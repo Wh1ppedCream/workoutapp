@@ -4,6 +4,8 @@ import 'db/database_helper.dart';
 import 'models.dart';
 import 'widgets/exercise_card.dart'; // reuse for display, read‑only version
 import 'session_detail_screen.dart';
+import 'exercise_catalog_page.dart';
+import 'muscle_filter_page.dart';
 
 
 class HistoryScreen extends StatefulWidget {
@@ -38,7 +40,37 @@ class _HistoryScreenState extends State<HistoryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('History')),
-      body: FutureBuilder<List<WorkoutSession>>(
+      body: Column(
+  children: [
+    // Top filter buttons
+    Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const ExerciseCatalogPage()),
+              );
+            },
+            child: const Text('Exercises'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const MuscleFilterPage()),
+              );
+            },
+            child: const Text('Muscle'),
+          ),
+        ],
+      ),
+    ),
+
+    // Existing session list
+    Expanded(
+      child: FutureBuilder<List<WorkoutSession>>(
         future: _sessionsFuture,
         builder: (context, snap) {
           if (snap.connectionState != ConnectionState.done) {
@@ -54,27 +86,29 @@ class _HistoryScreenState extends State<HistoryScreen> {
               final ses = sessions[i];
               final dateStr = DateFormat('yyyy-MM-dd').format(ses.date);
               final durationMin = (ses.duration / 60).ceil();
-              return ListTile(
-                title: Text('$dateStr — $durationMin min'),
-                onTap: () {
-                  Navigator.of(context)
+              return Card(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: ListTile(
+                  title: Text('$dateStr — $durationMin min'),
+                  onTap: () => Navigator.of(context)
                       .push(
                         MaterialPageRoute(
                           builder: (_) => SessionDetailScreen(ses),
                         ),
                       )
-                      .then((_) {
-                    // Refresh list when returning
-                    setState(() {
-                      _loadSessions();
-                    });
-                  });
-                },
+                      .then((_) => setState(() {
+                            _loadSessions();
+                          })),
+                ),
               );
             },
           );
         },
       ),
+    ),
+  ],
+),
+
     );
   }
 }

@@ -1,13 +1,8 @@
 class WorkoutExercise {
-  final String name;
-  final String equipment;
-  final List<ExerciseSet> sets;
-
-  WorkoutExercise({
-    required this.name,
-    required this.equipment,
-    required this.sets,
-  });
+  String name;
+  String equipment;
+  List<ExerciseSet> sets;
+  WorkoutExercise({required this.name, required this.equipment, required this.sets});
 }
 
 class ExerciseSet {
@@ -27,4 +22,27 @@ class WorkoutSession {
     required this.date,
     required this.duration,
   });
+}
+
+/// Represents a stored exercise definition.
+class ExerciseDefinition {
+  final int id;
+  final String name;
+  final int? equipmentId;
+
+  ExerciseDefinition({required this.id, required this.name, this.equipmentId});
+}
+
+/// Equipment lookup.
+class Equipment {
+  final int id;
+  final String name;
+  Equipment(this.id, this.name);
+}
+
+/// BodyPart lookup.
+class BodyPart {
+  final int id;
+  final String name;
+  BodyPart(this.id, this.name);
 }
