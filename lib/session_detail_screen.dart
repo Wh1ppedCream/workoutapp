@@ -7,7 +7,6 @@ import 'models.dart';
 import 'widgets/exercise_card.dart';
 
 /// Displays and allows editing of a saved workout session.
-/// Shows “Save Changes” when in-session edits occur.
 class SessionDetailScreen extends StatefulWidget {
   final WorkoutSession session;
   const SessionDetailScreen(this.session, {Key? key}) : super(key: key);
@@ -17,40 +16,76 @@ class SessionDetailScreen extends StatefulWidget {
 }
 
 class _SessionDetailScreenState extends State<SessionDetailScreen> {
-  // -- State fields (around line 15) --
-  late List<WorkoutExercise> _exercises;
+  // -- State fields --
+  List<WorkoutExercise> _exercises = [];
   bool _hasChanges = false;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadExercises(); // load from DB on screen open
+    _loadExercises();
   }
 
-  /// (Around line 25) Loads exercises and their sets from the database.
+  /// Loads exercises and their sets from the database.
   Future<void> _loadExercises() async {
-    final db = DatabaseHelper();
-    final exRows = await db.getExercisesForSession(widget.session.id);
+    final dbHelper = DatabaseHelper();
+    // 1) Fetch instance rows
+    final exRows = await dbHelper.getExercisesForSession(widget.session.id);
+
     final list = <WorkoutExercise>[];
     for (var exRow in exRows) {
-      final setsRows = await db.getSetsForExercise(exRow['id'] as int);
-      final sets = setsRows.map((s) => ExerciseSet(
-            weight: (s['weight'] as num).toDouble(),
-            reps: s['reps'] as int,
-          )).toList();
+      final instanceId = exRow['id'] as int;
+      final defId = exRow['exercise_def_id'] as int;
+
+      // 2) Lookup definition
+      final defRows = await dbHelper.database.then((db) => db.query(
+            'exercise_definitions',
+            where: 'id = ?',
+            whereArgs: [defId],
+          ));
+      if (defRows.isEmpty) continue;
+      final defRow = defRows.first;
+      final name = defRow['name'] as String;
+      final equipmentId = defRow['equipment_id'] as int?;
+
+      // 3) Resolve equipment name
+      var equipment = 'None';
+      if (equipmentId != null) {
+        final eqRows = await dbHelper.database.then((db) => db.query(
+              'equipment',
+              where: 'id = ?',
+              whereArgs: [equipmentId],
+            ));
+        if (eqRows.isNotEmpty) {
+          equipment = eqRows.first['name'] as String;
+        }
+      }
+
+      // 4) Load sets
+      final setsRows = await dbHelper.getSetsForExercise(instanceId);
+      final sets = setsRows
+          .map((s) => ExerciseSet(
+                weight: (s['weight'] as num).toDouble(),
+                reps: s['reps'] as int,
+              ))
+          .toList();
+
       list.add(WorkoutExercise(
-        name: exRow['name'] as String,
-        equipment: exRow['equipment'] as String,
+        name: name,
+        equipment: equipment,
         sets: sets,
       ));
     }
+
     setState(() {
       _exercises = list;
       _hasChanges = false;
+      _isLoading = false;
     });
   }
 
-  /// (Around line 45) Deletes the entire session (cascades exercises/sets).
+  /// Deletes the entire session (cascades exercises/sets).
   Future<void> _deleteSession(BuildContext context) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -71,10 +106,10 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     );
     if (confirm != true) return;
     await DatabaseHelper().deleteSession(widget.session.id);
-    Navigator.of(context).pop(); // go back to history
+    Navigator.of(context).pop();
   }
 
-  /// (Around line 65) Saves any in-session edits back to the database.
+  /// Saves any in-session edits back to the database.
   Future<void> _saveChanges() async {
     final db = DatabaseHelper();
     // Remove old exercises & cascade-delete sets
@@ -110,7 +145,6 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
         DateFormat('yyyy-MM-dd – kk:mm').format(widget.session.date);
 
     return Scaffold(
-      // AppBar with delete icon
       appBar: AppBar(
         title: Text('Session: $dateStr'),
         actions: [
@@ -121,27 +155,29 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
         ],
       ),
 
-      // Body: editable list of ExerciseCard widgets
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          for (var i = 0; i < _exercises.length; i++)
-            ExerciseCard(
-              exercise: _exercises[i],
-              onDeleteExercise: () {
-                setState(() {
-                  _exercises.removeAt(i);
-                  _hasChanges = true;
-                });
-              },
-              onSetAdded: () => setState(() => _hasChanges = true),
-              onSetDeleted: () => setState(() => _hasChanges = true),
-              onValueChanged: () => setState(() => _hasChanges = true),
+      // Loading spinner or the exercise list
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                for (var i = 0; i < _exercises.length; i++)
+                  ExerciseCard(
+                    exercise: _exercises[i],
+                    onDeleteExercise: () {
+                      setState(() {
+                        _exercises.removeAt(i);
+                        _hasChanges = true;
+                      });
+                    },
+                    onSetAdded: () => setState(() => _hasChanges = true),
+                    onSetDeleted: () => setState(() => _hasChanges = true),
+                    onValueChanged: () => setState(() => _hasChanges = true),
+                  ),
+              ],
             ),
-        ],
-      ),
 
-      // Bottom bar: shows only if there are changes
+      // Bottom bar: shows only if there are unsaved changes
       bottomNavigationBar: _hasChanges
           ? Padding(
               padding: const EdgeInsets.all(16),

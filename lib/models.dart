@@ -46,3 +46,28 @@ class BodyPart {
   final String name;
   BodyPart(this.id, this.name);
 }
+
+// Add after BodyPart...
+class MeasurementDefinition {
+  final int id;
+  final String name;
+  final String type;
+  MeasurementDefinition({required this.id, required this.name, required this.type});
+}
+
+class Measurement {
+  final int id;
+  final int defId;
+  final DateTime timestamp;
+  final double value;
+  final String unit;
+  final String? note;
+  Measurement({
+    required this.id,
+    required this.defId,
+    required this.timestamp,
+    required this.value,
+    required this.unit,
+    this.note,
+  });
+}

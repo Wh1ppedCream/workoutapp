@@ -97,6 +97,7 @@ class DatabaseHelper {
       )
     ''');
 
+
     // Seed equipment (line ~65)
     for (var name in ['None', 'Barbell', 'Dumbbell', 'Machine', 'Kettlebell']) {
       await db.insert('equipment', {'name': name});
@@ -105,6 +106,37 @@ class DatabaseHelper {
     for (var part in ['Chest', 'Back', 'Legs', 'Biceps', 'Triceps', 'Shoulders', 'Core']) {
       await db.insert('bodypart', {'name': part});
     }
+
+    await db.execute('''
+  CREATE TABLE measurement_definitions(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+    type TEXT NOT NULL
+  )
+''');
+
+await db.execute('''
+  CREATE TABLE measurements(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    def_id INTEGER NOT NULL,
+    timestamp TEXT NOT NULL,
+    value REAL NOT NULL,
+    unit TEXT NOT NULL,
+    note TEXT,
+    FOREIGN KEY(def_id) REFERENCES measurement_definitions(id) ON DELETE CASCADE
+  )
+''');
+
+// Seed measurement definitions
+for (var def in [
+  {'name':'Bodyweight','type':'weight'},
+  {'name':'Height','type':'height'},
+  {'name':'Forearm','type':'bodypart'},
+  // … add others as desired …
+]) {
+  await db.insert('measurement_definitions', def);
+}
+
   }
 
   /// (Around line 80) Inserts a new session and returns its id.
@@ -230,4 +262,46 @@ class DatabaseHelper {
     [bodyPartId],
   );
 }
+
+/// Fetch all measurement definitions
+Future<List<Map<String,dynamic>>> getMeasurementDefinitions() async {
+  final db = await database;
+  return db.query('measurement_definitions', orderBy: 'name');
+}
+
+/// Insert a new measurement instance
+Future<int> insertMeasurement(int defId, DateTime ts, double value, String unit, String? note) async {
+  final db = await database;
+  return db.insert('measurements', {
+    'def_id': defId,
+    'timestamp': ts.toIso8601String(),
+    'value': value,
+    'unit': unit,
+    'note': note,
+  });
+}
+
+/// Fetch all measurements for a definition
+Future<List<Map<String,dynamic>>> getMeasurementsForDefinition(int defId) async {
+  final db = await database;
+  return db.query(
+    'measurements',
+    where: 'def_id = ?',
+    whereArgs: [defId],
+    orderBy: 'timestamp DESC',
+  );
+}
+
+/// Returns only the definitions that have at least one measurement recorded.
+Future<List<Map<String, dynamic>>> getUsedMeasurementDefinitions() async {
+  final db = await database;
+  return db.rawQuery('''
+    SELECT md.id, md.name, md.type 
+      FROM measurement_definitions md
+      JOIN measurements m ON m.def_id = md.id
+     GROUP BY md.id
+     ORDER BY md.name
+  ''');
+}
+
 }
