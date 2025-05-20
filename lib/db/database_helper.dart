@@ -100,11 +100,13 @@ class DatabaseHelper {
 
     // Seed equipment (line ~65)
     for (var name in ['None', 'Barbell', 'Dumbbell', 'Machine', 'Kettlebell']) {
-      await db.insert('equipment', {'name': name});
+      await db.insert('equipment', {'name': name},
+          conflictAlgorithm: ConflictAlgorithm.ignore);
     }
     // Seed body parts
     for (var part in ['Chest', 'Back', 'Legs', 'Biceps', 'Triceps', 'Shoulders', 'Core']) {
-      await db.insert('bodypart', {'name': part});
+      await db.insert('bodypart', {'name': part},
+          conflictAlgorithm: ConflictAlgorithm.ignore);
     }
 
     await db.execute('''
@@ -140,10 +142,14 @@ for (var def in [
 for (var part in [
   'Forearm','Arm','Neck','Shoulder','Chest','Waist','Hip','Thigh','Calf'
 ]) {
-  await db.insert('measurement_definitions', {
+  await db.insert(
+  'measurement_definitions',
+  {
     'name': part,
     'type': 'bodypart',
-  });
+  },
+  conflictAlgorithm: ConflictAlgorithm.ignore,
+);
 }
 
   }
