@@ -137,6 +137,15 @@ for (var def in [
   await db.insert('measurement_definitions', def);
 }
 
+for (var part in [
+  'Forearm','Arm','Neck','Shoulder','Chest','Waist','Hip','Thigh','Calf'
+]) {
+  await db.insert('measurement_definitions', {
+    'name': part,
+    'type': 'bodypart',
+  });
+}
+
   }
 
   /// (Around line 80) Inserts a new session and returns its id.
