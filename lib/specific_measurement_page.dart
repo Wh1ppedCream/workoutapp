@@ -240,7 +240,7 @@ Row(
     for (var f in ['All', 'Week', 'Month', 'Year'])
       Expanded(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 2),
+          padding: const EdgeInsets.symmetric(horizontal: 1),
           child: OutlinedButton(
             style: OutlinedButton.styleFrom(
               backgroundColor: _timeFilter == f ? Colors.deepPurple : null,
@@ -265,7 +265,7 @@ Row(
             : ['Overall', 'With pump', 'Without pump']))
       Expanded(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 1),
           child: OutlinedButton(
             style: OutlinedButton.styleFrom(
               backgroundColor: _subFilter == s ? Colors.deepPurple : null,
