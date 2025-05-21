@@ -18,18 +18,59 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDatabase() async {
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, 'fitness_tracker.db');
-    return await openDatabase(
-      path,
-      version: 2,  // bumped for new schema
-      onConfigure: (db) async {
-        // Enable foreign key constraints
-        await db.execute('PRAGMA foreign_keys = ON');
-      },
-      onCreate: _onCreate,
-    );
-  }
+  final dbPath = await getDatabasesPath();
+  final path = join(dbPath, 'fitness_tracker.db');
+  return await openDatabase(
+    path,
+    version: 2,  // bumped for new schema
+    onConfigure: (db) async {
+      // Enable foreign key constraints
+      await db.execute('PRAGMA foreign_keys = ON');
+    },
+    onCreate: _onCreate,  // your existing table‐creation logic
+    onUpgrade: (db, oldVersion, newVersion) async {
+      if (oldVersion < 2) {
+        // Create any tables added in v2:
+        await db.execute('''
+          CREATE TABLE measurement_definitions(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL UNIQUE,
+            type TEXT NOT NULL
+          )
+        ''');
+        await db.execute('''
+          CREATE TABLE measurements(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            def_id INTEGER NOT NULL,
+            timestamp TEXT NOT NULL,
+            value REAL NOT NULL,
+            unit TEXT NOT NULL,
+            note TEXT,
+            FOREIGN KEY(def_id) REFERENCES measurement_definitions(id) ON DELETE CASCADE
+          )
+        ''');
+
+        // Seed lookup data, ignoring duplicates:
+        for (var part in [
+          'Bodyweight', 'Height',
+          'Forearm','Arm','Neck','Shoulder','Chest','Waist','Hip','Thigh','Calf'
+        ]) {
+          await db.insert(
+            'measurement_definitions',
+            {
+              'name': part,
+              'type': (part == 'Bodyweight' || part == 'Height')
+                  ? part.toLowerCase()
+                  : 'bodypart',
+            },
+            conflictAlgorithm: ConflictAlgorithm.ignore,
+          );
+        }
+      }
+    },
+  );
+}
+
 
   /// (Around line 25) Builds initial schema with lookups first.
   Future<void> _onCreate(Database db, int version) async {
