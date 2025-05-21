@@ -16,7 +16,7 @@ class SpecificMeasurementPage extends StatefulWidget {
 
 class _SpecificMeasurementPageState extends State<SpecificMeasurementPage> {
   // --- Filters ---
-  String _timeFilter = 'All Records'; // All Records, Weekly, Monthly, Yearly
+  String _timeFilter = 'All'; // All, Week, Month, Year
   String _subFilter = 'Overall'; // WakeUp/BedTime/Overall or ft/in/cm or Overall/With pump/Without pump
 
   late Future<List<Measurement>> _measurementsFuture;
@@ -42,15 +42,96 @@ class _SpecificMeasurementPageState extends State<SpecificMeasurementPage> {
         .toList();
   }
 
+    /// Compute chart X/Y points based on current timeFilter
+  List<FlSpot> _computeSpots(List<Measurement> filtered) {
+    if (filtered.isEmpty) return [];
+    switch (_timeFilter) {
+      case 'Weekly':
+        final last = filtered.last.timestamp;
+        final start = last.subtract(const Duration(days: 6));
+        return filtered.map((m) {
+          final dx = m.timestamp.difference(start).inDays.toDouble();
+          return FlSpot(dx, m.value);
+        }).toList();
+
+      case 'Monthly':
+        return filtered.map((m) {
+          // map day 1→0, day 20→19, etc.
+          final dx = (m.timestamp.day - 1).toDouble();
+          return FlSpot(dx, m.value);
+        }).toList();
+
+      case 'Yearly':
+        return filtered.map((m) {
+          // month 1→1.0, ... 12→12.0
+          return FlSpot(m.timestamp.month.toDouble(), m.value);
+        }).toList();
+
+      default:
+        return List.generate(
+          filtered.length,
+          (i) => FlSpot(i.toDouble(), filtered[i].value),
+        );
+    }
+  }
+
+    /// Build bottom-axis labels exactly as “Weekly/Monthly/Yearly” spec’d
+  AxisTitles bottomTitles() {
+    switch (_timeFilter) {
+      case 'Weekly':
+        const labels = ['S','M','T','W','Th','F','S'];
+        return AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: true,
+            interval: 1,
+            getTitlesWidget: (value, _) {
+              final i = value.toInt().clamp(0,6);
+              return Text(labels[i], style: const TextStyle(fontSize: 10));
+            },
+          ),
+        );
+      case 'Monthly':
+        return AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: true,
+            interval: 5,
+            getTitlesWidget: (value, _) {
+              final v = value.toInt();
+              if (v % 5 != 0 || v < 0 || v > 30) return const SizedBox();
+              return Text(v.toString(), style: const TextStyle(fontSize: 10));
+            },
+            reservedSize: 28,
+          ),
+        );
+      case 'Yearly':
+        return AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: true,
+            interval: 1,
+            getTitlesWidget: (value, _) {
+              final m = value.toInt();
+              if (m < 1 || m > 12) return const SizedBox();
+              return Text(m.toString(), style: const TextStyle(fontSize: 10));
+            },
+            reservedSize: 28,
+          ),
+        );
+      default:
+        return AxisTitles(sideTitles: SideTitles(showTitles: false));
+    }
+  }
+
+
+
   // Determine earliest allowed date for time filtering
   DateTime get _earliestDate {
     final now = DateTime.now();
     switch (_timeFilter) {
-      case 'Weekly':
+      case 'Week':
         return now.subtract(const Duration(days: 7));
-      case 'Monthly':
+      case 'Month':
         return DateTime(now.year, now.month - 1, now.day);
-      case 'Yearly':
+      case 'Year':
         return DateTime(now.year - 1, now.month, now.day);
       default:
         return DateTime(1970);
@@ -72,7 +153,7 @@ class _SpecificMeasurementPageState extends State<SpecificMeasurementPage> {
           final all = snap.data ?? [];
 
           // 2) apply time filter
-          final byTime = (_timeFilter == 'All Records')
+          final byTime = (_timeFilter == 'All')
               ? all
               : all.where((m) => m.timestamp.isAfter(_earliestDate)).toList();
 
@@ -93,53 +174,60 @@ class _SpecificMeasurementPageState extends State<SpecificMeasurementPage> {
 
           // 5) axis titles builder
           AxisTitles bottomTitles() {
-            switch (_timeFilter) {
-              case 'Weekly':
-                // 7 ticks: days of week ending at last record
-                final labels = ['S','M','T','W','Th','F','S'];
-                return AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    interval: 1,
-                    getTitlesWidget: (v, _) {
-                      final idx = v.toInt().clamp(0,6);
-                      return Text(labels[idx]);
-                    },
-                  ),
-                );
-              case 'Monthly':
-                // 5 ticks: 5,10,15,20,25
-                return AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    interval: (filtered.length/5).clamp(1, double.infinity),
-                    getTitlesWidget: (v, _) {
-                      final d = ((filtered.first.timestamp.day) + 5*v)
-                          .toInt().toString();
-                      return Text(d);
-                    },
-                  ),
-                );
-              case 'Yearly':
-                // 12 ticks: J F M A M J J A S O N D
-                final labels = ['J','F','M','A','M','J','J','A','S','O','N','D'];
-                return AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    interval: (filtered.length/12).clamp(1, double.infinity),
-                    getTitlesWidget: (v, _) {
-                      final idx = v.toInt().clamp(0,11);
-                      return Text(labels[idx]);
-                    },
-                  ),
-                );
-              default:
-                // All Records: no bottom titles
-                return AxisTitles(
-                  sideTitles: SideTitles(showTitles: false),
-                );
-            }
-          }
+  switch (_timeFilter) {
+    case 'Week':
+      // 7 ticks: days of week ending on last record’s weekday.
+      final lastWeekday = filtered.last.timestamp.weekday; // 1=Mon…7=Sun
+      const labels = ['S','M','T','W','Th','F','S'];
+      return AxisTitles(
+        sideTitles: SideTitles(
+          showTitles: true,
+          interval: 1,
+          getTitlesWidget: (value, meta) {
+            // value runs from 0..6; map to weekday index relative to last
+            final idx = ((lastWeekday % 7) + value.toInt()) % 7;
+            return Text(labels[idx], style: const TextStyle(fontSize: 10));
+          },
+        ),
+      );
+
+    case 'Month':
+      // 5 ticks: days 5,10,15,20,25 of that month
+      return AxisTitles(
+        sideTitles: SideTitles(
+          showTitles: true,
+          interval: (filtered.length - 1) / 4,
+          getTitlesWidget: (value, meta) {
+            // Map positions 0..4 to the day labels
+            const days = [5, 10, 15, 20, 25];
+            final idx = value.toInt().clamp(0, 4);
+            return Text(days[idx].toString(), style: const TextStyle(fontSize: 10));
+          },
+        ),
+      );
+
+    case 'Year':
+      // 12 ticks: months J F M A M J J A S O N D
+      const mLabels = ['J','F','M','A','M','J','J','A','S','O','N','D'];
+      return AxisTitles(
+        sideTitles: SideTitles(
+          showTitles: true,
+          interval: (filtered.length - 1) / 11,
+          getTitlesWidget: (value, meta) {
+            final idx = value.toInt().clamp(0, 11);
+            return Text(mLabels[idx], style: const TextStyle(fontSize: 10));
+          },
+        ),
+      );
+
+    default:
+      // All Records: no tick labels
+      return AxisTitles(
+        sideTitles: SideTitles(showTitles: false),
+      );
+  }
+}
+
 
           return Padding(
             padding: const EdgeInsets.all(16),
@@ -149,10 +237,10 @@ class _SpecificMeasurementPageState extends State<SpecificMeasurementPage> {
                 // Time filter buttons (equally sized)
 Row(
   children: [
-    for (var f in ['All Records', 'Weekly', 'Monthly', 'Yearly'])
+    for (var f in ['All', 'Week', 'Month', 'Year'])
       Expanded(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 2),
           child: OutlinedButton(
             style: OutlinedButton.styleFrom(
               backgroundColor: _timeFilter == f ? Colors.deepPurple : null,
@@ -195,20 +283,42 @@ const SizedBox(height: 16),
 
                 // Chart
                 SizedBox(
-                  height: 200,
-                  child: LineChart(LineChartData(
-                    gridData: FlGridData(show: true),
-                    lineBarsData: [
-                      LineChartBarData(spots: spots, isCurved: false, dotData: FlDotData(show: true))
-                    ],
-                    titlesData: FlTitlesData(
-                      leftTitles: AxisTitles(
-                        sideTitles: SideTitles(showTitles: true),
-                      ),
-                      bottomTitles: bottomTitles(),
-                    ),
-                  )),
-                ),
+  height: 200,
+  child: LineChart(
+    LineChartData(
+      minX: _timeFilter == 'Weekly'
+          ? 0
+          : _timeFilter == 'Monthly'
+              ? 0
+              : _timeFilter == 'Yearly'
+                  ? 1
+                  : 0,
+      maxX: _timeFilter == 'Weekly'
+          ? 6
+          : _timeFilter == 'Monthly'
+              ? 30
+              : _timeFilter == 'Yearly'
+                  ? 12
+                  : (_computeSpots(filtered).length - 1).toDouble(),
+      gridData: FlGridData(show: false),
+      borderData: FlBorderData(show: false),
+      titlesData: FlTitlesData(
+        bottomTitles: bottomTitles(),
+        leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+      ),
+      lineBarsData: [
+        LineChartBarData(
+          spots: _computeSpots(filtered),
+          isCurved: false,
+          dotData: FlDotData(show: true),
+        ),
+      ],
+    ),
+  ),
+),
+
                 const SizedBox(height: 16),
 
                 // History list
