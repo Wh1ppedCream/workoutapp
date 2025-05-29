@@ -1,0 +1,183 @@
+[
+    {
+    "name": "Ab Wheel",
+    "rating": 90,
+    "equipment": ["Ab Roller"],
+    "bodyparts": ["Core"],
+    "muscles": [
+      {"name":"Rectus Abdominis","rank":1},
+      {"name":"Transverse Abdominis","rank":2},
+      {"name":"Obliques","rank":3},
+      {"name":"Serratus Anterior","rank":4},
+      {"name":"Erector Spinae","rank":5},
+      {"name":"Latissimus Dorsi","rank":6},
+      {"name":"Triceps Brachii","rank":7}
+    ]
+  },
+  {
+    "name": "Arm Circles",
+    "rating": 30,
+    "equipment": ["Bodyweight"],
+    "bodyparts": ["Shoulders"],
+    "muscles": [
+      {"name":"Anterior Deltoid","rank":1},
+      {"name":"Lateral Deltoid","rank":2},
+      {"name":"Posterior Deltoid","rank":3},
+      {"name":"Supraspinatus","rank":4},
+      {"name":"Teres Minor","rank":5},
+      {"name":"Trapezius","rank":6},
+      {"name":"Brachialis","rank":7}
+    ]
+  },
+  {
+    "name": "Arnold Press",
+    "rating": 60,
+    "equipment": ["Dumbbell"],
+    "bodyparts": ["Shoulders", "Arms"],
+    "muscles": [
+      {"name":"Anterior Deltoid","rank":1},
+      {"name":"Lateral Deltoid","rank":2},
+      {"name":"Triceps Brachii","rank":3},
+      {"name":"Serratus Anterior","rank":4},
+      {"name":"Trapezius","rank":5},
+      {"name":"Supraspinatus","rank":6},
+      {"name":"Infraspinatus","rank":7}
+    ]
+  },
+  {
+    "name": "Back Extension",
+    "rating": 75,
+    "equipment": ["Hyperextension Bench/Machine"],
+    "bodyparts": ["Back", "Glutes", "Hamstrings"],
+    "muscles": [
+      {"name":"Erector Spinae","rank":1},
+      {"name":"Gluteus Maximus","rank":2},
+      {"name":"Biceps Femoris","rank":3},
+      {"name":"Semimembranosus","rank":4},
+      {"name":"Quadratus Lumborum","rank":5},
+      {"name":"Multifidus","rank":6},
+      {"name":"Latissimus Dorsi","rank":7}
+    ]
+  },
+  {
+  "name": "Ball Slam",
+  "rating": 40,
+  "equipment": ["Medicine Ball"],
+  "bodyparts": ["Core", "Shoulders"],
+  "muscles": [
+    {"name": "Rectus Abdominis", "rank": 1},
+    {"name": "Transverse Abdominis", "rank": 2},
+    {"name": "Obliques", "rank": 3},
+    {"name": "Gluteus Maximus", "rank": 4},
+    {"name": "Latissimus Dorsi", "rank": 5},
+    {"name": "Anterior Deltoid", "rank": 6},
+    {"name": "Erector Spinae", "rank": 7}
+  ]
+},
+  {
+    "name": "Barbell Squat",
+    "rating": 90,
+    "equipment": ["Barbell", "Weight Plates"],
+    "bodyparts": ["Quads", "Glutes"],
+    "muscles": [
+      {"name":"Vastus Lateralis","rank":1},
+      {"name":"Vastus Medialis","rank":2},
+      {"name":"Rectus Femoris","rank":3},
+      {"name":"Gluteus Maximus","rank":4},
+      {"name":"Adductor Magnus","rank":5},
+      {"name":"Erector Spinae","rank":6},
+      {"name":"Transverse Abdominis","rank":7}
+    ]
+  },
+  {
+  "name": "Bench Press - Barbell",
+  "rating": 90,
+  "equipment": ["Barbell", "Weight plates", "Adjustable Bench"],
+  "bodyparts": ["Chest", "Shoulders", "Arms"],
+  "muscles": [
+    {"name": "Pectoralis Major", "rank": 1},
+    {"name": "Anterior Deltoid", "rank": 2},
+    {"name": "Triceps Brachii", "rank": 3},
+    {"name": "Serratus Anterior", "rank": 4},
+    {"name": "Pectoralis Minor", "rank": 5},
+    {"name": "Trapezius (upper)", "rank": 6},
+    {"name": "Latissimus Dorsi", "rank": 7}
+  ]
+},
+{
+  "name": "Bench Press - Dumbbells",
+  "rating": 80,
+  "equipment": ["Dumbbells", "Adjustable Bench"],
+  "bodyparts": ["Chest", "Shoulder", "Arms"],
+  "muscles": [
+    {"name": "Pectoralis Major", "rank": 1},
+    {"name": "Anterior Deltoid", "rank": 2},
+    {"name": "Triceps Brachii", "rank": 3},
+    {"name": "Serratus Anterior", "rank": 4},
+    {"name": "Pectoralis Minor", "rank": 5},
+    {"name": "Lateral Deltoid", "rank": 6},
+    {"name": "Trapezius (upper)", "rank": 7}
+  ]
+},
+
+  {
+    "name": "Incline Bench Press - Cable Machine",
+    "rating": 80,
+    "equipment": ["Cable Machine", "Adjustable Bench", "Cable Handle Attachment"],
+    "bodyparts": ["Chest", "Shoulders"],
+    "muscles": [
+      {"name":"Pectoralis Major","rank":1},
+      {"name":"Anterior Deltoid","rank":2},
+      {"name":"Triceps Brachii","rank":3},
+      {"name":"Serratus Anterior","rank":4},
+      {"name":"Pectoralis Minor","rank":5},
+      {"name":"Lateral Deltoid","rank":6},
+      {"name":"Trapezius (upper)","rank":7}
+    ]
+  },
+  {
+    "name": "Incline Bench Press - Barbell",
+    "rating": 95,
+    "equipment": ["Barbell", "Weight Plates", "Adjustable Bench"],
+    "bodyparts": ["Chest", "Shoulders"],
+    "muscles": [
+      {"name":"Pectoralis Major","rank":1},
+      {"name":"Anterior Deltoid","rank":2},
+      {"name":"Triceps Brachii","rank":3},
+      {"name":"Serratus Anterior","rank":4},
+      {"name":"Pectoralis Minor","rank":5},
+      {"name":"Trapezius (upper)","rank":6},
+      {"name":"Latissimus Dorsi","rank":7}
+    ]
+  },
+  {
+    "name": "Incline Bench Press - Dumbbell",
+    "rating": 85,
+    "equipment": ["Dumbbell", "Adjustable Bench"],
+    "bodyparts": ["Chest", "Shoulders"],
+    "muscles": [
+      {"name":"Pectoralis Major","rank":1},
+      {"name":"Anterior Deltoid","rank":2},
+      {"name":"Triceps Brachii","rank":3},
+      {"name":"Serratus Anterior","rank":4},
+      {"name":"Pectoralis Minor","rank":5},
+      {"name":"Lateral Deltoid","rank":6},
+      {"name":"Trapezius (upper)","rank":7}
+    ]
+  },
+  {
+    "name": " ",
+    "rating": 100,
+    "equipment": [" "],
+    "bodyparts": [" "],
+    "muscles": [
+      {"name":" ","rank":1},
+      {"name":" ","rank":2},
+      {"name":" ","rank":3},
+      {"name":" ","rank":4},
+      {"name":" ","rank":5},
+      {"name":" ","rank":6},
+      {"name":" ","rank":7}
+    ]
+  }
+]

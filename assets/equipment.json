@@ -1,0 +1,16 @@
+[
+  { "name": "None" },
+  { "name": "Ab Roller"},
+  { "name": "Adjustable Bench" },
+  { "name": "Barbell" },
+  { "name": "Bodyweight" },
+  { "name": "Cable Handle Attachment" },
+  { "name": "Cable Machine" },
+  { "name": "Dumbbell" },
+  { "name": "HyperExtension Bench/Machine" },
+  { "name": "Kettlebell" },
+  { "name": "Machine" },
+  {"name": "Medicine Ball"},
+  { "name": "Power Rack"},
+  { "name": "Squat Rack" }
+]

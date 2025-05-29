@@ -28,6 +28,7 @@ class DefinitionsByBodyPartPage extends StatelessWidget {
                 id: row['id'] as int,
                 name: row['name'] as String,
                 equipmentId: row['equipment_id'] as int?,
+                rating: row['rating'] as int,
               );
               return Card(
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

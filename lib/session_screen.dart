@@ -70,24 +70,24 @@ class _SessionScreenState extends State<SessionScreen> {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.menu),
-          onPressed: () => _scaffoldKey.currentState!.openDrawer(),
+          onPressed: () => _scaffoldKey.currentState?.openDrawer(),
         ),
         title: const Text('New Workout'),
         centerTitle: true,
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          for (var i = 0; i < _exercises.length; i++)
-            ExerciseCard(
-              exercise: _exercises[i],
-              onDeleteExercise: () => setState(() => _exercises.removeAt(i)),
-              onSetAdded: () => setState(() {}),
-              onSetDeleted: () => setState(() {}),
-              onValueChanged: () => setState(() {}),
+      body: _exercises.isEmpty
+          ? const Center(child: Text('No exercises added.'))
+          : ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: _exercises.length,
+              itemBuilder: (ctx, i) => ExerciseCard(
+                exercise: _exercises[i],
+                onDeleteExercise: () => setState(() => _exercises.removeAt(i)),
+                onSetAdded: () => setState(() {}),
+                onSetDeleted: () => setState(() {}),
+                onValueChanged: () => setState(() {}),
+              ),
             ),
-        ],
-      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddModeDialog(context),
         child: const Icon(Icons.add),
@@ -113,73 +113,72 @@ class _SessionScreenState extends State<SessionScreen> {
     showDialog(
       context: ctx,
       builder: (_) => StatefulBuilder(
-        builder: (ctx, setState) => AlertDialog(
+        builder: (ctx, setDialogState) => AlertDialog(
           title: const Text('Add Exercise'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: useCustom ? Colors.deepPurple : null,
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: useCustom ? Colors.deepPurple : null,
+                        ),
+                        onPressed: () => setDialogState(() => useCustom = true),
+                        child: const Text('Custom'),
                       ),
-                      onPressed: () => setState(() => useCustom = true),
-                      child: const Text('Custom'),
                     ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: !useCustom ? Colors.deepPurple : null,
+                        ),
+                        onPressed: () {
+                          Navigator.of(ctx).pop();
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const ExerciseCatalogPage(),
+                            ),
+                          );
+                        },
+                        child: const Text('Catalog'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                if (useCustom) ...[
+                  DropdownButtonFormField<String>(
+                    isExpanded: true,
+                    decoration: const InputDecoration(labelText: 'Exercise'),
+                    items: kDefaultExercises
+                        .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                        .toList(),
+                    value: selectedExercise,
+                    hint: const Text('Select exercise'),
+                    onChanged: (v) => setDialogState(() => selectedExercise = v),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: !useCustom ? Colors.deepPurple : null,
-                      ),
-                      onPressed: () {
-                    Navigator.of(ctx).pop();
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const ExerciseCatalogPage(),
-                      ),
-                    );
-                      },
-                      child: const Text('Catalog'),
-                    ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    decoration: const InputDecoration(labelText: 'Or enter custom'),
+                    onChanged: (v) => customExercise = v.trim(),
+                  ),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<String>(
+                    isExpanded: true,
+                    decoration: const InputDecoration(labelText: 'Equipment'),
+                    items: kEquipments
+                        .map((eq) => DropdownMenuItem(value: eq, child: Text(eq)))
+                        .toList(),
+                    value: selectedEquipment,
+                    onChanged: (v) => setDialogState(() => selectedEquipment = v!),
                   ),
                 ],
-              ),
-             
-              if (useCustom) ...[
-                DropdownButtonFormField<String>(
-                  decoration: const InputDecoration(labelText: 'Exercise'),
-                  items: kDefaultExercises
-                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                      .toList(),
-                  value: selectedExercise,
-                  hint: const Text('Select exercise'),
-                  onChanged: (v) => setState(() => selectedExercise = v),
-                ),
-                // Equipment dropdown
-
-                const SizedBox(height: 8),
-                TextFormField(
-                  decoration: const InputDecoration(labelText: 'Or enter custom'),
-                  onChanged: (v) => customExercise = v.trim(),
-                ),
-
-DropdownButtonFormField<String>(
-  decoration: const InputDecoration(labelText: 'Equipment'),
-  items: kEquipments
-      .map((eq) => DropdownMenuItem(value: eq, child: Text(eq)))
-      .toList(),
-  value: selectedEquipment,
-  onChanged: (v) {
-    if (v != null) selectedEquipment = v;
-  },
-),
-
               ],
-            ],
+            ),
           ),
           actions: [
             TextButton(
@@ -190,7 +189,11 @@ DropdownButtonFormField<String>(
               onPressed: () {
                 final name = customExercise.isNotEmpty ? customExercise : selectedExercise;
                 if (name == null || name.isEmpty) return;
-                final newEx = WorkoutExercise(name: name, equipment: selectedEquipment, sets: [ExerciseSet()]);
+                final newEx = WorkoutExercise(
+                  name: name,
+                  equipment: selectedEquipment,
+                  sets: [ExerciseSet()],
+                );
                 setState(() => _exercises.add(newEx));
                 Navigator.of(ctx).pop();
               },
