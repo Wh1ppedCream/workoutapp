@@ -1,0 +1,19 @@
+[
+  { "name": "Chest" },
+  { "name": "Shoulders"},
+  { "name": "Back" },
+  { "name": "Arms" },
+  { "name": "Forearms" },
+  { "name": "Abdominals" },
+  { "name": "Trapezius" },
+  { "name": "Neck" },
+  { "name": "Quads" },
+  { "name": "Hamstrings" },
+  { "name": "Glutes" },
+  { "name": "Calves"},
+  { "name": "Hip Flexors" },
+  { "name": "Hip Adductors" },
+  { "name": "Hip Abductors" },
+  { "name": "Abs" },
+  { "name": "Erector Spinae" }
+]

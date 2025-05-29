@@ -1,5 +1,3 @@
-// File: lib/session_detail_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'db/database_helper.dart';
@@ -16,10 +14,8 @@ class SessionDetailScreen extends StatefulWidget {
 }
 
 class _SessionDetailScreenState extends State<SessionDetailScreen> {
-  // -- State fields --
   List<WorkoutExercise> _exercises = [];
   bool _hasChanges = false;
-  bool _isLoading = true;
 
   @override
   void initState() {
@@ -30,40 +26,49 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
   /// Loads exercises and their sets from the database.
   Future<void> _loadExercises() async {
     final dbHelper = DatabaseHelper();
-    // 1) Fetch instance rows
-    final exRows = await dbHelper.getExercisesForSession(widget.session.id);
+    final db = await dbHelper.database; // Simplify lookup
+
+    final exRows = await db.query(
+      'exercises',
+      where: 'session_id = ?',
+      whereArgs: [widget.session.id],
+    );
 
     final list = <WorkoutExercise>[];
     for (var exRow in exRows) {
       final instanceId = exRow['id'] as int;
       final defId = exRow['exercise_def_id'] as int;
 
-      // 2) Lookup definition
-      final defRows = await dbHelper.database.then((db) => db.query(
-            'exercise_definitions',
-            where: 'id = ?',
-            whereArgs: [defId],
-          ));
+      final defRows = await db.query(
+        'exercise_definitions',
+        where: 'id = ?',
+        whereArgs: [defId],
+      );
       if (defRows.isEmpty) continue;
       final defRow = defRows.first;
       final name = defRow['name'] as String;
       final equipmentId = defRow['equipment_id'] as int?;
 
-      // 3) Resolve equipment name
+      // Resolve equipment name
       var equipment = 'None';
       if (equipmentId != null) {
-        final eqRows = await dbHelper.database.then((db) => db.query(
-              'equipment',
-              where: 'id = ?',
-              whereArgs: [equipmentId],
-            ));
+        final eqRows = await db.query(
+          'equipment',
+          where: 'id = ?',
+          whereArgs: [equipmentId],
+        );
         if (eqRows.isNotEmpty) {
           equipment = eqRows.first['name'] as String;
         }
       }
 
-      // 4) Load sets
-      final setsRows = await dbHelper.getSetsForExercise(instanceId);
+      // Load sets
+      final setsRows = await db.query(
+        'sets',
+        where: 'exercise_id = ?',
+        whereArgs: [instanceId],
+        orderBy: 'order_index',
+      );
       final sets = setsRows
           .map((s) => ExerciseSet(
                 weight: (s['weight'] as num).toDouble(),
@@ -71,17 +76,12 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
               ))
           .toList();
 
-      list.add(WorkoutExercise(
-        name: name,
-        equipment: equipment,
-        sets: sets,
-      ));
+      list.add(WorkoutExercise(name: name, equipment: equipment, sets: sets));
     }
 
     setState(() {
       _exercises = list;
       _hasChanges = false;
-      _isLoading = false;
     });
   }
 
@@ -112,9 +112,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
   /// Saves any in-session edits back to the database.
   Future<void> _saveChanges() async {
     final db = DatabaseHelper();
-    // Remove old exercises & cascade-delete sets
     await db.deleteExercisesForSession(widget.session.id);
-    // Re-insert updated exercises & sets
     for (var i = 0; i < _exercises.length; i++) {
       final ex = _exercises[i];
       final exId = await db.insertExercise(
@@ -125,12 +123,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
       );
       for (var j = 0; j < ex.sets.length; j++) {
         final set = ex.sets[j];
-        await db.insertSet(
-          exId,
-          set.weight,
-          set.reps,
-          j,
-        );
+        await db.insertSet(exId, set.weight, set.reps, j);
       }
     }
     setState(() => _hasChanges = false);
@@ -139,54 +132,75 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final dateStr =
-        DateFormat('yyyy-MM-dd – kk:mm').format(widget.session.date);
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Session: $dateStr'),
+  Future<bool> _onWillPop() async {
+    if (!_hasChanges) return true;
+    final discard = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Unsaved Changes'),
+        content: const Text(
+            'You have unsaved changes. Do you want to discard them and leave?'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.delete_forever),
-            onPressed: () => _deleteSession(context),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Discard'),
           ),
         ],
       ),
+    );
+    return discard == true;
+  }
 
-      // Loading spinner or the exercise list
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                for (var i = 0; i < _exercises.length; i++)
-                  ExerciseCard(
-                    exercise: _exercises[i],
-                    onDeleteExercise: () {
-                      setState(() {
-                        _exercises.removeAt(i);
-                        _hasChanges = true;
-                      });
-                    },
-                    onSetAdded: () => setState(() => _hasChanges = true),
-                    onSetDeleted: () => setState(() => _hasChanges = true),
-                    onValueChanged: () => setState(() => _hasChanges = true),
-                  ),
-              ],
+  @override
+  Widget build(BuildContext context) {
+    final dateStr = DateFormat('yyyy-MM-dd – HH:mm')
+        .format(widget.session.date); // Use HH for 00-23
+
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('Session: $dateStr'),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.delete_forever),
+              onPressed: () => _deleteSession(context),
             ),
-
-      // Bottom bar: shows only if there are unsaved changes
-      bottomNavigationBar: _hasChanges
-          ? Padding(
-              padding: const EdgeInsets.all(16),
-              child: ElevatedButton(
-                onPressed: _saveChanges,
-                child: const Text('Save Changes'),
+          ],
+        ),
+        body: _exercises.isEmpty
+            ? const Center(child: Text('No exercises in this session.'))
+            : ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: _exercises.length,
+                itemBuilder: (_, i) => ExerciseCard(
+                  key: ValueKey(i),
+                  exercise: _exercises[i],
+                  onDeleteExercise: () {
+                    setState(() {
+                      _exercises.removeAt(i);
+                      _hasChanges = true;
+                    });
+                  },
+                  onSetAdded: () => setState(() => _hasChanges = true),
+                  onSetDeleted: () => setState(() => _hasChanges = true),
+                  onValueChanged: () => setState(() => _hasChanges = true),
+                ),
               ),
-            )
-          : null,
+        bottomNavigationBar: _hasChanges
+            ? Padding(
+                padding: const EdgeInsets.all(16),
+                child: ElevatedButton(
+                  onPressed: _saveChanges,
+                  child: const Text('Save Changes'),
+                ),
+              )
+            : null,
+      ),
     );
   }
 }
