@@ -463,16 +463,54 @@ Widget _buildCardioCard() {
       ),
 
       // Countdown display
-      if (_secondsLeft > 0) ...[
-        const SizedBox(height: 16),
-        Center(
-          child: Text(
-            '${(_secondsLeft ~/ 60).toString().padLeft(2,'0')}:'
-            '${(_secondsLeft % 60).toString().padLeft(2,'0')}',
-            style: Theme.of(context).textTheme.headlineMedium,
-          ),
+      // Countdown display + Start/Stop button
+if (_secondsLeft > 0) ...[
+  const SizedBox(height: 16),
+  Row(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      // Time display
+      Text(
+        '${(_secondsLeft ~/ 60).toString().padLeft(2, '0')}:'
+        '${(_secondsLeft % 60).toString().padLeft(2, '0')}',
+        style: Theme.of(context).textTheme.headlineMedium,
+      ),
+      const SizedBox(width: 12),
+
+      // Start/Stop toggle button
+      ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: (_cardioTimer?.isActive ?? false)
+              ? Colors.red
+              : Colors.green,
         ),
-      ],
+        onPressed: () {
+          // If timer is currently running, stop it
+          if (_cardioTimer?.isActive ?? false) {
+            _cardioTimer!.cancel();
+            setState(() {});
+          }
+          // If timer is paused (still have seconds left), resume
+          else if (_secondsLeft > 0) {
+            _cardioTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+              if (_secondsLeft > 0) {
+                setState(() => _secondsLeft--);
+              } else {
+                _cardioTimer?.cancel();
+                setState(() {}); // ensure button disappears at 0
+              }
+            });
+            setState(() {});
+          }
+        },
+        child: Text(
+          (_cardioTimer?.isActive ?? false) ? 'Stop' : 'Start',
+        ),
+      ),
+    ],
+  ),
+],
+
     ],
   );
 }
