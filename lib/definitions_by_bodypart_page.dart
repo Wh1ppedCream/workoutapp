@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'db/database_helper.dart';
 import 'models.dart';
 
+/// Displays exercises filtered by a specific body part.
 class DefinitionsByBodyPartPage extends StatelessWidget {
   final BodyPart bodyPart;
   const DefinitionsByBodyPartPage({Key? key, required this.bodyPart}) : super(key: key);
@@ -10,33 +11,35 @@ class DefinitionsByBodyPartPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('${bodyPart.name} Exercises')),
-      body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: DatabaseHelper().getExerciseDefsByBodyPart(bodyPart.id),
+      body: FutureBuilder<List<ExerciseDefinition>>(
+        future: DatabaseHelper().getExerciseDefinitionsFiltered(
+          bodypartIds: [bodyPart.id],
+        ),
         builder: (context, snap) {
           if (snap.connectionState != ConnectionState.done) {
             return const Center(child: CircularProgressIndicator());
           }
-          final rows = snap.data ?? [];
-          if (rows.isEmpty) {
-            return Center(child: Text('No exercises for ${bodyPart.name}.'));
+          if (snap.hasError) {
+            return Center(child: Text('Error: \${snap.error}'));
+          }
+          final defs = snap.data!;
+          if (defs.isEmpty) {
+            return Center(child: Text('No exercises for \${bodyPart.name}.'));
           }
           return ListView.builder(
-            itemCount: rows.length,
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            itemCount: defs.length,
             itemBuilder: (context, i) {
-              final row = rows[i];
-              final def = ExerciseDefinition(
-                id: row['id'] as int,
-                name: row['name'] as String,
-                equipmentId: row['equipment_id'] as int?,
-                rating: row['rating'] as int,
-              );
+              final def = defs[i];
+              final equipmentName = def.equipmentList.isNotEmpty
+                  ? def.equipmentList.first.name
+                  : 'None';
               return Card(
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: ListTile(
                   title: Text(def.name),
-                  subtitle: Text(def.equipmentId != null
-                      ? 'Equipment ID: ${def.equipmentId}'
-                      : 'No equipment'),
+                  subtitle: Text('Equipment: \$equipmentName'),
+                  trailing: Text('⭐️ \${def.rating}'),
                   onTap: () {
                     // TODO: drill into past instances for this definition
                   },

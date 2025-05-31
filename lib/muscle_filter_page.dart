@@ -3,45 +3,37 @@ import 'db/database_helper.dart';
 import 'models.dart';
 import 'definitions_by_bodypart_page.dart';
 
-class MuscleFilterPage extends StatefulWidget {
+
+
+/// Allows the user to select a body part and view its exercises.
+class MuscleFilterPage extends StatelessWidget {
   const MuscleFilterPage({Key? key}) : super(key: key);
-
-  @override
-  _MuscleFilterPageState createState() => _MuscleFilterPageState();
-}
-
-class _MuscleFilterPageState extends State<MuscleFilterPage> {
-  late Future<List<BodyPart>> _bodyPartsFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    _bodyPartsFuture = _loadBodyParts();
-  }
-
-  Future<List<BodyPart>> _loadBodyParts() async {
-    final db = await DatabaseHelper().database;
-    final rows = await db.query('bodypart');
-    return rows.map((r) => BodyPart(r['id'] as int, r['name'] as String)).toList();
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Muscle Filter')),
+      appBar: AppBar(title: const Text('Filter by Body Part')),
       body: FutureBuilder<List<BodyPart>>(
-        future: _bodyPartsFuture,
-        builder: (context, snap) {
-          if (snap.connectionState != ConnectionState.done) {
+        future: DatabaseHelper().getAllBodyParts(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState != ConnectionState.done) {
             return const Center(child: CircularProgressIndicator());
           }
-          final parts = snap.data ?? [];
-          return ListView.builder(
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: \${snapshot.error}'));
+          }
+          final parts = snapshot.data!;
+          if (parts.isEmpty) {
+            return const Center(child: Text('No body parts found.'));
+          }
+          return ListView.separated(
             itemCount: parts.length,
+            separatorBuilder: (_, __) => const Divider(height: 1),
             itemBuilder: (context, i) {
               final part = parts[i];
               return ListTile(
                 title: Text(part.name),
+                trailing: const Icon(Icons.chevron_right),
                 onTap: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
