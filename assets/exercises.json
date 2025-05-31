@@ -105,6 +105,22 @@
   ]
 },
 {
+  "name": "Bench Press - Barbell (Close Grip)",
+  "rating": 85,
+  "equipment": ["Barbell", "Weight plates", "Adjustable bench"],
+  "bodyparts": ["Arms", "Chest", "Shoulder"],
+  "muscles": [
+    {"name": "Triceps Brachii", "rank": 1},
+    {"name": "Pectoralis Major", "rank": 2},
+    {"name": "Anterior Deltoid", "rank": 3},
+    {"name": "Pectoralis Minor", "rank": 4},
+    {"name": "Serratus Anterior", "rank": 5},
+    {"name": "Trapezius (upper)", "rank": 6},
+    {"name": "Latissimus Dorsi", "rank": 7}
+  ]
+},
+
+{
   "name": "Bench Press - Dumbbells",
   "rating": 80,
   "equipment": ["Dumbbells", "Adjustable Bench"],
@@ -117,6 +133,36 @@
     {"name": "Pectoralis Minor", "rank": 5},
     {"name": "Lateral Deltoid", "rank": 6},
     {"name": "Trapezius (upper)", "rank": 7}
+  ]
+},
+{
+  "name": "Bench Press - Smith Machine",
+  "rating": 90,
+  "equipment": ["Smith machine", "Adjustable bench"],
+  "bodyparts": ["Chest", "Shoulder", "Arms"],
+  "muscles": [
+    {"name": "Pectoralis Major", "rank": 1},
+    {"name": "Anterior Deltoid", "rank": 2},
+    {"name": "Triceps Brachii", "rank": 3},
+    {"name": "Serratus Anterior", "rank": 4},
+    {"name": "Pectoralis Minor", "rank": 5},
+    {"name": "Trapezius (upper)", "rank": 6},
+    {"name": "Latissimus Dorsi", "rank": 7}
+  ]
+},
+{
+  "name": "Bench Press - Cable Machine",
+  "rating": 75,
+  "equipment": ["Cable machine", "Adjustable bench", "Cable Handle Attachment"],
+  "bodyparts": ["Chest", "Shoulder", "Arms"],
+  "muscles": [
+    {"name": "Pectoralis Major", "rank": 1},
+    {"name": "Anterior Deltoid", "rank": 2},
+    {"name": "Triceps Brachii", "rank": 3},
+    {"name": "Serratus Anterior", "rank": 4},
+    {"name": "Pectoralis Minor", "rank": 5},
+    {"name": "Trapezius (upper)", "rank": 6},
+    {"name": "Latissimus Dorsi", "rank": 7}
   ]
 },
 

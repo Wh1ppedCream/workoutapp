@@ -3,7 +3,11 @@ import 'db/database_helper.dart';
 import 'models.dart';
 
 class ExerciseCatalogPage extends StatefulWidget {
-  const ExerciseCatalogPage({Key? key}) : super(key: key);
+  final void Function(ExerciseDefinition)? onExercisePicked;
+  const ExerciseCatalogPage({
+    Key? key,
+    this.onExercisePicked,
+    }) : super(key: key);
 
   @override
   _ExerciseCatalogPageState createState() => _ExerciseCatalogPageState();
@@ -29,6 +33,9 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
   // Loading / search
   bool _isLoading = true;
   String _searchQuery = '';
+
+  ExerciseDefinition? _selectedDef;
+  
 
   @override
   void initState() {
@@ -206,15 +213,39 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                   : _displayedDefs.isEmpty
                       ? const Center(child: Text('No exercises match filters.'))
                       : ListView.builder(
-                          itemCount: _displayedDefs.length,
-                          itemBuilder: (_, i) => ListTile(
-                            title: Text(_displayedDefs[i].name),
-                          ),
-                        ),
+  itemCount: _displayedDefs.length,
+  itemBuilder: (_, i) {
+    final def = _displayedDefs[i];
+    return ListTile(
+      title: Text(def.name),
+      // highlight when tapped in selection mode
+      selected: widget.onExercisePicked != null && _selectedDef == def,
+      onTap: widget.onExercisePicked == null
+          ? null                  // normal “view-only” mode: do nothing
+          : () => setState(() {  // selection mode: remember which one
+              _selectedDef = def;
+            }),
+    );
+  },
+),
+
             ),
           ],
         ),
       ),
+    
+      floatingActionButton: widget.onExercisePicked != null && _selectedDef != null
+      ? FloatingActionButton(
+          child: const Icon(Icons.add),
+          onPressed: () {
+            // call back into the session screen:
+            widget.onExercisePicked!(_selectedDef!);
+            Navigator.of(context).pop();
+          },
+        )
+      : null,
+
+
     );
   }
 }

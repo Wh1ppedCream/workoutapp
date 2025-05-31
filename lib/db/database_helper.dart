@@ -727,5 +727,13 @@ Future<List<Map<String, dynamic>>> getUsedMeasurementDefinitions() async {
     )).toList();
   }
 
+/// Fetch all body parts with their IDs.
+Future<List<BodyPart>> getAllBodyParts() async {
+  final db = await database;
+  final rows = await db.query('bodypart', orderBy: 'name');
+  return rows
+      .map((r) => BodyPart(r['id'] as int, r['name'] as String))
+      .toList();
+}
 
 }
