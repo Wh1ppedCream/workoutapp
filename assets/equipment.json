@@ -12,6 +12,7 @@
   { "name": "Machine" },
   {"name": "Medicine Ball"},
   { "name": "Power Rack"},
+  { "name": "Resistance Band" },
   { "name": "Squat Rack" },
   { "name": "Smith Machine" }
 ]
