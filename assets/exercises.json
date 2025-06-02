@@ -165,6 +165,85 @@
     {"name": "Latissimus Dorsi", "rank": 7}
   ]
 },
+{
+  "name": "Bicep Curl - Barbell",
+  "rating": 75,
+  "equipment": ["Barbell"],
+  "bodyparts": ["Arms", "Forearms"],
+  "muscles": [
+    {"name": "Biceps Brachii", "rank": 1},
+    {"name": "Brachialis", "rank": 2},
+    {"name": "Brachioradialis", "rank": 3},
+    {"name": "Pronator Teres", "rank": 4},
+    {"name": "Wrist Flexors", "rank": 5},
+    {"name": "Anterior Deltoid", "rank": 6},
+    {"name": "Trapezius (upper)", "rank": 7}
+  ]
+},
+
+{
+  "name": "Bicep Curl - Cable Machine",
+  "rating": 90,
+  "equipment": ["Barbell"],
+  "bodyparts": ["Arms", "Forearms"],
+  "muscles": [
+    {"name": "Biceps Brachii", "rank": 1},
+    {"name": "Brachialis", "rank": 2},
+    {"name": "Brachioradialis", "rank": 3},
+    {"name": "Pronator Teres", "rank": 4},
+    {"name": "Wrist Flexors", "rank": 5},
+    {"name": "Anterior Deltoid", "rank": 6},
+    {"name": "Trapezius (upper)", "rank": 7}
+  ]
+},
+
+{
+  "name": "Bicep Curl - Dumbbell",
+  "rating": 85,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Arms", "Forearms"],
+  "muscles": [
+    {"name": "Biceps Brachii", "rank": 1},
+    {"name": "Brachialis", "rank": 2},
+    {"name": "Brachioradialis", "rank": 3},
+    {"name": "Pronator Teres", "rank": 4},
+    {"name": "Wrist Flexors", "rank": 5},
+    {"name": "Anterior Deltoid", "rank": 6},
+    {"name": "Trapezius (upper)", "rank": 7}
+  ]
+},
+
+{
+  "name": "Bicep Curl - Resistance Band",
+  "rating": 60,
+  "equipment": ["Barbell"],
+  "bodyparts": ["Arms", "Forearms"],
+  "muscles": [
+    {"name": "Biceps Brachii", "rank": 1},
+    {"name": "Brachialis", "rank": 2},
+    {"name": "Brachioradialis", "rank": 3},
+    {"name": "Pronator Teres", "rank": 4},
+    {"name": "Wrist Flexors", "rank": 5},
+    {"name": "Anterior Deltoid", "rank": 6},
+    {"name": "Trapezius (upper)", "rank": 7}
+  ]
+},
+
+{
+  "name": "Bicep Curl - Smith Machine",
+  "rating": 80,
+  "equipment": ["Barbell"],
+  "bodyparts": ["Arms", "Forearms"],
+  "muscles": [
+    {"name": "Biceps Brachii", "rank": 1},
+    {"name": "Brachialis", "rank": 2},
+    {"name": "Brachioradialis", "rank": 3},
+    {"name": "Pronator Teres", "rank": 4},
+    {"name": "Wrist Flexors", "rank": 5},
+    {"name": "Anterior Deltoid", "rank": 6},
+    {"name": "Trapezius (upper)", "rank": 7}
+  ]
+},
 
   {
     "name": "Incline Bench Press - Cable Machine",
