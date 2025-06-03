@@ -13,6 +13,31 @@ const List<String> kEquipments = [
   'None', 'Barbell', 'Dumbbell', 'Machine', 'Kettlebell'
 ];
 
+// cardio options
+const List<String> _bodyweightCardioOptions = [
+  'Aerobics',
+  'Box Jumps',
+  'Jump Squats',
+  'Running',
+  'Swimming',
+  'Walking',
+  'Zumba',
+];
+
+const List<String> _equipmentCardioOptions = [
+  'Battle Ropes',
+  'Bicycle',
+  'Elliptical',
+  'Rowing Machine',
+  'Ski Machine',
+  'Skipping Rope',
+  'Stair Climber',
+  'Stationary Bike',
+  'Treadmill',
+  'Vertical Climber',
+];
+
+
 class SessionScreen extends StatefulWidget {
   const SessionScreen({Key? key}) : super(key: key);
   @override
@@ -158,14 +183,7 @@ void _showAddCardTypeDialog(BuildContext ctx) {
             title: const Text('Cardio'),
             onTap: () {
               Navigator.of(ctx).pop();
-              setState(() {
-                _exercises.add(WorkoutExercise(
-                  name: 'Cardio',
-                  equipment: '',  // or use a note field
-                  sets: [],
-                ));
-                _cardTypes.add(CardType.cardio);
-              });
+              _showCardioDetailDialog();
             },
           ),
           ListTile(
@@ -190,6 +208,102 @@ void _showAddCardTypeDialog(BuildContext ctx) {
           child: const Text('Cancel'),
         )
       ],
+    ),
+  );
+}
+
+void _showCardioDetailDialog() {
+  String? selectedCategory = null; // either 'Bodyweight' or 'Equipment Based'
+  String? selectedExercise;
+
+  showDialog(
+    context: context,
+    builder: (dialogCtx) => StatefulBuilder(
+      builder: (dialogCtx, setState) {
+        // determine the list based on category
+        final options = (selectedCategory == 'Bodyweight')
+            ? _bodyweightCardioOptions
+            : (selectedCategory == 'Equipment Based')
+                ? _equipmentCardioOptions
+                : <String>[];
+
+        return AlertDialog(
+          title: const Text('Choose Cardio Type'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Category radio buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: RadioListTile<String>(
+                      title: const Text('Bodyweight'),
+                      value: 'Bodyweight',
+                      groupValue: selectedCategory,
+                      onChanged: (v) {
+                        setState(() {
+                          selectedCategory = v;
+                          selectedExercise = null;
+                        });
+                      },
+                    ),
+                  ),
+                  Expanded(
+                    child: RadioListTile<String>(
+                      title: const Text('Equipment Based'),
+                      value: 'Equipment Based',
+                      groupValue: selectedCategory,
+                      onChanged: (v) {
+                        setState(() {
+                          selectedCategory = v;
+                          selectedExercise = null;
+                        });
+                      },
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 8),
+
+              // Only show Dropdown once a category is chosen
+              if (selectedCategory != null) ...[
+                DropdownButtonFormField<String>(
+                  isExpanded: true,
+                  decoration: const InputDecoration(labelText: 'Select Exercise'),
+                  value: selectedExercise,
+                  items: options
+                      .map((ex) => DropdownMenuItem(value: ex, child: Text(ex)))
+                      .toList(),
+                  onChanged: (v) => setState(() => selectedExercise = v),
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogCtx).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: (selectedExercise == null)
+                  ? null
+                  : () {
+                      Navigator.of(dialogCtx).pop();
+                      setState(() {
+                        _exercises.add(WorkoutExercise(
+                          name: selectedExercise!,
+                          equipment: '', // or store category if you want
+                          sets: [],
+                        ));
+                        _cardTypes.add(CardType.cardio);
+                      });
+                    },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
     ),
   );
 }

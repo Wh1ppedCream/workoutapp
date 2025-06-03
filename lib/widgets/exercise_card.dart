@@ -37,6 +37,7 @@ class _ExerciseCardState extends State<ExerciseCard> {
   int _cardioMinutes = 0;
 Timer? _cardioTimer;
 int _secondsLeft = 0;
+late TextEditingController _cardioNameController;
 
 final List<TextEditingController> _stretchControllers = [];
   
@@ -57,6 +58,9 @@ final Map<int, List<ExerciseSet>> _cSets = {};
     // Initialize note from whatever was passed in as equipment
     _note = widget.exercise.equipment;
 
+    _cardioNameController = TextEditingController(text: widget.exercise.name);
+
+
     _weightControllers = widget.exercise.sets
         .map((s) => TextEditingController(text: s.weight.toString()))
         .toList();
@@ -64,6 +68,8 @@ final Map<int, List<ExerciseSet>> _cSets = {};
         .map((s) => TextEditingController(text: s.reps.toString()))
         .toList();
   }
+
+
 
   @override
   void dispose() {
@@ -74,6 +80,7 @@ final Map<int, List<ExerciseSet>> _cSets = {};
       c.dispose();
     }
 	_cardioTimer?.cancel();
+  _cardioNameController.dispose();
     super.dispose();
   }
 
@@ -406,28 +413,62 @@ Widget _buildCardioCard() {
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       // Header row: name + 3-dot menu (only “Remove Cardio”)
-      Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(widget.exercise.name, style: Theme.of(context).textTheme.titleMedium),
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert),
-            onSelected: (v) {
-              if (v == 'remove') {
-                Navigator.of(context).pop();
-      widget.onDeleteExercise?.call();
-                }
-            },
-            itemBuilder: (_) => [
-              const PopupMenuItem(value: 'remove', child: Text('Remove Cardio')),
-            ],
-          ),
-        ],
+      // Header row: editable name + menu
+// After: just display the cardio name as static text
+Row(
+  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  children: [
+    Expanded(
+      child: Text(
+        widget.exercise.name,
+        style: Theme.of(context).textTheme.titleMedium,
       ),
-      const SizedBox(height: 4),
-      // Note (reuse your _note logic if you like)
-      Text(widget.exercise.equipment, style: Theme.of(context).textTheme.bodySmall),
-      const SizedBox(height: 16),
+    ),
+    PopupMenuButton<String>(
+      icon: const Icon(Icons.more_vert),
+      onSelected: (v) {
+        if (v == 'remove') {
+          Navigator.of(context).pop();
+          widget.onDeleteExercise?.call();
+        }
+      },
+      itemBuilder: (_) => [
+        const PopupMenuItem(value: 'remove', child: Text('Remove Cardio')),
+      ],
+    ),
+  ],
+),
+const SizedBox(height: 4),
+
+// Tappable note under the name
+_isEditingNote
+  ? TextFormField(
+      initialValue: _note,
+      decoration: const InputDecoration(
+        isDense: true,
+        labelText: 'Note',
+      ),
+      onFieldSubmitted: (val) {
+        setState(() {
+          _note = val.trim();
+          _isEditingNote = false;
+          widget.exercise.equipment = _note;
+        });
+      },
+    )
+  : GestureDetector(
+      onTap: () => setState(() => _isEditingNote = true),
+      child: Text(
+        _note.isNotEmpty ? _note : 'Tap to add note',
+        style: Theme.of(context)
+          .textTheme
+          .bodySmall!
+          .copyWith(fontStyle: FontStyle.italic),
+      ),
+    ),
+
+const SizedBox(height: 16),
+
 
       // Minutes input + GO button
       Row(
