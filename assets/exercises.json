@@ -182,6 +182,22 @@
 },
 
 {
+  "name": "Bicep Curl - Bodyweight",
+  "rating": 60,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Arms", "Forearms"],
+  "muscles": [
+    {"name": "Biceps Brachii", "rank": 1},
+    {"name": "Brachialis", "rank": 2},
+    {"name": "Brachioradialis", "rank": 3},
+    {"name": "Pronator Teres", "rank": 4},
+    {"name": "Wrist Flexors", "rank": 5},
+    {"name": "Anterior Deltoid", "rank": 6},
+    {"name": "Trapezius (upper)", "rank": 7}
+  ]
+},
+
+{
   "name": "Bicep Curl - Cable Machine",
   "rating": 90,
   "equipment": ["Barbell"],

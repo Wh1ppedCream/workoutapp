@@ -1,0 +1,687 @@
+[
+  {
+    "name": "Arm Circles",
+    "bodyparts": ["Arms"],
+    "description": "Rotate arms in small and large circles to activate muscles."
+  },
+  {
+    "name": "Arm Kickbacks",
+    "bodyparts": ["Arms"],
+    "description": "Extend arms backward repeatedly to activate triceps."
+  },
+  {
+    "name": "Arm Swings",
+    "bodyparts": ["Arms", "Forearms", "Shoulder"],
+    "description": "Swing arms front to back to loosen up shoulders."
+  },
+  {
+    "name": "Backward Shoulder Rolls",
+    "bodyparts": ["Shoulder"],
+    "description": "Roll shoulders backward to improve mobility."
+  },
+  {
+    "name": "Behind-the-Back Biceps Stretch",
+    "bodyparts": ["Arms"],
+    "description": "Clasp hands behind your back and extend arms downward."
+  },
+  {
+    "name": "Behind-the-Back Neck Stretch",
+    "bodyparts": ["Neck"],
+    "description": "Clasp your hands behind your head and lightly press downward."
+  },
+  {
+    "name": "Behind-the-Back Shoulder Stretch",
+    "bodyparts": ["Shoulder"],
+    "description": "Clasp your hands behind your back and lift gently."
+  },
+  {
+    "name": "Behind-the-Back Wrist Stretch",
+    "bodyparts": ["Forearms"],
+    "description": "Reach behind with one arm and gently pull fingers upward."
+  },
+  {
+    "name": "Behind-the-Head Triceps Stretch",
+    "bodyparts": ["Arms"],
+    "description": "Reach one arm behind the head and gently push with the opposite hand."
+  },
+  {
+    "name": "Biceps Curls with Slow Tempo",
+    "bodyparts": ["Arms"],
+    "description": "Controlled bodyweight curls to stretch dynamically."
+  },
+  {
+    "name": "Bounding Strides",
+    "bodyparts": ["Hamstring", "Quads"],
+    "description": "Perform exaggerated running strides to stretch hamstrings (and quads)."
+  },
+  {
+    "name": "Boxer’s Arm Activation",
+    "bodyparts": ["Forearms"],
+    "description": "Mimic punching motions to warm up forearms."
+  },
+  {
+    "name": "Boxer’s Chest Warm-Up",
+    "bodyparts": ["Chest"],
+    "description": "Mimic punching movements to loosen chest muscles."
+  },
+  {
+    "name": "Boxer’s Warm-Up",
+    "bodyparts": ["Arms"],
+    "description": "Mimic punching movements to loosen up arms."
+  },
+  {
+    "name": "Breath-Control Chest Opening",
+    "bodyparts": ["Chest"],
+    "description": "Take deep breaths while expanding the chest outward."
+  },
+  {
+    "name": "Butterfly Hamstring Stretch",
+    "bodyparts": ["Hamstring"],
+    "description": "Sit with feet together and gently press knees down while leaning forward."
+  },
+  {
+    "name": "Cat-Cow Shoulder Flow",
+    "bodyparts": ["Shoulder"],
+    "description": "Move shoulders forward and backward while arching spine."
+  },
+  {
+    "name": "Cat-Cow Shoulder Stretch",
+    "bodyparts": ["Shoulder"],
+    "description": "Incorporate upper back movement while arching and rounding the spine."
+  },
+  {
+    "name": "Chest Doorway Stretch",
+    "bodyparts": ["Chest"],
+    "description": "Place hands on a doorway and step forward for a deep stretch."
+  },
+  {
+    "name": "Chest Expansion Stretch",
+    "bodyparts": ["Chest"],
+    "description": "Extend arms wide and squeeze shoulder blades together repeatedly."
+  },
+  {
+    "name": "Child’s Pose with Chest Stretch",
+    "bodyparts": ["Chest"],
+    "description": "Extend arms forward while sinking hips back to stretch the chest."
+  },
+  {
+    "name": "Child’s Pose with Shoulder Stretch",
+    "bodyparts": ["Shoulder"],
+    "description": "Extend arms forward while sinking your hips back."
+  },
+  {
+    "name": "Controlled Triceps Extensions",
+    "bodyparts": ["Arms"],
+    "description": "Perform slow, controlled extensions for mobility."
+  },
+  {
+    "name": "Cross-Body Arm Swings",
+    "bodyparts": ["Arms", "Chest", "Shoulder"],
+    "description": "Swing arms across the body to activate shoulder muscles."
+  },
+  {
+    "name": "Cross-Body Shoulder Stretch",
+    "bodyparts": ["Shoulder"],
+    "description": "Pull one arm across your chest and hold."
+  },
+  {
+    "name": "Cross-Body Triceps Stretch",
+    "bodyparts": ["Arms"],
+    "description": "Pull one arm across your chest to engage the triceps."
+  },
+  {
+    "name": "Doorway Biceps Stretch",
+    "bodyparts": ["Arms"],
+    "description": "Place arms against a doorway and lean forward."
+  },
+  {
+    "name": "Doorway Chest Stretch",
+    "bodyparts": ["Shoulder", "Chest"],
+    "description": "Place hands on a doorway and lean forward to stretch shoulders and chest."
+  },
+  {
+    "name": "Downward Dog Hamstring Stretch",
+    "bodyparts": ["Hamstring"],
+    "description": "Keep heels pressed down in a downward dog position."
+  },
+  {
+    "name": "Downward Dog Shoulder Warm-Up",
+    "bodyparts": ["Shoulder"],
+    "description": "Press shoulders down while in a downward dog position."
+  },
+  {
+    "name": "Downward Dog Walkout",
+    "bodyparts": ["Hamstring"],
+    "description": "Shift weight forward and back while stretching hamstrings."
+  },
+  {
+    "name": "Downward Dog to Lunge Flow",
+    "bodyparts": ["Quads"],
+    "description": "Move between downward dog and lunging positions for quad mobility."
+  },
+  {
+    "name": "Dynamic Forward Lunges",
+    "bodyparts": ["Hamstring", "Quads"],
+    "description": "Step forward into a lunge and alternate legs while engaging hamstrings (and quads)."
+  },
+  {
+    "name": "Eagle Arms Stretch",
+    "bodyparts": ["Shoulder"],
+    "description": "Cross arms in front of your body, wrapping them around each other."
+  },
+  {
+    "name": "External Rotator Stretch",
+    "bodyparts": ["Shoulder"],
+    "description": "Hold a resistance band or towel behind your back, pulling gently."
+  },
+  {
+    "name": "Fast Wrist Flexor & Extensor Movements",
+    "bodyparts": ["Forearms"],
+    "description": "Rapid flexing and extending motions to engage wrists."
+  },
+  {
+    "name": "Finger Flex & Extend",
+    "bodyparts": ["Forearms"],
+    "description": "Open and close fingers repeatedly to activate forearm muscles."
+  },
+  {
+    "name": "Finger Pull Stretch",
+    "bodyparts": ["Forearms"],
+    "description": "Stretch individual fingers gently to relieve tightness."
+  },
+  {
+    "name": "Forward & Backward Arm Swings",
+    "bodyparts": ["Chest"],
+    "description": "Swing arms back and forth to activate the chest."
+  },
+  {
+    "name": "Forward & Backward Neck Tilts",
+    "bodyparts": ["Neck"],
+    "description": "Lower your chin to your chest, then look upward."
+  },
+  {
+    "name": "Forward Neck Pull",
+    "bodyparts": ["Neck"],
+    "description": "Use both hands to gently pull your head forward, stretching the back of the neck."
+  },
+  {
+    "name": "Forward Shoulder Rolls",
+    "bodyparts": ["Shoulder"],
+    "description": "Roll shoulders in a circular motion forward."
+  },
+  {
+    "name": "Front-to-Back Leg Swings",
+    "bodyparts": ["Hamstring", "Quads"],
+    "description": "Swing one leg forward and backward while keeping it straight."
+  },
+  {
+    "name": "Half Split Stretch",
+    "bodyparts": ["Hamstring"],
+    "description": "Extend one leg forward while lowering into a deep stretch."
+  },
+  {
+    "name": "Half-Kneeling Quad Stretch",
+    "bodyparts": ["Quads"],
+    "description": "In a lunge position, bend the back leg and pull the foot toward your glutes."
+  },
+  {
+    "name": "Hands Behind Back Stretch",
+    "bodyparts": ["Chest"],
+    "description": "Clasp hands behind your back and gently lift for a deep stretch."
+  },
+  {
+    "name": "High-Knee Walks",
+    "bodyparts": ["Hamstring", "Quads"],
+    "description": "Lift knees high while extending the leg forward dynamically."
+  },
+  {
+    "name": "Hurdler Stretch",
+    "bodyparts": ["Hamstring"],
+    "description": "Stand, bend one knee backward, and extend the other leg straight forward."
+  },
+  {
+    "name": "Hero Pose Stretch",
+    "bodyparts": ["Quads"],
+    "description": "Sit with knees bent under you, keeping shins flat on the ground while leaning backward."
+  },
+  {
+    "name": "Jump Rope Arm Activation",
+    "bodyparts": ["Arms"],
+    "description": "Light skipping to engage triceps without static tension."
+  },
+  {
+    "name": "Jump Rope Chest Activation",
+    "bodyparts": ["Chest"],
+    "description": "Light bouncing movement while keeping the chest open."
+  },
+  {
+    "name": "Jump Rope Wrist Mobility",
+    "bodyparts": ["Forearms"],
+    "description": "Use light skipping motions to engage forearm joints."
+  },
+  {
+    "name": "Kneeling Quad Stretch",
+    "bodyparts": ["Quads"],
+    "description": "Sit on your heels with knees bent and lean back slightly."
+  },
+  {
+    "name": "Lateral Neck Stretch",
+    "bodyparts": ["Neck"],
+    "description": "Tilt your head to the side, bringing your ear toward your shoulder."
+  },
+  {
+    "name": "Large Arm Circles",
+    "bodyparts": ["Chest", "Shoulder"],
+    "description": "Extend arms fully and rotate in wide circles."
+  },
+  {
+    "name": "Leg Cycling Movements",
+    "bodyparts": ["Hamstring", "Quads"],
+    "description": "Mimic cycling motions while lying on the ground for gentle hamstring (or quad) activation."
+  },
+  {
+    "name": "Levator Scapulae Stretch",
+    "bodyparts": ["Neck", "Shoulder"],
+    "description": "Look slightly downward to one side, place a hand on your head, and gently press."
+  },
+  {
+    "name": "Lying Straight-Leg Stretch",
+    "bodyparts": ["Hamstring"],
+    "description": "Lie on your back, extend one leg, and pull it toward your chest."
+  },
+  {
+    "name": "Lying Wall Stretch",
+    "bodyparts": ["Hamstring"],
+    "description": "Place legs against a wall while lying down for a passive stretch."
+  },
+  {
+    "name": "Neck Extension Stretch",
+    "bodyparts": ["Neck"],
+    "description": "Slowly tilt your head back and hold."
+  },
+  {
+    "name": "Neck Flexion Stretch",
+    "bodyparts": ["Neck"],
+    "description": "Gently tuck your chin to your chest and hold."
+  },
+  {
+    "name": "Neck Rolls",
+    "bodyparts": ["Neck"],
+    "description": "Slowly rotate your head in a circular motion."
+  },
+  {
+    "name": "Neck Rotations",
+    "bodyparts": ["Neck"],
+    "description": "Turn your head left and right while keeping shoulders relaxed."
+  },
+  {
+    "name": "One-Leg Elevated Quad Stretch",
+    "bodyparts": ["Quads"],
+    "description": "Place one foot on a raised surface and lean slightly forward to stretch the quad."
+  },
+  {
+    "name": "Overhead Chest Stretch",
+    "bodyparts": ["Chest"],
+    "description": "Extend arms overhead and gently stretch the chest."
+  },
+  {
+    "name": "Overhead Reaches",
+    "bodyparts": ["Chest", "Forearms"],
+    "description": "Raise arms overhead and lean slightly forward or backward."
+  },
+  {
+    "name": "Overhead Reach Forearm Activation",
+    "bodyparts": ["Forearms"],
+    "description": "Extend arms above and flex fingers while reaching."
+  },
+  {
+    "name": "Overhead Reach Stretch",
+    "bodyparts": ["Shoulder"],
+    "description": "Extend arms overhead and reach alternately."
+  },
+  {
+    "name": "Overhead Triceps Pulses",
+    "bodyparts": ["Arms"],
+    "description": "Lift arms overhead and pulse gently to loosen triceps."
+  },
+  {
+    "name": "Overhead Triceps Stretch",
+    "bodyparts": ["Arms", "Shoulder"],
+    "description": "Reach one arm behind your head and gently press with the opposite hand."
+  },
+  {
+    "name": "Palm-Down & Palm-Up Pulses",
+    "bodyparts": ["Forearms"],
+    "description": "Slowly alternate between flexed and extended wrist positions."
+  },
+  {
+    "name": "Palm Press Stretch",
+    "bodyparts": ["Forearms"],
+    "description": "Press palms together and gently push downward."
+  },
+  {
+    "name": "Partner-Assisted Quad Stretch",
+    "bodyparts": ["Quads"],
+    "description": "Have a partner gently push the foot toward your glutes while lying down."
+  },
+  {
+    "name": "Pigeon Pose Variation",
+    "bodyparts": ["Hamstring"],
+    "description": "Extend one leg backward while keeping the opposite leg bent for a deep stretch."
+  },
+  {
+    "name": "Prone Quad Stretch",
+    "bodyparts": ["Quads"],
+    "description": "Lie on your stomach and pull one ankle toward your glutes for a deep stretch."
+  },
+  {
+    "name": "Pulsing Doorway Stretch",
+    "bodyparts": ["Chest"],
+    "description": "Perform gentle pulses while in a doorway chest stretch."
+  },
+  {
+    "name": "Quad Pulses in Lunge Position",
+    "bodyparts": ["Quads"],
+    "description": "Hold a lunge and perform small pulsing movements to activate muscles."
+  },
+  {
+    "name": "Reverse Lunges with Reach",
+    "bodyparts": ["Hamstring", "Quads"],
+    "description": "Lunge backward while reaching arms forward."
+  },
+  {
+    "name": "Reverse Prayer Stretch",
+    "bodyparts": ["Chest", "Shoulder"],
+    "description": "Place palms together behind your back and press upward."
+  },
+  {
+    "name": "Reverse Wrist Stretch",
+    "bodyparts": ["Forearms"],
+    "description": "Extend arm forward, palm facing down, and gently pull fingers upward."
+  },
+  {
+    "name": "Resistance Band Quad Stretch",
+    "bodyparts": ["Quads"],
+    "description": "Use a resistance band around the ankle to assist in pulling the foot toward your glutes."
+  },
+  {
+    "name": "Resistance Band Triceps Stretch",
+    "bodyparts": ["Arms"],
+    "description": "Hold a resistance band behind your back, pulling gently to deepen the stretch."
+  },
+  {
+    "name": "Rotational Neck Stretch",
+    "bodyparts": ["Neck"],
+    "description": "Turn your head to one side and hold, then switch."
+  },
+  {
+    "name": "Seated Biceps Stretch",
+    "bodyparts": ["Arms"],
+    "description": "Sit on the floor, place hands behind you with fingers pointing away, and stretch."
+  },
+  {
+    "name": "Seated Chest Opener",
+    "bodyparts": ["Chest"],
+    "description": "Sit upright, interlace fingers behind you, and open your chest."
+  },
+  {
+    "name": "Seated Chest Openers",
+    "bodyparts": ["Chest"],
+    "description": "Sit upright and rotate the chest side to side."
+  },
+  {
+    "name": "Seated Forearm Twist Stretch",
+    "bodyparts": ["Forearms"],
+    "description": "Place hands on a chair or surface and rotate forearms outward."
+  },
+  {
+    "name": "Seated Forward Fold",
+    "bodyparts": ["Hamstring"],
+    "description": "Sit with legs extended and reach toward your toes."
+  },
+  {
+    "name": "Seated Hamstring Stretch",
+    "bodyparts": ["Hamstring"],
+    "description": "Extend one leg while bending the other, reaching forward."
+  },
+  {
+    "name": "Seated Neck Extensions",
+    "bodyparts": ["Neck"],
+    "description": "Lean head forward and backward while seated upright."
+  },
+  {
+    "name": "Seated Neck Stretch",
+    "bodyparts": ["Neck"],
+    "description": "Sit upright, grab the edge of your chair, and tilt your head to the opposite side."
+  },
+  {
+    "name": "Seated Shoulder Rotation Stretch",
+    "bodyparts": ["Shoulder"],
+    "description": "Hold onto a chair and rotate shoulders gently."
+  },
+  {
+    "name": "Seated Twisting Stretch",
+    "bodyparts": ["Chest"],
+    "description": "Twist gently to each side while seated to stretch the chest."
+  },
+  {
+    "name": "Shoulder Shrugs",
+    "bodyparts": ["Shoulder"],
+    "description": "Lift and drop shoulders in a controlled motion."
+  },
+  {
+    "name": "Side Lunges",
+    "bodyparts": ["Hamstring", "Quads"],
+    "description": "Step sideways, keeping the stretching leg extended."
+  },
+  {
+    "name": "Side-Lying Chest Stretch",
+    "bodyparts": ["Chest"],
+    "description": "Lie on your side and stretch the arm outward for a deep chest stretch."
+  },
+  {
+    "name": "Side-Lying Quad Stretch",
+    "bodyparts": ["Quads"],
+    "description": "Lie on your side, grab the top ankle, and gently pull toward your glutes."
+  },
+  {
+    "name": "Side-to-Side Leg Swings",
+    "bodyparts": ["Hamstring", "Quads"],
+    "description": "Swing leg outward and inward for hip and hamstring (or quad) mobility."
+  },
+  {
+    "name": "Side-to-Side Neck Tilts",
+    "bodyparts": ["Neck"],
+    "description": "Tilt your head from one shoulder to the other."
+  },
+  {
+    "name": "Side-to-Side Reaches",
+    "bodyparts": ["Chest", "Shoulder"],
+    "description": "Reach toward one side and then the other to activate shoulders (and open chest)."
+  },
+  {
+    "name": "Single-Leg Seated Hamstring Stretch",
+    "bodyparts": ["Hamstring"],
+    "description": "Extend one leg while bending the other, reaching forward."
+  },
+  {
+    "name": "Small Arm Circles",
+    "bodyparts": ["Chest", "Shoulder"],
+    "description": "Rotate arms forward and backward in small circular motions."
+  },
+  {
+    "name": "Sprint Drill Toe Reaches",
+    "bodyparts": ["Hamstring", "Quads"],
+    "description": "Reach toward toes while doing slow running movements."
+  },
+  {
+    "name": "Standing One-Leg Hamstring Stretch",
+    "bodyparts": ["Hamstring"],
+    "description": "Place one foot on a raised surface and lean forward."
+  },
+  {
+    "name": "Standing Quad Stretch",
+    "bodyparts": ["Quads"],
+    "description": "Grab one ankle and pull it toward your glutes while balancing on the other foot."
+  },
+  {
+    "name": "Standing Toe Touch",
+    "bodyparts": ["Hamstring"],
+    "description": "Keep legs straight and reach toward your toes."
+  },
+  {
+    "name": "Standing Torso Twist",
+    "bodyparts": ["Chest"],
+    "description": "Rotate your torso while keeping arms extended outward."
+  },
+  {
+    "name": "Standing Torso Twists",
+    "bodyparts": ["Chest"],
+    "description": "Rotate side to side with arms extended outward."
+  },
+  {
+    "name": "Straight Arm Extension Stretch",
+    "bodyparts": ["Arms"],
+    "description": "Extend arms straight back while keeping shoulders relaxed."
+  },
+  {
+    "name": "Straight-Leg Kicks",
+    "bodyparts": ["Hamstring", "Quads"],
+    "description": "Kick one leg forward while keeping it straight and controlled."
+  },
+  {
+    "name": "Sternocleidomastoid Stretch",
+    "bodyparts": ["Neck"],
+    "description": "Tilt your head back at an angle while turning to the side."
+  },
+  {
+    "name": "Supine Chest Stretch",
+    "bodyparts": ["Chest"],
+    "description": "Lie on your back with arms extended outward to open up the chest."
+  },
+  {
+    "name": "Supine Hamstring Stretch with Resistance Band",
+    "bodyparts": ["Hamstring"],
+    "description": "Use a band to pull one leg upward while keeping the other flat."
+  },
+  {
+    "name": "Supine Leg Raises",
+    "bodyparts": ["Hamstring"],
+    "description": "Raise and lower one leg repeatedly while lying on your back."
+  },
+  {
+    "name": "Supine Quad Stretch",
+    "bodyparts": ["Quads"],
+    "description": "Lie on your back, bend one knee, and pull the foot toward your glutes."
+  },
+  {
+    "name": "Swimming Motions",
+    "bodyparts": ["Arms", "Chest", "Forearms", "Hamstring"],
+    "description": "Mimic freestyle or backstroke movements to engage (respective) muscles."
+  },
+  {
+    "name": "Table or Chair Stretch",
+    "bodyparts": ["Neck"],
+    "description": "Place your hands on a stable surface, lean forward, and let your neck relax downward."
+  },
+  {
+    "name": "Tabletop Forearm Mobility Stretch",
+    "bodyparts": ["Forearms"],
+    "description": "Place hands on a surface and shift weight forward and back."
+  },
+  {
+    "name": "Tabletop Wrist Stretch",
+    "bodyparts": ["Forearms"],
+    "description": "Place hands on a flat surface, fingers facing backward, and press gently."
+  },
+  {
+    "name": "Thread the Needle Stretch",
+    "bodyparts": ["Chest"],
+    "description": "Perform flowing arm movements while rotating the torso."
+  },
+  {
+    "name": "Torso Twists with Arm Reach",
+    "bodyparts": ["Arms", "Shoulder"],
+    "description": "Rotate torso while reaching with one arm."
+  },
+  {
+    "name": "Wall-Assisted Biceps Pulses",
+    "bodyparts": ["Arms"],
+    "description": "Press hands against a wall and pulse slightly forward."
+  },
+  {
+    "name": "Wall-Assisted Chest Stretch",
+    "bodyparts": ["Chest"],
+    "description": "Stand sideways to a wall, place your hand against it, and rotate slightly away."
+  },
+  {
+    "name": "Wall-Assisted Forearm Stretch",
+    "bodyparts": ["Forearms"],
+    "description": "Press hand against a wall with fingers pointing down and apply light pressure."
+  },
+  {
+    "name": "Wall-Assisted Neck Mobility",
+    "bodyparts": ["Neck"],
+    "description": "Move head gently side to side while pressing the back of your head against a wall."
+  },
+  {
+    "name": "Wall-Assisted Quad Stretch",
+    "bodyparts": ["Quads"],
+    "description": "Perform the standing quad stretch while holding onto a wall for support."
+  },
+  {
+    "name": "Wall-Assisted Shoulder Stretch",
+    "bodyparts": ["Shoulder"],
+    "description": "Stand sideways to a wall and stretch your arm outward."
+  },
+  {
+    "name": "Wall-Assisted Triceps Stretch",
+    "bodyparts": ["Arms"],
+    "description": "Place your arm against a wall with elbow bent and lean into the stretch."
+  },
+  {
+    "name": "Wall Biceps Stretch",
+    "bodyparts": ["Arms"],
+    "description": "Place your palm against a wall and rotate your body away."
+  },
+  {
+    "name": "Wall Neck Stretch",
+    "bodyparts": ["Neck"],
+    "description": "Stand with your back against a wall, press the back of your head into the surface gently."
+  },
+  {
+    "name": "Wall Push Stretch",
+    "bodyparts": ["Forearms"],
+    "description": "Press hands against a wall and pulse gently forward."
+  },
+  {
+    "name": "Wall Push-Off Stretch",
+    "bodyparts": ["Chest"],
+    "description": "Press hands against a wall and push away slightly for mobility."
+  },
+  {
+    "name": "Wall Quad Stretch",
+    "bodyparts": ["Quads"],
+    "description": "Kneel near a wall with the back foot against the wall, pressing into the stretch."
+  },
+  {
+    "name": "Wrist Extension with Hand Assist",
+    "bodyparts": ["Forearms"],
+    "description": "Use one hand to pull the opposite wrist gently into extension."
+  },
+  {
+    "name": "Wrist Flexor Stretch",
+    "bodyparts": ["Forearms"],
+    "description": "Extend one arm forward, palm facing up, and use the opposite hand to pull fingers downward."
+  },
+  {
+    "name": "Wrist Rolls",
+    "bodyparts": ["Forearms"],
+    "description": "Rotate wrists in circular motions to loosen joints."
+  },
+  {
+    "name": "Wrist Wave Stretch",
+    "bodyparts": ["Forearms"],
+    "description": "Move wrists up and down in a fluid motion."
+  }
+]
