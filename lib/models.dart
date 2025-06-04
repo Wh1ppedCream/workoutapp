@@ -1,8 +1,25 @@
+class StretchDefinition {
+  final int id;
+  final String name;
+  final String description;
+  final List<BodyPart> bodyParts; // pulled via join
+
+  StretchDefinition({
+    required this.id,
+    required this.name,
+    required this.description,
+    this.bodyParts = const [],
+  });
+}
+
 class WorkoutExercise {
   String name;
   String equipment;
   List<ExerciseSet> sets;
-  WorkoutExercise({required this.name, required this.equipment, required this.sets});
+  // add this:
+  List<StretchDefinition> stretches;
+
+  WorkoutExercise({required this.name, required this.equipment, required this.sets, List<StretchDefinition>? stretches,}) : stretches = stretches ?? <StretchDefinition>[];
 }
 
 class ExerciseSet {
@@ -114,3 +131,6 @@ class Measurement {
     this.note,
   });
 }
+
+
+
