@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import '../models.dart';
 import 'dart:async';
+import '../db/database_helper.dart';
 
 
 enum CardType { weight, cardio, stretch }
@@ -30,6 +31,7 @@ class ExerciseCard extends StatefulWidget {
 
 
 class _ExerciseCardState extends State<ExerciseCard> {
+
   late String _note;
   bool _isEditingNote = false;
   final Set<int> _completedSets = {};
@@ -39,7 +41,6 @@ Timer? _cardioTimer;
 int _secondsLeft = 0;
 late TextEditingController _cardioNameController;
 
-final List<TextEditingController> _stretchControllers = [];
   
 
   // track whether we’re in “Make ChangeSet” mode
@@ -52,6 +53,14 @@ final Map<int, List<ExerciseSet>> _cSets = {};
   late List<TextEditingController> _weightControllers;
   late List<TextEditingController> _repsControllers;
 
+
+
+late TextEditingController _stretchCustomController = TextEditingController();
+ /// keep all stretches the user has “added” to this card
+final List<Map<String,String>> _selectedStretches = []; // each: {'name':…, 'description':…}
+final Set<int> _completedStretches = {}; // indexes of checked items
+
+
   @override
   void initState() {
     super.initState();
@@ -59,6 +68,7 @@ final Map<int, List<ExerciseSet>> _cSets = {};
     _note = widget.exercise.equipment;
 
     _cardioNameController = TextEditingController(text: widget.exercise.name);
+    _stretchCustomController = TextEditingController();
 
 
     _weightControllers = widget.exercise.sets
@@ -81,6 +91,7 @@ final Map<int, List<ExerciseSet>> _cSets = {};
     }
 	_cardioTimer?.cancel();
   _cardioNameController.dispose();
+  _stretchCustomController.dispose();
     super.dispose();
   }
 
@@ -104,7 +115,7 @@ final Map<int, List<ExerciseSet>> _cSets = {};
     child: widget.cardType == CardType.cardio
       ? _buildCardioCard()
       : widget.cardType == CardType.stretch
-        ? _buildStretchCard()
+        ? _buildStretchCardV2()
         : _buildWeightCard(),  // your existing code
   ),
 );
@@ -428,7 +439,6 @@ Row(
       icon: const Icon(Icons.more_vert),
       onSelected: (v) {
         if (v == 'remove') {
-          Navigator.of(context).pop();
           widget.onDeleteExercise?.call();
         }
       },
@@ -556,55 +566,246 @@ if (_secondsLeft > 0) ...[
   );
 }
 
-Widget _buildStretchCard() {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      // Header + remove menu
-      Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(widget.exercise.name, style: Theme.of(context).textTheme.titleMedium),
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert),
-            onSelected: (v) {
-              if (v == 'remove') {
-                Navigator.of(context).pop();
-      widget.onDeleteExercise?.call();
+  Widget _buildStretchCardV2() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // 1) Header row: exercise name + “Remove Stretch” menu
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              widget.exercise.name,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert),
+              onSelected: (v) {
+                if (v == 'remove') {
+                  // Just remove this entire card
+                  widget.onDeleteExercise?.call();
                 }
-            },
-            itemBuilder: (_) => [
-              const PopupMenuItem(value: 'remove', child: Text('Remove Stretch')),
-            ],
-          ),
-        ],
-      ),
-      const SizedBox(height: 8),
-
-      // List of stretch steps (text fields)
-      ..._stretchControllers.map((ctrl) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: TextFormField(
-          controller: ctrl,
-          decoration: const InputDecoration(
-            border: OutlineInputBorder(),
-            labelText: 'Step',
-          ),
+              },
+              itemBuilder: (_) => const [
+                PopupMenuItem(value: 'remove', child: Text('Remove Stretch')),
+              ],
+            ),
+          ],
         ),
-      )),
 
-      // “Add Step” button
-      TextButton.icon(
-        onPressed: () {
-          setState(() => _stretchControllers.add(TextEditingController()));
-        },
-        icon: const Icon(Icons.add),
-        label: const Text('Add Step'),
-      ),
-    ],
-  );
+        const SizedBox(height: 12),
+
+        // 2) “Search” / “Custom” / “+” row
+        Row(
+          children: [
+            // 2a) Search button
+            ElevatedButton.icon(
+              icon: const Icon(Icons.search),
+              label: const Text('Search'),
+              onPressed: _showStretchSearchDialog,
+            ),
+
+            const SizedBox(width: 12),
+
+            // 2b) “Custom” text field
+            Expanded(
+              child: TextFormField(
+                controller: _stretchCustomController,
+                decoration: const InputDecoration(
+                  hintText: 'Custom',
+                  isDense: true,
+                ),
+                onChanged: (_) {
+                  setState(() {
+                    // Enables/disables the “+” button below automatically
+					// setState(() {});    IN OLD VERSION
+                  });
+                },
+              ),
+            ),
+
+            const SizedBox(width: 8),
+
+            // 2c) “+” button for a custom stretch
+            IconButton(
+              icon: const Icon(Icons.add_circle_outline, color: Colors.blue),
+              onPressed: (_stretchCustomController.text.trim().isEmpty)
+                  ? null
+                  : () {
+                      setState(() {
+                        _selectedStretches.add({
+                          'name': _stretchCustomController.text.trim(),
+                          'description': '',
+                        });
+                        _stretchCustomController.clear();
+                      });
+                    },
+            ),
+          ],
+        ),
+
+      const SizedBox(height: 16),
+		// version changed here:
+
+
+        // 3) Render each selected stretch (with checkbox + name + description)
+        for (var i = 0; i < _selectedStretches.length; i++)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Checkbox(
+                  value: _completedStretches.contains(i),
+                  onChanged: (checked) {
+                    setState(() {
+                      if (checked == true) {
+                        _completedStretches.add(i);
+                      } else {
+                        _completedStretches.remove(i);
+                      }
+                    });
+                  },
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _selectedStretches[i]['name']!,
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
+                      if (_selectedStretches[i]['description']!.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            _selectedStretches[i]['description']!,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+
+  void _showStretchSearchDialog() {
+    showDialog<StretchDefinition>(
+      context: context,
+      builder: (dialogCtx) {
+        int? selectedBodyPartId;
+        int? selectedStretchId;
+        List<StretchDefinition> _currentStretches = [];
+
+        return StatefulBuilder(
+          builder: (ctx, setState) {
+            return AlertDialog(
+              title: const Text('Stretch Search'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // 1) Body‐part dropdown
+                  FutureBuilder<List<BodyPart>>(
+                    future: DatabaseHelper().getAllBodyPartsFull(),
+                    builder: (ctx, snap) {
+                      if (snap.connectionState != ConnectionState.done) {
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          child: Center(child: CircularProgressIndicator()),
+                        );
+                      }
+                      final parts = snap.data!;
+                      return DropdownButtonFormField<int>(
+                        isExpanded: true,
+                        decoration: const InputDecoration(labelText: 'Body Part'),
+                        value: selectedBodyPartId,
+                        items: parts.map((bp) {
+                          return DropdownMenuItem<int>(
+                            value: bp.id,
+                            child: Text(bp.name),
+                          );
+                        }).toList(),
+                        onChanged: (newBpId) {
+                          setState(() {
+                            selectedBodyPartId = newBpId;
+                            selectedStretchId = null;
+                            _currentStretches = [];
+                          });
+                          if (newBpId != null) {
+                            DatabaseHelper()
+                                .getStretches(bodypartId: newBpId)
+                                .then((list) {
+                              if (!mounted) return;
+                              setState(() {
+                                _currentStretches = list;
+                              });
+                            });
+                          }
+                        },
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // 2) Stretch dropdown (only once bodyPart is chosen)
+                  if (selectedBodyPartId != null) ...[
+                    DropdownButtonFormField<int>(
+                      isExpanded: true,
+                      decoration: const InputDecoration(labelText: 'Stretch'),
+                      value: selectedStretchId,
+                      items: _currentStretches.map((st) {
+                        return DropdownMenuItem<int>(
+                          value: st.id,
+                          child: Text(st.name),
+                        );
+                      }).toList(),
+                      onChanged: (newStId) {
+                        setState(() {
+                          selectedStretchId = newStId;
+                        });
+                      },
+                    ),
+                  ],
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogCtx).pop(null),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: (selectedStretchId != null)
+                      ? () {
+                          final chosen = _currentStretches.firstWhere(
+                            (st) => st.id == selectedStretchId,
+                          );
+                          Navigator.of(dialogCtx).pop(chosen);
+                        }
+                      : null,
+                  child: const Text('Add'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    ).then((chosenStretch) {
+      if (chosenStretch != null) {
+        setState(() {
+          _selectedStretches.add({
+            'name': chosenStretch.name,
+            'description': chosenStretch.description,
+          });
+        });
+      }
+    });
+  }
+
 }
-
-  
-}
-

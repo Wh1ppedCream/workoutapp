@@ -21,55 +21,93 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDatabase() async {
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, 'fitness_tracker.db');
-    return await openDatabase(
-      path,
-      version: 3,  // bumped for new schema
-      onConfigure: (db) async {
-        // Enable foreign key constraints
-        await db.execute('PRAGMA foreign_keys = ON');
-      },
-      onCreate: _onCreate,  // your existing table‐creation logic
-      onUpgrade: (db, oldVersion, newVersion) async {
-        if (oldVersion < 3) {
-          // V3: add rating & equipment/muscle join tables
-          await db.execute('''
-            ALTER TABLE exercise_definitions
-              ADD COLUMN rating INTEGER NOT NULL DEFAULT 0;
-          ''');
-          await db.execute('''
-            CREATE TABLE exercise_equipment(
-              exercise_id  INTEGER NOT NULL,
-              equipment_id INTEGER NOT NULL,
-              PRIMARY KEY(exercise_id, equipment_id),
-              FOREIGN KEY(exercise_id)  REFERENCES exercise_definitions(id) ON DELETE CASCADE,
-              FOREIGN KEY(equipment_id) REFERENCES equipment(id)     ON DELETE CASCADE
-            );
-          ''');
-          await db.execute('''
-            CREATE TABLE muscles(
-              id   INTEGER PRIMARY KEY AUTOINCREMENT,
-              name TEXT    NOT NULL UNIQUE
-            );
-          ''');
-          await db.execute('''
-            CREATE TABLE exercise_muscle(
-              exercise_id INTEGER NOT NULL,
-              muscle_id   INTEGER NOT NULL,
-              rank        INTEGER NOT NULL,
-              PRIMARY KEY(exercise_id, rank),
-              FOREIGN KEY(exercise_id) REFERENCES exercise_definitions(id) ON DELETE CASCADE,
-              FOREIGN KEY(muscle_id)   REFERENCES muscles(id)             ON DELETE CASCADE
-            );
-          ''');
-          await _seedFromAssets(db);
-        }
+  final dbPath = await getDatabasesPath();
+  final path = join(dbPath, 'fitness_tracker.db');
+  return await openDatabase(
+    path,
+    version: 4,  // bumped to 4 now that we have stretch tables
+    onConfigure: (db) async {
+      await db.execute('PRAGMA foreign_keys = ON');
+    },
+    onCreate: _onCreate,
+    onUpgrade: (db, oldVersion, newVersion) async {
+      // ─── Version 3 migrations ───
+      if (oldVersion < 3) {
+        // V3: add rating & equipment/muscle join tables
+
+        // 1) add "rating" column to exercise_definitions
+        await db.execute('''
+          ALTER TABLE exercise_definitions
+            ADD COLUMN rating INTEGER NOT NULL DEFAULT 0;
+        ''');
+
+        // 2) exercise_equipment join table
+        await db.execute('''
+          CREATE TABLE exercise_equipment(
+            exercise_id  INTEGER NOT NULL,
+            equipment_id INTEGER NOT NULL,
+            PRIMARY KEY(exercise_id, equipment_id),
+            FOREIGN KEY(exercise_id)  REFERENCES exercise_definitions(id) ON DELETE CASCADE,
+            FOREIGN KEY(equipment_id) REFERENCES equipment(id)     ON DELETE CASCADE
+          );
+        ''');
+
+        // 3) muscles lookup table
+        await db.execute('''
+          CREATE TABLE muscles(
+            id   INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT    NOT NULL UNIQUE
+          );
+        ''');
+
+        // 4) exercise_muscle join table
+        await db.execute('''
+          CREATE TABLE exercise_muscle(
+            exercise_id INTEGER NOT NULL,
+            muscle_id   INTEGER NOT NULL,
+            rank        INTEGER NOT NULL,
+            PRIMARY KEY(exercise_id, rank),
+            FOREIGN KEY(exercise_id) REFERENCES exercise_definitions(id) ON DELETE CASCADE,
+            FOREIGN KEY(muscle_id)   REFERENCES muscles(id)             ON DELETE CASCADE
+          );
+        ''');
+
+        // After creating new tables, seed equipment/bodypart/muscle/exercise JSONs.
+        await _seedFromAssets(db);
+      }
+
+      // ─── Version 4 (stretch) migrations ───
+      if (oldVersion < 4) {
+        // 1) Create stretch_definitions table
+        await db.execute('''
+          CREATE TABLE stretch_definitions(
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            name        TEXT    NOT NULL UNIQUE,
+            description TEXT
+          );
+        ''');
+
+        // 2) Create stretch_bodypart join table
+        await db.execute('''
+          CREATE TABLE stretch_bodypart(
+            stretch_id   INTEGER NOT NULL,
+            bodypart_id  INTEGER NOT NULL,
+            PRIMARY KEY(stretch_id, bodypart_id),
+            FOREIGN KEY(stretch_id)   REFERENCES stretch_definitions(id) ON DELETE CASCADE,
+            FOREIGN KEY(bodypart_id)  REFERENCES bodypart(id)             ON DELETE CASCADE
+          );
+        ''');
+
+        // 3) Seed only the stretches from JSON (so _seedFromAssets should handle the stretch part,
+        //    or you may extract a separate function like _seedStretchesFromAssets(db) if you prefer).
+        await _seedFromAssets(db);
+      }
     },
   );
 }
 
-/// (around line 40, right after your table‐creation calls)
+
+/// (right after your table‐creation calls)
 Future<void> _seedFromAssets(Database db) async {
   // 1) Equipment lookup
   final eqJson = await rootBundle.loadString('assets/equipment.json');
@@ -192,159 +230,209 @@ Future<void> _seedFromAssets(Database db) async {
       }
     }
   }
-}
 
+// 5) Stretches
+  final stJson = await rootBundle.loadString('assets/stretches.json');
+  final List stList = json.decode(stJson);
+  for (var item in stList) {
+    // 5.1) insert into stretch_definitions
+    final stretchId = await db.insert(
+      'stretch_definitions',
+      {
+        'name':        item['name'],
+        'description': item['description'] ?? '',
+      },
+      conflictAlgorithm: ConflictAlgorithm.ignore,
+    );
 
-
-
-  /// (Around line 25) Builds initial schema with lookups first.
-  Future<void> _onCreate(Database db, int version) async {
-    // Sessions table
-    await db.execute('''
-      CREATE TABLE sessions(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        date TEXT NOT NULL,
-        duration INTEGER NOT NULL
+    // 5.2) link to each bodypart
+    for (var bpName in (item['bodyparts'] as List)) {
+      final bpRows = await db.query(
+        'bodypart',
+        where: 'name = ?',
+        whereArgs: [bpName],
       );
-    ''');
-
-    // Lookup tables: equipment & bodypart
-    await db.execute('''
-      CREATE TABLE equipment(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL UNIQUE
-      );
-    ''');
-    await db.execute('''
-      CREATE TABLE bodypart(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL UNIQUE
-      );
-    ''');
-
-    // Exercise definitions & junction to body parts
-    await db.execute('''
-      CREATE TABLE exercise_definitions(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        equipment_id INTEGER,
-        rating INTEGER NOT NULL DEFAULT 0,
-        FOREIGN KEY(equipment_id) REFERENCES equipment(id)
-      );
-    ''');
-    await db.execute('''
-      CREATE TABLE exercise_bodypart(
-        exercise_id INTEGER NOT NULL,
-        bodypart_id INTEGER NOT NULL,
-        PRIMARY KEY(exercise_id, bodypart_id),
-        FOREIGN KEY(exercise_id) REFERENCES exercise_definitions(id) ON DELETE CASCADE,
-        FOREIGN KEY(bodypart_id) REFERENCES bodypart(id) ON DELETE CASCADE
-      );
-    ''');
-
-    // Instance tables: exercises & sets
-    await db.execute('''
-      CREATE TABLE exercises(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        session_id INTEGER NOT NULL,
-        exercise_def_id INTEGER NOT NULL,
-        order_index INTEGER NOT NULL,
-        FOREIGN KEY(session_id) REFERENCES sessions(id) ON DELETE CASCADE,
-        FOREIGN KEY(exercise_def_id) REFERENCES exercise_definitions(id)
-      );
-    ''');
-    await db.execute('''
-      CREATE TABLE sets(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        exercise_id INTEGER NOT NULL,
-        weight REAL NOT NULL,
-        reps INTEGER NOT NULL,
-        order_index INTEGER NOT NULL,
-        FOREIGN KEY(exercise_id) REFERENCES exercises(id) ON DELETE CASCADE
-      );
-    ''');
-
-    await db.execute('''
-  CREATE TABLE measurement_definitions(
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL UNIQUE,
-    type TEXT NOT NULL
-  )
-''');
-
-await db.execute('''
-  CREATE TABLE measurements(
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    def_id INTEGER NOT NULL,
-    timestamp TEXT NOT NULL,
-    value REAL NOT NULL,
-    unit TEXT NOT NULL,
-    note TEXT,
-    FOREIGN KEY(def_id) REFERENCES measurement_definitions(id) ON DELETE CASCADE
-  )
-''');
-
-// Seed measurement definitions
-for (var def in [
-  {'name':'Bodyweight','type':'weight'},
-  {'name':'Height','type':'height'},
-  {'name':'Forearm','type':'bodypart'},
-  // … add others as desired …
-]) {
-  await db.insert('measurement_definitions', def);
-}
-
-for (var part in [
-  'Forearm','Arm','Neck','Shoulder','Chest','Waist','Hip','Thigh','Calf'
-]) {
-  await db.insert(
-  'measurement_definitions',
-  {
-    'name': part,
-    'type': 'bodypart',
-  },
-  conflictAlgorithm: ConflictAlgorithm.ignore,
-);
-}
-
-await db.execute('''
-CREATE TABLE exercise_equipment(
-        exercise_id  INTEGER NOT NULL,
-        equipment_id INTEGER NOT NULL,
-        PRIMARY KEY(exercise_id, equipment_id),
-        FOREIGN KEY(exercise_id)  REFERENCES exercise_definitions(id) ON DELETE CASCADE,
-        FOREIGN KEY(equipment_id) REFERENCES equipment(id)     ON DELETE CASCADE
-      );
-    ''');
-await db.execute('''
-      CREATE TABLE muscles(
-        id   INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT    NOT NULL UNIQUE
-      );
-    ''');
-    await db.execute('''
-      CREATE TABLE exercise_muscle(
-        exercise_id INTEGER NOT NULL,
-        muscle_id   INTEGER NOT NULL,
-        rank        INTEGER NOT NULL,
-        PRIMARY KEY(exercise_id, rank),
-        FOREIGN KEY(exercise_id) REFERENCES exercise_definitions(id) ON DELETE CASCADE,
-        FOREIGN KEY(muscle_id)   REFERENCES muscles(id)             ON DELETE CASCADE
-      );
-
-    ''');
-
-    //STARTHERE
-    await _seedFromAssets(db);
+      if (bpRows.isNotEmpty) {
+        await db.insert(
+          'stretch_bodypart',
+          {
+            'stretch_id':   stretchId,
+            'bodypart_id':  bpRows.first['id'] as int,
+          },
+          conflictAlgorithm: ConflictAlgorithm.ignore,
+        );
+      }
+    }
   }
 
-  /// (Around line 80) Inserts a new session and returns its id.
+}
+
+
+
+  /// Builds initial schema with lookups first.
+Future<void> _onCreate(Database db, int version) async {
+  // 1) Sessions table
+  await db.execute('''
+    CREATE TABLE sessions(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      date TEXT NOT NULL,
+      duration INTEGER NOT NULL
+    );
+  ''');
+
+  // 2) Lookup tables: equipment & bodypart
+  await db.execute('''
+    CREATE TABLE equipment(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE
+    );
+  ''');
+  await db.execute('''
+    CREATE TABLE bodypart(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE
+    );
+  ''');
+
+  // 3) Exercise definitions & junction to body parts
+  await db.execute('''
+    CREATE TABLE exercise_definitions(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      equipment_id INTEGER,
+      rating INTEGER NOT NULL DEFAULT 0,
+      FOREIGN KEY(equipment_id) REFERENCES equipment(id)
+    );
+  ''');
+  await db.execute('''
+    CREATE TABLE exercise_bodypart(
+      exercise_id INTEGER NOT NULL,
+      bodypart_id INTEGER NOT NULL,
+      PRIMARY KEY(exercise_id, bodypart_id),
+      FOREIGN KEY(exercise_id) REFERENCES exercise_definitions(id) ON DELETE CASCADE,
+      FOREIGN KEY(bodypart_id) REFERENCES bodypart(id)             ON DELETE CASCADE
+    );
+  ''');
+
+  // 4) Instance tables: exercises & sets
+  await db.execute('''
+    CREATE TABLE exercises(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      session_id INTEGER NOT NULL,
+      exercise_def_id INTEGER NOT NULL,
+      order_index INTEGER NOT NULL,
+      FOREIGN KEY(session_id) REFERENCES sessions(id)            ON DELETE CASCADE,
+      FOREIGN KEY(exercise_def_id) REFERENCES exercise_definitions(id)
+    );
+  ''');
+  await db.execute('''
+    CREATE TABLE sets(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      exercise_id INTEGER NOT NULL,
+      weight REAL NOT NULL,
+      reps INTEGER NOT NULL,
+      order_index INTEGER NOT NULL,
+      FOREIGN KEY(exercise_id) REFERENCES exercises(id) ON DELETE CASCADE
+    );
+  ''');
+
+  // 5) Measurement definitions & measurements
+  await db.execute('''
+    CREATE TABLE measurement_definitions(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE,
+      type TEXT NOT NULL
+    );
+  ''');
+  await db.execute('''
+    CREATE TABLE measurements(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      def_id INTEGER NOT NULL,
+      timestamp TEXT NOT NULL,
+      value REAL NOT NULL,
+      unit TEXT NOT NULL,
+      note TEXT,
+      FOREIGN KEY(def_id) REFERENCES measurement_definitions(id) ON DELETE CASCADE
+    );
+  ''');
+
+  // 5a) Seed some default measurement definitions
+  for (var def in [
+    {'name': 'Bodyweight', 'type': 'weight'},
+    {'name': 'Height',     'type': 'height'},
+    {'name': 'Forearm',    'type': 'bodypart'},
+    // … add others as desired …
+  ]) {
+    await db.insert('measurement_definitions', def);
+  }
+  for (var part in [
+    'Forearm','Arm','Neck','Shoulder','Chest','Waist','Hip','Thigh','Calf'
+  ]) {
+    await db.insert(
+      'measurement_definitions',
+      {'name': part, 'type': 'bodypart'},
+      conflictAlgorithm: ConflictAlgorithm.ignore,
+    );
+  }
+
+  // 6) Many-to-many tables for exercises
+  await db.execute('''
+    CREATE TABLE exercise_equipment(
+      exercise_id  INTEGER NOT NULL,
+      equipment_id INTEGER NOT NULL,
+      PRIMARY KEY(exercise_id, equipment_id),
+      FOREIGN KEY(exercise_id)  REFERENCES exercise_definitions(id) ON DELETE CASCADE,
+      FOREIGN KEY(equipment_id) REFERENCES equipment(id)            ON DELETE CASCADE
+    );
+  ''');
+  await db.execute('''
+    CREATE TABLE muscles(
+      id   INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT    NOT NULL UNIQUE
+    );
+  ''');
+  await db.execute('''
+    CREATE TABLE exercise_muscle(
+      exercise_id INTEGER NOT NULL,
+      muscle_id   INTEGER NOT NULL,
+      rank        INTEGER NOT NULL,
+      PRIMARY KEY(exercise_id, rank),
+      FOREIGN KEY(exercise_id) REFERENCES exercise_definitions(id) ON DELETE CASCADE,
+      FOREIGN KEY(muscle_id)   REFERENCES muscles(id)             ON DELETE CASCADE
+    );
+  ''');
+
+  // 7) Stretch tables
+  await db.execute('''
+    CREATE TABLE stretch_definitions(
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      name        TEXT NOT NULL UNIQUE,
+      description TEXT NOT NULL
+    );
+  ''');
+  await db.execute('''
+    CREATE TABLE stretch_bodypart(
+      stretch_id  INTEGER NOT NULL,
+      bodypart_id INTEGER NOT NULL,
+      PRIMARY KEY(stretch_id, bodypart_id),
+      FOREIGN KEY(stretch_id)   REFERENCES stretch_definitions(id) ON DELETE CASCADE,
+      FOREIGN KEY(bodypart_id)  REFERENCES bodypart(id)            ON DELETE CASCADE
+    );
+  ''');
+
+  // 8) Finally, seed from assets (equipment.json, bodyparts.json, muscles.json,
+  //    exercises.json, stretches.json)
+  await _seedFromAssets(db);
+}
+
+
+  /// Inserts a new session and returns its id.
  Future<int> insertSession(String date, int duration) async {
     final db = await database;
     return db.insert('sessions', {'date': date, 'duration': duration});
   }
 
-  /// (Around line 90) Inserts or finds the exercise definition, then the instance.
+  /// Inserts or finds the exercise definition, then the instance.
   Future<int> insertExercise(int sessionId, String name, String equipmentName, int orderIndex) async {
     final db = await database;
 
@@ -540,6 +628,7 @@ Future<List<Map<String,dynamic>>> getMeasurementsForDefinition(int defId) async 
   );
 }
 
+
 /// Returns only the definitions that have at least one measurement recorded.
 Future<List<Map<String, dynamic>>> getUsedMeasurementDefinitions() async {
   final db = await database;
@@ -565,6 +654,49 @@ Future<List<Map<String, dynamic>>> getUsedMeasurementDefinitions() async {
     final rows = await db.query('bodypart', columns: ['name'], orderBy: 'name');
     return rows.map((r) => r['name'] as String).toList();
   }
+
+/// Fetch all bodyparts (you already have getAllBodyPartNames), 
+/// but we want IDs+names:
+Future<List<BodyPart>> getAllBodyPartsFull() async {
+  final db = await database;
+  final rows = await db.query('bodypart', orderBy: 'name');
+  return rows.map((r) => BodyPart(r['id'] as int, r['name'] as String)).toList();
+}
+
+/// Fetch stretches by an optional bodypart ID (or all if null)
+Future<List<StretchDefinition>> getStretches({int? bodypartId}) async {
+  final db = await database;
+  // 1) Load base stretch rows
+  final stretchRows = (bodypartId == null)
+      ? await db.query('stretch_definitions', orderBy: 'name')
+      : await db.rawQuery('''
+          SELECT sd.id, sd.name, sd.description
+            FROM stretch_definitions sd
+            JOIN stretch_bodypart sb ON sb.stretch_id = sd.id
+           WHERE sb.bodypart_id = ?
+           ORDER BY sd.name
+        ''', [bodypartId]);
+
+  final List<StretchDefinition> result = [];
+  for (final r in stretchRows) {
+    final id = r['id'] as int;
+    final nm = r['name'] as String;
+    final desc = (r['description'] as String?) ?? '';
+    // 2) load the bodyparts for this stretch:
+    final bpRows = await db.rawQuery('''
+      SELECT b.id, b.name
+        FROM bodypart b
+        JOIN stretch_bodypart sb ON sb.bodypart_id = b.id
+       WHERE sb.stretch_id = ?
+       ORDER BY b.name
+    ''', [id]);
+    final bpList = bpRows.map((b) => BodyPart(b['id'] as int, b['name'] as String)).toList();
+
+    result.add(StretchDefinition(id: id, name: nm, description: desc, bodyParts: bpList));
+  }
+  return result;
+}
+
 
   /// Fetch all muscle names.
   Future<List<String>> getAllMuscleNames() async {
@@ -735,5 +867,6 @@ Future<List<BodyPart>> getAllBodyParts() async {
       .map((r) => BodyPart(r['id'] as int, r['name'] as String))
       .toList();
 }
+
 
 }
