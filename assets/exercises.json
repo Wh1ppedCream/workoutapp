@@ -100,7 +100,7 @@
     {"name": "Triceps Brachii", "rank": 3},
     {"name": "Serratus Anterior", "rank": 4},
     {"name": "Pectoralis Minor", "rank": 5},
-    {"name": "Trapezius (Upper)", "rank": 6},
+    {"name": "Trapezius (upper)", "rank": 6},
     {"name": "Latissimus Dorsi", "rank": 7}
   ]
 },
@@ -115,7 +115,7 @@
     {"name": "Anterior Deltoid", "rank": 3},
     {"name": "Pectoralis Minor", "rank": 4},
     {"name": "Serratus Anterior", "rank": 5},
-    {"name": "Trapezius (Upper)", "rank": 6},
+    {"name": "Trapezius (upper)", "rank": 6},
     {"name": "Latissimus Dorsi", "rank": 7}
   ]
 },
@@ -132,7 +132,7 @@
     {"name": "Serratus Anterior", "rank": 4},
     {"name": "Pectoralis Minor", "rank": 5},
     {"name": "Lateral Deltoid", "rank": 6},
-    {"name": "Trapezius (Upper)", "rank": 7}
+    {"name": "Trapezius (upper)", "rank": 7}
   ]
 },
 {
@@ -146,7 +146,7 @@
     {"name": "Triceps Brachii", "rank": 3},
     {"name": "Serratus Anterior", "rank": 4},
     {"name": "Pectoralis Minor", "rank": 5},
-    {"name": "Trapezius (Upper)", "rank": 6},
+    {"name": "Trapezius (upper)", "rank": 6},
     {"name": "Latissimus Dorsi", "rank": 7}
   ]
 },
@@ -161,7 +161,7 @@
     {"name": "Triceps Brachii", "rank": 3},
     {"name": "Serratus Anterior", "rank": 4},
     {"name": "Pectoralis Minor", "rank": 5},
-    {"name": "Trapezius (Upper)", "rank": 6},
+    {"name": "Trapezius (upper)", "rank": 6},
     {"name": "Latissimus Dorsi", "rank": 7}
   ]
 },
@@ -177,7 +177,7 @@
     {"name": "Pronator Teres", "rank": 4},
     {"name": "Wrist Flexors", "rank": 5},
     {"name": "Anterior Deltoid", "rank": 6},
-    {"name": "Trapezius (Upper)", "rank": 7}
+    {"name": "Trapezius (upper)", "rank": 7}
   ]
 },
 
@@ -193,14 +193,14 @@
     {"name": "Pronator Teres", "rank": 4},
     {"name": "Wrist Flexors", "rank": 5},
     {"name": "Anterior Deltoid", "rank": 6},
-    {"name": "Trapezius (Upper)", "rank": 7}
+    {"name": "Trapezius (upper)", "rank": 7}
   ]
 },
 
 {
   "name": "Bicep Curl - Cable Machine",
   "rating": 90,
-  "equipment": ["Cable machine"],
+  "equipment": ["Barbell"],
   "bodyparts": ["Arms", "Forearms"],
   "muscles": [
     {"name": "Biceps Brachii", "rank": 1},
@@ -209,7 +209,7 @@
     {"name": "Pronator Teres", "rank": 4},
     {"name": "Wrist Flexors", "rank": 5},
     {"name": "Anterior Deltoid", "rank": 6},
-    {"name": "Trapezius (Upper)", "rank": 7}
+    {"name": "Trapezius (upper)", "rank": 7}
   ]
 },
 
@@ -225,14 +225,14 @@
     {"name": "Pronator Teres", "rank": 4},
     {"name": "Wrist Flexors", "rank": 5},
     {"name": "Anterior Deltoid", "rank": 6},
-    {"name": "Trapezius (Upper)", "rank": 7}
+    {"name": "Trapezius (upper)", "rank": 7}
   ]
 },
 
 {
   "name": "Bicep Curl - Resistance Band",
   "rating": 60,
-  "equipment": ["Resistance Band"],
+  "equipment": ["Barbell"],
   "bodyparts": ["Arms", "Forearms"],
   "muscles": [
     {"name": "Biceps Brachii", "rank": 1},
@@ -241,14 +241,14 @@
     {"name": "Pronator Teres", "rank": 4},
     {"name": "Wrist Flexors", "rank": 5},
     {"name": "Anterior Deltoid", "rank": 6},
-    {"name": "Trapezius (Upper)", "rank": 7}
+    {"name": "Trapezius (upper)", "rank": 7}
   ]
 },
 
 {
   "name": "Bicep Curl - Smith Machine",
   "rating": 80,
-  "equipment": ["Smith machine"],
+  "equipment": ["Barbell"],
   "bodyparts": ["Arms", "Forearms"],
   "muscles": [
     {"name": "Biceps Brachii", "rank": 1},
@@ -257,7 +257,53 @@
     {"name": "Pronator Teres", "rank": 4},
     {"name": "Wrist Flexors", "rank": 5},
     {"name": "Anterior Deltoid", "rank": 6},
-    {"name": "Trapezius (Upper)", "rank": 7}
+    {"name": "Trapezius (upper)", "rank": 7}
+  ]
+},
+
+{
+  "name": "Bicycle Crunch - Straight Knees",
+  "rating": 65,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Abs", "Hip Flexors"],
+  "muscles": [
+    {"name": "Obliques", "rank": 1},
+    {"name": "Rectus Abdominis", "rank": 2},
+    {"name": "Transverse Abdominis", "rank": 3},
+    {"name": "Iliopsoas", "rank": 4},
+    {"name": "Rectus Femoris", "rank": 5},
+    {"name": "Quadratus Lumborum", "rank": 6},
+    {"name": "Multifidus", "rank": 7}
+  ]},
+
+  {
+  "name": "Bicycle Crunch - Bent Knees",
+  "rating": 50,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Abs", "Hip Flexors"],
+  "muscles": [
+    {"name": "Obliques", "rank": 1},
+    {"name": "Rectus Abdominis", "rank": 2},
+    {"name": "Transverse Abdominis", "rank": 3},
+    {"name": "Iliopsoas", "rank": 4},
+    {"name": "Rectus Femoris", "rank": 5},
+    {"name": "Quadratus Lumborum", "rank": 6},
+    {"name": "Multifidus", "rank": 7}
+  ]
+},
+{
+  "name": "Bulgarian Split Squat",
+  "rating": 65,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Quads", "Glutes", "Hip Abductors"],
+  "muscles": [
+    {"name": "Rectus Femoris", "rank": 1},
+    {"name": "Gluteus Maximus", "rank": 2},
+    {"name": "Gluteus Medius", "rank": 3},
+    {"name": "Biceps Femoris", "rank": 4},
+    {"name": "Adductor Magnus", "rank": 5},
+    {"name": "Erector Spinae", "rank": 6},
+    {"name": "Gastrocnemius", "rank": 7}
   ]
 },
 
@@ -273,7 +319,7 @@
       {"name":"Serratus Anterior","rank":4},
       {"name":"Pectoralis Minor","rank":5},
       {"name":"Lateral Deltoid","rank":6},
-      {"name":"Trapezius (Upper)","rank":7}
+      {"name":"Trapezius (upper)","rank":7}
     ]
   },
   {
@@ -287,7 +333,7 @@
       {"name":"Triceps Brachii","rank":3},
       {"name":"Serratus Anterior","rank":4},
       {"name":"Pectoralis Minor","rank":5},
-      {"name":"Trapezius (Upper)","rank":6},
+      {"name":"Trapezius (upper)","rank":6},
       {"name":"Latissimus Dorsi","rank":7}
     ]
   },
@@ -303,7 +349,7 @@
       {"name":"Serratus Anterior","rank":4},
       {"name":"Pectoralis Minor","rank":5},
       {"name":"Lateral Deltoid","rank":6},
-      {"name":"Trapezius (Upper)","rank":7}
+      {"name":"Trapezius (upper)","rank":7}
     ]
   },
   {
