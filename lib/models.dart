@@ -1,3 +1,10 @@
+// models.dart
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STRETCH DEFINITIONS
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Represents a master definition of a stretch, including related body parts.
 class StretchDefinition {
   final int id;
   final String name;
@@ -12,23 +19,120 @@ class StretchDefinition {
   });
 }
 
-class WorkoutExercise {
-  String name;
-  String equipment;
-  List<ExerciseSet> sets;
-  // add this:
-  List<StretchDefinition> stretches;
+/// Represents a single instance of a stretch in a workout.
+class StretchInstance {
+  final int? stretchId;    // null if custom
+  final bool isCustom;
+  final String? customName;
+  final String? customDesc;
+  bool isChecked;
+  final int orderIndex;
 
-  WorkoutExercise({required this.name, required this.equipment, required this.sets, List<StretchDefinition>? stretches,}) : stretches = stretches ?? <StretchDefinition>[];
+  StretchInstance({
+    this.stretchId,
+    required this.isCustom,
+    this.customName,
+    this.customDesc,
+    required this.isChecked,
+    required this.orderIndex,
+  });
 }
 
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WORKOUT EXERCISES
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Base class for all types of exercises in a workout.
+abstract class WorkoutExercise {
+  final String name;
+  final String equipment; // free-form description or name of equipment
+
+  /// Every exercise—whether weight, cardio, or stretch—carries a
+  /// `stretchInstances` list.  Non-stretch cards will just leave it empty.
+  final List<Map<String, dynamic>> stretchInstances;
+
+  WorkoutExercise({
+    required this.name,
+    required this.equipment,
+    List<Map<String, dynamic>>? stretchInstances,
+  }) : stretchInstances = stretchInstances ?? <Map<String, dynamic>>[];
+}
+
+/// Represents a weight-based exercise, including sets and optional changeSets.
+class WeightExercise extends WorkoutExercise {
+  final List<ExerciseSet> sets;
+  final Map<int, List<ExerciseSet>> changeSets;
+
+  /// NEW: which parent‐set indices were checked (completed) when saved
+  final Set<int> completedParentIndices;
+
+  /// NEW: for each parent index, which child‐set indices were checked
+  final Map<int, Set<int>> completedChildIndices;
+
+  WeightExercise({
+    required String name,
+    required String equipment,
+    required this.sets,
+    Map<int, List<ExerciseSet>>? changeSets,
+    Set<int>? completedParents,
+    Map<int, Set<int>>? completedChildren,
+  })  : changeSets = changeSets ?? <int, List<ExerciseSet>>{},
+        completedParentIndices = completedParents ?? <int>{},
+        completedChildIndices  = completedChildren ?? <int, Set<int>>{},
+        super(name: name, equipment: equipment);
+}
+
+/// Represents a cardio exercise, with planned duration and elapsed time.
+class CardioExercise extends WorkoutExercise {
+  final String cardioName;
+  final String? cardioNote;
+  final int plannedMinutes;
+  final int elapsedSeconds;
+
+  CardioExercise({
+    required String name,
+    required String equipment,
+    String? cardioName,
+    this.cardioNote,
+    int? plannedMinutes,
+    int? elapsedSeconds,
+  })  : cardioName = cardioName ?? 'Walking',
+        plannedMinutes = plannedMinutes ?? 0,
+        elapsedSeconds = elapsedSeconds ?? 0,
+        super(name: name, equipment: equipment);
+}
+
+/// Represents a stretch exercise, holding a list of StretchInstance objects.
+class StretchExercise extends WorkoutExercise {
+  /// Indices of which stretch‐rows were checked
+  final Set<int> completedStretchIndices;
+
+  StretchExercise({
+    required String name,
+    required String equipment,
+    List<Map<String, dynamic>>? stretchInstances,
+    Set<int>? completedStretchIndices,
+  })  : completedStretchIndices = completedStretchIndices ?? <int>{},
+        super(
+          name:            name,
+          equipment:       equipment,
+          stretchInstances: stretchInstances,
+        );
+}
+
+/// Represents one set of a weight exercise (weight + reps).
 class ExerciseSet {
-  double weight;
-  int reps;
+  final double weight;
+  final int reps;
 
-  ExerciseSet({this.weight = 0, this.reps = 10});
+  ExerciseSet({
+    this.weight = 0,
+    this.reps = 10,
+  });
 }
 
+/// Represents a single workout session with date and duration.
 class WorkoutSession {
   final int id;
   final DateTime date;
@@ -41,19 +145,23 @@ class WorkoutSession {
   });
 }
 
-/// Represents a stored exercise definition.
-/// A master definition of an exercise.  
+
+// ─────────────────────────────────────────────────────────────────────────────
+// EXERCISE DEFINITIONS
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Represents a stored exercise definition (master record).
 /// Now supports:
-///  • rating (0–100)  
-///  • one “primary” equipment_id (legacy)  
-///  • many-to-many Equipment via [equipmentList]  
-///  • many-to-many BodyPart via [bodyParts]  
+///  • rating (0–100)
+///  • one “primary” equipment_id (legacy)
+///  • many-to-many Equipment via [equipmentList]
+///  • many-to-many BodyPart via [bodyParts]
 ///  • up to 7 ranked muscles via [muscles]
 class ExerciseDefinition {
   final int id;
   final String name;
   final int? equipmentId;             // legacy single-equipment
-  final int rating;
+  final int rating;                   // 0–100
   final List<Equipment> equipmentList;
   final List<BodyPart> bodyParts;
   final List<RankedMuscle> muscles;
@@ -69,21 +177,23 @@ class ExerciseDefinition {
   });
 }
 
-/// Equipment lookup.
+/// Equipment lookup table.
 class Equipment {
   final int id;
   final String name;
+
   Equipment(this.id, this.name);
 }
 
-/// BodyPart lookup.
+/// BodyPart lookup table.
 class BodyPart {
   final int id;
   final String name;
+
   BodyPart(this.id, this.name);
 }
 
-/// A muscle lookup.
+/// A muscle lookup table.
 class Muscle {
   final int id;
   final String name;
@@ -94,34 +204,59 @@ class Muscle {
   });
 }
 
-/// A muscle-with-rank for an exercise, where [rank] goes 1..7.
+/// Associates a Muscle with a rank (1 through 7).
 class RankedMuscle {
-  final int muscleId;
-  final String muscleName;
-  final int rank;
+  final Muscle muscle;
+  final int rank; // 1..7
 
   RankedMuscle({
-    required this.muscleId,
-    required this.muscleName,
+    required this.muscle,
     required this.rank,
   });
 }
 
-// Add after BodyPart...
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MEASUREMENTS
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Types of measurements a user can track.
+enum MeasurementType {
+  BodyWeight,
+  Height,
+  Forearm,
+  Arm,
+  Neck,
+  Shoulder,
+  Chest,
+  Waist,
+  Hip,
+  Thigh,
+  Calf,
+}
+
+/// Represents a definition (kind) of measurement (e.g. “Body Weight”, “Blood Pressure”).
 class MeasurementDefinition {
   final int id;
   final String name;
-  final String type;
-  MeasurementDefinition({required this.id, required this.name, required this.type});
+  final MeasurementType type;
+
+  MeasurementDefinition({
+    required this.id,
+    required this.name,
+    required this.type,
+  });
 }
 
+/// Represents a single recorded measurement (with timestamp and numeric value).
 class Measurement {
   final int id;
-  final int defId;
+  final int defId;          // links back to MeasurementDefinition.id
   final DateTime timestamp;
   final double value;
-  final String unit;
+  final String unit;        // e.g. "kg", "%", "mmHg"
   final String? note;
+
   Measurement({
     required this.id,
     required this.defId,
@@ -131,6 +266,3 @@ class Measurement {
     this.note,
   });
 }
-
-
-

@@ -100,7 +100,7 @@
     {"name": "Triceps Brachii", "rank": 3},
     {"name": "Serratus Anterior", "rank": 4},
     {"name": "Pectoralis Minor", "rank": 5},
-    {"name": "Trapezius (upper)", "rank": 6},
+    {"name": "Trapezius (Upper)", "rank": 6},
     {"name": "Latissimus Dorsi", "rank": 7}
   ]
 },
@@ -115,7 +115,7 @@
     {"name": "Anterior Deltoid", "rank": 3},
     {"name": "Pectoralis Minor", "rank": 4},
     {"name": "Serratus Anterior", "rank": 5},
-    {"name": "Trapezius (upper)", "rank": 6},
+    {"name": "Trapezius (Upper)", "rank": 6},
     {"name": "Latissimus Dorsi", "rank": 7}
   ]
 },
@@ -132,7 +132,7 @@
     {"name": "Serratus Anterior", "rank": 4},
     {"name": "Pectoralis Minor", "rank": 5},
     {"name": "Lateral Deltoid", "rank": 6},
-    {"name": "Trapezius (upper)", "rank": 7}
+    {"name": "Trapezius (Upper)", "rank": 7}
   ]
 },
 {
@@ -146,7 +146,7 @@
     {"name": "Triceps Brachii", "rank": 3},
     {"name": "Serratus Anterior", "rank": 4},
     {"name": "Pectoralis Minor", "rank": 5},
-    {"name": "Trapezius (upper)", "rank": 6},
+    {"name": "Trapezius (Upper)", "rank": 6},
     {"name": "Latissimus Dorsi", "rank": 7}
   ]
 },
@@ -161,7 +161,7 @@
     {"name": "Triceps Brachii", "rank": 3},
     {"name": "Serratus Anterior", "rank": 4},
     {"name": "Pectoralis Minor", "rank": 5},
-    {"name": "Trapezius (upper)", "rank": 6},
+    {"name": "Trapezius (Upper)", "rank": 6},
     {"name": "Latissimus Dorsi", "rank": 7}
   ]
 },
@@ -177,7 +177,7 @@
     {"name": "Pronator Teres", "rank": 4},
     {"name": "Wrist Flexors", "rank": 5},
     {"name": "Anterior Deltoid", "rank": 6},
-    {"name": "Trapezius (upper)", "rank": 7}
+    {"name": "Trapezius (Upper)", "rank": 7}
   ]
 },
 
@@ -193,14 +193,14 @@
     {"name": "Pronator Teres", "rank": 4},
     {"name": "Wrist Flexors", "rank": 5},
     {"name": "Anterior Deltoid", "rank": 6},
-    {"name": "Trapezius (upper)", "rank": 7}
+    {"name": "Trapezius (Upper)", "rank": 7}
   ]
 },
 
 {
   "name": "Bicep Curl - Cable Machine",
   "rating": 90,
-  "equipment": ["Barbell"],
+  "equipment": ["Cable machine"],
   "bodyparts": ["Arms", "Forearms"],
   "muscles": [
     {"name": "Biceps Brachii", "rank": 1},
@@ -209,7 +209,7 @@
     {"name": "Pronator Teres", "rank": 4},
     {"name": "Wrist Flexors", "rank": 5},
     {"name": "Anterior Deltoid", "rank": 6},
-    {"name": "Trapezius (upper)", "rank": 7}
+    {"name": "Trapezius (Upper)", "rank": 7}
   ]
 },
 
@@ -225,14 +225,14 @@
     {"name": "Pronator Teres", "rank": 4},
     {"name": "Wrist Flexors", "rank": 5},
     {"name": "Anterior Deltoid", "rank": 6},
-    {"name": "Trapezius (upper)", "rank": 7}
+    {"name": "Trapezius (Upper)", "rank": 7}
   ]
 },
 
 {
   "name": "Bicep Curl - Resistance Band",
   "rating": 60,
-  "equipment": ["Barbell"],
+  "equipment": ["Resistance Band"],
   "bodyparts": ["Arms", "Forearms"],
   "muscles": [
     {"name": "Biceps Brachii", "rank": 1},
@@ -241,14 +241,14 @@
     {"name": "Pronator Teres", "rank": 4},
     {"name": "Wrist Flexors", "rank": 5},
     {"name": "Anterior Deltoid", "rank": 6},
-    {"name": "Trapezius (upper)", "rank": 7}
+    {"name": "Trapezius (Upper)", "rank": 7}
   ]
 },
 
 {
   "name": "Bicep Curl - Smith Machine",
   "rating": 80,
-  "equipment": ["Barbell"],
+  "equipment": ["Smith machine"],
   "bodyparts": ["Arms", "Forearms"],
   "muscles": [
     {"name": "Biceps Brachii", "rank": 1},
@@ -257,7 +257,7 @@
     {"name": "Pronator Teres", "rank": 4},
     {"name": "Wrist Flexors", "rank": 5},
     {"name": "Anterior Deltoid", "rank": 6},
-    {"name": "Trapezius (upper)", "rank": 7}
+    {"name": "Trapezius (Upper)", "rank": 7}
   ]
 },
 
@@ -273,7 +273,7 @@
       {"name":"Serratus Anterior","rank":4},
       {"name":"Pectoralis Minor","rank":5},
       {"name":"Lateral Deltoid","rank":6},
-      {"name":"Trapezius (upper)","rank":7}
+      {"name":"Trapezius (Upper)","rank":7}
     ]
   },
   {
@@ -287,7 +287,7 @@
       {"name":"Triceps Brachii","rank":3},
       {"name":"Serratus Anterior","rank":4},
       {"name":"Pectoralis Minor","rank":5},
-      {"name":"Trapezius (upper)","rank":6},
+      {"name":"Trapezius (Upper)","rank":6},
       {"name":"Latissimus Dorsi","rank":7}
     ]
   },
@@ -303,7 +303,7 @@
       {"name":"Serratus Anterior","rank":4},
       {"name":"Pectoralis Minor","rank":5},
       {"name":"Lateral Deltoid","rank":6},
-      {"name":"Trapezius (upper)","rank":7}
+      {"name":"Trapezius (Upper)","rank":7}
     ]
   },
   {

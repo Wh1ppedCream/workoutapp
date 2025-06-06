@@ -1,3 +1,5 @@
+//history_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'db/database_helper.dart';
@@ -92,7 +94,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     return Card(
                       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       child: ListTile(
-                        title: Text('\$dateStr — \$durationMin min'),
+                        title: Text('$dateStr — $durationMin min'),
                         onTap: () => Navigator.of(context)
                             .push(
                               MaterialPageRoute(

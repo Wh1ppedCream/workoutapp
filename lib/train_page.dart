@@ -1,3 +1,5 @@
+// train_page.dart
+
 import 'package:flutter/material.dart';
 import 'session_screen.dart';
 
@@ -24,7 +26,10 @@ class _TrainPageState extends State<TrainPage> {
           children: const [
             DrawerHeader(
               decoration: BoxDecoration(color: Colors.deepPurple),
-              child: Text('To be added', style: TextStyle(color: Colors.white, fontSize: 18)),
+              child: Text(
+                'To be added',
+                style: TextStyle(color: Colors.white, fontSize: 18),
+              ),
             ),
             ListTile(title: Text('Option A')),
             ListTile(title: Text('Option B')),
@@ -39,7 +44,10 @@ class _TrainPageState extends State<TrainPage> {
           children: const [
             DrawerHeader(
               decoration: BoxDecoration(color: Colors.lightGreen),
-              child: Text('Gym Profiles', style: TextStyle(color: Colors.white, fontSize: 18)),
+              child: Text(
+                'Gym Profiles',
+                style: TextStyle(color: Colors.white, fontSize: 18),
+              ),
             ),
             ListTile(title: Text('General')),
             ListTile(title: Text('Commercial Gym')),
@@ -58,7 +66,10 @@ class _TrainPageState extends State<TrainPage> {
           IconButton(
             icon: const CircleAvatar(
               backgroundColor: Colors.lightGreen,
-              child: Text('P', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              child: Text(
+                'P',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
             ),
             onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
           ),
@@ -74,7 +85,10 @@ class _TrainPageState extends State<TrainPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text('Exercise Presets', style: Theme.of(context).textTheme.titleLarge),
+                    Text(
+                      'Exercise Presets',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
                     const Divider(height: 24),
                     const _PresetBar(label: 'Push'),
                     const SizedBox(height: 8),
@@ -112,13 +126,13 @@ class _TrainPageState extends State<TrainPage> {
 /// Reusable bar widget
 class _PresetBar extends StatelessWidget {
   final String label;
-  const _PresetBar({required this.label});
+  const _PresetBar({Key? key, required this.label}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).primaryColor;
     return Material(
-      color: color.withOpacity(0.1),
+      color: color.withValues(alpha: 0.1),
       borderRadius: BorderRadius.circular(8),
       child: InkWell(
         borderRadius: BorderRadius.circular(8),
@@ -132,7 +146,10 @@ class _PresetBar extends StatelessWidget {
             border: Border.all(color: color),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Text(label, style: TextStyle(fontSize: 16, color: color, fontWeight: FontWeight.w600)),
+          child: Text(
+            label,
+            style: TextStyle(fontSize: 16, color: color, fontWeight: FontWeight.w600),
+          ),
         ),
       ),
     );

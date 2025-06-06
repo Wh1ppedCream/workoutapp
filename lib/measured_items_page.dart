@@ -1,3 +1,5 @@
+//measured_items_page.dart
+
 import 'package:flutter/material.dart';
 import 'db/database_helper.dart';
 import 'models.dart';
@@ -23,7 +25,10 @@ class _MeasuredItemsPageState extends State<MeasuredItemsPage> {
     return rows.map((r) => MeasurementDefinition(
       id: r['id'] as int,
       name: r['name'] as String,
-      type: r['type'] as String,
+      type: MeasurementType.values.firstWhere(
+        (mt) => mt.name == (r['type'] as String),
+        orElse: () => MeasurementType.BodyWeight,
+         ),
     )).toList();
   }
 
