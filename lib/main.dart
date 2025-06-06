@@ -1,7 +1,6 @@
 // File: lib/main.dart
 
 import 'package:flutter/material.dart';
-import 'session_screen.dart';
 import 'history_screen.dart';
 import 'train_page.dart';           // << Add this import
 import 'nutrition_page.dart';       // << And this

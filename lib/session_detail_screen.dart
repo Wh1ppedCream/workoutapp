@@ -1,3 +1,5 @@
+// session_detail_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'db/database_helper.dart';
@@ -10,7 +12,7 @@ class SessionDetailScreen extends StatefulWidget {
   const SessionDetailScreen(this.session, {Key? key}) : super(key: key);
 
   @override
-  _SessionDetailScreenState createState() => _SessionDetailScreenState();
+  State<SessionDetailScreen> createState() => _SessionDetailScreenState();
 }
 
 class _SessionDetailScreenState extends State<SessionDetailScreen> {
@@ -23,69 +25,178 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     _loadExercises();
   }
 
-  /// Loads exercises and their sets from the database.
   Future<void> _loadExercises() async {
     final dbHelper = DatabaseHelper();
-    final db = await dbHelper.database; // Simplify lookup
 
-    final exRows = await db.query(
-      'exercises',
-      where: 'session_id = ?',
-      whereArgs: [widget.session.id],
-    );
+    // 1) Fetch all exercise‐instance rows for this session
+    final exRows = await dbHelper.getExercisesForSession(widget.session.id);
+    final loaded = <WorkoutExercise>[];
 
-    final list = <WorkoutExercise>[];
     for (var exRow in exRows) {
       final instanceId = exRow['id'] as int;
-      final defId = exRow['exercise_def_id'] as int;
+      final storedTypeStr = exRow['type'] as String; // "weight", "cardio", or "stretch"
 
-      final defRows = await db.query(
-        'exercise_definitions',
-        where: 'id = ?',
-        whereArgs: [defId],
-      );
-      if (defRows.isEmpty) continue;
-      final defRow = defRows.first;
-      final name = defRow['name'] as String;
-      final equipmentId = defRow['equipment_id'] as int?;
+      if (storedTypeStr == 'weight') {
+        // ─── WEIGHT ──────────────────────────────────────────────────
+        final defId = exRow['exercise_def_id'] as int?;
+        String name = '';
+        String equipmentName = '';
 
-      // Resolve equipment name
-      var equipment = 'None';
-      if (equipmentId != null) {
-        final eqRows = await db.query(
-          'equipment',
-          where: 'id = ?',
-          whereArgs: [equipmentId],
-        );
-        if (eqRows.isNotEmpty) {
-          equipment = eqRows.first['name'] as String;
+        if (defId != null) {
+          final defRows = await (await dbHelper.database).query(
+            'exercise_definitions',
+            where: 'id = ?',
+            whereArgs: [defId],
+          );
+          if (defRows.isEmpty) continue;
+          final defRow = defRows.first;
+          name = defRow['name'] as String;
+          final equipmentId = defRow['equipment_id'] as int?;
+          if (equipmentId != null) {
+            final eqRows = await (await dbHelper.database).query(
+              'equipment',
+              where: 'id = ?',
+              whereArgs: [equipmentId],
+            );
+            if (eqRows.isNotEmpty) {
+              equipmentName = eqRows.first['name'] as String;
+            }
+          }
         }
+
+        // 2) Load parent sets
+        final parentRows = await (await dbHelper.database).query(
+          'sets',
+          where: 'exercise_id = ? AND parent_set_id IS NULL',
+          whereArgs: [instanceId],
+          orderBy: 'order_index',
+        );
+        final parentSets = <ExerciseSet>[];
+        final Map<int, List<ExerciseSet>> csetsMap = {};
+
+        for (var pRow in parentRows) {
+          final parentId = pRow['id'] as int;
+          final weight   = (pRow['weight'] as num).toDouble();
+          final reps     = (pRow['reps'] as int);
+          parentSets.add(ExerciseSet(weight: weight, reps: reps));
+
+          // Load any ChangeSets for that parent
+          final childRows = await (await dbHelper.database).query(
+            'sets',
+            where: 'parent_set_id = ?',
+            whereArgs: [parentId],
+            orderBy: 'order_index',
+          );
+          if (childRows.isNotEmpty) {
+            csetsMap[parentSets.length - 1] = childRows
+                .map((cRow) => ExerciseSet(
+                      weight: (cRow['weight'] as num).toDouble(),
+                      reps:   cRow['reps'] as int,
+                    ))
+                .toList();
+          }
+        }
+
+        // 3) Mark all parent‐sets (and all children) as “checked” for detail view
+        final completedParents = <int>{ for (var idx = 0; idx < parentSets.length; idx++) idx };
+        final completedChildren = <int, Set<int>>{};
+        csetsMap.forEach((parentIdx, children) {
+          completedChildren[parentIdx] = { for (var ci = 0; ci < children.length; ci++) ci };
+        });
+
+        loaded.add(WeightExercise(
+          name:                name,
+          equipment:           equipmentName,
+          sets:                parentSets,
+          changeSets:          csetsMap,
+          completedParents:    completedParents,
+          completedChildren:   completedChildren,
+        ));
       }
+      else if (storedTypeStr == 'cardio') {
+        // ─── CARDIO ─────────────────────────────────────────────────
+        final cardioRows = await (await dbHelper.database).query(
+          'cardio_details',
+          where: 'exercise_id = ?',
+          whereArgs: [instanceId],
+        );
+        if (cardioRows.isEmpty) continue;
+        final cRow = cardioRows.first;
+        final cardioName     = cRow['cardio_name'] as String;
+        final cardioNote     = cRow['note'] as String?;
+        final plannedMinutes = (cRow['planned_minutes'] as num).toInt();
+        final elapsedSeconds = (cRow['elapsed_seconds'] as num).toInt();
 
-      // Load sets
-      final setsRows = await db.query(
-        'sets',
-        where: 'exercise_id = ?',
-        whereArgs: [instanceId],
-        orderBy: 'order_index',
-      );
-      final sets = setsRows
-          .map((s) => ExerciseSet(
-                weight: (s['weight'] as num).toDouble(),
-                reps: s['reps'] as int,
-              ))
-          .toList();
+        loaded.add(CardioExercise(
+          name:            cardioName,
+          equipment:       '',
+          cardioName:      cardioName,
+          cardioNote:      cardioNote,
+          plannedMinutes:  plannedMinutes,
+          elapsedSeconds:  elapsedSeconds,
+        ));
+      }
+      else if (storedTypeStr == 'stretch') {
+        // ─── STRETCH ────────────────────────────────────────────────
+        final itemRows = await (await dbHelper.database).query(
+          'stretch_instance_items',
+          where: 'exercise_id = ?',
+          whereArgs: [instanceId],
+          orderBy: 'order_index',
+        );
 
-      list.add(WorkoutExercise(name: name, equipment: equipment, sets: sets));
+        final items = <Map<String, dynamic>>[];
+        final checkedIndices = <int>{};
+        for (int idx = 0; idx < itemRows.length; idx++) {
+          final r = itemRows[idx];
+          final isChecked  = (r['is_checked'] as int) == 1;
+          items.add({
+            'stretch_id':  r['stretch_id'] as int?,       // null = custom
+            'is_custom':   (r['is_custom'] as int) == 1,
+            'custom_name': r['custom_name'] as String?,
+            'custom_desc': r['custom_desc'] as String?,
+            'is_checked':  isChecked,
+            'order_index': (r['order_index'] as num).toInt(),
+          });
+          if (isChecked) checkedIndices.add(idx);
+        }
+
+        // Derive a sensible card header name
+        String stretchCardName = 'Stretch';
+        if (items.isNotEmpty) {
+          final first = items.first;
+          if (first['stretch_id'] != null) {
+            final sdRows = await (await dbHelper.database).query(
+              'stretch_definitions',
+              where: 'id = ?',
+              whereArgs: [first['stretch_id'] as int],
+            );
+            if (sdRows.isNotEmpty) {
+              stretchCardName = sdRows.first['name'] as String;
+            }
+          }
+          else if ((items.first['is_custom'] as bool) == true) {
+            stretchCardName = (items.first['custom_name'] as String?) ?? 'Stretch';
+          }
+        }
+
+        loaded.add(StretchExercise(
+          name:                    stretchCardName,
+          equipment:               '',
+          stretchInstances:        items,           // raw maps
+          completedStretchIndices: checkedIndices,  // which checkboxes were ticked
+        ));
+      }
     }
 
+    if (!mounted) return;
     setState(() {
-      _exercises = list;
+      _exercises = loaded;
       _hasChanges = false;
     });
   }
 
-  /// Deletes the entire session (cascades exercises/sets).
+  /// Deletes the entire session (cascades exercises & child rows).
   Future<void> _deleteSession(BuildContext context) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -109,29 +220,96 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     Navigator.of(context).pop();
   }
 
-  /// Saves any in-session edits back to the database.
+  /// Saves in‐session edits back to the database.
   Future<void> _saveChanges() async {
     final db = DatabaseHelper();
+
+    // 1) Delete all old exercises for this session (cascade deletes child rows)
     await db.deleteExercisesForSession(widget.session.id);
-    for (var i = 0; i < _exercises.length; i++) {
-      final ex = _exercises[i];
-      final exId = await db.insertExercise(
-        widget.session.id,
-        ex.name,
-        ex.equipment,
-        i,
-      );
-      for (var j = 0; j < ex.sets.length; j++) {
-        final set = ex.sets[j];
-        await db.insertSet(exId, set.weight, set.reps, j);
+
+    // 2) Re-insert each item in _exercises, using its concrete subclass
+    for (int i = 0; i < _exercises.length; i++) {
+      final we = _exercises[i];
+
+      int? defId;
+      if (we is WeightExercise) {
+        // Look up or insert into exercise_definitions
+        final eqRows = await (await db.database).query(
+          'equipment',
+          where: 'name = ?',
+          whereArgs: [we.equipment],
+        );
+        final eqId = eqRows.isNotEmpty ? eqRows.first['id'] as int : null;
+
+        final defRows = await (await db.database).query(
+          'exercise_definitions',
+          where: eqId != null
+              ? 'name = ? AND equipment_id = ?'
+              : 'name = ? AND equipment_id IS NULL',
+          whereArgs: eqId != null ? [we.name, eqId] : [we.name],
+        );
+
+        if (defRows.isNotEmpty) {
+          defId = defRows.first['id'] as int;
+        } else {
+          defId = await (await db.database).insert(
+            'exercise_definitions',
+            {
+              'name': we.name,
+              'equipment_id': eqId,
+              'rating': 0,
+            },
+          );
+        }
       }
+
+      // Insert into `exercises` with type = appropriate string
+      final exerciseId = await db.insertExerciseRow(
+        sessionId: widget.session.id,
+        exerciseDefId: defId,
+        type: we is WeightExercise
+            ? 'weight'
+            : we is CardioExercise
+                ? 'cardio'
+                : 'stretch',
+        orderIndex: i,
+      );
+
+      // 3) Insert child rows based on subclass
+      if (we is WeightExercise) {
+        await db.insertWeightSets(
+          exerciseId: exerciseId,
+          parentSets: we.sets,
+          childChangeSets: we.changeSets,
+        );
+      }
+      else if (we is CardioExercise) {
+        await db.insertCardioDetails(
+          exerciseId: exerciseId,
+          cardioName: we.cardioName,
+          note: we.cardioNote,
+          plannedMinutes: we.plannedMinutes,
+          elapsedSeconds: we.elapsedSeconds,
+        );
+      }
+      else if (we is StretchExercise) {
+  await db.insertStretchInstance(
+    exerciseId: exerciseId,
+    items: we.stretchInstances, // pass the raw List<Map<String,dynamic>>
+  );
+}
+
     }
+
+    if (!mounted) return;
     setState(() => _hasChanges = false);
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Changes saved!')),
     );
   }
 
+  /// If there are unsaved changes, prompt the user before popping.
   Future<bool> _onWillPop() async {
     if (!_hasChanges) return true;
     final discard = await showDialog<bool>(
@@ -158,10 +336,17 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final dateStr = DateFormat('yyyy-MM-dd – HH:mm')
-        .format(widget.session.date); // Use HH for 00-23
+        .format(widget.session.date);
 
-    return WillPopScope(
-      onWillPop: _onWillPop,
+    return PopScope(
+      canPop: false, // Prevent default back navigation
+      onPopInvokedWithResult: (bool didPop, Object? result) async {
+        if (didPop) return;
+        final allowPop = await _onWillPop();
+        if (allowPop && mounted) {
+          Navigator.of(context).pop();
+        }
+      },
       child: Scaffold(
         appBar: AppBar(
           title: Text('Session: $dateStr'),
@@ -177,19 +362,29 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
             : ListView.builder(
                 padding: const EdgeInsets.all(16),
                 itemCount: _exercises.length,
-                itemBuilder: (_, i) => ExerciseCard(
-                  key: ValueKey(i),
-                  exercise: _exercises[i],
-                  onDeleteExercise: () {
-                    setState(() {
-                      _exercises.removeAt(i);
-                      _hasChanges = true;
-                    });
-                  },
-                  onSetAdded: () => setState(() => _hasChanges = true),
-                  onSetDeleted: () => setState(() => _hasChanges = true),
-                  onValueChanged: () => setState(() => _hasChanges = true),
-                ),
+                itemBuilder: (_, i) {
+                  final we = _exercises[i];
+                  // Determine cardType by concrete class
+                  final cardType = we is WeightExercise
+                      ? CardType.weight
+                      : we is CardioExercise
+                          ? CardType.cardio
+                          : CardType.stretch;
+                  return ExerciseCard(
+                    key: ValueKey(i),
+                    exercise: we,
+                    cardType: cardType,
+                    onDeleteExercise: () {
+                      setState(() {
+                        _exercises.removeAt(i);
+                        _hasChanges = true;
+                      });
+                    },
+                    onSetAdded: () => setState(() => _hasChanges = true),
+                    onSetDeleted: () => setState(() => _hasChanges = true),
+                    onValueChanged: () => setState(() => _hasChanges = true),
+                  );
+                },
               ),
         bottomNavigationBar: _hasChanges
             ? Padding(

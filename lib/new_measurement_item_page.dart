@@ -1,5 +1,8 @@
+// new_measurement_item_page.dart
+
 import 'package:flutter/material.dart';
 import 'db/database_helper.dart';
+import 'models.dart';
 
 /// Page for creating a new measurement (weight, height, or specific body part).
 class NewMeasurementItemPage extends StatefulWidget {
@@ -12,10 +15,9 @@ class NewMeasurementItemPage extends StatefulWidget {
 
 class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
   bool _usePresets = true;
-  String? _selectedType;
+  MeasurementType? _selectedType;
   String? _bodyweightVariation;
   bool _heightIsFeet = true;
-  String? _selectedBodyPart;
   bool _pump = false;
   String _selectedWeightUnit = 'lbs';
 
@@ -32,7 +34,6 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
   void _resetSubControls() {
     _bodyweightVariation = null;
     _heightIsFeet = true;
-    _selectedBodyPart = null;
     _pump = false;
     _valController1.clear();
     _valController2.clear();
@@ -41,20 +42,18 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
 
   bool get _canSave {
     if (!_usePresets || _selectedType == null) return false;
-    switch (_selectedType) {
-      case 'Bodyweight':
+    switch (_selectedType!) {
+      case MeasurementType.BodyWeight:
         return _bodyweightVariation != null &&
             _valController1.text.isNotEmpty;
-      case 'Height':
+      case MeasurementType.Height:
         return _heightIsFeet
             ? _valController1.text.isNotEmpty &&
                 _valController2.text.isNotEmpty
             : _valController1.text.isNotEmpty;
-      case 'Body Part':
-        return _selectedBodyPart != null &&
-            _valController1.text.isNotEmpty;
       default:
-        return false;
+        // Any other enum value is a body part
+        return _valController1.text.isNotEmpty;
     }
   }
 
@@ -68,7 +67,7 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
     final db = await dbHelper.database;
 
     final type = _selectedType!;
-    final queryName = type == 'Body Part' ? _selectedBodyPart! : type;
+    final queryName = type.name; // matches measurement_definitions.name
     final defRows = await db.query(
       'measurement_definitions',
       where: 'name = ?',
@@ -83,10 +82,10 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
     double value;
     String unit;
     try {
-      if (type == 'Bodyweight') {
+      if (type == MeasurementType.BodyWeight) {
         value = double.parse(_valController1.text);
         unit = _selectedWeightUnit;
-      } else if (type == 'Height') {
+      } else if (type == MeasurementType.Height) {
         if (_heightIsFeet) {
           final ft = int.parse(_valController1.text);
           final inches = int.parse(_valController2.text);
@@ -97,6 +96,7 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
           unit = 'cm';
         }
       } else {
+        // any other type is a body part, measured in cm
         value = double.parse(_valController1.text);
         unit = 'cm';
       }
@@ -106,11 +106,14 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
     }
 
     String? note;
-    if (type == 'Bodyweight') {
+    if (type == MeasurementType.BodyWeight) {
       note = _bodyweightVariation;
-    } else if (type == 'Body Part') {
+    } else if (type != MeasurementType.BodyWeight &&
+        type != MeasurementType.Height) {
+      // body part
       note = _pump ? 'With pump' : 'Without pump';
     } else {
+      // Height
       note = 'Overall';
     }
 
@@ -169,24 +172,23 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
 
           if (_usePresets) ...[
             // Preset selector
-            DropdownButtonFormField<String>(
-              decoration:
-                  const InputDecoration(labelText: 'Preset Type'),
+            DropdownButtonFormField<MeasurementType>(
+              decoration: const InputDecoration(labelText: 'Preset Type'),
               value: _selectedType,
-              items: const ['Bodyweight', 'Height', 'Body Part']
-                  .map((e) => DropdownMenuItem(
-                        value: e,
-                        child: Text(e),
-                      ))
-                  .toList(),
-              onChanged: (v) => setState(() {
-                _selectedType = v;
+              items: MeasurementType.values.map((mt) {
+                return DropdownMenuItem<MeasurementType>(
+                  value: mt,
+                  child: Text(mt.name),
+                );
+              }).toList(),
+              onChanged: (mt) => setState(() {
+                _selectedType = mt;
                 _resetSubControls();
               }),
             ),
             const SizedBox(height: 16),
 
-            if (_selectedType == 'Bodyweight') ...[
+            if (_selectedType == MeasurementType.BodyWeight) ...[
               const Text('Variation'),
               const SizedBox(height: 8),
               ToggleButtons(
@@ -233,7 +235,7 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
               const SizedBox(height: 16),
             ],
 
-            if (_selectedType == 'Height') ...[
+            if (_selectedType == MeasurementType.Height) ...[
               const Text('Units'),
               const SizedBox(height: 8),
               ToggleButtons(
@@ -271,83 +273,61 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
               else
                 TextFormField(
                   controller: _valController1,
-                  decoration: const InputDecoration(
-                      labelText: 'Centimeters'),
+                  decoration:
+                      const InputDecoration(labelText: 'Centimeters'),
                   keyboardType: TextInputType.number,
                   onChanged: (_) => setState(() {}),
                 ),
               const SizedBox(height: 16),
             ],
 
-            if (_selectedType == 'Body Part') ...[
-              DropdownButtonFormField<String>(
-                decoration: const InputDecoration(
-                    labelText: 'Select Body Part'),
-                value: _selectedBodyPart,
-                items: const [
-                  'Forearm',
-                  'Arm',
-                  'Neck',
-                  'Shoulder',
-                  'Chest',
-                  'Waist',
-                  'Hip',
-                  'Thigh',
-                  'Calf',
-                ]
-                    .map((p) => DropdownMenuItem(
-                          value: p,
-                          child: Text(p),
-                        ))
-                    .toList(),
-                onChanged: (v) => setState(() {
-                  if (v != null) _selectedBodyPart = v;
-                }),
+            if (_selectedType != null &&
+                _selectedType != MeasurementType.BodyWeight &&
+                _selectedType != MeasurementType.Height) ...[
+              // Body part selected
+              Text(
+                _notesFor[_selectedType!.name]!,
+                style: const TextStyle(fontStyle: FontStyle.italic),
               ),
               const SizedBox(height: 8),
-              if (_selectedBodyPart != null) ...[
-                Text(
-                  _notesFor[_selectedBodyPart!]!,
-                  style:
-                      const TextStyle(fontStyle: FontStyle.italic),
+              ToggleButtons(
+                isSelected: [!_pump, _pump],
+                onPressed: (i) => setState(
+                  () => _pump = (i == 1),
                 ),
-                const SizedBox(height: 8),
-                ToggleButtons(
-                  isSelected: [!_pump, _pump],
-                  onPressed: (i) => setState(
-                    () => _pump = (i == 1),
-                  ),
-                  children: const [
-                    Text('Without pump'),
-                    Text('With pump'),
-                  ],
+                children: const [
+                  Text('Without pump'),
+                  Text('With pump'),
+                ],
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _valController1,
+                decoration: const InputDecoration(
+                  labelText: 'Centimeters',
+                  suffixText: 'cm',
                 ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _valController1,
-                  decoration: const InputDecoration(
-                    labelText: 'Centimeters',
-                    suffixText: 'cm',
-                  ),
-                  keyboardType: TextInputType.number,
-                  onChanged: (_) => setState(() {}),
-                ),
-              ],
+                keyboardType: TextInputType.number,
+                onChanged: (_) => setState(() {}),
+              ),
             ],
           ],
         ],
       ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(16),
-        child: ElevatedButton(
-          onPressed: _canSave ? _saveMeasurement : null,
-          child: const Text('Save New Measurement'),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: ElevatedButton(
+            onPressed: _canSave ? _saveMeasurement : null,
+            child: const Text('Save New Measurement'),
+          ),
         ),
       ),
     );
   }
 }
 
+/// Notes for each body part (must match MeasurementType names).
 const Map<String, String> _notesFor = {
   'Forearm': 'Go to widest, largest part and measure around',
   'Arm': 'Go to widest part of bicep and measure around',
