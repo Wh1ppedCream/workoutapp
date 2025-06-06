@@ -10,20 +10,28 @@ enum CardType { weight, cardio, stretch }
 class ExerciseCard extends StatefulWidget {
   final WorkoutExercise exercise;
   final CardType cardType;
+
+  final bool         readOnlyMode;               // NEW: if true, disable UI inputs
+  final Set<int>?    initialCompletedParents;    // NEW
+  final Map<int, Set<int>>? initialCompletedChildren; // NEW
+
   final VoidCallback? onDeleteExercise;
   final VoidCallback? onSetAdded;
   final VoidCallback? onSetDeleted;
   final VoidCallback? onValueChanged;
 
   const ExerciseCard({
-    super.key,
+    Key? key,
     required this.exercise,
     this.cardType = CardType.weight,
+    this.readOnlyMode = false,
+    this.initialCompletedParents,
+    this.initialCompletedChildren,
     this.onDeleteExercise,
     this.onSetAdded,
     this.onSetDeleted,
     this.onValueChanged,
-  });
+  }) : super(key: key);
 
   @override
   _ExerciseCardState createState() => _ExerciseCardState();

@@ -74,6 +74,27 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
         final parentSets = <ExerciseSet>[];
         final Map<int, List<ExerciseSet>> csetsMap = {};
 
+      // Mark every parent‐set index as “completed”
+final completedParentIndices = <int>{ for (var idx = 0; idx < parentSets.length; idx++) idx };
+
+// If you also want each C‐set to be “checked,” collect them by (parentIndex, childIndex) and flatten.
+final completedChildIndices = <int, Set<int>>{};
+csetsMap.forEach((parentIdx, childList) {
+  completedChildIndices[parentIdx] = { for (var ci = 0; ci < childList.length; ci++) ci };
+});
+
+// Then pass these two collections into WeightExercise (via an extra constructor parameter).
+loaded.add(WeightExercise(
+  name:       name,
+  equipment:  equipmentName,
+  sets:       parentSets,
+  changeSets: csetsMap,
+  completedParents: completedParentIndices,
+  completedChildren: completedChildIndices,
+));
+
+
+
         for (var pRow in parentRows) {
           final parentId = pRow['id'] as int;
           final weight   = (pRow['weight'] as num).toDouble();
