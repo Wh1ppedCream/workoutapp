@@ -81,6 +81,23 @@ class _ExerciseCardState extends State<ExerciseCard> {
       }
     }
 
+      if (widget.cardType == CardType.weight && widget.readOnlyMode) {
+    // Pull “which parents were checked” from widget.initialCompletedParents
+    if (widget.initialCompletedParents != null) {
+      _completedSets.addAll(widget.initialCompletedParents!);
+    }
+    // Pull “which child indices were checked” from widget.initialCompletedChildren
+    if (widget.initialCompletedChildren != null) {
+      widget.initialCompletedChildren!.forEach((parentIdx, childIdxSet) {
+        // we still need the actual ExerciseSet objects to render; widget.exercise.changeSets already holds them
+        _cSets[parentIdx] = widget.exercise.changeSets[parentIdx] ?? [];
+      });
+      // (we ignore “checked” status for C‐sets in the detail display—if you want checkboxes on them, you'd need a separate Map<int, Set<int>> to store which child‐indices are checked.)
+    }
+  }
+
+  // If not readOnlyMode, you keep the original “new card” init behavior
+  if (!widget.readOnlyMode) {
     // Weight initialization
     if (widget.cardType == CardType.weight) {
       List<ExerciseSet> sets = <ExerciseSet>[];
@@ -92,6 +109,9 @@ class _ExerciseCardState extends State<ExerciseCard> {
       _repsControllers =
           sets.map((s) => TextEditingController(text: s.reps.toString())).toList();
     }
+  }
+
+    
 
   // 4) Stretch‐specific initialization
   if (widget.cardType == CardType.stretch) {
