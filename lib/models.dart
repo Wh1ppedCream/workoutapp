@@ -87,10 +87,10 @@ class WeightExercise extends WorkoutExercise {
 
 /// Represents a cardio exercise, with planned duration and elapsed time.
 class CardioExercise extends WorkoutExercise {
-  final String cardioName;
-  final String? cardioNote;
-  final int plannedMinutes;
-  final int elapsedSeconds;
+  String cardioName;
+  String? cardioNote;
+  int plannedMinutes;
+  int elapsedSeconds;
 
   CardioExercise({
     required String name,
@@ -99,9 +99,9 @@ class CardioExercise extends WorkoutExercise {
     this.cardioNote,
     int? plannedMinutes,
     int? elapsedSeconds,
-  })  : cardioName = cardioName ?? 'Walking',
-        plannedMinutes = plannedMinutes ?? 0,
-        elapsedSeconds = elapsedSeconds ?? 0,
+  })  : cardioName      = cardioName      ?? 'Walking',
+        plannedMinutes  = plannedMinutes  ?? 0,
+        elapsedSeconds  = elapsedSeconds  ?? 0,
         super(name: name, equipment: equipment);
 }
 
@@ -125,12 +125,12 @@ class StretchExercise extends WorkoutExercise {
 
 /// Represents one set of a weight exercise (weight + reps).
 class ExerciseSet {
-  final double weight;
-  final int reps;
+  double weight;
+  int reps;
 
   ExerciseSet({
     this.weight = 0,
-    this.reps = 10,
+    this.reps   = 10,
   });
 }
 

@@ -154,11 +154,14 @@ void initState() {
     super.dispose();
   }
 
-  // Only update local controllers; do not assign to final model fields
   void _updateWeightSet(int index) {
     final w = double.tryParse(_weightControllers[index].text) ?? 0;
     final r = int.tryParse(_repsControllers[index].text) ?? 0;
-    // We do not assign to widget.exercise.sets[index].weight, since weight is final
+    if (widget.exercise is WeightExercise) {
+      final we = widget.exercise as WeightExercise;
+      // replace the old set with a freshly-configured one
+      we.sets[index] = ExerciseSet(weight: w, reps: r);
+    }
     widget.onValueChanged?.call();
   }
 
@@ -583,42 +586,50 @@ void initState() {
             SizedBox(
               width: 80,
               child: TextFormField(
-                initialValue: '$_cardioMinutes',
-                readOnly: readOnly,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Minutes'),
-                onChanged: readOnly
-      ? null
-                : (v) {
-                  setState(() {
-                    _cardioMinutes = int.tryParse(v) ?? 0;
-                    // Do not assign to final model
-                  });
-                  widget.onValueChanged?.call();
-                },
-              ),
+      initialValue: '$_cardioMinutes',
+      readOnly: readOnly,
+      keyboardType: TextInputType.number,
+      decoration: const InputDecoration(labelText: 'Minutes'),
+      onChanged: readOnly
+        ? null
+        : (v) {
+            final mins = int.tryParse(v) ?? 0;
+            setState(() {
+              _cardioMinutes = mins;
+            });
+            if (widget.exercise is CardioExercise) {
+              (widget.exercise as CardioExercise).plannedMinutes = mins;
+            }
+            widget.onValueChanged?.call();
+          },
+    ),
             ),
             const SizedBox(width: 8),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-              child: const Text('GO'),
-              onPressed: readOnly ? null
-              : () {
-                setState(() {
-                  _secondsLeft = _cardioMinutes * 60;
-                });
-                widget.onValueChanged?.call();
-                _cardioTimer?.cancel();
-                _cardioTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-                  if (_secondsLeft > 0) {
-                    setState(() => _secondsLeft--);
-                    widget.onValueChanged?.call();
-                  } else {
-                    _cardioTimer?.cancel();
-                  }
-                });
-              },
-            ),
+      onPressed: readOnly ? null : () {
+        setState(() {
+          _secondsLeft = _cardioMinutes * 60;
+        });
+        if (widget.exercise is CardioExercise) {
+          (widget.exercise as CardioExercise).elapsedSeconds = _secondsLeft;
+        }
+        widget.onValueChanged?.call();
+
+        _cardioTimer?.cancel();
+        _cardioTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+          if (_secondsLeft > 0) {
+            setState(() => _secondsLeft--);
+            if (widget.exercise is CardioExercise) {
+              (widget.exercise as CardioExercise).elapsedSeconds = _secondsLeft;
+            }
+            widget.onValueChanged?.call();
+          } else {
+            _cardioTimer?.cancel();
+          }
+        });
+      },
+      child: const Text('GO'),
+    ),
           ],
         ),
 

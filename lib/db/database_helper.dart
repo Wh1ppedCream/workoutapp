@@ -913,6 +913,29 @@ class DatabaseHelper {
     return result;
   }
 
+
+Future<Map<String, dynamic>?> getCardioDetailsForExercise(int eid) async {
+  final db = await database;
+  final rows = await db.query(
+    'cardio_details',
+    where: 'exercise_id = ?',
+    whereArgs: [eid],
+    limit: 1,
+  );
+  return rows.isNotEmpty ? rows.first : null;
+}
+
+Future<List<Map<String, dynamic>>> getStretchItemsForExercise(int eid) async {
+  final db = await database;
+  return db.query(
+    'stretch_instance_items',
+    where: 'exercise_id = ?',
+    whereArgs: [eid],
+    orderBy: 'order_index',
+  );
+}
+
+
   /// Fetch all muscle names.
   Future<List<String>> getAllMuscleNames() async {
     final db = await database;
