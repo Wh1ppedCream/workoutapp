@@ -25,197 +25,168 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     _loadExercises();
   }
 
-  Future<void> _loadExercises() async {
-    final dbHelper = DatabaseHelper();
+Future<void> _loadExercises() async {
+  final dbHelper = DatabaseHelper();
 
-    // 1) Fetch all exercise‐instance rows for this session
-    final exRows = await dbHelper.getExercisesForSession(widget.session.id);
-    final loaded = <WorkoutExercise>[];
+  // 1) Fetch all exercise‐instance rows for this session
+  final exRows = await dbHelper.getExercisesForSession(widget.session.id);
+  final loaded = <WorkoutExercise>[];
 
-    for (var exRow in exRows) {
-      final instanceId = exRow['id'] as int;
-      final storedTypeStr = exRow['type'] as String; // "weight", "cardio", or "stretch"
+  for (var exRow in exRows) {
+    final instanceId = exRow['id'] as int;
+    final storedType = exRow['type'] as String; // "weight", "cardio", or "stretch"
 
-      if (storedTypeStr == 'weight') {
-        // ─── WEIGHT ──────────────────────────────────────────────────
-        final defId = exRow['exercise_def_id'] as int?;
-        String name = '';
-        String equipmentName = '';
-
-        if (defId != null) {
-          final defRows = await (await dbHelper.database).query(
-            'exercise_definitions',
+    if (storedType == 'weight') {
+      // ─── WEIGHT ─────────────────────────────────────────────────
+      // Lookup definition
+      final defId = exRow['exercise_def_id'] as int?;
+      String name = '';
+      String equipmentName = '';
+      if (defId != null) {
+        final defRows = await (await dbHelper.database).query(
+          'exercise_definitions',
+          where: 'id = ?',
+          whereArgs: [defId],
+        );
+        if (defRows.isEmpty) continue;
+        final defRow = defRows.first;
+        name = defRow['name'] as String;
+        final eqId = defRow['equipment_id'] as int?;
+        if (eqId != null) {
+          final eqRows = await (await dbHelper.database).query(
+            'equipment',
             where: 'id = ?',
-            whereArgs: [defId],
+            whereArgs: [eqId],
           );
-          if (defRows.isEmpty) continue;
-          final defRow = defRows.first;
-          name = defRow['name'] as String;
-          final equipmentId = defRow['equipment_id'] as int?;
-          if (equipmentId != null) {
-            final eqRows = await (await dbHelper.database).query(
-              'equipment',
-              where: 'id = ?',
-              whereArgs: [equipmentId],
-            );
-            if (eqRows.isNotEmpty) {
-              equipmentName = eqRows.first['name'] as String;
-            }
-          }
+          if (eqRows.isNotEmpty) equipmentName = eqRows.first['name'] as String;
         }
+      }
 
-        // 2) Load parent sets
-        final parentRows = await (await dbHelper.database).query(
+      // Load parent sets + changeSets
+      final parentRows = await (await dbHelper.database).query(
+        'sets',
+        where: 'exercise_id = ? AND parent_set_id IS NULL',
+        whereArgs: [instanceId],
+        orderBy: 'order_index',
+      );
+      final parentSets = <ExerciseSet>[];
+      final csetsMap = <int, List<ExerciseSet>>{};
+      for (var pRow in parentRows) {
+        final parentId = pRow['id'] as int;
+        parentSets.add(ExerciseSet(
+          weight: (pRow['weight'] as num).toDouble(),
+          reps: pRow['reps'] as int,
+        ));
+        final childRows = await (await dbHelper.database).query(
           'sets',
-          where: 'exercise_id = ? AND parent_set_id IS NULL',
-          whereArgs: [instanceId],
+          where: 'parent_set_id = ?',
+          whereArgs: [parentId],
           orderBy: 'order_index',
         );
-        final parentSets = <ExerciseSet>[];
-        final Map<int, List<ExerciseSet>> csetsMap = {};
-
-      // Mark every parent‐set index as “completed”
-final completedParentIndices = <int>{ for (var idx = 0; idx < parentSets.length; idx++) idx };
-
-// If you also want each C‐set to be “checked,” collect them by (parentIndex, childIndex) and flatten.
-final completedChildIndices = <int, Set<int>>{};
-csetsMap.forEach((parentIdx, childList) {
-  completedChildIndices[parentIdx] = { for (var ci = 0; ci < childList.length; ci++) ci };
-});
-
-// Then pass these two collections into WeightExercise (via an extra constructor parameter).
-loaded.add(WeightExercise(
-  name:       name,
-  equipment:  equipmentName,
-  sets:       parentSets,
-  changeSets: csetsMap,
-  completedParents: completedParentIndices,
-  completedChildren: completedChildIndices,
-));
-
-
-
-        for (var pRow in parentRows) {
-          final parentId = pRow['id'] as int;
-          final weight   = (pRow['weight'] as num).toDouble();
-          final reps     = (pRow['reps'] as int);
-          parentSets.add(ExerciseSet(weight: weight, reps: reps));
-
-          // Load any ChangeSets for that parent
-          final childRows = await (await dbHelper.database).query(
-            'sets',
-            where: 'parent_set_id = ?',
-            whereArgs: [parentId],
-            orderBy: 'order_index',
-          );
-          if (childRows.isNotEmpty) {
-            csetsMap[parentSets.length - 1] = childRows
-                .map((cRow) => ExerciseSet(
-                      weight: (cRow['weight'] as num).toDouble(),
-                      reps:   cRow['reps'] as int,
-                    ))
-                .toList();
-          }
+        if (childRows.isNotEmpty) {
+          csetsMap[parentSets.length - 1] = childRows.map((cRow) =>
+            ExerciseSet(
+              weight: (cRow['weight'] as num).toDouble(),
+              reps: cRow['reps'] as int,
+            )
+          ).toList();
         }
-
-        // 3) Mark all parent‐sets (and all children) as “checked” for detail view
-        final completedParents = <int>{ for (var idx = 0; idx < parentSets.length; idx++) idx };
-        final completedChildren = <int, Set<int>>{};
-        csetsMap.forEach((parentIdx, children) {
-          completedChildren[parentIdx] = { for (var ci = 0; ci < children.length; ci++) ci };
-        });
-
-        loaded.add(WeightExercise(
-          name:                name,
-          equipment:           equipmentName,
-          sets:                parentSets,
-          changeSets:          csetsMap,
-          completedParents:    completedParents,
-          completedChildren:   completedChildren,
-        ));
       }
-      else if (storedTypeStr == 'cardio') {
-        // ─── CARDIO ─────────────────────────────────────────────────
-        final cardioRows = await (await dbHelper.database).query(
-          'cardio_details',
-          where: 'exercise_id = ?',
-          whereArgs: [instanceId],
-        );
-        if (cardioRows.isEmpty) continue;
-        final cRow = cardioRows.first;
-        final cardioName     = cRow['cardio_name'] as String;
-        final cardioNote     = cRow['note'] as String?;
-        final plannedMinutes = (cRow['planned_minutes'] as num).toInt();
-        final elapsedSeconds = (cRow['elapsed_seconds'] as num).toInt();
 
-        loaded.add(CardioExercise(
-          name:            cardioName,
-          equipment:       '',
-          cardioName:      cardioName,
-          cardioNote:      cardioNote,
-          plannedMinutes:  plannedMinutes,
-          elapsedSeconds:  elapsedSeconds,
-        ));
-      }
-      else if (storedTypeStr == 'stretch') {
-        // ─── STRETCH ────────────────────────────────────────────────
-        final itemRows = await (await dbHelper.database).query(
-          'stretch_instance_items',
-          where: 'exercise_id = ?',
-          whereArgs: [instanceId],
-          orderBy: 'order_index',
-        );
+      // Mark all parents & children completed
+      final completedParents = <int>{ for (var i = 0; i < parentSets.length; i++) i };
+      final completedChildren = <int, Set<int>>{};
+      csetsMap.forEach((parentIdx, kids) {
+        completedChildren[parentIdx] = { for (var i = 0; i < kids.length; i++) i };
+      });
 
-        final items = <Map<String, dynamic>>[];
-        final checkedIndices = <int>{};
-        for (int idx = 0; idx < itemRows.length; idx++) {
-          final r = itemRows[idx];
-          final isChecked  = (r['is_checked'] as int) == 1;
-          items.add({
-            'stretch_id':  r['stretch_id'] as int?,       // null = custom
-            'is_custom':   (r['is_custom'] as int) == 1,
-            'custom_name': r['custom_name'] as String?,
-            'custom_desc': r['custom_desc'] as String?,
-            'is_checked':  isChecked,
-            'order_index': (r['order_index'] as num).toInt(),
-          });
-          if (isChecked) checkedIndices.add(idx);
-        }
-
-        // Derive a sensible card header name
-        String stretchCardName = 'Stretch';
-        if (items.isNotEmpty) {
-          final first = items.first;
-          if (first['stretch_id'] != null) {
-            final sdRows = await (await dbHelper.database).query(
-              'stretch_definitions',
-              where: 'id = ?',
-              whereArgs: [first['stretch_id'] as int],
-            );
-            if (sdRows.isNotEmpty) {
-              stretchCardName = sdRows.first['name'] as String;
-            }
-          }
-          else if ((items.first['is_custom'] as bool) == true) {
-            stretchCardName = (items.first['custom_name'] as String?) ?? 'Stretch';
-          }
-        }
-
-        loaded.add(StretchExercise(
-          name:                    stretchCardName,
-          equipment:               '',
-          stretchInstances:        items,           // raw maps
-          completedStretchIndices: checkedIndices,  // which checkboxes were ticked
-        ));
-      }
+      loaded.add(WeightExercise(
+        name:              name,
+        equipment:         equipmentName,
+        sets:              parentSets,
+        changeSets:        csetsMap,
+        completedParents:  completedParents,
+        completedChildren: completedChildren,
+      ));
     }
+    else if (storedType == 'cardio') {
+      // ─── CARDIO ─────────────────────────────────────────────────
+      final cardioRows = await (await dbHelper.database).query(
+        'cardio_details',
+        where: 'exercise_id = ?',
+        whereArgs: [instanceId],
+      );
+      if (cardioRows.isEmpty) continue;
+      final cRow = cardioRows.first;
+      loaded.add(CardioExercise(
+        name:            cRow['cardio_name'] as String,
+        equipment:       '',
+        cardioName:      cRow['cardio_name'] as String,
+        cardioNote:      cRow['note'] as String?,
+        plannedMinutes:  (cRow['planned_minutes'] as num).toInt(),
+        elapsedSeconds:  (cRow['elapsed_seconds'] as num).toInt(),
+      ));
+    }
+    else if (storedType == 'stretch') {
+      // ─── STRETCH ────────────────────────────────────────────────
+      final itemRows = await (await dbHelper.database).query(
+        'stretch_instance_items',
+        where: 'exercise_id = ?',
+        whereArgs: [instanceId],
+        orderBy: 'order_index',
+      );
 
-    if (!mounted) return;
-    setState(() {
-      _exercises = loaded;
-      _hasChanges = false;
-    });
+      final items = <Map<String, dynamic>>[];
+      final checkedIndices = <int>{};
+      for (var idx = 0; idx < itemRows.length; idx++) {
+        final r = itemRows[idx];
+        final isChecked = (r['is_checked'] as int) == 1;
+        items.add({
+          'stretch_id':  r['stretch_id'] as int?,
+          'is_custom':   (r['is_custom'] as int) == 1,
+          'custom_name': r['custom_name'] as String?,
+          'custom_desc': r['custom_desc'] as String?,
+          'is_checked':  isChecked,
+          'order_index': (r['order_index'] as num).toInt(),
+        });
+        if (isChecked) checkedIndices.add(idx);
+      }
+
+      // Determine card header
+      String stretchCardName = 'Stretch';
+      if (items.isNotEmpty) {
+        final first = items.first;
+        if (first['stretch_id'] != null) {
+          final sdRows = await (await dbHelper.database).query(
+            'stretch_definitions',
+            where: 'id = ?',
+            whereArgs: [first['stretch_id'] as int],
+          );
+          if (sdRows.isNotEmpty) {
+            stretchCardName = sdRows.first['name'] as String;
+          }
+        } else if (first['is_custom'] == true) {
+          stretchCardName = first['custom_name'] as String? ?? 'Stretch';
+        }
+      }
+
+      loaded.add(StretchExercise(
+        name:                    stretchCardName,
+        equipment:               '',
+        stretchInstances:        items,
+        completedStretchIndices: checkedIndices,
+      ));
+    }
   }
+
+  if (!mounted) return;
+  setState(() {
+    _exercises = loaded;
+    _hasChanges = false;
+  });
+}
+
+
 
   /// Deletes the entire session (cascades exercises & child rows).
   Future<void> _deleteSession(BuildContext context) async {
@@ -392,19 +363,21 @@ loaded.add(WeightExercise(
                           ? CardType.cardio
                           : CardType.stretch;
                   return ExerciseCard(
-                    key: ValueKey(i),
-                    exercise: we,
-                    cardType: cardType,
-                    onDeleteExercise: () {
-                      setState(() {
-                        _exercises.removeAt(i);
-                        _hasChanges = true;
-                      });
-                    },
-                    onSetAdded: () => setState(() => _hasChanges = true),
-                    onSetDeleted: () => setState(() => _hasChanges = true),
-                    onValueChanged: () => setState(() => _hasChanges = true),
-                  );
+  key: ValueKey(i),
+  exercise: we,
+  cardType: cardType,
+  readOnlyMode: true,  // ← make it display‐only
+  initialCompletedParents: (we is WeightExercise)
+      ? we.completedParents
+      : null,
+  initialCompletedChildren: (we is WeightExercise)
+      ? we.completedChildren
+      : null,
+  onDeleteExercise:    () {}, // no-op
+  onSetAdded:          () {},
+  onSetDeleted:        () {},
+  onValueChanged:      () {},
+);
                 },
               ),
         bottomNavigationBar: _hasChanges

@@ -62,13 +62,15 @@ abstract class WorkoutExercise {
 /// Represents a weight-based exercise, including sets and optional changeSets.
 class WeightExercise extends WorkoutExercise {
   final List<ExerciseSet> sets;
+
+  /// Parent→child ChangeSets (parent index → list of child sets).
   final Map<int, List<ExerciseSet>> changeSets;
 
-  /// NEW: which parent‐set indices were checked (completed) when saved
-  final Set<int> completedParentIndices;
+  /// Which parent‐set indices were completed when saved.
+  final Set<int> completedParents;
 
-  /// NEW: for each parent index, which child‐set indices were checked
-  final Map<int, Set<int>> completedChildIndices;
+  /// For each parent index, which child‐set indices were completed.
+  final Map<int, Set<int>> completedChildren;
 
   WeightExercise({
     required String name,
@@ -78,8 +80,8 @@ class WeightExercise extends WorkoutExercise {
     Set<int>? completedParents,
     Map<int, Set<int>>? completedChildren,
   })  : changeSets = changeSets ?? <int, List<ExerciseSet>>{},
-        completedParentIndices = completedParents ?? <int>{},
-        completedChildIndices  = completedChildren ?? <int, Set<int>>{},
+        completedParents = completedParents ?? <int>{},
+        completedChildren = completedChildren ?? <int, Set<int>>{},
         super(name: name, equipment: equipment);
 }
 
