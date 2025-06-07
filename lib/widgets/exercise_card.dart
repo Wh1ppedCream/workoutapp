@@ -59,66 +59,66 @@ class _ExerciseCardState extends State<ExerciseCard> {
   late TextEditingController _stretchCustomController;
   final Set<int> _completedStretches = {};
 
-  @override
-  void initState() {
-    super.initState();
+@override
+void initState() {
+  super.initState();
 
-    // Initialize note from exercise.equipment (read-only)
-    _note = widget.exercise.equipment;
+  // 1) Always seed the note from the model
+  _note = widget.exercise.equipment;
 
-    // Cardio initialization
-    if (widget.cardType == CardType.cardio) {
-      if (widget.exercise is CardioExercise) {
-        final cardioEx = widget.exercise as CardioExercise;
-        _cardioMinutes = cardioEx.plannedMinutes;
-        _secondsLeft = cardioEx.elapsedSeconds;
-        _cardioNameController =
-            TextEditingController(text: cardioEx.cardioName);
-      } else {
-        _cardioMinutes = 0;
-        _secondsLeft = 0;
-        _cardioNameController = TextEditingController(text: widget.exercise.name);
-      }
+  // 2) CARDIO
+  if (widget.cardType == CardType.cardio) {
+    if (widget.exercise is CardioExercise) {
+      final ce = widget.exercise as CardioExercise;
+      _cardioMinutes = ce.plannedMinutes;
+      _secondsLeft    = ce.elapsedSeconds;
+      _cardioNameController =
+          TextEditingController(text: ce.cardioName);
+    } else {
+      // fallback
+      _cardioMinutes = 0;
+      _secondsLeft   = 0;
+      _cardioNameController =
+          TextEditingController(text: widget.exercise.name);
     }
+  }
 
-      if (widget.cardType == CardType.weight && widget.readOnlyMode) {
-    // Pull “which parents were checked” from widget.initialCompletedParents
-    if (widget.initialCompletedParents != null) {
+  // 3) WEIGHT
+  if (widget.cardType == CardType.weight) {
+    // a) pull the sets list to initialize controllers
+    final sets = widget.exercise is WeightExercise
+        ? (widget.exercise as WeightExercise).sets
+        : <ExerciseSet>[];
+    _weightControllers = sets
+        .map((s) => TextEditingController(text: s.weight.toString()))
+        .toList();
+    _repsControllers   = sets
+        .map((s) => TextEditingController(text: s.reps.toString()))
+        .toList();
+
+    // b) if we're in read-only mode, seed the completed‐sets
+    if (widget.readOnlyMode && widget.initialCompletedParents != null) {
       _completedSets.addAll(widget.initialCompletedParents!);
     }
-    // Pull “which child indices were checked” from widget.initialCompletedChildren
-    if (widget.initialCompletedChildren != null) {
-      widget.initialCompletedChildren!.forEach((parentIdx, childIdxSet) {
-        // we still need the actual ExerciseSet objects to render; widget.exercise.changeSets already holds them
-        _cSets[parentIdx] = widget.exercise.changeSets[parentIdx] ?? [];
-      });
-      // (we ignore “checked” status for C‐sets in the detail display—if you want checkboxes on them, you'd need a separate Map<int, Set<int>> to store which child‐indices are checked.)
-    }
+
+    // c) if read-only, also seed any existing ChangeSets so they show up
+    if (widget.readOnlyMode && widget.exercise is WeightExercise) {
+  final we = widget.exercise as WeightExercise;
+  _cSets.clear();
+  we.changeSets.forEach((parentIdx, children) {
+    // make a copy so you don't accidentally share the same list
+    _cSets[parentIdx] = List<ExerciseSet>.from(children);
+  });
+}
   }
 
-  // If not readOnlyMode, you keep the original “new card” init behavior
-  if (!widget.readOnlyMode) {
-    // Weight initialization
-    if (widget.cardType == CardType.weight) {
-      List<ExerciseSet> sets = <ExerciseSet>[];
-      if (widget.exercise is WeightExercise) {
-        sets = (widget.exercise as WeightExercise).sets;
-      }
-      _weightControllers =
-          sets.map((s) => TextEditingController(text: s.weight.toString())).toList();
-      _repsControllers =
-          sets.map((s) => TextEditingController(text: s.reps.toString())).toList();
-    }
-  }
-
-    
-
-  // 4) Stretch‐specific initialization
+  // 4) STRETCH
   if (widget.cardType == CardType.stretch) {
     _stretchCustomController = TextEditingController();
-
-    // Pull the existing stretchInstances from the model
-    // (Every WorkoutExercise now has a `stretchInstances` list by default.)
+  // Pull the existing stretchInstances from the model
+  // (Every WorkoutExercise now has a stretchInstances list by default.)
+  // Pull the existing stretchInstances from the model
+    // (Every WorkoutExercise now has a stretchInstances list by default.)
     if (widget.exercise is StretchExercise) {
       final stretchEx = widget.exercise as StretchExercise;
       for (var i = 0; i < stretchEx.stretchInstances.length; i++) {
@@ -131,6 +131,8 @@ class _ExerciseCardState extends State<ExerciseCard> {
     }
   }
 }
+
+
 
   @override
   void dispose() {
@@ -178,6 +180,7 @@ class _ExerciseCardState extends State<ExerciseCard> {
   // -------------------- Weight Card --------------------
 
   Widget _buildWeightCard() {
+    final readOnly = widget.readOnlyMode;
     final sets = (widget.exercise is WeightExercise)
         ? (widget.exercise as WeightExercise).sets
         : <ExerciseSet>[];
@@ -200,12 +203,13 @@ class _ExerciseCardState extends State<ExerciseCard> {
                   const SizedBox(height: 4),
                   _isEditingNote
                       ? TextFormField(
+                        readOnly: readOnly,
                           initialValue: _note,
                           decoration: const InputDecoration(
                             isDense: true,
                             labelText: 'Note',
                           ),
-                          onFieldSubmitted: (val) {
+                          onFieldSubmitted: readOnly ? null : (val) {
                             setState(() {
                               _note = val.trim();
                               _isEditingNote = false;
@@ -214,7 +218,8 @@ class _ExerciseCardState extends State<ExerciseCard> {
                             widget.onValueChanged?.call();
                           },
                         )
-                      : GestureDetector(
+                      : (!readOnly)
+  ? GestureDetector(
                           onTap: () => setState(() => _isEditingNote = true),
                           child: Text(
                             _note.isNotEmpty ? _note : 'Tap to add note',
@@ -223,11 +228,18 @@ class _ExerciseCardState extends State<ExerciseCard> {
                                 .bodySmall!
                                 .copyWith(fontStyle: FontStyle.italic),
                           ),
-                        ),
+                        ): Text(
+                            _note.isNotEmpty ? _note : 'Tap to add note',
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall!
+                                .copyWith(fontStyle: FontStyle.italic),
+                          ),
                 ],
               ),
             ),
             PopupMenuButton<String>(
+              enabled: !readOnly,
               icon: const Icon(Icons.more_vert),
               onSelected: (choice) async {
                 if (choice == 'remove') {
@@ -238,11 +250,13 @@ class _ExerciseCardState extends State<ExerciseCard> {
                       content: const Text('Are you sure you want to remove this exercise?'),
                       actions: [
                         TextButton(
-                          onPressed: () => Navigator.of(ctx).pop(false),
+                          onPressed: readOnly ? null
+                          : () => Navigator.of(ctx).pop(false),
                           child: const Text('Cancel'),
                         ),
                         TextButton(
-                          onPressed: () => Navigator.of(ctx).pop(true),
+                          onPressed: readOnly ? null
+                          : () => Navigator.of(ctx).pop(true),
                           child: const Text('Remove'),
                         ),
                       ],
@@ -283,7 +297,9 @@ class _ExerciseCardState extends State<ExerciseCard> {
                 children: [
                   Checkbox(
                     value: _completedSets.contains(index),
-                    onChanged: (yes) {
+                    onChanged: readOnly
+      ? null
+                    : (yes) {
                       setState(() {
                         if (yes == true) {
                           _completedSets.add(index);
@@ -304,9 +320,12 @@ class _ExerciseCardState extends State<ExerciseCard> {
                     width: 80,
                     child: TextFormField(
                       controller: _weightControllers[index],
+                      readOnly: readOnly,
                       keyboardType: TextInputType.number,
                       decoration: const InputDecoration(labelText: 'Weight'),
-                      onChanged: (_) => _updateWeightSet(index),
+                      onChanged: readOnly
+        ? null
+        : (_) => _updateWeightSet(index),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -314,14 +333,18 @@ class _ExerciseCardState extends State<ExerciseCard> {
                     width: 80,
                     child: TextFormField(
                       controller: _repsControllers[index],
+                      readOnly: readOnly,
                       keyboardType: TextInputType.number,
                       decoration: const InputDecoration(labelText: 'Reps'),
-                      onChanged: (_) => _updateWeightSet(index),
+                      onChanged: readOnly
+        ? null
+        : (_) => _updateWeightSet(index),
                     ),
                   ),
                   IconButton(
                     icon: const Icon(Icons.remove_circle_outline),
-                    onPressed: () async {
+                    onPressed: readOnly ? null
+                    : () async {
                       final confirm = await showDialog<bool>(
                         context: context,
                         builder: (ctx) => AlertDialog(
@@ -329,11 +352,13 @@ class _ExerciseCardState extends State<ExerciseCard> {
                           content: const Text('Are you sure you want to remove this set?'),
                           actions: [
                             TextButton(
-                              onPressed: () => Navigator.of(ctx).pop(false),
+                              onPressed: readOnly ? null
+                              : () => Navigator.of(ctx).pop(false),
                               child: const Text('Cancel'),
                             ),
                             TextButton(
-                              onPressed: () => Navigator.of(ctx).pop(true),
+                              onPressed: readOnly ? null
+                              : () => Navigator.of(ctx).pop(true),
                               child: const Text('Remove'),
                             ),
                           ],
@@ -358,7 +383,7 @@ class _ExerciseCardState extends State<ExerciseCard> {
           if (_isChangeSetMode) {
             children.add(
               GestureDetector(
-                onTap: () => setState(() {
+                onTap: readOnly ? null : () => setState(() {
                   _cSets.putIfAbsent(index, () => []);
                   _cSets[index]!.add(ExerciseSet(weight: set.weight, reps: set.reps));
                 }),
@@ -392,9 +417,12 @@ class _ExerciseCardState extends State<ExerciseCard> {
                         SizedBox(
                           width: 60,
                           child: TextFormField(
+                            readOnly: readOnly,
                             initialValue: cset.weight.toString(),
                             decoration: const InputDecoration(labelText: 'Wt'),
-                            onChanged: (v) {
+                            onChanged: readOnly
+      ? null
+                            : (v) {
                               // Cannot assign to final, so just notify
                               widget.onValueChanged?.call();
                             },
@@ -404,9 +432,12 @@ class _ExerciseCardState extends State<ExerciseCard> {
                         SizedBox(
                           width: 40,
                           child: TextFormField(
+                            readOnly: readOnly,
                             initialValue: cset.reps.toString(),
                             decoration: const InputDecoration(labelText: 'Reps'),
-                            onChanged: (v) {
+                            onChanged: readOnly
+      ? null
+                            : (v) {
                               widget.onValueChanged?.call();
                             },
                           ),
@@ -414,7 +445,8 @@ class _ExerciseCardState extends State<ExerciseCard> {
                         const Spacer(),
                         IconButton(
                           icon: const Icon(Icons.remove_circle_outline),
-                          onPressed: () async {
+                          onPressed: readOnly ? null
+                          : () async {
                             final confirm = await showDialog<bool>(
                               context: context,
                               builder: (ctx) => AlertDialog(
@@ -422,10 +454,12 @@ class _ExerciseCardState extends State<ExerciseCard> {
                                 content: const Text('Are you sure you want to remove this CSet?'),
                                 actions: [
                                   TextButton(
-                                      onPressed: () => Navigator.of(ctx).pop(false),
+                                      onPressed: readOnly ? null
+                                      : () => Navigator.of(ctx).pop(false),
                                       child: const Text('Cancel')),
                                   TextButton(
-                                      onPressed: () => Navigator.of(ctx).pop(true),
+                                      onPressed: readOnly ? null
+                                      : () => Navigator.of(ctx).pop(true),
                                       child: const Text('Remove')),
                                 ],
                               ),
@@ -455,7 +489,8 @@ class _ExerciseCardState extends State<ExerciseCard> {
         Align(
           alignment: Alignment.centerRight,
           child: TextButton.icon(
-            onPressed: () {
+            onPressed: readOnly ? null
+            : () {
               setState(() {
                 final last = sets.isNotEmpty ? sets.last : ExerciseSet();
                 sets.add(ExerciseSet(weight: last.weight, reps: last.reps));
@@ -475,6 +510,7 @@ class _ExerciseCardState extends State<ExerciseCard> {
   // -------------------- Cardio Card --------------------
 
   Widget _buildCardioCard() {
+    final readOnly = widget.readOnlyMode;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -489,6 +525,7 @@ class _ExerciseCardState extends State<ExerciseCard> {
               ),
             ),
             PopupMenuButton<String>(
+              enabled: !readOnly,
               icon: const Icon(Icons.more_vert),
               onSelected: (v) {
                 if (v == 'remove') {
@@ -506,12 +543,13 @@ class _ExerciseCardState extends State<ExerciseCard> {
         // Tappable note under name
         _isEditingNote
             ? TextFormField(
+              readOnly: readOnly,
                 initialValue: _note,
                 decoration: const InputDecoration(
                   isDense: true,
                   labelText: 'Note',
                 ),
-                onFieldSubmitted: (val) {
+                 onFieldSubmitted: readOnly ? null : (val) {
                   setState(() {
                     _note = val.trim();
                     _isEditingNote = false;
@@ -520,7 +558,8 @@ class _ExerciseCardState extends State<ExerciseCard> {
                   widget.onValueChanged?.call();
                 },
               )
-            : GestureDetector(
+            : (!readOnly)
+  ? GestureDetector(
                 onTap: () => setState(() => _isEditingNote = true),
                 child: Text(
                   _note.isNotEmpty ? _note : 'Tap to add note',
@@ -529,7 +568,13 @@ class _ExerciseCardState extends State<ExerciseCard> {
                       .bodySmall!
                       .copyWith(fontStyle: FontStyle.italic),
                 ),
-              ),
+              ): Text(
+                  _note.isNotEmpty ? _note : 'Tap to add note',
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodySmall!
+                      .copyWith(fontStyle: FontStyle.italic),
+                ),
         const SizedBox(height: 16),
 
         // Minutes input + GO button
@@ -539,9 +584,12 @@ class _ExerciseCardState extends State<ExerciseCard> {
               width: 80,
               child: TextFormField(
                 initialValue: '$_cardioMinutes',
+                readOnly: readOnly,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(labelText: 'Minutes'),
-                onChanged: (v) {
+                onChanged: readOnly
+      ? null
+                : (v) {
                   setState(() {
                     _cardioMinutes = int.tryParse(v) ?? 0;
                     // Do not assign to final model
@@ -554,7 +602,8 @@ class _ExerciseCardState extends State<ExerciseCard> {
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
               child: const Text('GO'),
-              onPressed: () {
+              onPressed: readOnly ? null
+              : () {
                 setState(() {
                   _secondsLeft = _cardioMinutes * 60;
                 });
@@ -590,7 +639,8 @@ class _ExerciseCardState extends State<ExerciseCard> {
                   backgroundColor:
                       (_cardioTimer?.isActive ?? false) ? Colors.red : Colors.green,
                 ),
-                onPressed: () {
+                onPressed: readOnly ? null
+                : () {
                   if (_cardioTimer?.isActive ?? false) {
                     _cardioTimer!.cancel();
                     setState(() {});
@@ -621,6 +671,7 @@ class _ExerciseCardState extends State<ExerciseCard> {
   // -------------------- Stretch Card --------------------
 
 Widget _buildStretchCard() {
+  final readOnly = widget.readOnlyMode;
   // Because we added `stretchInstances` to the base WorkoutExercise,
   // every exercise (even non‐stretch) has this field. Here we assume
   // that cardType == CardType.stretch implies widget.exercise is a StretchExercise.
@@ -638,6 +689,7 @@ Widget _buildStretchCard() {
             style: Theme.of(context).textTheme.titleMedium,
           ),
           PopupMenuButton<String>(
+            enabled: !readOnly,
             icon: const Icon(Icons.more_vert),
             onSelected: (v) {
               if (v == 'remove') {
@@ -661,23 +713,28 @@ Widget _buildStretchCard() {
           ElevatedButton.icon(
             icon: const Icon(Icons.search),
             label: const Text('Search'),
-            onPressed: _showStretchSearchDialog,
+            onPressed: readOnly ? null
+            : _showStretchSearchDialog,
           ),
           const SizedBox(width: 12),
           Expanded(
             child: TextFormField(
               controller: _stretchCustomController,
+              readOnly: readOnly,
               decoration: const InputDecoration(
                 hintText: 'Custom',
                 isDense: true,
               ),
-              onChanged: (_) => setState(() {}),
+              onChanged: readOnly
+      ? null
+              : (_) => setState(() {}),
             ),
           ),
           const SizedBox(width: 8),
           IconButton(
             icon: const Icon(Icons.add_circle_outline, color: Colors.blue),
-            onPressed: _stretchCustomController.text.trim().isEmpty
+            onPressed: readOnly ? null
+            : _stretchCustomController.text.trim().isEmpty
                 ? null
                 : () {
                     setState(() {
@@ -712,7 +769,9 @@ Widget _buildStretchCard() {
             children: [
               Checkbox(
                 value: stretchList[i]['is_checked'] as bool,
-                onChanged: (checked) {
+                onChanged: readOnly
+      ? null
+                : (checked) {
                   setState(() {
                     // Update the underlying map’s `is_checked` field
                     stretchList[i]['is_checked'] = (checked == true);
@@ -750,7 +809,8 @@ Widget _buildStretchCard() {
               ),
               IconButton(
                 icon: const Icon(Icons.remove_circle_outline),
-                onPressed: () {
+                onPressed: readOnly ? null 
+                : () {
                   setState(() {
                     // Remove the instance from the model list
                     stretchList.removeAt(i);
@@ -777,6 +837,7 @@ Widget _buildStretchCard() {
     ],
   );
 }
+ 
  // -------------------- Stretch Search Dialog --------------------
 void _showStretchSearchDialog() {
   showDialog<StretchDefinition>(
