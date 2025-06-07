@@ -382,6 +382,32 @@ void initState() {
             ),
           );
 
+          // ────────────────────────────────────────────────────────────────────────
+// 1) ALWAYS render any saved C-Sets under this parent (read-only style)
+// ────────────────────────────────────────────────────────────────────────
+if (_cSets.containsKey(index) && _cSets[index]!.isNotEmpty) {
+  for (var ci = 0; ci < _cSets[index]!.length; ci++) {
+    final cset = _cSets[index]![ci];
+    children.add(
+      Padding(
+        padding: const EdgeInsets.only(left: 32, bottom: 4),
+        child: Row(
+          children: [
+            Text('CSet ${ci + 1}: ',
+                style: Theme.of(context).textTheme.bodyMedium),
+            Text('${cset.weight} × ${cset.reps}',
+                style: Theme.of(context).textTheme.bodyMedium),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ────────────────────────────────────────────────────────────────────────
+// 2) Only if you’re in change-set mode, show the editing controls
+// ────────────────────────────────────────────────────────────────────────
+
           // ChangeSet mode
           if (_isChangeSetMode) {
             children.add(
@@ -389,6 +415,11 @@ void initState() {
                 onTap: readOnly ? null : () => setState(() {
                   _cSets.putIfAbsent(index, () => []);
                   _cSets[index]!.add(ExerciseSet(weight: set.weight, reps: set.reps));
+                  // mirror into the model so insertWeightSets sees it:
+                  if (widget.exercise is WeightExercise) {
+                    (widget.exercise as WeightExercise).changeSets[index] =
+                     List<ExerciseSet>.from(_cSets[index]!);
+                  }
                 }),
                 child: Container(
                   margin: const EdgeInsets.only(left: 16, bottom: 4),
@@ -420,30 +451,44 @@ void initState() {
                         SizedBox(
                           width: 60,
                           child: TextFormField(
-                            readOnly: readOnly,
-                            initialValue: cset.weight.toString(),
-                            decoration: const InputDecoration(labelText: 'Wt'),
-                            onChanged: readOnly
-      ? null
-                            : (v) {
-                              // Cannot assign to final, so just notify
-                              widget.onValueChanged?.call();
-                            },
-                          ),
+  readOnly: readOnly,
+  keyboardType: TextInputType.number,
+  initialValue: cset.weight.toString(),
+  decoration: const InputDecoration(labelText: 'Wt'),
+  onChanged: readOnly
+    ? null
+    : (v) {
+        final w = double.tryParse(v) ?? cset.weight;
+        cset.weight = w;
+        // sync back into the model
+        if (widget.exercise is WeightExercise) {
+          (widget.exercise as WeightExercise).changeSets[index] =
+            List<ExerciseSet>.from(_cSets[index]!);
+        }
+        widget.onValueChanged?.call();
+      },
+),
                         ),
                         const SizedBox(width: 8),
                         SizedBox(
                           width: 40,
                           child: TextFormField(
-                            readOnly: readOnly,
-                            initialValue: cset.reps.toString(),
-                            decoration: const InputDecoration(labelText: 'Reps'),
-                            onChanged: readOnly
-      ? null
-                            : (v) {
-                              widget.onValueChanged?.call();
-                            },
-                          ),
+  readOnly: readOnly,
+  keyboardType: TextInputType.number,
+  initialValue: cset.reps.toString(),
+  decoration: const InputDecoration(labelText: 'Reps'),
+  onChanged: readOnly
+    ? null
+    : (v) {
+        final r = int.tryParse(v) ?? cset.reps;
+        cset.reps = r;
+        if (widget.exercise is WeightExercise) {
+          (widget.exercise as WeightExercise).changeSets[index] =
+            List<ExerciseSet>.from(_cSets[index]!);
+        }
+        widget.onValueChanged?.call();
+      },
+),
                         ),
                         const Spacer(),
                         IconButton(
