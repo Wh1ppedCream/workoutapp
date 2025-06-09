@@ -112,6 +112,23 @@ void initState() {
 }
   }
 
+  // 1) Seed _cSets from the model:
+  if (widget.exercise is WeightExercise) {
+    final we = widget.exercise as WeightExercise;
+    _cSets.clear();
+    we.changeSets.forEach((parentIdx, children) {
+      _cSets[parentIdx] = List<ExerciseSet>.from(children);
+    });
+
+    // 2) If we’re in read-only mode and there _were_ changeSets saved,
+    //    we want to show them boxed:
+    if (widget.readOnlyMode && we.changeSets.isNotEmpty) {
+      _isChangeSetMode = true;
+    }
+  }
+
+
+
   // 4) STRETCH
   if (widget.cardType == CardType.stretch) {
     _stretchCustomController = TextEditingController();
@@ -184,9 +201,8 @@ void initState() {
 
   Widget _buildWeightCard() {
     final readOnly = widget.readOnlyMode;
-    final sets = (widget.exercise is WeightExercise)
-        ? (widget.exercise as WeightExercise).sets
-        : <ExerciseSet>[];
+    final we = widget.exercise as WeightExercise;
+  final sets = we.sets;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -382,178 +398,177 @@ void initState() {
             ),
           );
 
-          // ────────────────────────────────────────────────────────────────────────
-// 1) ALWAYS render any saved C-Sets under this parent (read-only style)
-// ────────────────────────────────────────────────────────────────────────
-if (_cSets.containsKey(index) && _cSets[index]!.isNotEmpty) {
-  for (var ci = 0; ci < _cSets[index]!.length; ci++) {
-    final cset = _cSets[index]![ci];
-    children.add(
-      Padding(
-        padding: const EdgeInsets.only(left: 32, bottom: 4),
-        child: Row(
-          children: [
-            Text('CSet ${ci + 1}: ',
-                style: Theme.of(context).textTheme.bodyMedium),
-            Text('${cset.weight} × ${cset.reps}',
-                style: Theme.of(context).textTheme.bodyMedium),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ────────────────────────────────────────────────────────────────────────
-// 2) Only if you’re in change-set mode, show the editing controls
-// ────────────────────────────────────────────────────────────────────────
-
-          // ChangeSet mode
-          if (_isChangeSetMode) {
+          
+// Boxed C-Sets
+        if (_isChangeSetMode || (readOnly && we.changeSets.isNotEmpty)) {
+          final cList = _cSets[index] ?? [];
+          for (var ci = 0; ci < cList.length; ci++) {
+            final cset = cList[ci];
             children.add(
-              GestureDetector(
-                onTap: readOnly ? null : () => setState(() {
-                  _cSets.putIfAbsent(index, () => []);
-                  _cSets[index]!.add(ExerciseSet(weight: set.weight, reps: set.reps));
-                  // mirror into the model so insertWeightSets sees it:
-                  if (widget.exercise is WeightExercise) {
-                    (widget.exercise as WeightExercise).changeSets[index] =
-                     List<ExerciseSet>.from(_cSets[index]!);
-                  }
-                }),
+              Transform.scale(
+                scale: 0.8,
+                alignment: Alignment.topLeft,
                 child: Container(
-                  margin: const EdgeInsets.only(left: 16, bottom: 4),
-                  padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.blueAccent),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: const Text('Add CSet'),
-                ),
-              ),
-            );
+                  margin: const EdgeInsets.only(left: 32, bottom: 4),
+                  padding: const EdgeInsets.all(6),
+                  decoration:
+                      BoxDecoration(border: Border.all(color: Colors.grey)),
+                  child: Row(
+                    children: [
+                      Text('CSet ${ci + 1}'),
+                      const SizedBox(width: 8),
 
-            final cList = _cSets[index] ?? [];
-            for (var ci = 0; ci < cList.length; ci++) {
-              final cset = cList[ci];
-              children.add(
-                Transform.scale(
-                  scale: 0.8,
-                  alignment: Alignment.topLeft,
-                  child: Container(
-                    margin: const EdgeInsets.only(left: 32, bottom: 4),
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
-                    child: Row(
-                      children: [
-                        Text('CSet ${ci + 1}'),
-                        const SizedBox(width: 8),
-                        SizedBox(
-                          width: 60,
-                          child: TextFormField(
-  readOnly: readOnly,
-  keyboardType: TextInputType.number,
-  initialValue: cset.weight.toString(),
-  decoration: const InputDecoration(labelText: 'Wt'),
-  onChanged: readOnly
-    ? null
-    : (v) {
-        final w = double.tryParse(v) ?? cset.weight;
-        cset.weight = w;
-        // sync back into the model
-        if (widget.exercise is WeightExercise) {
-          (widget.exercise as WeightExercise).changeSets[index] =
-            List<ExerciseSet>.from(_cSets[index]!);
-        }
-        widget.onValueChanged?.call();
-      },
-),
+                      // Weight field
+                      SizedBox(
+                        width: 60,
+                        child: TextFormField(
+                          readOnly: readOnly,
+                          keyboardType: TextInputType.number,
+                          initialValue: cset.weight.toString(),
+                          decoration: const InputDecoration(labelText: 'Wt'),
+                          onChanged: readOnly
+                              ? null
+                              : (v) {
+                                  cset.weight =
+                                      double.tryParse(v) ?? cset.weight;
+                                  we.changeSets[index] =
+                                      List.from(_cSets[index]!);
+                                  widget.onValueChanged?.call();
+                                },
                         ),
-                        const SizedBox(width: 8),
-                        SizedBox(
-                          width: 40,
-                          child: TextFormField(
-  readOnly: readOnly,
-  keyboardType: TextInputType.number,
-  initialValue: cset.reps.toString(),
-  decoration: const InputDecoration(labelText: 'Reps'),
-  onChanged: readOnly
-    ? null
-    : (v) {
-        final r = int.tryParse(v) ?? cset.reps;
-        cset.reps = r;
-        if (widget.exercise is WeightExercise) {
-          (widget.exercise as WeightExercise).changeSets[index] =
-            List<ExerciseSet>.from(_cSets[index]!);
-        }
-        widget.onValueChanged?.call();
-      },
-),
+                      ),
+                      const SizedBox(width: 8),
+
+                      // Reps field
+                      SizedBox(
+                        width: 40,
+                        child: TextFormField(
+                          readOnly: readOnly,
+                          keyboardType: TextInputType.number,
+                          initialValue: cset.reps.toString(),
+                          decoration: const InputDecoration(labelText: 'Reps'),
+                          onChanged: readOnly
+                              ? null
+                              : (v) {
+                                  cset.reps =
+                                      int.tryParse(v) ?? cset.reps;
+                                  we.changeSets[index] =
+                                      List.from(_cSets[index]!);
+                                  widget.onValueChanged?.call();
+                                },
                         ),
+                      ),
+
+                      // Remove CSet confirmation (edit-only)
+                      if (!readOnly) ...[
                         const Spacer(),
                         IconButton(
                           icon: const Icon(Icons.remove_circle_outline),
-                          onPressed: readOnly ? null
-                          : () async {
+                          onPressed: () async {
                             final confirm = await showDialog<bool>(
                               context: context,
                               builder: (ctx) => AlertDialog(
                                 title: const Text('Remove CSet'),
-                                content: const Text('Are you sure you want to remove this CSet?'),
+                                content: const Text(
+                                  'Are you sure you want to remove this CSet?',
+                                ),
                                 actions: [
                                   TextButton(
-                                      onPressed: readOnly ? null
-                                      : () => Navigator.of(ctx).pop(false),
-                                      child: const Text('Cancel')),
+                                    onPressed: () =>
+                                        Navigator.of(ctx).pop(false),
+                                    child: const Text('Cancel'),
+                                  ),
                                   TextButton(
-                                      onPressed: readOnly ? null
-                                      : () => Navigator.of(ctx).pop(true),
-                                      child: const Text('Remove')),
+                                    onPressed: () =>
+                                        Navigator.of(ctx).pop(true),
+                                    child: const Text('Remove'),
+                                  ),
                                 ],
                               ),
                             );
                             if (confirm == true) {
                               setState(() {
                                 _cSets[index]!.removeAt(ci);
+                                we.changeSets[index] =
+                                    List.from(_cSets[index]!);
                               });
+                              widget.onValueChanged?.call();
                             }
                           },
                         ),
                       ],
-                    ),
+                    ],
                   ),
                 ),
-              );
-            }
+              ),
+            );
           }
+        }
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: children,
+        // Add C-Set button (edit-only)
+        if (!readOnly && _isChangeSetMode) {
+          children.add(
+            GestureDetector(
+              onTap: () {
+                setState(() {
+                  _cSets.putIfAbsent(index, () => []);
+                  _cSets[index]!.add(
+                    ExerciseSet(weight: set.weight, reps: set.reps),
+                  );
+                  we.changeSets[index] = List.from(_cSets[index]!);
+                });
+                widget.onValueChanged?.call();
+              },
+              child: Container(
+                margin: const EdgeInsets.only(left: 16, bottom: 4),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.blueAccent),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: const Text('Add CSet'),
+              ),
+            ),
           );
-        }),
+        }
 
-        // Add Set Button
-        Align(
-          alignment: Alignment.centerRight,
-          child: TextButton.icon(
-            onPressed: readOnly ? null
-            : () {
-              setState(() {
-                final last = sets.isNotEmpty ? sets.last : ExerciseSet();
-                sets.add(ExerciseSet(weight: last.weight, reps: last.reps));
-                _weightControllers.add(TextEditingController(text: last.weight.toString()));
-                _repsControllers.add(TextEditingController(text: last.reps.toString()));
-              });
-              widget.onSetAdded?.call();
-            },
-            icon: const Icon(Icons.add),
-            label: const Text('Add Set'),
-          ),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: children,
+        );
+      }),
+
+      // Add Set Button
+      Align(
+        alignment: Alignment.centerRight,
+        child: TextButton.icon(
+          onPressed: readOnly
+              ? null
+              : () {
+                  setState(() {
+                    final last = sets.isNotEmpty
+                        ? sets.last
+                        : ExerciseSet();
+                    sets.add(
+                      ExerciseSet(weight: last.weight, reps: last.reps),
+                    );
+                    _weightControllers.add(
+                      TextEditingController(text: last.weight.toString()),
+                    );
+                    _repsControllers.add(
+                      TextEditingController(text: last.reps.toString()),
+                    );
+                  });
+                  widget.onSetAdded?.call();
+                },
+          icon: const Icon(Icons.add),
+          label: const Text('Add Set'),
         ),
-      ],
-    );
-  }
+      ),
+    ],
+  );
+}
 
   // -------------------- Cardio Card --------------------
 
