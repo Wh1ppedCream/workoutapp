@@ -19,6 +19,9 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
   List<WorkoutExercise> _exercises = [];
   bool _hasChanges = false;
 
+  bool _isEditing = false;
+
+
   @override
   void initState() {
     super.initState();
@@ -341,8 +344,15 @@ Future<void> _loadExercises() async {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text('Session: $dateStr'),
+          title: Text('$dateStr'),
           actions: [
+            IconButton(
+      icon: Icon(
+        Icons.edit,
+        color: _isEditing ? Colors.green : Colors.grey,
+      ),
+      onPressed: () => setState(() => _isEditing = !_isEditing),
+    ),
             IconButton(
               icon: const Icon(Icons.delete_forever),
               onPressed: () => _deleteSession(context),
@@ -366,18 +376,24 @@ Future<void> _loadExercises() async {
   key: ValueKey(i),
   exercise: we,
   cardType: cardType,
-  readOnlyMode: true,  // ← make it display‐only
-  initialCompletedParents: (we is WeightExercise)
-      ? we.completedParents
-      : null,
-  initialCompletedChildren: (we is WeightExercise)
-      ? we.completedChildren
-      : null,
-  onDeleteExercise:    () {}, // no-op
-  onSetAdded:          () {},
-  onSetDeleted:        () {},
-  onValueChanged:      () {},
+  readOnlyMode: !_isEditing,
+  initialCompletedParents: (we is WeightExercise) ? we.completedParents : null,
+  initialCompletedChildren:(we is WeightExercise) ? we.completedChildren : null,
+
+  // when editing, allow removal/add/edit → set _hasChanges
+  onDeleteExercise: _isEditing
+    ? () {
+        setState(() {
+          _exercises.removeAt(i);
+          _hasChanges = true;
+        });
+      }
+    : null,
+  onSetAdded: _isEditing ? () => setState(() => _hasChanges = true) : null,
+  onSetDeleted: _isEditing ? () => setState(() => _hasChanges = true) : null,
+  onValueChanged: _isEditing ? () => setState(() => _hasChanges = true) : null,
 );
+
                 },
               ),
         bottomNavigationBar: _hasChanges
@@ -389,6 +405,8 @@ Future<void> _loadExercises() async {
                 ),
               )
             : null,
+
+            
       ),
     );
   }
