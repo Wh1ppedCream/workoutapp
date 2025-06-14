@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../db/database_helper.dart';
-import '../models.dart';
+import '../models/models.dart';
 import '../widgets/exercise_card.dart';
 
 /// Displays and allows editing of a saved workout session.

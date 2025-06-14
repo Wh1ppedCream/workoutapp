@@ -3,7 +3,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../db/database_helper.dart';
-import '../models.dart';
+import '../models/models.dart';
 import '../widgets/exercise_card.dart';
 import 'exercise_catalog_page.dart'; // For Catalog flow
 

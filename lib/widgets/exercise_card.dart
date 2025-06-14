@@ -2,7 +2,7 @@
 
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../models.dart';
+import '../models/models.dart';
 import '../db/database_helper.dart';
 
 enum CardType { weight, cardio, stretch }

@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import '../db/database_helper.dart';
-import '../models.dart';
+import '../models/models.dart';
 import 'definitions_by_bodypart_page.dart';
 
 /// Allows the user to select a body part and view its exercises.

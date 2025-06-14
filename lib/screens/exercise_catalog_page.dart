@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../db/database_helper.dart';
-import '../../models.dart';
+import '../models/models.dart';
 
 class ExerciseCatalogPage extends StatefulWidget {
   final void Function(ExerciseDefinition)? onExercisePicked;

@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import '../db/database_helper.dart';
-import '../models.dart';
+import '../models/models.dart';
 
 /// Displays exercises filtered by a specific body part.
 class DefinitionsByBodyPartPage extends StatelessWidget {

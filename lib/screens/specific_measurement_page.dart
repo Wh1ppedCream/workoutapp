@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../db/database_helper.dart';
-import '../models.dart';
+import '../models/models.dart';
 
 /// Shows a historical chart and list for a single measurement definition.
 class SpecificMeasurementPage extends StatefulWidget {
