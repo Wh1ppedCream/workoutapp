@@ -1,8 +1,8 @@
 // muscle_filter_page.dart
 
 import 'package:flutter/material.dart';
-import 'db/database_helper.dart';
-import 'models.dart';
+import '../db/database_helper.dart';
+import '../models.dart';
 import 'definitions_by_bodypart_page.dart';
 
 /// Allows the user to select a body part and view its exercises.

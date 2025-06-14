@@ -2,8 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'db/database_helper.dart';
-import 'models.dart';
+import '../db/database_helper.dart';
+import '../models.dart';
 import 'session_detail_screen.dart';
 import 'exercise_catalog_page.dart';
 import 'muscle_filter_page.dart';

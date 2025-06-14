@@ -1,10 +1,10 @@
 // File: lib/main.dart
 
 import 'package:flutter/material.dart';
-import 'history_screen.dart';
-import 'train_page.dart';           // << Add this import
-import 'nutrition_page.dart';       // << And this
-import 'profile_page.dart';         // << And this
+import 'screens/history_screen.dart';
+import 'screens/train_page.dart';           // << Add this import
+import 'screens/nutrition_page.dart';       // << And this
+import 'screens/profile_page.dart';         // << And this
 
 void main() {
   runApp(const MyApp());
