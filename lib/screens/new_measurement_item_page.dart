@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import '../db/database_helper.dart';
-import '../models.dart';
+import '../models/models.dart';
 
 /// Page for creating a new measurement (weight, height, or specific body part).
 class NewMeasurementItemPage extends StatefulWidget {
