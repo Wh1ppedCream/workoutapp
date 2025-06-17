@@ -2,12 +2,15 @@
 
 import 'package:flutter/material.dart';
 import '../models/models.dart';
-import '../db/database_helper.dart';
+import '../repositories/app_repository.dart';
 
 /// A dialog that lets the user pick a stretch by body part,
 /// returning the chosen StretchDefinition (or null if cancelled).
 class StretchSearchDialog {
   static Future<StretchDefinition?> show(BuildContext context) {
+    // Use the repository instead of DatabaseHelper directly
+    final repo = AppRepository();
+
     return showDialog<StretchDefinition>(
       context: context,
       builder: (dialogCtx) {
@@ -24,7 +27,7 @@ class StretchSearchDialog {
                 children: [
                   // 1) Body-part dropdown
                   FutureBuilder<List<BodyPart>>(
-                    future: DatabaseHelper().getAllBodyParts(),
+                    future: repo.fetchAllBodyParts(),
                     builder: (ctx, snap) {
                       if (snap.connectionState != ConnectionState.done) {
                         return const Padding(
@@ -50,9 +53,8 @@ class StretchSearchDialog {
                             currentStretches = [];
                           });
                           if (newBpId != null) {
-                            DatabaseHelper()
-                                .getStretches(bodypartId: newBpId)
-                                .then((list) {
+                            // Fetch stretches via repo
+                                repo.fetchStretches(bodypartId: newBpId).then((list) {
                               setState(() {
                                 currentStretches = list;
                               });
