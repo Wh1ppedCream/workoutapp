@@ -9,19 +9,19 @@ class Seed {
   /// Seeds equipment, body parts, muscles, and exercises from JSON files.
   static Future<void> seedLookupsAndExercises(Database db) async {
     // 1) Equipment lookup
-    final eqJson = await rootBundle.loadString('assets/data/equipment.json');
+    final eqJson = await rootBundle.loadString('assets/equipment.json');
     final List eqList = json.decode(eqJson);
 
     // 2) Body parts lookup
-    final bpJson = await rootBundle.loadString('assets/data/bodyparts.json');
+    final bpJson = await rootBundle.loadString('assets/bodyparts.json');
     final List bpList = json.decode(bpJson);
 
     // 3) Muscles lookup
-    final mJson = await rootBundle.loadString('assets/data/muscles.json');
+    final mJson = await rootBundle.loadString('assets/muscles.json');
     final List mList = json.decode(mJson);
 
     // 4) Exercises definitions
-    final exJson = await rootBundle.loadString('assets/data/exercises.json');
+    final exJson = await rootBundle.loadString('assets/exercises.json');
     final List exList = json.decode(exJson);
 
     await db.transaction((txn) async {
@@ -143,7 +143,7 @@ class Seed {
 
   /// Seeds stretch definitions and their associated body parts.
   static Future<void> seedStretches(Database db) async {
-    final stJson = await rootBundle.loadString('assets/data/stretches.json');
+    final stJson = await rootBundle.loadString('assets/stretches.json');
     final List stList = json.decode(stJson);
 
     await db.transaction((txn) async {
