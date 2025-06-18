@@ -1,6 +1,7 @@
 // File: lib/db/database_helper.dart
 
 import 'dart:async';
+import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/models.dart';
@@ -121,7 +122,115 @@ Future<int> insertExercise(int sessionId, String name, String equipmentName, int
     return ExerciseDao.deleteExercisesForSession(db, sid);
   }
  
- 
+ /// Fetches a fully-detailed WorkoutExercise (Weight/Cardio/Stretch).
+Future<WorkoutExercise?> fetchDetailedExercise(int exerciseId) async {
+  final db = await database;
+
+  // 1) Base row
+  final exRow = await ExerciseDao.getExerciseById(db, exerciseId);
+  if (exRow == null) return null;
+  final type = exRow['type'] as String;
+
+  if (type == 'weight') {
+    // — definition info (name+equipment)
+    final defInfo = await DefinitionDao.getDefinitionInfo(db, exRow['exercise_def_id'] as int);
+
+    // — sets & changeSets
+    final parentRows = await db.query(
+      'sets',
+      where: 'exercise_id = ? AND parent_set_id IS NULL',
+      whereArgs: [exerciseId],
+      orderBy: 'order_index',
+    );
+    final sets = <ExerciseSet>[];
+    final changeSets = <int, List<ExerciseSet>>{};
+    final completedParents = <int>{};
+    final completedChildren = <int, Set<int>>{};
+
+    for (var i = 0; i < parentRows.length; i++) {
+      final p = parentRows[i];
+      sets.add(ExerciseSet(weight: (p['weight'] as num).toDouble(), reps: p['reps'] as int));
+      completedParents.add(i);
+
+      final children = await db.query(
+        'sets',
+        where: 'parent_set_id = ?',
+        whereArgs: [p['id']],
+        orderBy: 'order_index',
+      );
+      if (children.isNotEmpty) {
+        changeSets[i] = children.map((c) => ExerciseSet(
+          weight: (c['weight'] as num).toDouble(),
+          reps:   c['reps']   as int,
+        )).toList();
+        completedChildren[i] = Set.from(List.generate(children.length, (j) => j));
+      }
+    }
+
+    return WeightExercise(
+      name:              defInfo['name']!,
+      equipment:         defInfo['equipmentName'] ?? '',
+      sets:              sets,
+      changeSets:        changeSets,
+      completedParents:  completedParents,
+      completedChildren: completedChildren,
+    );
+  }
+
+  if (type == 'cardio') {
+    final c = await getCardioDetailsForExercise(exerciseId);
+    if (c == null) return null;
+    return CardioExercise(
+      name:           c['cardio_name']    as String,
+      equipment:      '',
+      cardioName:     c['cardio_name']    as String,
+      cardioNote:     c['note']           as String?,
+      plannedMinutes: (c['planned_minutes'] as num).toInt(),
+      elapsedSeconds: (c['elapsed_seconds'] as num).toInt(),
+    );
+  }
+
+  if (type == 'stretch') {
+    final items = await getStretchItemsForExercise(exerciseId);
+    final insts = <Map<String, dynamic>>[];
+    final completed = <int>{};
+    for (var i = 0; i < items.length; i++) {
+      final r = items[i];
+      insts.add({
+        'stretch_id':  r['stretch_id'] as int?,
+        'is_custom':   r['is_custom']  == 1,
+        'custom_name': r['custom_name'] as String?,
+        'custom_desc': r['custom_desc'] as String?,
+        'is_checked':  r['is_checked'] == 1,
+        'order_index': r['order_index'] as int,
+      });
+      if (r['is_checked'] == 1) completed.add(i);
+    }
+    // determine header name…
+    String hdr = 'Stretch';
+    if (insts.isNotEmpty && insts.first['stretch_id'] != null) {
+      final sd = await DefinitionDao.getDefinitionInfo(db, insts.first['stretch_id'] as int);
+      hdr = sd['name']!;
+    }
+    return StretchExercise(
+      name:                    hdr,
+      equipment:               '',
+      stretchInstances:        insts,
+      completedStretchIndices: completed,
+    );
+  }
+
+  return null;
+}
+
+
+/// Deletes a single exercise (and all its child rows) by ID.
+Future<void> deleteExercise(int exerciseId) async {
+  final db = await database;
+  // Delegate to the DAO
+  await ExerciseDao.deleteExerciseById(db, exerciseId);
+}
+
  // set_dao.dart
 
   /// Inserts a set belonging to an exercise instance.
@@ -326,4 +435,65 @@ Future<List<String>> getAllMuscleNames() async {
   final db = await database;
   return LookupDao.getAllMuscleNames(db);
 }
+
+/// Rerun JSON-seeding for lookup tables & stretches.
+  Future<void> reseedLookupData() async {
+    final db = await database;
+    await Seed.seedLookupsAndExercises(db);
+    await Seed.seedStretches(db);
+  }
+
+/// Export the entire database to a JSON string.
+  Future<String> exportDatabase() async {
+    final db = await database;
+    final tables = [
+      'sessions',
+      'exercises',
+      'sets',
+      'cardio_details',
+      'stretch_instances',
+      'stretch_instance_items',
+      'measurement_definitions',
+      'measurements',
+      'equipment',
+      'bodypart',
+      'muscles',
+      'exercise_definitions',
+      'exercise_equipment',
+      'exercise_bodypart',
+      'exercise_muscle',
+      'stretch_definitions',
+      'stretch_bodypart',
+    ];
+    final Map<String, dynamic> data = {};
+    for (final table in tables) {
+      data[table] = await db.query(table);
+    }
+    return jsonEncode(data);
+  }
+
+  /// Import the database from a JSON string.
+  /// If [clearFirst] is true, all existing rows are deleted before import.
+  Future<void> importDatabase(String jsonStr, {bool clearFirst = true}) async {
+    final db = await database;
+    final Map<String, dynamic> data = jsonDecode(jsonStr);
+    await db.transaction((txn) async {
+      await txn.execute('PRAGMA foreign_keys = OFF');
+      if (clearFirst) {
+        for (final table in data.keys) {
+          await txn.delete(table);
+        }
+     }
+      for (final table in data.keys) {
+        final rows = List<Map<String, dynamic>>.from(data[table] as List);
+        for (final row in rows) {
+          await txn.insert(table, row);
+        }
+      }
+      await txn.execute('PRAGMA foreign_keys = ON');
+    });
+  }
+
+
+
 }

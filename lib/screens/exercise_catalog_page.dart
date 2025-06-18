@@ -36,7 +36,7 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
 
   // Loading / search
   bool _isLoading = true;
-  String _searchQuery = '';
+  final String _searchQuery = '';
 
   ExerciseDefinition? _selectedDef;
 
@@ -44,7 +44,20 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
   void initState() {
     super.initState();
     _loadLookupsAndDefs();
+    _onSearchChanged('');
   }
+
+  void _onSearchChanged(String q) async {
+  setState(() {
+    _isLoading = true;
+  });
+  // Run the SQL LIKE search
+  final results = await _repo.fuzzsearchExercises(q);
+  setState(() {
+    _displayedDefs = results;
+    _isLoading = false;
+  });
+}
 
   Future<void> _loadLookupsAndDefs() async {
     try {
@@ -207,16 +220,11 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
           children: [
             TextField(
               decoration: const InputDecoration(
-                labelText: 'Search exercises',
+                labelText: 'Search Exercises',
                 prefixIcon: Icon(Icons.search),
                 border: OutlineInputBorder(),
               ),
-              onChanged: (q) {
-                setState(() {
-                  _searchQuery = q;
-                });
-                _applySearchAndDisplay();
-              },
+              onChanged: _onSearchChanged,
             ),
             const SizedBox(height: 12),
             Align(

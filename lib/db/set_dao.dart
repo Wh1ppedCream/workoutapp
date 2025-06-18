@@ -67,4 +67,75 @@ class SetDao {
       orderBy: 'order_index',
     );
   }
+
+static Future<List<Map<String,dynamic>>> getParentSets(
+    Database db,int exerciseId
+  ) {
+    return db.query(
+      'sets',
+      where:    'exercise_id = ? AND parent_set_id IS NULL',
+      whereArgs:[exerciseId],
+      orderBy:  'order_index',
+    );
+  }
+  static Future<List<Map<String,dynamic>>> getChildSets(
+    Database db,int parentId
+  ) {
+    return db.query(
+      'sets',
+      where:    'parent_set_id = ?',
+      whereArgs:[parentId],
+      orderBy:  'order_index',
+    );
+  }
+
+/// Updates the weight & reps of a single set.
+  static Future<int> updateSet(
+    Database db,
+    int setId,
+    double weight,
+    int reps,
+  ) {
+    return db.update(
+      'sets',
+      {
+        'weight': weight,
+        'reps':   reps,
+      },
+      where: 'id = ?',
+     whereArgs: [setId],
+    );
+  }
+
+ /// Deletes a single set (parent or child) by its ID.
+  static Future<void> deleteSet(
+    Database db,
+    int setId,
+ ) {
+    return db.delete(
+      'sets',
+      where: 'id = ?',
+      whereArgs: [setId],
+    );
+  }
+
+  /// Reorders a flat list of set IDs for an exercise by assigning
+  /// each ID a new order_index according to its position in [setIds].
+  static Future<void> reorderSets(
+    Database db,
+    int exerciseId,
+    List<int> setIds,
+  ) async {
+    // Only the passed IDs are reordered; assumes they all belong
+    // to the given exerciseId.
+    for (var i = 0; i < setIds.length; i++) {
+      await db.update(
+        'sets',
+        {'order_index': i},
+        where: 'id = ?',
+        whereArgs: [setIds[i]],
+      );
+    }
+  }
+
 }

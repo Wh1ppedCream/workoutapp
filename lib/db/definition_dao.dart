@@ -306,4 +306,82 @@ class DefinitionDao {
     };
   }
 
+/// Updates the core fields of an existing exercise definition.
+/// (Note: renaming/join tables updates must be handled separately.)
+static Future<int> updateExerciseDefinition(
+  Database db,
+  ExerciseDefinition def,
+) {
+  return db.update(
+    'exercise_definitions',
+    {
+      'name': def.name,
+      'equipment_id': def.equipmentId,
+      'rating': def.rating,
+    },
+    where: 'id = ?',
+    whereArgs: [def.id],
+  );
+}
+
+/// Deletes the exercise definition (cascade on join tables).
+static Future<int> deleteExerciseDefinition(
+  Database db,
+  int defId,
+) {
+  return db.delete(
+    'exercise_definitions',
+    where: 'id = ?',
+    whereArgs: [defId],
+  );
+}
+
+/// Searches definitions whose name contains [query] (case‐insensitive).
+/// Returns shallow ExerciseDefinition objects (no join lists).
+static Future<List<ExerciseDefinition>> searchExerciseDefinitions(
+  Database db,
+  String query,
+) async {
+  final rows = await db.query(
+    'exercise_definitions',
+    where: 'LOWER(name) LIKE ?',
+    whereArgs: ['%${query.toLowerCase()}%'],
+    orderBy: 'name',
+  );
+  return rows.map((r) => ExerciseDefinition(
+    id:           r['id'] as int,
+    name:         r['name'] as String,
+    equipmentId:  r['equipment_id'] as int?,
+    rating:       (r['rating'] as num).toInt(),
+    equipmentList: const [],
+    bodyParts:     const [],
+    muscles:       const [],
+  )).toList();
+}
+
+  /// Search exercise definitions by name (SQL LIKE).
+  static Future<List<ExerciseDefinition>> fuzzsearchExerciseDefinitions(
+    Database db,
+    String searchTerm,
+  ) async {
+    final likeArg = '%${searchTerm.replaceAll("'", "''")}%';
+    final rows = await db.query(
+      'exercise_definitions',
+      where: 'name LIKE ?',
+      whereArgs: [likeArg],
+      orderBy: 'name',
+    );
+    return rows.map((r) {
+      return ExerciseDefinition(
+        id:            r['id']            as int,
+        name:          r['name']          as String,
+        equipmentId:   r['equipment_id']  as int?,
+        rating:       (r['rating'] as num?)?.toInt() ?? 0,
+        equipmentList: const [],
+        bodyParts:     const [],
+        muscles:       const [],
+      );
+    }).toList();
+  }
+
 }

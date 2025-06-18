@@ -185,4 +185,132 @@ class LookupDao {
     return rows.first['id'] as int;
   }
 
+/// Fetch a single measurement by its ID (or null if none).
+  static Future<Map<String, dynamic>?> getMeasurementById(
+    Database db,
+    int measurementId,
+  ) async {
+    final rows = await db.query(
+      'measurements',
+      where: 'id = ?',
+      whereArgs: [measurementId],
+      limit: 1,
+    );
+    return rows.isNotEmpty ? rows.first : null;
+  }
+
+  /// Updates an existing measurement record.
+  static Future<int> updateMeasurement({
+    required Database db,
+    required int measurementId,
+    required DateTime timestamp,
+    required double value,
+    required String unit,
+    String? note,
+  }) {
+    return db.update(
+      'measurements',
+      {
+        'timestamp': timestamp.toIso8601String(),
+        'value':     value,
+        'unit':      unit,
+        'note':      note,
+      },
+      where: 'id = ?',
+      whereArgs: [measurementId],
+    );
+  }
+
+  /// Deletes a measurement by its ID.
+  static Future<int> deleteMeasurement(
+    Database db,
+    int measurementId,
+  ) {
+    return db.delete(
+      'measurements',
+      where: 'id = ?',
+      whereArgs: [measurementId],
+    );
+  }
+
+
+  /// Insert a new equipment.
+  static Future<int> insertEquipment(Database db, String name) {
+    return db.insert('equipment', {'name': name});
+  }
+
+  /// Update an existing equipment.
+  static Future<int> updateEquipment(Database db, int id, String name) {
+    return db.update(
+      'equipment',
+      {'name': name},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  /// Delete an equipment by ID.
+  static Future<int> deleteEquipment(Database db, int id) {
+    return db.delete(
+      'equipment',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  /// Fetch all equipment as full [Equipment] models.
+  static Future<List<Equipment>> getAllEquipment(Database db) async {
+    final rows = await db.query('equipment', orderBy: 'name');
+   return rows.map((r) => Equipment(r['id'] as int, r['name'] as String)).toList();
+  }
+
+  /// Insert a new body part.
+  static Future<int> insertBodyPart(Database db, String name) {
+    return db.insert('bodypart', {'name': name});
+  }
+
+  /// Update an existing body part.
+
+  static Future<int> updateBodyPart(Database db, int id, String name) {
+    return db.update(
+      'bodypart',
+      {'name': name},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  /// Delete a body part by ID.
+  static Future<int> deleteBodyPart(Database db, int id) {
+    return db.delete(
+      'bodypart',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  /// Insert a new muscle.
+  static Future<int> insertMuscle(Database db, String name) {
+    return db.insert('muscles', {'name': name});
+  }
+
+  /// Update an existing muscle.
+  static Future<int> updateMuscle(Database db, int id, String name) {
+    return db.update(
+      'muscles',
+      {'name': name},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  /// Delete a muscle by ID.
+  static Future<int> deleteMuscle(Database db, int id) {
+    return db.delete(
+      'muscles',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
 }
