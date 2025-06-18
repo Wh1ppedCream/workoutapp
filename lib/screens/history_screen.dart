@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../db/database_helper.dart';
+import '../repositories/app_repository.dart';
 import '../models/models.dart';
 import 'session_detail_screen.dart';
 import 'exercise_catalog_page.dart';
@@ -13,10 +13,11 @@ class HistoryScreen extends StatefulWidget {
   const HistoryScreen({Key? key}) : super(key: key);
 
   @override
-  _HistoryScreenState createState() => _HistoryScreenState();
+  State<HistoryScreen> createState() => _HistoryScreenState();
 }
 
 class _HistoryScreenState extends State<HistoryScreen> {
+  final _repo = AppRepository();
   late Future<List<WorkoutSession>> _sessionsFuture;
 
   @override
@@ -26,15 +27,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   void _loadSessions() {
-    _sessionsFuture = DatabaseHelper()
-        .getAllSessionsRaw()
-        .then((raw) => raw.map((row) {
-              return WorkoutSession(
-                id: row['id'] as int,
-                date: DateTime.parse(row['date'] as String),
-                duration: row['duration'] as int,
-              );
-            }).toList());
+    _sessionsFuture = _repo.fetchWorkoutSessions();
   }
 
   @override
@@ -77,7 +70,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (snapshot.hasError) {
-                  return Center(child: Text('Error: \${snapshot.error}'));
+                  return Center(child: Text('Error: ${snapshot.error}'));
                 }
                 final sessions = snapshot.data!;
                 if (sessions.isEmpty) {

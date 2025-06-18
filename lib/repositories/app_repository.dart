@@ -222,6 +222,12 @@ class AppRepository {
     return LookupDao.getMeasurementDefinitions(db);
   }
 
+  /// Returns the ID of the measurement definition with [name], or null.
+  Future<int?> fetchMeasurementDefinitionId(String name) async {
+    final db = await _dbHelper.database;
+    return LookupDao.getMeasurementDefinitionId(db, name);
+  }
+
   Future<int> insertMeasurement(
     int defId,
     DateTime timestamp,
@@ -238,10 +244,38 @@ class AppRepository {
     return LookupDao.getMeasurementsForDefinition(db, defId);
   }
 
+  /// Fetches all recorded measurements for the given definition ID,
+  /// mapped into your domain model.
+  Future<List<Measurement>> fetchClassMeasurementsForDefinition(int defId) async {
+    final db = await _dbHelper.database;
+    final rows = await LookupDao.getMeasurementsForDefinition(db, defId);
+    return rows.map((r) => Measurement(
+      id:        r['id'] as int,
+      defId:     r['def_id'] as int,
+      timestamp: DateTime.parse(r['timestamp'] as String),
+      value:     (r['value'] as num).toDouble(),
+      unit:      r['unit'] as String,
+      note:      r['note'] as String?,
+    )).toList();
+  }
+
   Future<List<Map<String, dynamic>>> fetchUsedMeasurementDefinitions() async {
     final db = await _dbHelper.database;
     return LookupDao.getUsedMeasurementDefinitions(db);
   }
+
+/// Returns definitions with at least one measurement recorded.
+Future<List<MeasurementDefinition>> fetchUsedClassMeasurementDefinitions() async {
+  final raw = await _dbHelper.getUsedMeasurementDefinitions();
+  return raw.map((r) => MeasurementDefinition(
+    id:   r['id']   as int,
+    name: r['name'] as String,
+    type: MeasurementType.values.firstWhere(
+      (mt) => mt.name == (r['type'] as String),
+    ),
+  )).toList();
+}
+
 
   Future<List<String>> fetchAllEquipmentNames() async {
     final db = await _dbHelper.database;
@@ -273,6 +307,34 @@ class AppRepository {
   Future<String?> fetchStretchDefinitionNameById(int stretchId) async {
     final db = await _dbHelper.database;
     return LookupDao.getStretchDefinitionNameById(db, stretchId);
+  }
+
+
+
+  /// Returns all sessions as WorkoutSession objects, sorted by date desc.
+  Future<List<WorkoutSession>> fetchWorkoutSessions() async {
+    final raw = await fetchAllSessions(); // List<Map<String,dynamic>>
+    return raw.map((row) {
+      return WorkoutSession(
+        id:       row['id'] as int,
+        date:     DateTime.parse(row['date'] as String),
+        duration: row['duration'] as int,
+      );
+    }).toList();
+  }
+
+
+/// Fetches exercise definitions with optional filters.
+  Future<List<ExerciseDefinition>> fetchExerciseDefinitionsFiltered({
+    List<String>? equipmentNames,
+    List<int>?    bodypartIds,
+    List<int>?    muscleIds,
+  }) {
+    return _dbHelper.getExerciseDefinitionsFiltered(
+      equipmentNames: equipmentNames,
+      bodypartIds:    bodypartIds,
+      muscleIds:      muscleIds,
+    );
   }
 
 }

@@ -1,20 +1,24 @@
 // definitions_by_bodypart_page.dart
 
 import 'package:flutter/material.dart';
-import '../db/database_helper.dart';
+import '../repositories/app_repository.dart';
 import '../models/models.dart';
 
 /// Displays exercises filtered by a specific body part.
 class DefinitionsByBodyPartPage extends StatelessWidget {
   final BodyPart bodyPart;
-  const DefinitionsByBodyPartPage({Key? key, required this.bodyPart}) : super(key: key);
+  const DefinitionsByBodyPartPage({
+    super.key,
+    required this.bodyPart,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final repo = AppRepository();
     return Scaffold(
       appBar: AppBar(title: Text('${bodyPart.name} Exercises')),
       body: FutureBuilder<List<ExerciseDefinition>>(
-        future: DatabaseHelper().getExerciseDefinitionsFiltered(
+        future: repo.fetchExerciseDefinitionsFiltered(
           bodypartIds: [bodyPart.id],
         ),
         builder: (context, snap) {

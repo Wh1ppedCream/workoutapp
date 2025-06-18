@@ -1,20 +1,22 @@
-// muscle_filter_page.dart
+// File: lib/screens/muscle_filter_page.dart
 
 import 'package:flutter/material.dart';
-import '../db/database_helper.dart';
 import '../models/models.dart';
+import '../repositories/app_repository.dart';
 import 'definitions_by_bodypart_page.dart';
 
 /// Allows the user to select a body part and view its exercises.
 class MuscleFilterPage extends StatelessWidget {
-  const MuscleFilterPage({Key? key}) : super(key: key);
+  const MuscleFilterPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final repo = AppRepository();
+
     return Scaffold(
       appBar: AppBar(title: const Text('Filter by Body Part')),
       body: FutureBuilder<List<BodyPart>>(
-        future: DatabaseHelper().getAllBodyParts(),
+        future: repo.fetchAllBodyParts(),
         builder: (context, snapshot) {
           if (snapshot.connectionState != ConnectionState.done) {
             return const Center(child: CircularProgressIndicator());

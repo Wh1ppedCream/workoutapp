@@ -1,7 +1,7 @@
-// new_measurement_item_page.dart
+// File: lib/screens/new_measurement_item_page.dart
 
 import 'package:flutter/material.dart';
-import '../db/database_helper.dart';
+import '../repositories/app_repository.dart';
 import '../models/models.dart';
 
 /// Page for creating a new measurement (weight, height, or specific body part).
@@ -14,6 +14,8 @@ class NewMeasurementItemPage extends StatefulWidget {
 }
 
 class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
+  final _repo = AppRepository();
+
   bool _usePresets = true;
   MeasurementType? _selectedType;
   String? _bodyweightVariation;
@@ -63,22 +65,22 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
   }
 
   Future<void> _saveMeasurement() async {
-    final dbHelper = DatabaseHelper();
-    final db = await dbHelper.database;
 
     final type = _selectedType!;
-    final queryName = type.name; // matches measurement_definitions.name
-    final defRows = await db.query(
-      'measurement_definitions',
-      where: 'name = ?',
-      whereArgs: [queryName],
-    );
-    if (defRows.isEmpty) {
+    final queryName = type.name;
+
+
+
+    // 1) Lookup the definition ID via repo
+
+    final defId = await _repo.fetchMeasurementDefinitionId(queryName);
+
+    if (defId == null) {
       _showError('Definition not found for $queryName');
       return;
     }
-    final defId = defRows.first['id'] as int;
 
+// 2) Parse the numeric value and decide unit
     double value;
     String unit;
     try {
@@ -117,7 +119,9 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
       note = 'Overall';
     }
 
-    await dbHelper.insertMeasurement(
+    // 4) Insert via repo
+
+    await _repo.insertMeasurement(
       defId,
       DateTime.now(),
       value,
