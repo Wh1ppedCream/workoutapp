@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../db/database_helper.dart';
 import '../models/models.dart';
 import '../widgets/exercise_card.dart';
+import '../repositories/app_repository.dart';
 
 /// Displays and allows editing of a saved workout session.
 class SessionDetailScreen extends StatefulWidget {
@@ -16,7 +17,10 @@ class SessionDetailScreen extends StatefulWidget {
 }
 
 class _SessionDetailScreenState extends State<SessionDetailScreen> {
+
+  final _repo = AppRepository();
   List<WorkoutExercise> _exercises = [];
+
   bool _hasChanges = false;
 
   bool _isEditing = false;
@@ -29,11 +33,10 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
   }
 
 Future<void> _loadExercises() async {
-  final dbHelper = DatabaseHelper();
-
-  // 1) Fetch all exercise‐instance rows for this session
-  final exRows = await dbHelper.getExercisesForSession(widget.session.id);
+  // 1) Fetch the exercise-instance rows
+  final exRows = await _repo.fetchExercises(widget.session.id);
   final loaded = <WorkoutExercise>[];
+
 
   for (var exRow in exRows) {
     final instanceId = exRow['id'] as int;
@@ -41,37 +44,17 @@ Future<void> _loadExercises() async {
 
     if (storedType == 'weight') {
       // ─── WEIGHT ─────────────────────────────────────────────────
-      // Lookup definition
+      // Lookup definition name + equipment via repo
       final defId = exRow['exercise_def_id'] as int?;
-      String name = '';
-      String equipmentName = '';
-      if (defId != null) {
-        final defRows = await (await dbHelper.database).query(
-          'exercise_definitions',
-          where: 'id = ?',
-          whereArgs: [defId],
-        );
-        if (defRows.isEmpty) continue;
-        final defRow = defRows.first;
-        name = defRow['name'] as String;
-        final eqId = defRow['equipment_id'] as int?;
-        if (eqId != null) {
-          final eqRows = await (await dbHelper.database).query(
-            'equipment',
-            where: 'id = ?',
-            whereArgs: [eqId],
-          );
-          if (eqRows.isNotEmpty) equipmentName = eqRows.first['name'] as String;
-        }
-      }
+      if (defId == null) continue;
+      final defInfo = await _repo.fetchDefinitionInfo(defId);
+      final name          = defInfo['name']!;
+      final equipmentName = defInfo['equipmentName'] ?? '';
 
       // Load parent sets + changeSets
-      final parentRows = await (await dbHelper.database).query(
-        'sets',
-        where: 'exercise_id = ? AND parent_set_id IS NULL',
-        whereArgs: [instanceId],
-        orderBy: 'order_index',
-      );
+      final allSetRows = await _repo.fetchSets(instanceId);
+     final parentRows = allSetRows.where((r) => r['parent_set_id'] == null).toList();
+      
       final parentSets = <ExerciseSet>[];
       final csetsMap = <int, List<ExerciseSet>>{};
       for (var pRow in parentRows) {

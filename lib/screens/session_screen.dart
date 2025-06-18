@@ -1,11 +1,11 @@
-// session_screen.dart
+// File: lib/widgets/session_screen.dart
 
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../db/database_helper.dart';
 import '../models/models.dart';
 import '../widgets/exercise_card.dart';
 import 'exercise_catalog_page.dart'; // For Catalog flow
+import '../repositories/app_repository.dart';
 
 const List<String> _bodyweightCardioOptions = [
   'Aerobics',
@@ -34,17 +34,18 @@ class SessionScreen extends StatefulWidget {
   const SessionScreen({Key? key}) : super(key: key);
 
   @override
-  _SessionScreenState createState() => _SessionScreenState();
+  State<SessionScreen> createState() => _SessionScreenState();
 }
 
 class _SessionScreenState extends State<SessionScreen> {
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey();
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey();                                                                  //
+  final _repo = AppRepository();
 
-  /// We keep a list of the abstract base type, but each entry will actually
-  /// be a WeightExercise, CardioExercise, or StretchExercise.
+  /// We keep a list of the abstract base type, but each entry will actually                                                                //
+  /// be a WeightExercise, CardioExercise, or StretchExercise.                                                                //
   final List<WorkoutExercise> _exercises = [];
 
-  /// We also keep a parallel list of CardType so the UI knows how to render each card.
+  /// We also keep a parallel list of CardType so the UI knows how to render each card.                                                                  //
   final List<CardType> _cardTypes = [];
 
   late Timer _timer;
@@ -56,13 +57,15 @@ class _SessionScreenState extends State<SessionScreen> {
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       setState(() => _elapsedSeconds++);
     });
-    _loadEquipmentNames(); // Just to warm up the DB
+    _warmUpDatabase();
   }
 
-  Future<void> _loadEquipmentNames() async {
-    await DatabaseHelper().getAllEquipmentNames();
-    // We don’t *actually* need to store the names here; this just ensures the DB is ready.
+   Future<void> _warmUpDatabase() async {
+
+    await _repo.fetchAllEquipmentNames();
+
   }
+
 
   @override
   void dispose() {
@@ -77,108 +80,82 @@ class _SessionScreenState extends State<SessionScreen> {
   }
   
 Future<void> _finishWorkout() async {
-  // 1) Stop the timer
   _timer.cancel();
 
-  // 2) Insert a new session row
-  final nowStr   = DateTime.now().toIso8601String();
-  final sessionId = await DatabaseHelper().insertSession(nowStr, _elapsedSeconds);
+  // 1) Create session
 
-  // 3) Loop over each exercise and save
+    final nowStr   = DateTime.now().toIso8601String();
+
+    final sessionId = await _repo.createSession(nowStr, _elapsedSeconds);
+
+  // 2) Loop over each exercise and save
   for (var i = 0; i < _exercises.length; i++) {
     final we       = _exercises[i];
     final cardType = _cardTypes[i];
 
     if (cardType == CardType.weight && we is WeightExercise) {
       // ─── Weight: ensure we have a definition ID first ───────────────────
-      final db = await DatabaseHelper().database;
+    final defId = await _repo.findOrCreateExerciseDefinition(
+      we.name, we.equipment,
+    );
 
-      // 3.1) Look up (or insert) an ExerciseDefinition
-      int? eqId;
-      if (we.equipment.isNotEmpty) {
-        final eqRows = await db.query(
-          'equipment',
-          where: 'name = ?',
-          whereArgs: [we.equipment],
+// 2b) Insert exercise row
+
+        final exId = await _repo.addExerciseRow(
+
+          sessionId:     sessionId,
+
+          exerciseDefId: defId,
+
+          type:          'weight',
+
+          orderIndex:    i,
+
         );
-        eqId = eqRows.isNotEmpty ? eqRows.first['id'] as int : null;
-      }
 
-      List<Map<String, Object?>> defRows;
-      if (eqId != null) {
-        defRows = await db.query(
-          'exercise_definitions',
-          where: 'name = ? AND equipment_id = ?',
-          whereArgs: [we.name, eqId],
+
+
+        // 2c) Insert sets + ChangeSets
+
+        await _repo.addWeightSets(
+
+          exerciseId:      exId,
+
+          parentSets:      we.sets,
+
+          childChangeSets: we.changeSets,
+
         );
-      } else {
-        defRows = await db.query(
-          'exercise_definitions',
-          where: 'name = ? AND equipment_id IS NULL',
-          whereArgs: [we.name],
-        );
+
       }
-
-      int defId;
-      if (defRows.isNotEmpty) {
-        defId = defRows.first['id'] as int;
-      } else {
-        defId = await db.insert(
-          'exercise_definitions',
-          {
-            'name': we.name,
-            'equipment_id': eqId,
-            'rating': 0,
-          },
-        ) as int;
-      }
-
-      // 3.2) Insert “exercises” row with type='weight' and exerciseDefId=defId
-      final exId = await DatabaseHelper().insertExerciseRow(
-        sessionId:     sessionId,
-        exerciseDefId: defId,
-        type:          'weight',
-        orderIndex:    i,
-      );
-
-      // 3.3) Insert all parent sets + any ChangeSets
-      await DatabaseHelper().insertWeightSets(
-        exerciseId:      exId,
-        parentSets:      we.sets,
-        childChangeSets: we.changeSets,
-      );
-    }
     else if (cardType == CardType.cardio && we is CardioExercise) {
       // ─── Cardio ─────────────────────────────────────────────────────────
-      final exId = await DatabaseHelper().insertExerciseRow(
-        sessionId:     sessionId,
-        exerciseDefId: null,
-        type:          'cardio',
-        orderIndex:    i,
+      final exId = await _repo.addExerciseRow(
+          sessionId:     sessionId,
+          exerciseDefId: null,
+          type:          'cardio',
+          orderIndex:    i,
       );
-      await DatabaseHelper().insertCardioDetails(
-        exerciseId:     exId,
-        cardioName:     we.cardioName,
-        note:           we.cardioNote,
-        plannedMinutes: we.plannedMinutes,
-        elapsedSeconds: we.elapsedSeconds,
+       await _repo.saveCardioDetails(
+          exerciseId:     exId,
+          cardioName:     we.cardioName,
+          note:           we.cardioNote,
+          plannedMinutes: we.plannedMinutes,
+          elapsedSeconds: we.elapsedSeconds,
       );
     }
     else if (cardType == CardType.stretch && we is StretchExercise) {
-      // ─── Stretch ─────────────────────────────────────────────────────────
-      final exId = await DatabaseHelper().insertExerciseRow(
-        sessionId:     sessionId,
-        exerciseDefId: null,
-        type:          'stretch',
-        orderIndex:    i,
-      );
-
-      // we.stretchInstances is already List<Map<String,dynamic>>
-      await DatabaseHelper().insertStretchInstance(
-        exerciseId: exId,
-        items:      we.stretchInstances,
-      );
-    }
+      final exId = await _repo.addExerciseRow(
+          sessionId:     sessionId,
+          exerciseDefId: null,
+          type:          'stretch',
+          orderIndex:    i,
+        );
+        await _repo.saveStretchInstance(
+          exerciseId: exId,
+          items:      we.stretchInstances,
+        ); 
+      }
     else {
       throw Exception('Mismatched cardType vs. actual subclass');
     }

@@ -194,6 +194,27 @@ class AppRepository {
     );
   }
 
+  /// Finds (or creates) an ExerciseDefinition via DefinitionDao.
+  Future<int> findOrCreateExerciseDefinition(
+    String name,
+    String equipmentName,
+  ) async {
+    final db = await _dbHelper.database;
+    return DefinitionDao.findOrCreateExerciseDefinition(
+      db,
+      name,
+      equipmentName,
+    );
+  }
+
+
+  /// Fetches the name & equipment for a definition ID.
+  Future<Map<String,String?>> fetchDefinitionInfo(int defId) async {
+    final db = await _dbHelper.database;
+    return DefinitionDao.getDefinitionInfo(db, defId);
+  }
+
+
   // ─── MEASUREMENTS & LOOKUPS ────────────────────────────
 
   Future<List<Map<String, dynamic>>> fetchMeasurementDefinitions() async {
@@ -232,6 +253,12 @@ class AppRepository {
     return LookupDao.getAllBodyParts(db);
   }
 
+  /// Fetch all muscles as full models (id + name).
+  Future<List<Muscle>> fetchAllMuscles() async {
+    final db = await _dbHelper.database;
+    return LookupDao.getAllMuscles(db);
+  }
+
   Future<List<String>> fetchAllMuscleNames() async {
     final db = await _dbHelper.database;
     return LookupDao.getAllMuscleNames(db);
@@ -241,4 +268,11 @@ class AppRepository {
     final db = await _dbHelper.database;
     return LookupDao.getStretches(db, bodypartId);
   }
+
+/// Fetches a stretch definition's name by ID.
+  Future<String?> fetchStretchDefinitionNameById(int stretchId) async {
+    final db = await _dbHelper.database;
+    return LookupDao.getStretchDefinitionNameById(db, stretchId);
+  }
+
 }

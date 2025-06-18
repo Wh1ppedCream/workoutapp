@@ -236,4 +236,74 @@ class DefinitionDao {
       );
     }).toList();
   }
+
+/// Finds an exercise_definition by name+equipment (inserting if missing),
+  /// and returns its ID.
+  static Future<int> findOrCreateExerciseDefinition(
+    Database db,
+    String name,
+    String equipmentName,
+  ) async {
+    // 1) Lookup equipment_id if the name is non-empty
+    int? eqId;
+    if (equipmentName.isNotEmpty) {
+      final eqRows = await db.query(
+        'equipment',
+        where: 'name = ?',
+        whereArgs: [equipmentName],
+      );
+      if (eqRows.isNotEmpty) {
+        eqId = eqRows.first['id'] as int;
+      }
+    }
+
+    // 2) Try to find an existing definition
+    final whereClause = eqId != null
+        ? 'name = ? AND equipment_id = ?'
+        : 'name = ? AND equipment_id IS NULL';
+    final whereArgs = eqId != null ? [name, eqId] : [name];
+    final defRows = await db.query(
+      'exercise_definitions',
+      where: whereClause,
+      whereArgs: whereArgs,
+    );
+    if (defRows.isNotEmpty) {
+      return defRows.first['id'] as int;
+    }
+
+    // 3) Not found—insert new
+    return await db.insert(
+      'exercise_definitions',
+      {
+        'name': name,
+        'equipment_id': eqId,
+        'rating': 0,  // default
+      },
+    );
+  }
+
+  /// Returns {'name': .., 'equipmentName': ..} for the given definition ID.
+  static Future<Map<String, String?>> getDefinitionInfo(
+    Database db,
+    int defId,
+  ) async {
+    final rows = await db.rawQuery('''
+      SELECT 
+        ed.name            AS name,
+        e.name            AS equipment_name
+      FROM exercise_definitions ed
+      LEFT JOIN equipment e ON ed.equipment_id = e.id
+      WHERE ed.id = ?
+    ''', [defId]);
+
+    if (rows.isEmpty) {
+      throw Exception('Definition $defId not found');
+    }
+    final row = rows.first;
+    return {
+      'name':           row['name'] as String,
+      'equipmentName':  row['equipment_name'] as String?,
+    };
+  }
+
 }
