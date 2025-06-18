@@ -12,12 +12,12 @@ class CardioCard extends StatefulWidget {
   final VoidCallback? onValueChanged;
 
   const CardioCard({
-    Key? key,
+    super.key,
     required this.exercise,
     this.readOnlyMode = false,
     this.onDeleteExercise,
     this.onValueChanged,
-  }) : super(key: key);
+  });
 
   @override
   State<CardioCard> createState() => _CardioCardState();

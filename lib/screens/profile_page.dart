@@ -4,7 +4,7 @@ import 'measured_items_page.dart';
 import 'app_settings_page.dart';
 
 class ProfilePage extends StatelessWidget {
-  const ProfilePage({Key? key}) : super(key: key);
+  const ProfilePage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -22,8 +22,7 @@ class ProfilePage extends StatelessWidget {
       ),
       // TODO: User info bar
       ListTile(leading: Icon(Icons.person), title: Text('User Info')),
-      // TODO: Settings bar
-      
+
       ListTile(
         leading: const Icon(Icons.settings),
         title: const Text('Settings'),

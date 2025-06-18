@@ -10,7 +10,7 @@ import 'muscle_filter_page.dart';
 
 /// Displays the list of past workout sessions and navigation to filters.
 class HistoryScreen extends StatefulWidget {
-  const HistoryScreen({Key? key}) : super(key: key);
+  const HistoryScreen({super.key});
 
   @override
   State<HistoryScreen> createState() => _HistoryScreenState();

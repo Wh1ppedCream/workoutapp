@@ -31,21 +31,21 @@ const List<String> _equipmentCardioOptions = [
 ];
 
 class SessionScreen extends StatefulWidget {
-  const SessionScreen({Key? key}) : super(key: key);
+  const SessionScreen({super.key});
 
   @override
   State<SessionScreen> createState() => _SessionScreenState();
 }
 
 class _SessionScreenState extends State<SessionScreen> {
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey();                                                                  //
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey();
   final _repo = AppRepository();
 
-  /// We keep a list of the abstract base type, but each entry will actually                                                                //
-  /// be a WeightExercise, CardioExercise, or StretchExercise.                                                                //
+  /// We keep a list of the abstract base type, but each entry will actually
+  /// be a WeightExercise, CardioExercise, or StretchExercise.
   final List<WorkoutExercise> _exercises = [];
 
-  /// We also keep a parallel list of CardType so the UI knows how to render each card.                                                                  //
+  /// We also keep a parallel list of CardType so the UI knows how to render each card.
   final List<CardType> _cardTypes = [];
 
   late Timer _timer;
@@ -60,12 +60,9 @@ class _SessionScreenState extends State<SessionScreen> {
     _warmUpDatabase();
   }
 
-   Future<void> _warmUpDatabase() async {
-
+  Future<void> _warmUpDatabase() async {
     await _repo.fetchAllEquipmentNames();
-
   }
-
 
   @override
   void dispose() {
@@ -79,73 +76,55 @@ class _SessionScreenState extends State<SessionScreen> {
     return '$minutes:${seconds.toString().padLeft(2, '0')}';
   }
   
-Future<void> _finishWorkout() async {
-  _timer.cancel();
+  Future<void> _finishWorkout() async {
+    _timer.cancel();
 
-  // 1) Create session
-
+    // 1) Create session
     final nowStr   = DateTime.now().toIso8601String();
-
     final sessionId = await _repo.createSession(nowStr, _elapsedSeconds);
 
-  // 2) Loop over each exercise and save
-  for (var i = 0; i < _exercises.length; i++) {
-    final we       = _exercises[i];
-    final cardType = _cardTypes[i];
+    // 2) Loop over each exercise and save
+    for (var i = 0; i < _exercises.length; i++) {
+      final we       = _exercises[i];
+      final cardType = _cardTypes[i];
 
-    if (cardType == CardType.weight && we is WeightExercise) {
-      // ─── Weight: ensure we have a definition ID first ───────────────────
-    final defId = await _repo.findOrCreateExerciseDefinition(
-      we.name, we.equipment,
-    );
-
-// 2b) Insert exercise row
-
-        final exId = await _repo.addExerciseRow(
-
-          sessionId:     sessionId,
-
-          exerciseDefId: defId,
-
-          type:          'weight',
-
-          orderIndex:    i,
-
+      if (cardType == CardType.weight && we is WeightExercise) {
+        // ─── Weight: ensure we have a definition ID first ───────────────────
+        final defId = await _repo.findOrCreateExerciseDefinition(
+          we.name, we.equipment,
         );
 
-
+        // 2b) Insert exercise row
+        final exId = await _repo.addExerciseRow(
+          sessionId:     sessionId,
+          exerciseDefId: defId,
+          type:          'weight',
+          orderIndex:    i,
+        );
 
         // 2c) Insert sets + ChangeSets
-
         await _repo.addWeightSets(
-
           exerciseId:      exId,
-
           parentSets:      we.sets,
-
           childChangeSets: we.changeSets,
-
         );
-
-      }
-    else if (cardType == CardType.cardio && we is CardioExercise) {
-      // ─── Cardio ─────────────────────────────────────────────────────────
-      final exId = await _repo.addExerciseRow(
+      } else if (cardType == CardType.cardio && we is CardioExercise) {
+        // ─── Cardio ─────────────────────────────────────────────────────────
+        final exId = await _repo.addExerciseRow(
           sessionId:     sessionId,
           exerciseDefId: null,
           type:          'cardio',
           orderIndex:    i,
-      );
-       await _repo.saveCardioDetails(
+        );
+        await _repo.saveCardioDetails(
           exerciseId:     exId,
           cardioName:     we.cardioName,
           note:           we.cardioNote,
           plannedMinutes: we.plannedMinutes,
           elapsedSeconds: we.elapsedSeconds,
-      );
-    }
-    else if (cardType == CardType.stretch && we is StretchExercise) {
-      final exId = await _repo.addExerciseRow(
+        );
+      } else if (cardType == CardType.stretch && we is StretchExercise) {
+        final exId = await _repo.addExerciseRow(
           sessionId:     sessionId,
           exerciseDefId: null,
           type:          'stretch',
@@ -155,15 +134,15 @@ Future<void> _finishWorkout() async {
           exerciseId: exId,
           items:      we.stretchInstances,
         ); 
+      } else {
+        throw Exception('Mismatched cardType vs. actual subclass');
       }
-    else {
-      throw Exception('Mismatched cardType vs. actual subclass');
     }
-  }
 
-  // 4) All done—pop back to History
-  Navigator.of(context).pop();
-}
+    // 4) All done—pop back to History
+    if (!mounted) return;
+    Navigator.of(context).pop();
+  }
 
   @override
   Widget build(BuildContext context) {

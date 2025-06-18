@@ -1,3 +1,4 @@
+//session_detail_screen.dart
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../repositories/app_repository.dart';
@@ -231,11 +232,10 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Unsaved Changes'),
-        content: const Text(
-            'You have unsaved changes. Do you want to discard them and leave?'),
+        content: const Text('You have unsaved changes. Do you want to discard them and leave?'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(ctx, true),  child: const Text('Discard')),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Discard')),
         ],
       ),
     );
@@ -246,9 +246,21 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
   Widget build(BuildContext context) {
     final dateStr = _dateFmt.format(widget.session.date);
 
-    return WillPopScope(
-      onWillPop: _onWillPop,
-      child: Scaffold(
+    return PopScope<Object?>(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, Object? result) async {
+        if (didPop) {
+          return;
+        }
+        final bool shouldPop = await _onWillPop();
+        if (!mounted) {
+          return;
+        }
+        if (shouldPop && context.mounted) {
+          Navigator.of(context).pop();
+        }
+      },
+      child:  Scaffold(
         appBar: AppBar(
           title: Text(dateStr),
           actions: [

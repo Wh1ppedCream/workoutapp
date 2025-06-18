@@ -1,3 +1,5 @@
+// ignore_for_file: constant_identifier_names
+
 // models.dart
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -73,16 +75,16 @@ class WeightExercise extends WorkoutExercise {
   final Map<int, Set<int>> completedChildren;
 
   WeightExercise({
-    required String name,
-    required String equipment,
+    required super.name,
+
+    required super.equipment,
     required this.sets,
     Map<int, List<ExerciseSet>>? changeSets,
     Set<int>? completedParents,
     Map<int, Set<int>>? completedChildren,
   })  : changeSets = changeSets ?? <int, List<ExerciseSet>>{},
         completedParents = completedParents ?? <int>{},
-        completedChildren = completedChildren ?? <int, Set<int>>{},
-        super(name: name, equipment: equipment);
+         completedChildren = completedChildren ?? <int, Set<int>>{};
 }
 
 /// Represents a cardio exercise, with planned duration and elapsed time.
@@ -93,16 +95,16 @@ class CardioExercise extends WorkoutExercise {
   int elapsedSeconds;
 
   CardioExercise({
-    required String name,
-    required String equipment,
+    required super.name,
+
+    required super.equipment,
     String? cardioName,
     this.cardioNote,
     int? plannedMinutes,
     int? elapsedSeconds,
   })  : cardioName      = cardioName      ?? 'Walking',
         plannedMinutes  = plannedMinutes  ?? 0,
-        elapsedSeconds  = elapsedSeconds  ?? 0,
-        super(name: name, equipment: equipment);
+        elapsedSeconds  = elapsedSeconds  ?? 0;
 }
 
 /// Represents a stretch exercise, holding a list of StretchInstance objects.
@@ -111,16 +113,13 @@ class StretchExercise extends WorkoutExercise {
   final Set<int> completedStretchIndices;
 
   StretchExercise({
-    required String name,
-    required String equipment,
-    List<Map<String, dynamic>>? stretchInstances,
+    required super.name,
+
+    required super.equipment,
+
+    super.stretchInstances,
     Set<int>? completedStretchIndices,
-  })  : completedStretchIndices = completedStretchIndices ?? <int>{},
-        super(
-          name:            name,
-          equipment:       equipment,
-          stretchInstances: stretchInstances,
-        );
+  })  : completedStretchIndices = completedStretchIndices ?? <int>{};
 }
 
 /// Represents one set of a weight exercise (weight + reps).

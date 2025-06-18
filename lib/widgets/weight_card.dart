@@ -15,7 +15,7 @@ class WeightCard extends StatefulWidget {
   final VoidCallback?                onValueChanged;
 
   const WeightCard({
-    Key? key,
+    super.key,
     required this.exercise,
     this.readOnlyMode = false,
     this.initialCompletedParents,
@@ -24,7 +24,7 @@ class WeightCard extends StatefulWidget {
     this.onSetAdded,
     this.onSetDeleted,
     this.onValueChanged,
-  }) : super(key: key);
+  });
 
   @override
   State<WeightCard> createState() => _WeightCardState();

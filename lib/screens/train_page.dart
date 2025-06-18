@@ -1,4 +1,4 @@
-// train_page.dart
+// File: lib/screens/train_page.dart
 
 import 'package:flutter/material.dart';
 import 'session_screen.dart';
@@ -7,7 +7,7 @@ class TrainPage extends StatefulWidget {
   const TrainPage({super.key});
 
   @override
-  _TrainPageState createState() => _TrainPageState();
+  State<TrainPage> createState() => _TrainPageState();
 }
 
 class _TrainPageState extends State<TrainPage> {
@@ -126,7 +126,7 @@ class _TrainPageState extends State<TrainPage> {
 /// Reusable bar widget
 class _PresetBar extends StatelessWidget {
   final String label;
-  const _PresetBar({Key? key, required this.label}) : super(key: key);
+  const _PresetBar({required this.label});
 
   @override
   Widget build(BuildContext context) {

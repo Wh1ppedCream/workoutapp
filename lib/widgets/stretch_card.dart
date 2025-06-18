@@ -12,12 +12,12 @@ class StretchCard extends StatefulWidget {
   final VoidCallback?   onValueChanged;
 
   const StretchCard({
-    Key? key,
+    super.key,
     required this.exercise,
     this.readOnlyMode = false,
     this.onDeleteExercise,
     this.onValueChanged,
-  }) : super(key: key);
+  });
 
   @override
   State<StretchCard> createState() => _StretchCardState();
