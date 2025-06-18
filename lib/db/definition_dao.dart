@@ -3,9 +3,18 @@
 import 'package:sqflite/sqflite.dart';
 import '../models/models.dart';
 
-/// Encapsulates all exercise‐definition queries and filters.
+/// Data Access Object for exercise definitions and related lookups.
+///
+/// Provides query methods to fetch, filter, search, create, update, and delete
+/// records in the `exercise_definitions` table and its join relationships.
 class DefinitionDao {
-  /// Fetch by body‐part.
+  /// Fetches exercise definition IDs, names, and equipment IDs for definitions
+  /// associated with a specific body part.
+  ///
+  /// - [db]: Open database instance.
+  /// - [bodyPartId]: ID of the body part to filter by.
+  ///
+  /// Returns a list of maps containing keys: `id`, `name`, `equipment_id`.
   static Future<List<Map<String, dynamic>>> getExerciseDefsByBodyPart(
     Database db,
     int bodyPartId,
@@ -22,7 +31,12 @@ class DefinitionDao {
     );
   }
 
-  /// Fully‐detailed definitions (joins equipment, bodyParts, muscles).
+  /// Retrieves full details for all exercise definitions, including
+  /// equipmentList, bodyParts, and ranked muscles.
+  ///
+  /// - [db]: Open database instance.
+  ///
+  /// Returns a list of [ExerciseDefinition] with all join lists populated.
   static Future<List<ExerciseDefinition>> getAllExerciseDefinitionsDetailed(
     Database db,
   ) async {
@@ -87,14 +101,23 @@ class DefinitionDao {
     return defs;
   }
 
-  /// Shallow list of raw definitions.
+  /// Retrieves a shallow list of all exercise definition rows.
+  ///
+  /// - [db]: Open database instance.
+  ///
+  /// Returns list of maps with keys directly from the table (no joins).
   static Future<List<Map<String, dynamic>>> getAllExercisesRaw(
     Database db,
   ) {
     return db.query('exercise_definitions', orderBy: 'name');
   }
 
-  /// Equipment‐any filter.
+  /// Filters definitions by any of the given equipment names (primary only).
+  ///
+  /// - [db]: Open database instance.
+  /// - [equipmentNames]: List of equipment names to match.
+  ///
+  /// Returns definitions that have a primary equipment in [equipmentNames].
   static Future<List<ExerciseDefinition>> getExerciseDefsWithAnyEquipment(
     Database db,
     List<String> equipmentNames,
@@ -127,7 +150,12 @@ class DefinitionDao {
     }).toList();
   }
 
-  /// Equipment‐only filter.
+  /// Filters definitions to only those matching given equipment names, and
+  /// optionally those with no equipment if [includeNone] is true.
+  ///
+  /// - [db]: Open database instance.
+  /// - [equipmentNames]: Names to include.
+  /// - [includeNone]: Whether to include definitions without equipment.
   static Future<List<ExerciseDefinition>> getExerciseDefsOnlyWithEquipment(
     Database db,
     List<String> equipmentNames, {
@@ -172,7 +200,14 @@ class DefinitionDao {
     }).toList();
   }
 
-  /// Multi-filter (equipment/bodyparts/muscles).
+  /// Applies combined filters for equipment, body parts, and muscles.
+  ///
+  /// - [db]: Open database instance.
+  /// - [equipmentNames]: Optional list of equipment to filter by.
+  /// - [bodypartIds]: Optional list of body part IDs to filter by.
+  /// - [muscleIds]: Optional list of muscle IDs to filter by.
+  ///
+  /// Returns distinct [ExerciseDefinition] objects matching all specified filters.
   static Future<List<ExerciseDefinition>> getExerciseDefinitionsFiltered(
     Database db, {
     List<String>? equipmentNames,
@@ -237,8 +272,9 @@ class DefinitionDao {
     }).toList();
   }
 
-/// Finds an exercise_definition by name+equipment (inserting if missing),
-  /// and returns its ID.
+/// Finds or creates an [ExerciseDefinition] by [name] and [equipmentName].
+  ///
+  /// Returns the definition ID.
   static Future<int> findOrCreateExerciseDefinition(
     Database db,
     String name,
@@ -282,7 +318,12 @@ class DefinitionDao {
     );
   }
 
-  /// Returns {'name': .., 'equipmentName': ..} for the given definition ID.
+  /// Retrieves the name and equipmentName for a definition ID.
+  ///
+  /// - [db]: Open database instance.
+  /// - [defId]: Definition ID to lookup.
+  ///
+  /// Returns map {'name': String, 'equipmentName': String?}.
   static Future<Map<String, String?>> getDefinitionInfo(
     Database db,
     int defId,
@@ -306,8 +347,12 @@ class DefinitionDao {
     };
   }
 
-/// Updates the core fields of an existing exercise definition.
-/// (Note: renaming/join tables updates must be handled separately.)
+/// Updates core fields of an existing [ExerciseDefinition].
+  ///
+  /// - [db]: Open database instance.
+  /// - [def]: Definition object with updated fields.
+  ///
+  /// Returns number of rows affected.
 static Future<int> updateExerciseDefinition(
   Database db,
   ExerciseDefinition def,
@@ -324,7 +369,12 @@ static Future<int> updateExerciseDefinition(
   );
 }
 
-/// Deletes the exercise definition (cascade on join tables).
+ /// Deletes an exercise definition, cascading to join tables.
+  ///
+  /// - [db]: Open database instance.
+  /// - [defId]: Definition ID to delete.
+  ///
+  /// Returns number of rows removed.
 static Future<int> deleteExerciseDefinition(
   Database db,
   int defId,
@@ -336,8 +386,12 @@ static Future<int> deleteExerciseDefinition(
   );
 }
 
-/// Searches definitions whose name contains [query] (case‐insensitive).
-/// Returns shallow ExerciseDefinition objects (no join lists).
+/// Performs case-insensitive name search on definitions.
+  ///
+  /// - [db]: Open database instance.
+  /// - [query]: Substring to search in lower-case.
+  ///
+  /// Returns shallow [ExerciseDefinition] list.
 static Future<List<ExerciseDefinition>> searchExerciseDefinitions(
   Database db,
   String query,
@@ -359,7 +413,12 @@ static Future<List<ExerciseDefinition>> searchExerciseDefinitions(
   )).toList();
 }
 
-  /// Search exercise definitions by name (SQL LIKE).
+  /// Performs fuzzy search on definition names with SQL LIKE.
+  ///
+  /// - [db]: Open database instance.
+  /// - [searchTerm]: Pattern to match in names.
+  ///
+  /// Returns shallow [ExerciseDefinition] list.
   static Future<List<ExerciseDefinition>> fuzzsearchExerciseDefinitions(
     Database db,
     String searchTerm,

@@ -6,13 +6,29 @@
 // STRETCH DEFINITIONS
 // ─────────────────────────────────────────────────────────────────────────────
 
-/// Represents a master definition of a stretch, including related body parts.
+/// A master definition of a stretch, including its name, description, and
+/// related body parts. Used for lookup and selection in the app.
+///
+/// - [id]: Unique database identifier for the stretch definition.
+/// - [name]: Human-readable name of the stretch.
+/// - [description]: Detailed instructions or notes about the stretch.
+/// - [bodyParts]: List of targeted body parts (populated via join query).
 class StretchDefinition {
+  /// Unique identifier in the database.
   final int id;
-  final String name;
-  final String description;
-  final List<BodyPart> bodyParts; // pulled via join
 
+  /// Display name of the stretch.
+  final String name;
+
+  /// Detailed instructions or description for the stretch.
+  final String description;
+
+  /// List of body parts targeted by this stretch.
+  final List<BodyPart> bodyParts;
+
+  /// Creates a [StretchDefinition].
+  ///
+  /// Defaults [bodyParts] to an empty list if not provided.
   StretchDefinition({
     required this.id,
     required this.name,
@@ -21,15 +37,24 @@ class StretchDefinition {
   });
 }
 
-/// Represents a single instance of a stretch in a workout.
+/// A single occurrence of a stretch within a workout session.
+///
+/// - [stretchId]: References the master definition or null if custom.
+/// - [isCustom]: True if this instance uses user-defined name/desc.
+/// - [customName]/[customDesc]: Custom metadata when [isCustom] is true.
+/// - [isChecked]: Whether the stretch was marked complete in the session.
+/// - [orderIndex]: Sequence order of this stretch in the workout.
 class StretchInstance {
-  final int? stretchId;    // null if custom
+  final int? stretchId;
   final bool isCustom;
   final String? customName;
   final String? customDesc;
   bool isChecked;
   final int orderIndex;
 
+  /// Creates a [StretchInstance].
+  ///
+  /// If [stretchId] is null, this represents a custom stretch defined by the user.
   StretchInstance({
     this.stretchId,
     required this.isCustom,
@@ -45,15 +70,19 @@ class StretchInstance {
 // WORKOUT EXERCISES
 // ─────────────────────────────────────────────────────────────────────────────
 
-/// Base class for all types of exercises in a workout.
+/// Abstract base for any exercise in a workout (weight, cardio, or stretch).
+///
+/// - [name]: Display name of the exercise.
+/// - [equipment]: Description or name of equipment used.
+/// - [stretchInstances]: Optional list of stretch items if this exercise includes stretches.
 abstract class WorkoutExercise {
   final String name;
-  final String equipment; // free-form description or name of equipment
-
-  /// Every exercise—whether weight, cardio, or stretch—carries a
-  /// `stretchInstances` list.  Non-stretch cards will just leave it empty.
+  final String equipment;
   final List<Map<String, dynamic>> stretchInstances;
 
+  /// Creates a [WorkoutExercise].
+  ///
+  /// The [stretchInstances] parameter defaults to an empty list if omitted.
   WorkoutExercise({
     required this.name,
     required this.equipment,
@@ -61,22 +90,22 @@ abstract class WorkoutExercise {
   }) : stretchInstances = stretchInstances ?? <Map<String, dynamic>>[];
 }
 
-/// Represents a weight-based exercise, including sets and optional changeSets.
+/// A weight-based exercise with parent sets and optional supersets/changesets.
+///
+/// - [sets]: List of primary [ExerciseSet] entries.
+/// - [changeSets]: Map from parent index to list of child sets (supersets).
+/// - [completedParents]/[completedChildren]: Tracks which sets were marked complete.
 class WeightExercise extends WorkoutExercise {
   final List<ExerciseSet> sets;
-
-  /// Parent→child ChangeSets (parent index → list of child sets).
   final Map<int, List<ExerciseSet>> changeSets;
-
-  /// Which parent‐set indices were completed when saved.
   final Set<int> completedParents;
-
-  /// For each parent index, which child‐set indices were completed.
   final Map<int, Set<int>> completedChildren;
 
+  /// Creates a [WeightExercise].
+  ///
+  /// [changeSets], [completedParents], and [completedChildren] default to empty collections if not provided.
   WeightExercise({
     required super.name,
-
     required super.equipment,
     required this.sets,
     Map<int, List<ExerciseSet>>? changeSets,
@@ -84,61 +113,80 @@ class WeightExercise extends WorkoutExercise {
     Map<int, Set<int>>? completedChildren,
   })  : changeSets = changeSets ?? <int, List<ExerciseSet>>{},
         completedParents = completedParents ?? <int>{},
-         completedChildren = completedChildren ?? <int, Set<int>>{};
+        completedChildren = completedChildren ?? <int, Set<int>>{};
 }
 
-/// Represents a cardio exercise, with planned duration and elapsed time.
+/// A cardio exercise with planned duration, elapsed time, and optional notes.
+///
+/// - [cardioName]: Specific cardio activity name.
+/// - [cardioNote]: Additional notes.
+/// - [plannedMinutes]: Intended duration.
+/// - [elapsedSeconds]: Actual time tracked.
 class CardioExercise extends WorkoutExercise {
   String cardioName;
   String? cardioNote;
   int plannedMinutes;
   int elapsedSeconds;
 
+  /// Creates a [CardioExercise].
+  ///
+  /// If [cardioName] is omitted, defaults to 'Walking'.
+  /// [plannedMinutes] and [elapsedSeconds] default to zero.
   CardioExercise({
     required super.name,
-
     required super.equipment,
     String? cardioName,
     this.cardioNote,
     int? plannedMinutes,
     int? elapsedSeconds,
-  })  : cardioName      = cardioName      ?? 'Walking',
-        plannedMinutes  = plannedMinutes  ?? 0,
-        elapsedSeconds  = elapsedSeconds  ?? 0;
+  })  : cardioName      = cardioName ?? 'Walking',
+        plannedMinutes  = plannedMinutes ?? 0,
+        elapsedSeconds  = elapsedSeconds ?? 0;
 }
 
-/// Represents a stretch exercise, holding a list of StretchInstance objects.
+/// A stretch exercise containing multiple [StretchInstance] items.
+///
+/// - [completedStretchIndices]: Set of indices marked complete.
 class StretchExercise extends WorkoutExercise {
-  /// Indices of which stretch‐rows were checked
   final Set<int> completedStretchIndices;
 
+  /// Creates a [StretchExercise].
   StretchExercise({
     required super.name,
-
     required super.equipment,
-
     super.stretchInstances,
     Set<int>? completedStretchIndices,
-  })  : completedStretchIndices = completedStretchIndices ?? <int>{};
+  }) : completedStretchIndices = completedStretchIndices ?? <int>{};
 }
 
-/// Represents one set of a weight exercise (weight + reps).
+/// A single weight-rep entry.
+///
+/// - [weight]: Weight amount.
+/// - [reps]: Number of repetitions.
 class ExerciseSet {
   double weight;
   int reps;
 
+  /// Creates an [ExerciseSet].
+  ///
+  /// Defaults to 0 weight and 10 reps if not provided.
   ExerciseSet({
     this.weight = 0,
     this.reps   = 10,
   });
 }
 
-/// Represents a single workout session with date and duration.
+/// Represents a recorded workout session with metadata.
+///
+/// - [id]: Unique session identifier.
+/// - [date]: Session timestamp.
+/// - [duration]: Total duration in seconds.
 class WorkoutSession {
   final int id;
   final DateTime date;
-  final int duration; // in seconds
+  final int duration;
 
+  /// Creates a [WorkoutSession].
   WorkoutSession({
     required this.id,
     required this.date,
@@ -151,22 +199,18 @@ class WorkoutSession {
 // EXERCISE DEFINITIONS
 // ─────────────────────────────────────────────────────────────────────────────
 
-/// Represents a stored exercise definition (master record).
-/// Now supports:
-///  • rating (0–100)
-///  • one “primary” equipment_id (legacy)
-///  • many-to-many Equipment via [equipmentList]
-///  • many-to-many BodyPart via [bodyParts]
-///  • up to 7 ranked muscles via [muscles]
+/// Master record for an exercise definition, including equipment, body parts,
+/// rating, and ranking of targeted muscles.
 class ExerciseDefinition {
   final int id;
   final String name;
-  final int? equipmentId;             // legacy single-equipment
-  final int rating;                   // 0–100
+  final int? equipmentId;
+  final int rating;
   final List<Equipment> equipmentList;
   final List<BodyPart> bodyParts;
   final List<RankedMuscle> muscles;
 
+  /// Creates an [ExerciseDefinition].
   ExerciseDefinition({
     required this.id,
     required this.name,
@@ -178,38 +222,42 @@ class ExerciseDefinition {
   });
 }
 
-/// Equipment lookup table.
+/// Lookup table entry for equipment.
 class Equipment {
   final int id;
   final String name;
 
+  /// Creates an [Equipment] entry.
   Equipment(this.id, this.name);
 }
 
-/// BodyPart lookup table.
+/// Lookup table entry for body parts.
 class BodyPart {
   final int id;
   final String name;
 
+  /// Creates a [BodyPart] entry.
   BodyPart(this.id, this.name);
 }
 
-/// A muscle lookup table.
+/// Lookup table entry for a muscle.
 class Muscle {
   final int id;
   final String name;
 
+  /// Creates a [Muscle] entry.
   Muscle({
     required this.id,
     required this.name,
   });
 }
 
-/// Associates a Muscle with a rank (1 through 7).
+/// Associates a [Muscle] with a specified [rank] (1 through 7).
 class RankedMuscle {
   final Muscle muscle;
-  final int rank; // 1..7
+  final int rank;
 
+  /// Creates a [RankedMuscle] entry.
   RankedMuscle({
     required this.muscle,
     required this.rank,
@@ -221,7 +269,7 @@ class RankedMuscle {
 // MEASUREMENTS
 // ─────────────────────────────────────────────────────────────────────────────
 
-/// Types of measurements a user can track.
+/// Enumeration of measurement types a user can track (e.g., body weight, height).
 enum MeasurementType {
   BodyWeight,
   Height,
@@ -236,12 +284,13 @@ enum MeasurementType {
   Calf,
 }
 
-/// Represents a definition (kind) of measurement (e.g. “Body Weight”, “Blood Pressure”).
+/// Definition of a measurement kind, linking to [MeasurementType].
 class MeasurementDefinition {
   final int id;
   final String name;
   final MeasurementType type;
 
+  /// Creates a [MeasurementDefinition].
   MeasurementDefinition({
     required this.id,
     required this.name,
@@ -249,15 +298,16 @@ class MeasurementDefinition {
   });
 }
 
-/// Represents a single recorded measurement (with timestamp and numeric value).
+/// A recorded measurement with timestamp, value, unit, and optional note.
 class Measurement {
   final int id;
-  final int defId;          // links back to MeasurementDefinition.id
+  final int defId;
   final DateTime timestamp;
   final double value;
-  final String unit;        // e.g. "kg", "%", "mmHg"
+  final String unit;
   final String? note;
 
+  /// Creates a [Measurement] record.
   Measurement({
     required this.id,
     required this.defId,

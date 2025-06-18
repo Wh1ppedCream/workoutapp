@@ -2,9 +2,25 @@
 
 import 'package:sqflite/sqflite.dart';
 
-/// Encapsulates cardio‐related CRUD operations.
+/// Data Access Object for cardio exercise details.
+///
+/// Encapsulates all CRUD operations on the `cardio_details` table:
+///  • Insert or replace details
+///  • Query details for an exercise
+///  • Update existing details
+///  • Delete details by exercise
 class CardioDao {
-  /// Inserts or updates the cardio_details row for an exercise.
+  /// Inserts or replaces the cardio details for a specific exercise.
+  ///
+  /// Parameters:
+  /// - [db]: Open SQLite database instance.
+  /// - [exerciseId]: Foreign key referencing the exercise.
+  /// - [cardioName]: Name of the cardio activity.
+  /// - [note]: Optional notes or description.
+  /// - [plannedMinutes]: Intended duration in minutes.
+  /// - [elapsedSeconds]: Recorded elapsed time in seconds.
+  ///
+  /// Uses `ConflictAlgorithm.replace` to overwrite existing records.
   static Future<void> insertCardioDetails({
     required Database db,
     required int exerciseId,
@@ -26,7 +42,11 @@ class CardioDao {
     );
   }
 
-  /// Fetches the cardio_details for a given exercise (or null if none).
+  /// Retrieves the cardio details for a given exercise.
+  ///
+  /// Returns a map of column names to values if found, otherwise `null`.
+  /// - [db]: Open SQLite database instance.
+  /// - [exerciseId]: Foreign key referencing the exercise.
   static Future<Map<String, dynamic>?> getCardioDetailsForExercise(
     Database db,
     int exerciseId,
@@ -40,7 +60,11 @@ class CardioDao {
     return rows.isNotEmpty ? rows.first : null;
   }
 
-/// Updates an existing cardio_details row for an exercise.
+  /// Updates the cardio details for a specific exercise.
+  ///
+  /// Parameters and behavior mirror [insertCardioDetails], except
+  /// this method only updates existing rows.
+  /// Returns the number of rows affected.
   static Future<int> updateCardioDetails({
     required Database db,
     required int exerciseId,
@@ -62,7 +86,12 @@ class CardioDao {
     );
   }
 
-  /// Deletes the cardio_details entry for a specific exercise.
+  /// Deletes the cardio details entry associated with a given exercise.
+  ///
+  /// - [db]: Open SQLite database instance.
+  /// - [exerciseId]: Foreign key referencing the exercise.
+  ///
+  /// Returns the number of rows removed (should be 0 or 1).
   static Future<int> deleteCardioDetails(
     Database db,
     int exerciseId,
@@ -73,5 +102,4 @@ class CardioDao {
       whereArgs: [exerciseId],
     );
   }
-
 }

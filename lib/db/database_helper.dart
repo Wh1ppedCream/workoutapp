@@ -245,9 +245,9 @@ Future<void> deleteExercise(int exerciseId) async {
    );
   }
 
-  /// Given a parentSets list and childChangeSets map, insert into `sets`.
-  /// `parentSets` is List < ExerciseSet >  where each is a top-level set.
-  /// `childChangeSets` is a Map < parentIndex, List < ExerciseSet>>.
+  /// Given a parentSets list and childChangeSets map, insert into sets.
+  /// parentSets is List < ExerciseSet >  where each is a top-level set.
+  /// childChangeSets is a Map < parentIndex, List < ExerciseSet>>.
   Future<void> insertWeightSets({
     required int exerciseId,
     required List<ExerciseSet> parentSets,
@@ -350,8 +350,8 @@ Future<List<Map<String, dynamic>>> getAllExercisesRaw() async {
 
   /// Fetch all exercises whose equipment is *only* drawn from [equipmentNames].
   ///
-  /// Because each definition has a single `equipment_id`, this currently
-  /// returns those whose `equipment_id` ∈ list, or `NULL` if you consider
+  /// Because each definition has a single equipment_id, this currently
+  /// returns those whose equipment_id ∈ list, or NULL if you consider
   /// “bodyweight/no equipment” as allowed.
  Future<List<ExerciseDefinition>> getExerciseDefsOnlyWithEquipment(
   List<String> equipmentNames, { bool includeNone = true }

@@ -4,28 +4,38 @@ import 'dart:convert';
 import 'package:flutter/services.dart';  // For rootBundle.loadString
 import 'package:sqflite/sqflite.dart';
 
-/// Handles JSON-based seeding of lookup and exercise data.
+/// Handles JSON-based seeding of lookup tables, exercise definitions, and stretches.
+///
+/// Reads static JSON files from assets and populates the database using transactions.
 class Seed {
-  /// Seeds equipment, body parts, muscles, and exercises from JSON files.
+  /// Seeds equipment, body parts, muscles, and exercise definitions.
+  ///
+  /// - [db]: The open SQLite database instance.
+  ///
+  /// Reads from:
+  ///  • assets/equipment.json
+  ///  • assets/bodyparts.json
+  ///  • assets/muscles.json
+  ///  • assets/exercises.json
   static Future<void> seedLookupsAndExercises(Database db) async {
-    // 1) Equipment lookup
+    // Load equipment JSON
     final eqJson = await rootBundle.loadString('assets/equipment.json');
     final List eqList = json.decode(eqJson);
 
-    // 2) Body parts lookup
+    // Load body parts JSON
     final bpJson = await rootBundle.loadString('assets/bodyparts.json');
     final List bpList = json.decode(bpJson);
 
-    // 3) Muscles lookup
+    // Load muscles JSON
     final mJson = await rootBundle.loadString('assets/muscles.json');
     final List mList = json.decode(mJson);
 
-    // 4) Exercises definitions
+    // Load exercise definitions JSON
     final exJson = await rootBundle.loadString('assets/exercises.json');
     final List exList = json.decode(exJson);
 
     await db.transaction((txn) async {
-      // Insert equipment
+      // Insert equipment records
       for (var item in eqList) {
         await txn.insert(
           'equipment',
@@ -34,7 +44,7 @@ class Seed {
         );
       }
 
-      // Insert body parts
+      // Insert body part records
       for (var item in bpList) {
         await txn.insert(
           'bodypart',
@@ -43,7 +53,7 @@ class Seed {
         );
       }
 
-      // Insert muscles
+      // Insert muscle records
       for (var item in mList) {
         await txn.insert(
           'muscles',
@@ -52,9 +62,9 @@ class Seed {
         );
       }
 
-      // Insert exercise definitions and relationships
+      // Insert exercise definitions and link lookups
       for (var item in exList) {
-        // Determine primary equipment_id
+        // Determine primary equipment_id if present
         final List eqNames = item['equipment'] as List;
         int? eqId;
         if (eqNames.isNotEmpty) {
@@ -67,7 +77,7 @@ class Seed {
           eqId = rows.isNotEmpty ? rows.first['id'] as int : null;
         }
 
-        // Insert definition
+        // Insert exercise_definitions record
         final defId = await txn.insert(
           'exercise_definitions',
           {
@@ -78,7 +88,7 @@ class Seed {
           conflictAlgorithm: ConflictAlgorithm.ignore,
         );
 
-        // Link many-to-many equipment
+        // Link additional equipment entries (many-to-many)
         for (var eName in eqNames) {
           final rows2 = await txn.query(
             'equipment',
@@ -97,7 +107,7 @@ class Seed {
           }
         }
 
-        // Link body parts
+        // Link body parts for this exercise
         for (var bpName in (item['bodyparts'] as List)) {
           final bRows = await txn.query(
             'bodypart',
@@ -116,7 +126,7 @@ class Seed {
           }
         }
 
-        // Link ranked muscles
+        // Link ranked muscles for this exercise
         for (var mEntry in (item['muscles'] as List)) {
           final name = mEntry['name'] as String;
           final rank = (mEntry['rank'] as num).toInt();
@@ -141,13 +151,19 @@ class Seed {
     });
   }
 
-  /// Seeds stretch definitions and their associated body parts.
+  /// Seeds stretch definitions and their body part associations.
+  ///
+  /// - [db]: The open SQLite database instance.
+  ///
+  /// Reads from: assets/stretches.json
   static Future<void> seedStretches(Database db) async {
+    // Load stretches JSON
     final stJson = await rootBundle.loadString('assets/stretches.json');
     final List stList = json.decode(stJson);
 
     await db.transaction((txn) async {
       for (var item in stList) {
+        // Insert stretch_definitions record
         final sid = await txn.insert(
           'stretch_definitions',
           {
@@ -157,6 +173,7 @@ class Seed {
           conflictAlgorithm: ConflictAlgorithm.ignore,
         );
 
+        // Link each body part to this stretch
         for (var bpName in (item['bodyparts'] as List)) {
           final bRows = await txn.query(
             'bodypart',
@@ -177,7 +194,4 @@ class Seed {
       }
     });
   }
-
-
-
 }

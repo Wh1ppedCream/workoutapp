@@ -2,11 +2,24 @@
 
 import 'package:sqflite/sqflite.dart';
 
-/// Holds all SQL for creating tables and performing schema migrations.
+/// Database schema manager: creates tables and handles version migrations.
+///
+/// Contains methods to:
+///  • Create initial schema (v1).
+///  • Migrate to v3, v4, and v5.
+///
+/// Usage:
+/// ```dart
+/// await Schema.createTables(db);
+/// await Schema.migrateV3(db);
+/// // etc.
+/// ```
 class Schema {
-  /// Initial schema creation (onCreate).
+  /// Creates all tables for the initial schema (version 1).
+  ///
+  /// - [db]: The open database instance.
   static Future<void> createTables(Database db) async {
-    // 1) sessions
+    // 1) sessions: stores workout sessions
     await db.execute('''
       CREATE TABLE sessions(
         id       INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -15,7 +28,7 @@ class Schema {
       );
     ''');
 
-    // 2) equipment & bodypart
+    // 2) equipment & bodypart lookup tables
     await db.execute('''
       CREATE TABLE equipment(
         id   INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -29,7 +42,7 @@ class Schema {
       );
     ''');
 
-    // 3) exercise_definitions & junction
+    // 3) exercise definitions and junction to body parts
     await db.execute('''
       CREATE TABLE exercise_definitions(
         id           INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -49,7 +62,7 @@ class Schema {
       );
     ''');
 
-    // 4) exercises
+    // 4) exercises (instances in sessions)
     await db.execute('''
       CREATE TABLE exercises(
         id              INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -62,7 +75,7 @@ class Schema {
       );
     ''');
 
-    // 5) sets
+    // 5) sets for weight exercises
     await db.execute('''
       CREATE TABLE sets(
         id             INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -75,7 +88,7 @@ class Schema {
       );
     ''');
 
-    // 6) measurement_definitions & measurements
+    // 6) measurement definitions and measurements
     await db.execute('''
       CREATE TABLE measurement_definitions(
         id   INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -95,7 +108,7 @@ class Schema {
       );
     ''');
 
-    // 7) exercise_equipment & muscles & exercise_muscle
+    // 7) equipment and muscle relationships for definitions
     await db.execute('''
       CREATE TABLE exercise_equipment(
         exercise_id  INTEGER NOT NULL,
@@ -122,7 +135,7 @@ class Schema {
       );
     ''');
 
-    // 8) stretch_definitions & stretch_bodypart
+    // 8) stretch definitions and join table
     await db.execute('''
       CREATE TABLE stretch_definitions(
         id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -140,7 +153,7 @@ class Schema {
       );
     ''');
 
-    // 9) cardio_details
+    // 9) cardio details for exercises
     await db.execute('''
       CREATE TABLE cardio_details(
         id              INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -153,7 +166,7 @@ class Schema {
       );
     ''');
 
-    // 10) stretch_instances & items
+    // 10) stretch instances and items in sessions
     await db.execute('''
       CREATE TABLE stretch_instances(
         id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -177,14 +190,12 @@ class Schema {
     ''');
   }
 
-  /// Migrations for version 3
+  /// Applies database migrations for version 3.
+  ///
+  /// - Adds [rating] column to exercise_definitions.
+  /// - Creates equipment/muscle lookup tables.
   static Future<void> migrateV3(Database db) async {
-    // Add rating to exercise_definitions
-    await db.execute('''
-      ALTER TABLE exercise_definitions
-        ADD COLUMN rating INTEGER NOT NULL DEFAULT 0;
-    ''');
-    // exercise_equipment join table
+    await db.execute('ALTER TABLE exercise_definitions ADD COLUMN rating INTEGER NOT NULL DEFAULT 0;');
     await db.execute('''
       CREATE TABLE exercise_equipment(
         exercise_id  INTEGER NOT NULL,
@@ -194,14 +205,7 @@ class Schema {
         FOREIGN KEY(equipment_id) REFERENCES equipment(id)             ON DELETE CASCADE
       );
     ''');
-    // muscles lookup
-    await db.execute('''
-      CREATE TABLE muscles(
-        id   INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT    NOT NULL UNIQUE
-      );
-    ''');
-    // exercise_muscle join table
+    await db.execute('CREATE TABLE muscles(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE);');
     await db.execute('''
       CREATE TABLE exercise_muscle(
         exercise_id INTEGER NOT NULL,
@@ -213,9 +217,10 @@ class Schema {
     ''');
   }
 
-  /// Migrations for version 4
+  /// Applies database migrations for version 4.
+  ///
+  /// - Creates stretch definitions and join table.
   static Future<void> migrateV4(Database db) async {
-    // Create stretch_definitions & join
     await db.execute('''
       CREATE TABLE stretch_definitions(
         id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -234,14 +239,13 @@ class Schema {
     ''');
   }
 
-  /// Migrations for version 5
+  /// Applies database migrations for version 5.
+  ///
+  /// - Adds [type] column to exercises.
+  /// - Creates cardio_details and stretch instance tables.
+  /// - Adds [parent_set_id] to sets.
   static Future<void> migrateV5(Database db) async {
-    // Add type column to exercises
-    await db.execute('''
-      ALTER TABLE exercises
-        ADD COLUMN type TEXT NOT NULL DEFAULT 'weight';
-    ''');
-    // Create cardio_details
+    await db.execute("ALTER TABLE exercises ADD COLUMN type TEXT NOT NULL DEFAULT 'weight';");
     await db.execute('''
       CREATE TABLE cardio_details(
         id              INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -253,7 +257,6 @@ class Schema {
         FOREIGN KEY(exercise_id) REFERENCES exercises(id) ON DELETE CASCADE
       );
     ''');
-    // Create stretch_instances
     await db.execute('''
       CREATE TABLE stretch_instances(
         id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -261,7 +264,6 @@ class Schema {
         FOREIGN KEY(exercise_id) REFERENCES exercises(id) ON DELETE CASCADE
       );
     ''');
-    // Create stretch_instance_items
     await db.execute('''
       CREATE TABLE stretch_instance_items(
         id             INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -276,10 +278,6 @@ class Schema {
         FOREIGN KEY(stretch_id)   REFERENCES stretch_definitions(id)    ON DELETE CASCADE
       );
     ''');
-    // Modify sets for parent_set_id
-    await db.execute('''
-      ALTER TABLE sets
-        ADD COLUMN parent_set_id INTEGER;
-    ''');
+    await db.execute('ALTER TABLE sets ADD COLUMN parent_set_id INTEGER;');
   }
 }
