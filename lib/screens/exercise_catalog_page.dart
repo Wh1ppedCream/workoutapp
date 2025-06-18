@@ -1,8 +1,8 @@
-//exercise_catalog_page.dart
+//lib/widgets/exercise_catalog_page.dart
 
 import 'package:flutter/material.dart';
-import '../../db/database_helper.dart';
 import '../models/models.dart';
+import '../repositories/app_repository.dart';
 
 class ExerciseCatalogPage extends StatefulWidget {
   final void Function(ExerciseDefinition)? onExercisePicked;
@@ -12,15 +12,17 @@ class ExerciseCatalogPage extends StatefulWidget {
   });
 
   @override
-  _ExerciseCatalogPageState createState() => _ExerciseCatalogPageState();
+  State<ExerciseCatalogPage> createState() => _ExerciseCatalogPageState();
 }
 
 class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
-  final _db = DatabaseHelper();
+  final _repo = AppRepository();
 
-  // Lookup lists
+  // Lookup data
   List<String> _equipmentList = [];
+  List<BodyPart> _bodyParts = [];
   List<String> _bodyPartList = [];
+  List<Muscle> _muscles = [];
   List<String> _muscleList = [];
 
   // All definitions and filtered view
@@ -46,13 +48,13 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
 
   Future<void> _loadLookupsAndDefs() async {
     try {
-      final equipmentNames = await _db.getAllEquipmentNames();
+      final equipmentNames = await _repo.fetchAllEquipmentNames();                                                //
 
-      // getAllBodyParts returns List<BodyPart>; map to names
-      final bodyParts = await _db.getAllBodyParts();
-      final bodyPartNames = bodyParts.map((bp) => bp.name).toList();
+      _bodyParts = await _repo.fetchAllBodyParts();
+      final bodyPartNames = _bodyParts.map((bp) => bp.name).toList();
 
-      final muscleNames = await _db.getAllMuscleNames();
+      _muscles = await _repo.fetchAllMuscles();
+       final muscleNames = _muscles.map((m) => m.name).toList();
 
       setState(() {
         _equipmentList = ['All', ...equipmentNames];
@@ -60,17 +62,14 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
         _muscleList = ['All', ...muscleNames];
       });
 
-      final defs = await _db.getExerciseDefinitionsFiltered();
-      setState(() {
-        _allDefs = defs;
-        _applySearchAndDisplay();
-        _isLoading = false;
-      });
+      // Load all definitions (no filters)
+      _allDefs = await _repo.lookupDefsFiltered();
+
+      _applySearchAndDisplay();
     } catch (e) {
       debugPrint('Error loading data: $e');
-      setState(() {
-        _isLoading = false;
-      });
+      } finally {
+      setState(() => _isLoading = false);
     }
   }
 
@@ -161,23 +160,20 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
 
                 List<int>? bodyPartIds;
                 if (selectedArea != 'All') {
-                  final rows = await (await _db.database)
-                      .query('bodypart', where: 'name = ?', whereArgs: [selectedArea]);
-                  if (rows.isNotEmpty) {
-                    bodyPartIds = [rows.first['id'] as int];
-                  }
+                  final bp = _bodyParts.firstWhere((b) => b.name == selectedArea);
+
+                  bodyPartIds = [bp.id];
                 }
 
                 List<int>? muscleIds;
                 if (selectedMuscle != 'All') {
-                  final rows = await (await _db.database)
-                      .query('muscles', where: 'name = ?', whereArgs: [selectedMuscle]);
-                  if (rows.isNotEmpty) {
-                    muscleIds = [rows.first['id'] as int];
-                  }
+                  final m = _muscles.firstWhere((mus) => mus.name == selectedMuscle);
+
+                  muscleIds = [m.id];
                 }
 
-                final defs = await _db.getExerciseDefinitionsFiltered(
+                // Fetch filtered definitions
+                final defs = await _repo.lookupDefsFiltered(
                   equipmentNames: equipNames,
                   bodypartIds: bodyPartIds,
                   muscleIds: muscleIds,

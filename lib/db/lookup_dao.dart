@@ -137,4 +137,35 @@ class LookupDao {
     );
     return rows.map((r) => r['name'] as String).toList();
   }
+
+  /// Fetch all muscles as full [Muscle] models.
+  static Future<List<Muscle>> getAllMuscles(Database db) async {
+    final rows = await db.query(
+      'muscles',
+      orderBy: 'name',
+    );
+    return rows.map((r) {
+      return Muscle(
+        id:   r['id']   as int,
+        name: r['name'] as String,
+      );
+    }).toList();
+  }
+
+  /// Returns the name of a stretch definition by its ID.
+  static Future<String?> getStretchDefinitionNameById(
+    Database db,
+    int stretchId,
+  ) async {
+    final rows = await db.query(
+      'stretch_definitions',
+      columns: ['name'],
+      where: 'id = ?',
+      whereArgs: [stretchId],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return rows.first['name'] as String;
+  }
+
 }
