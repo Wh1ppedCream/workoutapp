@@ -2,29 +2,46 @@
 
 import 'package:sqflite/sqflite.dart';
 
-/// Encapsulates stretch‐instance CRUD operations.
+/// Data Access Object for stretch instances and their items.
+///
+/// Provides methods to insert, query, update, delete, and reorder stretch
+/// instance data in the `stretch_instances` and `stretch_instance_items` tables.
 class StretchDao {
-  /// Inserts a stretch_instances row plus its items.
+  /// Inserts a new stretch instance for an exercise and its detail items.
+  ///
+  /// - [db]: Open database instance.
+  /// - [exerciseId]: ID of the exercise to which this stretch instance belongs.
+  /// - [items]: List of item maps, each containing keys:
+  ///   • `stretch_id` (int?)
+  ///   • `is_custom` (bool)
+  ///   • `custom_name` (String?)
+  ///   • `custom_desc` (String?)
+  ///   • `is_checked` (bool)
+  ///   • `order_index` (int)
+  ///
+  /// Inserts one row into `stretch_instances`, then each map into
+  /// `stretch_instance_items`, using `ConflictAlgorithm.ignore` to skip
+  /// duplicates.
   static Future<void> insertStretchInstance({
     required Database db,
     required int exerciseId,
     required List<Map<String, dynamic>> items,
   }) async {
-    // 1) Create the “container” row
+    // 1) Create the container row
     await db.insert(
       'stretch_instances',
       {'exercise_id': exerciseId},
     );
 
-    // 2) Insert each item
+    // 2) Insert each detail item
     for (var i = 0; i < items.length; i++) {
       final m = items[i];
       final stretchId  = m['stretch_id'] as int?;
       final isCustom   = (m['is_custom'] as bool) ? 1 : 0;
-      final customName = m['custom_name']   as String?;
-      final customDesc = m['custom_desc']   as String?;
+      final customName = m['custom_name'] as String?;
+      final customDesc = m['custom_desc'] as String?;
       final isChecked  = (m['is_checked'] as bool) ? 1 : 0;
-      final orderIndex = m['order_index']   as int;
+      final orderIndex = m['order_index'] as int;
 
       await db.insert(
         'stretch_instance_items',
@@ -42,7 +59,13 @@ class StretchDao {
     }
   }
 
-  /// Fetches all items for a stretch‐instance, ordered by index.
+  /// Retrieves all stretch instance items for a given exercise.
+  ///
+  /// - [db]: Open database instance.
+  /// - [exerciseId]: ID of the parent exercise.
+  ///
+  /// Returns a list of maps representing each row in
+  /// `stretch_instance_items`, ordered by `order_index`.
   static Future<List<Map<String, dynamic>>> getStretchItemsForExercise(
     Database db,
     int exerciseId,
@@ -55,7 +78,18 @@ class StretchDao {
     );
   }
 
-/// Updates one stretch‐instance item by its ID.
+  /// Updates fields of a single stretch instance item by its ID.
+  ///
+  /// - [db]: Open database instance.
+  /// - [itemId]: ID of the item to update.
+  /// - [stretchId]: New stretch definition ID, if updating.
+  /// - [isCustom]: New custom flag, if updating.
+  /// - [customName]: New custom name, if updating.
+  /// - [customDesc]: New custom description, if updating.
+  /// - [isChecked]: New checked state, if updating.
+  /// - [orderIndex]: New ordering index, if updating.
+  ///
+  /// Only non-null parameters will be applied. Returns number of rows updated.
   static Future<int> updateStretchItem({
     required Database db,
     required int itemId,
@@ -83,7 +117,12 @@ class StretchDao {
     );
   }
 
-  /// Deletes one stretch‐instance item by its ID.
+  /// Deletes a single stretch instance item by its ID.
+  ///
+  /// - [db]: Open database instance.
+  /// - [itemId]: ID of the item to remove.
+  ///
+  /// Returns number of rows deleted.
   static Future<int> deleteStretchItem(
     Database db,
     int itemId,
@@ -95,17 +134,23 @@ class StretchDao {
     );
   }
 
-  /// Deletes an entire stretch instance (both container & its items).
+  /// Deletes an entire stretch instance and its items.
+  ///
+  /// - [db]: Open database instance.
+  /// - [exerciseId]: ID of the parent exercise whose stretch instance is removed.
+  ///
+  /// Deletes rows from `stretch_instance_items` then `stretch_instances`.
   static Future<void> deleteStretchInstance(
     Database db,
     int exerciseId,
   ) async {
-    // items table has FK ON DELETE CASCADE if you set it up; if not, delete explicitly:
+    // Remove child items first (cascade not guaranteed)
     await db.delete(
       'stretch_instance_items',
       where: 'exercise_id = ?',
       whereArgs: [exerciseId],
     );
+    // Remove the container row
     await db.delete(
       'stretch_instances',
       where: 'exercise_id = ?',
@@ -113,7 +158,13 @@ class StretchDao {
     );
   }
 
-  /// Reorders the given list of item IDs under one exercise.
+  /// Reorders stretch instance items by updating their `order_index`.
+  ///
+  /// - [db]: Open database instance.
+  /// - [exerciseId]: ID of the parent exercise.
+  /// - [itemIds]: List of item IDs in desired new order.
+  ///
+  /// Updates each item’s `order_index` to its position in [itemIds].
   static Future<void> reorderStretchItems(
     Database db,
     int exerciseId,
@@ -128,5 +179,4 @@ class StretchDao {
       );
     }
   }
-
 }

@@ -3,9 +3,18 @@
 import 'package:sqflite/sqflite.dart';
 import '../models/models.dart';
 
-/// Encapsulates measurements, equipment/bodypart/muscle lookups, and stretches.
+/// Data Access Object for measurement records and lookup tables.
+///
+/// Encapsulates CRUD operations for:
+///  • measurement definitions & measurements
+///  • equipment, bodypart, and muscle lookup tables
+///  • stretch definitions
 class LookupDao {
-  /// Fetch all measurement definitions.
+  /// Retrieves all measurement definitions.
+  ///
+  /// - [db]: Open SQLite database instance.
+  ///
+  /// Returns a list of maps containing keys: `id`, `name`, `type`.
   static Future<List<Map<String, dynamic>>> getMeasurementDefinitions(
     Database db,
   ) {
@@ -15,7 +24,16 @@ class LookupDao {
     );
   }
 
-  /// Insert a new measurement instance.
+  /// Inserts a new measurement record tied to a definition.
+  ///
+  /// - [db]: Open SQLite database instance.
+  /// - [defId]: ID of the measurement definition.
+  /// - [ts]: Timestamp of the measurement.
+  /// - [value]: Numeric measurement value.
+  /// - [unit]: Measurement unit string (e.g., "kg").
+  /// - [note]: Optional note text.
+  ///
+  /// Returns the new measurement row ID.
   static Future<int> insertMeasurement(
     Database db,
     int defId,
@@ -36,7 +54,12 @@ class LookupDao {
     );
   }
 
-  /// Fetch all measurements for a given definition.
+  /// Retrieves all measurements for a given definition.
+  ///
+  /// - [db]: Open SQLite database instance.
+  /// - [defId]: Measurement definition ID to filter by.
+  ///
+  /// Returns a list of maps ordered by timestamp descending.
   static Future<List<Map<String, dynamic>>> getMeasurementsForDefinition(
     Database db,
     int defId,
@@ -49,12 +72,16 @@ class LookupDao {
     );
   }
 
-  /// Returns only the definitions that have at least one measurement recorded.
+  /// Retrieves only measurement definitions that have at least one entry.
+  ///
+  /// - [db]: Open SQLite database instance.
+  ///
+  /// Returns a list of maps containing keys: `id`, `name`, `type`.
   static Future<List<Map<String, dynamic>>> getUsedMeasurementDefinitions(
     Database db,
   ) {
     return db.rawQuery('''
-      SELECT md.id, md.name, md.type 
+      SELECT md.id, md.name, md.type
         FROM measurement_definitions md
         JOIN measurements m ON m.def_id = md.id
        GROUP BY md.id
@@ -62,7 +89,11 @@ class LookupDao {
     ''');
   }
 
-  /// Fetch all equipment names.
+  /// Retrieves all equipment names.
+  ///
+  /// - [db]: Open SQLite database instance.
+  ///
+  /// Returns a list of equipment name strings.
   static Future<List<String>> getAllEquipmentNames(
     Database db,
   ) async {
@@ -74,7 +105,11 @@ class LookupDao {
     return rows.map((r) => r['name'] as String).toList();
   }
 
-  /// Fetch all body-part IDs and names.
+  /// Retrieves all body part lookup entries as [BodyPart] models.
+  ///
+  /// - [db]: Open SQLite database instance.
+  ///
+  /// Returns a list of [BodyPart] objects.
   static Future<List<BodyPart>> getAllBodyParts(
     Database db,
   ) async {
@@ -87,7 +122,12 @@ class LookupDao {
         .toList();
   }
 
-  /// Fetch stretches by an optional bodypart ID (or all if null).
+  /// Retrieves stretch definitions, optionally filtered by body part.
+  ///
+  /// - [db]: Open SQLite database instance.
+  /// - [bodypartId]: If provided, filters stretches linked to this ID.
+  ///
+  /// Returns a list of [StretchDefinition] objects.
   static Future<List<StretchDefinition>> getStretches(
     Database db, [
     int? bodypartId,
@@ -104,8 +144,8 @@ class LookupDao {
 
     final List<StretchDefinition> result = [];
     for (final r in stretchRows) {
-      final id   = r['id'] as int;
-      final nm   = r['name'] as String;
+      final id = r['id'] as int;
+      final nm = r['name'] as String;
       final desc = (r['description'] as String?) ?? '';
 
       final bpRows = await db.rawQuery('''
@@ -120,13 +160,20 @@ class LookupDao {
           .toList();
 
       result.add(StretchDefinition(
-        id: id, name: nm, description: desc, bodyParts: bpList,
+        id: id,
+        name: nm,
+        description: desc,
+        bodyParts: bpList,
       ));
     }
     return result;
   }
 
-  /// Fetch all muscle names.
+  /// Retrieves all muscle names.
+  ///
+  /// - [db]: Open SQLite database instance.
+  ///
+  /// Returns a list of muscle name strings.
   static Future<List<String>> getAllMuscleNames(
     Database db,
   ) async {
@@ -138,21 +185,25 @@ class LookupDao {
     return rows.map((r) => r['name'] as String).toList();
   }
 
-  /// Fetch all muscles as full [Muscle] models.
+  /// Retrieves all muscles as [Muscle] models.
+  ///
+  /// - [db]: Open SQLite database instance.
+  ///
+  /// Returns a list of [Muscle] objects.
   static Future<List<Muscle>> getAllMuscles(Database db) async {
     final rows = await db.query(
       'muscles',
       orderBy: 'name',
     );
-    return rows.map((r) {
-      return Muscle(
-        id:   r['id']   as int,
-        name: r['name'] as String,
-      );
-    }).toList();
+    return rows.map((r) => Muscle(id: r['id'] as int, name: r['name'] as String)).toList();
   }
 
-  /// Returns the name of a stretch definition by its ID.
+  /// Retrieves the name of a stretch definition by its ID.
+  ///
+  /// - [db]: Open SQLite database instance.
+  /// - [stretchId]: ID of the stretch definition.
+  ///
+  /// Returns the stretch name or null if not found.
   static Future<String?> getStretchDefinitionNameById(
     Database db,
     int stretchId,
@@ -168,8 +219,12 @@ class LookupDao {
     return rows.first['name'] as String;
   }
 
-  /// Returns the ID of the measurement_definition with the given name,
-  /// or null if none exists.
+  /// Retrieves the ID of a measurement definition by name.
+  ///
+  /// - [db]: Open SQLite database instance.
+  /// - [name]: Definition name to match.
+  ///
+  /// Returns the definition ID or null if none exists.
   static Future<int?> getMeasurementDefinitionId(
     Database db,
     String name,
@@ -185,7 +240,12 @@ class LookupDao {
     return rows.first['id'] as int;
   }
 
-/// Fetch a single measurement by its ID (or null if none).
+  /// Retrieves a single measurement by its ID.
+  ///
+  /// - [db]: Open SQLite database instance.
+  /// - [measurementId]: ID of the measurement to fetch.
+  ///
+  /// Returns a map of column values or null if not found.
   static Future<Map<String, dynamic>?> getMeasurementById(
     Database db,
     int measurementId,
@@ -200,6 +260,15 @@ class LookupDao {
   }
 
   /// Updates an existing measurement record.
+  ///
+  /// - [db]: Open SQLite database instance.
+  /// - [measurementId]: ID of the measurement to update.
+  /// - [timestamp]: New timestamp value.
+  /// - [value]: New measurement value.
+  /// - [unit]: New unit string.
+  /// - [note]: Optional updated note.
+  ///
+  /// Returns number of rows affected.
   static Future<int> updateMeasurement({
     required Database db,
     required int measurementId,
@@ -222,6 +291,11 @@ class LookupDao {
   }
 
   /// Deletes a measurement by its ID.
+  ///
+  /// - [db]: Open SQLite database instance.
+  /// - [measurementId]: ID of the measurement to delete.
+  ///
+  /// Returns number of rows deleted.
   static Future<int> deleteMeasurement(
     Database db,
     int measurementId,
@@ -233,13 +307,23 @@ class LookupDao {
     );
   }
 
-
-  /// Insert a new equipment.
+  /// Inserts a new equipment lookup entry.
+  ///
+  /// - [db]: Open SQLite database instance.
+  /// - [name]: Equipment name to insert.
+  ///
+  /// Returns the new equipment row ID.
   static Future<int> insertEquipment(Database db, String name) {
     return db.insert('equipment', {'name': name});
   }
 
-  /// Update an existing equipment.
+  /// Updates an existing equipment lookup entry.
+  ///
+  /// - [db]: Open SQLite database instance.
+  /// - [id]: Equipment row ID to update.
+  /// - [name]: New equipment name.
+  ///
+  /// Returns number of rows affected.
   static Future<int> updateEquipment(Database db, int id, String name) {
     return db.update(
       'equipment',
@@ -249,7 +333,12 @@ class LookupDao {
     );
   }
 
-  /// Delete an equipment by ID.
+  /// Deletes an equipment lookup entry by ID.
+  ///
+  /// - [db]: Open SQLite database instance.
+  /// - [id]: Equipment row ID to delete.
+  ///
+  /// Returns number of rows deleted.
   static Future<int> deleteEquipment(Database db, int id) {
     return db.delete(
       'equipment',
@@ -258,19 +347,33 @@ class LookupDao {
     );
   }
 
-  /// Fetch all equipment as full [Equipment] models.
+  /// Retrieves all equipment as [Equipment] models.
+  ///
+  /// - [db]: Open SQLite database instance.
+  ///
+  /// Returns a list of [Equipment] objects.
   static Future<List<Equipment>> getAllEquipment(Database db) async {
     final rows = await db.query('equipment', orderBy: 'name');
-   return rows.map((r) => Equipment(r['id'] as int, r['name'] as String)).toList();
+    return rows.map((r) => Equipment(r['id'] as int, r['name'] as String)).toList();
   }
 
-  /// Insert a new body part.
+  /// Inserts a new body part lookup entry.
+  ///
+  /// - [db]: Open SQLite database instance.
+  /// - [name]: Body part name to insert.
+  ///
+  /// Returns the new body part row ID.
   static Future<int> insertBodyPart(Database db, String name) {
     return db.insert('bodypart', {'name': name});
   }
 
-  /// Update an existing body part.
-
+  /// Updates an existing body part lookup entry.
+  ///
+  /// - [db]: Open SQLite database instance.
+  /// - [id]: Body part row ID to update.
+  /// - [name]: New body part name.
+  ///
+  /// Returns number of rows affected.
   static Future<int> updateBodyPart(Database db, int id, String name) {
     return db.update(
       'bodypart',
@@ -280,7 +383,12 @@ class LookupDao {
     );
   }
 
-  /// Delete a body part by ID.
+  /// Deletes a body part lookup entry by ID.
+  ///
+  /// - [db]: Open SQLite database instance.
+  /// - [id]: Body part row ID to delete.
+  ///
+  /// Returns number of rows deleted.
   static Future<int> deleteBodyPart(Database db, int id) {
     return db.delete(
       'bodypart',
@@ -289,12 +397,23 @@ class LookupDao {
     );
   }
 
-  /// Insert a new muscle.
+  /// Inserts a new muscle lookup entry.
+  ///
+  /// - [db]: Open SQLite database instance.
+  /// - [name]: Muscle name to insert.
+  ///
+  /// Returns the new muscle row ID.
   static Future<int> insertMuscle(Database db, String name) {
     return db.insert('muscles', {'name': name});
   }
 
-  /// Update an existing muscle.
+  /// Updates an existing muscle lookup entry.
+  ///
+  /// - [db]: Open SQLite database instance.
+  /// - [id]: Muscle row ID to update.
+  /// - [name]: New muscle name.
+  ///
+  /// Returns number of rows affected.
   static Future<int> updateMuscle(Database db, int id, String name) {
     return db.update(
       'muscles',
@@ -304,7 +423,12 @@ class LookupDao {
     );
   }
 
-  /// Delete a muscle by ID.
+  /// Deletes a muscle lookup entry by ID.
+  ///
+  /// - [db]: Open SQLite database instance.
+  /// - [id]: Muscle row ID to delete.
+  ///
+  /// Returns number of rows deleted.
   static Future<int> deleteMuscle(Database db, int id) {
     return db.delete(
       'muscles',
@@ -312,5 +436,4 @@ class LookupDao {
       whereArgs: [id],
     );
   }
-
 }
