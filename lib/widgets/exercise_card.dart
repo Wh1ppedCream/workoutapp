@@ -20,7 +20,7 @@ class ExerciseCard extends StatelessWidget {
   final VoidCallback?             onValueChanged;
 
   const ExerciseCard({
-    Key? key,
+    super.key,
     required this.exercise,
     this.cardType = CardType.weight,
     this.readOnlyMode = false,
@@ -30,7 +30,7 @@ class ExerciseCard extends StatelessWidget {
     this.onSetAdded,
     this.onSetDeleted,
     this.onValueChanged,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext ctx) {

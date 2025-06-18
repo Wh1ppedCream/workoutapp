@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 
 class NutritionPage extends StatelessWidget {
-  const NutritionPage({Key? key}) : super(key: key);
+  const NutritionPage({super.key});
 
   @override
   Widget build(BuildContext context) {

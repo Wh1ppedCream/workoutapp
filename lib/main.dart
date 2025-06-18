@@ -2,16 +2,16 @@
 
 import 'package:flutter/material.dart';
 import 'screens/history_screen.dart';
-import 'screens/train_page.dart';           // << Add this import
-import 'screens/nutrition_page.dart';       // << And this
-import 'screens/profile_page.dart';         // << And this
+import 'screens/train_page.dart';          
+import 'screens/nutrition_page.dart';
+import 'screens/profile_page.dart';   
 
 void main() {
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -26,10 +26,10 @@ class MyApp extends StatelessWidget {
 }
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({Key? key}) : super(key: key);
+  const MainScreen({super.key});
 
   @override
-  _MainScreenState createState() => _MainScreenState();
+  State<MainScreen> createState() => _MainScreenState();
 }
 
 class _MainScreenState extends State<MainScreen> {
