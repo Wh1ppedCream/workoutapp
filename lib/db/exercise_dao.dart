@@ -86,4 +86,26 @@ class ExerciseDao {
       whereArgs: [sessionId],
     );
   }
+
+  /// Fetches a single exercise row by its ID, or null if not found.
+  static Future<Map<String, dynamic>?> getExerciseById(
+      Database db, int exerciseId) {
+    return db.query(
+      'exercises',
+      where: 'id = ?',
+      whereArgs: [exerciseId],
+      limit: 1,
+    ).then((rows) => rows.isNotEmpty ? rows.first : null);
+  }
+
+  /// Deletes one exercise by its ID (cascades its sets/cardio/stretch).
+  static Future<int> deleteExerciseById(
+      Database db, int exerciseId) {
+    return db.delete(
+      'exercises',
+      where: 'id = ?',
+      whereArgs: [exerciseId],
+    );
+  }
+
 }

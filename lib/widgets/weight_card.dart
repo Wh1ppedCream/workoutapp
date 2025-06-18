@@ -248,7 +248,6 @@ class _WeightCardState extends State<WeightCard> {
 
             // ─── List each set (with optional C-Sets) ───
             ...List.generate(sets.length, (index) {
-              final set = sets[index];
               final children = <Widget>[];
 
               // 1) Parent set row

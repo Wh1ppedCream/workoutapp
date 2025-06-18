@@ -15,6 +15,7 @@ import '../models/models.dart';
 /// never import DatabaseHelper or run raw SQL.
 class AppRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper();
+  final _db = DatabaseHelper();
 
   // ─── SESSIONS ───────────────────────────────────────────
 
@@ -31,6 +32,47 @@ class AppRepository {
   Future<void> deleteSession(int sessionId) async {
     final db = await _dbHelper.database;
     return SessionDao.deleteSession(db, sessionId);
+  }
+
+/// Fetch a single session by ID, or null if missing.
+  Future<WorkoutSession?> fetchSessionById(int sessionId) async {
+    final db  = await _dbHelper.database;
+    final row = await SessionDao.getSessionById(db, sessionId);
+    if (row == null) return null;
+    return WorkoutSession(
+      id:       row['id']       as int,
+      date:     DateTime.parse(row['date'] as String),
+      duration: row['duration'] as int,
+    );
+  }
+
+  /// Updates an existing session's date/duration.
+  Future<void> updateSession(
+    int sessionId,
+    DateTime newDate,
+    int newDuration,
+  ) async {
+    final db   = await _dbHelper.database;
+    final iso  = newDate.toIso8601String();
+    await SessionDao.updateSession(db, sessionId, iso, newDuration);
+  }
+
+  /// Fetches sessions between [start] and [end].
+  Future<List<WorkoutSession>> fetchSessionsInRange(
+    DateTime start,
+    DateTime end,
+  ) async {
+    final db    = await _dbHelper.database;
+    final raw   = await SessionDao.getSessionsInRange(
+      db,
+      start.toIso8601String(),
+      end.toIso8601String(),
+    );
+    return raw.map((row) => WorkoutSession(
+      id:       row['id']       as int,
+      date:     DateTime.parse(row['date'] as String),
+      duration: row['duration'] as int,
+    )).toList();
   }
 
   // ─── EXERCISES ──────────────────────────────────────────
@@ -71,6 +113,14 @@ class AppRepository {
     );
   }
 
+
+Future<WorkoutExercise?> fetchDetailedExercise(int id) {
+    return _db.fetchDetailedExercise(id);
+  }
+  Future<void> deleteExercise(int id) {
+    return _db.deleteExercise(id); // or use ExerciseDao.deleteExerciseById under the hood
+  }
+
   // ─── SETS ───────────────────────────────────────────────
 
   Future<int> addSet(
@@ -102,6 +152,25 @@ class AppRepository {
     return SetDao.getSetsForExercise(db, exerciseId);
   }
 
+  /// Update a single weight set’s weight & reps.
+  Future<void> updateSet(int setId, double weight, int reps) async {
+    final db = await _dbHelper.database;
+    await SetDao.updateSet(db, setId, weight, reps);
+  }
+
+  /// Delete a single set by its ID.
+  Future<void> deleteSet(int setId) async {
+    final db = await _dbHelper.database;
+    await SetDao.deleteSet(db, setId);
+  }
+
+  /// Reorder a list of sets (by IDs) within an exercise.
+  Future<void> reorderSets(int exerciseId, List<int> setIds) async {
+    final db = await _dbHelper.database;
+    await SetDao.reorderSets(db, exerciseId, setIds);
+  }
+
+
   // ─── CARDIO ────────────────────────────────────────────
 
   Future<void> saveCardioDetails({
@@ -127,6 +196,51 @@ class AppRepository {
     return CardioDao.getCardioDetailsForExercise(db, exerciseId);
   }
 
+/// Insert or replace cardio details for an exercise.
+  Future<void> setCardioDetails({
+    required int exerciseId,
+    required String cardioName,
+    String? note,
+    required int plannedMinutes,
+    required int elapsedSeconds,
+  }) async {
+    final db = await _dbHelper.database;
+    await CardioDao.insertCardioDetails(
+      db: db,
+      exerciseId: exerciseId,
+      cardioName: cardioName,
+      note: note,
+      plannedMinutes: plannedMinutes,
+      elapsedSeconds: elapsedSeconds,
+    );
+  }
+
+ /// Update cardio details for an exercise.
+  Future<void> updateCardioDetails({
+    required int exerciseId,
+    required String cardioName,
+    String? note,
+    required int plannedMinutes,
+    required int elapsedSeconds,
+  }) async {
+    final db = await _dbHelper.database;
+    await CardioDao.updateCardioDetails(
+      db: db,
+      exerciseId: exerciseId,
+      cardioName: cardioName,
+      note: note,
+      plannedMinutes: plannedMinutes,
+      elapsedSeconds: elapsedSeconds,
+    );
+  }
+
+/// Delete cardio details for a specific exercise.
+  Future<void> deleteCardioDetails(int exerciseId) async {
+    final db = await _dbHelper.database;
+    await CardioDao.deleteCardioDetails(db, exerciseId);
+  }
+
+
   // ─── STRETCH ────────────────────────────────────────────
 
   Future<void> saveStretchInstance({
@@ -144,6 +258,47 @@ class AppRepository {
   Future<List<Map<String, dynamic>>> fetchStretchItems(int exerciseId) async {
     final db = await _dbHelper.database;
     return StretchDao.getStretchItemsForExercise(db, exerciseId);
+  }
+
+/// Update fields on one stretch‐instance item.
+  Future<void> updateStretchItem({
+    required int itemId,
+    int? stretchId,
+    bool? isCustom,
+    String? customName,
+    String? customDesc,
+    bool? isChecked,
+    int? orderIndex,
+  }) async {
+    final db = await _dbHelper.database;
+    await StretchDao.updateStretchItem(
+     db: db,
+      itemId: itemId,
+      stretchId: stretchId,
+      isCustom: isCustom,
+      customName: customName,
+      customDesc: customDesc,
+      isChecked: isChecked,
+      orderIndex: orderIndex,
+    );
+  }
+
+  /// Delete one stretch instance item.
+  Future<void> deleteStretchItem(int itemId) async {
+    final db = await _dbHelper.database;
+    await StretchDao.deleteStretchItem(db, itemId);
+  }
+
+  /// Delete an entire stretch instance and its items.
+  Future<void> deleteStretchInstance(int exerciseId) async {
+    final db = await _dbHelper.database;
+    await StretchDao.deleteStretchInstance(db, exerciseId);
+  }
+
+  /// Reorder the items of a stretch instance.
+  Future<void> reorderStretchItems(int exerciseId, List<int> itemIds) async {
+    final db = await _dbHelper.database;
+    await StretchDao.reorderStretchItems(db, exerciseId, itemIds);
   }
 
   // ─── DEFINITIONS & FILTERS ─────────────────────────────
@@ -214,6 +369,24 @@ class AppRepository {
     return DefinitionDao.getDefinitionInfo(db, defId);
   }
 
+/// Update an existing exercise definition’s name/equipment/rating.
+  Future<void> updateExerciseDefinition(ExerciseDefinition def) async {
+    final db = await _dbHelper.database;
+    await DefinitionDao.updateExerciseDefinition(db, def);
+  }
+
+  /// Delete a definition and its joins.
+  Future<void> deleteExerciseDefinition(int defId) async {
+    final db = await _dbHelper.database;
+    await DefinitionDao.deleteExerciseDefinition(db, defId);
+  }
+
+  /// Search for definitions whose name contains [query].
+  Future<List<ExerciseDefinition>> searchExerciseDefinitions(String query) async {
+    final db   = await _dbHelper.database;
+    return DefinitionDao.searchExerciseDefinitions(db, query);
+  }
+
 
   // ─── MEASUREMENTS & LOOKUPS ────────────────────────────
 
@@ -262,6 +435,37 @@ class AppRepository {
   Future<List<Map<String, dynamic>>> fetchUsedMeasurementDefinitions() async {
     final db = await _dbHelper.database;
     return LookupDao.getUsedMeasurementDefinitions(db);
+  }
+
+  /// Retrieve a single measurement as a raw map.
+  Future<Map<String, dynamic>?> fetchMeasurementById(int id) async {
+    final db = await _dbHelper.database;
+    return LookupDao.getMeasurementById(db, id);
+  }
+
+  /// Update an existing measurement.
+  Future<void> updateMeasurement({
+    required int measurementId,
+    required DateTime timestamp,
+    required double value,
+    required String unit,
+    String? note,
+  }) async {
+    final db = await _dbHelper.database;
+    await LookupDao.updateMeasurement(
+      db: db,
+      measurementId: measurementId,
+      timestamp: timestamp,
+      value: value,
+      unit: unit,
+      note: note,
+    );
+  }
+
+  /// Delete a measurement by its ID.
+  Future<void> deleteMeasurement(int measurementId) async {
+    final db = await _dbHelper.database;
+    await LookupDao.deleteMeasurement(db, measurementId);
   }
 
 /// Returns definitions with at least one measurement recorded.
@@ -336,5 +540,81 @@ Future<List<MeasurementDefinition>> fetchUsedClassMeasurementDefinitions() async
       muscleIds:      muscleIds,
     );
   }
+
+// Equipment
+  Future<List<Equipment>> fetchAllEquipment() async {
+    final db = await _dbHelper.database;
+    return LookupDao.getAllEquipment(db);
+  }
+  Future<int> createEquipment(String name) async {
+    final db = await _dbHelper.database;
+    return LookupDao.insertEquipment(db, name);
+  }
+  Future<void> updateEquipment(int id, String name) async {
+    final db = await _dbHelper.database;
+    await LookupDao.updateEquipment(db, id, name);
+  }
+  Future<void> deleteEquipment(int id) async {
+    final db = await _dbHelper.database;
+    await LookupDao.deleteEquipment(db, id);
+  }
+
+  // BodyPart
+  Future<List<BodyPart>> fetchAllBodyPartsFull() async {
+    final db = await _dbHelper.database;
+    return LookupDao.getAllBodyParts(db);
+  }
+  Future<int> createBodyPart(String name) async {
+    final db = await _dbHelper.database;
+    return LookupDao.insertBodyPart(db, name);
+  }
+  Future<void> updateBodyPartEntry(int id, String name) async {
+    final db = await _dbHelper.database;
+    await LookupDao.updateBodyPart(db, id, name);
+  }
+  Future<void> deleteBodyPartEntry(int id) async {
+    final db = await _dbHelper.database;
+    await LookupDao.deleteBodyPart(db, id);
+  }
+
+  // Muscle
+  Future<List<Muscle>> fetchAllMusclesFull() async {
+    final db = await _dbHelper.database;
+    return LookupDao.getAllMuscles(db);
+  }
+  Future<int> createMuscle(String name) async {
+    final db = await _dbHelper.database;
+    return LookupDao.insertMuscle(db, name);
+  }
+  Future<void> updateMuscleEntry(int id, String name) async {
+    final db = await _dbHelper.database;
+    await LookupDao.updateMuscle(db, id, name);
+  }
+  Future<void> deleteMuscleEntry(int id) async {
+    final db = await _dbHelper.database;
+    await LookupDao.deleteMuscle(db, id);
+  }
+
+  // Reseed lookups from JSON
+  Future<void> reseedLookupData() async {
+    await _dbHelper.reseedLookupData();
+  }
+
+/// Export full DB as JSON.
+  Future<String> exportDatabase() async {
+    return _dbHelper.exportDatabase();
+  }
+
+  /// Import full DB from JSON.
+  Future<void> importDatabase(String jsonStr, {bool clearFirst = true}) async {
+    await _dbHelper.importDatabase(jsonStr, clearFirst: clearFirst);
+  }
+
+  /// Search exercises by name substring.
+  Future<List<ExerciseDefinition>> fuzzsearchExercises(String term) async {
+    final db = await _dbHelper.database;
+    return DefinitionDao.fuzzsearchExerciseDefinitions(db, term);
+  }
+
 
 }
