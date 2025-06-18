@@ -1,35 +1,25 @@
 //measured_items_page.dart
 
 import 'package:flutter/material.dart';
-import '../db/database_helper.dart';
+import '../repositories/app_repository.dart';
 import '../models/models.dart';
 import 'new_measurement_item_page.dart';
 import 'specific_measurement_page.dart';
 
 class MeasuredItemsPage extends StatefulWidget {
-  const MeasuredItemsPage({Key? key}) : super(key: key);
-  @override _MeasuredItemsPageState createState() => _MeasuredItemsPageState();
+  const MeasuredItemsPage({super.key});
+  @override
+  State<MeasuredItemsPage> createState() => _MeasuredItemsPageState();
 }
 
 class _MeasuredItemsPageState extends State<MeasuredItemsPage> {
+  final _repo = AppRepository();
   late Future<List<MeasurementDefinition>> _defsFuture;
 
   @override
   void initState() {
     super.initState();
-    _defsFuture = _loadUsedDefs();
-  }
-
-  Future<List<MeasurementDefinition>> _loadUsedDefs() async {
-    final rows = await DatabaseHelper().getUsedMeasurementDefinitions();
-    return rows.map((r) => MeasurementDefinition(
-      id: r['id'] as int,
-      name: r['name'] as String,
-      type: MeasurementType.values.firstWhere(
-        (mt) => mt.name == (r['type'] as String),
-        orElse: () => MeasurementType.BodyWeight,
-         ),
-    )).toList();
+    _defsFuture = _repo.fetchUsedClassMeasurementDefinitions();
   }
 
   @override

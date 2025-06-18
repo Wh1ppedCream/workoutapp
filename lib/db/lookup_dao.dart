@@ -168,4 +168,21 @@ class LookupDao {
     return rows.first['name'] as String;
   }
 
+  /// Returns the ID of the measurement_definition with the given name,
+  /// or null if none exists.
+  static Future<int?> getMeasurementDefinitionId(
+    Database db,
+    String name,
+  ) async {
+    final rows = await db.query(
+      'measurement_definitions',
+      columns: ['id'],
+      where: 'name = ?',
+      whereArgs: [name],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return rows.first['id'] as int;
+  }
+
 }

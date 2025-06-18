@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../db/database_helper.dart';
+import '../repositories/app_repository.dart';
 import '../models/models.dart';
 
 /// Shows a historical chart and list for a single measurement definition.
@@ -22,27 +22,14 @@ class _SpecificMeasurementPageState extends State<SpecificMeasurementPage> {
   // For Bodyweight, Height, or Body-Part sub-filter
   String _subFilter = 'Overall';
   late final Future<List<Measurement>> _measurementsFuture;
+  final _repo = AppRepository();
 
   @override
   void initState() {
     super.initState();
-    _measurementsFuture = _loadMeasurements();
+    _measurementsFuture = _repo.fetchClassMeasurementsForDefinition(widget.definition.id);
   }
 
-  Future<List<Measurement>> _loadMeasurements() async {
-    final rows = await DatabaseHelper()
-        .getMeasurementsForDefinition(widget.definition.id);
-    return rows.map((r) {
-      return Measurement(
-        id: r['id'] as int,
-        defId: r['def_id'] as int,
-        timestamp: DateTime.parse(r['timestamp'] as String),
-        value: (r['value'] as num).toDouble(),
-        unit: r['unit'] as String,
-        note: r['note'] as String?,
-      );
-    }).toList();
-  }
 
   /// If this is Height + "ft/in" view, convert inches→feet for y-axis.
   double _yValue(Measurement m) {
