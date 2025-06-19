@@ -1,0 +1,104 @@
+muscle_filter_page.dart
+
+Purpose:Provides a UI for selecting a body part and navigating to a page that displays exercise definitions targeting that body part.
+
+Key flow:
+
+FutureBuilder:
+
+Calls DatabaseHelper().getAllBodyParts() to fetch lookup data.
+
+Shows loading spinner until complete, then handles error or empty state.
+
+ListView:
+
+Renders a list of ListTile widgets for each BodyPart, with a chevron icon.
+
+On tap, navigates to DefinitionsByBodyPartPage, passing the selected BodyPart.
+
+Observations & suggestions:
+
+Error and empty states:
+
+Extract common loading/error UI into a reusable widget to reduce duplication across pages.
+
+Typed results:
+
+Map BodyPart objects directly to domain models for display; consider using ListView.builder with better keys (e.g., ValueKey(part.id)).
+
+State management:
+
+For multiple filter pages, centralize lookup caching via a provider or service to avoid re-fetching lookup lists.
+
+Navigation abstraction:
+
+Use named routes with generated arguments for cleaner navigation and easier testing.
+
+Accessibility:
+
+Add semanticLabel to list tiles and ensure tap targets meet accessibility size guidelines.
+
+Testing:
+
+Write widget tests to simulate tapping a body part and verify navigation to the correct page with the right parameter.
+
+Performance:
+
+If body parts list grows, consider grouping or adding a search field to quickly find parts.
+
+UI polish:
+
+Add pull-to-refresh support if body parts can be updated dynamically.
+
+
+// muscle_filter_page.dart
+
+import 'package:flutter/material.dart';
+import '../db/database_helper.dart';
+import '../models/models.dart';
+import 'definitions_by_bodypart_page.dart';
+
+/// Allows the user to select a body part and view its exercises.
+class MuscleFilterPage extends StatelessWidget {
+  const MuscleFilterPage({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Filter by Body Part')),
+      body: FutureBuilder<List<BodyPart>>(
+        future: DatabaseHelper().getAllBodyParts(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState != ConnectionState.done) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
+          final parts = snapshot.data!;
+          if (parts.isEmpty) {
+            return const Center(child: Text('No body parts found.'));
+          }
+          return ListView.separated(
+            itemCount: parts.length,
+            separatorBuilder: (_, __) => const Divider(height: 1),
+            itemBuilder: (context, i) {
+              final part = parts[i];
+              return ListTile(
+                title: Text(part.name),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => DefinitionsByBodyPartPage(bodyPart: part),
+                    ),
+                  );
+                },
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}

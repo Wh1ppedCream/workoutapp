@@ -1,0 +1,490 @@
+TODO:
+1. vehicle insurance
+2. ammu report
+3. enter ammu documents
+4. 
+
+1. 30%	= 30
+2. 25%	= 55
+3. 15%	= 70
+4. 10%	= 80
+5. 10%	= 90
+6. 5%	= 95
+7. 5%	= 100
+
+before we actually begin writing code to implement the finish workout button, storing session info and history, i want to go over how we are planning on doing this.
+
+
+
+
+Cardio:
+	- Non-Equipment Based:
+		Aerobics
+		Box Jumps
+		Jump Squats
+		Running
+		Swimming
+		Walking
+		Zumba
+			
+	- Equipment Based:
+		Battle Ropes
+		Bicycle
+		Elliptical
+		Rowing Machine
+		Ski Machine
+		Skipping Rope
+		Stair Climber
+		Stationary Bike
+		Treadmill
+		Vertical Climber
+
+
+[
+  { "name": "Chest" },
+  { "name": "Shoulders"},
+  { "name": "Back" },
+  { "name": "Arms" },
+  { "name": "Forearms" },
+  { "name": "Abdominals" },
+  { "name": "Trapezius" },
+  { "name": "Neck" },
+  { "name": "Quads" },
+  { "name": "Hamstrings" },
+  { "name": "Glutes" },
+  { "name": "Calves"},
+  { "name": "Hip Flexors" },
+  { "name": "Hip Adductors" },
+  { "name": "Hip Abductors" },
+  { "name": "Abs" },
+  { "name": "Erector Spinae" }
+]
+		
+		
+Stretches:
+	1. Neck 
+		- Static Stretches:
+			Neck Flexion Stretch 
+				– Gently tuck your chin to your chest and hold.
+			Neck Extension Stretch 
+				– Slowly tilt your head back and hold.
+			Lateral Neck Stretch 
+				– Tilt your head to the side, bringing your ear toward your shoulder.
+			Rotational Neck Stretch 
+				– Turn your head to one side and hold, then switch.
+			Upper Trapezius Stretch 
+				– Tilt your head to the side and gently press down for a deeper stretch.
+			Levator Scapulae Stretch 
+				– Look slightly downward to one side, place a hand on your head, and gently press.
+			Sternocleidomastoid Stretch 
+				– Tilt your head back at an angle while turning to the side.
+			Seated Neck Stretch 
+				– Sit upright, grab the edge of your chair, and tilt your head to the opposite side.
+			Forward Neck Pull 
+				– Use both hands to gently pull your head forward, stretching the back of the neck.
+			Behind-the-Back Neck Stretch 
+				– Clasp your hands behind your head and lightly press downward.
+			Wall Neck Stretch 
+				– Stand with your back against a wall, press the back of your head into the surface gently.
+			Table or Chair Stretch 
+				– Place your hands on a stable surface, lean forward, and let your neck relax downward.
+		- Dynamic Stretches:
+			Neck Rolls
+				– Slowly rotate your head in a circular motion.
+			Side-to-Side Neck Tilts 
+				– Tilt your head from one shoulder to the other.
+			Forward & Backward Neck Tilts 
+				– Lower your chin to your chest, then look upward.
+			Neck Rotations 
+				– Turn your head left and right while keeping shoulders relaxed.
+			Seated Neck Extensions 
+				– Lean head forward and backward while seated upright.
+			Wall-Assisted Neck Mobility 
+				– Move head gently side to side while pressing the back of your head against a wall.
+			
+	2. Shoulder
+		- Static Stretches:
+			Cross-Body Shoulder Stretch 
+				– Pull one arm across your chest and hold.
+			Overhead Triceps Stretch 
+				– Reach one arm behind your head and gently press with the opposite hand.
+			Behind-the-Back Shoulder Stretch 
+				– Clasp your hands behind your back and lift gently.
+			Doorway Chest Stretch 
+				– Place hands on a doorway and lean forward to stretch shoulders and chest.
+			Wall-Assisted Shoulder Stretch 
+				– Stand sideways to a wall and stretch your arm outward.
+			Reverse Prayer Stretch 
+				– Place palms together behind your back and press upward.
+			Seated Shoulder Rotation Stretch 
+				– Hold onto a chair and rotate shoulders gently.
+			External Rotator Stretch 
+				– Hold a resistance band or towel behind your back, pulling gently.
+			Eagle Arms Stretch 
+				– Cross arms in front of your body, wrapping them around each other.
+			Cat-Cow Shoulder Stretch 
+				– Incorporate upper back movement while arching and rounding the spine.
+			Child’s Pose with Shoulder Stretch 
+				– Extend arms forward while sinking your hips back.
+			Upper Trapezius Stretch 
+				– Tilt head to the side while pulling the opposite arm downward.
+			Levator Scapulae Stretch 
+				– Look slightly downward to one side and gently press on your head.
+		- Dynamic Stretches:
+			Small Arm Circles 
+				– Rotate arms forward and backward in small circular motions.
+			Large Arm Circles 
+				– Extend arms fully and rotate in wide circles.
+			Arm Swings 
+				– Swing arms front to back to loosen up shoulders.
+			Cross-Body Arm Swings 
+				– Swing arms across the body to activate shoulder muscles.
+			Forward Shoulder Rolls 
+				– Roll shoulders in a circular motion forward.
+			Backward Shoulder Rolls 
+				– Roll shoulders backward to improve mobility.
+			Shoulder Shrugs 
+				– Lift and drop shoulders in a controlled motion.
+			Overhead Reach Stretch 
+				– Extend arms overhead and reach alternately.
+			Side-to-Side Reaches 
+				– Reach toward one side and then the other to activate shoulders.
+			Torso Twists with Arm Reach 
+				– Rotate torso while reaching with one arm.
+			Cat-Cow Shoulder Flow 
+				– Move shoulders forward and backward while arching spine.
+			Downward Dog Shoulder Warm-Up 
+				– Press shoulders down while in a downward dog position.
+	3. Chest
+		- Static Stretches:
+			Chest Doorway Stretch 
+				– Place hands on a doorway and step forward for a deep stretch.
+			Wall-Assisted Chest Stretch 
+				– Stand sideways to a wall, place your hand against it, and rotate slightly away.
+			Hands Behind Back Stretch 
+				– Clasp hands behind your back and gently lift for a deep stretch.
+			Seated Chest Opener 
+				– Sit upright, interlace fingers behind you, and open your chest.
+			Child’s Pose with Chest Stretch 
+				– Extend arms forward while sinking hips back to stretch the chest.
+			Supine Chest Stretch 
+				– Lie on your back with arms extended outward to open up the chest.
+			Reverse Prayer Stretch 
+				– Place hands together behind your back and press upward.
+			Overhead Chest Stretch 
+				– Extend arms overhead and gently stretch the chest.
+			Side-Lying Chest Stretch 
+				– Lie on your side and stretch the arm outward for a deep chest stretch.
+			Standing Torso Twist 
+				– Rotate your torso while keeping arms extended outward.
+			Seated Twisting Stretch 
+				– Twist gently to each side while seated to stretch the chest.
+		- Dynamic Stretches:
+			Forward & Backward Arm Swings 
+				– Swing arms back and forth to activate the chest.
+			Cross-Body Arm Swings 
+				– Swing arms side to side across the chest for mobility.
+			Small Arm Circles 
+				– Rotate arms in small circles to warm up shoulders and chest.
+			Large Arm Circles 
+				– Extend arms fully and rotate in wide circles.
+			Chest Expansion Stretch 
+				– Extend arms wide and squeeze shoulder blades together repeatedly.
+			Pulsing Doorway Stretch 
+				– Perform gentle pulses while in a doorway chest stretch.
+			Breath-Control Chest Opening 
+				– Take deep breaths while expanding the chest outward.
+			Wall Push-Off Stretch 
+				– Press hands against a wall and push away slightly for mobility.
+			Overhead Reaches 
+				– Raise arms overhead and lean slightly forward or backward.
+			Side-to-Side Reaches 
+				– Reach one arm up and across to open the chest dynamically.
+			Seated Chest Openers 
+				– Sit upright and rotate the chest side to side.
+			Standing Torso Twists 
+				– Rotate side to side with arms extended outward.
+			Thread the Needle Stretch 
+				– Perform flowing arm movements while rotating the torso.
+			Boxer’s Chest Warm-Up 
+				– Mimic punching movements to loosen chest muscles.
+			Swimming Motions 
+				– Mimic freestyle or backstroke movements to engage the chest.
+			Jump Rope Chest Activation	
+				– Light bouncing movement while keeping the chest open.
+	4. Arms
+		- Static Stretches:
+			Wall Biceps Stretch 
+				– Place your palm against a wall and rotate your body away.
+			Behind-the-Back Biceps Stretch 
+				– Clasp hands behind your back and extend arms downward.
+			Seated Biceps Stretch 
+				– Sit on the floor, place hands behind you with fingers pointing away, and stretch.
+			Doorway Biceps Stretch 
+				– Place arms against a doorway and lean forward.
+			Straight Arm Extension Stretch 
+				– Extend arms straight back while keeping shoulders relaxed.
+			Overhead Triceps Stretch 
+				– Raise one arm, bend the elbow, and press gently with the opposite hand.
+			Cross-Body Triceps Stretch 
+				– Pull one arm across your chest to engage the triceps.
+			Wall-Assisted Triceps Stretch 
+				– Place your arm against a wall with elbow bent and lean into the stretch.
+			Behind-the-Head Triceps Stretch 
+				– Reach one arm behind the head and gently push with the opposite hand.
+			Resistance Band Triceps Stretch 
+				– Hold a resistance band behind your back, pulling gently to deepen the stretch.
+		- Dynamic Stretches: 
+			Arm Swings (Front to Back) 
+				– Swing arms forward and backward to loosen biceps.
+			Arm Circles 
+				– Rotate arms in small and large circles to activate muscles.
+			Cross-Body Arm Swings 
+				– Swing arms side to side to engage biceps.
+			Biceps Curls with Slow Tempo 
+				– Controlled bodyweight curls to stretch dynamically.
+			Wall-Assisted Biceps Pulses 
+				– Press hands against a wall and pulse slightly forward.
+			Overhead Triceps Pulses 
+				– Lift arms overhead and pulse gently to loosen triceps.
+			Arm Kickbacks 
+				– Extend arms backward repeatedly to activate triceps.
+			Controlled Triceps Extensions 
+				– Perform slow, controlled extensions for mobility.
+			Jump Rope Arm Activation 
+				– Light skipping to engage triceps without static tension.
+			Boxer’s Warm-Up 
+				– Mimic punching movements to loosen up arms.
+			Swimming Motions 
+				– Perform freestyle and backstroke motions to activate arms.
+			Torso Twists with Arm Reach 
+				– Rotate torso while stretching arms forward.
+	5. Forearms
+		- Static Stretches:
+			Palm Press Stretch 
+				– Press palms together and gently push downward.
+			Wrist Flexor Stretch 
+				– Extend one arm forward, palm facing up, and use the opposite hand to pull fingers downward.
+			Tabletop Wrist Stretch 
+				– Place hands on a flat surface, fingers facing backward, and press gently.
+			Reverse Wrist Stretch 
+				– Extend arm forward, palm facing down, and gently pull fingers upward.
+			Behind-the-Back Wrist Stretch 
+				– Reach behind with one arm and gently pull fingers upward.
+			Wall-Assisted Forearm Stretch 
+				– Press hand against a wall with fingers pointing down and apply light pressure.
+			Seated Forearm Twist Stretch 
+				– Place hands on a chair or surface and rotate forearms outward.
+			Self-Assisted Forearm Rotation Stretch 
+				– Grab one wrist and gently rotate in both directions.
+			Finger Pull Stretch 
+				– Stretch individual fingers gently to relieve tightness.
+			Wrist Extension with Hand Assist 
+				– Use one hand to pull the opposite wrist gently into extension.
+			Forearm Massage Stretch 
+				– Use the opposite hand to apply pressure while stretching the forearm muscles.
+		- Dynamic Stretches: 
+			Wrist Rolls 
+				– Rotate wrists in circular motions to loosen joints.
+			Finger Flex & Extend 
+				– Open and close fingers repeatedly to activate forearm muscles.
+			Wrist Wave Stretch
+				– Move wrists up and down in a fluid motion.
+			Self-Assisted Wrist Pulses 
+				– Use one hand to apply light resistance while moving the wrist.
+			Forearm Twists 
+				– Rotate palms from face-up to face-down dynamically.
+			Palm-Down & Palm-Up Pulses 
+				– Slowly alternate between flexed and extended wrist positions.
+			Arm Swings 
+				- Swing arms back and forth to activate forearm muscles.
+			Fast Wrist Flexor & Extensor Movements 
+				– Rapid flexing and extending motions to engage wrists.
+			Wall Push Stretch 
+				– Press hands against a wall and pulse gently forward.
+			Tabletop Forearm Mobility Stretch 
+				– Place hands on a surface and shift weight forward and back.
+			Overhead Reach Forearm Activation 
+				– Extend arms above and flex fingers while reaching.
+			Boxer’s Arm Activation 
+				– Mimic punching motions to warm up forearms.
+			Jump Rope Wrist Mobility 
+				– Use light skipping motions to engage forearm joints.
+			Swimming Motions 
+				– Mimic freestyle and backstroke motions for dynamic forearm movement.
+	6. Hamstring
+		- Static Stretches: 
+			Seated Forward Fold 
+				– Sit with legs extended and reach toward your toes.
+			Single-Leg Seated Hamstring Stretch 
+				– Extend one leg while bending the other, reaching forward.
+			Butterfly Hamstring Stretch 
+				– Sit with feet together and gently press knees down while leaning forward.
+			Standing Toe Touch 
+				– Keep legs straight and reach toward your toes.
+			Standing One-Leg Hamstring Stretch 
+				– Place one foot on a raised surface and lean forward.
+			Hurdler Stretch 
+				– Stand, bend one knee backward, and extend the other leg straight forward.
+			Lying Straight-Leg Stretch 
+				– Lie on your back, extend one leg, and pull it toward your chest.
+			Lying Wall Stretch 
+				– Place legs against a wall while lying down for a passive stretch.
+			Supine Hamstring Stretch with Resistance Band 
+				– Use a band to pull one leg upward while keeping the other flat.
+			Downward Dog Hamstring Stretch 
+				– Keep heels pressed down in a downward dog position.
+			Pigeon Pose Variation 
+				– Extend one leg backward while keeping the opposite leg bent for a deep stretch.
+			Half Split Stretch 
+				– Extend one leg forward while lowering into a deep stretch.
+			Swimming Motions 
+				– Mimic freestyle and backstroke motions for dynamic forearm movement.
+		- Dynamic Stretches:
+			Front-to-Back Leg Swings 
+				– Swing one leg forward and backward while keeping it straight.
+			Side-to-Side Leg Swings 
+				– Swing leg outward and inward for hip and hamstring mobility.
+			Straight-Leg Kicks 
+				– Kick one leg forward while keeping it straight and controlled.
+			Walking Hamstring Stretch 
+				– Take steps while reaching for the toes of each extended leg.
+			High-Knee Walks 
+				– Lift knees high while extending the leg forward dynamically.
+			Heel Walks 
+				– Walk on heels to activate hamstrings and calves.
+			Dynamic Forward Lunges 
+				– Step forward into a lunge and alternate legs while engaging hamstrings.
+			Reverse Lunges with Reach 
+				– Lunge backward while reaching arms forward.
+			Side Lunges 
+				– Step sideways, keeping the stretching leg extended.
+			Bounding Strides 
+				– Perform exaggerated running strides to stretch hamstrings.
+			Skipping Hamstring Activation 
+				– Light skipping to engage hamstrings dynamically.
+			Sprint Drill Toe Reaches 
+				– Reach toward toes while doing slow running movements.
+			Downward Dog Walkout 
+				– Shift weight forward and back while stretching hamstrings.
+			Leg Cycling Movements 
+				– Mimic cycling motions while lying on the ground for gentle hamstring activation.
+			Supine Leg Raises 
+				– Raise and lower one leg repeatedly while lying on your back.
+	7. Quads
+		- Static Stretches:
+			Standing Quad Stretch 
+				– Grab one ankle and pull it toward your glutes while balancing on the other foot.
+			Wall-Assisted Quad Stretch 
+				– Perform the standing quad stretch while holding onto a wall for support.
+			One-Leg Elevated Quad Stretch 
+				– Place one foot on a raised surface and lean slightly forward to stretch the quad.
+			Supine Quad Stretch 
+				– Lie on your back, bend one knee, and pull the foot toward your glutes.
+			Side-Lying Quad Stretch 
+				– Lie on your side, grab the top ankle, and gently pull toward your glutes.
+			Prone Quad Stretch 
+				– Lie on your stomach and pull one ankle toward your glutes for a deep stretch.
+			Kneeling Quad Stretch 
+				– Sit on your heels with knees bent and lean back slightly.
+			Half-Kneeling Quad Stretch 
+				– In a lunge position, bend the back leg and pull the foot toward your glutes.
+			Hero Pose Stretch 
+				– Sit with knees bent under you, keeping shins flat on the ground while leaning backward.
+			Wall Quad Stretch 
+				– Kneel near a wall with the back foot against the wall, pressing into the stretch.
+			Resistance Band Quad Stretch 
+				– Use a resistance band around the ankle to assist in pulling the foot toward the glutes.
+			Partner-Assisted Quad Stretch 
+				– Have a partner gently push the foot toward the glutes while lying down.
+		- Dynamic Stretches:
+			Front-to-Back Leg Swings 
+				– Swing one leg forward and backward to engage the quads.
+			Side-to-Side Leg Swings 
+				– Move the leg outward and inward to activate stabilizing muscles.
+			Straight-Leg Kicks 
+				– Kick one leg forward with control to loosen the quads.
+			Walking Quad Stretch 
+				– Step forward while pulling one foot toward the glutes before switching legs.
+			High-Knee Walks 
+				– Lift knees while stepping forward to dynamically stretch the quads.
+			Heel-to-Glute Walks 
+				– Walk while kicking heels up toward the glutes to activate the quads.
+			Dynamic Forward Lunges 
+				– Perform lunges while continuously alternating legs.
+			Reverse Lunges with Reach 
+				– Step backward into a lunge while reaching forward.
+			Side Lunges 
+				– Step sideways while keeping one leg extended to stretch the quads dynamically.
+			Bounding Strides 
+				– Exaggerated strides mimic running while stretching the quads.
+			Skipping Quad Activation 
+				– Light skipping movements engage the quads dynamically.
+			Sprint Drill Toe Touches 
+				– Slow running motions while reaching toward toes for active stretching.
+			Downward Dog to Lunge Flow 
+				– Move between downward dog and lunging positions for quad mobility.
+			Leg Cycling Movements 
+				– Mimic cycling motions while lying down to warm up the quads.
+			Quad Pulses in Lunge Position 
+				– Hold a lunge and perform small pulsing movements to activate muscles.
+	
+	
+	
+Upper Body Static Stretches
+-	{ "name": "Neck" },
+Neck stretch (side bends, chin tuck)
+
+-	{ "name": "Shoulders"},
+Shoulder stretch (cross-body shoulder stretch, overhead triceps stretch)
+
+-	{ "name": "Chest" },
+Chest stretch (standing doorway stretch, wall-assisted chest stretch)
+
+-	{ "name": "Arms" },
+Triceps stretch (overhead triceps stretch, behind-the-back triceps stretch)
+
+-	{ "name": "Arms" },
+Biceps stretch (arm extension against a wall)
+
+-	{ "name": "Forearms" },
+Wrist and forearm stretch (flexor and extensor stretch, palm press stretch)
+
+Lower Body Static Stretches
+-	{ "name": "Hamstrings" },
+Hamstring stretch (seated, standing, or lying hamstring stretch)
+
+-	{ "name": "Quads" },
+Quadriceps stretch (standing quad stretch, lying quad stretch)
+
+{ "name": "Calves"},
+Calf stretch (standing calf stretch against a wall, downward dog calf stretch)
+
+{ "name": "Hip Flexors" },
+Hip flexor stretch (kneeling hip flexor stretch, butterfly stretch)
+
+{ "name": "Glutes" },
+Glute stretch (figure-four stretch, seated glute stretch)
+
+{ "name": "Hip Adductors" },
+Inner thigh stretch (seated straddle stretch, frog stretch)
+
+Spine & Core Static Stretches
+
+{ "name": "Back" },
+Lower back stretch (child’s pose, knee-to-chest stretch)
+
+{ "name": "Abs" },
+Side stretch (standing side bend, seated spinal twist)
+
+{ "name": "Abs" },
+Abdominal stretch (cobra stretch, upward dog)
+
+Full-Body Static Stretches
+Downward dog (targets hamstrings, calves, shoulders, and spine)
+
+Pigeon pose (great for hip and glute flexibility)
+
+Seated forward bend (targets hamstrings, spine, and lower back)
+
+Standing forward fold (hamstrings, calves, lower back)

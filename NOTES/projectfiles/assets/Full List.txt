@@ -1,0 +1,616 @@
+Ab Wheel
+	Equipment needed:
+		- ab roller
+	Muscles worked: 
+		Core: 
+			Abs:
+				1. Rectus Abdominis
+				2. Transverse Abdominis
+				3. Obliques
+		Upper Body:
+			Chest:
+				4. Serratus anterior
+			Back:
+				5. Erector Spinae
+				6. Latissimus Dorsi
+			Arms:
+				7. Triceps Brachii
+			
+Arm Circles
+	- bodyweight
+	Muscles worked:
+   		Upper Body:
+   			Shoulders:
+       			1. Anterior Deltoid
+       			2. Lateral Deltoid
+				3. Posterior Deltoid
+				4. Supraspinatus
+				5. Teres Minor
+			Back:
+				6. Trapezius
+			Arms:
+				7. Brachialis
+Arnold Press
+	Equipment needed:
+		- dumbbell
+	Muscles worked:
+   		Upper Body:
+   			Shoulders:
+       			1. Anterior Deltoid
+       			2. Lateral Deltoid
+			Arms:
+   				3. Triceps Brachii
+			Chest:
+		        4. Serratus Anterior
+		    Back:
+				5. Trapezius (upper)
+			Shoulders:
+       			6. Supraspinatus
+       			7. Infraspinatus
+Around the World
+	Equipment needed:
+		- dumbell
+	Muscles worked:
+    	Upper Body:
+      		Shoulders:
+        		1. Anterior Deltoid
+        		2. Lateral Deltoid
+        		3. Posterior Deltoid
+        		4. Supraspinatus
+      		Chest:
+        		5. Serratus Anterior
+      		Back:
+       			6. Trapezius (upper)
+			Shoulders
+				7. Infraspinatus
+Back Extension
+	Equipment needed:
+		- HyperExtension Bench/Machine
+	Muscles worked:
+		Upper Body:
+    		Back:
+      			1. Erector Spinae
+	    Lower Body:
+      		Glutes:
+        		2. Gluteus Maximus
+      		Hamstrings:
+        		3. Biceps Femoris
+        		4. Semimembranosus
+    	Core:
+      		Others:
+        		5. Quadratus Lumborum
+        		6. Multifidus
+		Upper Body:
+    		Back:
+      			7. Latissimus Dorsi
+	Ball Slam
+		- Medicine Ball
+Barbell Squat
+	Equipment needed:
+		- Barbell
+		- Weight Plates
+		- Squat Rack
+		| Power Rack
+	Muscles Worked:
+		Lower Body:
+			Quads:
+        		1. Vastus Lateralis
+		        2. Vastus Medialis
+		        3. Rectus Femoris
+	    	Glutes:
+    		    4. Gluteus Maximus
+      		Hip Adductors:
+        		5. Adductor Magnus
+		    Back:
+				6. Erector Spinae
+	    Core:
+    		Others:
+		        7. Transverse Abdominis
+	Bench Press
+		- Bench Press station
+		- Barbell
+		- Dumbell
+		- smith machine
+		- Resistance Bands
+		- Cable Machine (Adjustable)
+		a) Avg Grip
+		- Close Grip
+		- Wide Grip
+	Bicep Curl
+		- Bodyweight
+		- Resistance Bands
+		- Cable Machine (Adjustable)
+		- Smith Machine
+		- Barbell
+		- Dumbell
+		a) Avg Grip
+		- Wide Grip
+	Bicycle Crunch
+		- Resistance Bands
+		- Cable Machine (Adjustable)
+		- bodyweight
+		a) Straight Knee
+		- Bent Knee
+	Biking
+		- Bicycle
+		- Stationary Bike
+	Bulgarian Split Squat
+		- bodyweight
+		- Dumbell
+		- Barbell
+	Burpee
+		- Bodyweight
+	Calf Press
+	Calf Raise
+		- calf raise machine (Seated)
+		- Dumbell
+		a) seated
+		- standing
+	Chest Dip
+		- Dip Bars/Station
+		- Dip/Pull-up Machine (Assisted)
+		- Bodyweight
+		a) Assisted
+	Chest Fly
+		- Cable Machine (Adjustable)
+		- Dumbell
+		a) Seated
+		- Standing
+		- Lying
+	Chest Press
+		- chest press machine
+	Chin Up
+		- Pull-up Bar
+		- Bodyweight
+		a) Assisted
+	Clean
+		- Barbell
+	Clean and Press
+		- Barbell
+	Concentration Curl
+		- Cable Machine (Adjustable)
+		- Dumbell
+		a) normal grip
+		- reverse grip
+	Crunch
+		- bodyweight
+		- Dumbell
+		a) Normal
+		- Crossbody
+		- Lying
+		- Seated
+	Cuban Rotation
+		- Bodyweight
+		- Dumbell
+	Curtsey Lunge
+		- bodyweight
+		- Dumbell
+	Deadlift
+		- Landmine
+		- Barbell
+		- Dumbell
+	Diamond Push-up
+		- Bodyweight
+	Donkey Kick
+		- Bodyweight
+		- Leg Extension Machine
+	Down-Up Twist
+		- Cable Machine (Adjustable)
+	Drag Curl
+		- Cable Machine (Adjustable)
+		- Barbell
+		- Dumbell
+	Elliptical
+		- Elliptical
+	External Rotation (cable/band)
+		- Cable Machine (Adjustable)
+	External Rotation (Dumbell/weights)
+		- Dumbell
+	Face Pull
+		- Cable Machine (Adjustable)
+	Farmer's Carry
+		- Dumbell
+	Fire Hydrant
+		- Bodyweight
+	Floor Press
+		- Dumbell
+		- Barbell
+	Front Raise
+		- Cable Machine (Adjustable)
+		- Barbell
+		- Dumbell
+	Front Squat
+		- Cable Machine (Adjustable)
+		- Dumbell
+		- Barbell
+	Glute Bridge
+		- Barbell
+		- bodyweight
+		- Dumbell
+	Glute Ham Raise
+		- Bodyweight
+	Glute Kickback
+		- Bodyweight
+		- Cable Machine (Adjustable)
+	Good Morning
+		- Barbell
+	Hack Squat
+		- Hack Squat Machine
+	Hammer Curl
+		- Cable Machine (Adjustable)
+		- Dumbell
+		a) Normal
+		- Crossbody
+	Hang Clean
+		- Barbell
+	Hang Snatch
+		- Barbell
+	Heel Touch
+		- Bodyweight
+	High Pull
+		- Barbell
+		- dumbell
+	Hip Abductor
+		- Cable Machine (Adjustable)
+	Hip Adductor 
+		- Cable Machine (Adjustable)
+		a) Seated
+		- Standing
+	Hip Extension
+		- Bodyweight
+	Hip Flexion
+	Hip Frog Extension
+		- Bodyweight
+	Hip Raise
+	Hip Thrust
+		- Hip Thrust Machine
+		- Cable Machine (Adjustable)
+		- Barbell
+	In-And-Out
+		- bodyweight
+		- Dumbell
+	Incline Around the World
+		- Dumbell
+	Incline Bench Fly
+		- Cable Machine (Adjustable)
+		- Dumbell
+	Incline Bench Press
+		- Cable Machine (Adjustable)
+		- Barbell
+		- Dumbell
+	Incline Bicep Curl
+		- Dumbell
+	Incline Chest Press
+	Incline Leg Press
+	Incline Push-Up
+		- Bodyweight
+	Incline Reverse Fly
+		- Dumbell
+	Incline Row
+		- Cable Machine (Adjustable)
+		- Dumbell
+	Internal Rotation
+		- Cable Machine (Adjustable)
+	Inverted Row
+		- Barbell
+		- bodyweight
+		a) Normal Grip
+		- Reverse Grip
+	Jump Squat
+		- bodyweight
+		- Dumbell
+	Jumping Jack
+		- Bodyweight
+	Kettlebell Swings
+	Knee Push-Up
+		- Bodyweight
+	Knee Raise
+		- Bodyweight
+		- Pull-up Bar
+		a) Hanging
+		- Lying
+	Knee Raise Twist
+		- Bodyweight
+		- Pull-up Bar
+		a) Hanging
+		- Lying
+	Kneeling Crunch
+		- Cable Machine (Adjustable)
+	Kneeling Plank
+		- Bodyweight
+	Kneeling Pull-down
+	Kneeling Tricep Extension
+		- Bodyweight
+	Landmine Press
+		- Landmine
+	Landmine Thruster
+		- Landmine
+	Lat Pulldown
+		- Lat Pulldown Machine
+		- Cable Machine (Adjustable)
+		a) Avg Grip
+		- Close Grip
+		- Wide Grip
+		- Reverse Grip
+		
+	Lat Raise
+		- Lateral Raise Machine
+		- Cable Machine (Adjustable)
+		- Dumbell
+		a) Straight Arm
+		- Bent Arm
+	Leg Curl
+		- Cable Machine (Adjustable)
+		- Leg Curl Machine (lying)
+		- Leg Curl Machine (seated)
+		a) Seated
+		- Lying
+		- Standing
+	Leg Extension
+		- Leg Extension Machine
+	Leg Raise
+		- Bodyweight
+		- Pull-up Bar
+		a) Hanging
+		- Lying
+	Leg Raise Twist
+		- Bodyweight
+		- Pull-up Bar
+		a) Hanging
+		- Lying
+	Leg Press
+	Lying Leg Curl
+		- Leg Curl Machine (lying)
+		- Dumbell
+	Lunge
+		- Cable Machine (Adjustable)
+		- bodyweight
+		- Dumbell
+		- Barbell
+	Mountain Climber
+		- Bodyweight
+		a) Normal
+		- Crossbody
+	Muscle Up
+		- Bodyweight
+		- Pull-up Bar
+	Oblique Crunch
+		- bodyweight
+	Oblique V Up
+		- bodyweight
+	Overhead Press
+		- Cable Machine (Adjustable)
+		- Barbell
+		- Dumbell
+		a) Avg Grip
+		- Close Grip
+		- Wide Grip
+	Overhead Squat
+		- Barbell
+		- Dumbell
+	Pec Deck Fly
+	Pendlay Row
+		- Barbell
+	Pike Push-up
+		- Bodyweight
+	Pistol Squat
+		- bodyweight
+	Plank
+		- Bodyweight
+	Power Clean
+		- Barbell
+	Power Snatch
+		- Barbell
+	Preacher Curl
+		- Cable Machine (Adjustable)
+		- Barbell
+		- Dumbell
+		- Preacher Bench
+	Pull Apart
+	Pull Through
+		- Resistance Bands
+		- Cable Machine (Adjustable)
+	Pull Up
+		- Bodyweight
+		a) Avg Grip
+		- Close Grip
+		- Wide Grip
+		- Reverse Grip
+		- Assisted
+	Pullover
+		- Cable Machine (Adjustable)
+		- Barbell
+		- Dumbell
+		a) Straight Arm
+		- Bent Arm
+	Push Away
+	Push Press
+		- Barbell
+		- Dumbell
+	Push-up
+		- Bodyweight
+		a) Avg Grip
+		- Close grip
+		- Wide Grip
+		
+	Rack Pull
+		- Barbell
+	Renegade Row
+		- Dumbell
+	Reverse fly
+		- Cable Machine (Adjustable)
+		- Dumbell
+		a) Bent Over
+		- Seated
+		- Standing
+		- Lying
+	Reverse Crunch
+		- Cable Machine (Adjustable)
+		- bodyweight
+	Reverse Curl
+		- Cable Machine (Adjustable)
+		- Barbell
+		- Dumbell
+	Reverse Lunge
+		- landmine
+		- bodyweight
+		- Dumbell
+		- Barbell
+		- kettlebell
+		- Cable Machine (Adjustable)
+		- smith machine
+	Reverse Plank
+		- Bodyweight
+	Romanian Deadlift
+		- Barbell
+	Row
+		- Landmine
+		- Resistance Bands
+		- Kettlebell
+		- Cable Machine (Adjustable)
+		- Smith Machine
+		- Barbell
+		- Dumbell
+		a) Bent Over
+		- Kneeling
+		- Seated
+		- Avg Grip
+		- Close Grip
+		- Wide Grip
+		- Reverse Grip
+	Russian Twist
+		- Bodyweight
+		- Dumbell
+	Seated Chest Press
+	Seated Leg Curl
+	Seated Leg Press
+	Shrug
+		- Cable Machine (Adjustable)
+		- Barbell
+		- Dumbell
+	Side Bend
+		- Cable Machine (Adjustable)
+		- Dumbell
+	Side Bridge
+		- bodyweight
+		- Dumbell
+	Side Lunge
+		- Cable Machine (Adjustable)
+		- bodyweight
+		- Dumbell
+	Side plank
+		- Bodyweight
+		a) Straight Knee
+		- Bent Knee
+	Single Arm Row
+		- Landmine
+		- Cable Machine (Adjustable)
+		- Dumbell
+		a) Kneeling
+		- Seated
+	Single Arm Lat Pull-down
+		- Lat Pulldown Machine
+		- Cable Machine (Adjustable)
+	Single Arm Lat Raise
+		- Cable Machine (Adjustable)
+		- Dumbell
+	Single Leg Deadlift
+		- Barbell
+		- dumbell
+	Single Leg Hip Thrust
+		- dumbell
+		- Barbell
+	Sit-Up
+		- bodyweight
+		- Dumbell
+	Skull Crusher
+		- Cable Machine (Adjustable)
+		- Barbell
+		- Dumbell
+	Sled Calf Press
+	Sled Pull
+		- sled
+	Sled Push
+		- sled
+	Snatch
+		- Barbell
+	Split Jerk
+		- Barbell
+	Split Squat
+		- bodyweight
+		- Dumbell
+		- Barbell
+	Squat
+		- Landmine
+		- Barbell
+		- bodyweight
+		- Dumbell
+	Squat Calf Press
+	Stair Climber
+		- Stair Climber
+	Straight Arm Lat Pull-down
+		- Lat Pulldown Machine
+		- Cable Machine (Adjustable)
+	Step-Up
+		- Barbell
+		- bodyweight
+		- Dumbell
+	Stiff Leg Deadlift
+		- Barbell
+	Swings
+		- Dumbell
+	Thruster
+		- Barbell
+		- dumbell
+	Toes To Bar
+		- Bodyweight
+		- Pull-up Bar
+.	Treadmill
+		- Treadmill
+	Tricep Dip
+		- Dip Bars/Station
+		- Dip/Pull-up Machine (Assisted)
+		- Bodyweight
+		a) Assisted
+	Tricep Extension
+		- Cable Machine (Adjustable)
+		- dumbell
+		- Barbell
+		a) standing
+		- bent over
+	Tricep Kickback
+		- Cable Machine (Adjustable)
+		- Dumbell
+	Tricep Pushdown
+		- Cable Machine (Adjustable)
+	Tuck Crunch
+		- bodyweight
+		- Dumbell
+	Turkish Get Up
+	Up-Down Twist
+		- Cable Machine (Adjustable)
+	Upright Row
+		- Cable Machine (Adjustable)
+		- Barbell
+		- Dumbell
+	V Up
+		- Resistance Bands
+		- Cable Machine (Adjustable)
+		- bodyweight
+		- dumbell
+	Windmill
+	Wipers
+		- Bodyweight
+		a) Straight Knee
+		- Bent Knee
+	Wrist Curl
+		- Cable Machine (Adjustable)
+		- Barbell
+		- Dumbell
+		a) normal Grip
+		- reverse grip
+	Zercher Carry
+		- Barbell
+	Zercher Squat
+		- Barbell
+		

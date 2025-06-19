@@ -1,0 +1,101 @@
+set_dao.dart
+
+Purpose:Handles CRUD operations for the sets table, including simple inserts and hierarchical insertion of parent sets with change‐set children.
+
+Key methods:
+
+insertSet(db, exerciseId, weight, reps, orderIndex):Inserts a single set row with parent_set_id set to null.
+
+insertWeightSets({db, exerciseId, parentSets, childChangeSets}):
+
+Loops through parentSets, inserting each as a parent row.
+
+For each parent index, inserts associated childChangeSets with parent_set_id referencing the parent row.
+
+getSetsForExercise(db, exerciseId):Retrieves all sets for an exercise, ordered by order_index.
+
+Observations & suggestions:
+
+Batch operations: Use db.batch() for bulk insertion of parent and child sets to improve performance and reduce round-trips.
+
+Transaction scope: Wrap multi-step inserts (insertWeightSets) in a txn.transaction to ensure atomicity.
+
+Typed mapping: Return List<ExerciseSet> or a combined structure mapping parents to children rather than raw maps, improving type safety in the UI layer.
+
+Helper functions: Factor out repeated insert logic into a private helper to reduce duplication between insertSet and insertWeightSets.
+
+Deletion & updates: Add methods for deleting or updating sets, including cascading delete for a parent with all its children.
+
+Ordering clarity: The order_index for child sets resets per parent; consider encoding a composite index if relative ordering between parent and children matters in UI.
+
+
+// File: lib/db/set_dao.dart
+
+import 'package:sqflite/sqflite.dart';
+import '../models/models.dart';
+
+/// Encapsulates set‐related CRUD operations.
+class SetDao {
+  /// Inserts a single set row.
+  static Future<int> insertSet(
+    Database db,
+    int exerciseId,
+    double weight,
+    int reps,
+    int orderIndex,
+  ) {
+    return db.insert('sets', {
+      'exercise_id':   exerciseId,
+      'weight':        weight,
+      'reps':          reps,
+      'order_index':   orderIndex,
+      'parent_set_id': null,
+    });
+  }
+
+  /// Inserts parent sets and their child ChangeSets.
+  static Future<void> insertWeightSets({
+    required Database db,
+    required int exerciseId,
+    required List<ExerciseSet> parentSets,
+    required Map<int, List<ExerciseSet>> childChangeSets,
+  }) async {
+    for (var i = 0; i < parentSets.length; i++) {
+      final parent = parentSets[i];
+      // 1) Insert parent
+      final parentId = await db.insert('sets', {
+        'exercise_id':   exerciseId,
+        'weight':        parent.weight,
+        'reps':          parent.reps,
+        'order_index':   i,
+        'parent_set_id': null,
+      });
+      // 2) Insert its children (if any)
+      if (childChangeSets.containsKey(i)) {
+        for (var ci = 0; ci < childChangeSets[i]!.length; ci++) {
+          final child = childChangeSets[i]![ci];
+          await db.insert('sets', {
+            'exercise_id':   exerciseId,
+            'weight':        child.weight,
+            'reps':          child.reps,
+            'order_index':   ci,
+            'parent_set_id': parentId,
+          });
+        }
+      }
+    }
+  }
+
+  /// Retrieves all sets for an exercise, ordered.
+  static Future<List<Map<String, dynamic>>> getSetsForExercise(
+    Database db,
+    int exerciseId,
+  ) {
+    return db.query(
+      'sets',
+      where: 'exercise_id = ?',
+      whereArgs: [exerciseId],
+      orderBy: 'order_index',
+    );
+  }
+}

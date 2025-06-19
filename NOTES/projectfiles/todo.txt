@@ -1,0 +1,127 @@
+DONE:
+- call ammu, get access code for reporting from her, check up on her
+
+TODO:
+
+- workout
+- fix all important note files
+- eat lunch
+- shower and wash clothes
+- eat dinner
+- sorting house
+- sorting files and documents
+	- online
+	- irl
+- start using dayplanner
+- socialize/catch up with people
+- arrange bag
+- put planner stuff into rocketbook
+5. pay off my bank
+6. trasnfer faculty app
+7. make weights (concrete: https://www.youtube.com/watch?v=Zgsl9to4JR4) 
+2. ammu report
+3. enter ammu documents
+
+
+FITNESS APP PROJECT: 
+	DONE:
+		1. finish adding in bulk exercises (mark with 23% so i'll remember to correct later)
+			- info format
+			- check and correct
+			- .json format
+		4. Editing mode in session detail screen
+		5. seperate large files into smaller files
+		6. refactor old code for better and easier code later
+			- (done) fixing directory structure
+			- (done) move all instances of screen or widget code directly altering database to controlled repository file
+			- (done) all non database managing files no longer have direct access to the database
+			- (done) added in more database methods for future use
+			- (done) Full documentation for all database files (except database_helper)
+		
+	UPCOMING:
+		
+		8. Gym profiles (base)
+		9. exericse presets
+		10. gym profiles (fully built out)
+		11. expanded history details
+			- amount work on each bodypart
+			- amount work on each muscle
+			- total time in gym
+			- total volume
+		12. nutrition
+			- fridge
+			- food item barcode scanning
+			- recipes
+			- filter recipes by fridge items
+		7. .txt files for each files overview
+			- details of each file's contents, use and goal
+			- current code for file section
+			- past code which might be useful section
+		3. compile for ios
+		- landscape mode designing
+		- fixing for web
+
+	##
+	- methods to add (that i can think of)
+		- obtaining all instances of an exercise being done for comparison
+		- 
+		
+	- exercise ranking to muscle usage% conversion
+		1. 30%	= 30
+		2. 25%	= 55
+		3. 15%	= 70
+		4. 10%	= 80
+		5. 10%	= 90
+		6. 5%	= 95
+		7. 5%	= 100
+
+	GYM PROFILES:
+		- 
+	
+	SESSION PRESETS:
+		-
+		
+	
+	
+	
+	
+	
+	
+	
+IDEAS: 
+
+	irl games: 
+		Everyone gets sheet of paper and pen, pens are numbered, everyone writes down punishment on one side of paper,  3 numbers on other side
+		Spare pens in box, if it's one of spare pens, number is lines
+		Mines
+		(maybe) reverse punishment card, so if numbers win, card writer has to do punishment
+		Possibly able to purchase new rule implementing by coin
+		You can buy coin with real money
+		Challenges: Make Lyrics
+		2) on the spot karaoke/singing
+		3) pick 3 other people and do a random improvised skit
+		4) sports stuff
+		5) user made challenge
+
+
+
+
+	PROJECTS:
+		- MAKE EVERYTHING HAVE EASY COMPLEXITY AND INCREASING COMPLEXITY
+		1. fitness app
+			- android
+			- ios
+			- website
+		2. product tracking
+			- food
+			- gym equipment
+		3. efficiency/productivity launcher
+		4. mobile planner
+		5. note taking app
+		6. text difference and merging app
+		
+		
+	planner additions:
+		- habit tracking
+		- food tracking
+		- 

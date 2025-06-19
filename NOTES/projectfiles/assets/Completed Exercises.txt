@@ -1,0 +1,4985 @@
+Equipment:
+	Ab roller
+	Adjustable Bench
+	Barbell
+	bodyweight
+	Cable Handle Attachment
+	Cable machine
+	dumbbell
+	HyperExtension Bench/Machine
+	Medicine Ball
+	Power Rack
+	Squat Rack
+	Weight Plates
+	
+	
+	
+	
+
+Adjustable bench / bench (flat, incline, decline)
+
+Assisted Dip/Pull-Up Machine
+
+Assisted pull-up machine or Resistance Band
+
+Barbell
+
+Bench (for support; flat, incline, decline, preacher)
+
+Cable Machine(various pulleys)
+
+Dip bars / Dip Bars
+
+Dumbbell
+
+Elliptical machine
+
+Exercise mat
+
+GHD (glute-ham developer) machine
+
+Hack squat machine
+
+Harness or strap (sled pull)
+
+Adjustable Bench
+
+Kettlebell
+
+Landmine Attachment + barbell
+
+Lat pulldown machine
+
+Leg curl machine (seated, lying)
+
+Leg extension machine
+
+Leg press / Incline Leg Press Machine
+
+Medicine ball
+
+Pec Deck Machine
+
+Pull-up bar (various grips)
+
+Resistance Band
+
+Rope attachment - Cable Machine
+
+Sled + sled platform or push sled handles
+
+Smith Machine
+
+Squat Rack
+
+Stair climber machine
+
+Step or stable platform (step-up)
+
+Treadmill
+	
+
+Ab Wheel
+	Exercise Rating: 90%
+	Equipment needed:
+		- ab roller
+	Target Body Parts:
+		- Core
+	Muscles worked: 
+		Core: 
+			Abs:
+				1. Rectus Abdominis
+				2. Transverse Abdominis
+				3. Obliques
+		
+			Chest:
+				4. Serratus anterior
+			Back:
+				5. Erector Spinae
+				6. Latissimus Dorsi
+			Arms:
+				7. Triceps Brachii
+Arm Circles
+	Exercise Rating: 30%
+	Equipment needed:
+		- bodyweight
+	Target Body Parts:
+		- Shoulders
+	Muscles worked:
+   		:
+   			Shoulders:
+       			1. Anterior Deltoid
+       			2. Lateral Deltoid
+				3. Posterior Deltoid
+				4. Supraspinatus
+				5. Teres Minor
+			Back:
+				6. Trapezius
+			Arms:
+				7. Brachialis
+Arnold Press
+	Exercise Rating: 60%
+	Equipment needed:
+		- dumbbell
+	Target Body Parts:
+		- Shoulders
+		- Arms
+	Muscles worked:
+   		:
+   			Shoulders:
+       			1. Anterior Deltoid
+       			2. Lateral Deltoid
+			Arms:
+   				3. Triceps Brachii
+			Chest:
+		        4. Serratus Anterior
+		    Back:
+				5. Trapezius (upper)
+			Shoulders:
+       			6. Supraspinatus
+       			7. Infraspinatus
+Around the World
+	Exercise Rating: 60%
+	Equipment needed:
+		- dumbell
+	Target Body Parts:
+		- Shoulders
+	Muscles worked:
+    	:
+      		Shoulders:
+        		1. Anterior Deltoid
+        		2. Lateral Deltoid
+        		3. Posterior Deltoid
+        		4. Supraspinatus
+      		Chest:
+        		5. Serratus Anterior
+      		Back:
+       			6. Trapezius (upper)
+			Shoulders
+				7. Infraspinatus
+Back Extension
+	Exercise Rating: 75%
+	Equipment needed:
+		- HyperExtension Bench/Machine
+	Target Body Parts:
+		- Back
+		- Glutes
+		- Hamstrings
+	Muscles worked:
+		:
+    		Back:
+      			1. Erector Spinae
+	    Lower Body:
+      		Glutes:
+        		2. Gluteus Maximus
+      		Hamstrings:
+        		3. Biceps Femoris
+        		4. Semimembranosus
+    	Core:
+      		Others:
+        		5. Quadratus Lumborum
+        		6. Multifidus
+		:
+    		Back:
+      			7. Latissimus Dorsi
+Ball Slam
+	Exercise Rating: 40%
+  	Equipment needed:
+   		- Medicine Ball
+	Target Body Parts:
+		- Core
+		- Shoulders
+  	Muscles worked:
+		Core:
+			Abs:
+        		1. Rectus Abdominis
+        		2. Transverse Abdominis
+       			3. Obliques
+    	Lower Body:
+      		Glutes:
+        		4. Gluteus Maximus
+    		Back:
+      			5. Latissimus Dorsi
+    	:
+     	 	Shoulders:
+     	   		6. Anterior Deltoid
+    		Back:
+      			7. Erector Spinae
+
+Barbell Squat
+	Exercise Rating: 90%
+	Equipment needed:
+		- Barbell
+		- Weight Plates
+	Target Body Parts:
+		- Quads
+		- Glutes
+	Muscles Worked:
+		Lower Body:
+			Quads:
+        		1. Vastus Lateralis
+		        2. Vastus Medialis
+		        3. Rectus Femoris
+	    	Glutes:
+    		    4. Gluteus Maximus
+      		Hip Adductors:
+        		5. Adductor Magnus
+		    Back:
+				6. Erector Spinae
+	    Core:
+    		Others:
+		        7. Transverse Abdominis
+
+Bench Press - Barbell
+  Equipment needed:
+    - Barbell
+    - Weight Plates
+    - Adjustable Bench
+    - Squat/Power Rack or spotter arms
+
+  Muscles worked:
+    
+      Chest:
+        1. Pectoralis Major
+
+    
+      Shoulders:
+        2. Anterior Deltoid
+
+    
+      Arms:
+        3. Triceps Brachii
+
+    
+      Chest:
+        4. Serratus Anterior
+
+    
+      Chest:
+        5. Pectoralis Minor
+
+    
+      Back:
+        6. Trapezius (upper)
+
+    
+      Back:
+        7. Latissimus Dorsi
+
+Bench Press - Barbell (Close Grip)
+	Exercise Rating: 85%
+	Equipment needed:
+    	- Barbell
+    	- Weight Plates
+	    - Adjustable bench
+
+	Target Body Parts: Arms, Chest, Shoulder
+	Muscles worked:
+        1. Triceps Brachii
+        2. Pectoralis Major
+        3. Anterior Deltoid
+        4. Pectoralis Minor
+        5. Serratus Anterior
+        6. Trapezius (upper)
+        7. Latissimus Dorsi
+
+Bench Press - Dumbbell
+	Exercise Rating: 80%
+  Equipment needed:
+    - Dumbbell
+    - Adjustable Bench
+	Target Body Parts: Chest, Shoulder, Arms
+  Muscles worked:
+        1. Pectoralis Major
+
+        2. Anterior Deltoid
+
+        3. Triceps Brachii
+
+        4. Serratus Anterior
+
+        5. Pectoralis Minor
+
+        6. Lateral Deltoid
+        7. Trapezius (upper)
+
+Bench Press - Smith Machine
+	Exercise Rating: 85%
+  Equipment needed:
+    - Smith Machine
+    - Adjustable bench
+Target Body Parts: Chest, Shoulder, Arms
+  Muscles worked:
+        1. Pectoralis Major
+        2. Anterior Deltoid
+        3. Triceps Brachii
+        4. Serratus Anterior
+        5. Pectoralis Minor
+        6. Trapezius (upper)
+        7. Latissimus Dorsi
+
+Bench Press - Cable Machine
+	Exercise Rating 75%
+  Equipment needed:
+    - Cable machine
+    - Adjustable bench
+    - Cable Handle Attachment
+Target Body Parts: Chest, Shoulder, Arms
+  Muscles worked:
+        1. Pectoralis Major
+        2. Anterior Deltoid
+        3. Triceps Brachii
+        4. Serratus Anterior
+        5. Pectoralis Minor
+        6. Trapezius (upper)
+        7. Latissimus Dorsi
+
+Bicep Curl - Barbell
+	Exercise rating 75%
+	Equipment needed:
+ 	   - Barbell
+	Target Body Parts: Arms, Forearms
+  Muscles worked:
+        1. Biceps Brachii
+        2. Brachialis
+        3. Brachioradialis
+        4. Pronator Teres
+      5. Wrist Flexors
+        6. Anterior Deltoid
+        7. Trapezius (upper)
+
+Bicep Curl - Dumbbell
+	Exercise rating 85%
+	Equipment needed:
+ 	   - Barbell
+	Target Body Parts: Arms, Forearms
+  Muscles worked:
+        1. Biceps Brachii
+        2. Brachialis
+        3. Brachioradialis
+        4. Pronator Teres
+      5. Wrist Flexors
+        6. Anterior Deltoid
+        7. Trapezius (upper)
+
+Bicep Curl - Smith Machine
+	Exercise rating 80%
+	Equipment needed:
+ 	   - Barbell
+	Target Body Parts: Arms, Forearms
+  Muscles worked:
+        1. Biceps Brachii
+        2. Brachialis
+        3. Brachioradialis
+        4. Pronator Teres
+      5. Wrist Flexors
+        6. Anterior Deltoid
+        7. Trapezius (upper)
+
+Bicep Curl - Cable Machine
+	Exercise rating 90%
+	Equipment needed:
+ 	   - Barbell
+	Target Body Parts: Arms, Forearms
+  Muscles worked:
+        1. Biceps Brachii
+        2. Brachialis
+        3. Brachioradialis
+        4. Pronator Teres
+      5. Wrist Flexors
+        6. Anterior Deltoid
+        7. Trapezius (upper)
+
+Bicep Curl - Resistance Bands
+	Exercise rating 80%
+	Equipment needed:
+ 	   - Barbell
+	Target Body Parts: Arms, Forearms
+  Muscles worked:
+        1. Biceps Brachii
+        2. Brachialis
+        3. Brachioradialis
+        4. Pronator Teres
+      5. Wrist Flexors
+        6. Anterior Deltoid
+        7. Trapezius (upper)
+		
+Bicep Curl - Bodyweight
+	Exercise rating 60%
+	Equipment needed:
+ 	   - Bodyweight
+	Target Body Parts: Arms, Forearms
+  Muscles worked:
+        1. Biceps Brachii
+        2. Brachialis
+        3. Brachioradialis
+        4. Pronator Teres
+      5. Wrist Flexors
+        6. Anterior Deltoid
+        7. Trapezius (upper)
+
+
+Incline Bench Press - Cable Machine
+	Exercise Rating: 80%
+	Equipment needed:
+    	- Cable machine
+    	- Adjustable bench
+    	- Cable Handle Attachment
+	Target Body Parts:
+		- Chest
+		- Shoulders
+	Muscles worked:
+    	
+      		Chest:
+        		1. Pectoralis Major
+			Shoulders:
+        		2. Anterior Deltoid
+		    Arms:
+				3. Triceps Brachii
+			Chest:
+		        4. Serratus Anterior
+				5. Pectoralis Minor
+			Shoulders:
+        		6. Lateral Deltoid
+			Back:
+		        7. Trapezius (upper)
+Incline Bench Press - Barbell
+	Exercise Rating: 95%
+	Equipment needed:
+    	- Barbell
+    	- Weight Plates
+    	- Adjustable Bench
+	Target Body Parts:
+		- Chest
+		- Shoulders
+  	Muscles worked:
+    	
+      		Chest:
+        		1. Pectoralis Major
+			Shoulders:
+        		2. Anterior Deltoid
+			Arms:
+		        3. Triceps Brachii
+			Chest:
+		        4. Serratus Anterior
+				5. Pectoralis Minor
+			Back:
+				6. Trapezius (upper)
+				7. Latissimus Dorsi
+Incline Bench Press - Dumbbell
+	Exercise Rating: 85%
+	Equipment needed:
+    	- Dumbbell
+    	- Adjustable bench
+	Target Body Parts:
+		- Chest
+		- Shoulders
+  	Muscles worked:
+    	
+      		Chest:
+        		1. Pectoralis Major
+			Shoulders:
+		        2. Anterior Deltoid
+		    Arms:
+        		3. Triceps Brachii
+			Chest:
+        		4. Serratus Anterior
+				5. Pectoralis Minor
+			Shoulders:
+				6. Lateral Deltoid
+			Back:
+				7. Trapezius (upper)
+				
+I think building out the helper to get all exercise definitions with optional filters would be helpful for when we are redo-ing the exercise catalog page. so lets first fully code that out. it should be able to optionally take in one or more names of equipment, one or more id's of body parts, one or more id's of muscles and be able to give 
+
+ok, now lets make a helper to get all exercise definitions, optionally filtered. it can optionally take one or more equipment names, one or more bodypart ID's, one or more muscle ID's. for equipment names, it will get exercise definitions which use one or more of those equipment names. for bodypart ID's, it will get exercise definitions which use one or more of those bodypart ID's. for muscle ID's, it will get exercise definitions which use one or more of those muscle ID's. for all 3, it will get exercise definitions which use at least one of each of the 3 (exercise definition must have at least one of the equipment names, one of the bodyparts and one of the muscles). for any combination of two (equipment and bodypart, bodypart and muscle, muscle and equipment) it must have at least one of each of the two.
+
+
+
+|| DETAIL FIX NEEDED:
+
+Bulgarian Split Squat - Barbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+    - Weight Plates
+    - Squat Rack
+
+  Target Body Parts:  Quads, Glutes
+  Muscles worked:
+    1. Rectus Femoris
+    2. Gluteus Maximus
+    3. Gluteus Medius
+    4. Biceps Femoris
+    5. Adductor Magnus
+    6. Gastrocnemius
+    7. Erector Spinae
+
+Burpee
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+    
+
+  Target Body Parts:  Core
+  Muscles worked:
+    1. Rectus Femoris
+    2. Pectoralis Major
+    3. Anterior Deltoid
+    4. Triceps Brachii
+    5. Rectus Abdominis
+    6. Gluteus Maximus
+    7. Gastrocnemius
+
+Calf Press
+  Exercise Rating: 23%
+  Equipment needed:
+    - Leg Press Machine
+    - Weight Plates
+
+  Target Body Parts: Calves
+  Muscles worked:
+    1. Gastrocnemius
+    2. Soleus
+    3. Tibialis Anterior
+    4. Rectus Femoris
+    5. Vastus Lateralis
+    6. Vastus Medialis
+    7. Gluteus Maximus
+
+Calf Raise - Seated Calf Raise Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Seated Calf Raise Machine
+    - Weight Plates
+
+  Target Body Parts: Calves
+  Muscles worked:
+    1. Soleus
+    2. Gastrocnemius
+    3. Tibialis Anterior
+    4. Rectus Femoris
+    5. Vastus Lateralis
+    6. Vastus Medialis
+    7. Gluteus Maximus
+
+Calf Raise - Standing Calf Raise Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Standing Calf Raise Machine
+    - Weight Plates
+
+  Target Body Parts: Calves
+  Muscles worked:
+    1. Gastrocnemius
+    2. Soleus
+    3. Tibialis Anterior
+    4. Rectus Femoris
+    5. Vastus Lateralis
+    6. Vastus Medialis
+    7. Gluteus Maximus
+
+Calf Raise - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts: Calves
+  Muscles worked:
+    1. Gastrocnemius
+    2. Soleus
+    3. Tibialis Anterior
+    4. Rectus Femoris
+    5. Vastus Lateralis
+    6. Vastus Medialis
+    7. Gluteus Maximus
+
+Chest Dip
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Chest, Arms,  Shoulders
+  Muscles worked:
+    1. Pectoralis Major
+    2. Triceps Brachii
+    3. Anterior Deltoid
+    4. Pectoralis Minor
+    5. Serratus Anterior
+    6. Rhomboids
+    7. Latissimus Dorsi
+
+Chest Dip - Dip Bars
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dip Bars
+
+  Target Body Parts: Chest, Arms,  Shoulders
+  Muscles worked:
+    1. Pectoralis Major
+    2. Triceps Brachii
+    3. Anterior Deltoid
+    4. Pectoralis Minor
+    5. Serratus Anterior
+    6. Rhomboids
+    7. Latissimus Dorsi
+
+Chest Dip - Assisted Dip/Pull-Up Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Assisted Dip/Pull-Up Machine
+
+  Target Body Parts: Chest, Arms,  Shoulders
+  Muscles worked:
+    1. Pectoralis Major
+    2. Triceps Brachii
+    3. Anterior Deltoid
+    4. Pectoralis Minor
+    5. Serratus Anterior
+    6. Rhomboids
+    7. Latissimus Dorsi
+
+Chest Fly - Cable Machine
+  Exercise Rating: 23%
+  Equipment needed:
+	- Cable Machine
+	- Cable Handle Attachment
+    - Adjustable Bench
+
+  Target Body Parts: Chest, Shoulders
+  Muscles worked:
+    1. Pectoralis Major
+    2. Pectoralis Minor
+    3. Anterior Deltoid
+    4. Serratus Anterior
+    5. Triceps Brachii
+    6. Latissimus Dorsi
+    7. Rhomboids
+
+Chest Fly - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+    - Adjustable Bench
+
+  Target Body Parts: Chest, Shoulders
+  Muscles worked:
+    1. Pectoralis Major
+    2. Pectoralis Minor
+    3. Anterior Deltoid
+    4. Serratus Anterior
+    5. Triceps Brachii
+    6. Latissimus Dorsi
+    7. Rhomboids
+
+|| FULL CHECK NEEDED:
+
+Chest Press - Chest Press Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Chest Press Machine
+
+  Target Body Parts: Chest, Arms,  Shoulders
+  Muscles worked:
+    1. Pectoralis Major
+    2. Anterior Deltoid
+    3. Triceps Brachii
+    4. Pectoralis Minor
+    5. Serratus Anterior
+    6. Trapezius (upper)
+    7. Latissimus Dorsi
+
+Chin Up
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Back,  Shoulders
+  Muscles worked:
+    1. Latissimus Dorsi
+    2. Biceps Brachii
+    3. Brachialis
+    4. Brachioradialis
+    5. Rhomboids
+    6. Trapezius (middle)
+    7. Posterior Deltoid
+
+Chin Up - Assisted Dip/Pull-Up Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Assisted Dip/Pull-Up Machine
+
+  Target Body Parts: Back,  Shoulders
+  Muscles worked:
+    1. Latissimus Dorsi
+    2. Biceps Brachii
+    3. Brachialis
+    4. Brachioradialis
+    5. Rhomboids
+    6. Trapezius (middle)
+    7. Posterior Deltoid
+
+Clean - Barbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+    - Weight Plates
+
+  Target Body Parts:  Back, Shoulders
+  Muscles worked:
+    1. Rectus Femoris
+    2. Gluteus Maximus
+    3. Biceps Femoris
+    4. Trapezius (upper)
+    5. Posterior Deltoid
+    6. Latissimus Dorsi
+    7. Biceps Brachii
+
+Clean and Press - Barbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+    - Weight Plates
+
+  Target Body Parts:  Shoulders
+  Muscles worked:
+    1. Anterior Deltoid
+    2. Trapezius (upper)
+    3. Rectus Femoris
+    4. Gluteus Maximus
+    5. Biceps Femoris
+    6. Latissimus Dorsi
+    7. Triceps Brachii
+
+Concentration Curl - Cable Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine         
+	- Cable Handle Attachment
+
+  Target Body Parts: Arms,  Forearms
+  Muscles worked:
+    1. Biceps Brachii
+    2. Brachialis
+    3. Brachioradialis
+    4. Pronator Teres
+    5. Wrist Flexors
+    6. Anterior Deltoid
+    7. Trapezius (upper)
+
+Concentration Curl - Dumbbell (Normal Grip)
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts: Arms,  Forearms
+  Muscles worked:
+    1. Biceps Brachii
+    2. Brachialis
+    3. Brachioradialis
+    4. Pronator Teres
+    5. Wrist Flexors
+    6. Anterior Deltoid
+    7. Trapezius (upper)
+
+Concentration Curl - Dumbbell (Reverse Grip)
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts: Arms, Forearms
+  Muscles worked:
+    1. Brachialis
+    2. Brachioradialis
+    3. Biceps Brachii
+    4. Pronator Teres
+    5. Wrist Flexors
+    6. Anterior Deltoid
+    7. Trapezius (upper)
+
+Crunch
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+    
+
+  Target Body Parts: Abs
+  Muscles worked:
+    1. Rectus Abdominis
+    2. Transverse Abdominis
+    3. Obliques
+    4. Iliopsoas
+    5. Rectus Femoris
+    6. Quadratus Lumborum
+    7. Multifidus
+
+Crunch - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+    
+
+  Target Body Parts: Abs
+  Muscles worked:
+    1. Rectus Abdominis
+    2. Transverse Abdominis
+    3. Obliques
+    4. Iliopsoas
+    5. Rectus Femoris
+    6. Quadratus Lumborum
+    7. Multifidus
+
+Crunch - Dumbbell (Crossbody)
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+    
+
+  Target Body Parts: Abs
+  Muscles worked:
+    1. Obliques
+    2. Rectus Abdominis
+    3. Transverse Abdominis
+    4. Iliopsoas
+    5. Rectus Femoris
+    6. Quadratus Lumborum
+    7. Multifidus
+
+Crunch - Dumbbell (Lying)
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+    
+
+  Target Body Parts: Abs
+  Muscles worked:
+    1. Rectus Abdominis
+    2. Transverse Abdominis
+    3. Obliques
+    4. Iliopsoas
+    5. Rectus Femoris
+    6. Quadratus Lumborum
+    7. Multifidus
+
+Crunch - Dumbbell (Seated)
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts: Abs
+  Muscles worked:
+    1. Rectus Abdominis
+    2. Transverse Abdominis
+    3. Obliques
+    4. Iliopsoas
+    5. Rectus Femoris
+    6. Quadratus Lumborum
+    7. Multifidus
+
+Cuban Rotation
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Shoulders
+  Muscles worked:
+    1. Supraspinatus
+    2. Infraspinatus
+    3. Teres Minor
+    4. Teres Major
+    5. Lateral Deltoid
+    6. Trapezius (middle)
+    7. Rhomboids
+
+Cuban Rotation - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts: Shoulders
+  Muscles worked:
+    1. Supraspinatus
+    2. Infraspinatus
+    3. Teres Minor
+    4. Teres Major
+    5. Lateral Deltoid
+    6. Trapezius (middle)
+    7. Rhomboids
+
+Curtsey Lunge
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+    
+
+  Target Body Parts:  Glutes, Quads
+  Muscles worked:
+    1. Gluteus Medius
+    2. Gluteus Maximus
+    3. Rectus Femoris
+    4. Adductor Magnus
+    5. Biceps Femoris
+    6. Vastus Lateralis
+    7. Gastrocnemius
+
+Curtsey Lunge - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts:  Glutes, Quads
+  Muscles worked:
+    1. Gluteus Medius
+    2. Gluteus Maximus
+    3. Rectus Femoris
+    4. Adductor Magnus
+    5. Biceps Femoris
+    6. Vastus Lateralis
+    7. Gastrocnemius
+
+Deadlift - Landmine Attachment
+  Exercise Rating: 23%
+  Equipment needed:
+    - Landmine Attachment
+    - Barbell
+    - Weight Plates
+
+  Target Body Parts:  Back, Hamstrings
+  Muscles worked:
+    1. Gluteus Maximus
+    2. Biceps Femoris
+    3. Erector Spinae
+    4. Rectus Femoris
+    5. Adductor Magnus
+    6. Latissimus Dorsi
+    7. Trapezius (upper)
+
+Deadlift - Barbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+    - Weight Plates
+
+  Target Body Parts:  Back, Hamstrings
+  Muscles worked:
+    1. Gluteus Maximus
+    2. Biceps Femoris
+    3. Erector Spinae
+    4. Rectus Femoris
+    5. Adductor Magnus
+    6. Latissimus Dorsi
+    7. Trapezius (upper)
+
+Deadlift - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts:  Back, Hamstrings
+  Muscles worked:
+    1. Gluteus Maximus
+    2. Biceps Femoris
+    3. Erector Spinae
+    4. Rectus Femoris
+    5. Adductor Magnus
+    6. Latissimus Dorsi
+    7. Trapezius (upper)
+
+Diamond Push-up
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+    
+
+  Target Body Parts: Chest, Arms, Shoulders
+  Muscles worked:
+    1. Triceps Brachii
+    2. Pectoralis Major
+    3. Anterior Deltoid
+    4. Pectoralis Minor
+    5. Serratus Anterior
+    6. Transverse Abdominis
+    7. Latissimus Dorsi
+
+Donkey Kick
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+    
+
+  Target Body Parts: Glutes
+  Muscles worked:
+    1. Gluteus Maximus
+    2. Gluteus Medius
+    3. Biceps Femoris
+    4. Erector Spinae
+    5. Quadratus Lumborum
+    6. Multifidus
+    7. Transverse Abdominis
+
+Donkey Kick - Leg Extension Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Leg Extension Machine
+
+  Target Body Parts: Glutes, Hamstrings
+  Muscles worked:
+    1. Gluteus Maximus
+    2. Gluteus Medius
+    3. Biceps Femoris
+    4. Erector Spinae
+    5. Quadratus Lumborum
+    6. Multifidus
+    7. Transverse Abdominis
+
+Down-Up Twist - Cable Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine                    
+	- Cable Handle Attachment
+
+  Target Body Parts: Abs
+  Muscles worked:
+    1. Obliques
+    2. Rectus Abdominis
+    3. Transverse Abdominis
+    4. Serratus Anterior
+    5. Latissimus Dorsi
+    6. Multifidus
+    7. Quadratus Lumborum
+
+Drag Curl - Cable Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine
+	- Cable Straight Bar Attachment
+
+  Target Body Parts: Arms
+  Muscles worked:
+    1. Biceps Brachii
+    2. Brachialis
+    3. Brachioradialis
+    4. Pronator Teres
+    5. Anterior Deltoid
+    6. Trapezius (upper)
+    7. Wrist Flexors
+
+Drag Curl - Barbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+    - Weight Plates
+
+  Target Body Parts: Arms
+  Muscles worked:
+    1. Biceps Brachii
+    2. Brachialis
+    3. Brachioradialis
+    4. Pronator Teres
+    5. Anterior Deltoid
+    6. Trapezius (upper)
+    7. Wrist Flexors
+
+Drag Curl - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts: Arms
+  Muscles worked:
+    1. Biceps Brachii
+    2. Brachialis
+    3. Brachioradialis
+    4. Pronator Teres
+    5. Anterior Deltoid
+    6. Trapezius (upper)
+    7. Wrist Flexors
+
+External Rotation - Cable Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine                   
+	- Cable Handle Attachment
+
+  Target Body Parts:  Shoulders
+  Muscles worked:
+    1. Infraspinatus
+    2. Teres Minor
+    3. Supraspinatus
+    4. Posterior Deltoid
+    5. Rhomboids
+    6. Trapezius (middle)
+    7. Teres Major
+
+External Rotation - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts:  Shoulders
+  Muscles worked:
+    1. Infraspinatus
+    2. Teres Minor
+    3. Supraspinatus
+    4. Posterior Deltoid
+    5. Rhomboids
+    6. Trapezius (middle)
+    7. Teres Major
+
+Face Pull - Cable Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine                        
+	- Cable Rope Attachment
+
+  Target Body Parts: Shoulders, Back
+  Muscles worked:
+    1. Posterior Deltoid
+    2. Infraspinatus
+    3. Supraspinatus
+    4. Trapezius (middle)
+    5. Rhomboids
+    6. Trapezius (lower)
+    7. Teres Minor
+
+Farmer’s Carry - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts: Abs
+  Muscles worked:
+    1. Brachioradialis
+    2. Wrist Flexors
+    3. Trapezius (upper)
+    4. Erector Spinae
+    5. Transverse Abdominis
+    6. Gluteus Medius
+    7. Gastrocnemius
+
+Fire Hydrant
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+    
+
+  Target Body Parts: Glutes, Hip Abductors
+  Muscles worked:
+    1. Gluteus Medius
+    2. Gluteus Minimus
+    3. Gluteus Maximus
+    4. Tensor Fasciae Latae
+    5. Piriformis
+    6. Quadratus Lumborum
+    7. Multifidus
+
+Floor Press - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+    
+
+  Target Body Parts: Chest, Arms,  Shoulders
+  Muscles worked:
+    1. Pectoralis Major
+    2. Triceps Brachii
+    3. Anterior Deltoid
+    4. Serratus Anterior
+    5. Pectoralis Minor
+    6. Latissimus Dorsi
+    7. Trapezius (upper)
+
+Floor Press - Barbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+    - Weight Plates
+    
+
+  Target Body Parts: Chest, Arms,  Shoulders
+  Muscles worked:
+    1. Pectoralis Major
+    2. Triceps Brachii
+    3. Anterior Deltoid
+    4. Serratus Anterior
+    5. Pectoralis Minor
+    6. Latissimus Dorsi
+    7. Trapezius (upper)
+
+Front Raise - Cable Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine         
+	- Cable Handle Attachment
+
+  Target Body Parts: Shoulders
+  Muscles worked:
+    1. Anterior Deltoid
+    2. Lateral Deltoid
+    3. Supraspinatus
+    4. Trapezius (upper)
+    5. Serratus Anterior
+    6. Pectoralis Major
+    7. Biceps Brachii
+
+Front Raise - Barbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+    - Weight Plates
+
+  Target Body Parts: Shoulders
+  Muscles worked:
+    1. Anterior Deltoid
+    2. Lateral Deltoid
+    3. Supraspinatus
+    4. Trapezius (upper)
+    5. Serratus Anterior
+    6. Pectoralis Major 
+    7. Biceps Brachii
+
+Front Raise - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts: Shoulders
+  Muscles worked:
+    1. Anterior Deltoid
+    2. Lateral Deltoid
+    3. Supraspinatus
+    4. Trapezius (upper)
+    5. Serratus Anterior
+    6. Pectoralis Major
+    7. Biceps Brachii
+
+Front Squat - Cable Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine            
+	- Cable Rope Attachment
+    
+
+  Target Body Parts:  Quads, Abs
+  Muscles worked:
+    1. Rectus Femoris
+    2. Vastus Lateralis
+    3. Vastus Medialis
+    4. Gluteus Maximus
+    5. Erector Spinae
+    6. Transverse Abdominis
+    7. Adductor Magnus
+
+Front Squat - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts:  Quads, Abs
+  Muscles worked:
+    1. Rectus Femoris
+    2. Vastus Lateralis
+    3. Vastus Medialis
+    4. Gluteus Maximus
+    5. Erector Spinae
+    6. Transverse Abdominis
+    7. Adductor Magnus
+
+Front Squat - Barbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+    - Weight Plates
+    - Squat Rack
+
+  Target Body Parts:  Quads, Abs
+  Muscles worked:
+    1. Rectus Femoris
+    2. Vastus Lateralis
+    3. Vastus Medialis
+    4. Gluteus Maximus
+    5. Erector Spinae
+    6. Transverse Abdominis
+    7. Adductor Magnus
+
+Glute Bridge
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+  Target Body Parts: Glutes, Hamstrings, Abs
+  Muscles worked:
+    1. Gluteus Maximus
+    2. Biceps Femoris
+    3. Semitendinosus
+    4. Erector Spinae
+    5. Multifidus
+    6. Quadratus Lumborum
+    7. Transverse Abdominis
+
+Glute Bridge - Barbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+    - Weight Plates
+  Target Body Parts: Glutes, Hamstrings, Abs
+  Muscles worked:
+    1. Gluteus Maximus
+    2. Biceps Femoris
+    3. Semitendinosus
+    4. Erector Spinae
+    5. Multifidus
+    6. Quadratus Lumborum
+    7. Transverse Abdominis
+
+Glute Bridge - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+  Target Body Parts: Glutes, Hamstrings, Abs
+  Muscles worked:
+    1. Gluteus Maximus
+    2. Biceps Femoris
+    3. Semitendinosus
+    4. Erector Spinae
+    5. Multifidus
+    6. Quadratus Lumborum
+    7. Transverse Abdominis
+
+Glute Ham Raise
+  Exercise Rating: 23%
+  Equipment needed:
+    - Glute-Ham Developer (GHD) Machine
+  Target Body Parts: Hamstrings, Glutes, Back
+  Muscles worked:
+    1. Biceps Femoris
+    2. Semitendinosus
+    3. Gluteus Maximus
+    4. Erector Spinae
+    5. Multifidus
+    6. Quadratus Lumborum
+    7. Gastrocnemius
+
+Glute Kickback
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+  Target Body Parts: Glutes, Hamstrings
+  Muscles worked:
+    1. Gluteus Maximus
+    2. Gluteus Medius
+    3. Biceps Femoris
+    4. Erector Spinae
+    5. Multifidus
+    6. Quadratus Lumborum
+    7. Gastrocnemius
+
+Glute Kickback - Cable Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine                         
+	- Cable Ankle Cuff Attachment
+  Target Body Parts: Glutes, Hamstrings
+  Muscles worked:
+    1. Gluteus Maximus
+    2. Gluteus Medius
+    3. Biceps Femoris
+    4. Erector Spinae
+    5. Multifidus
+    6. Quadratus Lumborum
+    7. Gastrocnemius
+
+Good Morning - Barbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+    - Weight Plates
+  Target Body Parts: Hamstrings, Back, Glutes
+  Muscles worked:
+    1. Erector Spinae
+    2. Gluteus Maximus
+    3. Biceps Femoris
+    4. Semitendinosus
+    5. Multifidus
+    6. Quadratus Lumborum
+    7. Adductor Magnus
+
+Hack Squat - Hack squat machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Hack squat machine
+  Target Body Parts: Quads, Glutes
+  Muscles worked:
+    1. Vastus Lateralis
+    2. Vastus Medialis
+    3. Rectus Femoris
+    4. Gluteus Maximus
+    5. Adductor Magnus
+    6. Erector Spinae
+    7. Gastrocnemius
+
+Hammer Curl - Cable Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine                         
+	- Cable Handle Attachment
+  Target Body Parts: Arms,  Forearms
+  Muscles worked:
+    1. Brachioradialis
+    2. Brachialis
+    3. Biceps Brachii
+    4. Pronator Teres
+    5. Wrist Flexors
+    6. Anterior Deltoid
+    7. Trapezius (upper)
+
+Hammer Curl - Dumbbell (Normal Grip)
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+  Target Body Parts: Arms,  Forearms
+  Muscles worked:
+    1. Brachioradialis
+    2. Brachialis
+    3. Biceps Brachii
+    4. Pronator Teres
+    5. Wrist Flexors
+    6. Anterior Deltoid
+    7. Trapezius (upper)
+
+Hammer Curl - Dumbbell (Crossbody)
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+  Target Body Parts: Arms,  Forearms
+  Muscles worked:
+    1. Brachialis
+    2. Brachioradialis
+    3. Biceps Brachii
+    4. Pronator Teres
+    5. Wrist Flexors
+    6. Anterior Deltoid
+    7. Trapezius (upper)
+
+Hang Clean - Barbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+    - Weight Plates
+  Target Body Parts:  Back, Shoulders
+  Muscles worked:
+    1. Vastus Lateralis
+    2. Gluteus Maximus
+    3. Biceps Femoris
+    4. Trapezius (upper)
+    5. Posterior Deltoid
+    6. Latissimus Dorsi
+    7. Biceps Brachii
+
+Hang Snatch - Barbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+    - Weight Plates
+  Target Body Parts:  Back, Shoulders
+  Muscles worked:
+    1. Anterior Deltoid
+    2. Trapezius (upper)
+    3. Vastus Lateralis
+    4. Gluteus Maximus
+    5. Biceps Femoris
+    6. Latissimus Dorsi
+    7. Biceps Brachii
+
+Heel Touch
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+    
+  Target Body Parts: Abs, Abs
+  Muscles worked:
+    1. Obliques
+    2. Rectus Abdominis
+    3. Transverse Abdominis
+    4. Iliopsoas
+    5. Rectus Femoris
+    6. Quadratus Lumborum
+    7. Multifidus
+
+High Pull - Barbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+    - Weight Plates
+  Target Body Parts:  Back, Shoulders
+  Muscles worked:
+    1. Trapezius (upper)
+    2. Posterior Deltoid
+    3. Vastus Lateralis
+    4. Gluteus Maximus
+    5. Biceps Femoris
+    6. Latissimus Dorsi
+    7. Biceps Brachii
+
+High Pull - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+  Target Body Parts:  Back, Shoulders
+  Muscles worked:
+    1. Trapezius (upper)
+    2. Posterior Deltoid
+    3. Vastus Lateralis
+    4. Gluteus Maximus
+    5. Biceps Femoris
+    6. Latissimus Dorsi
+    7. Biceps Brachii
+
+Hip Abductor - Cable Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine                         
+	- Cable Ankle Cuff Attachment
+  Target Body Parts: Hip Abductors, Glutes
+  Muscles worked:
+    1. Gluteus Medius
+    2. Gluteus Minimus
+    3. Tensor Fasciae Latae
+    4. Piriformis
+    5. Quadratus Lumborum
+    6. Multifidus
+    7. Gluteus Maximus
+
+Hip Adductor - Cable Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine                         
+	- Cable Ankle Cuff Attachment
+  Target Body Parts: Hip Adductors
+  Muscles worked:
+    1. Adductor Magnus
+    2. Adductor Longus
+    3. Adductor Brevis
+    4. Gracilis
+    5. Pectineus
+    6. Quadratus Lumborum
+    7. Multifidus
+
+Hip Extension
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+  Target Body Parts: Glutes, Hamstrings
+  Muscles worked:
+    1. Gluteus Maximus
+    2. Biceps Femoris
+    3. Semitendinosus
+    4. Erector Spinae
+    5. Multifidus
+    6. Quadratus Lumborum
+    7. Gastrocnemius
+
+Hip Flexion
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+  Target Body Parts: Hip Flexors, Abs
+  Muscles worked:
+    1. Iliopsoas
+    2. Rectus Femoris
+    3. Rectus Femoris
+    3. Transverse Abdominis
+    4. Rectus Abdominis
+    5. Obliques
+    6. Quadratus Lumborum
+    7. Multifidus
+
+Hip Frog Extension
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+  Target Body Parts: Glutes, Hip Abductors
+  Muscles worked:
+    1. Gluteus Medius
+    2. Gluteus Maximus
+    3. Gluteus Minimus
+    4. Tensor Fasciae Latae
+    5. Piriformis
+    6. Quadratus Lumborum
+    7. Multifidus
+
+Hip Raise
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Glutes, Hamstrings, Abs
+  Muscles worked:
+    1. Gluteus Maximus
+    2. Biceps Femoris
+    3. Semitendinosus
+    4. Erector Spinae
+    5. Transverse Abdominis
+    6. Multifidus
+    7. Quadratus Lumborum
+
+Hip Thrust - Hip Thrust Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Hip Thrust Machine
+
+  Target Body Parts: Glutes, Hamstrings, Abs
+  Muscles worked:
+    1. Gluteus Maximus
+    2. Biceps Femoris
+    3. Semitendinosus
+    4. Erector Spinae
+    5. Transverse Abdominis
+    6. Multifidus
+    7. Quadratus Lumborum
+
+Hip Thrust - Cable Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine                  
+	- Cable Ankle Cuff Attachment
+
+  Target Body Parts: Glutes, Hamstrings, Abs
+  Muscles worked:
+    1. Gluteus Maximus
+    2. Biceps Femoris
+    3. Semitendinosus
+    4. Erector Spinae
+    5. Transverse Abdominis
+    6. Multifidus
+    7. Quadratus Lumborum
+
+Hip Thrust - Barbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+    - Weight Plates
+    
+
+  Target Body Parts: Glutes, Hamstrings, Abs
+  Muscles worked:
+    1. Gluteus Maximus
+    2. Biceps Femoris
+    3. Semitendinosus
+    4. Erector Spinae
+    5. Transverse Abdominis
+    6. Multifidus
+    7. Quadratus Lumborum
+
+In-And-Out
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Hip Flexors
+  Muscles worked:
+    1. Rectus Abdominis
+    2. Transverse Abdominis
+    3. Obliques
+    4. Iliopsoas
+    5. Rectus Femoris
+    6. Quadratus Lumborum
+    7. Multifidus
+
+In-And-Out - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts: Hip Flexors
+  Muscles worked:
+    1. Rectus Abdominis
+    2. Transverse Abdominis
+    3. Obliques
+    4. Iliopsoas
+    5. Rectus Femoris
+    6. Quadratus Lumborum
+    7. Multifidus
+
+Incline Around the World - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+    - Adjustable Bench
+
+  Target Body Parts: Shoulders, Chest
+  Muscles worked:
+    1. Anterior Deltoid
+    2. Lateral Deltoid
+    3. Posterior Deltoid
+    4. Supraspinatus
+    5. Infraspinatus
+    6. Teres Minor
+    7. Pectoralis Major
+
+Incline Bench Fly - Cable Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine
+    - Adjustable Bench
+
+  Target Body Parts: Chest, Shoulders
+  Muscles worked:
+    1. Pectoralis Major
+    2. Pectoralis Minor
+    3. Anterior Deltoid
+    4. Serratus Anterior
+    5. Supraspinatus
+    6. Infraspinatus
+    7. Teres Minor
+
+Incline Bench Fly - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+    - Adjustable Bench
+
+  Target Body Parts: Chest, Shoulders
+  Muscles worked:
+    1. Pectoralis Major
+    2. Pectoralis Minor
+    3. Anterior Deltoid
+    4. Serratus Anterior
+    5. Supraspinatus
+    6. Infraspinatus
+    7. Teres Minor
+
+Incline Bicep Curl - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+    - Adjustable Bench
+
+  Target Body Parts: Arms
+  Muscles worked:
+    1. Biceps Brachii
+    2. Brachialis
+    3. Brachioradialis
+    4. Pronator Teres
+    5. Anterior Deltoid
+    6. Trapezius (upper)
+    7. Wrist Flexors
+
+Incline Chest Press - Barbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+    - Adjustable Bench
+	- Weight Plates
+
+  Target Body Parts: Chest, Shoulders, Arms
+  Muscles worked:
+    1. Pectoralis Major
+    2. Anterior Deltoid
+    3. Triceps Brachii
+    4. Serratus Anterior
+    5. Pectoralis Minor
+    6. Trapezius (upper)
+    7. Latissimus Dorsi
+
+Incline Chest Press - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+    - Adjustable Bench
+
+  Target Body Parts: Chest, Shoulders, Arms
+  Muscles worked:
+    1. Pectoralis Major
+    2. Anterior Deltoid
+    3. Triceps Brachii
+    4. Serratus Anterior
+    5. Pectoralis Minor
+    6. Trapezius (upper)
+    7. Latissimus Dorsi
+
+Incline Leg Press
+  Exercise Rating: 23%
+  Equipment needed:
+    - Incline Leg Press Machine
+    - Weight Plates
+
+  Target Body Parts: Quads, Glutes, Hamstrings
+  Muscles worked:
+    1. Vastus Lateralis
+    2. Vastus Medialis
+    3. Rectus Femoris
+    4. Gluteus Maximus
+    5. Biceps Femoris
+    6. Adductor Magnus
+    7. Gastrocnemius
+
+Incline Push-Up
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Chest, Shoulders, Arms
+  Muscles worked:
+    1. Pectoralis Major
+    2. Anterior Deltoid
+    3. Triceps Brachii
+    4. Serratus Anterior
+    5. Pectoralis Minor
+    6. Transverse Abdominis
+    7. Multifidus
+
+Incline Reverse Fly - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+    - Adjustable Bench
+
+  Target Body Parts: Back,  Shoulders
+  Muscles worked:
+    1. Posterior Deltoid
+    2. Infraspinatus
+    3. Supraspinatus
+    4. Rhomboids
+    5. Trapezius (middle)
+    6. Teres Minor
+    7. Erector Spinae
+
+Incline Row - Cable Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine                    
+	- Cable Handle Attachment
+    - Adjustable Bench
+
+  Target Body Parts: Back
+  Muscles worked:
+    1. Latissimus Dorsi
+    2. Rhomboids
+    3. Trapezius (middle)
+    4. Biceps Brachii
+    5. Brachialis
+    6. Posterior Deltoid
+    7. Erector Spinae
+
+Incline Row - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+    - Adjustable Bench
+
+  Target Body Parts: Back
+  Muscles worked:
+    1. Latissimus Dorsi
+    2. Rhomboids
+    3. Trapezius (middle)
+    4. Biceps Brachii
+    5. Brachialis
+    6. Posterior Deltoid
+    7. Erector Spinae
+
+Internal Rotation - Cable Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine                   
+	- Cable Handle Attachment
+
+  Target Body Parts:  Shoulders
+  Muscles worked:
+    1. Teres Major
+    2. Pectoralis Major
+    3. Anterior Deltoid
+    4. Latissimus Dorsi
+    5. Rhomboids
+    6. Trapezius (middle)
+
+Inverted Row
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Back
+  Muscles worked:
+    1. Latissimus Dorsi
+    2. Rhomboids
+    3. Trapezius (middle)
+    4. Biceps Brachii
+    5. Brachialis
+    6. Posterior Deltoid
+    7. Erector Spinae
+
+Inverted Row (Reverse Grip)
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Back
+  Muscles worked:
+    1. Biceps Brachii
+    2. Latissimus Dorsi
+    3. Rhomboids
+    4. Trapezius (middle)
+    5. Brachialis
+    6. Posterior Deltoid
+    7. Erector Spinae
+
+Jump Squat
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts:  Quads, Glutes, Calves
+  Muscles worked:
+    1. Vastus Lateralis
+    2. Vastus Medialis
+    3. Gluteus Maximus
+    4. Rectus Femoris
+    5. Gastrocnemius
+    6. Soleus
+    7. Biceps Femoris
+
+Jump Squat - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts:  Quads, Glutes, Calves
+  Muscles worked:
+    1. Vastus Lateralis
+    2. Vastus Medialis
+    3. Gluteus Maximus
+    4. Rectus Femoris
+    5. Gastrocnemius
+    6. Soleus
+    7. Biceps Femoris
+
+Kettlebell Swings
+  Exercise Rating: 23%
+  Equipment needed:
+    - Kettlebell
+
+  Target Body Parts: Erector Spinae, Hips, Abs
+  Muscles worked:
+    1. Gluteus Maximus
+    2. Biceps Femoris
+    3. Erector Spinae
+    4. Quadratus Lumborum
+    5. Transverse Abdominis
+    6. Anterior Deltoid
+    7. Latissimus Dorsi
+
+Knee Push-Up
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Chest, Arms,  Shoulders
+  Muscles worked:
+    1. Pectoralis Major
+    2. Triceps Brachii
+    3. Anterior Deltoid
+    4. Serratus Anterior
+    5. Pectoralis Minor
+    6. Transverse Abdominis
+    7. Latissimus Dorsi
+
+Knee Raise
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Hip Flexors, Abs
+  Muscles worked:
+    1. Iliopsoas
+    2. Rectus Femoris
+    3. Rectus Abdominis
+    4. Transverse Abdominis
+    5. Obliques
+    6. Quadratus Lumborum
+    7. Multifidus
+
+Knee Raise (Hanging)
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Hip Flexors, Abs
+  Muscles worked:
+    1. Iliopsoas
+    2. Rectus Femoris
+    3. Rectus Abdominis
+    4. Transverse Abdominis
+    5. Obliques
+    6. Quadratus Lumborum
+    7. Multifidus
+
+Knee Raise Twist
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Abs, Hip Flexors
+  Muscles worked:
+    1. Obliques
+    2. Iliopsoas
+    3. Rectus Abdominis
+    4. Transverse Abdominis
+    5. Rectus Femoris
+    6. Quadratus Lumborum
+    7. Multifidus
+
+Knee Raise Twist (Hanging)
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Abs, Hip Flexors
+  Muscles worked:
+    1. Obliques
+    2. Iliopsoas
+    3. Rectus Abdominis
+    4. Transverse Abdominis
+    5. Rectus Femoris
+    6. Quadratus Lumborum
+    7. Multifidus
+
+Kneeling Crunch - Cable Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine                        
+	- Cable Rope Attachment
+
+  Target Body Parts: Abs
+  Muscles worked:
+    1. Rectus Abdominis
+    2. Transverse Abdominis
+    3. Obliques
+    4. Iliopsoas
+    5. Rectus Femoris
+    6. Quadratus Lumborum
+    7. Multifidus
+
+Kneeling Plank
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Shoulders, Abs
+  Muscles worked:
+    1. Transverse Abdominis
+    2. Rectus Abdominis
+    3. Obliques
+    4. Serratus Anterior
+    5. Anterior Deltoid
+    6. Erector Spinae
+    7. Multifidus
+
+Kneeling Pull-down
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine                   
+	- Cable Straight Bar Attachment
+    
+
+  Target Body Parts: Back
+  Muscles worked:
+    1. Latissimus Dorsi
+    2. Rhomboids
+    3. Trapezius (middle)
+    4. Biceps Brachii
+    5. Brachialis
+    6. Posterior Deltoid
+    7. Erector Spinae
+
+Kneeling Tricep Extension
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine                   
+	- Cable Rope Attachment
+
+  Target Body Parts: Arms,  Abs
+  Muscles worked:
+    1. Triceps Brachii
+    2. Anconeus
+    3. Transverse Abdominis
+    4. Rectus Abdominis
+    5. Obliques
+    6. Serratus Anterior
+    7. Latissimus Dorsi
+
+Landmine Press - Landmine Attachment
+  Exercise Rating: 23%
+  Equipment needed:
+    - Landmine Attachment
+    - Barbell
+    - Weight Plates
+
+  Target Body Parts: Shoulders, Chest, Arms
+  Muscles worked:
+    1. Anterior Deltoid
+    2. Pectoralis Major
+    3. Triceps Brachii
+    4. Serratus Anterior
+    5. Lateral Deltoid
+    6. Trapezius (upper)
+    7. Latissimus Dorsi
+
+Landmine Thruster - Landmine Attachment
+  Exercise Rating: 23%
+  Equipment needed:
+    - Landmine Attachment
+    - Barbell
+    - Weight Plates
+
+  Target Body Parts:  Shoulders
+  Muscles worked:
+    1. Rectus Femoris
+    2. Gluteus Maximus
+    3. Anterior Deltoid
+    4. Triceps Brachii
+    5. Erector Spinae
+    6. Transverse Abdominis
+    7. Latissimus Dorsi
+
+Lat Pulldown - Lat pulldown machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Lat pulldown machine
+
+  Target Body Parts: Back
+  Muscles worked:
+    1. Latissimus Dorsi
+    2. Rhomboids
+    3. Trapezius (middle)
+    4. Biceps Brachii
+    5. Brachialis
+    6. Posterior Deltoid
+    7. Teres Minor
+
+Lat Pulldown - Cable Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine                      
+	- Cable Straight Bar Attachment
+
+  Target Body Parts: Back
+  Muscles worked:
+    1. Latissimus Dorsi
+    2. Rhomboids
+    3. Trapezius (middle)
+    4. Biceps Brachii
+    5. Brachialis
+    6. Posterior Deltoid
+    7. Teres Minor
+
+Lat Pulldown - Cable Machine (Close Grip)
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine                      
+	- Cable Straight Bar Attachment
+
+  Target Body Parts: Back
+  Muscles worked:
+    1. Latissimus Dorsi
+    2. Biceps Brachii
+    3. Rhomboids
+    4. Trapezius (middle)
+    5. Brachialis
+    6. Posterior Deltoid
+    7. Teres Minor
+
+Lat Pulldown - Cable Machine (Wide Grip)
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine
+	- Cable Straight Bar Attachment
+
+  Target Body Parts: Back, Shoulders
+  Muscles worked:
+    1. Latissimus Dorsi
+    2. Rhomboids
+    3. Trapezius (middle)
+    4. Posterior Deltoid
+    5. Teres Minor
+    6. Biceps Brachii
+    7. Brachialis
+
+Lat Pulldown - Cable Machine (Reverse Grip)
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine                                 
+	- Cable Straight Bar Attachment
+
+  Target Body Parts: Back
+  Muscles worked:
+    1. Biceps Brachii
+    2. Latissimus Dorsi
+    3. Rhomboids
+    4. Trapezius (middle)
+    5. Brachialis
+    6. Posterior Deltoid
+    7. Teres Minor
+
+Lateral Raise - Lateral raise machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Lateral raise machine
+
+  Target Body Parts: Shoulders
+  Muscles worked:
+    1. Lateral Deltoid
+    2. Anterior Deltoid
+    3. Posterior Deltoid
+    4. Supraspinatus
+    5. Trapezius (upper)
+    6. Serratus Anterior
+    7. Infraspinatus
+
+Lateral Raise - Cable Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine         
+	- Cable Handle Attachment
+
+  Target Body Parts: Shoulders
+  Muscles worked:
+    1. Lateral Deltoid
+    2. Anterior Deltoid
+    3. Posterior Deltoid
+    4. Supraspinatus
+    5. Trapezius (upper)
+    6. Serratus Anterior
+    7. Infraspinatus
+
+Lateral Raise - Dumbbell (Straight Arm)
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts: Shoulders
+  Muscles worked:
+    1. Lateral Deltoid
+    2. Supraspinatus
+    3. Anterior Deltoid
+    4. Posterior Deltoid
+    5. Trapezius (upper)
+    6. Serratus Anterior
+    7. Infraspinatus
+
+Lateral Raise - Dumbbell (Bent Arm)
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts: Shoulders
+  Muscles worked:
+    1. Lateral Deltoid
+    2. Supraspinatus
+    3. Anterior Deltoid
+    4. Posterior Deltoid
+    5. Trapezius (upper)
+    6. Serratus Anterior
+    7. Infraspinatus
+
+Leg Curl - Cable Machine (Standing)
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine                         
+	- Cable Ankle Cuff Attachment
+
+  Target Body Parts: Hamstrings
+  Muscles worked:
+    1. Biceps Femoris
+    2. Semitendinosus
+    3. Semimembranosus
+    4. Gluteus Maximus
+    5. Erector Spinae
+    6. Gastrocnemius
+    7. Multifidus
+
+Leg Curl - Leg Curl Machine (seated)
+  Exercise Rating: 23%
+  Equipment needed:
+    - Leg Curl Machine (seated)
+
+  Target Body Parts: Hamstrings
+  Muscles worked:
+    1. Biceps Femoris
+    2. Semitendinosus
+    3. Semimembranosus
+    4. Gluteus Maximus
+    5. Erector Spinae
+    6. Gastrocnemius
+    7. Multifidus
+
+Leg Curl - Leg Curl Machine (lying)
+  Exercise Rating: 23%
+  Equipment needed:
+    - Leg Curl Machine (lying)
+
+  Target Body Parts: Hamstrings
+  Muscles worked:
+    1. Biceps Femoris
+    2. Semitendinosus
+    3. Semimembranosus
+    4. Gluteus Maximus
+    5. Erector Spinae
+    6. Gastrocnemius
+    7. Multifidus
+
+Leg Extension - Leg extension machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Leg extension machine
+
+  Target Body Parts: Quads
+  Muscles worked:
+    1. Rectus Femoris
+    2. Vastus Lateralis
+    3. Vastus Medialis
+    4. Vastus Intermedius
+    5. Adductor Magnus
+    6. Erector Spinae
+    7. Transverse Abdominis
+
+Leg Raise
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Hip Flexors
+  Muscles worked:
+    1. Iliopsoas
+    2. Rectus Femoris
+    3. Rectus Abdominis
+    4. Transverse Abdominis
+    5. Obliques
+    6. Quadratus Lumborum
+    7. Multifidus
+
+Leg Raise (Hanging)
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Hip Flexors
+  Muscles worked:
+    1. Iliopsoas
+    2. Rectus Femoris
+    3. Rectus Abdominis
+    4. Transverse Abdominis
+    5. Obliques
+    6. Quadratus Lumborum
+    7. Multifidus
+
+Leg Raise (Lying)
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Hip Flexors
+  Muscles worked:
+    1. Iliopsoas
+    2. Rectus Femoris
+    3. Rectus Abdominis
+    4. Transverse Abdominis
+    5. Obliques
+    6. Quadratus Lumborum
+    7. Multifidus
+
+Leg Raise Twist
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Abs, Hip Flexors
+  Muscles worked:
+    1. Obliques
+    2. Iliopsoas
+    3. Rectus Abdominis
+    4. Transverse Abdominis
+    5. Rectus Femoris
+    6. Quadratus Lumborum
+    7. Multifidus
+
+Leg Raise Twist (Hanging)
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Abs, Hip Flexors
+  Muscles worked:
+    1. Obliques
+    2. Iliopsoas
+    3. Rectus Abdominis
+    4. Transverse Abdominis
+    5. Rectus Femoris
+    6. Quadratus Lumborum
+    7. Multifidus
+
+Leg Raise Twist (Lying)
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Abs, Hip Flexors
+  Muscles worked:
+    1. Obliques
+    2. Iliopsoas
+    3. Rectus Abdominis
+    4. Transverse Abdominis
+    5. Rectus Femoris
+    6. Quadratus Lumborum
+    7. Multifidus
+
+Leg Press
+  Exercise Rating: 23%
+  Equipment needed:
+    - Leg Press Machine
+    - Weight Plates
+
+  Target Body Parts: Quads, Glutes, Hamstrings
+  Muscles worked:
+    1. Vastus Lateralis
+    2. Vastus Medialis
+    3. Rectus Femoris
+    4. Gluteus Maximus
+    5. Biceps Femoris
+    6. Adductor Magnus
+    7. Gastrocnemius
+
+Lying Leg Curl - Leg Curl Machine (lying)
+  Exercise Rating: 23%
+  Equipment needed:
+    - Leg Curl Machine (lying)
+
+  Target Body Parts: Hamstrings
+  Muscles worked:
+    1. Biceps Femoris
+    2. Semitendinosus
+    3. Semimembranosus
+    4. Gluteus Maximus
+    5. Erector Spinae
+    6. Gastrocnemius
+    7. Multifidus
+
+Lying Leg Curl - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts: Hamstrings
+  Muscles worked:
+    1. Biceps Femoris
+    2. Semitendinosus
+    3. Semimembranosus
+    4. Gluteus Maximus
+    5. Erector Spinae
+    6. Gastrocnemius
+    7. Multifidus
+
+Lunge
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Quads, Glutes, Hamstrings
+  Muscles worked:
+    1. Rectus Femoris
+    2. Gluteus Maximus
+    3. Biceps Femoris
+    4. Vastus Lateralis
+    5. Vastus Medialis
+    6. Adductor Magnus
+    7. Gastrocnemius
+
+Lunge - Cable Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine                         
+	- Cable Ankle Cuff Attachment
+
+  Target Body Parts: Quads, Glutes, Hamstrings
+  Muscles worked:
+    1. Rectus Femoris
+    2. Gluteus Maximus
+    3. Biceps Femoris
+    4. Vastus Lateralis
+    5. Vastus Medialis
+    6. Adductor Magnus
+    7. Gastrocnemius
+
+Lunge - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts: Quads, Glutes, Hamstrings
+  Muscles worked:
+    1. Rectus Femoris
+    2. Gluteus Maximus
+    3. Biceps Femoris
+    4. Vastus Lateralis
+    5. Vastus Medialis
+    6. Adductor Magnus
+    7. Gastrocnemius
+
+Lunge - Barbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+    - Weight Plates
+    - Squat Rack
+
+  Target Body Parts: Quads, Glutes, Hamstrings
+  Muscles worked:
+    1. Rectus Femoris
+    2. Gluteus Maximus
+    3. Biceps Femoris
+    4. Vastus Lateralis
+    5. Vastus Medialis
+    6. Adductor Magnus
+    7. Gastrocnemius
+
+Mountain Climber
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Hip Flexors, Shoulders
+  Muscles worked:
+    1. Rectus Abdominis
+    2. Transverse Abdominis
+    3. Obliques
+    4. Iliopsoas
+    5. Rectus Femoris
+    6. Anterior Deltoid
+    7. Serratus Anterior
+
+Mountain Climber (Crossbody)
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Abs, Hip Flexors
+  Muscles worked:
+    1. Obliques
+    2. Rectus Abdominis
+    3. Transverse Abdominis
+    4. Iliopsoas
+    5. Rectus Femoris
+    6. Anterior Deltoid
+    7. Serratus Anterior
+
+Muscle Up
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Back, Chest, Arms, Shoulders
+  Muscles worked:
+    1. Latissimus Dorsi
+    2. Pectoralis Major
+    3. Biceps Brachii
+    4. Triceps Brachii
+    5. Anterior Deltoid
+    6. Rhomboids
+    7. Trapezius (upper)
+
+Oblique Crunch
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Abs
+  Muscles worked:
+    1. Obliques
+    2. Rectus Abdominis
+    3. Transverse Abdominis
+    4. Iliopsoas
+    5. Rectus Femoris
+    6. Quadratus Lumborum
+    7. Multifidus
+
+Oblique V-Up
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Abs
+  Muscles worked:
+    1. Obliques
+    2. Rectus Abdominis
+    3. Transverse Abdominis
+    4. Iliopsoas
+    5. Rectus Femoris
+    6. Quadratus Lumborum
+    7. Gluteus Medius
+
+Overhead Press - Cable Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine
+
+  Target Body Parts: Shoulders, Arms
+  Muscles worked:
+    1. Anterior Deltoid
+    2. Lateral Deltoid
+    3. Triceps Brachii
+    4. Serratus Anterior
+    5. Trapezius (upper)
+    6. Supraspinatus
+    7. Infraspinatus
+
+Overhead Press - Barbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+    - Weight Plates
+    - Squat Rack
+
+  Target Body Parts: Shoulders, Arms
+  Muscles worked:
+    1. Anterior Deltoid
+    2. Lateral Deltoid
+    3. Triceps Brachii
+    4. Serratus Anterior
+    5. Trapezius (upper)
+    6. Supraspinatus
+    7. Infraspinatus
+
+Overhead Press - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts: Shoulders, Arms
+  Muscles worked:
+    1. Anterior Deltoid
+    2. Lateral Deltoid
+    3. Triceps Brachii
+    4. Serratus Anterior
+    5. Trapezius (upper)
+    6. Supraspinatus
+    7. Infraspinatus
+
+Overhead Squat - Barbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+    - Weight Plates
+    - Squat Rack
+
+  Target Body Parts:  Quads, Shoulders
+  Muscles worked:
+    1. Rectus Femoris
+    2. Gluteus Maximus
+    3. Erector Spinae
+    4. Anterior Deltoid
+    5. Transverse Abdominis
+    6. Trapezius (upper)
+    7. Adductor Magnus
+
+Overhead Squat - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts:  Quads, Shoulders
+  Muscles worked:
+    1. Rectus Femoris
+    2. Gluteus Maximus
+    3. Erector Spinae
+    4. Anterior Deltoid
+    5. Transverse Abdominis
+    6. Trapezius (upper)
+    7. Adductor Magnus
+
+Pec Deck Fly
+  Exercise Rating: 23%
+  Equipment needed:
+    - Pec Deck Machine
+
+  Target Body Parts: Chest, Shoulders
+  Muscles worked:
+    1. Pectoralis Major
+    2. Pectoralis Minor
+    3. Anterior Deltoid
+    4. Serratus Anterior
+    5. Triceps Brachii
+    6. Latissimus Dorsi
+    7. Rhomboids
+
+Pendlay Row - Barbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+    - Weight Plates
+
+  Target Body Parts: Back
+  Muscles worked:
+    1. Latissimus Dorsi
+    2. Rhomboids
+    3. Trapezius (middle)
+    4. Posterior Deltoid
+    5. Biceps Brachii
+    6. Erector Spinae
+    7. Brachialis
+
+Pike Push-up
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Shoulders, Arms,  Chest
+  Muscles worked:
+    1. Anterior Deltoid
+    2. Triceps Brachii
+    3. Pectoralis Major
+    4. Serratus Anterior
+    5. Transverse Abdominis
+    6. Trapezius (upper)
+    7. Erector Spinae
+
+Pistol Squat
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight or support handle optional
+
+  Target Body Parts: Quads, Glutes, Hamstrings
+  Muscles worked:
+    1. Rectus Femoris
+    2. Gluteus Maximus
+    3. Biceps Femoris
+    4. Vastus Medialis
+    5. Vastus Lateralis
+    6. Adductor Magnus
+    7. Tibialis Anterior
+
+Plank
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+  Target Body Parts: Shoulders, Back
+  Muscles worked:
+    1. Transverse Abdominis
+    2. Rectus Abdominis
+    3. Obliques
+    4. Erector Spinae
+    5. Serratus Anterior
+    6. Anterior Deltoid
+    7. Multifidus
+
+Power Clean - Barbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+    - Weight Plates
+  Target Body Parts:  Back, Shoulders
+  Muscles worked:
+    1. Rectus Femoris
+    2. Gluteus Maximus
+    3. Biceps Femoris
+    4. Trapezius (upper)
+    5. Posterior Deltoid
+    6. Latissimus Dorsi
+    7. Biceps Brachii
+
+Power Snatch - Barbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+    - Weight Plates
+  Target Body Parts:  Back, Shoulders
+  Muscles worked:
+    1. Anterior Deltoid
+    2. Trapezius (upper)
+    3. Rectus Femoris
+    4. Gluteus Maximus
+    5. Biceps Femoris
+    6. Latissimus Dorsi
+    7. Biceps Brachii
+
+Preacher Curl - Cable Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine                                   
+	- Cable Straight Bar Attachment
+  Target Body Parts: Arms,  Forearms
+  Muscles worked:
+    1. Biceps Brachii
+    2. Brachialis
+    3. Brachioradialis
+    4. Pronator Teres
+    5. Wrist Flexors
+    6. Anterior Deltoid
+    7. Trapezius (upper)
+
+Preacher Curl - Barbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+  Target Body Parts: Arms,  Forearms
+  Muscles worked:
+    1. Biceps Brachii
+    2. Brachialis
+    3. Brachioradialis
+    4. Pronator Teres
+    5. Wrist Flexors
+    6. Anterior Deltoid
+    7. Trapezius (upper)
+
+Preacher Curl - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+    - Preacher Bench
+
+  Target Body Parts: Arms,  Forearms
+  Muscles worked:
+    1. Biceps Brachii
+    2. Brachialis
+    3. Brachioradialis
+    4. Pronator Teres
+    5. Wrist Flexors
+    6. Anterior Deltoid
+    7. Trapezius (upper)
+
+Preacher Curl - Barbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+    - Preacher Bench
+
+  Target Body Parts: Arms,  Forearms
+  Muscles worked:
+    1. Biceps Brachii
+    2. Brachialis
+    3. Brachioradialis
+    4. Pronator Teres
+    5. Wrist Flexors
+    6. Anterior Deltoid
+    7. Trapezius (upper)
+
+Pull Apart
+  Exercise Rating: 23%
+  Equipment needed:
+    - Resistance Band
+
+  Target Body Parts: Back,  Shoulders
+  Muscles worked:
+    1. Rhomboids
+    2. Trapezius (middle)
+    3. Posterior Deltoid
+    4. Infraspinatus
+    5. Teres Minor
+    6. Supraspinatus
+    7. Levator Scapulae
+
+Pull Through - Resistance Band
+  Exercise Rating: 23%
+  Equipment needed:
+    - Resistance Band
+
+  Target Body Parts: Glutes, Hamstrings, Abs
+  Muscles worked:
+    1. Gluteus Maximus
+    2. Biceps Femoris
+    3. Semitendinosus
+    4. Erector Spinae
+    5. Adductor Magnus
+    6. Transverse Abdominis
+    7. Multifidus
+
+Pull Through - Cable Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine                 
+	- Cable Rope Attachment
+
+  Target Body Parts: Glutes, Hamstrings, Abs
+  Muscles worked:
+    1. Gluteus Maximus
+    2. Biceps Femoris
+    3. Semitendinosus
+    4. Erector Spinae
+    5. Adductor Magnus
+    6. Transverse Abdominis
+    7. Multifidus
+
+Pull Up
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Back,  Shoulders
+  Muscles worked:
+    1. Latissimus Dorsi
+    2. Biceps Brachii
+    3. Brachialis
+    4. Rhomboids
+    5. Trapezius (middle)
+    6. Posterior Deltoid
+    7. Brachioradialis
+
+Pull Up – Close Grip
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Back
+  Muscles worked:
+    1. Biceps Brachii
+    2. Latissimus Dorsi
+    3. Brachialis
+    4. Rhomboids
+    5. Trapezius (middle)
+    6. Posterior Deltoid
+    7. Brachioradialis
+
+Pull Up – Wide Grip
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Back, Shoulders
+  Muscles worked:
+    1. Latissimus Dorsi
+    2. Rhomboids
+    3. Trapezius (middle)
+    4. Posterior Deltoid
+    5. Teres Minor
+    6. Biceps Brachii
+    7. Brachialis
+
+Pull Up – Reverse Grip
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Back
+  Muscles worked:
+    1. Biceps Brachii
+    2. Latissimus Dorsi
+    3. Brachialis
+    4. Rhomboids
+    5. Trapezius (middle)
+    6. Posterior Deltoid
+    7. Brachioradialis
+
+Pull Up - Assisted Dip/Pull-Up Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Assisted Dip/Pull-Up Machine
+
+  Target Body Parts: Back,  Shoulders
+  Muscles worked:
+    1. Latissimus Dorsi
+    2. Biceps Brachii
+    3. Brachialis
+    4. Rhomboids
+    5. Trapezius (middle)
+    6. Posterior Deltoid
+    7. Brachioradialis
+
+Pullover - Cable Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine                                 
+	- Cable Straight Bar Attachment
+
+  Target Body Parts: Chest, Back,  Abs
+  Muscles worked:
+    1. Latissimus Dorsi
+    2. Pectoralis Major
+    3. Serratus Anterior
+    4. Teres Major
+    5. Triceps Brachii
+    6. Transverse Abdominis
+    7. Multifidus
+
+Pullover - Barbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+    - Weight Plates
+
+  Target Body Parts: Chest, Back,  Abs
+  Muscles worked:
+    1. Latissimus Dorsi
+    2. Pectoralis Major
+    3. Serratus Anterior
+    4. Teres Major
+    5. Triceps Brachii
+    6. Transverse Abdominis
+    7. Multifidus
+
+Pullover - Dumbbell (Straight Arm)
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts: Chest, Back,  Abs
+  Muscles worked:
+    1. Latissimus Dorsi
+    2. Pectoralis Major
+    3. Serratus Anterior
+    4. Teres Major
+    5. Transverse Abdominis
+    6. Triceps Brachii
+    7. Multifidus
+
+Pullover - Dumbbell (Bent Arm)
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts: Chest, Back,  Abs
+  Muscles worked:
+    1. Pectoralis Major
+    2. Latissimus Dorsi
+    3. Serratus Anterior
+    4. Teres Major
+    5. Triceps Brachii
+    6. Transverse Abdominis
+    7. Multifidus
+
+Push Away
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Chest, Shoulders, Arms,  Core
+  Muscles worked:
+    1. Serratus Anterior
+    2. Pectoralis Major
+    3. Anterior Deltoid
+    4. Triceps Brachii
+    5. Transverse Abdominis
+    6. Rectus Abdominis
+    7. Rhomboids
+
+Push Press - Barbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+    - Weight Plates
+    - Squat Rack
+
+  Target Body Parts: Shoulders, Arms,  Core
+  Muscles worked:
+    1. Anterior Deltoid
+    2. Lateral Deltoid
+    3. Triceps Brachii
+    4. Gluteus Maximus
+    5. Rectus Femoris
+    6. Trapezius (upper)
+    7. Erector Spinae
+
+Push Press - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts: Shoulders, Arms,  Core
+  Muscles worked:
+    1. Anterior Deltoid
+    2. Lateral Deltoid
+    3. Triceps Brachii
+    4. Gluteus Maximus
+    5. Rectus Femoris
+    6. Trapezius (upper)
+    7. Erector Spinae
+
+Push-up
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Chest, Arms,  Shoulders
+  Muscles worked:
+    1. Pectoralis Major
+    2. Triceps Brachii
+    3. Anterior Deltoid
+    4. Serratus Anterior
+    5. Pectoralis Minor
+    6. Transverse Abdominis
+    7. Rhomboids
+
+Push-up (Close Grip)
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Arms,  Chest, Shoulders
+  Muscles worked:
+    1. Triceps Brachii
+    2. Pectoralis Major
+    3. Anterior Deltoid
+    4. Serratus Anterior
+    5. Pectoralis Minor
+    6. Transverse Abdominis
+    7. Rhomboids
+
+Push-up (Wide Grip)
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Chest, Shoulders, Arms
+  Muscles worked:
+    1. Pectoralis Major
+    2. Anterior Deltoid
+    3. Triceps Brachii
+    4. Serratus Anterior
+    5. Pectoralis Minor
+    6. Transverse Abdominis
+    7. Rhomboids
+
+Rack Pull - Barbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+    - Weight Plates
+    - Power Rack
+
+  Target Body Parts: Back, Hamstrings, Glutes
+  Muscles worked:
+    1. Erector Spinae
+    2. Gluteus Maximus
+    3. Biceps Femoris
+    4. Latissimus Dorsi
+    5. Trapezius (upper)
+    6. Adductor Magnus
+    7. Quadratus Lumborum
+
+Renegade Row - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+    
+
+  Target Body Parts: Back, Arms
+  Muscles worked:
+    1. Latissimus Dorsi
+    2. Rhomboids
+    3. Trapezius (middle)
+    4. Transverse Abdominis
+    5. Biceps Brachii
+    6. Triceps Brachii
+    7. Erector Spinae
+
+Reverse Fly - Cable Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine
+
+  Target Body Parts: Back,  Shoulders
+  Muscles worked:
+    1. Posterior Deltoid
+    2. Rhomboids
+    3. Trapezius (middle)
+    4. Infraspinatus
+    5. Teres Minor
+    6. Supraspinatus
+    7. Levator Scapulae
+
+Reverse Fly - Dumbbell (Bent Over)
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts: Back,  Shoulders
+  Muscles worked:
+    1. Posterior Deltoid
+    2. Rhomboids
+    3. Trapezius (middle)
+    4. Infraspinatus
+    5. Teres Minor
+    6. Supraspinatus
+    7. Erector Spinae
+
+Reverse Fly - Dumbbell (Seated)
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+    - Adjustable Bench
+
+  Target Body Parts: Back,  Shoulders
+  Muscles worked:
+    1. Posterior Deltoid
+    2. Rhomboids
+    3. Trapezius (middle)
+    4. Infraspinatus
+    5. Teres Minor
+    6. Supraspinatus
+    7. Levator Scapulae
+
+Reverse Fly - Dumbbell (Standing)
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts: Back,  Shoulders
+  Muscles worked:
+    1. Posterior Deltoid
+    2. Rhomboids
+    3. Trapezius (middle)
+    4. Infraspinatus
+    5. Teres Minor
+    6. Supraspinatus
+    7. Erector Spinae
+
+Reverse Fly - Dumbbell (Lying)
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+    - Adjustable Bench (face down)
+
+  Target Body Parts: Back,  Shoulders
+  Muscles worked:
+    1. Posterior Deltoid
+    2. Rhomboids
+    3. Trapezius (middle)
+    4. Infraspinatus
+    5. Teres Minor
+    6. Supraspinatus
+    7. Levator Scapulae
+
+Reverse Crunch
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Abs
+  Muscles worked:
+    1. Rectus Abdominis
+    2. Transverse Abdominis
+    3. Obliques
+    4. Iliopsoas
+    5. Rectus Femoris
+    6. Quadratus Lumborum
+    7. Multifidus
+
+Reverse Crunch - Cable Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine                         
+	- Cable Ankle Cuff Attachment
+
+  Target Body Parts: Abs
+  Muscles worked:
+    1. Rectus Abdominis
+    2. Transverse Abdominis
+    3. Obliques
+    4. Iliopsoas
+    5. Rectus Femoris
+    6. Quadratus Lumborum
+    7. Multifidus
+
+Reverse Curl - Cable Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine                                 
+	- Cable Straight Bar Attachment
+
+  Target Body Parts: Forearms
+  Muscles worked:
+    1. Brachioradialis
+    2. Brachialis
+    3. Wrist Extensors
+    4. Pronator Teres
+    5. Biceps Brachii
+    6. Anterior Deltoid
+    7. Trapezius (upper)
+
+Reverse Curl - Barbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+    - Weight Plates
+
+  Target Body Parts: Forearms
+  Muscles worked:
+    1. Brachioradialis
+    2. Brachialis
+    3. Wrist Extensors
+    4. Pronator Teres
+    5. Biceps Brachii
+    6. Anterior Deltoid
+    7. Trapezius (upper)
+
+Reverse Curl - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts: Forearms
+  Muscles worked:
+    1. Brachioradialis
+    2. Brachialis
+    3. Wrist Extensors
+    4. Pronator Teres
+    5. Biceps Brachii
+    6. Anterior Deltoid
+    7. Trapezius (upper)
+
+Reverse Lunge
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Quads, Glutes, Hamstrings
+  Muscles worked:
+    1. Gluteus Maximus
+    2. Biceps Femoris
+    3. Rectus Femoris
+    4. Vastus Lateralis
+    5. Adductor Magnus
+    6. Gastrocnemius
+    7. Erector Spinae
+
+Reverse Lunge - Landmine Attachment
+  Exercise Rating: 23%
+  Equipment needed:
+    - Landmine Attachment
+    - Barbell
+
+  Target Body Parts: Quads, Glutes, Hamstrings
+  Muscles worked:
+    1. Gluteus Maximus
+    2. Biceps Femoris
+    3. Rectus Femoris
+    4. Vastus Lateralis
+    5. Adductor Magnus
+    6. Gastrocnemius
+    7. Erector Spinae
+
+Reverse Lunge - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts: Quads, Glutes, Hamstrings
+  Muscles worked:
+    1. Gluteus Maximus
+    2. Biceps Femoris
+    3. Rectus Femoris
+    4. Vastus Lateralis
+    5. Adductor Magnus
+    6. Gastrocnemius
+    7. Erector Spinae
+
+Reverse Lunge - Barbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+    - Weight Plates
+    - Squat Rack
+
+  Target Body Parts: Quads, Glutes, Hamstrings
+  Muscles worked:
+    1. Gluteus Maximus
+    2. Biceps Femoris
+    3. Rectus Femoris
+    4. Vastus Lateralis
+    5. Adductor Magnus
+    6. Gastrocnemius
+    7. Erector Spinae
+
+Reverse Lunge - Kettlebell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Kettlebell
+
+  Target Body Parts: Quads, Glutes, Hamstrings
+  Muscles worked:
+    1. Gluteus Maximus
+    2. Biceps Femoris
+    3. Rectus Femoris
+    4. Vastus Lateralis
+    5. Adductor Magnus
+    6. Gastrocnemius
+    7. Erector Spinae
+
+Reverse Lunge - Cable Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine                         
+	- Cable Ankle Cuff Attachment
+
+  Target Body Parts: Quads, Glutes, Hamstrings
+  Muscles worked:
+    1. Gluteus Maximus
+    2. Biceps Femoris
+    3. Rectus Femoris
+    4. Vastus Lateralis
+    5. Adductor Magnus
+    6. Gastrocnemius
+    7. Erector Spinae
+
+Reverse Lunge - Smith Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Smith Machine
+
+  Target Body Parts: Quads, Glutes, Hamstrings
+  Muscles worked:
+    1. Gluteus Maximus
+    2. Biceps Femoris
+    3. Rectus Femoris
+    4. Vastus Lateralis
+    5. Adductor Magnus
+    6. Gastrocnemius
+    7. Erector Spinae
+
+Reverse Plank
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Glutes, Shoulders, Back
+  Muscles worked:
+    1. Erector Spinae
+    2. Gluteus Maximus
+    3. Transverse Abdominis
+    4. Biceps Femoris
+    5. Posterior Deltoid
+    6. Triceps Brachii
+    7. Multifidus
+
+Romanian Deadlift - Barbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+    - Weight Plates
+
+  Target Body Parts: Hamstrings, Glutes, Back
+  Muscles worked:
+    1. Biceps Femoris
+    2. Semitendinosus
+    3. Gluteus Maximus
+    4. Erector Spinae
+    5. Semimembranosus
+    6. Adductor Magnus
+    7. Multifidus
+
+Row - Landmine Attachment
+  Exercise Rating: 23%
+  Equipment needed:
+    - Landmine Attachment
+    - Barbell
+
+  Target Body Parts: Back
+  Muscles worked:
+    1. Latissimus Dorsi
+    2. Rhomboids
+    3. Trapezius (middle)
+    4. Biceps Brachii
+    5. Posterior Deltoid
+    6. Brachialis
+    7. Erector Spinae
+
+Row - Resistance Band
+  Exercise Rating: 23%
+  Equipment needed:
+    - Resistance Band
+
+  Target Body Parts: Back
+  Muscles worked:
+    1. Latissimus Dorsi
+    2. Rhomboids
+    3. Trapezius (middle)
+    4. Biceps Brachii
+    5. Posterior Deltoid
+    6. Brachialis
+    7. Erector Spinae
+
+Row - Kettlebell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Kettlebell
+
+  Target Body Parts: Back
+  Muscles worked:
+    1. Latissimus Dorsi
+    2. Rhomboids
+    3. Trapezius (middle)
+    4. Biceps Brachii
+    5. Posterior Deltoid
+    6. Brachialis
+    7. Erector Spinae
+
+Row - Cable Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine                           
+	- Cable Handle Attachment
+
+  Target Body Parts: Back
+  Muscles worked:
+    1. Latissimus Dorsi
+    2. Rhomboids
+    3. Trapezius (middle)
+    4. Biceps Brachii
+    5. Posterior Deltoid
+    6. Brachialis
+    7. Erector Spinae
+
+Row - Smith Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Smith Machine
+
+  Target Body Parts: Back
+  Muscles worked:
+    1. Latissimus Dorsi
+    2. Rhomboids
+    3. Trapezius (middle)
+    4. Biceps Brachii
+    5. Posterior Deltoid
+    6. Brachialis
+    7. Erector Spinae
+
+Row - Barbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+    - Weight Plates
+
+  Target Body Parts: Back
+  Muscles worked:
+    1. Latissimus Dorsi
+    2. Rhomboids
+    3. Trapezius (middle)
+    4. Biceps Brachii
+    5. Posterior Deltoid
+    6. Brachialis
+    7. Erector Spinae
+
+Row - Dumbbell (Bent Over)
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts: Back
+  Muscles worked:
+    1. Latissimus Dorsi
+    2. Rhomboids
+    3. Trapezius (middle)
+    4. Biceps Brachii
+    5. Posterior Deltoid
+    6. Brachialis
+    7. Erector Spinae
+
+Row - Dumbbell (Kneeling)
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+    - Adjustable Bench
+
+  Target Body Parts: Back
+  Muscles worked:
+    1. Latissimus Dorsi
+    2. Rhomboids
+    3. Trapezius (middle)
+    4. Biceps Brachii
+    5. Posterior Deltoid
+    6. Brachialis
+    7. Erector Spinae
+
+Row - Dumbbell (Seated)
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+    - Adjustable Bench
+
+  Target Body Parts: Back
+  Muscles worked:
+    1. Latissimus Dorsi
+    2. Rhomboids
+    3. Trapezius (middle)
+    4. Biceps Brachii
+    5. Posterior Deltoid
+    6. Brachialis
+    7. Erector Spinae
+
+Row - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts: Back
+  Muscles worked:
+    1. Latissimus Dorsi
+    2. Rhomboids
+    3. Trapezius (middle)
+    4. Biceps Brachii
+    5. Posterior Deltoid
+    6. Brachialis
+    7. Erector Spinae
+
+Row - Dumbbell (Reverse Grip)
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell 
+
+  Target Body Parts: Back
+  Muscles worked:
+    1. Biceps Brachii
+    2. Latissimus Dorsi
+    3. Rhomboids
+    4. Trapezius (middle)
+    5. Posterior Deltoid
+    6. Brachialis
+    7. Erector Spinae
+
+Russian Twist
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Abs
+  Muscles worked:
+    1. Obliques
+    2. Rectus Abdominis
+    3. Transverse Abdominis
+    4. Iliopsoas
+    5. Rectus Femoris
+    6. Quadratus Lumborum
+    7. Multifidus
+
+Russian Twist - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts: Abs
+  Muscles worked:
+    1. Obliques
+    2. Rectus Abdominis
+    3. Transverse Abdominis
+    4. Iliopsoas
+    5. Rectus Femoris
+    6. Quadratus Lumborum
+    7. Multifidus
+
+Seated Chest Press
+  Exercise Rating: 23%
+  Equipment needed:
+    - Chest Press Machine
+
+  Target Body Parts: Chest, Arms,  Shoulders
+  Muscles worked:
+    1. Pectoralis Major
+    2. Triceps Brachii
+    3. Anterior Deltoid
+    4. Serratus Anterior
+    5. Pectoralis Minor
+    6. Trapezius (upper)
+    7. Latissimus Dorsi
+
+Seated Leg Curl
+  Exercise Rating: 23%
+  Equipment needed:
+    - Leg Curl Machine (seated)
+
+  Target Body Parts: Hamstrings
+  Muscles worked:
+    1. Biceps Femoris
+    2. Semitendinosus
+    3. Semimembranosus
+    4. Gluteus Maximus
+    5. Erector Spinae
+    6. Gastrocnemius
+    7. Multifidus
+
+Seated Leg Press
+  Exercise Rating: 23%
+  Equipment needed:
+    - Seated Leg Press Machine
+    - Weight Plates
+
+  Target Body Parts: Quads, Glutes, Hamstrings
+  Muscles worked:
+    1. Vastus Lateralis
+    2. Vastus Medialis
+    3. Rectus Femoris
+    4. Gluteus Maximus
+    5. Biceps Femoris
+    6. Adductor Magnus
+    7. Gastrocnemius
+
+Shrug - Cable Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine                                 
+	- Cable Straight Bar Attachment
+
+  Target Body Parts: Trapezius, Shoulders
+  Muscles worked:
+    1. Trapezius (upper)
+    2. Levator Scapulae
+    3. Trapezius (middle)
+    4. Rhomboids
+    5. Posterior Deltoid
+    6. Erector Spinae
+    7. Serratus Anterior
+
+Shrug - Barbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+    - Weight Plates
+
+  Target Body Parts: Traps, Neck
+  Muscles worked:
+    1. Trapezius (upper)
+    2. Levator Scapulae
+    3. Trapezius (middle)
+    4. Rhomboids
+    5. Erector Spinae
+    6. Posterior Deltoid
+    7. Serratus Anterior
+
+Shrug - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts: Traps, Neck
+  Muscles worked:
+    1. Trapezius (upper)
+    2. Levator Scapulae
+    3. Trapezius (middle)
+    4. Rhomboids
+    5. Erector Spinae
+    6. Posterior Deltoid
+    7. Serratus Anterior
+
+Side Bend - Cable Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine         
+	- Cable Handle Attachment
+
+  Target Body Parts: Abs
+  Muscles worked:
+    1. Obliques
+    2. Quadratus Lumborum
+    3. Transverse Abdominis
+    4. Rectus Abdominis
+    5. Iliopsoas
+    6. Rectus Femoris
+    7. Multifidus
+
+Side Bend - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts: Abs
+  Muscles worked:
+    1. Obliques
+    2. Quadratus Lumborum
+    3. Transverse Abdominis
+    4. Rectus Abdominis
+    5. Iliopsoas
+    6. Rectus Femoris
+    7. Multifidus
+
+Side Bridge
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Abs, Shoulders
+  Muscles worked:
+    1. Obliques
+    2. Transverse Abdominis
+    3. Quadratus Lumborum
+    4. Gluteus Medius
+    5. Gluteus Maximus
+    6. Lateral Deltoid
+    7. Erector Spinae
+
+Side Bridge - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts: Abs, Shoulders
+  Muscles worked:
+    1. Obliques
+    2. Transverse Abdominis
+    3. Quadratus Lumborum
+    4. Gluteus Medius
+    5. Gluteus Maximus
+    6. Lateral Deltoid
+    7. Erector Spinae
+
+Side Lunge
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Adductors, Quads, Glutes
+  Muscles worked:
+    1. Adductor Magnus
+    2. Gluteus Maximus
+    3. Rectus Femoris
+    4. Vastus Lateralis
+    5. Gastrocnemius
+    6. Erector Spinae
+    7. Gluteus Medius
+
+Side Lunge - Cable Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine                         
+	- Cable Ankle Cuff Attachment
+
+  Target Body Parts: Adductors, Quads, Glutes
+  Muscles worked:
+    1. Adductor Magnus
+    2. Gluteus Maximus
+    3. Rectus Femoris
+    4. Vastus Lateralis
+    5. Gastrocnemius
+    6. Erector Spinae
+    7. Gluteus Medius
+
+Side Lunge - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts: Adductors, Quads, Glutes
+  Muscles worked:
+    1. Adductor Magnus
+    2. Gluteus Maximus
+    3. Rectus Femoris
+    4. Vastus Lateralis
+    5. Gastrocnemius
+    6. Erector Spinae
+    7. Gluteus Medius
+
+Side Plank
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Abs, Shoulders
+  Muscles worked:
+    1. Transverse Abdominis
+    2. Obliques
+    3. Rectus Abdominis
+    4. Gluteus Medius
+    5. Lateral Deltoid
+    6. Erector Spinae
+    7. Serratus Anterior
+
+Side Plank (Straight Knees)
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Abs, Shoulders
+  Muscles worked:
+    1. Obliques
+    2. Transverse Abdominis
+    3. Rectus Abdominis
+    4. Gluteus Medius
+    5. Lateral Deltoid
+    6. Erector Spinae
+    7. Serratus Anterior
+
+Side Plank (Bent Knees)
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Abs
+  Muscles worked:
+    1. Obliques
+    2. Transverse Abdominis
+    3. Rectus Abdominis
+    4. Gluteus Medius
+    5. Lateral Deltoid
+    6. Erector Spinae
+    7. Serratus Anterior
+
+Single Arm Row - Landmine Attachment
+  Exercise Rating: 23%
+  Equipment needed:
+    - Landmine Attachment
+    - Barbell
+
+  Target Body Parts: Back
+  Muscles worked:
+    1. Latissimus Dorsi
+    2. Rhomboids
+    3. Trapezius (middle)
+    4. Biceps Brachii
+    5. Posterior Deltoid
+    6. Brachialis
+    7. Erector Spinae
+
+Single Arm Row - Cable Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine         
+	- Cable Handle Attachment
+
+  Target Body Parts: Back
+  Muscles worked:
+    1. Latissimus Dorsi
+    2. Rhomboids
+    3. Trapezius (middle)
+    4. Biceps Brachii
+    5. Posterior Deltoid
+    6. Brachialis
+    7. Erector Spinae
+
+Single Arm Row - Dumbbell (Kneeling)
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+    - Adjustable Bench
+
+  Target Body Parts: Back
+  Muscles worked:
+    1. Latissimus Dorsi
+    2. Rhomboids
+    3. Trapezius (middle)
+    4. Biceps Brachii
+    5. Posterior Deltoid
+    6. Brachialis
+    7. Erector Spinae
+
+Single Arm Row - Dumbbell (Seated)
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+    - Adjustable Bench
+
+  Target Body Parts: Back
+  Muscles worked:
+    1. Latissimus Dorsi
+    2. Rhomboids
+    3. Trapezius (middle)
+    4. Biceps Brachii
+    5. Posterior Deltoid
+    6. Brachialis
+    7. Erector Spinae
+
+Single Arm Lat Pull-down - Lat Pulldown Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Lat Pulldown Machine
+
+  Target Body Parts: Back
+  Muscles worked:
+    1. Latissimus Dorsi
+    2. Rhomboids
+    3. Trapezius (middle)
+    4. Biceps Brachii
+    5. Brachialis
+    6. Posterior Deltoid
+    7. Teres Minor
+
+Single Arm Lat Pull-down - Cable Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine         
+	- Cable Handle Attachment
+
+  Target Body Parts: Back
+  Muscles worked:
+    1. Latissimus Dorsi
+    2. Rhomboids
+    3. Trapezius (middle)
+    4. Biceps Brachii
+    5. Brachialis
+    6. Posterior Deltoid
+    7. Teres Minor
+
+Single Arm Lat Raise - Cable Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine         
+	- Cable Handle Attachment
+
+  Target Body Parts: Shoulders
+  Muscles worked:
+    1. Lateral Deltoid
+    2. Supraspinatus
+    3. Anterior Deltoid
+    4. Posterior Deltoid
+    5. Trapezius (upper)
+    6. Serratus Anterior
+    7. Infraspinatus
+
+Single Arm Lat Raise - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts: Shoulders
+  Muscles worked:
+    1. Lateral Deltoid
+    2. Supraspinatus
+    3. Anterior Deltoid
+    4. Posterior Deltoid
+    5. Trapezius (upper)
+    6. Serratus Anterior
+    7. Infraspinatus
+
+Single Leg Deadlift - Barbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+    - Weight Plates
+
+  Target Body Parts: Hamstrings, Glutes, Back
+  Muscles worked:
+    1. Biceps Femoris
+    2. Semitendinosus
+    3. Gluteus Maximus
+    4. Erector Spinae
+    5. Semimembranosus
+    6. Adductor Magnus
+    7. Multifidus
+
+Single Leg Deadlift - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts: Hamstrings, Glutes, Back
+  Muscles worked:
+    1. Biceps Femoris
+    2. Semitendinosus
+    3. Gluteus Maximus
+    4. Erector Spinae
+    5. Semimembranosus
+    6. Adductor Magnus
+    7. Multifidus
+
+Single Leg Hip Thrust - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+    - Adjustable Bench
+
+  Target Body Parts: Glutes, Hamstrings, Abs
+  Muscles worked:
+    1. Gluteus Maximus
+    2. Biceps Femoris
+    3. Semitendinosus
+    4. Erector Spinae
+    5. Multifidus
+    6. Transverse Abdominis
+    7. Quadratus Lumborum
+
+Single Leg Hip Thrust - Barbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+    - Weight Plates
+    - Adjustable Bench
+
+  Target Body Parts: Glutes, Hamstrings, Abs
+  Muscles worked:
+    1. Gluteus Maximus
+    2. Biceps Femoris
+    3. Semitendinosus
+    4. Erector Spinae
+    5. Multifidus
+    6. Transverse Abdominis
+    7. Quadratus Lumborum
+
+Sit-Up
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+    
+
+  Target Body Parts: Abs
+  Muscles worked:
+    1. Rectus Abdominis
+    2. Transverse Abdominis
+    3. Obliques
+    4. Iliopsoas
+    5. Rectus Femoris
+    6. Quadratus Lumborum
+    7. Multifidus
+
+Sit-Up - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts: Abs
+  Muscles worked:
+    1. Rectus Abdominis
+    2. Transverse Abdominis
+    3. Obliques
+    4. Iliopsoas
+    5. Rectus Femoris
+    6. Quadratus Lumborum
+    7. Multifidus
+
+Skull Crusher - Cable Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine              
+	- Cable Rope Attachment
+
+  Target Body Parts: Arms
+  Muscles worked:
+    1. Triceps Brachii
+    2. Anconeus
+    3. Wrist Extensors
+    4. Wrist Flexors
+    5. Transverse Abdominis
+    6. Rectus Abdominis
+    7. Serratus Anterior
+
+Skull Crusher - Barbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+    - Weight Plates
+
+  Target Body Parts: Arms
+  Muscles worked:
+    1. Triceps Brachii
+    2. Anconeus
+    3. Wrist Extensors
+    4. Wrist Flexors
+    5. Transverse Abdominis
+    6. Rectus Abdominis
+    7. Serratus Anterior
+
+Skull Crusher - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts: Arms
+  Muscles worked:
+    1. Triceps Brachii
+    2. Anconeus
+    3. Wrist Extensors
+    4. Wrist Flexors
+    5. Transverse Abdominis
+    6. Rectus Abdominis
+    7. Serratus Anterior
+
+Sled Calf Press
+  Exercise Rating: 23%
+  Equipment needed:
+    - Incline Leg Press Machine
+	- Weight Plates
+
+  Target Body Parts: Calves
+  Muscles worked:
+    1. Gastrocnemius
+    2. Soleus
+    3. Tibialis Anterior
+    4. Gastrocnemius
+    5. Rectus Femoris
+    6. Vastus Lateralis
+    7. Gluteus Maximus
+
+Sled Pull
+  Exercise Rating: 23%
+  Equipment needed:
+    - Sled
+    - Harness
+
+  Target Body Parts:  Back, Abs
+  Muscles worked:
+    1. Erector Spinae
+    2. Latissimus Dorsi
+    3. Gluteus Maximus
+    4. Biceps Femoris
+    5. Rectus Femoris
+    6. Transverse Abdominis
+    7. Trapezius (upper)
+
+Sled Push
+  Exercise Rating: 23%
+  Equipment needed:
+    - Sled
+
+  Target Body Parts:  Chest
+  Muscles worked:
+    1. Vastus Lateralis
+    2. Gluteus Maximus
+    3. Gastrocnemius
+    4. Transverse Abdominis
+    5. Pectoralis Major
+    6. Anterior Deltoid
+    7. Triceps Brachii
+
+Snatch
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+    - Weight Plates
+
+  Target Body Parts:  Back, Shoulders
+  Muscles worked:
+    1. Anterior Deltoid
+    2. Trapezius (upper)
+    3. Gluteus Maximus
+    4. Rectus Femoris
+    5. Biceps Femoris
+    6. Latissimus Dorsi
+    7. Biceps Brachii
+
+Split Jerk
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+    - Weight Plates
+    - Squat Rack
+
+  Target Body Parts: Shoulders, Arms
+  Muscles worked:
+    1. Anterior Deltoid
+    2. Triceps Brachii
+    3. Gluteus Maximus
+    4. Rectus Femoris
+    5. Biceps Femoris
+    6. Transverse Abdominis
+    7. Trapezius (upper)
+
+Split Squat
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Quads, Glutes, Hamstrings
+  Muscles worked:
+    1. Rectus Femoris
+    2. Gluteus Maximus
+    3. Biceps Femoris
+    4. Vastus Medialis
+    5. Adductor Magnus
+    6. Gastrocnemius
+    7. Erector Spinae
+
+Split Squat - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts: Quads, Glutes, Hamstrings
+  Muscles worked:
+    1. Rectus Femoris
+    2. Gluteus Maximus
+    3. Biceps Femoris
+    4. Vastus Medialis
+    5. Adductor Magnus
+    6. Gastrocnemius
+    7. Erector Spinae
+
+Split Squat - Barbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+    - Weight Plates
+    - Squat Rack
+
+  Target Body Parts: Quads, Glutes, Hamstrings
+  Muscles worked:
+    1. Rectus Femoris
+    2. Gluteus Maximus
+    3. Biceps Femoris
+    4. Vastus Medialis
+    5. Adductor Magnus
+    6. Gastrocnemius
+    7. Erector Spinae
+
+Squat
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Quads, Glutes, Hamstrings, Abs
+  Muscles worked:
+    1. Vastus Lateralis
+    2. Gluteus Maximus
+    3. Biceps Femoris
+    4. Vastus Medialis
+    5. Transverse Abdominis
+    6. Erector Spinae
+    7. Adductor Magnus
+
+Squat - Landmine Attachment
+  Exercise Rating: 23%
+  Equipment needed:
+    - Landmine Attachment
+    - Barbell
+	- Weight Plates
+
+  Target Body Parts: Quads, Glutes, Hamstrings, Abs
+  Muscles worked:
+    1. Vastus Lateralis
+    2. Gluteus Maximus
+    3. Biceps Femoris
+    4. Vastus Medialis
+    5. Transverse Abdominis
+    6. Erector Spinae
+    7. Adductor Magnus
+
+Squat - Barbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+    - Weight Plates
+    - Squat Rack
+
+  Target Body Parts: Quads, Glutes, Hamstrings, Abs
+  Muscles worked:
+    1. Vastus Lateralis
+    2. Gluteus Maximus
+    3. Biceps Femoris
+    4. Vastus Medialis
+    5. Transverse Abdominis
+    6. Erector Spinae
+    7. Adductor Magnus
+
+Squat - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts: Quads, Glutes, Hamstrings, Abs
+  Muscles worked:
+    1. Vastus Lateralis
+    2. Gluteus Maximus
+    3. Biceps Femoris
+    4. Vastus Medialis
+    5. Transverse Abdominis
+    6. Erector Spinae
+    7. Adductor Magnus
+
+Squat Calf Press
+  Exercise Rating: 23%
+  Equipment needed:
+    - Leg Press Machine
+    - Weight Plates
+
+  Target Body Parts: Quads, Calves
+  Muscles worked:
+    1. Gastrocnemius
+    2. Soleus
+    3. Vastus Lateralis
+    4. Vastus Medialis
+    5. Rectus Femoris
+    6. Adductor Magnus
+    7. Gluteus Maximus
+
+Straight Arm Lat Pull-down - Lat Pulldown Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Lat Pulldown Machine
+
+  Target Body Parts: Back,  Shoulders
+  Muscles worked:
+    1. Latissimus Dorsi
+    2. Teres Major
+    3. Posterior Deltoid
+    4. Trapezius (lower)
+    5. Rhomboids
+    6. Erector Spinae
+    7. Infraspinatus
+
+Straight Arm Lat Pull-down - Cable Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine                                 
+	- Cable Straight Bar Attachment
+
+  Target Body Parts: Back,  Shoulders
+  Muscles worked:
+    1. Latissimus Dorsi
+    2. Teres Major
+    3. Posterior Deltoid
+    4. Trapezius (lower)
+    5. Rhomboids
+    6. Erector Spinae
+    7. Infraspinatus
+
+Step-Up
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Quads, Glutes, Hamstrings
+  Muscles worked:
+    1. Rectus Femoris
+    2. Gluteus Maximus
+    3. Biceps Femoris
+    4. Vastus Lateralis
+    5. Vastus Medialis
+    6. Adductor Magnus
+    7. Gastrocnemius
+
+Step-Up - Barbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+    - Weight Plates
+
+  Target Body Parts: Quads, Glutes, Hamstrings
+  Muscles worked:
+    1. Rectus Femoris
+    2. Gluteus Maximus
+    3. Biceps Femoris
+    4. Vastus Lateralis
+    5. Vastus Medialis
+    6. Adductor Magnus
+    7. Gastrocnemius
+
+Step-Up - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts: Quads, Glutes, Hamstrings
+  Muscles worked:
+    1. Rectus Femoris
+    2. Gluteus Maximus
+    3. Biceps Femoris
+    4. Vastus Lateralis
+
+Stiff Leg Deadlift - Barbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+    - Weight Plates
+
+  Target Body Parts: Hamstrings, Back, Glutes
+  Muscles worked:
+    1. Biceps Femoris
+    2. Semitendinosus
+    3. Gluteus Maximus
+    4. Erector Spinae
+    5. Semimembranosus
+    6. Adductor Magnus
+    7. Multifidus
+
+Swings - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts: Erector Spinae, Hips, Abs
+  Muscles worked:
+    1. Gluteus Maximus
+    2. Biceps Femoris
+    3. Erector Spinae
+    4. Quadratus Lumborum
+    5. Transverse Abdominis
+    6. Anterior Deltoid
+    7. Latissimus Dorsi
+
+Thruster - Barbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+    - Weight Plates
+    - Squat Rack
+
+  Target Body Parts:  Shoulders, Abs
+  Muscles worked:
+    1. Rectus Femoris
+    2. Gluteus Maximus
+    3. Anterior Deltoid
+    4. Triceps Brachii
+    5. Transverse Abdominis
+    6. Trapezius (upper)
+    7. Erector Spinae
+
+Thruster - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts:  Shoulders, Abs
+  Muscles worked:
+    1. Rectus Femoris
+    2. Gluteus Maximus
+    3. Anterior Deltoid
+    4. Triceps Brachii
+    5. Transverse Abdominis
+    6. Trapezius (upper)
+    7. Erector Spinae
+
+Toes To Bar
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Hip Flexors, Shoulders
+  Muscles worked:
+    1. Rectus Abdominis
+    2. Iliopsoas
+    3. Transverse Abdominis
+    4. Obliques
+    5. Anterior Deltoid
+    6. Serratus Anterior
+    7. Latissimus Dorsi
+
+Tricep Dip
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dip Bars
+
+  Target Body Parts: Arms,  Chest, Shoulders
+  Muscles worked:
+    1. Triceps Brachii
+    2. Pectoralis Major
+    3. Anterior Deltoid
+    4. Pectoralis Minor
+    5. Serratus Anterior
+    6. Rhomboids
+    7. Latissimus Dorsi
+
+Tricep Dip - Assisted Dip/Pull-Up Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Assisted Dip/Pull-Up Machine
+
+  Target Body Parts: Arms,  Chest, Shoulders
+  Muscles worked:
+    1. Triceps Brachii
+    2. Pectoralis Major
+    3. Anterior Deltoid
+    4. Pectoralis Minor
+    5. Serratus Anterior
+    6. Rhomboids
+    7. Latissimus Dorsi
+
+Tricep Extension - Cable Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine                   
+	- Cable Rope Attachment
+
+  Target Body Parts: Arms
+  Muscles worked:
+    1. Triceps Brachii
+    2. Anconeus
+    3. Wrist Extensors
+    4. Transverse Abdominis
+    5. Rectus Abdominis
+    6. Serratus Anterior
+    7. Latissimus Dorsi
+
+Tricep Extension - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts: Arms
+  Muscles worked:
+    1. Triceps Brachii
+    2. Anconeus
+    3. Wrist Extensors
+    4. Transverse Abdominis
+    5. Rectus Abdominis
+    6. Serratus Anterior
+    7. Latissimus Dorsi
+
+Tricep Extension - Barbel (Standing)
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+    - Weight Plates
+
+  Target Body Parts: Arms
+  Muscles worked:
+    1. Triceps Brachii
+    2. Anconeus
+    3. Wrist Extensors
+    4. Transverse Abdominis
+    5. Rectus Abdominis
+    6. Serratus Anterior
+    7. Latissimus Dorsi
+
+Tricep Extension - Barbell (Bent Over)
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+    - Weight Plates
+
+  Target Body Parts: Arms,  Back
+  Muscles worked:
+    1. Triceps Brachii
+    2. Anconeus
+    3. Posterior Deltoid
+    4. Trapezius (middle)
+    5. Rhomboids
+    6. Erector Spinae
+    7. Latissimus Dorsi
+
+Tricep Kickback - Cable Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine         
+	- Cable Handle Attachment
+
+  Target Body Parts: Arms
+  Muscles worked:
+    1. Triceps Brachii
+    2. Anconeus
+    3. Posterior Deltoid
+    4. Latissimus Dorsi
+    5. Rhomboids
+    6. Trapezius (middle)
+    7. Erector Spinae
+
+Tricep Kickback - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts: Arms
+  Muscles worked:
+    1. Triceps Brachii
+    2. Anconeus
+    3. Posterior Deltoid
+    4. Latissimus Dorsi
+    5. Rhomboids
+    6. Trapezius (middle)
+    7. Erector Spinae
+
+Tricep Pushdown - Cable Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine                                 
+	- Cable Straight Bar Attachment
+
+  Target Body Parts: Arms
+  Muscles worked:
+    1. Triceps Brachii
+    2. Anconeus
+    3. Wrist Extensors
+    4. Latissimus Dorsi
+    5. Rhomboids
+    6. Trapezius (middle)
+    7. Erector Spinae
+
+Tuck Crunch
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Abs
+  Muscles worked:
+    1. Rectus Abdominis
+    2. Transverse Abdominis
+    3. Obliques
+    4. Iliopsoas
+    5. Rectus Femoris
+    6. Quadratus Lumborum
+    7. Multifidus
+
+Tuck Crunch - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts: Abs
+  Muscles worked:
+    1. Rectus Abdominis
+    2. Transverse Abdominis
+    3. Obliques
+    4. Iliopsoas
+    5. Rectus Femoris
+    6. Quadratus Lumborum
+    7. Multifidus
+
+Turkish Get Up
+  Exercise Rating: 23%
+  Equipment needed:
+    - Kettlebell
+
+  Target Body Parts:  Shoulders, Hip Flexors
+  Muscles worked:
+    1. Transverse Abdominis
+    2. Gluteus Maximus
+    3. Anterior Deltoid
+    4. Latissimus Dorsi
+    5. Rectus Femoris
+    6. Biceps Femoris
+    7. Serratus Anterior
+
+Up-Down Twist - Cable Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine                           
+	- Cable Handle Attachment
+
+  Target Body Parts: Abs, Shoulders
+  Muscles worked:
+    1. Obliques
+    2. Rectus Abdominis
+    3. Transverse Abdominis
+    4. Serratus Anterior
+    5. Latissimus Dorsi
+    6. Multifidus
+    7. Quadratus Lumborum
+
+Upright Row - Cable Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine                                 
+	- Cable Straight Bar Attachment
+
+  Target Body Parts: Shoulders, Traps
+  Muscles worked:
+    1. Lateral Deltoid
+    2. Trapezius (upper)
+    3. Anterior Deltoid
+    4. Rhomboids
+    5. Supraspinatus
+    6. Serratus Anterior
+    7. Biceps Brachii
+
+Upright Row - Barbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+    - Weight Plates
+
+  Target Body Parts: Shoulders, Traps
+  Muscles worked:
+    1. Lateral Deltoid
+    2. Trapezius (upper)
+    3. Anterior Deltoid
+    4. Rhomboids
+    5. Supraspinatus
+    6. Serratus Anterior
+    7. Biceps Brachii
+
+Upright Row - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts: Shoulders, Traps
+  Muscles worked:
+    1. Lateral Deltoid
+    2. Trapezius (upper)
+    3. Anterior Deltoid
+    4. Rhomboids
+    5. Supraspinatus
+    6. Serratus Anterior
+    7. Biceps Brachii
+
+V Up
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Hip Flexors
+  Muscles worked:
+    1. Rectus Abdominis
+    2. Iliopsoas
+    3. Transverse Abdominis
+    4. Obliques
+    5. Rectus Femoris
+    6. Quadratus Lumborum
+    7. Multifidus
+
+V Up - Resistance Band
+  Exercise Rating: 23%
+  Equipment needed:
+    - Resistance Band
+
+  Target Body Parts: Hip Flexors
+  Muscles worked:
+    1. Rectus Abdominis
+    2. Iliopsoas
+    3. Transverse Abdominis
+    4. Obliques
+    5. Rectus Femoris
+    6. Quadratus Lumborum
+    7. Multifidus
+
+V Up - Cable Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine                         
+	- Cable Ankle Cuff Attachment
+
+  Target Body Parts: Hip Flexors
+  Muscles worked:
+    1. Rectus Abdominis
+    2. Iliopsoas
+    3. Transverse Abdominis
+    4. Obliques
+    5. Rectus Femoris
+    6. Quadratus Lumborum
+    7. Multifidus
+
+V Up - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts: Hip Flexors
+  Muscles worked:
+    1. Rectus Abdominis
+    2. Iliopsoas
+    3. Transverse Abdominis
+    4. Obliques
+    5. Rectus Femoris
+    6. Quadratus Lumborum
+    7. Multifidus
+
+Windmill Wipers
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+    
+
+  Target Body Parts: Abs, Hamstrings
+  Muscles worked:
+    1. Transverse Abdominis
+    2. Obliques
+    3. Rectus Abdominis
+    4. Biceps Femoris
+    5. Erector Spinae
+    6. Quadratus Lumborum
+    7. Multifidus
+
+Windmill Wipers (Straight Knees)
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Abs, Hamstrings
+  Muscles worked:
+    1. Transverse Abdominis
+    2. Obliques
+    3. Rectus Abdominis
+    4. Biceps Femoris
+    5. Erector Spinae
+    6. Quadratus Lumborum
+    7. Multifidus
+
+Windmill Wipers (Bent Knees)
+  Exercise Rating: 23%
+  Equipment needed:
+    - Bodyweight
+
+  Target Body Parts: Abs
+  Muscles worked:
+    1. Obliques
+    2. Transverse Abdominis
+    3. Rectus Abdominis
+    4. Multifidus
+    5. Quadratus Lumborum
+    6. Biceps Femoris
+    7. Erector Spinae
+
+Wrist Curl - Cable Machine
+  Exercise Rating: 23%
+  Equipment needed:
+    - Cable Machine                                 
+	- Cable Straight Bar Attachment
+	
+  Target Body Parts: Forearms
+  Muscles worked:
+    1. Wrist Flexors
+    2. Brachioradialis
+    3. Brachialis
+    4. Pronator Teres
+    5. Wrist Flexors
+    6. Wrist Extensors
+    
+
+Wrist Curl - Barbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+
+  Target Body Parts: Forearms
+  Muscles worked:
+    1. Wrist Flexors
+    2. Brachioradialis
+    3. Brachialis
+    4. Pronator Teres
+    5. Wrist Flexors
+    6. Wrist Extensors
+    
+
+Wrist Curl - Dumbbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts: Forearms
+  Muscles worked:
+    1. Wrist Flexors
+    2. Brachioradialis
+    3. Brachialis
+    4. Pronator Teres
+    5. Wrist Flexors
+    6. Wrist Extensors
+    
+
+Wrist Curl - Dumbbell (Reverse Grip)
+  Exercise Rating: 23%
+  Equipment needed:
+    - Dumbbell
+
+  Target Body Parts: Forearms
+  Muscles worked:
+    1. Wrist Extensors
+    2. Brachioradialis
+    3. Brachialis
+    4. Pronator Teres
+    5. Wrist Extensors
+    6. Wrist Flexors
+    
+
+Zercher Carry - Barbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+    - Weight Plates
+
+  Target Body Parts: Shoulders, Arms, Hips
+  Muscles worked:
+    1. Transverse Abdominis
+    2. Erector Spinae
+    3. Biceps Brachii
+    4. Anterior Deltoid
+    5. Gluteus Maximus
+    6. Rectus Femoris
+    7. Trapezius (upper)
+
+Zercher Squat - Barbell
+  Exercise Rating: 23%
+  Equipment needed:
+    - Barbell
+    - Weight Plates
+    - Squat Rack
+
+  Target Body Parts: Arms
+  Muscles worked:
+    1. Vastus Lateralis
+    2. Gluteus Maximus
+    3. Biceps Femoris
+    4. Transverse Abdominis
+    5. Erector Spinae
+    6. Biceps Brachii
+    7. Trapezius (upper)

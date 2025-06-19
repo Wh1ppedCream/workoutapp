@@ -1,0 +1,373 @@
+measured_items_page.dart
+
+
+1. get app upto usable state for tomorrow
+	a. Full exercise list
+	b. Full equipment list
+	c. Body Parts worked
+	d. Total Volume
+	e. Estimates for 1 to 3 rep maxes	
+2. set up interval training on app
+3. send maia resume
+
+
+weight, height, bodyfat%, lean muscle
+
+In profile tab:
+	1) Measurements button, leading to measurements screen
+		a) buttons for weight, height, bodyfat%, lean mass
+		b) bodyparts previously measured
+			i) flexed
+				.) pumped
+				..) not pumped
+			ii) unflexed
+				.) pumped
+				..) not pumped
+		c) add a measurement
+	2) User information
+	3) 
+	
+Profile screen: 
+- Measurements bar	
+	- when clicked will go to Measured Items screen (will be implemented now)
+- User information bar (to be implemented) 
+- User settings bar (to be implemented) 
+	
+Measured Items Screen:
+- has "Track a New Measurement" bar at bottom of screen
+	- after clicking bar, will go to New Measurement Item screen
+- initially empty
+- bars for each previously added Measurement Item
+	- clicking these will go to their individual Specific Measurement Screen.
+
+New Measurement Item Screen:
+- two selectable buttons, side by side, which when clicked will change items on screen
+	- 1st button is presets
+		- selecting presets will give drop down menu with options, with the following items, which when clicked will change items on screen:
+			- bodyweight
+				- will have three buttons to click (one must be selected before being able to save)
+					- WakeUp
+						- has note specifying "measurement made before any food or water consumption for day"
+					- BedTime
+						- has note specifying "measurement made before bed at night"
+					- Overall
+						- has note specifying "measurement made at a random time during day"
+				- box to insert number into, with a drop down menu with lbs or kg as options (lbs by default)
+			- height
+				- will have two selectable buttons, side by side, which when clicked will change items on screen
+					- 1st button: ft and inches
+						- clicking the 1st button gives 2 boxes to insert numbers into, first has feet beside it, 2nd has inches beside it
+					- 2nd button: cm
+						- clicking the 2nd button gives a box to insert number into, with cm beside it
+			- Body Parts
+				- if body parts is selected, it will give a second drop down menu, under the first, with the following items, which when clicked will change items on screen:
+					- Forearm. Selecting this will give: 
+						- note saying "go to widest, largest part and measure around"
+						- must select one of two selectable buttons, "without pump" (selected by default) and "with pump"
+						- box to insert number into, with cm beside it
+					- Arm. Selecting this will give: 
+						- note saing "go to widest, largest part of bicep and measure around"
+						- must select one of two selectable buttons, "without pump" (selected by default) and "with pump"
+						- box to insert number into, with cm beside it
+					- Neck. Selecting this will give: 
+						- note saying "go to area where measuring rope is straight"
+						- must select one of two selectable buttons, "without pump" (selected by default) and "with pump"
+						- box to insert number into, with cm beside it
+					- Shoulder. Selecting this will give: 
+						- note saying "keep tape straight, go to middle of side delt and measure around"
+						- must select one of two selectable buttons, "without pump" (selected by default) and "with pump"
+						- box to insert number into, with cm beside it
+					- Chest. Selecting this will give: 
+						- note saying "Raise arms, go under armpit, keep rope straight, measure just above nipple line"
+						- must select one of two selectable buttons, "without pump" (selected by default) and "with pump"
+						- box to insert number into, with cm beside it
+					- Waist. Selecting this will give: 
+						- note saying "around belly button"
+						- must select one of two selectable buttons, "without pump" (selected by default) and "with pump"
+						- box to insert number into, with cm beside it
+					- Hip. Selecting this will give: 
+						- note saying "go around biggest part of glute"
+						- must select one of two selectable buttons, "without pump" (selected by default) and "with pump"
+						- box to insert number into, with cm beside it
+					- Thigh. Selecting this will give: 
+						- note saying "go around widest part of thigh"
+						- must select one of two selectable buttons, "without pump" (selected by default) and "with pump"
+						- box to insert number into, with cm beside it
+					- Calf. Selecting this will give: 
+						- note saying "go around widest part of calf"
+						- must select one of two selectable buttons, "without pump" (selected by default) and "with pump"
+						- box to insert number into, with cm beside it
+	- 2nd button is 'custom measurements' and will be implemented later.
+- bottom of screen has "save new measurement" bar which can only be selected when full process above, has been completed
+		
+ok, now the UI appears to look right, lets move onto the actual functionality of the page. for now, lets fix up everything except the Add New Record bar, we'll do that later. I've typed out how everything else on this page should function right here: 
+
+
+Specific measurement screen (general layout):
+Overall layout should be: 
+	- (top of screen) 
+		Name of measurement (top of screen); 
+	- (under name of measurements) 
+		4 buttons for 'All Records', 'Weekly', 'Monthly', 'Yearly'; 
+	- (under 4 buttons mentioned above)
+		If measurement item is Bodyweight: 3 buttons for 'WakeUp', 'BedTime' and 'Overall' 
+		else if measurement item is Hieght: 2 buttons for 'ft/in' and 'cm'
+		else measurement item is a Body Part: 3 buttons for 'overall', 'with pump' and 'without pump' 
+	- (under buttons mentioned above)
+		Graph of measurements
+	- (under graph of measurements)
+		history of recorded measurements
+	- (bar at bottom of screen)
+		Add New Record
+
+Specific measurement screen (functionality):
+	- Name of measurement
+	- 4 buttons for 'All Records', 'Weekly', 'Monthly', 'Yearly'; 
+		- all these buttons should be equally sized and centered, only one can be selected, selecting the button will change which records will be shown in the history of recorded measurements and only these records will be used for the graph of measurements
+		- 'All Records' button
+			- Selected by default
+			- shows all recorded measurements in history
+			- Graph of measurements is made using all recorded measurements			
+		- 'Weekly' button
+			- shows only recorded measurements made within the last 7 days
+			- Graph of measurements is made using only measurements within the last 7 days
+		- 'Monthly' button
+			- shows only recorded measurements made within the last month
+			- Graph of measurements is made using only measurements within the last month
+		- 'Yearly' button
+			- shows only recorded measurements made within the last year
+			- Graph of measurements is made using only measurements within the last year
+	- next 3 (or 2 for Height) buttons 
+		- Hieght: 2 buttons for 'ft/in' and 'cm'; Bodyweight: 3 buttons for 'WakeUp', 'BedTime' and 'Overall' ; Body Part: 3 buttons for 'overall', 'with pump' and 'without pump' 
+		- (only for height) selecting 'ft/in' will convert all the records to feet and inches for the graph and history for only this page. Selecting cm will do the same, but converting to cm instead.
+		- For Bodyweight and all body parts:
+			- all three buttons should be equally sized and centered, only one can be selected, selecting the button will change which records will be shown in the history of recorded measurements and only these records will be used for the graph of measurements
+			- the 'Overall' button will show all measurements recorded under either of the two other buttons in history of recorded measurements and Graph of measurements will use all these measurements
+			- each of the other two buttons ('WakeUp' and 'BedTime' for Bodyweight; 'with pump' and 'without pump' for any Body Part) will filter the recorded measurements, showing only the measurements with the specific filter in history of recorded measurements and only these records will be used for the graph of measurements
+	- Graph of measurements
+		- x-axis will be time period and y-axis will be measured item
+		- each point on the graph is made from one entry, and all the points on the graph are connected by straight lines
+		- points on the graph should be bold and tapping one of them should show the measurement and the date when the measurement was made.
+		- records used for making and plotting the graph will be based off of: 
+			1) time period based off selected button from first row of selected buttons
+				- 'All Records' button selected:
+					- uses all records for plotting on graph
+					- x-axis is empty
+				- 'Weekly' button selected:
+					- only records made within 7 days of the last entered record are used for the graph (eg: if today is 20th may, last record was on 17th may, only records between 11-17th of may are used for plotting on the graph)
+					- x-axis will have 7 ticks, for each day of the week (ticks will contain S M T W Th F S, order of ticks depends on day of last record)
+					- Starts with 7 days before last recording, ends at the day of the last recording 
+						- if today is saturday and last recorded date was tuesday, entries used for graph should start from last wednesday, ending at the entry at tuesday. ticks on x-axis should be starting from wednesday, ending with tuesday
+				- 'Monthly' button selected:
+					- only records made within the span of the current month are used
+					- x-axis will have 5 ticks, for each 5 days of the current month (ticks will contain 5 10 15 20 25)
+				- 'Yearly' button selected:
+					- only records made within the span of the current year are used
+					- x-axis will have 12 ticks, for each month of the current year (ticks will contain J F M A M J J A S O N D)
+			2) filter based off selected button from second row of selected buttons (unless if measured item is height, in which case records are only based off time period)
+				- 'Overall' button selected:
+					- all records within the selected time period are used for plotting and designing the graph
+				- other button selected ('WakeUp' and 'BedTime' for Bodyweight; 'with pump' and 'without pump' for any Body Part)
+					- only records within the selected time period, which were recorded with the selected button filter (eg: Bodyweight was recorded with 'WakeUp' selected) are used for plotting and making the graph
+	- History of recorded measurements
+		- Previously recorded measurements shown in this section will be based off of: 
+			1) time period based off selected button from first row of selected buttons
+				- 'All Records' button selected:
+					- shows all records
+				- 'Weekly' button selected:
+					- only records made within 7 days of the last entered record are shown (eg: if today is 20th may, last record was on 17th may, only records between 11-17th of may are shown here)
+				- 'Monthly' button selected:
+					- only records made within the span of the current month are shown
+				- 'Yearly' button selected:
+					- only records made within the span of the current year are shown
+			2) filter based off selected button from second row of selected buttons (unless if measured item is height, in which case records are only based off time period)
+				- 'Overall' button selected:
+					- all records within the selected time period are shown
+				- other button selected ('WakeUp' and 'BedTime' for Bodyweight; 'with pump' and 'without pump' for any Body Part)
+					- only records within the selected time period, which were recorded with the selected button filter (eg: Bodyweight was recorded with 'WakeUp' selected) are shown
+	- Add New Record bar
+		- opens pop up box to add a new recording for this type of measurement
+
+Specific Measurement screen: 
+- should have name of measurement as name of screen ontop
+- should have 4 buttons side by side, under name of measurement, of equal size, centered, only one of which can be selected. selecting one will change the contents of the screen
+	- 1st button should be 'All Records' and should be selected by default
+		- while this is selected, below is a
+	- 2nd button should be 'Weekly'
+	- 3rd button should be 'Monthly'
+	- 4th button should be 'Yearly'
+- should be floating "add measurement" button at bottom of screen
+		
+- should have (one or more) fields to enter a new measurement
+	- (for all) text note box for mentioning special circumstances
+	- (height) cm
+	- (weight) lbs
+	- (bodyparts) cm
+- should have a button linking to past measurements
+	- past measurements should have 
+		- date measured
+		- measurement
+		- note (if was given when measurement made)
+- should have a graph at bottom of page where x-axis is time and y-axis is measured item
+	- points on graph should be the individual measurement (y-axis) and date the measurement was taken (x-axis) for the time period of the graph
+	- straight lines should connect each point on graph, starting at first measurement point on graph, ending at last measurement point on graph
+	- swipe from right to left to show graphs with different x-axis time measurements
+		- 1st graph should show day as x-axis, with 7 different days, making the full week
+		- 2nd graph should show week as x-axis, with 4 different weeks, making the full month
+		- 3rd graph should show month as x-axis, with 12 different months, making the whole year
+	
+
+measurement info:
+1) Forearm
+	a) go to widest, largest part and measure around
+2) Arm (bicep)
+	a) go to widest, largest part and measure around
+3) Neck
+	a) go to area where measuring rope is straight
+4) Shoulder
+	a) keep tape straight, go to middle of side delt and measure around
+5) Chest
+	a) Raise arms, go under armpit, keep rope straight, measure just above nipple line
+6) Waist
+	a) around belly button
+7) Hip
+	a) go around biggest part of glute
+8) Thigh
+	b) go around widest part of thigh
+9) Calf
+	a) go around widest part of calf
+10) 
+
+
+
+
+
+
+
+
+
+Purpose:Lists all measurement definitions that have recorded data and provides navigation to view specific measurement history or add a new measurement.
+
+Key flow & components:
+
+Data loading (initState):
+
+Calls _loadUsedDefs() to fetch definitions with existing measurements via getUsedMeasurementDefinitions, mapping raw rows to MeasurementDefinition objects.
+
+FutureBuilder UI:
+
+Shows loading spinner until definitions are loaded.
+
+Displays a ListView of ListTiles for each definition, tapping navigates to SpecificMeasurementPage.
+
+Track new measurement:
+
+Appends a special ListTile with distinct styling (‘Track a New Measurement’) that navigates to NewMeasurementItemPage regardless of existing definitions.
+
+Observations & suggestions:
+
+Typed DAO method:
+
+Introduce LookupDao.getUsedMeasurementDefinitions() returning domain objects directly to replace raw mapping in UI.
+
+Empty state:
+
+If no definitions exist, display a friendly message or prompt to create a new measurement before showing only the ‘Track a New Measurement’ option.
+
+Separation of concerns:
+
+Move navigation logic into a controller or ViewModel to keep UI code lean.
+
+Accessibility & theming:
+
+Ensure the ‘Track a New Measurement’ tile’s high-contrast colors meet accessibility guidelines; provide semantic labels.
+
+Testing:
+
+Write widget tests to verify list displays correct definitions and navigation triggers for both existing items and the new measurement tile.
+
+Caching definitions:
+
+Cache used definitions in memory or via provider to avoid re-fetching when returning from sub-pages.
+
+
+//measured_items_page.dart
+
+import 'package:flutter/material.dart';
+import '../db/database_helper.dart';
+import '../models/models.dart';
+import 'new_measurement_item_page.dart';
+import 'specific_measurement_page.dart';
+
+class MeasuredItemsPage extends StatefulWidget {
+  const MeasuredItemsPage({Key? key}) : super(key: key);
+  @override _MeasuredItemsPageState createState() => _MeasuredItemsPageState();
+}
+
+class _MeasuredItemsPageState extends State<MeasuredItemsPage> {
+  late Future<List<MeasurementDefinition>> _defsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _defsFuture = _loadUsedDefs();
+  }
+
+  Future<List<MeasurementDefinition>> _loadUsedDefs() async {
+    final rows = await DatabaseHelper().getUsedMeasurementDefinitions();
+    return rows.map((r) => MeasurementDefinition(
+      id: r['id'] as int,
+      name: r['name'] as String,
+      type: MeasurementType.values.firstWhere(
+        (mt) => mt.name == (r['type'] as String),
+        orElse: () => MeasurementType.BodyWeight,
+         ),
+    )).toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Measured Items')),
+      body: FutureBuilder<List<MeasurementDefinition>>(
+  future: _defsFuture,
+  builder: (ctx, snap) {
+    if (snap.connectionState != ConnectionState.done) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    // Safely unwrap data or default to empty list
+    final defs = snap.data ?? [];
+
+    // Otherwise, show the list plus the "Track a New Measurement" tile
+    return ListView(
+      children: [
+        for (var def in defs)
+          ListTile(
+            title: Text(def.name),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => SpecificMeasurementPage(definition: def),
+              ),
+            ),
+          ),
+
+        // Spacer for visual separation if defs exist
+            if (defs.isNotEmpty) const Divider(),
+
+        const SizedBox(height: 20),
+        ListTile(
+          tileColor: Colors.deepPurple,
+              textColor: Colors.white,
+              title: const Text('Track a New Measurement'),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const NewMeasurementItemPage()),
+              ),
+        ),
+      ],
+    );
+  },
+),
+
+    );
+  }
+}

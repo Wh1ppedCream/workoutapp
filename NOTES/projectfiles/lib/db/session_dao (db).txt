@@ -1,0 +1,66 @@
+session_dao.dart
+
+Purpose:Provides CRUD operations for the sessions table, abstracting direct SQL interactions into convenient methods.
+
+Key methods:
+
+insertSession(Database db, String date, int duration):Inserts a new session record and returns the generated id.
+
+getAllSessionsRaw(Database db):Retrieves all session rows as List<Map<String, dynamic>>, ordered by date DESC.
+
+deleteSession(Database db, int sessionId):Deletes a session by id; cascades configured in schema will remove related exercises and sets.
+
+Observations & suggestions:
+
+Date typing: Consider accepting DateTime instead of raw String for date, converting to ISO-8601 inside the DAO to ensure consistency and reduce caller burden.
+
+Typed models: Return domain objects (WorkoutSession) instead of raw maps, to encapsulate parsing and improve type safety.
+
+Pagination: Add optional parameters for limit/offset if the number of sessions grows large.
+
+Error handling: Wrap operations in try/catch to surface DB errors meaningfully.
+
+Batch deletes: If you need to clear stale sessions, consider a deleteOlderThan(DateTime cutoff) helper.
+
+
+
+// File: lib/db/session_dao.dart
+
+import 'package:sqflite/sqflite.dart';
+
+/// Encapsulates session CRUD operations.
+class SessionDao {
+  /// Inserts a new session row and returns its id.
+  static Future<int> insertSession(
+    Database db,
+    String date,
+    int duration,
+  ) {
+    return db.insert('sessions', {
+      'date': date,
+      'duration': duration,
+    });
+  }
+
+  /// Fetches all sessions as raw maps, ordered by date descending.
+  static Future<List<Map<String, dynamic>>> getAllSessionsRaw(
+    Database db,
+  ) {
+    return db.query(
+      'sessions',
+      orderBy: 'date DESC',
+    );
+  }
+
+  /// Deletes the session with the given id (cascades to exercises/sets).
+  static Future<void> deleteSession(
+    Database db,
+    int sessionId,
+  ) {
+    return db.delete(
+      'sessions',
+      where: 'id = ?',
+      whereArgs: [sessionId],
+    );
+  }
+}

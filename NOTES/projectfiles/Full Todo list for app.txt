@@ -1,0 +1,56 @@
+1. Specific Measurement Screen
+“Add New Record” button
+– Wire it up so it opens the NewMeasurementItemPage, passing in the current definition (so you can pre-select that measurement type).
+
+Dot-tap callbacks on the chart
+– When the user taps a data point, show a tooltip (e.g. via LineTouchData) with the exact value and date.
+
+Fine-tune the chart styling
+– E.g. a thin bottom border line, discrete grid lines if desired.
+
+2. New Measurement Item Screen
+Pre-selecting the definition
+– If you came here from “Add New Record,” select the appropriate preset type (Bodyweight, Height, or a specific body part) by default.
+
+Validation/UI polish
+– Make sure the unit dropdown for Bodyweight (“lbs”/“kg”) actually updates the saved unit if you later support “kg.”
+
+Edge-case handling
+– If the user backs out mid-flow, ensure controllers are reset correctly next time.
+
+3. Measured Items Page
+Show only definitions with at least one measurement
+– On a fresh install, only display the “Track a New Measurement” option; hide any definitions until they’ve got data.
+
+List item enhancements
+– For each definition, show its most recent value + date in the tile.
+
+Tapping a definition
+– Navigate to the specific measurement screen for that definition.
+
+4. Data Seeding & Migrations
+Complete seeding of “Bodyweight” and “Height” in measurement_definitions
+– Ensure you insert those two definitions on both onCreate and onUpgrade.
+
+Future migrations
+– Add placeholder if (oldVersion < 3) { … } blocks to your onUpgrade so you can slot in v3 changes later.
+
+5. History Screen & Session Detail
+Fix the trash-icon bug
+– Delete in‐history sessions properly (we skipped that to move on).
+
+SessionDetail “Save Changes”
+– We have the button wired, but confirm it correctly reloads the history list when you go back.
+
+Add “Undo” (optional)
+– A small Snackbar “Undo” when you delete a set or exercise in‐session.
+
+6. Bottom Navigation Bar & Overall App Shell
+Hook up the “Train” and “History” tabs
+– Make sure those pages really swap in and out.
+
+Nutrition/Profile placeholders
+– At least stub out the screens so the nav bar doesn’t crash.
+
+Persist navigation state
+– Retain the selected tab when you hot-reload or re-launch.

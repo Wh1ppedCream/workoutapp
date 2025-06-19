@@ -1,0 +1,16 @@
+Vices:
+	1. Sugar
+	2. Instagram Reels
+	3. Yearning
+	4. Random Cleaning
+	5. product searching
+	6. 
+	
+	
+
+Lookup & Seeding
+Future<void> refreshLookupData()
+Reseed your equipment/bodyparts/muscles/exercises JSON—in case you want to pull new data without shipping a full app update.
+
+Future<bool> hasLookupData()
+A quick check to skip seeding if already done.
