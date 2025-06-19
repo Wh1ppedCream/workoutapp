@@ -1,0 +1,5067 @@
+[
+  { "name": "None" },
+  { "name": "Ab Roller"},
+  { "name": "Adjustable Bench" },
+  { "name": "Assisted Dip/Pull-Up Machine" },
+  { "name": "Barbell" },
+  { "name": "Bodyweight" },
+  { "name": "Cable Ankle Cuff Attachment" },
+  { "name": "Cable Handle Attachment" },
+  { "name": "Cable Rope Attachment" },
+  { "name": "Cable Straight Bar Attachment" },
+  { "name": "Cable Machine" },
+  { "name": "Chest Press Machine" },
+  { "name": "Dip Bars" },
+  { "name": "Dumbbell" },
+  { "name": "Glute-Ham Developer (GHD) Machine" },
+  { "name": "Hack Squat Machine" },
+  { "name": "Harness" },
+  { "name": "Hip Thrust Machine" },
+  { "name": "HyperExtension Bench/Machine" },
+  { "name": "Incline Leg Press Machine" },
+  { "name": "Kettlebell" },
+  { "name": "Landmine Attachment" },
+  { "name": "Lat Pulldown Machine" },
+  { "name": "Leg Curl Machine (lying)" },
+  { "name": "Leg Curl Machine (seated)" },
+  { "name": "Leg Extension Machine" },
+  { "name": "Leg Press Machine" },
+  { "name": "Machine" },
+  {"name": "Medicine Ball"},
+  { "name": "Pec Deck Machine" },
+  { "name": "Power Rack"},
+  { "name": "Preacher Bench" },
+  { "name": "Resistance Band" },
+  { "name": "Seated Calf Raise Machine" },
+  { "name": "Sled" },
+  { "name": "Squat Rack" },
+  { "name": "Smith Machine" }
+  { "name": "Standing Calf Raise Machine" },
+  { "name": "Weight Plates" },
+]
+
+
+[
+    {
+    "name": "Ab Wheel",
+    "rating": 90,
+    "equipment": ["Ab Roller"],
+    "bodyparts": ["Core"],
+    "muscles": [
+      {"name":"Rectus Abdominis","rank":1},
+      {"name":"Transverse Abdominis","rank":2},
+      {"name":"Obliques","rank":3},
+      {"name":"Serratus Anterior","rank":4},
+      {"name":"Erector Spinae","rank":5},
+      {"name":"Latissimus Dorsi","rank":6},
+      {"name":"Triceps Brachii","rank":7}
+    ]
+  },
+  {
+    "name": "Arm Circles",
+    "rating": 30,
+    "equipment": ["Bodyweight"],
+    "bodyparts": ["Shoulders"],
+    "muscles": [
+      {"name":"Anterior Deltoid","rank":1},
+      {"name":"Lateral Deltoid","rank":2},
+      {"name":"Posterior Deltoid","rank":3},
+      {"name":"Supraspinatus","rank":4},
+      {"name":"Teres Minor","rank":5},
+      {"name":"Trapezius","rank":6},
+      {"name":"Brachialis","rank":7}
+    ]
+  },
+  {
+    "name": "Arnold Press",
+    "rating": 60,
+    "equipment": ["Dumbbell"],
+    "bodyparts": ["Shoulders", "Arms"],
+    "muscles": [
+      {"name":"Anterior Deltoid","rank":1},
+      {"name":"Lateral Deltoid","rank":2},
+      {"name":"Triceps Brachii","rank":3},
+      {"name":"Serratus Anterior","rank":4},
+      {"name":"Trapezius","rank":5},
+      {"name":"Supraspinatus","rank":6},
+      {"name":"Infraspinatus","rank":7}
+    ]
+  },
+  {
+    "name": "Back Extension",
+    "rating": 75,
+    "equipment": ["Hyperextension Bench/Machine"],
+    "bodyparts": ["Back", "Glutes", "Hamstrings"],
+    "muscles": [
+      {"name":"Erector Spinae","rank":1},
+      {"name":"Gluteus Maximus","rank":2},
+      {"name":"Biceps Femoris","rank":3},
+      {"name":"Semimembranosus","rank":4},
+      {"name":"Quadratus Lumborum","rank":5},
+      {"name":"Multifidus","rank":6},
+      {"name":"Latissimus Dorsi","rank":7}
+    ]
+  },
+  {
+  "name": "Ball Slam",
+  "rating": 40,
+  "equipment": ["Medicine Ball"],
+  "bodyparts": ["Core", "Shoulders"],
+  "muscles": [
+    {"name": "Rectus Abdominis", "rank": 1},
+    {"name": "Transverse Abdominis", "rank": 2},
+    {"name": "Obliques", "rank": 3},
+    {"name": "Gluteus Maximus", "rank": 4},
+    {"name": "Latissimus Dorsi", "rank": 5},
+    {"name": "Anterior Deltoid", "rank": 6},
+    {"name": "Erector Spinae", "rank": 7}
+  ]
+},
+  {
+    "name": "Barbell Squat",
+    "rating": 90,
+    "equipment": ["Barbell", "Weight Plates"],
+    "bodyparts": ["Quads", "Glutes"],
+    "muscles": [
+      {"name":"Vastus Lateralis","rank":1},
+      {"name":"Vastus Medialis","rank":2},
+      {"name":"Rectus Femoris","rank":3},
+      {"name":"Gluteus Maximus","rank":4},
+      {"name":"Adductor Magnus","rank":5},
+      {"name":"Erector Spinae","rank":6},
+      {"name":"Transverse Abdominis","rank":7}
+    ]
+  },
+  {
+  "name": "Bench Press - Barbell",
+  "rating": 90,
+  "equipment": ["Barbell", "Weight plates", "Adjustable Bench"],
+  "bodyparts": ["Chest", "Shoulders", "Arms"],
+  "muscles": [
+    {"name": "Pectoralis Major", "rank": 1},
+    {"name": "Anterior Deltoid", "rank": 2},
+    {"name": "Triceps Brachii", "rank": 3},
+    {"name": "Serratus Anterior", "rank": 4},
+    {"name": "Pectoralis Minor", "rank": 5},
+    {"name": "Trapezius (upper)", "rank": 6},
+    {"name": "Latissimus Dorsi", "rank": 7}
+  ]
+},
+{
+  "name": "Bench Press - Barbell (Close Grip)",
+  "rating": 85,
+  "equipment": ["Barbell", "Weight plates", "Adjustable bench"],
+  "bodyparts": ["Arms", "Chest", "Shoulder"],
+  "muscles": [
+    {"name": "Triceps Brachii", "rank": 1},
+    {"name": "Pectoralis Major", "rank": 2},
+    {"name": "Anterior Deltoid", "rank": 3},
+    {"name": "Pectoralis Minor", "rank": 4},
+    {"name": "Serratus Anterior", "rank": 5},
+    {"name": "Trapezius (upper)", "rank": 6},
+    {"name": "Latissimus Dorsi", "rank": 7}
+  ]
+},
+
+{
+  "name": "Bench Press - Dumbbells",
+  "rating": 80,
+  "equipment": ["Dumbbells", "Adjustable Bench"],
+  "bodyparts": ["Chest", "Shoulder", "Arms"],
+  "muscles": [
+    {"name": "Pectoralis Major", "rank": 1},
+    {"name": "Anterior Deltoid", "rank": 2},
+    {"name": "Triceps Brachii", "rank": 3},
+    {"name": "Serratus Anterior", "rank": 4},
+    {"name": "Pectoralis Minor", "rank": 5},
+    {"name": "Lateral Deltoid", "rank": 6},
+    {"name": "Trapezius (upper)", "rank": 7}
+  ]
+},
+{
+  "name": "Bench Press - Smith Machine",
+  "rating": 90,
+  "equipment": ["Smith machine", "Adjustable bench"],
+  "bodyparts": ["Chest", "Shoulder", "Arms"],
+  "muscles": [
+    {"name": "Pectoralis Major", "rank": 1},
+    {"name": "Anterior Deltoid", "rank": 2},
+    {"name": "Triceps Brachii", "rank": 3},
+    {"name": "Serratus Anterior", "rank": 4},
+    {"name": "Pectoralis Minor", "rank": 5},
+    {"name": "Trapezius (upper)", "rank": 6},
+    {"name": "Latissimus Dorsi", "rank": 7}
+  ]
+},
+{
+  "name": "Bench Press - Cable Machine",
+  "rating": 75,
+  "equipment": ["Cable machine", "Adjustable bench", "Cable Handle Attachment"],
+  "bodyparts": ["Chest", "Shoulder", "Arms"],
+  "muscles": [
+    {"name": "Pectoralis Major", "rank": 1},
+    {"name": "Anterior Deltoid", "rank": 2},
+    {"name": "Triceps Brachii", "rank": 3},
+    {"name": "Serratus Anterior", "rank": 4},
+    {"name": "Pectoralis Minor", "rank": 5},
+    {"name": "Trapezius (upper)", "rank": 6},
+    {"name": "Latissimus Dorsi", "rank": 7}
+  ]
+},
+{
+  "name": "Bicep Curl - Barbell",
+  "rating": 75,
+  "equipment": ["Barbell"],
+  "bodyparts": ["Arms", "Forearms"],
+  "muscles": [
+    {"name": "Biceps Brachii", "rank": 1},
+    {"name": "Brachialis", "rank": 2},
+    {"name": "Brachioradialis", "rank": 3},
+    {"name": "Pronator Teres", "rank": 4},
+    {"name": "Wrist Flexors", "rank": 5},
+    {"name": "Anterior Deltoid", "rank": 6},
+    {"name": "Trapezius (upper)", "rank": 7}
+  ]
+},
+
+{
+  "name": "Bicep Curl - Bodyweight",
+  "rating": 60,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Arms", "Forearms"],
+  "muscles": [
+    {"name": "Biceps Brachii", "rank": 1},
+    {"name": "Brachialis", "rank": 2},
+    {"name": "Brachioradialis", "rank": 3},
+    {"name": "Pronator Teres", "rank": 4},
+    {"name": "Wrist Flexors", "rank": 5},
+    {"name": "Anterior Deltoid", "rank": 6},
+    {"name": "Trapezius (upper)", "rank": 7}
+  ]
+},
+
+{
+  "name": "Bicep Curl - Cable Machine",
+  "rating": 90,
+  "equipment": ["Barbell"],
+  "bodyparts": ["Arms", "Forearms"],
+  "muscles": [
+    {"name": "Biceps Brachii", "rank": 1},
+    {"name": "Brachialis", "rank": 2},
+    {"name": "Brachioradialis", "rank": 3},
+    {"name": "Pronator Teres", "rank": 4},
+    {"name": "Wrist Flexors", "rank": 5},
+    {"name": "Anterior Deltoid", "rank": 6},
+    {"name": "Trapezius (upper)", "rank": 7}
+  ]
+},
+
+{
+  "name": "Bicep Curl - Dumbbell",
+  "rating": 85,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Arms", "Forearms"],
+  "muscles": [
+    {"name": "Biceps Brachii", "rank": 1},
+    {"name": "Brachialis", "rank": 2},
+    {"name": "Brachioradialis", "rank": 3},
+    {"name": "Pronator Teres", "rank": 4},
+    {"name": "Wrist Flexors", "rank": 5},
+    {"name": "Anterior Deltoid", "rank": 6},
+    {"name": "Trapezius (upper)", "rank": 7}
+  ]
+},
+
+{
+  "name": "Bicep Curl - Resistance Band",
+  "rating": 60,
+  "equipment": ["Barbell"],
+  "bodyparts": ["Arms", "Forearms"],
+  "muscles": [
+    {"name": "Biceps Brachii", "rank": 1},
+    {"name": "Brachialis", "rank": 2},
+    {"name": "Brachioradialis", "rank": 3},
+    {"name": "Pronator Teres", "rank": 4},
+    {"name": "Wrist Flexors", "rank": 5},
+    {"name": "Anterior Deltoid", "rank": 6},
+    {"name": "Trapezius (upper)", "rank": 7}
+  ]
+},
+
+{
+  "name": "Bicep Curl - Smith Machine",
+  "rating": 80,
+  "equipment": ["Barbell"],
+  "bodyparts": ["Arms", "Forearms"],
+  "muscles": [
+    {"name": "Biceps Brachii", "rank": 1},
+    {"name": "Brachialis", "rank": 2},
+    {"name": "Brachioradialis", "rank": 3},
+    {"name": "Pronator Teres", "rank": 4},
+    {"name": "Wrist Flexors", "rank": 5},
+    {"name": "Anterior Deltoid", "rank": 6},
+    {"name": "Trapezius (upper)", "rank": 7}
+  ]
+},
+
+{
+  "name": "Bicycle Crunch - Straight Knees",
+  "rating": 65,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Abs", "Hip Flexors"],
+  "muscles": [
+    {"name": "Obliques", "rank": 1},
+    {"name": "Rectus Abdominis", "rank": 2},
+    {"name": "Transverse Abdominis", "rank": 3},
+    {"name": "Iliopsoas", "rank": 4},
+    {"name": "Rectus Femoris", "rank": 5},
+    {"name": "Quadratus Lumborum", "rank": 6},
+    {"name": "Multifidus", "rank": 7}
+  ]},
+
+  {
+  "name": "Bicycle Crunch - Bent Knees",
+  "rating": 50,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Abs", "Hip Flexors"],
+  "muscles": [
+    {"name": "Obliques", "rank": 1},
+    {"name": "Rectus Abdominis", "rank": 2},
+    {"name": "Transverse Abdominis", "rank": 3},
+    {"name": "Iliopsoas", "rank": 4},
+    {"name": "Rectus Femoris", "rank": 5},
+    {"name": "Quadratus Lumborum", "rank": 6},
+    {"name": "Multifidus", "rank": 7}
+  ]
+},
+{
+  "name": "Bulgarian Split Squat",
+  "rating": 65,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Quads", "Glutes", "Hip Abductors"],
+  "muscles": [
+    {"name": "Rectus Femoris", "rank": 1},
+    {"name": "Gluteus Maximus", "rank": 2},
+    {"name": "Gluteus Medius", "rank": 3},
+    {"name": "Biceps Femoris", "rank": 4},
+    {"name": "Adductor Magnus", "rank": 5},
+    {"name": "Erector Spinae", "rank": 6},
+    {"name": "Gastrocnemius", "rank": 7}
+  ]
+},
+{
+  "name": "Bulgarian Split Squat - Barbell",
+  "rating": 23,
+  "equipment": ["Barbell", "Weight Plates", "Squat Rack"],
+  "bodyparts": ["Quads", "Glutes"],
+  "muscles": [
+    { "name": "Rectus Femoris", "rank": 1 },
+    { "name": "Gluteus Maximus", "rank": 2 },
+    { "name": "Gluteus Medius", "rank": 3 },
+    { "name": "Biceps Femoris", "rank": 4 },
+    { "name": "Adductor Magnus", "rank": 5 },
+    { "name": "Gastrocnemius", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+{
+  "name": "Burpee",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Core"],
+  "muscles": [
+    { "name": "Rectus Femoris", "rank": 1 },
+    { "name": "Pectoralis Major", "rank": 2 },
+    { "name": "Anterior Deltoid", "rank": 3 },
+    { "name": "Triceps Brachii", "rank": 4 },
+    { "name": "Rectus Abdominis", "rank": 5 },
+    { "name": "Gluteus Maximus", "rank": 6 },
+    { "name": "Gastrocnemius", "rank": 7 }
+  ]
+},
+
+
+
+
+{
+  "name": "Calf Press",
+  "rating": 23,
+  "equipment": ["Leg Press Machine", "Weight Plates"],
+  "bodyparts": ["Calves"],
+  "muscles": [
+    { "name": "Gastrocnemius", "rank": 1 },
+    { "name": "Soleus", "rank": 2 },
+    { "name": "Tibialis Anterior", "rank": 3 },
+    { "name": "Rectus Femoris", "rank": 4 },
+    { "name": "Vastus Lateralis", "rank": 5 },
+    { "name": "Vastus Medialis", "rank": 6 },
+    { "name": "Gluteus Maximus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Calf Raise - Seated Calf Raise Machine",
+  "rating": 23,
+  "equipment": ["Seated Calf Raise Machine", "Weight Plates"],
+  "bodyparts": ["Calves"],
+  "muscles": [
+    { "name": "Soleus", "rank": 1 },
+    { "name": "Gastrocnemius", "rank": 2 },
+    { "name": "Tibialis Anterior", "rank": 3 },
+    { "name": "Rectus Femoris", "rank": 4 },
+    { "name": "Vastus Lateralis", "rank": 5 },
+    { "name": "Vastus Medialis", "rank": 6 },
+    { "name": "Gluteus Maximus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Calf Raise - Standing Calf Raise Machine",
+  "rating": 23,
+  "equipment": ["Standing Calf Raise Machine", "Weight Plates"],
+  "bodyparts": ["Calves"],
+  "muscles": [
+    { "name": "Gastrocnemius", "rank": 1 },
+    { "name": "Soleus", "rank": 2 },
+    { "name": "Tibialis Anterior", "rank": 3 },
+    { "name": "Rectus Femoris", "rank": 4 },
+    { "name": "Vastus Lateralis", "rank": 5 },
+    { "name": "Vastus Medialis", "rank": 6 },
+    { "name": "Gluteus Maximus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Calf Raise - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Calves"],
+  "muscles": [
+    { "name": "Gastrocnemius", "rank": 1 },
+    { "name": "Soleus", "rank": 2 },
+    { "name": "Tibialis Anterior", "rank": 3 },
+    { "name": "Rectus Femoris", "rank": 4 },
+    { "name": "Vastus Lateralis", "rank": 5 },
+    { "name": "Vastus Medialis", "rank": 6 },
+    { "name": "Gluteus Maximus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Chest Dip",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Chest", "Arms", "Shoulders"],
+  "muscles": [
+    { "name": "Pectoralis Major", "rank": 1 },
+    { "name": "Triceps Brachii", "rank": 2 },
+    { "name": "Anterior Deltoid", "rank": 3 },
+    { "name": "Pectoralis Minor", "rank": 4 },
+    { "name": "Serratus Anterior", "rank": 5 },
+    { "name": "Rhomboids", "rank": 6 },
+    { "name": "Latissimus Dorsi", "rank": 7 }
+  ]
+},
+{
+  "name": "Chest Dip - Dip Bars",
+  "rating": 23,
+  "equipment": ["Dip Bars"],
+  "bodyparts": ["Chest", "Arms", "Shoulders"],
+  "muscles": [
+    { "name": "Pectoralis Major", "rank": 1 },
+    { "name": "Triceps Brachii", "rank": 2 },
+    { "name": "Anterior Deltoid", "rank": 3 },
+    { "name": "Pectoralis Minor", "rank": 4 },
+    { "name": "Serratus Anterior", "rank": 5 },
+    { "name": "Rhomboids", "rank": 6 },
+    { "name": "Latissimus Dorsi", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Chest Dip - Assisted Dip/Pull-Up Machine",
+  "rating": 23,
+  "equipment": ["Assisted Dip/Pull-Up Machine"],
+  "bodyparts": ["Chest", "Arms", "Shoulders"],
+  "muscles": [
+    { "name": "Pectoralis Major", "rank": 1 },
+    { "name": "Triceps Brachii", "rank": 2 },
+    { "name": "Anterior Deltoid", "rank": 3 },
+    { "name": "Pectoralis Minor", "rank": 4 },
+    { "name": "Serratus Anterior", "rank": 5 },
+    { "name": "Rhomboids", "rank": 6 },
+    { "name": "Latissimus Dorsi", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Chest Fly - Cable Machine",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Handle Attachment", "Adjustable Bench"],
+  "bodyparts": ["Chest", "Shoulders"],
+  "muscles": [
+    { "name": "Pectoralis Major", "rank": 1 },
+    { "name": "Pectoralis Minor", "rank": 2 },
+    { "name": "Anterior Deltoid", "rank": 3 },
+    { "name": "Serratus Anterior", "rank": 4 },
+    { "name": "Triceps Brachii", "rank": 5 },
+    { "name": "Latissimus Dorsi", "rank": 6 },
+    { "name": "Rhomboids", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Chest Fly - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell", "Adjustable Bench"],
+  "bodyparts": ["Chest", "Shoulders"],
+  "muscles": [
+    { "name": "Pectoralis Major", "rank": 1 },
+    { "name": "Pectoralis Minor", "rank": 2 },
+    { "name": "Anterior Deltoid", "rank": 3 },
+    { "name": "Serratus Anterior", "rank": 4 },
+    { "name": "Triceps Brachii", "rank": 5 },
+    { "name": "Latissimus Dorsi", "rank": 6 },
+    { "name": "Rhomboids", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Chest Press - Chest Press Machine",
+  "rating": 23,
+  "equipment": ["Chest Press Machine"],
+  "bodyparts": ["Chest", "Arms", "Shoulders"],
+  "muscles": [
+    { "name": "Pectoralis Major", "rank": 1 },
+    { "name": "Anterior Deltoid", "rank": 2 },
+    { "name": "Triceps Brachii", "rank": 3 },
+    { "name": "Pectoralis Minor", "rank": 4 },
+    { "name": "Serratus Anterior", "rank": 5 },
+    { "name": "Trapezius (upper)", "rank": 6 },
+    { "name": "Latissimus Dorsi", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Chin Up",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Back", "Shoulders"],
+  "muscles": [
+    { "name": "Latissimus Dorsi", "rank": 1 },
+    { "name": "Biceps Brachii", "rank": 2 },
+    { "name": "Brachialis", "rank": 3 },
+    { "name": "Brachioradialis", "rank": 4 },
+    { "name": "Rhomboids", "rank": 5 },
+    { "name": "Trapezius (middle)", "rank": 6 },
+    { "name": "Posterior Deltoid", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Chin Up - Assisted Dip/Pull-Up Machine",
+  "rating": 23,
+  "equipment": ["Assisted Dip/Pull-Up Machine"],
+  "bodyparts": ["Back", "Shoulders"],
+  "muscles": [
+    { "name": "Latissimus Dorsi", "rank": 1 },
+    { "name": "Biceps Brachii", "rank": 2 },
+    { "name": "Brachialis", "rank": 3 },
+    { "name": "Brachioradialis", "rank": 4 },
+    { "name": "Rhomboids", "rank": 5 },
+    { "name": "Trapezius (middle)", "rank": 6 },
+    { "name": "Posterior Deltoid", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Clean - Barbell",
+  "rating": 23,
+  "equipment": ["Barbell", "Weight Plates"],
+  "bodyparts": ["Back", "Shoulders"],
+  "muscles": [
+    { "name": "Rectus Femoris", "rank": 1 },
+    { "name": "Gluteus Maximus", "rank": 2 },
+    { "name": "Biceps Femoris", "rank": 3 },
+    { "name": "Trapezius (upper)", "rank": 4 },
+    { "name": "Posterior Deltoid", "rank": 5 },
+    { "name": "Latissimus Dorsi", "rank": 6 },
+    { "name": "Biceps Brachii", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Clean and Press - Barbell",
+  "rating": 23,
+  "equipment": ["Barbell", "Weight Plates"],
+  "bodyparts": ["Shoulders"],
+  "muscles": [
+    { "name": "Anterior Deltoid", "rank": 1 },
+    { "name": "Trapezius (upper)", "rank": 2 },
+    { "name": "Rectus Femoris", "rank": 3 },
+    { "name": "Gluteus Maximus", "rank": 4 },
+    { "name": "Biceps Femoris", "rank": 5 },
+    { "name": "Latissimus Dorsi", "rank": 6 },
+    { "name": "Triceps Brachii", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Concentration Curl - Cable Machine",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Handle Attachment"],
+  "bodyparts": ["Arms", "Forearms"],
+  "muscles": [
+    { "name": "Biceps Brachii", "rank": 1 },
+    { "name": "Brachialis", "rank": 2 },
+    { "name": "Brachioradialis", "rank": 3 },
+    { "name": "Pronator Teres", "rank": 4 },
+    { "name": "Wrist Flexors", "rank": 5 },
+    { "name": "Anterior Deltoid", "rank": 6 },
+    { "name": "Trapezius (upper)", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Concentration Curl - Dumbbell (Normal Grip)",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Arms", "Forearms"],
+  "muscles": [
+    { "name": "Biceps Brachii", "rank": 1 },
+    { "name": "Brachialis", "rank": 2 },
+    { "name": "Brachioradialis", "rank": 3 },
+    { "name": "Pronator Teres", "rank": 4 },
+    { "name": "Wrist Flexors", "rank": 5 },
+    { "name": "Anterior Deltoid", "rank": 6 },
+    { "name": "Trapezius (upper)", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Concentration Curl - Dumbbell (Reverse Grip)",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Arms", "Forearms"],
+  "muscles": [
+    { "name": "Brachialis", "rank": 1 },
+    { "name": "Brachioradialis", "rank": 2 },
+    { "name": "Biceps Brachii", "rank": 3 },
+    { "name": "Pronator Teres", "rank": 4 },
+    { "name": "Wrist Flexors", "rank": 5 },
+    { "name": "Anterior Deltoid", "rank": 6 },
+    { "name": "Trapezius (upper)", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Crunch",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Abs"],
+  "muscles": [
+    { "name": "Rectus Abdominis", "rank": 1 },
+    { "name": "Transverse Abdominis", "rank": 2 },
+    { "name": "Obliques", "rank": 3 },
+    { "name": "Iliopsoas", "rank": 4 },
+    { "name": "Rectus Femoris", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Crunch - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Abs"],
+  "muscles": [
+    { "name": "Rectus Abdominis", "rank": 1 },
+    { "name": "Transverse Abdominis", "rank": 2 },
+    { "name": "Obliques", "rank": 3 },
+    { "name": "Iliopsoas", "rank": 4 },
+    { "name": "Rectus Femoris", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Crunch - Dumbbell (Crossbody)",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Abs"],
+  "muscles": [
+    { "name": "Obliques", "rank": 1 },
+    { "name": "Rectus Abdominis", "rank": 2 },
+    { "name": "Transverse Abdominis", "rank": 3 },
+    { "name": "Iliopsoas", "rank": 4 },
+    { "name": "Rectus Femoris", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Crunch - Dumbbell (Lying)",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Abs"],
+  "muscles": [
+    { "name": "Rectus Abdominis", "rank": 1 },
+    { "name": "Transverse Abdominis", "rank": 2 },
+    { "name": "Obliques", "rank": 3 },
+    { "name": "Iliopsoas", "rank": 4 },
+    { "name": "Rectus Femoris", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Crunch - Dumbbell (Seated)",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Abs"],
+  "muscles": [
+    { "name": "Rectus Abdominis", "rank": 1 },
+    { "name": "Transverse Abdominis", "rank": 2 },
+    { "name": "Obliques", "rank": 3 },
+    { "name": "Iliopsoas", "rank": 4 },
+    { "name": "Rectus Femoris", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Cuban Rotation",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Shoulders"],
+  "muscles": [
+    { "name": "Supraspinatus", "rank": 1 },
+    { "name": "Infraspinatus", "rank": 2 },
+    { "name": "Teres Minor", "rank": 3 },
+    { "name": "Teres Major", "rank": 4 },
+    { "name": "Lateral Deltoid", "rank": 5 },
+    { "name": "Trapezius (middle)", "rank": 6 },
+    { "name": "Rhomboids", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Cuban Rotation - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Shoulders"],
+  "muscles": [
+    { "name": "Supraspinatus", "rank": 1 },
+    { "name": "Infraspinatus", "rank": 2 },
+    { "name": "Teres Minor", "rank": 3 },
+    { "name": "Teres Major", "rank": 4 },
+    { "name": "Lateral Deltoid", "rank": 5 },
+    { "name": "Trapezius (middle)", "rank": 6 },
+    { "name": "Rhomboids", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Curtsey Lunge",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Glutes", "Quads"],
+  "muscles": [
+    { "name": "Gluteus Medius", "rank": 1 },
+    { "name": "Gluteus Maximus", "rank": 2 },
+    { "name": "Rectus Femoris", "rank": 3 },
+    { "name": "Adductor Magnus", "rank": 4 },
+    { "name": "Biceps Femoris", "rank": 5 },
+    { "name": "Vastus Lateralis", "rank": 6 },
+    { "name": "Gastrocnemius", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Curtsey Lunge - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Glutes", "Quads"],
+  "muscles": [
+    { "name": "Gluteus Medius", "rank": 1 },
+    { "name": "Gluteus Maximus", "rank": 2 },
+    { "name": "Rectus Femoris", "rank": 3 },
+    { "name": "Adductor Magnus", "rank": 4 },
+    { "name": "Biceps Femoris", "rank": 5 },
+    { "name": "Vastus Lateralis", "rank": 6 },
+    { "name": "Gastrocnemius", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Deadlift - Landmine Attachment",
+  "rating": 23,
+  "equipment": ["Landmine Attachment", "Barbell", "Weight Plates"],
+  "bodyparts": ["Back", "Hamstrings"],
+  "muscles": [
+    { "name": "Gluteus Maximus", "rank": 1 },
+    { "name": "Biceps Femoris", "rank": 2 },
+    { "name": "Erector Spinae", "rank": 3 },
+    { "name": "Rectus Femoris", "rank": 4 },
+    { "name": "Adductor Magnus", "rank": 5 },
+    { "name": "Latissimus Dorsi", "rank": 6 },
+    { "name": "Trapezius (upper)", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Deadlift - Barbell",
+  "rating": 23,
+  "equipment": ["Barbell", "Weight Plates"],
+  "bodyparts": ["Back", "Hamstrings"],
+  "muscles": [
+    { "name": "Gluteus Maximus", "rank": 1 },
+    { "name": "Biceps Femoris", "rank": 2 },
+    { "name": "Erector Spinae", "rank": 3 },
+    { "name": "Rectus Femoris", "rank": 4 },
+    { "name": "Adductor Magnus", "rank": 5 },
+    { "name": "Latissimus Dorsi", "rank": 6 },
+    { "name": "Trapezius (upper)", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Deadlift - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Back", "Hamstrings"],
+  "muscles": [
+    { "name": "Gluteus Maximus", "rank": 1 },
+    { "name": "Biceps Femoris", "rank": 2 },
+    { "name": "Erector Spinae", "rank": 3 },
+    { "name": "Rectus Femoris", "rank": 4 },
+    { "name": "Adductor Magnus", "rank": 5 },
+    { "name": "Latissimus Dorsi", "rank": 6 },
+    { "name": "Trapezius (upper)", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Diamond Push-up",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Chest", "Arms", "Shoulders"],
+  "muscles": [
+    { "name": "Triceps Brachii", "rank": 1 },
+    { "name": "Pectoralis Major", "rank": 2 },
+    { "name": "Anterior Deltoid", "rank": 3 },
+    { "name": "Pectoralis Minor", "rank": 4 },
+    { "name": "Serratus Anterior", "rank": 5 },
+    { "name": "Transverse Abdominis", "rank": 6 },
+    { "name": "Latissimus Dorsi", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Donkey Kick",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Glutes"],
+  "muscles": [
+    { "name": "Gluteus Maximus", "rank": 1 },
+    { "name": "Gluteus Medius", "rank": 2 },
+    { "name": "Biceps Femoris", "rank": 3 },
+    { "name": "Erector Spinae", "rank": 4 },
+    { "name": "Quadratus Lumborum", "rank": 5 },
+    { "name": "Multifidus", "rank": 6 },
+    { "name": "Transverse Abdominis", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Donkey Kick - Leg Extension Machine",
+  "rating": 23,
+  "equipment": ["Leg Extension Machine"],
+  "bodyparts": ["Glutes", "Hamstrings"],
+  "muscles": [
+    { "name": "Gluteus Maximus", "rank": 1 },
+    { "name": "Gluteus Medius", "rank": 2 },
+    { "name": "Biceps Femoris", "rank": 3 },
+    { "name": "Erector Spinae", "rank": 4 },
+    { "name": "Quadratus Lumborum", "rank": 5 },
+    { "name": "Multifidus", "rank": 6 },
+    { "name": "Transverse Abdominis", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Down-Up Twist - Cable Machine",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Handle Attachment"],
+  "bodyparts": ["Abs"],
+  "muscles": [
+    { "name": "Obliques", "rank": 1 },
+    { "name": "Rectus Abdominis", "rank": 2 },
+    { "name": "Transverse Abdominis", "rank": 3 },
+    { "name": "Serratus Anterior", "rank": 4 },
+    { "name": "Latissimus Dorsi", "rank": 5 },
+    { "name": "Multifidus", "rank": 6 },
+    { "name": "Quadratus Lumborum", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Drag Curl - Cable Machine",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Straight Bar Attachment"],
+  "bodyparts": ["Arms"],
+  "muscles": [
+    { "name": "Biceps Brachii", "rank": 1 },
+    { "name": "Brachialis", "rank": 2 },
+    { "name": "Brachioradialis", "rank": 3 },
+    { "name": "Pronator Teres", "rank": 4 },
+    { "name": "Anterior Deltoid", "rank": 5 },
+    { "name": "Trapezius (upper)", "rank": 6 },
+    { "name": "Wrist Flexors", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Drag Curl - Barbell",
+  "rating": 23,
+  "equipment": ["Barbell", "Weight Plates"],
+  "bodyparts": ["Arms"],
+  "muscles": [
+    { "name": "Biceps Brachii", "rank": 1 },
+    { "name": "Brachialis", "rank": 2 },
+    { "name": "Brachioradialis", "rank": 3 },
+    { "name": "Pronator Teres", "rank": 4 },
+    { "name": "Anterior Deltoid", "rank": 5 },
+    { "name": "Trapezius (upper)", "rank": 6 },
+    { "name": "Wrist Flexors", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Drag Curl - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Arms"],
+  "muscles": [
+    { "name": "Biceps Brachii", "rank": 1 },
+    { "name": "Brachialis", "rank": 2 },
+    { "name": "Brachioradialis", "rank": 3 },
+    { "name": "Pronator Teres", "rank": 4 },
+    { "name": "Anterior Deltoid", "rank": 5 },
+    { "name": "Trapezius (upper)", "rank": 6 },
+    { "name": "Wrist Flexors", "rank": 7 }
+  ]
+},
+
+{
+  "name": "External Rotation - Cable Machine",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Handle Attachment"],
+  "bodyparts": ["Shoulders"],
+  "muscles": [
+    { "name": "Infraspinatus", "rank": 1 },
+    { "name": "Teres Minor", "rank": 2 },
+    { "name": "Supraspinatus", "rank": 3 },
+    { "name": "Posterior Deltoid", "rank": 4 },
+    { "name": "Rhomboids", "rank": 5 },
+    { "name": "Trapezius (middle)", "rank": 6 },
+    { "name": "Teres Major", "rank": 7 }
+  ]
+},
+
+{
+  "name": "External Rotation - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Shoulders"],
+  "muscles": [
+    { "name": "Infraspinatus", "rank": 1 },
+    { "name": "Teres Minor", "rank": 2 },
+    { "name": "Supraspinatus", "rank": 3 },
+    { "name": "Posterior Deltoid", "rank": 4 },
+    { "name": "Rhomboids", "rank": 5 },
+    { "name": "Trapezius (middle)", "rank": 6 },
+    { "name": "Teres Major", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Face Pull - Cable Machine",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Rope Attachment"],
+  "bodyparts": ["Shoulders", "Back"],
+  "muscles": [
+    { "name": "Posterior Deltoid", "rank": 1 },
+    { "name": "Infraspinatus", "rank": 2 },
+    { "name": "Supraspinatus", "rank": 3 },
+    { "name": "Trapezius (middle)", "rank": 4 },
+    { "name": "Rhomboids", "rank": 5 },
+    { "name": "Trapezius (lower)", "rank": 6 },
+    { "name": "Teres Minor", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Farmer’s Carry - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Abs"],
+  "muscles": [
+    { "name": "Brachioradialis", "rank": 1 },
+    { "name": "Wrist Flexors", "rank": 2 },
+    { "name": "Trapezius (upper)", "rank": 3 },
+    { "name": "Erector Spinae", "rank": 4 },
+    { "name": "Transverse Abdominis", "rank": 5 },
+    { "name": "Gluteus Medius", "rank": 6 },
+    { "name": "Gastrocnemius", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Fire Hydrant",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Glutes", "Hip Abductors"],
+  "muscles": [
+    { "name": "Gluteus Medius", "rank": 1 },
+    { "name": "Gluteus Minimus", "rank": 2 },
+    { "name": "Gluteus Maximus", "rank": 3 },
+    { "name": "Tensor Fasciae Latae", "rank": 4 },
+    { "name": "Piriformis", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Floor Press - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Chest", "Arms", "Shoulders"],
+  "muscles": [
+    { "name": "Pectoralis Major", "rank": 1 },
+    { "name": "Triceps Brachii", "rank": 2 },
+    { "name": "Anterior Deltoid", "rank": 3 },
+    { "name": "Serratus Anterior", "rank": 4 },
+    { "name": "Pectoralis Minor", "rank": 5 },
+    { "name": "Latissimus Dorsi", "rank": 6 },
+    { "name": "Trapezius (upper)", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Floor Press - Barbell",
+  "rating": 23,
+  "equipment": ["Barbell", "Weight Plates"],
+  "bodyparts": ["Chest", "Arms", "Shoulders"],
+  "muscles": [
+    { "name": "Pectoralis Major", "rank": 1 },
+    { "name": "Triceps Brachii", "rank": 2 },
+    { "name": "Anterior Deltoid", "rank": 3 },
+    { "name": "Serratus Anterior", "rank": 4 },
+    { "name": "Pectoralis Minor", "rank": 5 },
+    { "name": "Latissimus Dorsi", "rank": 6 },
+    { "name": "Trapezius (upper)", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Front Raise - Cable Machine",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Handle Attachment"],
+  "bodyparts": ["Shoulders"],
+  "muscles": [
+    { "name": "Anterior Deltoid", "rank": 1 },
+    { "name": "Lateral Deltoid", "rank": 2 },
+    { "name": "Supraspinatus", "rank": 3 },
+    { "name": "Trapezius (upper)", "rank": 4 },
+    { "name": "Serratus Anterior", "rank": 5 },
+    { "name": "Pectoralis Major", "rank": 6 },
+    { "name": "Biceps Brachii", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Front Raise - Barbell",
+  "rating": 23,
+  "equipment": ["Barbell", "Weight Plates"],
+  "bodyparts": ["Shoulders"],
+  "muscles": [
+    { "name": "Anterior Deltoid", "rank": 1 },
+    { "name": "Lateral Deltoid", "rank": 2 },
+    { "name": "Supraspinatus", "rank": 3 },
+    { "name": "Trapezius (upper)", "rank": 4 },
+    { "name": "Serratus Anterior", "rank": 5 },
+    { "name": "Pectoralis Major", "rank": 6 },
+    { "name": "Biceps Brachii", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Front Raise - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Shoulders"],
+  "muscles": [
+    { "name": "Anterior Deltoid", "rank": 1 },
+    { "name": "Lateral Deltoid", "rank": 2 },
+    { "name": "Supraspinatus", "rank": 3 },
+    { "name": "Trapezius (upper)", "rank": 4 },
+    { "name": "Serratus Anterior", "rank": 5 },
+    { "name": "Pectoralis Major", "rank": 6 },
+    { "name": "Biceps Brachii", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Front Squat - Cable Machine",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Rope Attachment"],
+  "bodyparts": ["Quads", "Abs"],
+  "muscles": [
+    { "name": "Rectus Femoris", "rank": 1 },
+    { "name": "Vastus Lateralis", "rank": 2 },
+    { "name": "Vastus Medialis", "rank": 3 },
+    { "name": "Gluteus Maximus", "rank": 4 },
+    { "name": "Erector Spinae", "rank": 5 },
+    { "name": "Transverse Abdominis", "rank": 6 },
+    { "name": "Adductor Magnus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Front Squat - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Quads", "Abs"],
+  "muscles": [
+    { "name": "Rectus Femoris", "rank": 1 },
+    { "name": "Vastus Lateralis", "rank": 2 },
+    { "name": "Vastus Medialis", "rank": 3 },
+    { "name": "Gluteus Maximus", "rank": 4 },
+    { "name": "Erector Spinae", "rank": 5 },
+    { "name": "Transverse Abdominis", "rank": 6 },
+    { "name": "Adductor Magnus", "rank": 7 }
+  ]
+},
+{
+  "name": "Front Squat - Barbell",
+  "rating": 23,
+  "equipment": ["Barbell", "Weight Plates", "Squat Rack"],
+  "bodyparts": ["Quads", "Abs"],
+  "muscles": [
+    { "name": "Rectus Femoris", "rank": 1 },
+    { "name": "Vastus Lateralis", "rank": 2 },
+    { "name": "Vastus Medialis", "rank": 3 },
+    { "name": "Gluteus Maximus", "rank": 4 },
+    { "name": "Erector Spinae", "rank": 5 },
+    { "name": "Transverse Abdominis", "rank": 6 },
+    { "name": "Adductor Magnus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Glute Bridge",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Glutes", "Hamstrings", "Abs"],
+  "muscles": [
+    { "name": "Gluteus Maximus", "rank": 1 },
+    { "name": "Biceps Femoris", "rank": 2 },
+    { "name": "Semitendinosus", "rank": 3 },
+    { "name": "Erector Spinae", "rank": 4 },
+    { "name": "Multifidus", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Transverse Abdominis", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Glute Bridge - Barbell",
+  "rating": 23,
+  "equipment": ["Barbell", "Weight Plates"],
+  "bodyparts": ["Glutes", "Hamstrings", "Abs"],
+  "muscles": [
+    { "name": "Gluteus Maximus", "rank": 1 },
+    { "name": "Biceps Femoris", "rank": 2 },
+    { "name": "Semitendinosus", "rank": 3 },
+    { "name": "Erector Spinae", "rank": 4 },
+    { "name": "Multifidus", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Transverse Abdominis", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Glute Bridge - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Glutes", "Hamstrings", "Abs"],
+  "muscles": [
+    { "name": "Gluteus Maximus", "rank": 1 },
+    { "name": "Biceps Femoris", "rank": 2 },
+    { "name": "Semitendinosus", "rank": 3 },
+    { "name": "Erector Spinae", "rank": 4 },
+    { "name": "Multifidus", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Transverse Abdominis", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Glute Ham Raise",
+  "rating": 23,
+  "equipment": ["Glute-Ham Developer (GHD) Machine"],
+  "bodyparts": ["Hamstrings", "Glutes", "Back"],
+  "muscles": [
+    { "name": "Biceps Femoris", "rank": 1 },
+    { "name": "Semitendinosus", "rank": 2 },
+    { "name": "Gluteus Maximus", "rank": 3 },
+    { "name": "Erector Spinae", "rank": 4 },
+    { "name": "Multifidus", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Gastrocnemius", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Glute Kickback",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Glutes", "Hamstrings"],
+  "muscles": [
+    { "name": "Gluteus Maximus", "rank": 1 },
+    { "name": "Gluteus Medius", "rank": 2 },
+    { "name": "Biceps Femoris", "rank": 3 },
+    { "name": "Erector Spinae", "rank": 4 },
+    { "name": "Multifidus", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Gastrocnemius", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Glute Kickback - Cable Machine",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Ankle Cuff Attachment"],
+  "bodyparts": ["Glutes", "Hamstrings"],
+  "muscles": [
+    { "name": "Gluteus Maximus", "rank": 1 },
+    { "name": "Gluteus Medius", "rank": 2 },
+    { "name": "Biceps Femoris", "rank": 3 },
+    { "name": "Erector Spinae", "rank": 4 },
+    { "name": "Multifidus", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Gastrocnemius", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Good Morning - Barbell",
+  "rating": 23,
+  "equipment": ["Barbell", "Weight Plates"],
+  "bodyparts": ["Hamstrings", "Back", "Glutes"],
+  "muscles": [
+    { "name": "Erector Spinae", "rank": 1 },
+    { "name": "Gluteus Maximus", "rank": 2 },
+    { "name": "Biceps Femoris", "rank": 3 },
+    { "name": "Semitendinosus", "rank": 4 },
+    { "name": "Multifidus", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Adductor Magnus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Hack Squat - Hack squat machine",
+  "rating": 23,
+  "equipment": ["Hack squat machine"],
+  "bodyparts": ["Quads", "Glutes"],
+  "muscles": [
+    { "name": "Vastus Lateralis", "rank": 1 },
+    { "name": "Vastus Medialis", "rank": 2 },
+    { "name": "Rectus Femoris", "rank": 3 },
+    { "name": "Gluteus Maximus", "rank": 4 },
+    { "name": "Adductor Magnus", "rank": 5 },
+    { "name": "Erector Spinae", "rank": 6 },
+    { "name": "Gastrocnemius", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Hammer Curl - Cable Machine",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Handle Attachment"],
+  "bodyparts": ["Arms", "Forearms"],
+  "muscles": [
+    { "name": "Brachioradialis", "rank": 1 },
+    { "name": "Brachialis", "rank": 2 },
+    { "name": "Biceps Brachii", "rank": 3 },
+    { "name": "Pronator Teres", "rank": 4 },
+    { "name": "Wrist Flexors", "rank": 5 },
+    { "name": "Anterior Deltoid", "rank": 6 },
+    { "name": "Trapezius (upper)", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Hammer Curl - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Arms", "Forearms"],
+  "muscles": [
+    { "name": "Brachioradialis", "rank": 1 },
+    { "name": "Brachialis", "rank": 2 },
+    { "name": "Biceps Brachii", "rank": 3 },
+    { "name": "Pronator Teres", "rank": 4 },
+    { "name": "Wrist Flexors", "rank": 5 },
+    { "name": "Anterior Deltoid", "rank": 6 },
+    { "name": "Trapezius (upper)", "rank": 7 }
+  ]
+},
+
+
+{
+  "name": "Hammer Curl - Dumbbell (Crossbody)",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Arms", "Forearms"],
+  "muscles": [
+    { "name": "Brachialis", "rank": 1 },
+    { "name": "Brachioradialis", "rank": 2 },
+    { "name": "Biceps Brachii", "rank": 3 },
+    { "name": "Pronator Teres", "rank": 4 },
+    { "name": "Wrist Flexors", "rank": 5 },
+    { "name": "Anterior Deltoid", "rank": 6 },
+    { "name": "Trapezius (upper)", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Hang Clean - Barbell",
+  "rating": 23,
+  "equipment": ["Barbell", "Weight Plates"],
+  "bodyparts": ["Back", "Shoulders"],
+  "muscles": [
+    { "name": "Vastus Lateralis", "rank": 1 },
+    { "name": "Gluteus Maximus", "rank": 2 },
+    { "name": "Biceps Femoris", "rank": 3 },
+    { "name": "Trapezius (upper)", "rank": 4 },
+    { "name": "Posterior Deltoid", "rank": 5 },
+    { "name": "Latissimus Dorsi", "rank": 6 },
+    { "name": "Biceps Brachii", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Hang Snatch - Barbell",
+  "rating": 23,
+  "equipment": ["Barbell", "Weight Plates"],
+  "bodyparts": ["Back", "Shoulders"],
+  "muscles": [
+    { "name": "Anterior Deltoid", "rank": 1 },
+    { "name": "Trapezius (upper)", "rank": 2 },
+    { "name": "Vastus Lateralis", "rank": 3 },
+    { "name": "Gluteus Maximus", "rank": 4 },
+    { "name": "Biceps Femoris", "rank": 5 },
+    { "name": "Latissimus Dorsi", "rank": 6 },
+    { "name": "Biceps Brachii", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Heel Touch",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Abs"],
+  "muscles": [
+    { "name": "Obliques", "rank": 1 },
+    { "name": "Rectus Abdominis", "rank": 2 },
+    { "name": "Transverse Abdominis", "rank": 3 },
+    { "name": "Iliopsoas", "rank": 4 },
+    { "name": "Rectus Femoris", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "High Pull - Barbell",
+  "rating": 23,
+  "equipment": ["Barbell", "Weight Plates"],
+  "bodyparts": ["Back", "Shoulders"],
+  "muscles": [
+    { "name": "Trapezius (upper)", "rank": 1 },
+    { "name": "Posterior Deltoid", "rank": 2 },
+    { "name": "Vastus Lateralis", "rank": 3 },
+    { "name": "Gluteus Maximus", "rank": 4 },
+    { "name": "Biceps Femoris", "rank": 5 },
+    { "name": "Latissimus Dorsi", "rank": 6 },
+    { "name": "Biceps Brachii", "rank": 7 }
+  ]
+},
+
+{
+  "name": "High Pull - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Back", "Shoulders"],
+  "muscles": [
+    { "name": "Trapezius (upper)", "rank": 1 },
+    { "name": "Posterior Deltoid", "rank": 2 },
+    { "name": "Vastus Lateralis", "rank": 3 },
+    { "name": "Gluteus Maximus", "rank": 4 },
+    { "name": "Biceps Femoris", "rank": 5 },
+    { "name": "Latissimus Dorsi", "rank": 6 },
+    { "name": "Biceps Brachii", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Hip Abductor - Cable Machine",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Ankle Cuff Attachment"],
+  "bodyparts": ["Hip Abductors", "Glutes"],
+  "muscles": [
+    { "name": "Gluteus Medius", "rank": 1 },
+    { "name": "Gluteus Minimus", "rank": 2 },
+    { "name": "Tensor Fasciae Latae", "rank": 3 },
+    { "name": "Piriformis", "rank": 4 },
+    { "name": "Quadratus Lumborum", "rank": 5 },
+    { "name": "Multifidus", "rank": 6 },
+    { "name": "Gluteus Maximus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Hip Adductor - Cable Machine",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Ankle Cuff Attachment"],
+  "bodyparts": ["Hip Adductors"],
+  "muscles": [
+    { "name": "Adductor Magnus", "rank": 1 },
+    { "name": "Adductor Longus", "rank": 2 },
+    { "name": "Adductor Brevis", "rank": 3 },
+    { "name": "Gracilis", "rank": 4 },
+    { "name": "Pectineus", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Hip Extension",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Glutes", "Hamstrings"],
+  "muscles": [
+    { "name": "Gluteus Maximus", "rank": 1 },
+    { "name": "Biceps Femoris", "rank": 2 },
+    { "name": "Semitendinosus", "rank": 3 },
+    { "name": "Erector Spinae", "rank": 4 },
+    { "name": "Multifidus", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Gastrocnemius", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Hip Flexion",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Hip Flexors", "Abs"],
+  "muscles": [
+    { "name": "Iliopsoas", "rank": 1 },
+    { "name": "Rectus Femoris", "rank": 2 },
+    { "name": "Transverse Abdominis", "rank": 3 },
+    { "name": "Rectus Abdominis", "rank": 4 },
+    { "name": "Obliques", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Hip Frog Extension",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Glutes", "Hip Abductors"],
+  "muscles": [
+    { "name": "Gluteus Medius", "rank": 1 },
+    { "name": "Gluteus Maximus", "rank": 2 },
+    { "name": "Gluteus Minimus", "rank": 3 },
+    { "name": "Tensor Fasciae Latae", "rank": 4 },
+    { "name": "Piriformis", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Hip Raise",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Glutes", "Hamstrings", "Abs"],
+  "muscles": [
+    { "name": "Gluteus Maximus", "rank": 1 },
+    { "name": "Biceps Femoris", "rank": 2 },
+    { "name": "Semitendinosus", "rank": 3 },
+    { "name": "Erector Spinae", "rank": 4 },
+    { "name": "Transverse Abdominis", "rank": 5 },
+    { "name": "Multifidus", "rank": 6 },
+    { "name": "Quadratus Lumborum", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Hip Thrust - Hip Thrust Machine",
+  "rating": 23,
+  "equipment": ["Hip Thrust Machine"],
+  "bodyparts": ["Glutes", "Hamstrings", "Abs"],
+  "muscles": [
+    { "name": "Gluteus Maximus", "rank": 1 },
+    { "name": "Biceps Femoris", "rank": 2 },
+    { "name": "Semitendinosus", "rank": 3 },
+    { "name": "Erector Spinae", "rank": 4 },
+    { "name": "Transverse Abdominis", "rank": 5 },
+    { "name": "Multifidus", "rank": 6 },
+    { "name": "Quadratus Lumborum", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Hip Thrust - Cable Machine",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Ankle Cuff Attachment"],
+  "bodyparts": ["Glutes", "Hamstrings", "Abs"],
+  "muscles": [
+    { "name": "Gluteus Maximus", "rank": 1 },
+    { "name": "Biceps Femoris", "rank": 2 },
+    { "name": "Semitendinosus", "rank": 3 },
+    { "name": "Erector Spinae", "rank": 4 },
+    { "name": "Transverse Abdominis", "rank": 5 },
+    { "name": "Multifidus", "rank": 6 },
+    { "name": "Quadratus Lumborum", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Hip Thrust - Barbell",
+  "rating": 23,
+  "equipment": ["Barbell", "Weight Plates"],
+  "bodyparts": ["Glutes", "Hamstrings", "Abs"],
+  "muscles": [
+    { "name": "Gluteus Maximus", "rank": 1 },
+    { "name": "Biceps Femoris", "rank": 2 },
+    { "name": "Semitendinosus", "rank": 3 },
+    { "name": "Erector Spinae", "rank": 4 },
+    { "name": "Transverse Abdominis", "rank": 5 },
+    { "name": "Multifidus", "rank": 6 },
+    { "name": "Quadratus Lumborum", "rank": 7 }
+  ]
+},
+
+{
+  "name": "In-And-Out",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Hip Flexors"],
+  "muscles": [
+    { "name": "Rectus Abdominis", "rank": 1 },
+    { "name": "Transverse Abdominis", "rank": 2 },
+    { "name": "Obliques", "rank": 3 },
+    { "name": "Iliopsoas", "rank": 4 },
+    { "name": "Rectus Femoris", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "In-And-Out - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Hip Flexors"],
+  "muscles": [
+    { "name": "Rectus Abdominis", "rank": 1 },
+    { "name": "Transverse Abdominis", "rank": 2 },
+    { "name": "Obliques", "rank": 3 },
+    { "name": "Iliopsoas", "rank": 4 },
+    { "name": "Rectus Femoris", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Incline Around the World - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell", "Adjustable Bench"],
+  "bodyparts": ["Shoulders", "Chest"],
+  "muscles": [
+    { "name": "Anterior Deltoid", "rank": 1 },
+    { "name": "Lateral Deltoid", "rank": 2 },
+    { "name": "Posterior Deltoid", "rank": 3 },
+    { "name": "Supraspinatus", "rank": 4 },
+    { "name": "Infraspinatus", "rank": 5 },
+    { "name": "Teres Minor", "rank": 6 },
+    { "name": "Pectoralis Major", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Incline Bench Fly - Cable Machine",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Adjustable Bench"],
+  "bodyparts": ["Chest", "Shoulders"],
+  "muscles": [
+    { "name": "Pectoralis Major", "rank": 1 },
+    { "name": "Pectoralis Minor", "rank": 2 },
+    { "name": "Anterior Deltoid", "rank": 3 },
+    { "name": "Serratus Anterior", "rank": 4 },
+    { "name": "Supraspinatus", "rank": 5 },
+    { "name": "Infraspinatus", "rank": 6 },
+    { "name": "Teres Minor", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Incline Bench Fly - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell", "Adjustable Bench"],
+  "bodyparts": ["Chest", "Shoulders"],
+  "muscles": [
+    { "name": "Pectoralis Major", "rank": 1 },
+    { "name": "Pectoralis Minor", "rank": 2 },
+    { "name": "Anterior Deltoid", "rank": 3 },
+    { "name": "Serratus Anterior", "rank": 4 },
+    { "name": "Supraspinatus", "rank": 5 },
+    { "name": "Infraspinatus", "rank": 6 },
+    { "name": "Teres Minor", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Incline Bicep Curl - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell", "Adjustable Bench"],
+  "bodyparts": ["Arms"],
+  "muscles": [
+    { "name": "Biceps Brachii", "rank": 1 },
+    { "name": "Brachialis", "rank": 2 },
+    { "name": "Brachioradialis", "rank": 3 },
+    { "name": "Pronator Teres", "rank": 4 },
+    { "name": "Anterior Deltoid", "rank": 5 },
+    { "name": "Trapezius (upper)", "rank": 6 },
+    { "name": "Wrist Flexors", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Incline Chest Press - Barbell",
+  "rating": 23,
+  "equipment": ["Barbell", "Adjustable Bench", "Weight Plates"],
+  "bodyparts": ["Chest", "Shoulders", "Arms"],
+  "muscles": [
+    { "name": "Pectoralis Major", "rank": 1 },
+    { "name": "Anterior Deltoid", "rank": 2 },
+    { "name": "Triceps Brachii", "rank": 3 },
+    { "name": "Serratus Anterior", "rank": 4 },
+    { "name": "Pectoralis Minor", "rank": 5 },
+    { "name": "Trapezius (upper)", "rank": 6 },
+    { "name": "Latissimus Dorsi", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Incline Chest Press - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell", "Adjustable Bench"],
+  "bodyparts": ["Chest", "Shoulders", "Arms"],
+  "muscles": [
+    { "name": "Pectoralis Major", "rank": 1 },
+    { "name": "Anterior Deltoid", "rank": 2 },
+    { "name": "Triceps Brachii", "rank": 3 },
+    { "name": "Serratus Anterior", "rank": 4 },
+    { "name": "Pectoralis Minor", "rank": 5 },
+    { "name": "Trapezius (upper)", "rank": 6 },
+    { "name": "Latissimus Dorsi", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Incline Leg Press",
+  "rating": 23,
+  "equipment": ["Incline Leg Press Machine", "Weight Plates"],
+  "bodyparts": ["Quads", "Glutes", "Hamstrings"],
+  "muscles": [
+    { "name": "Vastus Lateralis", "rank": 1 },
+    { "name": "Vastus Medialis", "rank": 2 },
+    { "name": "Rectus Femoris", "rank": 3 },
+    { "name": "Gluteus Maximus", "rank": 4 },
+    { "name": "Biceps Femoris", "rank": 5 },
+    { "name": "Adductor Magnus", "rank": 6 },
+    { "name": "Gastrocnemius", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Incline Push-Up",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Chest", "Shoulders", "Arms"],
+  "muscles": [
+    { "name": "Pectoralis Major", "rank": 1 },
+    { "name": "Anterior Deltoid", "rank": 2 },
+    { "name": "Triceps Brachii", "rank": 3 },
+    { "name": "Serratus Anterior", "rank": 4 },
+    { "name": "Pectoralis Minor", "rank": 5 },
+    { "name": "Transverse Abdominis", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Incline Reverse Fly - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell", "Adjustable Bench"],
+  "bodyparts": ["Back", "Shoulders"],
+  "muscles": [
+    { "name": "Posterior Deltoid", "rank": 1 },
+    { "name": "Infraspinatus", "rank": 2 },
+    { "name": "Supraspinatus", "rank": 3 },
+    { "name": "Rhomboids", "rank": 4 },
+    { "name": "Trapezius (middle)", "rank": 5 },
+    { "name": "Teres Minor", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Incline Row - Cable Machine",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Handle Attachment", "Adjustable Bench"],
+  "bodyparts": ["Back"],
+  "muscles": [
+    { "name": "Latissimus Dorsi", "rank": 1 },
+    { "name": "Rhomboids", "rank": 2 },
+    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Biceps Brachii", "rank": 4 },
+    { "name": "Brachialis", "rank": 5 },
+    { "name": "Posterior Deltoid", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Incline Row - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell", "Adjustable Bench"],
+  "bodyparts": ["Back"],
+  "muscles": [
+    { "name": "Latissimus Dorsi", "rank": 1 },
+    { "name": "Rhomboids", "rank": 2 },
+    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Biceps Brachii", "rank": 4 },
+    { "name": "Brachialis", "rank": 5 },
+    { "name": "Posterior Deltoid", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Internal Rotation - Cable Machine",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Handle Attachment"],
+  "bodyparts": ["Shoulders"],
+  "muscles": [
+    { "name": "Teres Major", "rank": 1 },
+    { "name": "Pectoralis Major", "rank": 2 },
+    { "name": "Anterior Deltoid", "rank": 3 },
+    { "name": "Latissimus Dorsi", "rank": 4 },
+    { "name": "Rhomboids", "rank": 5 },
+    { "name": "Trapezius (middle)", "rank": 6 },
+    { "name": "", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Inverted Row",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Back"],
+  "muscles": [
+    { "name": "Latissimus Dorsi", "rank": 1 },
+    { "name": "Rhomboids", "rank": 2 },
+    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Biceps Brachii", "rank": 4 },
+    { "name": "Brachialis", "rank": 5 },
+    { "name": "Posterior Deltoid", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Inverted Row (Reverse Grip)",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Back"],
+  "muscles": [
+    { "name": "Biceps Brachii", "rank": 1 },
+    { "name": "Latissimus Dorsi", "rank": 2 },
+    { "name": "Rhomboids", "rank": 3 },
+    { "name": "Trapezius (middle)", "rank": 4 },
+    { "name": "Brachialis", "rank": 5 },
+    { "name": "Posterior Deltoid", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Jump Squat",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Quads", "Glutes", "Calves"],
+  "muscles": [
+    { "name": "Vastus Lateralis", "rank": 1 },
+    { "name": "Vastus Medialis", "rank": 2 },
+    { "name": "Gluteus Maximus", "rank": 3 },
+    { "name": "Rectus Femoris", "rank": 4 },
+    { "name": "Gastrocnemius", "rank": 5 },
+    { "name": "Soleus", "rank": 6 },
+    { "name": "Biceps Femoris", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Jump Squat - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Quads", "Glutes", "Calves"],
+  "muscles": [
+    { "name": "Vastus Lateralis", "rank": 1 },
+    { "name": "Vastus Medialis", "rank": 2 },
+    { "name": "Gluteus Maximus", "rank": 3 },
+    { "name": "Rectus Femoris", "rank": 4 },
+    { "name": "Gastrocnemius", "rank": 5 },
+    { "name": "Soleus", "rank": 6 },
+    { "name": "Biceps Femoris", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Kettlebell Swings",
+  "rating": 23,
+  "equipment": ["Kettlebell"],
+  "bodyparts": ["Erector Spinae", "Hips", "Abs"],
+  "muscles": [
+    { "name": "Gluteus Maximus", "rank": 1 },
+    { "name": "Biceps Femoris", "rank": 2 },
+    { "name": "Erector Spinae", "rank": 3 },
+    { "name": "Quadratus Lumborum", "rank": 4 },
+    { "name": "Transverse Abdominis", "rank": 5 },
+    { "name": "Anterior Deltoid", "rank": 6 },
+    { "name": "Latissimus Dorsi", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Knee Push-Up",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Chest", "Arms", "Shoulders"],
+  "muscles": [
+    { "name": "Pectoralis Major", "rank": 1 },
+    { "name": "Triceps Brachii", "rank": 2 },
+    { "name": "Anterior Deltoid", "rank": 3 },
+    { "name": "Serratus Anterior", "rank": 4 },
+    { "name": "Pectoralis Minor", "rank": 5 },
+    { "name": "Transverse Abdominis", "rank": 6 },
+    { "name": "Latissimus Dorsi", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Knee Raise",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Hip Flexors", "Abs"],
+  "muscles": [
+    { "name": "Iliopsoas", "rank": 1 },
+    { "name": "Rectus Femoris", "rank": 2 },
+    { "name": "Rectus Abdominis", "rank": 3 },
+    { "name": "Transverse Abdominis", "rank": 4 },
+    { "name": "Obliques", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Knee Raise (Hanging)",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Hip Flexors", "Abs"],
+  "muscles": [
+    { "name": "Iliopsoas", "rank": 1 },
+    { "name": "Rectus Femoris", "rank": 2 },
+    { "name": "Rectus Abdominis", "rank": 3 },
+    { "name": "Transverse Abdominis", "rank": 4 },
+    { "name": "Obliques", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Knee Raise Twist",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Abs", "Hip Flexors"],
+  "muscles": [
+    { "name": "Obliques", "rank": 1 },
+    { "name": "Iliopsoas", "rank": 2 },
+    { "name": "Rectus Abdominis", "rank": 3 },
+    { "name": "Transverse Abdominis", "rank": 4 },
+    { "name": "Rectus Femoris", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Knee Raise Twist (Hanging)",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Abs", "Hip Flexors"],
+  "muscles": [
+    { "name": "Obliques", "rank": 1 },
+    { "name": "Iliopsoas", "rank": 2 },
+    { "name": "Rectus Abdominis", "rank": 3 },
+    { "name": "Transverse Abdominis", "rank": 4 },
+    { "name": "Rectus Femoris", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Kneeling Crunch - Cable Machine",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Rope Attachment"],
+  "bodyparts": ["Abs"],
+  "muscles": [
+    { "name": "Rectus Abdominis", "rank": 1 },
+    { "name": "Transverse Abdominis", "rank": 2 },
+    { "name": "Obliques", "rank": 3 },
+    { "name": "Iliopsoas", "rank": 4 },
+    { "name": "Rectus Femoris", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Kneeling Plank",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Shoulders", "Abs"],
+  "muscles": [
+    { "name": "Transverse Abdominis", "rank": 1 },
+    { "name": "Rectus Abdominis", "rank": 2 },
+    { "name": "Obliques", "rank": 3 },
+    { "name": "Serratus Anterior", "rank": 4 },
+    { "name": "Anterior Deltoid", "rank": 5 },
+    { "name": "Erector Spinae", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Kneeling Pull-down",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Straight Bar Attachment"],
+  "bodyparts": ["Back"],
+  "muscles": [
+    { "name": "Latissimus Dorsi", "rank": 1 },
+    { "name": "Rhomboids", "rank": 2 },
+    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Biceps Brachii", "rank": 4 },
+    { "name": "Brachialis", "rank": 5 },
+    { "name": "Posterior Deltoid", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Kneeling Tricep Extension",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Rope Attachment"],
+  "bodyparts": ["Arms", "Abs"],
+  "muscles": [
+    { "name": "Triceps Brachii", "rank": 1 },
+    { "name": "Anconeus", "rank": 2 },
+    { "name": "Transverse Abdominis", "rank": 3 },
+    { "name": "Rectus Abdominis", "rank": 4 },
+    { "name": "Obliques", "rank": 5 },
+    { "name": "Serratus Anterior", "rank": 6 },
+    { "name": "Latissimus Dorsi", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Landmine Press - Landmine Attachment",
+  "rating": 23,
+  "equipment": ["Landmine Attachment", "Barbell", "Weight Plates"],
+  "bodyparts": ["Shoulders", "Chest", "Arms"],
+  "muscles": [
+    { "name": "Anterior Deltoid", "rank": 1 },
+    { "name": "Pectoralis Major", "rank": 2 },
+    { "name": "Triceps Brachii", "rank": 3 },
+    { "name": "Serratus Anterior", "rank": 4 },
+    { "name": "Lateral Deltoid", "rank": 5 },
+    { "name": "Trapezius (upper)", "rank": 6 },
+    { "name": "Latissimus Dorsi", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Landmine Thruster - Landmine Attachment",
+  "rating": 23,
+  "equipment": ["Landmine Attachment", "Barbell", "Weight Plates"],
+  "bodyparts": ["Shoulders"],
+  "muscles": [
+    { "name": "Rectus Femoris", "rank": 1 },
+    { "name": "Gluteus Maximus", "rank": 2 },
+    { "name": "Anterior Deltoid", "rank": 3 },
+    { "name": "Triceps Brachii", "rank": 4 },
+    { "name": "Erector Spinae", "rank": 5 },
+    { "name": "Transverse Abdominis", "rank": 6 },
+    { "name": "Latissimus Dorsi", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Lat Pulldown - Lat pulldown machine",
+  "rating": 23,
+  "equipment": ["Lat pulldown machine"],
+  "bodyparts": ["Back"],
+  "muscles": [
+    { "name": "Latissimus Dorsi", "rank": 1 },
+    { "name": "Rhomboids", "rank": 2 },
+    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Biceps Brachii", "rank": 4 },
+    { "name": "Brachialis", "rank": 5 },
+    { "name": "Posterior Deltoid", "rank": 6 },
+    { "name": "Teres Minor", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Lat Pulldown - Cable Machine",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Straight Bar Attachment"],
+  "bodyparts": ["Back"],
+  "muscles": [
+    { "name": "Latissimus Dorsi", "rank": 1 },
+    { "name": "Rhomboids", "rank": 2 },
+    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Biceps Brachii", "rank": 4 },
+    { "name": "Brachialis", "rank": 5 },
+    { "name": "Posterior Deltoid", "rank": 6 },
+    { "name": "Teres Minor", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Lat Pulldown - Cable Machine (Close Grip)",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Straight Bar Attachment"],
+  "bodyparts": ["Back"],
+  "muscles": [
+    { "name": "Latissimus Dorsi", "rank": 1 },
+    { "name": "Biceps Brachii", "rank": 2 },
+    { "name": "Rhomboids", "rank": 3 },
+    { "name": "Trapezius (middle)", "rank": 4 },
+    { "name": "Brachialis", "rank": 5 },
+    { "name": "Posterior Deltoid", "rank": 6 },
+    { "name": "Teres Minor", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Lat Pulldown - Cable Machine (Wide Grip)",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Straight Bar Attachment"],
+  "bodyparts": ["Back", "Shoulders"],
+  "muscles": [
+    { "name": "Latissimus Dorsi", "rank": 1 },
+    { "name": "Rhomboids", "rank": 2 },
+    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Posterior Deltoid", "rank": 4 },
+    { "name": "Teres Minor", "rank": 5 },
+    { "name": "Biceps Brachii", "rank": 6 },
+    { "name": "Brachialis", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Lat Pulldown - Cable Machine (Reverse Grip)",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Straight Bar Attachment"],
+  "bodyparts": ["Back"],
+  "muscles": [
+    { "name": "Biceps Brachii", "rank": 1 },
+    { "name": "Latissimus Dorsi", "rank": 2 },
+    { "name": "Rhomboids", "rank": 3 },
+    { "name": "Trapezius (middle)", "rank": 4 },
+    { "name": "Brachialis", "rank": 5 },
+    { "name": "Posterior Deltoid", "rank": 6 },
+    { "name": "Teres Minor", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Lateral Raise - Lateral raise machine",
+  "rating": 23,
+  "equipment": ["Lateral raise machine"],
+  "bodyparts": ["Shoulders"],
+  "muscles": [
+    { "name": "Lateral Deltoid", "rank": 1 },
+    { "name": "Anterior Deltoid", "rank": 2 },
+    { "name": "Posterior Deltoid", "rank": 3 },
+    { "name": "Supraspinatus", "rank": 4 },
+    { "name": "Trapezius (upper)", "rank": 5 },
+    { "name": "Serratus Anterior", "rank": 6 },
+    { "name": "Infraspinatus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Lateral Raise - Cable Machine",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Handle Attachment"],
+  "bodyparts": ["Shoulders"],
+  "muscles": [
+    { "name": "Lateral Deltoid", "rank": 1 },
+    { "name": "Anterior Deltoid", "rank": 2 },
+    { "name": "Posterior Deltoid", "rank": 3 },
+    { "name": "Supraspinatus", "rank": 4 },
+    { "name": "Trapezius (upper)", "rank": 5 },
+    { "name": "Serratus Anterior", "rank": 6 },
+    { "name": "Infraspinatus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Lateral Raise - Dumbbell (Straight Arm)",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Shoulders"],
+  "muscles": [
+    { "name": "Lateral Deltoid", "rank": 1 },
+    { "name": "Supraspinatus", "rank": 2 },
+    { "name": "Anterior Deltoid", "rank": 3 },
+    { "name": "Posterior Deltoid", "rank": 4 },
+    { "name": "Trapezius (upper)", "rank": 5 },
+    { "name": "Serratus Anterior", "rank": 6 },
+    { "name": "Infraspinatus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Lateral Raise - Dumbbell (Bent Arm)",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Shoulders"],
+  "muscles": [
+    { "name": "Lateral Deltoid", "rank": 1 },
+    { "name": "Supraspinatus", "rank": 2 },
+    { "name": "Anterior Deltoid", "rank": 3 },
+    { "name": "Posterior Deltoid", "rank": 4 },
+    { "name": "Trapezius (upper)", "rank": 5 },
+    { "name": "Serratus Anterior", "rank": 6 },
+    { "name": "Infraspinatus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Leg Curl - Cable Machine (Standing)",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Ankle Cuff Attachment"],
+  "bodyparts": ["Hamstrings"],
+  "muscles": [
+    { "name": "Biceps Femoris", "rank": 1 },
+    { "name": "Semitendinosus", "rank": 2 },
+    { "name": "Semimembranosus", "rank": 3 },
+    { "name": "Gluteus Maximus", "rank": 4 },
+    { "name": "Erector Spinae", "rank": 5 },
+    { "name": "Gastrocnemius", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Leg Curl - Leg Curl Machine (seated)",
+  "rating": 23,
+  "equipment": ["Leg Curl Machine (seated)"],
+  "bodyparts": ["Hamstrings"],
+  "muscles": [
+    { "name": "Biceps Femoris", "rank": 1 },
+    { "name": "Semitendinosus", "rank": 2 },
+    { "name": "Semimembranosus", "rank": 3 },
+    { "name": "Gluteus Maximus", "rank": 4 },
+    { "name": "Erector Spinae", "rank": 5 },
+    { "name": "Gastrocnemius", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Leg Curl - Leg Curl Machine (lying)",
+  "rating": 23,
+  "equipment": ["Leg Curl Machine (lying)"],
+  "bodyparts": ["Hamstrings"],
+  "muscles": [
+    { "name": "Biceps Femoris", "rank": 1 },
+    { "name": "Semitendinosus", "rank": 2 },
+    { "name": "Semimembranosus", "rank": 3 },
+    { "name": "Gluteus Maximus", "rank": 4 },
+    { "name": "Erector Spinae", "rank": 5 },
+    { "name": "Gastrocnemius", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Leg Extension - Leg extension machine",
+  "rating": 23,
+  "equipment": ["Leg extension machine"],
+  "bodyparts": ["Quads"],
+  "muscles": [
+    { "name": "Rectus Femoris", "rank": 1 },
+    { "name": "Vastus Lateralis", "rank": 2 },
+    { "name": "Vastus Medialis", "rank": 3 },
+    { "name": "Vastus Intermedius", "rank": 4 },
+    { "name": "Adductor Magnus", "rank": 5 },
+    { "name": "Erector Spinae", "rank": 6 },
+    { "name": "Transverse Abdominis", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Leg Raise",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Hip Flexors"],
+  "muscles": [
+    { "name": "Iliopsoas", "rank": 1 },
+    { "name": "Rectus Femoris", "rank": 2 },
+    { "name": "Rectus Abdominis", "rank": 3 },
+    { "name": "Transverse Abdominis", "rank": 4 },
+    { "name": "Obliques", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Leg Raise (Hanging)",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Hip Flexors"],
+  "muscles": [
+    { "name": "Iliopsoas", "rank": 1 },
+    { "name": "Rectus Femoris", "rank": 2 },
+    { "name": "Rectus Abdominis", "rank": 3 },
+    { "name": "Transverse Abdominis", "rank": 4 },
+    { "name": "Obliques", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Leg Raise (Lying)",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Hip Flexors"],
+  "muscles": [
+    { "name": "Iliopsoas", "rank": 1 },
+    { "name": "Rectus Femoris", "rank": 2 },
+    { "name": "Rectus Abdominis", "rank": 3 },
+    { "name": "Transverse Abdominis", "rank": 4 },
+    { "name": "Obliques", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Leg Raise Twist",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Abs", "Hip Flexors"],
+  "muscles": [
+    { "name": "Obliques", "rank": 1 },
+    { "name": "Iliopsoas", "rank": 2 },
+    { "name": "Rectus Abdominis", "rank": 3 },
+    { "name": "Transverse Abdominis", "rank": 4 },
+    { "name": "Rectus Femoris", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Leg Raise Twist (Hanging)",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Abs", "Hip Flexors"],
+  "muscles": [
+    { "name": "Obliques", "rank": 1 },
+    { "name": "Iliopsoas", "rank": 2 },
+    { "name": "Rectus Abdominis", "rank": 3 },
+    { "name": "Transverse Abdominis", "rank": 4 },
+    { "name": "Rectus Femoris", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Leg Raise Twist (Lying)",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Abs", "Hip Flexors"],
+  "muscles": [
+    { "name": "Obliques", "rank": 1 },
+    { "name": "Iliopsoas", "rank": 2 },
+    { "name": "Rectus Abdominis", "rank": 3 },
+    { "name": "Transverse Abdominis", "rank": 4 },
+    { "name": "Rectus Femoris", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Leg Press",
+  "rating": 23,
+  "equipment": ["Leg Press Machine", "Weight Plates"],
+  "bodyparts": ["Quads", "Glutes", "Hamstrings"],
+  "muscles": [
+    { "name": "Vastus Lateralis", "rank": 1 },
+    { "name": "Vastus Medialis", "rank": 2 },
+    { "name": "Rectus Femoris", "rank": 3 },
+    { "name": "Gluteus Maximus", "rank": 4 },
+    { "name": "Biceps Femoris", "rank": 5 },
+    { "name": "Adductor Magnus", "rank": 6 },
+    { "name": "Gastrocnemius", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Lying Leg Curl - Leg Curl Machine (lying)",
+  "rating": 23,
+  "equipment": ["Leg Curl Machine (lying)"],
+  "bodyparts": ["Hamstrings"],
+  "muscles": [
+    { "name": "Biceps Femoris", "rank": 1 },
+    { "name": "Semitendinosus", "rank": 2 },
+    { "name": "Semimembranosus", "rank": 3 },
+    { "name": "Gluteus Maximus", "rank": 4 },
+    { "name": "Erector Spinae", "rank": 5 },
+    { "name": "Gastrocnemius", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Lying Leg Curl - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Hamstrings"],
+  "muscles": [
+    { "name": "Biceps Femoris", "rank": 1 },
+    { "name": "Semitendinosus", "rank": 2 },
+    { "name": "Semimembranosus", "rank": 3 },
+    { "name": "Gluteus Maximus", "rank": 4 },
+    { "name": "Erector Spinae", "rank": 5 },
+    { "name": "Gastrocnemius", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Lunge",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Quads", "Glutes", "Hamstrings"],
+  "muscles": [
+    { "name": "Rectus Femoris", "rank": 1 },
+    { "name": "Gluteus Maximus", "rank": 2 },
+    { "name": "Biceps Femoris", "rank": 3 },
+    { "name": "Vastus Lateralis", "rank": 4 },
+    { "name": "Vastus Medialis", "rank": 5 },
+    { "name": "Adductor Magnus", "rank": 6 },
+    { "name": "Gastrocnemius", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Lunge - Cable Machine",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Ankle Cuff Attachment"],
+  "bodyparts": ["Quads", "Glutes", "Hamstrings"],
+  "muscles": [
+    { "name": "Rectus Femoris", "rank": 1 },
+    { "name": "Gluteus Maximus", "rank": 2 },
+    { "name": "Biceps Femoris", "rank": 3 },
+    { "name": "Vastus Lateralis", "rank": 4 },
+    { "name": "Vastus Medialis", "rank": 5 },
+    { "name": "Adductor Magnus", "rank": 6 },
+    { "name": "Gastrocnemius", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Lunge - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Quads", "Glutes", "Hamstrings"],
+  "muscles": [
+    { "name": "Rectus Femoris", "rank": 1 },
+    { "name": "Gluteus Maximus", "rank": 2 },
+    { "name": "Biceps Femoris", "rank": 3 },
+    { "name": "Vastus Lateralis", "rank": 4 },
+    { "name": "Vastus Medialis", "rank": 5 },
+    { "name": "Adductor Magnus", "rank": 6 },
+    { "name": "Gastrocnemius", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Lunge - Barbell",
+  "rating": 23,
+  "equipment": ["Barbell", "Weight Plates", "Squat Rack"],
+  "bodyparts": ["Quads", "Glutes", "Hamstrings"],
+  "muscles": [
+    { "name": "Rectus Femoris", "rank": 1 },
+    { "name": "Gluteus Maximus", "rank": 2 },
+    { "name": "Biceps Femoris", "rank": 3 },
+    { "name": "Vastus Lateralis", "rank": 4 },
+    { "name": "Vastus Medialis", "rank": 5 },
+    { "name": "Adductor Magnus", "rank": 6 },
+    { "name": "Gastrocnemius", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Mountain Climber",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Hip Flexors", "Shoulders"],
+  "muscles": [
+    { "name": "Rectus Abdominis", "rank": 1 },
+    { "name": "Transverse Abdominis", "rank": 2 },
+    { "name": "Obliques", "rank": 3 },
+    { "name": "Iliopsoas", "rank": 4 },
+    { "name": "Rectus Femoris", "rank": 5 },
+    { "name": "Anterior Deltoid", "rank": 6 },
+    { "name": "Serratus Anterior", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Mountain Climber (Crossbody)",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Abs", "Hip Flexors"],
+  "muscles": [
+    { "name": "Obliques", "rank": 1 },
+    { "name": "Rectus Abdominis", "rank": 2 },
+    { "name": "Transverse Abdominis", "rank": 3 },
+    { "name": "Iliopsoas", "rank": 4 },
+    { "name": "Rectus Femoris", "rank": 5 },
+    { "name": "Anterior Deltoid", "rank": 6 },
+    { "name": "Serratus Anterior", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Muscle Up",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Back", "Chest", "Arms", "Shoulders"],
+  "muscles": [
+    { "name": "Latissimus Dorsi", "rank": 1 },
+    { "name": "Pectoralis Major", "rank": 2 },
+    { "name": "Biceps Brachii", "rank": 3 },
+    { "name": "Triceps Brachii", "rank": 4 },
+    { "name": "Anterior Deltoid", "rank": 5 },
+    { "name": "Rhomboids", "rank": 6 },
+    { "name": "Trapezius (upper)", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Oblique Crunch",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Abs"],
+  "muscles": [
+    { "name": "Obliques", "rank": 1 },
+    { "name": "Rectus Abdominis", "rank": 2 },
+    { "name": "Transverse Abdominis", "rank": 3 },
+    { "name": "Iliopsoas", "rank": 4 },
+    { "name": "Rectus Femoris", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Oblique V-Up",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Abs"],
+  "muscles": [
+    { "name": "Obliques", "rank": 1 },
+    { "name": "Rectus Abdominis", "rank": 2 },
+    { "name": "Transverse Abdominis", "rank": 3 },
+    { "name": "Iliopsoas", "rank": 4 },
+    { "name": "Rectus Femoris", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Gluteus Medius", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Overhead Press - Cable Machine",
+  "rating": 23,
+  "equipment": ["Cable Machine"],
+  "bodyparts": ["Shoulders", "Arms"],
+  "muscles": [
+    { "name": "Anterior Deltoid", "rank": 1 },
+    { "name": "Lateral Deltoid", "rank": 2 },
+    { "name": "Triceps Brachii", "rank": 3 },
+    { "name": "Serratus Anterior", "rank": 4 },
+    { "name": "Trapezius (upper)", "rank": 5 },
+    { "name": "Supraspinatus", "rank": 6 },
+    { "name": "Infraspinatus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Overhead Press - Barbell",
+  "rating": 23,
+  "equipment": ["Barbell", "Weight Plates", "Squat Rack"],
+  "bodyparts": ["Shoulders", "Arms"],
+  "muscles": [
+    { "name": "Anterior Deltoid", "rank": 1 },
+    { "name": "Lateral Deltoid", "rank": 2 },
+    { "name": "Triceps Brachii", "rank": 3 },
+    { "name": "Serratus Anterior", "rank": 4 },
+    { "name": "Trapezius (upper)", "rank": 5 },
+    { "name": "Supraspinatus", "rank": 6 },
+    { "name": "Infraspinatus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Overhead Press - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Shoulders", "Arms"],
+  "muscles": [
+    { "name": "Anterior Deltoid", "rank": 1 },
+    { "name": "Lateral Deltoid", "rank": 2 },
+    { "name": "Triceps Brachii", "rank": 3 },
+    { "name": "Serratus Anterior", "rank": 4 },
+    { "name": "Trapezius (upper)", "rank": 5 },
+    { "name": "Supraspinatus", "rank": 6 },
+    { "name": "Infraspinatus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Overhead Squat - Barbell",
+  "rating": 23,
+  "equipment": ["Barbell", "Weight Plates", "Squat Rack"],
+  "bodyparts": ["Quads", "Shoulders"],
+  "muscles": [
+    { "name": "Rectus Femoris", "rank": 1 },
+    { "name": "Gluteus Maximus", "rank": 2 },
+    { "name": "Erector Spinae", "rank": 3 },
+    { "name": "Anterior Deltoid", "rank": 4 },
+    { "name": "Transverse Abdominis", "rank": 5 },
+    { "name": "Trapezius (upper)", "rank": 6 },
+    { "name": "Adductor Magnus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Overhead Squat - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Quads", "Shoulders"],
+  "muscles": [
+    { "name": "Rectus Femoris", "rank": 1 },
+    { "name": "Gluteus Maximus", "rank": 2 },
+    { "name": "Erector Spinae", "rank": 3 },
+    { "name": "Anterior Deltoid", "rank": 4 },
+    { "name": "Transverse Abdominis", "rank": 5 },
+    { "name": "Trapezius (upper)", "rank": 6 },
+    { "name": "Adductor Magnus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Pec Deck Fly",
+  "rating": 23,
+  "equipment": ["Pec Deck Machine"],
+  "bodyparts": ["Chest", "Shoulders"],
+  "muscles": [
+    { "name": "Pectoralis Major", "rank": 1 },
+    { "name": "Pectoralis Minor", "rank": 2 },
+    { "name": "Anterior Deltoid", "rank": 3 },
+    { "name": "Serratus Anterior", "rank": 4 },
+    { "name": "Triceps Brachii", "rank": 5 },
+    { "name": "Latissimus Dorsi", "rank": 6 },
+    { "name": "Rhomboids", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Pendlay Row - Barbell",
+  "rating": 23,
+  "equipment": ["Barbell", "Weight Plates"],
+  "bodyparts": ["Back"],
+  "muscles": [
+    { "name": "Latissimus Dorsi", "rank": 1 },
+    { "name": "Rhomboids", "rank": 2 },
+    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Posterior Deltoid", "rank": 4 },
+    { "name": "Biceps Brachii", "rank": 5 },
+    { "name": "Erector Spinae", "rank": 6 },
+    { "name": "Brachialis", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Pike Push-up",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Shoulders", "Arms", "Chest"],
+  "muscles": [
+    { "name": "Anterior Deltoid", "rank": 1 },
+    { "name": "Triceps Brachii", "rank": 2 },
+    { "name": "Pectoralis Major", "rank": 3 },
+    { "name": "Serratus Anterior", "rank": 4 },
+    { "name": "Transverse Abdominis", "rank": 5 },
+    { "name": "Trapezius (upper)", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Pistol Squat",
+  "rating": 23,
+  "equipment": ["Bodyweight or support handle (optional)"],
+  "bodyparts": ["Quads", "Glutes", "Hamstrings"],
+  "muscles": [
+    { "name": "Rectus Femoris", "rank": 1 },
+    { "name": "Gluteus Maximus", "rank": 2 },
+    { "name": "Biceps Femoris", "rank": 3 },
+    { "name": "Vastus Medialis", "rank": 4 },
+    { "name": "Vastus Lateralis", "rank": 5 },
+    { "name": "Adductor Magnus", "rank": 6 },
+    { "name": "Tibialis Anterior", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Plank",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Shoulders", "Back"],
+  "muscles": [
+    { "name": "Transverse Abdominis", "rank": 1 },
+    { "name": "Rectus Abdominis", "rank": 2 },
+    { "name": "Obliques", "rank": 3 },
+    { "name": "Erector Spinae", "rank": 4 },
+    { "name": "Serratus Anterior", "rank": 5 },
+    { "name": "Anterior Deltoid", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Power Clean - Barbell",
+  "rating": 23,
+  "equipment": ["Barbell", "Weight Plates"],
+  "bodyparts": ["Back", "Shoulders"],
+  "muscles": [
+    { "name": "Rectus Femoris", "rank": 1 },
+    { "name": "Gluteus Maximus", "rank": 2 },
+    { "name": "Biceps Femoris", "rank": 3 },
+    { "name": "Trapezius (upper)", "rank": 4 },
+    { "name": "Posterior Deltoid", "rank": 5 },
+    { "name": "Latissimus Dorsi", "rank": 6 },
+    { "name": "Biceps Brachii", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Power Snatch - Barbell",
+  "rating": 23,
+  "equipment": ["Barbell", "Weight Plates"],
+  "bodyparts": ["Back", "Shoulders"],
+  "muscles": [
+    { "name": "Anterior Deltoid", "rank": 1 },
+    { "name": "Trapezius (upper)", "rank": 2 },
+    { "name": "Rectus Femoris", "rank": 3 },
+    { "name": "Gluteus Maximus", "rank": 4 },
+    { "name": "Biceps Femoris", "rank": 5 },
+    { "name": "Latissimus Dorsi", "rank": 6 },
+    { "name": "Biceps Brachii", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Preacher Curl - Cable Machine",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Straight Bar Attachment"],
+  "bodyparts": ["Arms", "Forearms"],
+  "muscles": [
+    { "name": "Biceps Brachii", "rank": 1 },
+    { "name": "Brachialis", "rank": 2 },
+    { "name": "Brachioradialis", "rank": 3 },
+    { "name": "Pronator Teres", "rank": 4 },
+    { "name": "Wrist Flexors", "rank": 5 },
+    { "name": "Anterior Deltoid", "rank": 6 },
+    { "name": "Trapezius (upper)", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Preacher Curl - Barbell",
+  "rating": 23,
+  "equipment": ["Barbell"],
+  "bodyparts": ["Arms", "Forearms"],
+  "muscles": [
+    { "name": "Biceps Brachii", "rank": 1 },
+    { "name": "Brachialis", "rank": 2 },
+    { "name": "Brachioradialis", "rank": 3 },
+    { "name": "Pronator Teres", "rank": 4 },
+    { "name": "Wrist Flexors", "rank": 5 },
+    { "name": "Anterior Deltoid", "rank": 6 },
+    { "name": "Trapezius (upper)", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Preacher Curl - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell", "Preacher Bench"],
+  "bodyparts": ["Arms", "Forearms"],
+  "muscles": [
+    { "name": "Biceps Brachii", "rank": 1 },
+    { "name": "Brachialis", "rank": 2 },
+    { "name": "Brachioradialis", "rank": 3 },
+    { "name": "Pronator Teres", "rank": 4 },
+    { "name": "Wrist Flexors", "rank": 5 },
+    { "name": "Anterior Deltoid", "rank": 6 },
+    { "name": "Trapezius (upper)", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Preacher Curl - Barbell (with Preacher Bench)",
+  "rating": 23,
+  "equipment": ["Barbell", "Preacher Bench"],
+  "bodyparts": ["Arms", "Forearms"],
+  "muscles": [
+    { "name": "Biceps Brachii", "rank": 1 },
+    { "name": "Brachialis", "rank": 2 },
+    { "name": "Brachioradialis", "rank": 3 },
+    { "name": "Pronator Teres", "rank": 4 },
+    { "name": "Wrist Flexors", "rank": 5 },
+    { "name": "Anterior Deltoid", "rank": 6 },
+    { "name": "Trapezius (upper)", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Pull Apart",
+  "rating": 23,
+  "equipment": ["Resistance Band"],
+  "bodyparts": ["Back", "Shoulders"],
+  "muscles": [
+    { "name": "Rhomboids", "rank": 1 },
+    { "name": "Trapezius (middle)", "rank": 2 },
+    { "name": "Posterior Deltoid", "rank": 3 },
+    { "name": "Infraspinatus", "rank": 4 },
+    { "name": "Teres Minor", "rank": 5 },
+    { "name": "Supraspinatus", "rank": 6 },
+    { "name": "Levator Scapulae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Pull Through - Resistance Band",
+  "rating": 23,
+  "equipment": ["Resistance Band"],
+  "bodyparts": ["Glutes", "Hamstrings", "Abs"],
+  "muscles": [
+    { "name": "Gluteus Maximus", "rank": 1 },
+    { "name": "Biceps Femoris", "rank": 2 },
+    { "name": "Semitendinosus", "rank": 3 },
+    { "name": "Erector Spinae", "rank": 4 },
+    { "name": "Adductor Magnus", "rank": 5 },
+    { "name": "Transverse Abdominis", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Pull Through - Cable Machine",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Rope Attachment"],
+  "bodyparts": ["Glutes", "Hamstrings", "Abs"],
+  "muscles": [
+    { "name": "Gluteus Maximus", "rank": 1 },
+    { "name": "Biceps Femoris", "rank": 2 },
+    { "name": "Semitendinosus", "rank": 3 },
+    { "name": "Erector Spinae", "rank": 4 },
+    { "name": "Adductor Magnus", "rank": 5 },
+    { "name": "Transverse Abdominis", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Pull Up",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Back", "Shoulders"],
+  "muscles": [
+    { "name": "Latissimus Dorsi", "rank": 1 },
+    { "name": "Biceps Brachii", "rank": 2 },
+    { "name": "Brachialis", "rank": 3 },
+    { "name": "Rhomboids", "rank": 4 },
+    { "name": "Trapezius (middle)", "rank": 5 },
+    { "name": "Posterior Deltoid", "rank": 6 },
+    { "name": "Brachioradialis", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Pull Up – Close Grip",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Back"],
+  "muscles": [
+    { "name": "Biceps Brachii", "rank": 1 },
+    { "name": "Latissimus Dorsi", "rank": 2 },
+    { "name": "Brachialis", "rank": 3 },
+    { "name": "Rhomboids", "rank": 4 },
+    { "name": "Trapezius (middle)", "rank": 5 },
+    { "name": "Posterior Deltoid", "rank": 6 },
+    { "name": "Brachioradialis", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Pull Up – Wide Grip",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Back", "Shoulders"],
+  "muscles": [
+    { "name": "Latissimus Dorsi", "rank": 1 },
+    { "name": "Rhomboids", "rank": 2 },
+    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Posterior Deltoid", "rank": 4 },
+    { "name": "Teres Minor", "rank": 5 },
+    { "name": "Biceps Brachii", "rank": 6 },
+    { "name": "Brachialis", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Pull Up – Reverse Grip",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Back"],
+  "muscles": [
+    { "name": "Biceps Brachii", "rank": 1 },
+    { "name": "Latissimus Dorsi", "rank": 2 },
+    { "name": "Brachialis", "rank": 3 },
+    { "name": "Rhomboids", "rank": 4 },
+    { "name": "Trapezius (middle)", "rank": 5 },
+    { "name": "Posterior Deltoid", "rank": 6 },
+    { "name": "Brachioradialis", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Pull Up - Assisted Dip/Pull-Up Machine",
+  "rating": 23,
+  "equipment": ["Assisted Dip/Pull-Up Machine"],
+  "bodyparts": ["Back", "Shoulders"],
+  "muscles": [
+    { "name": "Latissimus Dorsi", "rank": 1 },
+    { "name": "Biceps Brachii", "rank": 2 },
+    { "name": "Brachialis", "rank": 3 },
+    { "name": "Rhomboids", "rank": 4 },
+    { "name": "Trapezius (middle)", "rank": 5 },
+    { "name": "Posterior Deltoid", "rank": 6 },
+    { "name": "Brachioradialis", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Pullover - Cable Machine",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Straight Bar Attachment"],
+  "bodyparts": ["Chest", "Back", "Abs"],
+  "muscles": [
+    { "name": "Latissimus Dorsi", "rank": 1 },
+    { "name": "Pectoralis Major", "rank": 2 },
+    { "name": "Serratus Anterior", "rank": 3 },
+    { "name": "Teres Major", "rank": 4 },
+    { "name": "Triceps Brachii", "rank": 5 },
+    { "name": "Transverse Abdominis", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Pullover - Barbell",
+  "rating": 23,
+  "equipment": ["Barbell", "Weight Plates"],
+  "bodyparts": ["Chest", "Back", "Abs"],
+  "muscles": [
+    { "name": "Latissimus Dorsi", "rank": 1 },
+    { "name": "Pectoralis Major", "rank": 2 },
+    { "name": "Serratus Anterior", "rank": 3 },
+    { "name": "Teres Major", "rank": 4 },
+    { "name": "Triceps Brachii", "rank": 5 },
+    { "name": "Transverse Abdominis", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Pullover - Dumbbell (Straight Arm)",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Chest", "Back", "Abs"],
+  "muscles": [
+    { "name": "Latissimus Dorsi", "rank": 1 },
+    { "name": "Pectoralis Major", "rank": 2 },
+    { "name": "Serratus Anterior", "rank": 3 },
+    { "name": "Teres Major", "rank": 4 },
+    { "name": "Transverse Abdominis", "rank": 5 },
+    { "name": "Triceps Brachii", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Pullover - Dumbbell (Bent Arm)",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Chest", "Back", "Abs"],
+  "muscles": [
+    { "name": "Pectoralis Major", "rank": 1 },
+    { "name": "Latissimus Dorsi", "rank": 2 },
+    { "name": "Serratus Anterior", "rank": 3 },
+    { "name": "Teres Major", "rank": 4 },
+    { "name": "Triceps Brachii", "rank": 5 },
+    { "name": "Transverse Abdominis", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+{
+  "name": "Push Away",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Chest", "Shoulders", "Arms", "Core"],
+  "muscles": [
+    { "name": "Serratus Anterior", "rank": 1 },
+    { "name": "Pectoralis Major", "rank": 2 },
+    { "name": "Anterior Deltoid", "rank": 3 },
+    { "name": "Triceps Brachii", "rank": 4 },
+    { "name": "Transverse Abdominis", "rank": 5 },
+    { "name": "Rectus Abdominis", "rank": 6 },
+    { "name": "Rhomboids", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Push Press - Barbell",
+  "rating": 23,
+  "equipment": ["Barbell", "Weight Plates", "Squat Rack"],
+  "bodyparts": ["Shoulders", "Arms", "Core"],
+  "muscles": [
+    { "name": "Anterior Deltoid", "rank": 1 },
+    { "name": "Lateral Deltoid", "rank": 2 },
+    { "name": "Triceps Brachii", "rank": 3 },
+    { "name": "Gluteus Maximus", "rank": 4 },
+    { "name": "Rectus Femoris", "rank": 5 },
+    { "name": "Trapezius (upper)", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Push Press - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Shoulders", "Arms", "Core"],
+  "muscles": [
+    { "name": "Anterior Deltoid", "rank": 1 },
+    { "name": "Lateral Deltoid", "rank": 2 },
+    { "name": "Triceps Brachii", "rank": 3 },
+    { "name": "Gluteus Maximus", "rank": 4 },
+    { "name": "Rectus Femoris", "rank": 5 },
+    { "name": "Trapezius (upper)", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Push-up",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Chest", "Arms", "Shoulders"],
+  "muscles": [
+    { "name": "Pectoralis Major", "rank": 1 },
+    { "name": "Triceps Brachii", "rank": 2 },
+    { "name": "Anterior Deltoid", "rank": 3 },
+    { "name": "Serratus Anterior", "rank": 4 },
+    { "name": "Pectoralis Minor", "rank": 5 },
+    { "name": "Transverse Abdominis", "rank": 6 },
+    { "name": "Rhomboids", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Push-up (Close Grip)",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Arms", "Chest", "Shoulders"],
+  "muscles": [
+    { "name": "Triceps Brachii", "rank": 1 },
+    { "name": "Pectoralis Major", "rank": 2 },
+    { "name": "Anterior Deltoid", "rank": 3 },
+    { "name": "Serratus Anterior", "rank": 4 },
+    { "name": "Pectoralis Minor", "rank": 5 },
+    { "name": "Transverse Abdominis", "rank": 6 },
+    { "name": "Rhomboids", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Push-up (Wide Grip)",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Chest", "Shoulders", "Arms"],
+  "muscles": [
+    { "name": "Pectoralis Major", "rank": 1 },
+    { "name": "Anterior Deltoid", "rank": 2 },
+    { "name": "Triceps Brachii", "rank": 3 },
+    { "name": "Serratus Anterior", "rank": 4 },
+    { "name": "Pectoralis Minor", "rank": 5 },
+    { "name": "Transverse Abdominis", "rank": 6 },
+    { "name": "Rhomboids", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Rack Pull - Barbell",
+  "rating": 23,
+  "equipment": ["Barbell", "Weight Plates", "Power Rack"],
+  "bodyparts": ["Back", "Hamstrings", "Glutes"],
+  "muscles": [
+    { "name": "Erector Spinae", "rank": 1 },
+    { "name": "Gluteus Maximus", "rank": 2 },
+    { "name": "Biceps Femoris", "rank": 3 },
+    { "name": "Latissimus Dorsi", "rank": 4 },
+    { "name": "Trapezius (upper)", "rank": 5 },
+    { "name": "Adductor Magnus", "rank": 6 },
+    { "name": "Quadratus Lumborum", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Renegade Row - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Back", "Arms"],
+  "muscles": [
+    { "name": "Latissimus Dorsi", "rank": 1 },
+    { "name": "Rhomboids", "rank": 2 },
+    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Transverse Abdominis", "rank": 4 },
+    { "name": "Biceps Brachii", "rank": 5 },
+    { "name": "Triceps Brachii", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Reverse Fly - Cable Machine",
+  "rating": 23,
+  "equipment": ["Cable Machine"],
+  "bodyparts": ["Back", "Shoulders"],
+  "muscles": [
+    { "name": "Posterior Deltoid", "rank": 1 },
+    { "name": "Rhomboids", "rank": 2 },
+    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Infraspinatus", "rank": 4 },
+    { "name": "Teres Minor", "rank": 5 },
+    { "name": "Supraspinatus", "rank": 6 },
+    { "name": "Levator Scapulae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Reverse Fly - Dumbbell (Bent Over)",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Back", "Shoulders"],
+  "muscles": [
+    { "name": "Posterior Deltoid", "rank": 1 },
+    { "name": "Rhomboids", "rank": 2 },
+    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Infraspinatus", "rank": 4 },
+    { "name": "Teres Minor", "rank": 5 },
+    { "name": "Supraspinatus", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Reverse Fly - Dumbbell (Seated)",
+  "rating": 23,
+  "equipment": ["Dumbbell", "Adjustable Bench"],
+  "bodyparts": ["Back", "Shoulders"],
+  "muscles": [
+    { "name": "Posterior Deltoid", "rank": 1 },
+    { "name": "Rhomboids", "rank": 2 },
+    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Infraspinatus", "rank": 4 },
+    { "name": "Teres Minor", "rank": 5 },
+    { "name": "Supraspinatus", "rank": 6 },
+    { "name": "Levator Scapulae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Reverse Fly - Dumbbell (Standing)",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Back", "Shoulders"],
+  "muscles": [
+    { "name": "Posterior Deltoid", "rank": 1 },
+    { "name": "Rhomboids", "rank": 2 },
+    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Infraspinatus", "rank": 4 },
+    { "name": "Teres Minor", "rank": 5 },
+    { "name": "Supraspinatus", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Reverse Fly - Dumbbell (Lying)",
+  "rating": 23,
+  "equipment": ["Dumbbell", "Adjustable Bench (face down)"],
+  "bodyparts": ["Back", "Shoulders"],
+  "muscles": [
+    { "name": "Posterior Deltoid", "rank": 1 },
+    { "name": "Rhomboids", "rank": 2 },
+    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Infraspinatus", "rank": 4 },
+    { "name": "Teres Minor", "rank": 5 },
+    { "name": "Supraspinatus", "rank": 6 },
+    { "name": "Levator Scapulae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Reverse Crunch",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Abs"],
+  "muscles": [
+    { "name": "Rectus Abdominis", "rank": 1 },
+    { "name": "Transverse Abdominis", "rank": 2 },
+    { "name": "Obliques", "rank": 3 },
+    { "name": "Iliopsoas", "rank": 4 },
+    { "name": "Rectus Femoris", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Reverse Crunch - Cable Machine",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Ankle Cuff Attachment"],
+  "bodyparts": ["Abs"],
+  "muscles": [
+    { "name": "Rectus Abdominis", "rank": 1 },
+    { "name": "Transverse Abdominis", "rank": 2 },
+    { "name": "Obliques", "rank": 3 },
+    { "name": "Iliopsoas", "rank": 4 },
+    { "name": "Rectus Femoris", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Reverse Curl - Cable Machine",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Straight Bar Attachment"],
+  "bodyparts": ["Forearms"],
+  "muscles": [
+    { "name": "Brachioradialis", "rank": 1 },
+    { "name": "Brachialis", "rank": 2 },
+    { "name": "Wrist Extensors", "rank": 3 },
+    { "name": "Pronator Teres", "rank": 4 },
+    { "name": "Biceps Brachii", "rank": 5 },
+    { "name": "Anterior Deltoid", "rank": 6 },
+    { "name": "Trapezius (upper)", "rank": 7 }
+  ]
+},
+{
+  "name": "Reverse Curl - Barbell",
+  "rating": 23,
+  "equipment": ["Barbell", "Weight Plates"],
+  "bodyparts": ["Forearms"],
+  "muscles": [
+    { "name": "Brachioradialis", "rank": 1 },
+    { "name": "Brachialis", "rank": 2 },
+    { "name": "Wrist Extensors", "rank": 3 },
+    { "name": "Pronator Teres", "rank": 4 },
+    { "name": "Biceps Brachii", "rank": 5 },
+    { "name": "Anterior Deltoid", "rank": 6 },
+    { "name": "Trapezius (upper)", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Reverse Curl - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Forearms"],
+  "muscles": [
+    { "name": "Brachioradialis", "rank": 1 },
+    { "name": "Brachialis", "rank": 2 },
+    { "name": "Wrist Extensors", "rank": 3 },
+    { "name": "Pronator Teres", "rank": 4 },
+    { "name": "Biceps Brachii", "rank": 5 },
+    { "name": "Anterior Deltoid", "rank": 6 },
+    { "name": "Trapezius (upper)", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Reverse Lunge",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Quads", "Glutes", "Hamstrings"],
+  "muscles": [
+    { "name": "Gluteus Maximus", "rank": 1 },
+    { "name": "Biceps Femoris", "rank": 2 },
+    { "name": "Rectus Femoris", "rank": 3 },
+    { "name": "Vastus Lateralis", "rank": 4 },
+    { "name": "Adductor Magnus", "rank": 5 },
+    { "name": "Gastrocnemius", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Reverse Lunge - Landmine Attachment",
+  "rating": 23,
+  "equipment": ["Landmine Attachment", "Barbell"],
+  "bodyparts": ["Quads", "Glutes", "Hamstrings"],
+  "muscles": [
+    { "name": "Gluteus Maximus", "rank": 1 },
+    { "name": "Biceps Femoris", "rank": 2 },
+    { "name": "Rectus Femoris", "rank": 3 },
+    { "name": "Vastus Lateralis", "rank": 4 },
+    { "name": "Adductor Magnus", "rank": 5 },
+    { "name": "Gastrocnemius", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Reverse Lunge - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Quads", "Glutes", "Hamstrings"],
+  "muscles": [
+    { "name": "Gluteus Maximus", "rank": 1 },
+    { "name": "Biceps Femoris", "rank": 2 },
+    { "name": "Rectus Femoris", "rank": 3 },
+    { "name": "Vastus Lateralis", "rank": 4 },
+    { "name": "Adductor Magnus", "rank": 5 },
+    { "name": "Gastrocnemius", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Reverse Lunge - Barbell",
+  "rating": 23,
+  "equipment": ["Barbell", "Weight Plates", "Squat Rack"],
+  "bodyparts": ["Quads", "Glutes", "Hamstrings"],
+  "muscles": [
+    { "name": "Gluteus Maximus", "rank": 1 },
+    { "name": "Biceps Femoris", "rank": 2 },
+    { "name": "Rectus Femoris", "rank": 3 },
+    { "name": "Vastus Lateralis", "rank": 4 },
+    { "name": "Adductor Magnus", "rank": 5 },
+    { "name": "Gastrocnemius", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Reverse Lunge - Kettlebell",
+  "rating": 23,
+  "equipment": ["Kettlebell"],
+  "bodyparts": ["Quads", "Glutes", "Hamstrings"],
+  "muscles": [
+    { "name": "Gluteus Maximus", "rank": 1 },
+    { "name": "Biceps Femoris", "rank": 2 },
+    { "name": "Rectus Femoris", "rank": 3 },
+    { "name": "Vastus Lateralis", "rank": 4 },
+    { "name": "Adductor Magnus", "rank": 5 },
+    { "name": "Gastrocnemius", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Reverse Lunge - Cable Machine",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Ankle Cuff Attachment"],
+  "bodyparts": ["Quads", "Glutes", "Hamstrings"],
+  "muscles": [
+    { "name": "Gluteus Maximus", "rank": 1 },
+    { "name": "Biceps Femoris", "rank": 2 },
+    { "name": "Rectus Femoris", "rank": 3 },
+    { "name": "Vastus Lateralis", "rank": 4 },
+    { "name": "Adductor Magnus", "rank": 5 },
+    { "name": "Gastrocnemius", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Reverse Lunge - Smith Machine",
+  "rating": 23,
+  "equipment": ["Smith Machine"],
+  "bodyparts": ["Quads", "Glutes", "Hamstrings"],
+  "muscles": [
+    { "name": "Gluteus Maximus", "rank": 1 },
+    { "name": "Biceps Femoris", "rank": 2 },
+    { "name": "Rectus Femoris", "rank": 3 },
+    { "name": "Vastus Lateralis", "rank": 4 },
+    { "name": "Adductor Magnus", "rank": 5 },
+    { "name": "Gastrocnemius", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+{
+  "name": "Reverse Plank",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Glutes", "Shoulders", "Back"],
+  "muscles": [
+    { "name": "Erector Spinae", "rank": 1 },
+    { "name": "Gluteus Maximus", "rank": 2 },
+    { "name": "Transverse Abdominis", "rank": 3 },
+    { "name": "Biceps Femoris", "rank": 4 },
+    { "name": "Posterior Deltoid", "rank": 5 },
+    { "name": "Triceps Brachii", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Romanian Deadlift - Barbell",
+  "rating": 23,
+  "equipment": ["Barbell", "Weight Plates"],
+  "bodyparts": ["Hamstrings", "Glutes", "Back"],
+  "muscles": [
+    { "name": "Biceps Femoris", "rank": 1 },
+    { "name": "Semitendinosus", "rank": 2 },
+    { "name": "Gluteus Maximus", "rank": 3 },
+    { "name": "Erector Spinae", "rank": 4 },
+    { "name": "Semimembranosus", "rank": 5 },
+    { "name": "Adductor Magnus", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Row - Landmine Attachment",
+  "rating": 23,
+  "equipment": ["Landmine Attachment", "Barbell"],
+  "bodyparts": ["Back"],
+  "muscles": [
+    { "name": "Latissimus Dorsi", "rank": 1 },
+    { "name": "Rhomboids", "rank": 2 },
+    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Biceps Brachii", "rank": 4 },
+    { "name": "Posterior Deltoid", "rank": 5 },
+    { "name": "Brachialis", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Row - Resistance Band",
+  "rating": 23,
+  "equipment": ["Resistance Band"],
+  "bodyparts": ["Back"],
+  "muscles": [
+    { "name": "Latissimus Dorsi", "rank": 1 },
+    { "name": "Rhomboids", "rank": 2 },
+    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Biceps Brachii", "rank": 4 },
+    { "name": "Posterior Deltoid", "rank": 5 },
+    { "name": "Brachialis", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Row - Kettlebell",
+  "rating": 23,
+  "equipment": ["Kettlebell"],
+  "bodyparts": ["Back"],
+  "muscles": [
+    { "name": "Latissimus Dorsi", "rank": 1 },
+    { "name": "Rhomboids", "rank": 2 },
+    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Biceps Brachii", "rank": 4 },
+    { "name": "Posterior Deltoid", "rank": 5 },
+    { "name": "Brachialis", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Row - Cable Machine",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Handle Attachment"],
+  "bodyparts": ["Back"],
+  "muscles": [
+    { "name": "Latissimus Dorsi", "rank": 1 },
+    { "name": "Rhomboids", "rank": 2 },
+    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Biceps Brachii", "rank": 4 },
+    { "name": "Posterior Deltoid", "rank": 5 },
+    { "name": "Brachialis", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Row - Smith Machine",
+  "rating": 23,
+  "equipment": ["Smith Machine"],
+  "bodyparts": ["Back"],
+  "muscles": [
+    { "name": "Latissimus Dorsi", "rank": 1 },
+    { "name": "Rhomboids", "rank": 2 },
+    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Biceps Brachii", "rank": 4 },
+    { "name": "Posterior Deltoid", "rank": 5 },
+    { "name": "Brachialis", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Row - Barbell",
+  "rating": 23,
+  "equipment": ["Barbell", "Weight Plates"],
+  "bodyparts": ["Back"],
+  "muscles": [
+    { "name": "Latissimus Dorsi", "rank": 1 },
+    { "name": "Rhomboids", "rank": 2 },
+    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Biceps Brachii", "rank": 4 },
+    { "name": "Posterior Deltoid", "rank": 5 },
+    { "name": "Brachialis", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Row - Dumbbell (Bent Over)",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Back"],
+  "muscles": [
+    { "name": "Latissimus Dorsi", "rank": 1 },
+    { "name": "Rhomboids", "rank": 2 },
+    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Biceps Brachii", "rank": 4 },
+    { "name": "Posterior Deltoid", "rank": 5 },
+    { "name": "Brachialis", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Row - Dumbbell (Kneeling)",
+  "rating": 23,
+  "equipment": ["Dumbbell", "Adjustable Bench"],
+  "bodyparts": ["Back"],
+  "muscles": [
+    { "name": "Latissimus Dorsi", "rank": 1 },
+    { "name": "Rhomboids", "rank": 2 },
+    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Biceps Brachii", "rank": 4 },
+    { "name": "Posterior Deltoid", "rank": 5 },
+    { "name": "Brachialis", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Row - Dumbbell (Seated)",
+  "rating": 23,
+  "equipment": ["Dumbbell", "Adjustable Bench"],
+  "bodyparts": ["Back"],
+  "muscles": [
+    { "name": "Latissimus Dorsi", "rank": 1 },
+    { "name": "Rhomboids", "rank": 2 },
+    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Biceps Brachii", "rank": 4 },
+    { "name": "Posterior Deltoid", "rank": 5 },
+    { "name": "Brachialis", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Row - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Back"],
+  "muscles": [
+    { "name": "Latissimus Dorsi", "rank": 1 },
+    { "name": "Rhomboids", "rank": 2 },
+    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Biceps Brachii", "rank": 4 },
+    { "name": "Posterior Deltoid", "rank": 5 },
+    { "name": "Brachialis", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+{
+  "name": "Row - Dumbbell (Reverse Grip)",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Back"],
+  "muscles": [
+    { "name": "Biceps Brachii", "rank": 1 },
+    { "name": "Latissimus Dorsi", "rank": 2 },
+    { "name": "Rhomboids", "rank": 3 },
+    { "name": "Trapezius (middle)", "rank": 4 },
+    { "name": "Posterior Deltoid", "rank": 5 },
+    { "name": "Brachialis", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Russian Twist",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Abs"],
+  "muscles": [
+    { "name": "Obliques", "rank": 1 },
+    { "name": "Rectus Abdominis", "rank": 2 },
+    { "name": "Transverse Abdominis", "rank": 3 },
+    { "name": "Iliopsoas", "rank": 4 },
+    { "name": "Rectus Femoris", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Russian Twist - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Abs"],
+  "muscles": [
+    { "name": "Obliques", "rank": 1 },
+    { "name": "Rectus Abdominis", "rank": 2 },
+    { "name": "Transverse Abdominis", "rank": 3 },
+    { "name": "Iliopsoas", "rank": 4 },
+    { "name": "Rectus Femoris", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Seated Chest Press",
+  "rating": 23,
+  "equipment": ["Chest Press Machine"],
+  "bodyparts": ["Chest", "Arms", "Shoulders"],
+  "muscles": [
+    { "name": "Pectoralis Major", "rank": 1 },
+    { "name": "Triceps Brachii", "rank": 2 },
+    { "name": "Anterior Deltoid", "rank": 3 },
+    { "name": "Serratus Anterior", "rank": 4 },
+    { "name": "Pectoralis Minor", "rank": 5 },
+    { "name": "Trapezius (upper)", "rank": 6 },
+    { "name": "Latissimus Dorsi", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Seated Leg Curl",
+  "rating": 23,
+  "equipment": ["Leg Curl Machine (seated)"],
+  "bodyparts": ["Hamstrings"],
+  "muscles": [
+    { "name": "Biceps Femoris", "rank": 1 },
+    { "name": "Semitendinosus", "rank": 2 },
+    { "name": "Semimembranosus", "rank": 3 },
+    { "name": "Gluteus Maximus", "rank": 4 },
+    { "name": "Erector Spinae", "rank": 5 },
+    { "name": "Gastrocnemius", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Seated Leg Press",
+  "rating": 23,
+  "equipment": ["Seated Leg Press Machine", "Weight Plates"],
+  "bodyparts": ["Quads", "Glutes", "Hamstrings"],
+  "muscles": [
+    { "name": "Vastus Lateralis", "rank": 1 },
+    { "name": "Vastus Medialis", "rank": 2 },
+    { "name": "Rectus Femoris", "rank": 3 },
+    { "name": "Gluteus Maximus", "rank": 4 },
+    { "name": "Biceps Femoris", "rank": 5 },
+    { "name": "Adductor Magnus", "rank": 6 },
+    { "name": "Gastrocnemius", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Shrug - Cable Machine",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Straight Bar Attachment"],
+  "bodyparts": ["Trapezius", "Shoulders"],
+  "muscles": [
+    { "name": "Trapezius (upper)", "rank": 1 },
+    { "name": "Levator Scapulae", "rank": 2 },
+    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Rhomboids", "rank": 4 },
+    { "name": "Posterior Deltoid", "rank": 5 },
+    { "name": "Erector Spinae", "rank": 6 },
+    { "name": "Serratus Anterior", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Shrug - Barbell",
+  "rating": 23,
+  "equipment": ["Barbell", "Weight Plates"],
+  "bodyparts": ["Traps", "Neck"],
+  "muscles": [
+    { "name": "Trapezius (upper)", "rank": 1 },
+    { "name": "Levator Scapulae", "rank": 2 },
+    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Rhomboids", "rank": 4 },
+    { "name": "Erector Spinae", "rank": 5 },
+    { "name": "Posterior Deltoid", "rank": 6 },
+    { "name": "Serratus Anterior", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Shrug - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Traps", "Neck"],
+  "muscles": [
+    { "name": "Trapezius (upper)", "rank": 1 },
+    { "name": "Levator Scapulae", "rank": 2 },
+    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Rhomboids", "rank": 4 },
+    { "name": "Erector Spinae", "rank": 5 },
+    { "name": "Posterior Deltoid", "rank": 6 },
+    { "name": "Serratus Anterior", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Side Bend - Cable Machine",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Handle Attachment"],
+  "bodyparts": ["Abs"],
+  "muscles": [
+    { "name": "Obliques", "rank": 1 },
+    { "name": "Quadratus Lumborum", "rank": 2 },
+    { "name": "Transverse Abdominis", "rank": 3 },
+    { "name": "Rectus Abdominis", "rank": 4 },
+    { "name": "Iliopsoas", "rank": 5 },
+    { "name": "Rectus Femoris", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Side Bend - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Abs"],
+  "muscles": [
+    { "name": "Obliques", "rank": 1 },
+    { "name": "Quadratus Lumborum", "rank": 2 },
+    { "name": "Transverse Abdominis", "rank": 3 },
+    { "name": "Rectus Abdominis", "rank": 4 },
+    { "name": "Iliopsoas", "rank": 5 },
+    { "name": "Rectus Femoris", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Side Bridge",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Abs", "Shoulders"],
+  "muscles": [
+    { "name": "Obliques", "rank": 1 },
+    { "name": "Transverse Abdominis", "rank": 2 },
+    { "name": "Quadratus Lumborum", "rank": 3 },
+    { "name": "Gluteus Medius", "rank": 4 },
+    { "name": "Gluteus Maximus", "rank": 5 },
+    { "name": "Lateral Deltoid", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Side Bridge - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Abs", "Shoulders"],
+  "muscles": [
+    { "name": "Obliques", "rank": 1 },
+    { "name": "Transverse Abdominis", "rank": 2 },
+    { "name": "Quadratus Lumborum", "rank": 3 },
+    { "name": "Gluteus Medius", "rank": 4 },
+    { "name": "Gluteus Maximus", "rank": 5 },
+    { "name": "Lateral Deltoid", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Side Lunge",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Adductors", "Quads", "Glutes"],
+  "muscles": [
+    { "name": "Adductor Magnus", "rank": 1 },
+    { "name": "Gluteus Maximus", "rank": 2 },
+    { "name": "Rectus Femoris", "rank": 3 },
+    { "name": "Vastus Lateralis", "rank": 4 },
+    { "name": "Gastrocnemius", "rank": 5 },
+    { "name": "Erector Spinae", "rank": 6 },
+    { "name": "Gluteus Medius", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Side Lunge - Cable Machine",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Ankle Cuff Attachment"],
+  "bodyparts": ["Adductors", "Quads", "Glutes"],
+  "muscles": [
+    { "name": "Adductor Magnus", "rank": 1 },
+    { "name": "Gluteus Maximus", "rank": 2 },
+    { "name": "Rectus Femoris", "rank": 3 },
+    { "name": "Vastus Lateralis", "rank": 4 },
+    { "name": "Gastrocnemius", "rank": 5 },
+    { "name": "Erector Spinae", "rank": 6 },
+    { "name": "Gluteus Medius", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Side Lunge - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Adductors", "Quads", "Glutes"],
+  "muscles": [
+    { "name": "Adductor Magnus", "rank": 1 },
+    { "name": "Gluteus Maximus", "rank": 2 },
+    { "name": "Rectus Femoris", "rank": 3 },
+    { "name": "Vastus Lateralis", "rank": 4 },
+    { "name": "Gastrocnemius", "rank": 5 },
+    { "name": "Erector Spinae", "rank": 6 },
+    { "name": "Gluteus Medius", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Side Plank",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Abs", "Shoulders"],
+  "muscles": [
+    { "name": "Transverse Abdominis", "rank": 1 },
+    { "name": "Obliques", "rank": 2 },
+    { "name": "Rectus Abdominis", "rank": 3 },
+    { "name": "Gluteus Medius", "rank": 4 },
+    { "name": "Lateral Deltoid", "rank": 5 },
+    { "name": "Erector Spinae", "rank": 6 },
+    { "name": "Serratus Anterior", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Side Plank (Straight Knees)",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Abs", "Shoulders"],
+  "muscles": [
+    { "name": "Obliques", "rank": 1 },
+    { "name": "Transverse Abdominis", "rank": 2 },
+    { "name": "Rectus Abdominis", "rank": 3 },
+    { "name": "Gluteus Medius", "rank": 4 },
+    { "name": "Lateral Deltoid", "rank": 5 },
+    { "name": "Erector Spinae", "rank": 6 },
+    { "name": "Serratus Anterior", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Side Plank (Bent Knees)",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Abs"],
+  "muscles": [
+    { "name": "Obliques", "rank": 1 },
+    { "name": "Transverse Abdominis", "rank": 2 },
+    { "name": "Rectus Abdominis", "rank": 3 },
+    { "name": "Gluteus Medius", "rank": 4 },
+    { "name": "Lateral Deltoid", "rank": 5 },
+    { "name": "Erector Spinae", "rank": 6 },
+    { "name": "Serratus Anterior", "rank": 7 }
+  ]
+},
+{
+  "name": "Single Arm Row - Landmine Attachment",
+  "rating": 23,
+  "equipment": ["Landmine Attachment", "Barbell"],
+  "bodyparts": ["Back"],
+  "muscles": [
+    { "name": "Latissimus Dorsi", "rank": 1 },
+    { "name": "Rhomboids", "rank": 2 },
+    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Biceps Brachii", "rank": 4 },
+    { "name": "Posterior Deltoid", "rank": 5 },
+    { "name": "Brachialis", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Single Arm Row - Cable Machine",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Handle Attachment"],
+  "bodyparts": ["Back"],
+  "muscles": [
+    { "name": "Latissimus Dorsi", "rank": 1 },
+    { "name": "Rhomboids", "rank": 2 },
+    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Biceps Brachii", "rank": 4 },
+    { "name": "Posterior Deltoid", "rank": 5 },
+    { "name": "Brachialis", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Single Arm Row - Dumbbell (Kneeling)",
+  "rating": 23,
+  "equipment": ["Dumbbell", "Adjustable Bench"],
+  "bodyparts": ["Back"],
+  "muscles": [
+    { "name": "Latissimus Dorsi", "rank": 1 },
+    { "name": "Rhomboids", "rank": 2 },
+    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Biceps Brachii", "rank": 4 },
+    { "name": "Posterior Deltoid", "rank": 5 },
+    { "name": "Brachialis", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Single Arm Row - Dumbbell (Seated)",
+  "rating": 23,
+  "equipment": ["Dumbbell", "Adjustable Bench"],
+  "bodyparts": ["Back"],
+  "muscles": [
+    { "name": "Latissimus Dorsi", "rank": 1 },
+    { "name": "Rhomboids", "rank": 2 },
+    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Biceps Brachii", "rank": 4 },
+    { "name": "Posterior Deltoid", "rank": 5 },
+    { "name": "Brachialis", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Single Arm Lat Pull-down - Lat Pulldown Machine",
+  "rating": 23,
+  "equipment": ["Lat Pulldown Machine"],
+  "bodyparts": ["Back"],
+  "muscles": [
+    { "name": "Latissimus Dorsi", "rank": 1 },
+    { "name": "Rhomboids", "rank": 2 },
+    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Biceps Brachii", "rank": 4 },
+    { "name": "Brachialis", "rank": 5 },
+    { "name": "Posterior Deltoid", "rank": 6 },
+    { "name": "Teres Minor", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Single Arm Lat Pull-down - Cable Machine",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Handle Attachment"],
+  "bodyparts": ["Back"],
+  "muscles": [
+    { "name": "Latissimus Dorsi", "rank": 1 },
+    { "name": "Rhomboids", "rank": 2 },
+    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Biceps Brachii", "rank": 4 },
+    { "name": "Brachialis", "rank": 5 },
+    { "name": "Posterior Deltoid", "rank": 6 },
+    { "name": "Teres Minor", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Single Arm Lat Raise - Cable Machine",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Handle Attachment"],
+  "bodyparts": ["Shoulders"],
+  "muscles": [
+    { "name": "Lateral Deltoid", "rank": 1 },
+    { "name": "Supraspinatus", "rank": 2 },
+    { "name": "Anterior Deltoid", "rank": 3 },
+    { "name": "Posterior Deltoid", "rank": 4 },
+    { "name": "Trapezius (upper)", "rank": 5 },
+    { "name": "Serratus Anterior", "rank": 6 },
+    { "name": "Infraspinatus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Single Arm Lat Raise - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Shoulders"],
+  "muscles": [
+    { "name": "Lateral Deltoid", "rank": 1 },
+    { "name": "Supraspinatus", "rank": 2 },
+    { "name": "Anterior Deltoid", "rank": 3 },
+    { "name": "Posterior Deltoid", "rank": 4 },
+    { "name": "Trapezius (upper)", "rank": 5 },
+    { "name": "Serratus Anterior", "rank": 6 },
+    { "name": "Infraspinatus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Single Leg Deadlift - Barbell",
+  "rating": 23,
+  "equipment": ["Barbell", "Weight Plates"],
+  "bodyparts": ["Hamstrings", "Glutes", "Back"],
+  "muscles": [
+    { "name": "Biceps Femoris", "rank": 1 },
+    { "name": "Semitendinosus", "rank": 2 },
+    { "name": "Gluteus Maximus", "rank": 3 },
+    { "name": "Erector Spinae", "rank": 4 },
+    { "name": "Semimembranosus", "rank": 5 },
+    { "name": "Adductor Magnus", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Single Leg Deadlift - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Hamstrings", "Glutes", "Back"],
+  "muscles": [
+    { "name": "Biceps Femoris", "rank": 1 },
+    { "name": "Semitendinosus", "rank": 2 },
+    { "name": "Gluteus Maximus", "rank": 3 },
+    { "name": "Erector Spinae", "rank": 4 },
+    { "name": "Semimembranosus", "rank": 5 },
+    { "name": "Adductor Magnus", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Single Leg Hip Thrust - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell", "Adjustable Bench"],
+  "bodyparts": ["Glutes", "Hamstrings", "Abs"],
+  "muscles": [
+    { "name": "Gluteus Maximus", "rank": 1 },
+    { "name": "Biceps Femoris", "rank": 2 },
+    { "name": "Semitendinosus", "rank": 3 },
+    { "name": "Erector Spinae", "rank": 4 },
+    { "name": "Multifidus", "rank": 5 },
+    { "name": "Transverse Abdominis", "rank": 6 },
+    { "name": "Quadratus Lumborum", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Single Leg Hip Thrust - Barbell",
+  "rating": 23,
+  "equipment": ["Barbell", "Weight Plates", "Adjustable Bench"],
+  "bodyparts": ["Glutes", "Hamstrings", "Abs"],
+  "muscles": [
+    { "name": "Gluteus Maximus", "rank": 1 },
+    { "name": "Biceps Femoris", "rank": 2 },
+    { "name": "Semitendinosus", "rank": 3 },
+    { "name": "Erector Spinae", "rank": 4 },
+    { "name": "Multifidus", "rank": 5 },
+    { "name": "Transverse Abdominis", "rank": 6 },
+    { "name": "Quadratus Lumborum", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Sit-Up",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Abs"],
+  "muscles": [
+    { "name": "Rectus Abdominis", "rank": 1 },
+    { "name": "Transverse Abdominis", "rank": 2 },
+    { "name": "Obliques", "rank": 3 },
+    { "name": "Iliopsoas", "rank": 4 },
+    { "name": "Rectus Femoris", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Sit-Up - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Abs"],
+  "muscles": [
+    { "name": "Rectus Abdominis", "rank": 1 },
+    { "name": "Transverse Abdominis", "rank": 2 },
+    { "name": "Obliques", "rank": 3 },
+    { "name": "Iliopsoas", "rank": 4 },
+    { "name": "Rectus Femoris", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Skull Crusher - Cable Machine",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Rope Attachment"],
+  "bodyparts": ["Arms"],
+  "muscles": [
+    { "name": "Triceps Brachii", "rank": 1 },
+    { "name": "Anconeus", "rank": 2 },
+    { "name": "Wrist Extensors", "rank": 3 },
+    { "name": "Wrist Flexors", "rank": 4 },
+    { "name": "Transverse Abdominis", "rank": 5 },
+    { "name": "Rectus Abdominis", "rank": 6 },
+    { "name": "Serratus Anterior", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Skull Crusher - Barbell",
+  "rating": 23,
+  "equipment": ["Barbell", "Weight Plates"],
+  "bodyparts": ["Arms"],
+  "muscles": [
+    { "name": "Triceps Brachii", "rank": 1 },
+    { "name": "Anconeus", "rank": 2 },
+    { "name": "Wrist Extensors", "rank": 3 },
+    { "name": "Wrist Flexors", "rank": 4 },
+    { "name": "Transverse Abdominis", "rank": 5 },
+    { "name": "Rectus Abdominis", "rank": 6 },
+    { "name": "Serratus Anterior", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Skull Crusher - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Arms"],
+  "muscles": [
+    { "name": "Triceps Brachii", "rank": 1 },
+    { "name": "Anconeus", "rank": 2 },
+    { "name": "Wrist Extensors", "rank": 3 },
+    { "name": "Wrist Flexors", "rank": 4 },
+    { "name": "Transverse Abdominis", "rank": 5 },
+    { "name": "Rectus Abdominis", "rank": 6 },
+    { "name": "Serratus Anterior", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Sled Calf Press",
+  "rating": 23,
+  "equipment": ["Incline Leg Press Machine", "Weight Plates"],
+  "bodyparts": ["Calves"],
+  "muscles": [
+    { "name": "Gastrocnemius", "rank": 1 },
+    { "name": "Soleus", "rank": 2 },
+    { "name": "Tibialis Anterior", "rank": 3 },
+    { "name": "Gastrocnemius", "rank": 4 },
+    { "name": "Rectus Femoris", "rank": 5 },
+    { "name": "Vastus Lateralis", "rank": 6 },
+    { "name": "Gluteus Maximus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Sled Pull",
+  "rating": 23,
+  "equipment": ["Sled", "Harness"],
+  "bodyparts": ["Back", "Abs"],
+  "muscles": [
+    { "name": "Erector Spinae", "rank": 1 },
+    { "name": "Latissimus Dorsi", "rank": 2 },
+    { "name": "Gluteus Maximus", "rank": 3 },
+    { "name": "Biceps Femoris", "rank": 4 },
+    { "name": "Rectus Femoris", "rank": 5 },
+    { "name": "Transverse Abdominis", "rank": 6 },
+    { "name": "Trapezius (upper)", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Sled Push",
+  "rating": 23,
+  "equipment": ["Sled"],
+  "bodyparts": ["Chest"],
+  "muscles": [
+    { "name": "Vastus Lateralis", "rank": 1 },
+    { "name": "Gluteus Maximus", "rank": 2 },
+    { "name": "Gastrocnemius", "rank": 3 },
+    { "name": "Transverse Abdominis", "rank": 4 },
+    { "name": "Pectoralis Major", "rank": 5 },
+    { "name": "Anterior Deltoid", "rank": 6 },
+    { "name": "Triceps Brachii", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Snatch",
+  "rating": 23,
+  "equipment": ["Barbell", "Weight Plates"],
+  "bodyparts": ["Back", "Shoulders"],
+  "muscles": [
+    { "name": "Anterior Deltoid", "rank": 1 },
+    { "name": "Trapezius (upper)", "rank": 2 },
+    { "name": "Gluteus Maximus", "rank": 3 },
+    { "name": "Rectus Femoris", "rank": 4 },
+    { "name": "Biceps Femoris", "rank": 5 },
+    { "name": "Latissimus Dorsi", "rank": 6 },
+    { "name": "Biceps Brachii", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Split Jerk",
+  "rating": 23,
+  "equipment": ["Barbell", "Weight Plates", "Squat Rack"],
+  "bodyparts": ["Shoulders", "Arms"],
+  "muscles": [
+    { "name": "Anterior Deltoid", "rank": 1 },
+    { "name": "Triceps Brachii", "rank": 2 },
+    { "name": "Gluteus Maximus", "rank": 3 },
+    { "name": "Rectus Femoris", "rank": 4 },
+    { "name": "Biceps Femoris", "rank": 5 },
+    { "name": "Transverse Abdominis", "rank": 6 },
+    { "name": "Trapezius (upper)", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Split Squat",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Quads", "Glutes", "Hamstrings"],
+  "muscles": [
+    { "name": "Rectus Femoris", "rank": 1 },
+    { "name": "Gluteus Maximus", "rank": 2 },
+    { "name": "Biceps Femoris", "rank": 3 },
+    { "name": "Vastus Medialis", "rank": 4 },
+    { "name": "Adductor Magnus", "rank": 5 },
+    { "name": "Gastrocnemius", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Split Squat - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Quads", "Glutes", "Hamstrings"],
+  "muscles": [
+    { "name": "Rectus Femoris", "rank": 1 },
+    { "name": "Gluteus Maximus", "rank": 2 },
+    { "name": "Biceps Femoris", "rank": 3 },
+    { "name": "Vastus Medialis", "rank": 4 },
+    { "name": "Adductor Magnus", "rank": 5 },
+    { "name": "Gastrocnemius", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Split Squat - Barbell",
+  "rating": 23,
+  "equipment": ["Barbell", "Weight Plates", "Squat Rack"],
+  "bodyparts": ["Quads", "Glutes", "Hamstrings"],
+  "muscles": [
+    { "name": "Rectus Femoris", "rank": 1 },
+    { "name": "Gluteus Maximus", "rank": 2 },
+    { "name": "Biceps Femoris", "rank": 3 },
+    { "name": "Vastus Medialis", "rank": 4 },
+    { "name": "Adductor Magnus", "rank": 5 },
+    { "name": "Gastrocnemius", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Squat",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Quads", "Glutes", "Hamstrings", "Abs"],
+  "muscles": [
+    { "name": "Vastus Lateralis", "rank": 1 },
+    { "name": "Gluteus Maximus", "rank": 2 },
+    { "name": "Biceps Femoris", "rank": 3 },
+    { "name": "Vastus Medialis", "rank": 4 },
+    { "name": "Transverse Abdominis", "rank": 5 },
+    { "name": "Erector Spinae", "rank": 6 },
+    { "name": "Adductor Magnus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Squat - Landmine Attachment",
+  "rating": 23,
+  "equipment": ["Landmine Attachment", "Barbell", "Weight Plates"],
+  "bodyparts": ["Quads", "Glutes", "Hamstrings", "Abs"],
+  "muscles": [
+    { "name": "Vastus Lateralis", "rank": 1 },
+    { "name": "Gluteus Maximus", "rank": 2 },
+    { "name": "Biceps Femoris", "rank": 3 },
+    { "name": "Vastus Medialis", "rank": 4 },
+    { "name": "Transverse Abdominis", "rank": 5 },
+    { "name": "Erector Spinae", "rank": 6 },
+    { "name": "Adductor Magnus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Squat - Barbell",
+  "rating": 23,
+  "equipment": ["Barbell", "Weight Plates", "Squat Rack"],
+  "bodyparts": ["Quads", "Glutes", "Hamstrings", "Abs"],
+  "muscles": [
+    { "name": "Vastus Lateralis", "rank": 1 },
+    { "name": "Gluteus Maximus", "rank": 2 },
+    { "name": "Biceps Femoris", "rank": 3 },
+    { "name": "Vastus Medialis", "rank": 4 },
+    { "name": "Transverse Abdominis", "rank": 5 },
+    { "name": "Erector Spinae", "rank": 6 },
+    { "name": "Adductor Magnus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Squat - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Quads", "Glutes", "Hamstrings", "Abs"],
+  "muscles": [
+    { "name": "Vastus Lateralis", "rank": 1 },
+    { "name": "Gluteus Maximus", "rank": 2 },
+    { "name": "Biceps Femoris", "rank": 3 },
+    { "name": "Vastus Medialis", "rank": 4 },
+    { "name": "Transverse Abdominis", "rank": 5 },
+    { "name": "Erector Spinae", "rank": 6 },
+    { "name": "Adductor Magnus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Squat Calf Press",
+  "rating": 23,
+  "equipment": ["Leg Press Machine", "Weight Plates"],
+  "bodyparts": ["Quads", "Calves"],
+  "muscles": [
+    { "name": "Gastrocnemius", "rank": 1 },
+    { "name": "Soleus", "rank": 2 },
+    { "name": "Vastus Lateralis", "rank": 3 },
+    { "name": "Vastus Medialis", "rank": 4 },
+    { "name": "Rectus Femoris", "rank": 5 },
+    { "name": "Adductor Magnus", "rank": 6 },
+    { "name": "Gluteus Maximus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Straight Arm Lat Pull-down - Lat Pulldown Machine",
+  "rating": 23,
+  "equipment": ["Lat Pulldown Machine"],
+  "bodyparts": ["Back", "Shoulders"],
+  "muscles": [
+    { "name": "Latissimus Dorsi", "rank": 1 },
+    { "name": "Teres Major", "rank": 2 },
+    { "name": "Posterior Deltoid", "rank": 3 },
+    { "name": "Trapezius (lower)", "rank": 4 },
+    { "name": "Rhomboids", "rank": 5 },
+    { "name": "Erector Spinae", "rank": 6 },
+    { "name": "Infraspinatus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Straight Arm Lat Pull-down - Cable Machine",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Straight Bar Attachment"],
+  "bodyparts": ["Back", "Shoulders"],
+  "muscles": [
+    { "name": "Latissimus Dorsi", "rank": 1 },
+    { "name": "Teres Major", "rank": 2 },
+    { "name": "Posterior Deltoid", "rank": 3 },
+    { "name": "Trapezius (lower)", "rank": 4 },
+    { "name": "Rhomboids", "rank": 5 },
+    { "name": "Erector Spinae", "rank": 6 },
+    { "name": "Infraspinatus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Step-Up",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Quads", "Glutes", "Hamstrings"],
+  "muscles": [
+    { "name": "Rectus Femoris", "rank": 1 },
+    { "name": "Gluteus Maximus", "rank": 2 },
+    { "name": "Biceps Femoris", "rank": 3 },
+    { "name": "Vastus Lateralis", "rank": 4 },
+    { "name": "Vastus Medialis", "rank": 5 },
+    { "name": "Adductor Magnus", "rank": 6 },
+    { "name": "Gastrocnemius", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Step-Up - Barbell",
+  "rating": 23,
+  "equipment": ["Barbell", "Weight Plates"],
+  "bodyparts": ["Quads", "Glutes", "Hamstrings"],
+  "muscles": [
+    { "name": "Rectus Femoris", "rank": 1 },
+    { "name": "Gluteus Maximus", "rank": 2 },
+    { "name": "Biceps Femoris", "rank": 3 },
+    { "name": "Vastus Lateralis", "rank": 4 },
+    { "name": "Vastus Medialis", "rank": 5 },
+    { "name": "Adductor Magnus", "rank": 6 },
+    { "name": "Gastrocnemius", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Step-Up - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Quads", "Glutes", "Hamstrings"],
+  "muscles": [
+    { "name": "Rectus Femoris", "rank": 1 },
+    { "name": "Gluteus Maximus", "rank": 2 },
+    { "name": "Biceps Femoris", "rank": 3 },
+    { "name": "Vastus Lateralis", "rank": 4 }
+  ]
+},
+
+{
+  "name": "Stiff Leg Deadlift - Barbell",
+  "rating": 23,
+  "equipment": ["Barbell", "Weight Plates"],
+  "bodyparts": ["Hamstrings", "Back", "Glutes"],
+  "muscles": [
+    { "name": "Biceps Femoris", "rank": 1 },
+    { "name": "Semitendinosus", "rank": 2 },
+    { "name": "Gluteus Maximus", "rank": 3 },
+    { "name": "Erector Spinae", "rank": 4 },
+    { "name": "Semimembranosus", "rank": 5 },
+    { "name": "Adductor Magnus", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Swings - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Erector Spinae", "Hips", "Abs"],
+  "muscles": [
+    { "name": "Gluteus Maximus", "rank": 1 },
+    { "name": "Biceps Femoris", "rank": 2 },
+    { "name": "Erector Spinae", "rank": 3 },
+    { "name": "Quadratus Lumborum", "rank": 4 },    
+	{ "name": "Transverse Abdominis", "rank": 5 },
+    { "name": "Anterior Deltoid", "rank": 6 },
+    { "name": "Latissimus Dorsi", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Thruster - Barbell",
+  "rating": 23,
+  "equipment": ["Barbell", "Weight Plates", "Squat Rack"],
+  "bodyparts": ["Shoulders", "Abs"],
+  "muscles": [
+    { "name": "Rectus Femoris", "rank": 1 },
+    { "name": "Gluteus Maximus", "rank": 2 },
+    { "name": "Anterior Deltoid", "rank": 3 },
+    { "name": "Triceps Brachii", "rank": 4 },
+    { "name": "Transverse Abdominis", "rank": 5 },
+    { "name": "Trapezius (upper)", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Thruster - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Shoulders", "Abs"],
+  "muscles": [
+    { "name": "Rectus Femoris", "rank": 1 },
+    { "name": "Gluteus Maximus", "rank": 2 },
+    { "name": "Anterior Deltoid", "rank": 3 },
+    { "name": "Triceps Brachii", "rank": 4 },
+    { "name": "Transverse Abdominis", "rank": 5 },
+    { "name": "Trapezius (upper)", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Toes To Bar",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Hip Flexors", "Shoulders"],
+  "muscles": [
+    { "name": "Rectus Abdominis", "rank": 1 },
+    { "name": "Iliopsoas", "rank": 2 },
+    { "name": "Transverse Abdominis", "rank": 3 },
+    { "name": "Obliques", "rank": 4 },
+    { "name": "Anterior Deltoid", "rank": 5 },
+    { "name": "Serratus Anterior", "rank": 6 },
+    { "name": "Latissimus Dorsi", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Tricep Dip",
+  "rating": 23,
+  "equipment": ["Dip Bars"],
+  "bodyparts": ["Arms", "Chest", "Shoulders"],
+  "muscles": [
+    { "name": "Triceps Brachii", "rank": 1 },
+    { "name": "Pectoralis Major", "rank": 2 },
+    { "name": "Anterior Deltoid", "rank": 3 },
+    { "name": "Pectoralis Minor", "rank": 4 },
+    { "name": "Serratus Anterior", "rank": 5 },
+    { "name": "Rhomboids", "rank": 6 },
+    { "name": "Latissimus Dorsi", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Tricep Dip - Assisted Dip/Pull-Up Machine",
+  "rating": 23,
+  "equipment": ["Assisted Dip/Pull-Up Machine"],
+  "bodyparts": ["Arms", "Chest", "Shoulders"],
+  "muscles": [
+    { "name": "Triceps Brachii", "rank": 1 },
+    { "name": "Pectoralis Major", "rank": 2 },
+    { "name": "Anterior Deltoid", "rank": 3 },
+    { "name": "Pectoralis Minor", "rank": 4 },
+    { "name": "Serratus Anterior", "rank": 5 },
+    { "name": "Rhomboids", "rank": 6 },
+    { "name": "Latissimus Dorsi", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Tricep Extension - Cable Machine",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Rope Attachment"],
+  "bodyparts": ["Arms"],
+  "muscles": [
+    { "name": "Triceps Brachii", "rank": 1 },
+    { "name": "Anconeus", "rank": 2 },
+    { "name": "Wrist Extensors", "rank": 3 },
+    { "name": "Transverse Abdominis", "rank": 4 },
+    { "name": "Rectus Abdominis", "rank": 5 },
+    { "name": "Serratus Anterior", "rank": 6 },
+    { "name": "Latissimus Dorsi", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Tricep Extension - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Arms"],
+  "muscles": [
+    { "name": "Triceps Brachii", "rank": 1 },
+    { "name": "Anconeus", "rank": 2 },
+    { "name": "Wrist Extensors", "rank": 3 },
+    { "name": "Transverse Abdominis", "rank": 4 },
+    { "name": "Rectus Abdominis", "rank": 5 },
+    { "name": "Serratus Anterior", "rank": 6 },
+    { "name": "Latissimus Dorsi", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Tricep Extension - Barbell (Standing)",
+  "rating": 23,
+  "equipment": ["Barbell", "Weight Plates"],
+  "bodyparts": ["Arms"],
+  "muscles": [
+    { "name": "Triceps Brachii", "rank": 1 },
+    { "name": "Anconeus", "rank": 2 },
+    { "name": "Wrist Extensors", "rank": 3 },
+    { "name": "Transverse Abdominis", "rank": 4 },
+    { "name": "Rectus Abdominis", "rank": 5 },
+    { "name": "Serratus Anterior", "rank": 6 },
+    { "name": "Latissimus Dorsi", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Tricep Extension - Barbell (Bent Over)",
+  "rating": 23,
+  "equipment": ["Barbell", "Weight Plates"],
+  "bodyparts": ["Arms", "Back"],
+  "muscles": [
+    { "name": "Triceps Brachii", "rank": 1 },
+    { "name": "Anconeus", "rank": 2 },
+    { "name": "Posterior Deltoid", "rank": 3 },
+    { "name": "Trapezius (middle)", "rank": 4 },
+    { "name": "Rhomboids", "rank": 5 },
+    { "name": "Erector Spinae", "rank": 6 },
+    { "name": "Latissimus Dorsi", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Tricep Kickback - Cable Machine",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Handle Attachment"],
+  "bodyparts": ["Arms"],
+  "muscles": [
+    { "name": "Triceps Brachii", "rank": 1 },
+    { "name": "Anconeus", "rank": 2 },
+    { "name": "Posterior Deltoid", "rank": 3 },
+    { "name": "Latissimus Dorsi", "rank": 4 },
+    { "name": "Rhomboids", "rank": 5 },
+    { "name": "Trapezius (middle)", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Tricep Kickback - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Arms"],
+  "muscles": [
+    { "name": "Triceps Brachii", "rank": 1 },
+    { "name": "Anconeus", "rank": 2 },
+    { "name": "Posterior Deltoid", "rank": 3 },
+    { "name": "Latissimus Dorsi", "rank": 4 },
+    { "name": "Rhomboids", "rank": 5 },
+    { "name": "Trapezius (middle)", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Tricep Pushdown - Cable Machine",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Straight Bar Attachment"],
+  "bodyparts": ["Arms"],
+  "muscles": [
+    { "name": "Triceps Brachii", "rank": 1 },
+    { "name": "Anconeus", "rank": 2 },
+    { "name": "Wrist Extensors", "rank": 3 },
+    { "name": "Latissimus Dorsi", "rank": 4 },
+    { "name": "Rhomboids", "rank": 5 },
+    { "name": "Trapezius (middle)", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Tuck Crunch",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Abs"],
+  "muscles": [
+    { "name": "Rectus Abdominis", "rank": 1 },
+    { "name": "Transverse Abdominis", "rank": 2 },
+    { "name": "Obliques", "rank": 3 },
+    { "name": "Iliopsoas", "rank": 4 },
+    { "name": "Rectus Femoris", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Tuck Crunch - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Abs"],
+  "muscles": [
+    { "name": "Rectus Abdominis", "rank": 1 },
+    { "name": "Transverse Abdominis", "rank": 2 },
+    { "name": "Obliques", "rank": 3 },
+    { "name": "Iliopsoas", "rank": 4 },
+    { "name": "Rectus Femoris", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Turkish Get Up",
+  "rating": 23,
+  "equipment": ["Kettlebell"],
+  "bodyparts": ["Shoulders", "Hip Flexors"],
+  "muscles": [
+    { "name": "Transverse Abdominis", "rank": 1 },
+    { "name": "Gluteus Maximus", "rank": 2 },
+    { "name": "Anterior Deltoid", "rank": 3 },
+    { "name": "Latissimus Dorsi", "rank": 4 },
+    { "name": "Rectus Femoris", "rank": 5 },
+    { "name": "Biceps Femoris", "rank": 6 },
+    { "name": "Serratus Anterior", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Up-Down Twist - Cable Machine",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Handle Attachment"],
+  "bodyparts": ["Abs", "Shoulders"],
+  "muscles": [
+    { "name": "Obliques", "rank": 1 },
+    { "name": "Rectus Abdominis", "rank": 2 },
+    { "name": "Transverse Abdominis", "rank": 3 },
+    { "name": "Serratus Anterior", "rank": 4 },
+    { "name": "Latissimus Dorsi", "rank": 5 },
+    { "name": "Multifidus", "rank": 6 },
+    { "name": "Quadratus Lumborum", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Upright Row - Cable Machine",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Straight Bar Attachment"],
+  "bodyparts": ["Shoulders", "Traps"],
+  "muscles": [
+    { "name": "Lateral Deltoid", "rank": 1 },
+    { "name": "Trapezius (upper)", "rank": 2 },
+    { "name": "Anterior Deltoid", "rank": 3 },
+    { "name": "Rhomboids", "rank": 4 },
+    { "name": "Supraspinatus", "rank": 5 },
+    { "name": "Serratus Anterior", "rank": 6 },
+    { "name": "Biceps Brachii", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Upright Row - Barbell",
+  "rating": 23,
+  "equipment": ["Barbell", "Weight Plates"],
+  "bodyparts": ["Shoulders", "Traps"],
+  "muscles": [
+    { "name": "Lateral Deltoid", "rank": 1 },
+    { "name": "Trapezius (upper)", "rank": 2 },
+    { "name": "Anterior Deltoid", "rank": 3 },
+    { "name": "Rhomboids", "rank": 4 },
+    { "name": "Supraspinatus", "rank": 5 },
+    { "name": "Serratus Anterior", "rank": 6 },
+    { "name": "Biceps Brachii", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Upright Row - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Shoulders", "Traps"],
+  "muscles": [
+    { "name": "Lateral Deltoid", "rank": 1 },
+    { "name": "Trapezius (upper)", "rank": 2 },
+    { "name": "Anterior Deltoid", "rank": 3 },
+    { "name": "Rhomboids", "rank": 4 },
+    { "name": "Supraspinatus", "rank": 5 },
+    { "name": "Serratus Anterior", "rank": 6 },
+    { "name": "Biceps Brachii", "rank": 7 }
+  ]
+},
+
+{
+  "name": "V Up",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Hip Flexors"],
+  "muscles": [
+    { "name": "Rectus Abdominis", "rank": 1 },
+    { "name": "Iliopsoas", "rank": 2 },
+    { "name": "Transverse Abdominis", "rank": 3 },
+    { "name": "Obliques", "rank": 4 },
+    { "name": "Rectus Femoris", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "V Up - Resistance Band",
+  "rating": 23,
+  "equipment": ["Resistance Band"],
+  "bodyparts": ["Hip Flexors"],
+  "muscles": [
+    { "name": "Rectus Abdominis", "rank": 1 },
+    { "name": "Iliopsoas", "rank": 2 },
+    { "name": "Transverse Abdominis", "rank": 3 },
+    { "name": "Obliques", "rank": 4 },
+    { "name": "Rectus Femoris", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "V Up - Cable Machine",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Ankle Cuff Attachment"],
+  "bodyparts": ["Hip Flexors"],
+  "muscles": [
+    { "name": "Rectus Abdominis", "rank": 1 },
+    { "name": "Iliopsoas", "rank": 2 },
+    { "name": "Transverse Abdominis", "rank": 3 },
+    { "name": "Obliques", "rank": 4 },
+    { "name": "Rectus Femoris", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "V Up - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Hip Flexors"],
+  "muscles": [
+    { "name": "Rectus Abdominis", "rank": 1 },
+    { "name": "Iliopsoas", "rank": 2 },
+    { "name": "Transverse Abdominis", "rank": 3 },
+    { "name": "Obliques", "rank": 4 },
+    { "name": "Rectus Femoris", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Windmill Wipers",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Abs", "Hamstrings"],
+  "muscles": [
+    { "name": "Transverse Abdominis", "rank": 1 },
+    { "name": "Obliques", "rank": 2 },
+    { "name": "Rectus Abdominis", "rank": 3 },
+    { "name": "Biceps Femoris", "rank": 4 },
+    { "name": "Erector Spinae", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Windmill Wipers (Straight Knees)",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Abs", "Hamstrings"],
+  "muscles": [
+    { "name": "Transverse Abdominis", "rank": 1 },
+    { "name": "Obliques", "rank": 2 },
+    { "name": "Rectus Abdominis", "rank": 3 },
+    { "name": "Biceps Femoris", "rank": 4 },
+    { "name": "Erector Spinae", "rank": 5 },
+    { "name": "Quadratus Lumborum", "rank": 6 },
+    { "name": "Multifidus", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Windmill Wipers (Bent Knees)",
+  "rating": 23,
+  "equipment": ["Bodyweight"],
+  "bodyparts": ["Abs"],
+  "muscles": [
+    { "name": "Obliques", "rank": 1 },
+    { "name": "Transverse Abdominis", "rank": 2 },
+    { "name": "Rectus Abdominis", "rank": 3 },
+    { "name": "Multifidus", "rank": 4 },
+    { "name": "Quadratus Lumborum", "rank": 5 },
+    { "name": "Biceps Femoris", "rank": 6 },
+    { "name": "Erector Spinae", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Wrist Curl - Cable Machine",
+  "rating": 23,
+  "equipment": ["Cable Machine", "Cable Straight Bar Attachment"],
+  "bodyparts": ["Forearms"],
+  "muscles": [
+    { "name": "Wrist Flexors", "rank": 1 },
+    { "name": "Brachioradialis", "rank": 2 },
+    { "name": "Brachialis", "rank": 3 },
+    { "name": "Pronator Teres", "rank": 4 },
+    { "name": "Wrist Flexors", "rank": 5 },
+    { "name": "Wrist Extensors", "rank": 6 }
+  ]
+},
+
+{
+  "name": "Wrist Curl - Barbell",
+  "rating": 23,
+  "equipment": ["Barbell"],
+  "bodyparts": ["Forearms"],
+  "muscles": [
+    { "name": "Wrist Flexors", "rank": 1 },
+    { "name": "Brachioradialis", "rank": 2 },
+    { "name": "Brachialis", "rank": 3 },
+    { "name": "Pronator Teres", "rank": 4 },
+    { "name": "Wrist Flexors", "rank": 5 },
+    { "name": "Wrist Extensors", "rank": 6 }
+  ]
+},
+
+{
+  "name": "Wrist Curl - Dumbbell",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Forearms"],
+  "muscles": [
+    { "name": "Wrist Flexors", "rank": 1 },
+    { "name": "Brachioradialis", "rank": 2 },
+    { "name": "Brachialis", "rank": 3 },
+    { "name": "Pronator Teres", "rank": 4 },
+    { "name": "Wrist Flexors", "rank": 5 },
+    { "name": "Wrist Extensors", "rank": 6 }
+  ]
+},
+
+{
+  "name": "Wrist Curl - Dumbbell (Reverse Grip)",
+  "rating": 23,
+  "equipment": ["Dumbbell"],
+  "bodyparts": ["Forearms"],
+  "muscles": [
+    { "name": "Wrist Extensors", "rank": 1 },
+    { "name": "Brachioradialis", "rank": 2 },
+    { "name": "Brachialis", "rank": 3 },
+    { "name": "Pronator Teres", "rank": 4 },
+    { "name": "Wrist Extensors", "rank": 5 },
+    { "name": "Wrist Flexors", "rank": 6 }
+  ]
+},
+
+{
+  "name": "Zercher Carry - Barbell",
+  "rating": 23,
+  "equipment": ["Barbell", "Weight Plates"],
+  "bodyparts": ["Shoulders", "Arms", "Hips"],
+  "muscles": [
+    { "name": "Transverse Abdominis", "rank": 1 },
+    { "name": "Erector Spinae", "rank": 2 },
+    { "name": "Biceps Brachii", "rank": 3 },
+    { "name": "Anterior Deltoid", "rank": 4 },
+    { "name": "Gluteus Maximus", "rank": 5 },
+    { "name": "Rectus Femoris", "rank": 6 },
+    { "name": "Trapezius (upper)", "rank": 7 }
+  ]
+},
+
+{
+  "name": "Zercher Squat - Barbell",
+  "rating": 23,
+  "equipment": ["Barbell", "Weight Plates", "Squat Rack"],
+  "bodyparts": ["Arms"],
+  "muscles": [
+    { "name": "Vastus Lateralis", "rank": 1 },
+    { "name": "Gluteus Maximus", "rank": 2 },
+    { "name": "Biceps Femoris", "rank": 3 },
+    { "name": "Transverse Abdominis", "rank": 4 },
+    { "name": "Erector Spinae", "rank": 5 },
+    { "name": "Biceps Brachii", "rank": 6 },
+    { "name": "Trapezius (upper)", "rank": 7 }
+  ]
+},
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  {
+    "name": "Incline Bench Press - Cable Machine",
+    "rating": 80,
+    "equipment": ["Cable Machine", "Adjustable Bench", "Cable Handle Attachment"],
+    "bodyparts": ["Chest", "Shoulders"],
+    "muscles": [
+      {"name":"Pectoralis Major","rank":1},
+      {"name":"Anterior Deltoid","rank":2},
+      {"name":"Triceps Brachii","rank":3},
+      {"name":"Serratus Anterior","rank":4},
+      {"name":"Pectoralis Minor","rank":5},
+      {"name":"Lateral Deltoid","rank":6},
+      {"name":"Trapezius (upper)","rank":7}
+    ]
+  },
+  {
+    "name": "Incline Bench Press - Barbell",
+    "rating": 95,
+    "equipment": ["Barbell", "Weight Plates", "Adjustable Bench"],
+    "bodyparts": ["Chest", "Shoulders"],
+    "muscles": [
+      {"name":"Pectoralis Major","rank":1},
+      {"name":"Anterior Deltoid","rank":2},
+      {"name":"Triceps Brachii","rank":3},
+      {"name":"Serratus Anterior","rank":4},
+      {"name":"Pectoralis Minor","rank":5},
+      {"name":"Trapezius (upper)","rank":6},
+      {"name":"Latissimus Dorsi","rank":7}
+    ]
+  },
+  {
+    "name": "Incline Bench Press - Dumbbell",
+    "rating": 85,
+    "equipment": ["Dumbbell", "Adjustable Bench"],
+    "bodyparts": ["Chest", "Shoulders"],
+    "muscles": [
+      {"name":"Pectoralis Major","rank":1},
+      {"name":"Anterior Deltoid","rank":2},
+      {"name":"Triceps Brachii","rank":3},
+      {"name":"Serratus Anterior","rank":4},
+      {"name":"Pectoralis Minor","rank":5},
+      {"name":"Lateral Deltoid","rank":6},
+      {"name":"Trapezius (upper)","rank":7}
+    ]
+  },
+  {
+    "name": " ",
+    "rating": 100,
+    "equipment": [" "],
+    "bodyparts": [" "],
+    "muscles": [
+      {"name":" ","rank":1},
+      {"name":" ","rank":2},
+      {"name":" ","rank":3},
+      {"name":" ","rank":4},
+      {"name":" ","rank":5},
+      {"name":" ","rank":6},
+      {"name":" ","rank":7}
+    ]
+  }
+]

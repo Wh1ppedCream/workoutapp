@@ -1,0 +1,479 @@
+Muscles:
+Adductor brevis
+Adductor longus
+Adductor magnus
+Anconeus
+Anterior Deltoid
+Biceps brachii
+Biceps femoris
+Brachialis
+Brachioradialis
+Erector Spinae
+Gastrocnemius
+Gluteus maximus
+Gluteus medius
+Gluteus minimus
+Gracilis
+Iliopsoas
+Infraspinatus
+Latissimus dorsi
+Lateral Deltoid
+Levator Scapulae
+Multifidus
+Obliques
+Pectineus
+Pectoralis major
+Pectoralis minor
+Pelvic floor muscles
+Piriformis
+Posterior Deltoid
+Pronator Quadratus
+Pronator Teres
+Quadratus lumborum
+Rectus abdominis
+Rectus femoris
+Rhomboids
+Scalenes
+Semimembranosus
+Semitendinosus
+Serratus Anterior
+Soleus
+Splenius
+Sternocleidomastoid
+Supraspinatus
+Tensor fasciae latae
+Teres Major
+Teres Minor
+Tibialis anterior
+Trapezius (upper)
+Trapezius (middle)
+Trapezius (lower)
+Transverse abdominis
+Triceps brachii
+Vastus intermedius
+Vastus lateralis
+Vastus medialis
+Wrist flexors and extensors
+			
+Muscles Groups:
+	- Upper Body
+		Chest
+		Shoulders
+		Back
+		Arms
+		Forearms
+		Abdominals
+		Trapezius
+		Neck
+
+	Lower Body:
+		Quads
+		Hamstrings
+		Glutes
+		Calves
+		Hip Flexors
+		Hip Adductors
+		Hip Abductors
+	Core:
+		Abs
+		Erector Spinae
+
+
+
+
+
+Muscles
+	- Upper Body
+		Chest
+			Pectoralis major
+			Pectoralis minor
+			Serratus Anterior
+		Shoulders: 
+			Anterior Deltoid
+			Lateral Deltoid
+			Posterior Deltoid
+			Infraspinatus
+			Supraspinatus
+			Teres Major
+			Teres Minor
+		Back: 
+			Latissimus dorsi, 
+			Trapezius (upper, middle, lower), 
+			Rhomboids
+			Erector Spinae
+			Levator Scapulae
+		Arms: 
+			Anconeus
+			Biceps brachii, 
+			Triceps brachii, 
+			Brachialis
+			Pronator Teres
+			Pronator Quadratus
+		Forearms: 
+			Brachioradialis, 
+			Wrist flexors and 
+			extensors
+		Abdominals: 
+			Rectus abdominis, 
+			Transverse abdominis, 
+			Obliques
+		Neck: 
+			Sternocleidomastoid, 
+			Splenius 
+			Scalenes
+
+	Lower Body:
+		Quads: 
+			rectus femoris
+			vastus lateralis
+			vastus medialis
+			vastus intermedius
+		Hamstrings: 
+			Biceps femoris, 
+			Semitendinosus, 
+			Semimembranosus
+		Glutes: 
+			Gluteus maximus, 
+			Gluteus medius, 
+			Gluteus minimus
+			Piriformis
+			Tensor fasciae latae 
+		Calves: 
+			Gastrocnemius, 
+			Soleus
+			Tibialis anterior
+		Hip Flexors: 
+			Iliopsoas, 
+			Rectus femoris
+		Hip Adductors: 
+			Adductor longus, 
+			Adductor magnus, 
+			Adductor brevis
+			Gracilis
+			Pectineus
+		Hip Abductors: 
+			Gluteus medius, 
+			Gluteus minimus 
+	Core:
+		Abs: 
+			Rectus abdominis, 
+			Transverse abdominis, 
+			Obliques
+		Others: 
+			Quadratus lumborum
+			Multifidus
+			Pelvic floor muscles
+
+		
+Equipment: 
+.	ab roller
+.	Barbell
+.	Bench Press station
+.	Bicycle
+.	Bodyweight
+.	Cable Machine (Adjustable)
+.	calf raise machine (Seated)
+.	chest press machine
+.	Dip Bars/Station
+.	Dip/Pull-up Machine (Assisted)
+.	Dumbbell
+.	Elliptical
+	Flat Bench
+.	Hack Squat Machine
+.	Hip Thrust Machine
+.	HyperExtension Bench/Machine
+	Kettlebell
+.	Landmine
+.	Lat Pulldown Machine
+.	Lateral Raise Machine
+.	Leg Curl (lying)
+.	Leg Curl (seated)
+.	Leg Extension
+	Leg Press (flat)
+	Leg Press (incline)
+.	Medicine Ball
+	Pec Deck machine (pec fly)
+.	Preacher Bench
+.	Pull-up Bar
+	Resistance bands
+	Rowing Machine
+.	Sled
+	Smith Machine
+	Squat Rack
+.	Stair Climber
+.	Stationary Bike
+	Trap Bar
+.	Treadmill
+	weighted Row machine (cable)
+	weighted Row machine (seated)
+
+Exercises: 
+	Ab Wheel
+	Arm Circles
+	Arnold Press
+	Around the World
+	Back Extension
+	Backward Lunge
+	Ball Slam
+	Barbell Squat
+	Bench Fly
+	Bench Press
+	Bicep Curl
+	Bicycle Crunch
+	Bulgarian Split Squat
+	Burpee
+	Calf Press
+	Calf Raise
+	Chest Dip
+	Chest Fly
+	Chest Press
+	Chin Up
+	Clean
+	Clean and Press
+	Concentration Curl
+	Crunch
+	Cuban Rotation
+	Curtsey Lunge
+	Deadlift
+	Diamond Push-up
+	Donkey Kick
+	Down-Up Twist
+	Drag Curl
+	External Rotation (cable/band)
+	External Rotation (Dumbell/weights)
+	Face Pull
+	Farmer's Carry
+	Fire Hydrant
+	Floor Press
+	Front Raise
+	Front Squat
+	Glute Bridge
+	Glute Ham Raise
+	Glute Kickback
+	Good Morning
+	Hack Squat
+	Hammer Curl
+	Hang Clean
+	Hang Snatch
+	Heel Touch
+	High Pull
+	Hip Abductor
+	Hip Adductor 
+	Hip Extension
+	Hip Flexion
+	Hip Frog Extension
+	Hip Raise
+	Hip Thrust
+	In-And-Out
+	Incline Around the World
+	Incline Bench Fly
+	Incline Bench Press
+	Incline Bicep Curl
+	Incline Chest Press
+	Incline Leg Press
+	Incline Push-Up
+	Incline Reverse Fly
+	Incline Row
+	Internal Rotation
+	Inverted Row
+	Jump Squat
+	Jumping Jack
+	Kettlebell Swings
+	Knee Push-Up
+	Knee Raise
+	Knee Raise Twist
+	Kneeling Crunch
+	Kneeling Plank
+	Kneeling Pull-down
+	Kneeling Tricep Extension
+	Lat Pulldown
+	Lat Raise
+	Leg Curl
+	Leg Extension
+	Leg Raise
+	Leg Raise Twist
+	Leg Press
+	Lying Leg Curl
+	Lunge
+	Mountain Climber
+	Muscle Up
+	Oblique Crunch
+	Oblique V Up
+	Overhead Press
+	Overhead Squat
+	Pec Deck Fly
+	Pendlay Row
+	Pike Push-up
+	Pistol Squat
+	Plank
+	Power Clean
+	Power Snatch
+	Preacher Curl
+	Pull Apart
+	Pull Through
+	Pull Up
+	Pullover
+	Push Away
+	Push Press
+	Push-up
+	Rack Pull
+	Renegade Row
+	Reverse fly
+	Reverse Crunch
+	Reverse Curl
+	Reverse Plank
+	Romanian Deadlift
+	Row
+	Russian Twist
+	Seated Chest Press
+	Seated Leg Curl
+	Seated Leg Press
+	Shrug
+	Side Bridge
+	Side Lunge
+	Side plank
+	Single Arm Row
+	Single Arm Lat Pull-down
+	Single Arm Lat Raise
+	Single Leg Deadlift
+	Single Leg Hip Thrust
+	Sit-Up
+	Skull Crusher
+	Sled Calf Press
+	Sled Pull
+	Sled Push
+	Snatch
+	Split Jerk
+	Split Squat
+	Squat
+	Squat Calf Press
+	Straight Arm Lat Pull-down
+	Step-Up
+	Stiff Leg Deadlift
+	Swings
+	Thruster
+	Toes To Bar
+	Tricep Dip
+	Tricep Extension
+	Tricep Kickback
+	Tricep Pushdown
+	Tuck Crunch
+	Turkish Get Up
+	Up-Down Twist
+	Upright Row
+	V Up
+	Windmill
+	Wipers
+	Wrist Curl
+	Zercher Carry
+	Zercher Squat
+	
+	
+	
+exercise effects: 
+	bent over
+		Row
+		Reverse Fly
+	close grip
+		bench press
+		Push-up
+		Lat Pulldown
+		Overhead Press
+		Pull Up
+		Row
+	wide grip
+		bench press
+		Lat Pulldown
+		Overhead Press
+		Pull Up
+		Row
+		Bicep Curl
+	reverse grip
+		row
+		inverted Row
+		Lat Pulldown
+		Pull Up
+		Concentration Curl
+		Reverse curl
+		Wrist Curl
+	bent arm
+		pullover
+	straight arm
+		pullover
+		Lat Pulldown
+	bent knee
+		bicycle crunch
+		side plank
+		wipers
+	straight knee
+		bicycle crunch
+		side plank
+		wipers
+	Assisted:
+		Chest Dip
+		Chin Up
+		Pull Up
+		Tricep Dip
+	Crossbody
+		Crunch
+		Hammer Curl
+		Mountain Climber
+	Decline
+		Bench Fly
+		Bench Press
+		Pullover
+		Crunch
+		Reverse Crunch
+	Hanging
+		Knee Raise 
+		Knee Raise Twist
+		Leg Raise
+	Incline
+		Around the World
+		Bench Fly
+		Bench Press
+		Bicep Curl
+		Chest Press
+		Push-Up
+		Reverse Fly
+		Row
+	Kneeling
+		Crunch
+		Plank
+		Pull-down
+		Tricep Extension
+		Row
+	Lying
+		Hip Adductor
+		Hip Raise
+		Knee Raise
+		Leg Curl
+		Leg Raise
+		Reverse Fly
+	Overhead
+		Overhead Press
+		Squat
+		Tricep Extension
+	Power
+		Power Clean
+		Power Snatch
+	Seated 
+		Calf Press
+		Calf Raise
+		Chest Fly
+		Crunch
+		Hip Abductor
+		Hip Adductor
+		In-And-Out
+		Leg Curl
+		Leg Press
+		Overhead Press
+		Row
+		Reverse Fly
+		
+		
+		
+
+	
+Exercise Catalog Page
+muscle filter page

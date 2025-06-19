@@ -1,0 +1,67 @@
+cardio_dao.dart
+
+Purpose:Manages CRUD operations for the cardio_details table, linking cardio-specific metadata to exercise rows.
+
+Key methods:
+
+insertCardioDetails({db, exerciseId, cardioName, note, plannedMinutes, elapsedSeconds}):Inserts or updates (ConflictAlgorithm.replace) a cardio_details row for an exercise, ensuring at most one detail row per exercise.
+
+getCardioDetailsForExercise(db, exerciseId):Retrieves the cardio_details map for a given exercise ID, or null if absent.
+
+Observations & suggestions:
+
+Typed models: Convert the raw map to a CardioExercise or DTO for consistent handling in higher layers.
+
+Upsert clarity: Document or wrap replace behavior in a method named upsertCardioDetails to convey intent.
+
+Transactions: If inserting an exercise and its cardio details together, wrap in a single transaction to avoid orphaned exercise rows.
+
+Deletion support: Add a method to delete cardio details for an exercise if users clear or change exercise type.
+
+Validation: Enforce non-negative plannedMinutes and elapsedSeconds via assertions or throwing for invalid inputs.
+
+Query optimization: Add an index on exercise_id in cardio_details (if not already indexed) for faster retrieval.
+
+
+// File: lib/db/cardio_dao.dart
+
+import 'package:sqflite/sqflite.dart';
+
+/// Encapsulates cardio‐related CRUD operations.
+class CardioDao {
+  /// Inserts or updates the cardio_details row for an exercise.
+  static Future<void> insertCardioDetails({
+    required Database db,
+    required int exerciseId,
+    required String cardioName,
+    String? note,
+    required int plannedMinutes,
+    required int elapsedSeconds,
+  }) {
+    return db.insert(
+      'cardio_details',
+      {
+        'exercise_id':     exerciseId,
+        'cardio_name':     cardioName,
+        'note':            note,
+        'planned_minutes': plannedMinutes,
+        'elapsed_seconds': elapsedSeconds,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  /// Fetches the cardio_details for a given exercise (or null if none).
+  static Future<Map<String, dynamic>?> getCardioDetailsForExercise(
+    Database db,
+    int exerciseId,
+  ) async {
+    final rows = await db.query(
+      'cardio_details',
+      where: 'exercise_id = ?',
+      whereArgs: [exerciseId],
+      limit: 1,
+    );
+    return rows.isNotEmpty ? rows.first : null;
+  }
+}

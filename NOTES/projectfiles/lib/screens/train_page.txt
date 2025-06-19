@@ -1,0 +1,275 @@
+train_page.dart
+
+Layout
+	- Top left corner
+		- hamburger icon (three horizontal bars)
+			- when pressed , will open left sidebar (sidebar from left side) with different gym profiles
+				- sidebar will take up at most, 3 quarters of screen, covering left side, with 1 quarter of screen on right side not covered.
+			- functionality will be implemented later
+	- Middle top of screen has page title "Train"
+	- Top right corner
+		- Circle button with P on it (Gym Profile)
+			- when pressed, will open right sidebar (sidebar from right side) with different gym profiles
+				- sidebar will take up at most, 3 quarters of screen, covering right side, with 1 quarter of screen on left side not covered.
+			- functionality will be implemented later
+	- Under the above three items, text saying "Exercise Presets"
+	- Dividing line under the text above
+	- clickable bars for previously saved presets
+		- will look the same as the previous bars implemented in earlier versions (Push and Pull)
+		- by default will have the same Push and Pull bars as before, but with another bar for 'Legs'. All of these can be pressed, but will not lead to anything (for now, will be implemented later)
+	- Dividing line under the last preset bar (bars mentioned above)
+	- clickable bar with text on it saying "Generate Custom Presets"
+		- can be pressed, but will not lead to anything (for now, will be implemented later)
+	- Same "New Session" button on bottom of screen as in previous verions, with same functionality
+		- on click, changes to session screen
+		
+
+Session Screen Layout:
+	- Top left of screen
+		- title of screen will be 'New Workout' for now (changing this is TODO for later)
+	- Top Right of screen
+		- hamburger icon opening sidebar from left
+			- sidebar will only have a timer for now, will be filled out more later
+				- timer will start when session screen is opened for a new workout, will end when 'Finish Workout' bar at bottom of screen is selected, or if the session screen is closed.
+				- TODO: save time for session with session details so when opened in history, time for workout can be seen
+	- Under Top of screen items (mentioned above) 
+		- individual exercise cards
+			- same as in previous versions
+	- Bottom right (above finish workout bar)
+		- + button (for adding exercise to session)
+			- two floating buttons appear, if + button pressed
+				1. 'Existing Exercise' button:
+					- opens our existing exercise_catalog_page
+				2. 'Custom' button
+					- same 'Add Exercise' box as previous versions
+	- bottom of screen 
+		- Finish Workout bar 
+			- same as in previous versions
+			
+
+Exercise Catalog Page:
+		- Top left of screen
+			- title of screen 'Exercise Catalog'
+		- under title mentioned above
+			- Search Bar which you can enter text into
+				- TODO: use to filter exercises later
+		
+
+
+
+Purpose:Provides an entry point / dashboard (TrainPage) for starting new workout sessions, browsing exercise presets, and accessing user/gym profiles via drawers.
+
+Key components & flow:
+
+Scaffold with two drawers:
+
+Main Drawer (left): Placeholder menu options.
+
+End Drawer (right): Gym profile options.
+
+AppBar:
+
+Left icon opens main drawer; right avatar opens end drawer.
+
+Exercise Presets Section:
+
+Uses _PresetBar widgets for categories like Push, Pull, Legs, and Custom Presets.
+
+Preset taps currently marked TODO.
+
+New Session Button:
+
+Navigates to SessionScreen to start a workout session.
+
+PresetBar widget:
+
+A styled InkWell container that displays a label and handles tap events (pending implementation).
+
+Observations & suggestions:
+
+Implement presets logic:
+
+Hook _PresetBar.onTap to load predefined exercise lists or navigate to session screen pre-populated with workouts.
+
+Drawer content modularity:
+
+Extract drawer contents into their own widgets to separate navigation UI from screen layout.
+
+Theming & styling:
+
+Use consistent color definitions and spacing; consider spacing helpers.
+
+Accessibility:
+
+Add semantic labels or tooltips for preset bars and drawer items.
+
+Testing:
+
+Write widget tests to verify navigation to SessionScreen and drawer opening interactions.
+
+State management:
+
+If drawer options become dynamic (profile switching), integrate with app state or settings provider.
+
+Responsive layout:
+
+Consider adapting preset grid to larger screens or portrait/landscape orientations.
+
+
+// train_page.dart
+
+import 'package:flutter/material.dart';
+import 'session_screen.dart';
+
+class TrainPage extends StatefulWidget {
+  const TrainPage({super.key});
+
+  @override
+  _TrainPageState createState() => _TrainPageState();
+}
+
+class _TrainPageState extends State<TrainPage> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  @override
+  Widget build(BuildContext context) {
+    final drawerWidth = MediaQuery.of(context).size.width * 0.75;
+
+    return Scaffold(
+      key: _scaffoldKey,
+      drawer: Drawer(
+        width: drawerWidth,
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: const [
+            DrawerHeader(
+              decoration: BoxDecoration(color: Colors.deepPurple),
+              child: Text(
+                'To be added',
+                style: TextStyle(color: Colors.white, fontSize: 18),
+              ),
+            ),
+            ListTile(title: Text('Option A')),
+            ListTile(title: Text('Option B')),
+            ListTile(title: Text('Option C')),
+          ],
+        ),
+      ),
+      endDrawer: Drawer(
+        width: drawerWidth,
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: const [
+            DrawerHeader(
+              decoration: BoxDecoration(color: Colors.lightGreen),
+              child: Text(
+                'Gym Profiles',
+                style: TextStyle(color: Colors.white, fontSize: 18),
+              ),
+            ),
+            ListTile(title: Text('General')),
+            ListTile(title: Text('Commercial Gym')),
+            ListTile(title: Text('Home Gym')),
+          ],
+        ),
+      ),
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.menu),
+          onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+        ),
+        title: const Text('Train'),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const CircleAvatar(
+              backgroundColor: Colors.lightGreen,
+              child: Text(
+                'P',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+            ),
+            onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
+          ),
+        ],
+      ),
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      'Exercise Presets',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const Divider(height: 24),
+                    const _PresetBar(label: 'Push'),
+                    const SizedBox(height: 8),
+                    const _PresetBar(label: 'Pull'),
+                    const SizedBox(height: 8),
+                    const _PresetBar(label: 'Legs'),
+                    const SizedBox(height: 16),
+                    const Divider(height: 24),
+                    const _PresetBar(label: 'Generate Custom Presets'),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: SizedBox(
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const SessionScreen()),
+                    );
+                  },
+                  child: const Text('New Session'),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Reusable bar widget
+class _PresetBar extends StatelessWidget {
+  final String label;
+  const _PresetBar({Key? key, required this.label}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).primaryColor;
+    return Material(
+      color: color.withValues(alpha: 0.1),
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: () {
+          // TODO: handle preset tap
+        },
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+          decoration: BoxDecoration(
+            border: Border.all(color: color),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(fontSize: 16, color: color, fontWeight: FontWeight.w600),
+          ),
+        ),
+      ),
+    );
+  }
+}

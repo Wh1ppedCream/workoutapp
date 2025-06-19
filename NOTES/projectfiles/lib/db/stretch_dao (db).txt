@@ -1,0 +1,86 @@
+stretch_dao.dart
+
+Purpose:Handles CRUD operations for stretch instances and their items, linking stretches to exercise rows.
+
+Key methods:
+
+insertStretchInstance({db, exerciseId, items}):
+
+Inserts a parent row in stretch_instances to represent the container for items.
+
+Iterates through provided items (maps), converting Dart types to SQLite-friendly values (e.g., bool to int) and inserting into stretch_instance_items with ConflictAlgorithm.ignore.
+
+getStretchItemsForExercise(db, exerciseId):Retrieves all stretch_instance_items for an exercise, ordered by order_index.
+
+Observations & suggestions:
+
+Parent ID retrieval: After inserting the parent container, fetch its auto-generated id using insert return value, and use it to ensure data integrity instead of relying on exercise_id for join logic.
+
+Batch inserts: Use db.batch() for inserting multiple items to reduce I/O overhead.
+
+Transactions: Wrap container and items inserts within txn.transaction to guarantee all-or-nothing behavior.
+
+Typed mapping: Convert raw maps to StretchInstance and StretchInstanceItem domain models in the DAO, returning typed objects.
+
+Update & delete support: Add methods to update item states (e.g., checking/unchecking stretches) and to delete instances if workouts are modified.
+
+Validation: Assert that order_index values are unique per exerciseId to prevent ordering conflicts.
+
+
+// File: lib/db/stretch_dao.dart
+
+import 'package:sqflite/sqflite.dart';
+
+/// Encapsulates stretch‐instance CRUD operations.
+class StretchDao {
+  /// Inserts a stretch_instances row plus its items.
+  static Future<void> insertStretchInstance({
+    required Database db,
+    required int exerciseId,
+    required List<Map<String, dynamic>> items,
+  }) async {
+    // 1) Create the “container” row
+    await db.insert(
+      'stretch_instances',
+      {'exercise_id': exerciseId},
+    );
+
+    // 2) Insert each item
+    for (var i = 0; i < items.length; i++) {
+      final m = items[i];
+      final stretchId  = m['stretch_id'] as int?;
+      final isCustom   = (m['is_custom'] as bool) ? 1 : 0;
+      final customName = m['custom_name']   as String?;
+      final customDesc = m['custom_desc']   as String?;
+      final isChecked  = (m['is_checked'] as bool) ? 1 : 0;
+      final orderIndex = m['order_index']   as int;
+
+      await db.insert(
+        'stretch_instance_items',
+        {
+          'exercise_id': exerciseId,
+          'stretch_id':  stretchId,
+          'is_custom':   isCustom,
+          'custom_name': customName,
+          'custom_desc': customDesc,
+          'is_checked':  isChecked,
+          'order_index': orderIndex,
+        },
+        conflictAlgorithm: ConflictAlgorithm.ignore,
+      );
+    }
+  }
+
+  /// Fetches all items for a stretch‐instance, ordered by index.
+  static Future<List<Map<String, dynamic>>> getStretchItemsForExercise(
+    Database db,
+    int exerciseId,
+  ) {
+    return db.query(
+      'stretch_instance_items',
+      where: 'exercise_id = ?',
+      whereArgs: [exerciseId],
+      orderBy: 'order_index',
+    );
+  }
+}

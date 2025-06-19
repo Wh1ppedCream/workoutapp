@@ -1,0 +1,310 @@
+cardio_card.dart
+
+Purpose:A StatefulWidget that renders and manages user interaction with a CardioExercise, including:
+
+Displaying exercise name and a contextual menu for deletion.
+
+Editing a note (stored in equipment field by default).
+
+Inputting planned minutes and starting a countdown timer with real-time updates.
+
+Toggling timer start/stop and persisting elapsed seconds via onValueChanged callback.
+
+Key components & flow:
+
+State initialization:
+
+_note is seeded from widget.exercise.equipment.
+
+_cardioMinutes and _secondsLeft initialized from model.
+
+_cardioNameController seeded with widget.exercise.cardioName.
+
+UI layout:
+
+Header: Title and remove menu.
+
+Note editor: Toggles between TextFormField and Text with gesture detection.
+
+Minutes input & GO button: Updates planned minutes, resets and starts timer.
+
+Countdown & Start/Stop toggle: Displays remaining time and allows pausing/resuming.
+
+Timer management:
+
+Uses Timer.periodic to decrement _secondsLeft, updating widget.exercise.elapsedSeconds and invoking onValueChanged on each tick.
+
+Cancels timer on dispose and when time reaches zero.
+
+Observations & suggestions:
+
+Separation of concerns:
+
+Extract timer logic into a separate controller or service (e.g., CardioTimerController) to make widget stateless or reduce complexity in State.
+
+State management:
+
+Consider using a state management solution (Provider, Riverpod, Bloc) to manage CardioExercise model updates, improving testability and decoupling UI from business logic.
+
+Naming consistency:
+
+Using equipment field for notes may be confusing; introduce a dedicated note property on CardioExercise or a separate field in the model.
+
+Input validation:
+
+Validate numeric input for minutes (e.g., non-negative, max limits) and handle parsing errors gracefully.
+
+UI refinements:
+
+Extract subcomponents (e.g., NoteEditor, TimerControls) into smaller widgets for readability and reusability.
+
+Accessibility:
+
+Add semantic labels and ensure buttons have descriptive tooltip texts for screen readers.
+
+Performance:
+
+Debounce onValueChanged calls to avoid excessive writes if connected directly to persistence layer.
+
+Customization:
+
+Allow configuring timer intervals or audio feedback when timer completes.
+
+// File: lib/widgets/cardio_card.dart
+
+import 'dart:async';
+import 'package:flutter/material.dart';
+import '../models/models.dart';
+
+/// Displays and edits a CardioExercise, including timer controls.
+class CardioCard extends StatefulWidget {
+  final CardioExercise exercise;
+  final bool          readOnlyMode;
+  final VoidCallback? onDeleteExercise;
+  final VoidCallback? onValueChanged;
+
+  const CardioCard({
+    Key? key,
+    required this.exercise,
+    this.readOnlyMode = false,
+    this.onDeleteExercise,
+    this.onValueChanged,
+  }) : super(key: key);
+
+  @override
+  State<CardioCard> createState() => _CardioCardState();
+}
+
+class _CardioCardState extends State<CardioCard> {
+  late String _note;
+  bool _isEditingNote = false;
+
+  late int _cardioMinutes;
+  late int _secondsLeft;
+  Timer? _cardioTimer;
+  late TextEditingController _cardioNameController;
+
+  @override
+  void initState() {
+    super.initState();
+    // 1) Seed the note from the model’s equipment field
+    _note = widget.exercise.equipment;
+
+    // 2) Seed cardio‐specific fields
+    _cardioMinutes = widget.exercise.plannedMinutes;
+    _secondsLeft   = widget.exercise.elapsedSeconds;
+    _cardioNameController =
+        TextEditingController(text: widget.exercise.cardioName);
+  }
+
+  @override
+  void dispose() {
+    _cardioTimer?.cancel();
+    _cardioNameController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final readOnly = widget.readOnlyMode;
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ─── Header: Name + Remove Menu ───
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    widget.exercise.name,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
+                PopupMenuButton<String>(
+                  enabled: !readOnly,
+                  icon: const Icon(Icons.more_vert),
+                  onSelected: (v) {
+                    if (v == 'remove') {
+                      widget.onDeleteExercise?.call();
+                    }
+                  },
+                  itemBuilder: (_) => const [
+                    PopupMenuItem(
+                      value: 'remove',
+                      child: Text('Remove Cardio'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+
+            // ─── Note Editor ───
+            _isEditingNote
+                ? TextFormField(
+                    readOnly: readOnly,
+                    initialValue: _note,
+                    decoration: const InputDecoration(
+                      isDense: true,
+                      labelText: 'Note',
+                    ),
+                    onFieldSubmitted:
+                        readOnly ? null : (val) {
+                      setState(() {
+                        _note = val.trim();
+                        _isEditingNote = false;
+                      });
+                      widget.onValueChanged?.call();
+                    },
+                  )
+                : (readOnly
+                    ? Text(
+                        _note.isNotEmpty ? _note : 'Tap to add note',
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodySmall!
+                            .copyWith(fontStyle: FontStyle.italic),
+                      )
+                    : GestureDetector(
+                        onTap: () =>
+                            setState(() => _isEditingNote = true),
+                        child: Text(
+                          _note.isNotEmpty ? _note : 'Tap to add note',
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall!
+                              .copyWith(fontStyle: FontStyle.italic),
+                        ),
+                      )),
+            const SizedBox(height: 16),
+
+            // ─── Minutes Input & GO Button ───
+            Row(
+              children: [
+                SizedBox(
+                  width: 80,
+                  child: TextFormField(
+                    initialValue: '$_cardioMinutes',
+                    readOnly: readOnly,
+                    keyboardType: TextInputType.number,
+                    decoration:
+                        const InputDecoration(labelText: 'Minutes'),
+                    onChanged: readOnly ? null : (v) {
+                      final mins = int.tryParse(v) ?? 0;
+                      setState(() {
+                        _cardioMinutes = mins;
+                      });
+                      widget.exercise.plannedMinutes = mins;
+                      widget.onValueChanged?.call();
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: readOnly ? null : () {
+                    setState(() => _secondsLeft = _cardioMinutes * 60);
+                    widget.exercise.elapsedSeconds = _secondsLeft;
+                    widget.onValueChanged?.call();
+
+                    _cardioTimer?.cancel();
+                    _cardioTimer = Timer.periodic(
+                      const Duration(seconds: 1),
+                      (_) {
+                        if (_secondsLeft > 0) {
+                          setState(() => _secondsLeft--);
+                          widget.exercise.elapsedSeconds =
+                              _secondsLeft;
+                          widget.onValueChanged?.call();
+                        } else {
+                          _cardioTimer?.cancel();
+                        }
+                      },
+                    );
+                  },
+                  child: const Text('GO'),
+                ),
+              ],
+            ),
+
+            // ─── Countdown & Start/Stop Toggle ───
+            if (_secondsLeft > 0) ...[
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    '${(_secondsLeft ~/ 60).toString().padLeft(2, '0')}:'
+                    '${(_secondsLeft % 60).toString().padLeft(2, '0')}',
+                    style:
+                        Theme.of(context).textTheme.headlineMedium,
+                  ),
+                  const SizedBox(width: 12),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor:
+                          (_cardioTimer?.isActive ?? false)
+                              ? Colors.red
+                              : Colors.green,
+                    ),
+                    onPressed: readOnly ? null : () {
+                      if (_cardioTimer?.isActive ?? false) {
+                        _cardioTimer!.cancel();
+                        setState(() {});
+                      } else if (_secondsLeft > 0) {
+                        _cardioTimer = Timer.periodic(
+                          const Duration(seconds: 1),
+                          (_) {
+                            if (_secondsLeft > 0) {
+                              setState(() => _secondsLeft--);
+                              widget.exercise.elapsedSeconds =
+                                  _secondsLeft;
+                              widget.onValueChanged?.call();
+                            } else {
+                              _cardioTimer?.cancel();
+                              setState(() {});
+                            }
+                          },
+                        );
+                        setState(() {});
+                      }
+                    },
+                    child: Text(
+                      (_cardioTimer?.isActive ?? false)
+                          ? 'Stop'
+                          : 'Start',
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}

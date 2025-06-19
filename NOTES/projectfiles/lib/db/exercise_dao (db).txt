@@ -1,0 +1,124 @@
+exercise_dao.dart
+
+Purpose:Provides CRUD operations for the exercises table, including both legacy weight‐only helper and a generic insertion method for different exercise types, plus retrieval and deletion by session.
+
+Key methods:
+
+insertExercise(db, sessionId, name, equipmentName, orderIndex):
+
+Looks up or inserts equipment_id and exercise_definitions (legacy, assumes weight type).
+
+Inserts a new row in exercises, defaulting type to 'weight'.
+
+insertExerciseRow({db, exerciseDefId, type, orderIndex, sessionId}):Inserts an exercise of any type ('weight', 'cardio', 'stretch'), returning new row id.
+
+getExercisesForSession(db, sessionId):Queries all exercises for a given session, ordered by order_index.
+
+deleteExercisesForSession(db, sessionId):Deletes all exercises for a session; cascades remove related sets, cardio, stretch data.
+
+Observations & suggestions:
+
+DRY up definition lookup: Extract lookup-or-create logic for exercise_definitions into a helper to avoid duplication between legacy and new insert methods.
+
+Transactions for multi-step inserts: Wrap the legacy insertExercise flow in a transaction to guarantee atomicity when inserting into multiple tables.
+
+Unified API: Deprecate the legacy insertExercise in favor of a unified builder or factory that takes a WorkoutExercise domain model and persists accordingly, handling child tables for sets, cardio_details, and stretch_instances.
+
+Typed returns: Instead of returning raw IDs, consider returning domain objects or DTOs representing the full exercise, easing UI binding.
+
+Eager loading: Implement join queries or separate DAO methods to fetch exercise instances along with their related sets (sets table), cardio details (cardio_details), and stretch items (stretch_instance_items) in one round-trip.
+
+Indexing & performance: Ensure foreign-key columns (session_id, exercise_def_id) have indexes to speed lookups, especially when paginating or filtering by type.
+
+Error handling & logging: Add catch blocks with meaningful logs for constraint violations or missing foreign keys.
+
+
+// File: lib/db/exercise_dao.dart
+
+import 'package:sqflite/sqflite.dart';
+
+/// Encapsulates exercise CRUD operations.
+class ExerciseDao {
+  /// Legacy helper for weight‐only exercises.
+  static Future<int> insertExercise(
+    Database db,
+    int sessionId,
+    String name,
+    String equipmentName,
+    int orderIndex,
+  ) async {
+    // 1. Lookup equipment_id
+    final eq = await db.query(
+      'equipment',
+      where: 'name = ?',
+      whereArgs: [equipmentName],
+      limit: 1,
+    );
+    final eqId = eq.isNotEmpty ? eq.first['id'] as int : null;
+
+    // 2. Lookup or insert into exercise_definitions
+    final defRows = await db.query(
+      'exercise_definitions',
+      where: eqId != null
+          ? 'name = ? AND equipment_id = ?'
+          : 'name = ? AND equipment_id IS NULL',
+      whereArgs: eqId != null ? [name, eqId] : [name],
+      limit: 1,
+    );
+    final defId = defRows.isNotEmpty
+        ? defRows.first['id'] as int
+        : await db.insert(
+            'exercise_definitions',
+            {'name': name, 'equipment_id': eqId},
+          );
+
+    // 3. Insert the exercise instance (defaults to 'weight')
+    return db.insert('exercises', {
+      'session_id':      sessionId,
+      'exercise_def_id': defId,
+      'order_index':     orderIndex,
+      // 'type' omitted => defaults to 'weight'
+    });
+  }
+
+  /// Inserts an exercise of any type. Returns the new row’s id.
+  static Future<int> insertExerciseRow({
+    required Database db,
+    int?    exerciseDefId,
+    required String type,   // 'weight' | 'cardio' | 'stretch'
+    required int orderIndex,
+    required int sessionId,
+  }) {
+    return db.insert('exercises', {
+      'session_id':      sessionId,
+      'exercise_def_id': exerciseDefId,
+      'type':            type,
+      'order_index':     orderIndex,
+    });
+  }
+
+  /// Fetches all exercises for a session, ordered by `order_index`.
+  static Future<List<Map<String, dynamic>>> getExercisesForSession(
+    Database db,
+    int sessionId,
+  ) {
+    return db.query(
+      'exercises',
+      where: 'session_id = ?',
+      whereArgs: [sessionId],
+      orderBy: 'order_index',
+    );
+  }
+
+  /// Deletes all exercises for a session (cascades sets/cardio/stretch).
+  static Future<void> deleteExercisesForSession(
+    Database db,
+    int sessionId,
+  ) {
+    return db.delete(
+      'exercises',
+      where: 'session_id = ?',
+      whereArgs: [sessionId],
+    );
+  }
+}

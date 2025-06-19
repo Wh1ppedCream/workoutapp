@@ -1,0 +1,79 @@
+profile_page.dart
+
+Purpose:Serves as the user profile hub, providing navigation to measurement tracking, user info, and settings pages.
+
+Key flow & components:
+
+Measurements navigation:
+
+A ListTile with an icon and title ‘Measurements’ that navigates to MeasuredItemsPage to view and add measurement records.
+
+User Info (TODO):
+
+Placeholder ListTile for displaying and editing personal user details.
+
+Settings (TODO):
+
+Placeholder ListTile for application settings and preferences.
+
+Observations & suggestions:
+
+Implement User Info and Settings:
+
+Define and integrate pages for user profile editing and app settings, wiring up these list items.
+
+Reuse list builder:
+
+If additional profile options are added, consider mapping a list of ProfileOption objects to ListTiles for easier maintenance.
+
+Theming & icons:
+
+Use consistent theming and iconography; replace generic icons with ones that convey function.
+
+Accessibility:
+
+Add semanticLabel to each tile and ensure that navigation targets announce context.
+
+Testing:
+
+Write widget tests to verify navigation from profile page to measured items, user info, and settings pages.
+
+State management:
+
+If profile info is dynamic, integrate with a state management solution (Provider, Riverpod) to update UI on changes.
+
+Layout enhancements:
+
+Consider grouping profile options into sections or using a ListView with padding for consistent spacing.
+
+
+// File: lib/profile_page.dart
+import 'package:flutter/material.dart';
+import 'measured_items_page.dart';
+
+class ProfilePage extends StatelessWidget {
+  const ProfilePage({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+  appBar: AppBar(title: const Text('Profile')),
+  body: Column(
+    children: [
+      // Measurements bar
+      ListTile(
+        leading: const Icon(Icons.timeline),
+        title: const Text('Measurements'),
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const MeasuredItemsPage()),
+        ),
+      ),
+      // TODO: User info bar
+      ListTile(leading: Icon(Icons.person), title: Text('User Info')),
+      // TODO: Settings bar
+      ListTile(leading: Icon(Icons.settings), title: Text('Settings')),
+    ],
+  ),
+);
+  }
+}

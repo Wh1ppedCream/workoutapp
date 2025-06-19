@@ -1,0 +1,35 @@
+ FROM BD:
+	stationaries:
+		fabre castle pens
+		pens in general
+		markers
+	clothes:
+		shirts
+		tshirts
+		cool looking stuff
+		
+ Talha: 
+	(required)
+		- phone battery
+	(development)
+		- mac product (ipad/imac/macbook)
+	(gym)
+		- olympic barbell
+		- olympic curl barbell
+		- power rack
+		- plates/weights
+
+Baba's shopping cart: 
+	should get:
+		new phone
+		new laptop
+	car:
+		discharge valve
+		piston ring
+		piston liner cylinder
+		valuve spring opening tool
+		piston ring circular compression entering tool
+		
+Ammu: 
+	gift:
+		tom ford ombre perfume

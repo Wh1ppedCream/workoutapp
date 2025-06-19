@@ -1,0 +1,174 @@
+ALL CODE FILES: 
+	app_repository.dart
+	cardio_card.dart
+	cardio_dao.dart
+	database_helper.dart
+	definitions_by_bodypart_page.dart
+	definition_dao.dart
+	exercise_card.dart
+	exercise_catalog_page.dart
+	exercise_dao.dart
+	history_screen.dart	
+	lookup_dao.dart
+	measured_items_page.dart
+	models.dart
+	muscle_filter_page.dart
+	new_measurement_item_page.dart
+	nutrition_page.dart
+	profile_page.dart
+	schema.dart
+	seed.dart
+	session_dao.dart
+	session_detail_screen.dart
+	session_screen.dart
+	set_dao.dart
+	specific_measurement_page.dart
+	stretch_card.dart
+	stretch_dao.dart
+	stretch_search_dialog.dart	
+	train_page.dart							
+	weight_card.dart
+
+
+
+
+main.dart														//
+	1) history_screen.dart										//
+		a) app_repository.dart									//
+			i) database_helper.dart								//
+				- models.dart									//
+				- schema.dart									//
+				- seed.dart										//	
+				- session_dao.dart								//
+				- exercise_dao.dart								//	
+				- set_dao.dart									//
+					- models.dart								//
+				- cardio_dao.dart								//
+				- stretch_dao.dart								//
+				- definition_dao.dart							//
+					- models.dart								//
+				- lookup_dao.dart								//
+					- models.dart								//
+			ii) session_dao.dart								//
+			iii) exercise_dao.dart								//
+			iv) set_dao.dart									//
+			v) cardio_dao.dart									//
+			vi) stretch_dao.dart								//
+			vii) definition_dao.dart							//
+			viii) lookup_dao.dart								//
+			ix) models.dart										//
+		b) models.dart											//
+		c) session_detail_screen.dart							//
+			app_repository.dart									//
+			models.dart											//
+			exercise_card.dart									//
+				models.dart										//
+				weight_card.dart								//
+					models.dart									//
+				cardio_card.dart								//
+					models.dart									//
+				stretch_card.dart								//
+					models.dart									//
+					stretch_search_dialog.dart					//
+						models.dart								//
+						app_repository.dart						//
+		d) exercise_catalog_page.dart							//
+			models.dart											//
+			app_repository.dart									//
+		e) muscle_filter_page.dart								//
+			models.dart											//
+			app_repository.dart									//
+			definitions_by_bodypart_page.dart					//
+				models.dart										//
+				app_repository.dart								//
+	2) train_page.dart											//
+		- session_screen.dart									//
+			models.dart											//
+			exercise_card.dart									//
+			exercise_catalog_page.dart							//
+			app_repository.dart									//
+	3) nutrition_page.dart										//
+	4) profile_page.dart										//
+		measured_items_page.dart								//
+			app_repository.dart									//
+			models.dart											//
+			new_measurement_item_page.dart						//
+				app_repository.dart								//
+				models.dart										//
+			specific_measurement_page.dart						//
+				app_repository.dart								//
+				models.dart										//
+		
+			
+	
+	
+	
+Your app is a Flutter-based fitness tracker that lets users build workouts (weight, cardio, stretches), record measurements over time, and persist everything locally in SQLite. It’s organized into three main layers:
+
+Data Models (lib/models/models.dart)
+Defines your in-memory objects: exercises (WeightExercise, CardioExercise, StretchExercise), their child data (ExerciseSet, StretchInstance), workout sessions (WorkoutSession), lookup tables (ExerciseDefinition, Equipment, BodyPart, Muscle, RankedMuscle), and measurements (MeasurementDefinition, Measurement).
+
+Persistence Layer (lib/db/…)
+
+database_helper.dart: Singleton that opens the DB, defines the schema, handles migrations & seeding, and provides catch-all CRUD.
+
+seed.dart: JSON-driven seeding logic for lookups, exercises, and stretches.
+
+DAO files (each encapsulates raw SQL for one area):
+
+session_dao.dart → create/delete/list workout sessions
+
+definition_dao.dart → CRUD and filters for exercise_definitions
+
+exercise_dao.dart → insert/delete/list workout-instance rows
+
+set_dao.dart → parent sets & ChangeSets insert/fetch
+
+cardio_dao.dart → insert/fetch cardio details
+
+stretch_dao.dart → insert/fetch stretch-instance items
+
+lookup_dao.dart → measurements, equipment/bodypart/muscle lookups, stretches
+
+Repository (lib/repositories/app_repository.dart)
+Exposes async methods that call into your DAOs or DatabaseHelper, centralizing all database access behind a clean interface (e.g. fuzzsearchExercises(), exportDatabase(), importDatabase()).
+
+UI Layer (lib/screens/… + lib/widgets/…)
+
+Screens:
+
+profile_page.dart – main hub, links to Measurements & Settings
+
+session_screen.dart – start a new workout, add cards for different exercise types
+
+session_detail_screen.dart – view/edit a past session
+
+history_screen.dart – list of past sessions
+
+exercise_catalog_page.dart – pick an exercise definition (with fuzzy search)
+
+muscle_filter_page.dart & definitions_by_bodypart_page.dart – drill down by body part
+
+measured_items_page.dart – list of tracked measurement types
+
+new_measurement_item_page.dart – record a new measurement
+
+specific_measurement_page.dart – chart + list for one measurement definition
+
+app_settings_page.dart – export/import raw JSON backup of the DB
+
+Widgets:
+
+exercise_card.dart (split into)
+
+weight_card.dart – weight-exercise UI
+
+cardio_card.dart – cardio-exercise UI
+
+stretch_card.dart – stretch-exercise UI
+
+stretch_search_dialog.dart – pick a stretch from lookups
+
+(optional) exercise_card_help.dart – shared helper logic
+
+Everything’s wired together so that UI widgets never do raw SQL—they call into the repository, which in turn uses DAOs and/or the helper for all database work. This separation keeps your code organized, testable, and ready for future features like full-text search or cloud sync.

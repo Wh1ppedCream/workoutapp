@@ -1,0 +1,138 @@
+exercise_card.dart
+
+Exercise Card changes:
+	- Exercise Card will now have 3 different types of cards and will take an optional input to determine which type of card it will be when being made. If the input is not given, it will use the default Weight training card (which is the card which is currently defined in exercise_card.dart):
+		- Weight Training (this is the one which we currently have) which will be the default type of card
+		- Cardio
+			- The cardio card will have the name of the cardio exercise ontop, similar to how done on Weight Training type
+			- The cardio card will have a small note under the name, similar to how done on Weight Training type
+			- The cardio card will have a box to enter 'Minutes' into and a green 'GO' button beside it.
+				- Pressing the Go button will start a timer, under the box and button mentioned above, which ticks down, starting at the mentioned number of minutes and stops at 0
+			- Similar to the weight training card, the cardio card will have a three dot menu icon in the top right, which will produce a drop down menu with the first option being 'Remove Cardio' (no other options for now)
+				- Pressing 'Remove Cardio' will remove the exercise card, similar to how pressing 'Remove Exercise' does for a Weight training card.
+		- Stretch Routine
+			- for now this is simply a card where you can add individual boxes where you can enter text into.
+
+
+
+	- Exercise Card does not need to store equipment information anymore, instead of showing equipment under the Exercise Name, it will have a small note under the exercise name
+		- This note can be automatically input similar to how we were doing with the Equipment which it was replacing previously, or it can be manually input/changed directly on the card by tapping it and typing.
+	- Trashcan button beside exercise name and equipment is replaced with 3 dot menu icon in the same place
+		- when this icon is clicked, will produce a drop down menu
+			- first option in drop down menu is 'Remove Exercise' which has the same functionality as the trashcan button
+			- second option is 'Make ChangeSet' which does nothing for now
+	- To the left of the set number, there should be a tick box, which should be unticked by default, but selecting will tick it.
+		- sets and exercises can be added to the card during a session, but an exercise is not considered done/in the session, till at least one set has been ticked and sets are not considered in the session till they have been ticked
+			- this is important for later, when we are redo-ing the Finish workout button in the session screen to save a completed session to the database and show it in history.
+
+
+ChangeSet:
+After selecting option for 'Make ChangeSet' in drop down menu:
+	- will put each set in a box (all the set info, options, etc will be the same size, will only have an outline box around the whole thing)
+	- under each set in the exercise card, there will be a thin selectable bar titled 'Add CSet'
+		- selecting this will add a new set, similar to what pressing the '+ Add Set' option in the bottom right corner of an exercise card does, but this box will be 8/10 the size of the box above it, with the text to the left saying CSet number (eg: under Set 1, you have CSet 1) and all the set info, options, etc, will similarly be scaled down to 8/10 the size of the box above it.
+		
+		
+
+
+
+
+Purpose:A stateless wrapper that delegates to a specific exercise card widget (WeightCard, CardioCard, StretchCard) based on the cardType enum.
+
+Key flow:
+
+cardType switch:
+
+CardType.weight: Renders WeightCard with appropriate casting and forwarded callbacks.
+
+CardType.cardio: Renders CardioCard.
+
+CardType.stretch: Renders StretchCard.
+
+Observations & suggestions:
+
+Type safety:
+
+Instead of casting exercise as WeightExercise, use generics or separate constructors for each type to avoid runtime casting errors.
+
+Single Responsibility:
+
+Although lightweight, consider removing this wrapper by having parent code directly render specific card widgets, or use factory patterns for clarity.
+
+Extensibility:
+
+If new exercise types are added, ensure this switch is updated; you might use a Map<CardType, Widget Function()> to reduce boilerplate.
+
+Default case handling:
+
+Dart enforces exhaustive switches on enums, but consider adding an assert(false) or default to catch unexpected values.
+
+Performance:
+
+This is a pure function; no side-effects, so it's efficient. Just ensure parent rebuilds appropriately.
+
+// File: lib/widgets/exercise_card.dart
+
+import 'package:flutter/material.dart';
+import '../models/models.dart';
+import 'weight_card.dart';
+import 'cardio_card.dart';
+import 'stretch_card.dart';
+
+enum CardType { weight, cardio, stretch }
+
+class ExerciseCard extends StatelessWidget {
+  final WorkoutExercise           exercise;
+  final CardType                  cardType;
+  final bool                      readOnlyMode;
+  final Set<int>?                 initialCompletedParents;
+  final Map<int, Set<int>>?       initialCompletedChildren;
+  final VoidCallback?             onDeleteExercise;
+  final VoidCallback?             onSetAdded;
+  final VoidCallback?             onSetDeleted;
+  final VoidCallback?             onValueChanged;
+
+  const ExerciseCard({
+    Key? key,
+    required this.exercise,
+    this.cardType = CardType.weight,
+    this.readOnlyMode = false,
+    this.initialCompletedParents,
+    this.initialCompletedChildren,
+    this.onDeleteExercise,
+    this.onSetAdded,
+    this.onSetDeleted,
+    this.onValueChanged,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext ctx) {
+    switch (cardType) {
+      case CardType.weight:
+        return WeightCard(
+          exercise: exercise as WeightExercise,
+          readOnlyMode: readOnlyMode,
+          initialCompletedParents: initialCompletedParents,
+          initialCompletedChildren: initialCompletedChildren,
+          onDeleteExercise: onDeleteExercise,
+          onSetAdded: onSetAdded,
+          onSetDeleted: onSetDeleted,
+          onValueChanged: onValueChanged,
+        );
+      case CardType.cardio:
+        return CardioCard(
+          exercise: exercise as CardioExercise,
+          readOnlyMode: readOnlyMode,
+          onDeleteExercise: onDeleteExercise,
+          onValueChanged: onValueChanged,
+        );
+      case CardType.stretch:
+        return StretchCard(
+          exercise: exercise as StretchExercise,
+          readOnlyMode: readOnlyMode,
+          onDeleteExercise: onDeleteExercise,
+          onValueChanged: onValueChanged,
+        );
+    }
+  }
+}

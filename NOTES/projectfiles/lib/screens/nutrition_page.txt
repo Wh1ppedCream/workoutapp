@@ -1,0 +1,53 @@
+nutrition_page.dart
+
+NOT IMPLEMENTED YET PROPERLY
+
+My Fridge (inventory)
+	- Food stock box
+		- List of food items currently available
+			- on install and if all used up, empty
+			- add items button at bottom
+			- items in list can be edited to change quantity/remove entirely
+	- Recipe Lookup
+		- Recipes for me (only uses listed food items in stock)
+		- general recipe lookup
+
+Purpose:Placeholder for future nutrition tracking features; currently displays a ‘coming soon’ message.
+
+Observations & suggestions:
+
+Feature planning:
+
+Outline planned components: meal logs, macros tracking, recipe database, water intake.
+
+Routing:
+
+Add this page to the app’s navigation (e.g., bottom nav bar) once implemented.
+
+State & data:
+
+Plan data model for nutrition entries and consider integrating with SQLite or remote API.
+
+UI skeleton:
+
+Scaffold sub-widgets for future input (date picker, food search, summary charts).
+
+Testing:
+
+Once features are added, write widget tests for adding and displaying nutrition entries.
+
+
+// File: lib/nutrition_page.dart
+import 'package:flutter/material.dart';
+
+class NutritionPage extends StatelessWidget {
+  const NutritionPage({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Nutrition')),
+      body: const Center(child: Text('Nutrition page coming soon.')),
+    );
+  }
+}
