@@ -79,7 +79,10 @@ FITNESS APP PROJECT:
 		- 
 	
 	SESSION PRESETS:
-		-
+		- preset buttons are selectable and have a 3 vertical dot menu button on right hand side
+			- selecting preset will open preset screen corresponding to the preset name
+			- selecting menu button on preset will 
+			- 
 		
 	
 	
