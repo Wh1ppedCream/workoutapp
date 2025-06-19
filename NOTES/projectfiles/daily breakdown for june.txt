@@ -1,0 +1,112 @@
+days:
+	19th June (Thursday)
+		- session persistence (so session info is saved and session is paused if back button pressed or screen closed)
+		- tying cardio and stretches to equipment
+		- gym profiles
+	20th June (Friday)
+		- gym presets
+		- history details
+		- exercise detail screen/popup
+		- preset generator
+		- intelligent preset generator
+	21th June (Saturday)
+		- fixing info for all exercises
+		- actually looking through all exercises and adjusting everything
+			- fixing and removing stuff which is under wrong heading
+			- putting in % score for each exercise 
+			- putting in % for each muscle within each exercise
+				- optional specific % for each one
+				- if not specified, then default % for each one
+						1. 30%	= 30
+						2. 25%	= 55
+						3. 15%	= 70
+						4. 10%	= 80
+						5. 10%	= 90
+						6. 5%	= 95
+						7. 5%	= 100
+		- add in new exercises/stretches/cardio
+		- remaking database files for website
+		- designing website login and profile stuff
+	22th June (Sunday)
+		- nutrition page implementation
+			- calorie tracking framework
+			- database storing tracked info
+			- food database with macronutrient breakdown
+	23th June (Monday)
+		- nutrition page implementation
+			- barcode scanning
+			- fridge setup
+			- recipes page
+	24th June (Tuesday)
+		- recipes filtered for stuff in fridge
+		- custom recipe making
+		- recipe recommendations
+		- grocery recommendations
+	25th June (Wednesday)
+		- estimations for overall calorie intake and burn
+		- trend graphs for everything (intake, nutrients, general goal, calorie burn, etc)
+		- water intake reminders/requirements
+	26th June (Thursday)
+		- calorie burn estimation from workout
+		- step tracking
+		- sleep tracking
+	27th June (Friday)
+		- release everything
+	28th June (Saturday)
+		- wearable integration
+		- adaptable estimation for calorie intake requirements based off weight change and history of intake
+		- image based food recognition/calorie estimation
+	29th June (Sunday)
+	30th June (Monday)
+	
+	
+Features to put in:
+	
+	
+	
+	
+	- nutrition page implementation
+		- calorie tracking framework
+			- nutrients tracking
+				- protein
+				- carbohydrates
+				- fiber
+				- sugar
+				- fat
+				- saturated fat
+				- polyunsaturated fat
+				- monounsaturated fat
+				- trans fat
+				- cholesterol
+				- sodium 
+				- potassium
+				- vitamin A
+				- Vitamin C
+				- Calcium
+				- Iron
+			- macros tracking
+				- Carbohydrates
+				- Fat
+				- Protein
+			- calories tracking
+		- food database with macronutrient breakdown
+		- database storing tracked info
+		- barcode scanning
+		- fridge setup
+		- recipes page
+		- recipes filtered for stuff in fridge
+		- custom recipe making
+		- recipe recommendations
+		- grocery recommendations
+		- image based food recognition/calorie estimation
+		- estimations for overall calorie intake and burn
+		- trend graphs for everything (intake, nutrients, general goal, calorie burn, etc)
+		- water intake reminders/requirements
+	- calorie burn estimation from workout
+	- step tracking
+	- sleep tracking
+
+	- release everything
+	- wearable integration
+	- adaptable estimation for calorie intake requirements based off weight change and history of intake
+	
