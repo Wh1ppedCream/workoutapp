@@ -65,15 +65,21 @@ class SessionScreen extends StatelessWidget {
           : ListView.builder(
               padding: const EdgeInsets.all(16),
               itemCount: session.exercises.length,
-              itemBuilder: (ctx, i) => ExerciseCard(
-                exercise: session.exercises[i],
-                cardType: session.cardTypes[i],
-                onDeleteExercise: () => context.read<ActiveSession>().removeExercise(i),
-                onSetAdded: () {/* handled within card, optional: notify if needed */},
-                onSetDeleted: () {/* optional */},
-                onValueChanged: () {/* optional */},
+              itemBuilder: (ctx, i) {
+                final ex = session.exercises[i];
+                final type = session.cardTypes[i];
+                return ExerciseCard(
+                  exercise: ex,
+                  cardType: type,
+                  initialCompletedParents: type == CardType.weight ? (ex as WeightExercise).completedParents : null,
+                  initialCompletedChildren: type == CardType.weight ? (ex as WeightExercise).completedChildren : null,
+                  onDeleteExercise: () => context.read<ActiveSession>().removeExercise(i),
+                  onSetAdded: () => context.read<ActiveSession>().refresh(),
+                  onSetDeleted: () => context.read<ActiveSession>().refresh(),
+                  onValueChanged: () => context.read<ActiveSession>().refresh(),
+                );
+              },
               ),
-            ),
 
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddCardTypeDialog(context),
