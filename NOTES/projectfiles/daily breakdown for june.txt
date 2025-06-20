@@ -4,11 +4,17 @@ days:
 		- tying cardio and stretches to equipment
 		- gym profiles
 	20th June (Friday)
-		- gym presets
-		- history details
-		- exercise detail screen/popup
-		- preset generator
-		- intelligent preset generator
+		Done
+			- session persistence (so session info is saved and session is paused if back button pressed or screen closed)
+		
+		Todo:
+			- tying cardio and stretches to equipment
+			- gym profiles
+			- gym presets
+			- history details
+			- exercise detail screen/popup
+			- preset generator
+			- intelligent preset generator
 	21th June (Saturday)
 		- fixing info for all exercises
 		- actually looking through all exercises and adjusting everything

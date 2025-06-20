@@ -76,6 +76,16 @@ FITNESS APP PROJECT:
 		7. 5%	= 100
 
 	GYM PROFILES:
+		- currently has text for items 'General' 'Commercial Gym' and 'Home Gym'
+		- will be changed to selectable boxes (which can be added or removed by methods mentioned later) called 'General' 'Placeholder 1' 'Placeholder 2'. lets call these placeholder boxes for now
+		- 3 dot menu on right of each box
+			- pressing opens drop down menu
+				- has options:
+					1) edit profiles
+						- will open up profile screen
+					2) delete profiles
+						- will delete profile info
+		- has a + button on bottom of page, when pressed will open up profile screen
 		- 
 	
 	SESSION PRESETS:

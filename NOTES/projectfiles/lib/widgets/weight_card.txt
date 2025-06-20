@@ -75,17 +75,17 @@ import '../models/models.dart';
 
 /// Displays and edits a WeightExercise, including sets and ChangeSets.
 class WeightCard extends StatefulWidget {
-  final WeightExercise               exercise;
-  final bool                         readOnlyMode;
-  final Set<int>?                    initialCompletedParents;
-  final Map<int, Set<int>>?          initialCompletedChildren;
-  final VoidCallback?                onDeleteExercise;
-  final VoidCallback?                onSetAdded;
-  final VoidCallback?                onSetDeleted;
-  final VoidCallback?                onValueChanged;
+  final WeightExercise exercise;
+  final bool readOnlyMode;
+  final Set<int>? initialCompletedParents;
+  final Map<int, Set<int>>? initialCompletedChildren;
+  final VoidCallback? onDeleteExercise;
+  final VoidCallback? onSetAdded;
+  final VoidCallback? onSetDeleted;
+  final VoidCallback? onValueChanged;
 
   const WeightCard({
-    Key? key,
+    super.key,
     required this.exercise,
     this.readOnlyMode = false,
     this.initialCompletedParents,
@@ -94,45 +94,39 @@ class WeightCard extends StatefulWidget {
     this.onSetAdded,
     this.onSetDeleted,
     this.onValueChanged,
-  }) : super(key: key);
+  });
 
   @override
   State<WeightCard> createState() => _WeightCardState();
 }
 
 class _WeightCardState extends State<WeightCard> {
-
-   // ───── Note editing ─────
-
+  // Note editing
   late String _note;
-
   bool _isEditingNote = false;
 
-  // ───── State & Controllers ─────
-  late List<TextEditingController>   _weightControllers;
-  late List<TextEditingController>   _repsControllers;
-  bool                               _isChangeSetMode = false;
-  final Map<int, List<ExerciseSet>>  _cSets           = {};
-  final Set<int>                     _completedSets   = {};
+  // State & Controllers
+  late List<TextEditingController> _weightControllers;
+  late List<TextEditingController> _repsControllers;
+  bool _isChangeSetMode = false;
+  final Map<int, List<ExerciseSet>> _cSets = {};
+  final Set<int> _completedSets = {};
 
   @override
   void initState() {
     super.initState();
-
-    // Seed the note from the model’s equipment
-
     _note = widget.exercise.equipment;
 
     // 1) Seed controllers from existing sets
     final sets = widget.exercise.sets;
     _weightControllers = sets
-      .map((s) => TextEditingController(text: s.weight.toString()))
-      .toList();
+        .map((s) => TextEditingController(text: s.weight.toString()))
+        .toList();
     _repsControllers = sets
-      .map((s) => TextEditingController(text: s.reps.toString()))
-      .toList();
+        .map((s) => TextEditingController(text: s.reps.toString()))
+        .toList();
 
-    // 2) If read-only, restore which parents were completed
+    // 2) If read-only, restore completed parents
     if (widget.readOnlyMode && widget.initialCompletedParents != null) {
       _completedSets.addAll(widget.initialCompletedParents!);
     }
@@ -141,7 +135,8 @@ class _WeightCardState extends State<WeightCard> {
     widget.exercise.changeSets.forEach((parentIdx, children) {
       _cSets[parentIdx] = List<ExerciseSet>.from(children);
     });
-    // 4) In read-only, if there _were_ changeSets saved, show them boxed
+
+    // 4) In read-only, if there were changeSets, show them
     if (widget.readOnlyMode && widget.exercise.changeSets.isNotEmpty) {
       _isChangeSetMode = true;
     }
@@ -149,9 +144,12 @@ class _WeightCardState extends State<WeightCard> {
 
   @override
   void dispose() {
-    // Clean up all controllers
-    for (var c in _weightControllers) {c.dispose();}
-    for (var c in _repsControllers)   {c.dispose();}
+    for (var c in _weightControllers) {
+      c.dispose();
+    }
+    for (var c in _repsControllers) {
+      c.dispose();
+    }
     super.dispose();
   }
 
@@ -165,10 +163,9 @@ class _WeightCardState extends State<WeightCard> {
 
   @override
   Widget build(BuildContext context) {
-    final we       = widget.exercise;
-    final sets     = we.sets;
+    final we = widget.exercise;
+    final sets = we.sets;
     final readOnly = widget.readOnlyMode;
-    
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
@@ -177,88 +174,54 @@ class _WeightCardState extends State<WeightCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ─── Header: name, note, menu ───
+            // Header: name, note, menu
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                                Expanded(
-
+                Expanded(
                   child: Column(
-
                     crossAxisAlignment: CrossAxisAlignment.start,
-
                     children: [
-
                       Text(
-
                         we.name,
-
                         style: Theme.of(context).textTheme.titleMedium,
-
                       ),
-
                       const SizedBox(height: 4),
-
-                      // Note editor / display
-
                       _isEditingNote
-
-                        ? TextFormField(
-
-                            readOnly: readOnly,
-
-                            initialValue: _note,
-
-                            decoration: const InputDecoration(
-
-                              isDense: true,
-
-                              labelText: 'Note',
-
+                          ? TextFormField(
+                              readOnly: readOnly,
+                              initialValue: _note,
+                              decoration: const InputDecoration(
+                                isDense: true,
+                                labelText: 'Note',
+                              ),
+                              onFieldSubmitted:
+                                  readOnly ? null : (val) {
+                                setState(() {
+                                  _note = val.trim();
+                                  _isEditingNote = false;
+                                });
+                                widget.onValueChanged?.call();
+                              },
+                            )
+                          : GestureDetector(
+                              onTap: readOnly
+                                  ? null
+                                  : () => setState(
+                                      () => _isEditingNote = true),
+                              child: Text(
+                                _note.isNotEmpty
+                                    ? _note
+                                    : 'Tap to add note',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall!
+                                    .copyWith(
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                              ),
                             ),
-
-                            onFieldSubmitted: readOnly ? null : (val) {
-
-                              setState(() {
-
-                                _note = val.trim();
-
-                                _isEditingNote = false;
-
-                              });
-
-                              widget.onValueChanged?.call();
-
-                            },
-
-                          )
-
-                        : GestureDetector(
-
-                            onTap: readOnly
-
-                              ? null
-
-                              : () => setState(() => _isEditingNote = true),
-
-                            child: Text(
-
-                              _note.isNotEmpty ? _note : 'Tap to add note',
-
-                              style: Theme.of(context)
-
-                                .textTheme
-
-                                .bodySmall!
-
-                                .copyWith(fontStyle: FontStyle.italic),
-
-                            ),
-
-                          ),
-
                     ],
-
                   ),
                 ),
                 PopupMenuButton<String>(
@@ -266,66 +229,59 @@ class _WeightCardState extends State<WeightCard> {
                   icon: const Icon(Icons.more_vert),
                   onSelected: (choice) async {
                     if (choice == 'remove') {
-                      // original confirmation text
-
                       final confirm = await showDialog<bool>(
-
                         context: context,
-
                         builder: (ctx) => AlertDialog(
-
                           title: const Text('Remove Exercise'),
-
-                          content: const Text('Are you sure you want to remove this exercise?'),
-
+                          content: const Text(
+                              'Are you sure you want to remove this exercise?'),
                           actions: [
-
                             TextButton(
-
-                              onPressed: () => Navigator.pop(ctx, false),
-
+                              onPressed: () =>
+                                  Navigator.pop(ctx, false),
                               child: const Text('Cancel'),
-
                             ),
-
                             TextButton(
-
-                              onPressed: () => Navigator.pop(ctx, true),
-
+                              onPressed: () =>
+                                  Navigator.pop(ctx, true),
                               child: const Text('Remove'),
-
                             ),
-
                           ],
-
                         ),
-
                       );
-
-                      if (confirm == true) widget.onDeleteExercise?.call();
+                      if (confirm == true) {
+                        widget.onDeleteExercise?.call();
+                      }
                     } else if (choice == 'changeSet') {
-                      setState(() => _isChangeSetMode = !_isChangeSetMode);
+                      setState(() =>
+                          _isChangeSetMode = !_isChangeSetMode);
                     }
                   },
                   itemBuilder: (_) => const [
-                    PopupMenuItem(value: 'remove',  child: Text('Remove Exercise')),
-                    PopupMenuItem(value: 'changeSet', child: Text('Make ChangeSet')),
+                    PopupMenuItem(
+                      value: 'remove',
+                      child: Text('Remove Exercise'),
+                    ),
+                    PopupMenuItem(
+                      value: 'changeSet',
+                      child: Text('Make ChangeSet'),
+                    ),
                   ],
                 ),
               ],
             ),
             const Divider(height: 16),
-
-            // ─── List each set (with optional C-Sets) ───
+            // List each set (with optional C-Sets)
             ...List.generate(sets.length, (index) {
-              final set = sets[index];
               final children = <Widget>[];
 
-              // 1) Parent set row
+              // Parent set row
               children.add(
                 Container(
                   decoration: _isChangeSetMode
-                      ? BoxDecoration(border: Border.all(color: Colors.grey))
+                      ? BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                        )
                       : null,
                   padding: const EdgeInsets.all(8),
                   margin: const EdgeInsets.symmetric(vertical: 4),
@@ -337,9 +293,17 @@ class _WeightCardState extends State<WeightCard> {
                             ? null
                             : (ok) {
                                 setState(() {
-                                  if (ok == true) {_completedSets.add(index);}
-                                  else          { _completedSets.remove(index);}
+                                  if (ok == true) {
+                                    _completedSets.add(index);
+                                    widget.exercise.completedParents
+                                        .add(index);
+                                  } else {
+                                    _completedSets.remove(index);
+                                    widget.exercise.completedParents
+                                        .remove(index);
+                                  }
                                 });
+                                widget.onValueChanged?.call();
                               },
                       ),
                       Expanded(child: Text('Set ${index + 1}')),
@@ -350,8 +314,10 @@ class _WeightCardState extends State<WeightCard> {
                           controller: _weightControllers[index],
                           readOnly: readOnly,
                           keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(labelText: 'Weight'),
-                          onChanged: readOnly ? null : (_) => _updateWeightSet(index),
+                          decoration:
+                              const InputDecoration(labelText: 'Weight'),
+                          onChanged:
+                              readOnly ? null : (_) => _updateWeightSet(index),
                         ),
                       ),
                       const SizedBox(width: 16),
