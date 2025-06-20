@@ -5,9 +5,16 @@ import 'screens/history_screen.dart';
 import 'screens/train_page.dart';          
 import 'screens/nutrition_page.dart';
 import 'screens/profile_page.dart';   
+import 'models/active_session.dart';
+import 'package:provider/provider.dart';  // For ChangeNotifierProvider
 
 void main() {
-  runApp(const MyApp());
+runApp(
+    ChangeNotifierProvider(
+      create: (_) => ActiveSession(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
