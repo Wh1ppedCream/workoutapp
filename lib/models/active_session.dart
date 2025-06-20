@@ -36,6 +36,11 @@ class ActiveSession extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Tell Provider to rebuild any listeners
+  void refresh() {
+    notifyListeners();
+  }
+
   /// Adds a new exercise card to the session.
   void addExercise(WorkoutExercise ex, CardType type) {
     exercises.add(ex);
