@@ -1,12 +1,13 @@
 // File: lib/main.dart
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'models/active_session.dart';
 import 'screens/history_screen.dart';
 import 'screens/train_page.dart';          
 import 'screens/nutrition_page.dart';
-import 'screens/profile_page.dart';   
-import 'models/active_session.dart';
-import 'package:provider/provider.dart';  // For ChangeNotifierProvider
+import 'screens/profile_page.dart';
+import 'widgets/ongoing_session_fab.dart';
 
 void main() {
 runApp(
@@ -23,12 +24,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Fitness Tracker',
-      theme: ThemeData.from(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const MainScreen(),  // Use bottom navigation
-    );
+  title: 'Fitness Tracker',
+  theme: ThemeData.from(
+    colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+  ),
+  home: const MainScreen(),
+);
   }
 }
 
@@ -61,6 +62,7 @@ class _MainScreenState extends State<MainScreen> {
     return Scaffold(
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
+        
         // File: lib/main.dart
         // Customize colors for legibility
         backgroundColor: Colors.white,            // white background
@@ -87,6 +89,12 @@ class _MainScreenState extends State<MainScreen> {
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
       ),
+    
+      floatingActionButton: Consumer<ActiveSession>(
+    builder: (_, session, __) =>
+      session.isActive ? const OngoingSessionFab() : const SizedBox.shrink(),
+  ),
+
     );
   }
 }

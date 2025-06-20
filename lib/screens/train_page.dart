@@ -125,25 +125,12 @@ import '../models/active_session.dart';
               ),
             ),
           ),
-          if (session.isActive)
-            Positioned(
-              bottom: 24,
-              right: 24,
-              child: FloatingActionButton.extended(
-                icon: const Icon(Icons.fitness_center),
-                label: const Text('Resume Workout'),
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const SessionScreen()),
-                  );
-                },
-              ),
-            ),
         ],
       ),
     );
   }
 }
+
 
 /// Reusable bar widget
 class _PresetBar extends StatelessWidget {
@@ -177,3 +164,4 @@ class _PresetBar extends StatelessWidget {
     );
   }
 }
+
