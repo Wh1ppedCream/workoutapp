@@ -280,4 +280,71 @@ class Schema {
     ''');
     await db.execute('ALTER TABLE sets ADD COLUMN parent_set_id INTEGER;');
   }
+
+// In lib/db/schema.dart, **after** migrateV5:
+static Future<void> migrateV6(Database db) async {
+  // Preset definitions
+  await db.execute('''
+    CREATE TABLE preset_definitions(
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      name        TEXT    NOT NULL,
+      created_at  TEXT    NOT NULL DEFAULT (datetime('now'))
+    );
+  ''');
+
+  // Preset exercises
+  await db.execute('''
+    CREATE TABLE preset_exercises(
+      id                INTEGER PRIMARY KEY AUTOINCREMENT,
+      preset_id         INTEGER NOT NULL,
+      exercise_def_id   INTEGER,
+      type              TEXT    NOT NULL,
+      order_index       INTEGER NOT NULL,
+      FOREIGN KEY(preset_id)       REFERENCES preset_definitions(id) ON DELETE CASCADE,
+      FOREIGN KEY(exercise_def_id) REFERENCES exercise_definitions(id)
+    );
+  ''');
+
+  // Preset weight sets (with parent_set_id)
+  await db.execute('''
+    CREATE TABLE preset_sets(
+      id                   INTEGER PRIMARY KEY AUTOINCREMENT,
+      preset_exercise_id   INTEGER NOT NULL,
+      weight               REAL    NOT NULL,
+      reps                 INTEGER NOT NULL,
+      order_index          INTEGER NOT NULL,
+      parent_set_id        INTEGER,
+      FOREIGN KEY(preset_exercise_id) REFERENCES preset_exercises(id) ON DELETE CASCADE
+    );
+  ''');
+
+  // Preset cardio details
+  await db.execute('''
+    CREATE TABLE preset_cardio_details(
+      id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+      preset_exercise_id  INTEGER NOT NULL UNIQUE,
+      cardio_name         TEXT    NOT NULL,
+      note                TEXT,
+      planned_minutes     INTEGER NOT NULL,
+      FOREIGN KEY(preset_exercise_id) REFERENCES preset_exercises(id) ON DELETE CASCADE
+    );
+  ''');
+
+  // Preset stretch items
+  await db.execute('''
+    CREATE TABLE preset_stretch_items(
+      id                   INTEGER PRIMARY KEY AUTOINCREMENT,
+      preset_exercise_id   INTEGER NOT NULL,
+      stretch_id           INTEGER,
+      is_custom            INTEGER NOT NULL DEFAULT 0,
+      custom_name          TEXT,
+      custom_desc          TEXT,
+      order_index          INTEGER NOT NULL,
+      FOREIGN KEY(preset_exercise_id) REFERENCES preset_exercises(id) ON DELETE CASCADE,
+      FOREIGN KEY(stretch_id)            REFERENCES stretch_definitions(id)
+    );
+  ''');
+}
+
+
 }
