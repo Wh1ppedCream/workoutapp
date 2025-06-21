@@ -1,0 +1,17 @@
+Presets page Layout:
+	- preset name on-top 
+	- back button to left of name
+	- three dot menu beside name
+	- Pen icon to right of three dot menu icon to enter 'editing Mode', similar to in session detail screen
+		- If pen icon is pressed, editing mode is entered
+			- the same floating button as in session screen is present at the bottom of the page, pressing will let u add exercise cards, same as in session screen
+			- sets, csets, weights, reps, cards, stretches can be added and deleted, same as in session screen
+			- 'start session' button is replaced with 'save preset' button when editing mode is active.
+			- if save preset button is pressed, the preset information will be saved and editing mode will be turned off.
+	- exercise cards under name
+		- unlike in session screen, sets can't be ticked, start button on cardio can't be pressed, stretches can't be ticked.
+	- floating start session button at bottom of page which will open a session screen with all the information from specific preset page filled into the session screen.
+	
+
+T.H.
+In train page, every selectable bar under 'Exercise Presets', above 'Generate Custom Presets' will correspond to one preset name and ID, and when pressed will open up a corresponding preset page filled with the saved information
