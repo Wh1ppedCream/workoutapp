@@ -1,16 +1,66 @@
+trainpage layout:
+	Top AppBar
+	Leading: a hamburger “menu” icon that opens your main drawer (with Option A/B/C).
+	Title: centered text reading Train.
+	Trailing: a circular “P” avatar button that opens your right‐side “Gym Profiles” drawer.
+	Left & Right Drawers
+		Swipe from left (or tap the menu icon) to reveal a white drawer 75% of screen-wide, with a purple header and three list items (Option A, B, C).
+		Swipe from right (or tap the “P” avatar) to reveal a green “Gym Profiles” drawer with choices like General, Commercial Gym, Home Gym.
+	Body Content (inside a SafeArea + vertically scrollable):
+		A large header Exercise Presets (using your theme’s titleLarge style).
+		A thin divider.
+		Four tappable “bars,” each a rounded rectangle with a colored border and light fill:
+			Push
+			Pull
+			Legs
+			(TODO) THESE BARS WILL BE CHANGED INTO SPECIAL TYPES OF BARS CALLED PRESETBARS, DESCRIBED BELOW
+			Generate Custom Presets
+			(TODO) NEW BAR CALLED 'Manually Add Preset'
+			These bars are spaced out with padding and are ready for you to hook in your preset logic.
+		
+		“New Session” Button
+			Stuck to the bottom of the content (just above the bottom navigation), a full-width, purple New Session ElevatedButton inside padding.
+				Tapping it starts your ActiveSession timer and pushes you into the SessionScreen.
+	Persistent Bottom Navigation Bar (from your outer MainScreen scaffold)
+		Four tabs:
+			Fitness icon + “Train” (selected)
+			History icon + “History”
+			Restaurant icon + “Nutrition”
+			Person icon + “Profile”
+			Ongoing Session FAB (if a workout is in progress)
+				A single green FloatingActionButton with a dumbbell icon appears over the lower-right corner of whatever tab you’re on.
+				Tapping it expands into two extended FABs—green Resume and red Exit—so you can jump back into or cancel your in-flight workout.
+
+PRESET BARS:
+		- will each have a different color 
+		- will have the preset name on the leftmost side (eg: Push, Pull, Legs as was in previous versions)
+			- if name is not specified, they will be named by number (meaning Preset 1, Preset 2, etc)
+		- will have a 3 dot menu icon to rightmost side
+			- pressing will open drop down list of options
+				- options will contain:
+					Edit
+					Schedule
+					Profile Swap
+					Delete
+				- each option will later do something, but for now just let them be tappable and do nothing.
+
 Presets page Layout:
-	- preset name on-top 
-	- back button to left of name
-	- three dot menu beside name
-	- Pen icon to right of three dot menu icon to enter 'editing Mode', similar to in session detail screen
-		- If pen icon is pressed, editing mode is entered
-			- the same floating button as in session screen is present at the bottom of the page, pressing will let u add exercise cards, same as in session screen
-			- sets, csets, weights, reps, cards, stretches can be added and deleted, same as in session screen
-			- 'start session' button is replaced with 'save preset' button when editing mode is active.
-			- if save preset button is pressed, the preset information will be saved and editing mode will be turned off.
-	- exercise cards under name
-		- unlike in session screen, sets can't be ticked, start button on cardio can't be pressed, stretches can't be ticked.
-	- floating start session button at bottom of page which will open a session screen with all the information from specific preset page filled into the session screen.
+	generally similar look to session detail screen and session screen, with alot of minor additions, reductions and changes, all described below:
+	Top AppBar
+		- back button on left of appbar
+		- preset name (used as title) in middle of appbar
+		- three dot menu on right side of appbar
+		- Pen icon to left of three dot menu icon, to right of prest name, to enter 'editing Mode', similar to in session detail screen
+			- If pen icon is pressed, color changes from grey to green, editing mode is entered
+				- the same floating button as in session screen is present at the bottom of the page, pressing will let u add exercise cards, same as in session screen
+					- NOTE: might want to take the floating action button for adding exercise cards from session screen and make it a widget seperately, so it can be used in multiple places in app
+				- sets, csets, weights, reps, cards, stretches can be added and deleted, same as in session screen
+				- 'Start Session' button (described later) is replaced with 'Save Preset' button when editing mode is active.
+					- if save preset button is pressed, the preset information will be saved and editing mode will be turned off.
+	Body
+		- exercise cards
+			- unlike in session screen, sets can't be ticked, start button on cardio can't be pressed, stretches can't be ticked (if this is possible to do with current code in other files, otherwise just leave a note in code to remind to add this later).
+		- floating start session button at bottom of page which will open a session screen with all the information from specific preset page filled into the session screen.
 	
 
 T.H.

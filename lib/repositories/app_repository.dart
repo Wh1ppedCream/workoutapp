@@ -27,6 +27,10 @@ class AppRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper();
   final _db = DatabaseHelper();
 
+    /// Exposes the internal DatabaseHelper instance for extensions.
+  DatabaseHelper get dbHelper => _dbHelper;
+
+
   // ─── SESSIONS ───────────────────────────────────────────
 
 

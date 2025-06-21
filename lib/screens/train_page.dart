@@ -3,6 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'session_screen.dart';
 import '../models/active_session.dart';
+import '../widgets/preset_bar.dart';
+import 'preset_detail_screen.dart';
+import '../repositories/app_repository.dart';
+import '../repositories/app_repository_presets.dart';
 
  class TrainPage extends StatefulWidget {
    const TrainPage({super.key});
@@ -94,14 +98,84 @@ import '../models/active_session.dart';
                             style: Theme.of(context).textTheme.titleLarge,
                           ),
                           const Divider(height: 24),
-                          const _PresetBar(label: 'Push'),
-                         const SizedBox(height: 8),
-                          const _PresetBar(label: 'Pull'),
-                          const SizedBox(height: 8),
-                          const _PresetBar(label: 'Legs'),
+                          PresetBar(
+  label: 'Push',
+  color: Colors.blue,
+  index: 0,
+  onTap: () async {
+    // 1) grab what you need from the context synchronously:
+    final navigator = Navigator.of(context);
+
+    // 2) do your async work:
+    final repo     = AppRepository();
+    final presetId = await repo.findOrCreatePreset('Push');
+
+    // 3) guard mounted before using any State members:
+    if (!mounted) return;
+
+    // 4) use the captured navigator—no more context here:
+    navigator.push(
+      MaterialPageRoute(
+        builder: (_) => PresetDetailScreen(presetId: presetId),
+      ),
+    );
+  },
+),
+const SizedBox(height: 8),
+
+PresetBar(
+  label: 'Pull',
+  color: Colors.orange,
+  index: 1,
+  onTap: () async {
+    // 1) grab what you need from the context synchronously:
+    final navigator = Navigator.of(context);
+
+    // 2) do your async work:
+    final repo     = AppRepository();
+    final presetId = await repo.findOrCreatePreset('Push');
+
+    // 3) guard mounted before using any State members:
+    if (!mounted) return;
+
+    // 4) use the captured navigator—no more context here:
+    navigator.push(
+      MaterialPageRoute(
+        builder: (_) => PresetDetailScreen(presetId: presetId),
+      ),
+    );
+  },
+),
+
+const SizedBox(height: 8),
+PresetBar(
+  label: 'Legs',
+  color: Colors.green,
+  index: 2,
+  onTap: () async {
+    // 1) grab what you need from the context synchronously:
+    final navigator = Navigator.of(context);
+
+    // 2) do your async work:
+    final repo     = AppRepository();
+    final presetId = await repo.findOrCreatePreset('Push');
+
+    // 3) guard mounted before using any State members:
+    if (!mounted) return;
+
+    // 4) use the captured navigator—no more context here:
+    navigator.push(
+      MaterialPageRoute(
+        builder: (_) => PresetDetailScreen(presetId: presetId),
+      ),
+    );
+  },
+),
                           const SizedBox(height: 16),
                           const Divider(height: 24),
                           const _PresetBar(label: 'Generate Custom Presets'),
+                          const SizedBox(height: 8),
+                          const _PresetBar(label: 'Manually Add Preset'),
                         ],
                       ),
                     ),

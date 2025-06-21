@@ -36,24 +36,27 @@ class DatabaseHelper {
     final path = join(dbPath, 'fitness_tracker.db');
     return await openDatabase(
       path,
-      version: 5,  // bumped to 5
+      version: 6,  // bumped to 6 to include presets schema
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
       onCreate: _onCreate,
-      onUpgrade: (db, oldVersion, newVersion) async {
-  if (oldVersion < 3) {
-    await Schema.migrateV3(db);
-    await Seed.seedLookupsAndExercises(db);
-  }
-  if (oldVersion < 4) {
-    await Schema.migrateV4(db);
-    await Seed.seedStretches(db);
-  }
-  if (oldVersion < 5) {
-    await Schema.migrateV5(db);
-  }
-},
+  onUpgrade: (db, oldVersion, newVersion) async {
+    if (oldVersion < 3) {
+      await Schema.migrateV3(db);
+      await Seed.seedLookupsAndExercises(db);
+    }
+    if (oldVersion < 4) {
+      await Schema.migrateV4(db);
+      await Seed.seedStretches(db);
+    }
+    if (oldVersion < 5) {
+      await Schema.migrateV5(db);
+    }
+   if (oldVersion < 6) {
+     await Schema.migrateV6(db);
+   }
+  },
 );
   }
 
@@ -65,6 +68,8 @@ class DatabaseHelper {
   await Seed.seedLookupsAndExercises(db);
   // 3) Seed stretches
   await Seed.seedStretches(db);
+  // 4) Create preset tables (v6)
+  await Schema.migrateV6(db);
 }
 
   // ────────────────────────────────────────────────────────────────────────────
