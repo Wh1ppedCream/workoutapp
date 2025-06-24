@@ -47,6 +47,7 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    
     return FutureBuilder<FullPreset?>(
       future: _presetFuture,
       builder: (context, snapshot) {
@@ -63,7 +64,7 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
             body: Center(child: Text('Preset not found')),
           );
         }
-
+        
         // 2) we have a valid preset + shared repo
         return Scaffold(
           appBar: AppBar(
@@ -101,72 +102,67 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
 
           body: Column(
             children: [
+
               Expanded(
-                child: _isEditing
-                    ? ReorderableListView(
-                        padding: const EdgeInsets.all(16),
-                        onReorder: (oldIndex, newIndex) async {
-                          if (newIndex > oldIndex) newIndex--;
-                          setState(() {
-                            final item = preset.exercises.removeAt(oldIndex);
-                            preset.exercises.insert(newIndex, item);
-                          });
-                          await _repo.reorderPresetExercises(
-                            widget.presetId,
-                            preset.exercises.map((e) => e.id).toList(),
-                          );
-                          _loadPreset();
-                          setState(() {});
-                        },
-                        children: [
-                          for (var ex in preset.exercises)
-                            ExerciseCard(
-                              key: ValueKey(ex.id),
-                              exercise: _buildExerciseModel(preset, ex),
-                              cardType: _cardTypeFromString(ex.type),
-                              readOnlyMode: !_isEditing,
-                              onDeleteExercise: _isEditing
-                                  ? () async {
-                                      await _repo
-                                          .deletePresetExercise(ex.id);
-                                      _loadPreset();
-                                      setState(() {});
-                                    }
-                                  : null,
-                              onSetAdded: _isEditing
-                                  ? () {
-                                      _loadPreset();
-                                      setState(() {});
-                                    }
-                                  : null,
-                              onSetDeleted: _isEditing
-                                  ? () {
-                                      _loadPreset();
-                                      setState(() {});
-                                    }
-                                  : null,
-                              onValueChanged: _isEditing
-                                  ? () {
-                                      _loadPreset();
-                                      setState(() {});
-                                    }
-                                  : null,
-                            ),
-                        ],
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: preset.exercises.length,
-                        itemBuilder: (ctx, i) {
-                          final ex = preset.exercises[i];
-                          return ExerciseCard(
-                            exercise: _buildExerciseModel(preset, ex),
-                            cardType: _cardTypeFromString(ex.type),
-                            readOnlyMode: true,
-                          );
-                        },
-                      ),
-              ),
+  child: _isEditing
+      // ─── EDIT MODE: REORDERABLE ───────────────────────────────
+      ? ReorderableListView(
+          padding: const EdgeInsets.all(16),
+          onReorder: (oldIndex, newIndex) async {
+            if (newIndex > oldIndex) newIndex--;
+            setState(() {
+              final item = preset.exercises.removeAt(oldIndex);
+              preset.exercises.insert(newIndex, item);
+            });
+            await _repo.reorderPresetExercises(
+              widget.presetId,
+              preset.exercises.map((e) => e.id).toList(),
+            );
+            _loadPreset();
+            setState(() {});
+          },
+          children: [
+            for (var ex in preset.exercises)
+                // 1) materialize the rich model
+                ExerciseCard(
+                  key: ValueKey(ex.id),
+                  exercise: _buildExerciseModel(preset, ex),
+                  cardType: _cardTypeFromString(ex.type),
+                  readOnlyMode: !_isEditing,
+
+                  // 3) your existing edit callbacks
+                  onDeleteExercise: _isEditing
+      ? () async {
+          await _repo.deletePresetExercise(ex.id);
+          _loadPreset();
+          setState(() {});
+        }
+      : null,
+  onSetAdded:    _isEditing ? () { _loadPreset(); setState(() {}); } : null,
+  onSetDeleted:  _isEditing ? () { _loadPreset(); setState(() {}); } : null,
+  onValueChanged:_isEditing ? () { _loadPreset(); setState(() {}); } : null,
+                )
+          ],
+        )
+
+      // ─── READ-ONLY MODE: SIMPLE LIST ───────────────────────────
+      : ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: preset.exercises.length,
+          itemBuilder: (ctx, i) {
+            final ex    = preset.exercises[i];
+            final model = _buildExerciseModel(preset, ex);
+            return ExerciseCard(
+  exercise: model,
+  cardType: _cardTypeFromString(ex.type),
+  readOnlyMode: true,
+  // no completed params
+);
+          },
+        ),
+),
+
+              
               const Divider(height: 1),
               Padding(
                 padding: const EdgeInsets.all(16),
@@ -263,48 +259,41 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
   }
 
   /// Build a concrete WorkoutExercise (Weight/Cardio/Stretch) from a PresetExercise.
-       WorkoutExercise _buildExerciseModel(
-      FullPreset preset, PresetExercise pe) {
-    switch (pe.type) {
-      case 'weight':
-        final parents     = preset.presetSets[pe.id] ?? <ExerciseSet>[];
-        final childrenMap = preset.changeSetsMap[pe.id] ?? <int, List<ExerciseSet>>{};
-        return WeightExercise(
-          name:       pe.name,
-          equipment:  pe.equipment,
-          sets:       parents,
-          changeSets: childrenMap,
-        );
+  WorkoutExercise _buildExerciseModel(
+    FullPreset preset, PresetExercise pe) {
+  switch (pe.type) {
+    case 'weight':
+      final parents     = preset.presetSets[pe.id] ?? <ExerciseSet>[];
+      final childrenMap = preset.changeSetsMap[pe.id] ?? <int, List<ExerciseSet>>{};
+      return WeightExercise(
+        name:       pe.name,
+        equipment:  pe.equipment,
+        sets:       parents,
+        changeSets: childrenMap,
+      );
 
-      case 'cardio':
-        final c = preset.presetCardioDetails[pe.id]!;
-        return CardioExercise(
-          name:           pe.name,
-          equipment:      pe.equipment,
-          cardioName:     c['cardio_name']     as String,
-          cardioNote:     c['note']            as String?,
-          plannedMinutes: c['planned_minutes'] as int,
-          elapsedSeconds: c['elapsed_seconds'] as int,  // <<< use the real saved value
-        );
+    case 'cardio':
+      final c = preset.presetCardioDetails[pe.id]!;      // guaranteed non-null
+      return CardioExercise(
+        name:           pe.name,
+        equipment:      pe.equipment,
+        cardioName:     c['cardio_name']     as String,
+        cardioNote:     c['note']            as String?,
+        plannedMinutes: c['planned_minutes'] as int,
+        elapsedSeconds: c['elapsed_seconds'] as int,
+      );
 
-      case 'stretch':
-        final rawItems = preset.presetStretchItems[pe.id] ?? <Map<String, dynamic>>[];
-        final instances = rawItems.map((m) => StretchInstance(
-          id:         m['stretch_id']   as int,
-          isCustom:   (m['is_custom']   as int) == 1,
-          name:       m['custom_name']  as String,
-          description:m['custom_desc']  as String,
-        )).toList();
-        return StretchExercise(
-          name:             pe.name,
-          equipment:        pe.equipment,
-          stretchInstances: instances,
-        );
-
-      default:
-        throw Exception('Unknown preset exercise type: ${pe.type}');
-    }
+    case 'stretch':
+  final rawItems = preset.presetStretchItems[pe.id] ?? <Map<String,dynamic>>[];
+  return StretchExercise(
+    name:             pe.name,
+    equipment:        pe.equipment,
+    stretchInstances: rawItems,
+  );
+    default:
+      throw Exception('Unknown preset exercise type: ${pe.type}');
   }
+}
 
 
   CardType _cardTypeFromString(String type) {
