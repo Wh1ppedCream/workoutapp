@@ -27,18 +27,25 @@ class PresetDefinition {
 /// - [type]: One of 'weight', 'cardio', or 'stretch'.
 /// - [orderIndex]: Sequence order within the preset.
 class PresetExercise {
-  final int id;
-  final int? exerciseDefId;
+  final int    id;
+  final int?   exerciseDefId;
   final String type;
-  final int orderIndex;
+  final int   orderIndex;
+
+  // New:
+  final String name;
+  final String equipment;
 
   PresetExercise({
     required this.id,
     this.exerciseDefId,
     required this.type,
     required this.orderIndex,
+    this.name = '',
+    this.equipment = '',
   });
 }
+
 
 /// A full Preset, including its definition, exercises, and all detail data.
 ///
@@ -47,10 +54,18 @@ class PresetExercise {
 /// - [presetSets]: Map of parent+child weight sets by exercise ID.
 /// - [presetCardioDetails]: Map of cardio detail rows by exercise ID.
 /// - [presetStretchItems]: Map of stretch item rows by exercise ID.
+// ─── before FullPreset ──────────────────────────────────────
 class FullPreset {
   final PresetDefinition definition;
   final List<PresetExercise> exercises;
+
+  /// For each PresetExercise ID: the list of parent sets
   final Map<int, List<ExerciseSet>> presetSets;
+
+  // ─── add this line ─────────────────────────────────────────
+  /// For each PresetExercise ID: map parentIndex → list of change-sets
+  final Map<int, Map<int, List<ExerciseSet>>> changeSetsMap;
+
   final Map<int, Map<String, dynamic>> presetCardioDetails;
   final Map<int, List<Map<String, dynamic>>> presetStretchItems;
 
@@ -58,7 +73,10 @@ class FullPreset {
     required this.definition,
     required this.exercises,
     required this.presetSets,
+    // ─── include in constructor ─────────────────────────────
+    required this.changeSetsMap,
     required this.presetCardioDetails,
     required this.presetStretchItems,
   });
 }
+

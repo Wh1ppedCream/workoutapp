@@ -1,15 +1,44 @@
 // File: lib/widgets/add_exercise_fab.dart
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../models/active_session.dart';
 import '../screens/exercise_catalog_page.dart';
 import '../models/models.dart';
-import 'exercise_card.dart';
+
+/// Callback when a weight exercise definition is picked.
+typedef WeightPicker = Future<void> Function(ExerciseDefinition definition);
+/// Callback when a cardio exercise name is picked.
+typedef CardioPicker = Future<void> Function(String cardioName);
+/// Callback when a stretch exercise is picked.
+typedef StretchPicker = Future<void> Function();
 
 /// A FAB that opens a dialog to add a new exercise card (Weight, Cardio, Stretch).
+///
+/// Accepts callbacks to handle each choice, so it can be used for sessions or presets.
 class AddExerciseFab extends StatelessWidget {
-  const AddExerciseFab({super.key});
+  final WeightPicker? onWeightPicked;
+  final CardioPicker? onCardioPicked;
+  final StretchPicker? onStretchPicked;
+
+  /// Creates an AddExerciseFab.
+  ///
+  /// Provide any combination of [onWeightPicked], [onCardioPicked], [onStretchPicked]
+  /// to handle the respective selection.
+  const AddExerciseFab({
+    super.key,
+    this.onWeightPicked,
+    this.onCardioPicked,
+    this.onStretchPicked,
+  });
+
+  // Cardio options for bodyweight vs. equipment-based activities.
+  static const List<String> _bodyweightCardioOptions = [
+    'Aerobics', 'Box Jumps', 'Jump Squats', 'Running', 'Swimming', 'Walking', 'Zumba',
+  ];
+  static const List<String> _equipmentCardioOptions = [
+    'Battle Ropes', 'Bicycle', 'Elliptical', 'Rowing Machine',
+    'Ski Machine', 'Skipping Rope', 'Stair Climber',
+    'Stationary Bike', 'Treadmill', 'Vertical Climber',
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -34,18 +63,10 @@ class AddExerciseFab extends StatelessWidget {
                 Navigator.of(ctx).push(
                   MaterialPageRoute(
                     builder: (_) => ExerciseCatalogPage(
-                      onExercisePicked: (def) {
-                        ctx.read<ActiveSession>().addExercise(
-                          WeightExercise(
-                            name: def.name,
-                            equipment: def.equipmentList.isNotEmpty
-                                ? def.equipmentList.first.name
-                                : '',
-                            sets: [ExerciseSet()],
-                            changeSets: {},
-                          ),
-                          CardType.weight,
-                        );
+                      onExercisePicked: (def) async {
+                        if (onWeightPicked != null) {
+                          await onWeightPicked!(def);
+                        }
                       },
                     ),
                   ),
@@ -63,14 +84,7 @@ class AddExerciseFab extends StatelessWidget {
               title: const Text('Stretch'),
               onTap: () {
                 Navigator.of(ctx).pop();
-                ctx.read<ActiveSession>().addExercise(
-                  StretchExercise(
-                    name: 'Stretch',
-                    equipment: '',
-                    stretchInstances: [],
-                  ),
-                  CardType.stretch,
-                );
+                if (onStretchPicked != null) onStretchPicked!();
               },
             ),
           ],
@@ -85,18 +99,18 @@ class AddExerciseFab extends StatelessWidget {
     );
   }
 
-  void _showCardioDetailDialog(BuildContext context) {
+  void _showCardioDetailDialog(BuildContext dialogCtx) {
     String? selectedCategory;
     String? selectedExercise;
 
     showDialog(
-      context: context,
-      builder: (dialogCtx) => StatefulBuilder(
-        builder: (dialogCtx, setDialogState) {
+      context: dialogCtx,
+      builder: (innerCtx) => StatefulBuilder(
+        builder: (innerCtx, setState) {
           final options = (selectedCategory == 'Bodyweight')
-              ? ['Aerobics','Box Jumps','Jump Squats','Running','Swimming','Walking','Zumba']
+              ? _bodyweightCardioOptions
               : (selectedCategory == 'Equipment Based')
-                  ? ['Battle Ropes','Bicycle','Elliptical','Rowing Machine','Ski Machine','Skipping Rope','Stair Climber','Stationary Bike','Treadmill','Vertical Climber']
+                  ? _equipmentCardioOptions
                   : <String>[];
 
           return AlertDialog(
@@ -112,7 +126,7 @@ class AddExerciseFab extends StatelessWidget {
                         value: 'Bodyweight',
                         groupValue: selectedCategory,
                         onChanged: (v) {
-                          setDialogState(() {
+                          setState(() {
                             selectedCategory = v;
                             selectedExercise = null;
                           });
@@ -125,7 +139,7 @@ class AddExerciseFab extends StatelessWidget {
                         value: 'Equipment Based',
                         groupValue: selectedCategory,
                         onChanged: (v) {
-                          setDialogState(() {
+                          setState(() {
                             selectedCategory = v;
                             selectedExercise = null;
                           });
@@ -140,33 +154,27 @@ class AddExerciseFab extends StatelessWidget {
                     isExpanded: true,
                     decoration: const InputDecoration(labelText: 'Select Exercise'),
                     value: selectedExercise,
-                    items: options.map((ex) => DropdownMenuItem(value: ex, child: Text(ex))).toList(),
-                    onChanged: (v) => setDialogState(() => selectedExercise = v),
+                    items: options
+                        .map((ex) => DropdownMenuItem(value: ex, child: Text(ex)))
+                        .toList(),
+                    onChanged: (v) => setState(() => selectedExercise = v),
                   ),
                 ],
               ],
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.of(dialogCtx).pop(),
+                onPressed: () => Navigator.of(innerCtx).pop(),
                 child: const Text('Cancel'),
               ),
               ElevatedButton(
                 onPressed: (selectedExercise == null)
                     ? null
-                    : () {
-                        Navigator.of(dialogCtx).pop();
-                        context.read<ActiveSession>().addExercise(
-                          CardioExercise(
-                            name: selectedExercise!,
-                            equipment: '',
-                            cardioName: selectedExercise!,
-                            cardioNote: null,
-                            plannedMinutes: 0,
-                            elapsedSeconds: 0,
-                          ),
-                          CardType.cardio,
-                        );
+                    : () async {
+                        Navigator.of(innerCtx).pop();
+                        if (onCardioPicked != null) {
+                          await onCardioPicked!(selectedExercise!);
+                        }
                       },
                 child: const Text('Save'),
               ),

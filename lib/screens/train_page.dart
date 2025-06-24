@@ -133,7 +133,7 @@ PresetBar(
 
     // 2) do your async work:
     final repo     = AppRepository();
-    final presetId = await repo.findOrCreatePreset('Push');
+    final presetId = await repo.findOrCreatePreset('Pull');
 
     // 3) guard mounted before using any State members:
     if (!mounted) return;
@@ -158,7 +158,7 @@ PresetBar(
 
     // 2) do your async work:
     final repo     = AppRepository();
-    final presetId = await repo.findOrCreatePreset('Push');
+    final presetId = await repo.findOrCreatePreset('Legs');
 
     // 3) guard mounted before using any State members:
     if (!mounted) return;
