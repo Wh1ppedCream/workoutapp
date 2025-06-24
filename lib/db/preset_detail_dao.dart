@@ -57,18 +57,20 @@ class PresetDetailDao {
     required String cardioName,
     String? note,
     required int plannedMinutes,
+    required int elapsedSeconds,
   }) {
     return db.insert(
-      'preset_cardio_details',
-      {
-        'preset_exercise_id': presetExerciseId,
-        'cardio_name': cardioName,
-        'note': note,
-        'planned_minutes': plannedMinutes,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-  }
+    'preset_cardio_details',
+    {
+      'preset_exercise_id': presetExerciseId,
+      'cardio_name':        cardioName,
+      'note':               note,
+      'planned_minutes':    plannedMinutes,
+      'elapsed_seconds':    elapsedSeconds,
+    },
+    conflictAlgorithm: ConflictAlgorithm.replace,
+  );
+}
 
   /// Retrieves cardio details for a preset exercise.
   static Future<Map<String, dynamic>?> getPresetCardioDetails(
@@ -76,11 +78,12 @@ class PresetDetailDao {
     int presetExerciseId,
   ) async {
     final rows = await db.query(
-      'preset_cardio_details',
-      where: 'preset_exercise_id = ?',
-      whereArgs: [presetExerciseId],
-      limit: 1,
-    );
+    'preset_cardio_details',
+    columns: ['*'],   // includes elapsed_seconds
+    where: 'preset_exercise_id = ?',
+    whereArgs: [presetExerciseId],
+    limit: 1,
+  );
     return rows.isNotEmpty ? rows.first : null;
   }
 

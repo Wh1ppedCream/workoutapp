@@ -163,6 +163,7 @@ Future<int> findOrCreatePreset(String name) async {
     String cardioName,
     String? note,
     int plannedMinutes,
+    int elapsedSeconds,
   ) async {
     final db = await dbHelper.database;
     await PresetDetailDao.insertPresetCardioDetails(
@@ -171,6 +172,7 @@ Future<int> findOrCreatePreset(String name) async {
       cardioName: cardioName,
       note: note,
       plannedMinutes: plannedMinutes,
+      elapsedSeconds :    elapsedSeconds,
     );
   }
 
@@ -220,35 +222,55 @@ Future<int> findOrCreatePreset(String name) async {
       orderIndex:    r['order_index']       as int,
     )).toList();
 
-    // 3) details
-    final setsMap    = <int, List<ExerciseSet>>{};
-    final cardioMap  = <int, Map<String, dynamic>>{};
-    final stretchMap = <int, List<Map<String, dynamic>>>{};
+      // 4) details maps
+  final setsMap       = <int, List<ExerciseSet>>{};
+  final changeSetsMap = <int, Map<int, List<ExerciseSet>>>{};
+  final cardioMap     = <int, Map<String, dynamic>>{};
+  final stretchMap    = <int, List<Map<String, dynamic>>>{};
 
-    for (var ex in exs) {
-      // sets
-      setsMap[ex.id] = (await fetchPresetSets(ex.id))
-          .map((r) => ExerciseSet(
-            weight: (r['weight'] as num).toDouble(),
-            reps:   r['reps']   as int,
-          ))
-          .toList();
+  for (var ex in exs) {
+    // --- parent vs change-sets split ---
+    final rawSets      = await fetchPresetSets(ex.id);
+    final parents      = <ExerciseSet>[];
+    final childrenMap  = <int, List<ExerciseSet>>{};
+    final idToParentIx = <int, int>{};
 
-      // cardio
-      final c = await fetchPresetCardio(ex.id);
-      if (c != null) cardioMap[ex.id] = c;
+    for (var row in rawSets) {
+      final rowId    = row['id']            as int;
+      final parentId = row['parent_set_id'] as int?;
+      final set = ExerciseSet(
+        weight: (row['weight'] as num).toDouble(),
+        reps:   row['reps']   as int,
+      );
 
-      // stretch
-      stretchMap[ex.id] = await fetchPresetStretchItems(ex.id);
+      if (parentId == null) {
+        idToParentIx[rowId] = parents.length;
+        parents.add(set);
+      } else {
+        final pIx = idToParentIx[parentId]!;
+        (childrenMap[pIx] ??= []).add(set);
+      }
     }
 
-    return FullPreset(
-      definition:         def,
-      exercises:          exs,
-      presetSets:         setsMap,
-      presetCardioDetails: cardioMap,
-      presetStretchItems: stretchMap,
-    );
+    setsMap[ex.id]       = parents;
+    changeSetsMap[ex.id] = childrenMap;
+
+    // --- cardio & stretch as before ---
+    final c = await fetchPresetCardio(ex.id);
+    if (c != null) cardioMap[ex.id] = c;
+    stretchMap[ex.id] = await fetchPresetStretchItems(ex.id);
+  }
+
+  return FullPreset(
+    definition:          def,
+    exercises:           exs,
+    presetSets:          setsMap,
+    changeSetsMap:       changeSetsMap,      // pass in here
+    presetCardioDetails: cardioMap,
+    presetStretchItems:  stretchMap,
+  );
+
+
   }
 
 // ─── CLONING: Preset → Active Session ─────────────────────────────────────

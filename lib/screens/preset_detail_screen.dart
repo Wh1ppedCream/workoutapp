@@ -20,6 +20,7 @@ class PresetDetailScreen extends StatefulWidget {
 }
 
 class _PresetDetailScreenState extends State<PresetDetailScreen> {
+  final AppRepository _repo = AppRepository();
   late Future<FullPreset?> _presetFuture;
   bool _isEditing = false;
   late TextEditingController _nameController;
@@ -32,8 +33,7 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
   }
 
   void _loadPreset() {
-    final repo = AppRepository();
-    _presetFuture = repo.fetchFullPreset(widget.presetId);
+    _presetFuture = _repo.fetchFullPreset(widget.presetId);
     _presetFuture.then((fp) {
       if (fp != null) _nameController.text = fp.definition.name;
     });
@@ -47,60 +47,59 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        leading: BackButton(),
-        title: _isEditing
-            ? TextField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  hintText: 'Preset Name',
+    return FutureBuilder<FullPreset?>(
+      future: _presetFuture,
+      builder: (context, snapshot) {
+        // 1) loading state
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        final preset = snapshot.data;
+        if (preset == null) {
+          return const Scaffold(
+            body: Center(child: Text('Preset not found')),
+          );
+        }
+
+        // 2) we have a valid preset + shared repo
+        return Scaffold(
+          appBar: AppBar(
+            leading: const BackButton(),
+            title: _isEditing
+                ? TextField(
+                    controller: _nameController,
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      hintText: 'Preset Name',
+                    ),
+                    style: const TextStyle(
+                        fontSize: 20, fontWeight: FontWeight.bold),
+                  )
+                : Text(preset.definition.name),
+            centerTitle: true,
+            actions: [
+              IconButton(
+                icon: Icon(
+                  Icons.edit,
+                  color: _isEditing ? Colors.green : Colors.grey,
                 ),
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              )
-            : FutureBuilder<FullPreset?>(
-                future: _presetFuture,
-                builder: (_, snap) {
-                  final name = snap.hasData && snap.data != null
-                      ? snap.data!.definition.name
-                      : '';
-                  return Text(name);
-                },
+                onPressed: () =>
+                    setState(() => _isEditing = !_isEditing),
               ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: Icon(
-              Icons.edit,
-              color: _isEditing ? Colors.green : Colors.grey,
-            ),
-            onPressed: () {
-              setState(() => _isEditing = !_isEditing);
-            },
-          ),
-          PopupMenuButton<String>(
-            onSelected: (v) {},
-            itemBuilder: (_) => const [
-              PopupMenuItem(value: 'rename', child: Text('Rename')),
-              PopupMenuItem(value: 'delete', child: Text('Delete')),
+              PopupMenuButton<String>(
+                onSelected: (_) {},
+                itemBuilder: (_) => const [
+                  PopupMenuItem(value: 'rename', child: Text('Rename')),
+                  PopupMenuItem(value: 'delete', child: Text('Delete')),
+                ],
+              ),
             ],
           ),
-        ],
-      ),
-      body: FutureBuilder<FullPreset?>(
-        future: _presetFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          final preset = snapshot.data;
-          if (preset == null) {
-            return const Center(child: Text('Preset not found'));
-          }
-          final exercises = preset.exercises;
 
-          return Column(
+          body: Column(
             children: [
               Expanded(
                 child: _isEditing
@@ -109,49 +108,57 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                         onReorder: (oldIndex, newIndex) async {
                           if (newIndex > oldIndex) newIndex--;
                           setState(() {
-                            final item = exercises.removeAt(oldIndex);
-                            exercises.insert(newIndex, item);
+                            final item = preset.exercises.removeAt(oldIndex);
+                            preset.exercises.insert(newIndex, item);
                           });
-                          await AppRepository().reorderPresetExercises(
+                          await _repo.reorderPresetExercises(
                             widget.presetId,
-                            exercises.map((e) => e.id).toList(),
+                            preset.exercises.map((e) => e.id).toList(),
                           );
-                          setState(() => _loadPreset());
+                          _loadPreset();
+                          setState(() {});
                         },
                         children: [
-                          for (var i = 0; i < exercises.length; i++)
+                          for (var ex in preset.exercises)
                             ExerciseCard(
-                              key: ValueKey(exercises[i].id),
-                              exercise: _buildExerciseModel(preset, exercises[i]),
-                              cardType: _cardTypeFromString(exercises[i].type),
+                              key: ValueKey(ex.id),
+                              exercise: _buildExerciseModel(preset, ex),
+                              cardType: _cardTypeFromString(ex.type),
                               readOnlyMode: !_isEditing,
-                              initialCompletedParents: null,
-                              initialCompletedChildren: null,
                               onDeleteExercise: _isEditing
                                   ? () async {
-                                      await AppRepository()
-                                          .deletePresetExercise(
-                                              exercises[i].id);
-                                      setState(() => _loadPreset());
+                                      await _repo
+                                          .deletePresetExercise(ex.id);
+                                      _loadPreset();
+                                      setState(() {});
                                     }
                                   : null,
                               onSetAdded: _isEditing
-                                  ? () => setState(() => _loadPreset())
+                                  ? () {
+                                      _loadPreset();
+                                      setState(() {});
+                                    }
                                   : null,
                               onSetDeleted: _isEditing
-                                  ? () => setState(() => _loadPreset())
+                                  ? () {
+                                      _loadPreset();
+                                      setState(() {});
+                                    }
                                   : null,
                               onValueChanged: _isEditing
-                                  ? () => setState(() => _loadPreset())
+                                  ? () {
+                                      _loadPreset();
+                                      setState(() {});
+                                    }
                                   : null,
                             ),
                         ],
                       )
                     : ListView.builder(
                         padding: const EdgeInsets.all(16),
-                        itemCount: exercises.length,
+                        itemCount: preset.exercises.length,
                         itemBuilder: (ctx, i) {
-                          final ex = exercises[i];
+                          final ex = preset.exercises[i];
                           return ExerciseCard(
                             exercise: _buildExerciseModel(preset, ex),
                             cardType: _cardTypeFromString(ex.type),
@@ -166,8 +173,7 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                 child: _isEditing
                     ? ElevatedButton(
                         onPressed: () async {
-                          final repo = AppRepository();
-                          await repo.updatePresetName(
+                          await _repo.updatePresetName(
                               widget.presetId, _nameController.text);
                           setState(() {
                             _isEditing = false;
@@ -177,65 +183,129 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                         child: const Text('Save Preset'),
                       )
                     : ElevatedButton(
-                        onPressed: () async {
-                          final nav = Navigator.of(context);
-                          final sessionId = await
-                              AppRepository().startSessionFromPreset(
-                                  widget.presetId);
-                          if (!mounted) return;
-                          nav.pushReplacement(
-                            MaterialPageRoute(
-                              builder: (_) => SessionScreen(),
-                              settings: RouteSettings(
-                                arguments: sessionId,
-                              ),
-                            ),
-                          );
-                        },
-                        child: const Text('Start Session'),
-                      ),
+  onPressed: () async {
+    // 1) capture the navigator synchronously
+    final nav = Navigator.of(context);
+
+    // 2) do the async work
+    final sessionId = await _repo.startSessionFromPreset(widget.presetId);
+    if (!mounted) return;
+
+    // 3) use the captured navigator
+    nav.pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => SessionScreen(),
+        settings: RouteSettings(arguments: sessionId),
+      ),
+    );
+  },
+  child: const Text('Start Session'),
+),
+
               ),
             ],
-          );
-        },
-      ),
-      floatingActionButton:
-          _isEditing ? const AddExerciseFab() : const SizedBox.shrink(),
+          ),
+
+          // 3) only show this FAB when editing, wired with the loaded `preset`
+          floatingActionButton: _isEditing
+              ? AddExerciseFab(
+                  onWeightPicked: (def) async {
+                    final newIdx = preset.exercises.length;
+                    final newId = await _repo.addExerciseToPreset(
+                      widget.presetId,
+                      def.id,
+                      'weight',
+                      newIdx,
+                    );
+                    await _repo.savePresetWeightSets(
+                      newId,
+                      [ExerciseSet()],
+                      {},
+                    );
+                    _loadPreset();
+                    setState(() {});
+                  },
+                  onCardioPicked: (name) async {
+                    final newIdx = preset.exercises.length;
+                    final newId = await _repo.addExerciseToPreset(
+                      widget.presetId,
+                      null,
+                      'cardio',
+                      newIdx,
+                    );
+                    await _repo.savePresetCardio(
+                      newId,
+                      name,
+                      null,
+                      0,
+                      0,
+                    );
+                    _loadPreset();
+                    setState(() {});
+                  },
+                  onStretchPicked: () async {
+                    final newIdx = preset.exercises.length;
+                    final newId = await _repo.addExerciseToPreset(
+                      widget.presetId,
+                      null,
+                      'stretch',
+                      newIdx,
+                    );
+                    await _repo.savePresetStretch(newId, []);
+                    _loadPreset();
+                    setState(() {});
+                  },
+                )
+              : null,
+        );
+      },
     );
   }
 
   /// Build a concrete WorkoutExercise (Weight/Cardio/Stretch) from a PresetExercise.
-  WorkoutExercise _buildExerciseModel(
+       WorkoutExercise _buildExerciseModel(
       FullPreset preset, PresetExercise pe) {
     switch (pe.type) {
       case 'weight':
-        final sets = preset.presetSets[pe.id] ?? [];
+        final parents     = preset.presetSets[pe.id] ?? <ExerciseSet>[];
+        final childrenMap = preset.changeSetsMap[pe.id] ?? <int, List<ExerciseSet>>{};
         return WeightExercise(
-          name: '',
-          equipment: '',
-          sets: sets,
+          name:       pe.name,
+          equipment:  pe.equipment,
+          sets:       parents,
+          changeSets: childrenMap,
         );
+
       case 'cardio':
-        final c = preset.presetCardioDetails[pe.id];
+        final c = preset.presetCardioDetails[pe.id]!;
         return CardioExercise(
-          name: c?['cardio_name'] as String? ?? '',
-          equipment: '',
-          cardioName: c?['cardio_name'] as String? ?? '',
-          cardioNote: c?['note'] as String?,
-          plannedMinutes: c?['planned_minutes'] as int? ?? 0,
-          elapsedSeconds: 0,
+          name:           pe.name,
+          equipment:      pe.equipment,
+          cardioName:     c['cardio_name']     as String,
+          cardioNote:     c['note']            as String?,
+          plannedMinutes: c['planned_minutes'] as int,
+          elapsedSeconds: c['elapsed_seconds'] as int,  // <<< use the real saved value
         );
+
       case 'stretch':
-        final items = preset.presetStretchItems[pe.id] ?? [];
+        final rawItems = preset.presetStretchItems[pe.id] ?? <Map<String, dynamic>>[];
+        final instances = rawItems.map((m) => StretchInstance(
+          id:         m['stretch_id']   as int,
+          isCustom:   (m['is_custom']   as int) == 1,
+          name:       m['custom_name']  as String,
+          description:m['custom_desc']  as String,
+        )).toList();
         return StretchExercise(
-          name: '',
-          equipment: '',
-          stretchInstances: items,
+          name:             pe.name,
+          equipment:        pe.equipment,
+          stretchInstances: instances,
         );
+
       default:
         throw Exception('Unknown preset exercise type: ${pe.type}');
     }
   }
+
 
   CardType _cardTypeFromString(String type) {
     switch (type) {

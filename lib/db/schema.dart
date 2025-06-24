@@ -320,14 +320,15 @@ static Future<void> migrateV6(Database db) async {
 
   // Preset cardio details
   await db.execute('''
-    CREATE TABLE preset_cardio_details(
-      id                  INTEGER PRIMARY KEY AUTOINCREMENT,
-      preset_exercise_id  INTEGER NOT NULL UNIQUE,
-      cardio_name         TEXT    NOT NULL,
-      note                TEXT,
-      planned_minutes     INTEGER NOT NULL,
-      FOREIGN KEY(preset_exercise_id) REFERENCES preset_exercises(id) ON DELETE CASCADE
-    );
+      CREATE TABLE preset_cardio_details(
+    id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+    preset_exercise_id  INTEGER NOT NULL UNIQUE,
+    cardio_name         TEXT    NOT NULL,
+    note                TEXT,
+    planned_minutes     INTEGER NOT NULL,
+    elapsed_seconds     INTEGER NOT NULL DEFAULT 0,
+    FOREIGN KEY(preset_exercise_id) REFERENCES preset_exercises(id) ON DELETE CASCADE
+  );
   ''');
 
   // Preset stretch items
