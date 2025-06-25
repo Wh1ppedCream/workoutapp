@@ -32,11 +32,13 @@ class SessionScreen extends StatelessWidget {
         ),
       ),
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.menu),
-          onPressed: () => Scaffold.of(context).openDrawer(),
-        ),
-        title: const Text('Workout Session'),
+    leading: Builder(
+      builder: (innerCtx) => IconButton(
+        icon: const Icon(Icons.menu),
+        onPressed: () => Scaffold.of(innerCtx).openDrawer(),
+      ),
+    ),
+    title: const Text('Workout Session'),
         centerTitle: true,
       ),
 
@@ -61,8 +63,34 @@ class SessionScreen extends StatelessWidget {
               },
               ),
 
-      floatingActionButton: const AddExerciseFab(),
-
+           floatingActionButton: AddExerciseFab(
+        onWeightPicked: (def) async {
+          // build a brand-new WeightExercise with one empty set:
+          final ex = WeightExercise(
+            name: def.name,
+            equipment: def.equipmentList.isNotEmpty
+                ? def.equipmentList.first.name
+                : '',
+            sets: [ExerciseSet()],
+          );
+          context.read<ActiveSession>().addExercise(ex, CardType.weight);
+        },
+        onCardioPicked: (cardioName) async {
+          final ex = CardioExercise(
+            name: cardioName,
+            equipment: '',
+            cardioName: cardioName,
+          );
+          context.read<ActiveSession>().addExercise(ex, CardType.cardio);
+        },
+        onStretchPicked: () async {
+          final ex = StretchExercise(
+            name: 'Stretch',
+            equipment: '',
+          );
+          context.read<ActiveSession>().addExercise(ex, CardType.stretch);
+        },
+      ),
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

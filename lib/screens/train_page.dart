@@ -95,6 +95,7 @@ class _TrainPageState extends State<TrainPage> {
   @override
   Widget build(BuildContext context) {
     final drawerWidth = MediaQuery.of(context).size.width * 0.75;
+    int presetCount = 0;
 
     return Consumer<ActiveSession>(
       builder: (_, session, __) => Scaffold(
@@ -174,38 +175,14 @@ class _TrainPageState extends State<TrainPage> {
                       return const Center(child: CircularProgressIndicator());
                     }
                     final presets = snap.data!;
+                    presetCount = presets.length;
                     return ListView.separated(
                       padding: const EdgeInsets.all(16),
-                      itemCount: presets.length + 2,
-                      separatorBuilder: (_, __) =>
-                          const SizedBox(height: 8),
+                      itemCount: presets.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 8),
                       itemBuilder: (ctx, i) {
-                        // 1) Generate Custom Presets – no-op
-                        if (i == presets.length) {
-                          return const PresetBar(
-                            label: 'Generate Custom Presets',
-                            color: Colors.purple,
-                            index: 0,
-                          );
-                        }
-                        // 2) Manually Add Preset
-                        if (i == presets.length + 1) {
-                          return PresetBar(
-                            label: 'Manually Add Preset',
-                            color: Colors.purple,
-                            index: presets.length,
-                            onTap: () async {
-                              final newId =
-                                  await _repo.createPreset('New Preset');
-                              _refresh();
-                              _openPreset(newId, edit: true);
-                            },
-                          );
-                        }
-                        // 3) Real existing preset
                         final p = presets[i];
-                        final color =
-                            _palette[i % _palette.length];
+                        final color = _palette[i % _palette.length];
                         return PresetBar(
                           label: p.name,
                           color: color,
@@ -225,6 +202,32 @@ class _TrainPageState extends State<TrainPage> {
                 ),
               ),
 
+              // ← INSERT THIS DIVIDER
+              const Divider(height: 1),
+              const SizedBox(height: 8),
+
+              // “Generate Custom Presets” (no-op for now)
+              PresetBar(
+                label: 'Generate Custom Presets',
+                color: Colors.purple,
+                index: 0,
+              ),
+              const SizedBox(height: 8),
+
+              // “Manually Add Preset”
+              PresetBar(
+                label: 'Manually Add Preset',
+                color: Colors.purple,
+                index: presetCount,
+                onTap: () async {
+                  final newId = await _repo.createPreset('New Preset');
+                  _refresh();
+                  _openPreset(newId, edit: true);
+                },
+              ),
+
+              const SizedBox(height: 16),
+
               // --- New Session button ---
               Padding(
                 padding: const EdgeInsets.all(16),
@@ -243,6 +246,8 @@ class _TrainPageState extends State<TrainPage> {
             ],
           ),
         ),
+      
+      
       ),
     );
   }
