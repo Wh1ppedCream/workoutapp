@@ -244,6 +244,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+
     final dateStr = _dateFmt.format(widget.session.date);
 
     return PopScope<Object?>(
@@ -319,4 +320,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
       ),
     );
   }
+
+
+
 }
