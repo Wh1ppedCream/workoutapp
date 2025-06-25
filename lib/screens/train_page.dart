@@ -174,9 +174,6 @@ class _TrainPageState extends State<TrainPage> {
                       return const Center(child: CircularProgressIndicator());
                     }
                     final presets = snap.data!;
-                    const SizedBox(height: 16);
-
-                          const Divider(height: 24);
                     return ListView.separated(
                       padding: const EdgeInsets.all(16),
                       itemCount: presets.length + 2,
@@ -187,7 +184,7 @@ class _TrainPageState extends State<TrainPage> {
                         if (i == presets.length) {
                           return const PresetBar(
                             label: 'Generate Custom Presets',
-                            color: Colors.grey,
+                            color: Colors.purple,
                             index: 0,
                           );
                         }
@@ -195,7 +192,7 @@ class _TrainPageState extends State<TrainPage> {
                         if (i == presets.length + 1) {
                           return PresetBar(
                             label: 'Manually Add Preset',
-                            color: Colors.teal,
+                            color: Colors.purple,
                             index: presets.length,
                             onTap: () async {
                               final newId =
