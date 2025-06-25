@@ -109,13 +109,23 @@ class _TrainPageState extends State<TrainPage> {
                               final presetId = await repo.findOrCreatePreset('Push');
                               if (!mounted) return;
                               navigator.push(
-                                MaterialPageRoute(
-                                  builder: (_) => ChangeNotifierProvider(
-                                    create: (_) => PresetSession(presetId),
-                                    child: const PresetDetailScreen(),
-                                  ),
-                                ),
-                              );
+  MaterialPageRoute(
+    builder: (outerCtx) => MultiProvider(
+      providers: [
+        // Re-expose the same ActiveSession you already have in the TrainPage
+        ChangeNotifierProvider<ActiveSession>.value(
+          value: outerCtx.read<ActiveSession>(),
+        ),
+        // And add the new PresetSession
+        ChangeNotifierProvider(
+          create: (_) => PresetSession(presetId),
+        ),
+      ],
+      child: const PresetDetailScreen(),
+    ),
+  ),
+);
+
                             },
                           ),
                           const SizedBox(height: 8),
@@ -129,13 +139,23 @@ class _TrainPageState extends State<TrainPage> {
                               final presetId = await repo.findOrCreatePreset('Pull');
                               if (!mounted) return;
                               navigator.push(
-                                MaterialPageRoute(
-                                  builder: (_) => ChangeNotifierProvider(
-                                    create: (_) => PresetSession(presetId),
-                                    child: const PresetDetailScreen(),
-                                  ),
-                                ),
-                              );
+  MaterialPageRoute(
+    builder: (outerCtx) => MultiProvider(
+      providers: [
+        // Re-expose the same ActiveSession you already have in the TrainPage
+        ChangeNotifierProvider<ActiveSession>.value(
+          value: outerCtx.read<ActiveSession>(),
+        ),
+        // And add the new PresetSession
+        ChangeNotifierProvider(
+          create: (_) => PresetSession(presetId),
+        ),
+      ],
+      child: const PresetDetailScreen(),
+    ),
+  ),
+);
+
                             },
                           ),
                           const SizedBox(height: 8),
@@ -149,13 +169,23 @@ class _TrainPageState extends State<TrainPage> {
                               final presetId = await repo.findOrCreatePreset('Legs');
                               if (!mounted) return;
                               navigator.push(
-                                MaterialPageRoute(
-                                  builder: (_) => ChangeNotifierProvider(
-                                    create: (_) => PresetSession(presetId),
-                                    child: const PresetDetailScreen(),
-                                  ),
-                                ),
-                              );
+  MaterialPageRoute(
+    builder: (outerCtx) => MultiProvider(
+      providers: [
+        // Re-expose the same ActiveSession you already have in the TrainPage
+        ChangeNotifierProvider<ActiveSession>.value(
+          value: outerCtx.read<ActiveSession>(),
+        ),
+        // And add the new PresetSession
+        ChangeNotifierProvider(
+          create: (_) => PresetSession(presetId),
+        ),
+      ],
+      child: const PresetDetailScreen(),
+    ),
+  ),
+);
+
                             },
                           ),
                           const SizedBox(height: 16),

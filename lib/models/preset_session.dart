@@ -95,12 +95,21 @@ class PresetSession extends ChangeNotifier {
           cardTypes.add(CardType.cardio);
         }
       } else if (type == 'stretch') {
-        final items = await _repo.fetchPresetStretchItems(exId);
+        final rawItems = await _repo.fetchPresetStretchItems(exId);
+        final items = rawItems.map((r) {
+          return <String, dynamic>{
+            'stretch_id':  r['stretch_id'] as int?,
+            'is_custom':   (r['is_custom'] as int) == 1,
+            'custom_name': r['custom_name'] as String?,
+            'custom_desc': r['custom_desc'] as String?,
+            'order_index': (r['order_index'] as num).toInt(),
+            // presets have no "completed" info
+            'is_checked':  false,
+          };
+        }).toList();
         final completed = <int>{};
-        for (var i = 0; i < items.length; i++) {
-          if (items[i]['is_checked'] == true) completed.add(i);
-        }
 
+        // determine header
         String stretchName = 'Stretch';
         if (items.isNotEmpty) {
           final first = items.first;
@@ -115,9 +124,9 @@ class PresetSession extends ChangeNotifier {
         }
 
         exercises.add(StretchExercise(
-          name: stretchName,
-          equipment: '',
-          stretchInstances: items,
+          name:                    stretchName,
+          equipment:               '',
+          stretchInstances:        items,
           completedStretchIndices: completed,
         ));
         cardTypes.add(CardType.stretch);

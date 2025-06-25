@@ -65,13 +65,6 @@ Future<int> findOrCreatePreset(String name) async {
     await PresetDefinitionDao.deletePreset(db, presetId);
   }
 
-/// Changes the order of exercises within a Preset.
-  ///
-  /// [ids] is the list of PresetExercise IDs in the desired new order.
-  Future<void> reorderPresetExercises(int presetId, List<int> ids) async {
-    final db = await dbHelper.database;
-    await PresetExerciseDao.reorderExercises(db, presetId, ids);
-  }
 
  // ─── PRESETS: Exercise CRUD ──────────────────────────────────────
   /// Adds a new exercise to a Preset.
@@ -112,26 +105,7 @@ Future<int> findOrCreatePreset(String name) async {
 
   // ─── PRESETS: Single-Exercise CRUD ────────────────────────────
 
-  /// Deletes one exercise from a Preset.
-  Future<void> deletePresetExercise(int presetExerciseId) async {
-    final db = await dbHelper.database;
-    await PresetExerciseDao.deletePresetExercise(db, presetExerciseId);
-  }
 
-  /// Updates fields of an existing preset exercise.
-  Future<void> updatePresetExercise(
-    int presetExerciseId, {
-    int? exerciseDefId,
-    String? type,
-  }) async {
-    final db = await dbHelper.database;
-    await PresetExerciseDao.updatePresetExercise(
-      db: db,
-      id: presetExerciseId,
-      exerciseDefId: exerciseDefId,
-      type: type,
-    );
-  }
 
  // ─── PRESETS: Detail CRUD ──────────────────────────────────────
   /// Saves weight sets for a Preset exercise.
@@ -207,142 +181,7 @@ Future<int> findOrCreatePreset(String name) async {
 
 // ─── PRESETS: Fetch Full ───────────────────────────────────────
 
-  /// Fetches a full preset including its exercises and all their details.
-  Future<FullPreset?> fetchFullPreset(int presetId) async {
-    // 1) definition
-    final def = await fetchPresetById(presetId);
-    if (def == null) return null;
-
-    // 2) exercises
-    final rawExs = await fetchPresetExercises(presetId);
-    final exs = rawExs.map((r) => PresetExercise(
-      id:            r['id']                as int,
-      exerciseDefId: r['exercise_def_id']   as int?,
-      type:          r['type']              as String,
-      orderIndex:    r['order_index']       as int,
-    )).toList();
-
-      // 4) details maps
-  final setsMap       = <int, List<ExerciseSet>>{};
-  final changeSetsMap = <int, Map<int, List<ExerciseSet>>>{};
-  final cardioMap     = <int, Map<String, dynamic>>{};
-  final stretchMap    = <int, List<Map<String, dynamic>>>{};
-
-  for (var ex in exs) {
-    // --- parent vs change-sets split ---
-    final rawSets      = await fetchPresetSets(ex.id);
-    final parents      = <ExerciseSet>[];
-    final childrenMap  = <int, List<ExerciseSet>>{};
-    final idToParentIx = <int, int>{};
-
-    for (var row in rawSets) {
-      final rowId    = row['id']            as int;
-      final parentId = row['parent_set_id'] as int?;
-      final set = ExerciseSet(
-        weight: (row['weight'] as num).toDouble(),
-        reps:   row['reps']   as int,
-      );
-
-      if (parentId == null) {
-        idToParentIx[rowId] = parents.length;
-        parents.add(set);
-      } else {
-        final pIx = idToParentIx[parentId]!;
-        (childrenMap[pIx] ??= []).add(set);
-      }
-    }
-
-    setsMap[ex.id]       = parents;
-    changeSetsMap[ex.id] = childrenMap;
-
-    // --- cardio & stretch as before ---
-    final c = await fetchPresetCardio(ex.id);
-    if (c != null) cardioMap[ex.id] = c;
-    stretchMap[ex.id] = await fetchPresetStretchItems(ex.id);
-  }
-
-  return FullPreset(
-    definition:          def,
-    exercises:           exs,
-    presetSets:          setsMap,
-    changeSetsMap:       changeSetsMap,      // pass in here
-    presetCardioDetails: cardioMap,
-    presetStretchItems:  stretchMap,
-  );
 
 
-  }
 
-// ─── CLONING: Preset → Active Session ─────────────────────────────────────
-  /// Clones a Preset into a new workout session.
-  ///
-  /// - Creates a new session at the current time.
-  /// - Iterates each PresetExercise and replays its data into the session.
-  ///   • For 'weight', reuses addWeightSets
-  ///   • For 'cardio', calls saveCardioDetails
-  ///   • For 'stretch', calls saveStretchInstance
-  ///
-  /// Returns the newly created session ID.
-  Future<int> startSessionFromPreset(int presetId) async {
-    final preset = await fetchPresetById(presetId);
-    if (preset == null) throw Exception('Preset $presetId not found');
-    final nowIso = DateTime.now().toIso8601String();
-    final sessionId = await createSession(nowIso, 0);
-
-
-    final exercises = await fetchPresetExercises(presetId);
-    for (var ex in exercises) {
-      final exId = await addExerciseRow(
-        exerciseDefId: ex['exercise_def_id'] as int?,
-        type: ex['type'] as String,
-        orderIndex: ex['order_index'] as int,
-        sessionId: sessionId,
-      );
-
-      if (ex['type'] == 'weight') {
-        final rawSets = await fetchPresetSets(ex['id'] as int);
-        final parents = <ExerciseSet>[];
-        final children = <int, List<ExerciseSet>>{};
-        final indexMap = <int, int>{};
-        for (var row in rawSets) {
-          final id = row['id'] as int;
-          final parentId = row['parent_set_id'] as int?;
-          final set = ExerciseSet(
-            weight: (row['weight'] as num).toDouble(),
-            reps: row['reps'] as int,
-          );
-          if (parentId == null) {
-            indexMap[id] = parents.length;
-            parents.add(set);
-          } else {
-            final pIdx = indexMap[parentId]!;
-            children.putIfAbsent(pIdx, () => []).add(set);
-          }
-        }
-        await addWeightSets(
-          exerciseId: exId,
-          parentSets: parents,
-          childChangeSets: children,
-        );
-      } else if (ex['type'] == 'cardio') {
-        final c = await fetchPresetCardio(ex['id'] as int);
-        if (c != null) {
-          await saveCardioDetails(
-            exerciseId: exId,
-            cardioName: c['cardio_name'] as String,
-            note: c['note'] as String?,
-            plannedMinutes: c['planned_minutes'] as int,
-            elapsedSeconds: 0,
-          );
-        }
-      } else if (ex['type'] == 'stretch') {
-        final items = await fetchPresetStretchItems(ex['id'] as int);
-        await saveStretchInstance(
-          exerciseId: exId,
-          items: items,
-        );
-      }
-    }
-    return sessionId;
-  }
 }
