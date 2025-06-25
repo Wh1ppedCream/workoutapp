@@ -2,9 +2,9 @@
 
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import '../models/models.dart';
-import '../widgets/exercise_card.dart'; // for CardType
-import '../repositories/app_repository.dart';
+import 'package:env_test/models/models.dart';
+import 'package:env_test/widgets/exercise_card.dart';
+import 'package:env_test/repositories/app_repository.dart';
 
 /// Holds the in-memory state of a workout session, including timer and exercises.
 class ActiveSession extends ChangeNotifier {

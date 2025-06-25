@@ -1,3 +1,4 @@
+import 'package:env_test/models/active_session.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/models.dart';
@@ -184,20 +185,29 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
           child: const Text('Save Preset'),
                   )
                 : ElevatedButton(
-                    onPressed: () async {
-                      final nav = Navigator.of(context);
-                      final sess = context.read<PresetSession>();
-                      final sid = await sess.startSession();
-                      if (!mounted) return;
-                      nav.pushReplacement(
-                        MaterialPageRoute(
-                          builder: (_) => SessionScreen(),
-                          settings: RouteSettings(arguments: sid),
-                        ),
-                      );
-                    },
-                    child: const Text('Start Session'),
-                  ),
+  onPressed: () {
+    // 1) Capture Navigator and notifiers up-front
+    final nav   = Navigator.of(context);
+    final preset= context.read<PresetSession>();
+    final active= context.read<ActiveSession>();
+
+    // 2) Seed the live session
+    active.exercises.clear();
+    active.cardTypes.clear();
+    for (var i = 0; i < preset.exercises.length; i++) {
+      active.addExercise(preset.exercises[i], preset.cardTypes[i]);
+    }
+    // 3) Start the timer
+    active.start();
+
+    // 4) Navigate
+    nav.pushReplacement(
+      MaterialPageRoute(builder: (_) => const SessionScreen()),
+    );
+  },
+  child: const Text('Start Session'),
+),
+
           ),
         ),
       ),
