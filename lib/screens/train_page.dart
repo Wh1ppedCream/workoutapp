@@ -5,36 +5,37 @@ import 'session_screen.dart';
 import '../models/active_session.dart';
 import '../widgets/preset_bar.dart';
 import 'preset_detail_screen.dart';
+import '../models/preset_session.dart';
 import '../repositories/app_repository.dart';
 import '../repositories/app_repository_presets.dart';
 
- class TrainPage extends StatefulWidget {
-   const TrainPage({super.key});
+class TrainPage extends StatefulWidget {
+  const TrainPage({super.key});
 
-   @override
-   State<TrainPage> createState() => _TrainPageState();
- }
+  @override
+  State<TrainPage> createState() => _TrainPageState();
+}
 
- class _TrainPageState extends State<TrainPage> {
-   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+class _TrainPageState extends State<TrainPage> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-   @override
-   Widget build(BuildContext context) {
-     final drawerWidth = MediaQuery.of(context).size.width * 0.75;
+  @override
+  Widget build(BuildContext context) {
+    final drawerWidth = MediaQuery.of(context).size.width * 0.75;
 
     return Consumer<ActiveSession>(
       builder: (_, session, __) => Stack(
         children: [
           Scaffold(
             key: _scaffoldKey,
-           drawer: Drawer(
+            drawer: Drawer(
               width: drawerWidth,
               child: ListView(
                 padding: EdgeInsets.zero,
                 children: const [
                   DrawerHeader(
                     decoration: BoxDecoration(color: Colors.deepPurple),
-                   child: Text(
+                    child: Text(
                       'To be added',
                       style: TextStyle(color: Colors.white, fontSize: 18),
                     ),
@@ -47,9 +48,9 @@ import '../repositories/app_repository_presets.dart';
             ),
             endDrawer: Drawer(
               width: drawerWidth,
-             child: ListView(
+              child: ListView(
                 padding: EdgeInsets.zero,
-               children: const [
+                children: const [
                   DrawerHeader(
                     decoration: BoxDecoration(color: Colors.lightGreen),
                     child: Text(
@@ -62,7 +63,7 @@ import '../repositories/app_repository_presets.dart';
                   ListTile(title: Text('Home Gym')),
                 ],
               ),
-           ),
+            ),
             appBar: AppBar(
               leading: IconButton(
                 icon: const Icon(Icons.menu),
@@ -99,78 +100,64 @@ import '../repositories/app_repository_presets.dart';
                           ),
                           const Divider(height: 24),
                           PresetBar(
-  label: 'Push',
-  color: Colors.blue,
-  index: 0,
-  onTap: () async {
-    // 1) grab what you need from the context synchronously:
-    final navigator = Navigator.of(context);
-
-    // 2) do your async work:
-    final repo     = AppRepository();
-    final presetId = await repo.findOrCreatePreset('Push');
-
-    // 3) guard mounted before using any State members:
-    if (!mounted) return;
-
-    // 4) use the captured navigator—no more context here:
-    navigator.push(
-      MaterialPageRoute(
-        builder: (_) => PresetDetailScreen(presetId: presetId),
-      ),
-    );
-  },
-),
-const SizedBox(height: 8),
-
-PresetBar(
-  label: 'Pull',
-  color: Colors.orange,
-  index: 1,
-  onTap: () async {
-    // 1) grab what you need from the context synchronously:
-    final navigator = Navigator.of(context);
-
-    // 2) do your async work:
-    final repo     = AppRepository();
-    final presetId = await repo.findOrCreatePreset('Pull');
-
-    // 3) guard mounted before using any State members:
-    if (!mounted) return;
-
-    // 4) use the captured navigator—no more context here:
-    navigator.push(
-      MaterialPageRoute(
-        builder: (_) => PresetDetailScreen(presetId: presetId),
-      ),
-    );
-  },
-),
-
-const SizedBox(height: 8),
-PresetBar(
-  label: 'Legs',
-  color: Colors.green,
-  index: 2,
-  onTap: () async {
-    // 1) grab what you need from the context synchronously:
-    final navigator = Navigator.of(context);
-
-    // 2) do your async work:
-    final repo     = AppRepository();
-    final presetId = await repo.findOrCreatePreset('Legs');
-
-    // 3) guard mounted before using any State members:
-    if (!mounted) return;
-
-    // 4) use the captured navigator—no more context here:
-    navigator.push(
-      MaterialPageRoute(
-        builder: (_) => PresetDetailScreen(presetId: presetId),
-      ),
-    );
-  },
-),
+                            label: 'Push',
+                            color: Colors.blue,
+                            index: 0,
+                            onTap: () async {
+                              final navigator = Navigator.of(context);
+                              final repo = AppRepository();
+                              final presetId = await repo.findOrCreatePreset('Push');
+                              if (!mounted) return;
+                              navigator.push(
+                                MaterialPageRoute(
+                                  builder: (_) => ChangeNotifierProvider(
+                                    create: (_) => PresetSession(presetId),
+                                    child: const PresetDetailScreen(),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 8),
+                          PresetBar(
+                            label: 'Pull',
+                            color: Colors.orange,
+                            index: 1,
+                            onTap: () async {
+                              final navigator = Navigator.of(context);
+                              final repo = AppRepository();
+                              final presetId = await repo.findOrCreatePreset('Pull');
+                              if (!mounted) return;
+                              navigator.push(
+                                MaterialPageRoute(
+                                  builder: (_) => ChangeNotifierProvider(
+                                    create: (_) => PresetSession(presetId),
+                                    child: const PresetDetailScreen(),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 8),
+                          PresetBar(
+                            label: 'Legs',
+                            color: Colors.green,
+                            index: 2,
+                            onTap: () async {
+                              final navigator = Navigator.of(context);
+                              final repo = AppRepository();
+                              final presetId = await repo.findOrCreatePreset('Legs');
+                              if (!mounted) return;
+                              navigator.push(
+                                MaterialPageRoute(
+                                  builder: (_) => ChangeNotifierProvider(
+                                    create: (_) => PresetSession(presetId),
+                                    child: const PresetDetailScreen(),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
                           const SizedBox(height: 16),
                           const Divider(height: 24),
                           const _PresetBar(label: 'Generate Custom Presets'),
@@ -179,7 +166,7 @@ PresetBar(
                         ],
                       ),
                     ),
-                 ),
+                  ),
                   Padding(
                     padding: const EdgeInsets.all(16),
                     child: SizedBox(
@@ -190,7 +177,7 @@ PresetBar(
                           Navigator.of(context).push(
                             MaterialPageRoute(builder: (_) => const SessionScreen()),
                           );
-                       },
+                        },
                         child: const Text('New Session'),
                       ),
                     ),
@@ -205,7 +192,6 @@ PresetBar(
   }
 }
 
-
 /// Reusable bar widget
 class _PresetBar extends StatelessWidget {
   final String label;
@@ -215,12 +201,12 @@ class _PresetBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = Theme.of(context).primaryColor;
     return Material(
-      color: color.withValues(alpha: 0.1),
+      color: color.withAlpha(25),
       borderRadius: BorderRadius.circular(8),
       child: InkWell(
         borderRadius: BorderRadius.circular(8),
         onTap: () {
-          // TODO: handle preset tap
+          // TODO: implement preset tap navigation (wrap in Provider & navigate to PresetDetailScreen)
         },
         child: Container(
           width: double.infinity,
@@ -238,4 +224,3 @@ class _PresetBar extends StatelessWidget {
     );
   }
 }
-
