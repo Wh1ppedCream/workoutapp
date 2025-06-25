@@ -13,28 +13,31 @@ class PresetBar extends StatelessWidget {
   /// The index used when [label] is null.
   final int index;
 
-final VoidCallback? onTap;
+  /// Called when the user taps the bar.
+  final VoidCallback? onTap;
+
+  /// Called when the user selects an overflow menu item.
+  final ValueChanged<String>? onMenuSelected;
 
   /// Creates a [PresetBar].
-  ///
-  /// [color] is required; [label] optional; [index] used if label is null.
   const PresetBar({
     super.key,
     this.label,
     required this.color,
     required this.index,
-    this.onTap,  
+    this.onTap,
+    this.onMenuSelected,
   });
 
   @override
   Widget build(BuildContext context) {
-    // Determine display text
-    final title = label?.trim().isNotEmpty == true
+    final title = (label?.trim().isNotEmpty ?? false)
         ? label!
         : 'Preset ${index + 1}';
 
     return Material(
       color: color.withValues(alpha: 0.1),
+      //need to make colors different for each preset
       borderRadius: BorderRadius.circular(8),
       child: InkWell(
         borderRadius: BorderRadius.circular(8),
@@ -59,10 +62,14 @@ final VoidCallback? onTap;
               ),
               PopupMenuButton<String>(
                 icon: Icon(Icons.more_vert, color: color),
-                onSelected: (_) {},
+                onSelected: (action) {
+                  if (onMenuSelected != null) {
+                    onMenuSelected!(action);
+                  }
+                },
                 itemBuilder: (_) => const [
                   PopupMenuItem(value: 'edit', child: Text('Edit')),
-                  PopupMenuItem(value: 'schedule', child: Text('Schedule')),
+                  PopupMenuItem(value: 'delete', child: Text('Delete')),
                   PopupMenuItem(value: 'profile_swap', child: Text('Profile Swap')),
                   PopupMenuItem(value: 'delete', child: Text('Delete')),
                 ],

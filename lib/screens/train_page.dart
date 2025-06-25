@@ -1,13 +1,15 @@
 // File: lib/screens/train_page.dart
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'session_screen.dart';
 import '../models/active_session.dart';
-import '../widgets/preset_bar.dart';
-import 'preset_detail_screen.dart';
+import '../models/preset_models.dart';
 import '../models/preset_session.dart';
 import '../repositories/app_repository.dart';
 import '../repositories/app_repository_presets.dart';
+import '../widgets/preset_bar.dart';
+import 'preset_detail_screen.dart';
+import 'session_screen.dart';
 
 class TrainPage extends StatefulWidget {
   const TrainPage({super.key});
@@ -17,237 +19,231 @@ class TrainPage extends StatefulWidget {
 }
 
 class _TrainPageState extends State<TrainPage> {
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  static const _palette = [
+    Colors.blue,
+    Colors.orange,
+    Colors.green,
+    Colors.purple,
+    Colors.teal,
+  ];
+
+  final _repo = AppRepository();
+  late Future<List<PresetDefinition>> _presetsFuture;
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  @override
+  void initState() {
+    super.initState();
+    _ensureDefaults();
+    _loadPresets();
+  }
+
+  /// Make sure our three defaults exist at least once.
+  Future<void> _ensureDefaults() async {
+    await _repo.findOrCreatePreset('Push');
+    await _repo.findOrCreatePreset('Pull');
+    await _repo.findOrCreatePreset('Legs');
+  }
+
+  /// Reloads the future for all presets.
+  void _loadPresets() {
+    _presetsFuture = _repo
+        .fetchAllPresetsRaw()
+        .then((raw) => raw.map((r) {
+              return PresetDefinition(
+                id: r['id'] as int,
+                name: r['name'] as String,
+                createdAt: DateTime.parse(r['created_at'] as String),
+              );
+            }).toList());
+  }
+
+  /// Convenience: calls setState(&_loadPresets).
+  void _refresh() => setState(_loadPresets);
+
+  /// Navigate into the detail screen for [presetId].
+  void _openPreset(int presetId, {bool edit = false}) {
+    final navigator = Navigator.of(context);
+
+    navigator.push(
+      MaterialPageRoute(
+        builder: (outerCtx) => MultiProvider(
+          providers: [
+            // Re-use the same ActiveSession
+            ChangeNotifierProvider<ActiveSession>.value(
+              value: outerCtx.read<ActiveSession>(),
+            ),
+            // New PresetSession
+            ChangeNotifierProvider(
+              create: (_) => PresetSession(presetId),
+            ),
+          ],
+          child: PresetDetailScreen(
+            // if you add a 'startEditing' flag to the screen, you can pass edit:true here
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Delete a preset and refresh the list.
+  Future<void> _deletePreset(int presetId) async {
+    await _repo.deletePreset(presetId);
+    _refresh();
+  }
 
   @override
   Widget build(BuildContext context) {
     final drawerWidth = MediaQuery.of(context).size.width * 0.75;
 
     return Consumer<ActiveSession>(
-      builder: (_, session, __) => Stack(
-        children: [
-          Scaffold(
-            key: _scaffoldKey,
-            drawer: Drawer(
-              width: drawerWidth,
-              child: ListView(
-                padding: EdgeInsets.zero,
-                children: const [
-                  DrawerHeader(
-                    decoration: BoxDecoration(color: Colors.deepPurple),
-                    child: Text(
-                      'To be added',
-                      style: TextStyle(color: Colors.white, fontSize: 18),
-                    ),
-                  ),
-                  ListTile(title: Text('Option A')),
-                  ListTile(title: Text('Option B')),
-                  ListTile(title: Text('Option C')),
-                ],
+      builder: (_, session, __) => Scaffold(
+        key: _scaffoldKey,
+        drawer: Drawer(
+          width: drawerWidth,
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: const [
+              DrawerHeader(
+                decoration: BoxDecoration(color: Colors.deepPurple),
+                child: Text('To be added',
+                    style: TextStyle(color: Colors.white, fontSize: 18)),
               ),
-            ),
-            endDrawer: Drawer(
-              width: drawerWidth,
-              child: ListView(
-                padding: EdgeInsets.zero,
-                children: const [
-                  DrawerHeader(
-                    decoration: BoxDecoration(color: Colors.lightGreen),
-                    child: Text(
-                      'Gym Profiles',
-                      style: TextStyle(color: Colors.white, fontSize: 18),
-                    ),
-                  ),
-                  ListTile(title: Text('General')),
-                  ListTile(title: Text('Commercial Gym')),
-                  ListTile(title: Text('Home Gym')),
-                ],
+              ListTile(title: Text('Option A')),
+              ListTile(title: Text('Option B')),
+              ListTile(title: Text('Option C')),
+            ],
+          ),
+        ),
+        endDrawer: Drawer(
+          width: drawerWidth,
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: const [
+              DrawerHeader(
+                decoration: BoxDecoration(color: Colors.lightGreen),
+                child: Text('Gym Profiles',
+                    style: TextStyle(color: Colors.white, fontSize: 18)),
               ),
-            ),
-            appBar: AppBar(
-              leading: IconButton(
-                icon: const Icon(Icons.menu),
-                onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-              ),
-              title: const Text('Train'),
-              centerTitle: true,
-              actions: [
-                IconButton(
-                  icon: const CircleAvatar(
-                    backgroundColor: Colors.lightGreen,
-                    child: Text(
-                      'P',
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
+              ListTile(title: Text('General')),
+              ListTile(title: Text('Commercial Gym')),
+              ListTile(title: Text('Home Gym')),
+            ],
+          ),
+        ),
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.menu),
+            onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+          ),
+          title: const Text('Train'),
+          centerTitle: true,
+          actions: [
+            IconButton(
+              icon: const CircleAvatar(
+                backgroundColor: Colors.lightGreen,
+                child: Text(
+                  'P',
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold),
                 ),
-              ],
-            ),
-            body: SafeArea(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Text(
-                            'Exercise Presets',
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
-                          const Divider(height: 24),
-                          PresetBar(
-                            label: 'Push',
-                            color: Colors.blue,
-                            index: 0,
-                            onTap: () async {
-                              final navigator = Navigator.of(context);
-                              final repo = AppRepository();
-                              final presetId = await repo.findOrCreatePreset('Push');
-                              if (!mounted) return;
-                              navigator.push(
-  MaterialPageRoute(
-    builder: (outerCtx) => MultiProvider(
-      providers: [
-        // Re-expose the same ActiveSession you already have in the TrainPage
-        ChangeNotifierProvider<ActiveSession>.value(
-          value: outerCtx.read<ActiveSession>(),
-        ),
-        // And add the new PresetSession
-        ChangeNotifierProvider(
-          create: (_) => PresetSession(presetId),
-        ),
-      ],
-      child: const PresetDetailScreen(),
-    ),
-  ),
-);
-
-                            },
-                          ),
-                          const SizedBox(height: 8),
-                          PresetBar(
-                            label: 'Pull',
-                            color: Colors.orange,
-                            index: 1,
-                            onTap: () async {
-                              final navigator = Navigator.of(context);
-                              final repo = AppRepository();
-                              final presetId = await repo.findOrCreatePreset('Pull');
-                              if (!mounted) return;
-                              navigator.push(
-  MaterialPageRoute(
-    builder: (outerCtx) => MultiProvider(
-      providers: [
-        // Re-expose the same ActiveSession you already have in the TrainPage
-        ChangeNotifierProvider<ActiveSession>.value(
-          value: outerCtx.read<ActiveSession>(),
-        ),
-        // And add the new PresetSession
-        ChangeNotifierProvider(
-          create: (_) => PresetSession(presetId),
-        ),
-      ],
-      child: const PresetDetailScreen(),
-    ),
-  ),
-);
-
-                            },
-                          ),
-                          const SizedBox(height: 8),
-                          PresetBar(
-                            label: 'Legs',
-                            color: Colors.green,
-                            index: 2,
-                            onTap: () async {
-                              final navigator = Navigator.of(context);
-                              final repo = AppRepository();
-                              final presetId = await repo.findOrCreatePreset('Legs');
-                              if (!mounted) return;
-                              navigator.push(
-  MaterialPageRoute(
-    builder: (outerCtx) => MultiProvider(
-      providers: [
-        // Re-expose the same ActiveSession you already have in the TrainPage
-        ChangeNotifierProvider<ActiveSession>.value(
-          value: outerCtx.read<ActiveSession>(),
-        ),
-        // And add the new PresetSession
-        ChangeNotifierProvider(
-          create: (_) => PresetSession(presetId),
-        ),
-      ],
-      child: const PresetDetailScreen(),
-    ),
-  ),
-);
-
-                            },
-                          ),
-                          const SizedBox(height: 16),
-                          const Divider(height: 24),
-                          const _PresetBar(label: 'Generate Custom Presets'),
-                          const SizedBox(height: 8),
-                          const _PresetBar(label: 'Manually Add Preset'),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: SizedBox(
-                      height: 48,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          context.read<ActiveSession>().start();
-                          Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const SessionScreen()),
-                          );
-                        },
-                        child: const Text('New Session'),
-                      ),
-                    ),
-                  ),
-                ],
               ),
+              onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
+          ],
+        ),
+        body: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // --- Presets list header ---
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  'Exercise Presets',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+              ),
+              const Divider(height: 1),
+              // --- Dynamic presets + static last two bars ---
+              Expanded(
+                child: FutureBuilder<List<PresetDefinition>>(
+                  future: _presetsFuture,
+                  builder: (ctx, snap) {
+                    if (snap.connectionState != ConnectionState.done) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    final presets = snap.data!;
+                    const SizedBox(height: 16);
 
-/// Reusable bar widget
-class _PresetBar extends StatelessWidget {
-  final String label;
-  const _PresetBar({required this.label});
+                          const Divider(height: 24);
+                    return ListView.separated(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: presets.length + 2,
+                      separatorBuilder: (_, __) =>
+                          const SizedBox(height: 8),
+                      itemBuilder: (ctx, i) {
+                        // 1) Generate Custom Presets – no-op
+                        if (i == presets.length) {
+                          return const PresetBar(
+                            label: 'Generate Custom Presets',
+                            color: Colors.grey,
+                            index: 0,
+                          );
+                        }
+                        // 2) Manually Add Preset
+                        if (i == presets.length + 1) {
+                          return PresetBar(
+                            label: 'Manually Add Preset',
+                            color: Colors.teal,
+                            index: presets.length,
+                            onTap: () async {
+                              final newId =
+                                  await _repo.createPreset('New Preset');
+                              _refresh();
+                              _openPreset(newId, edit: true);
+                            },
+                          );
+                        }
+                        // 3) Real existing preset
+                        final p = presets[i];
+                        final color =
+                            _palette[i % _palette.length];
+                        return PresetBar(
+                          label: p.name,
+                          color: color,
+                          index: i,
+                          onTap: () => _openPreset(p.id),
+                          onMenuSelected: (action) {
+                            if (action == 'edit') {
+                              _openPreset(p.id, edit: true);
+                            } else if (action == 'delete') {
+                              _deletePreset(p.id);
+                            }
+                          },
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
 
-  @override
-  Widget build(BuildContext context) {
-    final color = Theme.of(context).primaryColor;
-    return Material(
-      color: color.withAlpha(25),
-      borderRadius: BorderRadius.circular(8),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(8),
-        onTap: () {
-          // TODO: implement preset tap navigation (wrap in Provider & navigate to PresetDetailScreen)
-        },
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-          decoration: BoxDecoration(
-            border: Border.all(color: color),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(fontSize: 16, color: color, fontWeight: FontWeight.w600),
+              // --- New Session button ---
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: ElevatedButton(
+                  onPressed: () {
+                    session.start();
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const SessionScreen(),
+                      ),
+                    );
+                  },
+                  child: const Text('New Session'),
+                ),
+              ),
+            ],
           ),
         ),
       ),
