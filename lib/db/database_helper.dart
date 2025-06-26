@@ -36,7 +36,7 @@ class DatabaseHelper {
     final path = join(dbPath, 'fitness_tracker.db');
     return await openDatabase(
       path,
-      version: 7,  // bumped to 6 to include presets schema
+      version: 7,  
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
@@ -75,6 +75,8 @@ class DatabaseHelper {
   await Seed.seedStretches(db);
   // 4) Create preset tables (v6)
   await Schema.migrateV6(db);
+  // 5) Create gym_profiles tables (v7)
+  await Schema.migrateV7(db);
 }
 
   // ────────────────────────────────────────────────────────────────────────────

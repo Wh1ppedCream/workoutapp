@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../models/gym_models.dart';
 import '../db/database_helper.dart';
 import '../repositories/profile_repository.dart';
+import '../repositories/app_repository.dart';
 
 /// Manages the list of gym profiles and the currently selected profile.
 class SelectedProfile extends ChangeNotifier {
@@ -28,6 +29,10 @@ class SelectedProfile extends ChangeNotifier {
     profiles = await _dbHelper.fetchAllProfiles();
     if (profiles.isEmpty) {
       final defaultId = await _dbHelper.createProfile('General');
+      final allEquip = await AppRepository().fetchAllEquipment();
+      for (final eq in allEquip) {
+        await _dbHelper.addEquipmentToProfile(defaultId, eq.id);
+      }
       profiles = await _dbHelper.fetchAllProfiles();
     }
     currentProfile = profiles.first;

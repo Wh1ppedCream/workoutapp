@@ -8,7 +8,6 @@ import '../models/preset_session.dart';
 import '../models/selected_profile.dart';
 import '../repositories/app_repository.dart';
 import '../repositories/app_repository_presets.dart';
-import '../repositories/profile_repository.dart';
 import '../widgets/preset_bar.dart';
 import 'gym_profile_screen.dart';
 import 'preset_detail_screen.dart';
@@ -33,20 +32,30 @@ class _TrainPageState extends State<TrainPage> {
   final _repo = AppRepository();
   final _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  @override
-  void initState() {
-    super.initState();
-    // Ensure default presets exist for the selected profile
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final profileId = context.read<SelectedProfile>().currentProfile?.id;
-      _ensureDefaults(profileId);
-    });
+
+  int? _lastProfileId;
+@override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // whenever SelectedProfile.currentProfile changes, ensure our defaults
+    final sel = context.watch<SelectedProfile>();
+    final pid = sel.currentProfile?.id;
+    if (pid != null && pid != _lastProfileId) {
+      _lastProfileId = pid;
+      _ensureDefaults(pid);
+    }
   }
 
+
   Future<void> _ensureDefaults(int? profileId) async {
-    await _repo.findOrCreatePreset('Push', profileId: profileId);
-    await _repo.findOrCreatePreset('Pull', profileId: profileId);
-    await _repo.findOrCreatePreset('Legs', profileId: profileId);
+    if (profileId == null) return;
+
+  // 1. See if this profile already has any presets
+  final existing = await _repo.fetchAllPresetsRaw(profileId: profileId);
+  if (existing.isNotEmpty) return;  // nothing to do
+
+    await _repo.findOrCreatePreset('Preset 1', profileId: profileId);
+    await _repo.findOrCreatePreset('Preset 2', profileId: profileId);
     setState(() {});
   }
 
@@ -99,72 +108,100 @@ class _TrainPageState extends State<TrainPage> {
             ],
           ),
         ),
-        endDrawer: Drawer(
-          width: drawerWidth,
-          child: Consumer<SelectedProfile>(
-            builder: (ctx, selected, _) {
-              return ListView(
-                padding: EdgeInsets.zero,
-                children: [
-                  const DrawerHeader(
-                    decoration: BoxDecoration(color: Colors.lightGreen),
-                    child: Text('Gym Profiles',
-                        style: TextStyle(color: Colors.white, fontSize: 18)),
-                  ),
-                  ...List.generate(
-                    selected.profiles.length,
-                    (i) {
-                      final profile = selected.profiles[i];
-                      final color = _palette[i % _palette.length];
-                      return PresetBar(
-                        label: profile.name,
-                        color: color,
-                        index: i,
-                        onTap: () {
-                          selected.selectProfile(profile);
-                          Navigator.of(context).pop();
-                          setState(() {});
-                        },
-                        onMenuSelected: (action) {
-                          if (action == 'edit') {
-                            final navigator = Navigator.of(context);
-                            navigator.pop();
-                            navigator.push(
-                              MaterialPageRoute(
-                                builder: (_) => GymProfileScreen(
-                                  profile: profile,
-                                ),
-                              ),
-                            );
-                          } else if (action == 'delete') {
-                            selected.deleteProfile(profile.id!);
-                            setState(() {});
-                          }
-                        },
-                      );
-                    },
-                  ),
-                  const Divider(),
-                  ListTile(
-                    leading: const Icon(Icons.add),
-                    title: const Text('New Profile'),
-                    onTap: () {
-                      final navigator = Navigator.of(context);
 
-    
-                      navigator.pop();
-                      navigator.push(
-                        MaterialPageRoute(
-                          builder: (_) => const GymProfileScreen(),
-                        ),
-                      );
-                    },
+
+       endDrawer: Drawer(
+  width: drawerWidth,
+  child: Consumer<SelectedProfile>(
+    builder: (ctx, selected, _) {
+      return ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          const DrawerHeader(
+            decoration: BoxDecoration(color: Colors.lightGreen),
+            child: Text(
+              'Gym Profiles',
+              style: TextStyle(color: Colors.white, fontSize: 18),
+            ),
+          ),
+
+          // ← Replace this block:
+          // ...List.generate(selected.profiles.length, (i) {
+          //   final profile = selected.profiles[i];
+          //   final color = _palette[i % _palette.length];
+          //   return PresetBar( … );
+          // }),
+
+          // → With this:
+          ...selected.profiles
+    .asMap()
+    .entries
+    .map((entry) {
+      final i = entry.key;
+      final profile = entry.value;
+      final color = _palette[i % _palette.length];
+      return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),    // light background
+          border: Border.all(color: color, width: 1), // colored border
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: ListTile(
+          leading: Radio<int>(
+            value: profile.id!,
+            groupValue: selected.currentProfile?.id,
+            onChanged: (newId) {
+              if (newId == null) return;
+              selected.selectProfile(profile);
+              Navigator.of(context).pop();
+              setState(() {});
+            },
+          ),
+          title: Text(profile.name),
+          trailing: PopupMenuButton<String>(
+            onSelected: (action) {
+              Navigator.of(context).pop();
+              if (action == 'edit') {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => GymProfileScreen(profile: profile),
                   ),
-                ],
+                );
+              } else if (action == 'delete') {
+                selected.deleteProfile(profile.id!);
+                setState(() {});
+              }
+            },
+            itemBuilder: (_) => const [
+              PopupMenuItem(value: 'edit', child: Text('Edit')),
+              PopupMenuItem(value: 'delete', child: Text('Delete')),
+            ],
+          ),
+        ),
+      );
+    })
+    ,
+          const Divider(),
+
+          ListTile(
+            leading: const Icon(Icons.add),
+            title: const Text('New Profile'),
+            onTap: () {
+              Navigator.of(context).pop();
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const GymProfileScreen()),
               );
             },
           ),
-        ),
+        ],
+      );
+    },
+  ),
+),
+
+        
+        
         appBar: AppBar(
           leading: IconButton(
             icon: const Icon(Icons.menu),

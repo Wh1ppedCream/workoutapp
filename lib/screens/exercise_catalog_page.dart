@@ -4,12 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/models.dart';
 import '../models/selected_profile.dart';
-import '../db/database_helper.dart';
 import '../repositories/app_repository.dart';
+import '../models/gym_models.dart';
 import '../repositories/profile_repository.dart';
 
-/// Catalog of exercise definitions with advanced filters,
-/// including optional workspace-profile scoping.
+/// Catalog of exercise definitions with workspace-profile and advanced filters.
 class ExerciseCatalogPage extends StatefulWidget {
   final void Function(ExerciseDefinition)? onExercisePicked;
   const ExerciseCatalogPage({
@@ -24,83 +23,120 @@ class ExerciseCatalogPage extends StatefulWidget {
 class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
   final _repo = AppRepository();
 
-  // UI state
+  // All loaded definitions (fully detailed)
+  List<ExerciseDefinition> _allDefs = [];
+  List<ExerciseDefinition> _displayedDefs = [];
   bool _isLoading = true;
+
+  // Search query
   String _searchQuery = '';
+
+  // Filter dialog state
   bool _useProfileFilter = true;
   int? _dialogProfileId;
-
-  // Filter dropdown options
-  List<int?> _profileIds = [];
-  List<String> _profileNames = [];
-  List<String> _equipmentList = [];
-  List<String> _bodyPartList = [];
-  List<String> _muscleList = [];
-
-  // Selected filter values
   String _filterEquipment = 'All';
   String _filterArea = 'All';
   String _filterMuscle = 'All';
 
-  // Definitions storage
-  List<ExerciseDefinition> _allDefs = [];
-  List<ExerciseDefinition> _displayedDefs = [];
+  // Dropdown options
+  List<GymProfile> _profiles = [];
+  List<String> _equipmentOptions = ['All'];
+  List<String> _areaOptions = ['All'];
+  List<String> _muscleOptions = ['All'];
+
   ExerciseDefinition? _selectedDef;
 
   @override
   void initState() {
     super.initState();
-    final sel = context.read<SelectedProfile>();
-    _dialogProfileId = sel.currentProfile?.id;
-    _loadLookupsAndDefs();
+    _loadInitialData();
   }
 
-  Future<void> _loadLookupsAndDefs() async {
-    setState(() => _isLoading = true);
-    // Load profiles for dialog
+  Future<void> _loadInitialData() async {
+    // Guard: capture context-synced values before any awaits
     final sel = context.read<SelectedProfile>();
-    _profileIds = sel.profiles.map((p) => p.id).toList();
-    _profileNames = sel.profiles.map((p) => p.name).toList();
+    final initialProfileId = sel.currentProfile?.id;
+    setState(() { _isLoading = true; });
+    // Load full definitions
+    _allDefs = await _repo.lookupDefsDetailed();
+    _displayedDefs = List.from(_allDefs);
+    // Load profiles list
+    _profiles = await _repo.dbHelper.fetchAllProfiles();
+    _dialogProfileId = initialProfileId;
 
-    // Determine equipment names based on profile filter state
-    List<String>? eqNames;
-    if (_useProfileFilter && _dialogProfileId != null) {
-      final eqMaps = await DatabaseHelper().fetchEquipmentForProfile(_dialogProfileId!);
-      eqNames = eqMaps.map((e) => e['name'] as String).toList();
-    } else {
-      eqNames = await _repo.fetchAllEquipmentNames();
-    }
-
-    // Body-parts and muscles lookup
-    final bodyParts = await _repo.fetchAllBodyParts();
+     // Load body-part, muscle, and equipment options
+    final areas = await _repo.fetchAllBodyParts();
     final muscles = await _repo.fetchAllMuscles();
 
-    setState(() {
-      _equipmentList = ['All', ...?eqNames];
-      _bodyPartList = ['All', ...bodyParts.map((b) => b.name)];
-      _muscleList = ['All', ...muscles.map((m) => m.name)];
-    });
-
-    // Load definitions: full equipment-only filter if using profile
-    if (_useProfileFilter && eqNames.isNotEmpty) {
-      _allDefs = await _repo.lookupDefsOnlyWithEquipment(eqNames);
+    // Figure out initial equipment list
+    List<String> initialEquipment;
+    if (_useProfileFilter && initialProfileId != null) {
+      // only that profile’s gear
+      final eqMaps = await _repo.dbHelper.fetchEquipmentForProfile(initialProfileId);
+      initialEquipment = eqMaps.map((e) => e['name'] as String).toList();
     } else {
-      _allDefs = await _repo.lookupDefsFiltered();
+      // everything
+      initialEquipment = await _repo.fetchAllEquipmentNames();
     }
 
-    _applyFilters();
+    setState(() {
+      _areaOptions = ['All', ...areas.map((b) => b.name)];
+      _muscleOptions = ['All', ...muscles.map((m) => m.name)];
+      _equipmentOptions = ['All', ...initialEquipment];
+      _displayedDefs = List.from(_allDefs);  // show all until they hit “Save”
+      _isLoading = false;
+    });
   }
 
-  void _applyFilters() {
-    final query = _searchQuery.toLowerCase();
-    final filtered = _allDefs.where((d) {
-      final matchesSearch = query.isEmpty || d.name.toLowerCase().contains(query);
-      final matchesArea = _filterArea == 'All' || d.bodyParts.any((bp) => bp.name == _filterArea);
-      final matchesMuscle = _filterMuscle == 'All' || d.muscles.any((rm) => rm.muscle.name == _filterMuscle);
-      final matchesEquipment = _filterEquipment == 'All' ||
-          d.equipmentList.any((e) => e.name == _filterEquipment);
-      return matchesSearch && matchesArea && matchesMuscle && matchesEquipment;
-    }).toList();
+  Future<void> _applyAllFilters() async {
+    setState(() { _isLoading = true; });
+    List<ExerciseDefinition> filtered = List.from(_allDefs);
+
+    // 1) Workspace profile subset-of filter
+    if (_useProfileFilter && _dialogProfileId != null) {
+      final eqMaps = await _repo.dbHelper.fetchEquipmentForProfile(_dialogProfileId!);
+      final allowed = eqMaps.map((e) => e['name'] as String).toSet();
+      filtered = filtered.where((d) {
+        return d.equipmentList.every((eq) => allowed.contains(eq.name));
+      }).toList();
+      // Also populate equipment options from profile gear
+      setState(() {
+        _equipmentOptions = ['All', ...allowed];
+      });
+    } else {
+      // Profile off: use global equipment list
+      final allEq = await _repo.fetchAllEquipmentNames();
+      setState(() {
+        _equipmentOptions = ['All', ...allEq];
+      });
+    }
+
+    // 2) Single-equipment any-of filter
+    if (_filterEquipment != 'All') {
+      filtered = filtered.where((d) =>
+          d.equipmentList.any((eq) => eq.name == _filterEquipment)
+      ).toList();
+    }
+
+    // 3) Area of Focus filter
+    if (_filterArea != 'All') {
+      filtered = filtered.where((d) =>
+          d.bodyParts.any((bp) => bp.name == _filterArea)
+      ).toList();
+    }
+
+    // 4) Specific Muscle filter
+    if (_filterMuscle != 'All') {
+      filtered = filtered.where((d) =>
+          d.muscles.any((rm) => rm.muscle.name == _filterMuscle)
+      ).toList();
+    }
+
+    // 5) Search filter
+    final q = _searchQuery.toLowerCase();
+    filtered = filtered.where((d) =>
+        q.isEmpty || d.name.toLowerCase().contains(q)
+    ).toList();
 
     setState(() {
       _displayedDefs = filtered;
@@ -111,131 +147,91 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
   void _onSearchChanged(String q) {
     setState(() {
       _searchQuery = q;
-      _isLoading = true;
     });
-    _applyFilters();
+    _applyAllFilters();
   }
 
   void _openFilterDialog() {
-    // Local copies
+    // Dialog local copies
     bool useProfile = _useProfileFilter;
-    int? chosenProfileId = _dialogProfileId;
-    List<String> dialogEquipment = List.from(_equipmentList);
-    String eqFilter = _filterEquipment;
-    String areaFilter = _filterArea;
-    String muscleFilter = _filterMuscle;
+    int? chosenProfile = _dialogProfileId;
+    String eq = _filterEquipment;
+    String area = _filterArea;
+    String muscle = _filterMuscle;
 
     showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) {
-          return AlertDialog(
-            title: const Text('Selected Filters'),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SwitchListTile(
-                    title: const Text('Use Workspace Profile'),
-                    value: useProfile,
-                    onChanged: (v) async {
-                      setDialogState(() => useProfile = v);
-                      // Reload equipment list for dialog
-                      List<String> names;
-                      if (v && chosenProfileId != null) {
-                        var cpid = chosenProfileId?.toInt() ?? 0;
-                        final eqMaps = await DatabaseHelper().fetchEquipmentForProfile(cpid);
-                        names = eqMaps.map((e) => e['name'] as String).toList();
-                      } else {
-                        names = await _repo.fetchAllEquipmentNames();
-                      }
-                      setDialogState(() {
-                        dialogEquipment = ['All', ...names];
-                        if (!dialogEquipment.contains(eqFilter)) eqFilter = 'All';
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 8),
-                  DropdownButtonFormField<int>(
-                    decoration: const InputDecoration(labelText: 'Workspace Profile'),
-                    value: chosenProfileId,
-                    items: List.generate(
-                      _profileIds.length,
-                      (i) => DropdownMenuItem(
-                        value: _profileIds[i],
-                        child: Text(_profileNames[i]),
-                      ),
-                    ),
-                    onChanged: useProfile
-                        ? (v) async {
-                            setDialogState(() => chosenProfileId = v);
-                            // reload equipment for this profile
-                            final eqMaps = await DatabaseHelper().fetchEquipmentForProfile(v!);
-                            final names = eqMaps.map((e) => e['name'] as String).toList();
-                            setDialogState(() {
-                              dialogEquipment = ['All', ...names];
-                              if (!dialogEquipment.contains(eqFilter)) eqFilter = 'All';
-                            });
-                          }
-                        : null,
-                  ),
-                  const SizedBox(height: 8),
-                  DropdownButtonFormField<String>(
-                    isExpanded: true,
-                    decoration: const InputDecoration(labelText: 'Equipment'),
-                    value: eqFilter,
-                    items: dialogEquipment
-                        .map((name) => DropdownMenuItem(value: name, child: Text(name)))
-                        .toList(),
-                    onChanged: (v) => setDialogState(() => eqFilter = v!),
-                  ),
-                  const SizedBox(height: 8),
-                  DropdownButtonFormField<String>(
-                    isExpanded: true,
-                    decoration: const InputDecoration(labelText: 'Area of Focus'),
-                    value: areaFilter,
-                    items: _bodyPartList
-                        .map((name) => DropdownMenuItem(value: name, child: Text(name)))
-                        .toList(),
-                    onChanged: (v) => setDialogState(() => areaFilter = v!),
-                  ),
-                  const SizedBox(height: 8),
-                  DropdownButtonFormField<String>(
-                    isExpanded: true,
-                    decoration: const InputDecoration(labelText: 'Specific Muscle'),
-                    value: muscleFilter,
-                    items: _muscleList
-                        .map((name) => DropdownMenuItem(value: name, child: Text(name)))
-                        .toList(),
-                    onChanged: (v) => setDialogState(() => muscleFilter = v!),
-                  ),
-                ],
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: const Text('Selected Filters'),
+          content: SingleChildScrollView(
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              SwitchListTile(
+                title: const Text('Use Workspace Profile'),
+                value: useProfile,
+                onChanged: (v) => setDialogState(() => useProfile = v),
               ),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<int>(
+                isExpanded: true,
+                decoration: const InputDecoration(labelText: 'Workspace Profile'),
+                value: chosenProfile,
+                items: _profiles.map((p) => DropdownMenuItem(
+                      value: p.id!, child: Text(p.name))).toList(),
+                onChanged: useProfile
+                    ? (v) => setDialogState(() => chosenProfile = v)
+                    : null,
+              ),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<String>(
+                isExpanded: true,
+                decoration: const InputDecoration(labelText: 'Equipment'),
+                value: eq,
+                items: _equipmentOptions
+                    .map((name) => DropdownMenuItem(value: name, child: Text(name)))
+                    .toList(),
+                onChanged: (v) => setDialogState(() => eq = v!),
+              ),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<String>(
+                isExpanded: true,
+                decoration: const InputDecoration(labelText: 'Area of Focus'),
+                value: area,
+                items: _areaOptions
+                    .map((name) => DropdownMenuItem(value: name, child: Text(name)))
+                    .toList(),
+                onChanged: (v) => setDialogState(() => area = v!),
+              ),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<String>(
+                isExpanded: true,
+                decoration: const InputDecoration(labelText: 'Specific Muscle'),
+                value: muscle,
+                items: _muscleOptions
+                    .map((name) => DropdownMenuItem(value: name, child: Text(name)))
+                    .toList(),
+                onChanged: (v) => setDialogState(() => muscle = v!),
+              ),
+            ]),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Cancel')),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  _useProfileFilter = useProfile;
+                  _dialogProfileId = chosenProfile;
+                  _filterEquipment = eq;
+                  _filterArea = area;
+                  _filterMuscle = muscle;
+                });
+                Navigator.of(ctx).pop();
+                _applyAllFilters();
+              },
+              child: const Text('Save'),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  // Commit dialog selections
-                  setState(() {
-                    _useProfileFilter = useProfile;
-                    _dialogProfileId = chosenProfileId;
-                    _equipmentList = dialogEquipment;
-                    _filterEquipment = eqFilter;
-                    _filterArea = areaFilter;
-                    _filterMuscle = muscleFilter;
-                  });
-                  Navigator.of(ctx).pop();
-                  _loadLookupsAndDefs();
-                },
-                child: const Text('Save'),
-              ),
-            ],
-          );
-        },
+          ],
+        ),
       ),
     );
   }
@@ -251,10 +247,7 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
           children: [
             TextField(
               decoration: const InputDecoration(
-                labelText: 'Search Exercises',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
-              ),
+                labelText: 'Search Exercises', prefixIcon: Icon(Icons.search), border: OutlineInputBorder()),
               onChanged: _onSearchChanged,
             ),
             const SizedBox(height: 12),
@@ -267,12 +260,7 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
               ),
             ),
             const SizedBox(height: 16),
-            const Expanded(
-              child: Center(child: Text('Previously Done: TODO')),
-            ),
-            const SizedBox(height: 16),
             Expanded(
-              flex: 2,
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : _displayedDefs.isEmpty
@@ -283,13 +271,12 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                             final def = _displayedDefs[i];
                             return ListTile(
                               title: Text(def.name),
-                              subtitle: Text(def.equipmentList.map((e) => e.name).join(', ')),
-                              selected: widget.onExercisePicked != null && _selectedDef == def,
+                              //the following two lines show equipment names under exercise name if they are uncommented.
+                              //subtitle: Text(def.equipmentList.map((e) => e.name).join(', ')),
+                              //selected: widget.onExercisePicked != null && _selectedDef == def,
                               onTap: widget.onExercisePicked == null
                                   ? null
-                                  : () {
-                                      setState(() => _selectedDef = def);
-                                    },
+                                  : () => setState(() => _selectedDef = def),
                             );
                           },
                         ),
