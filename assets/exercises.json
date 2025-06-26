@@ -1228,9 +1228,9 @@
 },
 
 {
-  "name": "Hack Squat - Hack squat machine",
+  "name": "Hack Squat - Hack Squat Machine",
   "rating": 23,
-  "equipment": ["Hack squat machine"],
+  "equipment": ["Hack Squat Machine"],
   "bodyparts": ["Quads", "Glutes"],
   "muscles": [
     { "name": "Vastus Lateralis", "rank": 1 },

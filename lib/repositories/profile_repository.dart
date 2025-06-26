@@ -1,6 +1,5 @@
 // File: lib/repositories/profile_repository.dart
 
-import 'package:sqflite/sqflite.dart';
 import '../db/database_helper.dart';
 import '../db/gym_profile_dao.dart';
 import '../models/gym_models.dart';

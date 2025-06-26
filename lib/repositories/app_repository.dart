@@ -9,6 +9,7 @@ import '../db/stretch_dao.dart';
 import '../db/definition_dao.dart';
 import '../db/lookup_dao.dart';
 import '../models/models.dart';
+import 'profile_repository.dart';
 
 /// Central repository providing a unified interface for all
 
@@ -391,6 +392,55 @@ Future<WorkoutExercise?> fetchDetailedExercise(int id) {
       bodypartIds: bodypartIds,
       muscleIds: muscleIds,
     );
+  }
+
+/// New: Fetches catalog definitions with optional workspace-profile and
+  /// detailed filters.
+  Future<List<ExerciseDefinition>> fetchCatalogDefinitions({
+    required bool useProfileFilter,
+    int? profileId,
+    String? equipmentFilter,
+    List<int>? bodypartIds,
+    List<int>? muscleIds,
+  }) async {
+    // Determine base equipment list
+    List<String>? eqNames;
+    if (useProfileFilter && profileId != null) {
+      final eqMaps = await dbHelper.fetchEquipmentForProfile(profileId);
+      eqNames = eqMaps.map((e) => e['name'] as String).toList();
+    }
+    // Override if single-equipment filter selected
+    if (equipmentFilter != null) {
+      eqNames = [equipmentFilter];
+    }
+
+    List<ExerciseDefinition> defs;
+    if (eqNames != null && eqNames.isNotEmpty) {
+      // Only definitions using only these equipment (and optionally none)
+      defs = await lookupDefsOnlyWithEquipment(eqNames);
+    } else {
+      // No equipment filter: apply general filtered query
+      defs = await lookupDefsFiltered(
+        equipmentNames: eqNames,
+        bodypartIds: bodypartIds,
+        muscleIds: muscleIds,
+      );
+    }
+
+    // If we did an "only these" equipment filter, still apply body/muscle join filters
+    if (eqNames != null && eqNames.isNotEmpty) {
+      defs = defs.where((d) {
+        final areaOk = bodypartIds == null ||
+            bodypartIds.any((id) => d.bodyParts.any((bp) => bp.id == id));
+        final muscleOk = muscleIds == null ||
+            muscleIds.any((id) =>
+                d.muscles.any((rm) =>
+                    rm.muscle.id == id));
+        return areaOk && muscleOk;
+      }).toList();
+    }
+
+    return defs;
   }
 
 /// Finds or creates a definition by name and equipment, returns its ID.
