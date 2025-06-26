@@ -193,6 +193,28 @@ TODO:
 			- based off these, will create multiple presets
 				- to fit within time constraint
 				- to cover as many bodyparts and muscles as possible
+			- info ill need to implement preset generator:
+				- available equipment
+				- available time
+				- time given to cardio
+				- how many sets per body parts
+				- how many sets per muscle group
+					- if not specified, then default
+						- 5sets = maintenance
+						- 5-10 sets = growth
+						- 10-19 sets = optimal growth
+						- 20 sets = growth cap
+				- selecting exerises which would best cover these set requirements
+					- bodypart sets = sets of exercise which are listed to use the bodypart
+					- muscle set = set * % muscle usage for exercise
+						- if % muscle usage is not specified for an exercise, then default: 
+								1. 30%	= 30
+								2. 25%	= 55
+								3. 15%	= 70
+								4. 10%	= 80
+								5. 10%	= 90
+								6. 5%	= 95
+								7. 5%	= 100
 		- intelligent preset generator
 			- makes special presets called Ipresets
 				- will adapt to your current amount of workout
