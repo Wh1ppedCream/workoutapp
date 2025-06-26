@@ -2,49 +2,69 @@
 
 import 'package:sqflite/sqflite.dart';
 
-/// Data Access Object for preset definitions.
-///
-/// Encapsulates CRUD operations on the `preset_definitions` table.
+/// DAO for accessing preset_definitions table, with optional profile filtering.
 class PresetDefinitionDao {
   /// Inserts a new preset and returns its ID.
+  ///
+  /// Optionally scopes the preset to [profileId].
   static Future<int> insertPreset(
     Database db,
-    String name,
-  ) {
-    return db.insert(
+    String name, {
+    int? profileId,
+  }) async {
+    final data = <String, dynamic>{
+      'name': name,
+    };
+    if (profileId != null) {
+      data['profile_id'] = profileId;
+    }
+    return await db.insert(
       'preset_definitions',
-      {'name': name},
+      data,
     );
   }
 
-  /// Finds a preset by [name] or inserts it if missing.
+  /// Finds a preset by [name] and optional [profileId], or inserts it if missing.
   ///
   /// Returns the existing or newly created preset ID.
   static Future<int> findOrCreatePresetDefinition(
     Database db,
-    String name,
-  ) async {
-    // 1) Try to find an existing preset with this name
+    String name, {
+    int? profileId,
+  }) async {
+    final whereClause = profileId != null
+        ? 'name = ? AND profile_id = ?'
+        : 'name = ? AND profile_id IS NULL';
+    final whereArgs = profileId != null ? [name, profileId] : [name];
     final rows = await db.query(
       'preset_definitions',
-      where: 'name = ?',
-      whereArgs: [name],
+      where: whereClause,
+      whereArgs: whereArgs,
       limit: 1,
     );
     if (rows.isNotEmpty) {
       return rows.first['id'] as int;
     }
-    // 2) Not found — insert new preset
-    return insertPreset(db, name);
+    // Not found — insert new preset with optional profileId
+    return insertPreset(db, name, profileId: profileId);
   }
 
-  /// Retrieves all presets as raw maps, ordered by creation time.
+  /// Fetches all presets, optionally scoped to a gym profile.
   static Future<List<Map<String, dynamic>>> getAllPresetsRaw(
-    Database db,
-  ) {
+    Database db, {
+    int? profileId,
+  }) async {
+    if (profileId != null) {
+      return db.query(
+        'preset_definitions',
+        where: 'profile_id = ?',
+        whereArgs: [profileId],
+        orderBy: 'created_at',
+      );
+    }
     return db.query(
       'preset_definitions',
-      orderBy: 'created_at DESC',
+      orderBy: 'created_at',
     );
   }
 
@@ -67,8 +87,8 @@ class PresetDefinitionDao {
     Database db,
     int presetId,
     String newName,
-  ) {
-    return db.update(
+  ) async {
+    return await db.update(
       'preset_definitions',
       {'name': newName},
       where: 'id = ?',
@@ -80,17 +100,11 @@ class PresetDefinitionDao {
   static Future<int> deletePreset(
     Database db,
     int presetId,
-  ) {
-    return db.delete(
+  ) async {
+    return await db.delete(
       'preset_definitions',
       where: 'id = ?',
       whereArgs: [presetId],
     );
   }
-
-
-
-
 }
-
-

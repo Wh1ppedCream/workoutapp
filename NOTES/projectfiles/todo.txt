@@ -76,17 +76,31 @@ FITNESS APP PROJECT:
 		7. 5%	= 100
 
 	GYM PROFILES:
-		- currently has text for items 'General' 'Commercial Gym' and 'Home Gym'
-		- will be changed to selectable boxes (which can be added or removed by methods mentioned later) called 'General' 'Placeholder 1' 'Placeholder 2'. lets call these placeholder boxes for now
-		- 3 dot menu on right of each box
-			- pressing opens drop down menu
-				- has options:
-					1) edit profiles
-						- will open up profile screen
-					2) delete profiles
-						- will delete profile info
-		- has a + button on bottom of page, when pressed will open up profile screen
-		- 
+		General info: 
+			- will be used to represent the spaces you are working out at
+			- will contain the list of available equipment in the space you are working out at, so the list of available exercises will be relegated to items using those pieces of equipment
+			- each profile will have its own associated presets, so when a profile is selected, only the presets associated with that profile will show up on the train page.
+			
+			
+		Train Page:
+			- currently has text for items 'General' 'Commercial Gym' and 'Home Gym' in right side Drawer 
+			- in drawer, text for items will be changed to selectable boxes (which can be added or removed by methods mentioned later) called 'General' (general is default selected profile) 'Placeholder 1' 'Placeholder 2'. lets call these placeholder boxes for now
+			- 3 dot menu on right of each box
+				- pressing opens drop down menu
+					- has options:
+						1) edit
+							- will open up profile screen
+						2) delete
+							- will delete profile info
+			- has a + button on bottom of page, when pressed will open up gym profile screen
+			
+		Gym Profile Screen:
+			- will be opened when you are adding or editing a profile
+			- will let you name the profile
+			- will let you select all the equipment the space you will be working out at has. 
+			- will let you save the information
+		
+		
 	
 	SESSION PRESETS:
 		- preset buttons are selectable and have a 3 vertical dot menu button on right hand side

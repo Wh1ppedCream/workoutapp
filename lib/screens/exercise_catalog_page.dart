@@ -1,9 +1,15 @@
-//lib/widgets/exercise_catalog_page.dart
+// File: lib/widgets/exercise_catalog_page.dart
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/models.dart';
+import '../models/selected_profile.dart';
+import '../db/database_helper.dart';
 import '../repositories/app_repository.dart';
+import '../repositories/profile_repository.dart';
 
+/// Catalog of exercise definitions with advanced filters,
+/// including optional workspace-profile scoping.
 class ExerciseCatalogPage extends StatefulWidget {
   final void Function(ExerciseDefinition)? onExercisePicked;
   const ExerciseCatalogPage({
@@ -18,193 +24,218 @@ class ExerciseCatalogPage extends StatefulWidget {
 class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
   final _repo = AppRepository();
 
-  // Lookup data
+  // UI state
+  bool _isLoading = true;
+  String _searchQuery = '';
+  bool _useProfileFilter = true;
+  int? _dialogProfileId;
+
+  // Filter dropdown options
+  List<int?> _profileIds = [];
+  List<String> _profileNames = [];
   List<String> _equipmentList = [];
-  List<BodyPart> _bodyParts = [];
   List<String> _bodyPartList = [];
-  List<Muscle> _muscles = [];
   List<String> _muscleList = [];
 
-  // All definitions and filtered view
-  List<ExerciseDefinition> _allDefs = [];
-  List<ExerciseDefinition> _displayedDefs = [];
-
-  // Filters
+  // Selected filter values
   String _filterEquipment = 'All';
   String _filterArea = 'All';
   String _filterMuscle = 'All';
 
-  // Loading / search
-  bool _isLoading = true;
-  final String _searchQuery = '';
-
+  // Definitions storage
+  List<ExerciseDefinition> _allDefs = [];
+  List<ExerciseDefinition> _displayedDefs = [];
   ExerciseDefinition? _selectedDef;
 
   @override
   void initState() {
     super.initState();
+    final sel = context.read<SelectedProfile>();
+    _dialogProfileId = sel.currentProfile?.id;
     _loadLookupsAndDefs();
-    _onSearchChanged('');
   }
-
-  void _onSearchChanged(String q) async {
-  setState(() {
-    _isLoading = true;
-  });
-  // Run the SQL LIKE search
-  final results = await _repo.fuzzsearchExercises(q);
-  setState(() {
-    _displayedDefs = results;
-    _isLoading = false;
-  });
-}
 
   Future<void> _loadLookupsAndDefs() async {
-    try {
-      final equipmentNames = await _repo.fetchAllEquipmentNames();                                                //
+    setState(() => _isLoading = true);
+    // Load profiles for dialog
+    final sel = context.read<SelectedProfile>();
+    _profileIds = sel.profiles.map((p) => p.id).toList();
+    _profileNames = sel.profiles.map((p) => p.name).toList();
 
-      _bodyParts = await _repo.fetchAllBodyParts();
-      final bodyPartNames = _bodyParts.map((bp) => bp.name).toList();
-
-      _muscles = await _repo.fetchAllMuscles();
-       final muscleNames = _muscles.map((m) => m.name).toList();
-
-      setState(() {
-        _equipmentList = ['All', ...equipmentNames];
-        _bodyPartList = ['All', ...bodyPartNames];
-        _muscleList = ['All', ...muscleNames];
-      });
-
-      // Load all definitions (no filters)
-      _allDefs = await _repo.lookupDefsFiltered();
-
-      _applySearchAndDisplay();
-    } catch (e) {
-      debugPrint('Error loading data: $e');
-      } finally {
-      setState(() => _isLoading = false);
+    // Determine equipment names based on profile filter state
+    List<String>? eqNames;
+    if (_useProfileFilter && _dialogProfileId != null) {
+      final eqMaps = await DatabaseHelper().fetchEquipmentForProfile(_dialogProfileId!);
+      eqNames = eqMaps.map((e) => e['name'] as String).toList();
+    } else {
+      eqNames = await _repo.fetchAllEquipmentNames();
     }
+
+    // Body-parts and muscles lookup
+    final bodyParts = await _repo.fetchAllBodyParts();
+    final muscles = await _repo.fetchAllMuscles();
+
+    setState(() {
+      _equipmentList = ['All', ...?eqNames];
+      _bodyPartList = ['All', ...bodyParts.map((b) => b.name)];
+      _muscleList = ['All', ...muscles.map((m) => m.name)];
+    });
+
+    // Load definitions: full equipment-only filter if using profile
+    if (_useProfileFilter && eqNames.isNotEmpty) {
+      _allDefs = await _repo.lookupDefsOnlyWithEquipment(eqNames);
+    } else {
+      _allDefs = await _repo.lookupDefsFiltered();
+    }
+
+    _applyFilters();
   }
 
-  void _applySearchAndDisplay() {
+  void _applyFilters() {
     final query = _searchQuery.toLowerCase();
     final filtered = _allDefs.where((d) {
-      return query.isEmpty || d.name.toLowerCase().contains(query);
+      final matchesSearch = query.isEmpty || d.name.toLowerCase().contains(query);
+      final matchesArea = _filterArea == 'All' || d.bodyParts.any((bp) => bp.name == _filterArea);
+      final matchesMuscle = _filterMuscle == 'All' || d.muscles.any((rm) => rm.muscle.name == _filterMuscle);
+      final matchesEquipment = _filterEquipment == 'All' ||
+          d.equipmentList.any((e) => e.name == _filterEquipment);
+      return matchesSearch && matchesArea && matchesMuscle && matchesEquipment;
     }).toList();
 
     setState(() {
       _displayedDefs = filtered;
+      _isLoading = false;
     });
   }
 
+  void _onSearchChanged(String q) {
+    setState(() {
+      _searchQuery = q;
+      _isLoading = true;
+    });
+    _applyFilters();
+  }
+
   void _openFilterDialog() {
-    String selectedEq = _filterEquipment;
-    String selectedArea = _filterArea;
-    String selectedMuscle = _filterMuscle;
+    // Local copies
+    bool useProfile = _useProfileFilter;
+    int? chosenProfileId = _dialogProfileId;
+    List<String> dialogEquipment = List.from(_equipmentList);
+    String eqFilter = _filterEquipment;
+    String areaFilter = _filterArea;
+    String muscleFilter = _filterMuscle;
 
     showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          title: const Text('Selected Filters'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                DropdownButtonFormField<String>(
-                  isExpanded: true,
-                  decoration: const InputDecoration(labelText: 'Equipment'),
-                  value: selectedEq,
-                  items: _equipmentList
-                      .map((name) => DropdownMenuItem(
-                            value: name,
-                            child: Text(name),
-                          ))
-                      .toList(),
-                  onChanged: (v) {
-                    setDialogState(() => selectedEq = v!);
-                  },
-                ),
-                const SizedBox(height: 8),
-                DropdownButtonFormField<String>(
-                  isExpanded: true,
-                  decoration: const InputDecoration(labelText: 'Area of Focus'),
-                  value: selectedArea,
-                  items: _bodyPartList
-                      .map((name) => DropdownMenuItem(
-                            value: name,
-                            child: Text(name),
-                          ))
-                      .toList(),
-                  onChanged: (v) {
-                    setDialogState(() => selectedArea = v!);
-                  },
-                ),
-                const SizedBox(height: 8),
-                DropdownButtonFormField<String>(
-                  isExpanded: true,
-                  decoration: const InputDecoration(labelText: 'Specific Muscle'),
-                  value: selectedMuscle,
-                  items: _muscleList
-                      .map((name) => DropdownMenuItem(
-                            value: name,
-                            child: Text(name),
-                          ))
-                      .toList(),
-                  onChanged: (v) {
-                    setDialogState(() => selectedMuscle = v!);
-                  },
-                ),
-              ],
+        builder: (ctx, setDialogState) {
+          return AlertDialog(
+            title: const Text('Selected Filters'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SwitchListTile(
+                    title: const Text('Use Workspace Profile'),
+                    value: useProfile,
+                    onChanged: (v) async {
+                      setDialogState(() => useProfile = v);
+                      // Reload equipment list for dialog
+                      List<String> names;
+                      if (v && chosenProfileId != null) {
+                        var cpid = chosenProfileId?.toInt() ?? 0;
+                        final eqMaps = await DatabaseHelper().fetchEquipmentForProfile(cpid);
+                        names = eqMaps.map((e) => e['name'] as String).toList();
+                      } else {
+                        names = await _repo.fetchAllEquipmentNames();
+                      }
+                      setDialogState(() {
+                        dialogEquipment = ['All', ...names];
+                        if (!dialogEquipment.contains(eqFilter)) eqFilter = 'All';
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<int>(
+                    decoration: const InputDecoration(labelText: 'Workspace Profile'),
+                    value: chosenProfileId,
+                    items: List.generate(
+                      _profileIds.length,
+                      (i) => DropdownMenuItem(
+                        value: _profileIds[i],
+                        child: Text(_profileNames[i]),
+                      ),
+                    ),
+                    onChanged: useProfile
+                        ? (v) async {
+                            setDialogState(() => chosenProfileId = v);
+                            // reload equipment for this profile
+                            final eqMaps = await DatabaseHelper().fetchEquipmentForProfile(v!);
+                            final names = eqMaps.map((e) => e['name'] as String).toList();
+                            setDialogState(() {
+                              dialogEquipment = ['All', ...names];
+                              if (!dialogEquipment.contains(eqFilter)) eqFilter = 'All';
+                            });
+                          }
+                        : null,
+                  ),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<String>(
+                    isExpanded: true,
+                    decoration: const InputDecoration(labelText: 'Equipment'),
+                    value: eqFilter,
+                    items: dialogEquipment
+                        .map((name) => DropdownMenuItem(value: name, child: Text(name)))
+                        .toList(),
+                    onChanged: (v) => setDialogState(() => eqFilter = v!),
+                  ),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<String>(
+                    isExpanded: true,
+                    decoration: const InputDecoration(labelText: 'Area of Focus'),
+                    value: areaFilter,
+                    items: _bodyPartList
+                        .map((name) => DropdownMenuItem(value: name, child: Text(name)))
+                        .toList(),
+                    onChanged: (v) => setDialogState(() => areaFilter = v!),
+                  ),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<String>(
+                    isExpanded: true,
+                    decoration: const InputDecoration(labelText: 'Specific Muscle'),
+                    value: muscleFilter,
+                    items: _muscleList
+                        .map((name) => DropdownMenuItem(value: name, child: Text(name)))
+                        .toList(),
+                    onChanged: (v) => setDialogState(() => muscleFilter = v!),
+                  ),
+                ],
+              ),
             ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                Navigator.of(ctx).pop();
-                setState(() => _isLoading = true);
-
-                List<String>? equipNames =
-                    selectedEq != 'All' ? [selectedEq] : null;
-
-                List<int>? bodyPartIds;
-                if (selectedArea != 'All') {
-                  final bp = _bodyParts.firstWhere((b) => b.name == selectedArea);
-
-                  bodyPartIds = [bp.id];
-                }
-
-                List<int>? muscleIds;
-                if (selectedMuscle != 'All') {
-                  final m = _muscles.firstWhere((mus) => mus.name == selectedMuscle);
-
-                  muscleIds = [m.id];
-                }
-
-                // Fetch filtered definitions
-                final defs = await _repo.lookupDefsFiltered(
-                  equipmentNames: equipNames,
-                  bodypartIds: bodyPartIds,
-                  muscleIds: muscleIds,
-                );
-
-                setState(() {
-                  _filterEquipment = selectedEq;
-                  _filterArea = selectedArea;
-                  _filterMuscle = selectedMuscle;
-                  _allDefs = defs;
-                  _applySearchAndDisplay();
-                  _isLoading = false;
-                });
-              },
-              child: const Text('Save'),
-            ),
-          ],
-        ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  // Commit dialog selections
+                  setState(() {
+                    _useProfileFilter = useProfile;
+                    _dialogProfileId = chosenProfileId;
+                    _equipmentList = dialogEquipment;
+                    _filterEquipment = eqFilter;
+                    _filterArea = areaFilter;
+                    _filterMuscle = muscleFilter;
+                  });
+                  Navigator.of(ctx).pop();
+                  _loadLookupsAndDefs();
+                },
+                child: const Text('Save'),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -236,21 +267,10 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Previously Done',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
             const Expanded(
-              flex: 1,
-              child: Center(child: Text('TODO: load past exercises')),
+              child: Center(child: Text('Previously Done: TODO')),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'All Exercises',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
             Expanded(
               flex: 2,
               child: _isLoading
@@ -263,14 +283,12 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                             final def = _displayedDefs[i];
                             return ListTile(
                               title: Text(def.name),
-                              selected:
-                                  widget.onExercisePicked != null && _selectedDef == def,
+                              subtitle: Text(def.equipmentList.map((e) => e.name).join(', ')),
+                              selected: widget.onExercisePicked != null && _selectedDef == def,
                               onTap: widget.onExercisePicked == null
                                   ? null
                                   : () {
-                                      setState(() {
-                                        _selectedDef = def;
-                                      });
+                                      setState(() => _selectedDef = def);
                                     },
                             );
                           },

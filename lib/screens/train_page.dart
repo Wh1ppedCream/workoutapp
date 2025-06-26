@@ -5,9 +5,12 @@ import 'package:provider/provider.dart';
 import '../models/active_session.dart';
 import '../models/preset_models.dart';
 import '../models/preset_session.dart';
+import '../models/selected_profile.dart';
 import '../repositories/app_repository.dart';
 import '../repositories/app_repository_presets.dart';
+import '../repositories/profile_repository.dart';
 import '../widgets/preset_bar.dart';
+import 'gym_profile_screen.dart';
 import 'preset_detail_screen.dart';
 import 'session_screen.dart';
 
@@ -28,77 +31,57 @@ class _TrainPageState extends State<TrainPage> {
   ];
 
   final _repo = AppRepository();
-  late Future<List<PresetDefinition>> _presetsFuture;
   final _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
     super.initState();
-    _ensureDefaults();
-    _loadPresets();
+    // Ensure default presets exist for the selected profile
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final profileId = context.read<SelectedProfile>().currentProfile?.id;
+      _ensureDefaults(profileId);
+    });
   }
 
-  /// Make sure our three defaults exist at least once.
-  Future<void> _ensureDefaults() async {
-    await _repo.findOrCreatePreset('Push');
-    await _repo.findOrCreatePreset('Pull');
-    await _repo.findOrCreatePreset('Legs');
+  Future<void> _ensureDefaults(int? profileId) async {
+    await _repo.findOrCreatePreset('Push', profileId: profileId);
+    await _repo.findOrCreatePreset('Pull', profileId: profileId);
+    await _repo.findOrCreatePreset('Legs', profileId: profileId);
+    setState(() {});
   }
 
-  /// Reloads the future for all presets.
-  void _loadPresets() {
-    _presetsFuture = _repo
-        .fetchAllPresetsRaw()
-        .then((raw) => raw.map((r) {
-              return PresetDefinition(
-                id: r['id'] as int,
-                name: r['name'] as String,
-                createdAt: DateTime.parse(r['created_at'] as String),
-              );
-            }).toList());
+  /// Deletes a preset and refreshes the list.
+  Future<void> _deletePreset(int presetId) async {
+    await _repo.deletePreset(presetId);
+    setState(() {});
   }
 
-  /// Convenience: calls setState(&_loadPresets).
-  void _refresh() => setState(_loadPresets);
-
-  /// Navigate into the detail screen for [presetId].
+  /// Opens the preset detail screen.
   void _openPreset(int presetId, {bool edit = false}) {
     final navigator = Navigator.of(context);
-
     navigator.push(
       MaterialPageRoute(
         builder: (outerCtx) => MultiProvider(
           providers: [
-            // Re-use the same ActiveSession
             ChangeNotifierProvider<ActiveSession>.value(
               value: outerCtx.read<ActiveSession>(),
             ),
-            // New PresetSession
             ChangeNotifierProvider(
               create: (_) => PresetSession(presetId),
             ),
           ],
-          child: PresetDetailScreen(
-            // if you add a 'startEditing' flag to the screen, you can pass edit:true here
-          ),
+          child: PresetDetailScreen(),
         ),
       ),
     );
   }
 
-  /// Delete a preset and refresh the list.
-  Future<void> _deletePreset(int presetId) async {
-    await _repo.deletePreset(presetId);
-    _refresh();
-  }
-
   @override
   Widget build(BuildContext context) {
     final drawerWidth = MediaQuery.of(context).size.width * 0.75;
-    int presetCount = 0;
 
-    return Consumer<ActiveSession>(
-      builder: (_, session, __) => Scaffold(
+    return Consumer2<ActiveSession, SelectedProfile>(
+      builder: (_, session, sel, __) => Scaffold(
         key: _scaffoldKey,
         drawer: Drawer(
           width: drawerWidth,
@@ -118,18 +101,68 @@ class _TrainPageState extends State<TrainPage> {
         ),
         endDrawer: Drawer(
           width: drawerWidth,
-          child: ListView(
-            padding: EdgeInsets.zero,
-            children: const [
-              DrawerHeader(
-                decoration: BoxDecoration(color: Colors.lightGreen),
-                child: Text('Gym Profiles',
-                    style: TextStyle(color: Colors.white, fontSize: 18)),
-              ),
-              ListTile(title: Text('General')),
-              ListTile(title: Text('Commercial Gym')),
-              ListTile(title: Text('Home Gym')),
-            ],
+          child: Consumer<SelectedProfile>(
+            builder: (ctx, selected, _) {
+              return ListView(
+                padding: EdgeInsets.zero,
+                children: [
+                  const DrawerHeader(
+                    decoration: BoxDecoration(color: Colors.lightGreen),
+                    child: Text('Gym Profiles',
+                        style: TextStyle(color: Colors.white, fontSize: 18)),
+                  ),
+                  ...List.generate(
+                    selected.profiles.length,
+                    (i) {
+                      final profile = selected.profiles[i];
+                      final color = _palette[i % _palette.length];
+                      return PresetBar(
+                        label: profile.name,
+                        color: color,
+                        index: i,
+                        onTap: () {
+                          selected.selectProfile(profile);
+                          Navigator.of(context).pop();
+                          setState(() {});
+                        },
+                        onMenuSelected: (action) {
+                          if (action == 'edit') {
+                            final navigator = Navigator.of(context);
+                            navigator.pop();
+                            navigator.push(
+                              MaterialPageRoute(
+                                builder: (_) => GymProfileScreen(
+                                  profile: profile,
+                                ),
+                              ),
+                            );
+                          } else if (action == 'delete') {
+                            selected.deleteProfile(profile.id!);
+                            setState(() {});
+                          }
+                        },
+                      );
+                    },
+                  ),
+                  const Divider(),
+                  ListTile(
+                    leading: const Icon(Icons.add),
+                    title: const Text('New Profile'),
+                    onTap: () {
+                      final navigator = Navigator.of(context);
+
+    
+                      navigator.pop();
+                      navigator.push(
+                        MaterialPageRoute(
+                          builder: (_) => const GymProfileScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              );
+            },
           ),
         ),
         appBar: AppBar(
@@ -157,7 +190,6 @@ class _TrainPageState extends State<TrainPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // --- Presets list header ---
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Text(
@@ -166,16 +198,23 @@ class _TrainPageState extends State<TrainPage> {
                 ),
               ),
               const Divider(height: 1),
-              // --- Dynamic presets + static last two bars ---
               Expanded(
                 child: FutureBuilder<List<PresetDefinition>>(
-                  future: _presetsFuture,
+                  future: _repo
+                      .fetchAllPresetsRaw(profileId: sel.currentProfile?.id)
+                      .then((raw) => raw
+                          .map((r) => PresetDefinition(
+                                id: r['id'] as int,
+                                name: r['name'] as String,
+                                createdAt: DateTime.parse(
+                                    r['created_at'] as String),
+                              ))
+                          .toList()),
                   builder: (ctx, snap) {
                     if (snap.connectionState != ConnectionState.done) {
                       return const Center(child: CircularProgressIndicator());
                     }
                     final presets = snap.data!;
-                    presetCount = presets.length;
                     return ListView.separated(
                       padding: const EdgeInsets.all(16),
                       itemCount: presets.length,
@@ -201,40 +240,35 @@ class _TrainPageState extends State<TrainPage> {
                   },
                 ),
               ),
-
-              // ← INSERT THIS DIVIDER
               const Divider(height: 1),
               const SizedBox(height: 8),
-
-              // “Generate Custom Presets” (no-op for now)
               PresetBar(
                 label: 'Generate Custom Presets',
                 color: Colors.purple,
                 index: 0,
               ),
               const SizedBox(height: 8),
-
-              // “Manually Add Preset”
               PresetBar(
                 label: 'Manually Add Preset',
                 color: Colors.purple,
-                index: presetCount,
+                index: 0,
                 onTap: () async {
-                  final newId = await _repo.createPreset('New Preset');
-                  _refresh();
+                  final newId = await _repo.createPreset(
+                    'New Preset',
+                    profileId: sel.currentProfile?.id,
+                  );
                   _openPreset(newId, edit: true);
+                  setState(() {});
                 },
               ),
-
               const SizedBox(height: 16),
-
-              // --- New Session button ---
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: ElevatedButton(
                   onPressed: () {
                     session.start();
-                    Navigator.of(context).push(
+                    final navigator = Navigator.of(context);
+    navigator.push(
                       MaterialPageRoute(
                         builder: (_) => const SessionScreen(),
                       ),
@@ -246,8 +280,6 @@ class _TrainPageState extends State<TrainPage> {
             ],
           ),
         ),
-      
-      
       ),
     );
   }
