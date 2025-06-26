@@ -36,7 +36,7 @@ class DatabaseHelper {
     final path = join(dbPath, 'fitness_tracker.db');
     return await openDatabase(
       path,
-      version: 6,  // bumped to 6 to include presets schema
+      version: 7,  // bumped to 6 to include presets schema
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
@@ -56,6 +56,11 @@ class DatabaseHelper {
    if (oldVersion < 6) {
      await Schema.migrateV6(db);
    }
+   // v7: gym_profiles + profile_equipment + preset_definitions.profile_id
+        if (oldVersion < 7) {
+          await Schema.migrateV7(db);
+          await db.execute('CREATE INDEX IF NOT EXISTS idx_preset_profile ON preset_definitions(profile_id);');
+        }
   },
 );
   }

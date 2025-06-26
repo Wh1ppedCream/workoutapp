@@ -8,11 +8,15 @@ import 'screens/train_page.dart';
 import 'screens/nutrition_page.dart';
 import 'screens/profile_page.dart';
 import 'widgets/ongoing_session_fab.dart';
+import 'models/selected_profile.dart';
 
 void main() {
-runApp(
-    ChangeNotifierProvider(
-      create: (_) => ActiveSession(),
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ActiveSession()),
+        ChangeNotifierProvider(create: (_) => SelectedProfile()),
+      ],
       child: const MyApp(),
     ),
   );

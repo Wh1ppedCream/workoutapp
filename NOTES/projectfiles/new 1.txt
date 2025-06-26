@@ -1,0 +1,28 @@
++ sets not working
++ changesets not working
+changing weight and rep numbers not working
+if trying to add changesets, changesets disappear
+cardio name doesn't show up
+cardio time can't be changed
+stretches when put in, don't show up
+when start session pressed, exercise card information from page is not used to fill session_screen, while it previously did. 
+
+/// Inserts cardio details for a preset exercise.
+  static Future<void> insertPresetCardioDetails({
+    required Database db,
+    required int presetExerciseId,
+    required String cardioName,
+    String? note,
+    required int plannedMinutes,
+    required int elapsedSeconds,
+  }) {
+    return db.insert(
+    'preset_cardio_details',
+    {
+      'preset_exercise_id': presetExerciseId,
+      'cardio_name':        cardioName,
+      'note':               note,
+      'planned_minutes':    plannedMinutes,
+ithm: ConflictAlgorithm.replace,
+  );
+}

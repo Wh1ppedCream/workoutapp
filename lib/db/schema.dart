@@ -348,4 +348,39 @@ static Future<void> migrateV6(Database db) async {
 }
 
 
+  /// Applies database migrations for version 7.
+  ///
+  /// - Creates `gym_profiles` table.
+  /// - Creates `profile_equipment` join table.
+  /// - Adds nullable `profile_id` column to `preset_definitions`.
+  static Future<void> migrateV7(Database db) async {
+    // 1) gym_profiles
+    await db.execute('''
+      CREATE TABLE gym_profiles(
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        name        TEXT    NOT NULL,
+        created_at  TEXT    NOT NULL DEFAULT (datetime('now'))
+      );
+    ''');
+
+    // 2) profile_equipment join table
+    await db.execute('''
+      CREATE TABLE profile_equipment(
+        profile_id    INTEGER NOT NULL,
+        equipment_id  INTEGER NOT NULL,
+        PRIMARY KEY(profile_id, equipment_id),
+        FOREIGN KEY(profile_id)    REFERENCES gym_profiles(id)    ON DELETE CASCADE,
+        FOREIGN KEY(equipment_id)  REFERENCES equipment(id)       ON DELETE CASCADE
+      );
+    ''');
+
+    // 3) link presets to profiles
+    await db.execute('''
+      ALTER TABLE preset_definitions
+      ADD COLUMN profile_id INTEGER;
+    ''');
+  }
+
+
+
 }

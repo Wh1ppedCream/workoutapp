@@ -9,42 +9,54 @@ import '../models/models.dart';
 
 /// Extension of [AppRepository] adding Preset support:
 /// - CRUD operations for Preset definitions and their exercises/details
-/// - A helper to clone a Preset into an active session
+/// - Ability to scope presets to a GymProfile via profileId
 extension PresetRepository on AppRepository {
   // ─── PRESETS: Definition CRUD ──────────────────────────────────────
-  /// Creates a new Preset with the given [name].
-  ///
-  /// Returns the new Preset's database ID, which can be used to add exercises.
-  Future<int> createPreset(String name) async {
-    final db = await dbHelper.database; // get writable db
-    return PresetDefinitionDao.insertPreset(db, name);  // insert row and return ID
-  }
 
-Future<int> findOrCreatePreset(String name) async {
-  final db = await dbHelper.database;
-  return PresetDefinitionDao.findOrCreatePresetDefinition(db, name);
-}
-
-
- /// Retrieves all Presets as raw maps.
-  ///
-  /// Each map contains keys:
-  ///   - 'id': Preset ID
-  ///   - 'name': Preset name
-  ///   - 'created_at': timestamp of creation
-  Future<List<Map<String, dynamic>>> fetchAllPresetsRaw() async {
+  /// Creates a new Preset with the given [name], optionally scoped to [profileId].
+  /// Returns the new Preset's database ID.
+  Future<int> createPreset(
+    String name, {
+    int? profileId,
+  }) async {
     final db = await dbHelper.database;
-    return PresetDefinitionDao.getAllPresetsRaw(db);
+    return PresetDefinitionDao.insertPreset(
+      db,
+      name,
+      profileId: profileId,
+    );
   }
 
-/// Fetches a single Preset by its [presetId].
-  ///
-  /// Returns a [PresetDefinition] model or `null` if not found.
+  /// Finds an existing Preset by [name] and optional [profileId], or creates one.
+  /// Returns the Preset's database ID.
+  Future<int> findOrCreatePreset(
+    String name, {
+    int? profileId,
+  }) async {
+    final db = await dbHelper.database;
+    return PresetDefinitionDao.findOrCreatePresetDefinition(
+      db,
+      name,
+      profileId: profileId,
+    );
+  }
+
+  /// Retrieves all Presets as raw maps, scoped to [profileId] if provided.
+  Future<List<Map<String, dynamic>>> fetchAllPresetsRaw({
+    int? profileId,
+  }) async {
+    final db = await dbHelper.database;
+    return PresetDefinitionDao.getAllPresetsRaw(
+      db,
+      profileId: profileId,
+    );
+  }
+
+  /// Fetches a single Preset by its [presetId].
   Future<PresetDefinition?> fetchPresetById(int presetId) async {
     final db = await dbHelper.database;
     final row = await PresetDefinitionDao.getPresetById(db, presetId);
     if (row == null) return null;
-    // Map raw row to model
     return PresetDefinition(
       id: row['id'] as int,
       name: row['name'] as String,
@@ -52,27 +64,21 @@ Future<int> findOrCreatePreset(String name) async {
     );
   }
 
-
-/// Updates the name of an existing Preset.
+  /// Updates the name of an existing Preset.
   Future<void> updatePresetName(int presetId, String name) async {
     final db = await dbHelper.database;
     await PresetDefinitionDao.updatePresetName(db, presetId, name);
   }
 
-/// Deletes a Preset and cascades removal of its exercises and details.
+  /// Deletes a Preset and cascades removal of its exercises and details.
   Future<void> deletePreset(int presetId) async {
     final db = await dbHelper.database;
     await PresetDefinitionDao.deletePreset(db, presetId);
   }
 
+  // ─── PRESETS: Exercise CRUD ──────────────────────────────────────
 
- // ─── PRESETS: Exercise CRUD ──────────────────────────────────────
   /// Adds a new exercise to a Preset.
-  ///
-  /// [presetId]: ID of the Preset to augment.
-  /// [exerciseDefId]: Optional reference to an existing definition.
-  /// [type]: One of 'weight', 'cardio', or 'stretch'.
-  /// [orderIndex]: Position within the Preset's sequence.
   Future<int> addExerciseToPreset(
     int presetId,
     int? exerciseDefId,
@@ -89,28 +95,21 @@ Future<int> findOrCreatePreset(String name) async {
     );
   }
 
-/// Retrieves raw exercise rows for a given Preset.
-  ///
-  /// Each map contains keys: id, preset_id, exercise_def_id, type, order_index.
+  /// Retrieves raw exercise rows for a given Preset.
   Future<List<Map<String, dynamic>>> fetchPresetExercises(int presetId) async {
     final db = await dbHelper.database;
     return PresetExerciseDao.getExercisesForPreset(db, presetId);
   }
 
-/// Deletes all exercises from a Preset (and cascades details).
+  /// Deletes all exercises from a Preset.
   Future<void> deletePresetExercises(int presetId) async {
     final db = await dbHelper.database;
     await PresetExerciseDao.deleteExercisesForPreset(db, presetId);
   }
 
-  // ─── PRESETS: Single-Exercise CRUD ────────────────────────────
+  // ─── PRESETS: Detail CRUD ──────────────────────────────────────
 
-
-
- // ─── PRESETS: Detail CRUD ──────────────────────────────────────
   /// Saves weight sets for a Preset exercise.
-  ///
-  /// [parents] is the list of parent sets; [children] maps parent index → list of change sets.
   Future<void> savePresetWeightSets(
     int presetExerciseId,
     List<ExerciseSet> parents,
@@ -125,13 +124,13 @@ Future<int> findOrCreatePreset(String name) async {
     );
   }
 
-/// Fetches weight sets (parents+children) for a Preset exercise.
+  /// Fetches weight sets for a Preset exercise.
   Future<List<Map<String, dynamic>>> fetchPresetSets(int presetExerciseId) async {
     final db = await dbHelper.database;
     return PresetDetailDao.getPresetSets(db, presetExerciseId);
   }
 
-/// Saves cardio details for a Preset exercise (insert or replace).
+  /// Saves cardio details for a Preset exercise.
   Future<void> savePresetCardio(
     int presetExerciseId,
     String cardioName,
@@ -146,19 +145,17 @@ Future<int> findOrCreatePreset(String name) async {
       cardioName: cardioName,
       note: note,
       plannedMinutes: plannedMinutes,
-      elapsedSeconds :    elapsedSeconds,
+      elapsedSeconds: elapsedSeconds,
     );
   }
 
- /// Fetches the saved cardio details row for a Preset exercise.
+  /// Fetches the saved cardio details row for a Preset exercise.
   Future<Map<String, dynamic>?> fetchPresetCardio(int presetExerciseId) async {
     final db = await dbHelper.database;
     return PresetDetailDao.getPresetCardioDetails(db, presetExerciseId);
   }
 
-/// Saves stretch items for a Preset exercise.
-  ///
-  /// [items] is a list of maps with keys: stretch_id, is_custom, custom_name, custom_desc, order_index.
+  /// Saves stretch items for a Preset exercise.
   Future<void> savePresetStretch(
     int presetExerciseId,
     List<Map<String, dynamic>> items,
@@ -171,17 +168,9 @@ Future<int> findOrCreatePreset(String name) async {
     );
   }
 
-/// Fetches stored stretch items for a Preset exercise.
-  Future<List<Map<String, dynamic>>> fetchPresetStretchItems(
-    int presetExerciseId,
-  ) async {
+  /// Fetches stored stretch items for a Preset exercise.
+  Future<List<Map<String, dynamic>>> fetchPresetStretchItems(int presetExerciseId) async {
     final db = await dbHelper.database;
     return PresetDetailDao.getPresetStretchItems(db, presetExerciseId);
   }
-
-// ─── PRESETS: Fetch Full ───────────────────────────────────────
-
-
-
-
 }
