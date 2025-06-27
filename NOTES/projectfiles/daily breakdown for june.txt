@@ -162,23 +162,80 @@ DONE:
 	- session persistence (so session info is saved and session is paused if back button pressed or screen closed)
 	- tying cardio and stretches to equipment
 	- gym presets
+	- gym profiles
 	
 ongoing: 
-	- gym profiles
+	
 	- tying cardio and stretches to equipment
 
 TODO:
 	train-related:
+		- session details
+			- workout time
+			- total volume
+			- rep max estimates 
+				- 1rm formula: 1rm = weight x (1 + 0.0333 x reps)
+				- 1rm to x rep max (x rm) formula: 
+						1	100%
+						2	97%
+						3	94%
+						4	92%
+						5	89%
+						6	86%
+						7	83%
+						8	81%
+						9	78%
+						10	75%
+						11	73%
+						12	71%
+						13	70%
+						14	68%
+						15	67%
+						16	65%
+						17	64%
+						18	63%
+						19	61%
+						20	60%
+						21	59%
+						22	58%
+						23	57%
+						24	56%
+						25	55%
+						26	54%
+						27	53%
+						28	52%
+						29	51%
+						30	50%
+			- Recorded Rep Maxes (RM's)
+				- RM's for each number of reps (eg: 5 RM, 10 RM are different for same exercise, also different from estimated rm)
+			- comparison or increments compared to older sessions
+			- calories burned
+			- exertion related questions, eg: muscle soreness, reps in reserve (optional for answering)
 		- history details
 			- will show last 7 days and info about the last 7 days
 				- no. of workouts
+				- time spent training
 				- total volume
 				- sets per bodypart
 				- calculated sets per muscle 
+					- by ranking; 
+						rank 1 = 1 set equivalent
+						rank 1+x = 1-(x*0.05) set equivalent
+						1 - 1
+						2 - 0.95
+						3 - 0.9
+						4 - 0.85
+						5 - 0.8
+						6 - 0.75
+						7 - 0.7
+				- overall muscle group coverage (heatmap of parts trained)
+				- exercise performance trends
 		- exercise detail screen/popup
-			- will show historic rep maxes 
+			- will show Recorded Rep Maxes (RM's)
 			- will show rep max estimates
+			- will show max volume
 			- will show volume graph
+			- will show estimated 1rm graph
 			- will have note section mentioning proper form
 			- will mention focus body parts
 			- will mention equipment needed
@@ -208,13 +265,103 @@ TODO:
 					- bodypart sets = sets of exercise which are listed to use the bodypart
 					- muscle set = set * % muscle usage for exercise
 						- if % muscle usage is not specified for an exercise, then default: 
-								1. 30%	= 30
-								2. 25%	= 55
-								3. 15%	= 70
-								4. 10%	= 80
-								5. 10%	= 90
-								6. 5%	= 95
-								7. 5%	= 100
+								rank 1 = 1 set equivalent
+								rank 1+x = 1-(x*0.05) set equivalent
+								1 - 1
+								2 - 0.95
+								3 - 0.9
+								4 - 0.85
+								5 - 0.8
+								6 - 0.75
+								7 - 0.7
+			- components needed: 
+				- editable body part ranking: 
+					1
+				- body part set guidelines:
+					### 📊 Weekly Training Volume Guidelines by Body Part (Overlapping Ranges)
+
+					| **Body Part**        | **Maintenance Volume** | **Hypertrophy Range** | **Max Recoverable Volume (MRV)** |
+					|----------------------|-------------------------|------------------------|-----------------------------------|
+					| **Chest**            | 4–10 sets               | 8–20 sets              | 14–25 sets                        |
+					| **Shoulders**        | 6–12 sets               | 10–24 sets             | 14–30+ sets                       |
+					| **Back (Overall)**   | 6–12 sets               | 10–24 sets             | 16–28 sets                        |
+					| **Arms (Biceps + Triceps)** | 4–10 sets         | 8–20 sets              | 12–24 sets                        |
+					| **Forearms**         | 4–8 sets                | 6–14 sets              | 10–16 sets                        |
+					| **Abdominals**       | 4–8 sets                | 8–15 sets              | 12–20 sets                        |
+					| **Trapezius**        | 4–10 sets               | 8–16 sets              | 14–22 sets                        |
+					| **Neck**             | 2–6 sets                | 6–10 sets              | 10–14 sets                        |
+					| **Quads**            | 6–12 sets               | 10–20 sets             | 16–28 sets                        |
+					| **Hamstrings**       | 4–10 sets               | 8–16 sets              | 14–22 sets                        |
+					| **Glutes**           | 4–10 sets               | 8–16 sets              | 14–24 sets                        |
+					| **Calves** *(Both heads)* | 6–10 sets         | 12–20 sets             | 16–24 sets                        |
+					| **Hip Flexors**      | 2–6 sets                | 6–10 sets              | 10–14 sets                        |
+					| **Hip Adductors**    | 4–8 sets                | 8–12 sets              | 12–18 sets                        |
+					| **Hip Abductors**    | 4–8 sets                | 8–14 sets              | 12–18 sets                        |
+					| **Abs** *(same as Abdominals)* | 4–8 sets       | 8–15 sets              | 12–20 sets                        |
+					| **Erector Spinae**   | 3–6 sets                | 6–10 sets              | 10–14 sets                        |
+				- body part set calculations:
+					1.
+				- editable muscle ranking: 
+					1. **Gluteus Maximus**  
+					2. **Erector Spinae**  
+					3. **Transverse Abdominis**  
+					4. **Rectus Abdominis**  
+					5. **Gluteus Medius**  
+					6. **Latissimus Dorsi**  
+					7. **Obliques**  
+					8. **Pectoralis Major**  
+					9. **Rhomboids**  
+					10. **Triceps Brachii**
+					11. **Posterior Deltoid**  
+					12. **Serratus Anterior**  
+					13. **Anterior Deltoid**  
+					14. **Vastus Medialis**  
+					15. **Rectus Femoris**  
+					16. **Supraspinatus**  
+					17. **Infraspinatus**  
+					18. **Trapezius (Lower)**  
+					19. **Multifidus**  
+					20. **Iliopsoas**  
+					21. **Vastus Lateralis**
+					22. **Semitendinosus**  
+					23. **Semimembranosus**  
+					24. **Biceps Femoris**  
+					25. **Vastus Intermedius**  
+					26. **Biceps Brachii**  
+					27. **Lateral Deltoid**  
+					28. **Pelvic Floor Muscles**  
+					29. **Pectoralis Minor**  
+					30. **Quadratus Lumborum**  
+					31. **Tibialis Anterior**  
+					32. **Soleus**  
+					33. **Gluteus Minimus**  
+					gastrocnemius
+					34. **Teres Major**
+					35. **Levator Scapulae**  
+					36. **Trapezius (Middle)**  
+					37. **Trapezius (Upper)**  
+					38. **Teres Minor**  
+					39. **Brachialis**  
+					40. **Brachioradialis**  
+					41. **Tensor Fasciae Latae**  
+					42. **Scalenes**  
+					43. **Piriformis**  
+					44. **Sternocleidomastoid**
+					45. **Wrist Flexors**  
+					46. **Wrist Extensors**  
+					47. **Anconeus**  
+					48. **Pronator Teres**  
+					49. **Pronator Quadratus**  
+					50. **Adductor Magnus**  
+					51. **Adductor Longus**  
+					52. **Adductor Brevis**  
+					53. **Gracilis**  
+					54. **Pectineus**  
+					55. **Splenius**
+				- muscle set guidelines:
+					1. 
+				- muscle set calculations:
+					1.
 		- intelligent preset generator
 			- makes special presets called Ipresets
 				- will adapt to your current amount of workout
@@ -234,6 +381,7 @@ TODO:
 								6. 5%	= 95
 								7. 5%	= 100
 		- add in new exercises/stretches/cardio
+		- dealing with load times: Push loading into your provider/model layer and drive the UI off of a single “ready” flag
 	
 	additional: 
 		- remaking database files for website

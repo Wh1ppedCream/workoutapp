@@ -54,3 +54,379 @@ Nutrition/Profile placeholders
 
 Persist navigation state
 – Retain the selected tab when you hot-reload or re-launch.
+
+i'll address each of your response parts. 1A. so the session completion popup is something i plan on showing up twice. it will show up once after the user taps "Finish" in the session screen and it will also be shown after the user opens a session detail screen for a past saved session in history. 1B. 
+
+planned features:
+	*) optional ads and thoughts:
+	recording rep maxes
+		each set is checked if it is the new recorded rep max (if the previous recorded 8 rep max was 
+		- rep max estimates 
+				- 1rm formula: 1rm = weight x (1 + 0.0333 x reps)
+				- 1rm to x rep max (x rm) formula: 
+						1	100%
+						2	97%
+						3	94%
+						4	92%
+						5	89%
+						6	86%
+						7	83%
+						8	81%
+						9	78%
+						10	75%
+						11	73%
+						12	71%
+						13	70%
+						14	68%
+						15	67%
+						16	65%
+						17	64%
+						18	63%
+						19	61%
+						20	60%
+						21	59%
+						22	58%
+						23	57%
+						24	56%
+						25	55%
+						26	54%
+						27	53%
+						28	52%
+						29	51%
+						30	50%
+			- Recorded Rep Maxes (RM's)
+				- RM's for each number of reps (eg: 5 RM, 10 RM are different for same exercise, also different from estimated rm)
+		session completion popup:
+			- comparison or increments compared to older sessions
+			- exertion related questions, eg: muscle soreness, reps in reserve (optional for answering)
+						
+	1) Session Completion Pop-up
+		1A. when and where it shows up: 
+			- only is generated and opened for a finished, saved session
+			1. session screen after finishing session (session info is saved before pop-up is opened, but you return to train page after pop up is closed)
+			2. session detail screen on opening a saved session from history pages
+		1B. metrics for displaying:
+			- date and start time
+			- total duration
+			- total volume: ∑(weight × reps)
+			- calories burnt (for now this will always be 100, later we'll implement this properly)
+			- gym score (for now this will always be 5/10, later we'll implement this properly)
+			- details for each set in each weighted exercise:
+				- only ticked exercises count here
+				- exercise name
+				- for each exercise, sets are numbered: 1, 2, and so on, with each set being on a different line
+				- sets are shown as weight x reps (eg: 15 lbs x 10 meaning 10 reps with 15 lbs weight)
+				- if a set is a new rep max or volume max for the exercise, it gets a RM badge (for rep max) or a VM badge (for volume max) beside the set entry 
+					- eg: if a 3rd set of Bench Press - Barbell is 8 reps with 225 lbs weight in the session and this is the new 8 rep max and the new volume max, the set entry will look like:
+						3. 225 lbs x 8		(RM badge)  (VM badge)		1 ERM = 284
+						(we will talk about ERM next)
+				- beside set info, on same line as set info, flush right to page, will be the 1 ERM (Estimated Rep Max) for the set.
+					- i'm not sure for now if this calculation will actually be done here or elsewhere, but here is the formula for finding this: 1 ERM = weight x (1 + 0.0333 x reps)
+			- details for cardio:
+				- just cardio name and minutes
+				- minutes shown is minutes completed, not the total number of minutes put in for cardio.
+			- details for stretches:
+				- just stretch name
+				- only ticked stretches count here
+			- weighted exercises, cardio, stretches will appear in the order they showed up in the session screen or session detail screen.
+		1C. Layout text-based
+			- Completed Session written on top
+			- under this: date, start time, total duration 
+			- under this: total volume, calories burnt, gym score
+			- under this: exercise details (weighted exercises, cardio and stretches)
+			- bottom right corner of pop-up: green button with tick mark on it to close the pop-up
+		
+		1D. Layout typed:
+			1. Initial appearance: bottom sheet opens to half-height (e.g. ~50% of screen), showing title, core metrics, and the top of the scrollable list.
+				Green “Done” button in the bottom-right corner always visible in the sheet chrome.
+				Tap behavior:
+					If sheet is only half-open, first tap expands it fully.
+					When fully expanded, tap again closes the sheet.
+				User can also swipe up/down at any time to expand or dismiss.
+			
+			2. Header & Core Metrics (sticky at top)
+				┌────────────────────────────────────────────┐
+				│ SESSION COMPLETE!                         │
+				│ Jan 22 • 09:53    Duration: 01:59:40     │
+				│ Volume: 17.5K lbs  •  Calories: 100 kcal  │
+				│ Gym Score: 5/10                           │
+				├────────────────────────────────────────────┤
+				All text in a compact, legible font.
+				Use subtle dividers to separate rows.
+			
+			3. Scrollable Body
+				For each exercise/cardio/stretch in session order:
+
+				3A. Weighted Exercises
+				■ Deadlift • Barbell
+				① 50 lbs × 10                 ERM = 66.7
+				② 70 lbs × 10                 ERM = 93.3
+				③ 110 lbs × 8 (RM)            ERM = 139.3
+				④ 130 lbs × 8 (RM)(VM)        ERM = 164.7
+				Badges:
+
+				(RM) badge background yellow, text black.
+
+				(VM) badge background green, text white.
+
+				ERM flush-right, same line, in small italic or secondary font color.
+
+				3B. Cardio
+				■ Bike • 12 min
+				Simple bullet line.
+
+				3C. Stretches
+				■ Quad Stretch
+				Simple bullet line.
+				
+			4. Green “Done” Button
+				Icon: a white checkmark inside a green circular FAB.
+				Position: bottom-right overlay of the sheet (fixed), not part of the scrollable area.
+				
+			
+			
+	2) Exercise Detail Pop-up
+		- only for weight exercises, not cardio or stretches
+		A) Entry Points & Navigation
+			- in session screen, preset detail screen, session detail screen and exercise catalog page, there will be a 'Details' button beside every WeightExercise name which opens this
+			- clicking on a card with a WeightExercise name in the definitions_by_bodypart_page will open this
+		
+		B) Data & Metrics Shown
+			B1) Exercise Identity
+				- Exercise name
+				- exercise equipment list
+				- Focused bodyparts
+				- focused muscles
+			B2) Exercise Notes
+				- will contain image or video link with example
+				- Set-up note for exercise
+				- execution note for exercise
+				- key tips for exercise
+			B3) Exercise Metrics
+				- showing the following for exercises within the last month, week and alltime
+					- recorded rep maxes listed for 1 to 20 reps
+						- if there is a recorded rep max for this rep range within the specified time period, shows that.
+						- if there is no recorded rep max for this rep range within the specified time period, shows the ERM instead and marks it as an ERM
+					- shows Volume Max for specified time period
+			B4) Exercise History
+				- 1ERM bargraph for last 10 sessions
+					Highlight the best ERM in that span.
+				- Volume Max bargraph for last 10 sessions
+					Highlight the best VM in that span.
+				- will have its own history shown (instances of the exercise being done)
+					very similar to session completion pop-up, but instead of exercise name on top of sets, will show session date instead.
+		C) Layout text-based
+			- three tabs on top for 'Details' (default),  'Metrics' and 'Records', selecting tab will change what is shown on pop-up
+			- if 'Details' is selected:
+				- info from B1) Exercise Identity first:
+					- Exercise name
+					- under this, EQUIPMENT with listed exercise equipment
+					- under this, FOCUS AREA with listed body parts
+					- under this, FOCUS MUSCLES with listed muscles
+				- under that is info from B2) Exercise Notes:
+					- EXAMPLE with space for an image or video, but with 'to be added' text as default
+					- SET-UP with space for text, but with 'to be added' text as default
+					- EXECUTION with space for an text, but with 'to be added' text as default
+					- TIPS with space for an text, but with 'to be added' text as default
+			- if 'Metrics' is selected:
+				- info from B3) Exercise Metrics:
+					- three buttons for 'Week', 'Month' and 'All Time' (default), selecting one will change numbers shown
+						- shows Volume Max and 1 ERM numbers for selected time period
+						- shows recorded Rep Maxes for 1 to 20 reps (1 rep max, 2 rep max, ... , 20 rep max)
+							if rep max is not recorded for selected time period, calculates it by 1 ERM and marks it as being an ERM
+			- if 'Records' is selected:
+				- info from B4) Exercise History:
+					- will have a bar graph on top, where x - axis is last 1 to 20 sessions and there will be 2 bars for each session, 1 bar being for 1 ERM and the other bar being for VM
+					- under this will be the exercise history, (previous instances of the exercise being done)
+						very similar to session completion pop-up, but instead of exercise name on top of sets, will show session date instead.
+			- at bottom of page, regardless of selected tabs, is 'Done' button, to close the pop-up
+						
+						
+			2) Exercise Detail Pop-up
+		A) Entry Points
+			SessionScreen, PresetDetailScreen, SessionDetailScreen, and ExerciseCatalogPage: tap the new Details button on any weight exercise.
+
+			DefinitionsByBodyPartPage: tap the exercise card itself.
+
+		B) What’s Displayed
+			Details Tab
+
+			Identity
+
+			Name (e.g. “Deadlift • Barbell”)
+
+			Equipment list (comma-separated)
+
+			Focus area (bodyParts)
+
+			Focus muscles
+
+			Notes
+
+			Placeholder for image/video (“Example: to be added”)
+
+			Setup text (“To be added”)
+
+			Execution text (“To be added”)
+
+			Key tips (“To be added”)
+
+			Metrics Tab
+
+			Time-range selector: Week / Month / All-time
+
+			Summary numbers:
+
+			Volume Max (single-set max volume in that period)
+
+			1 ERM (estimated 1-rep max)
+
+			Rep-max table for reps 1…20:
+
+			If you actually performed a max for a given rep-count in that period → show the recorded max.
+
+			Otherwise calculate ERM for that rep-count and flag it as “(ERM)”.
+
+			Records Tab
+
+			Dual-series bar chart over the last N sessions (e.g. 10):
+
+			One bar per session’s 1 ERM
+
+			One bar per session’s volume max
+
+			Highlight highest bar in each series
+
+			Exercise history list:
+
+			For each past instance: session date, set breakdown (weight × reps), number of sets, 1 ERM.
+
+			Similar styling to the Session-completion pop-up but grouped by date instead of exercise.
+
+			Persistent “Done” button at the bottom closes the sheet.
+
+		C) Behavior & Layout
+			Modal bottom sheet, ~70% height by default, scrollable internally.
+
+			Swipe up to expand full height; button first expands then closes.
+
+			Three tabs at top with an indicator under the active tab.
+
+			Data is fetched on open, show small spinners in each panel until loaded.
+
+
+
+				### 1) DETAILS Tab
+
+				```
+				┌────────────────────────────────────────────────┐
+				│  ×   Exercise Detail                          │  ← close icon
+				│────────────────────────────────────────────────│
+				│  [Details]  Metrics   Records                 │  ← tab selector
+				│                                               
+				│  Deadlift · Barbell                            │  ← Exercise name
+				│  EQUIPMENT: Barbell, Lifting Straps            │
+				│  FOCUS AREA: Hamstrings, Glutes                │
+				│  FOCUS MUSCLES: Biceps Femoris, Gluteus Max    │
+				│                                               
+				│  EXAMPLE                                      │
+				│  ┌──────────────────────────────────────────┐ 
+				│  │  [ video/image placeholder ]            │ 
+				│  └──────────────────────────────────────────┘ 
+				│                                               
+				│  SET-UP                                       │
+				│  “Stand with feet hip-width, grip barbell…”  │
+				│                                               
+				│  EXECUTION                                    │
+				│  “Hinge at hips, keep back flat…”            │
+				│                                               
+				│  TIPS                                         │
+				│  “Keep chest up, drive through heels.”       │
+				│                                               
+				├────────────────────────────────────────────────│
+				│                      [ DONE ]                  │
+				└────────────────────────────────────────────────┘
+
+				### 2) METRICS Tab
+
+				```
+				┌────────────────────────────────────────────────┐
+				│  ×   Exercise Detail                          │
+				│────────────────────────────────────────────────│
+				│  Details   [Metrics]  Records                 │
+				│                                               
+				│  Timeframe:  (Week)  (Month)  [All-time]      │  ← segmented control
+				│                                               
+				│  Historical Maxes                             │
+				│  ┌──────────┬───────────────┬──────────────┐   │
+				│  │ Reps     │ 1RM (lbs)     │ VM (lbs)     │   │
+				│  ├──────────┼───────────────┼──────────────┤   │
+				│  │ 1        │  230          │  230         │   │
+				│  │ 2        │  215 (ERM)    │  430         │   │
+				│  │ 3        │  200          │  600         │   │
+				│  │ …        │   …           │   …          │   │
+				│  │ 20       │  50 (ERM)     │ 1000         │   │
+				│  └──────────┴───────────────┴──────────────┘   │
+				│                                               
+				├────────────────────────────────────────────────│
+				│                      [ DONE ]                  │
+				└────────────────────────────────────────────────┘
+
+
+				### 3) RECORDS Tab
+
+				```
+				┌────────────────────────────────────────────────┐
+				│  ×   Exercise Detail                          │
+				│────────────────────────────────────────────────│
+				│  Details   Metrics   [Records]                │
+				│                                               
+				│  Last 10 Sessions Chart                       │
+				│  ┌──────────────────────────────────────────┐  │
+				│  │ [▇ ▇]  [▇ ▇]  [▇▇]  …                     │  │
+				│  │  1ERM VM   1ERM VM   1ERM VM             │  │
+				│  └──────────────────────────────────────────┘  │
+				│                                               
+				│  History                                      │
+				│  Jan 22 2024                                 │
+				│   1. 120 lbs × 10    [VM]    ERM 160.0       │
+				│   2. 100 lbs × 8     [ERM]                   │
+				│                                               
+				│  Jan 15 2024                                 │
+				│   1. 115 lbs × 10   [RM]  [VM]  ERM 153.8    │
+				│   …                                         │
+				│                                               
+				├────────────────────────────────────────────────│
+				│                      [ DONE ]                  │
+				└────────────────────────────────────────────────┘
+
+				**Notes on behavior**
+
+				* The sheet starts half-height. Tapping “Done” first expands it; tapping again closes it.
+				* Badges: yellow “RM” badge for new rep-max, green “VM” badge for new volume-max.
+				* The chart shows up to 10 most-recent sessions; fewer if not available.
+
+
+		
+	
+			
+	3) History Detail Widget
+			- will show last 7 days and info about the last 7 days
+				- no. of workouts
+				- time spent training
+				- total volume
+				- sets per bodypart
+				- calculated sets per muscle 
+					- by ranking; 
+						rank 1 = 1 set equivalent
+						rank 1+x = 1-(x*0.05) set equivalent
+						1 - 1
+						2 - 0.95
+						3 - 0.9
+						4 - 0.85
+						5 - 0.8
+						6 - 0.75
+						7 - 0.7
+				- overall muscle group coverage (heatmap of parts trained)
+				- exercise performance trends
+		
