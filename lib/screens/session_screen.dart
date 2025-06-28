@@ -1,4 +1,4 @@
-// File: lib/widgets/session_screen.dart
+// File: lib/screens/session_screen.dart
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -6,6 +6,8 @@ import '../models/models.dart';
 import '../widgets/exercise_card.dart';
 import '../models/active_session.dart';
 import '../widgets/add_exercise_fab.dart';
+import '../widgets/session_complete_sheet.dart';
+
 
 
 
@@ -96,8 +98,16 @@ class SessionScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: ElevatedButton(
             onPressed: () async {
-              await context.read<ActiveSession>().finish();
-              if (context.mounted) Navigator.of(context).pop();
+             final sid = await context.read<ActiveSession>().finish();
+              if (!context.mounted || sid == null) return;
+              // show the completion sheet
+              await showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                builder: (_) => SessionCompleteSheet(sessionId: sid),
+              );
+              if (!context.mounted) return;
+              Navigator.of(context).pop();  // back to train page
             },
             child: const Text('Finish Workout'),
           ),

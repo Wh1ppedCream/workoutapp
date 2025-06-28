@@ -1,9 +1,11 @@
-//session_detail_screen.dart
+// file: lib/screens/session_detail_screen.dart
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../repositories/app_repository.dart';
 import '../models/models.dart';
 import '../widgets/exercise_card.dart';
+import '../widgets/session_complete_sheet.dart';
+
 
 /// Displays and allows editing of a saved workout session.
 class SessionDetailScreen extends StatefulWidget {
@@ -25,7 +27,16 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
   void initState() {
     super.initState();
     _dateFmt = DateFormat('yyyy-MM-dd – HH:mm');
-    _loadExercises();
+     _loadExercises().then((_) {
+     // Show completion sheet right after open
+     WidgetsBinding.instance.addPostFrameCallback((_) {
+       showModalBottomSheet(
+         context: context,
+         isScrollControlled: true,
+         builder: (_) => SessionCompleteSheet(sessionId: widget.session.id),
+       );
+     });
+  });
   }
 
   Future<void> _loadExercises() async {

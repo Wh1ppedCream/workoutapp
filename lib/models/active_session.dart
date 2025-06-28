@@ -1,6 +1,7 @@
 // File: lib/models/active_session.dart
 
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:env_test/models/models.dart';
 import 'package:env_test/widgets/exercise_card.dart';
@@ -56,9 +57,58 @@ class ActiveSession extends ChangeNotifier {
   }
 
   /// Finishes the session: writes to DB and clears in-memory state.
-  Future<void> finish() async {
-    if (_timer == null) return;
+  Future<int?> finish() async {
+    if (_timer == null) return null;
     _timer!.cancel();
+
+    // ── 0) FILTER OUT UNCHECKED ITEMS ─────────────────────────────────
+for (var i = 0; i < exercises.length; i++) {
+  final we   = exercises[i];
+  final type = cardTypes[i];
+
+  if (type == CardType.weight && we is WeightExercise) {
+    // Build the kept parents and their children
+    final keptParents = <ExerciseSet>[];
+    final keptChildrenMap = <int, List<ExerciseSet>>{};
+
+    for (var pIdx = 0; pIdx < we.sets.length; pIdx++) {
+      if (we.completedParents.contains(pIdx)) {
+        keptParents.add(we.sets[pIdx]);
+
+        final originalChildren = we.changeSets[pIdx] ?? [];
+        final keptChildren = <ExerciseSet>[];
+        for (var cIdx = 0; cIdx < originalChildren.length; cIdx++) {
+          if (we.completedChildren[pIdx]?.contains(cIdx) ?? false) {
+            keptChildren.add(originalChildren[cIdx]);
+          }
+        }
+        if (keptChildren.isNotEmpty) {
+          keptChildrenMap[pIdx] = keptChildren;
+        }
+      }
+    }
+
+    // Mutate the original lists/maps
+    we.sets
+      ..clear()
+      ..addAll(keptParents);
+    we.changeSets
+      ..clear()
+      ..addAll(keptChildrenMap);
+  } else if (type == CardType.stretch && we is StretchExercise) {
+    // TODO: FIX STRETCHES SO THEY SAVE PROPERLY
+  // Keep only the instances whose list index was checked
+  final kept = <Map<String, dynamic>>[];
+  for (var idx = 0; idx < we.stretchInstances.length; idx++) {
+    if (we.completedStretchIndices.contains(idx)) {
+      kept.add(we.stretchInstances[idx]);
+    }
+  }
+  we.stretchInstances
+    ..clear()
+    ..addAll(kept);
+}
+}
 
     // 1) Create session row
     final nowIso = DateTime.now().toIso8601String();
@@ -84,6 +134,36 @@ class ActiveSession extends ChangeNotifier {
           parentSets:      we.sets,
           childChangeSets: we.changeSets,
         );
+
+
+        // 2) compute session‐level stats
+  double sessionVm = 0;
+  for (var set in we.sets) {
+    final weight = set.weight;
+    final reps   = set.reps;
+
+    // track volume-max
+    sessionVm = max(sessionVm, weight * reps);
+
+    // compute ERM
+    final oneErm = weight * (1 + 0.0333 * reps);
+
+    // upsert a rep-max entry (actual rmValue)
+    await _repo.updateRepMax(
+      defId,
+      reps,
+      'all',
+      weight,    // rm_value
+      oneErm,    // one_erm
+      false,     // is_erm == actual record
+    );
+  }
+
+  // 3) upsert volume-max entry
+  await _repo.updateVolumeMax(defId, 'all', sessionVm);
+
+
+
       } else if (type == CardType.cardio && we is CardioExercise) {
         final exId = await _repo.addExerciseRow(
           sessionId:     sid,
@@ -118,5 +198,6 @@ class ActiveSession extends ChangeNotifier {
     cardTypes.clear();
     _elapsedSeconds = 0;
     notifyListeners();
+    return sid;
   }
 }

@@ -1,6 +1,6 @@
 // ignore_for_file: constant_identifier_names
 
-// models.dart
+// file: lib/models/models.dart
 
 // ─────────────────────────────────────────────────────────────────────────────
 // STRETCH DEFINITIONS
@@ -319,3 +319,16 @@ class Measurement {
 }
 
 
+/// A single rep-max record (for the Metrics tab).
+class RepMaxRow {
+  final int repCount;
+  final double rmValue;
+  final double oneErm;
+  final bool isErm;
+  RepMaxRow({
+    required this.repCount,
+    required this.rmValue,
+    required this.oneErm,
+    required this.isErm,
+  });
+}

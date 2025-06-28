@@ -381,6 +381,37 @@ static Future<void> migrateV6(Database db) async {
     ''');
   }
 
+// Add this method to your Schema class:
+
+  /// Applies database migrations for version 8.
+  /// 
+  /// - Creates tables to track rep-max and volume-max stats per exercise.
+  static Future<void> migrateV8(Database db) async {
+    // Rep-max table (1–20 reps, for week/month/all-time)
+    await db.execute('''
+      CREATE TABLE exercise_rep_max (
+        def_id     INTEGER NOT NULL,
+        rep_count  INTEGER NOT NULL,
+        timeframe  TEXT    NOT NULL,    -- 'week', 'month', 'all'
+        rm_value   REAL    NOT NULL,    -- true rep-max or ERM fallback
+        one_erm    REAL    NOT NULL,    -- theoretical 1-rep max
+        is_erm     INTEGER NOT NULL,    -- 1 if rm_value is an ERM
+        PRIMARY KEY(def_id, rep_count, timeframe),
+        FOREIGN KEY(def_id) REFERENCES exercise_definitions(id)
+      );
+    ''');
+
+    // Volume-max table
+    await db.execute('''
+      CREATE TABLE exercise_volume_max (
+        def_id     INTEGER NOT NULL,
+        timeframe  TEXT    NOT NULL,    -- 'week', 'month', 'all'
+        vm_value   REAL    NOT NULL,
+        PRIMARY KEY(def_id, timeframe),
+        FOREIGN KEY(def_id) REFERENCES exercise_definitions(id)
+      );
+    ''');
+  }
 
 
 }
