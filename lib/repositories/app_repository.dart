@@ -481,6 +481,11 @@ Future<WorkoutExercise?> fetchDetailedExercise(int id) {
     return DefinitionDao.searchExerciseDefinitions(db, query);
   }
 
+/// Fetches a full ExerciseDefinition by ID (including equipment/bodyParts/muscles).
+Future<ExerciseDefinition?> fetchDefinitionById(int defId) {
+  return _dbHelper.getExerciseDefinitionById(defId);
+}
+
 
   // ─── MEASUREMENTS & LOOKUPS ────────────────────────────
 
@@ -811,6 +816,29 @@ Future<double?> fetchVolumeMax(
   final row = await _dbHelper.getVolumeMax(defId, timeframe);
   if (row == null) return null;
   return (row['vm_value'] as num).toDouble();
+}
+
+
+/// Calculates the total weight-×-reps volume across the given session IDs.
+Future<double> calculateTotalVolumeForSessions(List<int> sessionIds) async {
+  double volume = 0;
+  for (final sid in sessionIds) {
+    // fetch all exercises in that session
+    final exRows = await fetchExercises(sid);
+    for (final ex in exRows) {
+      if (ex['type'] == 'weight') {
+        final exerciseId = ex['id'] as int;
+        // fetch all sets for weight exercise
+        final setRows = await fetchSets(exerciseId);
+        for (final s in setRows) {
+          final w = (s['weight'] as num).toDouble();
+          final r = (s['reps']   as num).toInt();
+          volume += w * r;
+        }
+      }
+    }
+  }
+  return volume;
 }
 
 

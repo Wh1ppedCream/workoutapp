@@ -405,6 +405,12 @@ Future<List<ExerciseDefinition>> getExerciseDefinitionsFiltered({
   );
 }
 
+/// Fetch a single detailed ExerciseDefinition by its ID.
+Future<ExerciseDefinition?> getExerciseDefinitionById(int defId) async {
+  final db = await database;
+  return DefinitionDao.getExerciseDefinitionById(db, defId);
+}
+
 
 //lookup_dao.dart
   

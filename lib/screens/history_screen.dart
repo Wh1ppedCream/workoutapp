@@ -7,6 +7,8 @@ import '../models/models.dart';
 import 'session_detail_screen.dart';
 import 'exercise_catalog_page.dart';
 import 'muscle_filter_page.dart';
+import '../widgets/history_summary_widget.dart';
+
 
 /// Displays the list of past workout sessions and navigation to filters.
 class HistoryScreen extends StatefulWidget {
@@ -61,6 +63,34 @@ class _HistoryScreenState extends State<HistoryScreen> {
               ],
             ),
           ),
+          
+          // ─── 7-day Summary ────────────────────────────────
+          // ⬇️ History summary panel
+          FutureBuilder<List<WorkoutSession>>(
+            future: _repo.fetchSessionsInRange(
+              DateTime.now().subtract(const Duration(days: 7)),
+              DateTime.now(),
+            ),
+            builder: (ctx, snap) {
+              if (snap.connectionState == ConnectionState.waiting) {
+                return const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+              if (snap.hasError) {
+                return const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Center(child: Text('Error loading summary')),
+                );
+              }
+              final recent = snap.data ?? [];
+              return HistorySummaryWidget(recentSessions: recent);
+            },
+          ),
+          
+          
+          
           // Session list
           Expanded(
             child: FutureBuilder<List<WorkoutSession>>(
