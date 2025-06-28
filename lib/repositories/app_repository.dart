@@ -757,5 +757,62 @@ Future<List<MeasurementDefinition>> fetchUsedClassMeasurementDefinitions() async
     return DefinitionDao.fuzzsearchExerciseDefinitions(db, term);
   }
 
+// ─── STATS ───────────────────────────────────────────────────────────────
+
+/// Record or update a rep-max stat.
+Future<void> updateRepMax(
+  int defId,
+  int repCount,
+  String timeframe,
+  double rmValue,
+  double oneErm,
+  bool isErm,
+) {
+  return _dbHelper.upsertRepMax(
+    defId,
+    repCount,
+    timeframe,
+    rmValue,
+    oneErm,
+    isErm,
+  );
+}
+
+/// Record or update a volume-max stat.
+Future<void> updateVolumeMax(
+  int defId,
+  String timeframe,
+  double vmValue,
+) {
+  return _dbHelper.upsertVolumeMax(defId, timeframe, vmValue);
+}
+
+// ─── STATS QUERIES ─────────────────────────────────────────────────────
+
+/// Fetches rep-max stats (rep_count, rm_value, one_erm, is_erm) for an exercise.
+Future<List<RepMaxRow>> fetchRepMaxes(
+  int defId,
+  String timeframe,
+) async {
+  final raw = await _dbHelper.getRepMaxes(defId, timeframe);
+  return raw.map((r) => RepMaxRow(
+    repCount: r['rep_count']    as int,
+    rmValue:  (r['rm_value']    as num).toDouble(),
+    oneErm:   (r['one_erm']     as num).toDouble(),
+    isErm:    (r['is_erm']      as int) == 1,
+  )).toList();
+}
+
+/// Fetches the volume-max value (or null) for an exercise.
+Future<double?> fetchVolumeMax(
+  int defId,
+  String timeframe,
+) async {
+  final row = await _dbHelper.getVolumeMax(defId, timeframe);
+  if (row == null) return null;
+  return (row['vm_value'] as num).toDouble();
+}
+
+
 
 }

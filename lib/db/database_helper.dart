@@ -14,6 +14,7 @@ import 'cardio_dao.dart';
 import 'stretch_dao.dart';
 import 'definition_dao.dart';
 import 'lookup_dao.dart';
+import 'stats_dao.dart';
 
 
 
@@ -36,7 +37,7 @@ class DatabaseHelper {
     final path = join(dbPath, 'fitness_tracker.db');
     return await openDatabase(
       path,
-      version: 7,  
+      version: 8,  
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
@@ -61,6 +62,11 @@ class DatabaseHelper {
           await Schema.migrateV7(db);
           await db.execute('CREATE INDEX IF NOT EXISTS idx_preset_profile ON preset_definitions(profile_id);');
         }
+
+    if (oldVersion < 8) {
+     await Schema.migrateV8(db);
+   }
+
   },
 );
   }
@@ -77,6 +83,8 @@ class DatabaseHelper {
   await Schema.migrateV6(db);
   // 5) Create gym_profiles tables (v7)
   await Schema.migrateV7(db);
+  // 6) Create tables to track rep-max and volume-max stats per exercise (v8)
+  await Schema.migrateV8(db);
 }
 
   // ────────────────────────────────────────────────────────────────────────────
@@ -506,6 +514,49 @@ Future<List<String>> getAllMuscleNames() async {
     });
   }
 
+// stats_dao.dart methods:
 
+/// Upsert a rep-max stat row.
+Future<void> upsertRepMax(
+  int defId,
+  int repCount,
+  String timeframe,
+  double rmValue,
+  double oneErm,
+  bool isErm,
+) async {
+  final db = await database;
+  return StatsDao.upsertRepMax(db, defId, repCount, timeframe, rmValue, oneErm, isErm);
+}
+
+/// Upsert a volume-max stat row.
+Future<void> upsertVolumeMax(
+  int defId,
+  String timeframe,
+  double vmValue,
+) async {
+  final db = await database;
+  return StatsDao.upsertVolumeMax(db, defId, timeframe, vmValue);
+}
+
+// —————————————— Rep-Max + Volume-Max Queries ——————————————
+
+/// Returns list of rep-max rows for [defId] & [timeframe].
+Future<List<Map<String, dynamic>>> getRepMaxes(
+  int defId,
+  String timeframe,
+) async {
+  final db = await database;
+  return StatsDao.getRepMaxes(db, defId, timeframe);
+}
+
+/// Returns the volume-max row (or null) for [defId] & [timeframe].
+Future<Map<String, dynamic>?> getVolumeMax(
+  int defId,
+  String timeframe,
+) async {
+  final db = await database;
+  return StatsDao.getVolumeMax(db, defId, timeframe);
+}
 
 }

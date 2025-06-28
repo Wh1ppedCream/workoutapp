@@ -411,6 +411,47 @@ planned features:
 	
 			
 	3) History Detail Widget
+		3A. when and where it shows up:
+			- within the history page, under the 'Exercises' and 'Muscle' buttons, but over the entries for past sessions
+		3B. metrics for displaying:
+			- shows info relating to workouts within the last 7 days:
+				- number of workouts
+				- overall time spent (combined time of sessions in last 7 days)
+				- total volume of workouts in last 7 days
+				- Weekly training goal%
+					- based off:
+						- calculated sets done per bodypart
+						- calculated sets done per muscle
+				- body heatmap for parts trained
+					- based off:
+						- calculated sets done per bodypart
+						- calculated sets done per muscle
+						
+		Metrics to Compute
+# Workouts
+Count of distinct sessions in the past 7 days.
+
+Total Time
+Sum of all session durations  in past 7 days (e.g. “5 h 30 m”).
+
+Total Volume
+Σ over all sets: (weight × reps), formatted (e.g. “48 k lbs”).
+
+Weekly Goal %
+Your progress toward whatever weekly target you set—e.g.,
+
+Option A: % of target # of workouts (e.g. 4/5 sessions → 80 %)
+
+Option B: % of target total volume (e.g. 50 k / 60 k → 83 %)
+
+Option C: Balanced % across bodyparts/muscles (see below)
+
+Body-Heatmap
+A simplified muscle silhouette (front/back) with each region shaded proportionally to the number of sets you hit in that area.
+
+You can key “High ↔ Low” with a small legend.
+		
+		
 			- will show last 7 days and info about the last 7 days
 				- no. of workouts
 				- time spent training
@@ -429,4 +470,5 @@ planned features:
 						7 - 0.7
 				- overall muscle group coverage (heatmap of parts trained)
 				- exercise performance trends
-		
+	
+	
