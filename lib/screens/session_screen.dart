@@ -7,6 +7,9 @@ import '../widgets/exercise_card.dart';
 import '../models/active_session.dart';
 import '../widgets/add_exercise_fab.dart';
 import '../widgets/session_complete_sheet.dart';
+import '../widgets/exercise_detail_sheet.dart';
+import '../repositories/app_repository.dart';
+
 
 
 
@@ -55,6 +58,20 @@ class SessionScreen extends StatelessWidget {
                 return ExerciseCard(
                   exercise: ex,
                   cardType: type,
+                   onDetails: type == CardType.weight
+     ? () async {
+         final repo = AppRepository();
+         final defId = await repo.findOrCreateExerciseDefinition(ex.name, ex.equipment);
+         final def   = await repo.fetchDefinitionById(defId);
+         if (def != null && context.mounted) {
+           showModalBottomSheet(
+             context: context,
+             isScrollControlled: true,
+             builder: (_) => ExerciseDetailSheet(definition: def, defId: defId),
+           );
+         }
+       }
+     : null,
                   initialCompletedParents: type == CardType.weight ? (ex as WeightExercise).completedParents : null,
                   initialCompletedChildren: type == CardType.weight ? (ex as WeightExercise).completedChildren : null,
                   onDeleteExercise: () => context.read<ActiveSession>().removeExercise(i),

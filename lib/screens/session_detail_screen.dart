@@ -5,6 +5,8 @@ import '../repositories/app_repository.dart';
 import '../models/models.dart';
 import '../widgets/exercise_card.dart';
 import '../widgets/session_complete_sheet.dart';
+import '../widgets/exercise_detail_sheet.dart';
+
 
 
 /// Displays and allows editing of a saved workout session.
@@ -303,6 +305,22 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
                     exercise: we,
                     cardType: cardType,
                     readOnlyMode: !_isEditing,
+                     onDetails: !_isEditing && cardType == CardType.weight
+     ? () async {
+         final repo = AppRepository();
+         final defId = await repo.findOrCreateExerciseDefinition(we.name, we.equipment);
+         final def   = await repo.fetchDefinitionById(defId);
+         if (def != null && context.mounted) {
+           showModalBottomSheet(
+             context: context,
+             isScrollControlled: true,
+             builder: (_) => ExerciseDetailSheet(definition: def, defId: defId),
+           );
+         }
+       }
+     : null,
+
+
                     initialCompletedParents: we is WeightExercise ? we.completedParents : null,
                     initialCompletedChildren: we is WeightExercise ? we.completedChildren : null,
                     onDeleteExercise: _isEditing

@@ -13,6 +13,7 @@ class WeightCard extends StatefulWidget {
   final VoidCallback?                onSetAdded;
   final VoidCallback?                onSetDeleted;
   final VoidCallback?                onValueChanged;
+  final VoidCallback? onDetails;
 
   const WeightCard({
     super.key,
@@ -24,6 +25,7 @@ class WeightCard extends StatefulWidget {
     this.onSetAdded,
     this.onSetDeleted,
     this.onValueChanged,
+    this.onDetails,
   });
 
   @override
@@ -147,6 +149,11 @@ class _WeightCardState extends State<WeightCard> {
                     ],
                   ),
                 ),
+                IconButton(
+      icon: const Icon(Icons.info_outline),
+      tooltip: 'Details',
+      onPressed: widget.onDetails,
+    ),
                 PopupMenuButton<String>(
                   enabled: !readOnly,
                   icon: const Icon(Icons.more_vert),
@@ -173,6 +180,7 @@ class _WeightCardState extends State<WeightCard> {
                     PopupMenuItem(value: 'changeSet', child: Text('Make ChangeSet')),
                   ],
                 ),
+
               ],
             ),
             const Divider(height: 16),

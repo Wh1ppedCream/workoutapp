@@ -18,6 +18,7 @@ class ExerciseCard extends StatelessWidget {
   final VoidCallback?             onSetAdded;
   final VoidCallback?             onSetDeleted;
   final VoidCallback?             onValueChanged;
+  final VoidCallback?             onDetails;
 
   const ExerciseCard({
     super.key,
@@ -30,6 +31,7 @@ class ExerciseCard extends StatelessWidget {
     this.onSetAdded,
     this.onSetDeleted,
     this.onValueChanged,
+    this.onDetails,
   });
 
   @override
@@ -45,6 +47,7 @@ class ExerciseCard extends StatelessWidget {
           onSetAdded: onSetAdded,
           onSetDeleted: onSetDeleted,
           onValueChanged: onValueChanged,
+          onDetails: onDetails,
         );
       case CardType.cardio:
         return CardioCard(

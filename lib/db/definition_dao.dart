@@ -443,4 +443,72 @@ static Future<List<ExerciseDefinition>> searchExerciseDefinitions(
     }).toList();
   }
 
+
+/// Fetches a single ExerciseDefinition with all joins populated.
+static Future<ExerciseDefinition?> getExerciseDefinitionById(
+  Database db,
+  int defId,
+) async {
+  final rows = await db.query(
+    'exercise_definitions',
+    where: 'id = ?',
+    whereArgs: [defId],
+    limit: 1,
+  );
+  if (rows.isEmpty) return null;
+  final row = rows.first;
+  final name        = row['name']            as String;
+  final equipmentId = row['equipment_id']    as int?;
+  final rating      = (row['rating'] as num?)?.toInt() ?? 0;
+
+  // equipmentList
+  final equipRows = await db.rawQuery('''
+    SELECT e.id, e.name
+      FROM equipment e
+      JOIN exercise_equipment ee ON ee.equipment_id = e.id
+     WHERE ee.exercise_id = ?
+     ORDER BY e.name
+  ''', [defId]);
+  final equipmentList = equipRows
+      .map((e) => Equipment(e['id'] as int, e['name'] as String))
+      .toList();
+
+  // bodyParts
+  final bpRows = await db.rawQuery('''
+    SELECT b.id, b.name
+      FROM bodypart b
+      JOIN exercise_bodypart eb ON eb.bodypart_id = b.id
+     WHERE eb.exercise_id = ?
+     ORDER BY b.name
+  ''', [defId]);
+  final bodyParts = bpRows
+      .map((b) => BodyPart(b['id'] as int, b['name'] as String))
+      .toList();
+
+  // muscles
+  final mRows = await db.rawQuery('''
+    SELECT m.id AS muscle_id, m.name AS muscle_name, em.rank
+      FROM muscles m
+      JOIN exercise_muscle em ON em.muscle_id = m.id
+     WHERE em.exercise_id = ?
+     ORDER BY em.rank
+  ''', [defId]);
+  final muscles = mRows.map((m) {
+    return RankedMuscle(
+      muscle: Muscle(id: m['muscle_id'] as int, name: m['muscle_name'] as String),
+      rank:  (m['rank'] as num).toInt(),
+    );
+  }).toList();
+
+  return ExerciseDefinition(
+    id:            defId,
+    name:          name,
+    equipmentId:   equipmentId,
+    rating:        rating,
+    equipmentList: equipmentList,
+    bodyParts:     bodyParts,
+    muscles:       muscles,
+  );
+}
+
 }

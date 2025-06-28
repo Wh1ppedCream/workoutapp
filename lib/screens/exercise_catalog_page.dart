@@ -7,6 +7,8 @@ import '../models/selected_profile.dart';
 import '../repositories/app_repository.dart';
 import '../models/gym_models.dart';
 import '../repositories/profile_repository.dart';
+import '../widgets/exercise_detail_sheet.dart';
+
 
 /// Catalog of exercise definitions with workspace-profile and advanced filters.
 class ExerciseCatalogPage extends StatefulWidget {
@@ -271,6 +273,14 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                             final def = _displayedDefs[i];
                             return ListTile(
                               title: Text(def.name),
+                              trailing: IconButton(
+   icon: const Icon(Icons.info_outline),
+   onPressed: () => showModalBottomSheet(
+     context: context,
+     isScrollControlled: true,
+     builder: (_) => ExerciseDetailSheet(definition: def, defId: def.id),
+   ),
+ ),
                               //the following two lines show equipment names under exercise name if they are uncommented.
                               //subtitle: Text(def.equipmentList.map((e) => e.name).join(', ')),
                               //selected: widget.onExercisePicked != null && _selectedDef == def,
