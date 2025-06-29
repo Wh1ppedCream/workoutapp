@@ -1,71 +1,69 @@
-DONE:
-- call ammu, get access code for reporting from her, check up on her
-
-TODO:
-
-- workout
-- fix all important note files
-- eat lunch
-- shower and wash clothes
-- eat dinner
-- sorting house
-- sorting files and documents
-	- online
-	- irl
-- start using dayplanner
-- socialize/catch up with people
-- arrange bag
-- put planner stuff into rocketbook
-5. pay off my bank
-6. trasnfer faculty app
-7. make weights (concrete: https://www.youtube.com/watch?v=Zgsl9to4JR4) 
-2. ammu report
-3. enter ammu documents
-
-
 FITNESS APP PROJECT: 
 	DONE:
-		1. finish adding in bulk exercises (mark with 23% so i'll remember to correct later)
-			- info format
-			- check and correct
-			- .json format
-		4. Editing mode in session detail screen
-		5. seperate large files into smaller files
-		6. refactor old code for better and easier code later
+		8. Gym profiles (base)
+		9. exericse presets
+		
+	UPCOMING:
+		
+		- redoing exercise info
+		- muscles connected to bodyParts
+			- maybe editable table
+			- might want page
+		- bodypart ranking
+			- maybe editable table
+			- might want page
+		- muscle ranking
+			- maybe editable table
+			- might want page
+		- muscle ranking under bodyparts
+			- maybe editable table
+			- might want page
+		- % muscle hit per exercise
+			- maybe editable table
+		- % bodypart hit per exercise (maybe i won't need this because im now connecting bodyparts to muscles)
+			- maybe editable table
+		- sets per bodypart
+			- maybe editable table
+		- sets per muscle
+			- maybe editable table
+		- optimal set boundaries per bodypart
+			- maybe editable table
+			- might want page
+		- optimal set boundaries per muscle
+			- maybe editable table
+			- might want page
+			
+			
+		- refactor old code for better and easier code later
 			- (done) fixing directory structure
 			- (done) move all instances of screen or widget code directly altering database to controlled repository file
 			- (done) all non database managing files no longer have direct access to the database
 			- (done) added in more database methods for future use
 			- (done) Full documentation for all database files (except database_helper)
-		
-	UPCOMING:
-		
-		8. Gym profiles (base)
-		9. exericse presets
-		10. gym profiles (fully built out)
-		11. expanded history details
+		- gym profiles (fully built out)
+			- fix stretches and cardio
+				- stretches not showing up
+				- cardio equipment selectable
+		- expanded history details widget
 			- amount work on each bodypart
 			- amount work on each muscle
-			- total time in gym
-			- total volume
-		12. nutrition
+			- finish body heatmap on history widget
+		- nutrition
 			- fridge
 			- food item barcode scanning
 			- recipes
 			- filter recipes by fridge items
-		7. .txt files for each files overview
+		- .txt files for each files overview
 			- details of each file's contents, use and goal
 			- current code for file section
 			- past code which might be useful section
-		3. compile for ios
-		- landscape mode designing
-		- fixing for web
+		- compile for ios
+			- landscape mode designing
+			- fixing for web
 
-	##
-	- methods to add (that i can think of)
-		- obtaining all instances of an exercise being done for comparison
-		- 
 		
+		
+
 	- exercise ranking to muscle usage% conversion
 		1. 30%	= 30
 		2. 25%	= 55
@@ -75,45 +73,7 @@ FITNESS APP PROJECT:
 		6. 5%	= 95
 		7. 5%	= 100
 
-	GYM PROFILES:
-		General info: 
-			- will be used to represent the spaces you are working out at
-			- will contain the list of available equipment in the space you are working out at, so the list of available exercises will be relegated to items using those pieces of equipment
-			- each profile will have its own associated presets, so when a profile is selected, only the presets associated with that profile will show up on the train page.
-			
-			
-		Train Page:
-			- currently has text for items 'General' 'Commercial Gym' and 'Home Gym' in right side Drawer 
-			- in drawer, text for items will be changed to selectable boxes (which can be added or removed by methods mentioned later) called 'General' (general is default selected profile) 'Placeholder 1' 'Placeholder 2'. lets call these placeholder boxes for now
-			- 3 dot menu on right of each box
-				- pressing opens drop down menu
-					- has options:
-						1) edit
-							- will open up profile screen
-						2) delete
-							- will delete profile info
-			- has a + button on bottom of page, when pressed will open up gym profile screen
-			
-		Gym Profile Screen:
-			- will be opened when you are adding or editing a profile
-			- will let you name the profile
-			- will let you select all the equipment the space you will be working out at has. 
-			- will let you save the information
-		
-		
-	
-	SESSION PRESETS:
-		- preset buttons are selectable and have a 3 vertical dot menu button on right hand side
-			- selecting preset will open preset screen corresponding to the preset name
-			- selecting menu button on preset will 
-			- 
-		
-	
-	
-	
-	
-	
-	
+
 	
 IDEAS: 
 

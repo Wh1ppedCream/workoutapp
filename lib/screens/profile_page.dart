@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'measured_items_page.dart';
 import 'app_settings_page.dart';
+import 'analytics_setting_screen.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -30,6 +31,15 @@ class ProfilePage extends StatelessWidget {
           MaterialPageRoute(builder: (_) => const AppSettingsPage()),
         ),
       ),
+      
+      ListTile(
+        leading: const Icon(Icons.settings),
+        title: const Text('Workout Settings'),
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const AnalyticsSettingsScreen()),
+        ),
+      ),
+
 
     ],
   ),

@@ -10,6 +10,7 @@ import '../db/definition_dao.dart';
 import '../db/lookup_dao.dart';
 import '../models/models.dart';
 import 'profile_repository.dart';
+import '../db/analytics_dao.dart';
 
 /// Central repository providing a unified interface for all
 
@@ -841,6 +842,132 @@ Future<double> calculateTotalVolumeForSessions(List<int> sessionIds) async {
   return volume;
 }
 
+//analytics_dao.dart
+// — muscle/bodypart links —
+Future<void> linkMuscleToBodyPart(int muscleId, int bodypartId) async {
+  final db = await _dbHelper.database;
+  return AnalyticsDao.insertMuscleBodyPart(db, muscleId, bodypartId);
+}
+Future<int> unlinkMuscleFromBodyPart(int muscleId, int bodypartId) async {
+  final db = await _dbHelper.database;
+  return AnalyticsDao.deleteMuscleBodyPart(db, muscleId, bodypartId);
+}
+Future<List<MuscleBodyPart>> fetchBodyPartsForMuscle(int muscleId) async {
+  final db = await _dbHelper.database;
+  return AnalyticsDao.getBodyPartsForMuscle(db, muscleId);
+}
+Future<List<MuscleBodyPart>> fetchMusclesForBodyPart(int bodypartId) async {
+  final db = await _dbHelper.database;
+  return AnalyticsDao.getMusclesForBodyPart(db, bodypartId);
+}
 
+// — rankings —
+Future<void> setBodyPartRank(int bodypartId, int rank) async {
+  final db = await _dbHelper.database;
+  return AnalyticsDao.setBodyPartRanking(db, bodypartId, rank);
+}
+
+Future<BodyPartRanking?> getBodyPartRank(int bodypartId) async {
+  final db = await _dbHelper.database;
+  return AnalyticsDao.getBodyPartRanking(db, bodypartId);
+}
+
+Future<List<BodyPartRanking>> getAllBodyPartRanks() async {
+  final db = await _dbHelper.database;
+  return AnalyticsDao.getAllBodyPartRankings(db);
+}
+
+Future<int> deleteBodyPartRank(int bodypartId) async {
+  final db = await _dbHelper.database;
+  return AnalyticsDao.deleteBodyPartRanking(db, bodypartId);
+}
+
+// ... similarly for , , 
+
+Future<void> setMuscleRank(int muscleId, int rank) async {
+  final db = await _dbHelper.database;
+  return AnalyticsDao.setMuscleRanking(db, muscleId, rank);
+}
+
+Future<MuscleRanking?> getMuscleRank(int muscleId) async {
+  final db = await _dbHelper.database;
+  return AnalyticsDao.getMuscleRanking(db, muscleId);
+}
+
+Future<List<MuscleRanking>> getAllMuscleRanks() async {
+  final db = await _dbHelper.database;
+  return AnalyticsDao.getAllMuscleRankings(db);
+}
+
+Future<int> deleteMuscleRank(int muscleId) async {
+  final db = await _dbHelper.database;
+  return AnalyticsDao.deleteMuscleRanking(db, muscleId);
+}
+
+// ... and so on for muscle ranks
+
+// — exercise ↔ muscle % hit —
+Future<void> setExerciseMuscleHitPercent(int defId, int muscleId, double pct) async {
+  final db = await _dbHelper.database;
+  return AnalyticsDao.setExerciseMusclePercent(db, defId, muscleId, pct);
+}
+
+Future<ExerciseMusclePercent?> fetchExerciseMusclePercent(int defId, int muscleId) async {
+  final db = await _dbHelper.database;
+  return AnalyticsDao.getExerciseMusclePercent(db, defId, muscleId);
+}
+
+Future<int> removeExerciseMusclePercent(int defId, int muscleId) async {
+  final db = await _dbHelper.database;
+  return AnalyticsDao.deleteExerciseMusclePercent(db, defId, muscleId);
+}
+
+Future<List<ExerciseMusclePercent>> fetchPercentsForExercise(int defId) async {
+  final db = await _dbHelper.database;
+  return AnalyticsDao.getPercentsForExercise(db, defId);
+}
+// ... etc.
+
+// — volume boundaries —
+Future<void> setMuscleVolumeBounds(int muscleId, VolumeBoundaries b) async {
+  final db = await _dbHelper.database;
+  return AnalyticsDao.setMuscleVolumeBoundaries(db, muscleId, b);
+}
+Future<VolumeBoundaries?> fetchMuscleVolumeBounds(int muscleId) async {
+  final db = await _dbHelper.database;
+  return AnalyticsDao.getMuscleVolumeBoundaries(db, muscleId);
+}
+
+Future<List<Map<String, dynamic>>> fetchAllMuscleVolumeBounds() async {
+  final db = await _dbHelper.database;
+  return AnalyticsDao.getAllMuscleVolumeBoundaries(db);
+}
+
+Future<int> removeMuscleVolumeBounds(int muscleId) async {
+  final db = await _dbHelper.database;
+  return AnalyticsDao.deleteMuscleVolumeBoundaries(db, muscleId);
+}
+
+// ─── BODYPART VOLUME BOUNDARIES ───────────────────────────
+
+Future<void> setBodyPartVolumeBounds(int bodyPartId, VolumeBoundaries bounds) async {
+  final db = await _dbHelper.database;
+  return AnalyticsDao.setBodyPartVolumeBoundaries(db, bodyPartId, bounds);
+}
+
+Future<VolumeBoundaries?> fetchBodyPartVolumeBounds(int bodyPartId) async {
+  final db = await _dbHelper.database;
+  return AnalyticsDao.getBodyPartVolumeBoundaries(db, bodyPartId);
+}
+
+Future<List<Map<String, dynamic>>> fetchAllBodyPartVolumeBounds() async {
+  final db = await _dbHelper.database;
+  return AnalyticsDao.getAllBodyPartVolumeBoundaries(db);
+}
+
+Future<int> removeBodyPartVolumeBounds(int bodyPartId) async {
+  final db = await _dbHelper.database;
+  return AnalyticsDao.deleteBodyPartVolumeBoundaries(db, bodyPartId);
+}
 
 }

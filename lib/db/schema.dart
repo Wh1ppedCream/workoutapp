@@ -414,4 +414,73 @@ static Future<void> migrateV6(Database db) async {
   }
 
 
+  static Future<void> migrateV9(Database db) async {
+  // Muscle ↔ BodyPart connections
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS muscle_bodypart (
+      muscle_id    INTEGER NOT NULL,
+      bodypart_id  INTEGER NOT NULL,
+      PRIMARY KEY(muscle_id, bodypart_id),
+      FOREIGN KEY(muscle_id)   REFERENCES muscles(id)    ON DELETE CASCADE,
+      FOREIGN KEY(bodypart_id) REFERENCES bodypart(id)   ON DELETE CASCADE
+    );
+  ''');
+
+  // BodyPart ranking
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS bodypart_ranking (
+      bodypart_id INTEGER PRIMARY KEY,
+      rank        INTEGER NOT NULL,
+      FOREIGN KEY(bodypart_id) REFERENCES bodypart(id) ON DELETE CASCADE
+    );
+  ''');
+
+  // Muscle ranking
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS muscle_ranking (
+      muscle_id INTEGER PRIMARY KEY,
+      rank      INTEGER NOT NULL,
+      FOREIGN KEY(muscle_id) REFERENCES muscles(id) ON DELETE CASCADE
+    );
+  ''');
+
+  // Per-exercise muscle percent override
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS exercise_muscle_percent (
+      exercise_def_id INTEGER NOT NULL,
+      muscle_id       INTEGER NOT NULL,
+      percent         REAL    NOT NULL,
+      PRIMARY KEY(exercise_def_id, muscle_id),
+      FOREIGN KEY(exercise_def_id) REFERENCES exercise_definitions(id) ON DELETE CASCADE,
+      FOREIGN KEY(muscle_id)       REFERENCES muscles(id)             ON DELETE CASCADE
+    );
+  ''');
+
+  // Muscle volume boundaries
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS muscle_volume_boundaries (
+      muscle_id             INTEGER PRIMARY KEY,
+      maintenance_volume    REAL    NOT NULL,
+      min_effective_volume  REAL    NOT NULL,
+      max_adaptive_volume   REAL    NOT NULL,
+      max_recoverable_volume REAL   NOT NULL,
+      FOREIGN KEY(muscle_id) REFERENCES muscles(id) ON DELETE CASCADE
+    );
+  ''');
+
+  // BodyPart volume boundaries
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS bodypart_volume_boundaries (
+      bodypart_id            INTEGER PRIMARY KEY,
+      maintenance_volume     REAL    NOT NULL,
+      min_effective_volume   REAL    NOT NULL,
+      max_adaptive_volume    REAL    NOT NULL,
+      max_recoverable_volume REAL    NOT NULL,
+      FOREIGN KEY(bodypart_id) REFERENCES bodypart(id) ON DELETE CASCADE
+    );
+  ''');
+}
+
+
+
 }

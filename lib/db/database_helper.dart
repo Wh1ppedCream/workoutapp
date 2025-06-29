@@ -37,7 +37,7 @@ class DatabaseHelper {
     final path = join(dbPath, 'fitness_tracker.db');
     return await openDatabase(
       path,
-      version: 8,  
+      version: 9,  
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
@@ -67,6 +67,10 @@ class DatabaseHelper {
      await Schema.migrateV8(db);
    }
 
+   if (oldVersion < 9) {
+  await Schema.migrateV9(db);
+}
+
   },
 );
   }
@@ -85,6 +89,8 @@ class DatabaseHelper {
   await Schema.migrateV7(db);
   // 6) Create tables to track rep-max and volume-max stats per exercise (v8)
   await Schema.migrateV8(db);
+  // 7) Create tables for matching bodyparts ↔ muscles (v9), ranking bodyparts, ranking muscles, muscle and bodypart boundaries, per exercise muscle%
+  await Schema.migrateV9(db);
 }
 
   // ────────────────────────────────────────────────────────────────────────────
