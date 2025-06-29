@@ -33,7 +33,7 @@
     "name": "Arnold Press",
     "rating": 60,
     "equipment": ["Dumbbell"],
-    "bodyparts": ["Shoulders", "Arms"],
+    "bodyparts": ["Shoulders", "Triceps"],
     "muscles": [
       {"name":"Anterior Deltoid","rank":1},
       {"name":"Lateral Deltoid","rank":2},
@@ -48,7 +48,7 @@
     "name": "Back Extension",
     "rating": 75,
     "equipment": ["Hyperextension Bench/Machine"],
-    "bodyparts": ["Back", "Glutes", "Hamstrings"],
+    "bodyparts": ["Lower Back", "Hips", "Hamstrings"],
     "muscles": [
       {"name":"Erector Spinae","rank":1},
       {"name":"Gluteus Maximus","rank":2},
@@ -78,7 +78,7 @@
     "name": "Barbell Squat",
     "rating": 90,
     "equipment": ["Barbell", "Weight Plates"],
-    "bodyparts": ["Quads", "Glutes"],
+    "bodyparts": ["Quads", "Hips"],
     "muscles": [
       {"name":"Vastus Lateralis","rank":1},
       {"name":"Vastus Medialis","rank":2},
@@ -93,7 +93,7 @@
   "name": "Bench Press - Barbell",
   "rating": 90,
   "equipment": ["Barbell", "Weight plates", "Adjustable Bench"],
-  "bodyparts": ["Chest", "Shoulders", "Arms"],
+  "bodyparts": ["Chest", "Shoulders", "Triceps"],
   "muscles": [
     {"name": "Pectoralis Major", "rank": 1},
     {"name": "Anterior Deltoid", "rank": 2},
@@ -108,7 +108,7 @@
   "name": "Bench Press - Barbell (Close Grip)",
   "rating": 85,
   "equipment": ["Barbell", "Weight plates", "Adjustable bench"],
-  "bodyparts": ["Arms", "Chest", "Shoulder"],
+  "bodyparts": ["Triceps", "Chest", "Shoulder"],
   "muscles": [
     {"name": "Triceps Brachii", "rank": 1},
     {"name": "Pectoralis Major", "rank": 2},
@@ -124,7 +124,7 @@
   "name": "Bench Press - Dumbbells",
   "rating": 80,
   "equipment": ["Dumbbells", "Adjustable Bench"],
-  "bodyparts": ["Chest", "Shoulder", "Arms"],
+  "bodyparts": ["Chest", "Shoulder", "Triceps"],
   "muscles": [
     {"name": "Pectoralis Major", "rank": 1},
     {"name": "Anterior Deltoid", "rank": 2},
@@ -139,7 +139,7 @@
   "name": "Bench Press - Smith Machine",
   "rating": 90,
   "equipment": ["Smith machine", "Adjustable bench"],
-  "bodyparts": ["Chest", "Shoulder", "Arms"],
+  "bodyparts": ["Chest", "Shoulder", "Triceps"],
   "muscles": [
     {"name": "Pectoralis Major", "rank": 1},
     {"name": "Anterior Deltoid", "rank": 2},
@@ -154,7 +154,7 @@
   "name": "Bench Press - Cable Machine",
   "rating": 75,
   "equipment": ["Cable machine", "Adjustable bench", "Cable Handle Attachment"],
-  "bodyparts": ["Chest", "Shoulder", "Arms"],
+  "bodyparts": ["Chest", "Shoulder", "Triceps"],
   "muscles": [
     {"name": "Pectoralis Major", "rank": 1},
     {"name": "Anterior Deltoid", "rank": 2},
@@ -169,7 +169,7 @@
   "name": "Bicep Curl - Barbell",
   "rating": 75,
   "equipment": ["Barbell"],
-  "bodyparts": ["Arms", "Forearms"],
+  "bodyparts": ["Biceps", "Forearms"],
   "muscles": [
     {"name": "Biceps Brachii", "rank": 1},
     {"name": "Brachialis", "rank": 2},
@@ -185,7 +185,7 @@
   "name": "Bicep Curl - Bodyweight",
   "rating": 60,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Arms", "Forearms"],
+  "bodyparts": ["Biceps", "Forearms"],
   "muscles": [
     {"name": "Biceps Brachii", "rank": 1},
     {"name": "Brachialis", "rank": 2},
@@ -201,7 +201,7 @@
   "name": "Bicep Curl - Cable Machine",
   "rating": 90,
   "equipment": ["Barbell"],
-  "bodyparts": ["Arms", "Forearms"],
+  "bodyparts": ["Biceps", "Forearms"],
   "muscles": [
     {"name": "Biceps Brachii", "rank": 1},
     {"name": "Brachialis", "rank": 2},
@@ -217,7 +217,7 @@
   "name": "Bicep Curl - Dumbbell",
   "rating": 85,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Arms", "Forearms"],
+  "bodyparts": ["Biceps", "Forearms"],
   "muscles": [
     {"name": "Biceps Brachii", "rank": 1},
     {"name": "Brachialis", "rank": 2},
@@ -233,7 +233,7 @@
   "name": "Bicep Curl - Resistance Band",
   "rating": 60,
   "equipment": ["Barbell"],
-  "bodyparts": ["Arms", "Forearms"],
+  "bodyparts": ["Biceps", "Forearms"],
   "muscles": [
     {"name": "Biceps Brachii", "rank": 1},
     {"name": "Brachialis", "rank": 2},
@@ -249,7 +249,7 @@
   "name": "Bicep Curl - Smith Machine",
   "rating": 80,
   "equipment": ["Barbell"],
-  "bodyparts": ["Arms", "Forearms"],
+  "bodyparts": ["Biceps", "Forearms"],
   "muscles": [
     {"name": "Biceps Brachii", "rank": 1},
     {"name": "Brachialis", "rank": 2},
@@ -265,7 +265,7 @@
   "name": "Bicycle Crunch - Straight Knees",
   "rating": 65,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Abs", "Hip Flexors"],
+  "bodyparts": ["Core", "Hips"],
   "muscles": [
     {"name": "Obliques", "rank": 1},
     {"name": "Rectus Abdominis", "rank": 2},
@@ -280,7 +280,7 @@
   "name": "Bicycle Crunch - Bent Knees",
   "rating": 50,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Abs", "Hip Flexors"],
+  "bodyparts": ["Core", "Hips"],
   "muscles": [
     {"name": "Obliques", "rank": 1},
     {"name": "Rectus Abdominis", "rank": 2},
@@ -295,7 +295,7 @@
   "name": "Bulgarian Split Squat",
   "rating": 65,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Quads", "Glutes", "Hip Abductors"],
+  "bodyparts": ["Quads", "Hips"],
   "muscles": [
     {"name": "Rectus Femoris", "rank": 1},
     {"name": "Gluteus Maximus", "rank": 2},
@@ -310,7 +310,7 @@
   "name": "Bulgarian Split Squat - Barbell",
   "rating": 23,
   "equipment": ["Barbell", "Weight Plates", "Squat Rack"],
-  "bodyparts": ["Quads", "Glutes"],
+  "bodyparts": ["Quads", "Hips"],
   "muscles": [
     { "name": "Rectus Femoris", "rank": 1 },
     { "name": "Gluteus Maximus", "rank": 2 },
@@ -404,7 +404,7 @@
   "name": "Chest Dip",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Chest", "Arms", "Shoulders"],
+  "bodyparts": ["Chest", "Triceps", "Shoulders"],
   "muscles": [
     { "name": "Pectoralis Major", "rank": 1 },
     { "name": "Triceps Brachii", "rank": 2 },
@@ -419,7 +419,7 @@
   "name": "Chest Dip - Dip Bars",
   "rating": 23,
   "equipment": ["Dip Bars"],
-  "bodyparts": ["Chest", "Arms", "Shoulders"],
+  "bodyparts": ["Chest", "Triceps", "Shoulders"],
   "muscles": [
     { "name": "Pectoralis Major", "rank": 1 },
     { "name": "Triceps Brachii", "rank": 2 },
@@ -435,7 +435,7 @@
   "name": "Chest Dip - Assisted Dip/Pull-Up Machine",
   "rating": 23,
   "equipment": ["Assisted Dip/Pull-Up Machine"],
-  "bodyparts": ["Chest", "Arms", "Shoulders"],
+  "bodyparts": ["Chest", "Triceps", "Shoulders"],
   "muscles": [
     { "name": "Pectoralis Major", "rank": 1 },
     { "name": "Triceps Brachii", "rank": 2 },
@@ -483,7 +483,7 @@
   "name": "Chest Press - Chest Press Machine",
   "rating": 23,
   "equipment": ["Chest Press Machine"],
-  "bodyparts": ["Chest", "Arms", "Shoulders"],
+  "bodyparts": ["Chest", "Triceps", "Shoulders"],
   "muscles": [
     { "name": "Pectoralis Major", "rank": 1 },
     { "name": "Anterior Deltoid", "rank": 2 },
@@ -499,7 +499,7 @@
   "name": "Chin Up",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Back", "Shoulders"],
+  "bodyparts": ["Upper Back", "Shoulders"],
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Biceps Brachii", "rank": 2 },
@@ -515,7 +515,7 @@
   "name": "Chin Up - Assisted Dip/Pull-Up Machine",
   "rating": 23,
   "equipment": ["Assisted Dip/Pull-Up Machine"],
-  "bodyparts": ["Back", "Shoulders"],
+  "bodyparts": ["Upper Back", "Shoulders"],
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Biceps Brachii", "rank": 2 },
@@ -531,7 +531,7 @@
   "name": "Clean - Barbell",
   "rating": 23,
   "equipment": ["Barbell", "Weight Plates"],
-  "bodyparts": ["Back", "Shoulders"],
+  "bodyparts": ["Upper Back", "Shoulders"],
   "muscles": [
     { "name": "Rectus Femoris", "rank": 1 },
     { "name": "Gluteus Maximus", "rank": 2 },
@@ -563,7 +563,7 @@
   "name": "Concentration Curl - Cable Machine",
   "rating": 23,
   "equipment": ["Cable Machine", "Cable Handle Attachment"],
-  "bodyparts": ["Arms", "Forearms"],
+  "bodyparts": ["Biceps", "Forearms"],
   "muscles": [
     { "name": "Biceps Brachii", "rank": 1 },
     { "name": "Brachialis", "rank": 2 },
@@ -579,7 +579,7 @@
   "name": "Concentration Curl - Dumbbell (Normal Grip)",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Arms", "Forearms"],
+  "bodyparts": ["Biceps", "Forearms"],
   "muscles": [
     { "name": "Biceps Brachii", "rank": 1 },
     { "name": "Brachialis", "rank": 2 },
@@ -595,7 +595,7 @@
   "name": "Concentration Curl - Dumbbell (Reverse Grip)",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Arms", "Forearms"],
+  "bodyparts": ["Biceps", "Forearms"],
   "muscles": [
     { "name": "Brachialis", "rank": 1 },
     { "name": "Brachioradialis", "rank": 2 },
@@ -611,7 +611,7 @@
   "name": "Crunch",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Abs"],
+  "bodyparts": ["Core"],
   "muscles": [
     { "name": "Rectus Abdominis", "rank": 1 },
     { "name": "Transverse Abdominis", "rank": 2 },
@@ -627,7 +627,7 @@
   "name": "Crunch - Dumbbell",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Abs"],
+  "bodyparts": ["Core"],
   "muscles": [
     { "name": "Rectus Abdominis", "rank": 1 },
     { "name": "Transverse Abdominis", "rank": 2 },
@@ -643,7 +643,7 @@
   "name": "Crunch - Dumbbell (Crossbody)",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Abs"],
+  "bodyparts": ["Core"],
   "muscles": [
     { "name": "Obliques", "rank": 1 },
     { "name": "Rectus Abdominis", "rank": 2 },
@@ -659,7 +659,7 @@
   "name": "Crunch - Dumbbell (Lying)",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Abs"],
+  "bodyparts": ["Core"],
   "muscles": [
     { "name": "Rectus Abdominis", "rank": 1 },
     { "name": "Transverse Abdominis", "rank": 2 },
@@ -675,7 +675,7 @@
   "name": "Crunch - Dumbbell (Seated)",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Abs"],
+  "bodyparts": ["Core"],
   "muscles": [
     { "name": "Rectus Abdominis", "rank": 1 },
     { "name": "Transverse Abdominis", "rank": 2 },
@@ -723,7 +723,7 @@
   "name": "Curtsey Lunge",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Glutes", "Quads"],
+  "bodyparts": ["Hips", "Quads"],
   "muscles": [
     { "name": "Gluteus Medius", "rank": 1 },
     { "name": "Gluteus Maximus", "rank": 2 },
@@ -739,7 +739,7 @@
   "name": "Curtsey Lunge - Dumbbell",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Glutes", "Quads"],
+  "bodyparts": ["Hips", "Quads"],
   "muscles": [
     { "name": "Gluteus Medius", "rank": 1 },
     { "name": "Gluteus Maximus", "rank": 2 },
@@ -755,7 +755,7 @@
   "name": "Deadlift - Landmine Attachment",
   "rating": 23,
   "equipment": ["Landmine Attachment", "Barbell", "Weight Plates"],
-  "bodyparts": ["Back", "Hamstrings"],
+  "bodyparts": ["Lower Back", "Hamstrings"],
   "muscles": [
     { "name": "Gluteus Maximus", "rank": 1 },
     { "name": "Biceps Femoris", "rank": 2 },
@@ -771,7 +771,7 @@
   "name": "Deadlift - Barbell",
   "rating": 23,
   "equipment": ["Barbell", "Weight Plates"],
-  "bodyparts": ["Back", "Hamstrings"],
+  "bodyparts": ["Lower Back", "Hamstrings"],
   "muscles": [
     { "name": "Gluteus Maximus", "rank": 1 },
     { "name": "Biceps Femoris", "rank": 2 },
@@ -787,7 +787,7 @@
   "name": "Deadlift - Dumbbell",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Back", "Hamstrings"],
+  "bodyparts": ["Lower Back", "Hamstrings"],
   "muscles": [
     { "name": "Gluteus Maximus", "rank": 1 },
     { "name": "Biceps Femoris", "rank": 2 },
@@ -802,7 +802,7 @@
   "name": "Diamond Push-up",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Chest", "Arms", "Shoulders"],
+  "bodyparts": ["Chest", "Triceps", "Shoulders"],
   "muscles": [
     { "name": "Triceps Brachii", "rank": 1 },
     { "name": "Pectoralis Major", "rank": 2 },
@@ -818,7 +818,7 @@
   "name": "Donkey Kick",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Glutes"],
+  "bodyparts": ["Hips"],
   "muscles": [
     { "name": "Gluteus Maximus", "rank": 1 },
     { "name": "Gluteus Medius", "rank": 2 },
@@ -834,7 +834,7 @@
   "name": "Donkey Kick - Leg Extension Machine",
   "rating": 23,
   "equipment": ["Leg Extension Machine"],
-  "bodyparts": ["Glutes", "Hamstrings"],
+  "bodyparts": ["Hips", "Hamstrings"],
   "muscles": [
     { "name": "Gluteus Maximus", "rank": 1 },
     { "name": "Gluteus Medius", "rank": 2 },
@@ -850,7 +850,7 @@
   "name": "Down-Up Twist - Cable Machine",
   "rating": 23,
   "equipment": ["Cable Machine", "Cable Handle Attachment"],
-  "bodyparts": ["Abs"],
+  "bodyparts": ["Core"],
   "muscles": [
     { "name": "Obliques", "rank": 1 },
     { "name": "Rectus Abdominis", "rank": 2 },
@@ -866,7 +866,7 @@
   "name": "Drag Curl - Cable Machine",
   "rating": 23,
   "equipment": ["Cable Machine", "Cable Straight Bar Attachment"],
-  "bodyparts": ["Arms"],
+  "bodyparts": ["Biceps"],
   "muscles": [
     { "name": "Biceps Brachii", "rank": 1 },
     { "name": "Brachialis", "rank": 2 },
@@ -882,7 +882,7 @@
   "name": "Drag Curl - Barbell",
   "rating": 23,
   "equipment": ["Barbell", "Weight Plates"],
-  "bodyparts": ["Arms"],
+  "bodyparts": ["Biceps"],
   "muscles": [
     { "name": "Biceps Brachii", "rank": 1 },
     { "name": "Brachialis", "rank": 2 },
@@ -898,7 +898,7 @@
   "name": "Drag Curl - Dumbbell",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Arms"],
+  "bodyparts": ["Biceps"],
   "muscles": [
     { "name": "Biceps Brachii", "rank": 1 },
     { "name": "Brachialis", "rank": 2 },
@@ -946,7 +946,7 @@
   "name": "Face Pull - Cable Machine",
   "rating": 23,
   "equipment": ["Cable Machine", "Cable Rope Attachment"],
-  "bodyparts": ["Shoulders", "Back"],
+  "bodyparts": ["Shoulders", "Upper Back"],
   "muscles": [
     { "name": "Posterior Deltoid", "rank": 1 },
     { "name": "Infraspinatus", "rank": 2 },
@@ -961,7 +961,7 @@
   "name": "Farmer’s Carry - Dumbbell",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Abs"],
+  "bodyparts": ["Core"],
   "muscles": [
     { "name": "Brachioradialis", "rank": 1 },
     { "name": "Wrist Flexors", "rank": 2 },
@@ -977,7 +977,7 @@
   "name": "Fire Hydrant",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Glutes", "Hip Abductors"],
+  "bodyparts": ["Hips"],
   "muscles": [
     { "name": "Gluteus Medius", "rank": 1 },
     { "name": "Gluteus Minimus", "rank": 2 },
@@ -993,7 +993,7 @@
   "name": "Floor Press - Dumbbell",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Chest", "Arms", "Shoulders"],
+  "bodyparts": ["Chest", "Triceps", "Shoulders"],
   "muscles": [
     { "name": "Pectoralis Major", "rank": 1 },
     { "name": "Triceps Brachii", "rank": 2 },
@@ -1009,7 +1009,7 @@
   "name": "Floor Press - Barbell",
   "rating": 23,
   "equipment": ["Barbell", "Weight Plates"],
-  "bodyparts": ["Chest", "Arms", "Shoulders"],
+  "bodyparts": ["Chest", "Triceps", "Shoulders"],
   "muscles": [
     { "name": "Pectoralis Major", "rank": 1 },
     { "name": "Triceps Brachii", "rank": 2 },
@@ -1073,7 +1073,7 @@
   "name": "Front Squat - Cable Machine",
   "rating": 23,
   "equipment": ["Cable Machine", "Cable Rope Attachment"],
-  "bodyparts": ["Quads", "Abs"],
+  "bodyparts": ["Quads", "Core"],
   "muscles": [
     { "name": "Rectus Femoris", "rank": 1 },
     { "name": "Vastus Lateralis", "rank": 2 },
@@ -1089,7 +1089,7 @@
   "name": "Front Squat - Dumbbell",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Quads", "Abs"],
+  "bodyparts": ["Quads", "Core"],
   "muscles": [
     { "name": "Rectus Femoris", "rank": 1 },
     { "name": "Vastus Lateralis", "rank": 2 },
@@ -1104,7 +1104,7 @@
   "name": "Front Squat - Barbell",
   "rating": 23,
   "equipment": ["Barbell", "Weight Plates", "Squat Rack"],
-  "bodyparts": ["Quads", "Abs"],
+  "bodyparts": ["Quads", "Core"],
   "muscles": [
     { "name": "Rectus Femoris", "rank": 1 },
     { "name": "Vastus Lateralis", "rank": 2 },
@@ -1119,7 +1119,7 @@
   "name": "Glute Bridge",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Glutes", "Hamstrings", "Abs"],
+  "bodyparts": ["Hips", "Hamstrings", "Core"],
   "muscles": [
     { "name": "Gluteus Maximus", "rank": 1 },
     { "name": "Biceps Femoris", "rank": 2 },
@@ -1135,7 +1135,7 @@
   "name": "Glute Bridge - Barbell",
   "rating": 23,
   "equipment": ["Barbell", "Weight Plates"],
-  "bodyparts": ["Glutes", "Hamstrings", "Abs"],
+  "bodyparts": ["Hips", "Hamstrings", "Core"],
   "muscles": [
     { "name": "Gluteus Maximus", "rank": 1 },
     { "name": "Biceps Femoris", "rank": 2 },
@@ -1151,7 +1151,7 @@
   "name": "Glute Bridge - Dumbbell",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Glutes", "Hamstrings", "Abs"],
+  "bodyparts": ["Hips", "Hamstrings", "Core"],
   "muscles": [
     { "name": "Gluteus Maximus", "rank": 1 },
     { "name": "Biceps Femoris", "rank": 2 },
@@ -1167,7 +1167,7 @@
   "name": "Glute Ham Raise",
   "rating": 23,
   "equipment": ["Glute-Ham Developer (GHD) Machine"],
-  "bodyparts": ["Hamstrings", "Glutes", "Back"],
+  "bodyparts": ["Hamstrings", "Hips", "Lower Back"],
   "muscles": [
     { "name": "Biceps Femoris", "rank": 1 },
     { "name": "Semitendinosus", "rank": 2 },
@@ -1183,7 +1183,7 @@
   "name": "Glute Kickback",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Glutes", "Hamstrings"],
+  "bodyparts": ["Hips", "Hamstrings"],
   "muscles": [
     { "name": "Gluteus Maximus", "rank": 1 },
     { "name": "Gluteus Medius", "rank": 2 },
@@ -1199,7 +1199,7 @@
   "name": "Glute Kickback - Cable Machine",
   "rating": 23,
   "equipment": ["Cable Machine", "Cable Ankle Cuff Attachment"],
-  "bodyparts": ["Glutes", "Hamstrings"],
+  "bodyparts": ["Hips", "Hamstrings"],
   "muscles": [
     { "name": "Gluteus Maximus", "rank": 1 },
     { "name": "Gluteus Medius", "rank": 2 },
@@ -1215,7 +1215,7 @@
   "name": "Good Morning - Barbell",
   "rating": 23,
   "equipment": ["Barbell", "Weight Plates"],
-  "bodyparts": ["Hamstrings", "Back", "Glutes"],
+  "bodyparts": ["Hamstrings", "Lower Back", "Hips"],
   "muscles": [
     { "name": "Erector Spinae", "rank": 1 },
     { "name": "Gluteus Maximus", "rank": 2 },
@@ -1231,7 +1231,7 @@
   "name": "Hack Squat - Hack Squat Machine",
   "rating": 23,
   "equipment": ["Hack Squat Machine"],
-  "bodyparts": ["Quads", "Glutes"],
+  "bodyparts": ["Quads", "Hips"],
   "muscles": [
     { "name": "Vastus Lateralis", "rank": 1 },
     { "name": "Vastus Medialis", "rank": 2 },
@@ -1247,7 +1247,7 @@
   "name": "Hammer Curl - Cable Machine",
   "rating": 23,
   "equipment": ["Cable Machine", "Cable Handle Attachment"],
-  "bodyparts": ["Arms", "Forearms"],
+  "bodyparts": ["Biceps", "Forearms"],
   "muscles": [
     { "name": "Brachioradialis", "rank": 1 },
     { "name": "Brachialis", "rank": 2 },
@@ -1263,7 +1263,7 @@
   "name": "Hammer Curl - Dumbbell",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Arms", "Forearms"],
+  "bodyparts": ["Biceps", "Forearms"],
   "muscles": [
     { "name": "Brachioradialis", "rank": 1 },
     { "name": "Brachialis", "rank": 2 },
@@ -1279,7 +1279,7 @@
   "name": "Hammer Curl - Dumbbell (Crossbody)",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Arms", "Forearms"],
+  "bodyparts": ["Biceps", "Forearms"],
   "muscles": [
     { "name": "Brachialis", "rank": 1 },
     { "name": "Brachioradialis", "rank": 2 },
@@ -1295,7 +1295,7 @@
   "name": "Hang Clean - Barbell",
   "rating": 23,
   "equipment": ["Barbell", "Weight Plates"],
-  "bodyparts": ["Back", "Shoulders"],
+  "bodyparts": ["Upper Back", "Shoulders"],
   "muscles": [
     { "name": "Vastus Lateralis", "rank": 1 },
     { "name": "Gluteus Maximus", "rank": 2 },
@@ -1311,7 +1311,7 @@
   "name": "Hang Snatch - Barbell",
   "rating": 23,
   "equipment": ["Barbell", "Weight Plates"],
-  "bodyparts": ["Back", "Shoulders"],
+  "bodyparts": ["Upper Back", "Shoulders"],
   "muscles": [
     { "name": "Anterior Deltoid", "rank": 1 },
     { "name": "Trapezius (upper)", "rank": 2 },
@@ -1327,7 +1327,7 @@
   "name": "Heel Touch",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Abs"],
+  "bodyparts": ["Core"],
   "muscles": [
     { "name": "Obliques", "rank": 1 },
     { "name": "Rectus Abdominis", "rank": 2 },
@@ -1343,7 +1343,7 @@
   "name": "High Pull - Barbell",
   "rating": 23,
   "equipment": ["Barbell", "Weight Plates"],
-  "bodyparts": ["Back", "Shoulders"],
+  "bodyparts": ["Upper Back", "Shoulders"],
   "muscles": [
     { "name": "Trapezius (upper)", "rank": 1 },
     { "name": "Posterior Deltoid", "rank": 2 },
@@ -1359,7 +1359,7 @@
   "name": "High Pull - Dumbbell",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Back", "Shoulders"],
+  "bodyparts": ["Upper Back", "Shoulders"],
   "muscles": [
     { "name": "Trapezius (upper)", "rank": 1 },
     { "name": "Posterior Deltoid", "rank": 2 },
@@ -1375,7 +1375,7 @@
   "name": "Hip Abductor - Cable Machine",
   "rating": 23,
   "equipment": ["Cable Machine", "Cable Ankle Cuff Attachment"],
-  "bodyparts": ["Hip Abductors", "Glutes"],
+  "bodyparts": ["Hips"],
   "muscles": [
     { "name": "Gluteus Medius", "rank": 1 },
     { "name": "Gluteus Minimus", "rank": 2 },
@@ -1391,7 +1391,7 @@
   "name": "Hip Adductor - Cable Machine",
   "rating": 23,
   "equipment": ["Cable Machine", "Cable Ankle Cuff Attachment"],
-  "bodyparts": ["Hip Adductors"],
+  "bodyparts": ["Hips"],
   "muscles": [
     { "name": "Adductor Magnus", "rank": 1 },
     { "name": "Adductor Longus", "rank": 2 },
@@ -1407,7 +1407,7 @@
   "name": "Hip Extension",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Glutes", "Hamstrings"],
+  "bodyparts": ["Hips", "Hamstrings"],
   "muscles": [
     { "name": "Gluteus Maximus", "rank": 1 },
     { "name": "Biceps Femoris", "rank": 2 },
@@ -1422,7 +1422,7 @@
   "name": "Hip Flexion",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Hip Flexors", "Abs"],
+  "bodyparts": ["Hips", "Core"],
   "muscles": [
     { "name": "Iliopsoas", "rank": 1 },
     { "name": "Rectus Femoris", "rank": 2 },
@@ -1438,7 +1438,7 @@
   "name": "Hip Frog Extension",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Glutes", "Hip Abductors"],
+  "bodyparts": ["Hips"],
   "muscles": [
     { "name": "Gluteus Medius", "rank": 1 },
     { "name": "Gluteus Maximus", "rank": 2 },
@@ -1454,7 +1454,7 @@
   "name": "Hip Raise",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Glutes", "Hamstrings", "Abs"],
+  "bodyparts": ["Hips", "Hamstrings", "Core"],
   "muscles": [
     { "name": "Gluteus Maximus", "rank": 1 },
     { "name": "Biceps Femoris", "rank": 2 },
@@ -1470,7 +1470,7 @@
   "name": "Hip Thrust - Hip Thrust Machine",
   "rating": 23,
   "equipment": ["Hip Thrust Machine"],
-  "bodyparts": ["Glutes", "Hamstrings", "Abs"],
+  "bodyparts": ["Hips", "Hamstrings", "Core"],
   "muscles": [
     { "name": "Gluteus Maximus", "rank": 1 },
     { "name": "Biceps Femoris", "rank": 2 },
@@ -1486,7 +1486,7 @@
   "name": "Hip Thrust - Cable Machine",
   "rating": 23,
   "equipment": ["Cable Machine", "Cable Ankle Cuff Attachment"],
-  "bodyparts": ["Glutes", "Hamstrings", "Abs"],
+  "bodyparts": ["Hips", "Hamstrings", "Core"],
   "muscles": [
     { "name": "Gluteus Maximus", "rank": 1 },
     { "name": "Biceps Femoris", "rank": 2 },
@@ -1502,7 +1502,7 @@
   "name": "Hip Thrust - Barbell",
   "rating": 23,
   "equipment": ["Barbell", "Weight Plates"],
-  "bodyparts": ["Glutes", "Hamstrings", "Abs"],
+  "bodyparts": ["Hips", "Hamstrings", "Core"],
   "muscles": [
     { "name": "Gluteus Maximus", "rank": 1 },
     { "name": "Biceps Femoris", "rank": 2 },
@@ -1518,7 +1518,7 @@
   "name": "In-And-Out",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Hip Flexors"],
+  "bodyparts": ["Hips"],
   "muscles": [
     { "name": "Rectus Abdominis", "rank": 1 },
     { "name": "Transverse Abdominis", "rank": 2 },
@@ -1534,7 +1534,7 @@
   "name": "In-And-Out - Dumbbell",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Hip Flexors"],
+  "bodyparts": ["Hips"],
   "muscles": [
     { "name": "Rectus Abdominis", "rank": 1 },
     { "name": "Transverse Abdominis", "rank": 2 },
@@ -1647,7 +1647,7 @@
   "name": "Incline Bicep Curl - Dumbbell",
   "rating": 23,
   "equipment": ["Dumbbell", "Adjustable Bench"],
-  "bodyparts": ["Arms"],
+  "bodyparts": ["Biceps"],
   "muscles": [
     { "name": "Biceps Brachii", "rank": 1 },
     { "name": "Brachialis", "rank": 2 },
@@ -1663,7 +1663,7 @@
   "name": "Incline Chest Press - Barbell",
   "rating": 23,
   "equipment": ["Barbell", "Adjustable Bench", "Weight Plates"],
-  "bodyparts": ["Chest", "Shoulders", "Arms"],
+  "bodyparts": ["Chest", "Shoulders", "Triceps"],
   "muscles": [
     { "name": "Pectoralis Major", "rank": 1 },
     { "name": "Anterior Deltoid", "rank": 2 },
@@ -1679,7 +1679,7 @@
   "name": "Incline Chest Press - Dumbbell",
   "rating": 23,
   "equipment": ["Dumbbell", "Adjustable Bench"],
-  "bodyparts": ["Chest", "Shoulders", "Arms"],
+  "bodyparts": ["Chest", "Shoulders", "Triceps"],
   "muscles": [
     { "name": "Pectoralis Major", "rank": 1 },
     { "name": "Anterior Deltoid", "rank": 2 },
@@ -1695,7 +1695,7 @@
   "name": "Incline Leg Press",
   "rating": 23,
   "equipment": ["Incline Leg Press Machine", "Weight Plates"],
-  "bodyparts": ["Quads", "Glutes", "Hamstrings"],
+  "bodyparts": ["Quads", "Hips", "Hamstrings"],
   "muscles": [
     { "name": "Vastus Lateralis", "rank": 1 },
     { "name": "Vastus Medialis", "rank": 2 },
@@ -1711,7 +1711,7 @@
   "name": "Incline Push-Up",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Chest", "Shoulders", "Arms"],
+  "bodyparts": ["Chest", "Shoulders", "Triceps"],
   "muscles": [
     { "name": "Pectoralis Major", "rank": 1 },
     { "name": "Anterior Deltoid", "rank": 2 },
@@ -1727,7 +1727,7 @@
   "name": "Incline Reverse Fly - Dumbbell",
   "rating": 23,
   "equipment": ["Dumbbell", "Adjustable Bench"],
-  "bodyparts": ["Back", "Shoulders"],
+  "bodyparts": ["Upper Back", "Shoulders"],
   "muscles": [
     { "name": "Posterior Deltoid", "rank": 1 },
     { "name": "Infraspinatus", "rank": 2 },
@@ -1743,7 +1743,7 @@
   "name": "Incline Row - Cable Machine",
   "rating": 23,
   "equipment": ["Cable Machine", "Cable Handle Attachment", "Adjustable Bench"],
-  "bodyparts": ["Back"],
+  "bodyparts": ["Upper Back"],
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
@@ -1759,7 +1759,7 @@
   "name": "Incline Row - Dumbbell",
   "rating": 23,
   "equipment": ["Dumbbell", "Adjustable Bench"],
-  "bodyparts": ["Back"],
+  "bodyparts": ["Upper Back"],
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
@@ -1790,7 +1790,7 @@
   "name": "Inverted Row",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Back"],
+  "bodyparts": ["Upper Back"],
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
@@ -1806,7 +1806,7 @@
   "name": "Inverted Row (Reverse Grip)",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Back"],
+  "bodyparts": ["Upper Back"],
   "muscles": [
     { "name": "Biceps Brachii", "rank": 1 },
     { "name": "Latissimus Dorsi", "rank": 2 },
@@ -1822,7 +1822,7 @@
   "name": "Jump Squat",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Quads", "Glutes", "Calves"],
+  "bodyparts": ["Quads", "Hips", "Calves"],
   "muscles": [
     { "name": "Vastus Lateralis", "rank": 1 },
     { "name": "Vastus Medialis", "rank": 2 },
@@ -1838,7 +1838,7 @@
   "name": "Jump Squat - Dumbbell",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Quads", "Glutes", "Calves"],
+  "bodyparts": ["Quads", "Hips", "Calves"],
   "muscles": [
     { "name": "Vastus Lateralis", "rank": 1 },
     { "name": "Vastus Medialis", "rank": 2 },
@@ -1854,7 +1854,7 @@
   "name": "Kettlebell Swings",
   "rating": 23,
   "equipment": ["Kettlebell"],
-  "bodyparts": ["Erector Spinae", "Hips", "Abs"],
+  "bodyparts": ["Upper Back", "Hips", "Core"],
   "muscles": [
     { "name": "Gluteus Maximus", "rank": 1 },
     { "name": "Biceps Femoris", "rank": 2 },
@@ -1870,7 +1870,7 @@
   "name": "Knee Push-Up",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Chest", "Arms", "Shoulders"],
+  "bodyparts": ["Chest", "Triceps", "Shoulders"],
   "muscles": [
     { "name": "Pectoralis Major", "rank": 1 },
     { "name": "Triceps Brachii", "rank": 2 },
@@ -1886,7 +1886,7 @@
   "name": "Knee Raise",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Hip Flexors", "Abs"],
+  "bodyparts": ["Hips", "Core"],
   "muscles": [
     { "name": "Iliopsoas", "rank": 1 },
     { "name": "Rectus Femoris", "rank": 2 },
@@ -1902,7 +1902,7 @@
   "name": "Knee Raise (Hanging)",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Hip Flexors", "Abs"],
+  "bodyparts": ["Hips", "Core"],
   "muscles": [
     { "name": "Iliopsoas", "rank": 1 },
     { "name": "Rectus Femoris", "rank": 2 },
@@ -1918,7 +1918,7 @@
   "name": "Knee Raise Twist",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Abs", "Hip Flexors"],
+  "bodyparts": ["Core", "Hips"],
   "muscles": [
     { "name": "Obliques", "rank": 1 },
     { "name": "Iliopsoas", "rank": 2 },
@@ -1934,7 +1934,7 @@
   "name": "Knee Raise Twist (Hanging)",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Abs", "Hip Flexors"],
+  "bodyparts": ["Core", "Hips"],
   "muscles": [
     { "name": "Obliques", "rank": 1 },
     { "name": "Iliopsoas", "rank": 2 },
@@ -1950,7 +1950,7 @@
   "name": "Kneeling Crunch - Cable Machine",
   "rating": 23,
   "equipment": ["Cable Machine", "Cable Rope Attachment"],
-  "bodyparts": ["Abs"],
+  "bodyparts": ["Core"],
   "muscles": [
     { "name": "Rectus Abdominis", "rank": 1 },
     { "name": "Transverse Abdominis", "rank": 2 },
@@ -1966,7 +1966,7 @@
   "name": "Kneeling Plank",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Shoulders", "Abs"],
+  "bodyparts": ["Shoulders", "Core"],
   "muscles": [
     { "name": "Transverse Abdominis", "rank": 1 },
     { "name": "Rectus Abdominis", "rank": 2 },
@@ -1982,7 +1982,7 @@
   "name": "Kneeling Pull-down",
   "rating": 23,
   "equipment": ["Cable Machine", "Cable Straight Bar Attachment"],
-  "bodyparts": ["Back"],
+  "bodyparts": ["Upper Back"],
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
@@ -1998,7 +1998,7 @@
   "name": "Kneeling Tricep Extension",
   "rating": 23,
   "equipment": ["Cable Machine", "Cable Rope Attachment"],
-  "bodyparts": ["Arms", "Abs"],
+  "bodyparts": ["Triceps", "Core"],
   "muscles": [
     { "name": "Triceps Brachii", "rank": 1 },
     { "name": "Anconeus", "rank": 2 },
@@ -2014,7 +2014,7 @@
   "name": "Landmine Press - Landmine Attachment",
   "rating": 23,
   "equipment": ["Landmine Attachment", "Barbell", "Weight Plates"],
-  "bodyparts": ["Shoulders", "Chest", "Arms"],
+  "bodyparts": ["Shoulders", "Chest", "Triceps"],
   "muscles": [
     { "name": "Anterior Deltoid", "rank": 1 },
     { "name": "Pectoralis Major", "rank": 2 },
@@ -2045,7 +2045,7 @@
   "name": "Lat Pulldown - Lat pulldown machine",
   "rating": 23,
   "equipment": ["Lat pulldown machine"],
-  "bodyparts": ["Back"],
+  "bodyparts": ["Upper Back"],
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
@@ -2061,7 +2061,7 @@
   "name": "Lat Pulldown - Cable Machine",
   "rating": 23,
   "equipment": ["Cable Machine", "Cable Straight Bar Attachment"],
-  "bodyparts": ["Back"],
+  "bodyparts": ["Upper Back"],
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
@@ -2077,7 +2077,7 @@
   "name": "Lat Pulldown - Cable Machine (Close Grip)",
   "rating": 23,
   "equipment": ["Cable Machine", "Cable Straight Bar Attachment"],
-  "bodyparts": ["Back"],
+  "bodyparts": ["Upper Back"],
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Biceps Brachii", "rank": 2 },
@@ -2093,7 +2093,7 @@
   "name": "Lat Pulldown - Cable Machine (Wide Grip)",
   "rating": 23,
   "equipment": ["Cable Machine", "Cable Straight Bar Attachment"],
-  "bodyparts": ["Back", "Shoulders"],
+  "bodyparts": ["Upper Back", "Shoulders"],
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
@@ -2109,7 +2109,7 @@
   "name": "Lat Pulldown - Cable Machine (Reverse Grip)",
   "rating": 23,
   "equipment": ["Cable Machine", "Cable Straight Bar Attachment"],
-  "bodyparts": ["Back"],
+  "bodyparts": ["Upper Back"],
   "muscles": [
     { "name": "Biceps Brachii", "rank": 1 },
     { "name": "Latissimus Dorsi", "rank": 2 },
@@ -2253,7 +2253,7 @@
   "name": "Leg Raise",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Hip Flexors"],
+  "bodyparts": ["Hips"],
   "muscles": [
     { "name": "Iliopsoas", "rank": 1 },
     { "name": "Rectus Femoris", "rank": 2 },
@@ -2269,7 +2269,7 @@
   "name": "Leg Raise (Hanging)",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Hip Flexors"],
+  "bodyparts": ["Hips"],
   "muscles": [
     { "name": "Iliopsoas", "rank": 1 },
     { "name": "Rectus Femoris", "rank": 2 },
@@ -2285,7 +2285,7 @@
   "name": "Leg Raise (Lying)",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Hip Flexors"],
+  "bodyparts": ["Hips"],
   "muscles": [
     { "name": "Iliopsoas", "rank": 1 },
     { "name": "Rectus Femoris", "rank": 2 },
@@ -2301,7 +2301,7 @@
   "name": "Leg Raise Twist",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Abs", "Hip Flexors"],
+  "bodyparts": ["Core", "Hips"],
   "muscles": [
     { "name": "Obliques", "rank": 1 },
     { "name": "Iliopsoas", "rank": 2 },
@@ -2317,7 +2317,7 @@
   "name": "Leg Raise Twist (Hanging)",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Abs", "Hip Flexors"],
+  "bodyparts": ["Core", "Hips"],
   "muscles": [
     { "name": "Obliques", "rank": 1 },
     { "name": "Iliopsoas", "rank": 2 },
@@ -2333,7 +2333,7 @@
   "name": "Leg Raise Twist (Lying)",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Abs", "Hip Flexors"],
+  "bodyparts": ["Core", "Hips"],
   "muscles": [
     { "name": "Obliques", "rank": 1 },
     { "name": "Iliopsoas", "rank": 2 },
@@ -2348,7 +2348,7 @@
   "name": "Leg Press",
   "rating": 23,
   "equipment": ["Leg Press Machine", "Weight Plates"],
-  "bodyparts": ["Quads", "Glutes", "Hamstrings"],
+  "bodyparts": ["Quads", "Hips", "Hamstrings"],
   "muscles": [
     { "name": "Vastus Lateralis", "rank": 1 },
     { "name": "Vastus Medialis", "rank": 2 },
@@ -2396,7 +2396,7 @@
   "name": "Lunge",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Quads", "Glutes", "Hamstrings"],
+  "bodyparts": ["Quads", "Hips", "Hamstrings"],
   "muscles": [
     { "name": "Rectus Femoris", "rank": 1 },
     { "name": "Gluteus Maximus", "rank": 2 },
@@ -2412,7 +2412,7 @@
   "name": "Lunge - Cable Machine",
   "rating": 23,
   "equipment": ["Cable Machine", "Cable Ankle Cuff Attachment"],
-  "bodyparts": ["Quads", "Glutes", "Hamstrings"],
+  "bodyparts": ["Quads", "Hips", "Hamstrings"],
   "muscles": [
     { "name": "Rectus Femoris", "rank": 1 },
     { "name": "Gluteus Maximus", "rank": 2 },
@@ -2428,7 +2428,7 @@
   "name": "Lunge - Dumbbell",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Quads", "Glutes", "Hamstrings"],
+  "bodyparts": ["Quads", "Hips", "Hamstrings"],
   "muscles": [
     { "name": "Rectus Femoris", "rank": 1 },
     { "name": "Gluteus Maximus", "rank": 2 },
@@ -2444,7 +2444,7 @@
   "name": "Lunge - Barbell",
   "rating": 23,
   "equipment": ["Barbell", "Weight Plates", "Squat Rack"],
-  "bodyparts": ["Quads", "Glutes", "Hamstrings"],
+  "bodyparts": ["Quads", "Hips", "Hamstrings"],
   "muscles": [
     { "name": "Rectus Femoris", "rank": 1 },
     { "name": "Gluteus Maximus", "rank": 2 },
@@ -2460,7 +2460,7 @@
   "name": "Mountain Climber",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Hip Flexors", "Shoulders"],
+  "bodyparts": ["Hips", "Shoulders"],
   "muscles": [
     { "name": "Rectus Abdominis", "rank": 1 },
     { "name": "Transverse Abdominis", "rank": 2 },
@@ -2476,7 +2476,7 @@
   "name": "Mountain Climber (Crossbody)",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Abs", "Hip Flexors"],
+  "bodyparts": ["Core", "Hips"],
   "muscles": [
     { "name": "Obliques", "rank": 1 },
     { "name": "Rectus Abdominis", "rank": 2 },
@@ -2492,7 +2492,7 @@
   "name": "Muscle Up",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Back", "Chest", "Arms", "Shoulders"],
+  "bodyparts": ["Upper Back", "Chest", "Biceps", "Triceps", "Shoulders"],
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Pectoralis Major", "rank": 2 },
@@ -2508,7 +2508,7 @@
   "name": "Oblique Crunch",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Abs"],
+  "bodyparts": ["Core"],
   "muscles": [
     { "name": "Obliques", "rank": 1 },
     { "name": "Rectus Abdominis", "rank": 2 },
@@ -2524,7 +2524,7 @@
   "name": "Oblique V-Up",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Abs"],
+  "bodyparts": ["Core"],
   "muscles": [
     { "name": "Obliques", "rank": 1 },
     { "name": "Rectus Abdominis", "rank": 2 },
@@ -2540,7 +2540,7 @@
   "name": "Overhead Press - Cable Machine",
   "rating": 23,
   "equipment": ["Cable Machine"],
-  "bodyparts": ["Shoulders", "Arms"],
+  "bodyparts": ["Shoulders", "Triceps"],
   "muscles": [
     { "name": "Anterior Deltoid", "rank": 1 },
     { "name": "Lateral Deltoid", "rank": 2 },
@@ -2556,7 +2556,7 @@
   "name": "Overhead Press - Barbell",
   "rating": 23,
   "equipment": ["Barbell", "Weight Plates", "Squat Rack"],
-  "bodyparts": ["Shoulders", "Arms"],
+  "bodyparts": ["Shoulders", "Triceps"],
   "muscles": [
     { "name": "Anterior Deltoid", "rank": 1 },
     { "name": "Lateral Deltoid", "rank": 2 },
@@ -2572,7 +2572,7 @@
   "name": "Overhead Press - Dumbbell",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Shoulders", "Arms"],
+  "bodyparts": ["Shoulders", "Triceps"],
   "muscles": [
     { "name": "Anterior Deltoid", "rank": 1 },
     { "name": "Lateral Deltoid", "rank": 2 },
@@ -2636,7 +2636,7 @@
   "name": "Pendlay Row - Barbell",
   "rating": 23,
   "equipment": ["Barbell", "Weight Plates"],
-  "bodyparts": ["Back"],
+  "bodyparts": ["Upper Back"],
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
@@ -2652,7 +2652,7 @@
   "name": "Pike Push-up",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Shoulders", "Arms", "Chest"],
+  "bodyparts": ["Shoulders", "Triceps", "Chest"],
   "muscles": [
     { "name": "Anterior Deltoid", "rank": 1 },
     { "name": "Triceps Brachii", "rank": 2 },
@@ -2668,7 +2668,7 @@
   "name": "Pistol Squat",
   "rating": 23,
   "equipment": ["Bodyweight or support handle (optional)"],
-  "bodyparts": ["Quads", "Glutes", "Hamstrings"],
+  "bodyparts": ["Quads", "Hips", "Hamstrings"],
   "muscles": [
     { "name": "Rectus Femoris", "rank": 1 },
     { "name": "Gluteus Maximus", "rank": 2 },
@@ -2684,7 +2684,7 @@
   "name": "Plank",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Shoulders", "Back"],
+  "bodyparts": ["Shoulders", "Lower Back"],
   "muscles": [
     { "name": "Transverse Abdominis", "rank": 1 },
     { "name": "Rectus Abdominis", "rank": 2 },
@@ -2700,7 +2700,7 @@
   "name": "Power Clean - Barbell",
   "rating": 23,
   "equipment": ["Barbell", "Weight Plates"],
-  "bodyparts": ["Back", "Shoulders"],
+  "bodyparts": ["Upper Back", "Shoulders"],
   "muscles": [
     { "name": "Rectus Femoris", "rank": 1 },
     { "name": "Gluteus Maximus", "rank": 2 },
@@ -2716,7 +2716,7 @@
   "name": "Power Snatch - Barbell",
   "rating": 23,
   "equipment": ["Barbell", "Weight Plates"],
-  "bodyparts": ["Back", "Shoulders"],
+  "bodyparts": ["Upper Back", "Shoulders"],
   "muscles": [
     { "name": "Anterior Deltoid", "rank": 1 },
     { "name": "Trapezius (upper)", "rank": 2 },
@@ -2732,7 +2732,7 @@
   "name": "Preacher Curl - Cable Machine",
   "rating": 23,
   "equipment": ["Cable Machine", "Cable Straight Bar Attachment"],
-  "bodyparts": ["Arms", "Forearms"],
+  "bodyparts": ["Biceps", "Forearms"],
   "muscles": [
     { "name": "Biceps Brachii", "rank": 1 },
     { "name": "Brachialis", "rank": 2 },
@@ -2748,7 +2748,7 @@
   "name": "Preacher Curl - Barbell",
   "rating": 23,
   "equipment": ["Barbell"],
-  "bodyparts": ["Arms", "Forearms"],
+  "bodyparts": ["Biceps", "Forearms"],
   "muscles": [
     { "name": "Biceps Brachii", "rank": 1 },
     { "name": "Brachialis", "rank": 2 },
@@ -2764,7 +2764,7 @@
   "name": "Preacher Curl - Dumbbell",
   "rating": 23,
   "equipment": ["Dumbbell", "Preacher Bench"],
-  "bodyparts": ["Arms", "Forearms"],
+  "bodyparts": ["Biceps", "Forearms"],
   "muscles": [
     { "name": "Biceps Brachii", "rank": 1 },
     { "name": "Brachialis", "rank": 2 },
@@ -2780,7 +2780,7 @@
   "name": "Preacher Curl - Barbell (with Preacher Bench)",
   "rating": 23,
   "equipment": ["Barbell", "Preacher Bench"],
-  "bodyparts": ["Arms", "Forearms"],
+  "bodyparts": ["Biceps", "Forearms"],
   "muscles": [
     { "name": "Biceps Brachii", "rank": 1 },
     { "name": "Brachialis", "rank": 2 },
@@ -2796,7 +2796,7 @@
   "name": "Pull Apart",
   "rating": 23,
   "equipment": ["Resistance Band"],
-  "bodyparts": ["Back", "Shoulders"],
+  "bodyparts": ["Upper Back", "Shoulders"],
   "muscles": [
     { "name": "Rhomboids", "rank": 1 },
     { "name": "Trapezius (middle)", "rank": 2 },
@@ -2812,7 +2812,7 @@
   "name": "Pull Through - Resistance Band",
   "rating": 23,
   "equipment": ["Resistance Band"],
-  "bodyparts": ["Glutes", "Hamstrings", "Abs"],
+  "bodyparts": ["Hips", "Hamstrings", "Core"],
   "muscles": [
     { "name": "Gluteus Maximus", "rank": 1 },
     { "name": "Biceps Femoris", "rank": 2 },
@@ -2828,7 +2828,7 @@
   "name": "Pull Through - Cable Machine",
   "rating": 23,
   "equipment": ["Cable Machine", "Cable Rope Attachment"],
-  "bodyparts": ["Glutes", "Hamstrings", "Abs"],
+  "bodyparts": ["Hips", "Hamstrings", "Core"],
   "muscles": [
     { "name": "Gluteus Maximus", "rank": 1 },
     { "name": "Biceps Femoris", "rank": 2 },
@@ -2844,7 +2844,7 @@
   "name": "Pull Up",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Back", "Shoulders"],
+  "bodyparts": ["Upper Back", "Shoulders"],
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Biceps Brachii", "rank": 2 },
@@ -2860,7 +2860,7 @@
   "name": "Pull Up – Close Grip",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Back"],
+  "bodyparts": ["Upper Back"],
   "muscles": [
     { "name": "Biceps Brachii", "rank": 1 },
     { "name": "Latissimus Dorsi", "rank": 2 },
@@ -2876,7 +2876,7 @@
   "name": "Pull Up – Wide Grip",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Back", "Shoulders"],
+  "bodyparts": ["Upper Back", "Shoulders"],
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
@@ -2892,7 +2892,7 @@
   "name": "Pull Up – Reverse Grip",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Back"],
+  "bodyparts": ["Upper Back"],
   "muscles": [
     { "name": "Biceps Brachii", "rank": 1 },
     { "name": "Latissimus Dorsi", "rank": 2 },
@@ -2908,7 +2908,7 @@
   "name": "Pull Up - Assisted Dip/Pull-Up Machine",
   "rating": 23,
   "equipment": ["Assisted Dip/Pull-Up Machine"],
-  "bodyparts": ["Back", "Shoulders"],
+  "bodyparts": ["Upper Back", "Shoulders"],
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Biceps Brachii", "rank": 2 },
@@ -2924,7 +2924,7 @@
   "name": "Pullover - Cable Machine",
   "rating": 23,
   "equipment": ["Cable Machine", "Cable Straight Bar Attachment"],
-  "bodyparts": ["Chest", "Back", "Abs"],
+  "bodyparts": ["Chest", "Upper Back", "Core"],
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Pectoralis Major", "rank": 2 },
@@ -2940,7 +2940,7 @@
   "name": "Pullover - Barbell",
   "rating": 23,
   "equipment": ["Barbell", "Weight Plates"],
-  "bodyparts": ["Chest", "Back", "Abs"],
+  "bodyparts": ["Chest", "Upper Back", "Core"],
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Pectoralis Major", "rank": 2 },
@@ -2956,7 +2956,7 @@
   "name": "Pullover - Dumbbell (Straight Arm)",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Chest", "Back", "Abs"],
+  "bodyparts": ["Chest", "Upper Back", "Core"],
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Pectoralis Major", "rank": 2 },
@@ -2972,7 +2972,7 @@
   "name": "Pullover - Dumbbell (Bent Arm)",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Chest", "Back", "Abs"],
+  "bodyparts": ["Chest", "Upper Back", "Core"],
   "muscles": [
     { "name": "Pectoralis Major", "rank": 1 },
     { "name": "Latissimus Dorsi", "rank": 2 },
@@ -2987,7 +2987,7 @@
   "name": "Push Away",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Chest", "Shoulders", "Arms", "Core"],
+  "bodyparts": ["Chest", "Shoulders", "Triceps", "Core"],
   "muscles": [
     { "name": "Serratus Anterior", "rank": 1 },
     { "name": "Pectoralis Major", "rank": 2 },
@@ -3003,7 +3003,7 @@
   "name": "Push Press - Barbell",
   "rating": 23,
   "equipment": ["Barbell", "Weight Plates", "Squat Rack"],
-  "bodyparts": ["Shoulders", "Arms", "Core"],
+  "bodyparts": ["Shoulders", "Triceps", "Core"],
   "muscles": [
     { "name": "Anterior Deltoid", "rank": 1 },
     { "name": "Lateral Deltoid", "rank": 2 },
@@ -3019,7 +3019,7 @@
   "name": "Push Press - Dumbbell",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Shoulders", "Arms", "Core"],
+  "bodyparts": ["Shoulders", "Triceps", "Core"],
   "muscles": [
     { "name": "Anterior Deltoid", "rank": 1 },
     { "name": "Lateral Deltoid", "rank": 2 },
@@ -3035,7 +3035,7 @@
   "name": "Push-up",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Chest", "Arms", "Shoulders"],
+  "bodyparts": ["Chest", "Triceps", "Shoulders"],
   "muscles": [
     { "name": "Pectoralis Major", "rank": 1 },
     { "name": "Triceps Brachii", "rank": 2 },
@@ -3051,7 +3051,7 @@
   "name": "Push-up (Close Grip)",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Arms", "Chest", "Shoulders"],
+  "bodyparts": ["Triceps", "Chest", "Shoulders"],
   "muscles": [
     { "name": "Triceps Brachii", "rank": 1 },
     { "name": "Pectoralis Major", "rank": 2 },
@@ -3067,7 +3067,7 @@
   "name": "Push-up (Wide Grip)",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Chest", "Shoulders", "Arms"],
+  "bodyparts": ["Chest", "Shoulders", "Triceps"],
   "muscles": [
     { "name": "Pectoralis Major", "rank": 1 },
     { "name": "Anterior Deltoid", "rank": 2 },
@@ -3083,7 +3083,7 @@
   "name": "Rack Pull - Barbell",
   "rating": 23,
   "equipment": ["Barbell", "Weight Plates", "Power Rack"],
-  "bodyparts": ["Back", "Hamstrings", "Glutes"],
+  "bodyparts": ["Lower Back", "Hamstrings", "Hips"],
   "muscles": [
     { "name": "Erector Spinae", "rank": 1 },
     { "name": "Gluteus Maximus", "rank": 2 },
@@ -3099,7 +3099,7 @@
   "name": "Renegade Row - Dumbbell",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Back", "Arms"],
+  "bodyparts": ["Upper Back", "Biceps"],
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
@@ -3115,7 +3115,7 @@
   "name": "Reverse Fly - Cable Machine",
   "rating": 23,
   "equipment": ["Cable Machine"],
-  "bodyparts": ["Back", "Shoulders"],
+  "bodyparts": ["Upper Back", "Shoulders"],
   "muscles": [
     { "name": "Posterior Deltoid", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
@@ -3131,7 +3131,7 @@
   "name": "Reverse Fly - Dumbbell (Bent Over)",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Back", "Shoulders"],
+  "bodyparts": ["Upper Back", "Shoulders"],
   "muscles": [
     { "name": "Posterior Deltoid", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
@@ -3147,7 +3147,7 @@
   "name": "Reverse Fly - Dumbbell (Seated)",
   "rating": 23,
   "equipment": ["Dumbbell", "Adjustable Bench"],
-  "bodyparts": ["Back", "Shoulders"],
+  "bodyparts": ["Upper Back", "Shoulders"],
   "muscles": [
     { "name": "Posterior Deltoid", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
@@ -3163,7 +3163,7 @@
   "name": "Reverse Fly - Dumbbell (Standing)",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Back", "Shoulders"],
+  "bodyparts": ["Upper Back", "Shoulders"],
   "muscles": [
     { "name": "Posterior Deltoid", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
@@ -3179,7 +3179,7 @@
   "name": "Reverse Fly - Dumbbell (Lying)",
   "rating": 23,
   "equipment": ["Dumbbell", "Adjustable Bench (face down)"],
-  "bodyparts": ["Back", "Shoulders"],
+  "bodyparts": ["Upper Back", "Shoulders"],
   "muscles": [
     { "name": "Posterior Deltoid", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
@@ -3195,7 +3195,7 @@
   "name": "Reverse Crunch",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Abs"],
+  "bodyparts": ["Core"],
   "muscles": [
     { "name": "Rectus Abdominis", "rank": 1 },
     { "name": "Transverse Abdominis", "rank": 2 },
@@ -3211,7 +3211,7 @@
   "name": "Reverse Crunch - Cable Machine",
   "rating": 23,
   "equipment": ["Cable Machine", "Cable Ankle Cuff Attachment"],
-  "bodyparts": ["Abs"],
+  "bodyparts": ["Core"],
   "muscles": [
     { "name": "Rectus Abdominis", "rank": 1 },
     { "name": "Transverse Abdominis", "rank": 2 },
@@ -3274,7 +3274,7 @@
   "name": "Reverse Lunge",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Quads", "Glutes", "Hamstrings"],
+  "bodyparts": ["Quads", "Hips", "Hamstrings"],
   "muscles": [
     { "name": "Gluteus Maximus", "rank": 1 },
     { "name": "Biceps Femoris", "rank": 2 },
@@ -3290,7 +3290,7 @@
   "name": "Reverse Lunge - Landmine Attachment",
   "rating": 23,
   "equipment": ["Landmine Attachment", "Barbell"],
-  "bodyparts": ["Quads", "Glutes", "Hamstrings"],
+  "bodyparts": ["Quads", "Hips", "Hamstrings"],
   "muscles": [
     { "name": "Gluteus Maximus", "rank": 1 },
     { "name": "Biceps Femoris", "rank": 2 },
@@ -3306,7 +3306,7 @@
   "name": "Reverse Lunge - Dumbbell",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Quads", "Glutes", "Hamstrings"],
+  "bodyparts": ["Quads", "Hips", "Hamstrings"],
   "muscles": [
     { "name": "Gluteus Maximus", "rank": 1 },
     { "name": "Biceps Femoris", "rank": 2 },
@@ -3322,7 +3322,7 @@
   "name": "Reverse Lunge - Barbell",
   "rating": 23,
   "equipment": ["Barbell", "Weight Plates", "Squat Rack"],
-  "bodyparts": ["Quads", "Glutes", "Hamstrings"],
+  "bodyparts": ["Quads", "Hips", "Hamstrings"],
   "muscles": [
     { "name": "Gluteus Maximus", "rank": 1 },
     { "name": "Biceps Femoris", "rank": 2 },
@@ -3338,7 +3338,7 @@
   "name": "Reverse Lunge - Kettlebell",
   "rating": 23,
   "equipment": ["Kettlebell"],
-  "bodyparts": ["Quads", "Glutes", "Hamstrings"],
+  "bodyparts": ["Quads", "Hips", "Hamstrings"],
   "muscles": [
     { "name": "Gluteus Maximus", "rank": 1 },
     { "name": "Biceps Femoris", "rank": 2 },
@@ -3354,7 +3354,7 @@
   "name": "Reverse Lunge - Cable Machine",
   "rating": 23,
   "equipment": ["Cable Machine", "Cable Ankle Cuff Attachment"],
-  "bodyparts": ["Quads", "Glutes", "Hamstrings"],
+  "bodyparts": ["Quads", "Hips", "Hamstrings"],
   "muscles": [
     { "name": "Gluteus Maximus", "rank": 1 },
     { "name": "Biceps Femoris", "rank": 2 },
@@ -3370,7 +3370,7 @@
   "name": "Reverse Lunge - Smith Machine",
   "rating": 23,
   "equipment": ["Smith Machine"],
-  "bodyparts": ["Quads", "Glutes", "Hamstrings"],
+  "bodyparts": ["Quads", "Hips", "Hamstrings"],
   "muscles": [
     { "name": "Gluteus Maximus", "rank": 1 },
     { "name": "Biceps Femoris", "rank": 2 },
@@ -3385,7 +3385,7 @@
   "name": "Reverse Plank",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Glutes", "Shoulders", "Back"],
+  "bodyparts": ["Hips", "Shoulders", "Lower Back"],
   "muscles": [
     { "name": "Erector Spinae", "rank": 1 },
     { "name": "Gluteus Maximus", "rank": 2 },
@@ -3401,7 +3401,7 @@
   "name": "Romanian Deadlift - Barbell",
   "rating": 23,
   "equipment": ["Barbell", "Weight Plates"],
-  "bodyparts": ["Hamstrings", "Glutes", "Back"],
+  "bodyparts": ["Hamstrings", "Hips", "Lower Back"],
   "muscles": [
     { "name": "Biceps Femoris", "rank": 1 },
     { "name": "Semitendinosus", "rank": 2 },
@@ -3417,7 +3417,7 @@
   "name": "Row - Landmine Attachment",
   "rating": 23,
   "equipment": ["Landmine Attachment", "Barbell"],
-  "bodyparts": ["Back"],
+  "bodyparts": ["Upper Back"],
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
@@ -3433,7 +3433,7 @@
   "name": "Row - Resistance Band",
   "rating": 23,
   "equipment": ["Resistance Band"],
-  "bodyparts": ["Back"],
+  "bodyparts": ["Upper Back"],
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
@@ -3449,7 +3449,7 @@
   "name": "Row - Kettlebell",
   "rating": 23,
   "equipment": ["Kettlebell"],
-  "bodyparts": ["Back"],
+  "bodyparts": ["Upper Back"],
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
@@ -3465,7 +3465,7 @@
   "name": "Row - Cable Machine",
   "rating": 23,
   "equipment": ["Cable Machine", "Cable Handle Attachment"],
-  "bodyparts": ["Back"],
+  "bodyparts": ["Upper Back"],
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
@@ -3481,7 +3481,7 @@
   "name": "Row - Smith Machine",
   "rating": 23,
   "equipment": ["Smith Machine"],
-  "bodyparts": ["Back"],
+  "bodyparts": ["Upper Back"],
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
@@ -3497,7 +3497,7 @@
   "name": "Row - Barbell",
   "rating": 23,
   "equipment": ["Barbell", "Weight Plates"],
-  "bodyparts": ["Back"],
+  "bodyparts": ["Upper Back"],
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
@@ -3513,7 +3513,7 @@
   "name": "Row - Dumbbell (Bent Over)",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Back"],
+  "bodyparts": ["Upper Back"],
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
@@ -3529,7 +3529,7 @@
   "name": "Row - Dumbbell (Kneeling)",
   "rating": 23,
   "equipment": ["Dumbbell", "Adjustable Bench"],
-  "bodyparts": ["Back"],
+  "bodyparts": ["Upper Back"],
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
@@ -3545,7 +3545,7 @@
   "name": "Row - Dumbbell (Seated)",
   "rating": 23,
   "equipment": ["Dumbbell", "Adjustable Bench"],
-  "bodyparts": ["Back"],
+  "bodyparts": ["Upper Back"],
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
@@ -3561,7 +3561,7 @@
   "name": "Row - Dumbbell",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Back"],
+  "bodyparts": ["Upper Back"],
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
@@ -3576,7 +3576,7 @@
   "name": "Row - Dumbbell (Reverse Grip)",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Back"],
+  "bodyparts": ["Upper Back"],
   "muscles": [
     { "name": "Biceps Brachii", "rank": 1 },
     { "name": "Latissimus Dorsi", "rank": 2 },
@@ -3592,7 +3592,7 @@
   "name": "Russian Twist",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Abs"],
+  "bodyparts": ["Core"],
   "muscles": [
     { "name": "Obliques", "rank": 1 },
     { "name": "Rectus Abdominis", "rank": 2 },
@@ -3608,7 +3608,7 @@
   "name": "Russian Twist - Dumbbell",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Abs"],
+  "bodyparts": ["Core"],
   "muscles": [
     { "name": "Obliques", "rank": 1 },
     { "name": "Rectus Abdominis", "rank": 2 },
@@ -3624,7 +3624,7 @@
   "name": "Seated Chest Press",
   "rating": 23,
   "equipment": ["Chest Press Machine"],
-  "bodyparts": ["Chest", "Arms", "Shoulders"],
+  "bodyparts": ["Chest", "Triceps", "Shoulders"],
   "muscles": [
     { "name": "Pectoralis Major", "rank": 1 },
     { "name": "Triceps Brachii", "rank": 2 },
@@ -3656,7 +3656,7 @@
   "name": "Seated Leg Press",
   "rating": 23,
   "equipment": ["Seated Leg Press Machine", "Weight Plates"],
-  "bodyparts": ["Quads", "Glutes", "Hamstrings"],
+  "bodyparts": ["Quads", "Hips", "Hamstrings"],
   "muscles": [
     { "name": "Vastus Lateralis", "rank": 1 },
     { "name": "Vastus Medialis", "rank": 2 },
@@ -3672,7 +3672,7 @@
   "name": "Shrug - Cable Machine",
   "rating": 23,
   "equipment": ["Cable Machine", "Cable Straight Bar Attachment"],
-  "bodyparts": ["Trapezius", "Shoulders"],
+  "bodyparts": ["Upper Back", "Shoulders"],
   "muscles": [
     { "name": "Trapezius (upper)", "rank": 1 },
     { "name": "Levator Scapulae", "rank": 2 },
@@ -3720,7 +3720,7 @@
   "name": "Side Bend - Cable Machine",
   "rating": 23,
   "equipment": ["Cable Machine", "Cable Handle Attachment"],
-  "bodyparts": ["Abs"],
+  "bodyparts": ["Core"],
   "muscles": [
     { "name": "Obliques", "rank": 1 },
     { "name": "Quadratus Lumborum", "rank": 2 },
@@ -3736,7 +3736,7 @@
   "name": "Side Bend - Dumbbell",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Abs"],
+  "bodyparts": ["Core"],
   "muscles": [
     { "name": "Obliques", "rank": 1 },
     { "name": "Quadratus Lumborum", "rank": 2 },
@@ -3752,7 +3752,7 @@
   "name": "Side Bridge",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Abs", "Shoulders"],
+  "bodyparts": ["Core", "Shoulders"],
   "muscles": [
     { "name": "Obliques", "rank": 1 },
     { "name": "Transverse Abdominis", "rank": 2 },
@@ -3768,7 +3768,7 @@
   "name": "Side Bridge - Dumbbell",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Abs", "Shoulders"],
+  "bodyparts": ["Core", "Shoulders"],
   "muscles": [
     { "name": "Obliques", "rank": 1 },
     { "name": "Transverse Abdominis", "rank": 2 },
@@ -3784,7 +3784,7 @@
   "name": "Side Lunge",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Adductors", "Quads", "Glutes"],
+  "bodyparts": ["Adductors", "Quads", "Hips"],
   "muscles": [
     { "name": "Adductor Magnus", "rank": 1 },
     { "name": "Gluteus Maximus", "rank": 2 },
@@ -3800,7 +3800,7 @@
   "name": "Side Lunge - Cable Machine",
   "rating": 23,
   "equipment": ["Cable Machine", "Cable Ankle Cuff Attachment"],
-  "bodyparts": ["Adductors", "Quads", "Glutes"],
+  "bodyparts": ["Adductors", "Quads", "Hips"],
   "muscles": [
     { "name": "Adductor Magnus", "rank": 1 },
     { "name": "Gluteus Maximus", "rank": 2 },
@@ -3816,7 +3816,7 @@
   "name": "Side Lunge - Dumbbell",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Adductors", "Quads", "Glutes"],
+  "bodyparts": ["Adductors", "Quads", "Hips"],
   "muscles": [
     { "name": "Adductor Magnus", "rank": 1 },
     { "name": "Gluteus Maximus", "rank": 2 },
@@ -3832,7 +3832,7 @@
   "name": "Side Plank",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Abs", "Shoulders"],
+  "bodyparts": ["Core", "Shoulders"],
   "muscles": [
     { "name": "Transverse Abdominis", "rank": 1 },
     { "name": "Obliques", "rank": 2 },
@@ -3848,7 +3848,7 @@
   "name": "Side Plank (Straight Knees)",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Abs", "Shoulders"],
+  "bodyparts": ["Core", "Shoulders"],
   "muscles": [
     { "name": "Obliques", "rank": 1 },
     { "name": "Transverse Abdominis", "rank": 2 },
@@ -3864,7 +3864,7 @@
   "name": "Side Plank (Bent Knees)",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Abs"],
+  "bodyparts": ["Core"],
   "muscles": [
     { "name": "Obliques", "rank": 1 },
     { "name": "Transverse Abdominis", "rank": 2 },
@@ -3879,7 +3879,7 @@
   "name": "Single Arm Row - Landmine Attachment",
   "rating": 23,
   "equipment": ["Landmine Attachment", "Barbell"],
-  "bodyparts": ["Back"],
+  "bodyparts": ["Upper Back"],
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
@@ -3895,7 +3895,7 @@
   "name": "Single Arm Row - Cable Machine",
   "rating": 23,
   "equipment": ["Cable Machine", "Cable Handle Attachment"],
-  "bodyparts": ["Back"],
+  "bodyparts": ["Upper Back"],
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
@@ -3911,7 +3911,7 @@
   "name": "Single Arm Row - Dumbbell (Kneeling)",
   "rating": 23,
   "equipment": ["Dumbbell", "Adjustable Bench"],
-  "bodyparts": ["Back"],
+  "bodyparts": ["Upper Back"],
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
@@ -3927,7 +3927,7 @@
   "name": "Single Arm Row - Dumbbell (Seated)",
   "rating": 23,
   "equipment": ["Dumbbell", "Adjustable Bench"],
-  "bodyparts": ["Back"],
+  "bodyparts": ["Upper Back"],
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
@@ -3943,7 +3943,7 @@
   "name": "Single Arm Lat Pull-down - Lat Pulldown Machine",
   "rating": 23,
   "equipment": ["Lat Pulldown Machine"],
-  "bodyparts": ["Back"],
+  "bodyparts": ["Upper Back"],
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
@@ -3959,7 +3959,7 @@
   "name": "Single Arm Lat Pull-down - Cable Machine",
   "rating": 23,
   "equipment": ["Cable Machine", "Cable Handle Attachment"],
-  "bodyparts": ["Back"],
+  "bodyparts": ["Upper Back"],
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
@@ -4007,7 +4007,7 @@
   "name": "Single Leg Deadlift - Barbell",
   "rating": 23,
   "equipment": ["Barbell", "Weight Plates"],
-  "bodyparts": ["Hamstrings", "Glutes", "Back"],
+  "bodyparts": ["Hamstrings", "Hips", "Lower Back"],
   "muscles": [
     { "name": "Biceps Femoris", "rank": 1 },
     { "name": "Semitendinosus", "rank": 2 },
@@ -4023,7 +4023,7 @@
   "name": "Single Leg Deadlift - Dumbbell",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Hamstrings", "Glutes", "Back"],
+  "bodyparts": ["Hamstrings", "Hips", "Lower Back"],
   "muscles": [
     { "name": "Biceps Femoris", "rank": 1 },
     { "name": "Semitendinosus", "rank": 2 },
@@ -4039,7 +4039,7 @@
   "name": "Single Leg Hip Thrust - Dumbbell",
   "rating": 23,
   "equipment": ["Dumbbell", "Adjustable Bench"],
-  "bodyparts": ["Glutes", "Hamstrings", "Abs"],
+  "bodyparts": ["Hips", "Hamstrings", "Core"],
   "muscles": [
     { "name": "Gluteus Maximus", "rank": 1 },
     { "name": "Biceps Femoris", "rank": 2 },
@@ -4055,7 +4055,7 @@
   "name": "Single Leg Hip Thrust - Barbell",
   "rating": 23,
   "equipment": ["Barbell", "Weight Plates", "Adjustable Bench"],
-  "bodyparts": ["Glutes", "Hamstrings", "Abs"],
+  "bodyparts": ["Hips", "Hamstrings", "Core"],
   "muscles": [
     { "name": "Gluteus Maximus", "rank": 1 },
     { "name": "Biceps Femoris", "rank": 2 },
@@ -4071,7 +4071,7 @@
   "name": "Sit-Up",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Abs"],
+  "bodyparts": ["Core"],
   "muscles": [
     { "name": "Rectus Abdominis", "rank": 1 },
     { "name": "Transverse Abdominis", "rank": 2 },
@@ -4087,7 +4087,7 @@
   "name": "Sit-Up - Dumbbell",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Abs"],
+  "bodyparts": ["Core"],
   "muscles": [
     { "name": "Rectus Abdominis", "rank": 1 },
     { "name": "Transverse Abdominis", "rank": 2 },
@@ -4103,7 +4103,7 @@
   "name": "Skull Crusher - Cable Machine",
   "rating": 23,
   "equipment": ["Cable Machine", "Cable Rope Attachment"],
-  "bodyparts": ["Arms"],
+  "bodyparts": ["Triceps"],
   "muscles": [
     { "name": "Triceps Brachii", "rank": 1 },
     { "name": "Anconeus", "rank": 2 },
@@ -4119,7 +4119,7 @@
   "name": "Skull Crusher - Barbell",
   "rating": 23,
   "equipment": ["Barbell", "Weight Plates"],
-  "bodyparts": ["Arms"],
+  "bodyparts": ["Triceps"],
   "muscles": [
     { "name": "Triceps Brachii", "rank": 1 },
     { "name": "Anconeus", "rank": 2 },
@@ -4135,7 +4135,7 @@
   "name": "Skull Crusher - Dumbbell",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Arms"],
+  "bodyparts": ["Triceps"],
   "muscles": [
     { "name": "Triceps Brachii", "rank": 1 },
     { "name": "Anconeus", "rank": 2 },
@@ -4167,7 +4167,7 @@
   "name": "Sled Pull",
   "rating": 23,
   "equipment": ["Sled", "Harness"],
-  "bodyparts": ["Back", "Abs"],
+  "bodyparts": ["Lower Back", "Core"],
   "muscles": [
     { "name": "Erector Spinae", "rank": 1 },
     { "name": "Latissimus Dorsi", "rank": 2 },
@@ -4199,7 +4199,7 @@
   "name": "Snatch",
   "rating": 23,
   "equipment": ["Barbell", "Weight Plates"],
-  "bodyparts": ["Back", "Shoulders"],
+  "bodyparts": ["Upper Back", "Shoulders"],
   "muscles": [
     { "name": "Anterior Deltoid", "rank": 1 },
     { "name": "Trapezius (upper)", "rank": 2 },
@@ -4215,7 +4215,7 @@
   "name": "Split Jerk",
   "rating": 23,
   "equipment": ["Barbell", "Weight Plates", "Squat Rack"],
-  "bodyparts": ["Shoulders", "Arms"],
+  "bodyparts": ["Shoulders", "Triceps"],
   "muscles": [
     { "name": "Anterior Deltoid", "rank": 1 },
     { "name": "Triceps Brachii", "rank": 2 },
@@ -4231,7 +4231,7 @@
   "name": "Split Squat",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Quads", "Glutes", "Hamstrings"],
+  "bodyparts": ["Quads", "Hips", "Hamstrings"],
   "muscles": [
     { "name": "Rectus Femoris", "rank": 1 },
     { "name": "Gluteus Maximus", "rank": 2 },
@@ -4247,7 +4247,7 @@
   "name": "Split Squat - Dumbbell",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Quads", "Glutes", "Hamstrings"],
+  "bodyparts": ["Quads", "Hips", "Hamstrings"],
   "muscles": [
     { "name": "Rectus Femoris", "rank": 1 },
     { "name": "Gluteus Maximus", "rank": 2 },
@@ -4263,7 +4263,7 @@
   "name": "Split Squat - Barbell",
   "rating": 23,
   "equipment": ["Barbell", "Weight Plates", "Squat Rack"],
-  "bodyparts": ["Quads", "Glutes", "Hamstrings"],
+  "bodyparts": ["Quads", "Hips", "Hamstrings"],
   "muscles": [
     { "name": "Rectus Femoris", "rank": 1 },
     { "name": "Gluteus Maximus", "rank": 2 },
@@ -4279,7 +4279,7 @@
   "name": "Squat",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Quads", "Glutes", "Hamstrings", "Abs"],
+  "bodyparts": ["Quads", "Hips", "Hamstrings", "Core"],
   "muscles": [
     { "name": "Vastus Lateralis", "rank": 1 },
     { "name": "Gluteus Maximus", "rank": 2 },
@@ -4295,7 +4295,7 @@
   "name": "Squat - Landmine Attachment",
   "rating": 23,
   "equipment": ["Landmine Attachment", "Barbell", "Weight Plates"],
-  "bodyparts": ["Quads", "Glutes", "Hamstrings", "Abs"],
+  "bodyparts": ["Quads", "Hips", "Hamstrings", "Core"],
   "muscles": [
     { "name": "Vastus Lateralis", "rank": 1 },
     { "name": "Gluteus Maximus", "rank": 2 },
@@ -4311,7 +4311,7 @@
   "name": "Squat - Barbell",
   "rating": 23,
   "equipment": ["Barbell", "Weight Plates", "Squat Rack"],
-  "bodyparts": ["Quads", "Glutes", "Hamstrings", "Abs"],
+  "bodyparts": ["Quads", "Hips", "Hamstrings", "Core"],
   "muscles": [
     { "name": "Vastus Lateralis", "rank": 1 },
     { "name": "Gluteus Maximus", "rank": 2 },
@@ -4327,7 +4327,7 @@
   "name": "Squat - Dumbbell",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Quads", "Glutes", "Hamstrings", "Abs"],
+  "bodyparts": ["Quads", "Hips", "Hamstrings", "Core"],
   "muscles": [
     { "name": "Vastus Lateralis", "rank": 1 },
     { "name": "Gluteus Maximus", "rank": 2 },
@@ -4359,7 +4359,7 @@
   "name": "Straight Arm Lat Pull-down - Lat Pulldown Machine",
   "rating": 23,
   "equipment": ["Lat Pulldown Machine"],
-  "bodyparts": ["Back", "Shoulders"],
+  "bodyparts": ["Upper Back", "Shoulders"],
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Teres Major", "rank": 2 },
@@ -4375,7 +4375,7 @@
   "name": "Straight Arm Lat Pull-down - Cable Machine",
   "rating": 23,
   "equipment": ["Cable Machine", "Cable Straight Bar Attachment"],
-  "bodyparts": ["Back", "Shoulders"],
+  "bodyparts": ["Upper Back", "Shoulders"],
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Teres Major", "rank": 2 },
@@ -4391,7 +4391,7 @@
   "name": "Step-Up",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Quads", "Glutes", "Hamstrings"],
+  "bodyparts": ["Quads", "Hips", "Hamstrings"],
   "muscles": [
     { "name": "Rectus Femoris", "rank": 1 },
     { "name": "Gluteus Maximus", "rank": 2 },
@@ -4407,7 +4407,7 @@
   "name": "Step-Up - Barbell",
   "rating": 23,
   "equipment": ["Barbell", "Weight Plates"],
-  "bodyparts": ["Quads", "Glutes", "Hamstrings"],
+  "bodyparts": ["Quads", "Hips", "Hamstrings"],
   "muscles": [
     { "name": "Rectus Femoris", "rank": 1 },
     { "name": "Gluteus Maximus", "rank": 2 },
@@ -4423,7 +4423,7 @@
   "name": "Step-Up - Dumbbell",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Quads", "Glutes", "Hamstrings"],
+  "bodyparts": ["Quads", "Hips", "Hamstrings"],
   "muscles": [
     { "name": "Rectus Femoris", "rank": 1 },
     { "name": "Gluteus Maximus", "rank": 2 },
@@ -4436,7 +4436,7 @@
   "name": "Stiff Leg Deadlift - Barbell",
   "rating": 23,
   "equipment": ["Barbell", "Weight Plates"],
-  "bodyparts": ["Hamstrings", "Back", "Glutes"],
+  "bodyparts": ["Hamstrings", "Lower Back", "Hips"],
   "muscles": [
     { "name": "Biceps Femoris", "rank": 1 },
     { "name": "Semitendinosus", "rank": 2 },
@@ -4452,7 +4452,7 @@
   "name": "Swings - Dumbbell",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Erector Spinae", "Hips", "Abs"],
+  "bodyparts": ["Upper Back", "Hips", "Core"],
   "muscles": [
     { "name": "Gluteus Maximus", "rank": 1 },
     { "name": "Biceps Femoris", "rank": 2 },
@@ -4468,7 +4468,7 @@
   "name": "Thruster - Barbell",
   "rating": 23,
   "equipment": ["Barbell", "Weight Plates", "Squat Rack"],
-  "bodyparts": ["Shoulders", "Abs"],
+  "bodyparts": ["Shoulders", "Core"],
   "muscles": [
     { "name": "Rectus Femoris", "rank": 1 },
     { "name": "Gluteus Maximus", "rank": 2 },
@@ -4484,7 +4484,7 @@
   "name": "Thruster - Dumbbell",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Shoulders", "Abs"],
+  "bodyparts": ["Shoulders", "Core"],
   "muscles": [
     { "name": "Rectus Femoris", "rank": 1 },
     { "name": "Gluteus Maximus", "rank": 2 },
@@ -4500,7 +4500,7 @@
   "name": "Toes To Bar",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Hip Flexors", "Shoulders"],
+  "bodyparts": ["Hips", "Shoulders"],
   "muscles": [
     { "name": "Rectus Abdominis", "rank": 1 },
     { "name": "Iliopsoas", "rank": 2 },
@@ -4516,7 +4516,7 @@
   "name": "Tricep Dip",
   "rating": 23,
   "equipment": ["Dip Bars"],
-  "bodyparts": ["Arms", "Chest", "Shoulders"],
+  "bodyparts": ["Triceps", "Chest", "Shoulders"],
   "muscles": [
     { "name": "Triceps Brachii", "rank": 1 },
     { "name": "Pectoralis Major", "rank": 2 },
@@ -4532,7 +4532,7 @@
   "name": "Tricep Dip - Assisted Dip/Pull-Up Machine",
   "rating": 23,
   "equipment": ["Assisted Dip/Pull-Up Machine"],
-  "bodyparts": ["Arms", "Chest", "Shoulders"],
+  "bodyparts": ["Triceps", "Chest", "Shoulders"],
   "muscles": [
     { "name": "Triceps Brachii", "rank": 1 },
     { "name": "Pectoralis Major", "rank": 2 },
@@ -4548,7 +4548,7 @@
   "name": "Tricep Extension - Cable Machine",
   "rating": 23,
   "equipment": ["Cable Machine", "Cable Rope Attachment"],
-  "bodyparts": ["Arms"],
+  "bodyparts": ["Triceps"],
   "muscles": [
     { "name": "Triceps Brachii", "rank": 1 },
     { "name": "Anconeus", "rank": 2 },
@@ -4564,7 +4564,7 @@
   "name": "Tricep Extension - Dumbbell",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Arms"],
+  "bodyparts": ["Triceps"],
   "muscles": [
     { "name": "Triceps Brachii", "rank": 1 },
     { "name": "Anconeus", "rank": 2 },
@@ -4580,7 +4580,7 @@
   "name": "Tricep Extension - Barbell (Standing)",
   "rating": 23,
   "equipment": ["Barbell", "Weight Plates"],
-  "bodyparts": ["Arms"],
+  "bodyparts": ["Triceps"],
   "muscles": [
     { "name": "Triceps Brachii", "rank": 1 },
     { "name": "Anconeus", "rank": 2 },
@@ -4596,7 +4596,7 @@
   "name": "Tricep Extension - Barbell (Bent Over)",
   "rating": 23,
   "equipment": ["Barbell", "Weight Plates"],
-  "bodyparts": ["Arms", "Back"],
+  "bodyparts": ["Triceps", "Upper Back"],
   "muscles": [
     { "name": "Triceps Brachii", "rank": 1 },
     { "name": "Anconeus", "rank": 2 },
@@ -4612,7 +4612,7 @@
   "name": "Tricep Kickback - Cable Machine",
   "rating": 23,
   "equipment": ["Cable Machine", "Cable Handle Attachment"],
-  "bodyparts": ["Arms"],
+  "bodyparts": ["Triceps"],
   "muscles": [
     { "name": "Triceps Brachii", "rank": 1 },
     { "name": "Anconeus", "rank": 2 },
@@ -4628,7 +4628,7 @@
   "name": "Tricep Kickback - Dumbbell",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Arms"],
+  "bodyparts": ["Triceps"],
   "muscles": [
     { "name": "Triceps Brachii", "rank": 1 },
     { "name": "Anconeus", "rank": 2 },
@@ -4644,7 +4644,7 @@
   "name": "Tricep Pushdown - Cable Machine",
   "rating": 23,
   "equipment": ["Cable Machine", "Cable Straight Bar Attachment"],
-  "bodyparts": ["Arms"],
+  "bodyparts": ["Triceps"],
   "muscles": [
     { "name": "Triceps Brachii", "rank": 1 },
     { "name": "Anconeus", "rank": 2 },
@@ -4660,7 +4660,7 @@
   "name": "Tuck Crunch",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Abs"],
+  "bodyparts": ["Core"],
   "muscles": [
     { "name": "Rectus Abdominis", "rank": 1 },
     { "name": "Transverse Abdominis", "rank": 2 },
@@ -4676,7 +4676,7 @@
   "name": "Tuck Crunch - Dumbbell",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Abs"],
+  "bodyparts": ["Core"],
   "muscles": [
     { "name": "Rectus Abdominis", "rank": 1 },
     { "name": "Transverse Abdominis", "rank": 2 },
@@ -4692,7 +4692,7 @@
   "name": "Turkish Get Up",
   "rating": 23,
   "equipment": ["Kettlebell"],
-  "bodyparts": ["Shoulders", "Hip Flexors"],
+  "bodyparts": ["Shoulders", "Hips"],
   "muscles": [
     { "name": "Transverse Abdominis", "rank": 1 },
     { "name": "Gluteus Maximus", "rank": 2 },
@@ -4708,7 +4708,7 @@
   "name": "Up-Down Twist - Cable Machine",
   "rating": 23,
   "equipment": ["Cable Machine", "Cable Handle Attachment"],
-  "bodyparts": ["Abs", "Shoulders"],
+  "bodyparts": ["Core", "Shoulders"],
   "muscles": [
     { "name": "Obliques", "rank": 1 },
     { "name": "Rectus Abdominis", "rank": 2 },
@@ -4772,7 +4772,7 @@
   "name": "V Up",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Hip Flexors"],
+  "bodyparts": ["Hips"],
   "muscles": [
     { "name": "Rectus Abdominis", "rank": 1 },
     { "name": "Iliopsoas", "rank": 2 },
@@ -4788,7 +4788,7 @@
   "name": "V Up - Resistance Band",
   "rating": 23,
   "equipment": ["Resistance Band"],
-  "bodyparts": ["Hip Flexors"],
+  "bodyparts": ["Hips"],
   "muscles": [
     { "name": "Rectus Abdominis", "rank": 1 },
     { "name": "Iliopsoas", "rank": 2 },
@@ -4804,7 +4804,7 @@
   "name": "V Up - Cable Machine",
   "rating": 23,
   "equipment": ["Cable Machine", "Cable Ankle Cuff Attachment"],
-  "bodyparts": ["Hip Flexors"],
+  "bodyparts": ["Hips"],
   "muscles": [
     { "name": "Rectus Abdominis", "rank": 1 },
     { "name": "Iliopsoas", "rank": 2 },
@@ -4820,7 +4820,7 @@
   "name": "V Up - Dumbbell",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Hip Flexors"],
+  "bodyparts": ["Hips"],
   "muscles": [
     { "name": "Rectus Abdominis", "rank": 1 },
     { "name": "Iliopsoas", "rank": 2 },
@@ -4836,7 +4836,7 @@
   "name": "Windmill Wipers",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Abs", "Hamstrings"],
+  "bodyparts": ["Core", "Hamstrings"],
   "muscles": [
     { "name": "Transverse Abdominis", "rank": 1 },
     { "name": "Obliques", "rank": 2 },
@@ -4852,7 +4852,7 @@
   "name": "Windmill Wipers (Straight Knees)",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Abs", "Hamstrings"],
+  "bodyparts": ["Core", "Hamstrings"],
   "muscles": [
     { "name": "Transverse Abdominis", "rank": 1 },
     { "name": "Obliques", "rank": 2 },
@@ -4868,7 +4868,7 @@
   "name": "Windmill Wipers (Bent Knees)",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Abs"],
+  "bodyparts": ["Core"],
   "muscles": [
     { "name": "Obliques", "rank": 1 },
     { "name": "Transverse Abdominis", "rank": 2 },
@@ -4944,7 +4944,7 @@
   "name": "Zercher Carry - Barbell",
   "rating": 23,
   "equipment": ["Barbell", "Weight Plates"],
-  "bodyparts": ["Shoulders", "Arms", "Hips"],
+  "bodyparts": ["Shoulders", "Biceps", "Hips"],
   "muscles": [
     { "name": "Transverse Abdominis", "rank": 1 },
     { "name": "Erector Spinae", "rank": 2 },
@@ -4960,7 +4960,7 @@
   "name": "Zercher Squat - Barbell",
   "rating": 23,
   "equipment": ["Barbell", "Weight Plates", "Squat Rack"],
-  "bodyparts": ["Arms"],
+  "bodyparts": ["Hips"],
   "muscles": [
     { "name": "Vastus Lateralis", "rank": 1 },
     { "name": "Gluteus Maximus", "rank": 2 },

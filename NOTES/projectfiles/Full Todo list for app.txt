@@ -472,3 +472,630 @@ You can key “High ↔ Low” with a small legend.
 				- exercise performance trends
 	
 	
+	
+	
+	
+	
+Here’s a high‐level roadmap of everything you’ll need to make these three new features real.  No code yet—just the major moving parts:
+
+---
+
+## 1. Session-Completion Pop-Up
+
+### A. Data Layer
+
+* **Repository method**
+  Add something like
+
+  ```dart
+  Future<SessionSummary> fetchSessionSummary(int sessionId)
+  ```
+
+  which loads:
+
+  * session metadata (date, start time, duration)
+  * all weight exercises + their sets
+  * cardio details
+  * stretch details
+* **Helpers for “new Rep-Max” / “new Volume-Max”**
+  In that same repo (or a new `MetricsDao`), add queries to compute, for each exercise definition:
+
+  * the historical top weight for X reps
+  * the historical top volume (weight×reps) for X reps
+    so you can flag any set in this session that breaks those records.
+* **ERM calculation**
+  You’ll just compute on the fly:
+
+  ```dart
+  double erm = weight * (1 + 0.0333 * reps);
+  ```
+
+### B. UI Layer
+
+* **`showModalBottomSheet` or `DraggableScrollableSheet`**
+
+  * Build a widget (`SessionCompletionSheet`) that takes a `SessionSummary`.
+  * Half-height when first opened, expands to full height on drag or button tap.
+  * Layout:
+
+  ```
+  ┌─────────────────────────────┐
+  │ Completed Session           │
+  │  Date   | Duration | …     │
+  │  Volume | Cal 100  | Score5 │
+  ├─────────────────────────────┤
+  │ Exercise A                   │
+  │ 1. 100×10   (VM) (RM)  ERM=… │
+  │ 2. 120× 8            ERM=… │
+  │ …                           │
+  ├─────────────────────────────┤
+  │ [✓]  (green)                 │
+  └─────────────────────────────┘
+  ```
+
+---
+
+## 2. Exercise-Detail Pop-Up
+
+### A. Schema & Models
+
+* **Add columns** to `exercise_definitions` via a V8 migration:
+
+  ```sql
+  ALTER TABLE exercise_definitions
+    ADD COLUMN exampleUrl TEXT,
+    ADD COLUMN setupNote  TEXT,
+    ADD COLUMN execNote   TEXT,
+    ADD COLUMN tips       TEXT;
+  ```
+* **Update `DefinitionDao`** to read/write those new fields.
+* **New Models**
+
+  * `ExerciseDefinitionExtended` (inherits `ExerciseDefinition` + the 4 new fields)
+
+### B. Repository
+
+* **Fetch full details**
+
+  ```dart
+  Future<ExerciseDefinitionExtended> fetchDefExtended(int defId);
+  ```
+* **Metrics queries**
+
+  ```dart
+  Future<RepMaxMap>   fetchRepMaxes(int defId, DateRange range);
+  Future<double>      fetchVolumeMax(int defId, DateRange range);
+  ```
+* **History queries**
+
+  ```dart
+  Future<List<ExerciseHistoryEntry>> fetchExerciseHistory(int defId, {int limit=10});
+  ```
+
+### C. UI Layer
+
+* **Bottom sheet** with a `TabBar` of three tabs:
+
+  1. **Details**
+
+     * Name, equipment list, body-parts, muscles
+     * “Example” media placeholder
+     * Setup / Execution / Tips sections (show your new columns, or “to be added” if null)
+  2. **Metrics**
+
+     * Toggle buttons for Week / Month / All-Time
+     * Show Volume‐Max & 1-ERM for that span
+     * Table of rep-count buckets (1–20) with recorded max or ERM fallback
+  3. **Records**
+
+     * Bar chart of last N sessions (paired bars: ERM vs VM)
+     * Below, list the last sessions (date, sets summary, badges)
+
+---
+
+## 3. History-Detail Widget
+
+### A. Repository
+
+* **Weekly summary**
+
+  ```dart
+  Future<WeeklySummary> fetchWeeklySummary(); 
+  // includes: workoutCount, totalDuration, totalVolume, bodyPartSetCounts, dailySessionCounts
+  ```
+* **Body-part breakdown**
+  Use existing joins on `exercise_bodypart` + `sets` to count sets per part.
+
+### B. Models
+
+* `WeeklySummary { int sessionCount; Duration totalTime; double totalVolume; Map<Weekday,int> dailyCount; Map<BodyPart,int> partSetCounts; }`
+
+### C. UI Layer
+
+* **A new `HistoryDetailWidget`** placed above your session list on the History page:
+
+  ```
+  ┌─────────────────────────────────┐
+  │ This Week (last 7 days)        │
+  │ Workouts:   5   Time: 4h20m    │
+  │ Volume:  32k lbs               │
+  │ Goal:  80%                     │
+  ├─────────────────────────────────┤
+  │ 📊 Bar chart of sessions/day    │
+  ├─────────────────────────────────┤
+  │ 🔥 Body-heatmap silhouette      │
+  └─────────────────────────────────┘
+  ```
+
+---
+
+## Cross-cutting Concerns
+
+1. **State management**
+
+   * You can fetch data on-demand with `FutureBuilder` inside each sheet/widget, or pre-fetch via Providers if you prefer a “ready” flag.
+2. **Charting & heatmaps**
+
+   * Pick a Flutter charting package (`fl_chart`, `charts_flutter`, etc.).
+   * For the body silhouette, either overlay tinted SVG regions (with `flutter_svg`) or simple custom‐paint.
+3. **Migrations**
+
+   * Add a new schema migration (v8) for your notes columns.
+4. **Styling & animations**
+
+   * Mirror your existing bottom‐sheet style (rounded corners, swipe up).
+   * Badges for RM (yellow) / VM (green) in lists.
+
+---
+
+### Next Steps
+
+1. **Write the DB migration** for `exercise_definitions`.
+2. **Extend DAOs** with all the new queries.
+3. **Add new model classes** (`SessionSummary`, `WeeklySummary`, etc.).
+4. **Wire up repository methods** in `AppRepository` (or split off a `MetricsRepository`).
+5. **Build the three UI components** (each as its own widget).
+6. **Hook into navigation** (buttons/taps in sessions, catalog, presets, history).
+7. **Polish & performance** (batch queries, show spinners during long loads).
+
+Let me know if you want to drill into any of those steps in more detail before diving into code!
+
+
+
+
+
+
+
+
+
+
+Here’s a rough map of every place in your codebase you’ll touch or add to when rolling out those three new features:
+
+---
+
+### 1) Database & DAO layer
+
+* **`lib/db/schema.dart`**
+  – Add a new migration (v8) to alter `exercise_definitions` for your notes/URLs columns.
+* **`lib/db/definition_dao.dart`**
+  – Extend to read/write the new example/setup/execution/tips fields.
+  – Add queries to fetch rep-maxes, volume-maxes, and exercise history for a given definition.
+* **`lib/db/session_dao.dart`** (or new `metrics_dao.dart`)
+  – Add a method to load an entire session summary (all weight/cardio/stretch entries).
+* **`lib/db/exercise_dao.dart`**
+  – Possibly add a helper to fetch last N exercise instances for the bar charts.
+* **`lib/db/lookup_dao.dart`** (or new DAO)
+  – Queries for weekly summary: session count, total volume, set-counts per bodypart.
+
+### 2) Repository layer
+
+* **`lib/repositories/app_repository.dart`**
+  – Expose new methods:
+
+  ```dart
+  Future<SessionSummary> fetchSessionSummary(int sessionId);
+  Future<ExerciseDefinitionExtended> fetchDefExtended(int defId);
+  Future<RepMaxMap>   fetchRepMaxes(int defId, DateRange range);
+  Future<double>      fetchVolumeMax(int defId, DateRange range);
+  Future<List<ExerciseHistoryEntry>> fetchExerciseHistory(int defId, {int limit});
+  Future<WeeklySummary> fetchWeeklySummary();
+  ```
+* **`lib/repositories/profile_repository.dart`**
+  – (No change unless you want to filter history per profile.)
+
+### 3) Models & Value Objects
+
+* **`lib/models/session_summary.dart`** (new)
+* **`lib/models/exercise_definition_extended.dart`** (new)
+* **`lib/models/exercise_history_entry.dart`** (new)
+* **`lib/models/rep_max_map.dart`**, **`volume_max.dart`**, **`weekly_summary.dart`** (new)
+* **`lib/models/date_range.dart`** (maybe new helper)
+
+### 4) UI components
+
+* **`lib/widgets/session_completion_sheet.dart`** (new)
+* **`lib/widgets/exercise_detail_sheet.dart`** (new)
+* **`lib/widgets/history_detail_widget.dart`** (new)
+
+### 5) Screens & Integration
+
+* **`lib/screens/session_screen.dart`**
+  – Launch your session-completion sheet after saving a session.
+* **`lib/screens/session_detail_screen.dart`**
+  – Offer “View Summary” to open the same sheet.
+* **`lib/widgets/weight_exercise_tile.dart`** (if you have one) or wherever you render a `WeightExercise`
+  – Add a “Details” button to open the exercise-detail sheet.
+* **`lib/screens/exercise_catalog_page.dart`**, **`lib/screens/definitions_by_bodypart_page.dart`**
+  – Hook their “Details” taps to your exercise-detail sheet.
+* **`lib/screens/history_page.dart`**
+  – Insert `HistoryDetailWidget` at the top, above the session list.
+
+### 6) State management & providers
+
+* If you go the Provider route you mentioned, you may add:
+
+  * A `ChangeNotifier` for each sheet (e.g. `SessionSummaryProvider`, `ExerciseDetailProvider`, `HistoryProvider`) to pre-fetch & expose a “ready” flag.
+
+---
+
+With that map in hand, you can systematically:
+
+1. **Migrate & extend your schema/DAOs**
+2. **Expose new methods in your repository**
+3. **Define your new model classes**
+4. **Build the three widget components**
+5. **Wire them up from the appropriate screens**
+
+Let me know where you’d like to dig in next!
+
+
+
+
+MV = Maintenance Volume
+MEV = Minimum Effective Volume
+MAV = Maximum Adaptive Volume 
+MRV = Maximum Recoverable Volume
+
+what i should have before making preset maker:
+list of bodyparts
+	- muscles which fall under these bodyparts listed
+	- ranking of bodyparts for most important to train to least important to train
+	- numbers for optimal amount of sets for individual bodypart for 
+		- Maintenance Volume
+		- Minimum Effective Volume
+		- Maximum Adaptive Volume 
+		- Maximum Recoverable Volume
+list of muscles
+	- ranking of muscles for most important to train to least important to train
+	- numbers for optimal amount of sets for individual muscle for 
+		- Maintenance Volume
+		- Minimum Effective Volume
+		- Maximum Adaptive Volume 
+		- Maximum Recoverable Volume
+list of exercises
+	- list of bodyparts the exercises trains
+	- %efficiency of how much the exercise trains the bodypart
+	- list of muscles the exercises trains
+	- %efficiency of how much the exercise trains the muscle
+
+
+EXERCISES
+	correcting exercises for new bodyparts (maybe i won't need this because im now connecting bodyparts to muscles)
+	exercise %
+	muscle %
+
+GENERAL:
+	muscles connected to bodyParts
+		- maybe editable table
+		- might want page
+	bodypart ranking
+		- maybe editable table
+		- might want page
+	muscle ranking
+		- maybe editable table
+		- might want page
+	muscle ranking under bodyparts
+		- maybe editable table
+		- might want page
+	% muscle hit per exercise
+		- maybe editable table
+	% bodypart hit per exercise (maybe i won't need this because im now connecting bodyparts to muscles)
+		- maybe editable table
+	sets per bodypart
+		- maybe editable table
+	sets per muscle
+		- maybe editable table
+	optimal set boundaries per bodypart
+		- maybe editable table
+		- might want page
+	optimal set boundaries per muscle
+		- maybe editable table
+		- might want page
+
+Explained Additions:
+	- Connect muscles to bodyparts (maybe via another editable table or some other way), as bodyparts are essentially just groups of muscles here (eg: The body part "Chest" is basically just the combination of the three muscles - 1)Pectoralis Major 2) Pectoralis Minor 3) Serratus Anterior)
+		- I might want an in app method for manually editing which muscle is connected to which bodypart, perhaps through a new page which could be accessed from the profile page
+		
+		thoughts: 
+			- i would want to be able to look at a body part and see which muscles are under it or look at a muscle and see which body part it is under
+			- would have default setup connecting muscles to bodyparts
+				- either default written in by code
+				- or will be imported from a json
+			- should be able to be edited in app
+			
+		
+		
+	- Editable rankings for bodyparts and muscles (maybe through another table or as another part of the table above). This will be for deciding which bodyparts and which muscles are more in need of training. 
+		- will definitely want a page where app users can edit the rankings, also maybe accessible from profile page.
+		- not sure whether i would want rankings for bodyparts, muscles, muscles under bodyparts (as they are going to be connected from above addition) or all three
+		
+		thoughts:
+			- i would want to be able to rank body parts
+			- i would want to be able to rank muscles
+			- i would want to be able to rank the muscles under a body part
+			- would have default setup ranking for each
+				- either default written in by code
+				- or will be imported from a json
+			- should be able to be edited in app
+		
+		
+	- Percentage a muscle is hit per exercise, so we could later calculate sets per muscle
+		- might want its own table or maybe in table (or tables) mentioned above
+		- might also want a page for user to be able to change values, maybe accessible from profile page again
+		- I was also considering a percentage body part hit per exercise, but because muscles and bodyparts are being connected, from above addition, im not sure if ill actually need that, i might be able to calculate it from this
+		
+		thoughts:
+			- as exercises already have built in muscle ranking, these can have a default percentage value based off the ranking in the exercise definition
+			- 
+			
+			
+	- sets per bodypart and sets per muscle
+		- might want its own table or maybe in table (or tables) mentioned above
+		- will be updated automatically alot
+		- calculated off percentages from above addition and sets for exercise
+	- the 4 boundaries for optimal number of sets for specific muscles and for specific bodyparts
+		- the four boundaries being known as: 
+			- Maintenance Volume
+			- Minimum Effective Volume
+			- Maximum Adaptive Volume 
+			- Maximum Recoverable Volume
+		- might want its own table or maybe in table (or tables) mentioned above
+		- might also want a page for user to be able to change values, maybe accessible from profile page again
+		
+
+
+
+
+{ "name": "Chest" },
+					Pectoralis Major
+					Pectoralis Minor
+					Serratus Anterior
+
+
+weekly muscle sets table
+weekly bodypart sets table
+fix bodyparts (eg- turning arms into biceps, triceps, forearms)
+[
+  { "name": "Chest" },
+  { "name": "Shoulders"},
+  { "name": "Back" },
+  { "name": "Arms" },
+  { "name": "Forearms" },
+  { "name": "Trapezius" },
+  { "name": "Neck" },
+  { "name": "Quads" },
+  { "name": "Hamstrings" },
+  { "name": "Glutes" },
+  { "name": "Calves"},
+  { "name": "Hip Flexors" },
+  { "name": "Hip Adductors" },
+  { "name": "Hip Abductors" },
+  { "name": "Abs" },
+  { "name": "Erector Spinae" }
+]
+	- fixed
+		[
+		  { "name": "Chest" },
+		  { "name": "Shoulders"},
+		  { "name": "Back" },
+			- upper back
+				- includes Trapezius
+			- lower back
+				- includes Erector Spinae
+		  { "name": "Arms" },
+			- biceps
+			- triceps
+		  { "name": "Forearms" },
+		  { "name": "Neck" },
+		  { "name": "Quads" },
+		  { "name": "Hamstrings" },
+		  HIPS
+			- Glutes
+			- Hip Flexors
+			- Hip Adductors
+			- Hip Abductors
+		  { "name": "Calves"},
+		  { "name": "Abs" },
+		]
+			- added: 
+				{ "name": "Upper Back" },
+					- contains:
+						trapezius
+						stuff from back
+				{ "name": "Lower Back" },
+					- contains:
+						Erector Spinae
+						stuff from back
+				{ "name": "Biceps" },
+					- contains:
+						stuf from arms
+				{ "name": "Triceps" },
+					- contains:
+						stuf from arms
+				{ "name": "Hips" },
+					- contains:
+						glutes
+						hip flexors
+						hip abductors
+						hip adductors
+				{ "name": "Core" },
+					- contains:
+						abs
+
+			- removed: 
+				{ "name": "Back" },
+					- moved to:
+						upper back
+						lower back
+				{ "name": "Arms" },
+					- moved to:
+						biceps
+						triceps
+				{ "name": "Trapezius" },
+					- moved to:
+						upper back
+				{ "name": "Glutes" },
+					- moved to:
+						hips
+				{ "name": "Hip Flexors" },
+					- moved to:
+						hips
+				{ "name": "Hip Adductors" },
+					- moved to:
+						hips
+				{ "name": "Hip Abductors" },
+					- moved to:
+						hips
+				{ "name": "Abs" },
+					- moved to:
+						core
+				{ "name": "Erector Spinae" }
+					- moved to:
+						lower back
+[
+  DONE
+  { "name": "Abs" },
+  { "name": "Trapezius" },
+  { "name": "Erector Spinae" }
+  { "name": "Glutes" },
+  { "name": "Hip Adductors" },
+  { "name": "Hip Abductors" },
+  { "name": "Hip Flexors" },
+  { "name": "Arms" },
+  { "name": "Back" },
+]
+		[
+			{ "name": "Neck" },
+			{ "name": "Shoulders"},
+			{ "name": "Chest" },
+			{ "name": "Core" },
+			{ "name": "Upper Back" },
+			{ "name": "Lower Back" },
+			{ "name": "Biceps" },
+			{ "name": "Triceps" },
+			{ "name": "Forearms" },
+			{ "name": "Hips" },
+			{ "name": "Hamstrings" },
+			{ "name": "Quads" },
+			{ "name": "Calves"},
+		]
+		[
+			{ "name": "Neck" },
+					Sternocleidomastoid
+					Scalenes
+					Splenius
+			{ "name": "Shoulders"},
+					Anterior Deltoid
+					Lateral Deltoid
+					Posterior Deltoid
+					Supraspinatus
+					Infraspinatus
+					Teres Minor
+					Teres Major
+			{ "name": "Chest" },
+					Pectoralis Major
+					Pectoralis Minor
+					Serratus Anterior
+			{ "name": "Core" },
+					Rectus Abdominis
+					Obliques
+					Transverse Abdominis
+					Pelvic Floor Muscles
+			{ "name": "Upper Back" },
+					Trapezius (Upper)
+					Trapezius (Middle)
+					Trapezius (Lower)
+					Rhomboids
+					Latissimus Dorsi
+					Levator Scapulae
+			{ "name": "Lower Back" },
+					Erector Spinae
+					Multifidus
+					Quadratus Lumborum
+			{ "name": "Biceps" },
+					Biceps Brachii
+					Brachialis
+			{ "name": "Triceps" },
+					Triceps Brachii
+					Anconeus
+			{ "name": "Forearms" },
+					Brachioradialis
+					Wrist Flexors
+					Wrist Extensors
+					Pronator Teres
+					Pronator Quadratus
+			{ "name": "Hips" },
+					Gluteus Maximus
+					Gluteus Medius
+					Gluteus Minimus
+					Iliopsoas
+					Tensor Fasciae Latae
+					Piriformis
+					Adductor Longus
+					Adductor Brevis
+					Adductor Magnus
+					Gracilis
+					Pectineus
+			{ "name": "Hamstrings" },
+					Biceps Femoris
+					Semitendinosus
+					Semimembranosus
+			{ "name": "Quads" },
+					Rectus Femoris
+					Vastus Lateralis
+					Vastus Medialis
+					Vastus Intermedius
+			{ "name": "Calves"},
+					Gastrocnemius
+					Soleus
+					Tibialis Anterior
+		]
+	- unaltered
+		[
+		  { "name": "Chest" },
+		  { "name": "Shoulders"},
+		  { "name": "Back" },
+		  { "name": "Arms" },
+		  { "name": "Forearms" },
+		  { "name": "Trapezius" },
+		  { "name": "Neck" },
+		  { "name": "Quads" },
+		  { "name": "Hamstrings" },
+		  { "name": "Glutes" },
+		  { "name": "Calves"},
+		  { "name": "Hip Flexors" },
+		  { "name": "Hip Adductors" },
+		  { "name": "Hip Abductors" },
+		  { "name": "Abs" },
+		  { "name": "Erector Spinae" }
+		]
+tying muscles to related bodyparts (muscle groups) they fall under
+essential and accessory training seperations (for bodyparts and muscles)
+bodypart ranking (also page for editing)
+muscle ranking (also page for editing)
+
+intelligent presets (presets change rep and weight numbers based off history)
+
+
+
+
