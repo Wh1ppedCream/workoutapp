@@ -332,3 +332,48 @@ class RepMaxRow {
     required this.isErm,
   });
 }
+
+class MuscleBodyPart {
+  final int muscleId;
+  final int bodyPartId;
+  MuscleBodyPart({required this.muscleId, required this.bodyPartId});
+}
+
+class BodyPartRanking {
+  final int bodyPartId;
+  int rank;
+  BodyPartRanking({required this.bodyPartId, required this.rank});
+}
+
+class MuscleRanking {
+  final int muscleId;
+  int rank;
+  MuscleRanking({required this.muscleId, required this.rank});
+}
+
+class ExerciseMusclePercent {
+  final int exerciseDefId;
+  final int muscleId;
+  double percent;
+  ExerciseMusclePercent({
+    required this.exerciseDefId,
+    required this.muscleId,
+    required this.percent,
+  });
+}
+
+class VolumeBoundaries {
+  final int id; // muscleId or bodyPartId
+  final double maintenance;
+  final double minEffective;
+  final double maxAdaptive;
+  final double maxRecoverable;
+  VolumeBoundaries({
+    required this.id,
+    required this.maintenance,
+    required this.minEffective,
+    required this.maxAdaptive,
+    required this.maxRecoverable,
+  });
+}
+

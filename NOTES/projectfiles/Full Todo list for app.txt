@@ -812,22 +812,63 @@ GENERAL:
 		- maybe editable table
 		- might want page
 
+
+
+
+- default bodypart formula: x= a-(a^2/2)y
+										y = (2/a) (1- (1/a) x)  
+										for bodypart with n=2 muscles a (rank 1) and b (rank 7, last)
+										weight for a: integral from 0 to 1 for (2/7)(1-(1/7)x) dx	= 13/49	= 0.2653
+										weight for b: integral from 6 to 7 for (2/7)(1-(1/7)x) dx	= 1/49	= 0.0204
+										weight for bodypart = 0.2857
+				- eg:
+																												{
+						- "Deadlift - Barbell"								  										"name": "Deadlift - Barbell",
+																													"rating": 23,
+																													"equipment": ["Barbell"],
+																													"bodyparts": ["Lower Back", "Hamstrings"],
+							Muscle Ranking	Muscle Name			%hit calculation 						%hit		"muscles": [
+							1 				Gluteus Maximus		%hit = 1 - (0.05 * (1 - 1)) = 1 		1				{ "name": "Gluteus Maximus", "rank": 1 },
+							2 				Biceps Femoris		%hit = 1 - (0.05 * (2 - 1)) = 0.95		0.95			{ "name": "Biceps Femoris", "rank": 2 },
+							3 				Erector Spinae		%hit = 1 - (0.05 * (3 - 1)) = 0.9		0.9				{ "name": "Erector Spinae", "rank": 3 },
+							4 				Rectus Femoris		%hit = 1 - (0.05 * (4 - 1)) = 0.85		0.85			{ "name": "Rectus Femoris", "rank": 4 },
+							5 				Adductor Magnus		%hit = 1 - (0.05 * (5 - 1)) = 0.8		0.8				{ "name": "Adductor Magnus", "rank": 5 },
+							6 				Latissimus Dorsi	%hit = 1 - (0.05 * (6 - 1)) = 0.75		0.75			{ "name": "Latissimus Dorsi", "rank": 6 },
+							7 				Trapezius (upper) 	%hit = 1 - (0.05 * (7 - 1)) = 0.7		0.7				{ "name": "Trapezius (upper)", "rank": 7 }
+																													]
+																												},
+							BodyPart		Muscle Name			%hit calculation 						%hit
+							Hips			1. Gluteus Maximus		
+											5. Adductor Magnus
+							Hamstrings		2. Biceps Femoris		%hit = 0.95
+							Lower Back		3. Erector Spinae		%hit = 0.9
+							Quads			4. Rectus Femoris		%hit = 0.85
+							Upper Back		6. Latissimus Dorsi	
+											7. Trapezius (upper)
+
 Explained Additions:
 	- Connect muscles to bodyparts (maybe via another editable table or some other way), as bodyparts are essentially just groups of muscles here (eg: The body part "Chest" is basically just the combination of the three muscles - 1)Pectoralis Major 2) Pectoralis Minor 3) Serratus Anterior)
 		- I might want an in app method for manually editing which muscle is connected to which bodypart, perhaps through a new page which could be accessed from the profile page
 		
 		thoughts: 
-			- i would want to be able to look at a body part and see which muscles are under it or look at a muscle and see which body part it is under
+			- i would want to be able to look at a body part and see which muscles are under it or look at a muscle and see which body part it is a part of
 			- would have default setup connecting muscles to bodyparts
 				- either default written in by code
 				- or will be imported from a json
 			- should be able to be edited in app
 			
+		connection: 
+			- bodypart to a few muscles 
+				- eg: 
+					Chest:
+						1)Pectoralis Major 
+						2) Pectoralis Minor 
+						3) Serratus Anterior
+					Pectoralis Major:
+						a part of the chest
 		
-		
-	- Editable rankings for bodyparts and muscles (maybe through another table or as another part of the table above). This will be for deciding which bodyparts and which muscles are more in need of training. 
+	- Editable rankings for bodyparts, muscles and muscles under bodyparts (maybe through another table or as another part of the table above). This will be for deciding which bodyparts and which muscles are more in need of training. 
 		- will definitely want a page where app users can edit the rankings, also maybe accessible from profile page.
-		- not sure whether i would want rankings for bodyparts, muscles, muscles under bodyparts (as they are going to be connected from above addition) or all three
 		
 		thoughts:
 			- i would want to be able to rank body parts
@@ -837,22 +878,115 @@ Explained Additions:
 				- either default written in by code
 				- or will be imported from a json
 			- should be able to be edited in app
-		
-		
+			
+		connection: 
+			- all three of these are seperate rankings:
+				- bodypart to ranking
+					- eg:	Chest			->	Rank 1
+							Upper Back		->	Rank 2
+							Shoulders		->	Rank 3
+							Hips			->	Rank 4
+							
+			
+				- muscle to ranking
+					- eg:	Gluteus Maximus			->	Rank 1
+							Erector Spinae			->	Rank 2
+							Transverse Abdominis	->	Rank 3
+							Rectus Abdominis		->	Rank 4
+			
+				- bodypart to muscle to ranking
+					- eg:	1) Chest			->	1) Pectoralis Major
+												->	2) Serratus Anterior
+												->	3) Pectoralis Minor
+							2) Upper Back		->	1) Latissimus Dorsi
+												->	2) Trapezius (Middle)
+												->	3) Trapezius (Upper)
+												->	4) Trapezius (Lower)
+												->	5) Rhomboids
+												->	6) Levator Scapulae
+							3) Shoulders, etc, etc
+						
 	- Percentage a muscle is hit per exercise, so we could later calculate sets per muscle
 		- might want its own table or maybe in table (or tables) mentioned above
 		- might also want a page for user to be able to change values, maybe accessible from profile page again
-		- I was also considering a percentage body part hit per exercise, but because muscles and bodyparts are being connected, from above addition, im not sure if ill actually need that, i might be able to calculate it from this
+		
+		- values can be changed by user, maybe in profile page.
+		- each exercise, if it does not already have a value assigned, will use default values generated by formula
+			- default formula's can also be changed
+			- default formula:	1) Muscle: default percentage muscle hit will be based off the formula: mhit = 1 - (0.05 * (Rank - 1)); where Rank is the muscle ranking in the exercise
+								- muscles will be linked back to the bodyparts they are a part of and the number of muscles per bodypart will be remembered.
+								2) Bodypart: default percentage bodypart hit will be based off formula: bhit = (sum of mhit's)/(number of muscles for this bodypart worked by the exercise)
+			
 		
 		thoughts:
-			- as exercises already have built in muscle ranking, these can have a default percentage value based off the ranking in the exercise definition
-			- 
+			- default percentage muscle hit will be based off the formula: mhit = 1 - (0.05 * (Rank - 1)); where Rank is the muscle ranking in the exercise
+				eg: 1 				Gluteus Maximus		mhit = 1 - (0.05 * (1 - 1)) = 1 		1	\
+					5 				Adductor Magnus		mhit = 1 - (0.05 * (5 - 1)) = 0.8		0.8	
+			- muscles will be linked back to the bodyparts they are a part of and the number of muscles per bodypart will be remembered.
+				eg:	Hips			1. Gluteus Maximus		
+									5. Adductor Magnus				(2 hip muscles)
+			- default percentage bodypart hit will be based off formula: bhit = (sum of mhit's)/(number of muscles for this bodypart worked by the exercise)
+				eg:	Hips			bhit = (1+0.8)/(2) = 0.9
 			
 			
+		connection: 
+			- exercise to specific muscles(with ranking) to 	- %muscle hit
+																- connected bodypart and % bodypart hit
+			- default muscle formula: 1 - (0.05 * (Rank - 1))
+			- default bodypart formula: bhit = (sum of mhit's)/(number of muscles for this bodypart worked by the exercise)
+				- eg:
+																												{
+						- "Deadlift - Barbell"								  										"name": "Deadlift - Barbell",
+																													"rating": 23,
+																													"equipment": ["Barbell"],
+																													"bodyparts": ["Lower Back", "Hamstrings"],
+							Muscle Ranking	Muscle Name			%hit calculation 						%hit		"muscles": [
+							1 				Gluteus Maximus		%hit = 1 - (0.05 * (1 - 1)) = 1 		1				{ "name": "Gluteus Maximus", "rank": 1 },
+							2 				Biceps Femoris		%hit = 1 - (0.05 * (2 - 1)) = 0.95		0.95			{ "name": "Biceps Femoris", "rank": 2 },
+							3 				Erector Spinae		%hit = 1 - (0.05 * (3 - 1)) = 0.9		0.9				{ "name": "Erector Spinae", "rank": 3 },
+							4 				Rectus Femoris		%hit = 1 - (0.05 * (4 - 1)) = 0.85		0.85			{ "name": "Rectus Femoris", "rank": 4 },
+							5 				Adductor Magnus		%hit = 1 - (0.05 * (5 - 1)) = 0.8		0.8				{ "name": "Adductor Magnus", "rank": 5 },
+							6 				Latissimus Dorsi	%hit = 1 - (0.05 * (6 - 1)) = 0.75		0.75			{ "name": "Latissimus Dorsi", "rank": 6 },
+							7 				Trapezius (upper) 	%hit = 1 - (0.05 * (7 - 1)) = 0.7		0.7				{ "name": "Trapezius (upper)", "rank": 7 }
+																													]
+																												},
+							BodyPart		Muscle Name				%hit calculation 					%hit
+							Hips			1. Gluteus Maximus		
+											5. Adductor Magnus		%hit = (1 + 0.8) / 2 = 0.9			0.9
+							Hamstrings		2. Biceps Femoris		%hit = (0.95) / 1 = 0.95			0.95
+							Lower Back		3. Erector Spinae		%hit = (0.9) / 1 = 0.9				0.9
+							Quads			4. Rectus Femoris		%hit = (0.85) / 1 = 0.85			0.85
+							Upper Back		6. Latissimus Dorsi	
+											7. Trapezius (upper)	%hit = (0.75 + 0.7) / 2 = 0.725		0.725
+			
+				
 	- sets per bodypart and sets per muscle
-		- might want its own table or maybe in table (or tables) mentioned above
 		- will be updated automatically alot
 		- calculated off percentages from above addition and sets for exercise
+		
+		
+		thoughts: 
+			- 
+			
+		connection: 
+			- bodypart name to sets done in last week for the bodypart
+				- eg:	before 1st session in last 7 days, we check bodypart to see how many sets done: 0 sets done
+						right after 1st session in last 7 days, we check bodypart to see how many sets done: 3 sets done
+							- was incremented according to completed session (we calculated 3 sets for the bodypart in the session)
+						3 days after that, we do 2nd session and check bodypart to see how many sets done: 5 sets done
+							- was incremented according to completed session (we calculated 2 sets for the bodypart in the session)
+						5 days after that(8 days after first session), we don't do anymore sessions but we check bodypart to see how many sets done: 2 sets done
+							- 3 sets from first session now out of 7 day timeframe, so subtracted from total
+			- muscle name to sets done in last week for the muscle
+				- eg:	before 1st session in last 7 days, we check muscle to see how many sets done: 0 sets done
+						right after 1st session in last 7 days, we check muscle to see how many sets done: 3 sets done
+							- was incremented according to completed session (we calculated 3 sets for the muscle in the session)
+						3 days after that, we do 2nd session and check muscle to see how many sets done: 5 sets done
+							- was incremented according to completed session (we calculated 2 sets for the muscle in the session)
+						5 days after that(8 days after first session), we don't do anymore sessions but we check muscle to see how many sets done: 2 sets done
+							- 3 sets from first session now out of 7 day timeframe, so subtracted from total
+						
+						
 	- the 4 boundaries for optimal number of sets for specific muscles and for specific bodyparts
 		- the four boundaries being known as: 
 			- Maintenance Volume
@@ -862,9 +996,179 @@ Explained Additions:
 		- might want its own table or maybe in table (or tables) mentioned above
 		- might also want a page for user to be able to change values, maybe accessible from profile page again
 		
+		thoughts: 
+			- 
+			
+		connection: 
+			- muscle name to 4 optimal numbers
+				- eg:	we check the muscle Pectoralis Major and it has the numbers set: 
+										- Maintenance Volume: 3
+										- Minimum Effective Volume: 5
+										- Maximum Adaptive Volume : 12
+										- Maximum Recoverable Volume: 20
+			- bodypart name to 4 optimal numbers
+				- eg: we check the bodypart Chest and it has the numbers set: 
+										- Maintenance Volume: 3
+										- Minimum Effective Volume: 5
+										- Maximum Adaptive Volume : 12
+										- Maximum Recoverable Volume: 20
 
 
 
+Connections:
+
+		connection: 
+			- bodypart to a few muscles 
+				- eg: Chest:
+						1)Pectoralis Major 
+						2) Pectoralis Minor 
+						3) Serratus Anterior
+
+		connection: 
+			- bodypart to ranking
+				- eg:	Chest			->	Rank 1
+						Upper Back		->	Rank 2
+						Shoulders		->	Rank 3
+						Hips			->	Rank 4
+						
+		
+			- muscle to ranking
+				- eg:	Gluteus Maximus			->	Rank 1
+						Erector Spinae			->	Rank 2
+						Transverse Abdominis	->	Rank 3
+						Rectus Abdominis		->	Rank 4
+		
+			- bodypart to muscle to ranking
+				- eg:	1) Chest			->	1) Pectoralis Major
+											->	2) Serratus Anterior
+											->	3) Pectoralis Minor
+						2) Upper Back		->	1) Latissimus Dorsi
+											->	2) Trapezius (Middle)
+											->	3) Trapezius (Upper)
+											->	4) Trapezius (Lower)
+											->	5) Rhomboids
+											->	6) Levator Scapulae
+						3) Shoulders, etc, etc
+
+		connection: 
+			- exercise to specific muscles(with ranking) to 	- %muscle hit
+																- connected bodypart and % bodypart hit
+			- default muscle formula: 1 - (0.05 * (Rank - 1))
+			- default bodypart formula: x= a-(a^2/2)y
+										y = (2/a) (1- (1/a) x)  
+										for bodypart with n=2 muscles a (rank 1) and b (rank 7, last)
+										weight for a: integral from 0 to 1 for (2/7)(1-(1/7)x) dx	= 13/49	= 0.2653
+										weight for b: integral from 6 to 7 for (2/7)(1-(1/7)x) dx	= 1/49	= 0.0204
+										weight for bodypart = 0.2857
+				- eg:
+																												{
+						- "Deadlift - Barbell"								  										"name": "Deadlift - Barbell",
+																													"rating": 23,
+																													"equipment": ["Barbell"],
+																													"bodyparts": ["Lower Back", "Hamstrings"],
+							Muscle Ranking	Muscle Name			%hit calculation 						%hit		"muscles": [
+							1 				Gluteus Maximus		%hit = 1 - (0.05 * (1 - 1)) = 1 		1				{ "name": "Gluteus Maximus", "rank": 1 },
+							2 				Biceps Femoris		%hit = 1 - (0.05 * (2 - 1)) = 0.95		0.95			{ "name": "Biceps Femoris", "rank": 2 },
+							3 				Erector Spinae		%hit = 1 - (0.05 * (3 - 1)) = 0.9		0.9				{ "name": "Erector Spinae", "rank": 3 },
+							4 				Rectus Femoris		%hit = 1 - (0.05 * (4 - 1)) = 0.85		0.85			{ "name": "Rectus Femoris", "rank": 4 },
+							5 				Adductor Magnus		%hit = 1 - (0.05 * (5 - 1)) = 0.8		0.8				{ "name": "Adductor Magnus", "rank": 5 },
+							6 				Latissimus Dorsi	%hit = 1 - (0.05 * (6 - 1)) = 0.75		0.75			{ "name": "Latissimus Dorsi", "rank": 6 },
+							7 				Trapezius (upper) 	%hit = 1 - (0.05 * (7 - 1)) = 0.7		0.7				{ "name": "Trapezius (upper)", "rank": 7 }
+																													]
+																												},
+							BodyPart		Muscle Name			%hit calculation 						%hit
+							Hips			1. Gluteus Maximus		
+											5. Adductor Magnus
+							Hamstrings		2. Biceps Femoris		%hit = 0.95
+							Lower Back		3. Erector Spinae		%hit = 0.9
+							Quads			4. Rectus Femoris		%hit = 0.85
+							Upper Back		6. Latissimus Dorsi	
+											7. Trapezius (upper)
+							
+				
+		
+		connection: 
+			- bodypart name to sets done in last week for the bodypart
+				- eg:	before 1st session in last 7 days, we check bodypart to see how many sets done: 0 sets done
+						right after 1st session in last 7 days, we check bodypart to see how many sets done: 3 sets done
+							- was incremented according to completed session (we calculated 3 sets for the bodypart in the session)
+						3 days after that, we do 2nd session and check bodypart to see how many sets done: 5 sets done
+							- was incremented according to completed session (we calculated 2 sets for the bodypart in the session)
+						5 days after that(8 days after first session), we don't do anymore sessions but we check bodypart to see how many sets done: 2 sets done
+							- 3 sets from first session now out of 7 day timeframe, so subtracted from total
+			- muscle name to sets done in last week for the muscle
+				- eg:	before 1st session in last 7 days, we check muscle to see how many sets done: 0 sets done
+						right after 1st session in last 7 days, we check muscle to see how many sets done: 3 sets done
+							- was incremented according to completed session (we calculated 3 sets for the muscle in the session)
+						3 days after that, we do 2nd session and check muscle to see how many sets done: 5 sets done
+							- was incremented according to completed session (we calculated 2 sets for the muscle in the session)
+						5 days after that(8 days after first session), we don't do anymore sessions but we check muscle to see how many sets done: 2 sets done
+							- 3 sets from first session now out of 7 day timeframe, so subtracted from total
+						
+						
+	
+		connection: 
+			- muscle name to 4 optimal numbers
+				- eg:	we check the muscle Pectoralis Major and it has the numbers set: 
+										- Maintenance Volume: 3
+										- Minimum Effective Volume: 5
+										- Maximum Adaptive Volume : 12
+										- Maximum Recoverable Volume: 20
+			- bodypart name to 4 optimal numbers
+				- eg: we check the bodypart Chest and it has the numbers set: 
+										- Maintenance Volume: 3
+										- Minimum Effective Volume: 5
+										- Maximum Adaptive Volume : 12
+										- Maximum Recoverable Volume: 20
+
+
+Connections:
+
+		connection: 
+d			- bodypart to a few muscles 		
+				
+		connection: 
+			- bodypart to ranking
+			
+			- muscle to ranking
+			
+			- bodypart to muscle to ranking
+				
+		connection: 
+			- exercise to specific muscles(with ranking) to 	- %muscle hit
+																- connected bodypart and % bodypart hit
+			
+		connection: 
+			- bodypart name to sets done in last week for the bodypart
+			- muscle name to sets done in last week for the muscle
+				
+		connection: 
+			- muscle name to 4 optimal numbers
+				
+			- bodypart name to 4 optimal numbers
+
+table combos:
+	
+	1. bodypart name
+		- no. of sets done in last week
+		- 4 optimal numbers
+		- list of connected muscles
+			- their in-bodypart ranking
+	
+	2. Muscle name
+		- no. of sets done in last week
+		- 4 optimal numbers
+		- connected bodypart
+			- their in-bodypart ranking
+
+	3. exercises 
+		- % muscle hit
+		- bodyparts which are being hit (obtained from muscles listed)
+		- % bodypart hit
+	
+	4. ranking of all bodyparts
+	
+	5. ranking of all muscles
 
 { "name": "Chest" },
 					Pectoralis Major
