@@ -1,3 +1,6 @@
+// File: lib/screens/preset_detail_screen.dart
+// for viewing and editing a Preset using the PresetSession notifier.
+
 import 'package:env_test/models/active_session.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';

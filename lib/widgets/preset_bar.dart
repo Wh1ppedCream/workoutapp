@@ -63,15 +63,12 @@ class PresetBar extends StatelessWidget {
               PopupMenuButton<String>(
                 icon: Icon(Icons.more_vert, color: color),
                 onSelected: (action) {
-                  if (onMenuSelected != null) {
-                    onMenuSelected!(action);
-                  }
+                  onMenuSelected?.call(action);
                 },
                 itemBuilder: (_) => const [
                   PopupMenuItem(value: 'edit', child: Text('Edit')),
                   PopupMenuItem(value: 'delete', child: Text('Delete')),
                   PopupMenuItem(value: 'profile_swap', child: Text('Profile Swap')),
-                  PopupMenuItem(value: 'delete', child: Text('Delete')),
                 ],
               ),
             ],

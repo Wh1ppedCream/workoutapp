@@ -14,12 +14,12 @@ class AnalyticsDao {
   // ─── MUSCLE ←→ BODYPART ─────────────────────────────────
 
   /// Link a muscle to a body part.
-  static Future<void> insertMuscleBodyPart(
+  static Future<int> insertMuscleBodyPart(
     Database db,
     int muscleId,
     int bodypartId,
-  ) {
-    return db.insert(
+  ) async {
+    return await db.insert(
       'muscle_bodypart',
       {
         'muscle_id': muscleId,
@@ -42,7 +42,7 @@ class AnalyticsDao {
     );
   }
 
-  /// Get all bodypart‐links for a given muscle.
+  /// Get all body-part links for a given muscle.
   static Future<List<MuscleBodyPart>> getBodyPartsForMuscle(
     Database db,
     int muscleId,
@@ -58,7 +58,7 @@ class AnalyticsDao {
     )).toList();
   }
 
-  /// Get all muscle‐links for a given body part.
+  /// Get all muscle links for a given body part.
   static Future<List<MuscleBodyPart>> getMusclesForBodyPart(
     Database db,
     int bodypartId,
@@ -76,13 +76,13 @@ class AnalyticsDao {
 
   // ─── RANKING ─────────────────────────────────────────────
 
-  /// Upsert a body‐part ranking.
-  static Future<void> setBodyPartRanking(
+  /// Upsert a body-part ranking.
+  static Future<int> setBodyPartRanking(
     Database db,
     int bodypartId,
     int rank,
-  ) {
-    return db.insert(
+  ) async {
+    return await db.insert(
       'bodypart_ranking',
       {
         'bodypart_id': bodypartId,
@@ -135,12 +135,12 @@ class AnalyticsDao {
   }
 
   /// Upsert a muscle ranking.
-  static Future<void> setMuscleRanking(
+  static Future<int> setMuscleRanking(
     Database db,
     int muscleId,
     int rank,
-  ) {
-    return db.insert(
+  ) async {
+    return await db.insert(
       'muscle_ranking',
       {
         'muscle_id': muscleId,
@@ -194,14 +194,14 @@ class AnalyticsDao {
 
   // ─── EXERCISE ↔ MUSCLE % HIT ─────────────────────────────
 
-  /// Upsert a %‐hit for a muscle in an exercise definition.
-  static Future<void> setExerciseMusclePercent(
+  /// Upsert a %-hit for a muscle in an exercise definition.
+  static Future<int> setExerciseMusclePercent(
     Database db,
     int exerciseDefId,
     int muscleId,
     double percent,
-  ) {
-    return db.insert(
+  ) async {
+    return await db.insert(
       'exercise_muscle_percent',
       {
         'exercise_def_id': exerciseDefId,
@@ -212,7 +212,7 @@ class AnalyticsDao {
     );
   }
 
-  /// Fetch one %‐hit entry.
+  /// Fetch one %-hit entry.
   static Future<ExerciseMusclePercent?> getExerciseMusclePercent(
     Database db,
     int exerciseDefId,
@@ -233,7 +233,7 @@ class AnalyticsDao {
     );
   }
 
-  /// Fetch all %‐hits for an exercise.
+  /// Fetch all %-hits for an exercise.
   static Future<List<ExerciseMusclePercent>> getPercentsForExercise(
     Database db,
     int exerciseDefId,
@@ -250,7 +250,7 @@ class AnalyticsDao {
     )).toList();
   }
 
-  /// Remove one %‐hit entry.
+  /// Remove one %-hit entry.
   static Future<int> deleteExerciseMusclePercent(
     Database db,
     int exerciseDefId,
@@ -266,12 +266,12 @@ class AnalyticsDao {
   // ─── VOLUME BOUNDARIES ───────────────────────────────────
 
   /// Upsert volume boundaries for a muscle.
-  static Future<void> setMuscleVolumeBoundaries(
+  static Future<int> setMuscleVolumeBoundaries(
     Database db,
     int muscleId,
     VolumeBoundaries bounds,
-  ) {
-    return db.insert(
+  ) async {
+    return await db.insert(
       'muscle_volume_boundaries',
       {
         'muscle_id': muscleId,
@@ -298,15 +298,15 @@ class AnalyticsDao {
     if (rows.isEmpty) return null;
     final r = rows.first;
     return VolumeBoundaries(
-      id:              r['id']                 as int,
-      maintenance: (r['maintenance_volume'] as num).toDouble(),
-      minEffective: (r['min_effective_volume'] as num).toDouble(),
-      maxAdaptive: (r['max_adaptive_volume'] as num).toDouble(),
-      maxRecoverable: (r['max_recoverable_volume'] as num).toDouble(),
+      id:              r['muscle_id']            as int,
+      maintenance:     (r['maintenance_volume']   as num).toDouble(),
+      minEffective:    (r['min_effective_volume'] as num).toDouble(),
+      maxAdaptive:     (r['max_adaptive_volume']  as num).toDouble(),
+      maxRecoverable:  (r['max_recoverable_volume'] as num).toDouble(),
     );
   }
 
-  /// Fetch all muscle boundaries.
+  /// Fetch all muscle boundaries (raw map).
   static Future<List<Map<String, dynamic>>> getAllMuscleVolumeBoundaries(
     Database db,
   ) {
@@ -326,12 +326,12 @@ class AnalyticsDao {
   }
 
   /// Upsert volume boundaries for a body part.
-  static Future<void> setBodyPartVolumeBoundaries(
+  static Future<int> setBodyPartVolumeBoundaries(
     Database db,
     int bodypartId,
     VolumeBoundaries bounds,
-  ) {
-    return db.insert(
+  ) async {
+    return await db.insert(
       'bodypart_volume_boundaries',
       {
         'bodypart_id': bodypartId,
@@ -358,15 +358,15 @@ class AnalyticsDao {
     if (rows.isEmpty) return null;
     final r = rows.first;
     return VolumeBoundaries(
-      id:              r['id']                 as int,
-      maintenance: (r['maintenance_volume'] as num).toDouble(),
-      minEffective: (r['min_effective_volume'] as num).toDouble(),
-      maxAdaptive: (r['max_adaptive_volume'] as num).toDouble(),
-      maxRecoverable: (r['max_recoverable_volume'] as num).toDouble(),
+      id:              r['bodypart_id']           as int,
+      maintenance:     (r['maintenance_volume']   as num).toDouble(),
+      minEffective:    (r['min_effective_volume'] as num).toDouble(),
+      maxAdaptive:     (r['max_adaptive_volume']  as num).toDouble(),
+      maxRecoverable:  (r['max_recoverable_volume'] as num).toDouble(),
     );
   }
 
-  /// Fetch all body-part boundaries.
+  /// Fetch all body-part boundaries (raw map).
   static Future<List<Map<String, dynamic>>> getAllBodyPartVolumeBoundaries(
     Database db,
   ) {

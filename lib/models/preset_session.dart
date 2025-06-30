@@ -1,3 +1,4 @@
+// File: lib/models/preset_session.dart
 import 'package:flutter/foundation.dart';
 import '../models/models.dart';
 import '../repositories/app_repository.dart';
@@ -10,7 +11,7 @@ class PresetSession extends ChangeNotifier {
   final _repo = AppRepository();
 
   /// Preset's current name, loaded from the definition.
-    String presetName = '';
+  String presetName = '';
 
   /// In-memory list of exercises and their types.
   final List<WorkoutExercise> exercises = [];
@@ -37,15 +38,15 @@ class PresetSession extends ChangeNotifier {
       final type = row['type'] as String;
 
       if (type == 'weight') {
-  // 1) fetch definition info
-  final defId = row['exercise_def_id'] as int?;
-  final info = defId != null
-      ? await _repo.fetchDefinitionInfo(defId)
-      : {'name': '', 'equipment': ''};
-  final name = info['name'] ?? '';
-  final equipment = info['equipment'] ?? '';
+        // 1) fetch definition info
+        final defId = row['exercise_def_id'] as int?;
+        final info = defId != null
+            ? await _repo.fetchDefinitionInfo(defId)
+            : {'name': '', 'equipmentName': ''};
+        final name = info['name'] ?? '';
+        final equipment = info['equipmentName'] ?? '';
 
-  // 2) pull all rows, group parents vs. children
+        // 2) pull all rows, group parents vs. children
   final rawSets   = await _repo.fetchPresetSets(exId);
   final parentRows= rawSets.where((r) => r['parent_set_id'] == null).toList();
   final parents   = <ExerciseSet>[];

@@ -107,8 +107,8 @@ class ExerciseDao {
   static Future<void> deleteExercisesForSession(
     Database db,
     int sessionId,
-  ) {
-    return db.delete(
+  ) async {
+  await db.delete(
       'exercises',
       where: 'session_id = ?',
       whereArgs: [sessionId],

@@ -58,8 +58,8 @@ class PresetDetailDao {
     String? note,
     required int plannedMinutes,
     required int elapsedSeconds,
-  }) {
-    return db.insert(
+  }) async {
+  await db.insert(
     'preset_cardio_details',
     {
       'preset_exercise_id': presetExerciseId,

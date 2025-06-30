@@ -283,7 +283,7 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
  ),
                               //the following two lines show equipment names under exercise name if they are uncommented.
                               //subtitle: Text(def.equipmentList.map((e) => e.name).join(', ')),
-                              //selected: widget.onExercisePicked != null && _selectedDef == def,
+                              selected: widget.onExercisePicked != null && _selectedDef == def,
                               onTap: widget.onExercisePicked == null
                                   ? null
                                   : () => setState(() => _selectedDef = def),

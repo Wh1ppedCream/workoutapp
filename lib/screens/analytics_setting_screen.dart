@@ -1,9 +1,12 @@
+// File: lib/screens/analytics_settings_screen.dart
+// for viewing and changing settings related to exercise analytics.
+
 import 'package:flutter/material.dart';
 import 'bodypart_muscle_mapping_screen.dart';
 import 'bodypart_ranking_screen.dart';
 import 'muscle_ranking_screen.dart';
-import 'exercise_muscle_percent_screen.dart';
 import 'volume_boundaries_screen.dart';
+import 'exercise_analytics_screen.dart';
 
 class AnalyticsSettingsScreen extends StatelessWidget {
   const AnalyticsSettingsScreen({super.key});
@@ -22,28 +25,28 @@ class AnalyticsSettingsScreen extends StatelessWidget {
             ),
           ),
           ListTile(
-            title: const Text('BodyPart Rankings'),
+            title: const Text('BodyPart Training Bias Rankings'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(ctx).push(
               MaterialPageRoute(builder: (_) => const BodyPartRankingScreen()),
             ),
           ),
           ListTile(
-            title: const Text('Muscle Rankings'),
+            title: const Text('Muscle Training Bias Rankings'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(ctx).push(
               MaterialPageRoute(builder: (_) => const MuscleRankingScreen()),
             ),
           ),
           ListTile(
-            title: const Text('Exercise–Muscle % Hit'),
+            title: const Text('Exercise to %Sets per Muscle, Bodypart'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(ctx).push(
-              MaterialPageRoute(builder: (_) => const ExerciseMusclePercentScreen()),
+              MaterialPageRoute(builder: (_) => const ExerciseAnalyticsScreen()),
             ),
           ),
           ListTile(
-            title: const Text('Volume Boundaries'),
+            title: const Text('Volume Boundaries per BodyPart, Muscle'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(ctx).push(
               MaterialPageRoute(builder: (_) => const VolumeBoundariesScreen()),

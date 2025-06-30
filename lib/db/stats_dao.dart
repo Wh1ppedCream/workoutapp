@@ -20,8 +20,8 @@ class StatsDao {
     double rmValue,
     double oneErm,
     bool isErm,
-  ) {
-    return db.insert(
+  ) async {
+  await db.insert(
       'exercise_rep_max',
       {
         'def_id': defId,
@@ -41,8 +41,8 @@ class StatsDao {
     int defId,
     String timeframe,
     double vmValue,
-  ) {
-    return db.insert(
+  ) async {
+  await db.insert(
       'exercise_volume_max',
       {
         'def_id': defId,

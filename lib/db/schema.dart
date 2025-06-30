@@ -2,485 +2,448 @@
 
 import 'package:sqflite/sqflite.dart';
 
-/// Database schema manager: creates tables and handles version migrations.
-///
-/// Contains methods to:
-///  • Create initial schema (v1).
-///  • Migrate to v3, v4, and v5.
-///
-/// Usage:
-/// ```dart
-/// await Schema.createTables(db);
-/// await Schema.migrateV3(db);
-/// // etc.
-/// ```
+/// Database schema manager: handles fresh installs and migrations up to v9.
 class Schema {
-  /// Creates all tables for the initial schema (version 1).
-  ///
-  /// - [db]: The open database instance.
+  /// Creates initial schema (version 1).
+  static Future<void> createV1(Database db) async {
+    await db.execute('PRAGMA foreign_keys = ON;');
+    await db.transaction((txn) async {
+      // 1) sessions
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS sessions (
+          id       INTEGER PRIMARY KEY AUTOINCREMENT,
+          date     TEXT    NOT NULL,
+          duration INTEGER NOT NULL
+        );
+      ''');
+
+      // 2) equipment & bodypart lookup
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS equipment (
+          id   INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT    NOT NULL UNIQUE
+        );
+      ''');
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS bodypart (
+          id   INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT    NOT NULL UNIQUE
+        );
+      ''');
+
+      // 3) exercise definitions & bodypart join
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS exercise_definitions (
+          id           INTEGER PRIMARY KEY AUTOINCREMENT,
+          name         TEXT NOT NULL,
+          equipment_id INTEGER,
+          FOREIGN KEY(equipment_id) REFERENCES equipment(id)
+        );
+      ''');
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS exercise_bodypart (
+          exercise_id INTEGER NOT NULL,
+          bodypart_id INTEGER NOT NULL,
+          PRIMARY KEY(exercise_id, bodypart_id),
+          FOREIGN KEY(exercise_id)  REFERENCES exercise_definitions(id) ON DELETE CASCADE,
+          FOREIGN KEY(bodypart_id)  REFERENCES bodypart(id)            ON DELETE CASCADE
+        );
+      ''');
+
+      // 4) exercises (instances in sessions)
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS exercises (
+          id              INTEGER PRIMARY KEY AUTOINCREMENT,
+          session_id      INTEGER NOT NULL,
+          exercise_def_id INTEGER,
+          order_index     INTEGER NOT NULL,
+          FOREIGN KEY(session_id)      REFERENCES sessions(id)            ON DELETE CASCADE,
+          FOREIGN KEY(exercise_def_id) REFERENCES exercise_definitions(id)
+        );
+      ''');
+
+      // 5) sets for weight exercises
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS sets (
+          id          INTEGER PRIMARY KEY AUTOINCREMENT,
+          exercise_id INTEGER NOT NULL,
+          weight      REAL    NOT NULL,
+          reps        INTEGER NOT NULL,
+          order_index INTEGER NOT NULL,
+          FOREIGN KEY(exercise_id) REFERENCES exercises(id) ON DELETE CASCADE
+        );
+      ''');
+
+      // 6) measurement definitions & measurements
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS measurement_definitions (
+          id   INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT    NOT NULL UNIQUE,
+          type TEXT    NOT NULL
+        );
+      ''');
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS measurements (
+          id        INTEGER PRIMARY KEY AUTOINCREMENT,
+          def_id    INTEGER NOT NULL,
+          timestamp TEXT    NOT NULL,
+          value     REAL    NOT NULL,
+          unit      TEXT    NOT NULL,
+          note      TEXT,
+          FOREIGN KEY(def_id) REFERENCES measurement_definitions(id) ON DELETE CASCADE
+        );
+      ''');
+    });
+  }
+
+  /// Creates full schema for fresh installs (v1 + migrations up to v9).
   static Future<void> createTables(Database db) async {
-    // 1) sessions: stores workout sessions
-    await db.execute('''
-      CREATE TABLE sessions(
-        id       INTEGER PRIMARY KEY AUTOINCREMENT,
-        date     TEXT    NOT NULL,
-        duration INTEGER NOT NULL
-      );
-    ''');
-
-    // 2) equipment & bodypart lookup tables
-    await db.execute('''
-      CREATE TABLE equipment(
-        id   INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT    NOT NULL UNIQUE
-      );
-    ''');
-    await db.execute('''
-      CREATE TABLE bodypart(
-        id   INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT    NOT NULL UNIQUE
-      );
-    ''');
-
-    // 3) exercise definitions and junction to body parts
-    await db.execute('''
-      CREATE TABLE exercise_definitions(
-        id           INTEGER PRIMARY KEY AUTOINCREMENT,
-        name         TEXT NOT NULL,
-        equipment_id INTEGER,
-        rating       INTEGER NOT NULL DEFAULT 0,
-        FOREIGN KEY(equipment_id) REFERENCES equipment(id)
-      );
-    ''');
-    await db.execute('''
-      CREATE TABLE exercise_bodypart(
-        exercise_id INTEGER NOT NULL,
-        bodypart_id INTEGER NOT NULL,
-        PRIMARY KEY(exercise_id, bodypart_id),
-        FOREIGN KEY(exercise_id)  REFERENCES exercise_definitions(id) ON DELETE CASCADE,
-        FOREIGN KEY(bodypart_id)  REFERENCES bodypart(id)            ON DELETE CASCADE
-      );
-    ''');
-
-    // 4) exercises (instances in sessions)
-    await db.execute('''
-      CREATE TABLE exercises(
-        id              INTEGER PRIMARY KEY AUTOINCREMENT,
-        session_id      INTEGER NOT NULL,
-        exercise_def_id INTEGER,
-        type            TEXT    NOT NULL,
-        order_index     INTEGER NOT NULL,
-        FOREIGN KEY(session_id)      REFERENCES sessions(id)            ON DELETE CASCADE,
-        FOREIGN KEY(exercise_def_id) REFERENCES exercise_definitions(id)
-      );
-    ''');
-
-    // 5) sets for weight exercises
-    await db.execute('''
-      CREATE TABLE sets(
-        id             INTEGER PRIMARY KEY AUTOINCREMENT,
-        exercise_id    INTEGER NOT NULL,
-        weight         REAL    NOT NULL,
-        reps           INTEGER NOT NULL,
-        order_index    INTEGER NOT NULL,
-        parent_set_id  INTEGER,
-        FOREIGN KEY(exercise_id)   REFERENCES exercises(id) ON DELETE CASCADE
-      );
-    ''');
-
-    // 6) measurement definitions and measurements
-    await db.execute('''
-      CREATE TABLE measurement_definitions(
-        id   INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT    NOT NULL UNIQUE,
-        type TEXT    NOT NULL
-      );
-    ''');
-    await db.execute('''
-      CREATE TABLE measurements(
-        id        INTEGER PRIMARY KEY AUTOINCREMENT,
-        def_id    INTEGER NOT NULL,
-        timestamp TEXT    NOT NULL,
-        value     REAL    NOT NULL,
-        unit      TEXT    NOT NULL,
-        note      TEXT,
-        FOREIGN KEY(def_id) REFERENCES measurement_definitions(id) ON DELETE CASCADE
-      );
-    ''');
-
-    // 7) equipment and muscle relationships for definitions
-    await db.execute('''
-      CREATE TABLE exercise_equipment(
-        exercise_id  INTEGER NOT NULL,
-        equipment_id INTEGER NOT NULL,
-        PRIMARY KEY(exercise_id, equipment_id),
-        FOREIGN KEY(exercise_id)   REFERENCES exercise_definitions(id) ON DELETE CASCADE,
-        FOREIGN KEY(equipment_id)  REFERENCES equipment(id)            ON DELETE CASCADE
-      );
-    ''');
-    await db.execute('''
-      CREATE TABLE muscles(
-        id   INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT    NOT NULL UNIQUE
-      );
-    ''');
-    await db.execute('''
-      CREATE TABLE exercise_muscle(
-        exercise_id INTEGER NOT NULL,
-        muscle_id   INTEGER NOT NULL,
-        rank        INTEGER NOT NULL,
-        PRIMARY KEY(exercise_id, rank),
-        FOREIGN KEY(exercise_id) REFERENCES exercise_definitions(id) ON DELETE CASCADE,
-        FOREIGN KEY(muscle_id)   REFERENCES muscles(id)             ON DELETE CASCADE
-      );
-    ''');
-
-    // 8) stretch definitions and join table
-    await db.execute('''
-      CREATE TABLE stretch_definitions(
-        id          INTEGER PRIMARY KEY AUTOINCREMENT,
-        name        TEXT NOT NULL UNIQUE,
-        description TEXT NOT NULL
-      );
-    ''');
-    await db.execute('''
-      CREATE TABLE stretch_bodypart(
-        stretch_id  INTEGER NOT NULL,
-        bodypart_id INTEGER NOT NULL,
-        PRIMARY KEY(stretch_id, bodypart_id),
-        FOREIGN KEY(stretch_id)   REFERENCES stretch_definitions(id) ON DELETE CASCADE,
-        FOREIGN KEY(bodypart_id)  REFERENCES bodypart(id)            ON DELETE CASCADE
-      );
-    ''');
-
-    // 9) cardio details for exercises
-    await db.execute('''
-      CREATE TABLE cardio_details(
-        id              INTEGER PRIMARY KEY AUTOINCREMENT,
-        exercise_id     INTEGER NOT NULL UNIQUE,
-        cardio_name     TEXT    NOT NULL,
-        note            TEXT,
-        planned_minutes INTEGER NOT NULL,
-        elapsed_seconds INTEGER NOT NULL,
-        FOREIGN KEY(exercise_id) REFERENCES exercises(id) ON DELETE CASCADE
-      );
-    ''');
-
-    // 10) stretch instances and items in sessions
-    await db.execute('''
-      CREATE TABLE stretch_instances(
-        id          INTEGER PRIMARY KEY AUTOINCREMENT,
-        exercise_id INTEGER NOT NULL UNIQUE,
-        FOREIGN KEY(exercise_id) REFERENCES exercises(id) ON DELETE CASCADE
-      );
-    ''');
-    await db.execute('''
-      CREATE TABLE stretch_instance_items(
-        id             INTEGER PRIMARY KEY AUTOINCREMENT,
-        exercise_id    INTEGER NOT NULL,
-        stretch_id     INTEGER,
-        is_custom      INTEGER NOT NULL DEFAULT 0,
-        custom_name    TEXT,
-        custom_desc    TEXT,
-        is_checked     INTEGER NOT NULL DEFAULT 0,
-        order_index    INTEGER NOT NULL,
-        FOREIGN KEY(exercise_id) REFERENCES stretch_instances(exercise_id) ON DELETE CASCADE,
-        FOREIGN KEY(stretch_id)   REFERENCES stretch_definitions(id)    ON DELETE CASCADE
-      );
-    ''');
+    await db.execute('PRAGMA foreign_keys = ON;');
+    await createV1(db);
+    await migrateV3(db);
+    await migrateV4(db);
+    await migrateV5(db);
+    await migrateV6(db);
+    await migrateV7(db);
+    await migrateV8(db);
+    await migrateV9(db);
+    await migrateV10(db);
   }
 
-  /// Applies database migrations for version 3.
-  ///
-  /// - Adds [rating] column to exercise_definitions.
-  /// - Creates equipment/muscle lookup tables.
+  /// Handler for onUpgrade callback.
+  static Future<void> onUpgrade(Database db, int oldVersion, int newVersion) async {
+    await db.execute('PRAGMA foreign_keys = ON;');
+    if (oldVersion < 3) await migrateV3(db);
+    if (oldVersion < 4) await migrateV4(db);
+    if (oldVersion < 5) await migrateV5(db);
+    if (oldVersion < 6) await migrateV6(db);
+    if (oldVersion < 7) await migrateV7(db);
+    if (oldVersion < 8) await migrateV8(db);
+    if (oldVersion < 9) await migrateV9(db);
+    if (oldVersion < 10) await migrateV10(db);
+  }
+
+  /// Migration to version 3: adds rating, equipment/muscle tables.
   static Future<void> migrateV3(Database db) async {
-    await db.execute('ALTER TABLE exercise_definitions ADD COLUMN rating INTEGER NOT NULL DEFAULT 0;');
-    await db.execute('''
-      CREATE TABLE exercise_equipment(
-        exercise_id  INTEGER NOT NULL,
-        equipment_id INTEGER NOT NULL,
-        PRIMARY KEY(exercise_id, equipment_id),
-        FOREIGN KEY(exercise_id)  REFERENCES exercise_definitions(id) ON DELETE CASCADE,
-        FOREIGN KEY(equipment_id) REFERENCES equipment(id)             ON DELETE CASCADE
-      );
-    ''');
-    await db.execute('CREATE TABLE muscles(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE);');
-    await db.execute('''
-      CREATE TABLE exercise_muscle(
-        exercise_id INTEGER NOT NULL,
-        muscle_id   INTEGER NOT NULL,
-        rank        INTEGER NOT NULL,
-        PRIMARY KEY(exercise_id, rank),
-        FOREIGN KEY(exercise_id) REFERENCES exercise_definitions(id) ON DELETE CASCADE
-      );
-    ''');
+    await db.transaction((txn) async {
+      await txn.execute('ALTER TABLE exercise_definitions ADD COLUMN rating INTEGER NOT NULL DEFAULT 0;');
+
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS exercise_equipment (
+          exercise_id  INTEGER NOT NULL,
+          equipment_id INTEGER NOT NULL,
+          PRIMARY KEY(exercise_id, equipment_id),
+          FOREIGN KEY(exercise_id)  REFERENCES exercise_definitions(id) ON DELETE CASCADE,
+          FOREIGN KEY(equipment_id) REFERENCES equipment(id)             ON DELETE CASCADE
+        );
+      ''');
+
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS muscles (
+          id   INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT    NOT NULL UNIQUE
+        );
+      ''');
+
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS exercise_muscle (
+          exercise_id INTEGER NOT NULL,
+          muscle_id   INTEGER NOT NULL,
+          rank        INTEGER NOT NULL,
+          PRIMARY KEY(exercise_id, muscle_id),
+          UNIQUE(exercise_id, rank),
+          FOREIGN KEY(exercise_id) REFERENCES exercise_definitions(id) ON DELETE CASCADE,
+          FOREIGN KEY(muscle_id)   REFERENCES muscles(id)             ON DELETE CASCADE
+        );
+      ''');
+    });
   }
 
-  /// Applies database migrations for version 4.
-  ///
-  /// - Creates stretch definitions and join table.
+  /// Migration to version 4: adds stretches.
   static Future<void> migrateV4(Database db) async {
-    await db.execute('''
-      CREATE TABLE stretch_definitions(
-        id          INTEGER PRIMARY KEY AUTOINCREMENT,
-        name        TEXT    NOT NULL UNIQUE,
-        description TEXT    NOT NULL
-      );
-    ''');
-    await db.execute('''
-      CREATE TABLE stretch_bodypart(
-        stretch_id   INTEGER NOT NULL,
-        bodypart_id  INTEGER NOT NULL,
-        PRIMARY KEY(stretch_id, bodypart_id),
-        FOREIGN KEY(stretch_id)   REFERENCES stretch_definitions(id) ON DELETE CASCADE,
-        FOREIGN KEY(bodypart_id)  REFERENCES bodypart(id)            ON DELETE CASCADE
-      );
-    ''');
+    await db.transaction((txn) async {
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS stretch_definitions (
+          id          INTEGER PRIMARY KEY AUTOINCREMENT,
+          name        TEXT NOT NULL UNIQUE,
+          description TEXT NOT NULL
+        );
+      ''');
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS stretch_bodypart (
+          stretch_id  INTEGER NOT NULL,
+          bodypart_id INTEGER NOT NULL,
+          PRIMARY KEY(stretch_id, bodypart_id),
+          FOREIGN KEY(stretch_id)  REFERENCES stretch_definitions(id) ON DELETE CASCADE,
+          FOREIGN KEY(bodypart_id) REFERENCES bodypart(id)            ON DELETE CASCADE
+        );
+      ''');
+    });
   }
 
-  /// Applies database migrations for version 5.
-  ///
-  /// - Adds [type] column to exercises.
-  /// - Creates cardio_details and stretch instance tables.
-  /// - Adds [parent_set_id] to sets.
+  /// Migration to version 5: adds exercise type, cardio & stretch instance tables.
   static Future<void> migrateV5(Database db) async {
-    await db.execute("ALTER TABLE exercises ADD COLUMN type TEXT NOT NULL DEFAULT 'weight';");
-    await db.execute('''
-      CREATE TABLE cardio_details(
-        id              INTEGER PRIMARY KEY AUTOINCREMENT,
-        exercise_id     INTEGER NOT NULL UNIQUE,
-        cardio_name     TEXT    NOT NULL,
-        note            TEXT,
-        planned_minutes INTEGER NOT NULL,
-        elapsed_seconds INTEGER NOT NULL,
-        FOREIGN KEY(exercise_id) REFERENCES exercises(id) ON DELETE CASCADE
-      );
-    ''');
-    await db.execute('''
-      CREATE TABLE stretch_instances(
-        id          INTEGER PRIMARY KEY AUTOINCREMENT,
-        exercise_id INTEGER NOT NULL UNIQUE,
-        FOREIGN KEY(exercise_id) REFERENCES exercises(id) ON DELETE CASCADE
-      );
-    ''');
-    await db.execute('''
-      CREATE TABLE stretch_instance_items(
-        id             INTEGER PRIMARY KEY AUTOINCREMENT,
-        exercise_id    INTEGER NOT NULL,
-        stretch_id     INTEGER,
-        is_custom      INTEGER NOT NULL DEFAULT 0,
-        custom_name    TEXT,
-        custom_desc    TEXT,
-        is_checked     INTEGER NOT NULL DEFAULT 0,
-        order_index    INTEGER NOT NULL,
-        FOREIGN KEY(exercise_id) REFERENCES stretch_instances(exercise_id) ON DELETE CASCADE,
-        FOREIGN KEY(stretch_id)   REFERENCES stretch_definitions(id)    ON DELETE CASCADE
-      );
-    ''');
-    await db.execute('ALTER TABLE sets ADD COLUMN parent_set_id INTEGER;');
+    await db.transaction((txn) async {
+      await txn.execute("ALTER TABLE exercises ADD COLUMN type TEXT NOT NULL DEFAULT 'weight';");
+
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS cardio_details (
+          id              INTEGER PRIMARY KEY AUTOINCREMENT,
+          exercise_id     INTEGER NOT NULL UNIQUE,
+          cardio_name     TEXT    NOT NULL,
+          note            TEXT,
+          planned_minutes INTEGER NOT NULL,
+          elapsed_seconds INTEGER NOT NULL,
+          FOREIGN KEY(exercise_id) REFERENCES exercises(id) ON DELETE CASCADE
+        );
+      ''');
+
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS stretch_instances (
+          id          INTEGER PRIMARY KEY AUTOINCREMENT,
+          exercise_id INTEGER NOT NULL UNIQUE,
+          FOREIGN KEY(exercise_id) REFERENCES exercises(id) ON DELETE CASCADE
+        );
+      ''');
+
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS stretch_instance_items (
+          id             INTEGER PRIMARY KEY AUTOINCREMENT,
+          instance_id    INTEGER NOT NULL,
+          stretch_id     INTEGER,
+          is_custom      INTEGER NOT NULL DEFAULT 0,
+          custom_name    TEXT,
+          custom_desc    TEXT,
+          is_checked     INTEGER NOT NULL DEFAULT 0,
+          order_index    INTEGER NOT NULL,
+          FOREIGN KEY(instance_id) REFERENCES stretch_instances(id) ON DELETE CASCADE,
+          FOREIGN KEY(stretch_id)  REFERENCES stretch_definitions(id) ON DELETE CASCADE
+        );
+      ''');
+
+      await txn.execute('ALTER TABLE sets ADD COLUMN parent_set_id INTEGER;');
+    });
   }
 
-// In lib/db/schema.dart, **after** migrateV5:
-static Future<void> migrateV6(Database db) async {
-  // Preset definitions
-  await db.execute('''
-    CREATE TABLE preset_definitions(
-      id          INTEGER PRIMARY KEY AUTOINCREMENT,
-      name        TEXT    NOT NULL,
-      created_at  TEXT    NOT NULL DEFAULT (datetime('now'))
-    );
-  ''');
+  /// Migration to version 6: adds presets.
+  static Future<void> migrateV6(Database db) async {
+    await db.transaction((txn) async {
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS preset_definitions (
+          id          INTEGER PRIMARY KEY AUTOINCREMENT,
+          name        TEXT    NOT NULL,
+          created_at  TEXT    NOT NULL DEFAULT (datetime('now'))
+        );
+      ''');
 
-  // Preset exercises
-  await db.execute('''
-    CREATE TABLE preset_exercises(
-      id                INTEGER PRIMARY KEY AUTOINCREMENT,
-      preset_id         INTEGER NOT NULL,
-      exercise_def_id   INTEGER,
-      type              TEXT    NOT NULL,
-      order_index       INTEGER NOT NULL,
-      FOREIGN KEY(preset_id)       REFERENCES preset_definitions(id) ON DELETE CASCADE,
-      FOREIGN KEY(exercise_def_id) REFERENCES exercise_definitions(id)
-    );
-  ''');
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS preset_exercises (
+          id                INTEGER PRIMARY KEY AUTOINCREMENT,
+          preset_id         INTEGER NOT NULL,
+          exercise_def_id   INTEGER,
+          type              TEXT    NOT NULL,
+          order_index       INTEGER NOT NULL,
+          FOREIGN KEY(preset_id)       REFERENCES preset_definitions(id) ON DELETE CASCADE,
+          FOREIGN KEY(exercise_def_id) REFERENCES exercise_definitions(id)
+        );
+      ''');
 
-  // Preset weight sets (with parent_set_id)
-  await db.execute('''
-    CREATE TABLE preset_sets(
-      id                   INTEGER PRIMARY KEY AUTOINCREMENT,
-      preset_exercise_id   INTEGER NOT NULL,
-      weight               REAL    NOT NULL,
-      reps                 INTEGER NOT NULL,
-      order_index          INTEGER NOT NULL,
-      parent_set_id        INTEGER,
-      FOREIGN KEY(preset_exercise_id) REFERENCES preset_exercises(id) ON DELETE CASCADE
-    );
-  ''');
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS preset_sets (
+          id                   INTEGER PRIMARY KEY AUTOINCREMENT,
+          preset_exercise_id   INTEGER NOT NULL,
+          weight               REAL    NOT NULL,
+          reps                 INTEGER NOT NULL,
+          order_index          INTEGER NOT NULL,
+          parent_set_id        INTEGER,
+          FOREIGN KEY(preset_exercise_id) REFERENCES preset_exercises(id) ON DELETE CASCADE
+        );
+      ''');
 
-  // Preset cardio details
-  await db.execute('''
-      CREATE TABLE preset_cardio_details(
-    id                  INTEGER PRIMARY KEY AUTOINCREMENT,
-    preset_exercise_id  INTEGER NOT NULL UNIQUE,
-    cardio_name         TEXT    NOT NULL,
-    note                TEXT,
-    planned_minutes     INTEGER NOT NULL,
-    elapsed_seconds     INTEGER NOT NULL DEFAULT 0,
-    FOREIGN KEY(preset_exercise_id) REFERENCES preset_exercises(id) ON DELETE CASCADE
-  );
-  ''');
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS preset_cardio_details (
+          id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+          preset_exercise_id  INTEGER NOT NULL UNIQUE,
+          cardio_name         TEXT    NOT NULL,
+          note                TEXT,
+          planned_minutes     INTEGER NOT NULL,
+          elapsed_seconds     INTEGER NOT NULL DEFAULT 0,
+          FOREIGN KEY(preset_exercise_id) REFERENCES preset_exercises(id) ON DELETE CASCADE
+        );
+      ''');
 
-  // Preset stretch items
-  await db.execute('''
-    CREATE TABLE preset_stretch_items(
-      id                   INTEGER PRIMARY KEY AUTOINCREMENT,
-      preset_exercise_id   INTEGER NOT NULL,
-      stretch_id           INTEGER,
-      is_custom            INTEGER NOT NULL DEFAULT 0,
-      custom_name          TEXT,
-      custom_desc          TEXT,
-      order_index          INTEGER NOT NULL,
-      FOREIGN KEY(preset_exercise_id) REFERENCES preset_exercises(id) ON DELETE CASCADE,
-      FOREIGN KEY(stretch_id)            REFERENCES stretch_definitions(id)
-    );
-  ''');
-}
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS preset_stretch_items (
+          id                   INTEGER PRIMARY KEY AUTOINCREMENT,
+          preset_exercise_id   INTEGER NOT NULL,
+          stretch_id           INTEGER,
+          is_custom            INTEGER NOT NULL DEFAULT 0,
+          custom_name          TEXT,
+          custom_desc          TEXT,
+          order_index          INTEGER NOT NULL,
+          FOREIGN KEY(preset_exercise_id) REFERENCES preset_exercises(id) ON DELETE CASCADE,
+          FOREIGN KEY(stretch_id)            REFERENCES stretch_definitions(id)
+        );
+      ''');
+    });
+  }
 
-
-  /// Applies database migrations for version 7.
-  ///
-  /// - Creates `gym_profiles` table.
-  /// - Creates `profile_equipment` join table.
-  /// - Adds nullable `profile_id` column to `preset_definitions`.
+  /// Migration to version 7: adds gym profiles & link to presets.
   static Future<void> migrateV7(Database db) async {
-    // 1) gym_profiles
-    await db.execute('''
-      CREATE TABLE gym_profiles(
-        id          INTEGER PRIMARY KEY AUTOINCREMENT,
-        name        TEXT    NOT NULL,
-        created_at  TEXT    NOT NULL DEFAULT (datetime('now'))
-      );
-    ''');
+    await db.transaction((txn) async {
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS gym_profiles (
+          id          INTEGER PRIMARY KEY AUTOINCREMENT,
+          name        TEXT    NOT NULL,
+          created_at  TEXT    NOT NULL DEFAULT (datetime('now'))
+        );
+      ''');
 
-    // 2) profile_equipment join table
-    await db.execute('''
-      CREATE TABLE profile_equipment(
-        profile_id    INTEGER NOT NULL,
-        equipment_id  INTEGER NOT NULL,
-        PRIMARY KEY(profile_id, equipment_id),
-        FOREIGN KEY(profile_id)    REFERENCES gym_profiles(id)    ON DELETE CASCADE,
-        FOREIGN KEY(equipment_id)  REFERENCES equipment(id)       ON DELETE CASCADE
-      );
-    ''');
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS profile_equipment (
+          profile_id    INTEGER NOT NULL,
+          equipment_id  INTEGER NOT NULL,
+          PRIMARY KEY(profile_id, equipment_id),
+          FOREIGN KEY(profile_id)    REFERENCES gym_profiles(id)    ON DELETE CASCADE,
+          FOREIGN KEY(equipment_id)  REFERENCES equipment(id)       ON DELETE CASCADE
+        );
+      ''');
 
-    // 3) link presets to profiles
-    await db.execute('''
-      ALTER TABLE preset_definitions
-      ADD COLUMN profile_id INTEGER;
-    ''');
+      // Recreate preset_definitions to add foreign key on profile_id
+      await txn.execute('PRAGMA foreign_keys = OFF;');
+      await txn.execute('ALTER TABLE preset_definitions RENAME TO preset_definitions_old;');
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS preset_definitions (
+          id          INTEGER PRIMARY KEY AUTOINCREMENT,
+          name        TEXT    NOT NULL,
+          created_at  TEXT    NOT NULL DEFAULT (datetime('now')),
+          profile_id  INTEGER,
+          FOREIGN KEY(profile_id) REFERENCES gym_profiles(id) ON DELETE SET NULL
+        );
+      ''');
+      await txn.execute('''
+        INSERT INTO preset_definitions (id, name, created_at)
+        SELECT id, name, created_at FROM preset_definitions_old;
+      ''');
+      await txn.execute('DROP TABLE preset_definitions_old;');
+      await txn.execute('PRAGMA foreign_keys = ON;');
+    });
   }
 
-// Add this method to your Schema class:
-
-  /// Applies database migrations for version 8.
-  /// 
-  /// - Creates tables to track rep-max and volume-max stats per exercise.
+  /// Migration to version 8: adds rep-max & volume-max tables.
   static Future<void> migrateV8(Database db) async {
-    // Rep-max table (1–20 reps, for week/month/all-time)
-    await db.execute('''
-      CREATE TABLE exercise_rep_max (
-        def_id     INTEGER NOT NULL,
-        rep_count  INTEGER NOT NULL,
-        timeframe  TEXT    NOT NULL,    -- 'week', 'month', 'all'
-        rm_value   REAL    NOT NULL,    -- true rep-max or ERM fallback
-        one_erm    REAL    NOT NULL,    -- theoretical 1-rep max
-        is_erm     INTEGER NOT NULL,    -- 1 if rm_value is an ERM
-        PRIMARY KEY(def_id, rep_count, timeframe),
-        FOREIGN KEY(def_id) REFERENCES exercise_definitions(id)
-      );
-    ''');
+    await db.transaction((txn) async {
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS exercise_rep_max (
+          def_id     INTEGER NOT NULL,
+          rep_count  INTEGER NOT NULL,
+          timeframe  TEXT    NOT NULL,
+          rm_value   REAL    NOT NULL,
+          one_erm    REAL    NOT NULL,
+          is_erm     INTEGER NOT NULL,
+          PRIMARY KEY(def_id, rep_count, timeframe),
+          FOREIGN KEY(def_id) REFERENCES exercise_definitions(id) ON DELETE CASCADE
+        );
+      ''');
 
-    // Volume-max table
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS exercise_volume_max (
+          def_id     INTEGER NOT NULL,
+          timeframe  TEXT    NOT NULL,
+          vm_value   REAL    NOT NULL,
+          PRIMARY KEY(def_id, timeframe),
+          FOREIGN KEY(def_id) REFERENCES exercise_definitions(id) ON DELETE CASCADE
+        );
+      ''');
+    });
+  }
+
+  /// Migration to version 9: adds bodypart/muscle connections & boundaries.
+  static Future<void> migrateV9(Database db) async {
+    await db.transaction((txn) async {
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS muscle_bodypart (
+          muscle_id    INTEGER NOT NULL,
+          bodypart_id  INTEGER NOT NULL,
+          PRIMARY KEY(muscle_id, bodypart_id),
+          FOREIGN KEY(muscle_id)    REFERENCES muscles(id)    ON DELETE CASCADE,
+          FOREIGN KEY(bodypart_id)  REFERENCES bodypart(id)   ON DELETE CASCADE
+        );
+      ''');
+
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS bodypart_ranking (
+          bodypart_id INTEGER PRIMARY KEY,
+          rank        INTEGER NOT NULL,
+          FOREIGN KEY(bodypart_id) REFERENCES bodypart(id) ON DELETE CASCADE
+        );
+      ''');
+
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS muscle_ranking (
+          muscle_id INTEGER PRIMARY KEY,
+          rank      INTEGER NOT NULL,
+          FOREIGN KEY(muscle_id) REFERENCES muscles(id) ON DELETE CASCADE
+        );
+      ''');
+
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS exercise_muscle_percent (
+          exercise_def_id INTEGER NOT NULL,
+          muscle_id       INTEGER NOT NULL,
+          percent         REAL    NOT NULL,
+          PRIMARY KEY(exercise_def_id, muscle_id),
+          FOREIGN KEY(exercise_def_id) REFERENCES exercise_definitions(id) ON DELETE CASCADE,
+          FOREIGN KEY(muscle_id)       REFERENCES muscles(id)             ON DELETE CASCADE
+        );
+      ''');
+
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS muscle_volume_boundaries (
+          muscle_id              INTEGER PRIMARY KEY,
+          maintenance_volume     REAL    NOT NULL,
+          min_effective_volume   REAL    NOT NULL,
+          max_adaptive_volume    REAL    NOT NULL,
+          max_recoverable_volume REAL    NOT NULL,
+          FOREIGN KEY(muscle_id) REFERENCES muscles(id) ON DELETE CASCADE
+        );
+      ''');
+
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS bodypart_volume_boundaries (
+          bodypart_id            INTEGER PRIMARY KEY,
+          maintenance_volume     REAL    NOT NULL,
+          min_effective_volume   REAL    NOT NULL,
+          max_adaptive_volume    REAL    NOT NULL,
+          max_recoverable_volume REAL    NOT NULL,
+          FOREIGN KEY(bodypart_id) REFERENCES bodypart(id) ON DELETE CASCADE
+        );
+      ''');
+
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS bodypart_muscle_rankings (
+          bodypart_id   INTEGER NOT NULL,
+          muscle_id     INTEGER NOT NULL,
+          rank          INTEGER NOT NULL,
+          PRIMARY KEY(bodypart_id, muscle_id),
+          FOREIGN KEY(bodypart_id) REFERENCES bodypart(id) ON DELETE CASCADE,
+          FOREIGN KEY(muscle_id)   REFERENCES muscles(id)    ON DELETE CASCADE
+        );
+      ''');
+    });
+  }
+
+  /// Applies database migrations for version 10.
+  ///
+  /// - Creates `formula_settings` table for storing default‐formula parameters.
+  static Future<void> migrateV10(Database db) async {
     await db.execute('''
-      CREATE TABLE exercise_volume_max (
-        def_id     INTEGER NOT NULL,
-        timeframe  TEXT    NOT NULL,    -- 'week', 'month', 'all'
-        vm_value   REAL    NOT NULL,
-        PRIMARY KEY(def_id, timeframe),
-        FOREIGN KEY(def_id) REFERENCES exercise_definitions(id)
+      CREATE TABLE IF NOT EXISTS formula_settings (
+        key   TEXT    PRIMARY KEY,
+        value REAL    NOT NULL
       );
     ''');
   }
-
-
-  static Future<void> migrateV9(Database db) async {
-  // Muscle ↔ BodyPart connections
-  await db.execute('''
-    CREATE TABLE IF NOT EXISTS muscle_bodypart (
-      muscle_id    INTEGER NOT NULL,
-      bodypart_id  INTEGER NOT NULL,
-      PRIMARY KEY(muscle_id, bodypart_id),
-      FOREIGN KEY(muscle_id)   REFERENCES muscles(id)    ON DELETE CASCADE,
-      FOREIGN KEY(bodypart_id) REFERENCES bodypart(id)   ON DELETE CASCADE
-    );
-  ''');
-
-  // BodyPart ranking
-  await db.execute('''
-    CREATE TABLE IF NOT EXISTS bodypart_ranking (
-      bodypart_id INTEGER PRIMARY KEY,
-      rank        INTEGER NOT NULL,
-      FOREIGN KEY(bodypart_id) REFERENCES bodypart(id) ON DELETE CASCADE
-    );
-  ''');
-
-  // Muscle ranking
-  await db.execute('''
-    CREATE TABLE IF NOT EXISTS muscle_ranking (
-      muscle_id INTEGER PRIMARY KEY,
-      rank      INTEGER NOT NULL,
-      FOREIGN KEY(muscle_id) REFERENCES muscles(id) ON DELETE CASCADE
-    );
-  ''');
-
-  // Per-exercise muscle percent override
-  await db.execute('''
-    CREATE TABLE IF NOT EXISTS exercise_muscle_percent (
-      exercise_def_id INTEGER NOT NULL,
-      muscle_id       INTEGER NOT NULL,
-      percent         REAL    NOT NULL,
-      PRIMARY KEY(exercise_def_id, muscle_id),
-      FOREIGN KEY(exercise_def_id) REFERENCES exercise_definitions(id) ON DELETE CASCADE,
-      FOREIGN KEY(muscle_id)       REFERENCES muscles(id)             ON DELETE CASCADE
-    );
-  ''');
-
-  // Muscle volume boundaries
-  await db.execute('''
-    CREATE TABLE IF NOT EXISTS muscle_volume_boundaries (
-      muscle_id             INTEGER PRIMARY KEY,
-      maintenance_volume    REAL    NOT NULL,
-      min_effective_volume  REAL    NOT NULL,
-      max_adaptive_volume   REAL    NOT NULL,
-      max_recoverable_volume REAL   NOT NULL,
-      FOREIGN KEY(muscle_id) REFERENCES muscles(id) ON DELETE CASCADE
-    );
-  ''');
-
-  // BodyPart volume boundaries
-  await db.execute('''
-    CREATE TABLE IF NOT EXISTS bodypart_volume_boundaries (
-      bodypart_id            INTEGER PRIMARY KEY,
-      maintenance_volume     REAL    NOT NULL,
-      min_effective_volume   REAL    NOT NULL,
-      max_adaptive_volume    REAL    NOT NULL,
-      max_recoverable_volume REAL    NOT NULL,
-      FOREIGN KEY(bodypart_id) REFERENCES bodypart(id) ON DELETE CASCADE
-    );
-  ''');
-}
-
 
 
 }

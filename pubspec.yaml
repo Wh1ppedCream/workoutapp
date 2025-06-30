@@ -76,6 +76,11 @@ flutter:
     - assets/bodyparts.json
     - assets/muscles.json
     - assets/stretches.json
+    - assets/muscle_bodypart.json
+    - assets/bodypart_ranking.json
+    - assets/muscle_ranking.json
+    - assets/bodypart_muscle_rankings.json
+    - assets/volume_boundaries.json
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
