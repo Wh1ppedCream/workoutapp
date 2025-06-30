@@ -8,6 +8,7 @@ import 'session_detail_screen.dart';
 import 'exercise_catalog_page.dart';
 import 'muscle_filter_page.dart';
 import '../widgets/history_summary_widget.dart';
+import 'analytics_dashboard_screen.dart';
 
 
 /// Displays the list of past workout sessions and navigation to filters.
@@ -88,8 +89,22 @@ class _HistoryScreenState extends State<HistoryScreen> {
               return HistorySummaryWidget(recentSessions: recent);
             },
           ),
-          
-          
+
+          // ─── Analytics Dashboard button ───────────────────
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.analytics),
+              label: const Text('View 7-Day Analytics'),
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                      builder: (_) => const AnalyticsDashboardScreen()),
+                );
+              },
+            ),
+          ),
+              
           
           // Session list
           Expanded(

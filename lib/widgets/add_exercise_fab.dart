@@ -31,6 +31,7 @@ class AddExerciseFab extends StatelessWidget {
   });
 
   // Cardio options for bodyweight vs. equipment-based activities.
+  // TODO: put in database and put these in json files
   static const List<String> _bodyweightCardioOptions = [
     'Aerobics', 'Box Jumps', 'Jump Squats', 'Running', 'Swimming', 'Walking', 'Zumba',
   ];

@@ -30,11 +30,12 @@ class _CardioCardState extends State<CardioCard> {
   late int _cardioMinutes;
   late int _secondsLeft;
   Timer? _cardioTimer;
-  late TextEditingController _cardioNameController;
+  late TextEditingController _cardioNameController;       //TODO: idk why this has a controller
 
   @override
   void initState() {
     super.initState();
+    //TODO: use actual equipment for equipment field and have note for note field
     // 1) Seed the note from the model’s equipment field
     _note = widget.exercise.equipment;
 

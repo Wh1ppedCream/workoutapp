@@ -163,8 +163,8 @@ class SetDao {
   static Future<void> deleteSet(
     Database db,
     int setId,
-  ) {
-    return db.delete(
+  ) async {
+  await db.delete(
       'sets',
       where: 'id = ?',
       whereArgs: [setId],

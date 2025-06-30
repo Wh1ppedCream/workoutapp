@@ -37,7 +37,7 @@ class DatabaseHelper {
     final path = join(dbPath, 'fitness_tracker.db');
     return await openDatabase(
       path,
-      version: 9,  
+      version: 10,  
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
@@ -69,29 +69,27 @@ class DatabaseHelper {
 
    if (oldVersion < 9) {
   await Schema.migrateV9(db);
+  await Seed.seedAnalyticsDefaults(db);
 }
+if (oldVersion < 10) {
+        await Schema.migrateV10(db);
+      }
 
   },
 );
   }
 
-  /// Builds initial schema with lookups first.
- Future<void> _onCreate(Database db, int version) async {
-	// 1) Create all tables
-  await Schema.createTables(db);
-  // 2) Seed lookups & exercises
-  await Seed.seedLookupsAndExercises(db);
-  // 3) Seed stretches
-  await Seed.seedStretches(db);
-  // 4) Create preset tables (v6)
-  await Schema.migrateV6(db);
-  // 5) Create gym_profiles tables (v7)
-  await Schema.migrateV7(db);
-  // 6) Create tables to track rep-max and volume-max stats per exercise (v8)
-  await Schema.migrateV8(db);
-  // 7) Create tables for matching bodyparts ↔ muscles (v9), ranking bodyparts, ranking muscles, muscle and bodypart boundaries, per exercise muscle%
-  await Schema.migrateV9(db);
-}
+  /// Builds initial schema and seeds all data.
+  Future<void> _onCreate(Database db, int version) async {
+    // Create schema v1 + migrations v3–v9
+    await Schema.createTables(db);
+    // Seed lookup and exercise definitions
+    await Seed.seedLookupsAndExercises(db);
+    // Seed stretches
+    await Seed.seedStretches(db);
+    // Seed analytics defaults
+    await Seed.seedAnalyticsDefaults(db);
+  }
 
   // ────────────────────────────────────────────────────────────────────────────
   // CRUD METHODS
@@ -496,6 +494,22 @@ Future<List<String>> getAllMuscleNames() async {
       'exercise_muscle',
       'stretch_definitions',
       'stretch_bodypart',
+      'muscle_bodypart',
+      'bodypart_ranking',
+      'muscle_ranking',
+      'exercise_muscle_percent',
+      'bodypart_muscle_rankings',
+      'muscle_volume_boundaries',
+      'bodypart_volume_boundaries',
+      'preset_definitions',
+      'preset_exercises',
+      'preset_sets',
+      'preset_cardio_details',
+      'preset_stretch_items',
+      'gym_profiles',
+      'profile_equipment',
+      'exercise_rep_max',
+      'exercise_volume_max',
     ];
     final Map<String, dynamic> data = {};
     for (final table in tables) {
@@ -510,7 +524,7 @@ Future<List<String>> getAllMuscleNames() async {
     final db = await database;
     final Map<String, dynamic> data = jsonDecode(jsonStr);
     await db.transaction((txn) async {
-      await txn.execute('PRAGMA foreign_keys = OFF');
+      await txn.execute('PRAGMA foreign_keys = OFF;');
       if (clearFirst) {
         for (final table in data.keys) {
           await txn.delete(table);
@@ -522,7 +536,7 @@ Future<List<String>> getAllMuscleNames() async {
           await txn.insert(table, row);
         }
       }
-      await txn.execute('PRAGMA foreign_keys = ON');
+      await txn.execute('PRAGMA foreign_keys = ON;');
     });
   }
 

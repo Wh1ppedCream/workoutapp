@@ -1,0 +1,123 @@
+[
+  {
+    "bodypart": "Neck",
+    "muscles": [
+      "Sternocleidomastoid",
+      "Scalenes",
+      "Splenius"
+    ]
+  },
+  {
+    "bodypart": "Shoulders",
+    "muscles": [
+      "Anterior Deltoid",
+      "Lateral Deltoid",
+      "Posterior Deltoid",
+      "Supraspinatus",
+      "Infraspinatus",
+      "Teres Minor",
+      "Teres Major"
+    ]
+  },
+  {
+    "bodypart": "Chest",
+    "muscles": [
+      "Pectoralis Major",
+      "Pectoralis Minor",
+      "Serratus Anterior"
+    ]
+  },
+  {
+    "bodypart": "Core",
+    "muscles": [
+      "Rectus Abdominis",
+      "Obliques",
+      "Transverse Abdominis",
+      "Pelvic Floor Muscles"
+    ]
+  },
+  {
+    "bodypart": "Upper Back",
+    "muscles": [
+      "Latissimus Dorsi",
+      "Trapezius (Upper)",
+      "Trapezius (Middle)",
+      "Trapezius (Lower)",
+      "Rhomboids",
+      "Levator Scapulae"
+    ]
+  },
+  {
+    "bodypart": "Lower Back",
+    "muscles": [
+      "Erector Spinae",
+      "Multifidus",
+      "Quadratus Lumborum"
+    ]
+  },
+  {
+    "bodypart": "Biceps",
+    "muscles": [
+      "Biceps Brachii",
+      "Brachialis"
+    ]
+  },
+  {
+    "bodypart": "Triceps",
+    "muscles": [
+      "Triceps Brachii",
+      "Anconeus"
+    ]
+  },
+  {
+    "bodypart": "Forearms",
+    "muscles": [
+      "Brachioradialis",
+      "Wrist Flexors",
+      "Wrist Extensors",
+      "Pronator Teres",
+      "Pronator Quadratus"
+    ]
+  },
+  {
+    "bodypart": "Hips",
+    "muscles": [
+      "Gluteus Maximus",
+      "Gluteus Medius",
+      "Gluteus Minimus",
+      "Iliopsoas",
+      "Tensor Fasciae Latae",
+      "Piriformis",
+      "Adductor Longus",
+      "Adductor Brevis",
+      "Adductor Magnus",
+      "Gracilis",
+      "Pectineus"
+    ]
+  },
+  {
+    "bodypart": "Hamstrings",
+    "muscles": [
+      "Biceps Femoris",
+      "Semitendinosus",
+      "Semimembranosus"
+    ]
+  },
+  {
+    "bodypart": "Quads",
+    "muscles": [
+      "Rectus Femoris",
+      "Vastus Lateralis",
+      "Vastus Medialis",
+      "Vastus Intermedius"
+    ]
+  },
+  {
+    "bodypart": "Calves",
+    "muscles": [
+      "Gastrocnemius",
+      "Soleus",
+      "Tibialis Anterior"
+    ]
+  }
+]

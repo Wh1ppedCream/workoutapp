@@ -251,6 +251,9 @@ class _TrainPageState extends State<TrainPage> {
                     if (snap.connectionState != ConnectionState.done) {
                       return const Center(child: CircularProgressIndicator());
                     }
+                    if (snap.hasError) {
+      return Text('Error: ${snap.error}');
+    }
                     final presets = snap.data!;
                     return ListView.separated(
                       padding: const EdgeInsets.all(16),

@@ -1,0 +1,473 @@
+{
+  "bodyparts": [
+  {
+    "bodypart": "Neck",
+    "maintenance": 3,
+    "minEffective": 5,
+    "maxAdaptive": 12,
+    "maxRecoverable": 20
+  },
+  {
+    "bodypart": "Shoulders",
+    "maintenance": 3,
+    "minEffective": 5,
+    "maxAdaptive": 12,
+    "maxRecoverable": 20
+  },
+  {
+    "bodypart": "Chest",
+    "maintenance": 3,
+    "minEffective": 5,
+    "maxAdaptive": 12,
+    "maxRecoverable": 20
+  },
+  {
+    "bodypart": "Core",
+    "maintenance": 3,
+    "minEffective": 5,
+    "maxAdaptive": 12,
+    "maxRecoverable": 20
+  },
+  {
+    "bodypart": "Upper Back",
+    "maintenance": 3,
+    "minEffective": 5,
+    "maxAdaptive": 12,
+    "maxRecoverable": 20
+  },
+  {
+    "bodypart": "Lower Back",
+    "maintenance": 3,
+    "minEffective": 5,
+    "maxAdaptive": 12,
+    "maxRecoverable": 20
+  },
+  {
+    "bodypart": "Biceps",
+    "maintenance": 3,
+    "minEffective": 5,
+    "maxAdaptive": 12,
+    "maxRecoverable": 20
+  },
+  {
+    "bodypart": "Triceps",
+    "maintenance": 3,
+    "minEffective": 5,
+    "maxAdaptive": 12,
+    "maxRecoverable": 20
+  },
+  {
+    "bodypart": "Forearms",
+    "maintenance": 3,
+    "minEffective": 5,
+    "maxAdaptive": 12,
+    "maxRecoverable": 20
+  },
+  {
+    "bodypart": "Hips",
+    "maintenance": 3,
+    "minEffective": 5,
+    "maxAdaptive": 12,
+    "maxRecoverable": 20
+  },
+  {
+    "bodypart": "Hamstrings",
+    "maintenance": 3,
+    "minEffective": 5,
+    "maxAdaptive": 12,
+    "maxRecoverable": 20
+  },
+  {
+    "bodypart": "Quads",
+    "maintenance": 3,
+    "minEffective": 5,
+    "maxAdaptive": 12,
+    "maxRecoverable": 20
+  },
+  {
+    "bodypart": "Calves",
+    "maintenance": 3,
+    "minEffective": 5,
+    "maxAdaptive": 12,
+    "maxRecoverable": 20
+  }
+],
+"muscles": [
+     {
+      "muscle": "Adductor Brevis",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },
+    {
+      "muscle": "Adductor Longus",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },
+    {
+      "muscle": "Adductor Magnus",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },
+    {
+      "muscle": "Anconeus",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },
+{
+      "muscle": "Anterior Deltoid",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },
+    {
+      "muscle": "Biceps Brachii",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },
+    {
+      "muscle": "Biceps Femoris",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },
+    {
+      "muscle": "Brachialis",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },
+    {
+      "muscle": "Brachioradialis",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },
+    {
+      "muscle": "Erector Spinae",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },
+    {
+      "muscle": "Gastrocnemius",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },
+    {
+      "muscle": "Gluteus Maximus",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },
+    {
+      "muscle": "Gluteus Medius",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },
+    {
+      "muscle": "Gluteus Minimus",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },
+    {
+      "muscle": "Gracilis",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },
+    {
+      "muscle": "Iliopsoas",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },
+    {
+      "muscle": "Infraspinatus",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },
+    {
+      "muscle": "Latissimus Dorsi",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },
+    {
+      "muscle": "Lateral Deltoid",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },
+    {
+      "muscle": "Levator Scapulae",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },
+    {
+      "muscle": "Multifidus",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },
+    {
+      "muscle": "Obliques",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },
+    {
+      "muscle": "Pectineus",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },
+    {
+      "muscle": "Pectoralis Major",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },
+    {
+      "muscle": "Pectoralis Minor",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },
+    {
+      "muscle": "Pelvic Floor Muscles",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },
+    {
+      "muscle": "Piriformis",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },
+    {
+      "muscle": "Posterior Deltoid",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },
+    {
+      "muscle": "Pronator Quadratus",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },
+    {
+      "muscle": "Pronator Teres",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },
+    {
+      "muscle": "Quadratus Lumborum",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },
+    {
+      "muscle": "Rectus Abdominis",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },
+    {
+      "muscle": "Rectus Femoris",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },
+    {
+      "muscle": "Rhomboids",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },
+    {
+      "muscle": "Scalenes",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },
+    {
+      "muscle": "Semimembranosus",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },
+    {
+      "muscle": "Semitendinosus",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },
+    {
+      "muscle": "Serratus Anterior",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },
+    {
+      "muscle": "Soleus",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },
+    {
+      "muscle": "Splenius",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },
+    {
+      "muscle": "Sternocleidomastoid",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },
+    {
+      "muscle": "Supraspinatus",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },
+    {
+      "muscle": "Tensor Fasciae Latae",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },
+    {
+      "muscle": "Teres Major",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },
+    {
+      "muscle": "Tibialis Anterior",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },
+    {
+      "muscle": "Trapezius (Upper)",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },{
+      "muscle": "Trapezius (Middle)",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },{
+      "muscle": "Trapezius (Lower)",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },{
+      "muscle": "Transverse Abdominis",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },{
+      "muscle": "Triceps Brachii",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },{
+      "muscle": "Vastus Intermedius",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },{
+      "muscle": "Vastus Lateralis",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },{
+      "muscle": "Vastus Medialis",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },{
+      "muscle": "Wrist Flexors",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    },{
+      "muscle": "Wrist Extensors",
+      "maintenance": 3,
+      "minEffective": 5,
+      "maxAdaptive": 12,
+      "maxRecoverable": 20
+    }
+  ]
+}

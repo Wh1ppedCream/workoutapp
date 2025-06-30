@@ -15,5 +15,10 @@ class PresetDefinition {
     required this.name,
     required this.createdAt,
   });
+Map<String, dynamic> toMap() => {
+    'id':          id,
+    'name':        name,
+    'created_at':  createdAt.toIso8601String(),
+  };
 }
 

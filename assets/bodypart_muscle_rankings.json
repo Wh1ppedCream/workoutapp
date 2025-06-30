@@ -1,0 +1,124 @@
+[
+{
+    "bodypart": "Neck",
+    "muscleRanks": [
+      { "muscle": "Sternocleidomastoid", "rank": 1 },
+      { "muscle": "Scalenes", "rank": 2 },
+	  { "muscle": "Splenius", "rank": 3 }
+    ]
+  },
+  {
+    "bodypart": "Shoulders",
+    "muscleRanks": [
+      { "muscle": "Anterior Deltoid", "rank": 1 },
+      { "muscle": "Lateral Deltoid", "rank": 2 },
+	  { "muscle": "Posterior Deltoid", "rank": 3 },
+      { "muscle": "Supraspinatus", "rank": 4 },
+	  { "muscle": "Infraspinatus", "rank": 5 },
+      { "muscle": "Teres Minor", "rank": 6 },
+	  { "muscle": "Teres Major", "rank": 7 }
+    ]
+  },
+
+  {
+    "bodypart": "Chest",
+    "muscleRanks": [
+      { "muscle": "Pectoralis Major", "rank": 1 },
+      { "muscle": "Serratus Anterior", "rank": 2 },
+	  { "muscle": "Pectoralis Minor", "rank": 3 }
+    ]
+  },
+  {
+    "bodypart": "Core",
+    "muscleRanks": [
+      { "muscle": "Rectus Abdominis", "rank": 1 },
+      { "muscle": "Obliques", "rank": 2 },
+	  { "muscle": "Transverse Abdominis", "rank": 3 },
+      { "muscle": "Pelvic Floor Muscles", "rank": 4 }
+    ]
+  },
+  {
+    "bodypart": "Upper Back",
+    "muscleRanks": [
+      { "muscle": "Latissimus Dorsi", "rank": 1 },
+      { "muscle": "Trapezius (Upper)", "rank": 2 },
+	  { "muscle": "Trapezius (Middle)", "rank": 3 },
+      { "muscle": "Trapezius (Lower)", "rank": 4 },
+	  { "muscle": "Rhomboids", "rank": 5 },
+      { "muscle": "Levator Scapulae", "rank": 6 }
+    ]
+  },
+  {
+    "bodypart": "Lower Back",
+    "muscleRanks": [
+      { "muscle": "Erector Spinae", "rank": 1 },
+      { "muscle": "Multifidus", "rank": 2 },
+	  { "muscle": "Quadratus Lumborum", "rank": 3 }
+    ]
+  },
+  {
+    "bodypart": "Biceps",
+    "muscleRanks": [
+      { "muscle": "Biceps Brachii", "rank": 1 },
+      { "muscle": "Brachialis", "rank": 2 }
+    ]
+  },
+  {
+    "bodypart": "Triceps",
+    "muscleRanks": [
+      { "muscle": "Triceps Brachii", "rank": 1 },
+      { "muscle": "Anconeus", "rank": 2 }
+    ]
+  },
+  {
+    "bodypart": "Forearms",
+    "muscleRanks": [
+      { "muscle": "Brachioradialis", "rank": 1 },
+      { "muscle": "Wrist Flexors", "rank": 2 },
+	  { "muscle": "Wrist Extensors", "rank": 3 },
+      { "muscle": "Pronator Teres", "rank": 4 },
+	  { "muscle": "Pronator Quadratus", "rank": 5 }
+    ]
+  },
+  {
+    "bodypart": "Hips",
+    "muscleRanks": [
+      { "muscle": "Gluteus Maximus", "rank": 1 },
+      { "muscle": "Gluteus Medius", "rank": 2 },
+	  { "muscle":  "Gluteus Minimus", "rank": 3 },
+      { "muscle":  "Iliopsoas", "rank": 4 },
+	  { "muscle": "Tensor Fasciae Latae", "rank": 5 },
+      { "muscle": "Piriformis", "rank": 6 },
+	  { "muscle": "Adductor Longus", "rank": 7 },
+      { "muscle": "Adductor Brevis", "rank": 8 },
+	  { "muscle":  "Adductor Magnus", "rank": 9 },
+      { "muscle": "Gracilis", "rank": 10 },
+	  { "muscle": "Pectineus", "rank": 11 }
+    ]
+  },
+  {
+    "bodypart": "Hamstrings",
+    "muscleRanks": [
+      { "muscle": "Biceps Femoris", "rank": 1 },
+      { "muscle": "Semitendinosus", "rank": 2 },
+	  { "muscle": "Semimembranosus", "rank": 3 }
+    ]
+  },
+  {
+    "bodypart": "Quads",
+    "muscleRanks": [
+      { "muscle": "Rectus Femoris", "rank": 1 },
+      { "muscle": "Vastus Lateralis", "rank": 2 },
+	  { "muscle": "Vastus Medialis", "rank": 3 },
+      { "muscle": "Vastus Intermedius", "rank": 4 }
+    ]
+  },
+  {
+    "bodypart": "Calves",
+    "muscleRanks": [
+      { "muscle": "Gastrocnemius", "rank": 1 },
+      { "muscle": "Soleus", "rank": 2 },
+	  { "muscle": "Tibialis Anterior", "rank": 3 }
+    ]
+  }
+]

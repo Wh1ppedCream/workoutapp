@@ -1,0 +1,15 @@
+[
+  { "bodypart": "Shoulders", "rank": 1 },
+  { "bodypart": "Chest", "rank": 2 },
+  { "bodypart": "Hips", "rank": 3 },
+  { "bodypart": "Upper Back", "rank": 4 },
+  { "bodypart": "Hamstrings", "rank": 5 },
+  { "bodypart": "Quads", "rank": 6 },
+  { "bodypart": "Triceps", "rank": 7 },
+  { "bodypart": "Biceps", "rank": 8 },
+  { "bodypart": "Lower Back", "rank": 9 },
+  { "bodypart": "Core", "rank": 10 },
+  { "bodypart": "Forearms", "rank": 11 },
+  { "bodypart": "Calves", "rank": 12 },
+  { "bodypart": "Neck", "rank": 13 }
+]

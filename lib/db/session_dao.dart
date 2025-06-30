@@ -48,8 +48,8 @@ class SessionDao {
   static Future<void> deleteSession(
     Database db,
     int sessionId,
-  ) {
-    return db.delete(
+  ) async {
+  await db.delete(
       'sessions',
       where: 'id = ?',
       whereArgs: [sessionId],

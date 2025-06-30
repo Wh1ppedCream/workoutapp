@@ -11,6 +11,7 @@ import '../db/lookup_dao.dart';
 import '../models/models.dart';
 import 'profile_repository.dart';
 import '../db/analytics_dao.dart';
+import '../db/formula_settings_dao.dart';
 
 /// Central repository providing a unified interface for all
 
@@ -27,7 +28,6 @@ import '../db/analytics_dao.dart';
 /// [DatabaseHelper].
 class AppRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper();
-  final _db = DatabaseHelper();
 
     /// Exposes the internal DatabaseHelper instance for extensions.
   DatabaseHelper get dbHelper => _dbHelper;
@@ -57,7 +57,7 @@ class AppRepository {
 /// Deletes a session by its ID, cascading to related exercises & sets.
   Future<void> deleteSession(int sessionId) async {
     final db = await _dbHelper.database;
-    return SessionDao.deleteSession(db, sessionId);
+    await SessionDao.deleteSession(db, sessionId);
   }
 
  /// Fetches a single session by ID.
@@ -124,7 +124,7 @@ class AppRepository {
 /// Deletes all exercises (and related details) in a session.
   Future<void> deleteExercises(int sessionId) async {
     final db = await _dbHelper.database;
-    return ExerciseDao.deleteExercisesForSession(db, sessionId);
+    await ExerciseDao.deleteExercisesForSession(db, sessionId);
   }
 
 /// Inserts a generic exercise row of any type (weight, cardio, stretch).
@@ -146,12 +146,13 @@ class AppRepository {
 
  /// Fetches a fully-detailed [WorkoutExercise] by its ID.
 Future<WorkoutExercise?> fetchDetailedExercise(int id) {
-    return _db.fetchDetailedExercise(id);
+    return _dbHelper.fetchDetailedExercise(id);
   }
 
  /// Deletes an exercise instance by its ID.
-  Future<void> deleteExercise(int id) {
-    return _db.deleteExercise(id); // or use ExerciseDao.deleteExerciseById under the hood
+  Future<void> deleteExercise(int id) async {
+
+    await _dbHelper.deleteExercise(id); // or use ExerciseDao.deleteExerciseById under the hood
   }
 
   // ─── SETS ───────────────────────────────────────────────
@@ -174,7 +175,7 @@ Future<WorkoutExercise?> fetchDetailedExercise(int id) {
     required Map<int, List<ExerciseSet>> childChangeSets,
   }) async {
     final db = await _dbHelper.database;
-    return SetDao.insertWeightSets(
+    await SetDao.insertWeightSets(
       db: db,
       exerciseId: exerciseId,
       parentSets: parentSets,
@@ -218,7 +219,7 @@ Future<WorkoutExercise?> fetchDetailedExercise(int id) {
     required int elapsedSeconds,
   }) async {
     final db = await _dbHelper.database;
-    return CardioDao.insertCardioDetails(
+    return await CardioDao.insertCardioDetails(
       db: db,
       exerciseId: exerciseId,
       cardioName: cardioName,
@@ -287,7 +288,7 @@ Future<WorkoutExercise?> fetchDetailedExercise(int id) {
     required List<Map<String, dynamic>> items,
   }) async {
     final db = await _dbHelper.database;
-    return StretchDao.insertStretchInstance(
+    await StretchDao.insertStretchInstance(
       db: db,
       exerciseId: exerciseId,
       items: items,
@@ -301,7 +302,7 @@ Future<WorkoutExercise?> fetchDetailedExercise(int id) {
   }
 
 /// Updates a single stretch item’s fields.
-  Future<void> updateStretchItem({
+  Future<int> updateStretchItem({
     required int itemId,
     int? stretchId,
     bool? isCustom,
@@ -311,7 +312,7 @@ Future<WorkoutExercise?> fetchDetailedExercise(int id) {
     int? orderIndex,
   }) async {
     final db = await _dbHelper.database;
-    await StretchDao.updateStretchItem(
+    return await StretchDao.updateStretchItem(
      db: db,
       itemId: itemId,
       stretchId: stretchId,
@@ -583,15 +584,14 @@ Future<ExerciseDefinition?> fetchDefinitionById(int defId) {
 
 /// Returns definitions with at least one measurement recorded.
 Future<List<MeasurementDefinition>> fetchUsedClassMeasurementDefinitions() async {
-  final raw = await _dbHelper.getUsedMeasurementDefinitions();
+  final raw = await fetchUsedMeasurementDefinitions();
   return raw.map((r) => MeasurementDefinition(
     id:   r['id']   as int,
     name: r['name'] as String,
-    type: MeasurementType.values.firstWhere(
-      (mt) => mt.name == (r['type'] as String),
-    ),
+    type: MeasurementType.values.firstWhere((mt) => mt.name == (r['type'] as String)),
   )).toList();
 }
+
 
  /// Fetches all equipment names.
   Future<List<String>> fetchAllEquipmentNames() async {
@@ -843,131 +843,281 @@ Future<double> calculateTotalVolumeForSessions(List<int> sessionIds) async {
 }
 
 //analytics_dao.dart
-// — muscle/bodypart links —
-Future<void> linkMuscleToBodyPart(int muscleId, int bodypartId) async {
-  final db = await _dbHelper.database;
-  return AnalyticsDao.insertMuscleBodyPart(db, muscleId, bodypartId);
-}
-Future<int> unlinkMuscleFromBodyPart(int muscleId, int bodypartId) async {
-  final db = await _dbHelper.database;
-  return AnalyticsDao.deleteMuscleBodyPart(db, muscleId, bodypartId);
-}
-Future<List<MuscleBodyPart>> fetchBodyPartsForMuscle(int muscleId) async {
-  final db = await _dbHelper.database;
-  return AnalyticsDao.getBodyPartsForMuscle(db, muscleId);
-}
-Future<List<MuscleBodyPart>> fetchMusclesForBodyPart(int bodypartId) async {
-  final db = await _dbHelper.database;
-  return AnalyticsDao.getMusclesForBodyPart(db, bodypartId);
-}
+ // ─── ANALYTICS ─────────────────────────────────────────────
 
-// — rankings —
-Future<void> setBodyPartRank(int bodypartId, int rank) async {
-  final db = await _dbHelper.database;
-  return AnalyticsDao.setBodyPartRanking(db, bodypartId, rank);
-}
+  Future<int> linkMuscleToBodyPart(int muscleId, int bodypartId) async {
+    final db = await _dbHelper.database;
+    return AnalyticsDao.insertMuscleBodyPart(db, muscleId, bodypartId);
+  }
 
-Future<BodyPartRanking?> getBodyPartRank(int bodypartId) async {
-  final db = await _dbHelper.database;
-  return AnalyticsDao.getBodyPartRanking(db, bodypartId);
-}
+  Future<int> unlinkMuscleFromBodyPart(int muscleId, int bodypartId) async {
+    final db = await _dbHelper.database;
+    return AnalyticsDao.deleteMuscleBodyPart(db, muscleId, bodypartId);
+  }
 
-Future<List<BodyPartRanking>> getAllBodyPartRanks() async {
-  final db = await _dbHelper.database;
-  return AnalyticsDao.getAllBodyPartRankings(db);
-}
+  Future<List<MuscleBodyPart>> fetchBodyPartsForMuscle(int muscleId) async {
+    final db = await _dbHelper.database;
+    return AnalyticsDao.getBodyPartsForMuscle(db, muscleId);
+  }
 
-Future<int> deleteBodyPartRank(int bodypartId) async {
-  final db = await _dbHelper.database;
-  return AnalyticsDao.deleteBodyPartRanking(db, bodypartId);
-}
+  Future<List<MuscleBodyPart>> fetchMusclesForBodyPart(int bodypartId) async {
+    final db = await _dbHelper.database;
+    return AnalyticsDao.getMusclesForBodyPart(db, bodypartId);
+  }
 
-// ... similarly for , , 
+  Future<int> setBodyPartRank(int bodypartId, int rank) async {
+    final db = await _dbHelper.database;
+    return AnalyticsDao.setBodyPartRanking(db, bodypartId, rank);
+  }
 
-Future<void> setMuscleRank(int muscleId, int rank) async {
-  final db = await _dbHelper.database;
-  return AnalyticsDao.setMuscleRanking(db, muscleId, rank);
-}
+  Future<BodyPartRanking?> getBodyPartRank(int bodypartId) async {
+    final db = await _dbHelper.database;
+    return AnalyticsDao.getBodyPartRanking(db, bodypartId);
+  }
 
-Future<MuscleRanking?> getMuscleRank(int muscleId) async {
-  final db = await _dbHelper.database;
-  return AnalyticsDao.getMuscleRanking(db, muscleId);
-}
+  Future<List<BodyPartRanking>> getAllBodyPartRanks() async {
+    final db = await _dbHelper.database;
+    return AnalyticsDao.getAllBodyPartRankings(db);
+  }
 
-Future<List<MuscleRanking>> getAllMuscleRanks() async {
-  final db = await _dbHelper.database;
-  return AnalyticsDao.getAllMuscleRankings(db);
-}
+  Future<int> deleteBodyPartRank(int bodypartId) async {
+    final db = await _dbHelper.database;
+    return AnalyticsDao.deleteBodyPartRanking(db, bodypartId);
+  }
 
-Future<int> deleteMuscleRank(int muscleId) async {
-  final db = await _dbHelper.database;
-  return AnalyticsDao.deleteMuscleRanking(db, muscleId);
-}
+  Future<int> setMuscleRank(int muscleId, int rank) async {
+    final db = await _dbHelper.database;
+    return AnalyticsDao.setMuscleRanking(db, muscleId, rank);
+  }
 
-// ... and so on for muscle ranks
+  Future<MuscleRanking?> getMuscleRank(int muscleId) async {
+    final db = await _dbHelper.database;
+    return AnalyticsDao.getMuscleRanking(db, muscleId);
+  }
 
-// — exercise ↔ muscle % hit —
-Future<void> setExerciseMuscleHitPercent(int defId, int muscleId, double pct) async {
-  final db = await _dbHelper.database;
-  return AnalyticsDao.setExerciseMusclePercent(db, defId, muscleId, pct);
-}
+  Future<List<MuscleRanking>> getAllMuscleRanks() async {
+    final db = await _dbHelper.database;
+    return AnalyticsDao.getAllMuscleRankings(db);
+  }
 
-Future<ExerciseMusclePercent?> fetchExerciseMusclePercent(int defId, int muscleId) async {
-  final db = await _dbHelper.database;
-  return AnalyticsDao.getExerciseMusclePercent(db, defId, muscleId);
-}
+  Future<int> deleteMuscleRank(int muscleId) async {
+    final db = await _dbHelper.database;
+    return AnalyticsDao.deleteMuscleRanking(db, muscleId);
+  }
 
-Future<int> removeExerciseMusclePercent(int defId, int muscleId) async {
-  final db = await _dbHelper.database;
-  return AnalyticsDao.deleteExerciseMusclePercent(db, defId, muscleId);
-}
+  Future<int> setExerciseMuscleHitPercent(int defId, int muscleId, double pct) async {
+    final db = await _dbHelper.database;
+    return AnalyticsDao.setExerciseMusclePercent(db, defId, muscleId, pct);
+  }
 
-Future<List<ExerciseMusclePercent>> fetchPercentsForExercise(int defId) async {
-  final db = await _dbHelper.database;
-  return AnalyticsDao.getPercentsForExercise(db, defId);
-}
-// ... etc.
+  Future<ExerciseMusclePercent?> fetchExerciseMusclePercent(int defId, int muscleId) async {
+    final db = await _dbHelper.database;
+    return AnalyticsDao.getExerciseMusclePercent(db, defId, muscleId);
+  }
 
-// — volume boundaries —
-Future<void> setMuscleVolumeBounds(int muscleId, VolumeBoundaries b) async {
-  final db = await _dbHelper.database;
-  return AnalyticsDao.setMuscleVolumeBoundaries(db, muscleId, b);
-}
-Future<VolumeBoundaries?> fetchMuscleVolumeBounds(int muscleId) async {
-  final db = await _dbHelper.database;
-  return AnalyticsDao.getMuscleVolumeBoundaries(db, muscleId);
-}
+  Future<int> removeExerciseMusclePercent(int defId, int muscleId) async {
+    final db = await _dbHelper.database;
+    return AnalyticsDao.deleteExerciseMusclePercent(db, defId, muscleId);
+  }
 
-Future<List<Map<String, dynamic>>> fetchAllMuscleVolumeBounds() async {
-  final db = await _dbHelper.database;
-  return AnalyticsDao.getAllMuscleVolumeBoundaries(db);
-}
+  Future<List<ExerciseMusclePercent>> fetchPercentsForExercise(int defId) async {
+    final db = await _dbHelper.database;
+    return AnalyticsDao.getPercentsForExercise(db, defId);
+  }
 
-Future<int> removeMuscleVolumeBounds(int muscleId) async {
-  final db = await _dbHelper.database;
-  return AnalyticsDao.deleteMuscleVolumeBoundaries(db, muscleId);
-}
+  Future<int> setMuscleVolumeBounds(int muscleId, VolumeBoundaries b) async {
+    final db = await _dbHelper.database;
+    return AnalyticsDao.setMuscleVolumeBoundaries(db, muscleId, b);
+  }
 
-// ─── BODYPART VOLUME BOUNDARIES ───────────────────────────
+  Future<VolumeBoundaries?> fetchMuscleVolumeBounds(int muscleId) async {
+    final db = await _dbHelper.database;
+    return AnalyticsDao.getMuscleVolumeBoundaries(db, muscleId);
+  }
 
-Future<void> setBodyPartVolumeBounds(int bodyPartId, VolumeBoundaries bounds) async {
-  final db = await _dbHelper.database;
-  return AnalyticsDao.setBodyPartVolumeBoundaries(db, bodyPartId, bounds);
-}
+  Future<List<Map<String, dynamic>>> fetchAllMuscleVolumeBounds() async {
+    final db = await _dbHelper.database;
+    return AnalyticsDao.getAllMuscleVolumeBoundaries(db);
+  }
 
-Future<VolumeBoundaries?> fetchBodyPartVolumeBounds(int bodyPartId) async {
-  final db = await _dbHelper.database;
-  return AnalyticsDao.getBodyPartVolumeBoundaries(db, bodyPartId);
-}
+  Future<int> removeMuscleVolumeBounds(int muscleId) async {
+    final db = await _dbHelper.database;
+    return AnalyticsDao.deleteMuscleVolumeBoundaries(db, muscleId);
+  }
 
-Future<List<Map<String, dynamic>>> fetchAllBodyPartVolumeBounds() async {
-  final db = await _dbHelper.database;
-  return AnalyticsDao.getAllBodyPartVolumeBoundaries(db);
-}
+  Future<int> setBodyPartVolumeBounds(int bodyPartId, VolumeBoundaries bounds) async {
+    final db = await _dbHelper.database;
+    return AnalyticsDao.setBodyPartVolumeBoundaries(db, bodyPartId, bounds);
+  }
 
-Future<int> removeBodyPartVolumeBounds(int bodyPartId) async {
-  final db = await _dbHelper.database;
-  return AnalyticsDao.deleteBodyPartVolumeBoundaries(db, bodyPartId);
-}
+  Future<VolumeBoundaries?> fetchBodyPartVolumeBounds(int bodyPartId) async {
+    final db = await _dbHelper.database;
+    return AnalyticsDao.getBodyPartVolumeBoundaries(db, bodyPartId);
+  }
+
+  Future<List<Map<String, dynamic>>> fetchAllBodyPartVolumeBounds() async {
+    final db = await _dbHelper.database;
+    return AnalyticsDao.getAllBodyPartVolumeBoundaries(db);
+  }
+
+  Future<int> removeBodyPartVolumeBounds(int bodyPartId) async {
+    final db = await _dbHelper.database;
+    return AnalyticsDao.deleteBodyPartVolumeBoundaries(db, bodyPartId);
+  }
+
+ 
+  static const _stepKey = 'step';
+  static const _minKey  = 'min';
+  static const _maxKey  = 'max';
+
+  /// Public getters so screens can read the current formula params:
+  Future<double> getFormulaStep() => _getFormulaParam(_stepKey, 0.05);
+  Future<double> getFormulaMin()  => _getFormulaParam(_minKey,  0.0);
+  Future<double> getFormulaMax()  => _getFormulaParam(_maxKey,  1.0);
+
+  /// Reads a formula parameter from DB or returns [fallback].
+  Future<double> _getFormulaParam(String key, double fallback) async {
+    final db = await _dbHelper.database;
+    final v  = await FormulaSettingsDao.getParam(db, key);
+    return v ?? fallback;
+  }
+
+  /// Updates the default-step parameter (e.g. 0.05).
+  Future<void> setFormulaStep(double step) async {
+    final db = await _dbHelper.database;
+    await FormulaSettingsDao.setParam(db, _stepKey, step);
+  }
+  Future<void> setFormulaMin(double min) async {
+    final db = await _dbHelper.database;
+    await FormulaSettingsDao.setParam(db, _minKey, min);
+  }
+  Future<void> setFormulaMax(double max) async {
+    final db = await _dbHelper.database;
+    await FormulaSettingsDao.setParam(db, _maxKey, max);
+  }
+
+  /// Computes per-muscle % for [exerciseDefId], using formula params + any overrides.
+  Future<List<ExerciseMusclePercent>> computeMusclePercents(int exerciseDefId) async {
+    final def = await fetchDefinitionById(exerciseDefId);
+    if (def == null) return [];
+
+    // load formula settings (with sensible defaults)
+    final step = await _getFormulaParam(_stepKey, 0.05);
+    final mn   = await _getFormulaParam(_minKey,  0.0);
+    final mx   = await _getFormulaParam(_maxKey,  1.0);
+
+    // user overrides
+    final overrides = await fetchPercentsForExercise(exerciseDefId);
+    final overrideMap = { for (var e in overrides) e.muscleId : e.percent };
+
+    return def.muscles.map((rm) {
+      final mid = rm.muscle.id;
+      final defaultPct = (1.0 - step * (rm.rank - 1)).clamp(mn, mx);
+      final pct = overrideMap[mid] ?? defaultPct;
+      return ExerciseMusclePercent(
+        exerciseDefId: exerciseDefId,
+        muscleId: mid,
+        percent: pct,
+      );
+    }).toList();
+  }
+
+  /// Computes per-body-part % by averaging muscle percents belonging to each part.
+  Future<Map<BodyPart, double>> computeBodyPartPercents(int exerciseDefId) async {
+    final def = await fetchDefinitionById(exerciseDefId);
+    if (def == null) return {};
+
+    // first compute all muscle percents
+    final musclePercs = await computeMusclePercents(exerciseDefId);
+    final percMap = { for (var e in musclePercs) e.muscleId : e.percent };
+
+    final result = <BodyPart, double>{};
+    for (var bp in def.bodyParts) {
+      final links = await fetchMusclesForBodyPart(bp.id);
+      final hits = links
+          .map((l) => percMap[l.muscleId])
+          .whereType<double>()
+          .toList();
+      if (hits.isEmpty) continue;
+      final avg = hits.reduce((a, b) => a + b) / hits.length;
+      result[bp] = avg;
+    }
+    return result;
+  }
+
+/// Returns a map muscleId → total “sets” for that muscle, summing
+  /// (1 × muscleHitPercent) for every weight‐exercise set in sessions
+  /// between [start] and [end].
+  Future<Map<int, double>> fetchSetsPerMuscle({
+    required DateTime start,
+    required DateTime end,
+  }) async {
+    final db = await _dbHelper.database;
+    // 1) Get all sessions in the window
+    final sessions = await SessionDao.getSessionsInRange(
+      db,
+      start.toIso8601String(),
+      end.toIso8601String(),
+    );
+    final result = <int, double>{};
+
+    for (var s in sessions) {
+      final sid = s['id'] as int;
+      // 2) Fetch every exercise instance in that session
+      final exRows = await ExerciseDao.getExercisesForSession(db, sid);
+      for (var ex in exRows) {
+        if (ex['type'] != 'weight') continue;
+        final exerciseId = ex['id'] as int;
+        final defId       = ex['exercise_def_id'] as int?;
+        if (defId == null) continue;
+
+        // 3) Compute the per‐muscle % for this definition
+        final musclePercs = await computeMusclePercents(defId);
+
+        // 4) Fetch every set row for that exercise instance
+        final setRows = await SetDao.getSetsForExercise(db, exerciseId);
+        for (var set in setRows) {
+          // each set contributes fractionally to each muscle
+          for (var mp in musclePercs) {
+            result[mp.muscleId] = (result[mp.muscleId] ?? 0) + mp.percent;
+          }
+        }
+      }
+    }
+    return result;
+  }
+
+  /// Returns a map BodyPart → total “sets” for that body‐part over
+  /// [start]…[end], by summing the muscle‐level contributions
+  /// into their linked body‐parts.
+  Future<Map<BodyPart, double>> fetchSetsPerBodyPart({
+    required DateTime start,
+    required DateTime end,
+  }) async {
+    // 1) First get the muscle‐level totals
+    final muscleTotals = await fetchSetsPerMuscle(start: start, end: end);
+
+    // 2) Load all bodyParts into a lookup
+    final allBps = await fetchAllBodyPartsFull();
+    final bpById = { for (var bp in allBps) bp.id : bp };
+
+    final result = <BodyPart, double>{};
+
+    // 3) For each muscle that got any sets, look up which bodyParts it belongs to
+    for (var entry in muscleTotals.entries) {
+      final muscleId = entry.key;
+      final setsCount = entry.value;
+
+      // fetch all bodyPart links for this muscle
+      final links = await fetchBodyPartsForMuscle(muscleId);
+      for (var link in links) {
+        final bp = bpById[link.bodyPartId];
+        if (bp == null) continue;
+        result[bp] = (result[bp] ?? 0) + setsCount;
+      }
+    }
+
+    return result;
+  }
 
 }

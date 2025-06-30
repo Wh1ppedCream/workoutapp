@@ -28,8 +28,8 @@ class CardioDao {
     String? note,
     required int plannedMinutes,
     required int elapsedSeconds,
-  }) {
-    return db.insert(
+  }) async {
+    await db.insert(
       'cardio_details',
       {
         'exercise_id':     exerciseId,

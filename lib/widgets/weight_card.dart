@@ -8,7 +8,7 @@ class WeightCard extends StatefulWidget {
   final WeightExercise               exercise;
   final bool                         readOnlyMode;
   final Set<int>?                    initialCompletedParents;
-  final Map<int, Set<int>>?          initialCompletedChildren;
+  final Map<int, Set<int>>?          initialCompletedChildren;      //TODO: maybe fix model to store this too
   final VoidCallback?                onDeleteExercise;
   final VoidCallback?                onSetAdded;
   final VoidCallback?                onSetDeleted;
