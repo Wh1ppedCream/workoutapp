@@ -96,17 +96,16 @@ for (var i = 0; i < exercises.length; i++) {
       ..clear()
       ..addAll(keptChildrenMap);
   } else if (type == CardType.stretch && we is StretchExercise) {
-    // TODO: FIX STRETCHES SO THEY SAVE PROPERLY
-  // Keep only the instances whose list index was checked
-  final kept = <Map<String, dynamic>>[];
-  for (var idx = 0; idx < we.stretchInstances.length; idx++) {
-    if (we.completedStretchIndices.contains(idx)) {
-      kept.add(we.stretchInstances[idx]);
+    // Keep only the checked stretch instances
+    final kept = <StretchInstance>[];
+    for (var idx = 0; idx < we.stretchInstances.length; idx++) {
+      if (we.completedStretchIndices.contains(idx)) {
+        kept.add(we.stretchInstances[idx]);
+      }
     }
-  }
-  we.stretchInstances
-    ..clear()
-    ..addAll(kept);
+    we.stretchInstances
+      ..clear()
+      ..addAll(kept);
 }
 }
 
@@ -185,9 +184,10 @@ for (var i = 0; i < exercises.length; i++) {
           type:          'stretch',
           orderIndex:    i,
         );
+        // Convert model instances to maps for the DAO
         await _repo.saveStretchInstance(
           exerciseId: exId,
-          items:      we.stretchInstances,
+          items: we.stretchInstances.map((inst) => inst.toMap()).toList(),
         );
       }
     }

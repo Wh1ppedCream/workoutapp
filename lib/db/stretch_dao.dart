@@ -1,62 +1,52 @@
 // File: lib/db/stretch_dao.dart
 
 import 'package:sqflite/sqflite.dart';
+import '../models/models.dart';
 
 /// Data Access Object for stretch instances and their items.
 ///
 /// Provides methods to insert, query, update, delete, and reorder stretch
 /// instance data in the `stretch_instances` and `stretch_instance_items` tables.
 class StretchDao {
-  /// Inserts a new stretch instance for an exercise and its detail items.
+  /// Inserts all detail items for a stretch-type exercise directly using exercise_id
   static Future<void> insertStretchInstance({
     required Database db,
     required int exerciseId,
-    required List<Map<String, dynamic>> items,
+    required List<StretchInstance> items,
   }) async {
-    // 1) Create the container row and get its id
-    final instanceId = await db.insert(
-      'stretch_instances',
-      {'exercise_id': exerciseId},
-    );
-
-    // 2) Insert each detail item
-    for (var i = 0; i < items.length; i++) {
-      final m = items[i];
-      final stretchId  = m['stretch_id'] as int?;
-      final isCustom   = (m['is_custom'] as bool) ? 1 : 0;
-      final customName = m['custom_name'] as String?;
-      final customDesc = m['custom_desc'] as String?;
-      final isChecked  = (m['is_checked'] as bool) ? 1 : 0;
-      final orderIndex = m['order_index'] as int;
-
+    // We no longer need the 'stretch_instances' table,
+    // just insert items with the real exercise_id.
+    for (var m in items) {
       await db.insert(
         'stretch_instance_items',
         {
-          'instance_id':  instanceId,
-          'stretch_id':   stretchId,
-          'is_custom':    isCustom,
-          'custom_name':  customName,
-          'custom_desc':  customDesc,
-          'is_checked':   isChecked,
-          'order_index':  orderIndex,
+          'exercise_id': exerciseId,
+          'stretch_id':  m.stretchId,
+          'is_custom':   m.isCustom ? 1 : 0,
+          'custom_name': m.customName,
+          'custom_desc': m.customDesc,
+          'is_checked':  m.isChecked ? 1 : 0,
+          'order_index': m.orderIndex,
         },
         conflictAlgorithm: ConflictAlgorithm.ignore,
       );
     }
   }
 
-  /// Retrieves all stretch instance items for a given exercise.
-  static Future<List<Map<String, dynamic>>> getStretchItemsForExercise(
+  /// Loads the items by exercise_id
+  static Future<List<StretchInstance>> getStretchItemsForExercise(
     Database db,
     int exerciseId,
-  ) {
-    return db.rawQuery('''
-      SELECT sii.*
-        FROM stretch_instance_items sii
-        JOIN stretch_instances si ON sii.instance_id = si.id
-       WHERE si.exercise_id = ?
-       ORDER BY sii.order_index
-    ''', [exerciseId]);
+  ) async {
+    final rows = await db.query(
+      'stretch_instance_items',
+      where: 'exercise_id = ?',
+      whereArgs: [exerciseId],
+      orderBy: 'order_index',
+    );
+    return rows
+      .map((r) => StretchInstance.fromMap(r))
+      .toList();
   }
 
   /// Updates fields of a single stretch instance item by its ID.
@@ -99,58 +89,30 @@ class StretchDao {
     );
   }
 
-  /// Deletes an entire stretch instance and its items.
+   /// Deletes all items for an exercise
   static Future<void> deleteStretchInstance(
     Database db,
     int exerciseId,
-  ) async {
-    // 1) find instance id
-    final rows = await db.query(
-      'stretch_instances',
+  ) {
+    return db.delete(
+      'stretch_instance_items',
       where: 'exercise_id = ?',
       whereArgs: [exerciseId],
-      limit: 1,
-    );
-    if (rows.isEmpty) return;
-    final instanceId = rows.first['id'] as int;
-
-    // 2) Delete child items
-    await db.delete(
-      'stretch_instance_items',
-      where: 'instance_id = ?',
-      whereArgs: [instanceId],
-    );
-    // 3) Delete container row
-    await db.delete(
-      'stretch_instances',
-      where: 'id = ?',
-      whereArgs: [instanceId],
     );
   }
 
-  /// Reorders stretch instance items by updating their `order_index`.
+  /// Reorders items by exercise_id and item ids
   static Future<void> reorderStretchItems(
     Database db,
     int exerciseId,
     List<int> itemIds,
   ) async {
-    // 1) find instance id
-    final rows = await db.query(
-      'stretch_instances',
-      where: 'exercise_id = ?',
-      whereArgs: [exerciseId],
-      limit: 1,
-    );
-    if (rows.isEmpty) return;
-    final instanceId = rows.first['id'] as int;
-
-    // 2) reorder items by itemIds order
     for (var i = 0; i < itemIds.length; i++) {
       await db.update(
         'stretch_instance_items',
         {'order_index': i},
-        where: 'instance_id = ? AND id = ?',
-        whereArgs: [instanceId, itemIds[i]],
+        where: 'exercise_id = ? AND id = ?',
+        whereArgs: [exerciseId, itemIds[i]],
       );
     }
   }

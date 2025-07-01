@@ -34,7 +34,7 @@ class _StretchCardState extends State<StretchCard> {
     // Seed which stretches were already checked
     final instances = widget.exercise.stretchInstances;
     for (var i = 0; i < instances.length; i++) {
-      if (instances[i]['is_checked'] == true) {
+      if (instances[i].isChecked) {
         _completedStretches.add(i);
       }
     }
@@ -92,14 +92,14 @@ class _StretchCardState extends State<StretchCard> {
                           final chosen = await StretchSearchDialog.show(context);
                           if (chosen != null) {
                             setState(() {
-                              stretchList.add({
-                                'stretch_id':     chosen.id,
-                                'is_custom':      false,
-                                'custom_name':    chosen.name,
-                                'custom_desc':    chosen.description,
-                                'is_checked':     true,
-                                'order_index':    stretchList.length,
-                              });
+                              stretchList.add(StretchInstance(
+                                stretchId: chosen.id,
+                              isCustom: false,
+                              customName: chosen.name,
+                              customDesc: chosen.description,
+                              isChecked: true,
+                              orderIndex: stretchList.length,
+                              ));
                               _completedStretches.add(stretchList.length - 1);
                             });
                             widget.onValueChanged?.call();
@@ -125,14 +125,14 @@ class _StretchCardState extends State<StretchCard> {
                       ? null
                       : () {
                           setState(() {
-                            stretchList.add({
-                              'stretch_id':     null,
-                              'is_custom':      true,
-                              'custom_name':    _stretchCustomController.text.trim(),
-                              'custom_desc':    '',
-                              'is_checked':     false,
-                              'order_index':    stretchList.length,
-                            });
+                            stretchList.add(StretchInstance(
+                              stretchId: null,
+                              isCustom: true,
+                              customName: _stretchCustomController.text.trim(),
+                              customDesc: '',
+                              isChecked: false,
+                              orderIndex: stretchList.length,
+                            ));
                             _completedStretches.add(stretchList.length - 1);
                             _stretchCustomController.clear();
                           });
@@ -151,12 +151,12 @@ class _StretchCardState extends State<StretchCard> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Checkbox(
-                      value: stretchList[i]['is_checked'] as bool,
+                      value: stretchList[i].isChecked,
                       onChanged: readOnly
                           ? null
                           : (checked) {
                               setState(() {
-                                stretchList[i]['is_checked'] = (checked == true);
+                                stretchList[i].isChecked = (checked == true);
                                 if (checked == true) {
                                   _completedStretches.add(i);
                                 } else {
@@ -172,14 +172,14 @@ class _StretchCardState extends State<StretchCard> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            stretchList[i]['custom_name'] as String,
+                            stretchList[i].customName ?? '',
                             style: Theme.of(context).textTheme.bodyLarge,
                           ),
-                          if ((stretchList[i]['custom_desc'] as String).isNotEmpty)
+                          if ((stretchList[i].customDesc ?? '').isNotEmpty)
                             Padding(
                               padding: const EdgeInsets.only(top: 4),
                               child: Text(
-                                stretchList[i]['custom_desc'] as String,
+                                 stretchList[i].customDesc ?? '',
                                 style: Theme.of(context).textTheme.bodySmall,
                               ),
                             ),
@@ -194,10 +194,18 @@ class _StretchCardState extends State<StretchCard> {
                               setState(() {
                                 stretchList.removeAt(i);
                                 _completedStretches.remove(i);
-                                // Reindex order_index fields
-                                for (int k = 0; k < stretchList.length; k++) {
-                                  stretchList[k]['order_index'] = k;
-                                }
+                                // Reindex orderIndex by reconstructing each instance
+for (int k = 0; k < stretchList.length; k++) {
+  final oldInst = stretchList[k];
+  stretchList[k] = StretchInstance(
+    stretchId:   oldInst.stretchId,
+    isCustom:    oldInst.isCustom,
+    customName:  oldInst.customName,
+    customDesc:  oldInst.customDesc,
+    isChecked:   oldInst.isChecked,
+    orderIndex:  k,
+  );
+}
                                 // Adjust completed indices
                                 final toAdjust = _completedStretches
                                     .where((idx) => idx > i)

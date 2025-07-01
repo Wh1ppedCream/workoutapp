@@ -216,24 +216,19 @@ Future<WorkoutExercise?> fetchDetailedExercise(int exerciseId) async {
 
   if (type == 'stretch') {
     final items = await getStretchItemsForExercise(exerciseId);
-    final insts = <Map<String, dynamic>>[];
-    final completed = <int>{};
-    for (var i = 0; i < items.length; i++) {
-      final r = items[i];
-      insts.add({
-        'stretch_id':  r['stretch_id'] as int?,
-        'is_custom':   r['is_custom']  == 1,
-        'custom_name': r['custom_name'] as String?,
-        'custom_desc': r['custom_desc'] as String?,
-        'is_checked':  r['is_checked'] == 1,
-        'order_index': r['order_index'] as int,
-      });
-      if (r['is_checked'] == 1) completed.add(i);
-    }
+      // Decode rows into our StretchInstance models
+   final insts = items
+       .map((r) => StretchInstance.fromMap(r))
+       .toList();
+   // Track which indices were checked
+   final completed = <int>{};
+   for (var i = 0; i < insts.length; i++) {
+     if (insts[i].isChecked) completed.add(i);
+   }
     // determine header name…
     String hdr = 'Stretch';
-    if (insts.isNotEmpty && insts.first['stretch_id'] != null) {
-      final sd = await DefinitionDao.getDefinitionInfo(db, insts.first['stretch_id'] as int);
+       if (insts.isNotEmpty && insts.first.stretchId != null) {
+     final sd = await DefinitionDao.getDefinitionInfo(db, insts.first.stretchId!);
       hdr = sd['name']!;
     }
     return StretchExercise(
@@ -332,18 +327,24 @@ Future<void> deleteExercise(int exerciseId) async {
    required List<Map<String, dynamic>> items,
  }) async {
    final db = await database;
+   final instances = items
+      .map((m) => StretchInstance.fromMap(m))
+      .toList();
    return StretchDao.insertStretchInstance(
      db: db,
      exerciseId: exerciseId,
-     items: items,
+     items: instances,
    );
  }
 
   /// Fetch all items in a stretch instance for a given exercise.
- Future<List<Map<String, dynamic>>> getStretchItemsForExercise(int eid) async {
-   final db = await database;
-   return StretchDao.getStretchItemsForExercise(db, eid);
- }
+Future<List<Map<String, dynamic>>> getStretchItemsForExercise(int eid) async {
+  final db = await database;
+  // DAO now returns List<StretchInstance>
+  final instances = await StretchDao.getStretchItemsForExercise(db, eid);
+  // convert back to the old map format so callers see the same type
+  return instances.map((inst) => inst.toMap()).toList();
+}
  
 //definition_dao.dart
 

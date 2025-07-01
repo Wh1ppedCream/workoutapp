@@ -3,7 +3,6 @@
 
 import 'package:flutter/material.dart';
 import '../repositories/app_repository.dart';
-import '../models/models.dart' show Muscle;
 
 /// Simple pair of a name and an integer count.
 class _ItemCount {

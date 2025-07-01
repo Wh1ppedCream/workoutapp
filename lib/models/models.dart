@@ -63,6 +63,26 @@ class StretchInstance {
     required this.isChecked,
     required this.orderIndex,
   });
+
+  /// Deserialize from a Map (e.g. from SQLite or JSON blob).
+  factory StretchInstance.fromMap(Map<String, dynamic> m) => StretchInstance(
+        stretchId:  m['stretch_id'] as int?,
+        isCustom:   (m['is_custom'] as int) == 1,
+        customName: m['custom_name'] as String?,
+        customDesc: m['custom_desc'] as String?,
+        isChecked:  (m['is_checked'] as int) == 1,
+        orderIndex: m['order_index'] as int,
+      );
+
+  /// Serialize to a Map (e.g. for SQLite or JSON blob).
+  Map<String, dynamic> toMap() => {
+        'stretch_id':  stretchId,
+        'is_custom':   isCustom ? 1 : 0,
+        'custom_name': customName,
+        'custom_desc': customDesc,
+        'is_checked':  isChecked ? 1 : 0,
+        'order_index': orderIndex,
+      };
 }
 
 
@@ -78,7 +98,7 @@ class StretchInstance {
 abstract class WorkoutExercise {
   final String name;
   final String equipment;
-  final List<Map<String, dynamic>> stretchInstances;      //TODO: change to List<StretchInstance> after everything else is fixed.
+  final List<StretchInstance> stretchInstances;
 
   /// Creates a [WorkoutExercise].
   ///
@@ -86,8 +106,8 @@ abstract class WorkoutExercise {
   WorkoutExercise({
     required this.name,
     required this.equipment,
-    List<Map<String, dynamic>>? stretchInstances,
-  }) : stretchInstances = stretchInstances ?? <Map<String, dynamic>>[];
+    List<StretchInstance>? stretchInstances,
+  }) : stretchInstances = stretchInstances ?? <StretchInstance>[];
 }
 
 /// A weight-based exercise with parent sets and optional supersets/changesets.
@@ -111,6 +131,7 @@ class WeightExercise extends WorkoutExercise {
     Map<int, List<ExerciseSet>>? changeSets,
     Set<int>? completedParents,
     Map<int, Set<int>>? completedChildren,
+    super.stretchInstances,
   })  : changeSets = changeSets ?? <int, List<ExerciseSet>>{},
         completedParents = completedParents ?? <int>{},
         completedChildren = completedChildren ?? <int, Set<int>>{};
@@ -139,9 +160,10 @@ class CardioExercise extends WorkoutExercise {
     this.cardioNote,
     int? plannedMinutes,
     int? elapsedSeconds,
-  })  : cardioName      = cardioName ?? 'Walking',
-        plannedMinutes  = plannedMinutes ?? 0,
-        elapsedSeconds  = elapsedSeconds ?? 0;
+    super.stretchInstances,
+  })  : cardioName     = cardioName ?? 'Walking',
+        plannedMinutes = plannedMinutes ?? 0,
+        elapsedSeconds = elapsedSeconds ?? 0;
 }
 
 /// A stretch exercise containing multiple [StretchInstance] items.
@@ -156,7 +178,7 @@ class StretchExercise extends WorkoutExercise {
     required super.equipment,
     super.stretchInstances,
     Set<int>? completedStretchIndices,
-  }) : completedStretchIndices = completedStretchIndices ?? <int>{};
+  })  : completedStretchIndices = completedStretchIndices ?? <int>{};
 }
 
 /// A single weight-rep entry.
@@ -193,7 +215,6 @@ class WorkoutSession {
     required this.duration,
   });
 }
-
 
 // ─────────────────────────────────────────────────────────────────────────────
 // EXERCISE DEFINITIONS
@@ -264,7 +285,6 @@ class RankedMuscle {
   });
 }
 
-
 // ─────────────────────────────────────────────────────────────────────────────
 // MEASUREMENTS
 // ─────────────────────────────────────────────────────────────────────────────
@@ -318,18 +338,15 @@ class Measurement {
   });
 }
 
-
 /// A single rep-max record (for the Metrics tab).
 class RepMaxRow {
   /// NEW: the exercise definition ID (`def_id` in the table)
   final int defId;
-
   final int repCount;
   final double rmValue;
   final double oneErm;
   final bool isErm;
-
-/// NEW: timeframe string (e.g. '7d', '30d')
+  /// NEW: timeframe string (e.g. '7d', '30d')
   final String timeframe;
 
   RepMaxRow({
@@ -337,8 +354,8 @@ class RepMaxRow {
     required this.rmValue,
     required this.oneErm,
     required this.isErm,
-    this.defId = 0,            // ← default keeps existing calls safe
-    this.timeframe = '',       // ← default keeps existing calls safe
+    this.defId = 0,
+    this.timeframe = '',
   });
 
   /// NEW: helper to decode a row from SQL
@@ -360,27 +377,30 @@ class RepMaxRow {
         'one_erm':    oneErm,
         'is_erm':     isErm ? 1 : 0,
       };
-
 }
 
+/// Associates a muscle with a body part
 class MuscleBodyPart {
   final int muscleId;
   final int bodyPartId;
   MuscleBodyPart({required this.muscleId, required this.bodyPartId});
 }
 
+/// Ranking for a body part
 class BodyPartRanking {
   final int bodyPartId;
   int rank;
   BodyPartRanking({required this.bodyPartId, required this.rank});
 }
 
+/// Ranking for a muscle
 class MuscleRanking {
   final int muscleId;
   int rank;
   MuscleRanking({required this.muscleId, required this.rank});
 }
 
+/// Percent association between exercise and muscle
 class ExerciseMusclePercent {
   final int exerciseDefId;
   final int muscleId;
@@ -392,6 +412,7 @@ class ExerciseMusclePercent {
   });
 }
 
+/// Volume boundaries for muscle or body part
 class VolumeBoundaries {
   final int id; // muscleId or bodyPartId
   final double maintenance;
@@ -408,7 +429,6 @@ class VolumeBoundaries {
 
   /// NEW: decode from either muscle or bodypart boundaries table
   factory VolumeBoundaries.fromMap(Map<String, dynamic> m) {
-    // whichever PK column exists
     final keyId = m.containsKey('muscle_id') ? 'muscle_id' : 'bodypart_id';
     return VolumeBoundaries(
       id:               m[keyId] as int,
@@ -421,10 +441,10 @@ class VolumeBoundaries {
 
   /// NEW: encode for muscle table
   Map<String, dynamic> toMuscleMap() => {
-        'muscle_id':           id,
-        'maintenance_volume':  maintenance,
-        'min_effective_volume':minEffective,
-        'max_adaptive_volume': maxAdaptive,
+        'muscle_id':            id,
+        'maintenance_volume':   maintenance,
+        'min_effective_volume': minEffective,
+        'max_adaptive_volume':  maxAdaptive,
         'max_recoverable_volume': maxRecoverable,
       };
 
@@ -434,6 +454,6 @@ class VolumeBoundaries {
         'maintenance_volume':    maintenance,
         'min_effective_volume':  minEffective,
         'max_adaptive_volume':   maxAdaptive,
-        'max_recoverable_volume':maxRecoverable,
+        'max_recoverable_volume': maxRecoverable,
       };
 }

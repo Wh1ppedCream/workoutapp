@@ -58,6 +58,7 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
     // Guard: capture context-synced values before any awaits
     final sel = context.read<SelectedProfile>();
     final initialProfileId = sel.currentProfile?.id;
+    if (!mounted) return;
     setState(() { _isLoading = true; });
     // Load full definitions
     _allDefs = await _repo.lookupDefsDetailed();
@@ -81,6 +82,7 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
       initialEquipment = await _repo.fetchAllEquipmentNames();
     }
 
+    if (!mounted) return;
     setState(() {
       _areaOptions = ['All', ...areas.map((b) => b.name)];
       _muscleOptions = ['All', ...muscles.map((m) => m.name)];
@@ -91,6 +93,7 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
   }
 
   Future<void> _applyAllFilters() async {
+    
     setState(() { _isLoading = true; });
     List<ExerciseDefinition> filtered = List.from(_allDefs);
 

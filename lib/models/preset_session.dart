@@ -13,9 +13,10 @@ class PresetSession extends ChangeNotifier {
   /// Preset's current name, loaded from the definition.
   String presetName = '';
 
-  /// In-memory list of exercises and their types.
+  /// In-memory list of exercises and their types, and their original defIds
   final List<WorkoutExercise> exercises = [];
   final List<CardType> cardTypes = [];
+  final List<int?> _originalDefIds = [];
 
   bool _hasChanges = false;
   bool get hasChanges => _hasChanges;
@@ -31,20 +32,22 @@ class PresetSession extends ChangeNotifier {
 
     exercises.clear();
     cardTypes.clear();
+    _originalDefIds.clear();
 
     final rawRows = await _repo.fetchPresetExercises(presetId);
     for (var row in rawRows) {
       final exId = row['id'] as int;
       final type = row['type'] as String;
+      final defId= row['exercise_def_id'] as int?; 
 
       if (type == 'weight') {
         // 1) fetch definition info
-        final defId = row['exercise_def_id'] as int?;
         final info = defId != null
             ? await _repo.fetchDefinitionInfo(defId)
             : {'name': '', 'equipmentName': ''};
         final name = info['name'] ?? '';
         final equipment = info['equipmentName'] ?? '';
+
 
         // 2) pull all rows, group parents vs. children
   final rawSets   = await _repo.fetchPresetSets(exId);
@@ -81,6 +84,7 @@ class PresetSession extends ChangeNotifier {
     changeSets: changeSets,
   ));
   cardTypes.add(CardType.weight);
+  _originalDefIds.add(defId);
 }
  else if (type == 'cardio') {
         final c = await _repo.fetchPresetCardio(exId);
@@ -94,43 +98,43 @@ class PresetSession extends ChangeNotifier {
             elapsedSeconds: (c['elapsed_seconds'] as num).toInt(),
           ));
           cardTypes.add(CardType.cardio);
+          _originalDefIds.add(null);
         }
       } else if (type == 'stretch') {
         final rawItems = await _repo.fetchPresetStretchItems(exId);
-        final items = rawItems.map((r) {
-          return <String, dynamic>{
+        // Build typed StretchInstance list (all unchecked)
+        final instances = rawItems.map((r) {
+          // Map the DB row plus default is_checked=0 into our model
+          return StretchInstance.fromMap(<String, dynamic>{
             'stretch_id':  r['stretch_id'] as int?,
-            'is_custom':   (r['is_custom'] as int) == 1,
-            'custom_name': r['custom_name'] as String?,
-            'custom_desc': r['custom_desc'] as String?,
+            'is_custom':   r['is_custom']    as int,
+            'custom_name': r['custom_name']  as String?,
+            'custom_desc': r['custom_desc']  as String?,
+            'is_checked':  0,
             'order_index': (r['order_index'] as num).toInt(),
-            // presets have no "completed" info
-            'is_checked':  false,
-          };
+          });
         }).toList();
         final completed = <int>{};
 
         // determine header
         String stretchName = 'Stretch';
-        if (items.isNotEmpty) {
-          final first = items.first;
-          if (first['stretch_id'] != null) {
-            final dn = await _repo.fetchStretchDefinitionNameById(
-              first['stretch_id'] as int,
-            );
+        if (instances.isNotEmpty) {
+          final first = instances.first;
+          if (first.stretchId != null) {
+            final dn = await _repo.fetchStretchDefinitionNameById(first.stretchId!);
             if (dn != null) stretchName = dn;
-          } else if (first['is_custom'] == true) {
-            stretchName = first['custom_name'] as String? ?? 'Stretch';
+          } else if (first.isCustom) {
+            stretchName = first.customName ?? 'Stretch';
           }
         }
-
         exercises.add(StretchExercise(
           name:                    stretchName,
           equipment:               '',
-          stretchInstances:        items,
+          stretchInstances:        instances,
           completedStretchIndices: completed,
         ));
         cardTypes.add(CardType.stretch);
+        _originalDefIds.add(null);
       }
     }
 
@@ -139,17 +143,19 @@ class PresetSession extends ChangeNotifier {
   }
 
   /// Mirrors ActiveSession.addExercise.
-  void addExercise(WorkoutExercise ex, CardType type) {
-    exercises.add(ex);
-    cardTypes.add(type);
-    _hasChanges = true;
-    notifyListeners();
-  }
+  void addExercise(WorkoutExercise ex, CardType type, {int? defId}) {
+  exercises.add(ex);
+  cardTypes.add(type);
+  _originalDefIds.add(defId);
+  _hasChanges = true;
+  notifyListeners();
+}
 
   /// Mirrors ActiveSession.removeExercise.
   void removeExercise(int index) {
     exercises.removeAt(index);
     cardTypes.removeAt(index);
+    _originalDefIds.removeAt(index);
     _hasChanges = true;
     notifyListeners();
   }
@@ -174,7 +180,8 @@ class PresetSession extends ChangeNotifier {
       final we = exercises[i];
       int? defId;
       if (we is WeightExercise) {
-        defId = await _repo.findOrCreateExerciseDefinition(we.name, we.equipment);
+        defId = _originalDefIds[i]
+            ?? await _repo.findExerciseDefinitionId(we.name, we.equipment);
       }
       final newId = await _repo.addExerciseToPreset(
         presetId,
@@ -193,7 +200,11 @@ class PresetSession extends ChangeNotifier {
           we.elapsedSeconds,
         );
       } else if (we is StretchExercise) {
-        await _repo.savePresetStretch(newId, we.stretchInstances);
+       // Convert back to raw maps for DAO
+        await _repo.savePresetStretch(
+          newId,
+          we.stretchInstances.map((inst) => inst.toMap()).toList(),
+        );
       }
     }
 
@@ -212,7 +223,7 @@ Future<int> startSession() async {
     final we = exercises[i];
 
     // Ensure a definition exists for this exercise (never null)
-    final defId = await _repo.findOrCreateExerciseDefinition(we.name, we.equipment);
+    final defId = await _repo.findExerciseDefinitionId(we.name, we.equipment);
 
     // Insert the exercise row—
     // now exercise_def_id is always non-null
@@ -245,7 +256,7 @@ Future<int> startSession() async {
     } else if (we is StretchExercise) {
       await _repo.saveStretchInstance(
         exerciseId: exId,
-        items:       we.stretchInstances,
+        items: we.stretchInstances.map((inst) => inst.toMap()).toList(),
       );
     }
   }

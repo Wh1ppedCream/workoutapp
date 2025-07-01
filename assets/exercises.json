@@ -25,7 +25,7 @@
       {"name":"Posterior Deltoid","rank":3},
       {"name":"Supraspinatus","rank":4},
       {"name":"Teres Minor","rank":5},
-      {"name":"Trapezius","rank":6},
+      {"name":"Trapezius (Middle)","rank":6},
       {"name":"Brachialis","rank":7}
     ]
   },
@@ -39,7 +39,7 @@
       {"name":"Lateral Deltoid","rank":2},
       {"name":"Triceps Brachii","rank":3},
       {"name":"Serratus Anterior","rank":4},
-      {"name":"Trapezius","rank":5},
+      {"name":"Trapezius (Middle)","rank":5},
       {"name":"Supraspinatus","rank":6},
       {"name":"Infraspinatus","rank":7}
     ]
@@ -47,7 +47,7 @@
   {
     "name": "Back Extension",
     "rating": 75,
-    "equipment": ["Hyperextension Bench/Machine"],
+    "equipment": ["HyperExtension Bench/Machine"],
     "bodyparts": ["Lower Back", "Hips", "Hamstrings"],
     "muscles": [
       {"name":"Erector Spinae","rank":1},
@@ -92,7 +92,7 @@
   {
   "name": "Bench Press - Barbell",
   "rating": 90,
-  "equipment": ["Barbell", "Weight plates", "Adjustable Bench"],
+  "equipment": ["Barbell", "Weight Plates", "Adjustable Bench"],
   "bodyparts": ["Chest", "Shoulders", "Triceps"],
   "muscles": [
     {"name": "Pectoralis Major", "rank": 1},
@@ -100,22 +100,22 @@
     {"name": "Triceps Brachii", "rank": 3},
     {"name": "Serratus Anterior", "rank": 4},
     {"name": "Pectoralis Minor", "rank": 5},
-    {"name": "Trapezius (upper)", "rank": 6},
+    {"name": "Trapezius (Upper)", "rank": 6},
     {"name": "Latissimus Dorsi", "rank": 7}
   ]
 },
 {
   "name": "Bench Press - Barbell (Close Grip)",
   "rating": 85,
-  "equipment": ["Barbell", "Weight plates", "Adjustable bench"],
-  "bodyparts": ["Triceps", "Chest", "Shoulder"],
+  "equipment": ["Barbell", "Weight Plates", "Adjustable Bench"],
+  "bodyparts": ["Triceps", "Chest", "Shoulders"],
   "muscles": [
     {"name": "Triceps Brachii", "rank": 1},
     {"name": "Pectoralis Major", "rank": 2},
     {"name": "Anterior Deltoid", "rank": 3},
     {"name": "Pectoralis Minor", "rank": 4},
     {"name": "Serratus Anterior", "rank": 5},
-    {"name": "Trapezius (upper)", "rank": 6},
+    {"name": "Trapezius (Upper)", "rank": 6},
     {"name": "Latissimus Dorsi", "rank": 7}
   ]
 },
@@ -123,8 +123,8 @@
 {
   "name": "Bench Press - Dumbbells",
   "rating": 80,
-  "equipment": ["Dumbbells", "Adjustable Bench"],
-  "bodyparts": ["Chest", "Shoulder", "Triceps"],
+  "equipment": ["Dumbbell", "Adjustable Bench"],
+  "bodyparts": ["Chest", "Shoulders", "Triceps"],
   "muscles": [
     {"name": "Pectoralis Major", "rank": 1},
     {"name": "Anterior Deltoid", "rank": 2},
@@ -132,36 +132,36 @@
     {"name": "Serratus Anterior", "rank": 4},
     {"name": "Pectoralis Minor", "rank": 5},
     {"name": "Lateral Deltoid", "rank": 6},
-    {"name": "Trapezius (upper)", "rank": 7}
+    {"name": "Trapezius (Upper)", "rank": 7}
   ]
 },
 {
   "name": "Bench Press - Smith Machine",
   "rating": 90,
-  "equipment": ["Smith machine", "Adjustable bench"],
-  "bodyparts": ["Chest", "Shoulder", "Triceps"],
+  "equipment": ["Smith Machine", "Adjustable Bench"],
+  "bodyparts": ["Chest", "Shoulders", "Triceps"],
   "muscles": [
     {"name": "Pectoralis Major", "rank": 1},
     {"name": "Anterior Deltoid", "rank": 2},
     {"name": "Triceps Brachii", "rank": 3},
     {"name": "Serratus Anterior", "rank": 4},
     {"name": "Pectoralis Minor", "rank": 5},
-    {"name": "Trapezius (upper)", "rank": 6},
+    {"name": "Trapezius (Upper)", "rank": 6},
     {"name": "Latissimus Dorsi", "rank": 7}
   ]
 },
 {
   "name": "Bench Press - Cable Machine",
   "rating": 75,
-  "equipment": ["Cable machine", "Adjustable bench", "Cable Handle Attachment"],
-  "bodyparts": ["Chest", "Shoulder", "Triceps"],
+  "equipment": ["Cable Machine", "Adjustable Bench", "Cable Handle Attachment"],
+  "bodyparts": ["Chest", "Shoulders", "Triceps"],
   "muscles": [
     {"name": "Pectoralis Major", "rank": 1},
     {"name": "Anterior Deltoid", "rank": 2},
     {"name": "Triceps Brachii", "rank": 3},
     {"name": "Serratus Anterior", "rank": 4},
     {"name": "Pectoralis Minor", "rank": 5},
-    {"name": "Trapezius (upper)", "rank": 6},
+    {"name": "Trapezius (Upper)", "rank": 6},
     {"name": "Latissimus Dorsi", "rank": 7}
   ]
 },
@@ -177,7 +177,7 @@
     {"name": "Pronator Teres", "rank": 4},
     {"name": "Wrist Flexors", "rank": 5},
     {"name": "Anterior Deltoid", "rank": 6},
-    {"name": "Trapezius (upper)", "rank": 7}
+    {"name": "Trapezius (Upper)", "rank": 7}
   ]
 },
 
@@ -193,7 +193,7 @@
     {"name": "Pronator Teres", "rank": 4},
     {"name": "Wrist Flexors", "rank": 5},
     {"name": "Anterior Deltoid", "rank": 6},
-    {"name": "Trapezius (upper)", "rank": 7}
+    {"name": "Trapezius (Upper)", "rank": 7}
   ]
 },
 
@@ -209,7 +209,7 @@
     {"name": "Pronator Teres", "rank": 4},
     {"name": "Wrist Flexors", "rank": 5},
     {"name": "Anterior Deltoid", "rank": 6},
-    {"name": "Trapezius (upper)", "rank": 7}
+    {"name": "Trapezius (Upper)", "rank": 7}
   ]
 },
 
@@ -225,7 +225,7 @@
     {"name": "Pronator Teres", "rank": 4},
     {"name": "Wrist Flexors", "rank": 5},
     {"name": "Anterior Deltoid", "rank": 6},
-    {"name": "Trapezius (upper)", "rank": 7}
+    {"name": "Trapezius (Upper)", "rank": 7}
   ]
 },
 
@@ -241,7 +241,7 @@
     {"name": "Pronator Teres", "rank": 4},
     {"name": "Wrist Flexors", "rank": 5},
     {"name": "Anterior Deltoid", "rank": 6},
-    {"name": "Trapezius (upper)", "rank": 7}
+    {"name": "Trapezius (Upper)", "rank": 7}
   ]
 },
 
@@ -257,7 +257,7 @@
     {"name": "Pronator Teres", "rank": 4},
     {"name": "Wrist Flexors", "rank": 5},
     {"name": "Anterior Deltoid", "rank": 6},
-    {"name": "Trapezius (upper)", "rank": 7}
+    {"name": "Trapezius (Upper)", "rank": 7}
   ]
 },
 
@@ -490,7 +490,7 @@
     { "name": "Triceps Brachii", "rank": 3 },
     { "name": "Pectoralis Minor", "rank": 4 },
     { "name": "Serratus Anterior", "rank": 5 },
-    { "name": "Trapezius (upper)", "rank": 6 },
+    { "name": "Trapezius (Upper)", "rank": 6 },
     { "name": "Latissimus Dorsi", "rank": 7 }
   ]
 },
@@ -506,7 +506,7 @@
     { "name": "Brachialis", "rank": 3 },
     { "name": "Brachioradialis", "rank": 4 },
     { "name": "Rhomboids", "rank": 5 },
-    { "name": "Trapezius (middle)", "rank": 6 },
+    { "name": "Trapezius (Middle)", "rank": 6 },
     { "name": "Posterior Deltoid", "rank": 7 }
   ]
 },
@@ -522,7 +522,7 @@
     { "name": "Brachialis", "rank": 3 },
     { "name": "Brachioradialis", "rank": 4 },
     { "name": "Rhomboids", "rank": 5 },
-    { "name": "Trapezius (middle)", "rank": 6 },
+    { "name": "Trapezius (Middle)", "rank": 6 },
     { "name": "Posterior Deltoid", "rank": 7 }
   ]
 },
@@ -536,7 +536,7 @@
     { "name": "Rectus Femoris", "rank": 1 },
     { "name": "Gluteus Maximus", "rank": 2 },
     { "name": "Biceps Femoris", "rank": 3 },
-    { "name": "Trapezius (upper)", "rank": 4 },
+    { "name": "Trapezius (Upper)", "rank": 4 },
     { "name": "Posterior Deltoid", "rank": 5 },
     { "name": "Latissimus Dorsi", "rank": 6 },
     { "name": "Biceps Brachii", "rank": 7 }
@@ -550,7 +550,7 @@
   "bodyparts": ["Shoulders"],
   "muscles": [
     { "name": "Anterior Deltoid", "rank": 1 },
-    { "name": "Trapezius (upper)", "rank": 2 },
+    { "name": "Trapezius (Upper)", "rank": 2 },
     { "name": "Rectus Femoris", "rank": 3 },
     { "name": "Gluteus Maximus", "rank": 4 },
     { "name": "Biceps Femoris", "rank": 5 },
@@ -571,7 +571,7 @@
     { "name": "Pronator Teres", "rank": 4 },
     { "name": "Wrist Flexors", "rank": 5 },
     { "name": "Anterior Deltoid", "rank": 6 },
-    { "name": "Trapezius (upper)", "rank": 7 }
+    { "name": "Trapezius (Upper)", "rank": 7 }
   ]
 },
 
@@ -587,7 +587,7 @@
     { "name": "Pronator Teres", "rank": 4 },
     { "name": "Wrist Flexors", "rank": 5 },
     { "name": "Anterior Deltoid", "rank": 6 },
-    { "name": "Trapezius (upper)", "rank": 7 }
+    { "name": "Trapezius (Upper)", "rank": 7 }
   ]
 },
 
@@ -603,7 +603,7 @@
     { "name": "Pronator Teres", "rank": 4 },
     { "name": "Wrist Flexors", "rank": 5 },
     { "name": "Anterior Deltoid", "rank": 6 },
-    { "name": "Trapezius (upper)", "rank": 7 }
+    { "name": "Trapezius (Upper)", "rank": 7 }
   ]
 },
 
@@ -698,7 +698,7 @@
     { "name": "Teres Minor", "rank": 3 },
     { "name": "Teres Major", "rank": 4 },
     { "name": "Lateral Deltoid", "rank": 5 },
-    { "name": "Trapezius (middle)", "rank": 6 },
+    { "name": "Trapezius (Middle)", "rank": 6 },
     { "name": "Rhomboids", "rank": 7 }
   ]
 },
@@ -714,7 +714,7 @@
     { "name": "Teres Minor", "rank": 3 },
     { "name": "Teres Major", "rank": 4 },
     { "name": "Lateral Deltoid", "rank": 5 },
-    { "name": "Trapezius (middle)", "rank": 6 },
+    { "name": "Trapezius (Middle)", "rank": 6 },
     { "name": "Rhomboids", "rank": 7 }
   ]
 },
@@ -763,7 +763,7 @@
     { "name": "Rectus Femoris", "rank": 4 },
     { "name": "Adductor Magnus", "rank": 5 },
     { "name": "Latissimus Dorsi", "rank": 6 },
-    { "name": "Trapezius (upper)", "rank": 7 }
+    { "name": "Trapezius (Upper)", "rank": 7 }
   ]
 },
 
@@ -779,7 +779,7 @@
     { "name": "Rectus Femoris", "rank": 4 },
     { "name": "Adductor Magnus", "rank": 5 },
     { "name": "Latissimus Dorsi", "rank": 6 },
-    { "name": "Trapezius (upper)", "rank": 7 }
+    { "name": "Trapezius (Upper)", "rank": 7 }
   ]
 },
 
@@ -795,7 +795,7 @@
     { "name": "Rectus Femoris", "rank": 4 },
     { "name": "Adductor Magnus", "rank": 5 },
     { "name": "Latissimus Dorsi", "rank": 6 },
-    { "name": "Trapezius (upper)", "rank": 7 }
+    { "name": "Trapezius (Upper)", "rank": 7 }
   ]
 },
 {
@@ -873,7 +873,7 @@
     { "name": "Brachioradialis", "rank": 3 },
     { "name": "Pronator Teres", "rank": 4 },
     { "name": "Anterior Deltoid", "rank": 5 },
-    { "name": "Trapezius (upper)", "rank": 6 },
+    { "name": "Trapezius (Upper)", "rank": 6 },
     { "name": "Wrist Flexors", "rank": 7 }
   ]
 },
@@ -889,7 +889,7 @@
     { "name": "Brachioradialis", "rank": 3 },
     { "name": "Pronator Teres", "rank": 4 },
     { "name": "Anterior Deltoid", "rank": 5 },
-    { "name": "Trapezius (upper)", "rank": 6 },
+    { "name": "Trapezius (Upper)", "rank": 6 },
     { "name": "Wrist Flexors", "rank": 7 }
   ]
 },
@@ -905,7 +905,7 @@
     { "name": "Brachioradialis", "rank": 3 },
     { "name": "Pronator Teres", "rank": 4 },
     { "name": "Anterior Deltoid", "rank": 5 },
-    { "name": "Trapezius (upper)", "rank": 6 },
+    { "name": "Trapezius (Upper)", "rank": 6 },
     { "name": "Wrist Flexors", "rank": 7 }
   ]
 },
@@ -921,7 +921,7 @@
     { "name": "Supraspinatus", "rank": 3 },
     { "name": "Posterior Deltoid", "rank": 4 },
     { "name": "Rhomboids", "rank": 5 },
-    { "name": "Trapezius (middle)", "rank": 6 },
+    { "name": "Trapezius (Middle)", "rank": 6 },
     { "name": "Teres Major", "rank": 7 }
   ]
 },
@@ -937,7 +937,7 @@
     { "name": "Supraspinatus", "rank": 3 },
     { "name": "Posterior Deltoid", "rank": 4 },
     { "name": "Rhomboids", "rank": 5 },
-    { "name": "Trapezius (middle)", "rank": 6 },
+    { "name": "Trapezius (Middle)", "rank": 6 },
     { "name": "Teres Major", "rank": 7 }
   ]
 },
@@ -951,9 +951,9 @@
     { "name": "Posterior Deltoid", "rank": 1 },
     { "name": "Infraspinatus", "rank": 2 },
     { "name": "Supraspinatus", "rank": 3 },
-    { "name": "Trapezius (middle)", "rank": 4 },
+    { "name": "Trapezius (Middle)", "rank": 4 },
     { "name": "Rhomboids", "rank": 5 },
-    { "name": "Trapezius (lower)", "rank": 6 },
+    { "name": "Trapezius (Lower)", "rank": 6 },
     { "name": "Teres Minor", "rank": 7 }
   ]
 },
@@ -965,7 +965,7 @@
   "muscles": [
     { "name": "Brachioradialis", "rank": 1 },
     { "name": "Wrist Flexors", "rank": 2 },
-    { "name": "Trapezius (upper)", "rank": 3 },
+    { "name": "Trapezius (Upper)", "rank": 3 },
     { "name": "Erector Spinae", "rank": 4 },
     { "name": "Transverse Abdominis", "rank": 5 },
     { "name": "Gluteus Medius", "rank": 6 },
@@ -1001,7 +1001,7 @@
     { "name": "Serratus Anterior", "rank": 4 },
     { "name": "Pectoralis Minor", "rank": 5 },
     { "name": "Latissimus Dorsi", "rank": 6 },
-    { "name": "Trapezius (upper)", "rank": 7 }
+    { "name": "Trapezius (Upper)", "rank": 7 }
   ]
 },
 
@@ -1017,7 +1017,7 @@
     { "name": "Serratus Anterior", "rank": 4 },
     { "name": "Pectoralis Minor", "rank": 5 },
     { "name": "Latissimus Dorsi", "rank": 6 },
-    { "name": "Trapezius (upper)", "rank": 7 }
+    { "name": "Trapezius (Upper)", "rank": 7 }
   ]
 },
 
@@ -1030,7 +1030,7 @@
     { "name": "Anterior Deltoid", "rank": 1 },
     { "name": "Lateral Deltoid", "rank": 2 },
     { "name": "Supraspinatus", "rank": 3 },
-    { "name": "Trapezius (upper)", "rank": 4 },
+    { "name": "Trapezius (Upper)", "rank": 4 },
     { "name": "Serratus Anterior", "rank": 5 },
     { "name": "Pectoralis Major", "rank": 6 },
     { "name": "Biceps Brachii", "rank": 7 }
@@ -1046,7 +1046,7 @@
     { "name": "Anterior Deltoid", "rank": 1 },
     { "name": "Lateral Deltoid", "rank": 2 },
     { "name": "Supraspinatus", "rank": 3 },
-    { "name": "Trapezius (upper)", "rank": 4 },
+    { "name": "Trapezius (Upper)", "rank": 4 },
     { "name": "Serratus Anterior", "rank": 5 },
     { "name": "Pectoralis Major", "rank": 6 },
     { "name": "Biceps Brachii", "rank": 7 }
@@ -1062,7 +1062,7 @@
     { "name": "Anterior Deltoid", "rank": 1 },
     { "name": "Lateral Deltoid", "rank": 2 },
     { "name": "Supraspinatus", "rank": 3 },
-    { "name": "Trapezius (upper)", "rank": 4 },
+    { "name": "Trapezius (Upper)", "rank": 4 },
     { "name": "Serratus Anterior", "rank": 5 },
     { "name": "Pectoralis Major", "rank": 6 },
     { "name": "Biceps Brachii", "rank": 7 }
@@ -1255,7 +1255,7 @@
     { "name": "Pronator Teres", "rank": 4 },
     { "name": "Wrist Flexors", "rank": 5 },
     { "name": "Anterior Deltoid", "rank": 6 },
-    { "name": "Trapezius (upper)", "rank": 7 }
+    { "name": "Trapezius (Upper)", "rank": 7 }
   ]
 },
 
@@ -1271,7 +1271,7 @@
     { "name": "Pronator Teres", "rank": 4 },
     { "name": "Wrist Flexors", "rank": 5 },
     { "name": "Anterior Deltoid", "rank": 6 },
-    { "name": "Trapezius (upper)", "rank": 7 }
+    { "name": "Trapezius (Upper)", "rank": 7 }
   ]
 },
 
@@ -1287,7 +1287,7 @@
     { "name": "Pronator Teres", "rank": 4 },
     { "name": "Wrist Flexors", "rank": 5 },
     { "name": "Anterior Deltoid", "rank": 6 },
-    { "name": "Trapezius (upper)", "rank": 7 }
+    { "name": "Trapezius (Upper)", "rank": 7 }
   ]
 },
 
@@ -1300,7 +1300,7 @@
     { "name": "Vastus Lateralis", "rank": 1 },
     { "name": "Gluteus Maximus", "rank": 2 },
     { "name": "Biceps Femoris", "rank": 3 },
-    { "name": "Trapezius (upper)", "rank": 4 },
+    { "name": "Trapezius (Upper)", "rank": 4 },
     { "name": "Posterior Deltoid", "rank": 5 },
     { "name": "Latissimus Dorsi", "rank": 6 },
     { "name": "Biceps Brachii", "rank": 7 }
@@ -1314,7 +1314,7 @@
   "bodyparts": ["Upper Back", "Shoulders"],
   "muscles": [
     { "name": "Anterior Deltoid", "rank": 1 },
-    { "name": "Trapezius (upper)", "rank": 2 },
+    { "name": "Trapezius (Upper)", "rank": 2 },
     { "name": "Vastus Lateralis", "rank": 3 },
     { "name": "Gluteus Maximus", "rank": 4 },
     { "name": "Biceps Femoris", "rank": 5 },
@@ -1345,7 +1345,7 @@
   "equipment": ["Barbell", "Weight Plates"],
   "bodyparts": ["Upper Back", "Shoulders"],
   "muscles": [
-    { "name": "Trapezius (upper)", "rank": 1 },
+    { "name": "Trapezius (Upper)", "rank": 1 },
     { "name": "Posterior Deltoid", "rank": 2 },
     { "name": "Vastus Lateralis", "rank": 3 },
     { "name": "Gluteus Maximus", "rank": 4 },
@@ -1361,7 +1361,7 @@
   "equipment": ["Dumbbell"],
   "bodyparts": ["Upper Back", "Shoulders"],
   "muscles": [
-    { "name": "Trapezius (upper)", "rank": 1 },
+    { "name": "Trapezius (Upper)", "rank": 1 },
     { "name": "Posterior Deltoid", "rank": 2 },
     { "name": "Vastus Lateralis", "rank": 3 },
     { "name": "Gluteus Maximus", "rank": 4 },
@@ -1609,7 +1609,7 @@
       {"name":"Serratus Anterior","rank":4},
       {"name":"Pectoralis Minor","rank":5},
       {"name":"Lateral Deltoid","rank":6},
-      {"name":"Trapezius (upper)","rank":7}
+      {"name":"Trapezius (Upper)","rank":7}
     ]
   },
   {
@@ -1623,7 +1623,7 @@
       {"name":"Triceps Brachii","rank":3},
       {"name":"Serratus Anterior","rank":4},
       {"name":"Pectoralis Minor","rank":5},
-      {"name":"Trapezius (upper)","rank":6},
+      {"name":"Trapezius (Upper)","rank":6},
       {"name":"Latissimus Dorsi","rank":7}
     ]
   },
@@ -1639,7 +1639,7 @@
       {"name":"Serratus Anterior","rank":4},
       {"name":"Pectoralis Minor","rank":5},
       {"name":"Lateral Deltoid","rank":6},
-      {"name":"Trapezius (upper)","rank":7}
+      {"name":"Trapezius (Upper)","rank":7}
     ]
   },
 
@@ -1654,7 +1654,7 @@
     { "name": "Brachioradialis", "rank": 3 },
     { "name": "Pronator Teres", "rank": 4 },
     { "name": "Anterior Deltoid", "rank": 5 },
-    { "name": "Trapezius (upper)", "rank": 6 },
+    { "name": "Trapezius (Upper)", "rank": 6 },
     { "name": "Wrist Flexors", "rank": 7 }
   ]
 },
@@ -1670,7 +1670,7 @@
     { "name": "Triceps Brachii", "rank": 3 },
     { "name": "Serratus Anterior", "rank": 4 },
     { "name": "Pectoralis Minor", "rank": 5 },
-    { "name": "Trapezius (upper)", "rank": 6 },
+    { "name": "Trapezius (Upper)", "rank": 6 },
     { "name": "Latissimus Dorsi", "rank": 7 }
   ]
 },
@@ -1686,7 +1686,7 @@
     { "name": "Triceps Brachii", "rank": 3 },
     { "name": "Serratus Anterior", "rank": 4 },
     { "name": "Pectoralis Minor", "rank": 5 },
-    { "name": "Trapezius (upper)", "rank": 6 },
+    { "name": "Trapezius (Upper)", "rank": 6 },
     { "name": "Latissimus Dorsi", "rank": 7 }
   ]
 },
@@ -1733,7 +1733,7 @@
     { "name": "Infraspinatus", "rank": 2 },
     { "name": "Supraspinatus", "rank": 3 },
     { "name": "Rhomboids", "rank": 4 },
-    { "name": "Trapezius (middle)", "rank": 5 },
+    { "name": "Trapezius (Middle)", "rank": 5 },
     { "name": "Teres Minor", "rank": 6 },
     { "name": "Erector Spinae", "rank": 7 }
   ]
@@ -1747,7 +1747,7 @@
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
-    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Trapezius (Middle)", "rank": 3 },
     { "name": "Biceps Brachii", "rank": 4 },
     { "name": "Brachialis", "rank": 5 },
     { "name": "Posterior Deltoid", "rank": 6 },
@@ -1763,7 +1763,7 @@
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
-    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Trapezius (Middle)", "rank": 3 },
     { "name": "Biceps Brachii", "rank": 4 },
     { "name": "Brachialis", "rank": 5 },
     { "name": "Posterior Deltoid", "rank": 6 },
@@ -1782,7 +1782,7 @@
     { "name": "Anterior Deltoid", "rank": 3 },
     { "name": "Latissimus Dorsi", "rank": 4 },
     { "name": "Rhomboids", "rank": 5 },
-    { "name": "Trapezius (middle)", "rank": 6 },
+    { "name": "Trapezius (Middle)", "rank": 6 },
     { "name": "", "rank": 7 }
   ]
 },
@@ -1794,7 +1794,7 @@
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
-    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Trapezius (Middle)", "rank": 3 },
     { "name": "Biceps Brachii", "rank": 4 },
     { "name": "Brachialis", "rank": 5 },
     { "name": "Posterior Deltoid", "rank": 6 },
@@ -1811,7 +1811,7 @@
     { "name": "Biceps Brachii", "rank": 1 },
     { "name": "Latissimus Dorsi", "rank": 2 },
     { "name": "Rhomboids", "rank": 3 },
-    { "name": "Trapezius (middle)", "rank": 4 },
+    { "name": "Trapezius (Middle)", "rank": 4 },
     { "name": "Brachialis", "rank": 5 },
     { "name": "Posterior Deltoid", "rank": 6 },
     { "name": "Erector Spinae", "rank": 7 }
@@ -1986,7 +1986,7 @@
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
-    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Trapezius (Middle)", "rank": 3 },
     { "name": "Biceps Brachii", "rank": 4 },
     { "name": "Brachialis", "rank": 5 },
     { "name": "Posterior Deltoid", "rank": 6 },
@@ -2021,7 +2021,7 @@
     { "name": "Triceps Brachii", "rank": 3 },
     { "name": "Serratus Anterior", "rank": 4 },
     { "name": "Lateral Deltoid", "rank": 5 },
-    { "name": "Trapezius (upper)", "rank": 6 },
+    { "name": "Trapezius (Upper)", "rank": 6 },
     { "name": "Latissimus Dorsi", "rank": 7 }
   ]
 },
@@ -2042,14 +2042,14 @@
 },
 
 {
-  "name": "Lat Pulldown - Lat pulldown machine",
+  "name": "Lat Pulldown - Lat Pulldown Machine",
   "rating": 23,
-  "equipment": ["Lat pulldown machine"],
+  "equipment": ["Lat Pulldown Machine"],
   "bodyparts": ["Upper Back"],
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
-    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Trapezius (Middle)", "rank": 3 },
     { "name": "Biceps Brachii", "rank": 4 },
     { "name": "Brachialis", "rank": 5 },
     { "name": "Posterior Deltoid", "rank": 6 },
@@ -2065,7 +2065,7 @@
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
-    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Trapezius (Middle)", "rank": 3 },
     { "name": "Biceps Brachii", "rank": 4 },
     { "name": "Brachialis", "rank": 5 },
     { "name": "Posterior Deltoid", "rank": 6 },
@@ -2082,7 +2082,7 @@
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Biceps Brachii", "rank": 2 },
     { "name": "Rhomboids", "rank": 3 },
-    { "name": "Trapezius (middle)", "rank": 4 },
+    { "name": "Trapezius (Middle)", "rank": 4 },
     { "name": "Brachialis", "rank": 5 },
     { "name": "Posterior Deltoid", "rank": 6 },
     { "name": "Teres Minor", "rank": 7 }
@@ -2097,7 +2097,7 @@
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
-    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Trapezius (Middle)", "rank": 3 },
     { "name": "Posterior Deltoid", "rank": 4 },
     { "name": "Teres Minor", "rank": 5 },
     { "name": "Biceps Brachii", "rank": 6 },
@@ -2114,7 +2114,7 @@
     { "name": "Biceps Brachii", "rank": 1 },
     { "name": "Latissimus Dorsi", "rank": 2 },
     { "name": "Rhomboids", "rank": 3 },
-    { "name": "Trapezius (middle)", "rank": 4 },
+    { "name": "Trapezius (Middle)", "rank": 4 },
     { "name": "Brachialis", "rank": 5 },
     { "name": "Posterior Deltoid", "rank": 6 },
     { "name": "Teres Minor", "rank": 7 }
@@ -2122,16 +2122,16 @@
 },
 
 {
-  "name": "Lateral Raise - Lateral raise machine",
+  "name": "Lateral Raise - Lateral raise Machine",
   "rating": 23,
-  "equipment": ["Lateral raise machine"],
+  "equipment": ["Lat Raise Machine"],
   "bodyparts": ["Shoulders"],
   "muscles": [
     { "name": "Lateral Deltoid", "rank": 1 },
     { "name": "Anterior Deltoid", "rank": 2 },
     { "name": "Posterior Deltoid", "rank": 3 },
     { "name": "Supraspinatus", "rank": 4 },
-    { "name": "Trapezius (upper)", "rank": 5 },
+    { "name": "Trapezius (Upper)", "rank": 5 },
     { "name": "Serratus Anterior", "rank": 6 },
     { "name": "Infraspinatus", "rank": 7 }
   ]
@@ -2147,7 +2147,7 @@
     { "name": "Anterior Deltoid", "rank": 2 },
     { "name": "Posterior Deltoid", "rank": 3 },
     { "name": "Supraspinatus", "rank": 4 },
-    { "name": "Trapezius (upper)", "rank": 5 },
+    { "name": "Trapezius (Upper)", "rank": 5 },
     { "name": "Serratus Anterior", "rank": 6 },
     { "name": "Infraspinatus", "rank": 7 }
   ]
@@ -2163,7 +2163,7 @@
     { "name": "Supraspinatus", "rank": 2 },
     { "name": "Anterior Deltoid", "rank": 3 },
     { "name": "Posterior Deltoid", "rank": 4 },
-    { "name": "Trapezius (upper)", "rank": 5 },
+    { "name": "Trapezius (Upper)", "rank": 5 },
     { "name": "Serratus Anterior", "rank": 6 },
     { "name": "Infraspinatus", "rank": 7 }
   ]
@@ -2179,7 +2179,7 @@
     { "name": "Supraspinatus", "rank": 2 },
     { "name": "Anterior Deltoid", "rank": 3 },
     { "name": "Posterior Deltoid", "rank": 4 },
-    { "name": "Trapezius (upper)", "rank": 5 },
+    { "name": "Trapezius (Upper)", "rank": 5 },
     { "name": "Serratus Anterior", "rank": 6 },
     { "name": "Infraspinatus", "rank": 7 }
   ]
@@ -2234,9 +2234,9 @@
 },
 
 {
-  "name": "Leg Extension - Leg extension machine",
+  "name": "Leg Extension - Leg Extension Machine",
   "rating": 23,
-  "equipment": ["Leg extension machine"],
+  "equipment": ["Leg Extension Machine"],
   "bodyparts": ["Quads"],
   "muscles": [
     { "name": "Rectus Femoris", "rank": 1 },
@@ -2500,7 +2500,7 @@
     { "name": "Triceps Brachii", "rank": 4 },
     { "name": "Anterior Deltoid", "rank": 5 },
     { "name": "Rhomboids", "rank": 6 },
-    { "name": "Trapezius (upper)", "rank": 7 }
+    { "name": "Trapezius (Upper)", "rank": 7 }
   ]
 },
 
@@ -2546,7 +2546,7 @@
     { "name": "Lateral Deltoid", "rank": 2 },
     { "name": "Triceps Brachii", "rank": 3 },
     { "name": "Serratus Anterior", "rank": 4 },
-    { "name": "Trapezius (upper)", "rank": 5 },
+    { "name": "Trapezius (Upper)", "rank": 5 },
     { "name": "Supraspinatus", "rank": 6 },
     { "name": "Infraspinatus", "rank": 7 }
   ]
@@ -2562,7 +2562,7 @@
     { "name": "Lateral Deltoid", "rank": 2 },
     { "name": "Triceps Brachii", "rank": 3 },
     { "name": "Serratus Anterior", "rank": 4 },
-    { "name": "Trapezius (upper)", "rank": 5 },
+    { "name": "Trapezius (Upper)", "rank": 5 },
     { "name": "Supraspinatus", "rank": 6 },
     { "name": "Infraspinatus", "rank": 7 }
   ]
@@ -2578,7 +2578,7 @@
     { "name": "Lateral Deltoid", "rank": 2 },
     { "name": "Triceps Brachii", "rank": 3 },
     { "name": "Serratus Anterior", "rank": 4 },
-    { "name": "Trapezius (upper)", "rank": 5 },
+    { "name": "Trapezius (Upper)", "rank": 5 },
     { "name": "Supraspinatus", "rank": 6 },
     { "name": "Infraspinatus", "rank": 7 }
   ]
@@ -2595,7 +2595,7 @@
     { "name": "Erector Spinae", "rank": 3 },
     { "name": "Anterior Deltoid", "rank": 4 },
     { "name": "Transverse Abdominis", "rank": 5 },
-    { "name": "Trapezius (upper)", "rank": 6 },
+    { "name": "Trapezius (Upper)", "rank": 6 },
     { "name": "Adductor Magnus", "rank": 7 }
   ]
 },
@@ -2611,7 +2611,7 @@
     { "name": "Erector Spinae", "rank": 3 },
     { "name": "Anterior Deltoid", "rank": 4 },
     { "name": "Transverse Abdominis", "rank": 5 },
-    { "name": "Trapezius (upper)", "rank": 6 },
+    { "name": "Trapezius (Upper)", "rank": 6 },
     { "name": "Adductor Magnus", "rank": 7 }
   ]
 },
@@ -2640,7 +2640,7 @@
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
-    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Trapezius (Middle)", "rank": 3 },
     { "name": "Posterior Deltoid", "rank": 4 },
     { "name": "Biceps Brachii", "rank": 5 },
     { "name": "Erector Spinae", "rank": 6 },
@@ -2659,7 +2659,7 @@
     { "name": "Pectoralis Major", "rank": 3 },
     { "name": "Serratus Anterior", "rank": 4 },
     { "name": "Transverse Abdominis", "rank": 5 },
-    { "name": "Trapezius (upper)", "rank": 6 },
+    { "name": "Trapezius (Upper)", "rank": 6 },
     { "name": "Erector Spinae", "rank": 7 }
   ]
 },
@@ -2667,7 +2667,7 @@
 {
   "name": "Pistol Squat",
   "rating": 23,
-  "equipment": ["Bodyweight or support handle (optional)"],
+  "equipment": ["Bodyweight"],
   "bodyparts": ["Quads", "Hips", "Hamstrings"],
   "muscles": [
     { "name": "Rectus Femoris", "rank": 1 },
@@ -2705,7 +2705,7 @@
     { "name": "Rectus Femoris", "rank": 1 },
     { "name": "Gluteus Maximus", "rank": 2 },
     { "name": "Biceps Femoris", "rank": 3 },
-    { "name": "Trapezius (upper)", "rank": 4 },
+    { "name": "Trapezius (Upper)", "rank": 4 },
     { "name": "Posterior Deltoid", "rank": 5 },
     { "name": "Latissimus Dorsi", "rank": 6 },
     { "name": "Biceps Brachii", "rank": 7 }
@@ -2719,7 +2719,7 @@
   "bodyparts": ["Upper Back", "Shoulders"],
   "muscles": [
     { "name": "Anterior Deltoid", "rank": 1 },
-    { "name": "Trapezius (upper)", "rank": 2 },
+    { "name": "Trapezius (Upper)", "rank": 2 },
     { "name": "Rectus Femoris", "rank": 3 },
     { "name": "Gluteus Maximus", "rank": 4 },
     { "name": "Biceps Femoris", "rank": 5 },
@@ -2740,7 +2740,7 @@
     { "name": "Pronator Teres", "rank": 4 },
     { "name": "Wrist Flexors", "rank": 5 },
     { "name": "Anterior Deltoid", "rank": 6 },
-    { "name": "Trapezius (upper)", "rank": 7 }
+    { "name": "Trapezius (Upper)", "rank": 7 }
   ]
 },
 
@@ -2756,7 +2756,7 @@
     { "name": "Pronator Teres", "rank": 4 },
     { "name": "Wrist Flexors", "rank": 5 },
     { "name": "Anterior Deltoid", "rank": 6 },
-    { "name": "Trapezius (upper)", "rank": 7 }
+    { "name": "Trapezius (Upper)", "rank": 7 }
   ]
 },
 
@@ -2772,7 +2772,7 @@
     { "name": "Pronator Teres", "rank": 4 },
     { "name": "Wrist Flexors", "rank": 5 },
     { "name": "Anterior Deltoid", "rank": 6 },
-    { "name": "Trapezius (upper)", "rank": 7 }
+    { "name": "Trapezius (Upper)", "rank": 7 }
   ]
 },
 
@@ -2788,7 +2788,7 @@
     { "name": "Pronator Teres", "rank": 4 },
     { "name": "Wrist Flexors", "rank": 5 },
     { "name": "Anterior Deltoid", "rank": 6 },
-    { "name": "Trapezius (upper)", "rank": 7 }
+    { "name": "Trapezius (Upper)", "rank": 7 }
   ]
 },
 
@@ -2799,7 +2799,7 @@
   "bodyparts": ["Upper Back", "Shoulders"],
   "muscles": [
     { "name": "Rhomboids", "rank": 1 },
-    { "name": "Trapezius (middle)", "rank": 2 },
+    { "name": "Trapezius (Middle)", "rank": 2 },
     { "name": "Posterior Deltoid", "rank": 3 },
     { "name": "Infraspinatus", "rank": 4 },
     { "name": "Teres Minor", "rank": 5 },
@@ -2850,7 +2850,7 @@
     { "name": "Biceps Brachii", "rank": 2 },
     { "name": "Brachialis", "rank": 3 },
     { "name": "Rhomboids", "rank": 4 },
-    { "name": "Trapezius (middle)", "rank": 5 },
+    { "name": "Trapezius (Middle)", "rank": 5 },
     { "name": "Posterior Deltoid", "rank": 6 },
     { "name": "Brachioradialis", "rank": 7 }
   ]
@@ -2866,7 +2866,7 @@
     { "name": "Latissimus Dorsi", "rank": 2 },
     { "name": "Brachialis", "rank": 3 },
     { "name": "Rhomboids", "rank": 4 },
-    { "name": "Trapezius (middle)", "rank": 5 },
+    { "name": "Trapezius (Middle)", "rank": 5 },
     { "name": "Posterior Deltoid", "rank": 6 },
     { "name": "Brachioradialis", "rank": 7 }
   ]
@@ -2880,7 +2880,7 @@
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
-    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Trapezius (Middle)", "rank": 3 },
     { "name": "Posterior Deltoid", "rank": 4 },
     { "name": "Teres Minor", "rank": 5 },
     { "name": "Biceps Brachii", "rank": 6 },
@@ -2898,7 +2898,7 @@
     { "name": "Latissimus Dorsi", "rank": 2 },
     { "name": "Brachialis", "rank": 3 },
     { "name": "Rhomboids", "rank": 4 },
-    { "name": "Trapezius (middle)", "rank": 5 },
+    { "name": "Trapezius (Middle)", "rank": 5 },
     { "name": "Posterior Deltoid", "rank": 6 },
     { "name": "Brachioradialis", "rank": 7 }
   ]
@@ -2914,7 +2914,7 @@
     { "name": "Biceps Brachii", "rank": 2 },
     { "name": "Brachialis", "rank": 3 },
     { "name": "Rhomboids", "rank": 4 },
-    { "name": "Trapezius (middle)", "rank": 5 },
+    { "name": "Trapezius (Middle)", "rank": 5 },
     { "name": "Posterior Deltoid", "rank": 6 },
     { "name": "Brachioradialis", "rank": 7 }
   ]
@@ -3010,7 +3010,7 @@
     { "name": "Triceps Brachii", "rank": 3 },
     { "name": "Gluteus Maximus", "rank": 4 },
     { "name": "Rectus Femoris", "rank": 5 },
-    { "name": "Trapezius (upper)", "rank": 6 },
+    { "name": "Trapezius (Upper)", "rank": 6 },
     { "name": "Erector Spinae", "rank": 7 }
   ]
 },
@@ -3026,7 +3026,7 @@
     { "name": "Triceps Brachii", "rank": 3 },
     { "name": "Gluteus Maximus", "rank": 4 },
     { "name": "Rectus Femoris", "rank": 5 },
-    { "name": "Trapezius (upper)", "rank": 6 },
+    { "name": "Trapezius (Upper)", "rank": 6 },
     { "name": "Erector Spinae", "rank": 7 }
   ]
 },
@@ -3089,7 +3089,7 @@
     { "name": "Gluteus Maximus", "rank": 2 },
     { "name": "Biceps Femoris", "rank": 3 },
     { "name": "Latissimus Dorsi", "rank": 4 },
-    { "name": "Trapezius (upper)", "rank": 5 },
+    { "name": "Trapezius (Upper)", "rank": 5 },
     { "name": "Adductor Magnus", "rank": 6 },
     { "name": "Quadratus Lumborum", "rank": 7 }
   ]
@@ -3103,7 +3103,7 @@
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
-    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Trapezius (Middle)", "rank": 3 },
     { "name": "Transverse Abdominis", "rank": 4 },
     { "name": "Biceps Brachii", "rank": 5 },
     { "name": "Triceps Brachii", "rank": 6 },
@@ -3119,7 +3119,7 @@
   "muscles": [
     { "name": "Posterior Deltoid", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
-    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Trapezius (Middle)", "rank": 3 },
     { "name": "Infraspinatus", "rank": 4 },
     { "name": "Teres Minor", "rank": 5 },
     { "name": "Supraspinatus", "rank": 6 },
@@ -3135,7 +3135,7 @@
   "muscles": [
     { "name": "Posterior Deltoid", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
-    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Trapezius (Middle)", "rank": 3 },
     { "name": "Infraspinatus", "rank": 4 },
     { "name": "Teres Minor", "rank": 5 },
     { "name": "Supraspinatus", "rank": 6 },
@@ -3151,7 +3151,7 @@
   "muscles": [
     { "name": "Posterior Deltoid", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
-    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Trapezius (Middle)", "rank": 3 },
     { "name": "Infraspinatus", "rank": 4 },
     { "name": "Teres Minor", "rank": 5 },
     { "name": "Supraspinatus", "rank": 6 },
@@ -3167,7 +3167,7 @@
   "muscles": [
     { "name": "Posterior Deltoid", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
-    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Trapezius (Middle)", "rank": 3 },
     { "name": "Infraspinatus", "rank": 4 },
     { "name": "Teres Minor", "rank": 5 },
     { "name": "Supraspinatus", "rank": 6 },
@@ -3178,12 +3178,12 @@
 {
   "name": "Reverse Fly - Dumbbell (Lying)",
   "rating": 23,
-  "equipment": ["Dumbbell", "Adjustable Bench (face down)"],
+  "equipment": ["Dumbbell", "Adjustable Bench"],
   "bodyparts": ["Upper Back", "Shoulders"],
   "muscles": [
     { "name": "Posterior Deltoid", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
-    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Trapezius (Middle)", "rank": 3 },
     { "name": "Infraspinatus", "rank": 4 },
     { "name": "Teres Minor", "rank": 5 },
     { "name": "Supraspinatus", "rank": 6 },
@@ -3235,7 +3235,7 @@
     { "name": "Pronator Teres", "rank": 4 },
     { "name": "Biceps Brachii", "rank": 5 },
     { "name": "Anterior Deltoid", "rank": 6 },
-    { "name": "Trapezius (upper)", "rank": 7 }
+    { "name": "Trapezius (Upper)", "rank": 7 }
   ]
 },
 {
@@ -3250,7 +3250,7 @@
     { "name": "Pronator Teres", "rank": 4 },
     { "name": "Biceps Brachii", "rank": 5 },
     { "name": "Anterior Deltoid", "rank": 6 },
-    { "name": "Trapezius (upper)", "rank": 7 }
+    { "name": "Trapezius (Upper)", "rank": 7 }
   ]
 },
 
@@ -3266,7 +3266,7 @@
     { "name": "Pronator Teres", "rank": 4 },
     { "name": "Biceps Brachii", "rank": 5 },
     { "name": "Anterior Deltoid", "rank": 6 },
-    { "name": "Trapezius (upper)", "rank": 7 }
+    { "name": "Trapezius (Upper)", "rank": 7 }
   ]
 },
 
@@ -3421,7 +3421,7 @@
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
-    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Trapezius (Middle)", "rank": 3 },
     { "name": "Biceps Brachii", "rank": 4 },
     { "name": "Posterior Deltoid", "rank": 5 },
     { "name": "Brachialis", "rank": 6 },
@@ -3437,7 +3437,7 @@
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
-    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Trapezius (Middle)", "rank": 3 },
     { "name": "Biceps Brachii", "rank": 4 },
     { "name": "Posterior Deltoid", "rank": 5 },
     { "name": "Brachialis", "rank": 6 },
@@ -3453,7 +3453,7 @@
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
-    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Trapezius (Middle)", "rank": 3 },
     { "name": "Biceps Brachii", "rank": 4 },
     { "name": "Posterior Deltoid", "rank": 5 },
     { "name": "Brachialis", "rank": 6 },
@@ -3469,7 +3469,7 @@
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
-    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Trapezius (Middle)", "rank": 3 },
     { "name": "Biceps Brachii", "rank": 4 },
     { "name": "Posterior Deltoid", "rank": 5 },
     { "name": "Brachialis", "rank": 6 },
@@ -3485,7 +3485,7 @@
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
-    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Trapezius (Middle)", "rank": 3 },
     { "name": "Biceps Brachii", "rank": 4 },
     { "name": "Posterior Deltoid", "rank": 5 },
     { "name": "Brachialis", "rank": 6 },
@@ -3501,7 +3501,7 @@
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
-    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Trapezius (Middle)", "rank": 3 },
     { "name": "Biceps Brachii", "rank": 4 },
     { "name": "Posterior Deltoid", "rank": 5 },
     { "name": "Brachialis", "rank": 6 },
@@ -3517,7 +3517,7 @@
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
-    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Trapezius (Middle)", "rank": 3 },
     { "name": "Biceps Brachii", "rank": 4 },
     { "name": "Posterior Deltoid", "rank": 5 },
     { "name": "Brachialis", "rank": 6 },
@@ -3533,7 +3533,7 @@
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
-    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Trapezius (Middle)", "rank": 3 },
     { "name": "Biceps Brachii", "rank": 4 },
     { "name": "Posterior Deltoid", "rank": 5 },
     { "name": "Brachialis", "rank": 6 },
@@ -3549,7 +3549,7 @@
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
-    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Trapezius (Middle)", "rank": 3 },
     { "name": "Biceps Brachii", "rank": 4 },
     { "name": "Posterior Deltoid", "rank": 5 },
     { "name": "Brachialis", "rank": 6 },
@@ -3565,7 +3565,7 @@
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
-    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Trapezius (Middle)", "rank": 3 },
     { "name": "Biceps Brachii", "rank": 4 },
     { "name": "Posterior Deltoid", "rank": 5 },
     { "name": "Brachialis", "rank": 6 },
@@ -3581,7 +3581,7 @@
     { "name": "Biceps Brachii", "rank": 1 },
     { "name": "Latissimus Dorsi", "rank": 2 },
     { "name": "Rhomboids", "rank": 3 },
-    { "name": "Trapezius (middle)", "rank": 4 },
+    { "name": "Trapezius (Middle)", "rank": 4 },
     { "name": "Posterior Deltoid", "rank": 5 },
     { "name": "Brachialis", "rank": 6 },
     { "name": "Erector Spinae", "rank": 7 }
@@ -3631,7 +3631,7 @@
     { "name": "Anterior Deltoid", "rank": 3 },
     { "name": "Serratus Anterior", "rank": 4 },
     { "name": "Pectoralis Minor", "rank": 5 },
-    { "name": "Trapezius (upper)", "rank": 6 },
+    { "name": "Trapezius (Upper)", "rank": 6 },
     { "name": "Latissimus Dorsi", "rank": 7 }
   ]
 },
@@ -3655,7 +3655,7 @@
 {
   "name": "Seated Leg Press",
   "rating": 23,
-  "equipment": ["Seated Leg Press Machine", "Weight Plates"],
+  "equipment": ["Leg Press Machine", "Weight Plates"],
   "bodyparts": ["Quads", "Hips", "Hamstrings"],
   "muscles": [
     { "name": "Vastus Lateralis", "rank": 1 },
@@ -3674,9 +3674,9 @@
   "equipment": ["Cable Machine", "Cable Straight Bar Attachment"],
   "bodyparts": ["Upper Back", "Shoulders"],
   "muscles": [
-    { "name": "Trapezius (upper)", "rank": 1 },
+    { "name": "Trapezius (Upper)", "rank": 1 },
     { "name": "Levator Scapulae", "rank": 2 },
-    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Trapezius (Middle)", "rank": 3 },
     { "name": "Rhomboids", "rank": 4 },
     { "name": "Posterior Deltoid", "rank": 5 },
     { "name": "Erector Spinae", "rank": 6 },
@@ -3688,11 +3688,11 @@
   "name": "Shrug - Barbell",
   "rating": 23,
   "equipment": ["Barbell", "Weight Plates"],
-  "bodyparts": ["Traps", "Neck"],
+  "bodyparts": ["Upper Back", "Neck"],
   "muscles": [
-    { "name": "Trapezius (upper)", "rank": 1 },
+    { "name": "Trapezius (Upper)", "rank": 1 },
     { "name": "Levator Scapulae", "rank": 2 },
-    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Trapezius (Middle)", "rank": 3 },
     { "name": "Rhomboids", "rank": 4 },
     { "name": "Erector Spinae", "rank": 5 },
     { "name": "Posterior Deltoid", "rank": 6 },
@@ -3704,11 +3704,11 @@
   "name": "Shrug - Dumbbell",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Traps", "Neck"],
+  "bodyparts": ["Upper Back", "Neck"],
   "muscles": [
-    { "name": "Trapezius (upper)", "rank": 1 },
+    { "name": "Trapezius (Upper)", "rank": 1 },
     { "name": "Levator Scapulae", "rank": 2 },
-    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Trapezius (Middle)", "rank": 3 },
     { "name": "Rhomboids", "rank": 4 },
     { "name": "Erector Spinae", "rank": 5 },
     { "name": "Posterior Deltoid", "rank": 6 },
@@ -3784,7 +3784,7 @@
   "name": "Side Lunge",
   "rating": 23,
   "equipment": ["Bodyweight"],
-  "bodyparts": ["Adductors", "Quads", "Hips"],
+  "bodyparts": ["Hips", "Quads", "Hips"],
   "muscles": [
     { "name": "Adductor Magnus", "rank": 1 },
     { "name": "Gluteus Maximus", "rank": 2 },
@@ -3800,7 +3800,7 @@
   "name": "Side Lunge - Cable Machine",
   "rating": 23,
   "equipment": ["Cable Machine", "Cable Ankle Cuff Attachment"],
-  "bodyparts": ["Adductors", "Quads", "Hips"],
+  "bodyparts": ["Hips", "Quads", "Hips"],
   "muscles": [
     { "name": "Adductor Magnus", "rank": 1 },
     { "name": "Gluteus Maximus", "rank": 2 },
@@ -3816,7 +3816,7 @@
   "name": "Side Lunge - Dumbbell",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Adductors", "Quads", "Hips"],
+  "bodyparts": ["Hips", "Quads", "Hips"],
   "muscles": [
     { "name": "Adductor Magnus", "rank": 1 },
     { "name": "Gluteus Maximus", "rank": 2 },
@@ -3883,7 +3883,7 @@
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
-    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Trapezius (Middle)", "rank": 3 },
     { "name": "Biceps Brachii", "rank": 4 },
     { "name": "Posterior Deltoid", "rank": 5 },
     { "name": "Brachialis", "rank": 6 },
@@ -3899,7 +3899,7 @@
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
-    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Trapezius (Middle)", "rank": 3 },
     { "name": "Biceps Brachii", "rank": 4 },
     { "name": "Posterior Deltoid", "rank": 5 },
     { "name": "Brachialis", "rank": 6 },
@@ -3915,7 +3915,7 @@
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
-    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Trapezius (Middle)", "rank": 3 },
     { "name": "Biceps Brachii", "rank": 4 },
     { "name": "Posterior Deltoid", "rank": 5 },
     { "name": "Brachialis", "rank": 6 },
@@ -3931,7 +3931,7 @@
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
-    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Trapezius (Middle)", "rank": 3 },
     { "name": "Biceps Brachii", "rank": 4 },
     { "name": "Posterior Deltoid", "rank": 5 },
     { "name": "Brachialis", "rank": 6 },
@@ -3947,7 +3947,7 @@
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
-    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Trapezius (Middle)", "rank": 3 },
     { "name": "Biceps Brachii", "rank": 4 },
     { "name": "Brachialis", "rank": 5 },
     { "name": "Posterior Deltoid", "rank": 6 },
@@ -3963,7 +3963,7 @@
   "muscles": [
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Rhomboids", "rank": 2 },
-    { "name": "Trapezius (middle)", "rank": 3 },
+    { "name": "Trapezius (Middle)", "rank": 3 },
     { "name": "Biceps Brachii", "rank": 4 },
     { "name": "Brachialis", "rank": 5 },
     { "name": "Posterior Deltoid", "rank": 6 },
@@ -3981,7 +3981,7 @@
     { "name": "Supraspinatus", "rank": 2 },
     { "name": "Anterior Deltoid", "rank": 3 },
     { "name": "Posterior Deltoid", "rank": 4 },
-    { "name": "Trapezius (upper)", "rank": 5 },
+    { "name": "Trapezius (Upper)", "rank": 5 },
     { "name": "Serratus Anterior", "rank": 6 },
     { "name": "Infraspinatus", "rank": 7 }
   ]
@@ -3997,7 +3997,7 @@
     { "name": "Supraspinatus", "rank": 2 },
     { "name": "Anterior Deltoid", "rank": 3 },
     { "name": "Posterior Deltoid", "rank": 4 },
-    { "name": "Trapezius (upper)", "rank": 5 },
+    { "name": "Trapezius (Upper)", "rank": 5 },
     { "name": "Serratus Anterior", "rank": 6 },
     { "name": "Infraspinatus", "rank": 7 }
   ]
@@ -4166,7 +4166,7 @@
 {
   "name": "Sled Pull",
   "rating": 23,
-  "equipment": ["Sled", "Harness"],
+  "equipment": ["Sled"],
   "bodyparts": ["Lower Back", "Core"],
   "muscles": [
     { "name": "Erector Spinae", "rank": 1 },
@@ -4175,7 +4175,7 @@
     { "name": "Biceps Femoris", "rank": 4 },
     { "name": "Rectus Femoris", "rank": 5 },
     { "name": "Transverse Abdominis", "rank": 6 },
-    { "name": "Trapezius (upper)", "rank": 7 }
+    { "name": "Trapezius (Upper)", "rank": 7 }
   ]
 },
 
@@ -4202,7 +4202,7 @@
   "bodyparts": ["Upper Back", "Shoulders"],
   "muscles": [
     { "name": "Anterior Deltoid", "rank": 1 },
-    { "name": "Trapezius (upper)", "rank": 2 },
+    { "name": "Trapezius (Upper)", "rank": 2 },
     { "name": "Gluteus Maximus", "rank": 3 },
     { "name": "Rectus Femoris", "rank": 4 },
     { "name": "Biceps Femoris", "rank": 5 },
@@ -4223,7 +4223,7 @@
     { "name": "Rectus Femoris", "rank": 4 },
     { "name": "Biceps Femoris", "rank": 5 },
     { "name": "Transverse Abdominis", "rank": 6 },
-    { "name": "Trapezius (upper)", "rank": 7 }
+    { "name": "Trapezius (Upper)", "rank": 7 }
   ]
 },
 
@@ -4364,7 +4364,7 @@
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Teres Major", "rank": 2 },
     { "name": "Posterior Deltoid", "rank": 3 },
-    { "name": "Trapezius (lower)", "rank": 4 },
+    { "name": "Trapezius (Lower)", "rank": 4 },
     { "name": "Rhomboids", "rank": 5 },
     { "name": "Erector Spinae", "rank": 6 },
     { "name": "Infraspinatus", "rank": 7 }
@@ -4380,7 +4380,7 @@
     { "name": "Latissimus Dorsi", "rank": 1 },
     { "name": "Teres Major", "rank": 2 },
     { "name": "Posterior Deltoid", "rank": 3 },
-    { "name": "Trapezius (lower)", "rank": 4 },
+    { "name": "Trapezius (Lower)", "rank": 4 },
     { "name": "Rhomboids", "rank": 5 },
     { "name": "Erector Spinae", "rank": 6 },
     { "name": "Infraspinatus", "rank": 7 }
@@ -4475,7 +4475,7 @@
     { "name": "Anterior Deltoid", "rank": 3 },
     { "name": "Triceps Brachii", "rank": 4 },
     { "name": "Transverse Abdominis", "rank": 5 },
-    { "name": "Trapezius (upper)", "rank": 6 },
+    { "name": "Trapezius (Upper)", "rank": 6 },
     { "name": "Erector Spinae", "rank": 7 }
   ]
 },
@@ -4491,7 +4491,7 @@
     { "name": "Anterior Deltoid", "rank": 3 },
     { "name": "Triceps Brachii", "rank": 4 },
     { "name": "Transverse Abdominis", "rank": 5 },
-    { "name": "Trapezius (upper)", "rank": 6 },
+    { "name": "Trapezius (Upper)", "rank": 6 },
     { "name": "Erector Spinae", "rank": 7 }
   ]
 },
@@ -4601,7 +4601,7 @@
     { "name": "Triceps Brachii", "rank": 1 },
     { "name": "Anconeus", "rank": 2 },
     { "name": "Posterior Deltoid", "rank": 3 },
-    { "name": "Trapezius (middle)", "rank": 4 },
+    { "name": "Trapezius (Middle)", "rank": 4 },
     { "name": "Rhomboids", "rank": 5 },
     { "name": "Erector Spinae", "rank": 6 },
     { "name": "Latissimus Dorsi", "rank": 7 }
@@ -4619,7 +4619,7 @@
     { "name": "Posterior Deltoid", "rank": 3 },
     { "name": "Latissimus Dorsi", "rank": 4 },
     { "name": "Rhomboids", "rank": 5 },
-    { "name": "Trapezius (middle)", "rank": 6 },
+    { "name": "Trapezius (Middle)", "rank": 6 },
     { "name": "Erector Spinae", "rank": 7 }
   ]
 },
@@ -4635,7 +4635,7 @@
     { "name": "Posterior Deltoid", "rank": 3 },
     { "name": "Latissimus Dorsi", "rank": 4 },
     { "name": "Rhomboids", "rank": 5 },
-    { "name": "Trapezius (middle)", "rank": 6 },
+    { "name": "Trapezius (Middle)", "rank": 6 },
     { "name": "Erector Spinae", "rank": 7 }
   ]
 },
@@ -4651,7 +4651,7 @@
     { "name": "Wrist Extensors", "rank": 3 },
     { "name": "Latissimus Dorsi", "rank": 4 },
     { "name": "Rhomboids", "rank": 5 },
-    { "name": "Trapezius (middle)", "rank": 6 },
+    { "name": "Trapezius (Middle)", "rank": 6 },
     { "name": "Erector Spinae", "rank": 7 }
   ]
 },
@@ -4724,10 +4724,10 @@
   "name": "Upright Row - Cable Machine",
   "rating": 23,
   "equipment": ["Cable Machine", "Cable Straight Bar Attachment"],
-  "bodyparts": ["Shoulders", "Traps"],
+  "bodyparts": ["Shoulders", "Upper Back"],
   "muscles": [
     { "name": "Lateral Deltoid", "rank": 1 },
-    { "name": "Trapezius (upper)", "rank": 2 },
+    { "name": "Trapezius (Upper)", "rank": 2 },
     { "name": "Anterior Deltoid", "rank": 3 },
     { "name": "Rhomboids", "rank": 4 },
     { "name": "Supraspinatus", "rank": 5 },
@@ -4740,10 +4740,10 @@
   "name": "Upright Row - Barbell",
   "rating": 23,
   "equipment": ["Barbell", "Weight Plates"],
-  "bodyparts": ["Shoulders", "Traps"],
+  "bodyparts": ["Shoulders", "Upper Back"],
   "muscles": [
     { "name": "Lateral Deltoid", "rank": 1 },
-    { "name": "Trapezius (upper)", "rank": 2 },
+    { "name": "Trapezius (Upper)", "rank": 2 },
     { "name": "Anterior Deltoid", "rank": 3 },
     { "name": "Rhomboids", "rank": 4 },
     { "name": "Supraspinatus", "rank": 5 },
@@ -4756,10 +4756,10 @@
   "name": "Upright Row - Dumbbell",
   "rating": 23,
   "equipment": ["Dumbbell"],
-  "bodyparts": ["Shoulders", "Traps"],
+  "bodyparts": ["Shoulders", "Upper Back"],
   "muscles": [
     { "name": "Lateral Deltoid", "rank": 1 },
-    { "name": "Trapezius (upper)", "rank": 2 },
+    { "name": "Trapezius (Upper)", "rank": 2 },
     { "name": "Anterior Deltoid", "rank": 3 },
     { "name": "Rhomboids", "rank": 4 },
     { "name": "Supraspinatus", "rank": 5 },
@@ -4952,7 +4952,7 @@
     { "name": "Anterior Deltoid", "rank": 4 },
     { "name": "Gluteus Maximus", "rank": 5 },
     { "name": "Rectus Femoris", "rank": 6 },
-    { "name": "Trapezius (upper)", "rank": 7 }
+    { "name": "Trapezius (Upper)", "rank": 7 }
   ]
 },
 
@@ -4968,22 +4968,7 @@
     { "name": "Transverse Abdominis", "rank": 4 },
     { "name": "Erector Spinae", "rank": 5 },
     { "name": "Biceps Brachii", "rank": 6 },
-    { "name": "Trapezius (upper)", "rank": 7 }
+    { "name": "Trapezius (Upper)", "rank": 7 }
   ]
-},
-  {
-    "name": " ",
-    "rating": 100,
-    "equipment": [" "],
-    "bodyparts": [" "],
-    "muscles": [
-      {"name":" ","rank":1},
-      {"name":" ","rank":2},
-      {"name":" ","rank":3},
-      {"name":" ","rank":4},
-      {"name":" ","rank":5},
-      {"name":" ","rank":6},
-      {"name":" ","rank":7}
-    ]
-  }
+}
 ]

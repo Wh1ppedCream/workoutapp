@@ -2,7 +2,7 @@
 
 import 'package:sqflite/sqflite.dart';
 
-/// Database schema manager: handles fresh installs and migrations up to v9.
+/// Database schema manager: handles initial schema and migrations up to v10.
 class Schema {
   /// Creates initial schema (version 1).
   static Future<void> createV1(Database db) async {
@@ -37,7 +37,9 @@ class Schema {
           id           INTEGER PRIMARY KEY AUTOINCREMENT,
           name         TEXT NOT NULL,
           equipment_id INTEGER,
-          FOREIGN KEY(equipment_id) REFERENCES equipment(id)
+          rating       INTEGER NOT NULL DEFAULT 0,
+          FOREIGN KEY(equipment_id) REFERENCES equipment(id),
+          UNIQUE(name, equipment_id)
         );
       ''');
       await txn.execute('''
@@ -56,6 +58,7 @@ class Schema {
           id              INTEGER PRIMARY KEY AUTOINCREMENT,
           session_id      INTEGER NOT NULL,
           exercise_def_id INTEGER,
+          type            TEXT    NOT NULL,
           order_index     INTEGER NOT NULL,
           FOREIGN KEY(session_id)      REFERENCES sessions(id)            ON DELETE CASCADE,
           FOREIGN KEY(exercise_def_id) REFERENCES exercise_definitions(id)
@@ -70,6 +73,7 @@ class Schema {
           weight      REAL    NOT NULL,
           reps        INTEGER NOT NULL,
           order_index INTEGER NOT NULL,
+          parent_set_id  INTEGER,
           FOREIGN KEY(exercise_id) REFERENCES exercises(id) ON DELETE CASCADE
         );
       ''');
@@ -96,7 +100,7 @@ class Schema {
     });
   }
 
-  /// Creates full schema for fresh installs (v1 + migrations up to v9).
+  /// Creates full schema for fresh installs (v1 + all migrations).
   static Future<void> createTables(Database db) async {
     await db.execute('PRAGMA foreign_keys = ON;');
     await createV1(db);
@@ -125,33 +129,43 @@ class Schema {
 
   /// Migration to version 3: adds rating, equipment/muscle tables.
   static Future<void> migrateV3(Database db) async {
-    await db.transaction((txn) async {
-      await txn.execute('ALTER TABLE exercise_definitions ADD COLUMN rating INTEGER NOT NULL DEFAULT 0;');
 
+    // 1) Check if 'rating' already exists
+      final cols = await db.rawQuery("PRAGMA table_info('exercise_definitions')");
+      final hasRating = cols.any((c) => c['name'] == 'rating');
+    await db.transaction((txn) async {
+      if (!hasRating) {
+      await txn.execute(
+        "ALTER TABLE exercise_definitions ADD COLUMN rating INTEGER NOT NULL DEFAULT 0;"
+      );
+    }
+      // **new**: unique index on name+equipment
+    await txn.execute('''
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_ex_def_name_equipment
+        ON exercise_definitions(name, equipment_id);
+    ''');
       await txn.execute('''
         CREATE TABLE IF NOT EXISTS exercise_equipment (
           exercise_id  INTEGER NOT NULL,
           equipment_id INTEGER NOT NULL,
           PRIMARY KEY(exercise_id, equipment_id),
-          FOREIGN KEY(exercise_id)  REFERENCES exercise_definitions(id) ON DELETE CASCADE,
-          FOREIGN KEY(equipment_id) REFERENCES equipment(id)             ON DELETE CASCADE
+          FOREIGN KEY(exercise_id)   REFERENCES exercise_definitions(id) ON DELETE CASCADE,
+          FOREIGN KEY(equipment_id)  REFERENCES equipment(id)             ON DELETE CASCADE
         );
       ''');
-
       await txn.execute('''
         CREATE TABLE IF NOT EXISTS muscles (
           id   INTEGER PRIMARY KEY AUTOINCREMENT,
           name TEXT    NOT NULL UNIQUE
         );
       ''');
-
       await txn.execute('''
         CREATE TABLE IF NOT EXISTS exercise_muscle (
           exercise_id INTEGER NOT NULL,
           muscle_id   INTEGER NOT NULL,
           rank        INTEGER NOT NULL,
-          PRIMARY KEY(exercise_id, muscle_id),
-          UNIQUE(exercise_id, rank),
+          PRIMARY KEY(exercise_id, rank),
+          UNIQUE(exercise_id, muscle_id),
           FOREIGN KEY(exercise_id) REFERENCES exercise_definitions(id) ON DELETE CASCADE,
           FOREIGN KEY(muscle_id)   REFERENCES muscles(id)             ON DELETE CASCADE
         );
@@ -159,7 +173,7 @@ class Schema {
     });
   }
 
-  /// Migration to version 4: adds stretches.
+  /// Migration to version 4: adds stretch definitions and join table.
   static Future<void> migrateV4(Database db) async {
     await db.transaction((txn) async {
       await txn.execute('''
@@ -181,11 +195,20 @@ class Schema {
     });
   }
 
-  /// Migration to version 5: adds exercise type, cardio & stretch instance tables.
+  /// Migration to version 5: adds exercise type, cardio & stretch tables.
   static Future<void> migrateV5(Database db) async {
-    await db.transaction((txn) async {
-      await txn.execute("ALTER TABLE exercises ADD COLUMN type TEXT NOT NULL DEFAULT 'weight';");
+    // 1) Check if 'type' already exists
+  final cols = await db.rawQuery("PRAGMA table_info('exercises')");
+  final hasType = cols.any((c) => c['name'] == 'type');
 
+    await db.transaction((txn) async {
+      if (!hasType) {
+      await txn.execute(
+        "ALTER TABLE exercises ADD COLUMN type TEXT NOT NULL DEFAULT 'weight';"
+      );
+    }
+
+      // cardio details
       await txn.execute('''
         CREATE TABLE IF NOT EXISTS cardio_details (
           id              INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -198,6 +221,7 @@ class Schema {
         );
       ''');
 
+      // stretch instances
       await txn.execute('''
         CREATE TABLE IF NOT EXISTS stretch_instances (
           id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -206,26 +230,32 @@ class Schema {
         );
       ''');
 
+      // stretch items keyed by exercise_id
       await txn.execute('''
         CREATE TABLE IF NOT EXISTS stretch_instance_items (
           id             INTEGER PRIMARY KEY AUTOINCREMENT,
-          instance_id    INTEGER NOT NULL,
+          exercise_id    INTEGER NOT NULL,
           stretch_id     INTEGER,
           is_custom      INTEGER NOT NULL DEFAULT 0,
           custom_name    TEXT,
           custom_desc    TEXT,
           is_checked     INTEGER NOT NULL DEFAULT 0,
           order_index    INTEGER NOT NULL,
-          FOREIGN KEY(instance_id) REFERENCES stretch_instances(id) ON DELETE CASCADE,
-          FOREIGN KEY(stretch_id)  REFERENCES stretch_definitions(id) ON DELETE CASCADE
+          FOREIGN KEY(exercise_id) REFERENCES exercises(id) ON DELETE CASCADE,
+          FOREIGN KEY(stretch_id)   REFERENCES stretch_definitions(id) ON DELETE CASCADE
         );
       ''');
 
-      await txn.execute('ALTER TABLE sets ADD COLUMN parent_set_id INTEGER;');
+       // parent_set_id on sets
+    final setCols = await txn.rawQuery("PRAGMA table_info('sets')");
+    final hasParent = setCols.any((c) => c['name'] == 'parent_set_id');
+    if (!hasParent) {
+      await txn.execute("ALTER TABLE sets ADD COLUMN parent_set_id INTEGER;");
+    }
     });
   }
 
-  /// Migration to version 6: adds presets.
+  /// Migration to version 6: adds presets tables.
   static Future<void> migrateV6(Database db) async {
     await db.transaction((txn) async {
       await txn.execute('''
@@ -235,7 +265,6 @@ class Schema {
           created_at  TEXT    NOT NULL DEFAULT (datetime('now'))
         );
       ''');
-
       await txn.execute('''
         CREATE TABLE IF NOT EXISTS preset_exercises (
           id                INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -247,7 +276,6 @@ class Schema {
           FOREIGN KEY(exercise_def_id) REFERENCES exercise_definitions(id)
         );
       ''');
-
       await txn.execute('''
         CREATE TABLE IF NOT EXISTS preset_sets (
           id                   INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -259,7 +287,6 @@ class Schema {
           FOREIGN KEY(preset_exercise_id) REFERENCES preset_exercises(id) ON DELETE CASCADE
         );
       ''');
-
       await txn.execute('''
         CREATE TABLE IF NOT EXISTS preset_cardio_details (
           id                  INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -271,7 +298,6 @@ class Schema {
           FOREIGN KEY(preset_exercise_id) REFERENCES preset_exercises(id) ON DELETE CASCADE
         );
       ''');
-
       await txn.execute('''
         CREATE TABLE IF NOT EXISTS preset_stretch_items (
           id                   INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -288,9 +314,10 @@ class Schema {
     });
   }
 
-  /// Migration to version 7: adds gym profiles & link to presets.
+  /// Migration to version 7: adds gym profiles and profile_id on presets.
   static Future<void> migrateV7(Database db) async {
     await db.transaction((txn) async {
+      // gym profiles
       await txn.execute('''
         CREATE TABLE IF NOT EXISTS gym_profiles (
           id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -298,35 +325,25 @@ class Schema {
           created_at  TEXT    NOT NULL DEFAULT (datetime('now'))
         );
       ''');
-
+      // profile_equipment join
       await txn.execute('''
         CREATE TABLE IF NOT EXISTS profile_equipment (
           profile_id    INTEGER NOT NULL,
           equipment_id  INTEGER NOT NULL,
           PRIMARY KEY(profile_id, equipment_id),
-          FOREIGN KEY(profile_id)    REFERENCES gym_profiles(id)    ON DELETE CASCADE,
-          FOREIGN KEY(equipment_id)  REFERENCES equipment(id)       ON DELETE CASCADE
+          FOREIGN KEY(profile_id)   REFERENCES gym_profiles(id) ON DELETE CASCADE,
+          FOREIGN KEY(equipment_id) REFERENCES equipment(id)     ON DELETE CASCADE
         );
       ''');
-
-      // Recreate preset_definitions to add foreign key on profile_id
-      await txn.execute('PRAGMA foreign_keys = OFF;');
-      await txn.execute('ALTER TABLE preset_definitions RENAME TO preset_definitions_old;');
-      await txn.execute('''
-        CREATE TABLE IF NOT EXISTS preset_definitions (
-          id          INTEGER PRIMARY KEY AUTOINCREMENT,
-          name        TEXT    NOT NULL,
-          created_at  TEXT    NOT NULL DEFAULT (datetime('now')),
-          profile_id  INTEGER,
-          FOREIGN KEY(profile_id) REFERENCES gym_profiles(id) ON DELETE SET NULL
-        );
-      ''');
-      await txn.execute('''
-        INSERT INTO preset_definitions (id, name, created_at)
-        SELECT id, name, created_at FROM preset_definitions_old;
-      ''');
-      await txn.execute('DROP TABLE preset_definitions_old;');
-      await txn.execute('PRAGMA foreign_keys = ON;');
+      // add profile_id to preset_definitions
+      await txn.execute(
+        "ALTER TABLE preset_definitions ADD COLUMN profile_id INTEGER REFERENCES gym_profiles(id) ON DELETE SET NULL;"
+      );
+      // 4) enforce uniqueness per (name, profile_id)
+    await txn.execute('''
+      CREATE UNIQUE INDEX IF NOT EXISTS ux_preset_name_profile
+        ON preset_definitions(name, profile_id);
+    ''');
     });
   }
 
@@ -337,7 +354,7 @@ class Schema {
         CREATE TABLE IF NOT EXISTS exercise_rep_max (
           def_id     INTEGER NOT NULL,
           rep_count  INTEGER NOT NULL,
-          timeframe  TEXT    NOT NULL,
+          timeframe  TEXT    NOT NULL,  -- 'week', 'month', 'all'
           rm_value   REAL    NOT NULL,
           one_erm    REAL    NOT NULL,
           is_erm     INTEGER NOT NULL,
@@ -345,7 +362,6 @@ class Schema {
           FOREIGN KEY(def_id) REFERENCES exercise_definitions(id) ON DELETE CASCADE
         );
       ''');
-
       await txn.execute('''
         CREATE TABLE IF NOT EXISTS exercise_volume_max (
           def_id     INTEGER NOT NULL,
@@ -358,7 +374,7 @@ class Schema {
     });
   }
 
-  /// Migration to version 9: adds bodypart/muscle connections & boundaries.
+  /// Migration to version 9: adds analytics & volume boundary tables.
   static Future<void> migrateV9(Database db) async {
     await db.transaction((txn) async {
       await txn.execute('''
@@ -366,11 +382,10 @@ class Schema {
           muscle_id    INTEGER NOT NULL,
           bodypart_id  INTEGER NOT NULL,
           PRIMARY KEY(muscle_id, bodypart_id),
-          FOREIGN KEY(muscle_id)    REFERENCES muscles(id)    ON DELETE CASCADE,
-          FOREIGN KEY(bodypart_id)  REFERENCES bodypart(id)   ON DELETE CASCADE
+          FOREIGN KEY(muscle_id)    REFERENCES muscles(id) ON DELETE CASCADE,
+          FOREIGN KEY(bodypart_id)  REFERENCES bodypart(id) ON DELETE CASCADE
         );
       ''');
-
       await txn.execute('''
         CREATE TABLE IF NOT EXISTS bodypart_ranking (
           bodypart_id INTEGER PRIMARY KEY,
@@ -378,7 +393,6 @@ class Schema {
           FOREIGN KEY(bodypart_id) REFERENCES bodypart(id) ON DELETE CASCADE
         );
       ''');
-
       await txn.execute('''
         CREATE TABLE IF NOT EXISTS muscle_ranking (
           muscle_id INTEGER PRIMARY KEY,
@@ -386,7 +400,6 @@ class Schema {
           FOREIGN KEY(muscle_id) REFERENCES muscles(id) ON DELETE CASCADE
         );
       ''');
-
       await txn.execute('''
         CREATE TABLE IF NOT EXISTS exercise_muscle_percent (
           exercise_def_id INTEGER NOT NULL,
@@ -397,7 +410,6 @@ class Schema {
           FOREIGN KEY(muscle_id)       REFERENCES muscles(id)             ON DELETE CASCADE
         );
       ''');
-
       await txn.execute('''
         CREATE TABLE IF NOT EXISTS muscle_volume_boundaries (
           muscle_id              INTEGER PRIMARY KEY,
@@ -408,7 +420,6 @@ class Schema {
           FOREIGN KEY(muscle_id) REFERENCES muscles(id) ON DELETE CASCADE
         );
       ''');
-
       await txn.execute('''
         CREATE TABLE IF NOT EXISTS bodypart_volume_boundaries (
           bodypart_id            INTEGER PRIMARY KEY,
@@ -419,7 +430,6 @@ class Schema {
           FOREIGN KEY(bodypart_id) REFERENCES bodypart(id) ON DELETE CASCADE
         );
       ''');
-
       await txn.execute('''
         CREATE TABLE IF NOT EXISTS bodypart_muscle_rankings (
           bodypart_id   INTEGER NOT NULL,
@@ -433,9 +443,7 @@ class Schema {
     });
   }
 
-  /// Applies database migrations for version 10.
-  ///
-  /// - Creates `formula_settings` table for storing default‐formula parameters.
+  /// Migration to version 10: adds formula_settings.
   static Future<void> migrateV10(Database db) async {
     await db.execute('''
       CREATE TABLE IF NOT EXISTS formula_settings (
@@ -444,6 +452,4 @@ class Schema {
       );
     ''');
   }
-
-
 }

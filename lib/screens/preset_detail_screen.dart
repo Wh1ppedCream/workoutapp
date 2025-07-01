@@ -163,7 +163,7 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
             ? AddExerciseFab(
                 onWeightPicked: (def) async {
                   final we = WeightExercise(name: def.name, equipment: def.equipmentList.join(', '), sets: [ExerciseSet()], changeSets: {});
-                  context.read<PresetSession>().addExercise(we, CardType.weight);
+                  context.read<PresetSession>().addExercise(we, CardType.weight, defId: def.id);
                 },
                 onCardioPicked: (name) async {
                   final ce = CardioExercise(name: name, equipment: '', cardioName: name);
