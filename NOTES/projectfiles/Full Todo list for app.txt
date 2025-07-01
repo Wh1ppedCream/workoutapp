@@ -1128,24 +1128,24 @@ Connections:
 d			- bodypart to a few muscles 		
 				
 		connection: 
-			- bodypart to ranking
+d			- bodypart to ranking
 			
-			- muscle to ranking
+d			- muscle to ranking
 			
-			- bodypart to muscle to ranking
+nd			- bodypart to muscle to ranking
 				
 		connection: 
-			- exercise to specific muscles(with ranking) to 	- %muscle hit
-																- connected bodypart and % bodypart hit
+d			- exercise to specific muscles(with ranking) to 	- %muscle hit
+nd																- connected bodypart and % bodypart hit
 			
 		connection: 
-			- bodypart name to sets done in last week for the bodypart
-			- muscle name to sets done in last week for the muscle
+nd			- bodypart name to sets done in last week for the bodypart
+nd			- muscle name to sets done in last week for the muscle
 				
 		connection: 
-			- muscle name to 4 optimal numbers
+d			- muscle name to 4 optimal numbers
 				
-			- bodypart name to 4 optimal numbers
+d			- bodypart name to 4 optimal numbers
 
 table combos:
 	

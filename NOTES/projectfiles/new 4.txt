@@ -1,0 +1,30 @@
+intelligent presets
+	- badge over preset
+	- menu option on preset to make intelligent
+		- customizeable increment amount(IA) default for full preset
+		- customizeable increment amount(IA) for each exercise in preset
+	- increments 1 set for each weighted exercise by (IA)
+		- if failed to do increment amount in next session, reduces changed set by 2xIA and adds a rep to set
+			- if failed agian, reduces set by 1 rep, keeps weight same
+			- if succeded, +2xIA and -rep to set
+		- if succeded, repeat
+
+preset generator
+	- 
+	- available information
+		- rep maxes for each exercise (eg: 2 rep max for bench press is 220lbs)
+		- muscle ranking for which muscles to focus on (eg: 1. Gluteus Maximus, 2. Erector Spinae, 3. Transverse Abdominis)
+		- bodypart ranking for which bodyparts to focus on	(eg: 1. chest, 2. shoulders, 3. Quads, etc)
+		- bodypart, muscle ranking, for which muscles muscles should be getting the most focus in each bodypart (eg: under chest, 1. Pectoralis major, 2. Serratus Anterior, 3. Pectoralis Minor)
+		- volume maxes for each exercise (eg: max volume done on a bench press is (10 reps of 150lbs = 1500lbs volume))
+		- sets per bodypart limits (eg: for chest, try to get to 10 sets per week)
+		- sets per muscle limits (eg: for pectoralis major, try to get to 8 sets per week)
+		
+		{ "muscle": "Gluteus Maximus", "rank": 1 },
+  { "muscle": "Erector Spinae", "rank": 2 },
+  { "muscle": "Transverse Abdominis", "rank": 3 },
+  
+  
+  
+INFO TO THINK OF ADDING:
+	set intensity

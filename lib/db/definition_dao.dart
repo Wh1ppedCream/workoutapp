@@ -273,50 +273,61 @@ class DefinitionDao {
   }
 
 /// Finds or creates an [ExerciseDefinition] by [name] and [equipmentName].
-  ///
-  /// Returns the definition ID.
-  static Future<int> findOrCreateExerciseDefinition(
-    Database db,
-    String name,
-    String equipmentName,
-  ) async {
-    // 1) Lookup equipment_id if the name is non-empty
-    int? eqId;
-    if (equipmentName.isNotEmpty) {
-      final eqRows = await db.query(
-        'equipment',
-        where: 'name = ?',
-        whereArgs: [equipmentName],
-      );
-      if (eqRows.isNotEmpty) {
-        eqId = eqRows.first['id'] as int;
-      }
-    }
-
-    // 2) Try to find an existing definition
-    final whereClause = eqId != null
-        ? 'name = ? AND equipment_id = ?'
-        : 'name = ? AND equipment_id IS NULL';
-    final whereArgs = eqId != null ? [name, eqId] : [name];
-    final defRows = await db.query(
-      'exercise_definitions',
-      where: whereClause,
-      whereArgs: whereArgs,
+/// Returns the definition ID.
+static Future<int> findOrCreateExerciseDefinition(
+  Database db,
+  String name,
+  String equipmentName,
+) async {
+  // 1) Lookup equipment_id if provided
+  int? eqId;
+  if (equipmentName.isNotEmpty) {
+    final eqRows = await db.query(
+      'equipment',
+      where: 'name = ?',
+      whereArgs: [equipmentName],
+      limit: 1,
     );
-    if (defRows.isNotEmpty) {
-      return defRows.first['id'] as int;
-    }
-
-    // 3) Not found—insert new
-    return await db.insert(
-      'exercise_definitions',
-      {
-        'name': name,
-        'equipment_id': eqId,
-        'rating': 0,  // default
-      },
-    );
+    if (eqRows.isNotEmpty) eqId = eqRows.first['id'] as int;
   }
+
+  // 2) Try to find an existing definition
+  final whereClause = eqId != null
+      ? 'name = ? AND equipment_id = ?'
+      : 'name = ? AND equipment_id IS NULL';
+  final whereArgs = eqId != null ? [name, eqId] : [name];
+  final defRows = await db.query(
+    'exercise_definitions',
+    columns: ['id'],
+    where: whereClause,
+    whereArgs: whereArgs,
+    limit: 1,
+  );
+  if (defRows.isNotEmpty) {
+    return defRows.first['id'] as int;
+  }
+
+  // 3) Not found — try to insert, ignoring conflicts if someone else created it
+  await db.insert(
+    'exercise_definitions',
+    {
+      'name': name,
+      'equipment_id': eqId,
+      'rating': 0,
+    },
+    conflictAlgorithm: ConflictAlgorithm.ignore,
+  );
+
+  // 4) Re-query for the id (either our insert or the existing one)
+  final requery = await db.query(
+    'exercise_definitions',
+    columns: ['id'],
+    where: whereClause,
+    whereArgs: whereArgs,
+    limit: 1,
+  );
+  return requery.first['id'] as int;
+}
 
   /// Retrieves the name and equipmentName for a definition ID.
   ///

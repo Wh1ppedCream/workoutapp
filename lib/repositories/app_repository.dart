@@ -288,18 +288,25 @@ Future<WorkoutExercise?> fetchDetailedExercise(int id) {
     required List<Map<String, dynamic>> items,
   }) async {
     final db = await _dbHelper.database;
+    final instances = items
+        .map((m) => StretchInstance.fromMap(m))
+        .toList();
     await StretchDao.insertStretchInstance(
       db: db,
       exerciseId: exerciseId,
-      items: items,
+      items: instances,
     );
   }
 
 /// Fetches stretch items for an exercise.
   Future<List<Map<String, dynamic>>> fetchStretchItems(int exerciseId) async {
     final db = await _dbHelper.database;
-    return StretchDao.getStretchItemsForExercise(db, exerciseId);
-  }
+    // DAO now returns List<StretchInstance>, so map them back to raw maps
+    final instances = await StretchDao.getStretchItemsForExercise(db, exerciseId);
+    return instances
+        .map((inst) => inst.toMap())
+        .toList();
+   }
 
 /// Updates a single stretch item’s fields.
   Future<int> updateStretchItem({
@@ -1119,5 +1126,38 @@ Future<double> calculateTotalVolumeForSessions(List<int> sessionIds) async {
 
     return result;
   }
+
+  /// Look up an existing definition by name & equipment, but do *not* create it.
+/// Returns the defId, or throws if not found.
+Future<int> findExerciseDefinitionId(String name, String equipmentName) async {
+  final db = await _dbHelper.database;
+  int? eqId;
+  if (equipmentName.isNotEmpty) {
+    final eqRows = await db.query(
+      'equipment',
+      where: 'name = ?',
+      whereArgs: [equipmentName],
+    );
+    if (eqRows.isNotEmpty) eqId = eqRows.first['id'] as int;
+  }
+
+  final whereClause = eqId != null
+      ? 'name = ? AND equipment_id = ?'
+      : 'name = ? AND equipment_id IS NULL';
+  final whereArgs = eqId != null ? [name, eqId] : [name];
+
+  final rows = await db.query(
+    'exercise_definitions',
+    columns: ['id'],
+    where: whereClause,
+    whereArgs: whereArgs,
+  );
+
+  if (rows.isEmpty) {
+    throw Exception('ExerciseDefinition("$name",$equipmentName) not found');
+  }
+  return rows.first['id'] as int;
+}
+
 
 }

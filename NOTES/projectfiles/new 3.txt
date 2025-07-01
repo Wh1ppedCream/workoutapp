@@ -1,0 +1,187 @@
+presets:
+	// File: lib/screens/train_page.dart
+
+
+
+	lib/widgets/preset_bar.dart
+	
+	lib/screens/preset_detail_screen.dart
+		import 'package:env_test/models/active_session.dart';
+		import 'package:flutter/material.dart';
+		import 'package:provider/provider.dart';
+		import '../models/models.dart';
+		import '../repositories/app_repository.dart';
+		import '../repositories/app_repository_presets.dart';
+		import '../models/preset_session.dart';
+		import '../widgets/exercise_card.dart';
+		import '../widgets/add_exercise_fab.dart';
+		import 'session_screen.dart';
+		
+	// File: lib/screens/train_page.dart
+		import 'package:flutter/material.dart';
+		import 'package:provider/provider.dart';
+		import '../models/active_session.dart';
+		import '../models/preset_models.dart';
+		import '../models/preset_session.dart';
+		import '../models/selected_profile.dart';
+		import '../repositories/app_repository.dart';
+		import '../repositories/app_repository_presets.dart';
+		import '../widgets/preset_bar.dart';
+		import 'gym_profile_screen.dart';
+		import 'preset_detail_screen.dart';
+		import 'session_screen.dart';
+
+
+
+
+
+
+
+../models/models.dart';
+
+profiles:
+	// File: lib/screens/train_page.dart
+		1. import '../models/active_session.dart';
+			1. import 'package:env_test/models/models.dart';
+			2. import 'package:env_test/widgets/exercise_card.dart';
+				1. import '../models/models.dart';
+				2. import 'weight_card.dart';
+					1. import '../models/models.dart';
+				3. import 'cardio_card.dart';
+					1. import '../models/models.dart';
+				4. import 'stretch_card.dart';
+					1. import '../models/models.dart';
+					2. import 'stretch_search_dialog.dart';
+						1. import '../models/models.dart';
+						2. import '../repositories/app_repository.dart';
+							1. import '../db/database_helper.dart';
+								1. import '../models/models.dart';
+								2. import 'schema.dart';
+								3. import 'seed.dart';
+								4. import 'session_dao.dart';
+								5. import 'exercise_dao.dart';
+								6. import 'set_dao.dart';
+									1. import '../models/models.dart';
+								7. import 'cardio_dao.dart';
+								8. import 'stretch_dao.dart';
+								9. import 'definition_dao.dart';
+									1. import '../models/models.dart';
+								10. import 'lookup_dao.dart';
+									1. import '../models/models.dart';
+								11. import 'stats_dao.dart';
+							2. import '../db/session_dao.dart';
+							3. import '../db/exercise_dao.dart';
+							4. import '../db/set_dao.dart';
+								1. import '../models/models.dart';
+							5. import '../db/cardio_dao.dart';
+							6. import '../db/stretch_dao.dart';
+							7. import '../db/definition_dao.dart';
+								1. import '../models/models.dart';
+							8. import '../db/lookup_dao.dart';
+								1. import '../models/models.dart';
+							9. import '../models/models.dart';
+							10. import 'profile_repository.dart';
+								1. import '../db/database_helper.dart';
+								2. import '../db/gym_profile_dao.dart';
+									1. import '../models/gym_models.dart';
+								3. import '../models/gym_models.dart';
+							11. import '../db/analytics_dao.dart';
+								1. import '../models/models.dart';
+							12. import '../db/formula_settings_dao.dart';
+			3. import 'package:env_test/repositories/app_repository.dart';
+				1. import '../db/database_helper.dart';
+					1. import '../models/models.dart';
+					2. import 'schema.dart';
+					3. import 'seed.dart';
+					4. import 'session_dao.dart';
+					5. import 'exercise_dao.dart';
+					6. import 'set_dao.dart';
+						1. import '../models/models.dart';
+					7. import 'cardio_dao.dart';
+					8. import 'stretch_dao.dart';
+					9. import 'definition_dao.dart';
+						1. import '../models/models.dart';
+					10. import 'lookup_dao.dart';
+						1. import '../models/models.dart';
+					11. import 'stats_dao.dart';
+				2. import '../db/session_dao.dart';
+				3. import '../db/exercise_dao.dart';
+				4. import '../db/set_dao.dart';
+				5. import '../db/cardio_dao.dart';
+				6. import '../db/stretch_dao.dart';
+				7. import '../db/definition_dao.dart';
+				8. import '../db/lookup_dao.dart';
+				9. import '../models/models.dart';
+				10. import 'profile_repository.dart';
+				11. import '../db/analytics_dao.dart';
+				12. import '../db/formula_settings_dao.dart';
+		2. import '../models/preset_models.dart';
+		3. import '../models/preset_session.dart';
+			import '../models/models.dart';
+			import '../repositories/app_repository.dart';
+			import '../repositories/app_repository_presets.dart';
+				import '../db/preset_definition_dao.dart';
+				import '../db/preset_exercise_dao.dart';
+				import '../db/preset_detail_dao.dart';
+				import 'app_repository.dart';
+				import '../models/preset_models.dart';
+				import '../models/models.dart';
+			import '../widgets/exercise_card.dart'; // for CardType
+		4. import '../models/selected_profile.dart';
+			import '../models/gym_models.dart';
+			import '../db/database_helper.dart';
+			import '../repositories/profile_repository.dart';
+			import '../repositories/app_repository.dart';
+		5. import '../repositories/app_repository.dart';
+		6. import '../repositories/app_repository_presets.dart';
+		7. import '../widgets/preset_bar.dart';
+		8. import 'gym_profile_screen.dart';
+			import '../db/database_helper.dart';
+			import '../models/gym_models.dart';
+			import '../models/selected_profile.dart';
+			import '../repositories/profile_repository.dart';
+		9. import 'preset_detail_screen.dart';
+		10. import 'session_screen.dart';
+			import '../models/models.dart';
+			import '../widgets/exercise_card.dart';
+			import '../models/active_session.dart';
+				import 'package:env_test/models/models.dart';
+				import 'package:env_test/widgets/exercise_card.dart';
+				import 'package:env_test/repositories/app_repository.dart';
+			import '../widgets/add_exercise_fab.dart';
+			import '../widgets/session_complete_sheet.dart';
+			import '../widgets/exercise_detail_sheet.dart';
+			import '../repositories/app_repository.dart';
+
+
+
+
+
+
+	lib/screens/gym_profile_screen.dart
+		import 'package:flutter/material.dart';
+		import 'package:provider/provider.dart';
+		import '../db/database_helper.dart';
+		import '../models/gym_models.dart';
+		import '../models/selected_profile.dart';
+		import '../repositories/profile_repository.dart';
+		
+	// File: lib/screens/train_page.dart
+		
+		
+DONE:
+	all of db
+	all of models
+	all of repositories
+	widgets
+		- exercise cards
+		- preset_bar
+		- exercise detail sheet
+		- add exercise fab
+		- session complete sheet
+	screens
+		- exercise catalog page
+		- session screen
+		- preset detail screen
+		- gym profile screen
+		- train_page

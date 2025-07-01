@@ -119,41 +119,31 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
       else if (storedType == 'stretch') {
         // ─── STRETCH ────────────────────────────────────────────────
         final itemRows = await _repo.fetchStretchItems(instanceId);
-
-        final items = <Map<String, dynamic>>[];
+        // Build typed instances and track which are checked
+        final instances = <StretchInstance>[];
         final checkedIndices = <int>{};
         for (var idx = 0; idx < itemRows.length; idx++) {
           final r = itemRows[idx];
-          final isChecked = (r['is_checked'] as int) == 1;
-          items.add({
-            'stretch_id':  r['stretch_id']  as int?,
-            'is_custom':   (r['is_custom']  as int) == 1,
-            'custom_name': r['custom_name'] as String?,
-            'custom_desc': r['custom_desc'] as String?,
-            'is_checked':  isChecked,
-            'order_index': (r['order_index'] as num).toInt(),
-          });
-          if (isChecked) checkedIndices.add(idx);
+          final inst = StretchInstance.fromMap(r);
+          instances.add(inst);
+          if (inst.isChecked) checkedIndices.add(idx);
         }
-
         // Determine header name
-        String stretchCardName = 'Stretch';
-        if (items.isNotEmpty) {
-          final first = items.first;
-          if (first['stretch_id'] != null) {
-            final sdName = await _repo.fetchStretchDefinitionNameById(
-              first['stretch_id'] as int,
-            );
+       String stretchCardName = 'Stretch';
+        if (instances.isNotEmpty) {
+          final first = instances.first;
+          if (first.stretchId != null) {
+            final sdName = await _repo.fetchStretchDefinitionNameById(first.stretchId!);
             if (sdName != null) stretchCardName = sdName;
-          } else if (first['is_custom'] == true) {
-            stretchCardName = first['custom_name'] as String? ?? 'Stretch';
+          } else if (first.isCustom) {
+            stretchCardName = first.customName ?? 'Stretch';
           }
         }
 
         loaded.add(StretchExercise(
           name:                    stretchCardName,
           equipment:               '',
-          stretchInstances:        items,
+          stretchInstances:        instances,
           completedStretchIndices: checkedIndices,
         ));
       }
@@ -224,7 +214,9 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
       } else if (we is StretchExercise) {
         await _repo.saveStretchInstance(
           exerciseId: exId,
-          items:       we.stretchInstances,
+          items: we.stretchInstances
+              .map((inst) => inst.toMap())
+              .toList(),
         );
       }
     }

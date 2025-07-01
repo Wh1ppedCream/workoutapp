@@ -88,27 +88,38 @@ class PresetDetailDao {
   }
 
   /// Inserts stretch items for a preset exercise.
-  static Future<void> insertPresetStretchItems({
-    required Database db,
-    required int presetExerciseId,
-    required List<Map<String, dynamic>> items,
-  }) async {
-    for (var i = 0; i < items.length; i++) {
-      final m = items[i];
-      await db.insert(
-        'preset_stretch_items',
-        {
-          'preset_exercise_id': presetExerciseId,
-          'stretch_id': m['stretch_id'],
-          'is_custom': m['is_custom'] ? 1 : 0,
-          'custom_name': m['custom_name'],
-          'custom_desc': m['custom_desc'],
-          'order_index': m['order_index'],
-        },
-        conflictAlgorithm: ConflictAlgorithm.ignore,
-      );
-    }
+ static Future<void> insertPresetStretchItems({
+  required Database db,
+  required int presetExerciseId,
+  required List<Map<String, dynamic>> items,
+}) async {
+  for (var i = 0; i < items.length; i++) {
+    final m = items[i];
+
+    // Normalize is_custom (could be bool or int) to 0/1:
+    final rawIsCustom = m['is_custom'];
+    final int isCustomFlag = rawIsCustom is bool
+        ? (rawIsCustom ? 1 : 0)
+        : (rawIsCustom as int);
+
+    // Normalize is_checked if you ever store it here (presets don't, but safe):
+
+    await db.insert(
+      'preset_stretch_items',
+      {
+        'preset_exercise_id': presetExerciseId,
+        'stretch_id':         m['stretch_id'],
+        'is_custom':          isCustomFlag,
+        // no 'is_checked' column in preset_stretch_items
+        'custom_name':        m['custom_name'],
+        'custom_desc':        m['custom_desc'],
+        'order_index':        m['order_index'] as int,
+      },
+      conflictAlgorithm: ConflictAlgorithm.ignore,
+    );
   }
+}
+
 
   /// Retrieves stretch items for a preset exercise.
   static Future<List<Map<String, dynamic>>> getPresetStretchItems(
