@@ -2,8 +2,6 @@
 
 import '../db/database_helper.dart';
 import '../models/models.dart';
-import '../models/gym_models.dart';
-import '../models/preset_models.dart';
 
 /// Central repository providing a unified interface for all
 
@@ -331,8 +329,8 @@ Future<List<WorkoutSession>> fetchWorkoutSessions() =>  _dbHelper.fetchWorkoutSe
 // ─── STATS ───────────────────────────────────────────────────────────────
 
 /// Record or update a rep-max stat.
-Future<void> updateRepMax(int defId, int repCount, String timeframe, double rmValue, double oneErm, bool isErm,)  
-=> _dbHelper.upsertRepMax(    defId,    repCount,    timeframe,    rmValue,    oneErm,    isErm,  );
+Future<void> updateRepMax(int defId, int repCount, String timeframe, double rmValue, double oneErm, bool isErm,)
+=> _dbHelper.upsertRepMax( defId,    repCount, timeframe, rmValue, oneErm, isErm,);
 
 /// Record or update a volume-max stat.
 Future<void> updateVolumeMax(int defId, String timeframe, double vmValue,) => _dbHelper.upsertVolumeMax(defId, timeframe, vmValue);

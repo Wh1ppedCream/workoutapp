@@ -44,8 +44,9 @@ class _ExerciseMusclePercentScreenState extends State<ExerciseMusclePercentScree
       if (!mounted) return;
       setState(() => _error = e.toString());
     } finally {
-      if (!mounted) return;
+      if (mounted) {
       setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -69,8 +70,9 @@ class _ExerciseMusclePercentScreenState extends State<ExerciseMusclePercentScree
         SnackBar(content: Text('Failed to load entries: $e')),
       );
     } finally {
-      if (!mounted) return;
+      if (mounted) {
       setState(() => _isLoadingEntries = false);
+      }
     }
   }
 

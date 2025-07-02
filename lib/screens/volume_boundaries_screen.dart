@@ -73,10 +73,11 @@ class _VolumeBoundariesScreenState extends State<VolumeBoundariesScreen>
         _lookupError = e.toString();
       });
     } finally {
-      if (!mounted) return;
+      if (mounted) {
       setState(() {
         _isLoadingLookups = false;
       });
+      }
     }
   }
 
@@ -105,10 +106,11 @@ class _VolumeBoundariesScreenState extends State<VolumeBoundariesScreen>
         SnackBar(content: Text('Failed to load bodypart bounds: $e')),
       );
     } finally {
-      if (!mounted) return;
+      if (mounted) {
       setState(() {
         _isLoadingBp = false;
       });
+      }
     }
   }
 
@@ -136,10 +138,11 @@ class _VolumeBoundariesScreenState extends State<VolumeBoundariesScreen>
         SnackBar(content: Text('Failed to load muscle bounds: $e')),
       );
     } finally {
-      if (!mounted) return;
+      if (mounted) {
       setState(() {
         _isLoadingM = false;
       });
+      }
     }
   }
 
