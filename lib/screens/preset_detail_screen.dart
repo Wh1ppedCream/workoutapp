@@ -1,13 +1,12 @@
 // File: lib/screens/preset_detail_screen.dart
 // for viewing and editing a Preset using the PresetSession notifier.
 
-import 'package:env_test/models/active_session.dart';
+import 'package:env_test/providers/active_session.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/models.dart';
 import '../repositories/app_repository.dart';
-import '../repositories/app_repository_presets.dart';
-import '../models/preset_session.dart';
+import '../providers/preset_session.dart';
 import '../widgets/exercise_card.dart';
 import '../widgets/add_exercise_fab.dart';
 import 'session_screen.dart';

@@ -3,10 +3,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/models.dart';
-import '../models/selected_profile.dart';
-import '../repositories/app_repository.dart';
+import '../providers/selected_profile.dart';
 import '../models/gym_models.dart';
-import '../repositories/profile_repository.dart';
+import '../repositories/app_repository.dart';
 import '../widgets/exercise_detail_sheet.dart';
 
 

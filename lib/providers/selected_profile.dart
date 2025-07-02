@@ -1,22 +1,19 @@
 // File: lib/models/selected_profile.dart
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import '../models/gym_models.dart';
-import '../db/database_helper.dart';
-import '../repositories/profile_repository.dart';
 import '../repositories/app_repository.dart';
 
 /// Manages the list of gym profiles and the currently selected profile.
 class SelectedProfile extends ChangeNotifier {
-  final DatabaseHelper _dbHelper;
+  final AppRepository _repo;
 
   List<GymProfile> profiles = [];
   GymProfile? currentProfile;
   List<Map<String, dynamic>> equipment = [];
 
-  SelectedProfile({DatabaseHelper? dbHelper})
-      : _dbHelper = dbHelper ?? DatabaseHelper() {
+  SelectedProfile({AppRepository? repository})
+      : _repo = repository ?? AppRepository() {
     _init();
   }
 
@@ -26,14 +23,14 @@ class SelectedProfile extends ChangeNotifier {
 
   /// Loads all profiles, seeds a default if none exist, and selects the first.
   Future<void> loadProfiles() async {
-    profiles = await _dbHelper.fetchAllProfiles();
+    profiles = await _repo.fetchAllProfiles();
     if (profiles.isEmpty) {
-      final defaultId = await _dbHelper.createProfile('General');
-      final allEquip = await AppRepository().fetchAllEquipment();
+      final defaultId = await _repo.createProfile('General');
+      final allEquip = await _repo.fetchAllEquipment();
       for (final eq in allEquip) {
-        await _dbHelper.addEquipmentToProfile(defaultId, eq.id);
+        await _repo.addEquipmentToProfile(defaultId, eq.id);
       }
-      profiles = await _dbHelper.fetchAllProfiles();
+      profiles = await _repo.fetchAllProfiles();
     }
     currentProfile = profiles.first;
     await _loadEquipment();
@@ -49,7 +46,7 @@ class SelectedProfile extends ChangeNotifier {
 
   /// Creates a new profile and selects it.
   Future<void> createProfile(String name) async {
-    final id = await _dbHelper.createProfile(name);
+    final id = await _repo.createProfile(name);
     await loadProfiles();
     currentProfile = profiles.firstWhere((p) => p.id == id);
     await _loadEquipment();
@@ -58,7 +55,7 @@ class SelectedProfile extends ChangeNotifier {
 
   /// Updates an existing profile.
   Future<void> updateProfile(GymProfile profile) async {
-    await _dbHelper.updateProfile(profile);
+    await _repo.updateProfile(profile);
     await loadProfiles();
     currentProfile = profiles.firstWhere((p) => p.id == profile.id);
     await _loadEquipment();
@@ -67,7 +64,7 @@ class SelectedProfile extends ChangeNotifier {
 
   /// Deletes a profile and reverts selection if needed.
   Future<void> deleteProfile(int profileId) async {
-    await _dbHelper.deleteProfile(profileId);
+    await _repo.deleteProfile(profileId);
     await loadProfiles();
     notifyListeners();
   }
@@ -77,9 +74,9 @@ class SelectedProfile extends ChangeNotifier {
     if (currentProfile == null) return;
     final exists = equipment.any((e) => e['id'] == equipmentId);
     if (exists) {
-      await _dbHelper.removeEquipmentFromProfile(currentProfile!.id!, equipmentId);
+      await _repo.removeEquipmentFromProfile(currentProfile!.id!, equipmentId);
     } else {
-      await _dbHelper.addEquipmentToProfile(currentProfile!.id!, equipmentId);
+      await _repo.addEquipmentToProfile(currentProfile!.id!, equipmentId);
     }
     await _loadEquipment();
     notifyListeners();
@@ -90,7 +87,7 @@ class SelectedProfile extends ChangeNotifier {
     if (currentProfile == null) {
       equipment = [];
     } else {
-      equipment = await _dbHelper.fetchEquipmentForProfile(currentProfile!.id!);
+      equipment = await _repo.fetchEquipmentForProfile(currentProfile!.id!);
     }
   }
 }

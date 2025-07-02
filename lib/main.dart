@@ -2,13 +2,13 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'models/active_session.dart';
+import 'providers/active_session.dart';
 import 'screens/history_screen.dart';
 import 'screens/train_page.dart';          
 import 'screens/nutrition_page.dart';
 import 'screens/profile_page.dart';
 import 'widgets/ongoing_session_fab.dart';
-import 'models/selected_profile.dart';
+import 'providers/selected_profile.dart';
 
 void main() {
   runApp(
