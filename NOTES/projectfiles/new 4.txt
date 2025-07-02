@@ -1,13 +1,21 @@
-intelligent presets
-	- badge over preset
-	- menu option on preset to make intelligent
-		- customizeable increment amount(IA) default for full preset
-		- customizeable increment amount(IA) for each exercise in preset
+presets update
+	- in train page, preset bar has options for 'Edit' 'Delete' 'Profile Swap'
+	- will have new option 'Make Automatic'
+		- pressing will put a green A symbol to left of menu button on the preset bar.
+		- pressing will make the preset an Automatic Preset
+			
+
+Automatic Preset:
+	- same as normal preset, but weighted exercises (no difference for stretches or cardio) will have their weight and/or reps updated automatically after every time the start session button is pressed for this preset on the preset detail page
+	- option to not increment 1st set in exercise (selected by default)
+	- customizeable increment amount(IA) default for full preset, used if individual exercise (IA) not set. 
+			- customizeable increment amount(IA) for each exercise in preset
 	- increments 1 set for each weighted exercise by (IA)
 		- if failed to do increment amount in next session, reduces changed set by 2xIA and adds a rep to set
 			- if failed agian, reduces set by 1 rep, keeps weight same
 			- if succeded, +2xIA and -rep to set
-		- if succeded, repeat
+		- if succeded, repeat for next set, till last set, if last set done, then repeat from 1st or 2nd set.
+
 
 preset generator
 	- 
