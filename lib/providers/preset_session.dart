@@ -2,7 +2,6 @@
 import 'package:flutter/foundation.dart';
 import '../models/models.dart';
 import '../repositories/app_repository.dart';
-import '../repositories/app_repository_presets.dart';
 import '../widgets/exercise_card.dart'; // for CardType
 
 /// ChangeNotifier driving the Preset detail/edit UI, mirroring ActiveSession.
