@@ -79,10 +79,11 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
         _defsError = e.toString();
       });
     } finally {
-      if (!mounted) return;
+      if (mounted) {
       setState(() {
         _isLoadingDefs = false;
       });
+    }
     }
   }
 
@@ -115,8 +116,9 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
     } catch (e) {
       // swallow: muscle tab will just show empty
     } finally {
-      if (!mounted) return;
+      if (mounted) {
       setState(() => _isLoadingMuscles = false);
+    }
     }
   }
 
@@ -131,8 +133,9 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
     } catch (e) {
       // swallow
     } finally {
-      if (!mounted) return;
+      if (mounted) {
       setState(() => _isLoadingBody = false);
+      }
     }
   }
 
@@ -155,8 +158,9 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
         _defaultsError = e.toString();
       });
     } finally {
-      if (!mounted) return;
+      if (mounted) {
       setState(() => _isLoadingDefaults = false);
+      }
     }
   }
 

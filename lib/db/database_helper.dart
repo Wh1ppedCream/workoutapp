@@ -18,13 +18,9 @@ import 'stats_dao.dart';
 import 'analytics_dao.dart';
 import 'formula_settings_dao.dart';
 import '../db/gym_profile_dao.dart';
-import '../models/gym_models.dart';
-
-
 import '../db/preset_definition_dao.dart';
 import '../db/preset_exercise_dao.dart';
 import '../db/preset_detail_dao.dart';
-import '../models/preset_models.dart';
 
 
 
@@ -1195,6 +1191,7 @@ Future<double?> fetchVolumeMax(int defId, String timeframe) async {
         final eid = ex['id'] as int;
         final percents = await computeMusclePercents(ex['exercise_def_id'] as int);
         final sets = await SetDao.getSetsForExercise(db, eid);
+        // ignore: unused_local_variable
         for (var set in sets) {
           for (var mp in percents) {
             result[mp.muscleId] = (result[mp.muscleId] ?? 0) + mp.percent;
