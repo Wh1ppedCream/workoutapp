@@ -261,19 +261,30 @@ class _TrainPageState extends State<TrainPage> {
                       itemBuilder: (ctx, i) {
                         final p = presets[i];
                         final color = _palette[i % _palette.length];
-                        return PresetBar(
-                          label: p.name,
-                          color: color,
-                          index: i,
-                          onTap: () => _openPreset(p.id),
-                          onMenuSelected: (action) {
-                            if (action == 'edit') {
-                              _openPreset(p.id, edit: true);
-                            } else if (action == 'delete') {
-                              _deletePreset(p.id);
-                            }
-                          },
-                        );
+                        return FutureBuilder<Map<String, dynamic>?>(
+  future: _repo.fetchPresetAutoSettings(p.id),
+  builder: (ctx2, autoSnap) {
+    final isAuto = autoSnap.connectionState == ConnectionState.done
+        && (autoSnap.data?['is_automatic'] as int? ?? 0) == 1;
+
+    return PresetBar(
+      label: p.name,
+      color: color,
+      index: i,
+      isAutomatic: isAuto,
+      onTap: () => _openPreset(p.id),
+      onMenuSelected: (action) {
+        if (action == 'edit') {
+          _openPreset(p.id, edit: true);
+        } else if (action == 'delete') {
+          _deletePreset(p.id);
+        }
+        // (Later: handle 'make_automatic' & 'automatic_settings' here)
+      },
+    );
+  },
+);
+
                       },
                     );
                   },
@@ -292,13 +303,18 @@ class _TrainPageState extends State<TrainPage> {
                 color: Colors.purple,
                 index: 0,
                 onTap: () async {
-                  final newId = await _repo.createPreset(
-                    'New Preset',
-                    profileId: sel.currentProfile?.id,
-                  );
-                  _openPreset(newId, edit: true);
-                  setState(() {});
-                },
+    final profileId = sel.currentProfile?.id;
+    // 1) Fetch existing presets for this profile
+    final existing = await _repo.fetchAllPresetsRaw(profileId: profileId);
+    // 2) Derive a unique name
+    final nextNum = existing.length + 1;
+    final name = nextNum == 1 ? 'New Preset' : 'New Preset $nextNum';
+    // 3) Create it
+    final newId = await _repo.createPreset(name, profileId: profileId);
+    // 4) Open in edit mode
+    _openPreset(newId, edit: true);
+    setState(() {});
+  },
               ),
               const SizedBox(height: 16),
               Padding(

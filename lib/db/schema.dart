@@ -112,6 +112,7 @@ class Schema {
     await migrateV8(db);
     await migrateV9(db);
     await migrateV10(db);
+    await migrateV11(db);
   }
 
   /// Handler for onUpgrade callback.
@@ -125,6 +126,7 @@ class Schema {
     if (oldVersion < 8) await migrateV8(db);
     if (oldVersion < 9) await migrateV9(db);
     if (oldVersion < 10) await migrateV10(db);
+    if (oldVersion < 11) await migrateV11(db);
   }
 
   /// Migration to version 3: adds rating, equipment/muscle tables.
@@ -452,4 +454,42 @@ class Schema {
       );
     ''');
   }
+
+   /// Migration to version 11: adds automatic‐preset tables.
+  static Future<void> migrateV11(Database db) async {
+    await db.transaction((txn) async {
+      // 1) Global settings for each preset
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS preset_auto_settings (
+          preset_id        INTEGER PRIMARY KEY,
+          is_automatic     INTEGER NOT NULL DEFAULT 0,
+          global_increment REAL    NOT NULL DEFAULT 5,
+          skip_first_set   INTEGER NOT NULL DEFAULT 1,
+          FOREIGN KEY(preset_id) REFERENCES preset_definitions(id) ON DELETE CASCADE
+        );
+      ''');
+
+      // 2) Per‐exercise overrides + rotation pointer
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS preset_exercise_auto (
+          preset_exercise_id INTEGER PRIMARY KEY,
+          increment_amount   REAL,
+          last_set_index     INTEGER NOT NULL DEFAULT 1,
+          FOREIGN KEY(preset_exercise_id)
+            REFERENCES preset_exercises(id) ON DELETE CASCADE
+        );
+      ''');
+
+      // 3) Per‐set overrides
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS preset_set_auto (
+          preset_set_id    INTEGER PRIMARY KEY,
+          increment_amount REAL,
+          FOREIGN KEY(preset_set_id)
+            REFERENCES preset_sets(id) ON DELETE CASCADE
+        );
+      ''');
+    });
+  }
+
 }
