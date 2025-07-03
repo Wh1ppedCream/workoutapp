@@ -35,6 +35,8 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
     super.initState();
 
     final preset = widget.preset;
+    
+    
 
     // Global
     _globalController = TextEditingController(
@@ -90,6 +92,10 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
     await preset.saveAutoSettings(
       newGlobalIncrement: globalParsed,
       newSkipFirstSet: _skipFirst,
+      newWeightCheck:     preset.weightCheck,
+      newRepCheck:        preset.repCheck,
+      newVolumeCheck:     preset.volumeCheck,
+      newAdjustAllSets: preset.adjustAllSets,
     );
 
     // 2) Per-exercise overrides
@@ -112,6 +118,7 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
   Widget build(BuildContext context) {
     
     final preset = widget.preset;  // grab it here instead of context.watch
+    
     return DraggableScrollableSheet(
       expand: false,
       initialChildSize: 0.8,
@@ -307,15 +314,60 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
             ),
             const SizedBox(height: 24),
     ] else ...[
-      // ─── METHODS PANEL ───
-      Center(
-        heightFactor: 5,
-        child: Text(
-          'Methods settings coming soon.',
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
-      ),
-    ],
+    const Text('Increment When (decrement otherwise):'),
+    
+    CheckboxListTile(
+      title: const Text('Completed weight ≥ target weight'),
+      value: preset.weightCheck,
+      onChanged: (b) => setState(() => preset.weightCheck = b!),
+),
+    CheckboxListTile(
+      title: const Text('Completed reps ≥ target reps'),
+      value: preset.repCheck,
+      onChanged: (b) => setState(() =>preset.repCheck = b!),
+    ),
+    CheckboxListTile(
+      title: const Text('Completed volume ≥ target volume'),
+      value: preset.volumeCheck,
+      onChanged: (b) => setState(() => preset.volumeCheck = b!),
+    ),
+
+    // after the three “increment when” checkboxes…
+const SizedBox(height: 16),
+Text('For Every Exercise:', style: Theme.of(context).textTheme.titleMedium),
+RadioListTile<bool>(
+  title: Text('Adjust 1 set'),
+  value: false,
+  groupValue: preset.adjustAllSets,
+  onChanged: (v) => setState(() => preset.adjustAllSets = v!),
+),
+RadioListTile<bool>(
+  title: Text('Adjust All sets'),
+  value: true,
+  groupValue: preset.adjustAllSets,
+  onChanged: (v) => setState(() => preset.adjustAllSets = v!),
+),
+
+
+    const SizedBox(height: 16),
+    const Text('to add: looping functionality for successes and failures'),
+    const SizedBox(height: 24),
+    ElevatedButton(
+      onPressed: () {
+        // call your merged save, passing all six values
+        preset.saveAutoSettings(
+          newGlobalIncrement: preset.globalIncrement,
+          newSkipFirstSet:    preset.skipFirstSet,
+          newWeightCheck:     preset.weightCheck,
+          newRepCheck:        preset.repCheck,
+          newVolumeCheck:     preset.volumeCheck,
+          newAdjustAllSets:   preset.adjustAllSets,
+        );
+        Navigator.of(context).pop();
+      },
+      child: const Text('Save'),
+    ),
+  ]
   ],
 ),
       

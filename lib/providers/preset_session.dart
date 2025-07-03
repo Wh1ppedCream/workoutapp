@@ -23,6 +23,12 @@ class PresetSession extends ChangeNotifier {
   /// Whether to skip the first set.
   bool skipFirstSet = true;
 
+  // NEW:
+  bool weightCheck     = true;
+  bool repCheck        = true;
+  bool volumeCheck     = false;
+  bool adjustAllSets = false;
+
   /// Per-exercise override: preset_exercise_id → increment amount.
   final Map<int, double?> exerciseIncrementOverrides = {};
 
@@ -238,6 +244,13 @@ class PresetSession extends ChangeNotifier {
       }
     }
 
+
+    // NEW flags:
+    weightCheck     = (autoRow?['weight_check']   as int? ?? 1) == 1;
+    repCheck        = (autoRow?['rep_check']      as int? ?? 1) == 1;
+    volumeCheck     = (autoRow?['volume_check']   as int? ?? 0) == 1;
+    adjustAllSets = (autoRow?['adjust_all_sets'] as int? ?? 0) == 0 ? false : true;
+
     _hasChanges = false;
     notifyListeners();
   }
@@ -375,6 +388,10 @@ class PresetSession extends ChangeNotifier {
       isAutomatic: true,
       globalIncrement: globalIncrement,
       skipFirstSet: skipFirstSet,
+      weightCheck: weightCheck,
+      repCheck: repCheck,
+      volumeCheck: volumeCheck,
+      adjustAllSets:     adjustAllSets,
     );
     isAutomatic = true;
     notifyListeners();
@@ -391,6 +408,10 @@ class PresetSession extends ChangeNotifier {
   Future<void> saveAutoSettings({
   required double newGlobalIncrement,
   required bool newSkipFirstSet,
+    required bool   newWeightCheck,
+    required bool   newRepCheck,
+    required bool   newVolumeCheck,
+    required bool newAdjustAllSets,
 }) async {
   // 1) write the NEW settings into the DB
   await _repo.upsertPresetAutoSettings(
@@ -398,11 +419,19 @@ class PresetSession extends ChangeNotifier {
     isAutomatic:     isAutomatic,
     globalIncrement: newGlobalIncrement,   
     skipFirstSet:    newSkipFirstSet,    
+      weightCheck:     newWeightCheck,
+      repCheck:        newRepCheck,
+      volumeCheck:     newVolumeCheck,
+      adjustAllSets: newAdjustAllSets,
   );
   // 2) then update in-memory to match
   globalIncrement = newGlobalIncrement;
-  skipFirstSet    = newSkipFirstSet;
-  notifyListeners();
+    skipFirstSet    = newSkipFirstSet;
+    weightCheck     = newWeightCheck;
+    repCheck        = newRepCheck;
+    volumeCheck     = newVolumeCheck;
+    adjustAllSets    = newAdjustAllSets;
+    notifyListeners();
 }
 
 

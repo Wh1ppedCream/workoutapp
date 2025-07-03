@@ -465,6 +465,10 @@ class Schema {
           is_automatic     INTEGER NOT NULL DEFAULT 0,
           global_increment REAL    NOT NULL DEFAULT 5,
           skip_first_set   INTEGER NOT NULL DEFAULT 1,
+          weight_check    INTEGER NOT NULL DEFAULT 1,
+          rep_check       INTEGER NOT NULL DEFAULT 1,
+          volume_check    INTEGER NOT NULL DEFAULT 0,
+          adjust_all_sets INTEGER NOT NULL DEFAULT 0,
           FOREIGN KEY(preset_id) REFERENCES preset_definitions(id) ON DELETE CASCADE
         );
       ''');
