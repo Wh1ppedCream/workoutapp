@@ -523,11 +523,19 @@ Future<List<Map<String, dynamic>>> fetchPresetStretchItems(int presetExerciseId)
     required bool isAutomatic,
     required double globalIncrement,
     required bool skipFirstSet,
+  required bool   weightCheck,
+  required bool   repCheck,
+  required bool   volumeCheck,
+  required bool   adjustAllSets,
   }) => _dbHelper.upsertPresetAutoSettings(
         presetId: presetId,
         isAutomatic: isAutomatic,
         globalIncrement: globalIncrement,
         skipFirstSet: skipFirstSet,
+    weightCheck:     weightCheck,
+    repCheck:        repCheck,
+    volumeCheck:     volumeCheck,
+    adjustAllSets:     adjustAllSets,
       );
 
   /// Deletes the auto-preset settings (disables automatic) for a preset.
