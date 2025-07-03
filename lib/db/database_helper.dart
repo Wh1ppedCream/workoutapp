@@ -21,6 +21,10 @@ import '../db/gym_profile_dao.dart';
 import '../db/preset_definition_dao.dart';
 import '../db/preset_exercise_dao.dart';
 import '../db/preset_detail_dao.dart';
+import '../db/preset_auto_settings_dao.dart';
+import '../db/preset_exercise_auto_dao.dart';
+import '../db/preset_set_auto_dao.dart';
+
 
 
 
@@ -43,7 +47,7 @@ class DatabaseHelper {
     final path = join(dbPath, 'fitness_tracker.db');
     return await openDatabase(
       path,
-      version: 10,  
+      version: 11,  
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
@@ -80,6 +84,9 @@ class DatabaseHelper {
 if (oldVersion < 10) {
         await Schema.migrateV10(db);
       }
+  if (oldVersion < 11) {
+      await Schema.migrateV11(db);
+    }
 
   },
 );
@@ -1442,6 +1449,102 @@ Future<List<Map<String, dynamic>>> fetchPresetStretchItems(int presetExerciseId)
   final db = await database;
   return PresetDetailDao.getPresetStretchItems(db, presetExerciseId);
 }
+
+
+  // ─── AUTOPRESET SETTINGS WRAPPERS ───────────────────────────────────────
+
+  /// Fetches the global auto‐preset settings for a given preset.
+  Future<Map<String, dynamic>?> fetchPresetAutoSettings(int presetId) async {
+    final db = await database;
+    return PresetAutoSettingsDao.getAutoSettings(db, presetId);
+  }
+
+  /// Inserts or updates the global auto‐preset settings.
+  Future<void> upsertPresetAutoSettings({
+    required int presetId,
+    required bool isAutomatic,
+    required double globalIncrement,
+    required bool skipFirstSet,
+  }) async {
+    final db = await database;
+    await PresetAutoSettingsDao.upsertAutoSettings(
+      db,
+      presetId: presetId,
+      isAutomatic: isAutomatic,
+      globalIncrement: globalIncrement,
+      skipFirstSet: skipFirstSet,
+    );
+  }
+
+  /// Deletes the auto‐preset settings (disables automatic) for a preset.
+  Future<void> deletePresetAutoSettings(int presetId) async {
+    final db = await database;
+    await PresetAutoSettingsDao.deleteAutoSettings(db, presetId);
+  }
+
+  // ─── PER-EXERCISE OVERRIDES ──────────────────────────────────────────────
+
+  /// Fetches the auto override (IA + rotation) for a specific preset exercise.
+  Future<Map<String, dynamic>?> fetchPresetExerciseAuto(int presetExerciseId) async {
+    final db = await database;
+    return PresetExerciseAutoDao.getExerciseAuto(db, presetExerciseId);
+  }
+
+  /// Inserts or updates the per-exercise IA override and last_set_index.
+  Future<void> upsertPresetExerciseAuto({
+    required int presetExerciseId,
+    double? incrementAmount,
+    required int lastSetIndex,
+  }) async {
+    final db = await database;
+    await PresetExerciseAutoDao.upsertExerciseAuto(
+      db,
+      presetExerciseId: presetExerciseId,
+      incrementAmount: incrementAmount,
+      lastSetIndex: lastSetIndex,
+    );
+  }
+
+  /// Deletes the per-exercise auto override for a preset exercise.
+  Future<void> deletePresetExerciseAuto(int presetExerciseId) async {
+    final db = await database;
+    await PresetExerciseAutoDao.deleteExerciseAuto(db, presetExerciseId);
+  }
+
+  // ─── PER-SET OVERRIDES ──────────────────────────────────────────────────
+
+  /// Fetches the per-set IA override for a specific preset set.
+  Future<Map<String, dynamic>?> fetchPresetSetAuto(int presetSetId) async {
+    final db = await database;
+    return PresetSetAutoDao.getSetAuto(db, presetSetId);
+  }
+
+  /// Inserts or updates the per-set IA override.
+  Future<void> upsertPresetSetAuto({
+    required int presetSetId,
+    double? incrementAmount,
+  }) async {
+    final db = await database;
+    await PresetSetAutoDao.upsertSetAuto(
+      db,
+      presetSetId: presetSetId,
+      incrementAmount: incrementAmount,
+    );
+  }
+
+  /// Deletes the per-set IA override for a preset set.
+  Future<void> deletePresetSetAuto(int presetSetId) async {
+    final db = await database;
+    await PresetSetAutoDao.deleteSetAuto(db, presetSetId);
+  }
+
+
+  /// Update the target weight of a preset set.
+  Future<void> updatePresetSetWeight(int presetSetId, double weight) async {
+    final db = await database;
+    await PresetDetailDao.updatePresetSetWeight(db: db, presetSetId: presetSetId, weight: weight);
+  }
+
 
 
 }

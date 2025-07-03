@@ -19,6 +19,8 @@ class PresetBar extends StatelessWidget {
   /// Called when the user selects an overflow menu item.
   final ValueChanged<String>? onMenuSelected;
 
+final bool isAutomatic;
+
   /// Creates a [PresetBar].
   const PresetBar({
     super.key,
@@ -27,6 +29,7 @@ class PresetBar extends StatelessWidget {
     required this.index,
     this.onTap,
     this.onMenuSelected,
+    this.isAutomatic = false,
   });
 
   @override
@@ -60,15 +63,41 @@ class PresetBar extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              PopupMenuButton<String>(
-                icon: Icon(Icons.more_vert, color: color),
-                onSelected: (action) {
-                  onMenuSelected?.call(action);
-                },
-                itemBuilder: (_) => const [
-                  PopupMenuItem(value: 'edit', child: Text('Edit')),
-                  PopupMenuItem(value: 'delete', child: Text('Delete')),
-                  PopupMenuItem(value: 'profile_swap', child: Text('Profile Swap')),
+               Row(
+                children: [
+                  if (isAutomatic)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: Container(
+                        width: 16,
+                        height: 16,
+                        decoration: const BoxDecoration(
+                          color: Colors.green,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Center(
+                          child: Text(
+                            'A',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  PopupMenuButton<String>(
+                    icon: Icon(Icons.more_vert, color: color),
+                    onSelected: (action) {
+                      onMenuSelected?.call(action);
+                    },
+                    itemBuilder: (_) => const [
+                      PopupMenuItem(value: 'edit', child: Text('Edit')),
+                      PopupMenuItem(value: 'delete', child: Text('Delete')),
+                      PopupMenuItem(value: 'profile_swap', child: Text('Profile Swap')),
+                    ],
+                  ),
                 ],
               ),
             ],

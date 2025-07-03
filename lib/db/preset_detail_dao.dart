@@ -133,4 +133,22 @@ class PresetDetailDao {
       orderBy: 'order_index',
     );
   }
+
+
+/// Updates the weight for a preset set.
+static Future<int> updatePresetSetWeight({
+  required Database db,
+  required int presetSetId,
+  required double weight,
+}) {
+  return db.update(
+    'preset_sets',
+    {'weight': weight},
+    where: 'id = ?',
+    whereArgs: [presetSetId],
+  );
+}
+
+
+
 }

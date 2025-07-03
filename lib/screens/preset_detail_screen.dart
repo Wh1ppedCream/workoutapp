@@ -9,6 +9,7 @@ import '../repositories/app_repository.dart';
 import '../providers/preset_session.dart';
 import '../widgets/exercise_card.dart';
 import '../widgets/add_exercise_fab.dart';
+import '../widgets/automatic_settings_sheet.dart';
 import 'session_screen.dart';
 
 /// Screen to view and edit a Preset using the PresetSession notifier.
@@ -86,25 +87,61 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
               icon: Icon(Icons.edit, color: _isEditing ? Colors.green : Colors.grey),
               onPressed: () => setState(() => _isEditing = !_isEditing),
             ),
-            IconButton(
-              icon: const Icon(Icons.delete),
-              onPressed: () async {
-                final nav = Navigator.of(context);
-                final confirm = await showDialog<bool>(
-                  context: context,
-                  builder: (ctx) => AlertDialog(
-                    title: const Text('Delete Preset'),
-                    content: const Text('Are you sure you want to delete this preset?'),
-                    actions: [
-                      TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-                      TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Delete')),
-                    ],
-                  ),
-                );
-                if (confirm == true) {
-                  await AppRepository().deletePreset(preset.presetId);
-                  if (mounted) nav.pop();
+            // Overflow menu replacing delete icon
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert),
+              onSelected: (action) async {
+                if (action == 'delete') {
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: const Text('Delete Preset'),
+                      content: const Text('Are you sure you want to delete this preset?'),
+                      actions: [
+                        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                        TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Delete')),
+                      ],
+                    ),
+                  );
+                  if (confirm == true) {
+                    final navContext = context;
+                    await AppRepository().deletePreset(preset.presetId);
+                    if (navContext.mounted) {
+  Navigator.of(navContext).pop();
+}
+                  }
+                } else if (action == 'toggle_auto') {
+                  if (preset.isAutomatic) {
+                    await preset.disableAutomatic();
+                  } else {
+                    await preset.enableAutomatic();
+                  }
+                  setState(() {});
+                } else if (action == 'settings' && preset.isAutomatic) {
+                  // Open Automatic Settings modal
+                  showModalBottomSheet(
+  context: context,
+  isScrollControlled: true,
+  builder: (_) => AutomaticSettingsSheet(
+    preset: context.read<PresetSession>(),
+  ),
+);
+
                 }
+              },
+              itemBuilder: (_) {
+                return [
+                  const PopupMenuItem(value: 'delete', child: Text('Delete Preset')),
+                  PopupMenuItem(
+                    value: 'toggle_auto',
+                    child: Text(preset.isAutomatic ? 'Disable Automatic' : 'Make Automatic'),
+                  ),
+                  PopupMenuItem(
+                    value: 'settings',
+                    enabled: preset.isAutomatic,
+                    child: const Text('Automatic Settings'),
+                  ),
+                ];
               },
             ),
           ],
@@ -181,35 +218,35 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
             child: _isEditing
                 ? ElevatedButton(
                     onPressed: () async {
-            await context.read<PresetSession>().saveChanges();
-            setState(() => _isEditing = false);
-          },
-          child: const Text('Save Preset'),
+                      await context.read<PresetSession>().saveChanges();
+                      setState(() => _isEditing = false);
+                    },
+                    child: const Text('Save Preset'),
                   )
                 : ElevatedButton(
-  onPressed: () {
-    // 1) Capture Navigator and notifiers up-front
-    final nav   = Navigator.of(context);
-    final preset= context.read<PresetSession>();
-    final active= context.read<ActiveSession>();
+                    onPressed: () {
+                      // 1) Capture Navigator and notifiers up-front
+                      final nav = Navigator.of(context);
+                      final preset = context.read<PresetSession>();
+                      final active = context.read<ActiveSession>();
 
-    // 2) Seed the live session
-    active.exercises.clear();
-    active.cardTypes.clear();
-    for (var i = 0; i < preset.exercises.length; i++) {
-      active.addExercise(preset.exercises[i], preset.cardTypes[i]);
-    }
-    // 3) Start the timer
-    active.start();
+                      // 2) Seed the live session
+                      active.exercises.clear();
+                      active.cardTypes.clear();
+                      for (var i = 0; i < preset.exercises.length; i++) {
+                        active.addExercise(preset.exercises[i], preset.cardTypes[i]);
+                      }
+                      // 3) Start the timer
+                      active.start(presetId: preset.presetId);
 
-    // 4) Navigate
-    nav.pushReplacement(
-      MaterialPageRoute(builder: (_) => const SessionScreen()),
-    );
-  },
-  child: const Text('Start Session'),
-),
 
+                      // 4) Navigate
+                      nav.pushReplacement(
+                        MaterialPageRoute(builder: (_) => const SessionScreen()),
+                      );
+                    },
+                    child: const Text('Start Session'),
+                  ),
           ),
         ),
       ),

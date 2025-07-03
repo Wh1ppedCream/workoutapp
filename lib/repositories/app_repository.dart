@@ -510,4 +510,59 @@ Future<void> savePresetStretch( int presetExerciseId, List<Map<String, dynamic>>
 /// Fetches stored stretch items for a Preset exercise.
 Future<List<Map<String, dynamic>>> fetchPresetStretchItems(int presetExerciseId) => _dbHelper.fetchPresetStretchItems(presetExerciseId);
 
+
+// ─── AUTOPRESET SETTINGS ───────────────────────────────────────────────
+
+  /// Fetches the global auto-preset settings for a given preset.
+  Future<Map<String, dynamic>?> fetchPresetAutoSettings(int presetId) =>
+      _dbHelper.fetchPresetAutoSettings(presetId);
+
+  /// Inserts or updates the global auto-preset settings.
+  Future<void> upsertPresetAutoSettings({
+    required int presetId,
+    required bool isAutomatic,
+    required double globalIncrement,
+    required bool skipFirstSet,
+  }) => _dbHelper.upsertPresetAutoSettings(
+        presetId: presetId,
+        isAutomatic: isAutomatic,
+        globalIncrement: globalIncrement,
+        skipFirstSet: skipFirstSet,
+      );
+
+  /// Deletes the auto-preset settings (disables automatic) for a preset.
+  Future<void> deletePresetAutoSettings(int presetId) =>
+      _dbHelper.deletePresetAutoSettings(presetId);
+
+  // ─── PER-EXERCISE OVERRIDES ───────────────────────────────────────────
+
+  /// Fetches the auto override (IA + rotation) for a specific preset exercise.
+  Future<Map<String, dynamic>?> fetchPresetExerciseAuto(
+          int presetExerciseId) =>
+      _dbHelper.fetchPresetExerciseAuto(presetExerciseId);
+
+  /// Inserts or updates the per-exercise IA override and last_set_index.
+  Future<void> upsertPresetExerciseAuto({ required int presetExerciseId, double? incrementAmount, required int lastSetIndex,}) => 
+  _dbHelper.upsertPresetExerciseAuto( presetExerciseId: presetExerciseId, incrementAmount: incrementAmount, lastSetIndex: lastSetIndex,  );
+
+  /// Deletes the per-exercise auto override for a preset exercise.
+  Future<void> deletePresetExerciseAuto(int presetExerciseId) =>  _dbHelper.deletePresetExerciseAuto(presetExerciseId);
+
+  // ─── PER-SET OVERRIDES ─────────────────────────────────────────────────
+
+  /// Fetches the per-set IA override for a specific preset set.
+  Future<Map<String, dynamic>?> fetchPresetSetAuto(int presetSetId) =>
+      _dbHelper.fetchPresetSetAuto(presetSetId);
+
+  /// Inserts or updates the per-set IA override.
+  Future<void> upsertPresetSetAuto({ required int presetSetId,  double? incrementAmount, }) => 
+  _dbHelper.upsertPresetSetAuto( presetSetId: presetSetId, incrementAmount: incrementAmount,  );
+
+  /// Deletes the per-set IA override for a preset set.
+  Future<void> deletePresetSetAuto(int presetSetId) => _dbHelper.deletePresetSetAuto(presetSetId);
+
+  /// Updates the weight for a preset set.
+  Future<void> updatePresetSetWeight(int presetSetId, double weight) =>  _dbHelper.updatePresetSetWeight(presetSetId, weight);
+
+
 }

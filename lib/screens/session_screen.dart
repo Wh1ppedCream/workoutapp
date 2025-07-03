@@ -11,10 +11,6 @@ import '../widgets/exercise_detail_sheet.dart';
 import '../repositories/app_repository.dart';
 
 
-
-
-
-
 class SessionScreen extends StatelessWidget {
   const SessionScreen({super.key});
 

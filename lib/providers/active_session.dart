@@ -1,4 +1,4 @@
-// File: lib/models/active_session.dart
+// File: lib/providers/active_session.dart
 
 import 'dart:async';
 import 'dart:math';
@@ -6,10 +6,15 @@ import 'package:flutter/foundation.dart';
 import '../models/models.dart';
 import '../widgets/exercise_card.dart';
 import '../repositories/app_repository.dart';
+import '../services/auto_increment_service.dart';
+
 
 /// Holds the in-memory state of a workout session, including timer and exercises.
 class ActiveSession extends ChangeNotifier {
   final _repo = AppRepository();
+
+  // NEW: track which preset (if any) this session was started from
+  int? _autoPresetId;
 
   Timer? _timer;
   int _elapsedSeconds = 0;
@@ -27,8 +32,9 @@ class ActiveSession extends ChangeNotifier {
   final List<CardType> cardTypes = [];
 
   /// Starts a new workout timer and state.
-  void start() {
+  void start({int? presetId}) {
     if (_timer != null) return;
+    _autoPresetId = presetId;
     _elapsedSeconds = 0;
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       _elapsedSeconds++;
@@ -191,6 +197,14 @@ for (var i = 0; i < exercises.length; i++) {
         );
       }
     }
+
+        // ─── APPLY AUTO-INCREMENT IF STARTED FROM A PRESET ─────────────
+    if (_autoPresetId != null) {
+      await AutoIncrementService(_repo)
+          .apply(sessionId: sid, presetId: _autoPresetId!);
+      _autoPresetId = null;
+    }
+
 
     // 3) Clear state
     _timer = null;
