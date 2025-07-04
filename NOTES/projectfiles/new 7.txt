@@ -1,0 +1,216 @@
+increment/decriment which sets
+increment/decriment how much 
+increment/decriment when
+rep changes
+when it is a success
+when it is a failure
+
+text saying "You can set 
+when it is a success
+	- potential options (or combinations of options)
+		- >= preset weight
+		- >= preset reps
+		- >= preset volume
+when it is a failure
+	- potential options (or combinations of options)
+		- < preset weight
+		- < preset reps
+		- < preset volume
+
+ok, thank you for the information, i will come back to this later and we will fix how reps are changing later on. 
+right now, what i want to do is adjust what we define as a success and failure. 
+right now, a success is if the performed weight is greater than or equal to the target weight AND if performed reps is greater than or equal to the target reps. 
+i want to break this down into three checks (and their possible combinations) 
+	1) performed weight >= target weight  
+	2) performed reps >= target reps 
+	3) performed volume (volume = weight * reps) >= target volume (volume = weight * reps).
+which one (or which combination) of these three is used will depend on the bool value for the check:
+	1) bool weightcheck
+	2) bool repcheck
+	3) bool volumecheck
+in our current code, this would count as weightcheck and repcheck both being true, so we need both performed weight >= target weight && performed reps >= target reps for success to be true
+	- this will be the default (by default, weightcheck and repcheck will be true)
+the reason why i am making this change, is because i want users to be able to change which combination results in a success from the  “Methods” section in the automatic_settings_sheet
+	- if the 'methods' tab is selected in the automatic_settings_sheet, users will see a 
+		- under tabs, text saying "Increment When (decrement otherwise):"
+			- each of these options has its own checkbox
+				1) completed set weight >= preset weight
+				2) completed set reps >= preset reps
+				3) completed set volume >= preset volume
+				- these will determine the bool values weightcheck repcheck and volumecheck
+				- the default, till changed will have 1) completed set weight >= preset weight and 2) completed set reps >= preset reps checked off (so weightcheck and repcheck are true) 
+		- under this, text saying "to add: looping functionality for successes and failures"
+		- at bottom, save button to save the changes (bool values from the checkboxes) and close the automatic_settings_sheet
+
+loop augmenting
+	- can add in a success or a failure
+	- for each success or failure, can choose to
+		- increment/decrement weight
+		- increment/decrement reps
+		
+		
+
+
+alright, it seems like i've gotten all our additions to work, now, lets move on to the next thing i want to add.
+
+
+
+given sessionid and preset id
+	load in auto settings
+	load in preset exercises and session exercises
+		load in preset exercise id and session exercise id
+	get pointer
+	get row from pointer
+
+THREE-TIER IA LOOKUP: set → exercise → global
+
+
+rep eq's
+	- old reps += (inputted number)
+	- old reps -= (inputted number)
+weight eq's
+	- old weight += (inputted number) * IA
+	- old weight -= (inputted number) * IA
+set +/-
+	- add a new set with (inputted number) reps and (inputted number) weight
+	- delete (inputted number) set
+	
+	
+	
+	
+	
+	class SimpleFlowChart extends StatefulWidget {
+  const SimpleFlowChart({super.key});
+
+  @override
+  State<SimpleFlowChart> createState() => _SimpleFlowChartState();
+}
+
+class _SimpleFlowChartState extends State<SimpleFlowChart> {
+  final Dashboard dashboard = Dashboard();
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Root node
+    final root = FlowElement(
+      position: const Offset(60, 50),
+      size: const Size(60, 30),
+      text: 'Root',
+      textSize: 12,
+      kind: ElementKind.rectangle,
+      handlers: [Handler.bottomCenter],
+    );
+    dashboard.addElement(root);
+
+    // Intermediate nodes
+    final success1 = FlowElement(
+      position: const Offset(60, 100),
+      size: const Size(50, 25),
+      text: 'Success1',
+      textSize: 7,
+      kind: ElementKind.rectangle,
+      handlers: [Handler.topCenter, Handler.bottomCenter],
+    );
+
+    final fail1 = FlowElement(
+      position: const Offset(120, 100),
+      size: const Size(50, 25),
+      text: 'Fail1',
+      textSize: 7,
+      kind: ElementKind.rectangle,
+      handlers: [Handler.topCenter, Handler.bottomCenter],
+    );
+
+    dashboard.addElement(success1);
+    dashboard.addElement(fail1);
+
+    // Leaf nodes
+    final success2 = FlowElement(
+      position: const Offset(60, 150),
+      size: const Size(50, 25),
+      text: 'Success2',
+      textSize: 7,
+      kind: ElementKind.rectangle,
+      handlers: [Handler.topCenter, Handler.bottomCenter],
+    );
+
+    final fail2 = FlowElement(
+      position: const Offset(120, 150),
+      size: const Size(50, 25),
+      text: 'Fail2',
+      textSize: 7,
+      kind: ElementKind.rectangle,
+      handlers: [Handler.topCenter, Handler.bottomCenter],
+    );
+
+    final success3 = FlowElement(
+      position: const Offset(180, 150),
+      size: const Size(50, 25),
+      text: 'Success3',
+      textSize: 7,
+      kind: ElementKind.rectangle,
+      handlers: [Handler.topCenter, Handler.bottomCenter],
+    );
+
+    final fail3 = FlowElement(
+      position: const Offset(240, 150),
+      size: const Size(50, 25),
+      text: 'Fail3',
+      textSize: 7,
+      kind: ElementKind.rectangle,
+      handlers: [Handler.topCenter, Handler.bottomCenter],
+    );
+
+    dashboard.addElement(success2);
+    dashboard.addElement(fail2);
+    dashboard.addElement(success3);
+    dashboard.addElement(fail3);
+
+    // Connections
+    dashboard.addNextById(root, success1.id, _arrow(root, success1));
+    dashboard.addNextById(root, fail1.id, _arrow(root, fail1));
+
+    dashboard.addNextById(success1, success2.id, _arrow(success1, success2));
+    dashboard.addNextById(success1, fail2.id, _arrow(success1, fail2));
+
+    dashboard.addNextById(fail1, success3.id, _arrow(fail1, success3));
+    dashboard.addNextById(fail1, fail3.id, _arrow(fail1, fail3));
+
+    dashboard.addNextById(success2, root.id, _loopArrow(success2, root));
+    dashboard.addNextById(fail2, root.id, _loopArrow(fail2, root));
+    dashboard.addNextById(success3, root.id, _loopArrow(success3, root));
+    dashboard.addNextById(fail3, root.id, _loopArrow(fail3, root));
+  }
+
+  ArrowParams _arrow(FlowElement from, FlowElement to) {
+    return ArrowParams(
+      color: Colors.blue,
+      thickness: 2,
+      style: ArrowStyle.segmented,
+      startArrowPosition: Alignment.bottomCenter,
+      endArrowPosition: Alignment.topCenter,
+    );
+  }
+
+  ArrowParams _loopArrow(FlowElement from, FlowElement to) {
+    return ArrowParams(
+      color: Colors.black26,
+      thickness: 2,
+      style: ArrowStyle.curve,
+      startArrowPosition: Alignment.bottomCenter,
+      endArrowPosition: Alignment.topCenter,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FlowChart(
+      dashboard: dashboard,
+      onElementPressed: (_, __, element) {
+        debugPrint('Tapped: ${element.text}');
+      },
+    );
+  }
+}
