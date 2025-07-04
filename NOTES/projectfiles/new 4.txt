@@ -1,5 +1,5 @@
 presets update
-	- in train page, preset bar has options for 'Edit' 'Delete' 'Profile Swap'
+	- in train page, right now, preset bars have options for 'Edit' 'Delete' 'Profile Swap'
 	- will have new option 'Make Automatic'
 		- pressing will put a green A symbol to left of menu button on the preset bar.
 		- pressing will make the preset an Automatic Preset
@@ -36,3 +36,61 @@ preset generator
   
 INFO TO THINK OF ADDING:
 	set intensity
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+1. UX Changes
+1.1 In the TrainPage (PresetBar)
+
+1.2 In the PresetDetailScreen
+
+replace trashcan delete button with overflow menu.
+	- first option in overflow menu will be 'Delete Preset' which will have the functionality the trash can used to have
+	- 2nd option will be “Make Automatic” (or “Disable Automatic” when already auto).
+	- 3rd option will be "Automatic Settings" which will will be selectable if the preset is set to be automatic 
+		if selected, will open up a settings pop-up box with all the editing options for automatic presets we are thinking of (eg: skip first set, selecting between default and per exercise increment amount, changing increment amounts)
+
+
+2. Data-Model & Persistence
+2.1 Schema migrations
+
+maybe you could add an is_automatic field to preset_definitions to indicate if its automatic and make another table preset_auto with all the additional information being stored, or maybe some other method might seem better to you. Tell me what you think would be best practice here
+
+2.2 Repository updates
+DAO/repo methods for everything related which you think might come in handy.
+
+3. Workflow & Triggers
+
+the incremented amounts should show on the preset_detail_screen before a session is started, so that the session has the same amounts shown as on the preset_detail_screen. 
+after a preset is made to be automatic, the first time it is opened and started it should not be incremented
+	- if it is made automatic while it is opened, it should not be incremented till the first session is completed
+
+4. The Auto-Increment Algorithm
+For each weight exercise in the preset (in order):
+Choose target set index
+If skip_first_set = true, start at set #2; else set #1.
+Remember the last-used index, so on each successive auto-update we rotate through the sets.
+Determine increment (IA)
+If exercise has increment_amount override, use that; else use global_increment.
+Compare last session’s performance on that set:
+Success if they hit OR EXCEED target weight and reps.
+Failure otherwise.
+Adjust weight/reps:
+On first Success:
+weight += IA
+reps will be same
+On first Failure:
+weight –= 2 × IA
+reps will be same
+If they fail again on that same set (i.e. weight or reps still unmet):
+weight unchanged
+reps = reps – 1
+Advance to next set (wrapping around when you hit the last).
+5. 
