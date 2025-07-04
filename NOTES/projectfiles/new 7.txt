@@ -75,9 +75,34 @@ set +/-
 	- add a new set with (inputted number) reps and (inputted number) weight
 	- delete (inputted number) set
 	
-	
-	
-	
+
+				- saved weight eq's in use listed out
+					- old reps += (inputted number)
+					- old reps -= (inputted number)
+				- saved rep eq's in use listed out
+					- old weight += (inputted number) * IA
+					- old weight -= (inputted number) * IA
+				- saved set eq's in use listed out
+					- add a new set with (inputted number) reps and (inputted number) weight
+					- delete (inputted number) set
+
+flowchart 
+	- in automatic settings sheet
+		- in flow tab
+			- layout
+				- drop down box where you can select a node name (contains nodes with zero or 1 leaf nodes attached to it)
+					- buttons for 'add success node' and 'add failure node'
+						- if the selected node has already has a success leaf node connected to it, you can only select 'add failure node'
+						- if the selected node has already has a fail leaf node connected to it, you can only select 'add success node'
+				- box for flow chart with vertical tree diagram
+					- in tree diagram, root node is called initial event
+					- each node can have between one and two branches (either success and/or failure)
+					- root node has two initial branches, to success1 and fail1 nodes (initially these are the leaf nodes)
+					- each node can have upto two nodes added to it (one of success and fail)
+						- pressing the 'add success node' button mentioned above with the given node name, adds a success(n) node under the node with the selected name (n will be replaced with what number node this is).
+						- pressing the 'add fail node' button mentioned above with the given node name, adds a fail node(n) under the node with the selected name (n will be replaced with what number node this is).
+					- every node with one or zero leaf nodes connected to it, connects back to the root node again. 
+				
 	
 	class SimpleFlowChart extends StatefulWidget {
   const SimpleFlowChart({super.key});
