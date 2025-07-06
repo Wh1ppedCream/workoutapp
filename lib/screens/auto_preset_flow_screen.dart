@@ -38,10 +38,7 @@ List<FlowEdge> _edges = [];
   final Map<String, List<String>> _attachedMethodsByNode = {};
 
 
-  String? _selectedParent;
-  String _selectedOutcome = 'success';
   FlowMethod? _selectedMethod;
-  bool _isLoading = true;
 
   // inside class _AutoPresetFlowScreenState
 String? _selectedBranchParent;
@@ -74,7 +71,6 @@ String? _selectedMethodNode;
   });
   _buildDashboard();
   _initializeCounters();    // ← reset counters here
-  setState(() => _isLoading = false);
 }
 
   void _initializeCounters() {
@@ -89,6 +85,15 @@ String? _selectedMethodNode;
     _nodes.clear();
     _nodeData.clear();
     _placement.clear();
+    // 0.5) Rebuild any saved “method” attachments
+   _attachedMethodsByNode.clear();
+   for (final e in _flowDef?.edges ?? []) {
+     if (e.outcome == 'method') {
+       _attachedMethodsByNode
+         .putIfAbsent(e.from, () => <String>[])
+        .add(e.to);
+     }
+   }
 
     // If no nodes defined, fall back to default tree.
     if (_flowDef == null || _flowDef!.nodes.isEmpty) {
@@ -101,23 +106,20 @@ String? _selectedMethodNode;
     depths['1st attempt'] = 0;
     q.add('1st attempt');
 
-    final adjacency = <String, List<MapEntry<String,String>>>{}; 
-    // map from node to list of (outcome, toNode)
-    for (var e in _flowDef!.edges) {
-      adjacency.putIfAbsent(e.from, () => []).add(
-        MapEntry(e.outcome, e.to)
-      );
+    final adjacency = <String, List<String>>{};
+    for (var e in _flowDef!.edges.where((e) => e.outcome != 'method')) {
+      adjacency.putIfAbsent(e.from, () => []).add(e.to);
     }
 
     while (q.isNotEmpty) {
       final cur = q.removeAt(0);
       final d = depths[cur]!;
-      for (var edge in adjacency[cur] ?? []) {
-        if (!depths.containsKey(edge.value)) {
-          depths[edge.value] = d + 1;
-          q.add(edge.value);
-        }
+      for (var child in adjacency[cur] ?? []) {
+      if (!depths.containsKey(child)) {
+        depths[child] = d + 1;
+        q.add(child);
       }
+    }
     }
 
     // 2) Create elements in depth order
@@ -149,7 +151,9 @@ String? _selectedMethodNode;
     }
 
     // 3) Add edges
-    for (var e in _edges) {
+    // 3) Add *only branch* edges (success/failure).  Skip outcome=='method'
+    //for (var e in _edges) {
+    for (var e in _edges.where((e) => e.outcome != 'method')) {
       final fromEl = _nodes[e.from]!;
       final toEl   = _nodes[e.to]!;
       final style = e.outcome == 'success'
@@ -169,6 +173,11 @@ String? _selectedMethodNode;
       );
     }
 
+    }
+
+    // 4) Now render bullet‐lists for each node that has attached methods
+    for (var parent in _attachedMethodsByNode.keys) {
+      _refreshNodeText(parent);
     }
     
     _applyLoopbacks();
@@ -205,50 +214,6 @@ void _initializeDefaultTree() {
 }
 
 
-  /// Adds a new method‐node under [parentName] on the given branch.
-  void _addNode(String parentName, { required bool isSuccess }) {
-    final parent = _nodes[parentName]!;
-    final pData  = _nodeData[parentName]!;
-
-    final depth = pData.depth + 1;
-    final idx   = (_placement[depth] ?? 0);
-    _placement[depth] = idx + 1;
-
-    final name = _selectedMethod?.name ?? '??';
-    final pos = _baseOffset + Offset(idx * _hSpacing, depth * _vSpacing);
-
-    final newEl = FlowElement(
-      position: pos,
-      size: const Size(60, 30),
-      text: name,
-      textSize: 7,
-      kind: ElementKind.rectangle,
-      handlers: [Handler.topCenter],
-    );
-    _dashboard.addElement(newEl);
-    _nodes[name] = newEl;
-    _nodeData[name] = _NodeData(depth: depth);
-
-    final newName = newEl.text;
-  _edges.add(FlowEdge(
-    from: parentName,
-    outcome: isSuccess ? 'success' : 'failure',
-    to: newName,
-  ));
-
-    // connect
-    _dashboard.addNextById(
-      parent, 
-      newEl.id,
-      ArrowParams(
-        color: isSuccess ? Colors.blue : Colors.red,
-        thickness: 2,
-        style: isSuccess ? ArrowStyle.segmented : ArrowStyle.curve,
-        startArrowPosition: Alignment.bottomCenter,
-        endArrowPosition: Alignment.topCenter,
-      ),
-    );
-  }
 
   Future<void> _showManageMethodsDialog() async {
     await showDialog(
@@ -613,11 +578,7 @@ void _onAddMethod() {
   list.add(method.name);
   _attachedMethodsByNode[target] = list;
 
-  _edges.add(FlowEdge(
-  from: target,
-  outcome: 'method',
-  to: method.name,
-));
+  _edges.add(FlowEdge( from: target, outcome: 'method', to: method.name));
 
   // Redraw that node’s label
   _refreshNodeText(target);
@@ -659,38 +620,35 @@ void _onRemoveMethod() {
 }
 
 
-/// The grey, curved loop-back style
-ArrowParams get _loopBackStyle => ArrowParams(
-  color: Colors.grey,
-  thickness: 2,
-  style: ArrowStyle.curve,
-  startArrowPosition: Alignment.centerLeft,
-  endArrowPosition:   Alignment.centerLeft,
-);
+void _onRemoveNode() {
+  final name = _selectedMethodNode;
+  if (name == null || name == '1st attempt') return;
 
-/// Add a loop-back arrow from [nodeName] to the root.
-void _addLoopback(String nodeName) {
-  final fromEl = _nodes[nodeName]!;
-  final rootEl = _nodes['1st attempt']!;
-  _dashboard.addNextById(fromEl, rootEl.id, _loopBackStyle);
+  // Safety re-check:
+  final branchKids = _edges.where((e) =>
+    e.from == name &&
+    (e.outcome == 'success' || e.outcome == 'failure'));
+  final hasMethods = (_attachedMethodsByNode[name]?.isNotEmpty ?? false);
+  if (branchKids.isNotEmpty || hasMethods) return;
+
+  // 1) Remove any incoming branch edges (so parents drop their arrow)
+  _edges.removeWhere((e) => e.to == name && 
+    (e.outcome == 'success' || e.outcome == 'failure'));
+
+  // 2) Remove this element from the dashboard & your maps
+  final el = _nodes.remove(name)!;
+  _dashboard.removeElement(el);
+  _nodeData.remove(name);
+  _attachedMethodsByNode.remove(name);
+
+  // 3) Clear selection
+  _selectedMethodNode = null;
+  _selectedMethod = null;
+
+  setState(() {});
 }
 
-/// Remove *any* loop-back arrow on [nodeName].
-void _removeLoopback(String nodeName) {
-  final el = _nodes[nodeName]!;
-  _dashboard.removeElementConnection(el, Handler.leftCenter);
-}
 
-/// Helper to produce the grey curved “loop-back” arrow.
-ArrowParams _loopArrow(FlowElement from, FlowElement to) {
-  return ArrowParams(
-    color: Colors.grey,
-    thickness: 2,
-    style: ArrowStyle.curve,
-    startArrowPosition: Alignment.centerLeft,
-    endArrowPosition:   Alignment.centerLeft,
-  );
-}
 
 void _applyLoopbacks() {
   final rootEl = _nodes['1st attempt']!;
@@ -742,7 +700,6 @@ void _applyLoopbacks() {
 
 
 
-
  @override
 Widget build(BuildContext context) {
   // Compute branchable nodes (out-degree < 2)
@@ -768,7 +725,7 @@ Widget build(BuildContext context) {
 
   // Compute how many methods are attached to the selected method‐target
   // (i.e. outgoing edges that point to a method‐node)
-  final methodNames = _methods.map((m) => m.name).toSet();
+  _methods.map((m) => m.name).toSet();
   final attachedMethods = _attachedMethodsByNode[_selectedMethodNode] ?? <String>[];
 
   // 1) Figure out which method-types are already on the selected node
@@ -795,6 +752,26 @@ final canAdd =
   _selectedMethodNode != null &&
   _selectedMethod != null &&
   availableMethods.contains(_selectedMethod!);
+
+
+  bool canDeleteNode = true;
+  final selected = _selectedMethodNode;
+
+// 1) No deletion of root:
+if (selected == null || selected == '1st attempt') {
+  canDeleteNode = false;
+} else {
+  // 2) no branch children?
+  final branchKids = _edges.where((e) =>
+    e.from == selected &&
+    (e.outcome == 'success' || e.outcome == 'failure'));
+  final hasBranchChildren = branchKids.isNotEmpty;
+
+  // 3) no methods?
+  final hasMethods = (_attachedMethodsByNode[selected]?.isNotEmpty ?? false);
+
+  canDeleteNode = !hasBranchChildren && !hasMethods;
+}
 
 
   return Scaffold(
@@ -906,6 +883,11 @@ ElevatedButton(
       : _onRemoveMethod,
   child: const Text('- Method'),
 ),
+ElevatedButton(
+  onPressed: canDeleteNode ? _onRemoveNode : null,
+  child: const Text('- Node'),
+),
+
           ],
         ),
       ),
