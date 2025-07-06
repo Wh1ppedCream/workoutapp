@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_flow_chart/flutter_flow_chart.dart';
 import '../models/preset_models.dart';
 import '../repositories/app_repository.dart';
+import 'dart:math';  // for max()
 
 enum AddSetMode { explicit, copy }
 
@@ -73,11 +74,33 @@ String? _selectedMethodNode;
   _initializeCounters();    // ← reset counters here
 }
 
-  void _initializeCounters() {
-  _successCounter = 
-    _nodes.keys.where((name) => name.startsWith('success')).length;
-  _failureCounter = 
-    _nodes.keys.where((name) => name.startsWith('fail')).length;
+/// Call this *after* you’ve built `_nodes` from your saved definition.
+/// It scans every key in `_nodes`, picks out the numbers on
+/// `successNNN` and `failNNN`, and sets the counter to the max found.
+void _initializeCounters() {
+  // Find all numeric suffixes on "success###" keys
+  final succNums = <int>[];
+  final failNums = <int>[];
+
+  final successRe = RegExp(r'^success(\d+)$');
+  final failRe    = RegExp(r'^fail(\d+)$');
+
+  for (final name in _nodes.keys) {
+    final m1 = successRe.firstMatch(name);
+    if (m1 != null) {
+      final n = int.tryParse(m1.group(1)!) ?? 0;
+      succNums.add(n);
+    }
+    final m2 = failRe.firstMatch(name);
+    if (m2 != null) {
+      final n = int.tryParse(m2.group(1)!) ?? 0;
+      failNums.add(n);
+    }
+  }
+
+  // If none found, start at 0 so first new is 1
+  _successCounter = succNums.isEmpty ? 0 : succNums.reduce(max);
+  _failureCounter = failNums.isEmpty ? 0 : failNums.reduce(max);
 }
 
   void _buildDashboard() {
@@ -180,7 +203,10 @@ String? _selectedMethodNode;
       _refreshNodeText(parent);
     }
     
+     // Only draw loopbacks when loading a saved definition:
+  if (_flowDef != null && _flowDef!.nodes.isNotEmpty) {
     _applyLoopbacks();
+  }
   
   }
 
