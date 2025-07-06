@@ -11,6 +11,8 @@ import '../widgets/exercise_card.dart';
 import '../widgets/add_exercise_fab.dart';
 import '../widgets/automatic_settings_sheet.dart';
 import 'session_screen.dart';
+import 'auto_preset_flow_screen.dart';
+
 
 /// Screen to view and edit a Preset using the PresetSession notifier.
 class PresetDetailScreen extends StatefulWidget {
@@ -128,6 +130,15 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
 );
 
                 }
+
+                else if (action == 'flow' && preset.isAutomatic) {
+     // Navigate to the full‐screen flow editor
+     Navigator.of(context).push(
+       MaterialPageRoute(
+         builder: (_) => AutoPresetFlowScreen(presetId: preset.presetId),
+       ),
+     );
+   }
               },
               itemBuilder: (_) {
                 return [
@@ -141,6 +152,13 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                     enabled: preset.isAutomatic,
                     child: const Text('Automatic Settings'),
                   ),
+
+                  PopupMenuItem(
+       value: 'flow',
+       enabled: preset.isAutomatic,
+       child: const Text('Edit Auto‐Flow'),
+     ),
+
                 ];
               },
             ),

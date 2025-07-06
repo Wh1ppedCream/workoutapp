@@ -377,52 +377,56 @@ void _bringElementToFront(FlowElement el) {
         children: [
           // Dropdown selector + Add buttons
           Padding(
-            padding: const EdgeInsets.all(8),
-            child: Wrap(
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: 16,
-              runSpacing: 8,
-              children: [
-                // Node selection dropdown
-                SizedBox(
-                  width: 150,
-                  child: DropdownButton<String>(
-                    isExpanded: true,
-                    hint: const Text('Select node'),
-                    value: (_selectedNode != null &&
-                            _selectableNodes.contains(_selectedNode))
-                        ? _selectedNode
-                        : null,
-                    items: _selectableNodes.map((name) {
-                      return DropdownMenuItem(
-                        value: name,
-                        child: Text(name),
-                      );
-                    }).toList(),
-                    onChanged: (v) => setState(() {
-                      _selectedNode = v;
-                    }),
-                  ),
-                ),
-                // Add Success
-                ElevatedButton(
-                  onPressed: (_selectedNode == null ||
-                          _nodeData[_selectedNode!]!.successCount >= 1)
-                      ? null
-                      : _onAddSuccess,
-                  child: const Text('Add Success Node'),
-                ),
-                // Add Failure
-                ElevatedButton(
-                  onPressed: (_selectedNode == null ||
-                          _nodeData[_selectedNode!]!.failureCount >= 1)
-                      ? null
-                      : _onAddFailure,
-                  child: const Text('Add Failure Node'),
-                ),
-              ],
-            ),
+  padding: const EdgeInsets.all(8),
+  child: Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      // Node selection dropdown on its own line
+      SizedBox(
+        width: 150,
+        child: DropdownButton<String>(
+          isExpanded: true,
+          hint: const Text('Select node'),
+          value: (_selectedNode != null &&
+                  _selectableNodes.contains(_selectedNode))
+              ? _selectedNode
+              : null,
+          items: _selectableNodes.map((name) {
+            return DropdownMenuItem(
+              value: name,
+              child: Text(name),
+            );
+          }).toList(),
+          onChanged: (v) => setState(() {
+            _selectedNode = v;
+          }),
+        ),
+      ),
+      const SizedBox(height: 8), // Small vertical spacing
+      // Buttons in one row under the dropdown
+      Row(
+        children: [
+          ElevatedButton(
+            onPressed: (_selectedNode == null ||
+                    _nodeData[_selectedNode!]!.successCount >= 1)
+                ? null
+                : _onAddSuccess,
+            child: const Text('+ Success Node'),
           ),
+          const SizedBox(width: 16), // Spacing between buttons
+          ElevatedButton(
+            onPressed: (_selectedNode == null ||
+                    _nodeData[_selectedNode!]!.failureCount >= 1)
+                ? null
+                : _onAddFailure,
+            child: const Text('+ Failure Node'),
+          ),
+        ],
+      ),
+    ],
+  ),
+),
+
 
          // Selector for target node + Add Event button
           Padding(

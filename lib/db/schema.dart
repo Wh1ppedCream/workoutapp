@@ -113,6 +113,7 @@ class Schema {
     await migrateV9(db);
     await migrateV10(db);
     await migrateV11(db);
+    await migrateV12(db);
   }
 
   /// Handler for onUpgrade callback.
@@ -127,6 +128,7 @@ class Schema {
     if (oldVersion < 9) await migrateV9(db);
     if (oldVersion < 10) await migrateV10(db);
     if (oldVersion < 11) await migrateV11(db);
+    if (oldVersion < 12) await migrateV12(db);
   }
 
   /// Migration to version 3: adds rating, equipment/muscle tables.
@@ -495,5 +497,31 @@ class Schema {
       ''');
     });
   }
+
+/// Migration to version 12: flow‐chart persistence
+static Future<void> migrateV12(Database db) async {
+  await db.transaction((txn) async {
+    // 1) Add JSON column to hold the graph
+    await txn.execute('''
+      ALTER TABLE preset_auto_settings
+        ADD COLUMN flow_definition TEXT NOT NULL DEFAULT '{}';
+    ''');
+
+    // 2) Create table for reusable methods
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS preset_flow_methods (
+        id               INTEGER PRIMARY KEY AUTOINCREMENT,
+        preset_id        INTEGER NOT NULL,
+        name             TEXT    NOT NULL,
+        type             TEXT    NOT NULL,  -- 'weight','rep','addSet','delSet'
+        params           TEXT    NOT NULL,  -- JSON blob
+        FOREIGN KEY(preset_id)
+          REFERENCES preset_auto_settings(preset_id) ON DELETE CASCADE,
+        UNIQUE(preset_id, name)
+      );
+    ''');
+  });
+}
+
 
 }

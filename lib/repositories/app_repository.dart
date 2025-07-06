@@ -572,5 +572,42 @@ Future<List<Map<String, dynamic>>> fetchPresetStretchItems(int presetExerciseId)
   /// Updates the weight for a preset set.
   Future<void> updatePresetSetWeight(int presetSetId, double weight) =>  _dbHelper.updatePresetSetWeight(presetSetId, weight);
 
+  /// Flow‐chart JSON for a preset.
+Future<FlowDefinition> fetchFlowDefinition(int presetId) async {
+  final jsonStr = await _dbHelper.fetchFlowDefinition(presetId);
+  return FlowDefinition.fromJson(jsonStr);
+}
+
+/// Save flow‐chart JSON for a preset.
+Future<void> upsertFlowDefinition(int presetId, FlowDefinition def) {
+  return _dbHelper.upsertFlowDefinition(presetId, def.toJson());
+}
+
+/// Retrieve all FlowMethods for a preset.
+Future<List<FlowMethod>> fetchFlowMethods(int presetId) async {
+  final rows = await _dbHelper.fetchFlowMethods(presetId);
+  return rows.map((r) => FlowMethod.fromMap(r)).toList();
+}
+
+/// Create or update a FlowMethod.
+Future<FlowMethod> upsertFlowMethod({
+  required int presetId,
+  required String name,
+  required MethodType type,
+  required Map<String, dynamic> params,
+}) async {
+  final id = await _dbHelper.upsertFlowMethod(
+    presetId: presetId,
+    name: name,
+    type: type.toShortString(),
+    params: params,
+  );
+  return FlowMethod(id: id, presetId: presetId, name: name, type: type, params: params);
+}
+
+/// Delete a FlowMethod by its ID.
+Future<void> deleteFlowMethod(int methodId) {
+  return _dbHelper.deleteFlowMethod(methodId);
+}
 
 }

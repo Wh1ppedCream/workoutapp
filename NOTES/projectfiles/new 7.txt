@@ -103,139 +103,34 @@ flowchart
 						- pressing the 'add fail node' button mentioned above with the given node name, adds a fail node(n) under the node with the selected name (n will be replaced with what number node this is).
 					- every node with one or zero leaf nodes connected to it, connects back to the root node again. 
 				
-	
-	class SimpleFlowChart extends StatefulWidget {
-  const SimpleFlowChart({super.key});
-
-  @override
-  State<SimpleFlowChart> createState() => _SimpleFlowChartState();
-}
-
-class _SimpleFlowChartState extends State<SimpleFlowChart> {
-  final Dashboard dashboard = Dashboard();
-
-  @override
-  void initState() {
-    super.initState();
-
-    // Root node
-    final root = FlowElement(
-      position: const Offset(60, 50),
-      size: const Size(60, 30),
-      text: 'Root',
-      textSize: 12,
-      kind: ElementKind.rectangle,
-      handlers: [Handler.bottomCenter],
-    );
-    dashboard.addElement(root);
-
-    // Intermediate nodes
-    final success1 = FlowElement(
-      position: const Offset(60, 100),
-      size: const Size(50, 25),
-      text: 'Success1',
-      textSize: 7,
-      kind: ElementKind.rectangle,
-      handlers: [Handler.topCenter, Handler.bottomCenter],
-    );
-
-    final fail1 = FlowElement(
-      position: const Offset(120, 100),
-      size: const Size(50, 25),
-      text: 'Fail1',
-      textSize: 7,
-      kind: ElementKind.rectangle,
-      handlers: [Handler.topCenter, Handler.bottomCenter],
-    );
-
-    dashboard.addElement(success1);
-    dashboard.addElement(fail1);
-
-    // Leaf nodes
-    final success2 = FlowElement(
-      position: const Offset(60, 150),
-      size: const Size(50, 25),
-      text: 'Success2',
-      textSize: 7,
-      kind: ElementKind.rectangle,
-      handlers: [Handler.topCenter, Handler.bottomCenter],
-    );
-
-    final fail2 = FlowElement(
-      position: const Offset(120, 150),
-      size: const Size(50, 25),
-      text: 'Fail2',
-      textSize: 7,
-      kind: ElementKind.rectangle,
-      handlers: [Handler.topCenter, Handler.bottomCenter],
-    );
-
-    final success3 = FlowElement(
-      position: const Offset(180, 150),
-      size: const Size(50, 25),
-      text: 'Success3',
-      textSize: 7,
-      kind: ElementKind.rectangle,
-      handlers: [Handler.topCenter, Handler.bottomCenter],
-    );
-
-    final fail3 = FlowElement(
-      position: const Offset(240, 150),
-      size: const Size(50, 25),
-      text: 'Fail3',
-      textSize: 7,
-      kind: ElementKind.rectangle,
-      handlers: [Handler.topCenter, Handler.bottomCenter],
-    );
-
-    dashboard.addElement(success2);
-    dashboard.addElement(fail2);
-    dashboard.addElement(success3);
-    dashboard.addElement(fail3);
-
-    // Connections
-    dashboard.addNextById(root, success1.id, _arrow(root, success1));
-    dashboard.addNextById(root, fail1.id, _arrow(root, fail1));
-
-    dashboard.addNextById(success1, success2.id, _arrow(success1, success2));
-    dashboard.addNextById(success1, fail2.id, _arrow(success1, fail2));
-
-    dashboard.addNextById(fail1, success3.id, _arrow(fail1, success3));
-    dashboard.addNextById(fail1, fail3.id, _arrow(fail1, fail3));
-
-    dashboard.addNextById(success2, root.id, _loopArrow(success2, root));
-    dashboard.addNextById(fail2, root.id, _loopArrow(fail2, root));
-    dashboard.addNextById(success3, root.id, _loopArrow(success3, root));
-    dashboard.addNextById(fail3, root.id, _loopArrow(fail3, root));
-  }
-
-  ArrowParams _arrow(FlowElement from, FlowElement to) {
-    return ArrowParams(
-      color: Colors.blue,
-      thickness: 2,
-      style: ArrowStyle.segmented,
-      startArrowPosition: Alignment.bottomCenter,
-      endArrowPosition: Alignment.topCenter,
-    );
-  }
-
-  ArrowParams _loopArrow(FlowElement from, FlowElement to) {
-    return ArrowParams(
-      color: Colors.black26,
-      thickness: 2,
-      style: ArrowStyle.curve,
-      startArrowPosition: Alignment.bottomCenter,
-      endArrowPosition: Alignment.topCenter,
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FlowChart(
-      dashboard: dashboard,
-      onElementPressed: (_, __, element) {
-        debugPrint('Tapped: ${element.text}');
-      },
-    );
-  }
-}
+currently, for automatic presets, for deciding what happens after a success/failure, we simply call a function and for a particular sets weight, we do :
+	- newWeight = success
+		? targetWeight + ia
+		: max(0.0, targetWeight - 2 * ia);
+	- this could be considered to be picking between the two hardcoded equations:
+		- weightEQ1: newWeight = targetWeight + 1 * ia
+		- weightEQ2: newWeight = targetWeight - 2 * ia
+I want to change this so that instead of changes being made only through this one bit of predefined code, users can decide how, when, where and by how much changes are made, using our flow chart based system on the UI side
+	- users would be able to create, alter and delete as many methods of change as they want, with these methods being of upto four types:
+		- a weight altering equation
+			- weight altering equations will look like: 
+				- old weight += (inputted number) * IA
+				- old weight -= (inputted number) * IA
+			- not particularly sure how we will be saving this right now, but as only inputted number and sign (+ or -) is changing, maybe only those need to be saved for equation? 
+		- a rep altering equation
+			- rep altering equations will look like:
+				- old reps += (inputted number)
+				- old reps -= (inputted number)
+			- not particularly sure how we will be saving this right now, but as only inputted number and sign (+ or -) is changing, maybe only those need to be saved for equation? 
+		- set deletion
+			- simply deletes the last set for an exercise
+		- set addition
+			- either will have user defined weight and rep number or will copy weight and rep numbers from one of the other sets.
+			- not particularly sure how we will be saving this right now, but as only weight and rep numbers change (whether they are user inputted or based off a previous set), maybe only those need to be saved for equation? 
+	- flow chart will be the visual interpretation of allowing users to determine when and which method of change is applied. 
+		- we already have implemented ways of adding successes and fails to the flowchart, these will be representing successfully completing a session, as we have previously specified, and similarly, fails will represent failing.
+		- we already have implemented ways of adding events to a success or fail in the flowchart, with us being able to specify the event name/event key. 
+			- the event name/key here will replaced with the name of a method of change (like the ones we've previoulsy described)
+		- an example of what our current methods of change look like in the current incomplete flow chart page has been attached in an image.
+		- saving the flow chart itself would probably be a lot of work, so instead, perhaps we could have an easier version of the series of events the flow chart will describe be saved, so that we could repopulate a flow chart from it and we could use it when actually performing the changes on the preset.
+		
