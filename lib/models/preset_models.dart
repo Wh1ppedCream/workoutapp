@@ -55,6 +55,15 @@ class FlowMethod {
     'type':      type.toShortString(),
     'params':    jsonEncode(params),
   };
+
+  @override
+  bool operator ==(Object other) =>
+    identical(this, other) ||
+    other is FlowMethod && other.id == id;
+
+  @override
+  int get hashCode => id.hashCode;
+
 }
 
 /// The four method‐types you can apply.
