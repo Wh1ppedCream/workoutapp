@@ -24,6 +24,7 @@ import '../db/preset_detail_dao.dart';
 import '../db/preset_auto_settings_dao.dart';
 import '../db/preset_exercise_auto_dao.dart';
 import '../db/preset_set_auto_dao.dart';
+import '../db/preset_flow_methods_dao.dart';
 
 
 
@@ -47,7 +48,7 @@ class DatabaseHelper {
     final path = join(dbPath, 'fitness_tracker.db');
     return await openDatabase(
       path,
-      version: 11,  
+      version: 12,  
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
@@ -87,7 +88,9 @@ if (oldVersion < 10) {
   if (oldVersion < 11) {
       await Schema.migrateV11(db);
     }
-
+if (oldVersion < 12) {
+      await Schema.migrateV12(db);
+    }
   },
 );
   }
@@ -1555,5 +1558,46 @@ Future<List<Map<String, dynamic>>> fetchPresetStretchItems(int presetExerciseId)
   }
 
 
+  /// Fetch the flow‐graph JSON for a preset.
+Future<String> fetchFlowDefinition(int presetId) async {
+  final db = await database;
+  return PresetAutoSettingsDao.getFlowDefinition(db, presetId);
+}
+
+/// Save the flow‐graph JSON for a preset.
+Future<void> upsertFlowDefinition(int presetId, String flowJson) async {
+  final db = await database;
+  await PresetAutoSettingsDao.upsertFlowDefinition(db, presetId, flowJson);
+}
+
+/// Fetch all user‐defined methods for a preset.
+Future<List<Map<String, dynamic>>> fetchFlowMethods(int presetId) async {
+  final db = await database;
+  return PresetFlowMethodsDao.getMethods(db, presetId);
+}
+
+/// Insert or update a flow method; returns its new row ID.
+Future<int> upsertFlowMethod({
+  required int presetId,
+  required String name,
+  required String type,
+  required Map<String, dynamic> params,
+}) async {
+  final db = await database;
+  final paramsJson = jsonEncode(params);
+  return PresetFlowMethodsDao.upsertMethod(
+    db,
+    presetId: presetId,
+    name: name,
+    type: type,
+    paramsJson: paramsJson,
+  );
+}
+
+/// Delete a flow method by ID.
+Future<int> deleteFlowMethod(int methodId) async {
+  final db = await database;
+  return PresetFlowMethodsDao.deleteMethod(db, methodId);
+}
 
 }

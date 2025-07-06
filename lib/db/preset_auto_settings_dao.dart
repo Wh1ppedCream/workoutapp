@@ -59,5 +59,36 @@ class PresetAutoSettingsDao {
       whereArgs: [presetId],
     );
   }
+
+
+/// Reads the saved flow‐graph JSON for a preset.
+static Future<String> getFlowDefinition(
+  Database db,
+  int presetId,
+) async {
+  final rows = await db.query(
+    'preset_auto_settings',
+    columns: ['flow_definition'],
+    where: 'preset_id = ?',
+    whereArgs: [presetId],
+    limit: 1,
+  );
+  if (rows.isEmpty) return '{}';
+  return rows.first['flow_definition'] as String;
+}
+
+/// Updates only the flow_definition column.
+static Future<void> upsertFlowDefinition(
+  Database db,
+  int presetId,
+  String flowJson,
+) {
+  return db.update(
+    'preset_auto_settings',
+    { 'flow_definition': flowJson },
+    where: 'preset_id = ?',
+    whereArgs: [presetId],
+  );
+}
 }
 
