@@ -134,3 +134,750 @@ I want to change this so that instead of changes being made only through this on
 		- an example of what our current methods of change look like in the current incomplete flow chart page has been attached in an image.
 		- saving the flow chart itself would probably be a lot of work, so instead, perhaps we could have an easier version of the series of events the flow chart will describe be saved, so that we could repopulate a flow chart from it and we could use it when actually performing the changes on the preset.
 		
+
+
+i would like to alter how the flowchart page is shown so that looks-wise it more closely follows the original layout, with each node representing a successful session or a failed session and being able to be connected to upto 2 nodes after that (either a successful session, a failed session, both or neither), where if one of the conditions (success or failure) is not accounted for after the node (by it being connected to another success or failure node) then it will reconnect to the root node, '1st attempt' here right now (on the flow chart, if the node has less than two child nodes, it will reconnect to the top node and start from there again, making a loop). each success and fail node can have upto 3 methods attached to it, which could be shown either by being named within the node itself, under the node's name, or by the node being connected to a methods node right under it. these (upto three) methods are what will be applied after the node is reached through successes and/or failures. as an example, i've attached a photo of our original flowchart page. Hypothetically, if this was controlling our flow for automatic presets, if we had completed 4 sessions from the preset and they were 1. Fail 2. Success 3. Fail 4. Fail, here is what would happen
+
+
+// File: lib/screens/auto_preset_flow_screen.dart
+
+
+import 'package:flutter/material.dart';
+import 'package:flutter_flow_chart/flutter_flow_chart.dart';
+import '../models/preset_models.dart';
+import '../repositories/app_repository.dart';
+
+enum AddSetMode { explicit, copy }
+
+/// Screen to edit the automatic‐preset flowchart for a given preset.
+class AutoPresetFlowScreen extends StatefulWidget {
+  final int presetId;
+  const AutoPresetFlowScreen({super.key, required this.presetId});
+
+  @override
+  State<AutoPresetFlowScreen> createState() => _AutoPresetFlowScreenState();
+}
+
+class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
+  final _repo = AppRepository();
+
+  
+
+  late Dashboard _dashboard;
+  final Map<String, FlowElement> _nodes = {};
+  final Map<String, _NodeData> _nodeData = {};
+  final Map<int, int> _placement = {}; // depth → count in that row
+
+
+List<FlowEdge> _edges = [];
+  FlowDefinition? _flowDef;
+  List<FlowMethod> _methods = [];
+
+  String? _selectedParent;
+  String _selectedOutcome = 'success';
+  FlowMethod? _selectedMethod;
+  bool _isLoading = true;
+
+  // Spacing constants
+  static const double _hSpacing = 100;
+  static const double _vSpacing = 100;
+  static const Offset _baseOffset = Offset(60, 50);
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAll();
+  }
+
+  Future<void> _loadAll() async {
+  final def = await _repo.fetchFlowDefinition(widget.presetId);
+  final methods = await _repo.fetchFlowMethods(widget.presetId);
+  setState(() {
+    _flowDef = def;
+    _methods = methods;
+    _edges = def.edges;       // ✦ track the existing edges
+  });
+  _buildDashboard();
+  setState(() => _isLoading = false);
+}
+
+  void _buildDashboard() {
+    _dashboard = Dashboard(defaultArrowStyle: ArrowStyle.curve);
+    _nodes.clear();
+    _nodeData.clear();
+    _placement.clear();
+
+    // If no nodes defined, fall back to default tree.
+    if (_flowDef == null || _flowDef!.nodes.isEmpty) {
+      _initializeDefaultTree();
+      return;
+    }
+
+    // 1) Compute depths via BFS from "1st attempt"
+    final depths = <String,int>{};
+    final q = <String>[];
+    depths['1st attempt'] = 0;
+    q.add('1st attempt');
+
+    final adjacency = <String, List<MapEntry<String,String>>>{}; 
+    // map from node to list of (outcome, toNode)
+    for (var e in _flowDef!.edges) {
+      adjacency.putIfAbsent(e.from, () => []).add(
+        MapEntry(e.outcome, e.to)
+      );
+    }
+
+    while (q.isNotEmpty) {
+      final cur = q.removeAt(0);
+      final d = depths[cur]!;
+      for (var edge in adjacency[cur] ?? []) {
+        if (!depths.containsKey(edge.value)) {
+          depths[edge.value] = d + 1;
+          q.add(edge.value);
+        }
+      }
+    }
+
+    // 2) Create elements in depth order
+    final sorted = depths.keys.toList()
+      ..sort((a,b) => depths[a]!.compareTo(depths[b]!));
+    for (var name in sorted) {
+      final depth = depths[name]!;
+      final idxInRow = (_placement[depth] ?? 0);
+      _placement[depth] = idxInRow + 1;
+
+      final pos = _baseOffset + Offset(idxInRow * _hSpacing, depth * _vSpacing);
+
+      final el = FlowElement(
+        position: pos,
+        size: const Size(60, 30),
+        text: name,
+        textSize: 10,
+        kind: ElementKind.rectangle,
+        handlers: [
+          Handler.bottomCenter,
+          Handler.topCenter,
+          Handler.leftCenter,
+          Handler.rightCenter,
+        ],
+      );
+      _dashboard.addElement(el);
+      _nodes[name] = el;
+      _nodeData[name] = _NodeData(depth: depth);
+    }
+
+    // 3) Add edges
+    for (var e in _flowDef!.edges) {
+      final fromEl = _nodes[e.from]!;
+      final toEl   = _nodes[e.to]!;
+      final style = e.outcome == 'success'
+        ? ArrowStyle.segmented
+        : ArrowStyle.curve;
+      final color = e.outcome == 'success' ? Colors.blue : Colors.red;
+      _dashboard.addNextById(
+        fromEl, 
+        toEl.id, 
+        ArrowParams(
+          color: color,
+          thickness: 2,
+          style: style,
+          startArrowPosition: Alignment.bottomCenter,
+          endArrowPosition: Alignment.topCenter,
+        ),
+      );
+    }
+  }
+
+  /// Default starting tree: root → success1 + fail1
+  void _initializeDefaultTree() {
+    // 1) root
+    final root = FlowElement(
+      position: _baseOffset,
+      size: const Size(60, 30),
+      text: '1st attempt',
+      textSize: 10,
+      kind: ElementKind.rectangle,
+      handlers: [Handler.bottomCenter],
+    );
+    _dashboard.addElement(root);
+    _nodes[root.text] = root;
+    _nodeData[root.text] = _NodeData(depth: 0);
+    _placement[0] = 1;
+
+    // 2) two leaves
+    _addNode(root.text, isSuccess: true);
+    _addNode(root.text, isSuccess: false);
+  }
+
+  /// Adds a new method‐node under [parentName] on the given branch.
+  void _addNode(String parentName, { required bool isSuccess }) {
+    final parent = _nodes[parentName]!;
+    final pData  = _nodeData[parentName]!;
+
+    final depth = pData.depth + 1;
+    final idx   = (_placement[depth] ?? 0);
+    _placement[depth] = idx + 1;
+
+    final name = _selectedMethod?.name ?? '??';
+    final pos = _baseOffset + Offset(idx * _hSpacing, depth * _vSpacing);
+
+    final newEl = FlowElement(
+      position: pos,
+      size: const Size(60, 30),
+      text: name,
+      textSize: 10,
+      kind: ElementKind.rectangle,
+      handlers: [Handler.topCenter],
+    );
+    _dashboard.addElement(newEl);
+    _nodes[name] = newEl;
+    _nodeData[name] = _NodeData(depth: depth);
+
+    final newName = newEl.text;
+  _edges.add(FlowEdge(
+    from: parentName,
+    outcome: isSuccess ? 'success' : 'failure',
+    to: newName,
+  ));
+
+    // connect
+    _dashboard.addNextById(
+      parent, 
+      newEl.id,
+      ArrowParams(
+        color: isSuccess ? Colors.blue : Colors.red,
+        thickness: 2,
+        style: isSuccess ? ArrowStyle.segmented : ArrowStyle.curve,
+        startArrowPosition: Alignment.bottomCenter,
+        endArrowPosition: Alignment.topCenter,
+      ),
+    );
+  }
+
+  Future<void> _showManageMethodsDialog() async {
+    await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Manage Methods'),
+        content: SizedBox(
+          width: 300,
+          child: ListView(
+            shrinkWrap: true,
+            children: [
+              for (var m in _methods)
+                ListTile(
+                  title: Text(m.name),
+                  subtitle: Text(m.type.toShortString()),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete),
+                   onPressed: () async {
+  await _repo.deleteFlowMethod(m.id);
+
+  if (!mounted) return; // ensures this State is still active
+
+  Navigator.of(context).pop(); // use the widget's own context
+}
+
+
+                  ),
+                ),
+              ListTile(
+                leading: const Icon(Icons.add),
+                title: const Text('Add New Method…'),
+                onTap: () {
+                  Navigator.of(ctx).pop();
+                  _showAddMethodDialog();
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    // refresh
+    _methods = await _repo.fetchFlowMethods(widget.presetId);
+    setState(() {});
+  }
+
+ Future<void> _showAddMethodDialog() async {
+  final nameCtl      = TextEditingController();
+  MethodType type    = MethodType.weight;
+  String sign        = '+';
+  final factorCtl    = TextEditingController(text: '1.0');
+  final amountCtl    = TextEditingController(text: '0');
+  AddSetMode addMode = AddSetMode.explicit;
+  final weightCtl    = TextEditingController(text: '0.0');
+  final repsCtl      = TextEditingController(text: '0');
+  final copyIndexCtl = TextEditingController(text: '-1');
+
+  final saved = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => StatefulBuilder(
+      builder: (ctx, setState) => AlertDialog(
+        title: const Text('New Method'),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // 1) Method name
+              TextField(
+                controller: nameCtl,
+                decoration: const InputDecoration(labelText: 'Name'),
+              ),
+
+              const SizedBox(height: 12),
+
+              // 2) Method type
+              DropdownButton<MethodType>(
+                value: type,
+                isExpanded: true,
+                onChanged: (v) => setState(() => type = v!),
+                items: MethodType.values.map((t) {
+                  return DropdownMenuItem(
+                    value: t,
+                    child: Text(t.toShortString()),
+                  );
+                }).toList(),
+              ),
+
+              const SizedBox(height: 12),
+
+              // 3) Dynamic fields
+              if (type == MethodType.weight) ...[
+                // Sign picker
+                DropdownButton<String>(
+                  value: sign,
+                  onChanged: (v) => setState(() => sign = v!),
+                  items: const [
+                    DropdownMenuItem(value: '+', child: Text('+')),
+                    DropdownMenuItem(value: '-', child: Text('-')),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                // Factor input
+                TextField(
+                  controller: factorCtl,
+                  keyboardType: TextInputType.numberWithOptions(decimal: true),
+                  decoration: const InputDecoration(labelText: 'Factor'),
+                ),
+              ] else if (type == MethodType.rep) ...[
+                DropdownButton<String>(
+                  value: sign,
+                  onChanged: (v) => setState(() => sign = v!),
+                  items: const [
+                    DropdownMenuItem(value: '+', child: Text('+')),
+                    DropdownMenuItem(value: '-', child: Text('-')),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: amountCtl,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: 'Amount'),
+                ),
+              ] else if (type == MethodType.addSet) ...[
+                // Mode selector
+                Row(
+                  children: [
+                    Radio<AddSetMode>(
+                      value: AddSetMode.explicit,
+                      groupValue: addMode,
+                      onChanged: (v) => setState(() => addMode = v!),
+                    ),
+                    const Text('Explicit'),
+                    Radio<AddSetMode>(
+                      value: AddSetMode.copy,
+                      groupValue: addMode,
+                      onChanged: (v) => setState(() => addMode = v!),
+                    ),
+                    const Text('Copy from set'),
+                  ],
+                ),
+                const SizedBox(height: 8),
+
+                if (addMode == AddSetMode.explicit) ...[
+                  TextField(
+                    controller: weightCtl,
+                    keyboardType: TextInputType.numberWithOptions(decimal: true),
+                    decoration: const InputDecoration(labelText: 'Weight'),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: repsCtl,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(labelText: 'Reps'),
+                  ),
+                ] else ...[
+                  TextField(
+                    controller: copyIndexCtl,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Set index (-1 = last)',
+                    ),
+                  ),
+                ],
+              ] else if (type == MethodType.delSet) ...[
+                const Text('This method will delete the last set.'),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    ),
+  );
+  if (saved != true) return;
+
+  // Build params map
+  Map<String, dynamic> params;
+  switch (type) {
+    case MethodType.weight:
+      params = {
+        'sign': sign,
+        'factor': double.tryParse(factorCtl.text) ?? 1.0,
+      };
+      break;
+    case MethodType.rep:
+      params = {
+        'sign': sign,
+        'amount': int.tryParse(amountCtl.text) ?? 0,
+      };
+      break;
+    case MethodType.addSet:
+      if (addMode == AddSetMode.explicit) {
+        params = {
+          'weight': double.tryParse(weightCtl.text) ?? 0.0,
+          'reps': int.tryParse(repsCtl.text) ?? 0,
+        };
+      } else {
+        params = {
+          'copyFromSetIndex': int.tryParse(copyIndexCtl.text) ?? -1,
+        };
+      }
+      break;
+    case MethodType.delSet:
+      params = {};
+      break;
+  }
+
+  // Persist via repository
+  await _repo.upsertFlowMethod(
+    presetId: widget.presetId,
+    name: nameCtl.text.trim(),
+    type: type,
+    params: params,
+  );
+
+  // Reload methods list
+  _methods = await _repo.fetchFlowMethods(widget.presetId);
+  setState(() { /* refresh dropdowns */ });
+}
+  
+  
+  Future<void> _saveFlow() async {
+  final def = FlowDefinition(
+    nodes: _nodes.keys.toList(),
+    edges: _edges,
+  );
+  await _repo.upsertFlowDefinition(widget.presetId, def);
+  if (!mounted) return;
+  Navigator.pop(context);
+}
+
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Edit Auto‐Preset Flow'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: _showManageMethodsDialog,
+          ),
+          IconButton(
+            icon: const Icon(Icons.save),
+            onPressed: _saveFlow,
+          ),
+        ],
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
+                    children: [
+                      // Parent selector
+                      DropdownButton<String>(
+                        hint: const Text('Parent node'),
+                        value: _selectedParent,
+                        items: _nodes.keys
+                            .map((n) => DropdownMenuItem(value: n, child: Text(n)))
+                            .toList(),
+                        onChanged: (v) => setState(() {
+                          _selectedParent = v;
+                        }),
+                      ),
+                      const SizedBox(width: 8),
+                      // Outcome selector
+                      DropdownButton<String>(
+                        value: _selectedOutcome,
+                        items: const [
+                          DropdownMenuItem(value: 'success', child: Text('Success')),
+                          DropdownMenuItem(value: 'failure', child: Text('Failure')),
+                        ],
+                        onChanged: (v) => setState(() {
+                          _selectedOutcome = v!;
+                        }),
+                      ),
+                      const SizedBox(width: 8),
+                      // Method selector
+                      DropdownButton<FlowMethod>(
+                        hint: const Text('Method'),
+                        value: _selectedMethod,
+                        items: _methods
+                            .map((m) => DropdownMenuItem(value: m, child: Text(m.name)))
+                            .toList(),
+                        onChanged: (v) => setState(() {
+                          _selectedMethod = v;
+                        }),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        onPressed:
+                            (_selectedParent != null && _selectedMethod != null)
+                                ? () {
+                                    _addNode(
+                                      _selectedParent!,
+                                      isSuccess: _selectedOutcome == 'success',
+                                    );
+                                    setState(() {});
+                                  }
+                                : null,
+                        child: const Text('Add'),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Container(
+                    color: Colors.white,
+                    child: FlowChart(
+                      dashboard: _dashboard,
+                      onDashboardTapped: (_, __) {},
+                      onElementPressed: (_, __, ___) {},
+                    ),
+                  ),
+                ),
+              ],
+            ),
+    );
+  }
+}
+
+/// Internal data for positioning
+class _NodeData {
+  final int depth;
+  _NodeData({required this.depth});
+}
+
+
+alright, all of those seem to work now, the next thing i would like to alter in the flowchart is that with the current code, it seems like you can add seemingly infinite methods to a success or failure, and every method has its own node. 
+
+
+
+lets go through these one by one. for 1.  Persisting “Attached Methods”: how do we currently store methods in the code we had previously made? is it necessary to make additions to our database or saving code so that the list of methods
+
+
+
+for 1) “Determine the outcome”, the lines: "We apply your three checks (weightCheck, repCheck, volumeCheck)
+
+If all checked criteria pass, we call it success (true)
+
+Otherwise it’s failure (false)" are wrong. you assume you will be applying all three of the checks immediately, but this is not how i had laid it out. the checks aren't supposed to change from what we currently have, which is that there are three checks (weightCheck, repCheck, volumeCheck), and the user can decide which combination of the three checks they want to use to determine a success from the automatic_settings_sheet widget. for the target set which will be changed, it will be either the set deduced in the same way our current auto_increment_service file is finding it, or all the sets, if the user selected that in the automatic settings sheet.                  now, your interpretation of 2) “Walk the chart”, is entirely incorrect. a success or fail node in the flowchart represents exactly one successful or failed session. 
+
+
+
+Future<void> _processExercise(
+    Map<String, dynamic> pe,
+    Map<String, dynamic> se,
+    _AutoSettings settings,
+  ) async {
+    final peId = pe['id'] as int;
+    final seExId = se['id'] as int;
+
+    final exAuto = await _repo.fetchPresetExerciseAuto(peId);
+    int lastIdx = _resolveLastIdx(exAuto, settings.skipFirst);
+
+    final presetSets = await _repo.fetchPresetSets(peId);
+    final parentRows =
+        presetSets.where((r) => r['parent_set_id'] == null).toList();
+    if (parentRows.isEmpty) return;
+
+    lastIdx = _clampLastIdx(lastIdx, parentRows.length, settings.skipFirst);
+
+    // If the user has chosen “Adjust All sets,” loop through every parent set:
+  if (settings.adjustAllSets) {
+    // Determine the first index we should adjust
+    final startIdx = (settings.skipFirst && parentRows.length >= 2) ? 2 : 1;
+
+    for (var idx = startIdx; idx <= parentRows.length; idx++) {
+      final row    = parentRows[idx - 1];
+      final setId  = row['id'] as int;
+      final w0     = (row['weight'] as num).toDouble();
+      final r0     = row['reps']   as int;
+
+      // pick the correct IA for this set (per-set → per-exercise → global)
+      final ia = await _resolveIncrementAmount(setId, exAuto, settings.globalIncrement);
+
+      // decide success / failure for this set
+      final success = await _determineSuccess(
+        seExId,
+        idx,
+        w0,
+        r0,
+        settings,
+      );
+
+      // compute and persist the new weight
+      final newW = _computeNewWeight(w0, success, ia);
+      await _persistUpdatedTarget(setId, newW);
+    }
+
+    // when adjusting ALL sets, we do _not_ change the “lastSetIndex” pointer
+    return;
+  }
+
+    // ───────────────────────────────────────────────────────────
+  // Single‐set mode (unchanged from before)
+  //
+  // 1) Target the single set at lastIdx
+    final target = parentRows[lastIdx - 1];
+    final setId = target['id'] as int;
+
+    final ia = await _resolveIncrementAmount(setId, exAuto, settings.globalIncrement);
+    final targetWeight = (target['weight'] as num).toDouble();
+    final targetReps = (target['reps'] as int);
+
+    final success = await _determineSuccess(
+      seExId,
+      lastIdx,
+      targetWeight,
+      targetReps,
+      settings,
+    );
+
+    final newWeight = _computeNewWeight(targetWeight, success, ia);
+    await _persistUpdatedTarget(setId, newWeight);
+
+    final nextIdx =
+        _computeNextIdx(lastIdx, parentRows.length, settings.skipFirst);
+    await _saveNextPointer(
+      peId,
+      exAuto?['increment_amount'] as double?,
+      nextIdx,
+    );
+  }
+
+  int _resolveLastIdx(Map<String, dynamic>? exAuto, bool skipFirst) {
+    int lastIdx = exAuto?['last_set_index'] as int? ?? 1;
+    if (skipFirst && lastIdx == 1) lastIdx = 2;
+    return lastIdx;
+  }
+
+  int _clampLastIdx(int lastIdx, int parentCount, bool skipFirst) {
+    if (lastIdx > parentCount) {
+      return (skipFirst && parentCount >= 2) ? 2 : 1;
+    }
+    return lastIdx;
+  }
+
+  Future<double> _resolveIncrementAmount(
+    int setId,
+    Map<String, dynamic>? exAuto,
+    double globalIA,
+  ) async {
+    double ia = globalIA;
+    final setAuto = await _repo.fetchPresetSetAuto(setId);
+    if (setAuto != null && setAuto['increment_amount'] != null) {
+      ia = (setAuto['increment_amount'] as num).toDouble();
+    } else if (exAuto != null && exAuto['increment_amount'] != null) {
+      ia = (exAuto['increment_amount'] as num).toDouble();
+    }
+    return ia;
+  }
+
+  Future<bool> _determineSuccess(
+    int seExId,
+    int lastIdx,
+    double targetWeight,
+    int targetReps,
+    _AutoSettings settings,
+  ) async {
+    final sessionSets = await _repo.fetchSets(seExId);
+    final perfParents =
+        sessionSets.where((r) => r['parent_set_id'] == null).toList();
+    if (perfParents.length < lastIdx) return false;
+
+    final perf = perfParents[lastIdx - 1];
+    final w = (perf['weight'] as num).toDouble();
+    final r = perf['reps'] as int;
+    final perfVol = w * r;
+    final targetVol = targetWeight * targetReps;
+
+    if (settings.weightCheck && w < targetWeight) return false;
+    if (settings.repCheck && r < targetReps) return false;
+    if (settings.volumeCheck && perfVol < targetVol) return false;
+
+    return true;
+  }
+
+  double _computeNewWeight(double targetWeight, bool success, double ia) {
+    return success ? targetWeight + ia : max(0.0, targetWeight - 2 * ia);
+  }
+
+  Future<void> _persistUpdatedTarget(int setId, double newWeight) async {
+    await _repo.updatePresetSetWeight(setId, newWeight);
+  }
+
+  int _computeNextIdx(int lastIdx, int parentCount, bool skipFirst) {
+    int nextIdx = lastIdx + 1;
+    if (nextIdx > parentCount) {
+      nextIdx = (skipFirst && parentCount >= 2) ? 2 : 1;
+    }
+    return nextIdx;
+  }
+
+  Future<void> _saveNextPointer(
+    int presetExerciseId,
+    double? incrementAmount,
+    int nextIdx,
+  ) async {
+    await _repo.upsertPresetExerciseAuto(
+      presetExerciseId: presetExerciseId,
+      incrementAmount: incrementAmount,
+      lastSetIndex: nextIdx,
+    );
+  }
+
+
+5
+50
+10
+
+225	10
+350-335-320	7
+405	1

@@ -544,15 +544,24 @@ Future<List<Map<String, dynamic>>> fetchPresetStretchItems(int presetExerciseId)
 
   // ─── PER-EXERCISE OVERRIDES ───────────────────────────────────────────
 
-  /// Fetches the auto override (IA + rotation) for a specific preset exercise.
-  Future<Map<String, dynamic>?> fetchPresetExerciseAuto(
-          int presetExerciseId) =>
-      _dbHelper.fetchPresetExerciseAuto(presetExerciseId);
+ /// Fetches the per-exercise auto‐override, now with 'last_node'.
+Future<Map<String, dynamic>?> fetchPresetExerciseAuto(int presetExerciseId) =>
+    _dbHelper.fetchPresetExerciseAuto(presetExerciseId);
+
 
   /// Inserts or updates the per-exercise IA override and last_set_index.
-  Future<void> upsertPresetExerciseAuto({ required int presetExerciseId, double? incrementAmount, required int lastSetIndex,}) => 
-  _dbHelper.upsertPresetExerciseAuto( presetExerciseId: presetExerciseId, incrementAmount: incrementAmount, lastSetIndex: lastSetIndex,  );
-
+  /// Upserts the per-exercise IA override, rotation pointer, and landing node.
+Future<void> upsertPresetExerciseAuto({
+  required int presetExerciseId,
+  double? incrementAmount,
+  required int lastSetIndex,
+  String? lastNode,
+}) => _dbHelper.upsertPresetExerciseAuto(
+      presetExerciseId: presetExerciseId,
+      incrementAmount: incrementAmount,
+      lastSetIndex: lastSetIndex,
+      lastNode: lastNode,
+    );
   /// Deletes the per-exercise auto override for a preset exercise.
   Future<void> deletePresetExerciseAuto(int presetExerciseId) =>  _dbHelper.deletePresetExerciseAuto(presetExerciseId);
 
@@ -571,6 +580,32 @@ Future<List<Map<String, dynamic>>> fetchPresetStretchItems(int presetExerciseId)
 
   /// Updates the weight for a preset set.
   Future<void> updatePresetSetWeight(int presetSetId, double weight) =>  _dbHelper.updatePresetSetWeight(presetSetId, weight);
+
+
+/// Update reps for a single preset set.
+Future<void> updatePresetSetReps(int presetSetId, int reps) =>
+    _dbHelper.updatePresetSetReps(presetSetId, reps);
+
+/// Add one new set to a preset exercise.
+Future<int> addPresetSet({
+  required int presetExerciseId,
+  required double weight,
+  required int reps,
+  required int orderIndex,
+  int? parentSetId,
+}) =>
+    _dbHelper.addPresetSet(
+      presetExerciseId: presetExerciseId,
+      weight: weight,
+      reps: reps,
+      orderIndex: orderIndex,
+      parentSetId: parentSetId,
+    );
+
+/// Delete a single set from a preset exercise.
+Future<int> deletePresetSet(int presetSetId) =>
+    _dbHelper.deletePresetSet(presetSetId);
+
 
   /// Flow‐chart JSON for a preset.
 Future<FlowDefinition> fetchFlowDefinition(int presetId) async {

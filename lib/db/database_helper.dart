@@ -48,7 +48,7 @@ class DatabaseHelper {
     final path = join(dbPath, 'fitness_tracker.db');
     return await openDatabase(
       path,
-      version: 12,  
+      version: 13,  
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
@@ -90,6 +90,9 @@ if (oldVersion < 10) {
     }
 if (oldVersion < 12) {
       await Schema.migrateV12(db);
+    }
+    if (oldVersion < 13) {
+      await Schema.migrateV13(db);
     }
   },
 );
@@ -1497,26 +1500,31 @@ Future<List<Map<String, dynamic>>> fetchPresetStretchItems(int presetExerciseId)
   // ─── PER-EXERCISE OVERRIDES ──────────────────────────────────────────────
 
   /// Fetches the auto override (IA + rotation) for a specific preset exercise.
-  Future<Map<String, dynamic>?> fetchPresetExerciseAuto(int presetExerciseId) async {
-    final db = await database;
-    return PresetExerciseAutoDao.getExerciseAuto(db, presetExerciseId);
-  }
+  /// Fetches auto overrides _including_ last_node.
+Future<Map<String, dynamic>?> fetchPresetExerciseAuto(int presetExerciseId) async {
+  final db = await database;
+  return PresetExerciseAutoDao.getExerciseAuto(db, presetExerciseId);
+}
 
   /// Inserts or updates the per-exercise IA override and last_set_index.
-  Future<void> upsertPresetExerciseAuto({
-    required int presetExerciseId,
-    double? incrementAmount,
-    required int lastSetIndex,
-  }) async {
-    final db = await database;
-    await PresetExerciseAutoDao.upsertExerciseAuto(
-      db,
-      presetExerciseId: presetExerciseId,
-      incrementAmount: incrementAmount,
-      lastSetIndex: lastSetIndex,
-    );
-  }
-
+  /// Upsert with lastNode.
+Future<void> upsertPresetExerciseAuto({
+  required int presetExerciseId,
+  double? incrementAmount,
+  required int lastSetIndex,
+  String? lastNode,
+}) async {
+  final db = await database;
+  await PresetExerciseAutoDao.upsertExerciseAuto(
+    db,
+    presetExerciseId: presetExerciseId,
+    incrementAmount: incrementAmount,
+    lastSetIndex: lastSetIndex,
+    lastNode: lastNode,
+  );
+}
+  
+  
   /// Deletes the per-exercise auto override for a preset exercise.
   Future<void> deletePresetExerciseAuto(int presetExerciseId) async {
     final db = await database;
@@ -1598,6 +1606,42 @@ Future<int> upsertFlowMethod({
 Future<int> deleteFlowMethod(int methodId) async {
   final db = await database;
   return PresetFlowMethodsDao.deleteMethod(db, methodId);
+}
+
+
+Future<void> updatePresetSetReps(int presetSetId, int reps) async {
+  final db = await database;
+  await PresetDetailDao.updatePresetSetReps(
+    db: db,
+    presetSetId: presetSetId,
+    reps: reps,
+  );
+}
+
+Future<int> addPresetSet({
+  required int presetExerciseId,
+  required double weight,
+  required int reps,
+  required int orderIndex,
+  int? parentSetId,
+}) async {
+  final db = await database;
+  return PresetDetailDao.addPresetSet(
+    db: db,
+    presetExerciseId: presetExerciseId,
+    weight: weight,
+    reps: reps,
+    orderIndex: orderIndex,
+    parentSetId: parentSetId,
+  );
+}
+
+Future<int> deletePresetSet(int presetSetId) async {
+  final db = await database;
+  return PresetDetailDao.deletePresetSet(
+    db: db,
+    presetSetId: presetSetId,
+  );
 }
 
 }

@@ -36,8 +36,6 @@ List<FlowEdge> _edges = [];
   FlowDefinition? _flowDef;
   List<FlowMethod> _methods = [];
 
-  final Map<String, List<String>> _attachedMethodsByNode = {};
-
 
   FlowMethod? _selectedMethod;
 
@@ -104,60 +102,47 @@ void _initializeCounters() {
 }
 
   void _buildDashboard() {
-    _dashboard = Dashboard(defaultArrowStyle: ArrowStyle.curve);
-    _nodes.clear();
-    _nodeData.clear();
-    _placement.clear();
-    // 0.5) Rebuild any saved “method” attachments
-   _attachedMethodsByNode.clear();
-   for (final e in _flowDef?.edges ?? []) {
-     if (e.outcome == 'method') {
-       _attachedMethodsByNode
-         .putIfAbsent(e.from, () => <String>[])
-        .add(e.to);
-     }
-   }
+  // 0) Reset the dashboard and maps
+  _dashboard = Dashboard(defaultArrowStyle: ArrowStyle.curve);
+  _nodes.clear();
+  _nodeData.clear();
+  _placement.clear();
 
-    // If no nodes defined, fall back to default tree.
-    if (_flowDef == null || _flowDef!.nodes.isEmpty) {
-      _initializeDefaultTree();
-    } else {
+  // 1) If there’s no saved flow, build the default tree
+  if (_flowDef == null || _flowDef!.nodes.isEmpty) {
+    _initializeDefaultTree();
+  } else {
+    // 2) Compute depths via BFS from "1st attempt"
+    final depths = <String,int>{'1st attempt': 0};
+    final q = ['1st attempt'];
+    final adjacency = <String,List<String>>{};
 
-    // 1) Compute depths via BFS from "1st attempt"
-    final depths = <String,int>{};
-    final q = <String>[];
-    depths['1st attempt'] = 0;
-    q.add('1st attempt');
-
-    final adjacency = <String, List<String>>{};
     for (var e in _flowDef!.edges.where((e) => e.outcome != 'method')) {
       adjacency.putIfAbsent(e.from, () => []).add(e.to);
     }
-
     while (q.isNotEmpty) {
       final cur = q.removeAt(0);
       final d = depths[cur]!;
       for (var child in adjacency[cur] ?? []) {
-      if (!depths.containsKey(child)) {
-        depths[child] = d + 1;
-        q.add(child);
+        if (!depths.containsKey(child)) {
+          depths[child] = d + 1;
+          q.add(child);
+        }
       }
     }
-    }
 
-    // 2) Create elements in depth order
+    // 3) Create all nodes in depth order
     final sorted = depths.keys.toList()
-      ..sort((a,b) => depths[a]!.compareTo(depths[b]!));
+      ..sort((a, b) => depths[a]!.compareTo(depths[b]!));
     for (var name in sorted) {
-      final depth = depths[name]!;
-      final idxInRow = (_placement[depth] ?? 0);
-      _placement[depth] = idxInRow + 1;
-
-      final pos = _baseOffset + Offset(idxInRow * _hSpacing, depth * _vSpacing);
+      final depth   = depths[name]!;
+      final idx     = (_placement[depth] ?? 0);
+      _placement[depth] = idx + 1;
+      final pos = _baseOffset + Offset(idx * _hSpacing, depth * _vSpacing);
 
       final el = FlowElement(
         position: pos,
-        size: const Size(60, 30),
+        size: const Size(60,30),
         text: name,
         textSize: 7,
         kind: ElementKind.rectangle,
@@ -169,46 +154,39 @@ void _initializeCounters() {
         ],
       );
       _dashboard.addElement(el);
-      _nodes[name] = el;
+      _nodes[name]    = el;
       _nodeData[name] = _NodeData(depth: depth);
     }
 
-    // 3) Add edges
-    // 3) Add *only branch* edges (success/failure).  Skip outcome=='method'
-    //for (var e in _edges) {
+    // 4) Add only branch edges (success/failure)
     for (var e in _edges.where((e) => e.outcome != 'method')) {
       final fromEl = _nodes[e.from]!;
       final toEl   = _nodes[e.to]!;
-      final style = e.outcome == 'success'
-        ? ArrowStyle.segmented
-        : ArrowStyle.curve;
-      final color = e.outcome == 'success' ? Colors.blue : Colors.red;
+      final isSucc = e.outcome == 'success';
       _dashboard.addNextById(
-        fromEl, 
-        toEl.id, 
+        fromEl,
+        toEl.id,
         ArrowParams(
-          color: color,
+          color: isSucc ? Colors.blue : Colors.red,
           thickness: 2,
-          style: style,
+          style: isSucc ? ArrowStyle.segmented : ArrowStyle.curve,
           startArrowPosition: Alignment.bottomCenter,
-          endArrowPosition: Alignment.topCenter,
+          endArrowPosition:   Alignment.topCenter,
         ),
       );
     }
+  }
 
-    }
+  // 5) Render every node’s method‐bullets from _edges
+  for (var node in _nodes.keys) {
+    _refreshNodeText(node);
+  }
 
-    // 4) Now render bullet‐lists for each node that has attached methods
-    for (var parent in _attachedMethodsByNode.keys) {
-      _refreshNodeText(parent);
-    }
-    
-     // Only draw loopbacks when loading a saved definition:
+  // 6) Only draw grey loop‐backs when loading a saved definition
   if (_flowDef != null && _flowDef!.nodes.isNotEmpty) {
     _applyLoopbacks();
   }
-  
-  }
+}
 
   /// Default starting tree: root → success1 + fail1
 void _initializeDefaultTree() {
@@ -575,14 +553,17 @@ void _onAddFailure() {
 }
 
 void _refreshNodeText(String nodeName) {
-  final el = _nodes[nodeName]!;
-  final methods = _attachedMethodsByNode[nodeName] ?? [];
+  // Gather all 'method' edges for this node
+  final methods = _edges
+      .where((e) => e.from == nodeName && e.outcome == 'method')
+      .map((e) => e.to)
+      .toList();
 
-  // Build a multi-line label: first the node name, then bullets
-  final lines = [nodeName, ...methods.map((m) => m)];
+  final el = _nodes[nodeName]!;
+  final lines = [nodeName, ...methods];
   el.setText(lines.join('\n'));
 
-  // Grow height to fit up to 3 methods (adjust px as needed)
+  // Resize to fit bullets (one line per method)
   final baseHeight = 30.0;
   final lineHeight = 16.0;
   final newHeight = baseHeight + methods.length * lineHeight;
@@ -596,21 +577,15 @@ void _onAddMethod() {
   final method = _selectedMethod;
   if (target == null || method == null) return;
 
-  // Keep at most 3 methods per node
-  final list = _attachedMethodsByNode[target] ?? <String>[];
-  if (list.length >= 3) return;
+  // 1) Append the edge
+  _edges.add(FlowEdge(from: target, outcome: 'method', to: method.name));
 
-  // Attach it
-  list.add(method.name);
-  _attachedMethodsByNode[target] = list;
-
-  _edges.add(FlowEdge( from: target, outcome: 'method', to: method.name));
-
-  // Redraw that node’s label
+  // 2) Redraw that node’s label
   _refreshNodeText(target);
 
   setState(() {});
 }
+
 
 
 /// Remove the last attached method under the selected node.
@@ -618,30 +593,18 @@ void _onRemoveMethod() {
   final target = _selectedMethodNode;
   if (target == null) return;
 
-  final attached = _attachedMethodsByNode[target];
-  if (attached == null || attached.isEmpty) return;
+  // Find only the 'method' edges from this node, in insertion order
+  final methodEdges = _edges
+      .where((e) => e.from == target && e.outcome == 'method')
+      .toList();
+  if (methodEdges.isEmpty) return;
 
-  // 1) Pop off the last method name
-  final removedMethod = attached.removeLast();
+  // Remove the last one
+  final toRemove = methodEdges.last;
+  _edges.remove(toRemove);
 
-  // 2) If that was the only one, remove the entry entirely
-  if (attached.isEmpty) {
-    _attachedMethodsByNode.remove(target);
-  } else {
-    _attachedMethodsByNode[target] = attached;
-  }
-
-  // 3) Remove its FlowEdge from the model
-  _edges.removeWhere((e) =>
-    e.from == target &&
-    e.outcome == 'method' &&
-    e.to == removedMethod
-  );
-
-  // 4) Update the node's label to drop the bullet
+  // Update UI
   _refreshNodeText(target);
-
-  // 5) Repaint
   setState(() {});
 }
 
@@ -650,29 +613,37 @@ void _onRemoveNode() {
   final name = _selectedMethodNode;
   if (name == null || name == '1st attempt') return;
 
-  // Safety re-check:
+  // 1) Check for any branch children
   final branchKids = _edges.where((e) =>
     e.from == name &&
-    (e.outcome == 'success' || e.outcome == 'failure'));
-  final hasMethods = (_attachedMethodsByNode[name]?.isNotEmpty ?? false);
-  if (branchKids.isNotEmpty || hasMethods) return;
+    (e.outcome == 'success' || e.outcome == 'failure')
+  );
+  if (branchKids.isNotEmpty) return;
 
-  // 1) Remove any incoming branch edges (so parents drop their arrow)
-  _edges.removeWhere((e) => e.to == name && 
-    (e.outcome == 'success' || e.outcome == 'failure'));
+  // 2) Check for any attached methods
+  final hasMethods = _edges.any((e) =>
+    e.from == name && e.outcome == 'method'
+  );
+  if (hasMethods) return;
 
-  // 2) Remove this element from the dashboard & your maps
+  // 3) Remove any incoming branch edges (so parents drop their arrow)
+  _edges.removeWhere((e) =>
+    e.to == name &&
+    (e.outcome == 'success' || e.outcome == 'failure')
+  );
+
+  // 4) Remove the element from the dashboard & maps
   final el = _nodes.remove(name)!;
   _dashboard.removeElement(el);
   _nodeData.remove(name);
-  _attachedMethodsByNode.remove(name);
 
-  // 3) Clear selection
+  // 5) Clear selection
   _selectedMethodNode = null;
   _selectedMethod = null;
 
   setState(() {});
 }
+
 
 
 
@@ -749,55 +720,50 @@ Widget build(BuildContext context) {
   // Compute method‐targets: all except root
   final methodTargets = _nodes.keys.where((n) => n != '1st attempt').toList();
 
-  // Compute how many methods are attached to the selected method‐target
-  // (i.e. outgoing edges that point to a method‐node)
-  _methods.map((m) => m.name).toSet();
-  final attachedMethods = _attachedMethodsByNode[_selectedMethodNode] ?? <String>[];
+// 1) Get the list of method names attached to the selected node:
+final attachedMethods = _edges
+  .where((e) =>
+    e.from == _selectedMethodNode && e.outcome == 'method')
+  .map((e) => e.to)
+  .toList();
 
-  // 1) Figure out which method-types are already on the selected node
-final attachedNames = _attachedMethodsByNode[_selectedMethodNode] ?? [];
-
-// 2) Map each attached name into its MethodType (or null if not found)
-final attachedTypes = attachedNames
+// 2) Map those names back to their MethodType (if any), then unique them
+final attachedTypes = attachedMethods
   .map<MethodType?>((name) {
-    // find all methods matching that name
     final matches = _methods.where((m) => m.name == name);
-    if (matches.isEmpty) return null;        // no such method
-    return matches.first.type;               // return its type
+    return matches.isEmpty ? null : matches.first.type;
   })
-  .whereType<MethodType>()                  // drop any nulls
-  .toSet();                                 // unique set of types
+  .whereType<MethodType>()  // drops the nulls
+  .toSet();
 
-
-// 2) Build the list of methods *not* yet attached (one per type)
+// 3) Build the list of methods *not* yet attached (one per type)
 final availableMethods = _methods
   .where((m) => !attachedTypes.contains(m.type))
   .toList();
 
+// 4) Can we enable the “+ Method” button?
 final canAdd = 
-  _selectedMethodNode != null &&
-  _selectedMethod != null &&
-  availableMethods.contains(_selectedMethod!);
+    _selectedMethodNode != null &&
+    _selectedMethod    != null &&
+    availableMethods  .contains(_selectedMethod!);
 
-
-  bool canDeleteNode = true;
-  final selected = _selectedMethodNode;
-
-// 1) No deletion of root:
-if (selected == null || selected == '1st attempt') {
+// 5) Can we delete this node?
+bool canDeleteNode;
+final sel = _selectedMethodNode;
+if (sel == null || sel == '1st attempt') {
   canDeleteNode = false;
 } else {
-  // 2) no branch children?
-  final branchKids = _edges.where((e) =>
-    e.from == selected &&
+  // a) any branch‐children?
+  final hasBranchChildren = _edges.any((e) =>
+    e.from == sel &&
     (e.outcome == 'success' || e.outcome == 'failure'));
-  final hasBranchChildren = branchKids.isNotEmpty;
 
-  // 3) no methods?
-  final hasMethods = (_attachedMethodsByNode[selected]?.isNotEmpty ?? false);
+  // b) any methods?
+  final hasMethods = attachedMethods.isNotEmpty;
 
   canDeleteNode = !hasBranchChildren && !hasMethods;
 }
+
 
 
   return Scaffold(
@@ -930,6 +896,10 @@ ElevatedButton(
     ),
   );
 }
+
+
+
+
 }
 
 

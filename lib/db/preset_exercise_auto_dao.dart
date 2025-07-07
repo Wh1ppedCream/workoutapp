@@ -24,13 +24,15 @@ class PresetExerciseAutoDao {
     required int presetExerciseId,
     double? incrementAmount,
     required int lastSetIndex,
+    String? lastNode,               // ← new
   }) async {
     await db.insert(
       'preset_exercise_auto',
       {
         'preset_exercise_id': presetExerciseId,
-        'increment_amount': incrementAmount,
-        'last_set_index': lastSetIndex,
+        'increment_amount':   incrementAmount,
+        'last_set_index':     lastSetIndex,
+        'last_node':          lastNode,   // ← store the key of the last node
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
