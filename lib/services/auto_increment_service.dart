@@ -69,22 +69,27 @@ Future<void> apply({
       final lastNodeKey = exAuto?['last_node'] as String?;
 
       // 6) Traverse exactly one step
-      final toRun = await executor.traverse(
-        lastNodeKey: lastNodeKey,
-        outcome:    isSuccess,
-      );
+      final result = await executor.traverse(
+  lastNodeKey: lastNodeKey,
+  outcome: isSuccess,
+);
       // 7) Apply all returned methods
-      await _applyMethods(peId, seExId, toRun, settings);
+await _applyMethods(peId, seExId, result.methods, settings);
 
       // 8) Persist the new last_node
       await _repo.upsertPresetExerciseAuto(
-        presetExerciseId: peId,
-        incrementAmount:  exAuto?['increment_amount'] as double?,
-        lastSetIndex:     exAuto?['last_set_index']   as int? ?? 1,
-        lastNode:         toRun.isNotEmpty ? toRun.last.name : null,
-      );
+  presetExerciseId: peId,
+  incrementAmount:  exAuto?['increment_amount'] as double?,
+  lastSetIndex:     exAuto?['last_set_index']   as int? ?? 1,
+  lastNode:         result.nodeKey,
+);
+
+      
+
     }
   }
+
+
 
 Future<_AutoSettings?> _loadAutoSettings(int presetId) async {
     final auto = await _repo.fetchPresetAutoSettings(presetId);

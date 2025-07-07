@@ -2,6 +2,19 @@
 
 import '../models/preset_models.dart';
 
+
+/// When you traverse, you need both the node you landed on
+/// *and* the methods attached there.
+class TraverseResult {
+  /// The node key (e.g. "success1" or "fail2")
+  final String nodeKey;
+
+  /// The ordered list of FlowMethods to run at that node
+  final List<FlowMethod> methods;
+
+  TraverseResult(this.nodeKey, this.methods);
+}
+
 /// Walks a saved FlowDefinition + list of FlowMethods
 /// to decide, on each session outcome, which methods to run.
 class FlowExecutor {
@@ -30,33 +43,38 @@ class FlowExecutor {
     }
   }
 
-  /// Walks from [lastNodeKey] (or root) using [outcome] (true=success,false=failure),
-  /// returns the ordered FlowMethod objects to apply.
-  Future<List<FlowMethod>> traverse({
+/// Walks one step from [lastNodeKey] (or root) with [outcome].
+  /// Returns both the nodeKey you land on, and its methods.
+  Future<TraverseResult> traverse({
     String? lastNodeKey,
     required bool outcome,
   }) async {
+    // start from where we left off (or from root)
     final start = lastNodeKey ?? _rootKey;
-    final key    = '$start:${outcome ? 'success' : 'failure'}';
+    final branch = outcome ? 'success' : 'failure';
+    var next = _branchMap['$start:$branch'];
 
-    // 1) find the next node on this branch
-    String? next = _branchMap[key];
     if (next == null) {
-      // 2) if missing, loop back to root and try again
-      final rootKey = '$_rootKey:${outcome ? 'success' : 'failure'}';
-      next = _branchMap[rootKey];
-      if (next == null) {
-        // no branch at all for this outcome
-        return [];
-      }
+      // loop back to root and try again
+      next = _branchMap['$_rootKey:$branch'];
+      next ??= _rootKey;
     }
 
-    // 3) gather method names attached to that node
-    final names = _methodMap[next] ?? [];
+     // 3) gather method names attached to that node
+  final names = _methodMap[next] ?? [];
 
-    // 4) map each name back to its FlowMethod object
-    return names.map((n) {
-      return _methods.firstWhere((m) => m.name == n);
-    }).toList();
+  // 4) map each name back to its FlowMethod object, skipping any missing
+  final resultMethods = <FlowMethod>[];
+  for (var name in names) {
+    for (var method in _methods) {
+      if (method.name == name) {
+        resultMethods.add(method);
+        break;    // stop searching once we've found the match
+      }
+    }
+    // if no method matched that name, we simply skip it
+  }
+
+  return TraverseResult(next, resultMethods);
   }
 }

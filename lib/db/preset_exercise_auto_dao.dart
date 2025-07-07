@@ -49,4 +49,5 @@ class PresetExerciseAutoDao {
       whereArgs: [presetExerciseId],
     );
   }
+
 }
