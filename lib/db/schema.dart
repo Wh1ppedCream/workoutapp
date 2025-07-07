@@ -114,6 +114,7 @@ class Schema {
     await migrateV10(db);
     await migrateV11(db);
     await migrateV12(db);
+    await migrateV13(db);
   }
 
   /// Handler for onUpgrade callback.
@@ -129,6 +130,7 @@ class Schema {
     if (oldVersion < 10) await migrateV10(db);
     if (oldVersion < 11) await migrateV11(db);
     if (oldVersion < 12) await migrateV12(db);
+    if (oldVersion < 13) await migrateV13(db);
   }
 
   /// Migration to version 3: adds rating, equipment/muscle tables.
@@ -520,6 +522,21 @@ static Future<void> migrateV12(Database db) async {
         UNIQUE(preset_id, name)
       );
     ''');
+  });
+}
+
+
+/// Migration to version 13: add last_node to per-exercise auto table.
+static Future<void> migrateV13(Database db) async {
+  await db.transaction((txn) async {
+    // Add last_node TEXT if not already present
+    final cols = await txn.rawQuery("PRAGMA table_info('preset_exercise_auto')");
+    final hasLastNode = cols.any((c) => c['name'] == 'last_node');
+    if (!hasLastNode) {
+      await txn.execute(
+        "ALTER TABLE preset_exercise_auto ADD COLUMN last_node TEXT;"
+      );
+    }
   });
 }
 

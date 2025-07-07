@@ -149,6 +149,52 @@ static Future<int> updatePresetSetWeight({
   );
 }
 
+/// Update just the `reps` column for one preset_set.
+  static Future<void> updatePresetSetReps({
+    required Database db,
+    required int presetSetId,
+    required int reps,
+  }) async {
+    await db.update(
+      'preset_sets',
+      { 'reps': reps },
+      where: 'id = ?',
+      whereArgs: [presetSetId],
+    );
+  }
 
+  /// Insert one new set into `preset_sets`.
+  /// If you want to clone a set, pass weight & reps from an existing row.
+  static Future<int> addPresetSet({
+    required Database db,
+    required int presetExerciseId,
+    required double weight,
+    required int reps,
+    required int orderIndex,
+    int? parentSetId,
+  }) async {
+    return db.insert(
+      'preset_sets',
+      {
+        'preset_exercise_id': presetExerciseId,
+        'weight': weight,
+        'reps': reps,
+        'order_index': orderIndex,
+        'parent_set_id': parentSetId,
+      },
+    );
+  }
+
+  /// Delete a single preset_set by its ID.
+  static Future<int> deletePresetSet({
+    required Database db,
+    required int presetSetId,
+  }) {
+    return db.delete(
+      'preset_sets',
+      where: 'id = ?',
+      whereArgs: [presetSetId],
+    );
+  }
 
 }
