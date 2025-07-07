@@ -31,21 +31,35 @@ class PresetAutoSettingsDao {
   required bool   volumeCheck,    // NEW
   required bool adjustAllSets,
   }) async {
-    await db.insert(
-      'preset_auto_settings',
-      {
-        'preset_id': presetId,
-        'is_automatic': isAutomatic ? 1 : 0,
-        'global_increment': globalIncrement,
-        'skip_first_set': skipFirstSet ? 1 : 0,
-      'weight_check'     : weightCheck    ? 1 : 0,  // NEW
-      'rep_check'        : repCheck       ? 1 : 0,  // NEW
-      'volume_check'     : volumeCheck    ? 1 : 0,  // NEW
-      'adjust_all_sets':  adjustAllSets ? 1 : 0,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    // 1) Pull the existing row so we can keep its flow_definition JSON
+    final existing = await getAutoSettings(db, presetId);
+    final existingFlowDef = existing?['flow_definition'] as String? ?? '{}';
+
+    // 2) Prepare the full row
+  final values = {
+    'preset_id':        presetId,
+    'is_automatic':     isAutomatic   ? 1 : 0,
+    'global_increment': globalIncrement,
+    'skip_first_set':   skipFirstSet  ? 1 : 0,
+    'weight_check':     weightCheck   ? 1 : 0,
+    'rep_check':        repCheck      ? 1 : 0,
+    'volume_check':     volumeCheck   ? 1 : 0,
+    'adjust_all_sets':  adjustAllSets ? 1 : 0,
+    'flow_definition':  existingFlowDef,
+  };
+
+  // 3) Try an UPDATE first
+  final updated = await db.update(
+    'preset_auto_settings',
+    values,
+    where: 'preset_id = ?',
+    whereArgs: [presetId],
+  );
+  if (updated == 0) {
+    // 4) If no row was updated, INSERT a new one
+    await db.insert('preset_auto_settings', values);
   }
+}
 
 
   /// Deletes the automatic settings for a preset (disables automatic).
