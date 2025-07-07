@@ -73,16 +73,14 @@ Future<void> apply({
   lastNodeKey: lastNodeKey,
   outcome: isSuccess,
 );
-      // 7) Apply all returned methods
-await _applyMethods(peId, seExId, result.methods, settings);
-
-      // 8) Persist the new last_node
-      await _repo.upsertPresetExerciseAuto(
-  presetExerciseId: peId,
-  incrementAmount:  exAuto?['increment_amount'] as double?,
-  lastSetIndex:     exAuto?['last_set_index']   as int? ?? 1,
-  lastNode:         result.nodeKey,
-);
+      // 7) Apply all returned methods (this now also rotates & persists both pointers)
+      await _applyMethods(
+        peId,
+        seExId,
+        result.methods,
+        settings,
+        result.nodeKey,    // <-- pass the new last_node here
+      );
 
       
 
@@ -154,6 +152,7 @@ Future<_AutoSettings?> _loadAutoSettings(int presetId) async {
     int sessionExerciseId,
     List<FlowMethod> methods,
     _AutoSettings settings,
+     String? newLastNode,
   ) async {
     // 1) Load current parent sets
     final allSets = await _repo.fetchPresetSets(presetExerciseId);
@@ -176,19 +175,36 @@ Future<_AutoSettings?> _loadAutoSettings(int presetId) async {
     // 4) Run each method
     for (final m in methods) {
       switch (m.type) {
-        case MethodType.weight:
-          final sign   = m.params['sign']   as String;
-          final factor = m.params['factor'] as double;
-          for (var row in targetRows) {
-            final id   = row['id'] as int;
-            final oldW = (row['weight'] as num).toDouble();
-            final delta = factor * settings.globalIncrement;
-            final newW  = (sign == '+')
-              ? oldW + delta
-              : max(0.0, oldW - delta);
-            await _repo.updatePresetSetWeight(id, newW);
+      case MethodType.weight:
+        final sign   = m.params['sign']   as String;
+        final factor = m.params['factor'] as double;
+
+        for (var row in targetRows) {
+          final setId = row['id'] as int;
+
+          // ① Try per‐set override
+          double ia = settings.globalIncrement;
+          final setAuto = await _repo.fetchPresetSetAuto(setId);
+          if (setAuto != null && setAuto['increment_amount'] != null) {
+            ia = (setAuto['increment_amount'] as num).toDouble();
+          } else {
+            // ② Fallback to per‐exercise override
+            final exAuto = await _repo.fetchPresetExerciseAuto(presetExerciseId);
+            if (exAuto != null && exAuto['increment_amount'] != null) {
+              ia = (exAuto['increment_amount'] as num).toDouble();
+            }
           }
-          break;
+
+          // ③ Now apply your equation: old ± factor * ia
+          final oldW  = (row['weight'] as num).toDouble();
+          final delta = factor * ia;
+          final newW  = (sign == '+')
+            ? oldW + delta
+            : max(0.0, oldW - delta);
+
+          await _repo.updatePresetSetWeight(setId, newW);
+        }
+        break;
 
         case MethodType.rep:
           final sign = m.params['sign']   as String;
@@ -240,7 +256,28 @@ Future<_AutoSettings?> _loadAutoSettings(int presetId) async {
           await _repo.deletePresetSet(last['id'] as int);
           break;
       }
+
     }
+
+      // ─── 5) rotate & persist the set‐pointer, if not "adjust all" ───
+  if (!settings.adjustAllSets) {
+    // compute next index (wrap around, honor skipFirst)
+    int nextIdx = lastIdx + 1;
+    if (nextIdx > parents.length) {
+      nextIdx = (settings.skipFirst && parents.length >= 2) ? 2 : 1;
+    }
+
+    // fetch the existing per-exercise auto so we preserve incrementAmount + lastNode
+    final exAuto2 = await _repo.fetchPresetExerciseAuto(presetExerciseId);
+
+    await _repo.upsertPresetExerciseAuto(
+      presetExerciseId: presetExerciseId,
+      incrementAmount:  exAuto2?['increment_amount'] as double?,
+      lastSetIndex:     nextIdx,
+      lastNode:         newLastNode,   // <-- persist the updated flow position
+    );
+  }
+
   }
 
 
