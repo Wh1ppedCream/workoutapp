@@ -286,46 +286,119 @@ class PresetSession extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Persists all in-memory exercises back to the preset tables.
-  Future<void> saveChanges() async {
-    await _repo.deletePresetExercises(presetId);
-    for (var i = 0; i < exercises.length; i++) {
-      final we = exercises[i];
-      int? defId;
-      if (we is WeightExercise) {
-        defId = _originalDefIds[i] ??
-            await _repo.findExerciseDefinitionId(we.name, we.equipment);
-      }
-      final newId = await _repo.addExerciseToPreset(
-        presetId,
-        defId,
-        we is WeightExercise ? 'weight' : we is CardioExercise ? 'cardio' : 'stretch',
-        i,
-      );
-      if (we is WeightExercise) {
-        await _repo.savePresetWeightSets(newId, we.sets, we.changeSets);
-      } else if (we is CardioExercise) {
-        await _repo.savePresetCardio(
-          newId,
-          we.cardioName,
-          we.cardioNote,
-          we.plannedMinutes,
-          we.elapsedSeconds,
-        );
-      } else if (we is StretchExercise) {
-        // Convert back to raw maps for DAO
-        await _repo.savePresetStretch(
-          newId,
-          we.stretchInstances.map((inst) => inst.toMap()).toList(),
-        );
-      }
+  /// Persists all in-memory exercises back to the preset tables,
+/// but preserves any existing per-exercise and per-set overrides.
+Future<void> saveChanges() async {
+  // 0) Snapshot existing overrides by exercise-order index
+  final oldExRows = await _repo.fetchPresetExercises(presetId);
+  final exOverrideByOrder = <int, Map<String, dynamic>>{};
+  final setOverrideByOrder = <int, Map<int, double>>{};
+
+  for (var row in oldExRows) {
+    final oldExId = row['id'] as int;
+    final order   = row['order_index'] as int;
+
+    // a) per-ex override
+    final exAuto = await _repo.fetchPresetExerciseAuto(oldExId);
+    if (exAuto != null) {
+      exOverrideByOrder[order] = {
+        'increment_amount': exAuto['increment_amount'],
+        'last_set_index':   exAuto['last_set_index'],
+        'last_node':        exAuto['last_node'],
+      };
     }
 
-    _hasChanges = false;
-    // now re-sync all of the internal lists, including:
-  // _presetExerciseIds, _presetParentSetIds, _presetChildSetIds, etc.
-  await _loadPreset();
+    // b) per-set overrides (only parents)
+    final sets = await _repo.fetchPresetSets(oldExId);
+    final parents = sets.where((r) => r['parent_set_id'] == null).toList();
+    for (var i = 0; i < parents.length; i++) {
+      final setId = parents[i]['id'] as int;
+      final setAuto = await _repo.fetchPresetSetAuto(setId);
+      if (setAuto != null && setAuto['increment_amount'] != null) {
+        setOverrideByOrder.putIfAbsent(order, () => {})[i] =
+            (setAuto['increment_amount'] as num).toDouble();
+      }
+    }
   }
+
+  // 1) Delete all exercises & their sets
+  await _repo.deletePresetExercises(presetId);
+
+  // 2) Re-insert in the same order and re-apply overrides
+  for (var i = 0; i < exercises.length; i++) {
+    final we = exercises[i];
+
+    // 2a) find or re-use definition ID
+    int? defId;
+    if (we is WeightExercise) {
+      defId = _originalDefIds[i] ??
+          await _repo.findExerciseDefinitionId(we.name, we.equipment);
+    }
+
+    // 2b) insert the exercise
+    final newExId = await _repo.addExerciseToPreset(
+      presetId,
+      defId,
+      we is WeightExercise
+          ? 'weight'
+          : we is CardioExercise
+              ? 'cardio'
+              : 'stretch',
+      i,
+    );
+
+    // 2c) re-apply per-exercise override if it existed
+    final exSnap = exOverrideByOrder[i];
+    if (exSnap != null) {
+      await _repo.upsertPresetExerciseAuto(
+        presetExerciseId: newExId,
+        incrementAmount:  exSnap['increment_amount'] as double?,
+        lastSetIndex:     exSnap['last_set_index']   as int,
+        lastNode:         exSnap['last_node']        as String?,
+      );
+    }
+
+    // 2d) re-insert the details (sets / cardio / stretch)
+    if (we is WeightExercise) {
+      await _repo.savePresetWeightSets(newExId, we.sets, we.changeSets);
+
+      // 2e) re-apply per-set overrides
+      final newSets = await _repo.fetchPresetSets(newExId);
+      final newParents = newSets.where((r) => r['parent_set_id'] == null).toList();
+      final setSnaps = setOverrideByOrder[i] ?? {};
+      for (var pIdx = 0; pIdx < newParents.length; pIdx++) {
+        final amt = setSnaps[pIdx];
+        if (amt != null) {
+          final setId = newParents[pIdx]['id'] as int;
+          await _repo.upsertPresetSetAuto(
+            presetSetId:     setId,
+            incrementAmount: amt,
+          );
+        }
+      }
+
+    } else if (we is CardioExercise) {
+      await _repo.savePresetCardio(
+        newExId,
+        we.cardioName,
+        we.cardioNote,
+        we.plannedMinutes,
+        we.elapsedSeconds,
+      );
+
+    } else if (we is StretchExercise) {
+      await _repo.savePresetStretch(
+        newExId,
+        we.stretchInstances.map((inst) => inst.toMap()).toList(),
+      );
+    }
+  }
+
+  // 3) Clear dirty flag & reload everything
+  _hasChanges = false;
+  await _loadPreset();
+}
+
 
   /// Starts a live session by writing this preset's exercises into the session tables.
   Future<int> startSession() async {
