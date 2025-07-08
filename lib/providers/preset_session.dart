@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart';
 import '../models/models.dart';
 import '../repositories/app_repository.dart';
 import '../widgets/exercise_card.dart'; // for CardType
+import 'dart:convert';
+
 
 /// ChangeNotifier driving the Preset detail/edit UI, with Automatic Preset support.
 class PresetSession extends ChangeNotifier {
@@ -23,11 +25,20 @@ class PresetSession extends ChangeNotifier {
   /// Whether to skip the first set.
   bool skipFirstSet = true;
 
-  // NEW:
+
   bool weightCheck     = true;
   bool repCheck        = true;
   bool volumeCheck     = false;
   bool adjustAllSets = false;
+
+
+  // NEW:
+/// Whether the user picked manual-select mode
+bool manualSelect = false;
+
+/// When in manual mode, which set-IDs should be ticked
+Map<int,bool> manualSelections = {};
+
 
   /// Per-exercise override: preset_exercise_id → increment amount.
   final Map<int, double?> exerciseIncrementOverrides = {};
@@ -251,6 +262,16 @@ class PresetSession extends ChangeNotifier {
     volumeCheck     = (autoRow?['volume_check']   as int? ?? 0) == 1;
     adjustAllSets = (autoRow?['adjust_all_sets'] as int? ?? 0) == 0 ? false : true;
 
+    // 7) Load our new Manual‐Select settings
+manualSelect = (autoRow?['use_manual_select'] as int? ?? 0) == 1;
+
+final manualJson = autoRow?['manual_selection_json'] as String? ?? '{}';
+final Map<String, dynamic> decoded =
+    json.decode(manualJson) as Map<String, dynamic>;
+// keys in JSON are strings, parse back to int→bool
+manualSelections = decoded.map((key, value) =>
+  MapEntry(int.parse(key), value as bool));
+
     _hasChanges = false;
     notifyListeners();
   }
@@ -465,6 +486,10 @@ Future<void> saveChanges() async {
       repCheck: repCheck,
       volumeCheck: volumeCheck,
       adjustAllSets:     adjustAllSets,
+    useManualSelect: manualSelect,
+    manualSelectionJson: json.encode(
+      manualSelections.map((key, value) => MapEntry(key.toString(), value))
+        ),
     );
     isAutomatic = true;
     notifyListeners();
@@ -485,6 +510,10 @@ Future<void> saveChanges() async {
     required bool   newRepCheck,
     required bool   newVolumeCheck,
     required bool newAdjustAllSets,
+
+    required bool   newUseManualSelect,
+    required String newManualSelectionJson,
+    
 }) async {
   // 1) write the NEW settings into the DB
   await _repo.upsertPresetAutoSettings(
@@ -496,6 +525,8 @@ Future<void> saveChanges() async {
       repCheck:        newRepCheck,
       volumeCheck:     newVolumeCheck,
       adjustAllSets: newAdjustAllSets,
+    useManualSelect:       newUseManualSelect,
+    manualSelectionJson:   newManualSelectionJson,
   );
   // 2) then update in-memory to match
   globalIncrement = newGlobalIncrement;
@@ -504,7 +535,19 @@ Future<void> saveChanges() async {
     repCheck        = newRepCheck;
     volumeCheck     = newVolumeCheck;
     adjustAllSets    = newAdjustAllSets;
-    notifyListeners();
+    manualSelect      = newUseManualSelect;
+
+    // decode the JSON back into our Map<int,bool>
+final decoded = json.decode(newManualSelectionJson);
+if (decoded is Map<String, dynamic>) {
+  manualSelections = decoded.map<int, bool>(
+    (key, value) => MapEntry(int.parse(key), value as bool),
+  );
+} else {
+  manualSelections = <int, bool>{};
+}
+
+notifyListeners();
 }
 
 

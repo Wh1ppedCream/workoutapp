@@ -26,14 +26,18 @@ class PresetAutoSettingsDao {
     required bool isAutomatic,
     required double globalIncrement,
     required bool skipFirstSet,
-    required bool   weightCheck,    // NEW
-  required bool   repCheck,       // NEW
-  required bool   volumeCheck,    // NEW
+    required bool   weightCheck,    
+  required bool   repCheck,     
+  required bool   volumeCheck,   
   required bool adjustAllSets,
+  required bool useManualSelect,          // ← new
+  String? manualSelectionJson,            // ← new
   }) async {
     // 1) Pull the existing row so we can keep its flow_definition JSON
     final existing = await getAutoSettings(db, presetId);
     final existingFlowDef = existing?['flow_definition'] as String? ?? '{}';
+    // also preserve whatever was in manual_selection_json
+    final existingManualJson = existing?['manual_selection_json'] as String? ?? '{}';
 
     // 2) Prepare the full row
   final values = {
@@ -45,6 +49,9 @@ class PresetAutoSettingsDao {
     'rep_check':        repCheck      ? 1 : 0,
     'volume_check':     volumeCheck   ? 1 : 0,
     'adjust_all_sets':  adjustAllSets ? 1 : 0,
+    'use_manual_select':       useManualSelect ? 1 : 0,          // ←
+    // if caller passed a new JSON, use it; otherwise keep the old or default '{}'
+    'manual_selection_json':   manualSelectionJson ?? existingManualJson,
     'flow_definition':  existingFlowDef,
   };
 

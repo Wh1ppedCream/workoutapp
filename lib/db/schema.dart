@@ -115,6 +115,7 @@ class Schema {
     await migrateV11(db);
     await migrateV12(db);
     await migrateV13(db);
+    await migrateV14(db);
   }
 
   /// Handler for onUpgrade callback.
@@ -131,6 +132,7 @@ class Schema {
     if (oldVersion < 11) await migrateV11(db);
     if (oldVersion < 12) await migrateV12(db);
     if (oldVersion < 13) await migrateV13(db);
+    if (oldVersion < 14) await migrateV14(db);
   }
 
   /// Migration to version 3: adds rating, equipment/muscle tables.
@@ -540,5 +542,15 @@ static Future<void> migrateV13(Database db) async {
   });
 }
 
+static Future<void> migrateV14(Database db) async {
+  await db.execute('''
+    ALTER TABLE preset_auto_settings
+      ADD COLUMN use_manual_select INTEGER NOT NULL DEFAULT 0;
+  ''');
+  await db.execute('''
+    ALTER TABLE preset_auto_settings
+      ADD COLUMN manual_selection_json TEXT;
+  ''');
+}
 
 }

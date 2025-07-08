@@ -527,6 +527,8 @@ Future<List<Map<String, dynamic>>> fetchPresetStretchItems(int presetExerciseId)
   required bool   repCheck,
   required bool   volumeCheck,
   required bool   adjustAllSets,
+  required bool useManualSelect,         // ← add this
+  String? manualSelectionJson,           // ← and this
   }) => _dbHelper.upsertPresetAutoSettings(
         presetId: presetId,
         isAutomatic: isAutomatic,
@@ -536,6 +538,8 @@ Future<List<Map<String, dynamic>>> fetchPresetStretchItems(int presetExerciseId)
     repCheck:        repCheck,
     volumeCheck:     volumeCheck,
     adjustAllSets:     adjustAllSets,
+  useManualSelect:     useManualSelect,
+  manualSelectionJson: manualSelectionJson,
       );
 
   /// Deletes the auto-preset settings (disables automatic) for a preset.

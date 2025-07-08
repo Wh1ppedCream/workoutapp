@@ -3,7 +3,10 @@
 import 'package:flutter/material.dart';
 import '../providers/preset_session.dart';
 import '../models/models.dart';
-import 'package:flutter_flow_chart/flutter_flow_chart.dart';
+import 'dart:convert';
+
+enum SuccessCountMode { session, exercise, set }
+
 
 /// Bottom sheet for editing Automatic Preset settings:
 /// - Global increment amount
@@ -35,12 +38,18 @@ bool _manualSelect = false;
 // Holds per-set checkbox state when in manual mode
 final Map<int, bool> _setSelections = {};
 
+SuccessCountMode _successCountMode = SuccessCountMode.session;
+
+
 
   @override
   void initState() {
     super.initState();
 
     final preset = widget.preset;
+
+    // 1) Seed the global/manual flag
+  _manualSelect = preset.manualSelect;
 
     // Global
     _globalController = TextEditingController(
@@ -75,19 +84,16 @@ final Map<int, bool> _setSelections = {};
     }
 
 
-  // Prepopulate with false for every set ID
-  for (var parent in widget.preset.presetParentSetIds) {
-    for (var id in parent) {
-      _setSelections[id] = false;
-    }
+    // Seed _setSelections from whatever was saved in PresetSession.manualSelections
+  final allIds = <int>[
+    for (var list in preset.presetParentSetIds)      ...list,
+    for (var childMap in preset.presetChildSetIds)
+      for (var list in childMap.values)              ...list,
+  ];
+  for (var id in allIds) {
+    _setSelections[id] = preset.manualSelections[id] ?? false;
   }
-  for (var childMap in widget.preset.presetChildSetIds) {
-    for (var idList in childMap.values) {
-      for (var id in idList) {
-        _setSelections[id] = false;
-      }
-    }
-  }
+
   }
 
   @override
@@ -105,9 +111,13 @@ final Map<int, bool> _setSelections = {};
   Future<void> _saveAllAndClose() async {
     final preset = widget.preset;
 
-    // 1) Global settings
-    final globalParsed =
-        double.tryParse(_globalController.text) ?? preset.globalIncrement;
+    // 1) Global settings + manual flags
+final globalParsed = double.tryParse(_globalController.text) ?? preset.globalIncrement;
+final manualJson   = json.encode(
+  _setSelections.map((key, value) => MapEntry(key.toString(), value))
+);
+
+
     await preset.saveAutoSettings(
       newGlobalIncrement: globalParsed,
       newSkipFirstSet: _skipFirst,
@@ -115,6 +125,9 @@ final Map<int, bool> _setSelections = {};
       newRepCheck: preset.repCheck,
       newVolumeCheck: preset.volumeCheck,
       newAdjustAllSets: preset.adjustAllSets,
+
+      newUseManualSelect:   _manualSelect,
+      newManualSelectionJson:  manualJson,
     );
 
     // 2) Per-exercise overrides
@@ -143,14 +156,13 @@ final Map<int, bool> _setSelections = {};
           bottom: MediaQuery.of(ctx).viewInsets.bottom,
         ),
         child: DefaultTabController(
-          length: 3,
+          length: 2,
           child: Column(
             children: [
               TabBar(
                 tabs: const [
                   Tab(text: 'Values'),
                   Tab(text: 'Methods'),
-                  Tab(text: 'Flow'),
                 ],
                 labelPadding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 8.0),
               ),
@@ -326,7 +338,15 @@ final Map<int, bool> _setSelections = {};
                           );
                         }),
                         const SizedBox(height: 16),
-                        
+
+ElevatedButton(
+                          onPressed: _saveAllAndClose,
+                          child: const Text('Save'),
+                        ),
+
+    const SizedBox(height: 24),
+
+
     ]
                      
                      // 3b) Manual mode: per-set checkboxes
@@ -447,14 +467,15 @@ final Map<int, bool> _setSelections = {};
   }),
 
   const SizedBox(height: 16),
-],
 
-ElevatedButton(
+  ElevatedButton(
                           onPressed: _saveAllAndClose,
                           child: const Text('Save'),
                         ),
 
     const SizedBox(height: 24),
+],
+
                      
                      
                       ],
@@ -484,6 +505,37 @@ ElevatedButton(
                           onChanged: (b) => setState(() => preset.volumeCheck = b!),
                         ),
                         const SizedBox(height: 16),
+
+                        // ── New section header ───────────────────────────────
+const Text(
+  'Success/Fails counted and increments/decrements made based off:',
+  style: TextStyle(fontWeight: FontWeight.bold),
+),
+const SizedBox(height: 8),
+
+// ── Three radio options ──────────────────────────────
+// TODO: code and enable these options, currently only works per session ('Workout Session') here (the codes default, the boxes don't work at all)
+RadioListTile<SuccessCountMode>(
+  title: const Text('Workout Session'),
+  value: SuccessCountMode.session,
+  groupValue: _successCountMode,
+  onChanged: (mode) => setState(() => _successCountMode = mode!),
+),
+RadioListTile<SuccessCountMode>(
+  title: const Text('per Exercise'),
+  value: SuccessCountMode.exercise,
+  groupValue: _successCountMode,
+  onChanged: (mode) => setState(() => _successCountMode = mode!),
+),
+RadioListTile<SuccessCountMode>(
+  title: const Text('per Set'),
+  value: SuccessCountMode.set,
+  groupValue: _successCountMode,
+  onChanged: (mode) => setState(() => _successCountMode = mode!),
+),
+
+const SizedBox(height: 16),
+
                         Text('For Every Exercise:',
                             style: Theme.of(context)
                                 .textTheme
@@ -510,25 +562,8 @@ ElevatedButton(
                         const SizedBox(height: 24),
                       ],
                     ),
-                    // Flow Tab
-                    ListView(
-                      controller: scrollCtrl,
-                      padding: const EdgeInsets.all(16),
-                      children: [
-                        const SizedBox(height: 16),
-                        const Text(
-                            'To add: looping functionality for successes and failures'),
-                            SizedBox(
-      height: 300, // Adjust height as needed
-      child: SimpleFlowChart(),
-    ),
-                        const SizedBox(height: 24),
-                        ElevatedButton(
-                          onPressed: _saveAllAndClose,
-                          child: const Text('Save'),
-                        ),
-                      ],
-                    ),
+                    
+                  
                   ],
                 ),
               ),
@@ -536,143 +571,6 @@ ElevatedButton(
           ),
         ),
       ),
-    );
-  }
-}
-
-
-class SimpleFlowChart extends StatefulWidget {
-  const SimpleFlowChart({super.key});
-
-  @override
-  State<SimpleFlowChart> createState() => _SimpleFlowChartState();
-}
-
-class _SimpleFlowChartState extends State<SimpleFlowChart> {
-  final Dashboard dashboard = Dashboard();
-
-  @override
-  void initState() {
-    super.initState();
-
-    // Root node
-    final root = FlowElement(
-      position: const Offset(60, 50),
-      size: const Size(60, 30),
-      text: 'Root',
-      textSize: 12,
-      kind: ElementKind.rectangle,
-      handlers: [Handler.bottomCenter],
-    );
-    dashboard.addElement(root);
-
-    // Intermediate nodes
-    final success1 = FlowElement(
-      position: const Offset(60, 100),
-      size: const Size(50, 25),
-      text: 'Success1',
-      textSize: 7,
-      kind: ElementKind.rectangle,
-      handlers: [Handler.topCenter, Handler.bottomCenter],
-    );
-
-    final fail1 = FlowElement(
-      position: const Offset(120, 100),
-      size: const Size(50, 25),
-      text: 'Fail1',
-      textSize: 7,
-      kind: ElementKind.rectangle,
-      handlers: [Handler.topCenter, Handler.bottomCenter],
-    );
-
-    dashboard.addElement(success1);
-    dashboard.addElement(fail1);
-
-    // Leaf nodes
-    final success2 = FlowElement(
-      position: const Offset(60, 150),
-      size: const Size(50, 25),
-      text: 'Success2',
-      textSize: 7,
-      kind: ElementKind.rectangle,
-      handlers: [Handler.topCenter, Handler.bottomCenter],
-    );
-
-    final fail2 = FlowElement(
-      position: const Offset(120, 150),
-      size: const Size(50, 25),
-      text: 'Fail2',
-      textSize: 7,
-      kind: ElementKind.rectangle,
-      handlers: [Handler.topCenter, Handler.bottomCenter],
-    );
-
-    final success3 = FlowElement(
-      position: const Offset(180, 150),
-      size: const Size(50, 25),
-      text: 'Success3',
-      textSize: 7,
-      kind: ElementKind.rectangle,
-      handlers: [Handler.topCenter, Handler.bottomCenter],
-    );
-
-    final fail3 = FlowElement(
-      position: const Offset(240, 150),
-      size: const Size(50, 25),
-      text: 'Fail3',
-      textSize: 7,
-      kind: ElementKind.rectangle,
-      handlers: [Handler.topCenter, Handler.bottomCenter],
-    );
-
-    dashboard.addElement(success2);
-    dashboard.addElement(fail2);
-    dashboard.addElement(success3);
-    dashboard.addElement(fail3);
-
-    // Connections
-    dashboard.addNextById(root, success1.id, _arrow(root, success1));
-    dashboard.addNextById(root, fail1.id, _arrow(root, fail1));
-
-    dashboard.addNextById(success1, success2.id, _arrow(success1, success2));
-    dashboard.addNextById(success1, fail2.id, _arrow(success1, fail2));
-
-    dashboard.addNextById(fail1, success3.id, _arrow(fail1, success3));
-    dashboard.addNextById(fail1, fail3.id, _arrow(fail1, fail3));
-
-    dashboard.addNextById(success2, root.id, _loopArrow(success2, root));
-    dashboard.addNextById(fail2, root.id, _loopArrow(fail2, root));
-    dashboard.addNextById(success3, root.id, _loopArrow(success3, root));
-    dashboard.addNextById(fail3, root.id, _loopArrow(fail3, root));
-  }
-
-  ArrowParams _arrow(FlowElement from, FlowElement to) {
-    return ArrowParams(
-      color: Colors.blue,
-      thickness: 2,
-      style: ArrowStyle.segmented,
-      startArrowPosition: Alignment.bottomCenter,
-      endArrowPosition: Alignment.topCenter,
-    );
-  }
-
-  ArrowParams _loopArrow(FlowElement from, FlowElement to) {
-    return ArrowParams(
-      color: Colors.black26,
-      thickness: 2,
-      style: ArrowStyle.curve,
-      startArrowPosition: Alignment.bottomCenter,
-      endArrowPosition: Alignment.topCenter,
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FlowChart(
-      dashboard: dashboard,
-      onElementPressed: (_, __, element) {
-        debugPrint('Tapped: ${element.text}');
-      },
     );
   }
 }
