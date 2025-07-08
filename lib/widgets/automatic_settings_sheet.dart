@@ -29,7 +29,12 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet>
   /// One controller per set override (parents + children)
   final Map<int, TextEditingController> _setControllers = {};
 
-  
+  // Whether we’re in “auto” (rotating pointer) or “manual” mode
+bool _manualSelect = false;
+
+// Holds per-set checkbox state when in manual mode
+final Map<int, bool> _setSelections = {};
+
 
   @override
   void initState() {
@@ -68,6 +73,21 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet>
         }
       }
     }
+
+
+  // Prepopulate with false for every set ID
+  for (var parent in widget.preset.presetParentSetIds) {
+    for (var id in parent) {
+      _setSelections[id] = false;
+    }
+  }
+  for (var childMap in widget.preset.presetChildSetIds) {
+    for (var idList in childMap.values) {
+      for (var id in idList) {
+        _setSelections[id] = false;
+      }
+    }
+  }
   }
 
   @override
@@ -141,17 +161,12 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet>
                     ListView(
                       controller: scrollCtrl,
                       padding: const EdgeInsets.all(16),
-                      children: [ /*
-                        Text(
-                          'Automatic Settings',
-                          style: Theme.of(context).textTheme.headlineSmall,
-                        ), */
+                      children: [ 
                         const SizedBox(height: 12),
                         // Global Increment
                         TextField(
                           controller: _globalController,
-                          keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true),
+                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
                           decoration: const InputDecoration(
                             labelText: 'Global Increment Amount',
                             suffixText: 'lbs',
@@ -159,6 +174,33 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet>
                           ),
                         ),
                         const SizedBox(height: 12),
+
+                        // 2) Auto vs Manual toggle
+    Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Expanded(
+          child: ChoiceChip(
+          label: const Text('Auto Select'),
+          selected: !_manualSelect,
+          onSelected: (_) => setState(() => _manualSelect = false),
+        ),
+        ),
+
+        const SizedBox(width: 8),
+        Expanded(
+          child: ChoiceChip(
+          label: const Text('Manual Select'),
+          selected: _manualSelect,
+          onSelected: (_) => setState(() => _manualSelect = true),
+        ),
+        ),
+      ],
+    ),
+    const SizedBox(height: 16),
+
+    if (!_manualSelect) ...[
+
                         CheckboxListTile(
                           title: const Text('Skip First Set?'),
                           value: _skipFirst,
@@ -284,11 +326,137 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet>
                           );
                         }),
                         const SizedBox(height: 16),
-                        ElevatedButton(
+                        
+    ]
+                     
+                     // 3b) Manual mode: per-set checkboxes
+    else ...[
+  // We hide Skip First entirely in manual mode
+  const Divider(),
+
+  // For each exercise:
+  ...preset.exercises.asMap().entries.map((entry) {
+    final i      = entry.key;
+    final ex     = entry.value as WeightExercise;
+    final exId   = preset.presetExerciseIds[i];
+    final exCtrl = _exControllers[exId]!;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Exercise-level IA field stays the same
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                ex.name,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            SizedBox(
+              width: 80,
+              child: TextField(
+                controller: exCtrl,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(
+                  labelText: 'IA',
+                  hintText: 'ex',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+
+        // Parent sets, with a Checkbox to the left
+        ...List.generate(preset.presetParentSetIds[i].length, (pi) {
+          final setId   = preset.presetParentSetIds[i][pi];
+          final set     = ex.sets[pi];
+          final setCtrl = _setControllers[setId]!;
+
+          return Padding(
+            padding: const EdgeInsets.only(left: 16, bottom: 8),
+            child: Row(
+              children: [
+                Checkbox(
+                  value: _setSelections[setId] ?? false,
+                  onChanged: (v) => setState(() => _setSelections[setId] = v!),
+                ),
+                Expanded(
+                  child: Text('Set ${pi + 1}: ${set.weight} × ${set.reps}'),
+                ),
+                SizedBox(
+                  width: 60,
+                  child: TextField(
+                    controller: setCtrl,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    decoration: const InputDecoration(
+                      labelText: 'IA',
+                      hintText: 'set',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+
+        // Child sets, same pattern
+        ...preset.presetChildSetIds[i].entries.expand((e) {
+          final parentIdx = e.key;
+          return e.value.asMap().entries.map((childEntry) {
+            final ci        = childEntry.key;
+            final cid       = childEntry.value;
+            final child     = ex.changeSets[parentIdx]![ci];
+            final childCtrl = _setControllers[cid]!;
+
+            return Padding(
+              padding: const EdgeInsets.only(left: 16, bottom: 8),
+              child: Row(
+                children: [
+                  Checkbox(
+                    value: _setSelections[cid] ?? false,
+                    onChanged: (v) => setState(() => _setSelections[cid] = v!),
+                  ),
+                  Expanded(
+                    child: Text('Set ${parentIdx + 1}.${ci + 1}: ${child.weight} × ${child.reps}'),
+                  ),
+                  SizedBox(
+                    width: 60,
+                    child: TextField(
+                      controller: childCtrl,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      decoration: const InputDecoration(
+                        labelText: 'IA',
+                        hintText: 'set',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          });
+        }),
+
+        const Divider(),
+      ],
+    );
+  }),
+
+  const SizedBox(height: 16),
+],
+
+ElevatedButton(
                           onPressed: _saveAllAndClose,
                           child: const Text('Save'),
                         ),
-                        const SizedBox(height: 24),
+
+    const SizedBox(height: 24),
+                     
+                     
                       ],
                     ),
                     // Methods Tab
