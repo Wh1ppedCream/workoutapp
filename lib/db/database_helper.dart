@@ -48,7 +48,7 @@ class DatabaseHelper {
     final path = join(dbPath, 'fitness_tracker.db');
     return await openDatabase(
       path,
-      version: 13,  
+      version: 14,  
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
@@ -93,6 +93,9 @@ if (oldVersion < 12) {
     }
     if (oldVersion < 13) {
       await Schema.migrateV13(db);
+    }
+     if (oldVersion < 14) {
+      await Schema.migrateV14(db);
     }
   },
 );
@@ -1475,6 +1478,8 @@ Future<List<Map<String, dynamic>>> fetchPresetStretchItems(int presetExerciseId)
   required bool   repCheck,
   required bool   volumeCheck,
   required bool   adjustAllSets,
+  required bool useManualSelect,         // ← NEW
+  String? manualSelectionJson,           // ← NEW
   }) async {
     final db = await database;
     await PresetAutoSettingsDao.upsertAutoSettings(
@@ -1487,6 +1492,8 @@ Future<List<Map<String, dynamic>>> fetchPresetStretchItems(int presetExerciseId)
     repCheck:        repCheck,
     volumeCheck:     volumeCheck,
     adjustAllSets:     adjustAllSets,
+    useManualSelect:      useManualSelect,        // ← PASS THROUGH
+    manualSelectionJson:  manualSelectionJson,    // ← PASS THROUGH
     
     );
   }

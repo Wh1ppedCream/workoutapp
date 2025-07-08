@@ -1,6 +1,7 @@
 // File: lib/services/auto_increment_service.dart
 
 import 'dart:math';
+import 'dart:convert';
 import '../repositories/app_repository.dart';
 import 'flow_executor.dart';  // ← 1) import your executor
 import '../models/preset_models.dart';
@@ -16,6 +17,9 @@ class _AutoSettings {
   final bool volumeCheck;
   final bool adjustAllSets; 
 
+  final bool useManualSelect;
+  final Map<int,bool> manualSelections;
+
   _AutoSettings({
     required this.globalIncrement,
     required this.skipFirst,
@@ -23,6 +27,9 @@ class _AutoSettings {
     required this.repCheck,
     required this.volumeCheck,
     required this.adjustAllSets,
+
+    required this.useManualSelect,
+    required this.manualSelections,
   });
 }
 
@@ -94,6 +101,16 @@ Future<_AutoSettings?> _loadAutoSettings(int presetId) async {
     if (auto == null || (auto['is_automatic'] as int) != 1) return null;
 
     bool intToBool(int v) => v == 1;
+
+  // pull our new columns
+  final useManual = intToBool(auto['use_manual_select'] as int? ?? 0);
+   final rawSelJson = auto['manual_selection_json'] as String? ?? '{}';
+  final Map<String,dynamic> tmp = jsonDecode(rawSelJson);
+  final Map<int,bool> manualSelections = tmp.map(
+    (k,v) => MapEntry(int.parse(k), v as bool)
+  );
+
+
     return _AutoSettings(
       globalIncrement: (auto['global_increment'] as num).toDouble(),
       skipFirst:       intToBool(auto['skip_first_set'] as int),
@@ -101,6 +118,9 @@ Future<_AutoSettings?> _loadAutoSettings(int presetId) async {
       repCheck:        intToBool(auto['rep_check']      as int),
       volumeCheck:     intToBool(auto['volume_check']   as int),
       adjustAllSets:   intToBool(auto['adjust_all_sets'] as int),
+
+      useManualSelect: useManual,
+    manualSelections: manualSelections,
     );
   }
 
@@ -167,10 +187,19 @@ Future<_AutoSettings?> _loadAutoSettings(int presetId) async {
       lastIdx = (settings.skipFirst && parents.length >= 2) ? 2 : 1;
     }
 
-    // 3) Pick the target rows
-    final targetRows = settings.adjustAllSets
-      ? parents
-      : [ parents[lastIdx - 1] ];
+     // 3) Pick the target rows
+   final List<Map<String,dynamic>> targetRows;
+   if (settings.useManualSelect) {
+     // Only those sets the user checked
+     targetRows = allSets
+       .where((r) => settings.manualSelections[r['id'] as int] == true)
+       .toList();
+   } else {
+     // our existing “rotate or all-sets” behavior
+     targetRows = settings.adjustAllSets
+       ? parents
+       : [ parents[lastIdx - 1] ];
+   }
 
     // 4) Run each method
     for (final m in methods) {
@@ -260,7 +289,7 @@ Future<_AutoSettings?> _loadAutoSettings(int presetId) async {
     }
 
       // ─── 5) rotate & persist the set‐pointer, if not "adjust all" ───
-  if (!settings.adjustAllSets) {
+  if (!settings.adjustAllSets && !settings.useManualSelect) {
     // compute next index (wrap around, honor skipFirst)
     int nextIdx = lastIdx + 1;
     if (nextIdx > parents.length) {
