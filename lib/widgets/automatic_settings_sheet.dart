@@ -29,6 +29,8 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet>
   /// One controller per set override (parents + children)
   final Map<int, TextEditingController> _setControllers = {};
 
+  
+
   @override
   void initState() {
     super.initState();
