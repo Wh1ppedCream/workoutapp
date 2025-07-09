@@ -4,6 +4,7 @@ DONE:
 			- only targets 2nd set (from what i understand so far)
 			- does not seem to move down flow chart (only does first success and first fail) 
 			- if automatic settings changes made, auto flow is removed entirely
+			- In values add in a tick beside each set to indicate it will be incremented
 			
 			
 Current doing:
@@ -15,7 +16,12 @@ Current doing:
 				- change names
 				- (might want to do this by just reopening the add screen with already saved info)
 			- way to set default flow across all presets
-			- In values add in a tick beside each set to indicate it will be incremented
+			- counting success and failures (and applying the appropriate methods in the appropriate places
+				- per session (what code currently does)
+				- per exercise
+				- per set
+			- remove/remake flow widgets
+			- remove/swap out flowchart page in profile screen
 	
 
 
