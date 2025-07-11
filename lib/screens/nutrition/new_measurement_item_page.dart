@@ -1,8 +1,8 @@
-// File: lib/screens/new_measurement_item_page.dart
+// File: lib/screens/nutrition/new_measurement_item_page.dart
 
 import 'package:flutter/material.dart';
-import '../repositories/app_repository.dart';
-import '../models/models.dart';
+import '../../repositories/app_repository.dart';
+import '../../models/models.dart';
 
 /// Page for creating a new measurement (weight, height, or specific body part).
 class NewMeasurementItemPage extends StatefulWidget {

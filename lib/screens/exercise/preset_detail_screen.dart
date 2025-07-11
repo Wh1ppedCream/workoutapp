@@ -4,12 +4,12 @@
 import 'package:env_test/providers/active_session.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../models/models.dart';
-import '../repositories/app_repository.dart';
-import '../providers/preset_session.dart';
-import '../widgets/exercise_card.dart';
-import '../widgets/add_exercise_fab.dart';
-import '../widgets/automatic_settings_sheet.dart';
+import '../../models/models.dart';
+import '../../repositories/app_repository.dart';
+import '../../providers/preset_session.dart';
+import '../../widgets/exercise_card.dart';
+import '../../widgets/add_exercise_fab.dart';
+import '../../widgets/automatic_settings_sheet.dart';
 import 'session_screen.dart';
 import 'auto_preset_flow_screen.dart';
 

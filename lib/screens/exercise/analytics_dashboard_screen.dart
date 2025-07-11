@@ -2,7 +2,7 @@
 // for muscle and bodypart counts in the last 7 days.
 
 import 'package:flutter/material.dart';
-import '../repositories/app_repository.dart';
+import '../../repositories/app_repository.dart';
 
 /// Simple pair of a name and an integer count.
 class _ItemCount {

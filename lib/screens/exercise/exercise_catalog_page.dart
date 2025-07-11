@@ -2,10 +2,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../models/models.dart';
-import '../providers/selected_profile.dart';
-import '../repositories/app_repository.dart';
-import '../widgets/exercise_detail_sheet.dart';
+import '../../models/models.dart';
+import '../../providers/selected_profile.dart';
+import '../../repositories/app_repository.dart';
+import '../../widgets/exercise_detail_sheet.dart';
 
 
 /// Catalog of exercise definitions with workspace-profile and advanced filters.

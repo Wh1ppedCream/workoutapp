@@ -1,6 +1,6 @@
 // File: lib/profile_page.dart
 import 'package:flutter/material.dart';
-import 'measured_items_page.dart';
+import '../../nutrition/measured_items_page.dart';
 import 'app_settings_page.dart';
 import 'analytics_setting_screen.dart';
 

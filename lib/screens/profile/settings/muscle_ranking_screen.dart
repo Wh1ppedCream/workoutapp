@@ -1,8 +1,8 @@
 // File: lib/screens/muscle_ranking_screen.dart
 
 import 'package:flutter/material.dart';
-import '../repositories/app_repository.dart';
-import '../models/models.dart';
+import '../../../repositories/app_repository.dart';
+import '../../../models/models.dart';
 
 class MuscleRankingScreen extends StatefulWidget {
   const MuscleRankingScreen({super.key});

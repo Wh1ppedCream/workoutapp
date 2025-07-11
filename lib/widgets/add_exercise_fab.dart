@@ -1,7 +1,7 @@
 // File: lib/widgets/add_exercise_fab.dart
 
 import 'package:flutter/material.dart';
-import '../screens/exercise_catalog_page.dart';
+import '../screens/exercise/exercise_catalog_page.dart';
 import '../models/models.dart';
 
 /// Callback when a weight exercise definition is picked.

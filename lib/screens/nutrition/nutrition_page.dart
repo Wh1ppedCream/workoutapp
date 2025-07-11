@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'default_trend_page.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'food_logging_page.dart';
+import 'log_entry_page.dart';
+import '../../widgets/speed_dial_fab.dart';
 
 
 
@@ -210,8 +212,12 @@ Padding(
       final date = DateTime.now().subtract(Duration(days: 27 - i));
       return GestureDetector(
         onTap: () {
-          // TODO: show data for this specific date
-        },
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => LogEntryPage(date: date),
+      ),
+    );
+  },
         child: Container(
           alignment: Alignment.center,
           decoration: BoxDecoration(
@@ -327,12 +333,8 @@ Padding(
       ),
       ),
       // 4️⃣ Add new meal
-      floatingActionButton: FloatingActionButton(
-        child: const Icon(Icons.add),
-        onPressed: () {
-          // TODO: open “Add Meal” form
-        },
-      ),
+       floatingActionButton: const SpeedDialFab(),
+
     );
   }
 }

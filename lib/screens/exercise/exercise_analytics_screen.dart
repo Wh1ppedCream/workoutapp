@@ -1,8 +1,8 @@
 // File: lib/screens/exercise_analytics_screen.dart
 
 import 'package:flutter/material.dart';
-import '../repositories/app_repository.dart';
-import '../models/models.dart';
+import '../../repositories/app_repository.dart';
+import '../../models/models.dart';
 
 class ExerciseAnalyticsScreen extends StatefulWidget {
   const ExerciseAnalyticsScreen({super.key});

@@ -1,8 +1,8 @@
 // File: lib/screens/muscle_filter_page.dart
 
 import 'package:flutter/material.dart';
-import '../models/models.dart';
-import '../repositories/app_repository.dart';
+import '../../models/models.dart';
+import '../../repositories/app_repository.dart';
 import 'definitions_by_bodypart_page.dart';
 
 /// Allows the user to select a body part and view its exercises.
