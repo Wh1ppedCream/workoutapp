@@ -126,5 +126,15 @@ Initial Questionairre:
 	- gender
 	- current bodyfat estimate
 	- current activity level 
+		- high, moderate, low
 	- choose to lose maintain or gain weight
-		- can put in specifc targets
+		- can put in specifc weight target
+		- time for reaching goal
+	
+questionairre for presets:
+	- time per session
+	- sessions per week
+	- target specifications
+		- specify body parts
+		- specify muscles
+	- b 
