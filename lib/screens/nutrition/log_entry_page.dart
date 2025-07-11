@@ -120,6 +120,7 @@ class _MiniStat extends StatelessWidget {
   final String value;
 
   const _MiniStat({
+    // ignore: unused_element_parameter
     super.key,
     required this.label,
     required this.value,

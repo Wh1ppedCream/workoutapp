@@ -49,9 +49,13 @@ class DefinitionsByMusclePage extends StatelessWidget {
 
   Widget _buildHeader(BuildContext context) {
     // === PLACEHOLDER DATA ===
+    // ignore: unused_local_variable
     const imageUrl = 'https://via.placeholder.com/600x180';
+    // ignore: unused_local_variable
     const setsCount = 0;    // TODO: compute sets in last 7 days for this muscle
+    // ignore: unused_local_variable
     const minSets = 3;      // TODO: wire in Muscle.minSets
+    // ignore: unused_local_variable
     const maxSets = 5;      // TODO: wire in Muscle.maxSets
     const description = 'Description of the muscle goes here.'; // TODO: wire in Muscle.description
     // ========================
