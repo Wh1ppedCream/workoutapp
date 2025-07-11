@@ -27,6 +27,7 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
   int remainingCarbs = 120;
 
   // placeholder food list for Search
+  // ignore: prefer_final_fields
   List<Map<String, String>> _entries = [
     {'name': 'Olive Oil', 'cal': '80', 'macro': '0P 0F 9C', 'qty': '2 tsp'},
     {'name': 'Butter, Salted', 'cal': '36', 'macro': '0P 4F 0C', 'qty': '5g'},
@@ -177,6 +178,7 @@ class _StatCard extends StatelessWidget {
   final String value;
 
   const _StatCard({
+    // ignore: unused_element_parameter
     super.key,
     required this.label,
     required this.value,
