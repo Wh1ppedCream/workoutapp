@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../repositories/app_repository.dart';
+import '../../../repositories/app_repository.dart';
 
 class AppSettingsPage extends StatefulWidget {
   const AppSettingsPage({super.key});  // use_super_parameters

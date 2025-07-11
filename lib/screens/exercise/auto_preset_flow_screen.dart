@@ -5,9 +5,9 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_flow_chart/flutter_flow_chart.dart';
 
-import '../models/preset_models.dart';
-import '../repositories/app_repository.dart';
-import '../widgets/flow_screen_widgets.dart';
+import '../../models/preset_models.dart';
+import '../../repositories/app_repository.dart';
+import '../../widgets/flow_screen_widgets.dart';
 
 enum AddSetMode { explicit, copy }
 

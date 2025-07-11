@@ -2,9 +2,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../db/database_helper.dart';
-import '../models/gym_models.dart';
-import '../providers/selected_profile.dart';
+import '../../db/database_helper.dart';
+import '../../models/gym_models.dart';
+import '../../providers/selected_profile.dart';
 
 /// Screen for creating or editing a GymProfile.
 class GymProfileScreen extends StatefulWidget {

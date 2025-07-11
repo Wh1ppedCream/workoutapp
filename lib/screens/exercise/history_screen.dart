@@ -2,12 +2,12 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../repositories/app_repository.dart';
-import '../models/models.dart';
+import '../../repositories/app_repository.dart';
+import '../../models/models.dart';
 import 'session_detail_screen.dart';
 import 'exercise_catalog_page.dart';
 import 'muscle_filter_page.dart';
-import '../widgets/history_summary_widget.dart';
+import '../../widgets/history_summary_widget.dart';
 import 'analytics_dashboard_screen.dart';
 
 

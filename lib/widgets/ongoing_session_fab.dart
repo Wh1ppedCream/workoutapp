@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/active_session.dart';
-import '../screens/session_screen.dart'; // adjust path if needed
+import '../screens/exercise/session_screen.dart'; // adjust path if needed
 
 /// A FAB that toggles between a single dumbbell icon and
 /// a green “Resume” + red “Exit” pair when tapped.

@@ -1,8 +1,8 @@
 // File: lib/screens/bodypart_ranking_screen.dart
 
 import 'package:flutter/material.dart';
-import '../repositories/app_repository.dart';
-import '../models/models.dart';
+import '../../../repositories/app_repository.dart';
+import '../../../models/models.dart';
 
 class BodyPartRankingScreen extends StatefulWidget {
   const BodyPartRankingScreen({super.key});

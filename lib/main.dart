@@ -3,10 +3,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/active_session.dart';
-import 'screens/history_screen.dart';
-import 'screens/train_page.dart';          
-import 'screens/nutrition_page.dart';
-import 'screens/profile_page.dart';
+import 'screens/exercise/history_screen.dart';
+import 'screens/exercise/train_page.dart';          
+import 'screens/nutrition/nutrition_page.dart';
+import 'screens/profile/settings/profile_page.dart';
 import 'widgets/ongoing_session_fab.dart';
 import 'providers/selected_profile.dart';
 

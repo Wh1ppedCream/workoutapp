@@ -1,0 +1,130 @@
+nutrition page:
+	- dashboard widget:
+		-items:
+			- calories consumed
+			- calories left to consume (remaining)
+			- target calories
+			- protein 
+			- fat
+			- carbs
+	- trend graphs
+		- calorie expenditure trend
+			- clicking will open calorie expenditure page
+		- weight trend
+	- food log
+		- is like google calanderish view
+		- at top, shows (out of recommended amount, how much)
+			- calories consumed
+			- protein 
+			- fat
+			- carbs
+		- entries for meals/consumption 
+			- can select a few and make a meal breakdown from it.
+	- current body stats
+		- weight
+		- bodyfat
+		- avg intakes of calories and nutrients
+		- measurements of bodyparts
+			
+Goal selection page:
+	- 3 options
+		- gain
+		- maintain
+		- lose
+	- target weight selection
+	- sliding scale for how fast you want to make this change
+	- estimate for how difficult this change will be based off how different the required intake is from your current maintenance intake
+	- estimated details for reaching goal
+		- estimated calorie intake, protein, fat, carbs
+		- estimated time you will reach goal
+			
+
+Default trend page:
+	- space on top for average numbers, goal numbers, etc (general space for specific page to enter numbers and the name of what those numbers represent)
+	- graph of item being measured over selected timespan
+	- timespans for graph
+		- 1 week
+		- 1 month
+		- 3 months
+		- 6 months
+		- year
+		- all time
+	- section under graphs for insights regarding the item being measured
+	- section for showing and editing past measurements
+	- place to add in a measurement.
+		
+Calorie expenditure trend page:
+	- average calorie expenditure over selected timespan
+	- difference from start over selected timespan
+	- graph of calorie expenditure over given timespans
+		- 1 week
+		- 1 month
+		- 3 months
+		- 6 months
+		- year
+		- all time
+		
+weight trend page:
+	- average weight over timespan
+	- difference of weight now from timespan
+	- weight graph over timespan
+		- 1 week
+		- 1 month
+		- 3 months
+		- 6 months
+		- year
+		- all time
+		
+bodypart sizes trend pages:
+	- average size over timespan
+	- difference of size now from timespan
+	- size graph over timespan
+		- 1 week
+		- 1 month
+		- 3 months
+		- 6 months
+		- year
+		- all time
+	- capability to add in images for comparison for bodypart
+		
+		
+Food Logging:
+	- options 
+		- Barcode
+		- Search
+		- Quick Add
+		- Custom
+Meal Breakdown:
+	- calories contained
+	- protein, fat, carb contents
+	- what % of target protein, fat, carbs it makes up
+	- nutritional breakdown
+		- carb breakdown
+		- protein breakdown
+		- fat breakdown
+
+food database
+	- 
+
+Tracking Selection Screen
+	- lets you select what macros you want to track
+		- calories, protein, fat, carbs
+		- carb breakdown
+			- fiber, net(non-fiber), starch, sugars, sugars added
+		- fat breakdown
+			- monounsaturated fat, polyunsaturated fat, omega3, omega3 ALA, omega3 DHA, omega3 EPA, omega6, Saturated fat, trans fat
+		- protein breakdown
+			- cysteine, histidine, isoleucine, leucine, lysine, methionine, phenylalanine, threonine, tyrosine, valine
+		- vitamins
+			- Thiamin (B1), Riboflavin (B2), Niacin (B3), Pantothenic acid (B5), Pyridoxine (B6), Biotin (B7), Folate (B9), Cobalamin (B12)
+			
+			
+Initial Questionairre:
+	- date of birth
+	- height
+	- weight
+	- gender
+	- current bodyfat estimate
+	- current activity level 
+	- choose to lose maintain or gain weight
+		- can put in specifc targets

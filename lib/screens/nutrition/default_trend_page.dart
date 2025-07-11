@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../../widgets/speed_dial_fab.dart';
 
 
 /// A reusable “trend” page layout for things like bodyweight, calories burned, etc.
@@ -180,12 +181,8 @@ SizedBox(
       ),
 
       // ─── Add new measurement ─────────────────────────────
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // TODO: open add-measurement dialog/form
-        },
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: const SpeedDialFab(),
+
     );
   }
 }

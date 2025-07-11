@@ -1,11 +1,11 @@
 // file: lib/screens/session_detail_screen.dart
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../repositories/app_repository.dart';
-import '../models/models.dart';
-import '../widgets/exercise_card.dart';
-import '../widgets/session_complete_sheet.dart';
-import '../widgets/exercise_detail_sheet.dart';
+import '../../repositories/app_repository.dart';
+import '../../models/models.dart';
+import '../../widgets/exercise_card.dart';
+import '../../widgets/session_complete_sheet.dart';
+import '../../widgets/exercise_detail_sheet.dart';
 
 
 

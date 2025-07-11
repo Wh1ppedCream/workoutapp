@@ -1,8 +1,8 @@
 // File: lib/screens/volume_boundaries_screen.dart
 
 import 'package:flutter/material.dart';
-import '../repositories/app_repository.dart';
-import '../models/models.dart';
+import '../../repositories/app_repository.dart';
+import '../../models/models.dart';
 
 class VolumeBoundariesScreen extends StatefulWidget {
   const VolumeBoundariesScreen({super.key});

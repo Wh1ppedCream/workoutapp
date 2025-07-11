@@ -1,8 +1,8 @@
 //measured_items_page.dart
 
 import 'package:flutter/material.dart';
-import '../repositories/app_repository.dart';
-import '../models/models.dart';
+import '../../repositories/app_repository.dart';
+import '../../models/models.dart';
 import 'new_measurement_item_page.dart';
 import 'specific_measurement_page.dart';
 

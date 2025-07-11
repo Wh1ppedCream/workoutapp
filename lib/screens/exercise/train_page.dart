@@ -2,12 +2,12 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/active_session.dart';
-import '../models/preset_models.dart';
-import '../providers/preset_session.dart';
-import '../providers/selected_profile.dart';
-import '../repositories/app_repository.dart';
-import '../widgets/preset_bar.dart';
+import '../../providers/active_session.dart';
+import '../../models/preset_models.dart';
+import '../../providers/preset_session.dart';
+import '../../providers/selected_profile.dart';
+import '../../repositories/app_repository.dart';
+import '../../widgets/preset_bar.dart';
 import 'gym_profile_screen.dart';
 import 'preset_detail_screen.dart';
 import 'session_screen.dart';

@@ -1,8 +1,8 @@
 // definitions_by_bodypart_page.dart
 
 import 'package:flutter/material.dart';
-import '../repositories/app_repository.dart';
-import '../models/models.dart';
+import '../../repositories/app_repository.dart';
+import '../../models/models.dart';
 
 import 'definitions_by_muscle_page.dart';
 
