@@ -166,3 +166,117 @@ questionairre for presets:
 	- ability to upload photots for progression comparing
 	- allow you to preplan your meals in advance (for the day, upcoming days, etc) 
 		- might want to allow users to set default meals for x days to allow them to not track and still get info logged
+		
+		
+		
+		
+		
+		
+		
+		
+		
+
+You sent
+WORKOUTAPP
+	- assets
+		- bodypart_muscle_ranking.json
+		- bodypart_ranking.json
+		- bodyparts.json
+		- equipment.json
+		- exercies.json
+		- muscle_bodypart.json
+		- muscle_ranking.json
+		- muscles.json
+		- stretches.json
+		- volume_boundaries.json
+	- lib
+		- db
+			- analytics_dao.dart
+			- cardio_dao.dart
+			- database_helper.dart
+			- definition_dao.dart
+			- exercise_dao.dart
+			- formula_settings_dao.dart
+			- gym_profile_dao.dart
+			- lookup_dao.dart
+			- preset_auto_settings_dao.dart
+			- preset_definition_dao.dart
+			- preset_detail_dao.dart
+			- preset_exercise_auto_dao.dart
+			- preset_exercise_dao.dart
+			- preset_flow_methods_dao.dart
+			- preset_set_auto_dao.dart
+			- schema.dart
+			- seed.dart
+			- session_dao.dart
+			- set_dao.dart
+			- stats_dao.dart
+			- stretch_dao.dart
+		- models
+			- analytics_models.dart
+			- definition__models.dart
+			- gym_models.dart
+			- measurement_models.dart
+			- models.dart
+			- preset_models.dart
+			- workout_models.dart
+		- providers
+			- active_session.dart
+			- preset_session.dart
+			- selected_profile.dart
+		- repositories 
+			- app_repository.dart
+		- screens 
+			- exercise
+				- analytics_dashboard_screen.dart
+				- auto_preset-flow_screen.dart
+				- definitions_by_bodypart_page.dart
+				- definitions_by_muscle_page.dart
+				- exercise_analytics_screen.dart
+				- exercise_catalog_page.dart
+				- gym_profile_screen.dart
+				- history_screen.dart
+				- muscle_filter_page.dart
+				- preset_detail_screen.dart
+				- session_detail_screen.dart
+				- session_screen.dart
+				- train_page.dart
+				- volume_boundaries_screen.dart
+			- nutrition
+				- default_trend_page.dart
+				- food_customization_page.dart
+				- food_logging_page.dart
+				- log_entry_page.dart
+				- measured_items_page.dart
+				- new_measured_item_page.dart
+				- nutrition_page.dart
+				- specific_measurement_page.dart
+			- profile
+				- analytics_setting_screen.dart
+				- app_settings_page.dart
+				- bodypart_muscle_mapping_screen.dart
+				- bodypart_ranking_screen.dart
+				- exercise_muscle_percent_screen.dart
+				- flow_chart_page.dart
+				- muscle_ranking_screen.dart
+				- profile_page.dart
+		- services
+			- auto_increment_service.dart
+			- flow_executor.dart
+		- widgets 
+			- add_exercise_fab.dart
+			- automatic_settings_sheet.dart
+			- cardio_card.dart
+			- exercise_card.dart
+			- exercise_detail_sheet.dart
+			- flow_screen_widgets.dart
+			- flow_widgets.dart
+			- history_summary_widgets.dart
+			- ongoing_session_fab.dart
+			- preset_bar.dart
+			- session_complete_sheet.dart
+			- speed_dial_fab.dart
+			- stretch_card.dart
+			- stretch_search_dialog.dart
+			- weight_card.dart
+		- main.dart
