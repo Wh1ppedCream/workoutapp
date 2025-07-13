@@ -39,69 +39,50 @@ final bool isAutomatic;
         ? label!
         : 'Preset ${index + 1}';
 
-    return Material(
-      color: color.withValues(alpha: 0.1),
-      //need to make colors different for each preset
-      borderRadius: BorderRadius.circular(8),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(8),
-        onTap: onTap,
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-          decoration: BoxDecoration(
-            border: Border.all(color: color),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: color,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-               Row(
-                children: [
-                  if (isAutomatic)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: Container(
-                        width: 16,
-                        height: 16,
-                        decoration: const BoxDecoration(
-                          color: Colors.green,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Center(
-                          child: Text(
-                            'A',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  PopupMenuButton<String>(
-                    icon: Icon(Icons.more_vert, color: color),
-                    onSelected: (action) {
-                      onMenuSelected?.call(action);
-                    },
-                    itemBuilder: (_) => const [
-                      PopupMenuItem(value: 'edit', child: Text('Edit')),
-                      PopupMenuItem(value: 'delete', child: Text('Delete')),
-                      PopupMenuItem(value: 'rename', child: Text('Rename')),
-                    ],
-                  ),
-                ],
-              ),
-            ],
+    // Build the trailing row: optional “A” badge + menu
+    Widget trailing = Row(children: [
+      if (isAutomatic)
+        const Padding(
+          padding: EdgeInsets.only(right: 8),
+          child: _AutomaticBadge(),
+        ),
+      PopupMenuButton<String>(
+        icon: Icon(Icons.more_vert, color: color),
+        onSelected: onMenuSelected,
+        itemBuilder: (_) => const [
+          PopupMenuItem(value: 'edit',   child: Text('Edit')),
+          PopupMenuItem(value: 'delete', child: Text('Delete')),
+          PopupMenuItem(value: 'rename', child: Text('Rename')),
+        ],
+      ),
+    ]);
+
+    return GenericBar(
+      label: title,
+      color: color,
+      onTap: onTap,
+      trailing: trailing,
+    );
+  }
+}
+
+class _AutomaticBadge extends StatelessWidget {
+  const _AutomaticBadge();
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 16, height: 16,
+      decoration: const BoxDecoration(
+        color: Colors.green,
+        shape: BoxShape.circle,
+      ),
+      child: const Center(
+        child: Text(
+          'A',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
           ),
         ),
       ),

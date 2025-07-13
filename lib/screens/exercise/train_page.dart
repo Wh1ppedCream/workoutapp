@@ -1,4 +1,4 @@
-// File: lib/screens/train_page.dart
+// File: lib/screens/exercise/train_page.dart
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +8,7 @@ import '../../providers/preset_session.dart';
 import '../../providers/selected_profile.dart';
 import '../../repositories/app_repository.dart';
 import '../../widgets/preset_bar.dart';
+import '../../widgets/generic_bar.dart';
 import 'gym_profile_screen.dart';
 import 'preset_detail_screen.dart';
 import 'session_screen.dart';
@@ -330,17 +331,16 @@ class _TrainPageState extends State<TrainPage> {
               ),
               const Divider(height: 1),
               const SizedBox(height: 8),
-              PresetBar(
-                label: 'Generate Custom Presets',
-                color: Colors.purple,
-                index: 0,
-              ),
+              GenericBar(
+  label: 'Generate Custom Presets',
+  color: Colors.purple,
+  onTap: null, // or supply a callback if you want it tappable
+),
               const SizedBox(height: 8),
-              PresetBar(
-                label: 'Manually Add Preset',
-                color: Colors.purple,
-                index: 0,
-                onTap: () async {
+              GenericBar(
+  label: 'Manually Add Preset',
+  color: Colors.purple,
+  onTap: () async {
     final profileId = sel.currentProfile?.id;
     // 1) Fetch existing presets for this profile
     final existing = await _repo.fetchAllPresetsRaw(profileId: profileId);
