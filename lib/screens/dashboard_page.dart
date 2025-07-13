@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 
 import '../providers/dashboard_config.dart';
 import '../widgets/nutrition_dash.dart';
+import '../widgets/workout_dashboard.dart';
+
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
@@ -63,6 +65,15 @@ class DashboardPage extends StatelessWidget {
           ),
         );
 
+      case 'workoutDashboard':
+  return Card(
+    key: key,
+    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    child: const WorkoutDashboard(),
+  );
+
+
+
       default:
         return Card(
           key: key,
@@ -101,6 +112,8 @@ class DashboardSettingsPage extends StatelessWidget {
     switch (id) {
       case 'nutritionDash':
         return 'Nutrition Dashboard';
+      case 'workoutDashboard':
+        return 'Workout Dashboard';
       case 'quickStats':
         return 'Quick Stats';
       case 'recentWorkouts':

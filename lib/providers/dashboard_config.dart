@@ -10,6 +10,7 @@ class DashboardConfig extends ChangeNotifier {
   // These IDs must match whatever widget types you define
   final List<String> defaultOrder = [
     'nutritionDash',
+    'workoutDashboard',
     'quickStats',
     'recentWorkouts',
     'profileSummary',
@@ -22,6 +23,7 @@ class DashboardConfig extends ChangeNotifier {
   DashboardConfig()
       : _widgetOrder = List.from([
         'nutritionDash',
+        'workoutDashboard',
           'quickStats',
           'recentWorkouts',
           'profileSummary',
@@ -34,17 +36,24 @@ class DashboardConfig extends ChangeNotifier {
   bool isVisible(String id) => !_hiddenWidgets.contains(id);
 
   Future<void> _load() async {
-    final prefs = await SharedPreferences.getInstance();
-    final jsonStr = prefs.getString(_prefsKey);
-    if (jsonStr != null) {
-      final data = json.decode(jsonStr) as Map<String, dynamic>;
-      _widgetOrder = List<String>.from(data['order']);
-      _hiddenWidgets = Set<String>.from(data['hidden']);
-    } else {
-      // no prefs yet: keep the defaults
+  final prefs = await SharedPreferences.getInstance();
+  final jsonStr = prefs.getString(_prefsKey);
+  if (jsonStr != null) {
+    final data = json.decode(jsonStr) as Map<String, dynamic>;
+    _widgetOrder   = List<String>.from(data['order']);
+    _hiddenWidgets = Set<String>.from(data['hidden']);
+    
+    // ─── Ensure all newly-added defaults appear ─────────────────
+    for (var id in defaultOrder) {
+      if (!_widgetOrder.contains(id)) {
+        _widgetOrder.add(id);
+      }
     }
-    notifyListeners();
-  }
+  } 
+  // else: keep the initial defaults you set in the constructor
+  notifyListeners();
+}
+
 
   Future<void> _save() async {
     final prefs = await SharedPreferences.getInstance();

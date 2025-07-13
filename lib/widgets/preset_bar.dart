@@ -1,6 +1,7 @@
 // File: lib/widgets/preset_bar.dart
 
 import 'package:flutter/material.dart';
+import 'generic_bar.dart';
 
 /// A colored preset bar with label and overflow menu.
 class PresetBar extends StatelessWidget {
@@ -95,7 +96,7 @@ final bool isAutomatic;
                     itemBuilder: (_) => const [
                       PopupMenuItem(value: 'edit', child: Text('Edit')),
                       PopupMenuItem(value: 'delete', child: Text('Delete')),
-                      PopupMenuItem(value: 'profile_swap', child: Text('Profile Swap')),
+                      PopupMenuItem(value: 'rename', child: Text('Rename')),
                     ],
                   ),
                 ],

@@ -233,7 +233,9 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
         bottomNavigationBar: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(16),
-            child: _isEditing
+            child: 
+            // old save button logic
+            /*_isEditing
                 ? ElevatedButton(
                     onPressed: () async {
                       await context.read<PresetSession>().saveChanges();
@@ -241,6 +243,26 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                     },
                     child: const Text('Save Preset'),
                   )
+                  */
+                _isEditing
+  ? ElevatedButton(
+      onPressed: () async {
+        final sess = context.read<PresetSession>();
+        final newName = _nameController.text.trim();
+
+        // 1) If the name changed, push it to the DB and local state
+        if (newName.isNotEmpty && newName != sess.presetName) {
+          await sess.updateName(newName);
+        }
+
+        // 2) Then save any exercise changes
+        await sess.saveChanges();
+
+        setState(() => _isEditing = false);
+      },
+      child: const Text('Save Preset'),
+    )
+
                 : ElevatedButton(
                     onPressed: () {
                       // 1) Capture Navigator and notifiers up-front
