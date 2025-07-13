@@ -32,7 +32,7 @@ class NutritionDash extends StatefulWidget {
     required this.carbTarget,
     required this.fatConsumed,
     required this.fatTarget,
-    this.scale = 1.0,  // default = original size
+    this.scale = 1,  // default = original size
   });
 
   @override

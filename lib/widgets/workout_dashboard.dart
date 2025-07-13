@@ -19,7 +19,7 @@ class WorkoutDashboard extends StatefulWidget {
   /// Uniform scale factor for all paddings, fonts, and sizes.
   final double scale;
 
-  const WorkoutDashboard({super.key, this.scale = 1.0});
+  const WorkoutDashboard({super.key, this.scale = 1});
 
   @override
   State<WorkoutDashboard> createState() => _WorkoutDashboardState();
@@ -128,7 +128,7 @@ class _WorkoutDashboardState extends State<WorkoutDashboard> {
                           index:      i,
                           isAutomatic:isAuto,
                           onRefresh:  () => setState(() {}),
-                          scale:      0.2,
+                          scale:      0.2 * s,
                         ),
                       );
                     },

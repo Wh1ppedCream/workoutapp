@@ -61,6 +61,7 @@ class DashboardPage extends StatelessWidget {
               carbTarget:      200,
               fatConsumed:     10,
               fatTarget:       70,
+              scale: 0.7,  // pass scale down
             ),
           ),
         );
@@ -69,7 +70,9 @@ class DashboardPage extends StatelessWidget {
   return Card(
     key: key,
     margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-    child: const WorkoutDashboard(),
+    child: const WorkoutDashboard( 
+      scale: 0.7,  // default scale for existing sizes
+    ),
   );
 
 
