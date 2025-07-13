@@ -128,7 +128,7 @@ class _WorkoutDashboardState extends State<WorkoutDashboard> {
                           index:      i,
                           isAutomatic:isAuto,
                           onRefresh:  () => setState(() {}),
-                          scale:      0.2 * s,
+                          scale:      0.8 * s,
                         ),
                       );
                     },

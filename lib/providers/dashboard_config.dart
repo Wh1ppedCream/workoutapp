@@ -9,6 +9,7 @@ class DashboardConfig extends ChangeNotifier {
 
   // These IDs must match whatever widget types you define
   final List<String> defaultOrder = [
+    'quickBar',
     'nutritionDash',
     'workoutDashboard',
     'quickStats',
@@ -22,6 +23,7 @@ class DashboardConfig extends ChangeNotifier {
 
   DashboardConfig()
       : _widgetOrder = List.from([
+        'quickBar',
         'nutritionDash',
         'workoutDashboard',
           'quickStats',

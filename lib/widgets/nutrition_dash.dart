@@ -101,7 +101,7 @@ class _NutritionDashState extends State<NutritionDash> {
               duration: const Duration(milliseconds: 200),
               margin: EdgeInsets.symmetric(
                 horizontal: 4 * s,
-                vertical:   8 * s,
+                vertical:   1 * s,
               ),
               width:  selected ? 12 * s : 8 * s,
               height: selected ? 12 * s : 8 * s,

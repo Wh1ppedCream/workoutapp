@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../providers/dashboard_config.dart';
 import '../widgets/nutrition_dash.dart';
 import '../widgets/workout_dashboard.dart';
+import '../widgets/quick_bar.dart';
 
 
 class DashboardPage extends StatelessWidget {
@@ -46,6 +47,14 @@ class DashboardPage extends StatelessWidget {
 
   Widget _buildDashboardTile(String id, { required Key key }) {
     switch (id) {
+      
+      case 'quickBar':
+       return Card(
+         key: key,
+         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+         child: const QuickBar(),    // ← your new QuickBar
+       );
+
       case 'nutritionDash':
         return Card(
           key: key,
@@ -113,6 +122,8 @@ class DashboardSettingsPage extends StatelessWidget {
 
   String _labelFor(String id) {
     switch (id) {
+      case 'quickBar':
+     return 'Quick Actions';
       case 'nutritionDash':
         return 'Nutrition Dashboard';
       case 'workoutDashboard':
