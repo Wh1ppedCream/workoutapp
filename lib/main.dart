@@ -3,12 +3,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/active_session.dart';
+import 'screens/dashboard_page.dart';
 import 'screens/exercise/history_screen.dart';
 import 'screens/exercise/train_page.dart';          
 import 'screens/nutrition/nutrition_page.dart';
 import 'screens/profile/settings/profile_page.dart';
 import 'widgets/ongoing_session_fab.dart';
 import 'providers/selected_profile.dart';
+import 'providers/dashboard_config.dart';
 
 void main() {
   runApp(
@@ -16,6 +18,7 @@ void main() {
       providers: [
         ChangeNotifierProvider(create: (_) => ActiveSession()),
         ChangeNotifierProvider(create: (_) => SelectedProfile()),
+        ChangeNotifierProvider(create: (_) => DashboardConfig()),
       ],
       child: const MyApp(),
     ),
@@ -49,6 +52,7 @@ class _MainScreenState extends State<MainScreen> {
 
   // List of pages for bottom navigation
   static final List<Widget> _pages = <Widget>[
+    const DashboardPage(),
     const TrainPage(),        // Train tab
     const HistoryScreen(),    // History tab
     const NutritionPage(),    // Nutrition tab
@@ -73,6 +77,10 @@ class _MainScreenState extends State<MainScreen> {
         selectedItemColor: Colors.deepPurple,     // active icon/text color
         unselectedItemColor: Colors.black54,      // inactive icon/text color
         items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.dashboard),
+            label: 'Dashboard',
+          ),
           BottomNavigationBarItem(
             icon: Icon(Icons.fitness_center),
             label: 'Train',

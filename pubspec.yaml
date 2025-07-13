@@ -43,6 +43,7 @@ dependencies:
   fl_chart: ^1.0.0
   provider: ^6.1.5
   flutter_flow_chart: ^3.2.3
+  shared_preferences: ^2.5.3
 
 
 dev_dependencies:

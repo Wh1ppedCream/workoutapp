@@ -5,9 +5,9 @@
 import 'package:flutter/material.dart';
 import 'default_trend_page.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'food_logging_page.dart';
 import 'log_entry_page.dart';
 import '../../widgets/speed_dial_fab.dart';
+import '../../widgets/nutrition_dash.dart';
 
 
 
@@ -53,82 +53,29 @@ Padding(
     children: [
       const SizedBox(height: 12),
 
-// ─── Calorie summary cards ────────────────────────────
-Padding(
-  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-  child: Row(
-    children: [
-      Expanded(child: _StatCard(label: 'Remaining', value: '${calorieGoal - caloriesConsumed} kcal')),
-      const SizedBox(width: 8),
-      Expanded(child: _StatCard(label: 'Consumed',  value: '$caloriesConsumed kcal')),
-      const SizedBox(width: 8),
-      Expanded(child: _StatCard(label: 'Target',    value: '$calorieGoal kcal')),
-    ],
-  ),
+// ─── Daily summary: date + two-line numeric tally ─────────────────
+NutritionDash(
+  caloriesConsumed: caloriesConsumed,
+  calorieGoal: calorieGoal,
+  proteinConsumed: proteinGrams,
+  proteinTarget: proteinTarget,
+  carbConsumed: carbGrams,
+  carbTarget: carbTarget,
+  fatConsumed: fatGrams,
+  fatTarget: fatTarget,
 ),
 
 
-const SizedBox(height: 16),
 
-// ─── Macro summary cards ──────────────────────────────
-Padding(
-  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-  child: Row(
-    children: [
-      Expanded(child: _MacroCard(label: 'Protein', consumed: proteinGrams, target: proteinTarget)),
-      const SizedBox(width: 8),
-      Expanded(child: _MacroCard(label: 'Carbs',   consumed: carbGrams,    target: carbTarget)),
-      const SizedBox(width: 8),
-      Expanded(child: _MacroCard(label: 'Fat',     consumed: fatGrams,     target: fatTarget)),
-    ],
-  ),
-),
-
-const Divider(height: 25),
 
     ],
   ),
 ),
 
 
-// ─── Quick Actions ───────────────────────────────────
-Padding(
-  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-  child: Row(
-    children: [
-      Expanded(
-        child: ElevatedButton(
-          onPressed: () {
-            // TODO: navigate to Pantry Log page
-          },
-          child: const Text('Pantry Log'),
-        ),
-      ),
-      const SizedBox(width: 1),
-      Expanded(
-  child: ElevatedButton(
-    onPressed: () {
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => const FoodLoggingPage(),
-        ),
-      );
-    },
-    child: const Text('Add Meal'),
-  ),
-),
-      const SizedBox(width: 1),
-      Expanded(
-        child: ElevatedButton(
-          onPressed: () {
-            // TODO: open Plan Meal planner
-          },
-          child: const Text('Plan Meal'),
-        ),
-      ),
-    ],
-  ),
-),
+
+
+
 
 const Divider(height: 25),
 
@@ -341,71 +288,6 @@ Padding(
   }
 }
 
-/// A small card showing one macro’s grams
-class _MacroCard extends StatelessWidget {
-  final String label;
-  final int consumed;
-  final int target;
-
-  const _MacroCard({
-    super.key,
-    required this.label,
-    required this.consumed,
-    required this.target,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey[300]!),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(label, style: Theme.of(context).textTheme.bodySmall),
-          const SizedBox(height: 4),
-          Text('$consumed / $target g', style: Theme.of(context).textTheme.titleMedium),
-        ],
-      ),
-    );
-  }
-}
-
-/// A card showing one numeric stat (e.g. calories remaining)
-class _StatCard extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _StatCard({
-    super.key,
-    required this.label,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey[300]!),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(label, style: Theme.of(context).textTheme.bodySmall),
-          const SizedBox(height: 4),
-          Text(value, style: Theme.of(context).textTheme.titleMedium),
-        ],
-      ),
-    );
-  }
-}
 
 
 /// A tappable box showing a mini trend line + value + chevron.
