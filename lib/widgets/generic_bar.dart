@@ -1,7 +1,9 @@
+// File: lib/widgets/generic_bar.dart
+
 import 'package:flutter/material.dart';
 
 /// A tappable bar with a colored border & optional trailing widget.
-/// This is the base building-block for things that look like your current PresetBar.
+/// You can adjust its overall size by passing [scale].
 class GenericBar extends StatelessWidget {
   /// The main text label.
   final String label;
@@ -9,11 +11,14 @@ class GenericBar extends StatelessWidget {
   /// The accent color (used for border, text, splash).
   final Color color;
 
-  /// Called on tap. If null, the bar is not tappable.
+  /// Called on tap. If null, the bar isn’t tappable.
   final VoidCallback? onTap;
 
-  /// An optional widget displayed at the trailing end (e.g. menu button).
+  /// An optional widget displayed at the trailing end.
   final Widget? trailing;
+
+  /// Uniform scale factor for all dimensions (padding, radius, border width, font size).
+  final double scale;
 
   const GenericBar({
     super.key,
@@ -21,22 +26,32 @@ class GenericBar extends StatelessWidget {
     required this.color,
     this.onTap,
     this.trailing,
+    this.scale = 1.0,
   });
 
   @override
   Widget build(BuildContext context) {
+    // base constants × scale
+    final borderRadius = BorderRadius.circular(8 * scale);
+    final horizontalPadding = 12 * scale;
+    final verticalPadding = 16 * scale;
+    final borderWidth = 1 * scale;
+
     return Material(
       color: color.withValues(alpha: 0.1),
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: borderRadius,
       child: InkWell(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: borderRadius,
         onTap: onTap,
         child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+          padding: EdgeInsets.symmetric(
+            horizontal: horizontalPadding,
+            vertical: verticalPadding,
+          ),
           decoration: BoxDecoration(
-            border: Border.all(color: color, width: 1),
-            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: color, width: borderWidth),
+            borderRadius: borderRadius,
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -44,7 +59,7 @@ class GenericBar extends StatelessWidget {
               Text(
                 label,
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 15,
                   color: color,
                   fontWeight: FontWeight.w600,
                 ),

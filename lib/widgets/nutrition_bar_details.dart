@@ -14,6 +14,9 @@ class NutritionBarDetails extends StatelessWidget {
   final int fatConsumed;
   final int fatTarget;
 
+  /// Uniform scale factor for all dimensions.
+  final double scale;
+
   const NutritionBarDetails({
     super.key,
     required this.caloriesConsumed,
@@ -24,6 +27,7 @@ class NutritionBarDetails extends StatelessWidget {
     required this.carbTarget,
     required this.fatConsumed,
     required this.fatTarget,
+    this.scale = 1.0,    // default to 1.0 for existing sizes
   });
 
   @override
@@ -43,7 +47,7 @@ class NutritionBarDetails extends StatelessWidget {
         : 0.0;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      padding: EdgeInsets.symmetric(vertical: 16 * scale),
       child: Column(
         children: [
           // ─── Horizontal calories bar ─────────────────────────
@@ -53,12 +57,11 @@ class NutritionBarDetails extends StatelessWidget {
             target: calorieGoal,
             remaining: remainingCalories,
             factor: pctCal,
-            height: 80,
+            height: 80 * scale,
             color: Colors.green.shade600,
-           // color: Theme.of(context).colorScheme.primary,
           ),
 
-          const SizedBox(height: 24),
+          SizedBox(height: 24 * scale),
 
           // ─── Vertical macro bars ─────────────────────────────
           Row(
@@ -70,8 +73,8 @@ class NutritionBarDetails extends StatelessWidget {
                 consumed: proteinConsumed,
                 target: proteinTarget,
                 factor: pctProtein,
-                height: 140,
-                width: 50,
+                height: 140 * scale,
+                width: 50 * scale,
                 color: Theme.of(context).colorScheme.primary,
               ),
               _buildVerticalBar(
@@ -80,8 +83,8 @@ class NutritionBarDetails extends StatelessWidget {
                 consumed: carbConsumed,
                 target: carbTarget,
                 factor: pctCarb,
-                height: 140,
-                width: 50,
+                height: 140 * scale,
+                width: 50 * scale,
                 color: Colors.blue.shade600,
               ),
               _buildVerticalBar(
@@ -90,8 +93,8 @@ class NutritionBarDetails extends StatelessWidget {
                 consumed: fatConsumed,
                 target: fatTarget,
                 factor: pctFat,
-                height: 140,
-                width: 50,
+                height: 140 * scale,
+                width: 50 * scale,
                 color: Colors.orange.shade600,
               ),
             ],
@@ -113,7 +116,7 @@ class NutritionBarDetails extends StatelessWidget {
     // light version for unfilled track
     final trackColor = color.withValues(alpha: 0.3);
 
-    return LayoutBuilder(builder: (context, constraints) {
+    return LayoutBuilder(builder: (ctx, constraints) {
       final fullWidth = constraints.maxWidth;
       final filledWidth = fullWidth * factor;
 
@@ -130,23 +133,22 @@ class NutritionBarDetails extends StatelessWidget {
             ),
           ),
 
-          // filled portion
           // filled portion aligned to left
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Container(
-            width: filledWidth,
-            height: height,
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(height / 2),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Container(
+              width: filledWidth,
+              height: height,
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(height / 2),
+              ),
             ),
           ),
-        ),
 
           // texts
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
+            padding: EdgeInsets.symmetric(horizontal: 8 * scale),
             child: Row(
               children: [
                 // consumed on left
@@ -155,7 +157,7 @@ class NutritionBarDetails extends StatelessWidget {
                   style: Theme.of(context)
                       .textTheme
                       .bodyLarge!
-                      .copyWith(color: Colors.white),
+                      .copyWith(color: Colors.white, fontSize: 16 * scale),
                 ),
                 const Spacer(),
                 // target in center
@@ -164,7 +166,7 @@ class NutritionBarDetails extends StatelessWidget {
                   style: Theme.of(context)
                       .textTheme
                       .bodyLarge!
-                      .copyWith(color: Colors.white),
+                      .copyWith(color: Colors.white, fontSize: 16 * scale),
                 ),
                 const Spacer(),
                 // remaining on right
@@ -173,7 +175,7 @@ class NutritionBarDetails extends StatelessWidget {
                   style: Theme.of(context)
                       .textTheme
                       .bodyLarge!
-                      .copyWith(color: Colors.white),
+                      .copyWith(color: Colors.white, fontSize: 16 * scale),
                 ),
               ],
             ),
@@ -198,8 +200,6 @@ class NutritionBarDetails extends StatelessWidget {
 
     return Column(
       children: [
-        // label above if you want, or skip and show remaining inside
-        // remaining number at top inside bar
         SizedBox(
           width: width,
           height: height,
@@ -234,38 +234,40 @@ class NutritionBarDetails extends StatelessWidget {
 
               // remaining at top
               Positioned(
-                top: 4,
+                top: 4 * scale,
                 child: Text(
                   '$remaining',
                   style: Theme.of(context)
                       .textTheme
                       .bodyMedium!
-                      .copyWith(color: Colors.white),
+                      .copyWith(color: Colors.white, fontSize: 12 * scale),
                 ),
               ),
 
               // consumed at bottom
               Positioned(
-                bottom: 4,
+                bottom: 4 * scale,
                 child: Text(
                   '$consumed',
                   style: Theme.of(context)
                       .textTheme
                       .bodyMedium!
-                      .copyWith(color: Colors.white),
+                      .copyWith(color: Colors.white, fontSize: 12 * scale),
                 ),
               ),
             ],
           ),
         ),
 
-        const SizedBox(height: 4),
+        SizedBox(height: 4 * scale),
 
         // label below bar
         Text(
           label,
-          style: Theme.of(context).textTheme.bodySmall!
-          .copyWith(color: color),
+          style: Theme.of(context)
+              .textTheme
+              .bodySmall!
+              .copyWith(color: color, fontSize: 12 * scale),
         ),
       ],
     );

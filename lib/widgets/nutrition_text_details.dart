@@ -3,7 +3,8 @@
 import 'package:flutter/material.dart';
 
 /// Shows calorie stats (Remaining, Consumed, Target)
-/// and macro stats (Protein, Carbs, Fat) in two rows of ValueCards.
+/// and macro stats (Protein, Carbs, Fat) in two rows of ValueCards,
+/// with an optional [scale] factor to adjust sizing.
 class NutritionTextDetails extends StatelessWidget {
   final int caloriesConsumed;
   final int calorieGoal;
@@ -13,6 +14,9 @@ class NutritionTextDetails extends StatelessWidget {
   final int carbTarget;
   final int fatConsumed;
   final int fatTarget;
+
+  /// Uniform scale factor for paddings, spacings, and card sizing.
+  final double scale;
 
   const NutritionTextDetails({
     super.key,
@@ -24,114 +28,139 @@ class NutritionTextDetails extends StatelessWidget {
     required this.carbTarget,
     required this.fatConsumed,
     required this.fatTarget,
+    this.scale = 1.0,
   });
 
   @override
   Widget build(BuildContext context) {
-    // compute remaining calories
     final remaining = calorieGoal - caloriesConsumed;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: EdgeInsets.symmetric(
+        horizontal: 16 * scale,
+        vertical: 12 * scale,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Calorie summary
+          // Calorie summary row
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
+            padding: EdgeInsets.symmetric(vertical: 8 * scale),
             child: Row(
               children: [
                 Expanded(
                   child: ValueCard(
                     label: 'Remaining',
                     value: '$remaining kcal',
+                    scale: scale,
                   ),
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: 8 * scale),
                 Expanded(
                   child: ValueCard(
                     label: 'Consumed',
                     value: '$caloriesConsumed kcal',
+                    scale: scale,
                   ),
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: 8 * scale),
                 Expanded(
                   child: ValueCard(
                     label: 'Target',
                     value: '$calorieGoal kcal',
+                    scale: scale,
                   ),
                 ),
               ],
             ),
           ),
 
-          const SizedBox(height: 16),
+          SizedBox(height: 16 * scale),
 
-          // Macro summary
+          // Macro summary row
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
+            padding: EdgeInsets.symmetric(vertical: 8 * scale),
             child: Row(
               children: [
                 Expanded(
                   child: ValueCard(
                     label: 'Protein',
                     value: '$proteinConsumed / $proteinTarget g',
+                    scale: scale,
                   ),
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: 8 * scale),
                 Expanded(
                   child: ValueCard(
                     label: 'Carbs',
                     value: '$carbConsumed / $carbTarget g',
+                    scale: scale,
                   ),
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: 8 * scale),
                 Expanded(
                   child: ValueCard(
                     label: 'Fat',
                     value: '$fatConsumed / $fatTarget g',
+                    scale: scale,
                   ),
                 ),
               ],
             ),
           ),
-
         ],
       ),
     );
   }
 }
 
-/// A generic card that shows a label and a single line of text.
-/// Use it for stats (e.g. “Remaining: 800 kcal”) or macros (e.g. “80 / 100 g”).
+/// A generic card that shows a [label] and a [value], with optional [scale]
+/// to adjust padding, border radius, and font sizes.
 class ValueCard extends StatelessWidget {
   final String label;
   final String value;
   final Color? borderColor;
+
+  /// Uniform scale factor for padding, border radius, spacing, and fonts.
+  final double scale;
 
   const ValueCard({
     super.key,
     required this.label,
     required this.value,
     this.borderColor,
+    this.scale = 1.0,
   });
 
   @override
   Widget build(BuildContext context) {
     final borderClr = borderColor ?? Colors.grey[300]!;
 
+    // base text styles
+    final theme = Theme.of(context);
+    final labelStyleBase = theme.textTheme.bodySmall!;
+    final valueStyleBase = theme.textTheme.titleMedium!;
+
+    // scaled text styles
+    final labelStyle = labelStyleBase.copyWith(
+      fontSize: (labelStyleBase.fontSize ?? 14) * scale,
+    );
+    final valueStyle = valueStyleBase.copyWith(
+      fontSize: (valueStyleBase.fontSize ?? 18) * scale,
+    );
+
     return Container(
-      padding: const EdgeInsets.all(8),
+      padding: EdgeInsets.all(8 * scale),
       decoration: BoxDecoration(
         border: Border.all(color: borderClr),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(8 * scale),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(label, style: Theme.of(context).textTheme.bodySmall),
-          const SizedBox(height: 4),
-          Text(value, style: Theme.of(context).textTheme.titleMedium),
+          Text(label, style: labelStyle),
+          SizedBox(height: 4 * scale),
+          Text(value, style: valueStyle),
         ],
       ),
     );

@@ -1,12 +1,15 @@
+// File: lib/widgets/rounded_progress_indicator.dart
+
 import 'dart:math';
 import 'package:flutter/material.dart';
 
 /// A donut-style progress indicator with rounded stroke caps.
+/// You can pass [scale] to shrink/grow the overall size and stroke thickness.
 class RoundedProgressIndicator extends StatelessWidget {
   /// Fractional progress from 0.0 to 1.0.
   final double progress;
 
-  /// Width & height of the square widget.
+  /// Base width & height of the square widget before scaling.
   final double size;
 
   /// Color of the filled arc.
@@ -15,8 +18,11 @@ class RoundedProgressIndicator extends StatelessWidget {
   /// Color of the unfilled track.
   final Color backgroundColor;
 
-  /// Thickness of the ring.
+  /// Base thickness of the ring before scaling.
   final double strokeWidth;
+
+  /// Uniform scale factor for both [size] and [strokeWidth].
+  final double scale;
 
   const RoundedProgressIndicator({
     super.key,
@@ -25,19 +31,23 @@ class RoundedProgressIndicator extends StatelessWidget {
     required this.progressColor,
     required this.backgroundColor,
     this.strokeWidth = 12,
+    this.scale = 1.0,
   });
 
   @override
   Widget build(BuildContext context) {
+    final actualSize = size * scale;
+    final actualStroke = strokeWidth * scale;
+
     return SizedBox(
-      width: size,
-      height: size,
+      width: actualSize,
+      height: actualSize,
       child: CustomPaint(
         painter: _RoundedProgressPainter(
           progress: progress.clamp(0.0, 1.0),
           progressColor: progressColor,
           backgroundColor: backgroundColor,
-          strokeWidth: strokeWidth,
+          strokeWidth: actualStroke,
         ),
       ),
     );

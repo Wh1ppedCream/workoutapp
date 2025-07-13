@@ -59,11 +59,6 @@ class _TrainPageState extends State<TrainPage> {
     setState(() {});
   }
 
-  /// Deletes a preset and refreshes the list.
-  Future<void> _deletePreset(int presetId) async {
-    await _repo.deletePreset(presetId);
-    setState(() {});
-  }
 
   /// Opens the preset detail screen.
   void _openPreset(int presetId, {bool edit = false}) {
@@ -269,58 +264,14 @@ class _TrainPageState extends State<TrainPage> {
         && (autoSnap.data?['is_automatic'] as int? ?? 0) == 1;
 
     return PresetBar(
-      label: p.name,
-      color: color,
-      index: i,
-      isAutomatic: isAuto,
-      onTap: () => _openPreset(p.id),
-      onMenuSelected: (action) async {
-        if (action == 'edit') {
-          _openPreset(p.id, edit: true);
-        } else if (action == 'delete') {
-          _deletePreset(p.id);
-        }
+  presetId:   p.id,
+  label:      p.name,
+  color:      color,
+  index:      i,
+  isAutomatic: isAuto,
+  onRefresh:  () => setState(() {}),
+);
 
-        else if (action == 'rename') {
-          // 1) Prompt for the new name
-      final newName = await showDialog<String>(
-        context: context,
-        builder: (dCtx) {
-          final ctl = TextEditingController(text: p.name);
-          return AlertDialog(
-            title: const Text('Rename Preset'),
-            content: TextField(
-              controller: ctl,
-              decoration: const InputDecoration(labelText: 'Preset Name'),
-              autofocus: true,
-            ),
-             actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dCtx).pop(),
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: () =>
-                    Navigator.of(dCtx).pop(ctl.text.trim()),
-                child: const Text('Rename'),
-                ),
-            ],
-          );
-        },
-      );
-
-        // 2) If they entered a different, non-empty name, save it
-      if (newName != null && newName.isNotEmpty && newName != p.name) {
-        await _repo.updatePresetName(p.id, newName);
-        setState(() {}); // re-fetch via FutureBuilder
-      }
-
-        }
-
-        // (Later: handle 'make_automatic' & 'automatic_settings' here)
-      },
-    );
-  
   },
 );
 

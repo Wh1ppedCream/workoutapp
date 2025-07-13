@@ -6,17 +6,26 @@ import '../screens/nutrition/food_logging_page.dart';
 import '../screens/nutrition/plan_meal_page.dart';
 
 class MealPlanAddBar extends StatelessWidget {
-  const MealPlanAddBar({super.key});
+  /// Scale factor for all dimensions (padding, radius, divider thickness).
+  final double scale;
+
+  const MealPlanAddBar({super.key, this.scale = 0.8});
 
   @override
   Widget build(BuildContext context) {
     final dividerColor = Colors.grey.shade400;
+    final margin = EdgeInsets.symmetric(
+      horizontal: 16 * scale,
+      vertical: 8 * scale,
+    );
+    final handlePadding = EdgeInsets.symmetric(vertical: 12 * scale);
+    final radius = BorderRadius.circular(24 * scale);
+    final dividerThickness = 1.0 * scale;
+    final segmentHeight = 40 * scale;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-      ),
+      margin: margin,
+      decoration: BoxDecoration(borderRadius: radius),
       child: Row(
         children: [
           // Pantry Log (light yellow)
@@ -24,29 +33,36 @@ class MealPlanAddBar extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.yellow.shade100,
-                borderRadius: const BorderRadius.horizontal(
-                  left: Radius.circular(24),
+                borderRadius: BorderRadius.horizontal(
+                  left: Radius.circular(24 * scale),
                 ),
               ),
               child: InkWell(
-                borderRadius: const BorderRadius.horizontal(
-                    left: Radius.circular(24)),
+                borderRadius: BorderRadius.horizontal(
+                  left: Radius.circular(24 * scale),
+                ),
                 onTap: () {
                   Navigator.of(context).push(
-                    MaterialPageRoute(
-                        builder: (_) => const PantryLogPage()),
+                    MaterialPageRoute(builder: (_) => const PantryLogPage()),
                   );
                 },
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 12),
-                  child: Center(child: Text('Pantry Log')),
+                child: Padding(
+                  padding: handlePadding,
+                  child: SizedBox(
+                    height: segmentHeight,
+                    child: const Center(child: Text('Pantry Log')),
+                  ),
                 ),
               ),
             ),
           ),
 
           // Divider
-          Container(width: 1, height: 40, color: dividerColor),
+          Container(
+            width: dividerThickness,
+            height: segmentHeight,
+            color: dividerColor,
+          ),
 
           // Add Meal (light green)
           Expanded(
@@ -55,42 +71,51 @@ class MealPlanAddBar extends StatelessWidget {
               child: InkWell(
                 onTap: () {
                   Navigator.of(context).push(
-                    MaterialPageRoute(
-                        builder: (_) => const FoodLoggingPage()),
+                    MaterialPageRoute(builder: (_) => const FoodLoggingPage()),
                   );
                 },
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 12),
-                  child: Center(child: Text('Add Meal')),
+                child: Padding(
+                  padding: handlePadding,
+                  child: SizedBox(
+                    height: segmentHeight,
+                    child: const Center(child: Text('Add Meal')),
+                  ),
                 ),
               ),
             ),
           ),
 
           // Divider
-          Container(width: 1, height: 40, color: dividerColor),
+          Container(
+            width: dividerThickness,
+            height: segmentHeight,
+            color: dividerColor,
+          ),
 
           // Plan Meal (light blue)
           Expanded(
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.blue.shade100,
-                borderRadius: const BorderRadius.horizontal(
-                  right: Radius.circular(24),
+                borderRadius: BorderRadius.horizontal(
+                  right: Radius.circular(24 * scale),
                 ),
               ),
               child: InkWell(
-                borderRadius: const BorderRadius.horizontal(
-                    right: Radius.circular(24)),
+                borderRadius: BorderRadius.horizontal(
+                  right: Radius.circular(24 * scale),
+                ),
                 onTap: () {
                   Navigator.of(context).push(
-                    MaterialPageRoute(
-                        builder: (_) => const PlanMealPage()),
+                    MaterialPageRoute(builder: (_) => const PlanMealPage()),
                   );
                 },
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 12),
-                  child: Center(child: Text('Plan Meal')),
+                child: Padding(
+                  padding: handlePadding,
+                  child: SizedBox(
+                    height: segmentHeight,
+                    child: const Center(child: Text('Plan Meal')),
+                  ),
                 ),
               ),
             ),
