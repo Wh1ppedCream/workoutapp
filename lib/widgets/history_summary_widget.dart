@@ -2,6 +2,40 @@
 import 'package:flutter/material.dart';
 import '../models/models.dart';
 import '../repositories/app_repository.dart';
+import 'body_heatmap.dart';
+
+/// Map from your DB BodyPart.name → all matching SVG path id="…"
+const Map<String, List<String>> _bodyPartNameToSvgIds = {
+  'Neck':          ['Neck_frontal', 'neck_rear'],
+  'Shoulders':     [
+                     'Shoulder_frontal_left',
+                     'Shoulder_frontal_right',
+                     'shoulder_left_back',
+                     'shoulder_right_rear',
+                   ],
+  'Chest':         ['Chest_left', 'Chest_right'],
+  'Core':          ['Core_front'],
+  'Upper Back':    ['Upper_Back'],
+  'Lower Back':    ['lower_back'],
+  'Biceps':        ['bicep_left', 'Bicep_right'],
+  'Triceps':       ['tricep_left_back', 'tricep_right_rear'],
+  'Forearms':      [
+                     'Forearm_Right_front',
+                     'forearm_frontal_left',
+                     'forearm_left_back',
+                     'forearm_right_rear',
+                   ],
+  'Hips':          ['Hip_back_left', 'hip_right_rear'],
+  'Hamstrings':    ['hamstring_left_back', 'Hamstring_right_back'],
+  'Quads':         ['Quad_Front_Right', 'Quad_Left_front'],
+  'Calves':        [
+                     'Calf_Front_Right',
+                     'Calf_front_left',
+                     'Calf_left_back',
+                     'Calf_right_back',
+                   ],
+};
+
 
 /// Widget that displays summary metrics (count, time, volume, goal%)
 /// for the given list of sessions (e.g. the last 7 days).
@@ -35,6 +69,12 @@ class HistorySummaryWidget extends StatelessWidget {
     final goalPercent = ((workoutCount / targetWorkouts) * 100)
         .clamp(0, 100)
         .toInt();
+
+     // Fetch body-part sets for the last 7 days
+    final now = DateTime.now();
+    final weekAgo = now.subtract(const Duration(days: 7));
+    final futureBodyPartMap = AppRepository()
+        .fetchSetsPerBodyPart(start: weekAgo, end: now);
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -73,13 +113,62 @@ class HistorySummaryWidget extends StatelessWidget {
               ],
             ),
 
+
             const SizedBox(height: 12),
-            // TODO: Body heatmap visualization
+            // Heatmap showing sets per bodypart
+            FutureBuilder<Map<BodyPart, double>>(
+              future: futureBodyPartMap,
+              builder: (ctx, snap) {
+                const heatmapHeight = 180.0;
+                if (snap.connectionState == ConnectionState.waiting) {
+                  return SizedBox(
+                    height: heatmapHeight,
+                    child: const Center(child: CircularProgressIndicator()),
+                  );
+                }
+                if (snap.hasError || snap.data == null) {
+                  return SizedBox(
+                    height: heatmapHeight,
+                    child: const Center(child: Text('Failed to load heatmap')),
+                  );
+                }
+                final rawCounts = snap.data!;
+                final maxCount = rawCounts.values.fold<double>(
+                  0.0, (prev, v) => v > prev ? v : prev);
+
+                // Build svgId→normalized frequency map
+                final freqMap = <String, double>{};
+                rawCounts.forEach((bodyPart, count) {
+                  final ids = _bodyPartNameToSvgIds[bodyPart.name];
+                  if (ids != null) {
+                    final norm = maxCount == 0.0 ? 0.0 : count / maxCount;
+                    for (var svgId in ids) {
+                      freqMap[svgId] = norm;
+                    }
+                  }
+                });
+
+                return SizedBox(
+                  height: heatmapHeight,
+                  child: BodyHeatmap(
+                    frequencyMap: freqMap,
+                    lowColor: Colors.grey.shade400,
+                    highColor: const Color.fromARGB(255, 16, 2, 216),
+                    width: double.infinity,
+                    height: heatmapHeight,
+                  ),
+                );
+              },
+            ),
           ],
         ),
       ),
     );
   }
+
+
+
+           
 
   Widget _buildMetric(String label, String value) {
     return Column(
