@@ -44,6 +44,7 @@ dependencies:
   provider: ^6.1.5
   flutter_flow_chart: ^3.2.3
   shared_preferences: ^2.5.3
+  flutter_svg: ^2.2.0
 
 
 dev_dependencies:
@@ -83,6 +84,8 @@ flutter:
     - assets/muscle_ranking.json
     - assets/bodypart_muscle_rankings.json
     - assets/volume_boundaries.json
+    - assets/body_heatmap.svg
+
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
