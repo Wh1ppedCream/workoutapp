@@ -13,6 +13,7 @@ class DashboardConfig extends ChangeNotifier {
     'nutritionDash',
     'workoutDashboard',
     'quickStats',
+    'historySummary', 
     'recentWorkouts',
     'profileSummary',
   ];
@@ -27,6 +28,7 @@ class DashboardConfig extends ChangeNotifier {
         'nutritionDash',
         'workoutDashboard',
           'quickStats',
+          'historySummary', 
           'recentWorkouts',
           'profileSummary',
         ]),
