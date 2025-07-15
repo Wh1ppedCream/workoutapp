@@ -6,7 +6,7 @@ import '../repositories/app_repository.dart';
 import 'body_heatmap.dart';
 
 
-// Mapping DB BodyPart.name → all SVG <path id="…"> strings
+// Mapping DB BodyPart.name → all SVG <path id="…"> strings 
 const Map<String, List<String>> _bodyPartNameToSvgIds = {
   'Neck': [
     'Neck_frontal',
@@ -146,21 +146,46 @@ class HistorySummaryWidget extends StatelessWidget {
     // Heatmap Future
     final now = DateTime.now();
     final weekAgo = now.subtract(const Duration(days: 7));
-    final heatmapFuture = AppRepository()
-        .fetchSetsPerBodyPart(start: weekAgo, end: now);
+    final heatmapFuture = AppRepository().fetchSetsPerBodyPart(start: weekAgo, end: now);
+
+final theme = Theme.of(context);
 
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: const EdgeInsets.symmetric(vertical: 8),
       child: Padding(
         padding: const EdgeInsets.all(16),
+        child: DefaultTabController(
+          length: 6,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              'Last 7 Days',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 12),
+              // ─── Tab Bar ────────────────────────────────
+              Container(
+                height: 35,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: TabBar(
+                  // full-tab indicator
+                  indicator: BoxDecoration(
+                    color: theme.colorScheme.primary,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  labelColor: theme.colorScheme.onPrimary,
+                  unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
+                  tabs: const [
+                    Tab(text: '1W'),
+                    Tab(text: '1M'),
+                    Tab(text: '3M'),
+                    Tab(text: '6M'),
+                    Tab(text: '1Y'),
+                    Tab(text: 'All'),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
 
             // ── NEW ROW: Heatmap on left, 3 info cards on right ──
             Row(
@@ -168,8 +193,8 @@ class HistorySummaryWidget extends StatelessWidget {
                 children: [
                   // 1) The heatmap
                   SizedBox(
-                    width: 200,
-                    height: 200,
+                    width: 250,
+                    height: 250,
                     child: FutureBuilder<Map<BodyPart, double>>(
                       future: heatmapFuture,
                       builder: (ctx, snap) {
@@ -258,6 +283,7 @@ class HistorySummaryWidget extends StatelessWidget {
 
             // remove the old placeholder / TODO
           ],
+        ),
         ),
       ),
     );

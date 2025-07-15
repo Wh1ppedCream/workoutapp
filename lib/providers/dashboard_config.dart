@@ -12,10 +12,7 @@ class DashboardConfig extends ChangeNotifier {
     'quickBar',
     'nutritionDash',
     'workoutDashboard',
-    'quickStats',
     'historySummary', 
-    'recentWorkouts',
-    'profileSummary',
   ];
 
   // initialize immediately so we can read them before prefs load
@@ -27,10 +24,7 @@ class DashboardConfig extends ChangeNotifier {
         'quickBar',
         'nutritionDash',
         'workoutDashboard',
-          'quickStats',
           'historySummary', 
-          'recentWorkouts',
-          'profileSummary',
         ]),
         _hiddenWidgets = {} {
     _load();

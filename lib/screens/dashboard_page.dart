@@ -33,66 +33,67 @@ class DashboardPage extends StatelessWidget {
         ],
       ),
       body: Consumer<DashboardConfig>(
-        builder: (_, config, __) => ReorderableListView(
-          onReorder: (oldIndex, newIndex) {
-            if (newIndex > oldIndex) newIndex -= 1;
-            config.reorder(oldIndex, newIndex);
-          },
-          children: [
-            for (var id in config.widgetOrder)
-              if (config.isVisible(id))
-                _buildDashboardTile(id, key: ValueKey(id)),
-          ],
-        ),
+        builder: (_, config, __) {
+          // Only keep the visible IDs
+          final visibleIds = config.widgetOrder.where(config.isVisible).toList();
+          return ReorderableListView(
+            onReorder: (oldIndex, newIndex) {
+              if (newIndex > oldIndex) newIndex -= 1;
+              config.reorder(oldIndex, newIndex);
+            },
+            children: [
+              for (var i = 0; i < visibleIds.length; i++)
+                // Wrap each tile+divider in a Column
+                Container(
+                  key: ValueKey(visibleIds[i]),
+                  // Optional horizontal inset:
+                  padding: const EdgeInsets.symmetric(horizontal: 5),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _buildDashboardTile(visibleIds[i]),
+                      // Only draw a divider if it's not the last item:
+                      if (i < visibleIds.length - 1)
+                        const Divider(height: 1, thickness: 1),
+                    ],
+                  ),
+                ),
+            ],
+          );
+        },
       ),
     );
   }
 
-  Widget _buildDashboardTile(String id, { required Key key }) {
+  /// Returns the *bare* widget for each section, without any Card/margin.
+  Widget _buildDashboardTile(String id) {
     switch (id) {
       
       case 'quickBar':
-       return Card(
-         key: key,
-         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-         child: const QuickBar(),    // ← your new QuickBar
-       );
+        return const QuickBar();
 
-      case 'nutritionDash':
-        return Card(
-          key: key,
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Padding(
-            padding: const EdgeInsets.all(8),
-            child: NutritionDash(
-              caloriesConsumed: 500,    // TODO: wire real values here
-              calorieGoal:    2000,
-              proteinConsumed: 20,
-              proteinTarget:   100,
-              carbConsumed:    50,
-              carbTarget:      200,
-              fatConsumed:     10,
-              fatTarget:       70,
-              scale: 0.7,  // pass scale down
-            ),
+       case 'nutritionDash':
+        return Padding(
+          padding: const EdgeInsets.all(8),
+          child: NutritionDash(
+            caloriesConsumed: 500,
+            calorieGoal: 2000,
+            proteinConsumed: 20,
+            proteinTarget: 100,
+            carbConsumed: 50,
+            carbTarget: 200,
+            fatConsumed: 10,
+            fatTarget: 70,
+            scale: 0.7,
           ),
         );
 
       case 'workoutDashboard':
-  return Card(
-    key: key,
-    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-    child: const WorkoutDashboard( 
-      scale: 0.7,  // default scale for existing sizes
-    ),
-  );
+        return const WorkoutDashboard(scale: 0.7);
 
 
        case 'historySummary':
-     return Card(
-           key: key,
-           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-           child: FutureBuilder<List<WorkoutSession>>(
+     return FutureBuilder<List<WorkoutSession>>(
           // TODO: replace with your actual fetch method
           future: AppRepository().fetchSessionsInRange(
               DateTime.now().subtract(const Duration(days: 7)),
@@ -111,23 +112,14 @@ class DashboardPage extends StatelessWidget {
                    child: Center(child: Text('Error loading summary')),
                  );
                }
-              final recent = snap.data ?? [];
-               return HistorySummaryWidget(
-                recentSessions: recent,
-               );
+              return HistorySummaryWidget(recentSessions: snap.data!);
              },
-           ),
-         );
+        );
 
 
       default:
-        return Card(
-          key: key,
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: ListTile(
-            title: Text('Placeholder for $id'),
-          ),
-        );
+        // Should never hit this if you've removed placeholders
+        return const SizedBox.shrink();
     }
   }
 }
@@ -162,12 +154,6 @@ class DashboardSettingsPage extends StatelessWidget {
         return 'Nutrition Dashboard';
       case 'workoutDashboard':
         return 'Workout Dashboard';
-      case 'quickStats':
-        return 'Quick Stats';
-      case 'recentWorkouts':
-        return 'Recent Workouts';
-      case 'profileSummary':
-        return 'Profile Summary';
       default:
         return id;
     }
