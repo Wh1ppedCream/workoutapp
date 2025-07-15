@@ -9,6 +9,7 @@ import '../widgets/workout_dashboard.dart';
 import '../widgets/quick_bar.dart';
 import '../widgets/history_summary_widget.dart';
 import '../widgets/past_sessions_list.dart';
+import '../widgets/data_records_section.dart'; 
 
 
 class DashboardPage extends StatelessWidget {
@@ -86,6 +87,10 @@ class DashboardPage extends StatelessWidget {
             scale: 0.7,
           ),
         );
+
+
+ case 'dataRecords':
+        return const DataRecordsSection();
 
       case 'workoutDashboard':
         return const WorkoutDashboard(scale: 0.7);

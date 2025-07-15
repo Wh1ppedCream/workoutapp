@@ -11,6 +11,7 @@ class DashboardConfig extends ChangeNotifier {
   final List<String> defaultOrder = [
     'quickBar',
     'nutritionDash',
+    'dataRecords',
     'workoutDashboard',
     'historySummary', 
     'sessionList',
@@ -24,6 +25,7 @@ class DashboardConfig extends ChangeNotifier {
       : _widgetOrder = List.from([
         'quickBar',
         'nutritionDash',
+        'dataRecords',
         'workoutDashboard',
           'historySummary', 
           'sessionList',

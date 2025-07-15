@@ -10,6 +10,10 @@ class DataRecordsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final today = DateTime.now();
+
+// Two‐letter labels for Monday–Sunday
+    const dayLabels = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
@@ -17,6 +21,22 @@ class DataRecordsSection extends StatelessWidget {
         children: [
           Text('Data & Records', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
+
+          // ─── New: Day‐of‐week header ───────────────────────
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: dayLabels.map((lbl) {
+                return Expanded(
+                  child: Center(
+                    child: Text(lbl, style: Theme.of(context).textTheme.bodySmall),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+          const SizedBox(height: 8),
+
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: GridView.count(
@@ -28,6 +48,10 @@ class DataRecordsSection extends StatelessWidget {
               childAspectRatio: 1,
               children: List.generate(28, (i) {
                 final date = today.subtract(Duration(days: 27 - i));
+                final isToday = date.year == today.year
+                    && date.month == today.month
+                    && date.day == today.day;
+
                 return GestureDetector(
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(builder: (_) => LogEntryPage(date: date)),
@@ -36,9 +60,20 @@ class DataRecordsSection extends StatelessWidget {
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.grey[400]!),
+                      color: isToday
+                          ? Colors.green.withOpacity(0.2)
+                          : Colors.transparent,
+                      border: Border.all(
+                        color: isToday ? Colors.green : Colors.grey[400]!,
+                      ),
                     ),
-                    child: Text('${date.day}', style: Theme.of(context).textTheme.bodySmall),
+                   child: Text(
+                      '${date.day}',
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodySmall!
+                          .copyWith(color: isToday ? Colors.green : null),
+                    ),
                   ),
                 );
               }),
