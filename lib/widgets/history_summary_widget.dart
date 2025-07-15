@@ -118,16 +118,55 @@ class InfoCard extends StatelessWidget {
   }
 }
 
-class HistorySummaryWidget extends StatelessWidget {
-  final List<WorkoutSession> recentSessions;
+/// Loads the last-7-day sessions internally, then renders the summary.
+class HistorySummaryWidget extends StatefulWidget {
+  const HistorySummaryWidget({super.key});
 
-  const HistorySummaryWidget({
-    super.key,
-    required this.recentSessions,
-  });
+  @override
+  _HistorySummaryWidgetState createState() => _HistorySummaryWidgetState();
+}
+
+class _HistorySummaryWidgetState extends State<HistorySummaryWidget> {
+  late final Future<List<WorkoutSession>> _sessionsFuture;
+  late final Future<Map<BodyPart,double>> _heatmapFuture;
+  late final DateTime _now;
+  late final DateTime _weekAgo;
+
+  @override
+  void initState() {
+    super.initState();
+    _now = DateTime.now();
+    _weekAgo = _now.subtract(const Duration(days: 7));
+    _sessionsFuture = AppRepository().fetchSessionsInRange(_weekAgo, _now);
+    _heatmapFuture  = AppRepository().fetchSetsPerBodyPart(
+      start: _weekAgo, end: _now,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    return FutureBuilder<List<WorkoutSession>>(
+      future: _sessionsFuture,
+      builder: (ctx, snap) {
+        if (snap.connectionState != ConnectionState.done) {
+          return const SizedBox(
+            height: 250,
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (snap.hasError || snap.data == null) {
+          return const Padding(
+            padding: EdgeInsets.all(16),
+            child: Center(child: Text('Error loading history')),
+          );
+        }
+        return _buildSummary(context, snap.data!);
+      },
+    );
+  }
+
+
+Widget _buildSummary(BuildContext context, List<WorkoutSession> recentSessions) {
     // 1) Number of workouts
     final workoutCount = recentSessions.length;
 
@@ -144,9 +183,7 @@ class HistorySummaryWidget extends StatelessWidget {
     final sessionIds = recentSessions.map((s) => s.id).toList();
 
     // Heatmap Future
-    final now = DateTime.now();
-    final weekAgo = now.subtract(const Duration(days: 7));
-    final heatmapFuture = AppRepository().fetchSetsPerBodyPart(start: weekAgo, end: now);
+    final heatmapFuture = _heatmapFuture;
 
 final theme = Theme.of(context);
 
@@ -287,5 +324,10 @@ final theme = Theme.of(context);
         ),
       ),
     );
+
+
   }
-}
+ }
+
+
+

@@ -67,28 +67,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           
           // ─── 7-day Summary ────────────────────────────────
           // ⬇️ History summary panel
-          FutureBuilder<List<WorkoutSession>>(
-            future: _repo.fetchSessionsInRange(
-              DateTime.now().subtract(const Duration(days: 7)),
-              DateTime.now(),
-            ),
-            builder: (ctx, snap) {
-              if (snap.connectionState == ConnectionState.waiting) {
-                return const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Center(child: CircularProgressIndicator()),
-                );
-              }
-              if (snap.hasError) {
-                return const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Center(child: Text('Error loading summary')),
-                );
-              }
-              final recent = snap.data ?? [];
-              return HistorySummaryWidget(recentSessions: recent);
-            },
-          ),
+              const HistorySummaryWidget(),
 
           // ─── Analytics Dashboard button ───────────────────
           Padding(

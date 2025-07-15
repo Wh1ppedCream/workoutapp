@@ -8,8 +8,6 @@ import '../widgets/nutrition_dash.dart';
 import '../widgets/workout_dashboard.dart';
 import '../widgets/quick_bar.dart';
 import '../widgets/history_summary_widget.dart';
-import '../models/workout_models.dart';  
-import '../repositories/app_repository.dart';
 
 
 class DashboardPage extends StatelessWidget {
@@ -93,28 +91,7 @@ class DashboardPage extends StatelessWidget {
 
 
        case 'historySummary':
-     return FutureBuilder<List<WorkoutSession>>(
-          // TODO: replace with your actual fetch method
-          future: AppRepository().fetchSessionsInRange(
-              DateTime.now().subtract(const Duration(days: 7)),
-              DateTime.now(),
-            ),
-             builder: (ctx, snap) {
-               if (snap.connectionState == ConnectionState.waiting) {
-                 return const SizedBox(
-                   height: 250,
-                   child: Center(child: CircularProgressIndicator()),
-                 );
-               }
-               if (snap.hasError) {
-                 return const Padding(
-                   padding: EdgeInsets.all(16),
-                   child: Center(child: Text('Error loading summary')),
-                 );
-               }
-              return HistorySummaryWidget(recentSessions: snap.data!);
-             },
-        );
+  return const HistorySummaryWidget();
 
 
       default:
