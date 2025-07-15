@@ -13,6 +13,7 @@ class DashboardConfig extends ChangeNotifier {
     'nutritionDash',
     'workoutDashboard',
     'historySummary', 
+    'sessionList',
   ];
 
   // initialize immediately so we can read them before prefs load
@@ -25,6 +26,7 @@ class DashboardConfig extends ChangeNotifier {
         'nutritionDash',
         'workoutDashboard',
           'historySummary', 
+          'sessionList',
         ]),
         _hiddenWidgets = {} {
     _load();

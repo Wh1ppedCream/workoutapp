@@ -212,7 +212,9 @@ class _HistorySummaryWidgetState extends State<HistorySummaryWidget> {
     rawHeatmap.forEach((bp, count) {
       final ids = _bodyPartNameToSvgIds[bp.name] ?? [];
       final norm = maxCount == 0.0 ? 0.0 : count / maxCount;
-      for (var id in ids) freqMap[id] = norm;
+      for (var id in ids) {
+        freqMap[id] = norm;
+      }
     });
 
     return Row(

@@ -8,6 +8,7 @@ import '../widgets/nutrition_dash.dart';
 import '../widgets/workout_dashboard.dart';
 import '../widgets/quick_bar.dart';
 import '../widgets/history_summary_widget.dart';
+import '../widgets/past_sessions_list.dart';
 
 
 class DashboardPage extends StatelessWidget {
@@ -92,6 +93,15 @@ class DashboardPage extends StatelessWidget {
 
        case 'historySummary':
   return const HistorySummaryWidget();
+
+  case 'sessionList':
+        return PastSessionsList(
+          key: key,
+          height: 320,
+          onReload: () {
+            // nothing else needed here—PastSessionsList reloads itself
+          },
+        );
 
 
       default:
