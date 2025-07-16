@@ -2,7 +2,16 @@
 
 import 'package:flutter/material.dart';
 
-/// A single dot + value + label.
+/// Data holder for a metric tile
+class MetricData {
+  final Color color;
+  final String label;
+  final String value;
+
+  MetricData({required this.color, required this.label, required this.value});
+}
+
+/// A single dot + value + label
 class MetricItem extends StatelessWidget {
   final Color color;
   final String label;
@@ -30,26 +39,39 @@ class MetricItem extends StatelessWidget {
   }
 }
 
-/// Shows “Current Metrics” with a date, three MetricItems, and footer.
-class CurrentMetricsSection extends StatelessWidget {
-  final DateTime lastMeasured;
-  final String bodyFat;
-  final String waist;
-  final String hips;
-  final int daysAgo;
+/// Shows “Current Metrics” with a date, dynamic metric tiles, and add button
+class CurrentMetricsSection extends StatefulWidget {
+  const CurrentMetricsSection({super.key});
 
-  const CurrentMetricsSection({
-    super.key,
-    required this.lastMeasured,
-    required this.bodyFat,
-    required this.waist,
-    required this.hips,
-    required this.daysAgo,
-  });
+  @override
+  _CurrentMetricsSectionState createState() => _CurrentMetricsSectionState();
+}
+
+class _CurrentMetricsSectionState extends State<CurrentMetricsSection> {
+  final DateTime _lastMeasured = DateTime.now();
+  final int _daysAgo = 0;
+
+  final List<MetricData> _metrics = [
+    MetricData(color: Colors.green, label: 'Visual Body Fat', value: '26.0 %'),
+    MetricData(color: Colors.blue,  label: 'Waist', value: '27 in'),
+    MetricData(color: Colors.purple,label: 'Hips',  value: '36 in'),
+  ];
+
+  void _addMetric() {
+    setState(() {
+      _metrics.add(
+        MetricData(
+          color: Colors.orange,
+          label: 'New Metric',
+          value: '123 u',
+        ),
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    final fmtDate = '${lastMeasured.month}/${lastMeasured.day}';
+    final fmtDate = '${_lastMeasured.month}/${_lastMeasured.day}';
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -57,17 +79,38 @@ class CurrentMetricsSection extends StatelessWidget {
         const SizedBox(height: 4),
         Text(fmtDate, style: Theme.of(context).textTheme.bodySmall),
         const SizedBox(height: 12),
-        Row(children: [
-          MetricItem(color: Colors.green,  label: 'Visual Body Fat', value: bodyFat),
-          const SizedBox(width: 16),
-          MetricItem(color: Colors.blue,   label: 'Waist',            value: waist),
-          const SizedBox(width: 16),
-          MetricItem(color: Colors.purple, label: 'Hips',             value: hips),
-        ]),
+        SingleChildScrollView(
+  scrollDirection: Axis.horizontal,
+  child: 
+        Row(
+          children: [
+            ..._metrics.map((m) => Padding(
+              padding: const EdgeInsets.only(right: 16),
+              child: MetricItem(color: m.color, label: m.label, value: m.value),
+            )),
+            GestureDetector(
+              onTap: _addMetric,
+              child: Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.add, size: 24),
+              ),
+            ),
+          ],
+        ),
+        ),
+       
         const SizedBox(height: 12),
         Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          Text('$daysAgo days ago', style: Theme.of(context).textTheme.bodySmall),
-          GestureDetector(onTap: () { /* TODO */ }, child: const Icon(Icons.chevron_right, size: 16)),
+          Text('$_daysAgo days ago', style: Theme.of(context).textTheme.bodySmall),
+          GestureDetector(
+            onTap: () {},
+            child: const Icon(Icons.chevron_right, size: 16),
+          ),
         ]),
         const Divider(height: 32),
       ]),

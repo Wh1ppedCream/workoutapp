@@ -91,13 +91,7 @@ const Divider(height: 25),
 const DataRecordsSection(),
 
           // ─── Current Metrics ──────────────────────────────────
-           CurrentMetricsSection(
-   lastMeasured:   today,
-   bodyFat:        '26.0 %',
-   waist:          '27 in',
-   hips:           '36 in',
-   daysAgo:        0,
- ),
+           CurrentMetricsSection(),
         ],
       ),
       ),

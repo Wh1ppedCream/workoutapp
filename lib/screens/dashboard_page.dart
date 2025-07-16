@@ -12,6 +12,8 @@ import '../widgets/past_sessions_list.dart';
 import '../widgets/data_records_section.dart'; 
 import '../widgets/health_trends_section.dart';
 
+import '../widgets/current_metrics_section.dart';
+
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
@@ -112,6 +114,9 @@ class DashboardPage extends StatelessWidget {
           },
         );
 
+      case 'CurrentMetricsSection':
+        return const CurrentMetricsSection();
+
 
       default:
         // Should never hit this if you've removed placeholders
@@ -158,6 +163,8 @@ class DashboardSettingsPage extends StatelessWidget {
         return 'History Summary';
       case 'sessionList':
         return 'Past Sessions List';
+      case 'CurrentMetricsSection':
+        return 'Current Metrics';
 
       default:
         return id;
