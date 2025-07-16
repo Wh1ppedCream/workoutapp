@@ -1,0 +1,22 @@
+WIDGETS
+	DONE-ish
+	- nutrition dashboard
+	- workout dashboard
+	- quickstart (+measurement,+meal,+workout)
+	- x-day workout details
+		- can slide between 
+			- 1 week, 
+			- 1 month, 
+			- 3 month
+			- 6 month, 
+			- 1 year
+			- all time
+	- scrollable workout history 
+	- Nutrition log calender
+	- Trend tile holder (contains healthtrendtiles we created for nutrition page)
+	
+	DOING:
+	- Important Stats (user decided stats to show)
+	
+	TODO: 
+	- detailed trend (details for an individual trend for recorded info healthtrendtiles lead to)
