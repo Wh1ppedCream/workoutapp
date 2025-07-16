@@ -10,6 +10,7 @@ import '../widgets/quick_bar.dart';
 import '../widgets/history_summary_widget.dart';
 import '../widgets/past_sessions_list.dart';
 import '../widgets/data_records_section.dart'; 
+import '../widgets/health_trends_section.dart';
 
 
 class DashboardPage extends StatelessWidget {
@@ -92,6 +93,9 @@ class DashboardPage extends StatelessWidget {
  case 'dataRecords':
         return const DataRecordsSection();
 
+        case 'healthTrends':
+        return const HealthTrendsSection();
+
       case 'workoutDashboard':
         return const WorkoutDashboard(scale: 0.7);
 
@@ -144,8 +148,17 @@ class DashboardSettingsPage extends StatelessWidget {
      return 'Quick Actions';
       case 'nutritionDash':
         return 'Nutrition Dashboard';
+      case 'dataRecords':
+        return 'Data & Records';
+      case 'healthTrends':
+        return 'Health Trends';
       case 'workoutDashboard':
         return 'Workout Dashboard';
+      case 'historySummary':
+        return 'History Summary';
+      case 'sessionList':
+        return 'Past Sessions List';
+
       default:
         return id;
     }

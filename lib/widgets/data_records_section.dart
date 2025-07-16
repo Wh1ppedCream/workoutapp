@@ -61,7 +61,7 @@ class DataRecordsSection extends StatelessWidget {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: isToday
-                          ? Colors.green.withOpacity(0.2)
+                          ? Colors.green.withValues(alpha: 0.2)
                           : Colors.transparent,
                       border: Border.all(
                         color: isToday ? Colors.green : Colors.grey[400]!,

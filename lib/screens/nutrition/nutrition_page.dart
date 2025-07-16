@@ -3,7 +3,6 @@
 // ignore_for_file: unused_local_variable, unused_element_parameter
 
 import 'package:flutter/material.dart';
-import 'package:fl_chart/fl_chart.dart';
 import '../../widgets/speed_dial_fab.dart';
 import '../../widgets/nutrition_dash.dart';
 import '../../widgets/health_trends_section.dart';
@@ -84,22 +83,7 @@ const Divider(height: 25),
 // ─── Health Trends ───────────────────────────────────
 
 
- HealthTrendsSection(
-   caloriesConsumed: caloriesConsumed,
-   calorieGoal:      calorieGoal,   // TODO: wire actual remaining or total
-   expenditureSpots: const [
-    FlSpot(0, 50), FlSpot(1, 60), FlSpot(2, 55),
-    FlSpot(3, 70), FlSpot(4, 65), FlSpot(5, 80),
-    FlSpot(6, 75),
-  ], // TODO: replace with real 7-day spots
-   weightSpots: const [
-    FlSpot(0, 210), FlSpot(1, 211), FlSpot(2, 211.5),
-    FlSpot(3, 212), FlSpot(4, 211.8), FlSpot(5, 212.2),
-    FlSpot(6, 211.9),
-    ],// TODO: replace with real 7-day weight spots
-   weightValue: '211.9 lbs',// TODO: wire actual current weight
- ),
-
+ const HealthTrendsSection(),
 
 
 
