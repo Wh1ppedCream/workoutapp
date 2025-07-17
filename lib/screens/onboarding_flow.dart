@@ -35,25 +35,45 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   String _trainingType = 'Lifting and cardio';
   String _proteinPreference = 'Moderate';
 
-  late final List<Widget> _pages;
+  // New usage intent selections
+  bool _useNutritionData = false;
+  bool _useExerciseData = false;
+  bool _useMeasurementsData = false;
 
   @override
-  void initState() {
-    super.initState();
-    _pages = [
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  List<Widget> _getOnboardingPages() {
+    final pages = <Widget>[
       _buildWelcomePage(),
       _buildPersonalInfoPage(),
-      _buildAnthropometryPage(),
-      _buildWeightHistoryPage(),
-      _buildExerciseActivityPage(),
-      _buildNutritionPreferencesPage(),
-      _buildTrainingPreferencesPage(),
-      _buildSummaryPage(),
+      _buildUsageIntentPage(),
     ];
+
+    if (_useNutritionData) {
+      pages.addAll([
+        _buildAnthropometryPage(),
+        _buildWeightHistoryPage(),
+        _buildExerciseActivityPage(),
+        _buildNutritionPreferencesPage(),
+        _buildTrainingPreferencesPage(),
+      ]);
+    }
+
+    // TODO: Add exercise-specific pages when _useExerciseData is true
+    // TODO: Add measurement-specific pages when _useMeasurementsData is true
+
+    pages.add(_buildSummaryPage());
+    return pages;
   }
 
   void _nextAction() {
-    if (_currentPage < _pages.length - 1) {
+    final pages = _getOnboardingPages();
+    final lastPageIndex = pages.length - 1;
+    if (_currentPage < lastPageIndex) {
       _controller.nextPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
@@ -65,11 +85,13 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   }
 
   void _skipOrFinish() {
-    if (_currentPage == _pages.length - 1) {
+    final pages = _getOnboardingPages();
+    final lastPageIndex = pages.length - 1;
+    if (_currentPage == lastPageIndex) {
       Navigator.pushReplacementNamed(context, '/main');
     } else {
       _controller.animateToPage(
-        _pages.length - 1,
+        lastPageIndex,
         duration: const Duration(milliseconds: 400),
         curve: Curves.easeInOut,
       );
@@ -78,15 +100,21 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
 
   @override
   Widget build(BuildContext context) {
+    final pages = _getOnboardingPages();
+    final lastPageIndex = pages.length - 1;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Onboarding'),
+        title: Text(
+          // show “Step X of Y”
+          'Step ${_currentPage + 1} of ${pages.length}',
+        ),
         actions: [
           TextButton(
             onPressed: _skipOrFinish,
             child: Text(
-              _currentPage == _pages.length - 1 ? 'Finish' : 'Skip',
-              style: const TextStyle(color: Colors.white),
+              _currentPage == lastPageIndex ? 'Finish' : 'Skip',
+              style: const TextStyle(color: Colors.green),
             ),
           ),
         ],
@@ -98,44 +126,40 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
               controller: _controller,
               physics: const NeverScrollableScrollPhysics(),
               onPageChanged: (idx) => setState(() => _currentPage = idx),
-              itemCount: _pages.length,
+              itemCount: pages.length,
               itemBuilder: (_, idx) => Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: _pages[idx],
+                child: pages[idx],
               ),
             ),
           ),
-          _buildProgressIndicator(),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(
+              pages.length,
+              (idx) => Container(
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                width: _currentPage == idx ? 16 : 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: _currentPage == idx ? Colors.blue : Colors.grey,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+            ),
+          ),
           const SizedBox(height: 16),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24.0),
             child: ElevatedButton(
               onPressed: _nextAction,
               child: Text(
-                _currentPage == _pages.length - 1 ? 'Finish' : 'Next',
+                _currentPage == lastPageIndex ? 'Finish' : 'Next',
               ),
             ),
           ),
           const SizedBox(height: 24),
         ],
-      ),
-    );
-  }
-
-  Widget _buildProgressIndicator() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(
-        _pages.length,
-        (idx) => Container(
-          margin: const EdgeInsets.symmetric(horizontal: 4),
-          width: _currentPage == idx ? 16 : 8,
-          height: 8,
-          decoration: BoxDecoration(
-            color: _currentPage == idx ? Colors.blue : Colors.grey,
-            borderRadius: BorderRadius.circular(4),
-          ),
-        ),
       ),
     );
   }
@@ -174,7 +198,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
           items: ['Male', 'Female', 'Other']
               .map((g) => DropdownMenuItem(value: g, child: Text(g)))
               .toList(),
-          onChanged: (v) => setState(() => _gender = v!), // TODO: persist
+          onChanged: (v) => setState(() => _gender = v!), // TODO
         ),
         const SizedBox(height: 16),
         const Text('Date of birth', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -186,11 +210,38 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
               firstDate: DateTime(1900),
               lastDate: DateTime.now(),
             );
-            if (d != null) setState(() => _dob = d); // TODO: persist
+            if (d != null) setState(() => _dob = d); // TODO
           },
           child: Text(
             _dob == null ? 'Select date' : _dob!.toLocal().toString().split(' ')[0],
           ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildUsageIntentPage() {
+    return ListView(
+      children: [
+        const Text(
+          'What do you intend on using the app for?',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 12),
+        CheckboxListTile(
+          title: const Text('Logging nutritional data'),
+          value: _useNutritionData,
+          onChanged: (v) => setState(() => _useNutritionData = v!), // TODO
+        ),
+        CheckboxListTile(
+          title: const Text('Logging exercise data'),
+          value: _useExerciseData,
+          onChanged: (v) => setState(() => _useExerciseData = v!), // TODO
+        ),
+        CheckboxListTile(
+          title: const Text('Logging bodily changes and measurements'),
+          value: _useMeasurementsData,
+          onChanged: (v) => setState(() => _useMeasurementsData = v!), // TODO
         ),
       ],
     );
@@ -202,13 +253,13 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         const Text('Height', style: TextStyle(fontWeight: FontWeight.bold)),
         TextField(
           decoration: const InputDecoration(hintText: 'e.g. 5\'10" or 178 cm'),
-          onChanged: (v) => _height = v, // TODO: persist
+          onChanged: (v) => _height = v, // TODO
         ),
         const SizedBox(height: 16),
         const Text('Current Weight', style: TextStyle(fontWeight: FontWeight.bold)),
         TextField(
           decoration: const InputDecoration(hintText: 'e.g. 160 lbs or 72 kg'),
-          onChanged: (v) => _weight = v, // TODO: persist
+          onChanged: (v) => _weight = v, // TODO
         ),
       ],
     );
@@ -224,26 +275,39 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         SwitchListTile(
           title: const Text('Yes'),
           value: _weighedHeavy,
-          onChanged: (v) => setState(() => _weighedHeavy = v), // TODO: persist
+          onChanged: (v) => setState(() => _weighedHeavy = v), // TODO
         ),
         const SizedBox(height: 16),
         const Text('Current weight trend', style: TextStyle(fontWeight: FontWeight.bold)),
-        ...['Gaining weight', 'Losing weight', 'Maintaining weight', 'Not sure']
-            .map(
-              (opt) => RadioListTile<String>(
-                title: Text(opt),
-                value: opt,
-                groupValue: _weightTrend,
-                onChanged: (v) => setState(() => _weightTrend = v!), // TODO
-              ),
-            )
+        ...[
+          'Gaining weight',
+          'Losing weight',
+          'Maintaining weight',
+          'Not sure',
+        ]
+            .map((opt) => RadioListTile<String>(
+                  title: Text(opt),
+                  value: opt,
+                  groupValue: _weightTrend,
+                  onChanged: (v) => setState(() => _weightTrend = v!), // TODO
+                ))
             ,
         const SizedBox(height: 16),
         const Text('Bodyfat estimate', style: TextStyle(fontWeight: FontWeight.bold)),
         // TODO: replace with image grid for 5% increments
         DropdownButton<String>(
           value: _bodyFatEstimate,
-          items: ['0-5%', '5-10%', '10-15%', '15-20%', '20-25%', '25-30%', '30-35%', '35-40%', '40+%']
+          items: <String>[
+            '0-5%',
+            '5-10%',
+            '10-15%',
+            '15-20%',
+            '20-25%',
+            '25-30%',
+            '30-35%',
+            '35-40%',
+            '40+%',
+          ]
               .map((lbl) => DropdownMenuItem(value: lbl, child: Text(lbl)))
               .toList(),
           onChanged: (v) => setState(() => _bodyFatEstimate = v!),
@@ -257,50 +321,52 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       children: [
         const Text('Exercise frequency', style: TextStyle(fontWeight: FontWeight.bold)),
         ...['0', '1-3 sessions', '4-6 sessions', '7+ sessions']
-            .map(
-              (opt) => RadioListTile<String>(
-                title: Text(opt),
-                value: opt,
-                groupValue: _exerciseFrequency,
-                onChanged: (v) => setState(() => _exerciseFrequency = v!),
-              ),
-            )
+            .map((opt) => RadioListTile<String>(
+                  title: Text(opt),
+                  value: opt,
+                  groupValue: _exerciseFrequency,
+                  onChanged: (v) => setState(() => _exerciseFrequency = v!),
+                ))
             ,
         const SizedBox(height: 16),
         const Text('Activity level (steps)', style: TextStyle(fontWeight: FontWeight.bold)),
         ...['Low (0-5k)', 'Moderate (5-15k)', 'High (15k+)']
-            .map(
-              (opt) => RadioListTile<String>(
-                title: Text(opt),
-                value: opt,
-                groupValue: _activityLevel,
-                onChanged: (v) => setState(() => _activityLevel = v!),
-              ),
-            )
+            .map((opt) => RadioListTile<String>(
+                  title: Text(opt),
+                  value: opt,
+                  groupValue: _activityLevel,
+                  onChanged: (v) => setState(() => _activityLevel = v!),
+                ))
             ,
         const SizedBox(height: 16),
         const Text('Weightlifting experience', style: TextStyle(fontWeight: FontWeight.bold)),
-        ...['No experience', 'Beginner (<1yr)', 'Intermediate (1-4yr)', 'Advanced (4yr+)']
-            .map(
-              (opt) => RadioListTile<String>(
-                title: Text(opt),
-                value: opt,
-                groupValue: _liftingExperience,
-                onChanged: (v) => setState(() => _liftingExperience = v!),
-              ),
-            )
+        ...[
+          'No experience',
+          'Beginner (<1yr)',
+          'Intermediate (1-4yr)',
+          'Advanced (4yr+)',
+        ]
+            .map((opt) => RadioListTile<String>(
+                  title: Text(opt),
+                  value: opt,
+                  groupValue: _liftingExperience,
+                  onChanged: (v) => setState(() => _liftingExperience = v!),
+                ))
             ,
         const SizedBox(height: 16),
         const Text('Cardio experience', style: TextStyle(fontWeight: FontWeight.bold)),
-        ...['No experience', 'Beginner (<1yr)', 'Intermediate (1-4yr)', 'Advanced (4yr+)']
-            .map(
-              (opt) => RadioListTile<String>(
-                title: Text(opt),
-                value: opt,
-                groupValue: _cardioExperience,
-                onChanged: (v) => setState(() => _cardioExperience = v!),
-              ),
-            )
+        ...[
+          'No experience',
+          'Beginner (<1yr)',
+          'Intermediate (1-4yr)',
+          'Advanced (4yr+)',
+        ]
+            .map((opt) => RadioListTile<String>(
+                  title: Text(opt),
+                  value: opt,
+                  groupValue: _cardioExperience,
+                  onChanged: (v) => setState(() => _cardioExperience = v!),
+                ))
             ,
       ],
     );
@@ -309,7 +375,10 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   Widget _buildNutritionPreferencesPage() {
     return ListView(
       children: [
-        const Text('Maintenance calorie estimate', style: TextStyle(fontWeight: FontWeight.bold)),
+        const Text(
+          'Maintenance calorie estimate',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         TextField(
           decoration: const InputDecoration(hintText: 'e.g. 2000 kcal'),
           onChanged: (v) => _maintenanceCalories = v, // TODO
@@ -324,7 +393,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         const Text('Preferred diet', style: TextStyle(fontWeight: FontWeight.bold)),
         DropdownButton<String>(
           value: _preferredDiet,
-          items: ['Balanced', 'Low fat', 'Low carb', 'Keto']
+          items: <String>['Balanced', 'Low fat', 'Low carb', 'Keto']
               .map((d) => DropdownMenuItem(value: d, child: Text(d)))
               .toList(),
           onChanged: (v) => setState(() => _preferredDiet = v!),
@@ -342,28 +411,27 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   Widget _buildTrainingPreferencesPage() {
     return ListView(
       children: [
-        const Text('Training during program', style: TextStyle(fontWeight: FontWeight.bold)),
+        const Text(
+          'Training during program',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         ...['None', 'Lifting', 'Cardio', 'Lifting and cardio']
-            .map(
-              (opt) => RadioListTile<String>(
-                title: Text(opt),
-                value: opt,
-                groupValue: _trainingType,
-                onChanged: (v) => setState(() => _trainingType = v!),
-              ),
-            )
+            .map((opt) => RadioListTile<String>(
+                  title: Text(opt),
+                  value: opt,
+                  groupValue: _trainingType,
+                  onChanged: (v) => setState(() => _trainingType = v!),
+                ))
             ,
         const SizedBox(height: 16),
         const Text('Preferred protein intake', style: TextStyle(fontWeight: FontWeight.bold)),
         ...['Low', 'Moderate', 'High', 'Very high']
-            .map(
-              (opt) => RadioListTile<String>(
-                title: Text(opt),
-                value: opt,
-                groupValue: _proteinPreference,
-                onChanged: (v) => setState(() => _proteinPreference = v!),
-              ),
-            )
+            .map((opt) => RadioListTile<String>(
+                  title: Text(opt),
+                  value: opt,
+                  groupValue: _proteinPreference,
+                  onChanged: (v) => setState(() => _proteinPreference = v!),
+                ))
             ,
       ],
     );
@@ -383,6 +451,13 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         Text('Name: $_name'),
         Text('Gender: $_gender'),
         Text('DOB: ${_dob?.toLocal().toString().split(' ')[0] ?? ''}'),
+        const SizedBox(height: 12),
+        const Text('Intends to use for:', style: TextStyle(fontWeight: FontWeight.bold)),
+        if (_useNutritionData) const Text('- Logging nutritional data'),
+        if (_useExerciseData) const Text('- Logging exercise data'),
+        if (_useMeasurementsData)
+          const Text('- Logging bodily changes and measurements'),
+        const SizedBox(height: 12),
         Text('Height: $_height'),
         Text('Weight: $_weight'),
         Text('Weighed >10lb before: ${_weighedHeavy ? 'Yes' : 'No'}'),
