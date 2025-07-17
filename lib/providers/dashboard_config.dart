@@ -80,10 +80,28 @@ class DashboardConfig extends ChangeNotifier {
     notifyListeners();
   }
 
-  void reorder(int oldIndex, int newIndex) {
-    final id = _widgetOrder.removeAt(oldIndex);
-    _widgetOrder.insert(newIndex, id);
-    _save();
-    notifyListeners();
+  void reorder(int oldVisibleIndex, int newVisibleIndex) {
+  // 1. Build the visible‐only list
+  final visible = _widgetOrder.where((id) => !_hiddenWidgets.contains(id)).toList();
+
+  // 2. Which widget are we actually moving?
+  final movingId = visible[oldVisibleIndex];
+
+  // 3. Pull it out of the full order
+  _widgetOrder.remove(movingId);
+
+  // 4. Compute its new spot in the *full* list:
+  //    If they're dragging to the end of the visible list, just append.
+  if (newVisibleIndex >= visible.length - 1) {
+    _widgetOrder.add(movingId);
+  } else {
+    // Otherwise insert it before the pivot visible ID at newVisibleIndex
+    final pivotId = visible[newVisibleIndex];
+    final pivotFullIndex = _widgetOrder.indexOf(pivotId);
+    _widgetOrder.insert(pivotFullIndex, movingId);
   }
+
+  _save();
+  notifyListeners();
+}
 }
