@@ -128,13 +128,72 @@ NEED TO MAKE:
 				- Thiamin (B1), Riboflavin (B2), Niacin (B3), Pantothenic acid (B5), Pyridoxine (B6), Biotin (B7), Folate (B9), Cobalamin (B12)
 			
 	- Initial Questionairre:
+		- gender
 		- date of birth
 		- height
 		- weight
-		- gender
+		- have you weighed more than 10 lbs over current weight before?
+		- current ongoing weight trend:
+			- gaining weight
+			- losing weight
+			- maintaining weight
+			- not sure
 		- current bodyfat estimate
-		- current activity level 
-			- high, moderate, low
+			- photos for each estimate level
+				- 5% increments (0-5, 5-10, 10-15, 15-20, 20-25, 25-30, 30-35, 35-40, 40+)
+		- exercise frequency
+			- in sessions per week (0, 1-3, 4-6, 7+)
+		- current activity level (steps
+			- high (15k+ steps)
+			- moderate (5-15k steps)
+			- low (0-5k steps)
+		- weightlifting experience
+			- no experience
+			- beginner (less than 1yr)
+			- intermediate (1yr to 4yr)
+			- advanced (4yr + )
+		- cardio experience
+			- no experience
+			- beginner (less than 1yr)
+			- intermediate (1yr to 4yr)
+			- advanced (4yr + )
+		- maintenance calorie estimate value
+		- provide target weight and related metrics
+			- target weight
+			- weight loss per week
+			- weight loss per month
+			- difficulty of selected items
+		- summary of selected goal
+			- rate of bodyfat% loss per week
+			- initial daily calorie intake budget
+			- estimated date to reach goal
+		- preferred diet
+			- balanced: standard amounts of everything
+			- low fat: less fats, more carbs and protein
+			- low carb: less carbs, more fat and protein
+			- keto: very low carbs, much higher fat
+		- calorie floor:
+			- provide minimum amount of calories which program can set for you
+		- training during program:
+			- none
+			- lifting
+			-cardio
+			- lifting and cardio
+		- preferred protein intake:
+			- low
+			- moderate
+			- high
+			- very high
+		- estimated amounts
+			- calorie expenditure
+			- avg calorie target
+			- target protein (grams/lb)
+			- diet type
+		
+		
+		
+		
+		
 		- choose to lose maintain or gain weight
 			- can put in specifc weight target
 			- time for reaching goal

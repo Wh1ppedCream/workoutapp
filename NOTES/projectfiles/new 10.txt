@@ -14,9 +14,19 @@ WIDGETS
 	- scrollable workout history 
 	- Nutrition log calender
 	- Trend tile holder (contains healthtrendtiles we created for nutrition page)
+	- Important Stats (user decided stats to show)
+	
 	
 	DOING:
-	- Important Stats (user decided stats to show)
 	
 	TODO: 
 	- detailed trend (details for an individual trend for recorded info healthtrendtiles lead to)
+	- last workout session widget
+	- last meal breakdown widget
+	- customizeable widget
+	- MAKE WIDGETS RESIZEABLE BY USER
+	
+	
+	
+	
+	
