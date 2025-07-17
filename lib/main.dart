@@ -11,6 +11,7 @@ import 'screens/profile/settings/profile_page.dart';
 import 'widgets/ongoing_session_fab.dart';
 import 'providers/selected_profile.dart';
 import 'providers/dashboard_config.dart';
+import 'screens/onboarding_flow.dart'; // New import for onboarding
 
 void main() {
   runApp(
@@ -35,8 +36,14 @@ class MyApp extends StatelessWidget {
   theme: ThemeData.from(
     colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
   ),
-  home: const MainScreen(),
-);
+  // old code: home: const MainScreen(),
+  // TODO: Replace with conditional logic to show onboarding only once
+      home: const OnboardingFlow(),
+      // TODO: After onboarding completes, navigate to MainScreen
+      routes: {
+        '/main': (_) => const MainScreen(),
+        },
+    );
   }
 }
 
