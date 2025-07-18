@@ -1,4 +1,4 @@
-// File: lib/widgets/exercise_catalog_page.dart
+// File: lib/screens/exercise/exercise_catalog_page.dart
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';

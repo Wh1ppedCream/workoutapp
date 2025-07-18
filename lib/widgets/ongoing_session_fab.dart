@@ -1,3 +1,5 @@
+// file: lib/widgets/ongoing_session_fab.dart
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/active_session.dart';

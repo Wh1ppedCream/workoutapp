@@ -1,4 +1,4 @@
-// File: lib/screens/muscle_ranking_screen.dart
+// file: lib/screens/profile/settings/muscle_ranking_screen.dart
 
 import 'package:flutter/material.dart';
 import '../../../repositories/app_repository.dart';

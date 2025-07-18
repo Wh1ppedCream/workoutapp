@@ -1,4 +1,4 @@
-// File: lib/screens/definitions_by_muscle_page.dart
+// File: lib/screens/exercise/definitions_by_muscle_page.dart
 
 import 'package:flutter/material.dart';
 // TODO: import your models (Muscle, ExerciseDefinition) and AppRepository

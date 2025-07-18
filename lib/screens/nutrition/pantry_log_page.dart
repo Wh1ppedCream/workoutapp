@@ -1,3 +1,5 @@
+// File: lib/screens/nutrition/pantry_log_page.dart
+
 import 'package:flutter/material.dart';
 
 class PantryLogPage extends StatelessWidget {

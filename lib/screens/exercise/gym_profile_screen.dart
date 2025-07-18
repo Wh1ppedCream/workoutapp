@@ -1,4 +1,4 @@
-// File: lib/screens/gym_profile_screen.dart
+// File: lib/screens/exercise/gym_profile_screen.dart
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';

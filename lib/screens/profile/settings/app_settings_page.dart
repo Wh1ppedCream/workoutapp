@@ -1,4 +1,4 @@
-// File: lib/screens/app_settings_page.dart
+// File: lib/screens/profile/settings/app_settings_page.dart
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

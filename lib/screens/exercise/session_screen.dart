@@ -1,4 +1,4 @@
-// File: lib/screens/session_screen.dart
+// File: lib/screens/exercise/session_screen.dart
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';

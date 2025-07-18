@@ -1,4 +1,4 @@
-// File: lib/screens/muscle_filter_page.dart
+// File: lib/screens/exercise/muscle_filter_page.dart
 
 import 'package:flutter/material.dart';
 import '../../models/models.dart';

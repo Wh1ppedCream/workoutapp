@@ -1,4 +1,4 @@
-// lib/screens/flow_chart_page.dart
+// File: lib/screens/profile/settings/flow_chart_page.dart
 
 import 'package:flutter/material.dart';
 import 'package:flutter_flow_chart/flutter_flow_chart.dart';

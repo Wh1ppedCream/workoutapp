@@ -1,4 +1,4 @@
-// File: lib/screens/nutrition_page.dart
+// File: lib/screens/nutrition/nutrition_page.dart
 
 // ignore_for_file: unused_local_variable, unused_element_parameter
 

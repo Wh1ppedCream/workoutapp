@@ -1,4 +1,4 @@
-// File: lib/screens/food_customization_page.dart
+// File: lib/screens/nutrition/food_customization_page.dart
 
 import 'package:flutter/material.dart';
 

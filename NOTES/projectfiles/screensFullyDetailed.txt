@@ -1,0 +1,4668 @@
+**Comprehensive App UI & Architecture Overview (Expanded Detail)**
+
+**Table of Contents**
+
+1. [App Entry & Top‑Level Configuration](#1-app-entry--top-level-configuration)
+2. [Onboarding Flow](#2-onboarding-flow)
+3. [Dashboard Page](#3-dashboard-page)
+4. [Train Page](#4-train-page)
+5. [History Page](#5-history-page)
+6. [Session Detail Screen](#6-session-detail-screen)
+7. [Analytics Dashboard Screen](#7-analytics-dashboard-screen)
+8. [Automatic‑Preset Flow Screen](#8-automatic‑preset-flow-screen)
+9. [Definitions by Body‑Part Page](#9-definitions-by-body-part-page)
+10. [Definitions by Muscle Page](#10-definitions-by-muscle-page)
+11. [Exercise Catalog Page](#11-exercise-catalog-page)
+12. [Full History Screen](#12-full-history-screen)
+13. [Gym Profile Screen](#13-gym-profile-screen)
+14. [Muscle Filter Page](#14-muscle-filter-page)
+15. [Preset Detail Screen](#15-preset-detail-screen)
+16. [Session Screen](#16-session-screen)
+17. [Nutrition Page](#17-nutrition-page)
+18. [Profile Page](#18-profile-page)
+19. [Bottom Sheets & Dialogs](#19-bottom-sheets--dialogs)
+20. [Widgets Reference](#20-widgets-reference)
+21. [Data Models Overview](#21-data-models-overview)
+
+---
+
+## 1. App Entry & Top‑Level Configuration
+
+**File:** `lib/main.dart`
+
+**1.1 Imports & Dependencies**
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'providers/active_session.dart';
+import 'providers/selected_profile.dart';
+import 'providers/dashboard_config.dart';
+import 'screens/onboarding_flow.dart';
+import 'screens/dashboard_page.dart';
+import 'screens/train_page.dart';
+import 'screens/history_screen.dart';
+import 'screens/nutrition_page.dart';
+import 'screens/profile/settings/profile_page.dart';
+import 'widgets/ongoing_session_fab.dart';
+```
+
+**1.2 Providers Setup**
+
+* **MultiProvider** in `main()`:
+
+  * `ChangeNotifierProvider(create: (_) => ActiveSession())`
+  * `ChangeNotifierProvider(create: (_) => SelectedProfile())`
+  * `ChangeNotifierProvider(create: (_) => DashboardConfig())`
+* **ActiveSession**:
+
+  * **State:** `bool isActive`, `List<WorkoutExercise> currentExercises`, `Duration elapsedTime`
+  * **Methods:** `start()`, `stop()`, `addExercise(Exercise)`, `finish()`, `pause()`, `resume()`
+* **SelectedProfile**:
+
+  * **State:** `List<GymProfile> profiles`, `GymProfile? currentProfile`
+  * **Methods:** `loadProfiles()`, `selectProfile(GymProfile)`, `addProfile()`, `deleteProfile(int id)`
+* **DashboardConfig**:
+
+  * **State:** `List<String> visibleWidgets`, `List<String> widgetOrder`, persistent via `SharedPreferences`
+  * **Methods:** `loadConfig()`, `toggleVisibility(String id)`, `reorder(int oldIndex, int newIndex)`, `resetToDefaults()`
+
+**1.3 MyApp & MaterialApp**
+
+* **MyApp** extends `StatelessWidget`:
+
+  * **build:** returns `MaterialApp(`
+
+    * `title: 'Fitness Tracker'`
+    * `theme: ThemeData.from(colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple)).copyWith(textTheme: GoogleFonts.openSansTextTheme())`
+    * `home: FutureBuilder<bool>(future: SharedPreferences.getBool('onboardingComplete'), builder: ...)`
+    * `routes: {'/main': (_) => MainScreen()}`
+    * `debugShowCheckedModeBanner: false`
+  * **FutureBuilder** loads `'onboardingComplete'` boolean; shows `OnboardingFlow()` if false, else `MainScreen()`.
+
+**1.4 MainScreen & Navigation**
+
+* **MainScreen** (`StatefulWidget`):
+
+  * **Fields:** `int _selectedIndex = 0;`, `List<Widget> _pages`
+  * **\_pages**:
+
+    1. `DashboardPage()`
+    2. `TrainPage()`
+    3. `HistoryScreen()`
+    4. `NutritionPage()`
+    5. `ProfilePage()`
+  * **Scaffold**:
+
+    * `body: _pages[_selectedIndex]`
+    * `bottomNavigationBar: BottomNavigationBar(`
+
+      * `type: BottomNavigationBarType.fixed`
+      * `backgroundColor: Colors.white`
+      * `selectedItemColor: Colors.deepPurple`
+      * `unselectedItemColor: Colors.black54`
+      * `currentIndex: _selectedIndex`
+      * `onTap: (i) => setState(() => _selectedIndex = i)`
+      * `items: [...]` with `Icon` + `Text` labels
+        )
+    * `floatingActionButton: Consumer<ActiveSession>(builder: (ctx, session, _) => session.isActive ? OngoingSessionFab() : SizedBox())`
+
+---
+
+## 2. Onboarding Flow
+
+**File:** `lib/screens/onboarding_flow.dart`
+
+**2.1 State & Controllers**
+
+* `PageController _controller`
+* UI Fields & Controllers:
+
+  * `TextEditingController _nameController`
+  * `String? _selectedGender;` (`'Male'|'Female'|'Other'`)
+  * `DateTime? _selectedDob;`
+  * `TextEditingController _heightController` (cm)
+  * `TextEditingController _weightController` (kg)
+* Validation flags per page, e.g. `bool _isPersonalInfoValid = false;`, updated via listeners.
+
+**2.2 Page Sequence & Logic**
+
+```dart
+List<Widget> _getPages() {
+  final pages = [
+    _buildWelcomePage(),
+    _buildPersonalInfoPage(),
+    _buildUsageIntentPage(),
+  ];
+  if (_useAnthropometry) {
+    pages.addAll([
+      _buildAnthropometryPage(),
+      _buildWeightHistoryPage(),
+      _buildExerciseActivityPage(),
+      _buildNutritionPreferencesPage(),
+      _buildTrainingPreferencesPage(),
+    ]);
+  }
+  pages.add(_buildSummaryPage());
+  return pages;
+}
+```
+
+* **Navigation Buttons:**
+
+  * `TextButton` in AppBar: `Skip` or `Finish` calls `_completeOnboarding()`
+  * Bottom `ElevatedButton`: `Next` or `Finish` disabled when current page invalid
+  * `_currentPage` tracked via `_controller.addListener`
+
+**2.3 Page Widgets Detail**
+
+* **WelcomePage:**
+
+  * `Column(mainAxisAlignment: center)`
+
+    * `Text('Welcome to Fitness Tracker', style: headline4)`
+    * `Text('Let’s set up your profile...', style: subtitle1)`
+
+* **PersonalInfoPage:**
+
+  * `Padding(16) -> Column`:
+
+    * `TextField(controller: _nameController, decoration: label:'Name')`
+    * `DropdownButtonFormField(value:_selectedGender, items:['Male','Female','Other'])`
+    * `TextButton('Select Date of Birth', onPressed:_pickDate) -> shows DatePicker`
+
+* **UsageIntentPage:**
+
+  * `CheckboxListTile(title:'Log Nutrition', value:_useNutritionData, onChanged:...)`
+  * `CheckboxListTile(title:'Log Exercise', value:_useExerciseData, onChanged:...)`
+  * `CheckboxListTile(title:'Log Measurements', value:_useMeasurementsData, onChanged:...)`
+
+* **AnthropometryPage:**
+
+  * `TextField(controller:_heightController, keyboardType:number, decoration:label:'Height (cm)')`
+  * `TextField(controller:_weightController, keyboardType:number, decoration:label:'Weight (kg)')`
+
+* **WeightHistoryPage:**
+
+  * `SwitchListTile(title:'Have weight history data?', value:_weighedHeavy, onChanged:...)`
+  * `Column` of `RadioListTile` for weight trend: `['Stable','Losing','Gaining']`
+  * `DropdownButtonFormField` for body fat estimate: `['<10%','10-20%', '>20%']`
+
+* **ExerciseActivityPage:** Multiple `RadioListTile` groups:
+
+  * `Exercise Frequency`: `['Daily','3‑5 days/week','1‑2 days/week']`
+  * `Activity Level`: `['Sedentary','Light','Moderate','Active']`
+  * `Lifting Experience`: `['None','Beginner','Intermediate','Advanced']`
+  * `Cardio Experience`: same structure
+
+* **NutritionPreferencesPage:**
+
+  * `TextField` for maintenance calories
+  * `TextField` for target weight
+  * `DropdownButtonFormField` for diet type: `['Omni','Keto','Vegan','Paleo']`
+  * `TextField` for minimum daily calories
+
+* **TrainingPreferencesPage:**
+
+  * `RadioListTile` for program type: `['Hypertrophy','Strength','Endurance']`
+  * `RadioListTile` for protein preference: `['Low','Moderate','High']`
+
+* **SummaryPage:**
+
+  * Checklist of entered values: uses `ListTile(leading:Icon(Icons.check), title:Text('Name: $_nameController.text'))`, etc.
+  * `ElevatedButton('Get Started')` calls `_completeOnboarding()`
+
+---
+
+## 3. Dashboard Page
+
+**File:** `lib/screens/dashboard_page.dart`
+
+**3.1 State & Config**
+
+* `bool _isEditing = false;` toggled by AppBar `Edit`/`Done` icon
+* Hint shown once: `_hasShownHint`
+* `final config = context.watch<DashboardConfig>();`
+* `visibleIds = config.widgetOrder.where((id) => config.visibleWidgets.contains(id));`
+
+**3.2 View Mode**
+
+* `ListView.builder(itemCount: visibleIds.length, itemBuilder: (i) => _tile(context, visibleIds[i]));`
+* `_tile`: wraps `_buildWidget(id)` in `Padding` + `Material` elevation
+
+**3.3 Edit Mode**
+
+* `ReorderableListView.builder`:
+
+  * `itemCount: visibleIds.length + 1` (extra for Add card)
+  * For each index < length: wrap in `KeyedSubtree` with `ValueKey(id)`
+  * Build `Card(elevation:2)` with:
+
+    * `ReorderableDragStartListener(index,i, child: Icon(Icons.drag_handle))`
+    * `Expanded(child: Text(_labelFor(id), style: headline6))`
+    * `IconButton(icon: Icon(Icons.visibility_off), onPressed:() => config.toggleVisibility(id))`
+    * `Container(height:120, child: _buildWidget(id))`
+  * Last index: Add-Widget card: `InkWell(onTap:_showAddWidgetDialog) {Icon(Icons.add_box), Text('Add Widget')}`
+
+**3.4 Add Widget Dialog**
+
+```dart
+showDialog(
+ context,...,
+ builder: (_) => Dialog(
+  child: ListView(
+    children: config.allPossibleWidgets
+      .where((id) => !config.visibleWidgets.contains(id))
+      .map((id) => ListTile(title:Text(_labelFor(id)), onTap:(){config.toggleVisibility(id);Navigator.pop(context);})).toList()
+  )
+ )
+);
+```
+
+**3.5 Settings BottomSheet**
+
+* AppBar `IconButton(icon:Icon(Icons.settings), onPressed:_openSettings);`
+* `_openSettings()` calls `showModalBottomSheet` containing `SwitchListTile` per widget id to toggle visibility.
+
+**3.6 Widget Mapping**
+
+| ID                      | Widget Constructor & Key Props                                     |
+| ----------------------- | ------------------------------------------------------------------ |
+| `quickBar`              | `QuickBar(scale:1.0)`                                              |
+| `nutritionDash`         | `NutritionDash(caloriesConsumed:..., macroTargets:..., scale:0.8)` |
+| `workoutDashboard`      | `WorkoutDashboard(scale:0.8)`                                      |
+| `historySummary`        | `HistorySummaryWidget()`                                           |
+| `sessionList`           | `PastSessionsList(height:300,onReload:...)`                        |
+| `dataRecords`           | `DataRecordsSection()`                                             |
+| `healthTrends`          | `HealthTrendsSection()`                                            |
+| `CurrentMetricsSection` | `CurrentMetricsSection()`                                          |
+
+---
+
+## 4. Train Page
+
+**File:** `lib/screens/exercise/train_page.dart`
+
+**4.1 State & Dependencies**
+
+* `_repo = AppRepository()`
+* `_scaffoldKey = GlobalKey<ScaffoldState>()`
+* Watch `SelectedProfile.currentProfile` to load presets
+* `_ensureDefaults(int profileId)`: creates two `PresetDefinition` if none exist
+
+**4.2 Drawer & End Drawer**
+
+* **Left Drawer:** `DrawerHeader` + `ListTile` placeholders
+* **Right Drawer**:
+
+  * `ListView` of `selected.profiles.map((p) => RadioListTile(value:p.id, groupValue:sel.currentProfile?.id, onChanged:sel.selectProfile))`
+  * Popup menu per profile: Edit → pushes `GymProfileScreen(profile: p)`, Delete → confirmation + repo.deleteProfile
+  * `ListTile(title:'Add Profile', leading:Icon(Icons.add), onTap: ()=>Navigator.push(GymProfileScreen()))`
+
+**4.3 AppBar**
+
+* `leading: IconButton(icon:Icons.menu, onPressed: ()=>_scaffoldKey.currentState.openDrawer())`
+* `title: Text('Train')`
+* `actions: [IconButton(icon:Icons.account_circle, onPressed: ()=>_scaffoldKey.currentState.openEndDrawer())]`
+
+**4.4 Body: Exercise Presets List**
+
+```dart
+FutureBuilder<List<PresetDefinition>>(
+ future: _repo.fetchAllPresets(profileId),
+ builder: (ctx, snap) {
+  if(!snap.hasData) return CircularProgressIndicator();
+  final presets = snap.data;
+  return ListView.separated(
+    itemCount: presets.length,
+    separatorBuilder: (_,__)=>Divider(),
+    itemBuilder: (i)=>FutureBuilder<bool>(
+      future: _repo.fetchPresetAutomatic(presets[i].id),
+      builder:(c,s){ return PresetBar(
+        presetId: presets[i].id,
+        name: presets[i].name,
+        color: _palette[i%_palette.length],
+        isAutomatic: s.data ?? false,
+        onTap: ()=>Navigator.push(PresetDetailScreen(presets[i].id)),
+        onRefresh: ()=>setState((){}),
+      );}
+    )
+  );
+}
+```
+
+**4.5 Bottom Section**
+
+* Two `GenericBar`:
+
+  * "Generate Custom Presets" → placeholder `onTap`
+  * "Manually Add Preset" → `_repo.createPreset(profileId)` then open detail screen
+* `ElevatedButton('New Session')` → `sessionProvider.start(profileId)` & navigate to `SessionScreen`
+
+---
+
+*Detailed expanded sections for 5–21:*
+
+## 5. History Page
+
+**File:** `lib/screens/exercise/history_screen.dart`
+
+**5.1 Imports & Dependencies**
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'widgets/history_summary_widget.dart';
+import 'widgets/past_sessions_list.dart';
+import '../exercise_catalog_page.dart';
+import '../muscle_filter_page.dart';
+import 'analytics_dashboard_screen.dart';
+```
+
+**5.2 State & Controllers**
+
+* Stateless overall; uses default `TabController` via `DefaultTabController(length:2)`.
+* Local state managed by `HistorySummaryWidget` and `PastSessionsList` reload callbacks.
+
+**5.3 Build Method & UI**
+
+```dart
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(title: Text('History')),
+    body: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.all(8),
+          child: Row(
+            children: [
+              ElevatedButton(
+                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ExerciseCatalogPage())),
+                child: Text('Exercises'),
+              ),
+              SizedBox(width: 8),
+              ElevatedButton(
+                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => MuscleFilterPage())),
+                child: Text('Muscle'),
+              ),
+            ],
+          ),
+        ),
+        HistorySummaryWidget(),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: ElevatedButton.icon(
+            icon: Icon(Icons.analytics),
+            label: Text('View 7-Day Analytics'),
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AnalyticsDashboardScreen())),
+          ),
+        ),
+        Expanded(
+          child: PastSessionsList(onReload: () => setState(() {})),
+        ),
+      ],
+    ),
+  );
+}
+```
+
+---
+
+## 6. Session Detail Screen
+
+**File:** `lib/screens/exercise/session_detail_screen.dart`
+
+**6.1 Imports & Models**
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import '../repository/app_repository.dart';
+import '../models/workout_models.dart';
+import '../widgets/exercise_card.dart';
+import '../widgets/session_complete_sheet.dart';
+import '../widgets/exercise_detail_sheet.dart';
+```
+
+**6.2 State & Initialization**
+
+* **Props:** `final WorkoutSession session;`
+* **State Fields:**
+
+  * `List<WorkoutExercise> _exercises = []`
+  * `bool _isEditing = false;`
+  * `bool _hasChanges = false;`
+  * `DateFormat _dateFmt;`
+* **initState():**
+
+  * Initialize `_dateFmt = DateFormat('MMM dd • HH:mm');`
+  * Call `_loadExercises()` then schedule `SessionCompleteSheet` via `WidgetsBinding.instance.addPostFrameCallback`.
+
+**6.3 Data Loading**
+
+```dart
+Future<void> _loadExercises() async {
+  final repo = AppRepository();
+  final rows = await repo.fetchExercises(session.id);
+  List<WorkoutExercise> loaded = [];
+  for (var row in rows) {
+    if (row.type == ExerciseType.weight) {
+      // Fetch sets & changeSets...
+      loaded.add(WeightExercise(...));
+    } else if (row.type == ExerciseType.cardio) {
+      loaded.add(CardioExercise(...));
+    } else if (row.type == ExerciseType.stretch) {
+      loaded.add(StretchExercise(...));
+    }
+  }
+  setState(() { _exercises = loaded; _hasChanges = false; });
+}
+```
+
+**6.4 UI & Interaction**
+
+```dart
+@override
+Widget build(BuildContext context) {
+  return WillPopScope(
+    onWillPop: () async {
+      if (_hasChanges) return await _showDiscardDialog();
+      return true;
+    },
+    child: Scaffold(
+      appBar: AppBar(
+        title: Text(_dateFmt.format(session.date)),
+        actions: [
+          IconButton(icon: Icon(_isEditing ? Icons.check : Icons.edit), onPressed: () => setState(() => _isEditing = !_isEditing)),
+          IconButton(icon: Icon(Icons.delete), onPressed: _deleteSession),
+        ],
+      ),
+      body: _exercises.isEmpty
+        ? Center(child: Text('No exercises logged.'))
+        : ListView.builder(
+          itemCount: _exercises.length,
+          itemBuilder: (_, i) => ExerciseCard(
+            exercise: _exercises[i],
+            isEditing: _isEditing,
+            onDelete: () { setState(() => _exercises.removeAt(i)); _hasChanges = true; },
+            onValueChanged: () => _hasChanges = true,
+          ),
+        ),
+      bottomNavigationBar: _hasChanges
+        ? Padding(
+            padding: EdgeInsets.all(8),
+            child: ElevatedButton(onPressed: _saveChanges, child: Text('Save Changes')),
+          )
+        : null,
+    ),
+  );
+}
+```
+
+---
+
+## 7. Analytics Dashboard Screen
+
+**File:** `lib/screens/exercise/analytics_dashboard_screen.dart`
+
+**7.1 Imports & Internal Models**
+
+```dart
+import 'package:flutter/material.dart';
+import '../repository/app_repository.dart';
+
+class _ItemCount { final String name; final int count; _ItemCount(this.name, this.count); }
+```
+
+**7.2 State & Data Loading**
+
+* **State Fields:** `_isLoading`, `_error`, `List<_ItemCount> _muscleCounts`, `_bodyPartCounts`
+* **initState():** call `_loadData()`
+* **\_loadData():**
+
+  1. Query `repo.fetchSetsPerMuscle(start, end)`
+  2. Query `repo.fetchSetsPerBodyPart(start, end)`
+  3. Map IDs to names via `repo.fetchAllMuscles()` / `repo.fetchAllBodyParts()`
+  4. Floor counts & filter zero, sort desc
+  5. setState accordingly
+
+**7.3 Build & Tabs**
+
+```dart
+@override
+Widget build(BuildContext context) {
+  return DefaultTabController(
+    length: 2,
+    child: Scaffold(
+      appBar: AppBar(
+        title: Text('Sets in Last 7 Days'),
+        bottom: TabBar(tabs: [Tab(text:'By Muscle'), Tab(text:'By Body Part')]),
+      ),
+      body: _isLoading
+        ? Center(child:CircularProgressIndicator())
+        : _error != null
+          ? Center(child: Text(_error!))
+          : TabBarView(
+              children: [
+                _buildCountList(_muscleCounts),
+                _buildCountList(_bodyPartCounts),
+              ],
+            ),
+    ),
+  );
+}
+
+Widget _buildCountList(List<_ItemCount> items) {
+  if (items.isEmpty) return Center(child: Text('No data available.'));
+  return ListView.builder(
+    itemCount: items.length,
+    itemBuilder: (_, i) => ListTile(title: Text(items[i].name), trailing: Text(items[i].count.toString())),
+  );
+}
+```
+
+---
+
+## 8. Automatic‑Preset Flow Screen
+
+**File:** `lib/screens/exercise/auto_preset_flow_screen.dart`
+
+**8.1 Imports & Models**
+
+```dart
+import 'dart:math';
+import 'package:flutter/material.dart';
+import 'package:flutter_flow_chart/flutter_flow_chart.dart';
+import '../models/flow_models.dart';
+import '../repository/app_repository.dart';
+import '../widgets/branch_controls.dart';
+import '../widgets/method_controls.dart';
+```
+
+**8.2 State & Load Logic**
+
+* **Props:** `final int presetId;`
+* **State:** `_dashboard`, `_flowDef`, `_methods`, `_edges`, `_selectedBranchParent`, `_selectedMethodNode`, `_successCounter`, `_failureCounter`
+* **initState:** call `_loadAll()`
+* **\_loadAll():**
+
+  1. `repo.fetchFlowDefinition(presetId)` → `_flowDef`
+  2. `repo.fetchFlowMethods(presetId)` → `_methods`
+  3. Build `_edges` list from `_flowDef.edges`
+  4. `_buildDashboard()`
+
+**8.3 Dashboard Construction**
+
+* BFS from root node to assign depths
+* Position nodes vertically by depth and horizontally by branch index
+* Add edges: colored lines (blue=success, red=failure) via `ArrowParams`
+* Loopback arrows for missing cycles
+* Method bullets drawn at node centers
+
+**8.4 Dialogs & Actions**
+
+* **Manage Methods:** `_showManageMethodsDialog()` builds `AlertDialog` listing `_methods`, with `onDelete` and `onAdd` buttons
+* **Add Method:** `_showAddMethodDialog()` with `TextField`s for `name`, `type`, `parameters`, calls `repo.upsertFlowMethod`
+* **Save Flow:** AppBar save icon calls `repo.upsertFlowDefinition(_flowDef)`
+
+**8.5 Build & UI**
+
+```dart
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(
+      title: Text('Auto-Preset Flow'),
+      actions: [
+        IconButton(icon: Icon(Icons.list), onPressed: _showManageMethodsDialog),
+        IconButton(icon: Icon(Icons.save), onPressed: _saveFlow),
+      ],
+    ),
+    body: Column(
+      children: [
+        Wrap(children: [BranchControls(...), MethodControls(...)]),
+        Expanded(child: FlowChartCanvas(dashboard: _dashboard)),
+      ],
+    ),
+  );
+}
+```
+
+---
+
+## 9. Definitions by Body‑Part Page
+
+**File:** `lib/screens/exercise/definitions_by_bodypart_page.dart`
+
+**9.1 Imports & Props**
+
+```dart
+import 'package:flutter/material.dart';
+import '../repository/app_repository.dart';
+import '../models/definition_models.dart';
+import 'definitions_by_muscle_page.dart';
+```
+
+* **Props:** `final BodyPart bodyPart;`
+
+**9.2 Build & Header**
+
+```dart
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(title: Text('${bodyPart.name} Exercises')),
+    body: FutureBuilder<List<ExerciseDefinition>>( 
+      future: AppRepository().fetchExerciseDefinitionsFiltered([bodyPart.id]),
+      builder: (c,s) {
+        if (!s.hasData) return Center(child:CircularProgressIndicator());
+        final defs = s.data!;
+        return ListView(
+          children: [
+            _buildHeader(defs.length),
+            ...defs.map((def) => Card(
+              child: ListTile(
+                title: Text(def.name),
+                subtitle: Text(def.equipment.join(', ')),
+                trailing: Icon(Icons.chevron_right),
+                onTap: () {},
+              ),
+            )),
+          ],
+        );
+      }
+    ),
+  );
+}
+
+Widget _buildHeader(int count) {
+  return Padding(
+    padding: EdgeInsets.all(16),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(height:180, decoration: BoxDecoration(color:Colors.grey[300], borderRadius:BorderRadius.circular(8))),
+        SizedBox(height:12),
+        Text('$count exercises in last 7 days', style: TextStyle(fontSize:16, fontWeight:FontWeight.bold)),
+        Wrap(
+          spacing:8,
+          children: bodyPart.muscles.map((m) => ActionChip(label: Text(m.name), onPressed: () => Navigator.push(context, MaterialPageRoute(builder:(_) => DefinitionsByMusclePage(muscleName:m.name, bodyPartName:bodyPart.name))))).toList(),
+        ),
+      ],
+    ),
+  );
+}
+```
+
+---
+
+## 10. Definitions by Muscle Page
+
+**File:** `lib/screens/exercise/definitions_by_muscle_page.dart`
+
+**10.1 Imports & Props**
+
+```dart
+import 'package:flutter/material.dart';
+```
+
+* **Props:** `final String muscleName;`, `final String bodyPartName;`
+
+**10.2 Build**
+
+```dart
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(title: Text('$muscleName Exercises')),
+    body: ListView(
+      children: [
+        Container(height:180, color:Colors.grey[300]),
+        Padding(
+          padding: EdgeInsets.all(16),
+          child: ElevatedButton(
+            child: Text('View $bodyPartName Exercises'),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
+        ...List.generate(10, (i) => Card(
+          child: ListTile(
+            title: Text('$muscleName Exercise ${i+1}'),
+            subtitle: Text('Equipment: ...'),
+            trailing: Icon(Icons.chevron_right),
+            onTap: () {},
+          ),
+        )),
+      ],
+    ),
+  );
+}
+```
+
+---
+
+## 11. Exercise Catalog Page
+
+**File:** `lib/screens/exercise/exercise_catalog_page.dart`
+
+**11.1 Imports**
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../repository/app_repository.dart';
+import '../models/definition_models.dart';
+import '../models/gym_models.dart';
+import '../providers/selected_profile.dart';
+import '../widgets/exercise_detail_sheet.dart';
+```
+
+**11.2 State & Data**
+
+* **State Fields:**
+
+  * `List<ExerciseDefinition> _allDefs = [];`
+  * `List<ExerciseDefinition> _displayedDefs = [];`
+  * `bool _isLoading = true;`
+  * Filter state: `_useProfileFilter`, `_selectedProfileId`, `_selectedEquipment`, `_selectedArea`, `_selectedMuscle`, `_searchQuery`
+* **initState -> \_loadInitialData():**
+
+  * Fetch all definitions, gym profiles, body parts, muscles, and initial equipment list.
+  * Populate filter dropdown options.
+  * Call `_applyAllFilters()`.
+
+**11.3 Filter Logic**
+
+```dart
+void _applyAllFilters() {
+  var list = List<ExerciseDefinition>.from(_allDefs);
+  if (_useProfileFilter) {
+    list = list.where((d) => d.equipment.any((e) => profileEquipment.contains(e))).toList();
+  }
+  if (_selectedEquipment != null) list = list.where((d) => d.equipment.contains(_selectedEquipment)).toList();
+  if (_selectedArea != null) list = list.where((d) => d.area == _selectedArea).toList();
+  if (_selectedMuscle != null) list = list.where((d) => d.primaryMuscles.contains(_selectedMuscle)).toList();
+  if (_searchQuery.isNotEmpty) list = list.where((d) => d.name.toLowerCase().contains(_searchQuery.toLowerCase())).toList();
+  setState(() => _displayedDefs = list);
+}
+```
+
+**11.4 Build & UI**
+
+```dart
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(title: Text('Exercise Catalog')),
+    body: Column(
+      children: [
+        Padding(
+          padding: EdgeInsets.all(8),
+          child: TextField(
+            decoration: InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Search exercises'),
+            onChanged: (v) => setState(() { _searchQuery = v; _applyAllFilters(); }),
+          ),
+        ),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 8),
+          child: ElevatedButton.icon(
+            icon: Icon(Icons.filter_list),
+            label: Text('Filters'),
+            onPressed: _openFilterDialog,
+          ),
+        ),
+        Expanded(
+          child: _isLoading ? Center(child:CircularProgressIndicator()) : ListView.builder(
+            itemCount: _displayedDefs.length,
+            itemBuilder: (_, i) => ListTile(
+              title: Text(_displayedDefs[i].name),
+              trailing: IconButton(icon: Icon(Icons.info), onPressed: () => showModalBottomSheet(context: context, builder: (_) => ExerciseDetailSheet(definition: _displayedDefs[i]))),
+            ),
+          ),
+        ),
+      ],
+    ),
+    floatingActionButton: _pickerMode ? FloatingActionButton(onPressed: _returnSelection) : null,
+  );
+}
+```
+
+---
+
+## 12. Full History Screen
+
+**File:** `lib/screens/exercise/full_history_screen.dart`
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import '../repository/app_repository.dart';
+import '../models/workout_models.dart';
+import 'session_detail_screen.dart';
+```
+
+* Stateless widget with `FutureBuilder<List<WorkoutSession>>` calling `repo.fetchWorkoutSessions()`.
+* Build `ListView.separated`:
+
+  * `itemBuilder`: `Card(child: ListTile(title: Text(date), subtitle: Text(duration), onTap: ()=>Navigator.push(SessionDetailScreen(session))))`
+  * Separator: `Divider()`
+
+---
+
+## 13. Gym Profile Screen
+
+**File:** `lib/screens/exercise/gym_profile_screen.dart`
+
+**13.1 Imports**
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../repository/database_helper.dart';
+import '../models/gym_models.dart';
+import '../providers/selected_profile.dart';
+```
+
+**13.2 State & Form**
+
+* **Props:** `final GymProfile? profile;`
+* **State:**
+
+  * `TextEditingController _nameController`
+  * `List<Equipment> _allEquipment = []`
+  * `Set<int> _selectedEquipmentIds = {}`
+  * `bool _isSaving = false;`
+* **initState:** load `_allEquipment` and pre-fill `_selectedEquipmentIds` if editing.
+
+**13.3 Save Logic**
+
+```dart
+Future<void> _save() async {
+  if (!_formKey.currentState!.validate()) return;
+  setState(() => _isSaving = true);
+  final helper = DatabaseHelper.instance;
+  final newProfile = GymProfile(id: profile?.id, name: _nameController.text);
+  final id = await helper.upsertProfile(newProfile);
+  await helper.updateEquipmentAssignments(profileId: id, selectedIds: _selectedEquipmentIds);
+  await context.read<SelectedProfile>().loadProfiles();
+  context.read<SelectedProfile>().selectProfileById(id);
+  Navigator.pop(context);
+}
+```
+
+**13.4 Build**
+
+```dart
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(title: Text(profile == null ? 'New Profile' : 'Edit Profile')),
+    body: Form(
+      key: _formKey,
+      child: ListView(
+        padding: EdgeInsets.all(16),
+        children: [
+          TextFormField(controller: _nameController, decoration: InputDecoration(labelText:'Profile Name'), validator: (v)=>v!.isEmpty?'Required':null),
+          SizedBox(height:16),
+          Text('Select Equipment'),
+          ..._allEquipment.map((eq) => CheckboxListTile(
+            title: Text(eq.name),
+            value: _selectedEquipmentIds.contains(eq.id),
+            onChanged:(v) => setState(()=> v!?_selectedEquipmentIds.add(eq.id):_selectedEquipmentIds.remove(eq.id)),
+          )),
+          SizedBox(height:16),
+          ElevatedButton(onPressed: _isSaving?null:_save, child: Text('Save'))
+        ],
+      ),
+    ),
+  );
+}
+```
+
+---
+
+## 14. Muscle Filter Page
+
+**File:** `lib/screens/exercise/muscle_filter_page.dart`
+
+**Imports:**
+
+```dart
+import 'package:flutter/material.dart';
+import '../repository/app_repository.dart';
+import '../models/definition_models.dart';
+import 'definitions_by_bodypart_page.dart';
+```
+
+**Build:**
+
+```dart
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(title: Text('Filter by Body Part')),
+    body: FutureBuilder<List<BodyPart>>(
+      future: AppRepository().fetchAllBodyParts(),
+      builder: (c,s) {
+        if (!s.hasData) return Center(child:CircularProgressIndicator());
+        return ListView.separated(
+          itemCount: s.data!.length,
+          separatorBuilder: (_,__)=>Divider(),
+          itemBuilder: (i) {
+            final part = s.data![i];
+            return ListTile(
+              title: Text(part.name),
+              trailing: Icon(Icons.chevron_right),
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => DefinitionsByBodyPartPage(bodyPart: part))),
+            );
+          }
+        );
+      }
+    ),
+  );
+}
+```
+
+---
+
+## 15. Preset Detail Screen
+
+**File:** `lib/screens/exercise/preset_detail_screen.dart`
+
+**15.1 Imports**
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../models/workout_models.dart';
+import '../providers/active_session.dart';
+import '../providers/preset_session.dart';
+import '../widgets/exercise_card.dart';
+import '../widgets/add_exercise_fab.dart';
+import '../widgets/automatic_settings_sheet.dart';
+import 'session_screen.dart';
+import 'auto_preset_flow_screen.dart';
+```
+
+**15.2 State & Controllers**
+
+* Props: `final int presetId;`
+* State: `bool _isEditing = false;`, `TextEditingController _nameController;`
+* `initState`: load `PresetSession` via `context.read<PresetSession>().load(presetId)`, seed `_nameController.text`.
+
+**15.3 PopScope & Save**
+
+* Wrap in `WillPopScope` to confirm unsaved changes using `_onWillPop()`.
+* `_savePreset()`: calls `presetSession.saveChanges()`, toggles `_isEditing = false`.
+
+**15.4 AppBar & Overflow**
+
+```dart
+appBar: AppBar(
+  leading: BackButton(onPressed: _onWillPop),
+  title: _isEditing ? TextField(controller:_nameController) : Text(presetSession.name),
+  actions: [
+    IconButton(icon:Icon(_isEditing?Icons.check:Icons.edit), onPressed:(){ if(_isEditing) _savePreset(); else setState(()=>_isEditing=true); }),
+    PopupMenuButton(itemBuilder: (_) => [
+      PopupMenuItem(child: Text('Delete'), value:'delete'),
+      PopupMenuItem(child: Text('Toggle Automatic'), value:'toggle_auto'),
+      PopupMenuItem(child: Text('Settings'), value:'settings'),
+      PopupMenuItem(child: Text('Edit Flow'), value:'edit_flow'),
+    ], onSelected: _onMenuSelected),
+  ],
+)
+```
+
+**15.5 Body & Editing**
+
+```dart
+body: _isEditing
+  ? ReorderableListView(
+      onReorder: presetSession.reorderExercises,
+      children: presetSession.exercises.map((ex) => ExerciseCard(key:ValueKey(ex.id), exercise:ex, isEditing:true, onDelete:(){presetSession.removeExercise(ex.id);setState((){});}, onValueChanged:(){},)).toList(),
+    )
+  : ListView(children: presetSession.exercises.map((ex) => ExerciseCard(exercise:ex)).toList()),
+```
+
+**15.6 FAB & Bottom Bar**
+
+* `floatingActionButton`: `_isEditing ? AddExerciseFab(onSelect: presetSession.addExercise) : null`
+* `bottomNavigationBar`:
+
+  * Editing: `ElevatedButton('Save Preset', onPressed:_savePreset)`
+  * View: `ElevatedButton('Start Session', onPressed:(){context.read<ActiveSession>().startFromPreset(presetId);Navigator.push(SessionScreen());})`
+
+---
+
+## 16. Session Screen
+
+**File:** `lib/screens/exercise/session_screen.dart`
+
+**16.1 Imports**
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/active_session.dart';
+import '../widgets/exercise_card.dart';
+import '../widgets/add_exercise_fab.dart';
+import '../widgets/session_complete_sheet.dart';
+import '../widgets/exercise_detail_sheet.dart';
+```
+
+**16.2 Build & UI**
+
+```dart
+@override
+Widget build(BuildContext context) {
+  final session = context.watch<ActiveSession>();
+  return Scaffold(
+    appBar: AppBar(title: Text('Workout Session'), leading: IconButton(icon:Icon(Icons.menu), onPressed:()=>_openTimerDrawer())),
+    drawer: Drawer(child: Center(child: Text(session.formattedTime))),
+    body: session.exercises.isEmpty
+      ? Center(child: Text('Add exercises to start.'))
+      : ListView.builder(
+          itemCount: session.exercises.length,
+          itemBuilder: (_, i) => ExerciseCard(
+            exercise: session.exercises[i],
+            onDelete: () => session.removeExercise(session.exercises[i].id),
+            onValueChanged: () => session.updateExercise(session.exercises[i]),
+            onDetails: session.exercises[i].type == ExerciseType.weight ? () => showModalBottomSheet(context:context, builder: (_) => ExerciseDetailSheet(exercise: session.exercises[i])) : null,
+          ),
+        ),
+    floatingActionButton: AddExerciseFab(onSelect: session.addExercise),
+    bottomNavigationBar: Padding(
+      padding: EdgeInsets.all(8),
+      child: ElevatedButton(
+        onPressed: () { session.finish(); showModalBottomSheet(context: context, builder: (_) => SessionCompleteSheet(session: session.lastSession!)); Navigator.pop(context); },
+        child: Text('Finish Workout'),
+      ),
+    ),
+  );
+}
+```
+
+---
+
+## 17. Nutrition Page
+
+**File:** `lib/screens/nutrition/nutrition_page.dart`
+
+**17.1 Imports**
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/selected_profile.dart';
+import '../repository/app_repository.dart';
+import '../widgets/nutrition_dash.dart';
+import '../widgets/health_trends_section.dart';
+import '../widgets/data_records_section.dart';
+import '../widgets/current_metrics_section.dart';
+import '../widgets/speed_dial_fab.dart';
+```
+
+**17.2 State & Data**
+
+* Stateful for potential profile-based fetches.
+* Load daily nutrition summaries via `AppRepository.fetchDailyNutrition()`.
+
+**17.3 Build & Layout**
+
+```dart
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(title: Text('Nutrition')),
+    body: SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          NutritionDash(caloriesConsumed:500, calorieGoal:2000, proteinConsumed:50, proteinTarget:150, carbConsumed:200, carbTarget:300, fatConsumed:40, fatTarget:70, scale:0.9),
+          SizedBox(height:16),
+          HealthTrendsSection(),
+          SizedBox(height:16),
+          DataRecordsSection(),
+          SizedBox(height:16),
+          CurrentMetricsSection(),
+        ],
+      ),
+    ),
+    floatingActionButton: SpeedDialFab(
+      logFood: () => Navigator.push(context, MaterialPageRoute(builder: (_) => FoodLoggingPage())),
+      logMeasurement: () => Navigator.push(context, MaterialPageRoute(builder: (_) => NewMeasurementItemPage())),
+    ),
+  );
+}
+```
+
+---
+
+## 18. Profile Page
+
+**File:** `lib/screens/profile/settings/profile_page.dart`
+
+**18.1 Imports**
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../models/gym_models.dart';
+import '../../providers/selected_profile.dart';
+import '../../utils/preferences.dart';
+import '../gym_profile_screen.dart';
+```
+
+**18.2 Build & Settings List**
+
+```dart
+@override
+Widget build(BuildContext context) {
+  final prefs = Preferences.of(context);
+  return Scaffold(
+    appBar: AppBar(title: Text('Profile')),
+    body: ListView(
+      children: [
+        SwitchListTile(
+          title: Text('Metric Units'),
+          value: prefs.useMetric,
+          onChanged: (v) => prefs.useMetric = v,
+        ),
+        SwitchListTile(
+          title: Text('Enable Reminders'),
+          value: prefs.remindersEnabled,
+          onChanged: (v) => prefs.remindersEnabled = v,
+        ),
+        ListTile(
+          leading: Icon(Icons.map),
+          title: Text('Body-Part Mappings'),
+          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => BodyPartMappingScreen())),
+        ),
+        FutureBuilder<List<GymProfile>>(
+          future: context.read<SelectedProfile>().loadProfiles(),
+          builder: (c,s) {
+            if (!s.hasData) return SizedBox();
+            return Column(
+              children: s.data!.map((p) => ListTile(
+                title: Text(p.name),
+                trailing: IconButton(icon:Icon(Icons.delete), onPressed: () => _deleteProfile(p.id)),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => GymProfileScreen(profile:p))),
+              )).toList(),
+            );
+          }
+        ),
+      ],
+    ),
+    floatingActionButton: FloatingActionButton(
+      child: Icon(Icons.add),
+      onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => GymProfileScreen())),
+    ),
+  );
+}
+```
+
+---
+
+## 19. Bottom Sheets & Dialogs
+
+| Component                | File                                        | Description                                                                                       |
+| ------------------------ | ------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `ExerciseDetailSheet`    | `lib/widgets/exercise_detail_sheet.dart`    | Draggable sheet with 3 tabs: Details (metadata), Metrics (1RM & volume), Records (chart + list).  |
+| `AutomaticSettingsSheet` | `lib/widgets/automatic_settings_sheet.dart` | Bottom sheet for auto-settings with global/manual/per-ex overrides via radio & checkboxes.        |
+| `AddExerciseFab`         | `lib/widgets/add_exercise_fab.dart`         | FAB that opens `AlertDialog` to select Weight/Cardio/Stretch, then navigates accordingly.         |
+| `SessionCompleteSheet`   | `lib/widgets/session_complete_sheet.dart`   | DraggableScrollableSheet summarizing session (date, duration, volume, calories, gym score).       |
+| `StretchSearchDialog`    | `lib/widgets/stretch_search_dialog.dart`    | `showDialog` with `DropdownButtonFormField` for body part & stretches, returns chosen definition. |
+
+---
+
+## 20. Widgets Reference
+
+* **QuickBar** (`lib/widgets/quick_bar.dart`): measurement/food/workout segments with scaled layout & colors.
+* **NutritionDash** (`lib/widgets/nutrition_dash.dart`): circular/bar/text macro detail views in `PageView`.
+* **RoundedProgressIndicator** (`lib/widgets/rounded_progress_indicator.dart`): `CustomPaint` arc painter with rounded cap.
+* **WorkoutDashboard** (`lib/widgets/workout_dashboard.dart`): profile dropdown, preset list, start button.
+* **PresetBar** (`lib/widgets/preset_bar.dart`): displays preset name, auto flag, custom color, onTap callback.
+* **ValueCard** (`lib/widgets/value_card.dart`): bordered container with label & value.
+* **HealthTrendsSection**, **DataRecordsSection**, **CurrentMetricsSection**, **HistorySummaryWidget**, **PastSessionsList**: composite widgets for analytics & records.
+* **SpeedDialFab**: expands main FAB to multiple action buttons with animated rotation.
+
+---
+
+## 21. Data Models Overview
+
+**Location:** `lib/models/`
+
+* **workout\_models.dart**: `WorkoutSession`, `WeightExercise`, `CardioExercise`, `StretchExercise`, `ExerciseSet`, `StretchInstance`.
+* **definition\_models.dart**: `ExerciseDefinition`, `Equipment`, `BodyPart`, `Muscle`, `RankedMuscle`.
+* **measurement\_models.dart**: `MeasurementDefinition`, `Measurement`, `MeasurementType` enum.
+* **gym\_models.dart**: `GymProfile` with `toMap()`/`fromMap()`.
+* **preset\_models.dart**: `PresetDefinition`, `FlowDefinition`, `FlowMethod`, `FlowEdge`, `FlowDefinition`.
+* **analytics\_models.dart**: `RepMaxRow`, `VolumeBoundaries` for heatmap calculations.
+
+*Completed detailed sections for items 5–21 as requested.*
+
+
+
+## 19. Bottom Sheets & Dialogs
+
+### 19.1 ExerciseDetailSheet
+
+**File:** `lib/widgets/exercise_detail_sheet.dart`
+**Purpose:** Presents detailed metadata, performance metrics, and historical records for a selected exercise.
+**Structure:**
+
+```dart
+class ExerciseDetailSheet extends StatelessWidget {
+  final ExerciseDefinition definition;
+  ExerciseDetailSheet({required this.definition});
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.7,
+      minChildSize: 0.4,
+      maxChildSize: 0.95,
+      builder: (ctx, scrollCtl) => Column(
+        children: [
+          TabBar(...),          // Tabs: Details, Metrics, Records
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildDetailsTab(),    // equipment, muscles, instructions
+                _buildMetricsTab(),    // 1RM calculation, total volume
+                _buildRecordsTab(),    // fl_chart bar chart + last-10 sessions
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+```
+
+* **Details Tab:** List of equipment, primary/secondary muscles, text description.
+* **Metrics Tab:**
+
+  * Uses `FutureBuilder` to load rep/weight history.
+  * Displays one‑rep max via Epley formula and cumulative volume.
+* **Records Tab:**
+
+  * Renders a bar chart (via `fl_chart`) of weight lifted over time.
+  * Below chart, a scrollable `ListView` of the last 10 logged sessions.
+
+### 19.2 AutomaticSettingsSheet
+
+**File:** `lib/widgets/automatic_settings_sheet.dart`
+**Purpose:** Configures how automatic presets adjust rep counts and weights.
+**Structure:**
+
+```dart
+void showAutomaticSettings(BuildContext ctx, Preset preset) {
+  showModalBottomSheet(
+    context: ctx,
+    builder: (_) => Column(
+      children: [
+        TabBar(...),       // Global / Manual / Per-Exercise / Per-Set
+        Expanded(child: TabBarView(
+          children: [
+            _buildGlobalSettings(),    // radio: countMode, checkBoxes
+            _buildManualOverrides(),   // list of overrides per exercise
+            _buildExerciseOverrides(), // each exercise radio toggles
+            _buildSetOverrides(),      // list of individual set controls
+          ],
+        )),
+        ElevatedButton(onPressed: _applyAll, child: Text('Apply to All Sets')),
+      ],
+    ),
+  );
+}
+```
+
+* **Global:** Radio buttons for count mode (e.g. fixed %, linear progression) and toggles for enabling checks.
+* **Manual:** Per-exercise override list with text fields for custom values.
+* **Per-Exercise:** List of exercises with switches to include/exclude in auto-calculation.
+* **Per-Set:** Fine‑grained controls to adjust individual set targets.
+
+### 19.3 AddExerciseFab
+
+**File:** `lib/widgets/add_exercise_fab.dart`
+**Purpose:** Floating Action Button for adding a new exercise to a session or preset.
+**Structure:**
+
+```dart
+class AddExerciseFab extends StatelessWidget {
+  final void Function(ExerciseType) onSelect;
+  @override
+  Widget build(BuildContext ctx) => FloatingActionButton(
+    child: Icon(Icons.add),
+    onPressed: () {
+      showDialog(
+        context: ctx,
+        builder: (_) => AlertDialog(
+          title: Text('Add Exercise'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              RadioListTile(value: ExerciseType.weight, groupValue: null, title: Text('Weight'), onChanged: onSelect),
+              RadioListTile(value: ExerciseType.cardio,  title: Text('Cardio'), onChanged: onSelect),
+              RadioListTile(value: ExerciseType.stretch, title: Text('Stretch'), onChanged: onSelect),
+            ],
+          ),
+          actions: [TextButton(onPressed: ()=>Navigator.pop(ctx), child: Text('Cancel'))],
+        ),
+      );
+    },
+  );
+}
+```
+
+* Opens a simple dialog with three radio choices.
+* On selection, calls `onSelect(type)` and closes.
+
+### 19.4 SessionCompleteSheet
+
+**File:** `lib/widgets/session_complete_sheet.dart`
+**Purpose:** Summarizes a finished workout session—overall stats and breakdown.
+**Structure:**
+
+```dart
+class SessionCompleteSheet extends StatelessWidget {
+  final WorkoutSession session;
+  @override
+  Widget build(BuildContext ctx) => DraggableScrollableSheet(
+    initialChildSize: 0.6,
+    builder: (_, ctl) => Column(
+      children: [
+        _buildHeader(),        // date, duration, total volume, calories, gymScore
+        Expanded(child: ListView(
+          controller: ctl,
+          children: session.exercises.map(_buildExerciseSummary).toList(),
+        )),
+        FloatingActionButton(onPressed: ()=>Navigator.pop(ctx), child: Icon(Icons.done)),
+      ],
+    ),
+  );
+}
+```
+
+* **Header:** Formatted date (`MMM dd • HH:mm`), duration (`HH:mm:ss`), computed total volume, placeholder calories, gym score.
+* **Body:** Scrollable list of each exercise with summary cards.
+
+### 19.5 StretchSearchDialog
+
+**File:** `lib/widgets/stretch_search_dialog.dart`
+**Purpose:** Lets user pick a predefined stretch or define a custom one.
+**Structure:**
+
+```dart
+Future<StretchDefinition?> showStretchSearch(BuildContext ctx) {
+  int? selectedBodyId, selectedStretchId;
+  return showDialog(
+    context: ctx,
+    builder: (_) => StatefulBuilder(
+      builder: (c, setState) => AlertDialog(
+        title: Text('Select Stretch'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            FutureBuilder<List<BodyPart>>(..., builder: (_, snap) => DropdownButtonFormField(
+              items: snap.data.map((bp)=>DropdownMenuItem(value:bp.id,child:Text(bp.name))),
+              onChanged: (v)=>setState(()=>selectedBodyId=v),
+            )),
+            if (selectedBodyId != null)
+              FutureBuilder<List<StretchDefinition>>(..., builder: (_, snap) => DropdownButtonFormField(
+                items: snap.data.map((s)=>DropdownMenuItem(value:s.id,child:Text(s.name))),
+                onChanged: (v)=>setState(()=>selectedStretchId=v),
+              )),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: ()=>Navigator.pop(ctx), child: Text('Cancel')),
+          ElevatedButton(onPressed: selectedStretchId!=null?()=>Navigator.pop(ctx, /*definition*/):null, child: Text('Add')),
+        ],
+      ),
+    ),
+  );
+}
+```
+
+* Chain of two dropdowns: first for body part, then populated stretches.
+* Returns chosen `StretchDefinition` or `null`.
+
+---
+
+## 20. Widgets Reference
+
+| Widget                       | File                                          | Key Props & Behavior                                                                                                                                                                                        |
+| ---------------------------- | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **QuickBar**                 | `lib/widgets/quick_bar.dart`                  | **Props:** `scale` <br>Three segments: Measurement, Food, Workout. Uses `InkWell` taps to navigate or start session. Custom border radii and divider lines.                                                 |
+| **NutritionDash**            | `lib/widgets/nutrition_dash.dart`             | **Props:** `caloriesConsumed`, `calorieGoal`, macro ints, `scale` <br>Swipable `PageView` of `NutritionCircleDetails`, `NutritionBarDetails`, `NutritionTextDetails`. Page indicator dots animate on swipe. |
+| **RoundedProgressIndicator** | `lib/widgets/rounded_progress_indicator.dart` | **Props:** `progress`, `size`, `progressColor`, `backgroundColor`, `strokeWidth`, `scale` <br>`CustomPaint` draws circular track + arc with rounded caps.                                                   |
+| **WorkoutDashboard**         | `lib/widgets/workout_dashboard.dart`          | **Props:** `scale` <br>Dropdown for profile selection, `FutureBuilder` list of presets with `PresetBar`, styled start workout button.                                                                       |
+| **PresetBar**                | `lib/widgets/preset_bar.dart`                 | **Props:** `presetId`, `name`, `color`, `isAutomatic`, `onTap`, `onRefresh` <br>Custom card with colored side bar and auto‐icon badge.                                                                      |
+| **ValueCard**                | `lib/widgets/value_card.dart`                 | **Props:** `label`, `value`, `borderColor`, `scale` <br>Container with border & rounded corners, displays label + value with scaled text.                                                                   |
+| **HistorySummaryWidget**     | `lib/widgets/history_summary_widget.dart`     | Shows a summary of past week’s workouts: total sessions, avg duration, bar sparkline of session counts per day.                                                                                             |
+| **PastSessionsList**         | `lib/widgets/past_sessions_list.dart`         | **Props:** `height`, `onReload` <br>Horizontal list of past sessions’ cards, each tappable to detail.                                                                                                       |
+| **DataRecordsSection**       | `lib/widgets/data_records_section.dart`       | Grid/calendar view of daily nutrition & exercise logs, with colored dots or icons per day.                                                                                                                  |
+| **HealthTrendsSection**      | `lib/widgets/health_trends_section.dart`      | Horizontal scroll of small line charts (weight, calories, macros) using `charts_flutter`.                                                                                                                   |
+| **CurrentMetricsSection**    | `lib/widgets/current_metrics_section.dart`    | Vertical list of key metrics: current weight, BMI, body fat %, resting HR. Each item in a `ListTile` with icon.                                                                                             |
+| **SpeedDialFab**             | `lib/widgets/speed_dial_fab.dart`             | Multi‐action FAB: on open, shows extended FABs for Log Food & Log Measurement. Main FAB icon rotates via `AnimatedRotation`.                                                                                |
+| **ExerciseCard**             | `lib/widgets/exercise_card.dart`              | Reusable card for weight/cardio/stretch exercises: shows sets with inputs, delete button, optional drag handle.                                                                                             |
+
+---
+
+## 21. Data Models Overview
+
+All model classes live under `lib/models/`:
+
+### 21.1 workout\_models.dart
+
+```dart
+class WorkoutSession {
+  final int id;
+  final DateTime date;
+  final Duration duration;
+  // relationships: List<WorkoutExercise>
+}
+
+abstract class WorkoutExercise {
+  final int id;
+  final String name;
+  final ExerciseType type;
+}
+
+class WeightExercise extends WorkoutExercise {
+  final List<ExerciseSet> sets;
+  final Map<int, List<ExerciseSet>> changeSets;
+  final Set<int> completedSets;
+}
+
+class CardioExercise extends WorkoutExercise {
+  final int plannedMinutes;
+  final int elapsedSeconds;
+}
+
+class StretchExercise extends WorkoutExercise {
+  final List<StretchInstance> instances;
+  final Set<int> completedInstances;
+}
+
+class ExerciseSet {
+  final double weight;
+  final int reps;
+}
+
+class StretchInstance {
+  final int stretchId;
+  final bool isCustom;
+  final String? customName;
+  final bool isChecked;
+  final int orderIndex;
+}
+```
+
+### 21.2 definition\_models.dart
+
+```dart
+class ExerciseDefinition {
+  final int id;
+  final String name;
+  final List<String> equipment;
+  final List<int> primaryBodyPartIds;
+  final List<String> primaryMuscles;
+  final String instructions;
+}
+
+class Equipment { final int id; final String name; }
+class BodyPart { final int id; final String name; List<Muscle> muscles; }
+class Muscle { final int id; final String name; }
+
+class RankedMuscle {
+  final int muscleId;
+  final double rank; // importance score
+}
+```
+
+### 21.3 measurement\_models.dart
+
+```dart
+class MeasurementDefinition { final int id; final String name; }
+class Measurement {
+  final int id;
+  final int definitionId;
+  final double value;
+  final DateTime timestamp;
+}
+enum MeasurementType { weight, bodyFat, circumference }
+```
+
+### 21.4 gym\_models.dart
+
+```dart
+class GymProfile {
+  final int id;
+  final String name;
+  final Map<int, bool> equipmentMap; // equipmentId -> assigned
+  GymProfile({ this.id, required this.name, required this.equipmentMap });
+}
+```
+
+### 21.5 preset\_models.dart
+
+```dart
+class PresetDefinition { final int id; final String name; final bool isAutomatic; }
+class FlowDefinition {
+  final int presetId;
+  final List<FlowEdge> edges;
+}
+class FlowMethod { final int id; final String name; final String type; final Map<String,dynamic> params; }
+class FlowEdge { final int fromNode; final int toNode; final bool success; }
+```
+
+### 21.6 analytics\_models.dart
+
+```dart
+class RepMaxRow {
+  final int exerciseId;
+  final double oneRepMax;
+}
+class VolumeBoundaries {
+  final int bodyPartId;
+  final double minVolume;
+  final double maxVolume;
+}
+```
+
+## 22. Default Trend Page
+
+**File:** `lib/screens/nutrition/default_trend_page.dart`
+
+---
+
+### 22.1 Imports & Dependencies
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:fl_chart/fl_chart.dart';
+import '../../widgets/speed_dial_fab.dart';
+```
+
+---
+
+### 22.2 State & Fields
+
+* **Header stats:**
+
+  * `double averageValue = 0;`
+  * `double goalValue    = 0;`
+  * `double currentValue = 0;`
+* **Timespan options:**
+
+  * `final spans = ['1W', '1M', '3M', '6M', '1Y', 'All'];`
+  * `String selectedSpan = '1W';`
+
+---
+
+### 22.3 Build & UI
+
+```dart
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(
+      title: Text('${widget.title} Trend'),
+    ),
+    body: Column(
+      children: [
+        // Header stats
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _StatColumn(label: 'Average', value: averageValue.toString()),
+              _StatColumn(label: 'Goal',    value: goalValue   .toString()),
+              _StatColumn(label: 'Current', value: currentValue.toString()),
+            ],
+          ),
+        ),
+
+        // Trend graph
+        SizedBox(
+          height: 200,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: LineChart(
+              LineChartData(
+                minX: 0, maxX: spans.indexOf(selectedSpan).toDouble(),
+                minY: 0, maxY: 100,
+                gridData: FlGridData(show: true),
+                borderData: FlBorderData(show: true),
+                titlesData: FlTitlesData(
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: true),
+                  ),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: true),
+                  ),
+                ),
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: const [
+                      FlSpot(0, 20), FlSpot(1, 40), FlSpot(2, 35),
+                      FlSpot(3, 60), FlSpot(4, 50), FlSpot(5, 80),
+                      FlSpot(6, 70),
+                    ],
+                    isCurved: true,
+                    barWidth: 2,
+                    dotData: FlDotData(show: false),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      color: Theme.of(context).primaryColor,
+                    ),
+                  ),
+                ],
+                lineTouchData: LineTouchData(
+                  enabled: true,
+                  touchTooltipData: LineTouchTooltipData(),
+                ),
+              ),
+            ),
+          ),
+        ),
+
+        // Timespan selector
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: spans.map((span) {
+                final isSelected = span == selectedSpan;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: ChoiceChip(
+                    label: Text(span),
+                    selected: isSelected,
+                    onSelected: (_) {
+                      setState(() => selectedSpan = span);
+                      // TODO: reload graph data for this timespan
+                    },
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ),
+
+        // Insights
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Insights', style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 8),
+              Text(
+                '• TODO: Show dynamic insights for ${widget.title}\n'
+                '• e.g. highest value this period, trend up/down, notes...',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ),
+        ),
+
+        const Divider(),
+
+        // Past measurements
+        Expanded(
+          child: ListView.separated(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            itemCount: 5, // TODO: use real measurement count
+            separatorBuilder: (_, __) => const SizedBox(height: 8),
+            itemBuilder: (context, i) {
+              final placeholderDate = DateTime.now().subtract(Duration(days: i * 3));
+              final placeholderValue = (100 + i * 5).toString();
+              return Card(
+                child: ListTile(
+                  title: Text(placeholderValue),
+                  subtitle: Text('${placeholderDate.month}/${placeholderDate.day}/${placeholderDate.year}'),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.edit),
+                    onPressed: () {
+                      // TODO: open edit-measurement form
+                    },
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    ),
+
+    // Add new measurement
+    floatingActionButton: const SpeedDialFab(),
+  );
+}
+```
+
+---
+
+### 22.4 Subcomponent: `_StatColumn`
+
+```dart
+class _StatColumn extends StatelessWidget {
+  final String label;
+  final String value;
+  const _StatColumn({
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(label, style: Theme.of(context).textTheme.bodySmall),
+        const SizedBox(height: 4),
+        Text(value, style: Theme.of(context).textTheme.titleMedium),
+      ],
+    );
+  }
+}
+```
+
+* **Purpose:** Displays a label above and its corresponding numeric value below, used in the header row.
+
+---
+
+## 23. Food Customization Page
+
+**File:** `lib/screens/nutrition/food_customization_page.dart`
+
+---
+
+### 23.1 Imports & Dependencies
+
+```dart
+import 'package:flutter/material.dart';
+```
+
+---
+
+### 23.2 State & Controllers
+
+* **Form key:**
+
+  * `final _formKey = GlobalKey<FormState>();`
+* **Text controllers:**
+
+  * `_nameController` (Food Name)
+  * `_brandController` (Brand)
+  * `_calController` (Calories)
+  * `_proteinController` (Protein)
+  * `_carbController` (Carbs)
+  * `_fatController` (Fats)
+* **Image paths (placeholders):**
+
+  * `String? _foodImagePath;`
+  * `String? _labelImagePath;`
+* **Computed getters for breakdown toggles:**
+
+  ```dart
+  bool get _hasProtein => (_proteinController.text.isNotEmpty && double.tryParse(_proteinController.text)! > 0);
+  bool get _hasCarbs   => (_carbController.text   .isNotEmpty && double.tryParse(_carbController.text)!    > 0);
+  bool get _hasFats    => (_fatController.text    .isNotEmpty && double.tryParse(_fatController.text)!     > 0);
+  ```
+
+---
+
+### 23.3 Build & UI
+
+```dart
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(title: const Text('Customize Food')),
+    body: SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+
+            /// 1. Name & Brand
+            TextFormField(
+              controller: _nameController,
+              decoration: const InputDecoration(
+                labelText: 'Food Name',
+                border: OutlineInputBorder(),
+              ),
+              validator: (v) => (v == null || v.isEmpty) ? 'Enter a name' : null,
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _brandController,
+              decoration: const InputDecoration(
+                labelText: 'Brand',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            /// 2. Images
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    children: [
+                      Container(
+                        height: 100,
+                        color: Colors.grey[200],
+                        child: _foodImagePath == null
+                          ? const Center(child: Icon(Icons.photo, size: 40, color: Colors.grey))
+                          : Image.network(_foodImagePath!, fit: BoxFit.cover),
+                      ),
+                      const SizedBox(height: 4),
+                      ElevatedButton(
+                        onPressed: () {
+                          // TODO: pick a photo of the food
+                        },
+                        child: const Text('Food Photo'),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    children: [
+                      Container(
+                        height: 100,
+                        color: Colors.grey[200],
+                        child: _labelImagePath == null
+                          ? const Center(child: Icon(Icons.photo, size: 40, color: Colors.grey))
+                          : Image.network(_labelImagePath!, fit: BoxFit.cover),
+                      ),
+                      const SizedBox(height: 4),
+                      ElevatedButton(
+                        onPressed: () {
+                          // TODO: pick a photo of the nutrition label
+                        },
+                        child: const Text('Label Photo'),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            /// 3. Macro inputs (with inline breakdowns)
+            TextFormField(
+              controller: _calController,
+              decoration: const InputDecoration(
+                labelText: 'Calories (kcal)',
+                border: OutlineInputBorder(),
+              ),
+              keyboardType: TextInputType.number,
+            ),
+            const SizedBox(height: 12),
+
+            // — Protein & Breakdown —
+            TextFormField(
+              controller: _proteinController,
+              decoration: const InputDecoration(
+                labelText: 'Protein (g)',
+                border: OutlineInputBorder(),
+              ),
+              keyboardType: TextInputType.number,
+              onChanged: (_) => setState(() {}),
+            ),
+            if (_hasProtein) ...[
+              const SizedBox(height: 8),
+              ExpansionTile(
+                title: const Text('Protein Breakdown'),
+                children: [
+                  _buildSubField('Cysteine (g)'),
+                  _buildSubField('Histidine (g)'),
+                  _buildSubField('Isoleucine (g)'),
+                  _buildSubField('Leucine (g)'),
+                  _buildSubField('Lysine (g)'),
+                  _buildSubField('Methionine (g)'),
+                  _buildSubField('Phenylalanine (g)'),
+                  _buildSubField('Threonine (g)'),
+                  _buildSubField('Tyrosine (g)'),
+                  _buildSubField('Valine (g)'),
+                ],
+              ),
+            ],
+            const SizedBox(height: 12),
+
+            // — Carbs & Breakdown —
+            TextFormField(
+              controller: _carbController,
+              decoration: const InputDecoration(
+                labelText: 'Carbs (g)',
+                border: OutlineInputBorder(),
+              ),
+              keyboardType: TextInputType.number,
+              onChanged: (_) => setState(() {}),
+            ),
+            if (_hasCarbs) ...[
+              const SizedBox(height: 8),
+              ExpansionTile(
+                title: const Text('Carb Breakdown'),
+                children: [
+                  _buildSubField('Fiber (g)'),
+                  _buildSubField('Net Carbs (g)'),
+                  _buildSubField('Starch (g)'),
+                  _buildSubField('Sugars (g)'),
+                  _buildSubField('Added Sugars (g)'),
+                ],
+              ),
+            ],
+            const SizedBox(height: 12),
+
+            // — Fats & Breakdown —
+            TextFormField(
+              controller: _fatController,
+              decoration: const InputDecoration(
+                labelText: 'Fats (g)',
+                border: OutlineInputBorder(),
+              ),
+              keyboardType: TextInputType.number,
+              onChanged: (_) => setState(() {}),
+            ),
+            if (_hasFats) ...[
+              const SizedBox(height: 8),
+              ExpansionTile(
+                title: const Text('Fat Breakdown'),
+                children: [
+                  _buildSubField('Monounsaturated (g)'),
+                  _buildSubField('Polyunsaturated (g)'),
+                  _buildSubField('Omega-3 (g)'),
+                  _buildSubField(' • ALA (g)'),
+                  _buildSubField(' • DHA (g)'),
+                  _buildSubField(' • EPA (g)'),
+                  _buildSubField('Omega-6 (g)'),
+                  _buildSubField('Saturated (g)'),
+                  _buildSubField('Trans (g)'),
+                ],
+              ),
+            ],
+            const SizedBox(height: 20),
+
+            /// 5. Save / Cancel
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                OutlinedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (_formKey.currentState!.validate()) {
+                      // TODO: save or update the food entry
+                      Navigator.of(context).pop();
+                    }
+                  },
+                  child: const Text('Save'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+```
+
+---
+
+### 23.4 Subcomponent: `_buildSubField`
+
+```dart
+Widget _buildSubField(String label) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+    child: TextFormField(
+      decoration: InputDecoration(
+        labelText: label,
+        border: const OutlineInputBorder(),
+      ),
+      keyboardType: TextInputType.number,
+    ),
+  );
+}
+```
+
+* **Purpose:** Generates a standardized number input field with label and outline border, used for each macro breakdown.
+
+## 24. Food Logging Page
+
+**File:** `lib/screens/nutrition/food_logging_page.dart`
+
+---
+
+### 24.1 Imports & Dependencies
+
+```dart
+import 'package:flutter/material.dart';
+import 'food_customization_page.dart';
+```
+
+---
+
+### 24.2 State & Fields
+
+* **Tab state:**
+
+  ```dart
+  // 0=Scan, 1=Search, 2=Pre‑Planned, 3=Custom
+  final List<bool> _tabs = [false, true, false, false];
+  ```
+* **Nutrition stats (placeholder):**
+
+  ```dart
+  int selectedCalories   = 500, remainingCalories   = 1500;
+  int selectedFats       = 10,  remainingFats       = 40;
+  int selectedProtein    = 30,  remainingProtein    = 70;
+  int selectedCarbs      = 80,  remainingCarbs      = 120;
+  ```
+* **Search results placeholder:**
+
+  ```dart
+  List<Map<String, String>> _entries = [
+    {'name': 'Olive Oil',       'cal': '80',  'macro': '0P 0F 9C', 'qty': '2 tsp'},
+    {'name': 'Butter, Salted',  'cal': '36',  'macro': '0P 4F 0C', 'qty': '5g'},
+    {'name': 'Chicken Cutlet',  'cal': '220', 'macro': '23P 8F 0C','qty': '1 cutlet'},
+  ];
+  ```
+
+---
+
+### 24.3 Build & UI
+
+```dart
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(title: const Text('Food Logging')),
+
+    body: Column(
+      children: [
+
+        // ─── Top stats row ────────────────────────────────
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Expanded(child: _StatCard(label: 'Calories', value: '$selectedCalories/$remainingCalories kcal')),
+              const SizedBox(width: 8),
+              Expanded(child: _StatCard(label: 'Fats',     value: '$selectedFats/$remainingFats g')),
+              const SizedBox(width: 8),
+              Expanded(child: _StatCard(label: 'Protein',  value: '$selectedProtein/$remainingProtein g')),
+              const SizedBox(width: 8),
+              Expanded(child: _StatCard(label: 'Carbs',    value: '$selectedCarbs/$remainingCarbs g')),
+            ],
+          ),
+        ),
+
+        // ─── Tab selector ─────────────────────────────────
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: ToggleButtons(
+            isSelected: _tabs,
+            onPressed: (i) => setState(() {
+              for (var idx = 0; idx < _tabs.length; idx++) {
+                _tabs[idx] = idx == i;
+              }
+            }),
+            borderRadius: BorderRadius.circular(8),
+            selectedColor: Colors.white,
+            fillColor: Theme.of(context).primaryColor,
+            children: const [
+              Padding(padding: EdgeInsets.symmetric(horizontal: 12), child: Text('Scan')),
+              Padding(padding: EdgeInsets.symmetric(horizontal: 12), child: Text('Search')),
+              Padding(padding: EdgeInsets.symmetric(horizontal: 12), child: Text('Pre‑Planned')),
+              Padding(padding: EdgeInsets.symmetric(horizontal: 12), child: Text('Custom')),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 8),
+
+        // ─── Content area ────────────────────────────────
+        Expanded(
+          child: _tabs[0]
+            // Scan
+            ? const Center(child: Text('Scan interface coming soon'))
+
+            // Search
+            : _tabs[1]
+              ? ListView.separated(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: _entries.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  itemBuilder: (context, i) {
+                    final e = _entries[i];
+                    return Card(
+                      child: ListTile(
+                        title: Text(e['name']!),
+                        subtitle: Text('${e['macro']} • ${e['qty']}'),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.add_circle_outline),
+                          onPressed: () {
+                            // TODO: mark this item for adding to log
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                )
+
+            // Pre‑Planned
+            : _tabs[2]
+              ? const Center(child: Text('Pre‑Planned meals coming soon'))
+
+              // Custom
+              : ListView.separated(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: 1,
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  itemBuilder: (context, i) {
+                    return Card(
+                      child: ListTile(
+                        title: const Text('Add New Food Item'),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const FoodCustomizationPage()),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
+        ),
+
+        // ─── Bottom search & add row ──────────────────────
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: 'Search for a food...',
+                    prefixIcon: const Icon(Icons.search),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  onChanged: (q) {
+                    // TODO: filter _entries
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                onPressed: () {
+                  // TODO: batch-add selected items to log
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Add Food'),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+}
+```
+
+---
+
+### 24.4 Subcomponent: `_StatCard`
+
+```dart
+class _StatCard extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _StatCard({
+    super.key,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey[300]!),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(label, style: Theme.of(context).textTheme.labelSmall),
+          const SizedBox(height: 2),
+          Text(value, style: Theme.of(context).textTheme.labelMedium),
+        ],
+      ),
+    );
+  }
+}
+```
+
+* **Purpose:** Displays a compact stat card showing a label and its current/remaining value.
+
+
+## 25. Log Entry Page
+
+**File:** `lib/screens/nutrition/log_entry_page.dart`
+
+---
+
+### 25.1 Imports & Dependencies
+
+```dart
+import 'package:flutter/material.dart';
+import '../../widgets/speed_dial_fab.dart';
+```
+
+---
+
+### 25.2 Props & Helper
+
+* **Props:**
+
+  ```dart
+  final DateTime date;
+  ```
+* **Time label helper:**
+
+  ```dart
+  String _hourLabel(int hour) {
+    if (hour == 0) return '12 a.m.';
+    if (hour < 12) return '$hour a.m.';
+    if (hour == 12) return '12 p.m.';
+    return '${hour - 12} p.m.';
+  }
+  ```
+
+---
+
+### 25.3 Build & UI
+
+```dart
+@override
+Widget build(BuildContext context) {
+  // TODO: replace these with real daily summary values
+  final consumedCal = 1200, calTarget = 2000;
+  final consumedFat = 30,   fatTarget = 70;
+  final consumedP   = 50,   pTarget   = 100;
+  final consumedC   = 120,  cTarget   = 200;
+
+  return Scaffold(
+    appBar: AppBar(
+      title: Text(
+        '${date.month}/${date.day}/${date.year}',
+        style: Theme.of(context).textTheme.titleLarge,
+      ),
+    ),
+    body: Column(
+      children: [
+
+        // ─── Header Stats ─────────────────────────────
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Expanded(child: _MiniStat(label: 'Calories', value: '$consumedCal/$calTarget kcal')),
+              const SizedBox(width: 8),
+              Expanded(child: _MiniStat(label: 'Fats',     value: '$consumedFat/$fatTarget g')),
+              const SizedBox(width: 8),
+              Expanded(child: _MiniStat(label: 'Protein',  value: '$consumedP/$pTarget g')),
+              const SizedBox(width: 8),
+              Expanded(child: _MiniStat(label: 'Carbs',    value: '$consumedC/$cTarget g')),
+            ],
+          ),
+        ),
+
+        const Divider(height: 1),
+
+        // ─── 24‑Hour Timeline ───────────────────────────
+        Expanded(
+          child: ListView.builder(
+            itemCount: 24,
+            itemBuilder: (context, hour) {
+              return SizedBox(
+                height: 64,
+                child: Row(
+                  children: [
+                    // Time label
+                    SizedBox(
+                      width: 72,
+                      child: Text(
+                        _hourLabel(hour),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ),
+                    // Vertical divider
+                    const VerticalDivider(width: 1),
+                    // Empty slot for entries
+                    Expanded(
+                      child: Container(
+                        // TODO: render meal/workout entries here at correct vertical positions
+                        color: Colors.transparent,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    ),
+
+    // ─── Add Entry FAB ───────────────────────────────
+    floatingActionButton: const SpeedDialFab(),
+  );
+}
+```
+
+---
+
+### 25.4 Subcomponent: `_MiniStat`
+
+```dart
+class _MiniStat extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _MiniStat({
+    super.key,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey[300]!),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(label, style: Theme.of(context).textTheme.labelSmall),
+          const SizedBox(height: 2),
+          Text(value, style: Theme.of(context).textTheme.bodyMedium),
+        ],
+      ),
+    );
+  }
+}
+```
+
+* **Purpose:** A compact stat card for displaying a label and its corresponding daily value in the header row.
+
+
+
+## 26. Measured Items Page
+
+**File:** `lib/screens/nutrition/measured_items_page.dart`
+
+---
+
+### 26.1 Imports & Dependencies
+
+```dart
+import 'package:flutter/material.dart';
+import '../../repositories/app_repository.dart';
+import '../../models/models.dart';
+import 'new_measurement_item_page.dart';
+import 'specific_measurement_page.dart';
+```
+
+---
+
+### 26.2 State & Initialization
+
+* **Repository instance:**
+
+  ```dart
+  final _repo = AppRepository();
+  ```
+* **Future for definitions:**
+
+  ```dart
+  late Future<List<MeasurementDefinition>> _defsFuture;
+  ```
+* **initState:**
+
+  ```dart
+  @override
+  void initState() {
+    super.initState();
+    _defsFuture = _repo.fetchUsedClassMeasurementDefinitions();
+  }
+  ```
+
+---
+
+### 26.3 Build & UI
+
+```dart
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(title: const Text('Measured Items')),
+
+    body: FutureBuilder<List<MeasurementDefinition>>(
+      future: _defsFuture,
+      builder: (ctx, snap) {
+        if (snap.connectionState != ConnectionState.done) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final defs = snap.data ?? [];
+
+        return ListView(
+          children: [
+            // One tile per existing measurement definition
+            for (var def in defs)
+              ListTile(
+                title: Text(def.name),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => SpecificMeasurementPage(definition: def),
+                  ),
+                ),
+              ),
+
+            // Divider if there are any existing definitions
+            if (defs.isNotEmpty) const Divider(),
+
+            const SizedBox(height: 20),
+
+            // Tile to track a completely new measurement
+            ListTile(
+              tileColor: Colors.deepPurple,
+              textColor: Colors.white,
+              title: const Text('Track a New Measurement'),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const NewMeasurementItemPage()),
+              ),
+            ),
+          ],
+        );
+      },
+    ),
+  );
+}
+```
+
+* **Purpose:** Lists all measurement definitions the user has logged, allowing selection to view or add entries; always provides a prominent action to track a new measurement.
+
+---
+## 27. New Measurement Item Page
+
+**File:** `lib/screens/nutrition/new_measurement_item_page.dart`
+
+---
+
+### 27.1 Imports & Dependencies
+
+```dart
+import 'package:flutter/material.dart';
+import '../../repositories/app_repository.dart';
+import '../../models/models.dart';
+```
+
+---
+
+### 27.2 State & Controllers
+
+* **Repository instance:**
+
+  ```dart
+  final _repo = AppRepository();
+  ```
+* **Form mode toggle:**
+
+  ```dart
+  bool _usePresets = true;
+  ```
+* **Selected measurement type & sub-options:**
+
+  ```dart
+  MeasurementType? _selectedType;
+  String? _bodyweightVariation;      // “WakeUp”, “BedTime”, “Overall”
+  bool _heightIsFeet = true;
+  bool _pump         = false;        // for body-part measurements
+  String _selectedWeightUnit = 'lbs';
+  ```
+* **Value input controllers:**
+
+  ```dart
+  final TextEditingController _valController1 = TextEditingController();
+  final TextEditingController _valController2 = TextEditingController();
+  ```
+* **Save eligibility getter:**
+
+  ```dart
+  bool get _canSave {
+    if (!_usePresets || _selectedType == null) return false;
+    switch (_selectedType!) {
+      case MeasurementType.BodyWeight:
+        return _bodyweightVariation != null && _valController1.text.isNotEmpty;
+      case MeasurementType.Height:
+        return _heightIsFeet
+          ? _valController1.text.isNotEmpty && _valController2.text.isNotEmpty
+          : _valController1.text.isNotEmpty;
+      default:
+        return _valController1.text.isNotEmpty;
+    }
+  }
+  ```
+
+---
+
+### 27.3 Lifecycle & Helpers
+
+* **resetSubControls():** Clears all sub-fields when switching type or mode.
+* **\_showError(msg):** Displays a `SnackBar` with an error message.
+* **\_saveMeasurement():**
+
+  1. Lookup definition ID by `type.name` via `fetchMeasurementDefinitionId`.
+  2. Parse numeric inputs, converting ft/in to inches if needed.
+  3. Determine unit (`'lbs'`, `'kg'`, or `'cm'`) and optional `note` (e.g. “With pump”).
+  4. Call `insertMeasurement(defId, now, value, unit, note)`.
+  5. Pop on success; show error `SnackBar` on failure.
+
+---
+
+### 27.4 Build & UI
+
+```dart
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(title: const Text('New Measurement')),
+    body: ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+
+        // Mode toggle: Presets vs. Custom
+        Row(
+          children: [
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () {
+                  setState(() { _usePresets = true;  _resetSubControls(); });
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _usePresets ? Colors.deepPurple : null,
+                ),
+                child: const Text('Presets'),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () {
+                  setState(() { _usePresets = false; _resetSubControls(); });
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: !_usePresets ? Colors.deepPurple : null,
+                ),
+                child: const Text('Custom'),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        if (_usePresets) ...[
+          // Preset type selector
+          DropdownButtonFormField<MeasurementType>(
+            decoration: const InputDecoration(labelText: 'Preset Type'),
+            value: _selectedType,
+            items: MeasurementType.values.map((mt) {
+              return DropdownMenuItem(
+                value: mt,
+                child: Text(mt.name),
+              );
+            }).toList(),
+            onChanged: (mt) => setState(() { _selectedType = mt; _resetSubControls(); }),
+          ),
+          const SizedBox(height: 16),
+
+          // Body Weight inputs
+          if (_selectedType == MeasurementType.BodyWeight) ...[
+            const Text('Variation'),
+            const SizedBox(height: 8),
+            ToggleButtons(
+              isSelected: [
+                _bodyweightVariation == 'WakeUp',
+                _bodyweightVariation == 'BedTime',
+                _bodyweightVariation == 'Overall',
+              ],
+              onPressed: (i) {
+                const opts = ['WakeUp', 'BedTime', 'Overall'];
+                setState(() => _bodyweightVariation = opts[i]);
+              },
+              children: const [Text('WakeUp'), Text('BedTime'), Text('Overall')],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _valController1,
+                    decoration: const InputDecoration(labelText: 'Weight'),
+                    keyboardType: TextInputType.number,
+                    onChanged: (_) => setState(() {}),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                DropdownButton<String>(
+                  value: _selectedWeightUnit,
+                  onChanged: (u) => setState(() { if (u != null) _selectedWeightUnit = u; }),
+                  items: const [
+                    DropdownMenuItem(value: 'lbs', child: Text('lbs')),
+                    DropdownMenuItem(value: 'kg',  child: Text('kg')),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+          ],
+
+          // Height inputs
+          if (_selectedType == MeasurementType.Height) ...[
+            const Text('Units'),
+            const SizedBox(height: 8),
+            ToggleButtons(
+              isSelected: [_heightIsFeet, !_heightIsFeet],
+              onPressed: (i) => setState(() => _heightIsFeet = (i == 0)),
+              children: const [Text('ft/in'), Text('cm')],
+            ),
+            const SizedBox(height: 16),
+            if (_heightIsFeet)
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _valController1,
+                      decoration: const InputDecoration(labelText: 'Feet'),
+                      keyboardType: TextInputType.number,
+                      onChanged: (_) => setState(() {}),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _valController2,
+                      decoration: const InputDecoration(labelText: 'Inches'),
+                      keyboardType: TextInputType.number,
+                      onChanged: (_) => setState(() {}),
+                    ),
+                  ),
+                ],
+              )
+            else
+              TextFormField(
+                controller: _valController1,
+                decoration: const InputDecoration(labelText: 'Centimeters'),
+                keyboardType: TextInputType.number,
+                onChanged: (_) => setState(() {}),
+              ),
+            const SizedBox(height: 16),
+          ],
+
+          // Body-part measurement inputs
+          if (_selectedType != null &&
+              _selectedType != MeasurementType.BodyWeight &&
+              _selectedType != MeasurementType.Height) ...[
+            Text(
+              _notesFor[_selectedType!.name]!,
+              style: const TextStyle(fontStyle: FontStyle.italic),
+            ),
+            const SizedBox(height: 8),
+            ToggleButtons(
+              isSelected: [!_pump, _pump],
+              onPressed: (i) => setState(() => _pump = (i == 1)),
+              children: const [Text('Without pump'), Text('With pump')],
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _valController1,
+              decoration: const InputDecoration(
+                labelText: 'Centimeters',
+                suffixText: 'cm',
+              ),
+              keyboardType: TextInputType.number,
+              onChanged: (_) => setState(() {}),
+            ),
+          ],
+        ],
+      ],
+    ),
+
+    // Bottom Save button
+    bottomNavigationBar: SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: ElevatedButton(
+          onPressed: _canSave ? _saveMeasurement : null,
+          child: const Text('Save New Measurement'),
+        ),
+      ),
+    ),
+  );
+}
+```
+
+---
+
+### 27.5 Notes Map
+
+```dart
+/// Notes for each body part (must match MeasurementType names).
+const Map<String, String> _notesFor = {
+  'Forearm':  'Go to widest, largest part and measure around',
+  'Arm':      'Go to widest part of bicep and measure around',
+  'Neck':     'Go to area where measuring rope is straight',
+  'Shoulder':'Keep tape straight, measure around side delt',
+  'Chest':    'Under armpit, above nipple line',
+  'Waist':    'Around belly button',
+  'Hip':      'Around biggest part of glute',
+  'Thigh':    'Around widest part of thigh',
+  'Calf':     'Around widest part of calf',
+};
+```
+
+* **Purpose:** Provides guidance text for how to measure each specific body part when a custom measurement is selected.
+
+
+## 28. Nutrition Page
+
+**File:** `lib/screens/nutrition/nutrition_page.dart`
+
+---
+
+### 28.1 Imports & Dependencies
+
+```dart
+import 'package:flutter/material.dart';
+import '../../widgets/speed_dial_fab.dart';
+import '../../widgets/nutrition_dash.dart';
+import '../../widgets/health_trends_section.dart';
+import '../../widgets/data_records_section.dart';
+import '../../widgets/current_metrics_section.dart';
+```
+
+---
+
+### 28.2 State & Data
+
+> *Note: All values are currently TODO placeholders; wire these up to your repository or provider.*
+
+* **Date & goals**
+
+  ```dart
+  final today           = DateTime.now();
+  final caloriesConsumed = 1200; // TODO
+  final calorieGoal      = 2000; // TODO
+
+  final proteinTarget = 100; // grams
+  final carbTarget    = 200; // grams
+  final fatTarget     =  70; // grams
+  ```
+* **Consumed macros**
+
+  ```dart
+  final proteinGrams =  80;  // TODO
+  final carbGrams    = 150;  // TODO
+  final fatGrams     =  60;  // TODO
+  ```
+* **Today's meal entries**
+
+  ```dart
+  final meals = [
+    {'name': 'Breakfast', 'cal': 400, 'time': '8:00 AM'},
+    {'name': 'Lunch',     'cal': 500, 'time': '12:30 PM'},
+    {'name': 'Snack',     'cal': 300, 'time': '3:30 PM'},
+  ];
+  ```
+
+---
+
+### 28.3 Build & UI
+
+```dart
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(title: const Text('Nutrition Dashboard')),
+    body: SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+
+          // ─── Daily Summary ────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: NutritionDash(
+              caloriesConsumed: caloriesConsumed,
+              calorieGoal:      calorieGoal,
+              proteinConsumed:  proteinGrams,
+              proteinTarget:    proteinTarget,
+              carbConsumed:     carbGrams,
+              carbTarget:       carbTarget,
+              fatConsumed:      fatGrams,
+              fatTarget:        fatTarget,
+            ),
+          ),
+
+          const Divider(height: 25),
+
+          // ─── Health Trends ────────────────────────────────
+          const HealthTrendsSection(),
+
+          // ─── Data & Records ──────────────────────────────
+          const DataRecordsSection(),
+
+          // ─── Current Metrics ─────────────────────────────
+          const CurrentMetricsSection(),
+        ],
+      ),
+    ),
+
+    // ─── Add New Meal FAB ──────────────────────────────
+    floatingActionButton: const SpeedDialFab(),
+  );
+}
+```
+
+---
+
+### 28.4 Notes
+
+* **NutritionDash:** Shows today’s macros and goals in a two-line summary with progress indicators.
+* **HealthTrendsSection:** Displays small line charts of weight, calories, and macro trends.
+* **DataRecordsSection:** Calendar/grid view of past nutrition and exercise logs.
+* **CurrentMetricsSection:** List of current metrics such as weight, BMI, body fat, etc.
+* **SpeedDialFab:** FAB providing quick actions to log food or measurements.
+
+
+
+## 29. Pantry Log Page
+
+**File:** `lib/screens/nutrition/pantry_log_page.dart`
+
+---
+
+### 29.1 Imports & Dependencies
+
+```dart
+import 'package:flutter/material.dart';
+```
+
+---
+
+### 29.2 Widget Definition
+
+```dart
+class PantryLogPage extends StatelessWidget {
+  const PantryLogPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Pantry Log')),
+      body: const Center(child: Text('Pantry Log Page')),
+    );
+  }
+}
+```
+
+---
+
+### 29.3 Purpose & Structure
+
+* **Purpose:** A placeholder screen for logging and viewing pantry inventory or usage history.
+* **Structure:**
+
+  * **AppBar:** Title “Pantry Log”.
+  * **Body:** Centered text indicating the page (to be replaced with actual pantry log UI later).
+
+---
+
+## 30. Plan Meal Page
+
+**File:** `lib/screens/nutrition/plan_meal_page.dart`
+
+---
+
+### 30.1 Imports & Dependencies
+
+```dart
+import 'package:flutter/material.dart';
+```
+
+---
+
+### 30.2 Widget Definition
+
+```dart
+class PlanMealPage extends StatelessWidget {
+  const PlanMealPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Plan Meal')),
+      body: const Center(child: Text('Plan Meal Page')),
+    );
+  }
+}
+```
+
+---
+
+### 30.3 Purpose & Structure
+
+* **Purpose:** Placeholder screen for designing or scheduling meals in advance.
+* **Structure:**
+
+  * **AppBar:** Displays the title “Plan Meal”.
+  * **Body:** Centered text indicating the page, to be replaced with the actual meal planning UI (e.g., calendar view, meal templates, ingredient selection).
+
+---
+
+## 31. Specific Measurement Page
+
+**File:** `lib/screens/nutrition/specific_measurement_page.dart`
+
+---
+
+### 31.1 Imports & Dependencies
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:fl_chart/fl_chart.dart';
+import '../../repositories/app_repository.dart';
+import '../../models/models.dart';
+```
+
+---
+
+### 31.2 Props & State
+
+* **Props:**
+
+  ```dart
+  final MeasurementDefinition definition;
+  ```
+* **Time filter options:**
+
+  ```dart
+  static const timeOptions = ['All Records', 'Weekly', 'Monthly', 'Yearly'];
+  String _timeFilter = timeOptions[0];
+  ```
+* **Sub‑filter (for body‑weight, height units, or pump state):**
+
+  ```dart
+  String _subFilter = 'Overall';
+  ```
+* **Data future & repository:**
+
+  ```dart
+  late final Future<List<Measurement>> _measurementsFuture;
+  final _repo = AppRepository();
+  ```
+
+---
+
+### 31.3 Lifecycle & Data Loading
+
+```dart
+@override
+void initState() {
+  super.initState();
+  _measurementsFuture = _repo.fetchClassMeasurementsForDefinition(widget.definition.id);
+}
+```
+
+---
+
+### 31.4 Helper Methods
+
+* **\_yValue(Measurement m):**
+  Converts inches→feet for height when in ‘ft/in’ sub‑filter; otherwise returns raw value.
+* **\_computeSpots(List<Measurement> data):**
+  Maps measurements to `FlSpot(x, y)` according to `_timeFilter` (days for Weekly, day-of-month for Monthly, month index for Yearly, index order for All Records).
+* **\_buildBottomTitles(…):**
+  Returns `AxisTitles` for the chart’s X‑axis—weekday initials for Weekly, selected day ticks for Monthly, month letters for Yearly, or hidden for All Records.
+* **\_applyFilters(List<Measurement> all):**
+  Filters by time window, then by `_subFilter` (unless it's Height, which always shows all).
+
+---
+
+### 31.5 Build & UI
+
+```dart
+@override
+Widget build(BuildContext context) {
+  final name = widget.definition.name;
+
+  return Scaffold(
+    appBar: AppBar(title: Text(name)),
+    body: FutureBuilder<List<Measurement>>(
+      future: _measurementsFuture,
+      builder: (ctx, snap) {
+        if (snap.connectionState != ConnectionState.done) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snap.hasError) {
+          return Center(child: Text('Error: ${snap.error}'));
+        }
+
+        final all      = snap.data!;
+        var filtered    = _applyFilters(all)..sort((a, b) => a.timestamp.compareTo(b.timestamp));
+        final spots     = _computeSpots(filtered);
+        final bottomTitles = _buildBottomTitles(filtered, spots);
+
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+
+              // Time Filter Buttons
+              Row(
+                children: timeOptions.map((f) {
+                  return Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 1),
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          backgroundColor: _timeFilter == f ? Colors.deepPurple : null,
+                          foregroundColor: _timeFilter == f ? Colors.white : null,
+                        ),
+                        onPressed: () => setState(() => _timeFilter = f),
+                        child: Text(f),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 16),
+
+              // Sub‑Filter Buttons
+              Row(
+                children: (name == 'BodyWeight'
+                        ? ['WakeUp', 'BedTime', 'Overall']
+                        : name == 'Height'
+                            ? ['ft/in', 'cm']
+                            : ['Overall', 'With pump', 'Without pump'])
+                    .map((s) {
+                  return Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 1),
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          backgroundColor: _subFilter == s ? Colors.deepPurple : null,
+                          foregroundColor: _subFilter == s ? Colors.white : null,
+                        ),
+                        onPressed: () => setState(() => _subFilter = s),
+                        child: Text(s),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 16),
+
+              // Line Chart
+              SizedBox(
+                height: 200,
+                child: LineChart(
+                  LineChartData(
+                    minX: spots.isEmpty ? 0 : spots.first.x,
+                    maxX: spots.isEmpty ? 0 : spots.last.x,
+                    gridData: FlGridData(show: false),
+                    borderData: FlBorderData(show: false),
+                    titlesData: FlTitlesData(
+                      bottomTitles: bottomTitles,
+                      leftTitles:   AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      topTitles:    AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      rightTitles:  AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    ),
+                    lineTouchData: LineTouchData(
+                      touchTooltipData: LineTouchTooltipData(
+                        getTooltipColor: (_) => Colors.deepPurple,
+                        getTooltipItems: (spotsTouched) => spotsTouched.map((ts) {
+                          final m = filtered[ts.spotIndex];
+                          final date = m.timestamp.toLocal().toIso8601String().split('T').first;
+                          final displayValue = (name == 'Height' && _subFilter == 'ft/in')
+                              ? '${(m.value~/12)}ft ${(m.value%12).toInt()}in'
+                              : '${m.value.toStringAsFixed(1)} ${m.unit}';
+                          return LineTooltipItem(
+                            '$displayValue\n$date',
+                            const TextStyle(color: Colors.white),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    lineBarsData: [LineChartBarData(spots: spots, isCurved: false, dotData: FlDotData(show: true))],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Historical List
+              Expanded(
+                child: ListView.builder(
+                  itemCount: filtered.length,
+                  itemBuilder: (ctx, i) {
+                    final m = filtered[i];
+                    final date = m.timestamp.toLocal().toIso8601String().split('T').first;
+                    final displayValue = (name == 'Height' && _subFilter == 'ft/in')
+                        ? '${(m.value~/12)}ft ${(m.value%12).toInt()}in'
+                        : '${m.value.toStringAsFixed(1)} ${m.unit}';
+                    return ListTile(
+                      title: Text(displayValue),
+                      subtitle: Text('$date${m.note != null ? ' • ${m.note}' : ''}'),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    ),
+
+    // Add New Record Button
+    bottomNavigationBar: Padding(
+      padding: const EdgeInsets.all(16),
+      child: ElevatedButton.icon(
+        onPressed: () {
+          // TODO: open add new record dialog
+        },
+        icon: const Icon(Icons.add),
+        label: const Text('Add New Record'),
+      ),
+    ),
+  );
+}
+```
+
+---
+
+### 31.6 Purpose
+
+This screen presents the historical data for a single measurement definition (e.g., body weight, height, or any body‑part circumference). Users can:
+
+* **Filter by time window** (All, Weekly, Monthly, Yearly)
+* **Sub‑filter** by variation (wake‑up/bedtime), unit (ft/in vs. cm), or pump state
+* **View an interactive line chart** with tooltips showing date and value
+* **Browse a chronological list** of past entries
+* **Quickly add a new record** via the bottom button.
+
+
+## 32. Analytics Settings Screen
+
+**File:** `lib/screens/profile/settings/analytics_setting_screen.dart`
+
+---
+
+### 32.1 Imports & Dependencies
+
+```dart
+import 'package:flutter/material.dart';
+import 'bodypart_muscle_mapping_screen.dart';
+import 'bodypart_ranking_screen.dart';
+import 'muscle_ranking_screen.dart';
+import 'volume_boundaries_screen.dart';
+import '../../exercise/exercise_analytics_screen.dart';
+```
+
+---
+
+### 32.2 Purpose
+
+Provides a central hub for configuring all exercise analytics–related settings. From here, users can navigate to:
+
+* **BodyPart ↔ Muscle Mapping**
+* **BodyPart Training Bias Rankings**
+* **Muscle Training Bias Rankings**
+* **Exercise-to-%Sets per Muscle & BodyPart Analytics**
+* **Volume Boundaries per BodyPart & Muscle**
+
+---
+
+### 32.3 Build & UI
+
+```dart
+@override
+Widget build(BuildContext ctx) {
+  return Scaffold(
+    appBar: AppBar(title: const Text('Analytics Settings')),
+    body: ListView(
+      children: [
+
+        ListTile(
+          title: const Text('BodyPart ↔ Muscle Mapping'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => Navigator.of(ctx).push(
+            MaterialPageRoute(builder: (_) => const BodyPartMuscleMappingScreen()),
+          ),
+        ),
+
+        ListTile(
+          title: const Text('BodyPart Training Bias Rankings'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => Navigator.of(ctx).push(
+            MaterialPageRoute(builder: (_) => const BodyPartRankingScreen()),
+          ),
+        ),
+
+        ListTile(
+          title: const Text('Muscle Training Bias Rankings'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => Navigator.of(ctx).push(
+            MaterialPageRoute(builder: (_) => const MuscleRankingScreen()),
+          ),
+        ),
+
+        ListTile(
+          title: const Text('Exercise to %Sets per Muscle, BodyPart'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => Navigator.of(ctx).push(
+            MaterialPageRoute(builder: (_) => const ExerciseAnalyticsScreen()),
+          ),
+        ),
+
+        ListTile(
+          title: const Text('Volume Boundaries per BodyPart, Muscle'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => Navigator.of(ctx).push(
+            MaterialPageRoute(builder: (_) => const VolumeBoundariesScreen()),
+          ),
+        ),
+
+      ],
+    ),
+  );
+}
+```
+
+---
+
+### 32.4 Navigation Targets
+
+* **BodyPartMuscleMappingScreen** (`bodypart_muscle_mapping_screen.dart`)
+* **BodyPartRankingScreen** (`bodypart_ranking_screen.dart`)
+* **MuscleRankingScreen** (`muscle_ranking_screen.dart`)
+* **ExerciseAnalyticsScreen** (`../../exercise/exercise_analytics_screen.dart`)
+* **VolumeBoundariesScreen** (`volume_boundaries_screen.dart`)
+
+Each `ListTile` routes to the corresponding settings page for deeper configuration.
+
+
+## 33. App Settings Page
+
+**File:** `lib/screens/profile/settings/app_settings_page.dart`
+
+---
+
+### 33.1 Imports & Dependencies
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import '../../../repositories/app_repository.dart';
+```
+
+---
+
+### 33.2 State & Repository
+
+* **Repository instance:**
+
+  ```dart
+  final _repo = AppRepository();
+  ```
+* **Text controller for import dialog:**
+  Created on demand within `_importDatabase`.
+
+---
+
+### 33.3 Helpers: Export & Import
+
+#### `_exportDatabase()`
+
+1. Calls `_repo.exportDatabase()` to get JSON string of the entire DB.
+2. Displays an `AlertDialog` with a `SelectableText` of the JSON.
+3. “Copy” button copies JSON to clipboard and shows a `SnackBar`.
+4. “Close” dismisses the dialog.
+5. Errors show a `SnackBar` on failure.
+
+#### `_importDatabase()`
+
+1. Presents an `AlertDialog` with a multi-line `TextField` for pasting JSON.
+2. “Import” returns the pasted string; “Cancel” returns `null`.
+3. On non-null input, calls `_repo.importDatabase(result, clearFirst: true)`.
+4. Shows a success or error `SnackBar` accordingly.
+
+---
+
+### 33.4 Build & UI
+
+```dart
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(title: const Text('Settings')),
+    body: ListView(
+      children: [
+        ListTile(
+          leading: const Icon(Icons.upload_file),
+          title: const Text('Export Database'),
+          onTap: _exportDatabase,
+        ),
+        ListTile(
+          leading: const Icon(Icons.download),
+          title: const Text('Import Database'),
+          onTap: _importDatabase,
+        ),
+      ],
+    ),
+  );
+}
+```
+
+* **ListTile “Export Database”:** Triggers `_exportDatabase`.
+* **ListTile “Import Database”:** Triggers `_importDatabase`.
+
+---
+
+### 33.5 Purpose & Notes
+
+* **Purpose:** Allows users to backup and restore their local SQLite data via JSON export/import.
+* **Notes:**
+
+  * JSON is shown in a scrollable, selectable dialog for easy copying.
+  * Import clears existing data before loading new JSON to avoid duplicates.
+  * Clipboard integration and `SnackBar` feedback improve usability.
+
+
+## 34. Body-Part ↔ Muscle Mapping Screen
+
+**File:** `lib/screens/profile/settings/bodypart_muscle_mapping_screen.dart`
+
+---
+
+### 34.1 Imports & Dependencies
+
+```dart
+import 'package:flutter/material.dart';
+import '../../../repositories/app_repository.dart';
+import '../../../models/models.dart';
+```
+
+---
+
+### 34.2 State & Initialization
+
+* **Repository:**
+
+  ```dart
+  final _repo = AppRepository();
+  ```
+* **Data lists:**
+
+  ```dart
+  List<BodyPart> _bodyParts = [];
+  List<Muscle>   _muscles   = [];
+  ```
+* **Selected body-part & current mappings:**
+
+  ```dart
+  BodyPart? _selectedBodyPart;
+  Set<int> _linkedMuscleIds = {};
+  ```
+* **initState:**
+  Loads all body-parts and muscles, then selects the first body-part (if any) and loads its muscle mappings:
+
+  ```dart
+  @override
+  void initState() {
+    super.initState();
+    _loadLookups();
+  }
+  ```
+
+---
+
+### 34.3 Data Loading & Mapping Logic
+
+```dart
+Future<void> _loadLookups() async {
+  final bps = await _repo.fetchAllBodyPartsFull();
+  final ms  = await _repo.fetchAllMusclesFull();
+  setState(() {
+    _bodyParts        = bps;
+    _muscles          = ms;
+    _selectedBodyPart = bps.isNotEmpty ? bps.first : null;
+  });
+  if (_selectedBodyPart != null) {
+    _loadMappings(_selectedBodyPart!.id);
+  }
+}
+
+Future<void> _loadMappings(int bodypartId) async {
+  final rows = await _repo.fetchMusclesForBodyPart(bodypartId);
+  setState(() {
+    _linkedMuscleIds = rows.map((r) => r.muscleId).toSet();
+  });
+}
+```
+
+* **Toggle mapping:** Adds or removes the link in the database and updates `_linkedMuscleIds`:
+
+  ```dart
+  Future<void> _toggleMapping(int muscleId, bool link) async {
+    final bpId = _selectedBodyPart!.id;
+    if (link) {
+      await _repo.linkMuscleToBodyPart(muscleId, bpId);
+      _linkedMuscleIds.add(muscleId);
+    } else {
+      await _repo.unlinkMuscleFromBodyPart(muscleId, bpId);
+      _linkedMuscleIds.remove(muscleId);
+    }
+    setState(() {});
+  }
+  ```
+
+---
+
+### 34.4 Build & UI
+
+```dart
+@override
+Widget build(BuildContext ctx) {
+  return Scaffold(
+    appBar: AppBar(title: const Text('Map Muscles ↔ BodyParts')),
+    body: _bodyParts.isEmpty
+      ? const Center(child: Text('No body parts defined'))
+      : Column(
+          children: [
+            // Body-part selector
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: DropdownButton<BodyPart>(
+                isExpanded: true,
+                value: _selectedBodyPart,
+                items: _bodyParts.map((bp) {
+                  return DropdownMenuItem(
+                    value: bp,
+                    child: Text(bp.name),
+                  );
+                }).toList(),
+                onChanged: (bp) {
+                  if (bp == null) return;
+                  setState(() => _selectedBodyPart = bp);
+                  _loadMappings(bp.id);
+                },
+              ),
+            ),
+            const Divider(),
+
+            // Muscle checklist
+            Expanded(
+              child: ListView(
+                children: _muscles.map((m) {
+                  final linked = _linkedMuscleIds.contains(m.id);
+                  return CheckboxListTile(
+                    title: Text(m.name),
+                    value: linked,
+                    onChanged: (checked) {
+                      if (checked == null) return;
+                      _toggleMapping(m.id, checked);
+                    },
+                  );
+                }).toList(),
+              ),
+            ),
+          ],
+        ),
+  );
+}
+```
+
+---
+
+### 34.5 Purpose
+
+This screen allows users to define which muscles are associated with each body part. It:
+
+* Fetches and displays all body parts in a dropdown.
+* Shows a checklist of all muscles.
+* Lets users toggle links between the selected body part and any muscle.
+* Persists changes immediately via the repository, updating UI state accordingly.
+
+
+## 35. BodyPart Ranking Screen
+
+**File:** `lib/screens/profile/settings/bodypart_ranking_screen.dart`
+
+---
+
+### 35.1 Imports & Dependencies
+
+```dart
+import 'package:flutter/material.dart';
+import '../../../repositories/app_repository.dart';
+import '../../../models/models.dart';
+```
+
+---
+
+### 35.2 State & Initialization
+
+* **Repository instance:**
+
+  ```dart
+  final _repo = AppRepository();
+  ```
+* **Data holders:**
+
+  ```dart
+  List<BodyPart> _parts   = [];
+  Map<int,int>   _ranks   = {};
+  bool           _isLoading = true;
+  String?        _error;
+  ```
+* **initState:** Begins loading body‑part list and their stored ranks.
+
+  ```dart
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+  ```
+
+---
+
+### 35.3 Data Loading
+
+```dart
+Future<void> _load() async {
+  try {
+    final parts = await _repo.fetchAllBodyPartsFull();
+    final rows  = await _repo.getAllBodyPartRanks();
+    if (!mounted) return;
+    setState(() {
+      _parts     = parts;
+      _ranks     = { for (var r in rows) r.bodyPartId : r.rank };
+      _isLoading = false;
+    });
+  } catch (e) {
+    if (!mounted) return;
+    setState(() {
+      _error     = e.toString();
+      _isLoading = false;
+    });
+  }
+}
+```
+
+* Fetches all body parts and their current ranking values, then updates UI state or captures any error.
+
+---
+
+### 35.4 Rank Update Helper
+
+```dart
+Future<void> _updateRank(int id, String val) async {
+  final newRank = int.tryParse(val) ?? 0;
+  try {
+    await _repo.setBodyPartRank(id, newRank);
+    if (!mounted) return;
+    setState(() => _ranks[id] = newRank);
+  } catch (e) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      .showSnackBar(SnackBar(content: Text('Failed to update: $e')));
+  }
+}
+```
+
+* Parses the entered rank, sends it to the repository, and on success updates the in-memory map; on failure shows a `SnackBar`.
+
+---
+
+### 35.5 Build & UI
+
+```dart
+@override
+Widget build(BuildContext ctx) {
+  if (_isLoading) {
+    return const Center(child: CircularProgressIndicator());
+  }
+  if (_error != null) {
+    return Center(child: Text('Error: $_error'));
+  }
+  if (_parts.isEmpty) {
+    return const Center(child: Text('No body parts defined'));
+  }
+  return ListView.builder(
+    itemCount: _parts.length,
+    itemBuilder: (_, i) {
+      final bp = _parts[i];
+      final rk = _ranks[bp.id] ?? 0;
+      return ListTile(
+        title: Text(bp.name),
+        trailing: SizedBox(
+          width: 60,
+          child: TextFormField(
+            initialValue: rk.toString(),
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(labelText: 'Rank'),
+            onFieldSubmitted: (v) => _updateRank(bp.id, v),
+          ),
+        ),
+      );
+    },
+  );
+}
+```
+
+* **Loading/Error states:** Shows spinner or message accordingly.
+* **Empty list:** Indicates if no body parts are available.
+* **List view:** Each body part is displayed with a trailing numeric input for its rank, submitting instantly updates the repository.
+
+---
+
+### 35.6 Purpose
+
+Enables users to assign or adjust training‑bias rankings for each body part, which can inform analytics screens and custom program recommendations.
+
+
+## 36. Exercise Muscle Percent Screen
+
+**File:** `lib/screens/profile/settings/exercise_muscle_percent_screen.dart`
+
+---
+
+### 36.1 Imports & Dependencies
+
+```dart
+import 'package:flutter/material.dart';
+import '../../../repositories/app_repository.dart';
+import '../../../models/models.dart';
+```
+
+---
+
+### 36.2 State & Initialization
+
+* **Repository instance:**
+
+  ```dart
+  final _repo = AppRepository();
+  ```
+* **Exercise definitions & selection:**
+
+  ```dart
+  List<ExerciseDefinition> _defs = [];
+  ExerciseDefinition?     _sel;
+  ```
+* **Computed entries & overrides:**
+
+  ```dart
+  List<ExerciseMusclePercent> _entries   = [];
+  Set<int>                   _overrides = {}; // muscleIds with explicit overrides
+  ```
+* **Loading states & error:**
+
+  ```dart
+  bool   _isLoading        = true;
+  bool   _isLoadingEntries = false;
+  String? _error;
+  ```
+* **initState:** Loads all exercise definitions (detailed), selects the first, then loads its muscle percent entries.
+
+  ```dart
+  @override
+  void initState() {
+    super.initState();
+    _initScreen();
+  }
+  ```
+
+---
+
+### 36.3 Data Loading
+
+```dart
+Future<void> _initScreen() async {
+  try {
+    final defs = await _repo.lookupDefsDetailed();
+    if (!mounted) return;
+    setState(() {
+      _defs = defs;
+      _sel  = defs.isNotEmpty ? defs.first : null;
+    });
+    if (_sel != null) await _loadEntries(_sel!);
+  } catch (e) {
+    if (!mounted) return;
+    setState(() => _error = e.toString());
+  } finally {
+    if (mounted) setState(() => _isLoading = false);
+  }
+}
+
+Future<void> _loadEntries(ExerciseDefinition def) async {
+  setState(() => _isLoadingEntries = true);
+  try {
+    final computed = await _repo.computeMusclePercents(def.id);
+    final saved    = await _repo.fetchPercentsForExercise(def.id);
+    final overrideIds = saved.map((e) => e.muscleId).toSet();
+    if (!mounted || _sel?.id != def.id) return;
+    setState(() {
+      _entries   = computed;
+      _overrides = overrideIds;
+    });
+  } catch (e) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text('Failed to load entries: $e')));
+  } finally {
+    if (mounted) setState(() => _isLoadingEntries = false);
+  }
+}
+```
+
+---
+
+### 36.4 Update & Reset Helpers
+
+```dart
+Future<void> _updatePercent(int muscleId, String val) async {
+  final parsed = double.tryParse(val) ?? 0.0;
+  final def    = _sel;
+  if (def == null) return;
+  try {
+    await _repo.setExerciseMuscleHitPercent(def.id, muscleId, parsed);
+    await _loadEntries(def);
+  } catch (e) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text('Failed to update percent: $e')));
+  }
+}
+
+Future<void> _resetPercent(int muscleId) async {
+  final def = _sel;
+  if (def == null) return;
+  try {
+    await _repo.removeExerciseMusclePercent(def.id, muscleId);
+    await _loadEntries(def);
+  } catch (e) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text('Failed to reset to default: $e')));
+  }
+}
+```
+
+---
+
+### 36.5 Build & UI
+
+```dart
+@override
+Widget build(BuildContext context) {
+  if (_isLoading) {
+    return const Scaffold(
+      body: Center(child: CircularProgressIndicator()),
+    );
+  }
+  if (_error != null) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('% Hit per Muscle')),
+      body: Center(child: Text('Error: $_error')),
+    );
+  }
+  if (_defs.isEmpty) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('% Hit per Muscle')),
+      body: const Center(child: Text('No exercises defined')),
+    );
+  }
+
+  return Scaffold(
+    appBar: AppBar(title: const Text('% Hit per Muscle')),
+    body: Column(
+      children: [
+        // Exercise selector
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: DropdownButton<ExerciseDefinition>(
+            isExpanded: true,
+            value: _sel,
+            items: _defs.map((d) {
+              return DropdownMenuItem(value: d, child: Text(d.name));
+            }).toList(),
+            onChanged: (d) {
+              if (d == null) return;
+              setState(() { 
+                _sel       = d;
+                _entries   = [];
+                _overrides = {};
+              });
+              _loadEntries(d);
+            },
+          ),
+        ),
+        const Divider(height: 1),
+
+        // Loading indicator for entries
+        if (_isLoadingEntries)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Center(child: CircularProgressIndicator()),
+          )
+        else
+          // List of muscle percentages
+          Expanded(
+            child: _entries.isEmpty
+                ? const Center(child: Text('No muscle percentages set'))
+                : ListView.builder(
+                    itemCount: _entries.length,
+                    itemBuilder: (_, i) {
+                      final e = _entries[i];
+                      final def = _sel!;
+                      final muscleName = def.muscles
+                          .firstWhere((rm) => rm.muscle.id == e.muscleId)
+                          .muscle
+                          .name;
+                      final isOverride = _overrides.contains(e.muscleId);
+
+                      return ListTile(
+                        title: Text(muscleName),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SizedBox(
+                              width: 70,
+                              child: TextFormField(
+                                initialValue: e.percent.toStringAsFixed(1),
+                                keyboardType: TextInputType.number,
+                                decoration: const InputDecoration(labelText: '%'),
+                                onFieldSubmitted: (v) => _updatePercent(e.muscleId, v),
+                              ),
+                            ),
+                            if (isOverride)
+                              IconButton(
+                                icon: const Icon(Icons.refresh),
+                                tooltip: 'Revert to default',
+                                onPressed: () => _resetPercent(e.muscleId),
+                              ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+          ),
+      ],
+    ),
+  );
+}
+```
+
+---
+
+### 36.6 Purpose
+
+Enables users to review and adjust the computed percentage of how often each muscle is “hit” by a selected exercise. Overrides are immediately persisted, and users can revert individual muscles back to the default computed values.
+
+
+## 37. Flow Chart Page
+
+**File:** `lib/screens/profile/settings/flow_chart_page.dart`
+
+---
+
+### 37.1 Imports & Dependencies
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:flutter_flow_chart/flutter_flow_chart.dart';
+```
+
+---
+
+### 37.2 State & Fields
+
+* **Dashboard & nodes:**
+
+  ```dart
+  late Dashboard _dashboard;
+  final Map<String, FlowElement> _nodes   = {};
+  final Map<String, NodeData>    _nodeData = {};
+  ```
+* **Selection state:**
+
+  ```dart
+  String? _selectedNode;
+  String? _selectedTargetNode;
+  String? _selectedEvent;
+  ```
+* **Event‑targetable nodes (excludes root):**
+
+  ```dart
+  List<String> get _targetableNodes =>
+    _nodes.keys.where((name) => name != '1st attempt').toList();
+  ```
+* **Counters & layout:**
+
+  ```dart
+  int _successCounter = 0, _failureCounter = 0;
+  static const double _hSpacing = 60, _vSpacing = 100;
+  final Map<int,int> _placement = {};
+  ```
+
+---
+
+### 37.3 Lifecycle & Initialization
+
+```dart
+@override
+void initState() {
+  super.initState();
+  _dashboard = Dashboard(defaultArrowStyle: ArrowStyle.curve);
+  _initializeTree();
+}
+```
+
+* **\_initializeTree():**
+
+  * Creates a root node labeled `"1st attempt"`.
+  * Adds two initial child nodes (`success1`, `fail1`), each with loop‑back arrows to the root.
+  * Registers nodes in `_nodes` and `_nodeData` with their depth and child counts.
+
+---
+
+### 37.4 Node Addition Logic
+
+```dart
+void _addChild({required String parentName, required bool isSuccess}) { ... }
+```
+
+* **Depth & positioning:** Computes row by parent’s depth + 1, then columns by `_placement`.
+* **Naming:** Increments `_successCounter` or `_failureCounter` to name nodes (`success2`, `fail2`, etc.).
+* **Arrow drawing:**
+
+  * Connects parent → new child with a blue segmented arrow.
+  * Manages loop‑back arrows: first child adds a loop, second child removes the parent’s loop.
+  * Adds each new child’s own loop back to the root with a grey curved arrow.
+
+---
+
+### 37.5 Event List Logic
+
+* **Adding an event:**
+
+  ```dart
+  Future<void> _showAddEventDialog() { ... }
+  void _onAddEvent(String newKey, String display) { ... }
+  ```
+
+  * Prompts for a key and optional label.
+  * Creates (on first event) a FlowElement “list box” attached to the node, then reflows its size/position.
+* **Removing an event:**
+
+  ```dart
+  void _onRemoveSelectedEvent() { ... }
+  ```
+
+  * Deletes the selected event; removes the list box entirely if no events remain.
+* **Layout helper:**
+
+  ```dart
+  void _layoutListBox(String nodeName) { ... }
+  ```
+
+  * Recomputes the list box dimensions based on number of events and repositions it next to its node.
+
+---
+
+### 37.6 Build & UI
+
+```dart
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(title: const Text('Vertical Tree FlowChart')),
+    body: Column(
+      children: [
+        // — Node selector + Add‑Success/Failure buttons —
+        Padding(
+          padding: const EdgeInsets.all(8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 150,
+                child: DropdownButton<String>(
+                  hint: const Text('Select node'),
+                  value: _selectableNodes.contains(_selectedNode) ? _selectedNode : null,
+                  items: _selectableNodes.map((n) => DropdownMenuItem(value: n, child: Text(n))).toList(),
+                  onChanged: (v) => setState(() => _selectedNode = v),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  ElevatedButton(
+                    onPressed: (_selectedNode != null && _nodeData[_selectedNode!]!.successCount < 1)
+                        ? _onAddSuccess : null,
+                    child: const Text('+ Success Node'),
+                  ),
+                  const SizedBox(width: 16),
+                  ElevatedButton(
+                    onPressed: (_selectedNode != null && _nodeData[_selectedNode!]!.failureCount < 1)
+                        ? _onAddFailure : null,
+                    child: const Text('+ Failure Node'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+
+        // — Event selector + Add/Remove Event buttons —
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 150,
+                child: DropdownButton<String>(
+                  hint: const Text('Select node'),
+                  value: _targetableNodes.contains(_selectedTargetNode) ? _selectedTargetNode : null,
+                  items: _targetableNodes.map((n) => DropdownMenuItem(value: n, child: Text(n))).toList(),
+                  onChanged: (v) => setState(() { _selectedTargetNode = v; _selectedEvent = null; }),
+                ),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton(onPressed: _showAddEventDialog, child: const Text('+ Event')),
+            ],
+          ),
+        ),
+        if (_selectedTargetNode != null && _nodeData[_selectedTargetNode!]!.events.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 150,
+                  child: DropdownButton<String>(
+                    hint: const Text('Select Event'),
+                    value: _nodeData[_selectedTargetNode!]!.events.contains(_selectedEvent) ? _selectedEvent : null,
+                    items: _nodeData[_selectedTargetNode!]!.events
+                        .map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+                    onChanged: (v) => setState(() => _selectedEvent = v),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(onPressed: _onRemoveSelectedEvent, child: const Text('Remove Event')),
+              ],
+            ),
+          ),
+
+        // — Flow chart canvas —
+        Expanded(
+          child: Container(
+            color: Colors.white,
+            child: FlowChart(
+              dashboard: _dashboard,
+              onDashboardTapped: (_, __) {},
+              onElementPressed: (_, __, ___) {},
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+```
+
+* **Node dropdown + buttons:** Let you pick a node with ≤1 child, then add a success or failure child.
+* **Event controls:** Select a node, add labeled events to its list box, or remove selected events.
+* **FlowChart widget:** Renders the `Dashboard` with all nodes and arrows.
+
+---
+
+### 37.7 NodeData Model
+
+```dart
+class NodeData {
+  int successCount = 0;
+  int failureCount = 0;
+  int depth;
+  final List<String> events = [];
+  FlowElement? listElement;
+  String? successChild;
+  String? failureChild;
+
+  NodeData({this.depth = 0});
+}
+```
+
+* **Fields:**
+
+  * `successCount`/`failureCount`: track children per node.
+  * `depth`: row index in the vertical tree.
+  * `events`: attached event keys/labels.
+  * `listElement`: the FlowElement rendering the event list.
+  * `successChild`/`failureChild`: names of the two possible children.
+
+
+## 38. Muscle Ranking Screen
+
+**File:** `lib/screens/profile/settings/muscle_ranking_screen.dart`
+
+---
+
+### 38.1 Imports & Dependencies
+
+```dart
+import 'package:flutter/material.dart';
+import '../../../repositories/app_repository.dart';
+import '../../../models/models.dart';
+```
+
+---
+
+### 38.2 State & Initialization
+
+* **Repository instance:**
+
+  ```dart
+  final _repo = AppRepository();
+  ```
+* **Data holders:**
+
+  ```dart
+  List<Muscle> _muscles    = [];
+  Map<int,int> _ranks      = {};
+  bool         _isLoading  = true;
+  String?      _error;
+  ```
+* **initState:** Begins loading the full muscle list and their saved rank values.
+
+  ```dart
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+  ```
+
+---
+
+### 38.3 Data Loading
+
+```dart
+Future<void> _load() async {
+  try {
+    final ms   = await _repo.fetchAllMusclesFull();
+    final rows = await _repo.getAllMuscleRanks();
+    if (!mounted) return;
+    setState(() {
+      _muscles   = ms;
+      _ranks     = { for (var r in rows) r.muscleId : r.rank };
+      _isLoading = false;
+    });
+  } catch (e) {
+    if (!mounted) return;
+    setState(() {
+      _error     = e.toString();
+      _isLoading = false;
+    });
+  }
+}
+```
+
+* Fetches all muscle definitions and their current rankings, then updates UI state or captures any error.
+
+---
+
+### 38.4 Rank Update Helper
+
+```dart
+Future<void> _update(int id, String val) async {
+  final newRank = int.tryParse(val) ?? 0;
+  try {
+    await _repo.setMuscleRank(id, newRank);
+    if (!mounted) return;
+    setState(() => _ranks[id] = newRank);
+  } catch (e) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      .showSnackBar(SnackBar(content: Text('Failed to update: $e')));
+  }
+}
+```
+
+* Parses the entered value, updates the repository, and refreshes the in-memory map; errors display a `SnackBar`.
+
+---
+
+### 38.5 Build & UI
+
+```dart
+@override
+Widget build(BuildContext ctx) {
+  if (_isLoading) {
+    return const Scaffold(
+      body: Center(child: CircularProgressIndicator()),
+    );
+  }
+  if (_error != null) {
+    return Scaffold(
+      body: Center(child: Text('Error loading muscles: $_error')),
+    );
+  }
+  if (_muscles.isEmpty) {
+    return const Scaffold(
+      body: Center(child: Text('No muscles defined')),
+    );
+  }
+  return Scaffold(
+    appBar: AppBar(title: const Text('Muscle Rankings')),
+    body: ListView.builder(
+      itemCount: _muscles.length,
+      itemBuilder: (_, i) {
+        final m = _muscles[i];
+        final r = _ranks[m.id] ?? 0;
+        return ListTile(
+          title: Text(m.name),
+          trailing: SizedBox(
+            width: 60,
+            child: TextFormField(
+              initialValue: r.toString(),
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(labelText: 'Rank'),
+              onFieldSubmitted: (v) {
+                if (!mounted) return;
+                _update(m.id, v);
+              },
+            ),
+          ),
+        );
+      },
+    ),
+  );
+}
+```
+
+* **Loading/Error/Empty states:** Shows spinner or message as appropriate.
+* **List of muscles:** Each muscle name with a numeric input to adjust its rank; submitting updates immediately.
+
+---
+
+### 38.6 Purpose
+
+Allows users to assign or adjust bias rankings for each muscle, informing analytics and training recommendations throughout the app.
+
+
+## 39. Profile Page
+
+**File:** `lib/screens/profile/settings/profile_page.dart`
+
+---
+
+### 39.1 Imports & Dependencies
+
+```dart
+import 'package:flutter/material.dart';
+import '../../nutrition/measured_items_page.dart';
+import 'app_settings_page.dart';
+import 'analytics_setting_screen.dart';
+import 'flow_chart_page.dart';
+```
+
+---
+
+### 39.2 Build & UI
+
+```dart
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(title: const Text('Profile')),
+    body: ListView(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      children: [
+
+        ListTile(
+          leading: const Icon(Icons.timeline),
+          title: const Text('Measurements'),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const MeasuredItemsPage()),
+          ),
+        ),
+
+        ListTile(
+          leading: const Icon(Icons.person),
+          title: const Text('User Info'),
+          onTap: () {
+            // TODO: navigate to user info editing screen
+          },
+        ),
+
+        ListTile(
+          leading: const Icon(Icons.settings),
+          title: const Text('Settings'),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const AppSettingsPage()),
+          ),
+        ),
+
+        ListTile(
+          leading: const Icon(Icons.bar_chart),
+          title: const Text('Workout Settings'),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const AnalyticsSettingsScreen()),
+          ),
+        ),
+
+        ListTile(
+          leading: const Icon(Icons.account_tree_outlined),
+          title: const Text('Flowchart Example'),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const FlowChartPage()),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+```
+
+---
+
+### 39.3 Purpose
+
+This screen serves as the user's central profile hub, providing quick access to:
+
+* **Measurements:** View and track all logged measurement items.
+* **User Info:** (Placeholder) Edit personal profile details.
+* **Settings:** Export/import database and general app settings.
+* **Workout Settings:** Configure analytics and training bias options.
+* **Flowchart Example:** Demo of the dynamic flow‑chart UI component.
+
+Each `ListTile` routes to the relevant settings or feature screen, using a `ListView` to ensure the menu scrolls if needed.
+
+
+
+## 40. Volume Boundaries Screen
+
+**File:** `lib/screens/profile/settings/volume_boundaries_screen.dart`
+
+---
+
+### 40.1 Imports & Dependencies
+
+```dart
+import 'package:flutter/material.dart';
+import '../../../repositories/app_repository.dart';
+import '../../../models/models.dart';
+```
+
+---
+
+### 40.2 State & Controllers
+
+* **Repository instance:**
+
+  ```dart
+  final _repo = AppRepository();
+  ```
+* **Tab controller:**
+
+  ```dart
+  late final TabController _tabCtrl;
+  ```
+* **Lookup data & loading state:**
+
+  ```dart
+  List<BodyPart> _bps = [];
+  List<Muscle>   _ms  = [];
+  bool           _isLoadingLookups = true;
+  String?        _lookupError;
+  ```
+* **Current selections:**
+
+  ```dart
+  BodyPart? _selBp;
+  Muscle?   _selM;
+  ```
+* **Text controllers for boundaries:**
+
+  ```dart
+  final _bpCtrls = List.generate(4, (_) => TextEditingController());
+  final _mCtrls  = List.generate(4, (_) => TextEditingController());
+  ```
+* **Loading flags per tab:**
+
+  ```dart
+  bool _isLoadingBp = false;
+  bool _isLoadingM  = false;
+  ```
+
+---
+
+### 40.3 Lifecycle
+
+```dart
+@override
+void initState() {
+  super.initState();
+  _tabCtrl = TabController(length: 2, vsync: this);
+  _loadLookups();
+}
+
+@override
+void dispose() {
+  _tabCtrl.dispose();
+  for (var c in _bpCtrls) c.dispose();
+  for (var c in _mCtrls)  c.dispose();
+  super.dispose();
+}
+```
+
+* Initializes tabs (BodyPart vs. Muscle) and begins fetching lookup lists.
+* Disposes controllers and tab controller on teardown.
+
+---
+
+### 40.4 Data Loading
+
+```dart
+Future<void> _loadLookups() async {
+  try {
+    final bps = await _repo.fetchAllBodyPartsFull();
+    final ms  = await _repo.fetchAllMusclesFull();
+    if (!mounted) return;
+    setState(() {
+      _bps = bps;
+      _ms  = ms;
+      _selBp = bps.isNotEmpty ? bps.first : null;
+      _selM  = ms.isNotEmpty  ? ms.first  : null;
+      _lookupError = null;
+    });
+    if (_selBp != null) await _loadBpBounds(_selBp!.id);
+    if (_selM  != null) await _loadMBounds(_selM! .id);
+  } catch (e) {
+    if (!mounted) return;
+    setState(() => _lookupError = e.toString());
+  } finally {
+    if (!mounted) return;
+    setState(() => _isLoadingLookups = false);
+  }
+}
+```
+
+* Fetches and populates both BodyPart and Muscle lists.
+* Initializes selection to first item in each list.
+* Triggers loading of their respective volume boundaries.
+
+---
+
+### 40.5 Boundary Loading Helpers
+
+```dart
+Future<void> _loadBpBounds(int id) async { ... }
+Future<void> _loadMBounds(int id) async { ... }
+```
+
+* Each clears its controllers, sets loading flag, fetches `VolumeBoundaries` for the selected id, and populates the four text fields:
+
+  1. Maintenance
+  2. Min Effective
+  3. Max Adaptive
+  4. Max Recoverable
+* Errors are shown via `SnackBar`.
+
+---
+
+### 40.6 Save Helpers
+
+```dart
+Future<void> _saveBp() async { ... }
+Future<void> _saveM()  async { ... }
+```
+
+* Parse the four inputs; if any invalid, show a `SnackBar`.
+* Construct a `VolumeBoundaries` model and call repository to persist.
+* On success or failure, notify via `SnackBar`.
+
+---
+
+### 40.7 Reusable Form Builder
+
+```dart
+Widget _boundsForm(List<TextEditingController> ctrls, bool isLoading, VoidCallback onSave) => ...
+```
+
+* If `isLoading`, shows a `CircularProgressIndicator`.
+* Otherwise builds a column of four number fields+labels and a “Save” button.
+
+---
+
+### 40.8 Build & UI
+
+```dart
+@override
+Widget build(BuildContext ctx) {
+  return Scaffold(
+    appBar: AppBar(
+      title: const Text('Volume Boundaries'),
+      bottom: TabBar(
+        controller: _tabCtrl,
+        tabs: const [
+          Tab(text: 'BodyPart'),
+          Tab(text: 'Muscle'),
+        ],
+      ),
+    ),
+    body: _isLoadingLookups
+      ? const Center(child: CircularProgressIndicator())
+      : (_lookupError != null)
+        ? Center(child: Text('Error: $_lookupError'))
+        : TabBarView(
+            controller: _tabCtrl,
+            children: [
+              // BodyPart tab
+              Column(
+                children: [
+                  if (_bps.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: DropdownButton<BodyPart>(
+                        isExpanded: true,
+                        value: _selBp,
+                        items: _bps.map((b) => DropdownMenuItem(value: b, child: Text(b.name))).toList(),
+                        onChanged: (b) {
+                          if (b == null) return;
+                          setState(() => _selBp = b);
+                          _loadBpBounds(b.id);
+                        },
+                      ),
+                    ),
+                  Expanded(child: _boundsForm(_bpCtrls, _isLoadingBp, _saveBp)),
+                ],
+              ),
+              // Muscle tab
+              Column(
+                children: [
+                  if (_ms.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: DropdownButton<Muscle>(
+                        isExpanded: true,
+                        value: _selM,
+                        items: _ms.map((m) => DropdownMenuItem(value: m, child: Text(m.name))).toList(),
+                        onChanged: (m) {
+                          if (m == null) return;
+                          setState(() => _selM = m);
+                          _loadMBounds(m.id);
+                        },
+                      ),
+                    ),
+                  Expanded(child: _boundsForm(_mCtrls, _isLoadingM, _saveM)),
+                ],
+              ),
+            ],
+          ),
+  );
+}
+```
+
+* **AppBar:** Includes a `TabBar` to switch between BodyPart and Muscle modes.
+* **Loading & error states:** Shows spinner or error message before tabs appear.
+* **Each tab:** Presents a dropdown to select the entity, then the boundary form for editing and saving.
+
+---
+
+### 40.9 Purpose
+
+Allows trainers or advanced users to define volume ranges (maintenance, minimum effective, maximum adaptive, recovery thresholds) for each body part and muscle, driving personalized analytics and program adjustments elsewhere in the app.

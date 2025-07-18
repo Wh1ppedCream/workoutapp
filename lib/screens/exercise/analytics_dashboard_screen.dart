@@ -1,4 +1,4 @@
-// File: lib/screens/analytics_dashboard_screen.dart
+// File: lib/screens/exercise/analytics_dashboard_screen.dart
 // for muscle and bodypart counts in the last 7 days.
 
 import 'package:flutter/material.dart';

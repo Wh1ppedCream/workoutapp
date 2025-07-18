@@ -1,4 +1,4 @@
-// File: lib/screens/exercise_analytics_screen.dart
+// File: lib/screens/exercise/exercise_analytics_screen.dart
 
 import 'package:flutter/material.dart';
 import '../../repositories/app_repository.dart';

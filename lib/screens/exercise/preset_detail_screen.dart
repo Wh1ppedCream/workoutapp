@@ -1,4 +1,4 @@
-// File: lib/screens/preset_detail_screen.dart
+// File: lib/screens/exercise/preset_detail_screen.dart
 // for viewing and editing a Preset using the PresetSession notifier.
 
 import 'package:env_test/providers/active_session.dart';

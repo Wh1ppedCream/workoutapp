@@ -1,4 +1,4 @@
-// File: lib/screens/log_entry_page.dart
+// File: lib/screens/nutrition/log_entry_page.dart
 
 import 'package:flutter/material.dart';
 import '../../widgets/speed_dial_fab.dart';

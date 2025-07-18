@@ -1,11 +1,11 @@
-// File: lib/screens/analytics_settings_screen.dart
+// File: lib/screens/profile/settings/analytics_setting_screen.dart
 // for viewing and changing settings related to exercise analytics.
 
 import 'package:flutter/material.dart';
 import 'bodypart_muscle_mapping_screen.dart';
 import 'bodypart_ranking_screen.dart';
 import 'muscle_ranking_screen.dart';
-import '../../exercise/volume_boundaries_screen.dart';
+import 'volume_boundaries_screen.dart';
 import '../../exercise/exercise_analytics_screen.dart';
 
 class AnalyticsSettingsScreen extends StatelessWidget {

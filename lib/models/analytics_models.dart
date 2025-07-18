@@ -1,3 +1,5 @@
+// file: lib/models/analytics_models.dart
+
 /// A single rep-max record (for the Metrics tab).
 class RepMaxRow {
   /// NEW: the exercise definition ID (`def_id` in the table)

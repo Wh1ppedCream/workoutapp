@@ -1,4 +1,4 @@
-// File: lib/screens/exercise_muscle_percent_screen.dart
+// File: lib/screens/profile/settings/exercise_muscle_percent_screen.dart
 
 import 'package:flutter/material.dart';
 import '../../../repositories/app_repository.dart';

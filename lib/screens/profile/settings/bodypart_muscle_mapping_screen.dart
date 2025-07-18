@@ -1,4 +1,4 @@
-// File: lib/screens/bodypart_muscle_mapping_screen.dart
+// File: lib/screens/profile/settings/bodypart_muscle_mapping_screen.dart
 
 import 'package:flutter/material.dart';
 import '../../../repositories/app_repository.dart';

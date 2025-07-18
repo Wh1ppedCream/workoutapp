@@ -1,4 +1,4 @@
-// File: lib/profile_page.dart
+// File: lib/screens/profile/settings/profile_page.dart
 import 'package:flutter/material.dart';
 import '../../nutrition/measured_items_page.dart';
 import 'app_settings_page.dart';
