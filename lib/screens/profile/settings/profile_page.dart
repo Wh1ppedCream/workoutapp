@@ -1,8 +1,10 @@
 // File: lib/screens/profile/settings/profile_page.dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../nutrition/measured_items_page.dart';
 import 'app_settings_page.dart';
 import 'analytics_setting_screen.dart';
+import '../../../providers/theme_provider.dart';
 
 // Adjust this path to wherever you put flow_chart_page.dart:
 import 'flow_chart_page.dart';
@@ -18,6 +20,16 @@ class ProfilePage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 8),
         children: [
+          SwitchListTile(
+  title: const Text('Dark Mode'),
+  value: context.watch<ThemeProvider>().mode == ThemeMode.dark,
+  onChanged: (on) {
+    context.read<ThemeProvider>().setMode(
+      on ? ThemeMode.dark : ThemeMode.light
+    );
+  },
+),
+
           ListTile(
             leading: const Icon(Icons.timeline),
             title: const Text('Measurements'),

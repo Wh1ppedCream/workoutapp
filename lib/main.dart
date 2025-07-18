@@ -13,6 +13,8 @@ import 'providers/selected_profile.dart';
 import 'providers/dashboard_config.dart';
 import 'screens/onboarding_flow.dart'; // New import for onboarding
 
+import 'providers/theme_provider.dart';
+
 void main() {
   runApp(
     MultiProvider(
@@ -20,6 +22,7 @@ void main() {
         ChangeNotifierProvider(create: (_) => ActiveSession()),
         ChangeNotifierProvider(create: (_) => SelectedProfile()),
         ChangeNotifierProvider(create: (_) => DashboardConfig()),
+       ChangeNotifierProvider(create: (_) => ThemeProvider()),
       ],
       child: const MyApp(),
     ),
@@ -31,21 +34,29 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return Consumer<ThemeProvider>(
+     builder: (context, themeProv, _) => MaterialApp(
   title: 'Fitness Tracker',
-  theme: ThemeData.from(
-    colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-  ),
-  // old code: home: const MainScreen(),
+ theme: ThemeData.from(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+      ),
+      darkTheme: ThemeData.from(
+        colorScheme: ColorScheme.fromSeed(
+          brightness: Brightness.dark,
+          seedColor: Colors.deepPurple,
+        ),
+      ),
+      themeMode: themeProv.mode,
   // TODO: Replace with conditional logic to show onboarding only once
       home: const OnboardingFlow(),
       // TODO: After onboarding completes, navigate to MainScreen
       routes: {
         '/main': (_) => const MainScreen(),
         },
+    ),
     );
-  }
-}
+   }
+ }
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
