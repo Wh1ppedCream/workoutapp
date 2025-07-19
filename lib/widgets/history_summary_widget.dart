@@ -60,10 +60,10 @@ class HistorySummaryWidget extends StatefulWidget {
   const HistorySummaryWidget({super.key});
 
   @override
-  _HistorySummaryWidgetState createState() => _HistorySummaryWidgetState();
+  HistorySummaryWidgetState createState() => HistorySummaryWidgetState();
 }
 
-class _HistorySummaryWidgetState extends State<HistorySummaryWidget> {
+class HistorySummaryWidgetState extends State<HistorySummaryWidget> {
   static const _tabLabels = ['1W', '1M', '3M', '6M', '1Y', 'All'];
   static const _durations = [7, 30, 90, 180, 365];
 
