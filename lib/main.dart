@@ -68,6 +68,15 @@ class MyApp extends StatelessWidget {
   flowArrowSuccess:        Color(0xFF2E7D32),
   flowArrowFailure:        Color(0xFFC62828),
   flowArrowLoopback:       Color(0xFF757575),
+
+  metricAddBorderColor: Colors.deepPurple, // light-mode border color
+  metricAddIconColor: Colors.deepPurpleAccent, // light-mode icon color
+
+  genericBarAccent: Color(0xFF6200EE),  // your current light-mode border/text color
+
+  presetBadgeBg: Color.fromARGB(255, 78, 218, 65), // light-mode badge background
+  presetBadgeText: Colors.white,    // light-mode badge text color
+
               // add other light-mode overrides here…
             ),
           ],
@@ -109,6 +118,14 @@ class MyApp extends StatelessWidget {
   flowArrowSuccess:        Color(0xFF66BB6A),
   flowArrowFailure:        Color(0xFFEF5350),
   flowArrowLoopback:       Color(0xFF757575),
+
+  metricAddBorderColor: Colors.deepPurpleAccent, // dark-mode border color
+  metricAddIconColor: Colors.deepPurple, // dark-mode icon color
+
+  genericBarAccent: Color(0xFFBB86FC),  // your chosen dark-mode accent
+
+  presetBadgeBg: Color.fromARGB(255, 78, 218, 65), // dark-mode badge background
+  presetBadgeText: Colors.blueGrey,    // dark-mode badge text color
 
               // add other dark-mode overrides here…
             ),

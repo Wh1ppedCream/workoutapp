@@ -38,6 +38,15 @@ final Color? flowChartBackground;
   /// Default arrow color on loopbacks
   final Color? flowArrowLoopback;
 
+  final Color? metricAddBorderColor;
+  final Color? metricAddIconColor;
+
+  /// Accent color for GenericBar (border, text, splash)
+  final Color? genericBarAccent;
+
+  final Color? presetBadgeBg ;
+  final Color? presetBadgeText;
+
 
 // …add more fields for anything you might override…
 
@@ -67,6 +76,14 @@ final Color? flowChartBackground;
     this.flowArrowSuccess,
     this.flowArrowFailure,
     this.flowArrowLoopback,
+
+    this.metricAddBorderColor,
+    this.metricAddIconColor,
+
+    this.genericBarAccent,
+
+    this.presetBadgeBg,
+    this.presetBadgeText,
 
     // …
   });
@@ -98,6 +115,14 @@ final Color? flowChartBackground;
     Color? flowArrowSuccess,
     Color? flowArrowFailure,
     Color? flowArrowLoopback,
+
+    Color? metricAddBorderColor,
+    Color? metricAddIconColor,
+
+    Color? genericBarAccent,
+
+    Color? presetBadgeBg,
+    Color? presetBadgeText,
 
     // …
   }) {
@@ -140,6 +165,13 @@ final Color? flowChartBackground;
       flowArrowFailure: flowArrowFailure ?? this.flowArrowFailure,
       flowArrowLoopback: flowArrowLoopback ?? this.flowArrowLoopback,
 
+      metricAddBorderColor: metricAddBorderColor ?? this.metricAddBorderColor,
+      metricAddIconColor: metricAddIconColor ?? this.metricAddIconColor,
+
+      genericBarAccent: genericBarAccent ?? this.genericBarAccent,
+
+      presetBadgeBg: presetBadgeBg ?? this.presetBadgeBg,
+      presetBadgeText: presetBadgeText ?? this.presetBadgeText,
       
       // …
     );
@@ -180,7 +212,15 @@ final Color? flowChartBackground;
       flowArrowSuccess: Color.lerp(flowArrowSuccess, other.flowArrowSuccess, t),
       flowArrowFailure: Color.lerp(flowArrowFailure, other.flowArrowFailure, t),
       flowArrowLoopback: Color.lerp(flowArrowLoopback, other.flowArrowLoopback, t), 
-      
+
+      metricAddBorderColor: Color.lerp(metricAddBorderColor, other.metricAddBorderColor, t),
+      metricAddIconColor: Color.lerp(metricAddIconColor, other.metricAddIconColor, t),
+
+
+      genericBarAccent: Color.lerp(genericBarAccent, other.genericBarAccent, t),
+
+      presetBadgeBg: Color.lerp(presetBadgeBg, other.presetBadgeBg, t),
+      presetBadgeText: Color.lerp(presetBadgeText, other.presetBadgeText, t),
       // …
     );
   }

@@ -1,6 +1,7 @@
 // File: lib/widgets/current_metrics_section.dart
 
 import 'package:flutter/material.dart';
+import '../theme/theme_extensions.dart';
 
 /// Data holder for a metric tile
 class MetricData {
@@ -72,6 +73,7 @@ class CurrentMetricsSectionState extends State<CurrentMetricsSection> {
   @override
   Widget build(BuildContext context) {
     final fmtDate = '${_lastMeasured.month}/${_lastMeasured.day}';
+    final colors = context.colors;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -94,10 +96,10 @@ class CurrentMetricsSectionState extends State<CurrentMetricsSection> {
                 width: 60,
                 height: 60,
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
+                  border: Border.all(color: colors.metricAddBorderColor!),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.add, size: 24),
+                child: Icon(Icons.add, size: 24, color: colors.metricAddIconColor!),
               ),
             ),
           ],

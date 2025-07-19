@@ -7,6 +7,7 @@ import '../providers/active_session.dart';
 import '../providers/preset_session.dart';
 import '../screens/exercise/preset_detail_screen.dart';
 import 'generic_bar.dart';
+import '../theme/theme_extensions.dart';
 
 /// A colored bar that *knows* how to open, rename, & delete its own preset.
 class PresetBar extends StatelessWidget {
@@ -34,10 +35,13 @@ class PresetBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final title = label.trim().isNotEmpty ? label : 'Preset ${index + 1}';
+    // pull theme defaults if needed (but we'll still use the passed‐in color)
+    final accent = color;
 
     return GenericBar(
       label: title,
-      color: color,
+      // use the same color as before, but via the themed accent slot
+      color: accent,
       onTap: () => _openDetail(context),
       scale: scale,  // <-- pass down scale
       trailing: Row(
@@ -47,7 +51,7 @@ class PresetBar extends StatelessWidget {
           PopupMenuButton<String>(
             icon: Icon(
               Icons.more_vert,
-              color: color,
+              color: accent,
               size: 24 * scale,        // scale the icon
             ),
             onSelected: (action) => _handleMenu(context, action),
@@ -134,16 +138,17 @@ class _AutomaticBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Padding(
       padding: EdgeInsets.only(right: 8 * scale),
       child: CircleAvatar(
         radius: 8 * scale,
-        backgroundColor: Colors.green,
+        backgroundColor: colors.presetBadgeBg!,
         child: Text(
           'A',
           style: TextStyle(
             fontSize: 12 * scale,
-            color: Colors.white,
+            color: colors.presetBadgeText!,
             fontWeight: FontWeight.bold,
           ),
         ),
