@@ -8,6 +8,7 @@ import '../providers/active_session.dart';
 import '../repositories/app_repository.dart';
 import '../screens/exercise/session_screen.dart';
 import 'preset_bar.dart';
+import '../theme/theme_extensions.dart';
 
 /// A self-contained dashboard widget showing:
 /// 1️⃣ Profile selector dropdown
@@ -40,6 +41,7 @@ class _WorkoutDashboardState extends State<WorkoutDashboard> {
   Widget build(BuildContext context) {
     final s = widget.scale;
     final sel = context.watch<SelectedProfile>();
+    final colors = context.colors;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -153,7 +155,8 @@ class _WorkoutDashboardState extends State<WorkoutDashboard> {
               );
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
+              backgroundColor: colors.workoutStartBg!,
+              foregroundColor: colors.workoutStartText!,
               minimumSize: Size.fromHeight(55 * s),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10 * s),

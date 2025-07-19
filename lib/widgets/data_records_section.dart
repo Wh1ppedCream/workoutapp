@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import '../screens/nutrition/log_entry_page.dart';
 
+import '../theme/theme_extensions.dart';
+
 /// A calendar‐style grid plus summary for “Data & Records”.
 class DataRecordsSection extends StatelessWidget {
   const DataRecordsSection({super.key});
@@ -10,6 +12,7 @@ class DataRecordsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final today = DateTime.now();
+    final colors = context.colors;
 
 // Two‐letter labels for Monday–Sunday
     const dayLabels = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
@@ -61,10 +64,12 @@ class DataRecordsSection extends StatelessWidget {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: isToday
-                          ? Colors.green.withValues(alpha: 0.2)
+                          ? colors.dataRecordsTodayBg!.withValues(alpha: 0.2)
                           : Colors.transparent,
                       border: Border.all(
-                        color: isToday ? Colors.green : Colors.grey[400]!,
+                        color: isToday
+                          ? colors.dataRecordsTodayBorder!
+                          : colors.dataRecordsDefaultBorder!,
                       ),
                     ),
                    child: Text(
@@ -72,7 +77,7 @@ class DataRecordsSection extends StatelessWidget {
                       style: Theme.of(context)
                           .textTheme
                           .bodySmall!
-                          .copyWith(color: isToday ? Colors.green : null),
+                          .copyWith(color: isToday ? colors.dataRecordsTodayText! : null),
                     ),
                   ),
                 );
@@ -85,7 +90,10 @@ class DataRecordsSection extends StatelessWidget {
             children: [
               Text('1/7 this week', style: Theme.of(context).textTheme.bodySmall),
               Text('1 all time',    style: Theme.of(context).textTheme.bodySmall),
-              GestureDetector(onTap: () { /* TODO */ }, child: const Icon(Icons.chevron_right, size: 16)),
+              GestureDetector(
+                onTap: () { /* TODO */ },
+                child: Icon(Icons.chevron_right, size: 16, color: colors.dataRecordsChevron!),
+              ),
             ],
           ),
           const Divider(height: 32),

@@ -101,6 +101,30 @@ class MyApp extends StatelessWidget {
   nutritionPageIndicatorActive:   Colors.purple,
 nutritionPageIndicatorInactive: Color(0xFFBDBDBD), // grey.shade400
 
+workoutStartBg:   Color(0xFF4CAF50), // light green
+  workoutStartText: Colors.white,
+
+  dataRecordsTodayBg:         Color(0x33388E3C), // green.shade600 @20% opacity
+  dataRecordsTodayBorder:     Color(0xFF388E3C), // green.shade600
+  dataRecordsTodayText:       Color(0xFF388E3C),
+  dataRecordsDefaultBorder:   Color(0xFFBDBDBD), // grey.shade400
+  dataRecordsChevron:         Color(0xFF757575), // grey.shade600
+
+  pastSessionsProgress:  Color(0xFF6200EE), // e.g. your primary
+  pastSessionsIcon:      Color(0xFF6200EE),
+  pastSessionsDivider:   Color(0xFFBDBDBD), // grey.shade400
+
+  historySummaryProgress:      Color(0xFF6200EE),
+historySummaryHeatmapLow:    Color.fromARGB(255, 224, 224, 224),
+historySummaryHeatmapHigh:   Color(0xFF1565C0), // blue.shade800
+
+
+infoCardBackground: Color(0xFFFFFFFF),
+  infoCardValueText:  Color(0xFF000000),
+  infoCardLabelText:  Color(0xFF757575), // grey.shade600
+  infoCardShadow:     Color(0x22000000), // black12
+
+
 
 
               // add other light-mode overrides here…
@@ -176,6 +200,29 @@ nutritionPageIndicatorInactive: Color(0xFFBDBDBD), // grey.shade400
 
   nutritionPageIndicatorActive:   Colors.purple,
 nutritionPageIndicatorInactive: Color(0xFF757575), // grey.shade600
+
+workoutStartBg:   Color(0xFF81C784), // lighter green for dark
+  workoutStartText: Colors.black,
+
+  dataRecordsTodayBg:         Color(0x2281C784), // green.shade300 @20% opacity
+  dataRecordsTodayBorder:     Color(0xFF81C784), // green.shade300
+  dataRecordsTodayText:       Color(0xFF81C784),
+  dataRecordsDefaultBorder:   Color(0xFF616161), // grey.shade700
+  dataRecordsChevron:         Color(0xFFBDBDBD), // grey.shade400
+
+  pastSessionsProgress:  Color(0xFFBB86FC),
+  pastSessionsIcon:      Color(0xFFBB86FC),
+  pastSessionsDivider:   Color(0xFF616161), // grey.shade700
+
+  historySummaryProgress:      Color(0xFFBB86FC),
+historySummaryHeatmapLow:    Color.fromARGB(255, 161, 161, 161),
+historySummaryHeatmapHigh:   Color(0xFF1565C0), // blue.shade800
+
+infoCardBackground: Color(0xFF222222),
+  infoCardValueText:  Color(0xFFE0E0E0), // grey.shade300
+  infoCardLabelText:  Color(0xFFBDBDBD), // grey.shade400
+  infoCardShadow:     Color(0x66000000), // black40
+
 
               // add other dark-mode overrides here…
             ),

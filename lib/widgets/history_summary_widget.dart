@@ -5,6 +5,8 @@ import '../models/models.dart';
 import '../repositories/app_repository.dart';
 import 'body_heatmap.dart';
 
+import '../theme/theme_extensions.dart';
+
 // Mapping DB BodyPart.name → all SVG <path id="…"> strings
 const Map<String, List<String>> _bodyPartNameToSvgIds = {
   'Neck': ['Neck_frontal', 'neck_rear'],
@@ -35,24 +37,38 @@ class InfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.infoCardBackground,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2))],
+        boxShadow: [BoxShadow(color: colors.infoCardShadow!, blurRadius: 4, offset: Offset(0, 2))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: colors.infoCardValueText,
+            ),
+          ),
           const SizedBox(height: 4),
-          Text(label, style: TextStyle(color: Colors.grey[600], fontSize: 10)),
+          Text(
+           label,
+            style: TextStyle(
+              fontSize: 10,
+              color: colors.infoCardLabelText,
+            ),
+          ),
         ],
       ),
     );
-  }
+ }
 }
 
 /// Widget showing history summary across selectable timeframes via segmented button bar.
@@ -107,13 +123,18 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colors = context.colors;
     return FutureBuilder<void>(
       future: _initialLoadFuture,
       builder: (ctx, snap) {
         if (snap.connectionState != ConnectionState.done) {
-          return const SizedBox(
+          return SizedBox(
             height: 300,
-            child: Center(child: CircularProgressIndicator()),
+            child: Center(
+              child: CircularProgressIndicator(
+                color: colors.historySummaryProgress!,
+              ),
+            ),
           );
         }
         if (snap.hasError) {
@@ -196,6 +217,7 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget> {
   }
 
   Widget _buildLoadedTab(int index) {
+    final colors = context.colors;
     final sessions = _sessionsList[index];
     final rawHeatmap = _heatmapList[index];
 
@@ -224,12 +246,12 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget> {
           width: 250,
           height: 250,
           child: BodyHeatmap(
-            frequencyMap: freqMap,
-            lowColor: Colors.grey.shade300,
-            highColor: Colors.blue.shade800,
-            width: 200,
-            height: 200,
-          ),
+                  frequencyMap: freqMap,
+                  lowColor:  colors.historySummaryHeatmapLow!,
+                  highColor: colors.historySummaryHeatmapHigh!,
+                  width: 200,
+                  height: 200,
+                ),
         ),
         const SizedBox(width: 16),
         Expanded(

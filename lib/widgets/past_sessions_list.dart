@@ -7,6 +7,8 @@ import '../repositories/app_repository.dart';
 import '../screens/exercise/session_detail_screen.dart';
 import '../screens/exercise/full_history_screen.dart';
 
+import '../theme/theme_extensions.dart';
+
 
 /// A scrollable, filterable list of past WorkoutSessions.
 /// Offers a dropdown for “Week”, “Month”, “Year”, “All” timeframes,
@@ -60,6 +62,9 @@ class _PastSessionsListState extends State<PastSessionsList> {
 
   @override
   Widget build(BuildContext context) {
+    // grab our theme extension
+    final colors = context.colors;
+    final cs     = context.cs;
     return SizedBox(
   height: widget.height,
   child: Card(
@@ -72,7 +77,7 @@ class _PastSessionsListState extends State<PastSessionsList> {
             // ─── Header Row: Dropdown + Fullscreen Icon ──────
             Row(
               children: [
-                const Text('Show:'),
+                Text('Show:', style: TextStyle(color: cs.onSurface)),
                 const SizedBox(width: 8),
                 DropdownButton<String>(
                   value: _selected,
@@ -90,7 +95,7 @@ class _PastSessionsListState extends State<PastSessionsList> {
                 ),
                 const Spacer(),
                 IconButton(
-                  icon: const Icon(Icons.fullscreen),
+                  icon: Icon(Icons.fullscreen, color: colors.pastSessionsIcon!),
                   tooltip: 'Fullscreen',
                   onPressed: () {
                     Navigator.of(context).push(
@@ -110,7 +115,9 @@ class _PastSessionsListState extends State<PastSessionsList> {
                 future: _sessionsFuture,
                 builder: (ctx, snap) {
                   if (snap.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
+                    return Center(child: CircularProgressIndicator(
+                      color: colors.pastSessionsProgress!,
+                    ));
                   }
                   if (snap.hasError) {
                     return Center(child: Text('Error: ${snap.error}'));
@@ -122,7 +129,10 @@ class _PastSessionsListState extends State<PastSessionsList> {
                   return ListView.separated(
                     padding: const EdgeInsets.symmetric(vertical: 2),
                     itemCount: sessions.length,
-                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    separatorBuilder: (_, __) => Divider(
+                      height: 1,
+                      color: colors.pastSessionsDivider!,
+                    ),
                     itemBuilder: (ctx, i) {
                       final ses = sessions[i];
                       final dateStr =

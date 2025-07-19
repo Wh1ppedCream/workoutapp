@@ -77,6 +77,43 @@ final Color? nutritionTextDetailsBorder;
 final Color? nutritionPageIndicatorActive;
 final Color? nutritionPageIndicatorInactive;
 
+/// Start Workout button background
+  final Color? workoutStartBg;
+  /// Start Workout button text/icon color
+  final Color? workoutStartText;
+
+/// Background for “today” circle in DataRecordsSection
+  final Color? dataRecordsTodayBg;
+  /// Border for “today” circle
+  final Color? dataRecordsTodayBorder;
+  /// Text color for “today” day number
+  final Color? dataRecordsTodayText;
+  /// Default circle border (non-today)
+  final Color? dataRecordsDefaultBorder;
+  /// Chevron icon color in the summary row
+  final Color? dataRecordsChevron;
+
+  /// Color for the loading spinner in PastSessionsList
+  final Color? pastSessionsProgress;
+  /// Icon color for the fullscreen button
+  final Color? pastSessionsIcon;
+  /// Divider color between list items
+  final Color? pastSessionsDivider;
+
+  final Color? historySummaryProgress;      // spinner
+final Color? historySummaryHeatmapLow;    // body-heatmap “cold” color
+final Color? historySummaryHeatmapHigh;   // body-heatmap “hot” color
+
+/// Background for all InfoCards
+  final Color? infoCardBackground;
+  /// Text color for the “value” line
+  final Color? infoCardValueText;
+  /// Text color for the “label” line
+  final Color? infoCardLabelText;
+  /// Shadow color behind InfoCards
+  final Color? infoCardShadow;
+
+
 
 // …add more fields for anything you might override…
 
@@ -140,6 +177,30 @@ final Color? nutritionPageIndicatorInactive;
     this.nutritionPageIndicatorActive,
     this.nutritionPageIndicatorInactive,
 
+    this.workoutStartBg,
+    this.workoutStartText,
+
+    this.dataRecordsTodayBg,
+    this.dataRecordsTodayBorder,
+    this.dataRecordsTodayText,
+    this.dataRecordsDefaultBorder,
+    this.dataRecordsChevron,
+
+
+    this.pastSessionsProgress,
+    this.pastSessionsIcon,
+    this.pastSessionsDivider,
+
+    this.historySummaryProgress,
+    this.historySummaryHeatmapLow,
+    this.historySummaryHeatmapHigh,
+
+    this.infoCardBackground,
+    this.infoCardValueText,
+    this.infoCardLabelText,
+    this.infoCardShadow,
+
+
     // …
   });
 
@@ -202,6 +263,29 @@ final Color? nutritionPageIndicatorInactive;
 
     Color? nutritionPageIndicatorActive,
     Color? nutritionPageIndicatorInactive,
+
+    Color? workoutStartBg,
+    Color? workoutStartText,
+
+    Color? dataRecordsTodayBg,
+    Color? dataRecordsTodayBorder,
+    Color? dataRecordsTodayText,
+    Color? dataRecordsDefaultBorder,
+    Color? dataRecordsChevron,
+
+
+    Color? pastSessionsProgress,
+    Color? pastSessionsIcon,
+    Color? pastSessionsDivider,
+
+    Color? historySummaryProgress,
+    Color? historySummaryHeatmapLow,
+    Color? historySummaryHeatmapHigh,
+
+    Color? infoCardBackground,
+    Color? infoCardValueText,
+    Color? infoCardLabelText,
+    Color? infoCardShadow,
 
 
     // …
@@ -276,6 +360,31 @@ final Color? nutritionPageIndicatorInactive;
 
       nutritionPageIndicatorActive: nutritionPageIndicatorActive ?? this.nutritionPageIndicatorActive,
       nutritionPageIndicatorInactive: nutritionPageIndicatorInactive ?? this.nutritionPageIndicatorInactive,
+
+      workoutStartBg: workoutStartBg ?? this.workoutStartBg,
+      workoutStartText: workoutStartText ?? this.workoutStartText,
+
+       dataRecordsTodayBg:         dataRecordsTodayBg         ?? this.dataRecordsTodayBg,
+      dataRecordsTodayBorder:     dataRecordsTodayBorder     ?? this.dataRecordsTodayBorder,
+      dataRecordsTodayText:       dataRecordsTodayText       ?? this.dataRecordsTodayText,
+      dataRecordsDefaultBorder:   dataRecordsDefaultBorder   ?? this.dataRecordsDefaultBorder,
+      dataRecordsChevron:         dataRecordsChevron         ?? this.dataRecordsChevron,
+
+
+      pastSessionsProgress:  pastSessionsProgress  ?? this.pastSessionsProgress,
+      pastSessionsIcon:      pastSessionsIcon      ?? this.pastSessionsIcon,
+      pastSessionsDivider:   pastSessionsDivider   ?? this.pastSessionsDivider,
+
+      historySummaryProgress:  historySummaryProgress  ?? this.historySummaryProgress,
+      historySummaryHeatmapLow: historySummaryHeatmapLow ?? this.historySummaryHeatmapLow,
+      historySummaryHeatmapHigh: historySummaryHeatmapHigh ?? this.historySummaryHeatmapHigh,
+
+      infoCardBackground: infoCardBackground ?? this.infoCardBackground,
+      infoCardValueText: infoCardValueText ?? this.infoCardValueText,
+      infoCardLabelText: infoCardLabelText ?? this.infoCardLabelText,
+      infoCardShadow: infoCardShadow ?? this.infoCardShadow,
+
+   
 
       
       // …
@@ -352,6 +461,30 @@ final Color? nutritionPageIndicatorInactive;
       nutritionPageIndicatorActive: Color.lerp(nutritionPageIndicatorActive, other.nutritionPageIndicatorActive, t),
       nutritionPageIndicatorInactive: Color.lerp(nutritionPageIndicatorInactive, other.nutritionPageIndicatorInactive, t),
 
+
+      workoutStartBg: Color.lerp(workoutStartBg, other.workoutStartBg, t),
+      workoutStartText: Color.lerp(workoutStartText, other.workoutStartText, t),
+
+      dataRecordsTodayBg:         Color.lerp(dataRecordsTodayBg,         other.dataRecordsTodayBg,         t),
+      dataRecordsTodayBorder:     Color.lerp(dataRecordsTodayBorder,     other.dataRecordsTodayBorder,     t),
+      dataRecordsTodayText:       Color.lerp(dataRecordsTodayText,       other.dataRecordsTodayText,       t),
+      dataRecordsDefaultBorder:   Color.lerp(dataRecordsDefaultBorder,   other.dataRecordsDefaultBorder,   t),
+      dataRecordsChevron:         Color.lerp(dataRecordsChevron,         other.dataRecordsChevron,         t),
+
+
+      pastSessionsProgress:  Color.lerp(pastSessionsProgress,   other.pastSessionsProgress,   t),
+      pastSessionsIcon:      Color.lerp(pastSessionsIcon,       other.pastSessionsIcon,       t),
+      pastSessionsDivider:   Color.lerp(pastSessionsDivider,    other.pastSessionsDivider,    t),
+
+      historySummaryProgress:  Color.lerp(historySummaryProgress,  other.historySummaryProgress,  t),
+      historySummaryHeatmapLow: Color.lerp(historySummaryHeatmapLow, other.historySummaryHeatmapLow, t),
+      historySummaryHeatmapHigh: Color.lerp(historySummaryHeatmapHigh, other.historySummaryHeatmapHigh, t),
+
+      infoCardBackground: Color.lerp(infoCardBackground, other.infoCardBackground, t),
+      infoCardValueText: Color.lerp(infoCardValueText, other.infoCardValueText, t),
+      infoCardLabelText: Color.lerp(infoCardLabelText, other.infoCardLabelText, t),
+      infoCardShadow: Color.lerp(infoCardShadow, other.infoCardShadow, t),
+  
       // …
     );
   }
