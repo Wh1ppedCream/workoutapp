@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'rounded_progress_indicator.dart';
+import '../theme/theme_extensions.dart';
 
 /// Shows calories and macros in ring charts that can scale via [scale].
 class NutritionCircleDetails extends StatelessWidget {
@@ -69,10 +70,11 @@ class NutritionCircleDetails extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final kcalColor   = Colors.green.shade600;
-    final proteinColor= Theme.of(context).colorScheme.primary;
-    final carbColor   = Colors.blue.shade600;
-    final fatColor    = Colors.orange.shade600;
+    final colors = context.colors;
+    final kcalColor    = colors.nutritionCalorieCircle!;
+    final proteinColor = colors.nutritionProteinCircle!;
+    final carbColor    = colors.nutritionCarbCircle!;
+    final fatColor     = colors.nutritionFatCircle!;
 
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 16 * scale),

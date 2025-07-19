@@ -2,6 +2,8 @@
 
 import 'package:flutter/material.dart';
 
+import '../theme/theme_extensions.dart';
+
 /// Shows calories as a thick horizontal bar (with consumed / target / remaining inside),
 /// and protein, carbs, fat as three vertical bars (remaining at top, consumed at bottom).
 class NutritionBarDetails extends StatelessWidget {
@@ -46,6 +48,10 @@ class NutritionBarDetails extends StatelessWidget {
         ? (fatConsumed / fatTarget).clamp(0.0, 1.0)
         : 0.0;
 
+
+    // pull in AppColors & ColorScheme
+  final colors = context.colors;
+
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 16 * scale),
       child: Column(
@@ -58,7 +64,7 @@ class NutritionBarDetails extends StatelessWidget {
             remaining: remainingCalories,
             factor: pctCal,
             height: 80 * scale,
-            color: Colors.green.shade600,
+            color: colors.nutritionCalorieBar!,
           ),
 
           SizedBox(height: 24 * scale),
@@ -75,7 +81,7 @@ class NutritionBarDetails extends StatelessWidget {
                 factor: pctProtein,
                 height: 140 * scale,
                 width: 50 * scale,
-                color: Theme.of(context).colorScheme.primary,
+                color: colors.nutritionProteinBar!,
               ),
               _buildVerticalBar(
                 context: context,
@@ -85,7 +91,7 @@ class NutritionBarDetails extends StatelessWidget {
                 factor: pctCarb,
                 height: 140 * scale,
                 width: 50 * scale,
-                color: Colors.blue.shade600,
+                color: colors.nutritionCarbBar!,
               ),
               _buildVerticalBar(
                 context: context,
@@ -95,7 +101,7 @@ class NutritionBarDetails extends StatelessWidget {
                 factor: pctFat,
                 height: 140 * scale,
                 width: 50 * scale,
-                color: Colors.orange.shade600,
+                color: colors.nutritionFatBar!,
               ),
             ],
           ),

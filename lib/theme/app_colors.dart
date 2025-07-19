@@ -47,6 +47,36 @@ final Color? flowChartBackground;
   final Color? presetBadgeBg ;
   final Color? presetBadgeText;
 
+  /// Light “Pantry Log” segment background
+  final Color? mealPlanPantryLogBg;
+  /// Light “Add Meal” segment background
+  final Color? mealPlanAddMealBg;
+  /// Light “Plan Meal” segment background
+  final Color? mealPlanPlanMealBg;
+  /// Divider between segments
+  final Color? mealPlanDivider;
+
+  /// Border color for health-trends tiles and the “+” button
+  final Color? healthTrendBorder;
+  /// Icon color for the “+” button and chevrons in trend tiles
+  final Color? healthTrendIcon;
+  final Color? healthTrendLine;
+
+  final Color? nutritionCalorieBar;
+final Color? nutritionProteinBar;
+final Color? nutritionCarbBar;
+final Color? nutritionFatBar;
+
+final Color? nutritionCalorieCircle;
+final Color? nutritionProteinCircle;
+final Color? nutritionCarbCircle;
+final Color? nutritionFatCircle;
+
+final Color? nutritionTextDetailsBorder;
+
+final Color? nutritionPageIndicatorActive;
+final Color? nutritionPageIndicatorInactive;
+
 
 // …add more fields for anything you might override…
 
@@ -84,6 +114,31 @@ final Color? flowChartBackground;
 
     this.presetBadgeBg,
     this.presetBadgeText,
+
+    this.mealPlanPantryLogBg,
+    this.mealPlanAddMealBg,
+    this.mealPlanPlanMealBg,
+    this.mealPlanDivider,
+
+    this.healthTrendBorder,
+    this.healthTrendIcon,
+    this.healthTrendLine,
+
+    this.nutritionCalorieBar,
+    this.nutritionProteinBar,
+    this.nutritionCarbBar,
+    this.nutritionFatBar,
+
+    this.nutritionCalorieCircle,
+    this.nutritionProteinCircle,
+    this.nutritionCarbCircle,
+    this.nutritionFatCircle,
+
+
+    this.nutritionTextDetailsBorder,
+
+    this.nutritionPageIndicatorActive,
+    this.nutritionPageIndicatorInactive,
 
     // …
   });
@@ -123,6 +178,31 @@ final Color? flowChartBackground;
 
     Color? presetBadgeBg,
     Color? presetBadgeText,
+
+    Color? mealPlanPantryLogBg,
+    Color? mealPlanAddMealBg,
+    Color? mealPlanPlanMealBg,
+    Color? mealPlanDivider,
+
+    Color? healthTrendBorder,
+    Color? healthTrendIcon,
+    Color? healthTrendLine,
+
+    Color? nutritionCalorieBar,
+    Color? nutritionProteinBar,
+    Color? nutritionCarbBar,
+    Color? nutritionFatBar,
+
+    Color? nutritionCalorieCircle,
+    Color? nutritionProteinCircle,
+    Color? nutritionCarbCircle,
+    Color? nutritionFatCircle,
+
+    Color? nutritionTextDetailsBorder,
+
+    Color? nutritionPageIndicatorActive,
+    Color? nutritionPageIndicatorInactive,
+
 
     // …
   }) {
@@ -172,6 +252,31 @@ final Color? flowChartBackground;
 
       presetBadgeBg: presetBadgeBg ?? this.presetBadgeBg,
       presetBadgeText: presetBadgeText ?? this.presetBadgeText,
+
+      mealPlanPantryLogBg: mealPlanPantryLogBg ?? this.mealPlanPantryLogBg,
+      mealPlanAddMealBg: mealPlanAddMealBg ?? this.mealPlanAddMealBg,
+      mealPlanPlanMealBg: mealPlanPlanMealBg ?? this.mealPlanPlanMealBg,
+      mealPlanDivider: mealPlanDivider ?? this.mealPlanDivider,
+
+      healthTrendBorder: healthTrendBorder ?? this.healthTrendBorder,
+      healthTrendIcon: healthTrendIcon ?? this.healthTrendIcon,
+      healthTrendLine: healthTrendLine ?? this.healthTrendLine,
+
+      nutritionCalorieBar: nutritionCalorieBar ?? this.nutritionCalorieBar,
+      nutritionProteinBar: nutritionProteinBar ?? this.nutritionProteinBar,
+      nutritionCarbBar: nutritionCarbBar ?? this.nutritionCarbBar,
+      nutritionFatBar: nutritionFatBar ?? this.nutritionFatBar,
+
+      nutritionCalorieCircle: nutritionCalorieCircle ?? this.nutritionCalorieCircle,
+      nutritionProteinCircle: nutritionProteinCircle ?? this.nutritionProteinCircle,
+      nutritionCarbCircle: nutritionCarbCircle ?? this.nutritionCarbCircle,
+      nutritionFatCircle: nutritionFatCircle ?? this.nutritionFatCircle,
+
+      nutritionTextDetailsBorder: nutritionTextDetailsBorder ?? this.nutritionTextDetailsBorder,
+
+      nutritionPageIndicatorActive: nutritionPageIndicatorActive ?? this.nutritionPageIndicatorActive,
+      nutritionPageIndicatorInactive: nutritionPageIndicatorInactive ?? this.nutritionPageIndicatorInactive,
+
       
       // …
     );
@@ -221,6 +326,32 @@ final Color? flowChartBackground;
 
       presetBadgeBg: Color.lerp(presetBadgeBg, other.presetBadgeBg, t),
       presetBadgeText: Color.lerp(presetBadgeText, other.presetBadgeText, t),
+
+      mealPlanPantryLogBg: Color.lerp(mealPlanPantryLogBg, other.mealPlanPantryLogBg, t),
+      mealPlanAddMealBg: Color.lerp(mealPlanAddMealBg, other.mealPlanAddMealBg, t),
+      mealPlanPlanMealBg: Color.lerp(mealPlanPlanMealBg, other.mealPlanPlanMealBg, t),
+      mealPlanDivider: Color.lerp(mealPlanDivider, other.mealPlanDivider, t),
+
+      healthTrendBorder: Color.lerp(healthTrendBorder, other.healthTrendBorder, t),
+      healthTrendIcon: Color.lerp(healthTrendIcon, other.healthTrendIcon, t),
+      healthTrendLine: Color.lerp(healthTrendLine, other.healthTrendLine, t),
+
+
+      nutritionCalorieBar: Color.lerp(nutritionCalorieBar, other.nutritionCalorieBar, t),
+      nutritionProteinBar: Color.lerp(nutritionProteinBar, other.nutritionProteinBar, t),
+      nutritionCarbBar: Color.lerp(nutritionCarbBar, other.nutritionCarbBar, t),
+      nutritionFatBar: Color.lerp(nutritionFatBar, other.nutritionFatBar, t),
+
+      nutritionCalorieCircle: Color.lerp(nutritionCalorieCircle, other.nutritionCalorieCircle, t),
+      nutritionProteinCircle: Color.lerp(nutritionProteinCircle, other.nutritionProteinCircle, t),
+      nutritionCarbCircle: Color.lerp(nutritionCarbCircle, other.nutritionCarbCircle, t),
+      nutritionFatCircle: Color.lerp(nutritionFatCircle, other.nutritionFatCircle, t),
+
+      nutritionTextDetailsBorder: Color.lerp(nutritionTextDetailsBorder, other.nutritionTextDetailsBorder, t),
+
+      nutritionPageIndicatorActive: Color.lerp(nutritionPageIndicatorActive, other.nutritionPageIndicatorActive, t),
+      nutritionPageIndicatorInactive: Color.lerp(nutritionPageIndicatorInactive, other.nutritionPageIndicatorInactive, t),
+
       // …
     );
   }

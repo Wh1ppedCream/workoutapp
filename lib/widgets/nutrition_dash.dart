@@ -6,6 +6,8 @@ import 'meal_plan_add_bar.dart';
 import 'nutrition_circle_details.dart';
 import 'nutrition_bar_details.dart';
 
+import '../theme/theme_extensions.dart';
+
 /// A dashboard section that lets users swipe between different
 /// nutrition detail views, then shows the meal plan/add bar below.
 /// You can pass [scale] to shrink/grow the entire widget.
@@ -45,6 +47,10 @@ class _NutritionDashState extends State<NutritionDash> {
   @override
   Widget build(BuildContext context) {
     final s = widget.scale;
+
+    // pull in our theme extension
+    final colors = context.colors;
+
     final detailWidgets = <Widget>[
       NutritionCircleDetails(
         caloriesConsumed: widget.caloriesConsumed,
@@ -108,8 +114,8 @@ class _NutritionDashState extends State<NutritionDash> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: selected
-                    ? Theme.of(context).primaryColor
-                    : Colors.grey.shade400,
+                  ? colors.nutritionPageIndicatorActive! 
+                  : colors.nutritionPageIndicatorInactive!,
               ),
             );
           }),

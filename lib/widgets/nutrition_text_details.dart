@@ -1,6 +1,7 @@
 // File: lib/widgets/nutrition_text_details.dart
 
 import 'package:flutter/material.dart';
+import '../theme/theme_extensions.dart';
 
 /// Shows calorie stats (Remaining, Consumed, Target)
 /// and macro stats (Protein, Carbs, Fat) in two rows of ValueCards,
@@ -134,7 +135,9 @@ class ValueCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final borderClr = borderColor ?? Colors.grey[300]!;
+    // pull your themed border color if no override was passed
+    final colors    = context.colors;
+    final borderClr = borderColor ?? colors.nutritionTextDetailsBorder!;
 
     // base text styles
     final theme = Theme.of(context);

@@ -77,6 +77,32 @@ class MyApp extends StatelessWidget {
   presetBadgeBg: Color.fromARGB(255, 78, 218, 65), // light-mode badge background
   presetBadgeText: Colors.white,    // light-mode badge text color
 
+  mealPlanPantryLogBg:  Color(0xFFFFF9C4), // yellow.shade100
+  mealPlanAddMealBg:    Color(0xFFC8E6C9), // green.shade100
+  mealPlanPlanMealBg:   Color(0xFFBBDEFB), // blue.shade100
+  mealPlanDivider:      Color(0xFFBDBDBD), // grey.shade400
+
+   healthTrendBorder: Color(0xFFE0E0E0), // grey.shade300
+  healthTrendIcon:   Color(0xFF757575), // grey.shade600 (matches your existing grey icon)
+  healthTrendLine:   Colors.purple, // purple line for health trends
+
+  nutritionCalorieBar: Color.fromARGB(255, 67, 160, 71), // calorie bar color
+  nutritionProteinBar: Color.fromARGB(255, 30, 136, 229), // protein bar color
+  nutritionCarbBar: Color.fromARGB(255, 255, 140, 0), // carb bar color
+  nutritionFatBar: Color.fromARGB(255, 229, 57, 53), // fat bar color
+
+  nutritionCalorieCircle: Color.fromARGB(255, 67, 160, 71), // calorie circle color
+  nutritionProteinCircle: Colors.purple, // protein circle color
+  nutritionCarbCircle: Color.fromARGB(255, 30, 136, 229), // carb circle color
+  nutritionFatCircle: Color.fromARGB(255, 255, 140, 0), // fat circle color
+
+  nutritionTextDetailsBorder: Color.fromARGB(255, 223, 223, 223), // border color for text details
+
+  nutritionPageIndicatorActive:   Colors.purple,
+nutritionPageIndicatorInactive: Color(0xFFBDBDBD), // grey.shade400
+
+
+
               // add other light-mode overrides here…
             ),
           ],
@@ -126,6 +152,30 @@ class MyApp extends StatelessWidget {
 
   presetBadgeBg: Color.fromARGB(255, 78, 218, 65), // dark-mode badge background
   presetBadgeText: Colors.blueGrey,    // dark-mode badge text color
+
+  mealPlanPantryLogBg:  Color(0xFF4E4E1A), // dark yellow
+  mealPlanAddMealBg:    Color(0xFF2E4E2E), // dark green
+  mealPlanPlanMealBg:   Color(0xFF1A2E4E), // dark blue
+  mealPlanDivider:      Color(0xFF616161), // grey.shade700
+
+  healthTrendBorder: Color(0xFF616161), // grey.shade700
+  healthTrendIcon:   Color(0xFFBDBDBD), // grey.shade400
+  healthTrendLine:   Colors.purple, // purple line for health trends
+
+  nutritionCalorieBar: Color.fromARGB(255, 102, 187, 106), // dark green for calorie bar
+  nutritionProteinBar: Color.fromARGB(255, 66, 165, 245), // dark blue for protein bar
+  nutritionCarbBar: Color.fromARGB(255, 255, 167, 38), // dark orange for carb bar
+  nutritionFatBar: Color.fromARGB(255, 239, 83, 80), // dark red for fat bar
+
+  nutritionCalorieCircle: Color.fromARGB(255, 102, 187, 106), // dark green for calorie circle
+  nutritionProteinCircle: Color.fromARGB(255, 181, 60, 202), // dark purple for protein circle
+  nutritionCarbCircle: Color.fromARGB(255, 66, 165, 245), // dark blue for carb circle
+  nutritionFatCircle: Color.fromARGB(255, 255, 167, 38), // dark orange for fat circle
+
+  nutritionTextDetailsBorder: Color.fromARGB(255, 100, 100, 100), // dark grey for text details border
+
+  nutritionPageIndicatorActive:   Colors.purple,
+nutritionPageIndicatorInactive: Color(0xFF757575), // grey.shade600
 
               // add other dark-mode overrides here…
             ),

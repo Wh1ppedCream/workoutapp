@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../screens/nutrition/default_trend_page.dart';
 
+import '../theme/theme_extensions.dart';
+
 /// Minimal data-holder for one trend tile.
 class TrendData {
   String title;
@@ -67,6 +69,9 @@ class HealthTrendsSectionState extends State<HealthTrendsSection> {
 
   @override
   Widget build(BuildContext context) {
+      final colors = context.colors;
+
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -104,11 +109,11 @@ class HealthTrendsSectionState extends State<HealthTrendsSection> {
                     width: 120,
                     margin: const EdgeInsets.only(right: 8),
                     decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey[300]!),
+                      border: Border.all(color: colors.healthTrendBorder!),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Center(
-                      child: Icon(Icons.add, size: 32, color: Colors.grey),
+                    child: Center(
+                      child: Icon(Icons.add, size: 32, color: colors.healthTrendIcon!),
                     ),
                   ),
                 );
@@ -136,6 +141,7 @@ class _TrendTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -144,7 +150,7 @@ class _TrendTile extends StatelessWidget {
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
-          border: Border.all(color: Colors.grey[300]!),
+          border: Border.all(color: colors.healthTrendBorder!),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Column(
@@ -163,7 +169,7 @@ class _TrendTile extends StatelessWidget {
                       barWidth: 2,
                       dotData: FlDotData(show: false),
                       belowBarData: BarAreaData(show: false),
-                      color: Theme.of(context).primaryColor,
+                      color: colors.healthTrendLine!,
                     ),
                   ],
                   minX: spots.first.x,
@@ -179,7 +185,7 @@ class _TrendTile extends StatelessWidget {
               children: [
                 Text(value, style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(width: 4),
-                const Icon(Icons.chevron_right, size: 16),
+                Icon(Icons.chevron_right, size: 16, color: colors.healthTrendIcon!),
               ],
             ),
           ],

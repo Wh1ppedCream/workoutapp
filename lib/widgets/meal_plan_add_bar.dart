@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../screens/nutrition/pantry_log_page.dart';
 import '../screens/nutrition/food_logging_page.dart';
 import '../screens/nutrition/plan_meal_page.dart';
+import '../theme/theme_extensions.dart';
 
 class MealPlanAddBar extends StatelessWidget {
   /// Scale factor for all dimensions (padding, radius, divider thickness).
@@ -13,7 +14,8 @@ class MealPlanAddBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dividerColor = Colors.grey.shade400;
+    final colors = context.colors;
+    final dividerColor = colors.mealPlanDivider!;
     final margin = EdgeInsets.symmetric(
       horizontal: 16 * scale,
       vertical: 8 * scale,
@@ -32,7 +34,7 @@ class MealPlanAddBar extends StatelessWidget {
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.yellow.shade100,
+                color: colors.mealPlanPantryLogBg!,
                 borderRadius: BorderRadius.horizontal(
                   left: Radius.circular(24 * scale),
                 ),
@@ -67,7 +69,7 @@ class MealPlanAddBar extends StatelessWidget {
           // Add Meal (light green)
           Expanded(
             child: Container(
-              color: Colors.green.shade100,
+              color: colors.mealPlanAddMealBg!,
               child: InkWell(
                 onTap: () {
                   Navigator.of(context).push(
@@ -96,7 +98,7 @@ class MealPlanAddBar extends StatelessWidget {
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.blue.shade100,
+                color: colors.mealPlanPlanMealBg!,
                 borderRadius: BorderRadius.horizontal(
                   right: Radius.circular(24 * scale),
                 ),
