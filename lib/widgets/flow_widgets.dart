@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_flow_chart/flutter_flow_chart.dart';
 
+import '../theme/app_colors.dart';
+
 /// Data class to track child counts, depth, and event list for each node.
 class NodeData {
   int successCount = 0;
@@ -156,6 +158,7 @@ class FlowChartWidgetState extends State<FlowChartWidget> {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
+            
             onPressed: () {
               final k = keyCtrl.text.trim();
               if (k.isEmpty) return;
@@ -215,7 +218,7 @@ class FlowChartWidgetState extends State<FlowChartWidget> {
   }
 
   ArrowParams _arrow(FlowElement f, FlowElement t) => ArrowParams(
-        color: Colors.blue,
+        color: Colors.green,
         thickness: 2,
         style: ArrowStyle.segmented,
         startArrowPosition: Alignment.bottomCenter,
@@ -223,7 +226,7 @@ class FlowChartWidgetState extends State<FlowChartWidget> {
       );
 
   ArrowParams _loopArrow(FlowElement f, FlowElement t) => ArrowParams(
-        color: Colors.black26,
+        color: Colors.yellow.withValues(alpha: 0.3),
         thickness: 2,
         style: ArrowStyle.curve,
         startArrowPosition: Alignment.centerLeft,
@@ -232,6 +235,11 @@ class FlowChartWidgetState extends State<FlowChartWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final theme  = Theme.of(context);
+final cs     = theme.colorScheme;
+final extras = theme.extension<AppColors>()!;
+
+
     return Column(
       children: [
         // success/fail controls
@@ -248,6 +256,10 @@ class FlowChartWidgetState extends State<FlowChartWidget> {
                 onChanged: (v) => setState(() => _selectedNode = v),
               ),
               ElevatedButton(
+                style: ElevatedButton.styleFrom(
+    backgroundColor: extras.buttonBg ?? cs.primary,
+    foregroundColor: extras.buttonText ?? cs.onPrimary,
+  ),
                 onPressed: (_selectedNode == null || _nodeData[_selectedNode!]!.successCount >= 1)
                     ? null
                     : () {
@@ -257,6 +269,10 @@ class FlowChartWidgetState extends State<FlowChartWidget> {
                 child: const Text('Add Success Node'),
               ),
               ElevatedButton(
+                style: ElevatedButton.styleFrom(
+    backgroundColor: extras.buttonBg ?? cs.primary,
+    foregroundColor: extras.buttonText ?? cs.onPrimary,
+  ),
                 onPressed: (_selectedNode == null || _nodeData[_selectedNode!]!.failureCount >= 1)
                     ? null
                     : () {
@@ -284,6 +300,10 @@ class FlowChartWidgetState extends State<FlowChartWidget> {
               ),
               const SizedBox(width: 8),
               ElevatedButton(
+                style: ElevatedButton.styleFrom(
+    backgroundColor: extras.buttonBg ?? cs.primary,
+    foregroundColor: extras.buttonText ?? cs.onPrimary,
+  ),
                 onPressed: _showAddEventDialog,
                 child: const Text('+ Event'),
               ),
@@ -303,6 +323,10 @@ class FlowChartWidgetState extends State<FlowChartWidget> {
                 ),
                 const SizedBox(width: 8),
                 ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+    backgroundColor: extras.buttonBg ?? cs.primary,
+    foregroundColor: extras.buttonText ?? cs.onPrimary,
+  ),
                   onPressed: _onRemoveSelectedEvent,
                   child: const Text('Remove Event'),
                 ),
@@ -312,7 +336,7 @@ class FlowChartWidgetState extends State<FlowChartWidget> {
         // flow chart area
         Expanded(
           child: Container(
-            color: Colors.white,
+            color: extras.flowChartBackground ?? cs.surface,
             child: FlowChart(
               dashboard: _dashboard,
               onDashboardTapped: (_, __) {},
@@ -342,9 +366,16 @@ class NodeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme  = Theme.of(context);
+final cs     = theme.colorScheme;
+final extras = theme.extension<AppColors>()!;
+
     return SizedBox(
       width: 150,
       child: DropdownButton<String>(
+        
+  dropdownColor: extras.dialogBackground ?? cs.surface,
+  style: theme.textTheme.bodyMedium!.copyWith(color: cs.onSurface),
         isExpanded: true,
         hint: Text(hint),
         value: selected,

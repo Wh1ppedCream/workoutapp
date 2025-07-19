@@ -9,6 +9,8 @@ import '../../models/preset_models.dart';
 import '../../repositories/app_repository.dart';
 import '../../widgets/flow_screen_widgets.dart';
 
+import '../../theme/theme_extensions.dart';
+
 enum AddSetMode { explicit, copy }
 
 /// Screen to edit the automatic‐preset flowchart for a given preset.
@@ -42,6 +44,27 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
   static const double _hSpacing = 100;
   static const double _vSpacing = 100;
   static const Offset _baseOffset = Offset(60, 50);
+
+@override
+void didChangeDependencies() {
+  super.didChangeDependencies();
+  final colors = context.colors;
+  final cs     = context.cs;
+
+  final bg   = colors.flowChartBackground!;
+  final grid = cs.brightness == Brightness.dark
+    ? Colors.white.withValues(alpha: 0.15)   // light grid in dark mode
+    : colors.flowChartGrid!;            // theme default in light mode
+
+  _dashboard.setGridBackgroundParams(
+    GridBackgroundParams(
+      backgroundColor: bg,
+      gridColor:       grid,
+    ),
+  );
+}
+
+
 
   @override
   void initState() {
@@ -80,7 +103,19 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
   }
 
   void _buildDashboard() {
-    _dashboard = Dashboard(defaultArrowStyle: ArrowStyle.curve);
+  final extras = context.colors;
+
+    // 1) Create dashboard
+  _dashboard = Dashboard(defaultArrowStyle: ArrowStyle.curve);
+
+  // 2) Re-set your grid colors on the fresh dashboard
+  final colors = context.colors;
+  _dashboard.setGridBackgroundParams(
+    GridBackgroundParams(
+      backgroundColor: colors.flowChartBackground!,
+      gridColor:       colors.flowChartGrid!,
+    ),
+  );
     _nodes.clear();
     _nodeData.clear();
     _placement.clear();
@@ -119,6 +154,9 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
           position: pos,
           size: const Size(60, 30),
           text: name,
+          backgroundColor: extras.flowNodeBg!,
+   borderColor:     extras.flowNodeBorder!,
+   textColor:       extras.flowNodeText!,
           textSize: 7,
           kind: ElementKind.rectangle,
           handlers: const [
@@ -138,13 +176,20 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
         final fromEl = _nodes[e.from]!;
         final toEl = _nodes[e.to]!;
         final isSucc = e.outcome == 'success';
+
+        // grab your colors once per loop
+
         _dashboard.addNextById(
           fromEl,
           toEl.id,
           ArrowParams(
-            color: isSucc ? Colors.blue : Colors.red,
-            thickness: 2,
-            style: isSucc ? ArrowStyle.segmented : ArrowStyle.curve,
+            color: isSucc
+     ? extras.flowArrowSuccess! // ← use your success arrow color
+     : extras.flowArrowFailure!,// ← use your failure arrow color
+          thickness: 2,
+          style: isSucc
+            ? ArrowStyle.segmented
+            : ArrowStyle.curve,
             startArrowPosition: Alignment.bottomCenter,
             endArrowPosition: Alignment.topCenter,
           ),
@@ -163,10 +208,14 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
   }
 
   void _initializeDefaultTree() {
+    final extras = context.colors;
     final root = FlowElement(
       position: const Offset(60, 50),
       size: const Size(60, 30),
       text: '1st attempt',
+      backgroundColor: extras.flowNodeBg!,
+   borderColor:     extras.flowNodeBorder!,
+   textColor:       extras.flowNodeText!,
       textSize: 7,
       kind: ElementKind.rectangle,
       handlers: const [
@@ -203,6 +252,7 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
   }
 
   void _applyLoopbacks() {
+    final extras = context.colors;
     final rootEl = _nodes['1st attempt']!;
     final hasSucc = <String, bool>{};
     final hasFail = <String, bool>{};
@@ -218,7 +268,7 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
           fromEl,
           rootEl.id,
           ArrowParams(
-            color: Colors.grey,
+            color: extras.flowArrowLoopback!,
             thickness: 2,
             style: ArrowStyle.curve,
             startArrowPosition: Alignment.centerLeft,
@@ -231,7 +281,7 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
           fromEl,
           rootEl.id,
           ArrowParams(
-            color: Colors.grey,
+            color: extras.flowArrowLoopback!,
             thickness: 2,
             style: ArrowStyle.curve,
             startArrowPosition: Alignment.centerLeft,
@@ -243,6 +293,7 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
   }
 
   void _createBranchNode(String parent, String name, String outcome) {
+    final extras = context.colors;
     final pData = _nodeData[parent]!;
     final depth = pData.depth + 1;
     final idx = (_placement[depth] ?? 0);
@@ -253,6 +304,9 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
       position: pos,
       size: const Size(60, 30),
       text: name,
+      backgroundColor: extras.flowNodeBg!,
+   borderColor:     extras.flowNodeBorder!,
+   textColor:       extras.flowNodeText!,
       textSize: 7,
       kind: ElementKind.rectangle,
       handlers: const [
@@ -266,7 +320,9 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
     _nodes[name] = el;
     _nodeData[name] = _NodeData(depth: depth);
 
-    final branchColor = outcome == 'success' ? Colors.blue : Colors.red;
+    final branchColor = outcome == 'success'
+   ? context.colors.flowArrowSuccess!
+   : context.colors.flowArrowFailure!;
     final branchStyle =
         outcome == 'success' ? ArrowStyle.segmented : ArrowStyle.curve;
     _dashboard.addNextById(
@@ -289,7 +345,7 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
       el,
       rootEl.id,
       ArrowParams(
-        color: Colors.grey,
+        color: context.colors.flowArrowLoopback!,
         thickness: 2,
         style: ArrowStyle.curve,
         startArrowPosition: Alignment.centerLeft,
@@ -515,6 +571,11 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
 
   @override
   Widget build(BuildContext context) {
+
+      //for colors
+    final cs     = context.cs;
+
+
     // branchable nodes
     final outCounts = <String, int>{};
     for (var e in _edges.where((e) => e.outcome == 'success' || e.outcome == 'failure')) {
@@ -541,9 +602,11 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Edit Auto-Preset Flow'),
+        backgroundColor: cs.surface,
+        iconTheme: IconThemeData(color: cs.onSurface),
         actions: [
-          IconButton(icon: const Icon(Icons.build), tooltip: 'Manage Methods', onPressed: _showManageMethodsDialog),
-          IconButton(icon: const Icon(Icons.save), tooltip: 'Save Flow', onPressed: _saveFlow),
+          IconButton(icon: const Icon(Icons.build), color: cs.primary, tooltip: 'Manage Methods', onPressed: _showManageMethodsDialog),
+          IconButton(icon: const Icon(Icons.save), color: cs.primary, tooltip: 'Save Flow', onPressed: _saveFlow),
         ],
       ),
       body: Column(

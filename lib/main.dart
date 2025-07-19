@@ -54,6 +54,20 @@ class MyApp extends StatelessWidget {
   addExerciseFabBg: Color(0xFF6200EE),         // light-mode FAB bg
   addExerciseFabIcon: Colors.white,            // light-mode FAB icon
   dialogBackground: Colors.white,             // light-mode dialogs
+
+  sheetBackground: Colors.white,              // light-mode bottom sheets
+  buttonBg: Colors.deepPurple,                // light-mode button bg
+  buttonText: Colors.white,                   // light-mode button text
+  flowChartBackground: Color.fromARGB(255, 255, 255, 255),     // blackish
+      flowChartGrid:       Color.fromARGB(102, 43, 42, 42),     // 40%-opaque white
+
+// ── new flow-chart defaults ───────────────────
+  flowNodeBg:              Color(0xFFFFFFFF),
+  flowNodeBorder:          Color.fromARGB(255, 93, 188, 226),
+  flowNodeText:            Color(0xFF333333),
+  flowArrowSuccess:        Color(0xFF2E7D32),
+  flowArrowFailure:        Color(0xFFC62828),
+  flowArrowLoopback:       Color(0xFF757575),
               // add other light-mode overrides here…
             ),
           ],
@@ -81,6 +95,21 @@ class MyApp extends StatelessWidget {
   addExerciseFabBg: Color(0xFF3700B3),    // a darker purple
   addExerciseFabIcon: Colors.black,
   dialogBackground: Color(0xFF202020),
+
+  sheetBackground: Color(0xFF303030), // dark grey for bottom sheets
+  buttonBg: Colors.deepPurple, // darker purple for buttons
+  buttonText: Colors.white, // white text for contrast
+  flowChartBackground: Color(0xFF121212),     // blackish
+      flowChartGrid:       Color(0x66FFFFFF),     // 40%-opaque white
+
+  // ── new flow-chart defaults ───────────────────
+  flowNodeBg:              Color(0xFF1E1E1E),
+  flowNodeBorder:          Color.fromARGB(255, 34, 55, 245),
+  flowNodeText:            Color(0xFFE0E0E0),
+  flowArrowSuccess:        Color(0xFF66BB6A),
+  flowArrowFailure:        Color(0xFFEF5350),
+  flowArrowLoopback:       Color(0xFF757575),
+
               // add other dark-mode overrides here…
             ),
           ],

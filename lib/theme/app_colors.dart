@@ -10,7 +10,7 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color? quickBarFoodText;
   final Color? quickBarWorkoutBg;
   final Color? quickBarWorkoutText;
-  // …add more fields for anything you might override…
+  
   final Color? addExerciseFabBg;
 final Color? addExerciseFabIcon;
 final Color? dialogBackground;
@@ -20,6 +20,26 @@ final Color? sheetBackground;
 final Color? buttonBg;
 final Color? buttonText;
 
+//flowchart 
+final Color? flowChartBackground;
+  final Color? flowChartGrid;
+
+  /// Default background for every chart node
+  final Color? flowNodeBg;
+  /// Default border for every chart node
+  final Color? flowNodeBorder;
+  /// Default text color for every chart node
+  final Color? flowNodeText;
+
+  /// Default arrow color on “success” branches
+  final Color? flowArrowSuccess;
+  /// Default arrow color on “failure” branches
+  final Color? flowArrowFailure;
+  /// Default arrow color on loopbacks
+  final Color? flowArrowLoopback;
+
+
+// …add more fields for anything you might override…
 
   const AppColors({
     this.quickBarMeasurementBg,
@@ -37,6 +57,17 @@ final Color? buttonText;
 
     this.buttonBg,
     this.buttonText,
+
+    this.flowChartBackground,
+    this.flowChartGrid,
+
+    this.flowNodeBg,
+    this.flowNodeBorder,  
+    this.flowNodeText,
+    this.flowArrowSuccess,
+    this.flowArrowFailure,
+    this.flowArrowLoopback,
+
     // …
   });
 
@@ -57,6 +88,17 @@ final Color? buttonText;
 
     Color? buttonBg,
     Color? buttonText,
+
+    Color? flowChartBackground,
+    Color? flowChartGrid,
+
+    Color? flowNodeBg,
+    Color? flowNodeBorder,
+    Color? flowNodeText,
+    Color? flowArrowSuccess,
+    Color? flowArrowFailure,
+    Color? flowArrowLoopback,
+
     // …
   }) {
     return AppColors(
@@ -87,6 +129,17 @@ final Color? buttonText;
 
       buttonBg: buttonBg ?? this.buttonBg,
       buttonText: buttonText ?? this.buttonText,
+
+      flowChartBackground: flowChartBackground ?? this.flowChartBackground,
+      flowChartGrid: flowChartGrid ?? this.flowChartGrid,
+
+      flowNodeBg: flowNodeBg ?? this.flowNodeBg,
+      flowNodeBorder: flowNodeBorder ?? this.flowNodeBorder,
+      flowNodeText: flowNodeText ?? this.flowNodeText,
+      flowArrowSuccess: flowArrowSuccess ?? this.flowArrowSuccess,
+      flowArrowFailure: flowArrowFailure ?? this.flowArrowFailure,
+      flowArrowLoopback: flowArrowLoopback ?? this.flowArrowLoopback,
+
       
       // …
     );
@@ -117,6 +170,17 @@ final Color? buttonText;
 
       buttonBg: Color.lerp(buttonBg, other.buttonBg, t),
       buttonText: Color.lerp(buttonText, other.buttonText, t),
+
+      flowChartBackground: Color.lerp(flowChartBackground, other.flowChartBackground, t),
+      flowChartGrid: Color.lerp(flowChartGrid, other.flowChartGrid, t),
+
+      flowNodeBg: Color.lerp(flowNodeBg, other.flowNodeBg, t),
+      flowNodeBorder: Color.lerp(flowNodeBorder, other.flowNodeBorder, t),
+      flowNodeText: Color.lerp(flowNodeText, other.flowNodeText, t),
+      flowArrowSuccess: Color.lerp(flowArrowSuccess, other.flowArrowSuccess, t),
+      flowArrowFailure: Color.lerp(flowArrowFailure, other.flowArrowFailure, t),
+      flowArrowLoopback: Color.lerp(flowArrowLoopback, other.flowArrowLoopback, t), 
+      
       // …
     );
   }

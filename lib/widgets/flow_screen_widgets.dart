@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_flow_chart/flutter_flow_chart.dart';
 import '../models/preset_models.dart';
-import '../theme/app_colors.dart';
+import '../theme/theme_extensions.dart';
 
 // Callback types for reusability
 typedef BranchParentChanged = void Function(String? newParent);
@@ -57,12 +57,12 @@ class BranchControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final extras = Theme.of(context).extension<AppColors>();
-    final dropdownBg = extras?.dialogBackground ?? cs.surface;
+    final cs     = context.cs;
+    final extras = context.colors;
+    final dropdownBg = extras.dialogBackground ?? cs.surface;
     final textColor = cs.onSurface;
-    final btnBg = extras?.buttonBg ?? cs.primary;
-    final btnText = extras?.buttonText ?? cs.onPrimary;
+    final btnBg = extras.buttonBg ?? cs.primary;
+    final btnText = extras.buttonText ?? cs.onPrimary;
 
     return Wrap(
       spacing: 12,
@@ -139,12 +139,12 @@ class MethodControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final extras = Theme.of(context).extension<AppColors>();
-    final dropdownBg = extras?.dialogBackground ?? cs.surface;
+    final cs     = context.cs;
+    final extras = context.colors;
+    final dropdownBg = extras.dialogBackground ?? cs.surface;
     final textColor = cs.onSurface;
-    final btnBg = extras?.buttonBg ?? cs.primary;
-    final btnText = extras?.buttonText ?? cs.onPrimary;
+    final btnBg = extras.buttonBg ?? cs.primary;
+    final btnText = extras.buttonText ?? cs.onPrimary;
 
     return Wrap(
       spacing: 12,
