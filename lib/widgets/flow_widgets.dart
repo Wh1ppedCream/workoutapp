@@ -19,10 +19,10 @@ class FlowChartWidget extends StatefulWidget {
   const FlowChartWidget({super.key});
 
   @override
-  _FlowChartWidgetState createState() => _FlowChartWidgetState();
+  FlowChartWidgetState createState() => FlowChartWidgetState();
 }
 
-class _FlowChartWidgetState extends State<FlowChartWidget> {
+class FlowChartWidgetState extends State<FlowChartWidget> {
   late Dashboard _dashboard;
   final Map<String, FlowElement> _nodes = {};
   final Map<String, NodeData> _nodeData = {};

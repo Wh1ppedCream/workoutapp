@@ -44,10 +44,10 @@ class CurrentMetricsSection extends StatefulWidget {
   const CurrentMetricsSection({super.key});
 
   @override
-  _CurrentMetricsSectionState createState() => _CurrentMetricsSectionState();
+  CurrentMetricsSectionState createState() => CurrentMetricsSectionState();
 }
 
-class _CurrentMetricsSectionState extends State<CurrentMetricsSection> {
+class CurrentMetricsSectionState extends State<CurrentMetricsSection> {
   final DateTime _lastMeasured = DateTime.now();
   final int _daysAgo = 0;
 

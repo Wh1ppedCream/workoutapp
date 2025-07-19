@@ -22,10 +22,10 @@ class HealthTrendsSection extends StatefulWidget {
   const HealthTrendsSection({super.key});
 
   @override
-  _HealthTrendsSectionState createState() => _HealthTrendsSectionState();
+  HealthTrendsSectionState createState() => HealthTrendsSectionState();
 }
 
-class _HealthTrendsSectionState extends State<HealthTrendsSection> {
+class HealthTrendsSectionState extends State<HealthTrendsSection> {
   // start with your two demo tiles
   final List<TrendData> _tiles = [
     TrendData(
