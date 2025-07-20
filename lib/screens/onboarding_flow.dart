@@ -40,6 +40,14 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   bool _useExerciseData = false;
   bool _useMeasurementsData = false;
 
+  // List of all “big” sections in order, and whether the user opted into them
+  List<_Section> get _sections => [
+    _Section('Basics', true),                             // always true
+    _Section('Logging nutritional data', _useNutritionData),
+    _Section('Logging exercise data',    _useExerciseData),
+    _Section('Logging measurements',      _useMeasurementsData),
+  ];
+
   @override
   void dispose() {
     _controller.dispose();
@@ -47,28 +55,50 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   }
 
   List<Widget> _getOnboardingPages() {
-    final pages = <Widget>[
-      _buildWelcomePage(),
-      _buildPersonalInfoPage(),
-      _buildUsageIntentPage(),
-    ];
+    final pages = <Widget>[];
+  //  int sectionIndex = 0;
 
-    if (_useNutritionData) {
-      pages.addAll([
-        _buildAnthropometryPage(),
-        _buildWeightHistoryPage(),
-        _buildExerciseActivityPage(),
-        _buildNutritionPreferencesPage(),
-        _buildTrainingPreferencesPage(),
-      ]);
-    }
+     // — Welcome
+  pages.add(_buildWelcomePage());
+  // Progress: only “Basics” highlighted
+  pages.add(_buildProgressPage(0));
 
-    // TODO: Add exercise-specific pages when _useExerciseData is true
-    // TODO: Add measurement-specific pages when _useMeasurementsData is true
+  // — Basics chunk: Personal + Usage Intent
+  pages.add(_buildPersonalInfoPage());
+  pages.add(_buildUsageIntentPage());
+  // Progress: Basics ✔, Nutrition highlighted (or ✕ if skipped)
+  pages.add(_buildProgressPage(1));
 
-    pages.add(_buildSummaryPage());
-    return pages;
+  // — Nutrition chunk
+  if (_useNutritionData) {
+    pages.add(_buildAnthropometryPage());
+    pages.add(_buildWeightHistoryPage());
+    pages.add(_buildNutritionPreferencesPage());
+    pages.add(_buildTrainingPreferencesPage());
   }
+  // Progress: Nutrition ✔ (or ✕), Exercise highlighted
+  pages.add(_buildProgressPage(2));
+
+  // — Exercise chunk
+  if (_useExerciseData) {
+    pages.add(_buildExerciseActivityPage());
+    pages.add(_buildExerciseDataPage());
+  }
+  // Progress: Exercise ✔ (or ✕), Measurements highlighted
+  pages.add(_buildProgressPage(3));
+
+  // — Measurements chunk
+  if (_useMeasurementsData) {
+    pages.add(_buildMeasurementsPage());
+  }
+
+  // — Final Summary
+  pages.add(_buildSummaryPage());
+
+  return pages;
+}
+
+
 
   void _nextAction() {
     final pages = _getOnboardingPages();
@@ -478,4 +508,118 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       ],
     );
   }
+
+// === NEW METHOD: Exercise section placeholder ===
+Widget _buildExerciseDataPage() {
+  return Column(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: const [
+      Icon(Icons.fitness_center, size: 80, color: Colors.blue),
+      SizedBox(height: 16),
+      Text(
+        'Exercise Data',
+        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        textAlign: TextAlign.center,
+      ),
+      SizedBox(height: 12),
+      Text('Coming soon: questions about your workout habits.'),
+    ],
+  );
+}
+
+// === NEW METHOD: Measurements section placeholder ===
+Widget _buildMeasurementsPage() {
+  return Column(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: const [
+      Icon(Icons.straighten, size: 80, color: Colors.teal),
+      SizedBox(height: 16),
+      Text(
+        'Measurements',
+        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        textAlign: TextAlign.center,
+      ),
+      SizedBox(height: 12),
+      Text('Coming soon: track your body measurements over time.'),
+    ],
+  );
+}
+
+ /// Builds a graphic progress screen for section `currentSection` (0-3).
+ Widget _buildProgressPage(int currentSection) {
+  final secs = _sections;
+  return SingleChildScrollView(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 32),
+        const Text("Let's get started", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        const Text('Your personalized program awaits', style: TextStyle(fontSize: 16)),
+        const SizedBox(height: 24),
+        // Build each section’s row
+        ...List.generate(secs.length, (i) {
+          final s          = secs[i];
+          final isDone     = i < currentSection;
+          final isCurrent  = i == currentSection;
+          final isSkipped  = !s.included;
+
+          Color circleBg;
+          Widget inner;
+          if (isSkipped) {
+            circleBg = Colors.grey.shade400;
+            inner    = const Icon(Icons.close, color: Colors.white);
+          } else if (isDone) {
+            circleBg = Theme.of(context).colorScheme.primary;
+            inner    = const Icon(Icons.check, color: Colors.white);
+          } else if (isCurrent) {
+            circleBg = Theme.of(context).colorScheme.primary;
+            inner    = Text('${i + 1}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold));
+          } else {
+            circleBg = Colors.grey.shade400;
+            inner    = Text('${i + 1}', style: const TextStyle(color: Colors.white70));
+          }
+
+          final labelColor = isSkipped
+            ? Colors.grey
+            : (isDone || isCurrent)
+              ? Theme.of(context).textTheme.bodyLarge!.color
+              : Colors.grey;
+
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Column(
+                  children: [
+                    CircleAvatar(radius: 18, backgroundColor: circleBg, child: inner),
+                    if (i < secs.length - 1)
+                      Container(width: 2, height: 40, color: Colors.grey.shade300),
+                  ],
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 4.0),
+                    child: Text(s.title, style: TextStyle(fontSize: 16, color: labelColor)),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+        const SizedBox(height: 24),
+      ],
+    ),
+  );
+}
+
+}
+
+
+class _Section {
+  final String title;
+  final bool included;
+  const _Section(this.title, this.included);
 }
