@@ -92,6 +92,8 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     pages.add(_buildMeasurementsPage());
   }
 
+   pages.add(_buildProgressPage(4));
+
   // — Final Summary
   pages.add(_buildSummaryPage());
 
@@ -545,7 +547,6 @@ Widget _buildMeasurementsPage() {
   );
 }
 
- /// Builds a graphic progress screen for section `currentSection` (0-3).
  Widget _buildProgressPage(int currentSection) {
   final secs = _sections;
   return SingleChildScrollView(
@@ -553,36 +554,53 @@ Widget _buildMeasurementsPage() {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 32),
-        const Text("Let's get started", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+        const Text(
+          "Let's get started",
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        ),
         const SizedBox(height: 8),
         const Text('Your personalized program awaits', style: TextStyle(fontSize: 16)),
         const SizedBox(height: 24),
-        // Build each section’s row
+
         ...List.generate(secs.length, (i) {
-          final s          = secs[i];
-          final isDone     = i < currentSection;
-          final isCurrent  = i == currentSection;
-          final isSkipped  = !s.included;
+          final s = secs[i];
+          final hasCompleted    = i < currentSection;
+          final shouldShowTick  = hasCompleted && s.included;
+          final shouldShowCross = hasCompleted && !s.included;
+          final isCurrent       = i == currentSection;
 
           Color circleBg;
           Widget inner;
-          if (isSkipped) {
-            circleBg = Colors.grey.shade400;
-            inner    = const Icon(Icons.close, color: Colors.white);
-          } else if (isDone) {
-            circleBg = Theme.of(context).colorScheme.primary;
+
+          if (shouldShowTick) {
+            // ✅ completed and included
+            circleBg = Colors.green;
             inner    = const Icon(Icons.check, color: Colors.white);
-          } else if (isCurrent) {
+          }
+          else if (isCurrent) {
+            // 🔵 the next chunk to do
             circleBg = Theme.of(context).colorScheme.primary;
-            inner    = Text('${i + 1}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold));
-          } else {
+            inner    = Text(
+              '${i + 1}',
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            );
+          }
+          else if (shouldShowCross) {
+            // ❌ skipped *and* past
+            circleBg = Colors.red;
+            inner    = const Icon(Icons.close, color: Colors.white);
+          }
+          else {
+            // ◯ future (not done, not skipped yet)
             circleBg = Colors.grey.shade400;
-            inner    = Text('${i + 1}', style: const TextStyle(color: Colors.white70));
+            inner    = Text(
+              '${i + 1}',
+              style: const TextStyle(color: Colors.white70),
+            );
           }
 
-          final labelColor = isSkipped
-            ? Colors.grey
-            : (isDone || isCurrent)
+          // label text—only full‑color for “done” or “current”
+          final labelColor = (shouldShowTick || isCurrent)
               ? Theme.of(context).textTheme.bodyLarge!.color
               : Colors.grey;
 
@@ -602,13 +620,14 @@ Widget _buildMeasurementsPage() {
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.only(top: 4.0),
-                    child: Text(s.title, style: TextStyle(fontSize: 16, color: labelColor)),
+                    child: Text(secs[i].title, style: TextStyle(fontSize: 16, color: labelColor)),
                   ),
                 ),
               ],
             ),
           );
         }),
+
         const SizedBox(height: 24),
       ],
     ),
