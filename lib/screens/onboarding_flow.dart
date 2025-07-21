@@ -71,7 +71,6 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
 
   // — Nutrition chunk
   if (_useNutritionData) {
-    pages.add(_buildAnthropometryPage());
     pages.add(_buildWeightHistoryPage());
     pages.add(_buildNutritionPreferencesPage());
     pages.add(_buildTrainingPreferencesPage());
@@ -248,10 +247,23 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
             _dob == null ? 'Select date' : _dob!.toLocal().toString().split(' ')[0],
           ),
         ),
+		const SizedBox(height: 16),
+		const Text('Height', style: TextStyle(fontWeight: FontWeight.bold)),
+        TextField(
+          decoration: const InputDecoration(hintText: 'e.g. 5\'10" or 178 cm'),
+          onChanged: (v) => _height = v, // TODO
+        ),
+        const SizedBox(height: 16),
+        const Text('Current Weight', style: TextStyle(fontWeight: FontWeight.bold)),
+        TextField(
+          decoration: const InputDecoration(hintText: 'e.g. 160 lbs or 72 kg'),
+          onChanged: (v) => _weight = v, // TODO
+        ),
       ],
     );
   }
-
+  
+  
   Widget _buildUsageIntentPage() {
     return ListView(
       children: [
@@ -279,25 +291,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     );
   }
 
-  Widget _buildAnthropometryPage() {
-    return ListView(
-      children: [
-        const Text('Height', style: TextStyle(fontWeight: FontWeight.bold)),
-        TextField(
-          decoration: const InputDecoration(hintText: 'e.g. 5\'10" or 178 cm'),
-          onChanged: (v) => _height = v, // TODO
-        ),
-        const SizedBox(height: 16),
-        const Text('Current Weight', style: TextStyle(fontWeight: FontWeight.bold)),
-        TextField(
-          decoration: const InputDecoration(hintText: 'e.g. 160 lbs or 72 kg'),
-          onChanged: (v) => _weight = v, // TODO
-        ),
-      ],
-    );
-  }
-
-  Widget _buildWeightHistoryPage() {
+ Widget _buildWeightHistoryPage() {
     return ListView(
       children: [
         const Text(
