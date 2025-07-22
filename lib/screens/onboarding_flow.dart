@@ -40,6 +40,15 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   bool _useExerciseData = false;
   bool _useMeasurementsData = false;
 
+  // —— add these state fields at the top of your State class —— 
+double _goalWeightValue = 140;      // TODO: initialize from user input / profile
+DateTime _projectedEndDate =        // TODO: calculate based on goal
+    DateTime.now().add(const Duration(days: 30));
+double _weeklyRateLbs = 0.7;        // TODO: bind to goal-rate slider
+double _weeklyRatePct = 0.5;        // TODO: bind to goal-rate slider
+double _monthlyRateLbs = 2.8;       // TODO: calculate from weekly
+double _monthlyRatePct = 2.0;       // TODO: calculate from weekly
+
   
 
   // List of all “big” sections in order, and whether the user opted into them
@@ -74,9 +83,9 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   // — Nutrition chunk
   if (_useNutritionData) {
     pages.add(_buildWeightHistoryPage());
-    pages.add(_buildBodyFatPage());       
-    pages.add(_buildNutritionPreferencesPage());
-    pages.add(_buildTrainingPreferencesPage());
+    pages.add(_buildBodyFatPage());
+    pages.add(_buildNutritionAndTrainingPage());
+    pages.add(_buildNutritionGoalPage());
   }
   // Progress: Nutrition ✔ (or ✕), Exercise highlighted
   pages.add(_buildProgressPage(2));
@@ -516,70 +525,232 @@ Widget _buildBodyFatPage() {
     );
   }
 
-  Widget _buildNutritionPreferencesPage() {
-    return ListView(
-      children: [
-        const Text(
-          'Maintenance calorie estimate',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        TextField(
-          decoration: const InputDecoration(hintText: 'e.g. 2000 kcal'),
-          onChanged: (v) => _maintenanceCalories = v, // TODO
-        ),
-        const SizedBox(height: 16),
-        const Text('Target weight', style: TextStyle(fontWeight: FontWeight.bold)),
-        TextField(
-          decoration: const InputDecoration(hintText: 'e.g. 150 lbs'),
-          onChanged: (v) => _targetWeight = v, // TODO
-        ),
-        const SizedBox(height: 16),
-        const Text('Preferred diet', style: TextStyle(fontWeight: FontWeight.bold)),
-        DropdownButton<String>(
-          value: _preferredDiet,
-          items: <String>['Balanced', 'Low fat', 'Low carb', 'Keto']
-              .map((d) => DropdownMenuItem(value: d, child: Text(d)))
-              .toList(),
-          onChanged: (v) => setState(() => _preferredDiet = v!),
-        ),
-        const SizedBox(height: 16),
-        const Text('Calorie floor', style: TextStyle(fontWeight: FontWeight.bold)),
-        TextField(
-          decoration: const InputDecoration(hintText: 'Minimum kcal'),
-          onChanged: (v) => _calorieFloor = v, // TODO
-        ),
-      ],
-    );
-  }
+Widget _buildNutritionAndTrainingPage() {
+  return ListView(
+    padding: const EdgeInsets.all(16),
+    children: [
+      // — Nutrition prefs
+      const Text(
+        'Preferred diet',
+        style: TextStyle(fontWeight: FontWeight.bold),
+      ),
+      const SizedBox(height: 8),
+      DropdownButton<String>(
+        value: _preferredDiet,
+        items: <String>['Balanced', 'Low fat', 'Low carb', 'Keto']
+            .map((d) => DropdownMenuItem(value: d, child: Text(d)))
+            .toList(),
+        onChanged: (v) => setState(() => _preferredDiet = v!),
+      ),
+      const SizedBox(height: 24),
 
-  Widget _buildTrainingPreferencesPage() {
-    return ListView(
-      children: [
-        const Text(
-          'Training during program',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        ...['None', 'Lifting', 'Cardio', 'Lifting and cardio']
-            .map((opt) => RadioListTile<String>(
-                  title: Text(opt),
-                  value: opt,
-                  groupValue: _trainingType,
-                  onChanged: (v) => setState(() => _trainingType = v!),
-                ))
-            ,
-        const SizedBox(height: 16),
-        const Text('Preferred protein intake', style: TextStyle(fontWeight: FontWeight.bold)),
-        ...['Low', 'Moderate', 'High', 'Very high']
-            .map((opt) => RadioListTile<String>(
-                  title: Text(opt),
-                  value: opt,
-                  groupValue: _proteinPreference,
-                  onChanged: (v) => setState(() => _proteinPreference = v!),
-                ))
-            ,
-      ],
-    );
-  }
+      const Text(
+        'Calorie floor',
+        style: TextStyle(fontWeight: FontWeight.bold),
+      ),
+      const SizedBox(height: 8),
+      TextField(
+        decoration: const InputDecoration(hintText: 'Minimum kcal'),
+        onChanged: (v) => _calorieFloor = v,
+      ),
+      const SizedBox(height: 32),
+
+      // — Training prefs
+      const Text(
+        'Training during program',
+        style: TextStyle(fontWeight: FontWeight.bold),
+      ),
+      ...['None', 'Lifting', 'Cardio', 'Lifting and cardio']
+          .map((opt) => RadioListTile<String>(
+                title: Text(opt),
+                value: opt,
+                groupValue: _trainingType,
+                onChanged: (v) => setState(() => _trainingType = v!),
+              )),
+      const SizedBox(height: 24),
+
+      const Text(
+        'Preferred protein intake',
+        style: TextStyle(fontWeight: FontWeight.bold),
+      ),
+      ...['Low', 'Moderate', 'High', 'Very high']
+          .map((opt) => RadioListTile<String>(
+                title: Text(opt),
+                value: opt,
+                groupValue: _proteinPreference,
+                onChanged: (v) => setState(() => _proteinPreference = v!),
+              )),
+    ],
+  );
+}
+
+
+Widget _buildNutritionGoalPage() {
+  return ListView(
+    padding: const EdgeInsets.all(16),
+    children: [
+      // — Top summary cards —
+      Row(
+        children: [
+          Expanded(
+            child: Card(
+              color: Colors.green.shade700,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    // TODO: replace with actual daily budget
+                    Text(
+                      '2025 kcal',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'initial daily budget',
+                      style: TextStyle(color: Colors.white70),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Card(
+              color: Colors.grey.shade800,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    // TODO: replace with calculated end date
+                    Text(
+                      '${_projectedEndDate.month}/${_projectedEndDate.day}/${_projectedEndDate.year}',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'projected end date',
+                      style: TextStyle(color: Colors.white70),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+
+      const SizedBox(height: 24),
+
+      // — Target weight selector —
+      const Text(
+        'What is your target weight?',
+        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      ),
+      const SizedBox(height: 12),
+      Text(
+        '${_goalWeightValue.round()} lbs',
+        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        textAlign: TextAlign.center,
+      ),
+      Slider(
+        value: _goalWeightValue,
+        min: 100,
+        max: 250,
+        divisions: 150,
+        label: '${_goalWeightValue.round()}',
+        onChanged: (v) => setState(() => _goalWeightValue = v),
+      ),
+
+      const SizedBox(height: 32),
+
+      // — Goal rate slider & stats —
+      const Text(
+        'What is your target goal rate?',
+        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      ),
+      const SizedBox(height: 12),
+      // TODO: swap this for a custom “standard/aggressive” selector if desired
+      Slider(
+        value: _weeklyRatePct,
+        min: 0.1,
+        max: 1.0,
+        divisions: 9,
+        label: '${_weeklyRatePct.toStringAsFixed(1)}% BW/wk',
+        onChanged: (v) => setState(() {
+          _weeklyRatePct = v;
+          _weeklyRateLbs = (_goalWeightValue * v / 100);
+          _monthlyRatePct = v * 4;
+          _monthlyRateLbs = _weeklyRateLbs * 4;
+        }),
+      ),
+      const SizedBox(height: 12),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          Column(
+            children: [
+              Text('-${_weeklyRateLbs.toStringAsFixed(1)} lbs',
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text('-${_weeklyRatePct.toStringAsFixed(1)} % BW',
+                  style: const TextStyle(color: Colors.white70)),
+              const Text('Per Week'),
+            ],
+          ),
+          Column(
+            children: [
+              Text('-${_monthlyRateLbs.toStringAsFixed(1)} lbs',
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text('-${_monthlyRatePct.toStringAsFixed(1)} % BW',
+                  style: const TextStyle(color: Colors.white70)),
+              const Text('Per Month'),
+            ],
+          ),
+        ],
+      ),
+
+      const SizedBox(height: 32),
+
+      // — Macronutrient breakdown (placeholder) —
+      const Text(
+        'Plan Summary',
+        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      ),
+      const SizedBox(height: 12),
+      // TODO: replace with a real pie chart widget
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: const [
+          Text('Carbs', style: TextStyle(color: Colors.green)),  
+          Text('271g'),
+        ],
+      ),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: const [
+          Text('Protein', style: TextStyle(color: Colors.purple)),
+          Text('120g'),
+        ],
+      ),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: const [
+          Text('Fat', style: TextStyle(color: Colors.amber)),
+          Text('94g'),
+        ],
+      ),
+
+    ],
+  );
+}
 
   Widget _buildSummaryPage() {
     return ListView(
