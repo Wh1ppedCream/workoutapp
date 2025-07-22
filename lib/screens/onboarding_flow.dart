@@ -72,6 +72,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   // — Nutrition chunk
   if (_useNutritionData) {
     pages.add(_buildWeightHistoryPage());
+    pages.add(_buildBodyFatPage());       
     pages.add(_buildNutritionPreferencesPage());
     pages.add(_buildTrainingPreferencesPage());
   }
@@ -318,6 +319,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                   onChanged: (v) => setState(() => _weightTrend = v!), // TODO
                 ))
             ,
+            /*
         const SizedBox(height: 16),
         const Text('Bodyfat estimate', style: TextStyle(fontWeight: FontWeight.bold)),
         // TODO: replace with image grid for 5% increments
@@ -338,9 +340,109 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
               .toList(),
           onChanged: (v) => setState(() => _bodyFatEstimate = v!),
         ),
+        */
       ],
     );
   }
+
+  // 2) New _buildBodyFatPage: just the estimator
+Widget _buildBodyFatPage() {
+  const options = <String>[
+    '0-5%',
+    '5-10%',
+    '10-15%',
+    '15-20%',
+    '20-25%',
+    '25-30%',
+    '30-35%',
+    '35-40%',
+  ];
+
+  const assetPaths = <String>[
+  'assets/bodyfat/0-5_bf.png',
+  'assets/bodyfat/5-10_bf.png',
+  'assets/bodyfat/10-15_bf.png',
+  'assets/bodyfat/15-20_bf.png',
+  'assets/bodyfat/20-25_bf.png',
+  'assets/bodyfat/25-30_bf.png',
+  'assets/bodyfat/30-35_bf.png',
+  'assets/bodyfat/35-40_bf.png',
+];
+
+  return ListView(
+    padding: const EdgeInsets.all(16),
+    children: [
+      const Text(
+        'What is your body-fat level?',
+        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+      ),
+      const SizedBox(height: 8),
+      const Text(
+        'Visually assess and estimate, don’t worry about being too precise',
+        style: TextStyle(fontSize: 16),
+      ),
+      const SizedBox(height: 16),
+
+      // 2) Grid of images
+      GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: options.length,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: 1,  // square cells
+        ),
+        itemBuilder: (context, i) {
+          final label = options[i];
+          final path  = assetPaths[i];
+          final isSelected = _bodyFatEstimate == label;
+
+          return GestureDetector(
+            onTap: () => setState(() => _bodyFatEstimate = label),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: isSelected
+                      ? Theme.of(context).colorScheme.primary
+                      : Colors.grey.shade400,
+                  width: isSelected ? 3 : 1,
+                ),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(6),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Image.asset(path, fit: BoxFit.cover),
+                    // semi‑transparent overlay + label
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      child: Container(
+                        color: Colors.black54,
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Text(
+                          label,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    ],
+  );
+}
+
 
   Widget _buildExerciseActivityPage() {
     return ListView(
