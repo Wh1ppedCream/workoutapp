@@ -40,6 +40,8 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   bool _useExerciseData = false;
   bool _useMeasurementsData = false;
 
+  
+
   // List of all “big” sections in order, and whether the user opted into them
   List<_Section> get _sections => [
     _Section('Basics', true),                             // always true
@@ -227,7 +229,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         const Text('Gender', style: TextStyle(fontWeight: FontWeight.bold)),
         DropdownButton<String>(
           value: _gender,
-          items: ['Male', 'Female', 'Other']
+          items: ['Male', 'Female']
               .map((g) => DropdownMenuItem(value: g, child: Text(g)))
               .toList(),
           onChanged: (v) => setState(() => _gender = v!), // TODO
@@ -347,43 +349,58 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
 
   // 2) New _buildBodyFatPage: just the estimator
 Widget _buildBodyFatPage() {
-  const options = <String>[
-    '0-5%',
-    '5-10%',
-    '10-15%',
-    '15-20%',
-    '20-25%',
-    '25-30%',
-    '30-35%',
-    '35-40%',
+  final isFemale = _gender == 'Female';
+
+  // male options & assets
+  final optionsMale = <String>[
+    '0-5%', '5-10%', '10-15%', '15-20%',
+    '20-25%', '25-30%', '30-35%', '35-40%',
+  ];
+  final pathsMale = <String>[
+    'assets/bodyfat/0-5_bf.png',
+    'assets/bodyfat/5-10_bf.png',
+    'assets/bodyfat/10-15_bf.png',
+    'assets/bodyfat/15-20_bf.png',
+    'assets/bodyfat/20-25_bf.png',
+    'assets/bodyfat/25-30_bf.png',
+    'assets/bodyfat/30-35_bf.png',
+    'assets/bodyfat/35-40_bf.png',
   ];
 
-  const assetPaths = <String>[
-  'assets/bodyfat/0-5_bf.png',
-  'assets/bodyfat/5-10_bf.png',
-  'assets/bodyfat/10-15_bf.png',
-  'assets/bodyfat/15-20_bf.png',
-  'assets/bodyfat/20-25_bf.png',
-  'assets/bodyfat/25-30_bf.png',
-  'assets/bodyfat/30-35_bf.png',
-  'assets/bodyfat/35-40_bf.png',
-];
+  // female options & assets
+  final optionsFemale = <String>[
+    '5-10%', '10-15%', '15-20%',
+    '20-25%', '25-30%', '30-35%', '35-40%', '40-45%',
+  ];
+  final pathsFemale = <String>[
+    'assets/bodyfat_woman/5-10_woman.png',
+    'assets/bodyfat_woman/10-15_woman.png',
+    'assets/bodyfat_woman/15-20_woman.png',
+    'assets/bodyfat_woman/20-25_woman.png',
+    'assets/bodyfat_woman/25-30_woman.png',
+    'assets/bodyfat_woman/30-35_woman.png',
+    'assets/bodyfat_woman/35-40_woman.png',
+    'assets/bodyfat_woman/40-45_woman.png',
+  ];
+
+  // pick the right set
+  final options = isFemale ? optionsFemale : optionsMale;
+  final assetPaths = isFemale ? pathsFemale : pathsMale;
 
   return ListView(
     padding: const EdgeInsets.all(16),
     children: [
       const Text(
-        'What is your body-fat level?',
+        'What is your body‑fat level?',
         style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
       ),
       const SizedBox(height: 8),
       const Text(
-        'Visually assess and estimate, don’t worry about being too precise',
+        'Visually assess and estimate; don’t worry about being too precise',
         style: TextStyle(fontSize: 16),
       ),
       const SizedBox(height: 16),
 
-      // 2) Grid of images
       GridView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
@@ -392,7 +409,7 @@ Widget _buildBodyFatPage() {
           crossAxisCount: 2,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
-          childAspectRatio: 1,  // square cells
+          childAspectRatio: 1,
         ),
         itemBuilder: (context, i) {
           final label = options[i];
@@ -417,7 +434,6 @@ Widget _buildBodyFatPage() {
                   fit: StackFit.expand,
                   children: [
                     Image.asset(path, fit: BoxFit.cover),
-                    // semi‑transparent overlay + label
                     Positioned(
                       bottom: 0,
                       left: 0,
