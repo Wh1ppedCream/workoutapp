@@ -5,10 +5,9 @@ import 'package:provider/provider.dart';
 
 import '../providers/selected_profile.dart';
 import '../providers/active_session.dart';
-import '../repositories/app_repository.dart';
 import '../screens/exercise/session_screen.dart';
-import 'preset_bar.dart';
 import '../theme/theme_extensions.dart';
+import 'presets_loaded.dart';
 
 /// A self-contained dashboard widget showing:
 /// 1️⃣ Profile selector dropdown
@@ -27,15 +26,7 @@ class WorkoutDashboard extends StatefulWidget {
 }
 
 class _WorkoutDashboardState extends State<WorkoutDashboard> {
-  static const _palette = [
-    Colors.blue,
-    Colors.orange,
-    Colors.green,
-    Colors.purple,
-    Colors.teal,
-  ];
 
-  final _repo = AppRepository();
 
   @override
   Widget build(BuildContext context) {
@@ -75,71 +66,17 @@ class _WorkoutDashboardState extends State<WorkoutDashboard> {
           ),
         ),
 
-        // 2️⃣ Gym presets list
+
+
+// 2️⃣ Gym presets list (now delegated)
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 16 * s),
-          child: FutureBuilder<List<Map<String, dynamic>>>(
-            future: _repo.fetchAllPresetsRaw(
-                profileId: sel.currentProfile?.id),
-            builder: (ctx, snap) {
-              if (snap.connectionState != ConnectionState.done) {
-                return Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 24 * s),
-                    child: CircularProgressIndicator(),
-                  ),
-                );
-              }
-              if (snap.hasError) {
-                return Padding(
-                  padding: EdgeInsets.all(16 * s),
-                  child: Text('Error loading presets'),
-                );
-              }
-              final rows = snap.data!;
-              if (rows.isEmpty) {
-                return Padding(
-                  padding: EdgeInsets.all(16 * s),
-                  child: Text('No presets found.'),
-                );
-              }
-
-              return Column(
-                children: rows.asMap().entries.map((entry) {
-                  final i = entry.key;
-                  final row = entry.value;
-                  final presetId = row['id'] as int;
-                  final name = row['name'] as String;
-                  final color = _palette[i % _palette.length];
-
-                  return FutureBuilder<Map<String, dynamic>?>(
-                    future: _repo.fetchPresetAutoSettings(presetId),
-                    builder: (ctx2, autoSnap) {
-                      final isAuto = autoSnap.connectionState ==
-                                  ConnectionState.done &&
-                              (autoSnap.data?['is_automatic'] as int? ?? 0) ==
-                                  1;
-
-                      return Padding(
-                        padding:
-                            EdgeInsets.symmetric(vertical: 6 * s),
-                        child: PresetBar(
-                          presetId:   presetId,
-                          label:      name,
-                          color:      color,
-                          index:      i,
-                          isAutomatic:isAuto,
-                          onRefresh:  () => setState(() {}),
-                          scale:      0.8 * s,
-                        ),
-                      );
-                    },
-                  );
-                }).toList(),
-              );
-            },
+          child: PresetsLoaded(
+            scale: 0.8 * s,
+            onRefresh: () => setState(() {}),
           ),
         ),
+
 
         SizedBox(height: 6 * s),
 
