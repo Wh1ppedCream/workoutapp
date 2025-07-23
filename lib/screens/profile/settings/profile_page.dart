@@ -5,6 +5,7 @@ import '../../nutrition/measured_items_page.dart';
 import 'app_settings_page.dart';
 import 'analytics_setting_screen.dart';
 import '../../../providers/theme_provider.dart';
+import 'nav_bar_settings_page.dart';
 
 // Adjust this path to wherever you put flow_chart_page.dart:
 import 'flow_chart_page.dart';
@@ -63,6 +64,14 @@ class ProfilePage extends StatelessWidget {
               MaterialPageRoute(builder: (_) => const FlowChartPage()),
             ),
           ),
+          ListTile(
+  leading: const Icon(Icons.edit),
+  title: const Text('Edit Bottom Tabs'),
+  onTap: () => Navigator.of(context).push(
+    MaterialPageRoute(builder: (_) => const NavBarSettingsPage()),
+  ),
+),
+
         ],
       ),
     );

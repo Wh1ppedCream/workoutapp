@@ -16,6 +16,8 @@ import 'screens/onboarding_flow.dart'; // New import for onboarding
 import 'providers/theme_provider.dart';
 import '../theme/app_colors.dart';
 
+import 'providers/nav_bar_config.dart';
+
 void main() {
   runApp(
     MultiProvider(
@@ -24,6 +26,7 @@ void main() {
         ChangeNotifierProvider(create: (_) => SelectedProfile()),
         ChangeNotifierProvider(create: (_) => DashboardConfig()),
        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+       ChangeNotifierProvider(create: (_) => NavBarConfig()),
       ],
       child: const MyApp(),
     ),
@@ -258,15 +261,6 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
 
-  // List of pages for bottom navigation
-  static final List<Widget> _pages = <Widget>[
-    const DashboardPage(),
-    const TrainPage(),        // Train tab
-    const HistoryScreen(),    // History tab
-    const NutritionPage(),    // Nutrition tab
-    const ProfilePage(),      // Profile tab
-  ];
-
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -275,55 +269,58 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final navConfig = context.watch<NavBarConfig>();
+
+    // 1) While loading, show a spinner
+    if (!navConfig.loaded) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    // 2) Grab the *current* list of tabs & pages
+    final tabs = navConfig.items;
+    final pages = tabs.map((tab) {
+      switch (tab) {
+        case TabItem.dashboard:
+          return const DashboardPage();
+        case TabItem.train:
+          return const TrainPage();
+        case TabItem.history:
+          return const HistoryScreen();
+        case TabItem.nutrition:
+          return const NutritionPage();
+        case TabItem.profile:
+          return const ProfilePage();
+      }
+    }).toList();
+
+    // 3) If the current index is now too big, clamp it
+    if (_selectedIndex >= pages.length) {
+      _selectedIndex = pages.length - 1;
+    }
+
     return Scaffold(
-      body: _pages[_selectedIndex],
+      body: pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
-        
-        // File: lib/main.dart
-        // Customize colors for legibility
-        /*
-        backgroundColor: Colors.white,            // white background
-        selectedItemColor: Colors.deepPurple,     // active icon/text color
-        unselectedItemColor: Colors.black54,      // inactive icon/text color
-        */
-
         backgroundColor: Theme.of(context).colorScheme.surface,
-
         selectedItemColor: Theme.of(context).colorScheme.primary,
-
-        unselectedItemColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard),
-            label: 'Dashboard',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.fitness_center),
-            label: 'Train',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.history),
-            label: 'History',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.restaurant),
-            label: 'Nutrition',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
+        unselectedItemColor:
+            Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+        items: [
+          for (final tab in tabs)
+            BottomNavigationBarItem(
+              icon: Icon(tab.icon),
+              label: tab.title,
+            )
         ],
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
       ),
-    
       floatingActionButton: Consumer<ActiveSession>(
-    builder: (_, session, __) =>
-      session.isActive ? const OngoingSessionFab() : const SizedBox.shrink(),
-  ),
-
+        builder: (_, session, __) =>
+            session.isActive ? const OngoingSessionFab() : const SizedBox.shrink(),
+      ),
     );
   }
 }
