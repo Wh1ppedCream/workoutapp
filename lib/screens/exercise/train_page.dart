@@ -15,6 +15,8 @@ import '../../widgets/drawers.dart';
 import 'gym_profile_screen.dart';
 import 'preset_detail_screen.dart';
 import 'session_screen.dart';
+import 'preset_generation_qa.dart';
+
 
 import '../../widgets/history_content.dart';
 
@@ -183,12 +185,20 @@ class _TrainPageState extends State<TrainPage> {
           ),
         ),
         const Divider(height: 1),
+
         const SizedBox(height: 8),
         GenericBar(
           label: 'Generate Custom Presets',
           color: Colors.purple,
-          onTap: null,
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const PresetGenerationQaScreen(),
+              ),
+            );
+          },
         ),
+
         const SizedBox(height: 8),
         GenericBar(
           label: 'Manually Add Preset',
@@ -207,7 +217,16 @@ class _TrainPageState extends State<TrainPage> {
             setState(() {});
           },
         ),
-        const SizedBox(height: 16),
+        
+        const SizedBox(height: 8),
+
+        GenericBar(
+          label: 'Start Optimized Workout',
+          color: Colors.green,
+          onTap: null,
+        ),
+        
+        const SizedBox(height: 8),
         Padding(
           padding: const EdgeInsets.all(16),
           child: ElevatedButton(

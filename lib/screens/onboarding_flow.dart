@@ -212,7 +212,7 @@ double _monthlyRatePct = 2.0;       // TODO: calculate from weekly
       mainAxisAlignment: MainAxisAlignment.center,
       children: const [
         Text(
-          'Welcome to FitTrack!',
+          "Welcome to 'insert name'!",
           style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           textAlign: TextAlign.center,
         ),
