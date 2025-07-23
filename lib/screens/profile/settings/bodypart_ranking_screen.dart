@@ -14,8 +14,10 @@ class BodyPartRankingScreen extends StatefulWidget {
 class _BodyPartRankingScreenState extends State<BodyPartRankingScreen> {
   final _repo = AppRepository();
   List<BodyPart> _parts = [];
-  Map<int,int>   _ranks = {};
+  Map<int, int> _ranks = {};
   bool _isLoading = true;
+  bool _isSaving = false;
+  bool _dirty = false;
   String? _error;
 
   @override
@@ -27,69 +29,124 @@ class _BodyPartRankingScreenState extends State<BodyPartRankingScreen> {
   Future<void> _load() async {
     try {
       final parts = await _repo.fetchAllBodyPartsFull();
-      final rows  = await _repo.getAllBodyPartRanks();
+      final rows = await _repo.getAllBodyPartRanks();
       if (!mounted) return;
       setState(() {
-        _parts     = parts;
-        _ranks     = { for (var r in rows) r.bodyPartId : r.rank };
+        _parts = parts;
+        _ranks = {for (var r in rows) r.bodyPartId: r.rank};
+        // sort by current rank ascending
+        _parts.sort((a, b) => (_ranks[a.id] ?? 0).compareTo(_ranks[b.id] ?? 0));
         _isLoading = false;
+        _dirty = false;
       });
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error     = e.toString();
+        _error = e.toString();
         _isLoading = false;
       });
     }
   }
 
-  Future<void> _updateRank(int id, String val) async {
-    final newRank = int.tryParse(val) ?? 0;
+  void _onReorder(int oldIndex, int newIndex) {
+    setState(() {
+      if (newIndex > oldIndex) newIndex -= 1;
+      final part = _parts.removeAt(oldIndex);
+      _parts.insert(newIndex, part);
+      // update ranks based on new order
+      for (var i = 0; i < _parts.length; i++) {
+        _ranks[_parts[i].id] = i + 1;
+      }
+      _dirty = true;
+    });
+  }
+
+  Future<void> _saveAll() async {
+    setState(() {
+      _isSaving = true;
+    });
     try {
-      await _repo.setBodyPartRank(id, newRank);
+      for (var entry in _ranks.entries) {
+        await _repo.setBodyPartRank(entry.key, entry.value);
+      }
       if (!mounted) return;
-      setState(() => _ranks[id] = newRank);
+      setState(() {
+        _isSaving = false;
+        _dirty = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Body part ranks saved')),
+      );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text('Failed to update: $e')));
+      setState(() {
+        _isSaving = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to save: \$e')),
+      );
     }
   }
 
   @override
-  Widget build(BuildContext ctx) {
-    if (_isLoading) {
+  Widget build(BuildContext context) {
+    if (_isLoading || _isSaving) {
       return const Center(child: CircularProgressIndicator());
     }
     if (_error != null) {
-      return Center(child: Text('Error: $_error'));
+      return Center(child: Text('Error: \$_error'));
     }
     if (_parts.isEmpty) {
       return const Center(child: Text('No body parts defined'));
     }
-    return ListView.builder(
-      itemCount: _parts.length,
-      itemBuilder: (_, i) {
-        final bp = _parts[i];
-        final rk = _ranks[bp.id] ?? 0;
-        return Material(
-          child: ListTile(
-          title: Text(bp.name),
-          trailing: SizedBox(
-            width: 60,
-            child: TextFormField(
-              initialValue: rk.toString(),
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Rank'),
-              onFieldSubmitted: (v) {
-                if (!mounted) return;
-                _updateRank(bp.id, v);
-              },
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: const Text('Rank Body Parts'),
+      ),
+      body: ReorderableListView.builder(
+        itemCount: _parts.length,
+        onReorder: _onReorder,
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        itemBuilder: (context, index) {
+          final bp = _parts[index];
+          final rk = _ranks[bp.id] ?? index + 1;
+          return ListTile(
+            key: ValueKey(bp.id),
+            leading: ReorderableDragStartListener(
+              index: index,
+              child: const Icon(Icons.drag_handle),
             ),
-          ),
-        )
-        );
-      },
+            title: Text(bp.name),
+            trailing: SizedBox(
+              width: 60,
+              child: TextFormField(
+                initialValue: rk.toString(),
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Rank'),
+                onFieldSubmitted: (v) {
+                  setState(() {
+                    final newRank = int.tryParse(v) ?? rk;
+                    _ranks[bp.id] = newRank;
+                    _dirty = true;
+                    // re-sort list based on updated ranks
+                    _parts.sort((a, b) => (_ranks[a.id] ?? 0).compareTo(_ranks[b.id] ?? 0));
+                  });
+                },
+              ),
+            ),
+          );
+        },
+      ),
+      floatingActionButton: _dirty
+          ? FloatingActionButton(
+              onPressed: _saveAll,
+              child: const Icon(Icons.save),
+            )
+          : null,
     );
   }
 }
