@@ -1,26 +1,64 @@
+// file: lib/widgets/drawers.dart
 import 'package:flutter/material.dart';
 import '../screens/exercise/gym_profile_screen.dart';
 
-/// A simple drawer for main navigation options.
+/// Represents an entry in the main drawer.
+class DrawerItem {
+  final String title;
+  final WidgetBuilder builder;
+
+  const DrawerItem({
+    required this.title,
+    required this.builder,
+  });
+}
+
+/// A simple, configurable drawer for main navigation options.
+/// If [items] is null or empty, shows default placeholder options.
 class MainDrawer extends StatelessWidget {
-  const MainDrawer({super.key});
+  final String headerTitle;
+  final List<DrawerItem>? items;
+
+  const MainDrawer({
+    super.key,
+    this.headerTitle = 'Navigation',
+    this.items,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final useDefault = items == null || items!.isEmpty;
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
-        children: const [
+        children: [
           DrawerHeader(
-            decoration: BoxDecoration(color: Colors.deepPurple),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary,
+            ),
             child: Text(
-              'To be added',
-              style: TextStyle(color: Colors.white, fontSize: 18),
+              headerTitle,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+              ),
             ),
           ),
-          ListTile(title: Text('Option A')),
-          ListTile(title: Text('Option B')),
-          ListTile(title: Text('Option C')),
+          if (useDefault) ...[
+            const ListTile(title: Text('Option A')),
+            const ListTile(title: Text('Option B')),
+            const ListTile(title: Text('Option C')),
+          ] else ...items!.map((item) {
+            return ListTile(
+              title: Text(item.title),
+              onTap: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: item.builder),
+                );
+              },
+            );
+          }),
         ],
       ),
     );
