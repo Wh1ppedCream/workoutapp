@@ -6,7 +6,7 @@ import 'bodypart_muscle_mapping_screen.dart';
 import 'bodypart_ranking_screen.dart';
 import 'muscle_ranking_screen.dart';
 import 'volume_boundaries_screen.dart';
-import '../../exercise/exercise_analytics_screen.dart';
+import 'exercise_analytics_screen.dart';
 
 class AnalyticsSettingsScreen extends StatelessWidget {
   const AnalyticsSettingsScreen({super.key});

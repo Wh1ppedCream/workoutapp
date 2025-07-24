@@ -20,6 +20,10 @@ import 'preset_generation_qa.dart';
 
 import '../../widgets/history_content.dart';
 
+import 'exercise_catalog_page.dart';
+import 'muscle_filter_page.dart';
+import '../profile/settings/gym_exercise_settings_page.dart';
+
 class TrainPage extends StatefulWidget {
   const TrainPage({super.key});
 
@@ -76,7 +80,23 @@ class _TrainPageState extends State<TrainPage> {
     return Consumer2<ActiveSession, SelectedProfile>(
       builder: (_, session, sel, __) => Scaffold(
         key: _scaffoldKey,
-        drawer: const MainDrawer(),
+        drawer: MainDrawer(
+          headerTitle: 'Training Menu',
+          items: [
+            DrawerItem(
+              title: 'Exercise Catalog',
+              builder: (_) => const ExerciseCatalogPage(),
+            ),
+            DrawerItem(
+              title: 'Muscle Filter',
+              builder: (_) => const MuscleFilterPage(),
+            ),
+            DrawerItem(
+              title: 'Gym & Workout Settings',
+              builder: (_) => const GymExerciseSettingsPage(),
+            ),
+          ],
+        ),
         endDrawer: ProfileDrawer(
           profiles: sel.profiles,
           selected: sel.currentProfile,
