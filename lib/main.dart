@@ -17,6 +17,11 @@ import 'providers/theme_provider.dart';
 import '../theme/app_colors.dart';
 
 import 'providers/nav_bar_config.dart';
+import 'screens/measurement_trends_page.dart';
+import 'screens/nutrition_log_page.dart';
+import 'screens/combined_history_page.dart';
+import 'screens/form_posing_page.dart';
+
 
 void main() {
   runApp(
@@ -292,6 +297,14 @@ class _MainScreenState extends State<MainScreen> {
           return const NutritionPage();
         case TabItem.profile:
           return const ProfilePage();
+        case TabItem.measurementsTrends:
+          return const MeasurementsTrendsPage();
+        case TabItem.nutritionLog:
+          return const NutritionLogPage();
+        case TabItem.combinedHistory:
+          return const CombinedHistoryPage();
+        case TabItem.formAndPosing:
+          return const FormPosingPage();
       }
     }).toList();
 

@@ -2,7 +2,17 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 
-enum TabItem { dashboard, train, history, nutrition, profile }
+enum TabItem {
+  dashboard,
+  train,
+  history,              // now “Workout Log”
+  nutrition,
+  profile,
+  measurementsTrends,   // M&T
+  nutritionLog,         // N.Log
+  combinedHistory,      // History (Combined)
+  formAndPosing         // F&P
+}
 
 extension TabItemExtension on TabItem {
   /// Full page titles & settings‐page labels
@@ -18,15 +28,33 @@ extension TabItemExtension on TabItem {
         return 'Nutrition';
       case TabItem.profile:
         return 'Profile';
+      case TabItem.measurementsTrends:
+        return 'Measurements and Trends';
+      case TabItem.nutritionLog:
+        return 'Nutrition Log';
+      case TabItem.combinedHistory:
+        return 'Combined History';
+      case TabItem.formAndPosing:
+        return 'Form and Posing';
+      
     }
   }
 
   /// Under-icon label for the bottom bar
   String get bottomLabel {
     switch (this) {
-      //SHORTENED LABELS IF NEEDED
-//      case TabItem.history:
- //       return 'W.Log';              // short form for nav bar
+      /*SHORTENED LABELS IF NEEDED
+      case TabItem.history:
+       return 'W.Log';              // short form for nav bar
+ case TabItem.measurementsTrends:
+       return 'M&T';
+      case TabItem.nutritionLog:
+        return 'N.Log';
+      case TabItem.combinedHistory:
+        return 'History';
+      case TabItem.formAndPosing:
+        return 'F&P';
+      */
       default:
         return title;
     }
@@ -44,6 +72,14 @@ extension TabItemExtension on TabItem {
         return Icons.restaurant;
       case TabItem.profile:
         return Icons.person;
+      case TabItem.measurementsTrends:
+        return Icons.straighten;
+      case TabItem.nutritionLog:
+        return Icons.receipt_long;
+      case TabItem.combinedHistory:
+        return Icons.timeline;
+      case TabItem.formAndPosing:
+        return Icons.self_improvement;
     }
   }
 }
@@ -57,7 +93,13 @@ class NavBarConfig extends ChangeNotifier {
 
   // Which tabs are enabled (visible)
   // Tabs enabled by default: hide history on first install
-  Set<TabItem> _enabled = TabItem.values.where((tab) => tab != TabItem.history).toSet();
+  Set<TabItem> _enabled = TabItem.values.toSet()
+    ..remove(TabItem.history)
+    ..remove(TabItem.measurementsTrends)
+    ..remove(TabItem.nutritionLog)
+    ..remove(TabItem.combinedHistory)
+    ..remove(TabItem.formAndPosing);
+
 
   bool _loaded = false;
 
@@ -78,16 +120,26 @@ class NavBarConfig extends ChangeNotifier {
 
     final savedOrder = prefs.getStringList(_keyOrder);
     if (savedOrder != null) {
+      // restore user’s saved order...
       _order = savedOrder
         .map((s) => TabItem.values.firstWhere((e) => e.toString() == s))
         .toList();
+      // …then append any new tabs that weren’t in their prefs
+      for (final tab in TabItem.values) {
+        if (!_order.contains(tab)) {
+          _order.add(tab);
+        }
+      }
     }
 
     final savedEnabled = prefs.getStringList(_keyEnabled);
     if (savedEnabled != null) {
+      // restore user’s saved enabled set…
       _enabled = savedEnabled
         .map((s) => TabItem.values.firstWhere((e) => e.toString() == s))
         .toSet();
+      // …and make sure profile can never be turned off
+      _enabled.add(TabItem.profile);
     }
 
     _loaded = true;
@@ -100,9 +152,11 @@ class NavBarConfig extends ChangeNotifier {
   }) async {
     // never allow profile to be disabled
     newEnabled.add(TabItem.profile);
+    // make sure profile is always on
+    newEnabled.add(TabItem.profile);
     _order = newOrder;
     _enabled = newEnabled;
-    notifyListeners();
+   notifyListeners();
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList(_keyOrder, _order.map((e) => e.toString()).toList());
