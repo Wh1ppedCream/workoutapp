@@ -16,7 +16,7 @@ class ProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
+      appBar: AppBar(title: const Text('Profile'), centerTitle: true,),
       // ← changed Column → ListView
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 8),

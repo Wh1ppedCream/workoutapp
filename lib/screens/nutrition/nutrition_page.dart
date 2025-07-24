@@ -41,7 +41,8 @@ final fatTarget     =  70; // grams
     ];
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Nutrition Dashboard')),
+      appBar: AppBar(title: const Text('Nutrition Dashboard'),
+      centerTitle: true,),
       body: SingleChildScrollView(
   child: Column(
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -52,7 +53,6 @@ Padding(
   child: Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      const SizedBox(height: 12),
 
 // ─── Daily summary: date + two-line numeric tally ─────────────────
 NutritionDash(
