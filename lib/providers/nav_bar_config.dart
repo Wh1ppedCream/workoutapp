@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 enum TabItem { dashboard, train, history, nutrition, profile }
 
 extension TabItemExtension on TabItem {
+  /// Full page titles & settings‐page labels
   String get title {
     switch (this) {
       case TabItem.dashboard:
@@ -12,11 +13,22 @@ extension TabItemExtension on TabItem {
       case TabItem.train:
         return 'Train';
       case TabItem.history:
-        return 'History';
+        return 'Workout Log';
       case TabItem.nutrition:
         return 'Nutrition';
       case TabItem.profile:
         return 'Profile';
+    }
+  }
+
+  /// Under-icon label for the bottom bar
+  String get bottomLabel {
+    switch (this) {
+      //SHORTENED LABELS IF NEEDED
+//      case TabItem.history:
+ //       return 'W.Log';              // short form for nav bar
+      default:
+        return title;
     }
   }
 
@@ -86,6 +98,8 @@ class NavBarConfig extends ChangeNotifier {
     required List<TabItem> newOrder,
     required Set<TabItem> newEnabled,
   }) async {
+    // never allow profile to be disabled
+    newEnabled.add(TabItem.profile);
     _order = newOrder;
     _enabled = newEnabled;
     notifyListeners();

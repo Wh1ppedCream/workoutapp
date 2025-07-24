@@ -42,19 +42,22 @@ class _NavBarSettingsPageState extends State<NavBarSettingsPage> {
             key: ValueKey(tab),
             leading: Icon(tab.icon),
             title: Text(tab.title),
-            trailing: Switch(
-              value: _enabled.contains(tab),
-              onChanged: (on) {
-                setState(() {
-                  if (on) {
-                    _enabled.add(tab);
-                  } else {
-                    _enabled.remove(tab);
-                  }
-                });
-              },
-            ),
-          );
+            trailing: tab == TabItem.profile
+                // profile is always on, switch disabled
+                ? const Switch(value: true, onChanged: null)
+                : Switch(
+                    value: _enabled.contains(tab),
+                    onChanged: (on) {
+                      setState(() {
+                        if (on) {
+                          _enabled.add(tab);
+                        } else {
+                          _enabled.remove(tab);
+                        }
+                      });
+                    },
+                  ),
+         );
         },
       ),
       bottomNavigationBar: Padding(

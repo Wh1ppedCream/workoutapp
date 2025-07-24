@@ -18,7 +18,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     return Scaffold(
       drawer: const MainDrawer(),
       appBar: AppBar( 
-        title: const Text('Workout History'),
+        title: const Text('Workout Log'),
         centerTitle: true,
       ),
       body: HistoryContent(

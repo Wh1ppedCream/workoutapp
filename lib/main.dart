@@ -311,7 +311,7 @@ class _MainScreenState extends State<MainScreen> {
           for (final tab in tabs)
             BottomNavigationBarItem(
               icon: Icon(tab.icon),
-              label: tab.title,
+              label: tab.bottomLabel,     // ← use short label
             )
         ],
         currentIndex: _selectedIndex,
