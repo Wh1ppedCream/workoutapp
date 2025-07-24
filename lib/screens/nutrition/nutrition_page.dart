@@ -10,6 +10,8 @@ import '../../widgets/data_records_section.dart';
 import '../../widgets/current_metrics_section.dart';
 
 
+import '../../widgets/drawers.dart';
+
 
 
 class NutritionPage extends StatelessWidget {
@@ -41,6 +43,7 @@ final fatTarget     =  70; // grams
     ];
 
     return Scaffold(
+      drawer: const MainDrawer(), 
       appBar: AppBar(title: const Text('Nutrition Dashboard'),
       centerTitle: true,),
       body: SingleChildScrollView(
