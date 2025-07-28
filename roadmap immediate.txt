@@ -1,0 +1,75 @@
+		- Database
+			- Exercises
+				- upgrade muscle list from 7 muscles to a variable number of muscles (0 to all 56)
+				- generate bodyparts hit based off muscles hit (if mentioned in settings)
+				- associate each muscle/bodypart hit by an exercise with a %of set value (or decimal no. per set value) for that instance, which can be overridden by the current settings page for this
+				- built in exercise rating for everything
+			- Nutrition
+				- update-able daily required amounts and daily consumed amounts for 
+					- primarily: calories, macro-nutrients (protein, carbs, fat)
+					- secondarily: micro-nutrients
+						- for protein
+							1.Cysteine 2.Histidine 3.Isoleucine 4.Leucine 5.Lysine 6.Methionine 7.Phenylalanine 8.Threonine 9.Tyrosine 10.Valine
+						- for Fiber
+							1.Net Carbs 2.Starch 3.Sugars 4.Added Sugars
+						- for Fats
+							1.Monounsaturated 2.Polyunsaturated 3.Omega-3 4.ALA (Alpha-Linolenic Acid) 5.DHA (Docosahexaenoic Acid) 6.EPA (Eicosapentaenoic Acid) 7.Omega-6 8.Saturated 9.Trans
+				- date associated with above amounts (so each day has its own seperate amounts)
+				- list of above quantities for different dates
+				- Current pantry, containing log of quantitites of food items
+				- food items
+					- required: calorie, macros (protein, carbs, fat), serving size/quantity
+					- extra: micro-nutrients, brand name, photo of food, food label, food barcode
+				- food log (consumed items)
+					- food items which have been consumed
+					- serving size/quantity consumed
+					- date/time each item was consumed
+			- Health Trends
+				- migrate existing measurement system into health trends
+				- name, value, measurement unit (or units), date, time, other signifiers and measurement numbers
+				
+		- Nutrition Page
+			- fill in main drawer
+			- nutrition dashboard
+				- wire in proper amounts for dashboard from database (daily required amounts, daily consumed amounts for protein, carbs, fat)
+				- build new pantry log page and plan meal page
+			- health trends
+				- fix so that shows actual database values and graph is same as inside graph using same values for points
+			- data and records
+				- updates mentioned above
+			- current metrics
+				- updates mentioned above
+				
+		- log_entry_page
+			- right now, there is just a default page, change this to create a page for specified date
+				- pull from database and show correct numbers for calories, fats, protein, carbs for the specified date
+				- populate page with logged food items from database for the specified date, positioning them at their respective times
+			- ability to select a time, open food logging page and add in food items for this specific time and date to the food log in database
+			- ability to select an entry for a recorded, logged food and either delete it or open something like the food_customization_page, where user can update/fix the entered values
+			- will show pre-planned meals for current day even if they haven't been added into food log yet, after set time passes these will automatically be added into food log
+			- if time selected after current time, then adding a food is considered pre-planning a meal
+			- ability to navigate to previous or later days food logs in the log_entry_page (maybe a back and forth arrow beside date, or just slide to move to previous or later date)
+			- pressing date opens up calender, from which you can quickly navigate to other date
+				
+		- food_customization_page
+			- allows users to create new food items or edit all existing information related to existing food items
+			- add in optional field for serving size/quantity
+			- add in optional photo space for barcode photo/barcode
+			- pressing save will save the food item to the database, as a custom food (if the food item did not exist in the search tab or pre-planend tab, otherwise will just update foods information in database)
+		
+		- food_logging_page
+			- wire up values to actual values in database (calories, protein, carbs, fat)
+			- all food items, when one is selected, will also have an edit icon pop-up above the add food button, which if pressed, will open up the food_customization_page with the food items database information filled in, so it can be edited/updated
+			- have all tabs work:
+				- scan tab
+					- barcode scanning and label info scanning
+				- search tab
+					- replace default food_item entries with actual food_item entries from database
+					- pressing + icon on food items should actually select them and pressing 'add food' should add selected items to today's food log (for consumed items)
+				- pre-planned tab
+					- shows pre-planned meals (food items from database) which are scheduled to be consumed later in the day or week
+					- selecting and adding works the same as in search tab
+				- custom tab
+					- shows food items which were custom made, in same way food items are shown in search and pre-planned tabs
+			- pressing add food button will add items to database food log and change to the updated log_entry_page for the current day
+

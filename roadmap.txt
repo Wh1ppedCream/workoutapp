@@ -1,0 +1,333 @@
+ROADMAP:
+	OVERALL TASKS:
+		- known errors:
+			- exercise duplication
+				- (by my knowledge) occurs when session exited without saving, sometimes/maybe when certain exercises finished not being from a preset.
+		
+		- Non-Code:
+			- rearrange file structure
+		
+		- Gym Profiles:
+			- make gym profile settings page
+		
+		- Onboading Flow:
+			- complete onboarding flow
+				- exercise related
+				- measurement and trend related
+			- backup onboarding flow information
+			- use onboarding flow information for app
+			- wire in users selection for app use for initial app structuring
+			- make various versions of app structuring for different app use selections, changeable by settings screen
+			
+		- Train Page
+			- make 'Start Optimized Workout' functionality in Train Page
+				- get this as widget for other places use
+			- Wire in 'generate custom presets' information page to actual preset generation functionality
+			- Wire in 'Start optimized workout' functionality to actually start a new session with prefilled exercise cards based off incomplete set requirements
+			- fill out main drawer
+		
+		- Workout Log (old history)
+			- fill out main drawer
+			- rename labels and items in Workout Log (old history) page 
+			
+		- full_history_screen
+			- restructure to improve look and understandability
+		
+		- muscle_filter_page
+			- rename this to bodyparts_muscles
+			- have two tabs on the top,	
+				- bodyparts
+					- lists out bodyparts in database, with links to their Definitions_by_bodypart_pages
+				- muscles
+					- lists out muscles in database, with links to their Definitions_by_muscle_pages
+		
+		- Definitions_by_bodypart_page
+			- details for bodypart: 
+				- get bodypart details from database/exercise history. 
+					- sets in last 7 days, description, recommended set boundaries, associated muscles
+				- Should have photo for bodypart at top, from database (or insert highlighted part on heatmap at top of page)
+					- later, seperate bodypart photo into constituent muscles with different highlighted colors and label them
+				- associated muscles buttons link to specific Definitions_by_muscle_page
+			- exercise tiles: 
+				- exercise tiles are filled in with correct info
+					- equipment, rating, sets per bodypart
+				- exercise tiles if pressed open up exercise detial sheet
+				- option at top of page to sort exercises by name, rating, sets per bodypart
+		
+		- Definitions_by_muscle_page
+			- details for muscle:
+				- get muscle details from database/exercise history. 
+					- sets in last 7 days, description, recommended set boundaries, associated bodypart
+				- should have photo of highlighted muscle in its bodypart (other muscles grey)
+				- associated bodypart button links to specific Definitions_by_bodypart_page
+			- exercise tiles: 
+				- load in exercise tiles where the exercises work the specific muscle
+				- exercise tiles are filled in with correct info
+					- equipment, rating, sets per muscle
+				- exercise tiles if pressed open up exercise detial sheet
+				- option at top of page to sort exercises by name, rating, sets per muscle
+				
+		- analytics_dashboard_screen
+			- later on, shift all information here to muscle_filter_page, Definitions_by_bodypart_page and Definitions_by_muscle_page and remove this
+			
+		- Exercise Catalog Page
+			- make all of it widgets
+			- improve overall look and layout
+				- better entries, improved filters, better looking ui
+			- recommended exercises section/icon for pop-up based off bodyparts/muscles which have not hit goal
+			- ability to select more than 1 option
+			
+		- Profile/Settings Page:
+			- make additional necessary options for profile settings screen
+			- UI and Appearance
+				- system theming methods (default themes - light and dark)
+					- screen for editing a theme which will also be used for adding in a new theme (for editing it will prefill with existing info, for adding it will be blank)
+			- Presets/Auto
+				- make auto preset settings page (flow charts) where you can select profile and preset and have defaults
+			- Gym Profile:
+				- gym profile settings page
+			- Exercise
+				- settings page/option for adjusting exercise rating
+				- settings page/option for blacklisting exercises
+				- option to factor in exercise rating for bodypart/muscle sets counting
+				- option to choose to calculate sets for bodyparts based off muscles or predefined bodyparts for an exercise
+				- option to choose to calculate sets for muscles based off bodyparts or predefined muscles for an exercise
+		
+		- Gym Profiles
+			- make 'Gym Profile' management more robust, detailed, more user changeable and easier to understand
+				- larger equipment database
+				- restructure gym profile management pages
+					- can have multiples of equipment
+				- equipment types more deeply integrated with app functionality
+					- eg: weights listed as added can affect weights in presets/sessions
+				- could make database describing different gym profiles for actual real world gyms and equipment they have, so users could look up gyms in their area/where they have subscriptions to and immediately get all equipment in gym for app use
+			- settings page
+			
+		- Session Screen/ detail screen/ sessions in general
+			- Body heat map for session end screen to show body parts worked in the specific session
+		
+		- Presets/Auto presets:
+			- Cardio & Stretches
+				- ways to increment/change these for automatic				
+			- Flow Chart
+				- Make Default flows for App overall < gym profile < individual preset
+				- way to choose, open and alter in settings/profile page
+				- restructure method management
+				- method copying, moving between presets
+				- redo some of the flow chart page fields to look more clean and easy to understand
+				- make profile settings page version
+			- weighted exercises
+				- add in drop sets to automatic in some way
+				
+				
+		- UI:
+			- new pages:
+				- make an exercise detail page
+				- make pages for all new navbar items
+				- macro-breakdown page
+					- tabs for calories, protein, carbs, fat
+					- if selected tab is protein, carbs or fat, first item under tab is bar for 'xxx micro-nutrient breakdown', where xxx is the selected tab
+					- entries for logged food items, showing how much they have contributed to the consumed total for the current tab (sorted from largest number to lowest)
+				- micro-breakdown page
+					- between 1 and 10 tabs for the default, specified by what it was opened from
+						- for protein
+							1.Cysteine 2.Histidine 3.Isoleucine 4.Leucine 5.Lysine 6.Methionine 7.Phenylalanine 8.Threonine 9.Tyrosine 10.Valine
+						- for Fiber
+							1.Net Carbs 2.Starch 3.Sugars 4.Added Sugars
+						- for Fats
+							1.Monounsaturated 2.Polyunsaturated 3.Omega-3 4.ALA (Alpha-Linolenic Acid) 5.DHA (Docosahexaenoic Acid) 6.EPA (Eicosapentaenoic Acid) 7.Omega-6 8.Saturated 9.Trans
+					- entries for logged food items, showing how much they have contributed to the consumed total for the current tab (sorted from largest number to lowest)
+				- Pantry Log page
+					- seperates cooked and uncooked food items
+					- lets you add/remove items entirely or quantities from stock of items
+						- adding items from food database
+					- can select items to combine together into a
+						- logged meal
+						- new combined food item
+						- recipe
+				- Plan Meal Page
+					- pre-schedule meals planned to be consumed (to add to food log)
+					- recipes based off of current pantry log contents
+						- database recipes
+						- user made recipes
+				- New trend logging page
+					- sort of like the current new_measurement_item_page
+					- allows users to either track another measurement for an existing trend or create a new trend to track
+						- creating new trend allows users to add in trend name, number boxes, unit names, optional image boxes, etc
+						- after a trend has been created, the parameters set for the trend ( number boxes, unit names, optional image boxes, etc) will information will be asked/required for tracking a new measurement of its type
+			- updates to existing pages:
+				- fill in top left main drawers for most bottom navbar items/pages with related/attached pages
+				- allow users to alter look and setup of all individual navbar pages
+				- make all pages widgets or consist of widgets, so page itself has very little code
+			- app-wide ui changes/updates:
+				- have areas of app be able to be turned on and off so based on user preference, they will be un-noticeable and will not confuse users
+			
+			
+		- Dashboard and Widgets:
+			- general/new:
+				- make dashboard widgets customizeable
+				- seperate widget components into smaller items so users can put those items in dashboard screen or create their own combined widgets with those items
+				- allow users to create new combined widgets
+				- more pre-made dashboard widgets and widgets from all new navbar pages will have dashboard versions
+				- let users use widgets on phone homescreen
+				- New widget for specific last session details in dashboard/history
+				- New widget for remaining things to work for current (7day) cycle
+			- history_summary_widget
+				- update the history_summary_widget (or body heatmap) so that tapping on a bodypart on the heatmap will show stats for the specific bodypart instead of overall stats
+			- exercise_detail_sheet
+				- fix the chart/graph in the exercise_detail_sheet
+				- badges for pr's and volume max's
+				- put in body heatmap showing which parts the exercise hits
+				- (after the relevant database update is made) pull in all info exercise related, like example photo/vid/vid link, set up description, execution description, tips
+				- full screen button to open a full page for this
+			- exercise cards
+				- weight card
+					- have different variations for different types of weight exercises (eg: for dips, display bodyweight and an increment/decrement weight value)
+			- nutrition Dashboard
+				- wire up values to actual values in database (calories, protein, carbs, fat)
+				- clicking on the macro part of the dashboard opens up a macro-breakdown page for the clicked part (calories, protein, carbs, fat)
+				- pantry log and plan meal lead to actual filled out, usable pages
+			- health_trends_section
+				- outer graph should be the same as inner graph based off same measurements from database as points on graph
+				- value on tiles should be the last measured value for the item (last point used on graph)
+				- pressing + box should open up something like the new_measurement_item_page
+			- data_records_section
+				- updated so that dates which don't have any recordings stay the same solid grey color, dates with recordings are blue and dates where it has been considered that the default macros and calories have been filled without all the proper recordings to fill them, are yellow.
+				- (maybe) changed to show 4 weeks including current week, without current day being last day (like it currently is)
+			- current metrics
+				- pressing + button opens pop-up allowing users to select a new metric to add, which is an item which the database is recording numeric values for. the number shown will be the newest recorded value
+				- tapping a metric box highlights it and puts in a trashcan box beside it, which if tapped will remove the metric box.
+				
+		
+		- Database
+			- Cardio and Stretch
+				- Fix and build out cardio and stretch functionality and information
+				- More cardio details, types, associated information, equipment, calories burnt ties
+				- Custom cardio types users can define
+				- Custom stretches users can define
+			- Equipment
+				- Custom equipment users can define
+			- Exercises
+				- upgrade muscle list from 7 muscles to a variable number of muscles (0 to all 56)
+				- generate bodyparts hit based off muscles hit (if mentioned in settings)
+				- give exercises optional equipment, which it could be done with or without. (eg: pull-up/dip station for pull-ups/dips
+				- associate each muscle/bodypart hit by an exercise with a %of set value (or decimal no. per set value) for that instance, which can be overridden by the current settings page for this
+				- built in exercise rating for everything
+				- Custom exercises users can define
+				- Descriptions for existing exercises
+				- Images and/or videos/video Links for exercises, cardio and stretches
+			- Nutrition
+				- update-able daily required amounts and daily consumed amounts for 
+					- primarily: calories, macro-nutrients (protein, carbs, fat)
+					- secondarily: micro-nutrients
+						- for protein
+							1.Cysteine 2.Histidine 3.Isoleucine 4.Leucine 5.Lysine 6.Methionine 7.Phenylalanine 8.Threonine 9.Tyrosine 10.Valine
+						- for Fiber
+							1.Net Carbs 2.Starch 3.Sugars 4.Added Sugars
+						- for Fats
+							1.Monounsaturated 2.Polyunsaturated 3.Omega-3 4.ALA (Alpha-Linolenic Acid) 5.DHA (Docosahexaenoic Acid) 6.EPA (Eicosapentaenoic Acid) 7.Omega-6 8.Saturated 9.Trans
+				- date associated with above amounts (so each day has its own seperate amounts)
+				- list of above quantities for different dates
+				- Current pantry, containing log of quantitites of food items
+				- recipes with 
+					- instructions
+					- list of required ingredients 
+					- list of required utensils
+				- food items
+					- required: calorie, macros (protein, carbs, fat), serving size/quantity
+					- extra: micro-nutrients, brand name, photo of food, food label, food barcode
+				- food log (consumed items)
+					- food items which have been consumed
+					- serving size/quantity consumed
+					- date/time each item was consumed
+				- pre-planned meals
+					- food items, size/quantity and the time/date they will be consumed
+				- custom foods
+					- food items with usual fields, but these are specifically new food items created by users
+			- Health Trends
+				- migrate existing measurement system into health trends
+				- name, value, measurement unit (or units), date, time, other signifiers and measurement numbers
+						
+						
+		- default_trend_page
+			- specified page for each trend
+			- graph updated to be based off recorded values
+			- values, dates and entries all pulled from database
+			- entries can be edited by pressing the pen button beside the entry's tile. 
+				- opens up either the New trend logging page or something similar with all the fields filled in by the old entry which is being edited. saving will update the old entry, keeping the date same
+				
+		
+		
+		- Nutrition Page
+			- fill in main drawer
+			- nutrition dashboard
+				- wire in proper amounts for dashboard from database (daily required amounts, daily consumed amounts for protein, carbs, fat)
+				- build new pantry log page and plan meal page
+			- health trends
+				- fix so that shows actual database values and graph is same as inside graph using same values for points
+			- data and records
+				- updates mentioned above
+			- current metrics
+				- updates mentioned above
+				
+		- log_entry_page
+			- right now, there is just a default page, change this to create a page for specified date
+				- pull from database and show correct numbers for calories, fats, protein, carbs for the specified date
+				- populate page with logged food items from database for the specified date, positioning them at their respective times
+			- ability to select a time, open food logging page and add in food items for this specific time and date to the food log in database
+			- ability to select an entry for a recorded, logged food and either delete it or open something like the food_customization_page, where user can update/fix the entered values
+			- will show pre-planned meals for current day even if they haven't been added into food log yet, after set time passes these will automatically be added into food log
+			- if time selected after current time, then adding a food is considered pre-planning a meal
+			- ability to navigate to previous or later days food logs in the log_entry_page (maybe a back and forth arrow beside date, or just slide to move to previous or later date)
+			- pressing date opens up calender, from which you can quickly navigate to other date
+				
+		
+		- food_customization_page
+			- allows users to create new food items or edit all existing information related to existing food items
+			- add in optional field for serving size/quantity
+			- add in optional photo space for barcode photo/barcode
+			- pressing save will save the food item to the database, as a custom food (if the food item did not exist in the search tab or pre-planend tab, otherwise will just update foods information in database)
+		
+		- food_logging_page
+			- wire up values to actual values in database (calories, protein, carbs, fat)
+			- all food items, when one is selected, will also have an edit icon pop-up above the add food button, which if pressed, will open up the food_customization_page with the food items database information filled in, so it can be edited/updated
+			- have all tabs work:
+				- scan tab
+					- barcode scanning and label info scanning
+				- search tab
+					- replace default food_item entries with actual food_item entries from database
+					- pressing + icon on food items should actually select them and pressing 'add food' should add selected items to today's food log (for consumed items)
+				- pre-planned tab
+					- shows pre-planned meals (food items from database) which are scheduled to be consumed later in the day or week
+					- selecting and adding works the same as in search tab
+				- custom tab
+					- shows food items which were custom made, in same way food items are shown in search and pre-planned tabs
+			- pressing add food button will add items to database food log and change to the updated log_entry_page for the current day
+			
+		
+		
+		
+	SEPERATED TASKS (based on what the work is for):
+		- UI AND VISUAL
+			- Flow Chart:
+				- make profile settings page version
+				- restructuring method management
+				
+			- Gym Profiles:
+				- make gym profile settings page
+				
+			- fill in top left main drawers for most bottom navbar items/pages with related/attached pages
+		
+		- APP FUNCTIONALITY (non database)
+			- Flow Chart:
+				- make profile settings page version
+				- restructuring method management
+		
+		
+		- DATABASE
+			- Flow Chart:
+				- make default preset flow
+				- method copying, moving between presets
+		
+		- CODE-SIDE (not for users)
+			- rearrange file structure
