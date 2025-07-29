@@ -279,7 +279,7 @@ static Future<int> findOrCreateExerciseDefinition(
   String name,
   String equipmentName,
 ) async {
-  // 1) Lookup equipment_id if provided
+  // 1) Resolve equipment_id if provided
   int? eqId;
   if (equipmentName.isNotEmpty) {
     final eqRows = await db.query(
@@ -291,23 +291,27 @@ static Future<int> findOrCreateExerciseDefinition(
     if (eqRows.isNotEmpty) eqId = eqRows.first['id'] as int;
   }
 
-  // 2) Try to find an existing definition
-  final whereClause = eqId != null
-      ? 'name = ? AND equipment_id = ?'
-      : 'name = ? AND equipment_id IS NULL';
-  final whereArgs = eqId != null ? [name, eqId] : [name];
-  final defRows = await db.query(
-    'exercise_definitions',
-    columns: ['id'],
-    where: whereClause,
-    whereArgs: whereArgs,
-    limit: 1,
-  );
+  // 2) Lookup existing definition by name + any equipment (primary or via join table)
+  final lookupArgs = eqId != null ? [name, eqId, eqId] : [name];
+  // new: interpolated string (Dart will replace ${…})
+final defRows = await db.rawQuery('''
+  SELECT ed.id
+    FROM exercise_definitions ed
+    LEFT JOIN exercise_equipment ee ON ee.exercise_id = ed.id
+   WHERE ed.name = ?
+     AND (
+       ${eqId != null ? 'ed.equipment_id = ? OR ee.equipment_id = ?' : 'ed.equipment_id IS NULL'}
+     )
+   LIMIT 1
+''', lookupArgs);
+
+
   if (defRows.isNotEmpty) {
+    // Found an existing definition
     return defRows.first['id'] as int;
   }
 
-  // 3) Not found — try to insert, ignoring conflicts if someone else created it
+  // 3) Not found — insert a new definition
   await db.insert(
     'exercise_definitions',
     {
@@ -318,16 +322,20 @@ static Future<int> findOrCreateExerciseDefinition(
     conflictAlgorithm: ConflictAlgorithm.ignore,
   );
 
-  // 4) Re-query for the id (either our insert or the existing one)
-  final requery = await db.query(
-    'exercise_definitions',
-    columns: ['id'],
-    where: whereClause,
-    whereArgs: whereArgs,
-    limit: 1,
-  );
+  // 4) Re-query for the ID (either our insert or an existing one)
+  final requery = await db.rawQuery('''
+  SELECT ed.id
+    FROM exercise_definitions ed
+    LEFT JOIN exercise_equipment ee ON ee.exercise_id = ed.id
+   WHERE ed.name = ?
+     AND (
+       ${eqId != null ? 'ed.equipment_id = ? OR ee.equipment_id = ?' : 'ed.equipment_id IS NULL'}
+     )
+   LIMIT 1
+''', lookupArgs);
   return requery.first['id'] as int;
 }
+
 
   /// Retrieves the name and equipmentName for a definition ID.
   ///

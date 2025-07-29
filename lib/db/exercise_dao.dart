@@ -33,20 +33,26 @@ class ExerciseDao {
     final eqId = eq.isNotEmpty ? eq.first['id'] as int : null;
 
     // 2. Lookup or insert into exercise_definitions
-    final defRows = await db.query(
-      'exercise_definitions',
-      where: eqId != null
-          ? 'name = ? AND equipment_id = ?'
-          : 'name = ? AND equipment_id IS NULL',
-      whereArgs: eqId != null ? [name, eqId] : [name],
-      limit: 1,
-    );
-    final defId = defRows.isNotEmpty
-        ? defRows.first['id'] as int
-        : await db.insert(
-            'exercise_definitions',
-            {'name': name, 'equipment_id': eqId},
-          );
+//    match on name + any equipment (primary or via the join table)
+final defRows = await db.rawQuery(r'''
+  SELECT ed.id
+    FROM exercise_definitions ed
+    LEFT JOIN exercise_equipment ee
+      ON ee.exercise_id = ed.id
+   WHERE ed.name = ?
+     AND (
+       ${eqId != null ? 'ed.equipment_id = ? OR ee.equipment_id = ?' : 'ed.equipment_id IS NULL'}
+     )
+   LIMIT 1
+''', eqId != null ? [name, eqId, eqId] : [name]);
+
+final defId = defRows.isNotEmpty
+    ? defRows.first['id'] as int
+    : await db.insert(
+        'exercise_definitions',
+        {'name': name, 'equipment_id': eqId},
+      );
+
 
     // 3. Insert the exercise instance
     return db.insert('exercises', {
