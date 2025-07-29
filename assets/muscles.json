@@ -1,5 +1,4 @@
-[
-  { "name": "Adductor Brevis" },
+[  { "name": "Adductor Brevis" },
   { "name": "Adductor Longus" },
   { "name": "Adductor Magnus" },
   { "name": "Anconeus" },
@@ -54,5 +53,4 @@
   { "name": "Vastus Lateralis" },
   { "name": "Vastus Medialis" },
   { "name": "Wrist Flexors" },
-  { "name": "Wrist Extensors" }
-]
+  { "name": "Wrist Extensors" }]
