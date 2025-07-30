@@ -42,9 +42,6 @@
 				- have areas of app be able to be turned on and off so based on user preference, they will be un-noticeable and will not confuse users
 			
 		- Dashboard and Widgets:
-			- exercise_detail_sheet
-				- fix the chart/graph in the exercise_detail_sheet
-				- (after the relevant database update is made) pull in all info exercise related, like example photo/vid/vid link, set up description, execution description, tips
 			- nutrition Dashboard
 				- wire up values to actual values in database (calories, protein, carbs, fat)
 				- clicking on the macro part of the dashboard opens up a macro-breakdown page for the clicked part (calories, protein, carbs, fat)
@@ -143,6 +140,12 @@ IN PROGRESS:
 				- generate bodyparts hit based off muscles hit (if mentioned in settings)
 				- associate each muscle/bodypart hit by an exercise with a %of set value (or decimal no. per set value) for that instance, which can be overridden by the current settings page for this
 				- built in exercise rating for everything
+
+		- Dashboard and Widgets:
+			- exercise_detail_sheet
+				- fix the chart/graph in the exercise_detail_sheet
+				- (after the relevant database update is made) pull in all info exercise related, like example photo/vid/vid link, set up description, execution description, tips
+		
 	
 
 PLANNING:
@@ -184,6 +187,7 @@ PLANNING:
 			- options for:
 				- adjusting exercise ratings
 				- blacklisting exercises
+			- when editing mode on, save button for all tabs and fields
 			- input default exercise ratings for every exercise
 			
 
@@ -201,7 +205,7 @@ PLANNING:
 			- update db to have note fields associated with exercises
 			- update db to have media like images, videos, youtube links
 		- save buttons
-			- for actively saving each page
+			- for actively saving all info in every tab if editing mode open
 			
 	
 
