@@ -2,6 +2,9 @@
 // Exercise Editor Screen: allows viewing and editing an exercise definition.
 
 import 'package:flutter/material.dart';
+import '../../../repositories/app_repository.dart';
+import '../../../models/models.dart';
+
 
 /// Exercise Editor Screen: allows viewing and editing an exercise definition.
 class ExerciseEditorScreen extends StatefulWidget {

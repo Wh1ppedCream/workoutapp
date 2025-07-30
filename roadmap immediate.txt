@@ -1,9 +1,63 @@
+'essential for launch'				
+		- Onboading Flow:
+			- complete onboarding flow
+				- exercise related
+				- measurement and trend related
+			- backup onboarding flow information
+			- use onboarding flow information for app
+			
+		- Train Page
+			- make 'Start Optimized Workout' functionality in Train Page
+			- Wire in 'generate custom presets' information page to actual preset generation functionality
+			- Wire in 'Start optimized workout' functionality to actually start a new session with prefilled exercise cards based off incomplete set requirements
+	
+		- Workout Log (old history)
+			- rename labels and items in Workout Log (old history) page 
+			
+		- Profile/Settings Page:
+			- make additional necessary options for profile settings screen
+			- Presets/Auto
+				- make auto preset settings page (flow charts) where you can select profile and preset and have defaults
+				
+		- UI:
+			- new pages:
+				- macro-breakdown page
+					- tabs for calories, protein, carbs, fat
+					- if selected tab is protein, carbs or fat, first item under tab is bar for 'xxx micro-nutrient breakdown', where xxx is the selected tab
+					- entries for logged food items, showing how much they have contributed to the consumed total for the current tab (sorted from largest number to lowest)
+				- Pantry Log page
+					- seperates cooked and uncooked food items
+					- lets you add/remove items entirely or quantities from stock of items
+						- adding items from food database
+					- can select items to combine together into a
+						- logged meal
+						- new combined food item
+						- recipe
+				- Plan Meal Page
+					- pre-schedule meals planned to be consumed (to add to food log)
+					- recipes based off of current pantry log contents
+						- database recipes
+						- user made recipes
+			- app-wide ui changes/updates:
+				- have areas of app be able to be turned on and off so based on user preference, they will be un-noticeable and will not confuse users
+			
+		- Dashboard and Widgets:
+			- exercise_detail_sheet
+				- fix the chart/graph in the exercise_detail_sheet
+				- (after the relevant database update is made) pull in all info exercise related, like example photo/vid/vid link, set up description, execution description, tips
+			- nutrition Dashboard
+				- wire up values to actual values in database (calories, protein, carbs, fat)
+				- clicking on the macro part of the dashboard opens up a macro-breakdown page for the clicked part (calories, protein, carbs, fat)
+				- pantry log and plan meal lead to actual filled out, usable pages
+			- health_trends_section
+				- outer graph should be the same as inner graph based off same measurements from database as points on graph
+				- value on tiles should be the last measured value for the item (last point used on graph)
+				- pressing + box should open up something like the new_measurement_item_page
+			- current metrics
+				- pressing + button opens pop-up allowing users to select a new metric to add, which is an item which the database is recording numeric values for. the number shown will be the newest recorded value
+				- tapping a metric box highlights it and puts in a trashcan box beside it, which if tapped will remove the metric box.
+
 		- Database
-			- Exercises
-				- upgrade muscle list from 7 muscles to a variable number of muscles (0 to all 56)
-				- generate bodyparts hit based off muscles hit (if mentioned in settings)
-				- associate each muscle/bodypart hit by an exercise with a %of set value (or decimal no. per set value) for that instance, which can be overridden by the current settings page for this
-				- built in exercise rating for everything
 			- Nutrition
 				- update-able daily required amounts and daily consumed amounts for 
 					- primarily: calories, macro-nutrients (protein, carbs, fat)
@@ -73,3 +127,89 @@
 					- shows food items which were custom made, in same way food items are shown in search and pre-planned tabs
 			- pressing add food button will add items to database food log and change to the updated log_entry_page for the current day
 
+
+
+IN PROGRESS:
+
+		- Profile/Settings Page:
+			- Exercise
+				- settings page/option for adjusting exercise rating
+				- settings page/option for blacklisting exercises
+				- option to factor in exercise rating for bodypart/muscle sets counting
+				- option to choose to calculate sets for bodyparts based off muscles or predefined bodyparts for an exercise
+				- option to choose to calculate sets for muscles based off bodyparts or predefined muscles for an exercise
+		- Database
+			- Exercises
+				- generate bodyparts hit based off muscles hit (if mentioned in settings)
+				- associate each muscle/bodypart hit by an exercise with a %of set value (or decimal no. per set value) for that instance, which can be overridden by the current settings page for this
+				- built in exercise rating for everything
+	
+
+PLANNING:
+	Exercise editing requirements:
+		- selectable pen icon in top right to enter editing mode for exercise
+		- exercise search/dropdown/name typpable entry
+			- option to add in new exercise if name does not appear
+				- if selected, will have indicator showing this is new exercise
+				- will turn on editing mode if selected
+		- tabs for different part of exercise which user should be able to edit:
+			- associated muscles
+				- shows muscles listed for exercise with their percent sets per muscle number
+				- if in editing mode
+					- there is a trash icon to left side of muscle name, to remove muscle from exercise
+					- you can now change the sets per muscle number
+					- there is a bar/button at the bottom of the section for associated muscles 'Add Associated Muscle' which if selected will open up a pop up of all the muscle names not yet included, listed, from which you can select multiple and add them into the exercise muscle ranking
+			- associated bodyparts
+				- has option with checkbox saying 'Use Manual Bodyparts (otherwise makes calculations based off muscles and their associated bodyparts)'
+					- not selected by default, so both headings and sections mentioned below are shown, if selected, 'Selected based off Muscles' heading and parts under it do not appear
+				- shows bodyparts listed for exercise under a 'Selected for exercise' heading with their sets per bodypart number
+					- if in editing mode
+						- there is a trash icon to left side of bodypart name, to remove bodypart from exercise
+						- you can now change the sets per bodypart number
+						- there is a bar/button at the bottom of the section for associated bodyparts 'Add Associated Bodyparts' which if selected will open up a pop up of all the bodypart names not yet included, listed, from which you can select multiple and add them into the exercise bodyparts
+				- shows bodyparts associated for exercise based off muscle-bodypart mapping and associated muscles for exercise under 'Selected based off Muscles' heading with their calculated sets per bodypart number
+			- equipment
+				- shows equipment associated with exercise
+					- (will be used later on) equipment for exercise is divided unter two headings 'Required' and 'Additional'
+				- if in editing mode
+					- trash can icon to left side of equipment name to remove equipment from exercise
+					- bar/button at bottom of section 'Add Equipment' which if selected will open up a pop up of all equipment names not yet included, listed, from which you can select multiple and add them into the exercise equipment 
+			- text descriptions
+				- for exercise 'set-up'
+				- for exercise 'execution'
+				- for exercise 'tips'
+			- (for later) media additions
+				- maybe images/videos/links to youtube videos for examples of exercise being done with correct form.
+		- NEW EXTRAS:
+			- options for:
+				- adjusting exercise ratings
+				- blacklisting exercises
+			- input default exercise ratings for every exercise
+			
+
+	- DB RELATED FETCHING:
+		- search and drop down
+			- fetch exercise entries from db for each exercise
+			- add back in '+custom exercise option'
+		- mucles tab
+			- fill in muscle info from db
+		- bodypart tab
+			- fill in bodypart info from db
+		- equipment tab
+			- fill in equipment info from db
+		- notes
+			- update db to have note fields associated with exercises
+			- update db to have media like images, videos, youtube links
+		- save buttons
+			- for actively saving each page
+			
+	
+
+COMPLETED: 
+
+		- known errors:
+			- exercise duplication
+				- (by my knowledge) occurs when session exited without saving, sometimes/maybe when certain exercises finished not being from a preset.
+		- Database
+			- Exercises
+				- upgrade muscle list from 7 muscles to a variable number of muscles (0 to all 56)
