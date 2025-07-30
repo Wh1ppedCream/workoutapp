@@ -183,7 +183,7 @@
 
 {
   "name": "Bicep Curl - Bodyweight",
-  "rating": 60,
+  "rating": 50,
   "equipment": ["Bodyweight"],
   "bodyparts": ["Biceps", "Forearms"],
   "muscles": [
@@ -231,7 +231,7 @@
 
 {
   "name": "Bicep Curl - Resistance Band",
-  "rating": 60,
+  "rating": 50,
   "equipment": ["Barbell"],
   "bodyparts": ["Biceps", "Forearms"],
   "muscles": [
@@ -308,7 +308,7 @@
 },
 {
   "name": "Bulgarian Split Squat - Barbell",
-  "rating": 23,
+  "rating": 55,
   "equipment": ["Barbell", "Weight Plates", "Squat Rack"],
   "bodyparts": ["Quads", "Hips"],
   "muscles": [
@@ -323,7 +323,7 @@
 },
 {
   "name": "Burpee",
-  "rating": 23,
+  "rating": 50,
   "equipment": ["Bodyweight"],
   "bodyparts": ["Core"],
   "muscles": [
@@ -338,7 +338,7 @@
 },
 {
   "name": "Calf Press",
-  "rating": 23,
+  "rating": 75,
   "equipment": ["Leg Press Machine", "Weight Plates"],
   "bodyparts": ["Calves"],
   "muscles": [
@@ -354,7 +354,7 @@
 
 {
   "name": "Calf Raise - Seated Calf Raise Machine",
-  "rating": 23,
+  "rating": 65,
   "equipment": ["Seated Calf Raise Machine", "Weight Plates"],
   "bodyparts": ["Calves"],
   "muscles": [
@@ -370,7 +370,7 @@
 
 {
   "name": "Calf Raise - Standing Calf Raise Machine",
-  "rating": 23,
+  "rating": 75,
   "equipment": ["Standing Calf Raise Machine", "Weight Plates"],
   "bodyparts": ["Calves"],
   "muscles": [
@@ -386,7 +386,7 @@
 
 {
   "name": "Calf Raise - Dumbbell",
-  "rating": 23,
+  "rating": 55,
   "equipment": ["Dumbbell"],
   "bodyparts": ["Calves"],
   "muscles": [
@@ -402,7 +402,7 @@
 
 {
   "name": "Chest Dip",
-  "rating": 23,
+  "rating": 75,
   "equipment": ["Bodyweight"],
   "bodyparts": ["Chest", "Triceps", "Shoulders"],
   "muscles": [
@@ -417,7 +417,7 @@
 },
 {
   "name": "Chest Dip - Dip Bars",
-  "rating": 23,
+  "rating": 80,
   "equipment": ["Dip Bars"],
   "bodyparts": ["Chest", "Triceps", "Shoulders"],
   "muscles": [
@@ -433,7 +433,7 @@
 
 {
   "name": "Chest Dip - Assisted Dip/Pull-Up Machine",
-  "rating": 23,
+  "rating": 85,
   "equipment": ["Assisted Dip/Pull-Up Machine"],
   "bodyparts": ["Chest", "Triceps", "Shoulders"],
   "muscles": [
@@ -449,7 +449,7 @@
 
 {
   "name": "Chest Fly - Cable Machine",
-  "rating": 23,
+  "rating": 80,
   "equipment": ["Cable Machine", "Cable Handle Attachment", "Adjustable Bench"],
   "bodyparts": ["Chest", "Shoulders"],
   "muscles": [
