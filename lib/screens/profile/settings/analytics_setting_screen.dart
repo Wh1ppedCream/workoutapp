@@ -8,6 +8,9 @@ import 'muscle_ranking_screen.dart';
 import 'volume_boundaries_screen.dart';
 import 'exercise_analytics_screen.dart';
 
+import 'exercise_editor_screen.dart';
+
+
 class AnalyticsSettingsScreen extends StatelessWidget {
   const AnalyticsSettingsScreen({super.key});
 
@@ -43,6 +46,13 @@ class AnalyticsSettingsScreen extends StatelessWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(ctx).push(
               MaterialPageRoute(builder: (_) => const ExerciseAnalyticsScreen()),
+            ),
+          ),
+          ListTile(
+            title: const Text('Exercise Editor'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(ctx).push(
+              MaterialPageRoute(builder: (_) => const ExerciseEditorScreen()),
             ),
           ),
           ListTile(
