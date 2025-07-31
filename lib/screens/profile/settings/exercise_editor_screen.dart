@@ -25,8 +25,8 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
   bool _isNewExercise = false;
 
   // Tab data
-  List<Map<String, dynamic>> _muscleEntries = []; // { 'id': int, 'name': String, 'percent': double }
-  List<Map<String, dynamic>> _bodyEntries = [];   // { 'id': int, 'name': String, 'percent': double }
+  List<Map<String, Object>> _muscleEntries = []; // { 'id': int, 'name': String, 'percent': double }
+  List<Map<String, Object>> _bodyEntries = [];   // { 'id': int, 'name': String, 'percent': double }
   List<String> _equipmentList = [];
   bool _useManualBody = false;
 
@@ -34,10 +34,14 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
   String _setupNotes = '';
   String _executionNotes = '';
   String _tipsNotes = '';
-  List<Map<String, dynamic>> _mediaItems = []; // { 'type': 'image'|'video'|'link', 'url': '' }
+  List<Map<String, Object>> _mediaItems = []; // { 'type': 'image'|'video'|'link', 'url': '' }
 
   /// IDs of muscles the user has deleted in this edit session.
 final Set<int> _musclesToRemove = {};
+
+/// the IDs we loaded initially, so we can diff on Save
+late List<int> _originalMuscleIds;
+
 
 
   @override
@@ -86,9 +90,6 @@ final Map<BodyPart, double> bodyPercents =
     await _repo.computeBodyPartPercents(
   _selectedDef!.id,
 );
-
-
-
     setState(() {
       // Map muscles by definition order, default percent 0 if missing
       _muscleEntries = def.muscles.map((rm) {
@@ -107,6 +108,9 @@ final Map<BodyPart, double> bodyPercents =
         };
       }).toList();
 
+      // remember what we started with
+    _originalMuscleIds = def.muscles.map((rm) => rm.muscle.id).toList();
+
       // Map bodyparts by definition, default percent 0 if missing
       _bodyEntries = def.bodyParts.map((bp) {
         final p = bodyPercents[bp] ?? 0.0;
@@ -122,20 +126,127 @@ final Map<BodyPart, double> bodyPercents =
   }
 
   Future<void> _toggleEdit() async {
-  // If we’re currently editing, and the user just tapped “Save”:
-  if (_isEditing && _selectedDef != null && _musclesToRemove.isNotEmpty) {
-    for (var muscleId in _musclesToRemove) {
-      // <-- call your repo/DB method to remove the muscle association
-      await _repo.deleteExerciseMuscleMapping(_selectedDef!.id, muscleId);
+   // if we’re about to exit editing mode, commit our muscle changes
+   if (_isEditing && _selectedDef != null) {
+     await _saveMuscleChanges();
+   }
+   setState(() => _isEditing = !_isEditing);
+ }
 
-    }
-    _musclesToRemove.clear();
-    // reload full details so all tabs refresh
-    await _loadDefinitionDetails(_selectedDef!);
+
+/// Compare the original vs. current _muscleEntries and persist adds/removes/percentage‐overrides.
+Future<void> _saveMuscleChanges() async {
+  final def = _selectedDef!;
+  final defId = def.id;
+
+  // current IDs & a quick lookup for percent
+  final currIds = _muscleEntries.map((e) => e['id'] as int).toSet();
+  final currPct = {
+    for (var e in _muscleEntries) e['id'] as int : e['percent'] as double
+  };
+
+  final origIds = _originalMuscleIds.toSet();
+
+  // 1) removals
+  for (var removed in origIds.difference(currIds)) {
+    await _repo.deleteExerciseMuscleMapping(defId, removed);
+    // also wipe out any overrides
+    await _repo.removeExerciseMusclePercent(defId, removed);
   }
-  setState(() {
-    _isEditing = !_isEditing;
-  });
+
+  // 2) additions
+  for (var added in currIds.difference(origIds)) {
+    // new rank = position in the list + 1
+    final rank = _muscleEntries.indexWhere((e) => e['id'] == added) + 1;
+    await _repo.addExerciseMuscleMapping(defId, added, rank);
+    // if user typed a percent override
+    final p = currPct[added]!;
+    if (p != 0.0) {
+      await _repo.setExerciseMuscleHitPercent(defId, added, p);
+    }
+  }
+
+  // 3) updates for existing
+  for (var kept in currIds.intersection(origIds)) {
+    final p = currPct[kept]!;
+    await _repo.setExerciseMuscleHitPercent(defId, kept, p);
+  }
+
+  // refresh our baseline for any further edits
+  _originalMuscleIds = currIds.toList();
+}
+
+
+
+/// Show a dialog of all muscles *not* yet on this exercise,
+/// let the user pick many, and then add them (with 0% default) to the UI list.
+Future<void> _openAddMuscleDialog() async {
+  // 1) grab every muscle in the DB
+  final allMuscles = await _repo.fetchAllMusclesFull();
+  // 2) filter out the ones already staged
+  final existingIds = _muscleEntries.map((e) => e['id'] as int).toSet();
+  final available = allMuscles.where((m) => !existingIds.contains(m.id)).toList();
+
+  // 3) track selections
+  final selectedIds = <int>{};
+
+  // 4) show dialog
+  final result = await showDialog<Set<int>>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('Add Associated Muscles'),
+      content: SizedBox(
+        width: double.maxFinite,
+        // need StatefulBuilder to update the checkboxes
+        child: StatefulBuilder(builder: (ctx2, setDialogState) {
+          return ListView.builder(
+            shrinkWrap: true,
+            itemCount: available.length,
+            itemBuilder: (ctx3, i) {
+              final m = available[i];
+              final checked = selectedIds.contains(m.id);
+              return CheckboxListTile(
+                title: Text(m.name),
+                value: checked,
+                onChanged: (on) {
+                  setDialogState(() {
+                    if (on == true)
+                      selectedIds.add(m.id);
+                    else
+                      selectedIds.remove(m.id);
+                  });
+                },
+              );
+            },
+          );
+        }),
+      ),
+      actions: [
+        TextButton(
+          child: const Text('Cancel'),
+          onPressed: () => Navigator.of(ctx).pop(),
+        ),
+        TextButton(
+          child: const Text('Add'),
+          onPressed: () => Navigator.of(ctx).pop(selectedIds),
+        ),
+      ],
+    ),
+  );
+
+  // 5) merge them into the UI list
+  if (result != null && result.isNotEmpty) {
+    setState(() {
+      for (final id in result) {
+        final m = allMuscles.firstWhere((muscle) => muscle.id == id);
+        _muscleEntries.add(<String, Object>{
+          'id':      m.id,
+          'name':    m.name,
+          'percent': 0.0,
+        });
+      }
+    });
+  }
 }
 
 
@@ -232,7 +343,9 @@ final Map<BodyPart, double> bodyPercents =
         actions: [
           IconButton(
             icon: Icon(_isEditing ? Icons.check : Icons.edit),
-            onPressed: _selectedDef != null || _isNewExercise ? _toggleEdit : null,
+            onPressed: (_selectedDef != null || _isNewExercise)
+    ? () => _toggleEdit()
+    : null,
             tooltip: _isEditing ? 'Save' : 'Edit',
           ),
         ],
@@ -329,9 +442,7 @@ final Map<BodyPart, double> bodyPercents =
           Padding(
             padding: const EdgeInsets.all(16),
             child: ElevatedButton.icon(
-              onPressed: () {
-                // TODO: open add-muscle modal
-              },
+              onPressed: _openAddMuscleDialog,
               icon: const Icon(Icons.add),
               label: const Text('Add Associated Muscle'),
             ),
@@ -530,7 +641,7 @@ final Map<BodyPart, double> bodyPercents =
                 children: [
                   Container(
                     color: Colors.grey[300],
-                    child: Center(child: Text(media['type'])),
+                    child: Center(child: Text(media['url'] as String)),
                   ),
                   if (_isEditing)
                     Positioned(
@@ -551,4 +662,7 @@ final Map<BodyPart, double> bodyPercents =
       ),
     );
   }
+
+
+
 }
