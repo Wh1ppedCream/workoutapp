@@ -465,7 +465,7 @@
 
 {
   "name": "Chest Fly - Dumbbell",
-  "rating": 23,
+  "rating": 65,
   "equipment": ["Dumbbell", "Adjustable Bench"],
   "bodyparts": ["Chest", "Shoulders"],
   "muscles": [
@@ -481,7 +481,7 @@
 
 {
   "name": "Chest Press - Chest Press Machine",
-  "rating": 23,
+  "rating": 90,
   "equipment": ["Chest Press Machine"],
   "bodyparts": ["Chest", "Triceps", "Shoulders"],
   "muscles": [
@@ -497,7 +497,7 @@
 
 {
   "name": "Chin Up",
-  "rating": 23,
+  "rating": 70,
   "equipment": ["Bodyweight"],
   "bodyparts": ["Upper Back", "Shoulders"],
   "muscles": [
@@ -513,7 +513,7 @@
 
 {
   "name": "Chin Up - Assisted Dip/Pull-Up Machine",
-  "rating": 23,
+  "rating": 80,
   "equipment": ["Assisted Dip/Pull-Up Machine"],
   "bodyparts": ["Upper Back", "Shoulders"],
   "muscles": [
@@ -529,7 +529,7 @@
 
 {
   "name": "Clean - Barbell",
-  "rating": 23,
+  "rating": 70,
   "equipment": ["Barbell", "Weight Plates"],
   "bodyparts": ["Upper Back", "Shoulders"],
   "muscles": [
@@ -545,7 +545,7 @@
 
 {
   "name": "Clean and Press - Barbell",
-  "rating": 23,
+  "rating": 70,
   "equipment": ["Barbell", "Weight Plates"],
   "bodyparts": ["Shoulders"],
   "muscles": [
@@ -561,7 +561,7 @@
 
 {
   "name": "Concentration Curl - Cable Machine",
-  "rating": 23,
+  "rating": 75,
   "equipment": ["Cable Machine", "Cable Handle Attachment"],
   "bodyparts": ["Biceps", "Forearms"],
   "muscles": [

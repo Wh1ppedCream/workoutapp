@@ -47,6 +47,10 @@ final Set<int> _musclesToRemove = {};
 /// the IDs we loaded initially, so we can diff on Save
 late List<int> _originalMuscleIds;
 
+// IDs of bodyparts the user loaded initially, so we can diff on Save
+late List<int> _originalBodypartIds;
+
+
 
 
   @override
@@ -116,6 +120,10 @@ final Map<BodyPart, double> bodyPercents =
       // remember what we started with
     _originalMuscleIds = def.muscles.map((rm) => rm.muscle.id).toList();
 
+    // remember what we started with for bodyparts
+_originalBodypartIds = def.bodyParts.map((bp) => bp.id).toList();
+
+
       // Map bodyparts by definition, default percent 0 if missing
       _bodyEntries = def.bodyParts.map((bp) {
         final p = bodyPercents[bp] ?? 0.0;
@@ -140,9 +148,84 @@ _originalEquipmentIds = def.equipmentList.map((e) => e.id).toList();
    if (_isEditing && _selectedDef != null) {
      await _saveMuscleChanges();
      await _saveEquipmentChanges();
+     await _saveBodypartChanges();
    }
    setState(() => _isEditing = !_isEditing);
  }
+
+
+/// Persist adds/removals of bodyparts when saving.
+Future<void> _saveBodypartChanges() async {
+  final defId = _selectedDef!.id;
+
+  final currIds = _bodyEntries
+      .map((e) => e['id'] as int)
+      .toSet();
+  final origIds = _originalBodypartIds.toSet();
+
+  // 1) removals
+  for (var removed in origIds.difference(currIds)) {
+    await _repo.deleteExerciseBodypartMapping(defId, removed);
+  }
+
+  // 2) additions
+  for (var added in currIds.difference(origIds)) {
+    await _repo.addExerciseBodypartMapping(defId, added);
+  }
+
+  // reset baseline
+  _originalBodypartIds = currIds.toList();
+}
+
+/// Let the user pick one or more new BodyParts to stage.
+Future<void> _openAddBodypartDialog() async {
+  final allBps = await _repo.fetchAllBodyPartsFull(); // List<BodyPart>
+  final existing = _bodyEntries.map((e) => e['id'] as int).toSet();
+  final available = allBps.where((bp) => !existing.contains(bp.id)).toList();
+  final selectedIds = <int>{};
+
+  final result = await showDialog<Set<int>>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('Add Associated Bodyparts'),
+      content: SizedBox(
+        width: double.maxFinite,
+        child: StatefulBuilder(builder: (ctx2, setState2) {
+          return ListView.builder(
+            shrinkWrap: true,
+            itemCount: available.length,
+            itemBuilder: (_, i) {
+              final bp = available[i];
+              final checked = selectedIds.contains(bp.id);
+              return CheckboxListTile(
+                title: Text(bp.name),
+                value: checked,
+                onChanged: (on) => setState2(() {
+                  if (on == true) selectedIds.add(bp.id);
+                  else selectedIds.remove(bp.id);
+                }),
+              );
+            },
+          );
+        }),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.of(ctx).pop(),    child: const Text('Cancel')),
+        TextButton(onPressed: () => Navigator.of(ctx).pop(selectedIds), child: const Text('Add')),
+      ],
+    ),
+  );
+
+  if (result != null && result.isNotEmpty) {
+    setState(() {
+      for (var id in result) {
+        final bp = allBps.firstWhere((b) => b.id == id);
+        _bodyEntries.add({'id': bp.id, 'name': bp.name, 'percent': 0.0});
+      }
+    });
+  }
+}
+
 
  /// Persist adds/removals on equipment when saving.
 Future<void> _saveEquipmentChanges() async {
@@ -543,84 +626,105 @@ if (!mounted) return;
   }
 
   Widget _buildBodypartsTab() {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Checkbox(
-                value: _useManualBody,
-                onChanged: _isEditing
-                    ? (val) => setState(() => _useManualBody = val ?? false)
-                    : null,
-              ),
-              const Text('Use Manual Bodyparts'),
-            ],
+  return Padding(
+    padding: const EdgeInsets.all(16),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Checkbox(
+              value: _useManualBody,
+              onChanged: _isEditing
+                  ? (v) => setState(() => _useManualBody = v ?? false)
+                  : null,
+            ),
+            const Text('Use Manual Bodyparts'),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Expanded(
+          child: _useManualBody ? _buildManualBodyparts() : _buildAutoBodyparts(),
+        ),
+        if (_isEditing && _useManualBody)
+          Padding(
+            padding: const EdgeInsets.only(top: 8, bottom: 16),
+            child: ElevatedButton.icon(
+              onPressed: _openAddBodypartDialog,
+              icon: const Icon(Icons.add),
+              label: const Text('Add Associated Bodypart'),
+            ),
           ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: _useManualBody
-                ? _buildManualBodyparts()
-                : _buildAutoBodyparts(),
-          ),
-          if (_isEditing && _useManualBody)
-            Padding(
-              padding: const EdgeInsets.only(top: 8, bottom: 16),
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  // TODO: open add-bodypart modal
+      ],
+    ),
+  );
+}
+
+Widget _buildAutoBodyparts() {
+  // just the computed percents, no editing
+  return ListView(
+    children: _bodyEntries.map((e) {
+      return ListTile(
+        title: Text(e['name'] as String),
+        trailing: Text('${(e['percent'] as double).toStringAsFixed(1)}%'),
+      );
+    }).toList(),
+  );
+}
+
+Widget _buildManualBodyparts() {
+  return ListView.builder(
+    itemCount: _bodyEntries.length,
+    itemBuilder: (_, i) {
+      final entry = _bodyEntries[i];
+      return ListTile(
+        leading: _isEditing
+            ? IconButton(
+                icon: const Icon(Icons.delete),
+                onPressed: () async {
+                  final bpId   = entry['id']   as int;
+                  final bpName = entry['name'] as String;
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (_) => AlertDialog(
+                      title: const Text('Remove Bodypart'),
+                      content: Text('Remove "$bpName" from this exercise?'),
+                      actions: [
+                        TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
+                        TextButton(onPressed: () => Navigator.of(context).pop(true),  child: const Text('Remove')),
+                      ],
+                    ),
+                  );
+                  if (confirm != true) return;
+                  setState(() {
+                    _bodyEntries.removeAt(i);
+                  });
                 },
-                icon: const Icon(Icons.add),
-                label: const Text('Add Associated Bodypart'),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAutoBodyparts() {
-    return ListView(
-      children: _bodyEntries.map((entry) {
-        return ListTile(
-          title: Text(entry['name'] as String),
-          trailing: Text('${entry['percent']}%'),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildManualBodyparts() {
-    return ListView(
-      children: _bodyEntries.map((entry) {
-        return ListTile(
-          leading: _isEditing
-              ? IconButton(
-                  icon: const Icon(Icons.delete),
-                  onPressed: () {
-                    // TODO: remove bodypart
-                  },
-                )
-              : null,
-          title: Text(entry['name'] as String),
-          trailing: SizedBox(
-            width: 80,
-            child: TextFormField(
-              enabled: _isEditing,
-              initialValue: entry['percent'].toString(),
-              decoration: const InputDecoration(suffixText: '%'),
-              keyboardType: TextInputType.number,
-              onFieldSubmitted: (val) {
-                // TODO: update bodypart percent override
-              },
-            ),
+              )
+            : null,
+        title: Text(entry['name'] as String),
+        trailing: SizedBox(
+          width: 80,
+          child: TextFormField(
+            enabled: _isEditing,
+            initialValue: (entry['percent'] as double).toStringAsFixed(1),
+            decoration: const InputDecoration(suffixText: '%'),
+            keyboardType: TextInputType.numberWithOptions(decimal: true),
+            onFieldSubmitted: (val) {
+              final p = double.tryParse(val) ?? 0.0;
+              setState(() {
+                entry['percent'] = p;
+              });
+            },
           ),
-        );
-      }).toList(),
-    );
-  }
+        ),
+      );
+    },
+  );
+}
+
+
+  
 
  Widget _buildEquipmentTab() {
   return Column(
