@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import '../../../repositories/app_repository.dart';
 import '../../../models/models.dart';
 
-
 /// Exercise Editor Screen: allows viewing and editing an exercise definition.
 class ExerciseEditorScreen extends StatefulWidget {
   const ExerciseEditorScreen({super.key});
@@ -14,36 +13,120 @@ class ExerciseEditorScreen extends StatefulWidget {
   State<ExerciseEditorScreen> createState() => _ExerciseEditorScreenState();
 }
 
-class _ExerciseEditorScreenState extends State<ExerciseEditorScreen> with SingleTickerProviderStateMixin {
+class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
+    with SingleTickerProviderStateMixin {
+  final _repo = AppRepository();
   late final TabController _tabController;
+  // **ADD** this line for a persistent controller:
+  late final TextEditingController _nameController;
   bool _isEditing = false;
 
-  // TODO: Replace with actual data from repository
-  List<String> _exerciseNames = ['Bench Press', 'Squat', 'Deadlift'];
-  String? _selectedExercise;
+  // Definitions
+  List<ExerciseDefinition> _defs = [];
+  ExerciseDefinition? _selectedDef;
   bool _isNewExercise = false;
 
-  // TODO: Replace with actual model lists
-  List<Map<String, dynamic>> _muscleEntries = [];    // { 'name': '', 'percent': 100.0 }
-  List<Map<String, dynamic>> _bodyEntries = [];      // { 'name': '', 'percent': 100.0 }
+  // Tab data
+  List<Map<String, dynamic>> _muscleEntries = []; // { 'id': int, 'name': String, 'percent': double }
+  List<Map<String, dynamic>> _bodyEntries = [];   // { 'id': int, 'name': String, 'percent': double }
   List<String> _equipmentList = [];
+  bool _useManualBody = false;
+
+  // Notes & Media (stubbed)
   String _setupNotes = '';
   String _executionNotes = '';
   String _tipsNotes = '';
-  List<Map<String, dynamic>> _mediaItems = [];       // { 'type': 'image'|'video'|'link', 'url': '' }
-  bool _useManualBody = false;
+  List<Map<String, dynamic>> _mediaItems = []; // { 'type': 'image'|'video'|'link', 'url': '' }
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
-    // TODO: Load initial data
+    // **ADD**:
+    _nameController = TextEditingController();
+    _loadExerciseList();
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    // **ADD**:
+    _nameController.dispose();
     super.dispose();
+  }
+
+  /// Load all definitions and select the first one
+  Future<void> _loadExerciseList() async {
+    final defs = await _repo.lookupDefsDetailed();
+    setState(() {
+      _defs = defs;
+      _isNewExercise = false;
+      _isEditing = false;
+    });
+    if (_defs.isNotEmpty) {
+      _selectedDef = defs.first;
+    _nameController.text = _selectedDef!.name;
+    await _onExerciseSelected(_selectedDef!);
+    }
+  }
+
+  /// Handle selecting an exercise definition
+  Future<void> _onExerciseSelected(ExerciseDefinition def) async {
+    setState(() {
+      _selectedDef = def;
+      _isNewExercise = false;
+      _isEditing = false;
+      // ← ADD THIS LINE
+    _nameController.text = def.name;
+    });
+    // **ADD**: send user back to the first tab
+    _tabController.index = 0;
+    await _loadDefinitionDetails(def);
+  }
+
+  /// Populate muscles, bodyparts, equipment for the selected definition
+  Future<void> _loadDefinitionDetails(ExerciseDefinition def) async {
+    // new: pass the definition ID positionally
+final musclePercents = await _repo.computeMusclePercents(
+  _selectedDef!.id,
+);
+final Map<BodyPart, double> bodyPercents =
+    await _repo.computeBodyPartPercents(
+  _selectedDef!.id,
+);
+
+
+
+    setState(() {
+      // Map muscles by definition order, default percent 0 if missing
+      _muscleEntries = def.muscles.map((rm) {
+        final percentEntry = musclePercents.firstWhere(
+          (e) => e.muscleId == rm.muscle.id,
+          orElse: () => ExerciseMusclePercent(
+            exerciseDefId: def.id, 
+            muscleId: rm.muscle.id,
+            percent: 0.0,
+          ),
+        );
+        return {
+          'id': rm.muscle.id,
+          'name': rm.muscle.name,
+          'percent': percentEntry.percent,
+        };
+      }).toList();
+
+      // Map bodyparts by definition, default percent 0 if missing
+      _bodyEntries = def.bodyParts.map((bp) {
+        final p = bodyPercents[bp] ?? 0.0;
+        return {
+          'id': bp.id,
+          'name': bp.name,
+          'percent': p,
+        };
+      }).toList();
+
+      _equipmentList = def.equipmentList.map((e) => e.name).toList();
+    });
   }
 
   void _toggleEdit() {
@@ -52,140 +135,152 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen> with Single
 
   @override
   Widget build(BuildContext context) {
+    // **ADD**: show a loader until an exercise is selected
+    if (_selectedDef == null && !_isNewExercise) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
     return Scaffold(
       appBar: AppBar(
         title: SizedBox(
-    width: 250, // tweak to taste
-    child: Autocomplete<String>(
-      optionsBuilder: (TextEditingValue txt) {
-        if (txt.text.isEmpty) return _exerciseNames;
-        return _exerciseNames.where((e) =>
-          e.toLowerCase().contains(txt.text.toLowerCase())
-        );
-      },
-      onSelected: (selection) {
-        setState(() {
-          if (!_exerciseNames.contains(selection)) {
-            // treat as "new"
-            _isNewExercise = true;
-            _selectedExercise = null;
-            _isEditing = true;
-          } else {
-            _isNewExercise = false;
-            _selectedExercise = selection;
-            _isEditing = false;
-            // TODO: load your model-data here
-          }
-        });
-      },
-      fieldViewBuilder: (context, controller, focusNode, onSubmitted) {
-        // initialize text each time you open it
-        controller.text = _isNewExercise
-            ? ''
-            : (_selectedExercise ?? '');
-        return TextField(
-          controller: controller,
-          focusNode: focusNode,
-          decoration: InputDecoration(
-  hintText: 'Select or enter exercise',
-  isDense: true,
-  contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-  enabledBorder: OutlineInputBorder(
-    borderSide: BorderSide(color: Colors.white60),
-    borderRadius: BorderRadius.circular(4),
-  ),
-  focusedBorder: OutlineInputBorder(
-    borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
-    borderRadius: BorderRadius.circular(4),
-  ),
-  filled: true,
-  fillColor: Theme.of(context).colorScheme.surface.withValues(alpha: 0.1),
-),
-
-          onSubmitted: (value) {
-            // if they type something not in the list, treat as new:
-            if (!_exerciseNames.contains(value)) {
-              setState(() {
-                _isNewExercise = true;
-                _selectedExercise = null;
-                _isEditing = true;
-              });
-            } else {
-              setState(() {
-                _selectedExercise = value;
-                _isNewExercise = false;
-              });
-            }
-            onSubmitted();
-          },
-        );
-      },
-     
-      optionsViewBuilder: (ctx, onSelected, options) {
-        return Material(
-          elevation: 4,
-          child: ListView(
-            padding: EdgeInsets.zero,
-            shrinkWrap: true,
-            children: options.map((opt) => ListTile(
-              title: Text(opt),
-              onTap: () => onSelected(opt),
-            )).toList(),
-          ),
-        );
-      },
-    ),
-  ),
-  actions: [
-    IconButton(
-      icon: Icon(_isEditing ? Icons.check : Icons.edit),
-      onPressed: _toggleEdit,
-      tooltip: _isEditing ? 'Save' : 'Edit',
-    ),
-  ],
-  
-),
-      body: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // put the TabBar in its own Material so the indicator shows
-        Material(
-  color: Theme.of(context).appBarTheme.backgroundColor,
-  child: TabBar(
-    controller: _tabController,
-    padding: EdgeInsets.zero,
-    indicatorPadding: EdgeInsets.zero,
-
-    // Give only **right** padding on each label:
-    labelPadding: const EdgeInsets.only(right: 16),
-
-    tabs: const [
-      Tab(text: 'Muscles'),
-      Tab(text: 'Bodyparts'),
-      Tab(text: 'Equipment'),
-      Tab(text: 'Notes'),
-    ],
-  ),
-),
-
-
-        // then the content
-        Expanded(
-          child: TabBarView(
-            controller: _tabController,
-            children: [
-              _buildMusclesTab(),
-              _buildBodypartsTab(),
-              _buildEquipmentTab(),
-              _buildNotesMediaTab(),
-            ],
+          width: 250,
+          child: Autocomplete<String>(
+            optionsBuilder: (TextEditingValue txt) {
+              final names = _defs.map((d) => d.name).toList();
+              if (txt.text.isEmpty) return names;
+              return names
+                  .where(
+                      (name) => name.toLowerCase().contains(txt.text.toLowerCase()))
+                  .toList();
+            },
+            onSelected: (selection) {
+              final match = _defs.firstWhere(
+                (d) => d.name == selection,
+                orElse: () => ExerciseDefinition(
+                  id: -1,
+                  name: selection,
+                  equipmentId: null,
+                  rating: 0,
+                  equipmentList: [],
+                  bodyParts: [],
+                  muscles: [],
+                ),
+              );
+              if (match.id == -1) {
+                // New exercise
+                setState(() {
+                  _isNewExercise = true;
+                  _selectedDef = null;
+                  _isEditing = true;
+                  _muscleEntries = [];
+                  _bodyEntries = [];
+                  _equipmentList = [];
+                });
+              } else {
+                _onExerciseSelected(match);
+              }
+            },
+            fieldViewBuilder: (context, _ , focusNode, onSubmitted) {
+  // **USE** your controller instead of recreating one:
+  _nameController.text = _isNewExercise
+      ? ''
+      : (_selectedDef?.name ?? '');
+              return TextField(
+                controller: _nameController,
+                focusNode: focusNode,
+                decoration: InputDecoration(
+                  hintText: 'Select or enter exercise',
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white60),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  filled: true,
+                  fillColor: Theme.of(context).colorScheme.surface.withValues(alpha: 0.1),
+                ),
+                onSubmitted: (value) {
+                  if (!_defs.any((d) => d.name == value)) {
+                    setState(() {
+                      _isNewExercise = true;
+                      _selectedDef = null;
+                      _isEditing = true;
+                      _muscleEntries = [];
+                      _bodyEntries = [];
+                      _equipmentList = [];
+                    });
+                  } else {
+                    final def = _defs.firstWhere((d) => d.name == value);
+                    _onExerciseSelected(def);
+                  }
+                  // after selection or new, keep the text in sync:
+      _nameController.text = _isNewExercise
+          ? ''
+          : (_selectedDef?.name ?? '');
+      onSubmitted();
+                },
+              );
+            },
+            optionsViewBuilder: (ctx, onSelected, options) {
+              return Material(
+                elevation: 4,
+                child: ListView(
+                  padding: EdgeInsets.zero,
+                  shrinkWrap: true,
+                  children: options
+                      .map((opt) => ListTile(
+                            title: Text(opt),
+                            onTap: () => onSelected(opt),
+                          ))
+                      .toList(),
+                ),
+              );
+            },
           ),
         ),
-      ],
-    ),
-  );
-}
-
+        actions: [
+          IconButton(
+            icon: Icon(_isEditing ? Icons.check : Icons.edit),
+            onPressed: _selectedDef != null || _isNewExercise ? _toggleEdit : null,
+            tooltip: _isEditing ? 'Save' : 'Edit',
+          ),
+        ],
+      ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Material(
+            color: Theme.of(context).appBarTheme.backgroundColor,
+            child: TabBar(
+              controller: _tabController,
+              tabs: const [
+                Tab(text: 'Muscles'),
+                Tab(text: 'Bodyparts'),
+                Tab(text: 'Equipment'),
+                Tab(text: 'Notes'),
+              ],
+            ),
+          ),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildMusclesTab(),
+                _buildBodypartsTab(),
+                _buildEquipmentTab(),
+                _buildNotesMediaTab(),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildMusclesTab() {
     return Column(
@@ -278,7 +373,6 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen> with Single
   }
 
   Widget _buildAutoBodyparts() {
-    // TODO: generate from muscle-bodypart mapping and percent
     return ListView(
       children: _bodyEntries.map((entry) {
         return ListTile(
