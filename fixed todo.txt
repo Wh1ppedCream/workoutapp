@@ -13,6 +13,8 @@ FITNESS APP PROJECT:
 			- maybe editable table
 		
 	UPCOMING:
+		
+		
 		- expanded history details widget
 			- amount work on each bodypart
 			- amount work on each muscle
@@ -31,6 +33,8 @@ FITNESS APP PROJECT:
 			- if altering older sessions has an undo button which works
 		
 		
+
+
 	THOUGHTS:
 		- exercise ranking to muscle usage% conversion
 			1. 30%	= 30
@@ -82,46 +86,44 @@ FITNESS APP PROJECT:
 		session completion popup:
 			- comparison or increments compared to older sessions
 			- exertion related questions, eg: muscle soreness, reps in reserve (optional for answering)
-
-
-
+			
+			
+			
+	OUTDATED:
 	
-IDEAS: 
-
-	irl games: 
-		Everyone gets sheet of paper and pen, pens are numbered, everyone writes down punishment on one side of paper,  3 numbers on other side
-		Spare pens in box, if it's one of spare pens, number is lines
-		Mines
-		(maybe) reverse punishment card, so if numbers win, card writer has to do punishment
-		Possibly able to purchase new rule implementing by coin
-		You can buy coin with real money
-		Challenges: Make Lyrics
-		2) on the spot karaoke/singing
-		3) pick 3 other people and do a random improvised skit
-		4) sports stuff
-		5) user made challenge
-
-
-
-
-	PROJECTS:
-		- MAKE EVERYTHING HAVE EASY COMPLEXITY AND INCREASING COMPLEXITY
-		1. fitness app
-			- android
-			- ios
-			- website
-		2. product tracking
-			- food
-			- gym equipment
-		3. efficiency/productivity launcher
-		4. mobile planner
-		5. note taking app
-		6. text difference and merging app
-		
-		
-	planner additions:
-		- habit tracking
-		- food tracking
-		- 
-		
-		
+		- measurements: 
+			“Add New Record” button
+			– Wire it up so it opens the NewMeasurementItemPage, passing in the current definition (so you can pre-select that measurement type).
+			
+			Dot-tap callbacks on the chart
+			– When the user taps a data point, show a tooltip (e.g. via LineTouchData) with the exact value and date.
+			
+			Fine-tune the chart styling
+			– E.g. a thin bottom border line, discrete grid lines if desired.
+			
+			2. New Measurement Item Screen
+				Pre-selecting the definition
+				– If you came here from “Add New Record,” select the appropriate preset type (Bodyweight, Height, or a specific body part) by default.
+				
+				Validation/UI polish
+				– Make sure the unit dropdown for Bodyweight (“lbs”/“kg”) actually updates the saved unit if you later support “kg.”
+				
+				Edge-case handling
+				– If the user backs out mid-flow, ensure controllers are reset correctly next time.
+				
+				3. Measured Items Page
+				Show only definitions with at least one measurement
+				– On a fresh install, only display the “Track a New Measurement” option; hide any definitions until they’ve got data.
+				
+				List item enhancements
+				– For each definition, show its most recent value + date in the tile.
+				
+				Tapping a definition
+				– Navigate to the specific measurement screen for that definition.
+				
+				4. Data Seeding & Migrations
+				Complete seeding of “Bodyweight” and “Height” in measurement_definitions
+				– Ensure you insert those two definitions on both onCreate and onUpgrade.
+				
+				Future migrations
+				– Add placeholder if (oldVersion < 3) { … } blocks to your onUpgrade so you can slot in v3 changes later.

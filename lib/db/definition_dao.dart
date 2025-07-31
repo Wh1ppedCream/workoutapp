@@ -530,4 +530,91 @@ static Future<ExerciseDefinition?> getExerciseDefinitionById(
   );
 }
 
+/// Inserts a muscle↔exercise link at a given rank.
+static Future<int> insertExerciseMuscleMapping(
+  Database db,
+  int exerciseId,
+  int muscleId,
+  int rank,
+) {
+  return db.insert(
+    'exercise_muscle',
+    {
+      'exercise_id': exerciseId,
+      'muscle_id':   muscleId,
+      'rank':        rank,
+    },
+  );
+}
+
+/// Deletes the association between an exercise definition and a muscle.
+static Future<int> deleteExerciseMuscleMapping(
+  Database db,
+  int exerciseId,
+  int muscleId,
+) {
+  return db.delete(
+    'exercise_muscle',
+    where: 'exercise_id = ? AND muscle_id = ?',
+    whereArgs: [exerciseId, muscleId],
+  );
+}
+
+/// Inserts a body-part↔exercise link.
+static Future<int> insertExerciseBodypartMapping(
+  Database db,
+  int exerciseId,
+  int bodypartId,
+) {
+  return db.insert(
+    'exercise_bodypart',
+    {
+      'exercise_id': exerciseId,
+      'bodypart_id': bodypartId,
+    },
+  );
+}
+
+/// Deletes a body-part↔exercise link.
+static Future<int> deleteExerciseBodypartMapping(
+  Database db,
+  int exerciseId,
+  int bodypartId,
+) {
+  return db.delete(
+    'exercise_bodypart',
+    where: 'exercise_id = ? AND bodypart_id = ?',
+    whereArgs: [exerciseId, bodypartId],
+  );
+}
+
+/// Inserts an equipment↔exercise link.
+static Future<int> insertExerciseEquipmentMapping(
+  Database db,
+  int exerciseId,
+  int equipmentId,
+) {
+  return db.insert(
+    'exercise_equipment',
+    {
+      'exercise_id':  exerciseId,
+      'equipment_id': equipmentId,
+    },
+  );
+}
+
+/// Deletes an equipment↔exercise link.
+static Future<int> deleteExerciseEquipmentMapping(
+  Database db,
+  int exerciseId,
+  int equipmentId,
+) {
+  return db.delete(
+    'exercise_equipment',
+    where: 'exercise_id = ? AND equipment_id = ?',
+    whereArgs: [exerciseId, equipmentId],
+  );
+}
+
+
 }

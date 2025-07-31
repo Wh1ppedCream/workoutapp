@@ -1,0 +1,2003 @@
+all my old todolists combined where i need to sort them
+
+____________________________________________________________________________________________________________________________________
+DOING:
+____________________________________________________________________________________________________________________________________
+
+		- redoing exercise info
+		
+		- muscle ranking under bodyparts
+			- maybe editable table
+			- might want page
+		- sets per bodypart
+			- maybe editable table
+		- sets per muscle
+			- maybe editable table
+____________________________________________________________________________________________________________________________________
+TO DO :
+____________________________________________________________________________________________________________________________________
+
+		- expanded history details widget
+			- amount work on each bodypart
+			- amount work on each muscle
+			- finish body heatmap on history widget
+		- nutrition
+			- fridge
+			- food item barcode scanning
+			- recipes
+			- filter recipes by fridge items
+		- compile for ios
+			- landscape mode designing
+			- fixing for web
+		- double check 
+			- if deleting sesisons in history works
+			- if making alterations to historic sessions works
+			- if altering older sessions has an undo button which works
+			
+			
+	- nutrition dashboard
+	- workout dashboard
+	- quickstart (+measurement,+meal,+workout)
+	- x-day workout details
+		- can slide between 
+			- 1 week, 
+			- 1 month, 
+			- 3 month
+			- 6 month, 
+			- 1 year
+			- all time
+	- scrollable workout history 
+	- Nutrition log calender
+	- Trend tile holder (contains healthtrendtiles we created for nutrition page)
+	- Important Stats (user decided stats to show)
+	
+	
+	
+	- detailed trend (details for an individual trend for recorded info healthtrendtiles lead to)
+	- last workout session widget
+	- last meal breakdown widget
+	- customizeable widget
+	- MAKE WIDGETS RESIZEABLE BY USER
+	
+			
+			
+			
+	Complete onboarding flow
+Make the rest of the screens also widgets
+Optimize start training bar
+Replace settings screen flow chart screen with proper preset flow chart screen
+Combine measurements with health trends
+Fix all analytics settings pages
+Add in other analytics settings pages
+Ways to edit existing methods
+IMPORTANT: ERROR WHEN
+Exercises added in the session if session cancelled/ ddeleted instead of finishing, creates blank version of exercise
+change everything that loads in app, so that it all loads in on initial opening of app, and reloads when change is made (generally just make stuff not always reload and work faster)
+like body heatmap, bottom navbar, profiles, presets, history, etc
+
+
+
+
+
+
+immediate tasks:
+	- fill in top left navbars for most bottom tab pages with nav bar items	
+		- train_page
+			- exercise_catalog_page.dart
+			- muscle_filter_page.dart
+			- gym_exercise_settings_page.dart
+			
+			- full_history_screen.dart
+			
+			- (later, after final implementation of flowchart ) flow settings page
+			- (later, after making gym profile settings) gym profile settings page
+		- history_screen
+			- analytics_dashboard_screen.dart
+			- exercise_catalog_page.dart
+			- full_history_screen.dart
+			- muscle_filter_page.dart
+		- nutrition_page
+	
+	- rearrange file structure
+	
+	- flow chart
+		- default preset flow
+			- create default version of preset flow
+				- make default for use across all profiles
+				- maybe make defaults for individual profiles also
+			- completely restructure method management
+			- for new presets, these default methods will be coppied over and used as starting point
+		- restructuring method management
+			- new method management screen
+				- shows profiles as large collapsable headlines
+				- shows presets as smaller collapsable headlines under profiles
+				- shows methods as list items
+					- default methods for all profiles are shown at top under large collapsable 'default' headline
+					- default methods for a specific profile are shown under the profile headline, under a small smaller collapsable 'default' headline, above the first preset headline
+					- specific methods for a specific preset are just under the preset headline
+					- method layout and actions:
+						- drag_handle to far left side of list tile	
+							- method can be dragged out of the collapsable headline it is under, into other smaller or larger collapsable headlines and if let go there, will open up pop up box with options to 'copy' 'move' or 'cancel'
+								- 'copy' will add a copy of this method to the area it was dragged to.
+									- eg:
+								- 'move' will move the method to the new position, where it can only be used there
+									- eg:
+								- 'cancel' will make no changes
+						- method name to right of drag handle
+						- to far right, small edit icon and small delete icon
+							- edit icon will open up method add/edit pop-up
+								- this is the pop up our auto_preset_flow_screen currently uses, with name box, type drop down and the other same fields, it will simply be prepopulated with existing information so users can alter the method
+							- delete icon will open up confirmation pop-up asking 'do you want to delete this method?'.
+						- between method name and edit, delete icons: there will be badges/rounded colored boxes indicating which type of method this is:
+							- each option for type of method will have a different color.
+							- options: weight, rep, addSet, delSet
+		- profile settings page version
+			- has drop down to select profile
+				- by default has no profile selected and shows default flow across all profiles
+				- after selecting a profile has dropdown to select specific preset within that profile
+					- by default, after profile selected, no specific preset will be selected and will show default flow for that profile
+					- after preset is selected, will show flow for that preset, the same way it shows up in auto_preset_flow_screen.dart, after opening that from a specifc preset_detail_screen.
+					
+	- exercise analytics
+	
+	- Goal selection page:
+		- 3 options
+			- gain
+			- maintain
+			- lose
+		- target weight selection
+		- sliding scale for how fast you want to make this change
+		- estimate for how difficult this change will be based off how different the required intake is from your current maintenance intake
+		- estimated details for reaching goal
+			- estimated calorie intake, protein, fat, carbs
+			- estimated time you will reach goal
+
+	- bodypart sizes trend pages:
+		- average size over timespan
+		- difference of size now from timespan
+		- size graph over timespan
+			- 1 week
+			- 1 month
+			- 3 months
+			- 6 months
+			- year
+			- all time
+		- capability to add in images for comparison for bodypart
+
+	- Meal Breakdown:
+		- calories contained
+		- protein, fat, carb contents
+		- what % of target protein, fat, carbs it makes up
+		- nutritional breakdown
+			- carb breakdown
+			- protein breakdown
+			- fat breakdown
+
+	- nutrition view difficulty selection
+		- options:
+			- simplified
+			- gradually teach users
+			- detailed
+	
+	Tracking Selection Screen
+		- lets you select what macros you want to track
+			- calories, protein, fat, carbs
+			- carb breakdown
+				- fiber, net(non-fiber), starch, sugars, sugars added
+			- fat breakdown
+				- monounsaturated fat, polyunsaturated fat, omega3, omega3 ALA, omega3 DHA, omega3 EPA, omega6, Saturated fat, trans fat
+			- protein breakdown
+				- cysteine, histidine, isoleucine, leucine, lysine, methionine, phenylalanine, threonine, tyrosine, valine
+			- vitamins
+				- Thiamin (B1), Riboflavin (B2), Niacin (B3), Pantothenic acid (B5), Pyridoxine (B6), Biotin (B7), Folate (B9), Cobalamin (B12)
+			
+	- Initial Questionairre: (take in info) (show info for)
+		- name (take in info)
+		- gender (take in info)
+		- date of birth (take in info)
+		- height (take in info)
+		- weight (take in info)
+		- have you weighed more than 10 lbs over current weight before? (take in info)
+		- current ongoing weight trend: (take in info)
+			- gaining weight
+			- losing weight
+			- maintaining weight
+			- not sure
+		- current bodyfat estimate (take in info)
+			- photos for each estimate level
+				- 5% increments (0-5, 5-10, 10-15, 15-20, 20-25, 25-30, 30-35, 35-40, 40+)
+		- exercise frequency (take in info)
+			- in sessions per week (0, 1-3, 4-6, 7+)
+		- current activity level in terms of steps (take in info)
+			- high (15k+ steps)
+			- moderate (5-15k steps)
+			- low (0-5k steps)
+		- weightlifting experience (take in info)
+			- no experience
+			- beginner (less than 1yr)
+			- intermediate (1yr to 4yr)
+			- advanced (4yr + )
+		- cardio experience (take in info)
+			- no experience
+			- beginner (less than 1yr)
+			- intermediate (1yr to 4yr)
+			- advanced (4yr + )
+		- maintenance calorie estimate value (show info for)
+		- provide target weight and related metrics
+			- target weight	(take in info)
+			- weight loss per week
+			- weight loss per month
+			- difficulty of selected items (show info for)
+		- summary of selected goal (show info for)
+			- rate of bodyfat% loss per week
+			- initial daily calorie intake budget
+			- estimated date to reach goal
+		- preferred diet (take in info)
+			- balanced: standard amounts of everything
+			- low fat: less fats, more carbs and protein
+			- low carb: less carbs, more fat and protein
+			- keto: very low carbs, much higher fat
+		- calorie floor: (take in info)
+			- provide minimum amount of calories which program can set for you
+		- training during program: (take in info)
+			- none
+			- lifting
+			-cardio
+			- lifting and cardio
+		- preferred protein intake: (take in info)
+			- low
+			- moderate
+			- high
+			- very high
+		- estimated amounts (show info for)
+			- calorie expenditure
+			- avg calorie target
+			- target protein (grams/lb)
+			- diet type
+		
+		
+		
+		
+		
+		- choose to lose maintain or gain weight
+			- can put in specifc weight target
+			- time for reaching goal
+			
+	
+	- nutrition page:
+		- dashboard widget:
+			-items:
+				- calories consumed
+				- calories left to consume (remaining)
+				- target calories
+				- protein 
+				- fat
+				- carbs
+		- trend graphs
+			- calorie expenditure trend
+				- clicking will open calorie expenditure page
+			- weight trend
+		- food log
+			- is like google calanderish view
+			- at top, shows (out of recommended amount, how much)
+				- calories consumed
+				- protein 
+				- fat
+				- carbs
+			- entries for meals/consumption 
+				- can select a few and make a meal breakdown from it.
+		- current body stats
+			- weight
+			- bodyfat
+			- avg intakes of calories and nutrients
+			- measurements of bodyparts
+			
+			
+	- Default trend page:
+		- space on top for average numbers, goal numbers, etc (general space for specific page to enter numbers and the name of what those numbers represent)
+		- graph of item being measured over selected timespan
+		- timespans for graph
+			- 1 week
+			- 1 month
+			- 3 months
+			- 6 months
+			- year
+			- all time
+		- section under graphs for insights regarding the item being measured
+		- section for showing and editing past measurements
+		- place to add in a measurement.
+		
+	- Calorie expenditure trend page:
+		- average calorie expenditure over selected timespan
+		- difference from start over selected timespan
+		- graph of calorie expenditure over given timespans
+			- 1 week
+			- 1 month
+			- 3 months
+			- 6 months
+			- year
+			- all time
+		
+	- weight trend page:
+		- average weight over timespan
+		- difference of weight now from timespan
+		- weight graph over timespan
+			- 1 week
+			- 1 month
+			- 3 months
+			- 6 months
+			- year
+			- all time
+			
+	food database (just the page):
+		- options 
+			- Barcode
+			- Search
+			- Quick Add
+			- Custom
+			
+		
+						
+	1) Session Completion Pop-up
+		1A. when and where it shows up: 
+			- only is generated and opened for a finished, saved session
+			1. session screen after finishing session (session info is saved before pop-up is opened, but you return to train page after pop up is closed)
+			2. session detail screen on opening a saved session from history pages
+		1B. metrics for displaying:
+			- date and start time
+			- total duration
+			- total volume: ∑(weight × reps)
+			- calories burnt (for now this will always be 100, later we'll implement this properly)
+			- gym score (for now this will always be 5/10, later we'll implement this properly)
+			- details for each set in each weighted exercise:
+				- only ticked exercises count here
+				- exercise name
+				- for each exercise, sets are numbered: 1, 2, and so on, with each set being on a different line
+				- sets are shown as weight x reps (eg: 15 lbs x 10 meaning 10 reps with 15 lbs weight)
+				- if a set is a new rep max or volume max for the exercise, it gets a RM badge (for rep max) or a VM badge (for volume max) beside the set entry 
+					- eg: if a 3rd set of Bench Press - Barbell is 8 reps with 225 lbs weight in the session and this is the new 8 rep max and the new volume max, the set entry will look like:
+						3. 225 lbs x 8		(RM badge)  (VM badge)		1 ERM = 284
+						(we will talk about ERM next)
+				- beside set info, on same line as set info, flush right to page, will be the 1 ERM (Estimated Rep Max) for the set.
+					- i'm not sure for now if this calculation will actually be done here or elsewhere, but here is the formula for finding this: 1 ERM = weight x (1 + 0.0333 x reps)
+			- details for cardio:
+				- just cardio name and minutes
+				- minutes shown is minutes completed, not the total number of minutes put in for cardio.
+			- details for stretches:
+				- just stretch name
+				- only ticked stretches count here
+			- weighted exercises, cardio, stretches will appear in the order they showed up in the session screen or session detail screen.
+		1C. Layout text-based
+			- Completed Session written on top
+			- under this: date, start time, total duration 
+			- under this: total volume, calories burnt, gym score
+			- under this: exercise details (weighted exercises, cardio and stretches)
+			- bottom right corner of pop-up: green button with tick mark on it to close the pop-up
+		
+		1D. Layout typed:
+			1. Initial appearance: bottom sheet opens to half-height (e.g. ~50% of screen), showing title, core metrics, and the top of the scrollable list.
+				Green “Done” button in the bottom-right corner always visible in the sheet chrome.
+				Tap behavior:
+					If sheet is only half-open, first tap expands it fully.
+					When fully expanded, tap again closes the sheet.
+				User can also swipe up/down at any time to expand or dismiss.
+			
+			2. Header & Core Metrics (sticky at top)
+				┌────────────────────────────────────────────┐
+				│ SESSION COMPLETE!                         │
+				│ Jan 22 • 09:53    Duration: 01:59:40     │
+				│ Volume: 17.5K lbs  •  Calories: 100 kcal  │
+				│ Gym Score: 5/10                           │
+				├────────────────────────────────────────────┤
+				All text in a compact, legible font.
+				Use subtle dividers to separate rows.
+			
+			3. Scrollable Body
+				For each exercise/cardio/stretch in session order:
+
+				3A. Weighted Exercises
+				■ Deadlift • Barbell
+				① 50 lbs × 10                 ERM = 66.7
+				② 70 lbs × 10                 ERM = 93.3
+				③ 110 lbs × 8 (RM)            ERM = 139.3
+				④ 130 lbs × 8 (RM)(VM)        ERM = 164.7
+				Badges:
+
+				(RM) badge background yellow, text black.
+
+				(VM) badge background green, text white.
+
+				ERM flush-right, same line, in small italic or secondary font color.
+
+				3B. Cardio
+				■ Bike • 12 min
+				Simple bullet line.
+
+				3C. Stretches
+				■ Quad Stretch
+				Simple bullet line.
+				
+			4. Green “Done” Button
+				Icon: a white checkmark inside a green circular FAB.
+				Position: bottom-right overlay of the sheet (fixed), not part of the scrollable area.
+				
+			
+			
+	2) Exercise Detail Pop-up
+		- only for weight exercises, not cardio or stretches
+		A) Entry Points & Navigation
+			- in session screen, preset detail screen, session detail screen and exercise catalog page, there will be a 'Details' button beside every WeightExercise name which opens this
+			- clicking on a card with a WeightExercise name in the definitions_by_bodypart_page will open this
+		
+		B) Data & Metrics Shown
+			B1) Exercise Identity
+				- Exercise name
+				- exercise equipment list
+				- Focused bodyparts
+				- focused muscles
+			B2) Exercise Notes
+				- will contain image or video link with example
+				- Set-up note for exercise
+				- execution note for exercise
+				- key tips for exercise
+			B3) Exercise Metrics
+				- showing the following for exercises within the last month, week and alltime
+					- recorded rep maxes listed for 1 to 20 reps
+						- if there is a recorded rep max for this rep range within the specified time period, shows that.
+						- if there is no recorded rep max for this rep range within the specified time period, shows the ERM instead and marks it as an ERM
+					- shows Volume Max for specified time period
+			B4) Exercise History
+				- 1ERM bargraph for last 10 sessions
+					Highlight the best ERM in that span.
+				- Volume Max bargraph for last 10 sessions
+					Highlight the best VM in that span.
+				- will have its own history shown (instances of the exercise being done)
+					very similar to session completion pop-up, but instead of exercise name on top of sets, will show session date instead.
+		C) Layout text-based
+			- three tabs on top for 'Details' (default),  'Metrics' and 'Records', selecting tab will change what is shown on pop-up
+			- if 'Details' is selected:
+				- info from B1) Exercise Identity first:
+					- Exercise name
+					- under this, EQUIPMENT with listed exercise equipment
+					- under this, FOCUS AREA with listed body parts
+					- under this, FOCUS MUSCLES with listed muscles
+				- under that is info from B2) Exercise Notes:
+					- EXAMPLE with space for an image or video, but with 'to be added' text as default
+					- SET-UP with space for text, but with 'to be added' text as default
+					- EXECUTION with space for an text, but with 'to be added' text as default
+					- TIPS with space for an text, but with 'to be added' text as default
+			- if 'Metrics' is selected:
+				- info from B3) Exercise Metrics:
+					- three buttons for 'Week', 'Month' and 'All Time' (default), selecting one will change numbers shown
+						- shows Volume Max and 1 ERM numbers for selected time period
+						- shows recorded Rep Maxes for 1 to 20 reps (1 rep max, 2 rep max, ... , 20 rep max)
+							if rep max is not recorded for selected time period, calculates it by 1 ERM and marks it as being an ERM
+			- if 'Records' is selected:
+				- info from B4) Exercise History:
+					- will have a bar graph on top, where x - axis is last 1 to 20 sessions and there will be 2 bars for each session, 1 bar being for 1 ERM and the other bar being for VM
+					- under this will be the exercise history, (previous instances of the exercise being done)
+						very similar to session completion pop-up, but instead of exercise name on top of sets, will show session date instead.
+			- at bottom of page, regardless of selected tabs, is 'Done' button, to close the pop-up
+						
+						
+			2) Exercise Detail Pop-up
+		A) Entry Points
+			SessionScreen, PresetDetailScreen, SessionDetailScreen, and ExerciseCatalogPage: tap the new Details button on any weight exercise.
+
+			DefinitionsByBodyPartPage: tap the exercise card itself.
+
+		B) What’s Displayed
+			Details Tab
+
+			Identity
+
+			Name (e.g. “Deadlift • Barbell”)
+
+			Equipment list (comma-separated)
+
+			Focus area (bodyParts)
+
+			Focus muscles
+
+			Notes
+
+			Placeholder for image/video (“Example: to be added”)
+
+			Setup text (“To be added”)
+
+			Execution text (“To be added”)
+
+			Key tips (“To be added”)
+
+			Metrics Tab
+
+			Time-range selector: Week / Month / All-time
+
+			Summary numbers:
+
+			Volume Max (single-set max volume in that period)
+
+			1 ERM (estimated 1-rep max)
+
+			Rep-max table for reps 1…20:
+
+			If you actually performed a max for a given rep-count in that period → show the recorded max.
+
+			Otherwise calculate ERM for that rep-count and flag it as “(ERM)”.
+
+			Records Tab
+
+			Dual-series bar chart over the last N sessions (e.g. 10):
+
+			One bar per session’s 1 ERM
+
+			One bar per session’s volume max
+
+			Highlight highest bar in each series
+
+			Exercise history list:
+
+			For each past instance: session date, set breakdown (weight × reps), number of sets, 1 ERM.
+
+			Similar styling to the Session-completion pop-up but grouped by date instead of exercise.
+
+			Persistent “Done” button at the bottom closes the sheet.
+
+		C) Behavior & Layout
+			Modal bottom sheet, ~70% height by default, scrollable internally.
+
+			Swipe up to expand full height; button first expands then closes.
+
+			Three tabs at top with an indicator under the active tab.
+
+			Data is fetched on open, show small spinners in each panel until loaded.
+
+
+
+				### 1) DETAILS Tab
+
+				```
+				┌────────────────────────────────────────────────┐
+				│  ×   Exercise Detail                          │  ← close icon
+				│────────────────────────────────────────────────│
+				│  [Details]  Metrics   Records                 │  ← tab selector
+				│                                               
+				│  Deadlift · Barbell                            │  ← Exercise name
+				│  EQUIPMENT: Barbell, Lifting Straps            │
+				│  FOCUS AREA: Hamstrings, Glutes                │
+				│  FOCUS MUSCLES: Biceps Femoris, Gluteus Max    │
+				│                                               
+				│  EXAMPLE                                      │
+				│  ┌──────────────────────────────────────────┐ 
+				│  │  [ video/image placeholder ]            │ 
+				│  └──────────────────────────────────────────┘ 
+				│                                               
+				│  SET-UP                                       │
+				│  “Stand with feet hip-width, grip barbell…”  │
+				│                                               
+				│  EXECUTION                                    │
+				│  “Hinge at hips, keep back flat…”            │
+				│                                               
+				│  TIPS                                         │
+				│  “Keep chest up, drive through heels.”       │
+				│                                               
+				├────────────────────────────────────────────────│
+				│                      [ DONE ]                  │
+				└────────────────────────────────────────────────┘
+
+				### 2) METRICS Tab
+
+				```
+				┌────────────────────────────────────────────────┐
+				│  ×   Exercise Detail                          │
+				│────────────────────────────────────────────────│
+				│  Details   [Metrics]  Records                 │
+				│                                               
+				│  Timeframe:  (Week)  (Month)  [All-time]      │  ← segmented control
+				│                                               
+				│  Historical Maxes                             │
+				│  ┌──────────┬───────────────┬──────────────┐   │
+				│  │ Reps     │ 1RM (lbs)     │ VM (lbs)     │   │
+				│  ├──────────┼───────────────┼──────────────┤   │
+				│  │ 1        │  230          │  230         │   │
+				│  │ 2        │  215 (ERM)    │  430         │   │
+				│  │ 3        │  200          │  600         │   │
+				│  │ …        │   …           │   …          │   │
+				│  │ 20       │  50 (ERM)     │ 1000         │   │
+				│  └──────────┴───────────────┴──────────────┘   │
+				│                                               
+				├────────────────────────────────────────────────│
+				│                      [ DONE ]                  │
+				└────────────────────────────────────────────────┘
+
+
+				### 3) RECORDS Tab
+
+				```
+				┌────────────────────────────────────────────────┐
+				│  ×   Exercise Detail                          │
+				│────────────────────────────────────────────────│
+				│  Details   Metrics   [Records]                │
+				│                                               
+				│  Last 10 Sessions Chart                       │
+				│  ┌──────────────────────────────────────────┐  │
+				│  │ [▇ ▇]  [▇ ▇]  [▇▇]  …                     │  │
+				│  │  1ERM VM   1ERM VM   1ERM VM             │  │
+				│  └──────────────────────────────────────────┘  │
+				│                                               
+				│  History                                      │
+				│  Jan 22 2024                                 │
+				│   1. 120 lbs × 10    [VM]    ERM 160.0       │
+				│   2. 100 lbs × 8     [ERM]                   │
+				│                                               
+				│  Jan 15 2024                                 │
+				│   1. 115 lbs × 10   [RM]  [VM]  ERM 153.8    │
+				│   …                                         │
+				│                                               
+				├────────────────────────────────────────────────│
+				│                      [ DONE ]                  │
+				└────────────────────────────────────────────────┘
+
+				**Notes on behavior**
+
+				* The sheet starts half-height. Tapping “Done” first expands it; tapping again closes it.
+				* Badges: yellow “RM” badge for new rep-max, green “VM” badge for new volume-max.
+				* The chart shows up to 10 most-recent sessions; fewer if not available.
+
+
+		
+	
+			
+	3) History Detail Widget
+		3A. when and where it shows up:
+			- within the history page, under the 'Exercises' and 'Muscle' buttons, but over the entries for past sessions
+		3B. metrics for displaying:
+			- shows info relating to workouts within the last 7 days:
+				- number of workouts
+				- overall time spent (combined time of sessions in last 7 days)
+				- total volume of workouts in last 7 days
+				- Weekly training goal%
+					- based off:
+						- calculated sets done per bodypart
+						- calculated sets done per muscle
+				- body heatmap for parts trained
+					- based off:
+						- calculated sets done per bodypart
+						- calculated sets done per muscle
+						
+		Metrics to Compute
+# Workouts
+Count of distinct sessions in the past 7 days.
+
+Total Time
+Sum of all session durations  in past 7 days (e.g. “5 h 30 m”).
+
+Total Volume
+Σ over all sets: (weight × reps), formatted (e.g. “48 k lbs”).
+
+Weekly Goal %
+Your progress toward whatever weekly target you set—e.g.,
+
+Option A: % of target # of workouts (e.g. 4/5 sessions → 80 %)
+
+Option B: % of target total volume (e.g. 50 k / 60 k → 83 %)
+
+Option C: Balanced % across bodyparts/muscles (see below)
+
+Body-Heatmap
+A simplified muscle silhouette (front/back) with each region shaded proportionally to the number of sets you hit in that area.
+
+You can key “High ↔ Low” with a small legend.
+		
+		
+			- will show last 7 days and info about the last 7 days
+				- no. of workouts
+				- time spent training
+				- total volume
+				- sets per bodypart
+				- calculated sets per muscle 
+					- by ranking; 
+						rank 1 = 1 set equivalent
+						rank 1+x = 1-(x*0.05) set equivalent
+						1 - 1
+						2 - 0.95
+						3 - 0.9
+						4 - 0.85
+						5 - 0.8
+						6 - 0.75
+						7 - 0.7
+				- overall muscle group coverage (heatmap of parts trained)
+				- exercise performance trends
+	
+	
+	
+	
+	
+	
+Here’s a high‐level roadmap of everything you’ll need to make these three new features real.  No code yet—just the major moving parts:
+
+---
+
+## 1. Session-Completion Pop-Up
+
+### A. Data Layer
+
+* **Repository method**
+  Add something like
+
+  ```dart
+  Future<SessionSummary> fetchSessionSummary(int sessionId)
+  ```
+
+  which loads:
+
+  * session metadata (date, start time, duration)
+  * all weight exercises + their sets
+  * cardio details
+  * stretch details
+* **Helpers for “new Rep-Max” / “new Volume-Max”**
+  In that same repo (or a new `MetricsDao`), add queries to compute, for each exercise definition:
+
+  * the historical top weight for X reps
+  * the historical top volume (weight×reps) for X reps
+    so you can flag any set in this session that breaks those records.
+* **ERM calculation**
+  You’ll just compute on the fly:
+
+  ```dart
+  double erm = weight * (1 + 0.0333 * reps);
+  ```
+
+### B. UI Layer
+
+* **`showModalBottomSheet` or `DraggableScrollableSheet`**
+
+  * Build a widget (`SessionCompletionSheet`) that takes a `SessionSummary`.
+  * Half-height when first opened, expands to full height on drag or button tap.
+  * Layout:
+
+  ```
+  ┌─────────────────────────────┐
+  │ Completed Session           │
+  │  Date   | Duration | …     │
+  │  Volume | Cal 100  | Score5 │
+  ├─────────────────────────────┤
+  │ Exercise A                   │
+  │ 1. 100×10   (VM) (RM)  ERM=… │
+  │ 2. 120× 8            ERM=… │
+  │ …                           │
+  ├─────────────────────────────┤
+  │ [✓]  (green)                 │
+  └─────────────────────────────┘
+  ```
+
+---
+
+## 2. Exercise-Detail Pop-Up
+
+### A. Schema & Models
+
+* **Add columns** to `exercise_definitions` via a V8 migration:
+
+  ```sql
+  ALTER TABLE exercise_definitions
+    ADD COLUMN exampleUrl TEXT,
+    ADD COLUMN setupNote  TEXT,
+    ADD COLUMN execNote   TEXT,
+    ADD COLUMN tips       TEXT;
+  ```
+* **Update `DefinitionDao`** to read/write those new fields.
+* **New Models**
+
+  * `ExerciseDefinitionExtended` (inherits `ExerciseDefinition` + the 4 new fields)
+
+### B. Repository
+
+* **Fetch full details**
+
+  ```dart
+  Future<ExerciseDefinitionExtended> fetchDefExtended(int defId);
+  ```
+* **Metrics queries**
+
+  ```dart
+  Future<RepMaxMap>   fetchRepMaxes(int defId, DateRange range);
+  Future<double>      fetchVolumeMax(int defId, DateRange range);
+  ```
+* **History queries**
+
+  ```dart
+  Future<List<ExerciseHistoryEntry>> fetchExerciseHistory(int defId, {int limit=10});
+  ```
+
+### C. UI Layer
+
+* **Bottom sheet** with a `TabBar` of three tabs:
+
+  1. **Details**
+
+     * Name, equipment list, body-parts, muscles
+     * “Example” media placeholder
+     * Setup / Execution / Tips sections (show your new columns, or “to be added” if null)
+  2. **Metrics**
+
+     * Toggle buttons for Week / Month / All-Time
+     * Show Volume‐Max & 1-ERM for that span
+     * Table of rep-count buckets (1–20) with recorded max or ERM fallback
+  3. **Records**
+
+     * Bar chart of last N sessions (paired bars: ERM vs VM)
+     * Below, list the last sessions (date, sets summary, badges)
+
+---
+
+## 3. History-Detail Widget
+
+### A. Repository
+
+* **Weekly summary**
+
+  ```dart
+  Future<WeeklySummary> fetchWeeklySummary(); 
+  // includes: workoutCount, totalDuration, totalVolume, bodyPartSetCounts, dailySessionCounts
+  ```
+* **Body-part breakdown**
+  Use existing joins on `exercise_bodypart` + `sets` to count sets per part.
+
+### B. Models
+
+* `WeeklySummary { int sessionCount; Duration totalTime; double totalVolume; Map<Weekday,int> dailyCount; Map<BodyPart,int> partSetCounts; }`
+
+### C. UI Layer
+
+* **A new `HistoryDetailWidget`** placed above your session list on the History page:
+
+  ```
+  ┌─────────────────────────────────┐
+  │ This Week (last 7 days)        │
+  │ Workouts:   5   Time: 4h20m    │
+  │ Volume:  32k lbs               │
+  │ Goal:  80%                     │
+  ├─────────────────────────────────┤
+  │ 📊 Bar chart of sessions/day    │
+  ├─────────────────────────────────┤
+  │ 🔥 Body-heatmap silhouette      │
+  └─────────────────────────────────┘
+  ```
+
+---
+
+## Cross-cutting Concerns
+
+1. **State management**
+
+   * You can fetch data on-demand with `FutureBuilder` inside each sheet/widget, or pre-fetch via Providers if you prefer a “ready” flag.
+2. **Charting & heatmaps**
+
+   * Pick a Flutter charting package (`fl_chart`, `charts_flutter`, etc.).
+   * For the body silhouette, either overlay tinted SVG regions (with `flutter_svg`) or simple custom‐paint.
+3. **Migrations**
+
+   * Add a new schema migration (v8) for your notes columns.
+4. **Styling & animations**
+
+   * Mirror your existing bottom‐sheet style (rounded corners, swipe up).
+   * Badges for RM (yellow) / VM (green) in lists.
+
+---
+
+### Next Steps
+
+1. **Write the DB migration** for `exercise_definitions`.
+2. **Extend DAOs** with all the new queries.
+3. **Add new model classes** (`SessionSummary`, `WeeklySummary`, etc.).
+4. **Wire up repository methods** in `AppRepository` (or split off a `MetricsRepository`).
+5. **Build the three UI components** (each as its own widget).
+6. **Hook into navigation** (buttons/taps in sessions, catalog, presets, history).
+7. **Polish & performance** (batch queries, show spinners during long loads).
+
+Let me know if you want to drill into any of those steps in more detail before diving into code!
+
+
+
+
+
+
+
+
+
+
+Here’s a rough map of every place in your codebase you’ll touch or add to when rolling out those three new features:
+
+---
+
+### 1) Database & DAO layer
+
+* **`lib/db/schema.dart`**
+  – Add a new migration (v8) to alter `exercise_definitions` for your notes/URLs columns.
+* **`lib/db/definition_dao.dart`**
+  – Extend to read/write the new example/setup/execution/tips fields.
+  – Add queries to fetch rep-maxes, volume-maxes, and exercise history for a given definition.
+* **`lib/db/session_dao.dart`** (or new `metrics_dao.dart`)
+  – Add a method to load an entire session summary (all weight/cardio/stretch entries).
+* **`lib/db/exercise_dao.dart`**
+  – Possibly add a helper to fetch last N exercise instances for the bar charts.
+* **`lib/db/lookup_dao.dart`** (or new DAO)
+  – Queries for weekly summary: session count, total volume, set-counts per bodypart.
+
+### 2) Repository layer
+
+* **`lib/repositories/app_repository.dart`**
+  – Expose new methods:
+
+  ```dart
+  Future<SessionSummary> fetchSessionSummary(int sessionId);
+  Future<ExerciseDefinitionExtended> fetchDefExtended(int defId);
+  Future<RepMaxMap>   fetchRepMaxes(int defId, DateRange range);
+  Future<double>      fetchVolumeMax(int defId, DateRange range);
+  Future<List<ExerciseHistoryEntry>> fetchExerciseHistory(int defId, {int limit});
+  Future<WeeklySummary> fetchWeeklySummary();
+  ```
+* **`lib/repositories/profile_repository.dart`**
+  – (No change unless you want to filter history per profile.)
+
+### 3) Models & Value Objects
+
+* **`lib/models/session_summary.dart`** (new)
+* **`lib/models/exercise_definition_extended.dart`** (new)
+* **`lib/models/exercise_history_entry.dart`** (new)
+* **`lib/models/rep_max_map.dart`**, **`volume_max.dart`**, **`weekly_summary.dart`** (new)
+* **`lib/models/date_range.dart`** (maybe new helper)
+
+### 4) UI components
+
+* **`lib/widgets/session_completion_sheet.dart`** (new)
+* **`lib/widgets/exercise_detail_sheet.dart`** (new)
+* **`lib/widgets/history_detail_widget.dart`** (new)
+
+### 5) Screens & Integration
+
+* **`lib/screens/session_screen.dart`**
+  – Launch your session-completion sheet after saving a session.
+* **`lib/screens/session_detail_screen.dart`**
+  – Offer “View Summary” to open the same sheet.
+* **`lib/widgets/weight_exercise_tile.dart`** (if you have one) or wherever you render a `WeightExercise`
+  – Add a “Details” button to open the exercise-detail sheet.
+* **`lib/screens/exercise_catalog_page.dart`**, **`lib/screens/definitions_by_bodypart_page.dart`**
+  – Hook their “Details” taps to your exercise-detail sheet.
+* **`lib/screens/history_page.dart`**
+  – Insert `HistoryDetailWidget` at the top, above the session list.
+
+### 6) State management & providers
+
+* If you go the Provider route you mentioned, you may add:
+
+  * A `ChangeNotifier` for each sheet (e.g. `SessionSummaryProvider`, `ExerciseDetailProvider`, `HistoryProvider`) to pre-fetch & expose a “ready” flag.
+
+---
+
+With that map in hand, you can systematically:
+
+1. **Migrate & extend your schema/DAOs**
+2. **Expose new methods in your repository**
+3. **Define your new model classes**
+4. **Build the three widget components**
+5. **Wire them up from the appropriate screens**
+
+Let me know where you’d like to dig in next!
+
+
+
+
+MV = Maintenance Volume
+MEV = Minimum Effective Volume
+MAV = Maximum Adaptive Volume 
+MRV = Maximum Recoverable Volume
+
+what i should have before making preset maker:
+list of bodyparts
+	- muscles which fall under these bodyparts listed
+	- ranking of bodyparts for most important to train to least important to train
+	- numbers for optimal amount of sets for individual bodypart for 
+		- Maintenance Volume
+		- Minimum Effective Volume
+		- Maximum Adaptive Volume 
+		- Maximum Recoverable Volume
+list of muscles
+	- ranking of muscles for most important to train to least important to train
+	- numbers for optimal amount of sets for individual muscle for 
+		- Maintenance Volume
+		- Minimum Effective Volume
+		- Maximum Adaptive Volume 
+		- Maximum Recoverable Volume
+list of exercises
+	- list of bodyparts the exercises trains
+	- %efficiency of how much the exercise trains the bodypart
+	- list of muscles the exercises trains
+	- %efficiency of how much the exercise trains the muscle
+
+
+EXERCISES
+	correcting exercises for new bodyparts (maybe i won't need this because im now connecting bodyparts to muscles)
+	exercise %
+	muscle %
+
+GENERAL:
+	muscles connected to bodyParts
+		- maybe editable table
+		- might want page
+	bodypart ranking
+		- maybe editable table
+		- might want page
+	muscle ranking
+		- maybe editable table
+		- might want page
+	muscle ranking under bodyparts
+		- maybe editable table
+		- might want page
+	% muscle hit per exercise
+		- maybe editable table
+	% bodypart hit per exercise (maybe i won't need this because im now connecting bodyparts to muscles)
+		- maybe editable table
+	sets per bodypart
+		- maybe editable table
+	sets per muscle
+		- maybe editable table
+	optimal set boundaries per bodypart
+		- maybe editable table
+		- might want page
+	optimal set boundaries per muscle
+		- maybe editable table
+		- might want page
+
+
+
+
+- default bodypart formula: x= a-(a^2/2)y
+										y = (2/a) (1- (1/a) x)  
+										for bodypart with n=2 muscles a (rank 1) and b (rank 7, last)
+										weight for a: integral from 0 to 1 for (2/7)(1-(1/7)x) dx	= 13/49	= 0.2653
+										weight for b: integral from 6 to 7 for (2/7)(1-(1/7)x) dx	= 1/49	= 0.0204
+										weight for bodypart = 0.2857
+				- eg:
+																												{
+						- "Deadlift - Barbell"								  										"name": "Deadlift - Barbell",
+																													"rating": 23,
+																													"equipment": ["Barbell"],
+																													"bodyparts": ["Lower Back", "Hamstrings"],
+							Muscle Ranking	Muscle Name			%hit calculation 						%hit		"muscles": [
+							1 				Gluteus Maximus		%hit = 1 - (0.05 * (1 - 1)) = 1 		1				{ "name": "Gluteus Maximus", "rank": 1 },
+							2 				Biceps Femoris		%hit = 1 - (0.05 * (2 - 1)) = 0.95		0.95			{ "name": "Biceps Femoris", "rank": 2 },
+							3 				Erector Spinae		%hit = 1 - (0.05 * (3 - 1)) = 0.9		0.9				{ "name": "Erector Spinae", "rank": 3 },
+							4 				Rectus Femoris		%hit = 1 - (0.05 * (4 - 1)) = 0.85		0.85			{ "name": "Rectus Femoris", "rank": 4 },
+							5 				Adductor Magnus		%hit = 1 - (0.05 * (5 - 1)) = 0.8		0.8				{ "name": "Adductor Magnus", "rank": 5 },
+							6 				Latissimus Dorsi	%hit = 1 - (0.05 * (6 - 1)) = 0.75		0.75			{ "name": "Latissimus Dorsi", "rank": 6 },
+							7 				Trapezius (upper) 	%hit = 1 - (0.05 * (7 - 1)) = 0.7		0.7				{ "name": "Trapezius (upper)", "rank": 7 }
+																													]
+																												},
+							BodyPart		Muscle Name			%hit calculation 						%hit
+							Hips			1. Gluteus Maximus		
+											5. Adductor Magnus
+							Hamstrings		2. Biceps Femoris		%hit = 0.95
+							Lower Back		3. Erector Spinae		%hit = 0.9
+							Quads			4. Rectus Femoris		%hit = 0.85
+							Upper Back		6. Latissimus Dorsi	
+											7. Trapezius (upper)
+
+Explained Additions:
+	- Connect muscles to bodyparts (maybe via another editable table or some other way), as bodyparts are essentially just groups of muscles here (eg: The body part "Chest" is basically just the combination of the three muscles - 1)Pectoralis Major 2) Pectoralis Minor 3) Serratus Anterior)
+		- I might want an in app method for manually editing which muscle is connected to which bodypart, perhaps through a new page which could be accessed from the profile page
+		
+		thoughts: 
+			- i would want to be able to look at a body part and see which muscles are under it or look at a muscle and see which body part it is a part of
+			- would have default setup connecting muscles to bodyparts
+				- either default written in by code
+				- or will be imported from a json
+			- should be able to be edited in app
+			
+		connection: 
+			- bodypart to a few muscles 
+				- eg: 
+					Chest:
+						1)Pectoralis Major 
+						2) Pectoralis Minor 
+						3) Serratus Anterior
+					Pectoralis Major:
+						a part of the chest
+		
+	- Editable rankings for bodyparts, muscles and muscles under bodyparts (maybe through another table or as another part of the table above). This will be for deciding which bodyparts and which muscles are more in need of training. 
+		- will definitely want a page where app users can edit the rankings, also maybe accessible from profile page.
+		
+		thoughts:
+			- i would want to be able to rank body parts
+			- i would want to be able to rank muscles
+			- i would want to be able to rank the muscles under a body part
+			- would have default setup ranking for each
+				- either default written in by code
+				- or will be imported from a json
+			- should be able to be edited in app
+			
+		connection: 
+			- all three of these are seperate rankings:
+				- bodypart to ranking
+					- eg:	Chest			->	Rank 1
+							Upper Back		->	Rank 2
+							Shoulders		->	Rank 3
+							Hips			->	Rank 4
+							
+			
+				- muscle to ranking
+					- eg:	Gluteus Maximus			->	Rank 1
+							Erector Spinae			->	Rank 2
+							Transverse Abdominis	->	Rank 3
+							Rectus Abdominis		->	Rank 4
+			
+				- bodypart to muscle to ranking
+					- eg:	1) Chest			->	1) Pectoralis Major
+												->	2) Serratus Anterior
+												->	3) Pectoralis Minor
+							2) Upper Back		->	1) Latissimus Dorsi
+												->	2) Trapezius (Middle)
+												->	3) Trapezius (Upper)
+												->	4) Trapezius (Lower)
+												->	5) Rhomboids
+												->	6) Levator Scapulae
+							3) Shoulders, etc, etc
+						
+	- Percentage a muscle is hit per exercise, so we could later calculate sets per muscle
+		- might want its own table or maybe in table (or tables) mentioned above
+		- might also want a page for user to be able to change values, maybe accessible from profile page again
+		
+		- values can be changed by user, maybe in profile page.
+		- each exercise, if it does not already have a value assigned, will use default values generated by formula
+			- default formula's can also be changed
+			- default formula:	1) Muscle: default percentage muscle hit will be based off the formula: mhit = 1 - (0.05 * (Rank - 1)); where Rank is the muscle ranking in the exercise
+								- muscles will be linked back to the bodyparts they are a part of and the number of muscles per bodypart will be remembered.
+								2) Bodypart: default percentage bodypart hit will be based off formula: bhit = (sum of mhit's)/(number of muscles for this bodypart worked by the exercise)
+			
+		
+		thoughts:
+			- default percentage muscle hit will be based off the formula: mhit = 1 - (0.05 * (Rank - 1)); where Rank is the muscle ranking in the exercise
+				eg: 1 				Gluteus Maximus		mhit = 1 - (0.05 * (1 - 1)) = 1 		1	\
+					5 				Adductor Magnus		mhit = 1 - (0.05 * (5 - 1)) = 0.8		0.8	
+			- muscles will be linked back to the bodyparts they are a part of and the number of muscles per bodypart will be remembered.
+				eg:	Hips			1. Gluteus Maximus		
+									5. Adductor Magnus				(2 hip muscles)
+			- default percentage bodypart hit will be based off formula: bhit = (sum of mhit's)/(number of muscles for this bodypart worked by the exercise)
+				eg:	Hips			bhit = (1+0.8)/(2) = 0.9
+			
+			
+		connection: 
+			- exercise to specific muscles(with ranking) to 	- %muscle hit
+																- connected bodypart and % bodypart hit
+			- default muscle formula: 1 - (0.05 * (Rank - 1))
+			- default bodypart formula: bhit = (sum of mhit's)/(number of muscles for this bodypart worked by the exercise)
+				- eg:
+																												{
+						- "Deadlift - Barbell"								  										"name": "Deadlift - Barbell",
+																													"rating": 23,
+																													"equipment": ["Barbell"],
+																													"bodyparts": ["Lower Back", "Hamstrings"],
+							Muscle Ranking	Muscle Name			%hit calculation 						%hit		"muscles": [
+							1 				Gluteus Maximus		%hit = 1 - (0.05 * (1 - 1)) = 1 		1				{ "name": "Gluteus Maximus", "rank": 1 },
+							2 				Biceps Femoris		%hit = 1 - (0.05 * (2 - 1)) = 0.95		0.95			{ "name": "Biceps Femoris", "rank": 2 },
+							3 				Erector Spinae		%hit = 1 - (0.05 * (3 - 1)) = 0.9		0.9				{ "name": "Erector Spinae", "rank": 3 },
+							4 				Rectus Femoris		%hit = 1 - (0.05 * (4 - 1)) = 0.85		0.85			{ "name": "Rectus Femoris", "rank": 4 },
+							5 				Adductor Magnus		%hit = 1 - (0.05 * (5 - 1)) = 0.8		0.8				{ "name": "Adductor Magnus", "rank": 5 },
+							6 				Latissimus Dorsi	%hit = 1 - (0.05 * (6 - 1)) = 0.75		0.75			{ "name": "Latissimus Dorsi", "rank": 6 },
+							7 				Trapezius (upper) 	%hit = 1 - (0.05 * (7 - 1)) = 0.7		0.7				{ "name": "Trapezius (upper)", "rank": 7 }
+																													]
+																												},
+							BodyPart		Muscle Name				%hit calculation 					%hit
+							Hips			1. Gluteus Maximus		
+											5. Adductor Magnus		%hit = (1 + 0.8) / 2 = 0.9			0.9
+							Hamstrings		2. Biceps Femoris		%hit = (0.95) / 1 = 0.95			0.95
+							Lower Back		3. Erector Spinae		%hit = (0.9) / 1 = 0.9				0.9
+							Quads			4. Rectus Femoris		%hit = (0.85) / 1 = 0.85			0.85
+							Upper Back		6. Latissimus Dorsi	
+											7. Trapezius (upper)	%hit = (0.75 + 0.7) / 2 = 0.725		0.725
+			
+				
+	- sets per bodypart and sets per muscle
+		- will be updated automatically alot
+		- calculated off percentages from above addition and sets for exercise
+		
+		
+		thoughts: 
+			- 
+			
+		connection: 
+			- bodypart name to sets done in last week for the bodypart
+				- eg:	before 1st session in last 7 days, we check bodypart to see how many sets done: 0 sets done
+						right after 1st session in last 7 days, we check bodypart to see how many sets done: 3 sets done
+							- was incremented according to completed session (we calculated 3 sets for the bodypart in the session)
+						3 days after that, we do 2nd session and check bodypart to see how many sets done: 5 sets done
+							- was incremented according to completed session (we calculated 2 sets for the bodypart in the session)
+						5 days after that(8 days after first session), we don't do anymore sessions but we check bodypart to see how many sets done: 2 sets done
+							- 3 sets from first session now out of 7 day timeframe, so subtracted from total
+			- muscle name to sets done in last week for the muscle
+				- eg:	before 1st session in last 7 days, we check muscle to see how many sets done: 0 sets done
+						right after 1st session in last 7 days, we check muscle to see how many sets done: 3 sets done
+							- was incremented according to completed session (we calculated 3 sets for the muscle in the session)
+						3 days after that, we do 2nd session and check muscle to see how many sets done: 5 sets done
+							- was incremented according to completed session (we calculated 2 sets for the muscle in the session)
+						5 days after that(8 days after first session), we don't do anymore sessions but we check muscle to see how many sets done: 2 sets done
+							- 3 sets from first session now out of 7 day timeframe, so subtracted from total
+						
+						
+	- the 4 boundaries for optimal number of sets for specific muscles and for specific bodyparts
+		- the four boundaries being known as: 
+			- Maintenance Volume
+			- Minimum Effective Volume
+			- Maximum Adaptive Volume 
+			- Maximum Recoverable Volume
+		- might want its own table or maybe in table (or tables) mentioned above
+		- might also want a page for user to be able to change values, maybe accessible from profile page again
+		
+		thoughts: 
+			- 
+			
+		connection: 
+			- muscle name to 4 optimal numbers
+				- eg:	we check the muscle Pectoralis Major and it has the numbers set: 
+										- Maintenance Volume: 3
+										- Minimum Effective Volume: 5
+										- Maximum Adaptive Volume : 12
+										- Maximum Recoverable Volume: 20
+			- bodypart name to 4 optimal numbers
+				- eg: we check the bodypart Chest and it has the numbers set: 
+										- Maintenance Volume: 3
+										- Minimum Effective Volume: 5
+										- Maximum Adaptive Volume : 12
+										- Maximum Recoverable Volume: 20
+
+
+
+Connections:
+
+		connection: 
+			- bodypart to a few muscles 
+				- eg: Chest:
+						1)Pectoralis Major 
+						2) Pectoralis Minor 
+						3) Serratus Anterior
+
+		connection: 
+			- bodypart to ranking
+				- eg:	Chest			->	Rank 1
+						Upper Back		->	Rank 2
+						Shoulders		->	Rank 3
+						Hips			->	Rank 4
+						
+		
+			- muscle to ranking
+				- eg:	Gluteus Maximus			->	Rank 1
+						Erector Spinae			->	Rank 2
+						Transverse Abdominis	->	Rank 3
+						Rectus Abdominis		->	Rank 4
+		
+			- bodypart to muscle to ranking
+				- eg:	1) Chest			->	1) Pectoralis Major
+											->	2) Serratus Anterior
+											->	3) Pectoralis Minor
+						2) Upper Back		->	1) Latissimus Dorsi
+											->	2) Trapezius (Middle)
+											->	3) Trapezius (Upper)
+											->	4) Trapezius (Lower)
+											->	5) Rhomboids
+											->	6) Levator Scapulae
+						3) Shoulders, etc, etc
+
+		connection: 
+			- exercise to specific muscles(with ranking) to 	- %muscle hit
+																- connected bodypart and % bodypart hit
+			- default muscle formula: 1 - (0.05 * (Rank - 1))
+			- default bodypart formula: x= a-(a^2/2)y
+										y = (2/a) (1- (1/a) x)  
+										for bodypart with n=2 muscles a (rank 1) and b (rank 7, last)
+										weight for a: integral from 0 to 1 for (2/7)(1-(1/7)x) dx	= 13/49	= 0.2653
+										weight for b: integral from 6 to 7 for (2/7)(1-(1/7)x) dx	= 1/49	= 0.0204
+										weight for bodypart = 0.2857
+				- eg:
+																												{
+						- "Deadlift - Barbell"								  										"name": "Deadlift - Barbell",
+																													"rating": 23,
+																													"equipment": ["Barbell"],
+																													"bodyparts": ["Lower Back", "Hamstrings"],
+							Muscle Ranking	Muscle Name			%hit calculation 						%hit		"muscles": [
+							1 				Gluteus Maximus		%hit = 1 - (0.05 * (1 - 1)) = 1 		1				{ "name": "Gluteus Maximus", "rank": 1 },
+							2 				Biceps Femoris		%hit = 1 - (0.05 * (2 - 1)) = 0.95		0.95			{ "name": "Biceps Femoris", "rank": 2 },
+							3 				Erector Spinae		%hit = 1 - (0.05 * (3 - 1)) = 0.9		0.9				{ "name": "Erector Spinae", "rank": 3 },
+							4 				Rectus Femoris		%hit = 1 - (0.05 * (4 - 1)) = 0.85		0.85			{ "name": "Rectus Femoris", "rank": 4 },
+							5 				Adductor Magnus		%hit = 1 - (0.05 * (5 - 1)) = 0.8		0.8				{ "name": "Adductor Magnus", "rank": 5 },
+							6 				Latissimus Dorsi	%hit = 1 - (0.05 * (6 - 1)) = 0.75		0.75			{ "name": "Latissimus Dorsi", "rank": 6 },
+							7 				Trapezius (upper) 	%hit = 1 - (0.05 * (7 - 1)) = 0.7		0.7				{ "name": "Trapezius (upper)", "rank": 7 }
+																													]
+																												},
+							BodyPart		Muscle Name			%hit calculation 						%hit
+							Hips			1. Gluteus Maximus		
+											5. Adductor Magnus
+							Hamstrings		2. Biceps Femoris		%hit = 0.95
+							Lower Back		3. Erector Spinae		%hit = 0.9
+							Quads			4. Rectus Femoris		%hit = 0.85
+							Upper Back		6. Latissimus Dorsi	
+											7. Trapezius (upper)
+							
+				
+		
+		connection: 
+			- bodypart name to sets done in last week for the bodypart
+				- eg:	before 1st session in last 7 days, we check bodypart to see how many sets done: 0 sets done
+						right after 1st session in last 7 days, we check bodypart to see how many sets done: 3 sets done
+							- was incremented according to completed session (we calculated 3 sets for the bodypart in the session)
+						3 days after that, we do 2nd session and check bodypart to see how many sets done: 5 sets done
+							- was incremented according to completed session (we calculated 2 sets for the bodypart in the session)
+						5 days after that(8 days after first session), we don't do anymore sessions but we check bodypart to see how many sets done: 2 sets done
+							- 3 sets from first session now out of 7 day timeframe, so subtracted from total
+			- muscle name to sets done in last week for the muscle
+				- eg:	before 1st session in last 7 days, we check muscle to see how many sets done: 0 sets done
+						right after 1st session in last 7 days, we check muscle to see how many sets done: 3 sets done
+							- was incremented according to completed session (we calculated 3 sets for the muscle in the session)
+						3 days after that, we do 2nd session and check muscle to see how many sets done: 5 sets done
+							- was incremented according to completed session (we calculated 2 sets for the muscle in the session)
+						5 days after that(8 days after first session), we don't do anymore sessions but we check muscle to see how many sets done: 2 sets done
+							- 3 sets from first session now out of 7 day timeframe, so subtracted from total
+						
+						
+	
+		connection: 
+			- muscle name to 4 optimal numbers
+				- eg:	we check the muscle Pectoralis Major and it has the numbers set: 
+										- Maintenance Volume: 3
+										- Minimum Effective Volume: 5
+										- Maximum Adaptive Volume : 12
+										- Maximum Recoverable Volume: 20
+			- bodypart name to 4 optimal numbers
+				- eg: we check the bodypart Chest and it has the numbers set: 
+										- Maintenance Volume: 3
+										- Minimum Effective Volume: 5
+										- Maximum Adaptive Volume : 12
+										- Maximum Recoverable Volume: 20
+
+
+Connections:
+
+		connection: 
+d			- bodypart to a few muscles 		
+				
+		connection: 
+d			- bodypart to ranking
+			
+d			- muscle to ranking
+			
+nd			- bodypart to muscle to ranking
+				
+		connection: 
+d			- exercise to specific muscles(with ranking) to 	- %muscle hit
+nd																- connected bodypart and % bodypart hit
+			
+		connection: 
+nd			- bodypart name to sets done in last week for the bodypart
+nd			- muscle name to sets done in last week for the muscle
+				
+		connection: 
+d			- muscle name to 4 optimal numbers
+				
+d			- bodypart name to 4 optimal numbers
+
+table combos:
+	
+	1. bodypart name
+		- no. of sets done in last week
+		- 4 optimal numbers
+		- list of connected muscles
+			- their in-bodypart ranking
+	
+	2. Muscle name
+		- no. of sets done in last week
+		- 4 optimal numbers
+		- connected bodypart
+			- their in-bodypart ranking
+
+	3. exercises 
+		- % muscle hit
+		- bodyparts which are being hit (obtained from muscles listed)
+		- % bodypart hit
+	
+	4. ranking of all bodyparts
+	
+	5. ranking of all muscles
+
+{ "name": "Chest" },
+					Pectoralis Major
+					Pectoralis Minor
+					Serratus Anterior
+
+
+weekly muscle sets table
+weekly bodypart sets table
+fix bodyparts (eg- turning arms into biceps, triceps, forearms)
+[
+  { "name": "Chest" },
+  { "name": "Shoulders"},
+  { "name": "Back" },
+  { "name": "Arms" },
+  { "name": "Forearms" },
+  { "name": "Trapezius" },
+  { "name": "Neck" },
+  { "name": "Quads" },
+  { "name": "Hamstrings" },
+  { "name": "Glutes" },
+  { "name": "Calves"},
+  { "name": "Hip Flexors" },
+  { "name": "Hip Adductors" },
+  { "name": "Hip Abductors" },
+  { "name": "Abs" },
+  { "name": "Erector Spinae" }
+]
+	- fixed
+		[
+		  { "name": "Chest" },
+		  { "name": "Shoulders"},
+		  { "name": "Back" },
+			- upper back
+				- includes Trapezius
+			- lower back
+				- includes Erector Spinae
+		  { "name": "Arms" },
+			- biceps
+			- triceps
+		  { "name": "Forearms" },
+		  { "name": "Neck" },
+		  { "name": "Quads" },
+		  { "name": "Hamstrings" },
+		  HIPS
+			- Glutes
+			- Hip Flexors
+			- Hip Adductors
+			- Hip Abductors
+		  { "name": "Calves"},
+		  { "name": "Abs" },
+		]
+			- added: 
+				{ "name": "Upper Back" },
+					- contains:
+						trapezius
+						stuff from back
+				{ "name": "Lower Back" },
+					- contains:
+						Erector Spinae
+						stuff from back
+				{ "name": "Biceps" },
+					- contains:
+						stuf from arms
+				{ "name": "Triceps" },
+					- contains:
+						stuf from arms
+				{ "name": "Hips" },
+					- contains:
+						glutes
+						hip flexors
+						hip abductors
+						hip adductors
+				{ "name": "Core" },
+					- contains:
+						abs
+
+			- removed: 
+				{ "name": "Back" },
+					- moved to:
+						upper back
+						lower back
+				{ "name": "Arms" },
+					- moved to:
+						biceps
+						triceps
+				{ "name": "Trapezius" },
+					- moved to:
+						upper back
+				{ "name": "Glutes" },
+					- moved to:
+						hips
+				{ "name": "Hip Flexors" },
+					- moved to:
+						hips
+				{ "name": "Hip Adductors" },
+					- moved to:
+						hips
+				{ "name": "Hip Abductors" },
+					- moved to:
+						hips
+				{ "name": "Abs" },
+					- moved to:
+						core
+				{ "name": "Erector Spinae" }
+					- moved to:
+						lower back
+[
+  DONE
+  { "name": "Abs" },
+  { "name": "Trapezius" },
+  { "name": "Erector Spinae" }
+  { "name": "Glutes" },
+  { "name": "Hip Adductors" },
+  { "name": "Hip Abductors" },
+  { "name": "Hip Flexors" },
+  { "name": "Arms" },
+  { "name": "Back" },
+]
+		[
+			{ "name": "Neck" },
+			{ "name": "Shoulders"},
+			{ "name": "Chest" },
+			{ "name": "Core" },
+			{ "name": "Upper Back" },
+			{ "name": "Lower Back" },
+			{ "name": "Biceps" },
+			{ "name": "Triceps" },
+			{ "name": "Forearms" },
+			{ "name": "Hips" },
+			{ "name": "Hamstrings" },
+			{ "name": "Quads" },
+			{ "name": "Calves"},
+		]
+		[
+			{ "name": "Neck" },
+					Sternocleidomastoid
+					Scalenes
+					Splenius
+			{ "name": "Shoulders"},
+					Anterior Deltoid
+					Lateral Deltoid
+					Posterior Deltoid
+					Supraspinatus
+					Infraspinatus
+					Teres Minor
+					Teres Major
+			{ "name": "Chest" },
+					Pectoralis Major
+					Pectoralis Minor
+					Serratus Anterior
+			{ "name": "Core" },
+					Rectus Abdominis
+					Obliques
+					Transverse Abdominis
+					Pelvic Floor Muscles
+			{ "name": "Upper Back" },
+					Trapezius (Upper)
+					Trapezius (Middle)
+					Trapezius (Lower)
+					Rhomboids
+					Latissimus Dorsi
+					Levator Scapulae
+			{ "name": "Lower Back" },
+					Erector Spinae
+					Multifidus
+					Quadratus Lumborum
+			{ "name": "Biceps" },
+					Biceps Brachii
+					Brachialis
+			{ "name": "Triceps" },
+					Triceps Brachii
+					Anconeus
+			{ "name": "Forearms" },
+					Brachioradialis
+					Wrist Flexors
+					Wrist Extensors
+					Pronator Teres
+					Pronator Quadratus
+			{ "name": "Hips" },
+					Gluteus Maximus
+					Gluteus Medius
+					Gluteus Minimus
+					Iliopsoas
+					Tensor Fasciae Latae
+					Piriformis
+					Adductor Longus
+					Adductor Brevis
+					Adductor Magnus
+					Gracilis
+					Pectineus
+			{ "name": "Hamstrings" },
+					Biceps Femoris
+					Semitendinosus
+					Semimembranosus
+			{ "name": "Quads" },
+					Rectus Femoris
+					Vastus Lateralis
+					Vastus Medialis
+					Vastus Intermedius
+			{ "name": "Calves"},
+					Gastrocnemius
+					Soleus
+					Tibialis Anterior
+		]
+	- unaltered
+		[
+		  { "name": "Chest" },
+		  { "name": "Shoulders"},
+		  { "name": "Back" },
+		  { "name": "Arms" },
+		  { "name": "Forearms" },
+		  { "name": "Trapezius" },
+		  { "name": "Neck" },
+		  { "name": "Quads" },
+		  { "name": "Hamstrings" },
+		  { "name": "Glutes" },
+		  { "name": "Calves"},
+		  { "name": "Hip Flexors" },
+		  { "name": "Hip Adductors" },
+		  { "name": "Hip Abductors" },
+		  { "name": "Abs" },
+		  { "name": "Erector Spinae" }
+		]
+tying muscles to related bodyparts (muscle groups) they fall under
+essential and accessory training seperations (for bodyparts and muscles)
+bodypart ranking (also page for editing)
+muscle ranking (also page for editing)
+
+intelligent presets (presets change rep and weight numbers based off history)
+
+
+____________________________________________________________________________________________________________________________________
+DONE:
+____________________________________________________________________________________________________________________________________
+
+
+	- edit nav_bar/bottom_tab_bar and its settings page
+		- Rename 'Workout History' into 'Workout Log'. Specifically: nav_bar text, under icon: W.Log 			page (app_bar and settings page) name: Workout Log
+		- Make it impossible to remove the profile tab, because removing this will stop them from being able to edit tabs
+		- new bottom tabs and (empty for now) pages for them
+			- nav_bar text: M&T 		page (app_bar and settings page) name: Measurements and Trends
+			- nav_bar text: N.Log		page (app_bar and settings page) name: Nutrition Log
+			- nav_bar text:	History		page (app_bar and settings page) name: Combined History
+			- nav_bar text: F&P			page (app_bar and settings page) name: Form and Posing
+			- nav_bar text: 			page (app_bar and settings page) name:
+	- edit settings page so that the options have drag bars and you can reorder them, which will reorder the actual navbar
+	
+	- Divide settings in profile page into categories
+		- User Information
+			- User Info
+		- UI and Appearance Settings
+			- Dark Mode
+			- Edit Bottom Tabs
+		- Database Settings
+			- Settings
+		- Gym, Exercise and Workout Settings
+			- Workout Settings
+			- Flowchart Example
+		- Diet and Nutrition Settings
+		- Measurements and Trends Settings
+			- Measurements
+			
+	- Fill out User info section in profile screen
+		- name
+		- user id
+		- email address
+		- phone number
+		- date of birth
+		- gender
+
+
+____________________________________________________________________________________________________
+THOUGHTS/NOTES/XTRAS:
+____________________________________________________________________________________________________________________________________
+
+		- exercise ranking to muscle usage% conversion
+			1. 30%	= 30
+			2. 25%	= 55
+			3. 15%	= 70
+			4. 10%	= 80
+			5. 10%	= 90
+			6. 5%	= 95
+			7. 5%	= 100
+			
+		- 1rm calc ideas: 
+			each set is checked if it is the new recorded rep max (if the previous recorded 8 rep max was 
+			- rep max estimates 
+					- 1rm formula: 1rm = weight x (1 + 0.0333 x reps)
+					- 1rm to x rep max (x rm) formula: 
+							1	100%
+							2	97%
+							3	94%
+							4	92%
+							5	89%
+							6	86%
+							7	83%
+							8	81%
+							9	78%
+							10	75%
+							11	73%
+							12	71%
+							13	70%
+							14	68%
+							15	67%
+							16	65%
+							17	64%
+							18	63%
+							19	61%
+							20	60%
+							21	59%
+							22	58%
+							23	57%
+							24	56%
+							25	55%
+							26	54%
+							27	53%
+							28	52%
+							29	51%
+							30	50%
+				- Recorded Rep Maxes (RM's)
+					- RM's for each number of reps (eg: 5 RM, 10 RM are different for same exercise, also different from estimated rm)
+		
+		session completion popup:
+			- comparison or increments compared to older sessions
+			- exertion related questions, eg: muscle soreness, reps in reserve (optional for answering)
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+	
+### 📊 Weekly Training Volume Guidelines by Body Part (Overlapping Ranges)
+
+| **Body Part**        | **Maintenance Volume** | **Hypertrophy Range** | **Max Recoverable Volume (MRV)** |
+|----------------------|-------------------------|------------------------|-----------------------------------|
+| **Chest**            | 4–10 sets               | 8–20 sets              | 14–25 sets                        |
+| **Shoulders**        | 6–12 sets               | 10–24 sets             | 14–30+ sets                       |
+| **Back (Overall)**   | 6–12 sets               | 10–24 sets             | 16–28 sets                        |
+| **Arms (Biceps + Triceps)** | 4–10 sets         | 8–20 sets              | 12–24 sets                        |
+| **Forearms**         | 4–8 sets                | 6–14 sets              | 10–16 sets                        |
+| **Abdominals**       | 4–8 sets                | 8–15 sets              | 12–20 sets                        |
+| **Trapezius**        | 4–10 sets               | 8–16 sets              | 14–22 sets                        |
+| **Neck**             | 2–6 sets                | 6–10 sets              | 10–14 sets                        |
+| **Quads**            | 6–12 sets               | 10–20 sets             | 16–28 sets                        |
+| **Hamstrings**       | 4–10 sets               | 8–16 sets              | 14–22 sets                        |
+| **Glutes**           | 4–10 sets               | 8–16 sets              | 14–24 sets                        |
+| **Calves** *(Both heads)* | 6–10 sets         | 12–20 sets             | 16–24 sets                        |
+| **Hip Flexors**      | 2–6 sets                | 6–10 sets              | 10–14 sets                        |
+| **Hip Adductors**    | 4–8 sets                | 8–12 sets              | 12–18 sets                        |
+| **Hip Abductors**    | 4–8 sets                | 8–14 sets              | 12–18 sets                        |
+| **Abs** *(same as Abdominals)* | 4–8 sets       | 8–15 sets              | 12–20 sets                        |
+| **Erector Spinae**   | 3–6 sets                | 6–10 sets              | 10–14 sets                        |
+
+
+
+
+
+questionairre for presets:
+	- time per session
+	- sessions per week
+	- target specifications
+		- specify body parts
+		- specify muscles
+	- b 
+	
+	
+	
+- final requirements:
+	- strict and accurate calorie and macronutrient targets
+	- personalized adjustments for nutritional targets
+		- updates recomended calorie, macronutrient intake targets, etc based off information being put into it.
+	- needs accurate and verified food database.
+		- foods exist and are easy to find
+		- food information is verified, like nutrients, serving sizes, etc
+	- possibility of storing own recipes
+	- ability to track important bodybuilding metrics
+		- ability to show trends for specified date ranges for specific items (weight, weightloss/gain, etc)
+		- taking data and forcasting results and requirements to reach those results in specified time
+	- ability to upload photots for progression comparing
+	- allow you to preplan your meals in advance (for the day, upcoming days, etc) 
+		- might want to allow users to set default meals for x days to allow them to not track and still get info logged
+		
+
+
+
+
+	
+env_test
+	- pubspec.yaml
+	- assets
+		- body_heatmap.svg
+		- bodypart_muscle_ranking.json
+		- bodypart_ranking.json
+		- bodyparts.json
+		- equipment.json
+		- exercies.json
+		- muscle_bodypart.json
+		- muscle_ranking.json
+		- muscles.json
+		- stretches.json
+		- volume_boundaries.json
+	- lib
+		- db
+			- analytics_dao.dart
+			- cardio_dao.dart
+			- database_helper.dart
+			- definition_dao.dart
+			- exercise_dao.dart
+			- formula_settings_dao.dart
+			- gym_profile_dao.dart
+			- lookup_dao.dart
+			- preset_auto_settings_dao.dart
+			- preset_definition_dao.dart
+			- preset_detail_dao.dart
+			- preset_exercise_auto_dao.dart
+			- preset_exercise_dao.dart
+			- preset_flow_methods_dao.dart
+			- preset_set_auto_dao.dart
+			- schema.dart
+			- seed.dart
+			- session_dao.dart
+			- set_dao.dart
+			- stats_dao.dart
+			- stretch_dao.dart
+		- models
+			- analytics_models.dart
+			- definition__models.dart
+			- gym_models.dart
+			- measurement_models.dart
+			- models.dart
+			- preset_models.dart
+			- workout_models.dart
+		- providers
+			- active_session.dart
+			- dashboard_config.dart
+			- preset_session.dart
+			- selected_profile.dart
+		- repositories 
+			- app_repository.dart
+		- screens 
+			- exercise
+				- analytics_dashboard_screen.dart
+				- auto_preset-flow_screen.dart
+				- definitions_by_bodypart_page.dart
+				- definitions_by_muscle_page.dart
+				- exercise_analytics_screen.dart
+				- exercise_catalog_page.dart
+				- full_history_screen.dart
+				- gym_profile_screen.dart
+				- history_screen.dart
+				- muscle_filter_page.dart
+				- preset_detail_screen.dart
+				- session_detail_screen.dart
+				- session_screen.dart
+				- train_page.dart
+			- nutrition
+				- default_trend_page.dart
+				- food_customization_page.dart
+				- food_logging_page.dart
+				- log_entry_page.dart
+				- measured_items_page.dart
+				- new_measured_item_page.dart
+				- nutrition_page.dart
+				- pantry_log_page.dart
+				- plan_meal_page.dart
+				- specific_measurement_page.dart
+			- profile
+				- settings
+					- analytics_setting_screen.dart
+					- app_settings_page.dart
+					- bodypart_muscle_mapping_screen.dart
+					- bodypart_ranking_screen.dart
+					- exercise_muscle_percent_screen.dart
+					- flow_chart_page.dart
+					- muscle_ranking_screen.dart
+					- profile_page.dart
+					- volume_boundaries_screen.dart
+			- dashboard_page.dart
+			- onboarding_flow.dart
+		- services
+			- auto_increment_service.dart
+			- flow_executor.dart
+		- widgets 
+			- add_exercise_fab.dart
+			- automatic_settings_sheet.dart
+			- body_heatmap.dart
+			- cardio_card.dart
+			- current_metrics_section.dart
+			- data_records_section.dart
+			- exercise_card.dart
+			- exercise_detail_sheet.dart
+			- flow_screen_widgets.dart
+			- flow_widgets.dart
+			- generic_bar.dart
+			- health_trends_section.dart
+			- history_summary_widgets.dart
+			- meal_plan_add_bar.dart
+			- nutrition_bar_details.dart
+			- nutrition_circle_details.dart
+			- nutrition_dash.dart
+			- nutrition_text_details.dart
+			- ongoing_session_fab.dart
+			- past_sessions_list.dart
+			- preset_bar.dart
+			- quick_bar.dart
+			- rounded_progress_indicator.dart
+			- session_complete_sheet.dart
+			- speed_dial_fab.dart
+			- stretch_card.dart
+			- stretch_search_dialog.dart
+			- weight_card.dart
+			- workout_dashboard.dart
+		- main.dart
+
+
+[
+			{ "name": "Neck" },
+			{ "name": "Shoulders"},
+			{ "name": "Chest" },
+			{ "name": "Core" },
+			{ "name": "Upper Back" },
+			{ "name": "Lower Back" },
+			{ "name": "Biceps" },
+			{ "name": "Triceps" },
+			{ "name": "Forearms" },
+			{ "name": "Hips" },
+			{ "name": "Hamstrings" },
+			{ "name": "Quads" },
+			{ "name": "Calves"}
+		]
+
+
+
+id="Calf_Front_Right">
+id="Calf_front_left">
+id="Quad_Front_Right">
+id="Quad_Left_front">
+id="Core_front">
+id="Forearm_Right_front">
+id="Bicep_right">
+id="Shoulder_frontal_right">
+id="Chest_right">
+id="forearm_frontal_left">
+id="bicep_left">
+id="Shoulder_frontal_left">
+id="Chest_left">
+id="Neck_frontal">
+id="Head_frontal">
+id="Calf_left_back">
+id="Calf_right_back">
+id="hamstring_left_back">
+id="Hamstring_right_back">
+id="Hip_back_left">
+id="hip_right_rear">
+id="Upper_Back">
+id="shoulder_left_back">
+id="tricep_left_back">
+id="forearm_left_back">
+id="lower_back">
+id="shoulder_right_rear">
+id="tricep_right_rear">
+id="forearm_right_rear">
+id="neck_rear">
+id="Head_rear">
+id="hand_right_front">
+id="hand_left_front">
+id="hand_left_back">
+id="hand_right_back">
+id="foot_front_right">
+id="foot_front_left">
+id="foot_left_back">
+id="foot_right_back">
+
+
+
+
+
+
+
+
+
+

@@ -652,6 +652,38 @@ Future<List<ExerciseDefinition>> fetchCatalogDefinitions({
   return defs;
 }
 
+Future<int> insertExerciseMuscleMapping(int defId, int muscleId, int rank) async {
+  final db = await database;
+  return DefinitionDao.insertExerciseMuscleMapping(db, defId, muscleId, rank);
+}
+
+/// Deletes the link between a definition and a muscle.
+Future<int> deleteExerciseMuscleMapping(int defId, int muscleId) async {
+  final db = await database;
+  return DefinitionDao.deleteExerciseMuscleMapping(db, defId, muscleId);
+}
+
+
+Future<int> insertExerciseBodypartMapping(int defId, int bpId) async {
+  final db = await database;
+  return DefinitionDao.insertExerciseBodypartMapping(db, defId, bpId);
+}
+Future<int> deleteExerciseBodypartMapping(int defId, int bpId) async {
+  final db = await database;
+  return DefinitionDao.deleteExerciseBodypartMapping(db, defId, bpId);
+}
+
+Future<int> insertExerciseEquipmentMapping(int defId, int eqId) async {
+  final db = await database;
+  return DefinitionDao.insertExerciseEquipmentMapping(db, defId, eqId);
+}
+Future<int> deleteExerciseEquipmentMapping(int defId, int eqId) async {
+  final db = await database;
+  return DefinitionDao.deleteExerciseEquipmentMapping(db, defId, eqId);
+}
+
+
+
 //lookup_dao.dart
   
   /// Fetch all measurement definitions.

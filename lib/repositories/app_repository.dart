@@ -168,6 +168,32 @@ Future<void> saveStretchInstance({required int exerciseId, required List<Map<Str
     );
 
 
+Future<int> addExerciseMuscleMapping(int defId, int muscleId, int rank) {
+  return _dbHelper.insertExerciseMuscleMapping(defId, muscleId, rank);
+}
+
+/// Deletes an exercise-muscle association.
+Future<int> deleteExerciseMuscleMapping(int defId, int muscleId) {
+  return _dbHelper.deleteExerciseMuscleMapping(defId, muscleId);
+}
+
+
+Future<int> addExerciseBodypartMapping(int defId, int bpId) {
+  return _dbHelper.insertExerciseBodypartMapping(defId, bpId);
+}
+Future<int> deleteExerciseBodypartMapping(int defId, int bpId) {
+  return _dbHelper.deleteExerciseBodypartMapping(defId, bpId);
+}
+
+Future<int> addExerciseEquipmentMapping(int defId, int eqId) {
+  return _dbHelper.insertExerciseEquipmentMapping(defId, eqId);
+}
+Future<int> deleteExerciseEquipmentMapping(int defId, int eqId) {
+  return _dbHelper.deleteExerciseEquipmentMapping(defId, eqId);
+}
+
+
+
 /// Finds or creates a definition by name and equipment, returns its ID.
   Future<int> findOrCreateExerciseDefinition(String name, String equipmentName) => _dbHelper.findOrCreateExerciseDefinition(name, equipmentName);
 

@@ -17,8 +17,6 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
     with SingleTickerProviderStateMixin {
   final _repo = AppRepository();
   late final TabController _tabController;
-  // **ADD** this line for a persistent controller:
-  late final TextEditingController _nameController;
   bool _isEditing = false;
 
   // Definitions
@@ -38,20 +36,20 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
   String _tipsNotes = '';
   List<Map<String, dynamic>> _mediaItems = []; // { 'type': 'image'|'video'|'link', 'url': '' }
 
+  /// IDs of muscles the user has deleted in this edit session.
+final Set<int> _musclesToRemove = {};
+
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
-    // **ADD**:
-    _nameController = TextEditingController();
     _loadExerciseList();
   }
 
   @override
   void dispose() {
     _tabController.dispose();
-    // **ADD**:
-    _nameController.dispose();
     super.dispose();
   }
 
@@ -60,29 +58,23 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
     final defs = await _repo.lookupDefsDetailed();
     setState(() {
       _defs = defs;
+      _selectedDef = null;
       _isNewExercise = false;
       _isEditing = false;
     });
-    if (_defs.isNotEmpty) {
-      _selectedDef = defs.first;
-    _nameController.text = _selectedDef!.name;
-    await _onExerciseSelected(_selectedDef!);
-    }
   }
 
   /// Handle selecting an exercise definition
   Future<void> _onExerciseSelected(ExerciseDefinition def) async {
-    setState(() {
-      _selectedDef = def;
-      _isNewExercise = false;
-      _isEditing = false;
-      // ← ADD THIS LINE
-    _nameController.text = def.name;
-    });
-    // **ADD**: send user back to the first tab
-    _tabController.index = 0;
-    await _loadDefinitionDetails(def);
-  }
+  setState(() {
+    _selectedDef = def;
+    _isNewExercise = false;
+    _isEditing = false;
+  });
+  _tabController.index = 0;
+  await _loadDefinitionDetails(def);
+}
+
 
   /// Populate muscles, bodyparts, equipment for the selected definition
   Future<void> _loadDefinitionDetails(ExerciseDefinition def) async {
@@ -129,14 +121,28 @@ final Map<BodyPart, double> bodyPercents =
     });
   }
 
-  void _toggleEdit() {
-    setState(() => _isEditing = !_isEditing);
+  Future<void> _toggleEdit() async {
+  // If we’re currently editing, and the user just tapped “Save”:
+  if (_isEditing && _selectedDef != null && _musclesToRemove.isNotEmpty) {
+    for (var muscleId in _musclesToRemove) {
+      // <-- call your repo/DB method to remove the muscle association
+      await _repo.deleteExerciseMuscleMapping(_selectedDef!.id, muscleId);
+
+    }
+    _musclesToRemove.clear();
+    // reload full details so all tabs refresh
+    await _loadDefinitionDetails(_selectedDef!);
   }
+  setState(() {
+    _isEditing = !_isEditing;
+  });
+}
+
 
   @override
   Widget build(BuildContext context) {
     // **ADD**: show a loader until an exercise is selected
-    if (_selectedDef == null && !_isNewExercise) {
+    if (_defs.isEmpty) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );
@@ -181,15 +187,11 @@ final Map<BodyPart, double> bodyPercents =
                 _onExerciseSelected(match);
               }
             },
-            fieldViewBuilder: (context, _ , focusNode, onSubmitted) {
-  // **USE** your controller instead of recreating one:
-  _nameController.text = _isNewExercise
-      ? ''
-      : (_selectedDef?.name ?? '');
+            fieldViewBuilder: (context, textController, focusNode, onFieldSubmitted) {
               return TextField(
-                controller: _nameController,
-                focusNode: focusNode,
-                decoration: InputDecoration(
+    controller: textController,
+    focusNode: focusNode,
+    decoration: InputDecoration(
                   hintText: 'Select or enter exercise',
                   isDense: true,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
@@ -202,30 +204,14 @@ final Map<BodyPart, double> bodyPercents =
                     borderRadius: BorderRadius.circular(4),
                   ),
                   filled: true,
-                  fillColor: Theme.of(context).colorScheme.surface.withValues(alpha: 0.1),
-                ),
-                onSubmitted: (value) {
-                  if (!_defs.any((d) => d.name == value)) {
-                    setState(() {
-                      _isNewExercise = true;
-                      _selectedDef = null;
-                      _isEditing = true;
-                      _muscleEntries = [];
-                      _bodyEntries = [];
-                      _equipmentList = [];
-                    });
-                  } else {
-                    final def = _defs.firstWhere((d) => d.name == value);
-                    _onExerciseSelected(def);
-                  }
-                  // after selection or new, keep the text in sync:
-      _nameController.text = _isNewExercise
-          ? ''
-          : (_selectedDef?.name ?? '');
-      onSubmitted();
-                },
-              );
-            },
+      fillColor: Theme.of(context)
+          .colorScheme
+          .surface
+          .withAlpha(25),
+    ),
+    onSubmitted: (_) => onFieldSubmitted(),
+  );
+},
             optionsViewBuilder: (ctx, onSelected, options) {
               return Material(
                 elevation: 4,
@@ -295,11 +281,32 @@ final Map<BodyPart, double> bodyPercents =
                     return ListTile(
                       leading: _isEditing
                           ? IconButton(
-                              icon: const Icon(Icons.delete),
-                              onPressed: () {
-                                // TODO: remove muscle
-                              },
-                            )
+  icon: const Icon(Icons.delete),
+  onPressed: () async {
+    final muscleId   = entry['id']   as int;
+    final muscleName = entry['name'] as String;
+    // 1) confirm
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Remove Muscle'),
+        content: Text('Remove "$muscleName" from this exercise?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.of(ctx).pop(true),  child: const Text('Remove')),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    // 2) queue it and remove from the visible list
+    setState(() {
+      _musclesToRemove.add(muscleId);
+      _muscleEntries.removeAt(index);
+    });
+  },
+)
+
                           : null,
                       title: Text(entry['name'] as String),
                       trailing: SizedBox(
