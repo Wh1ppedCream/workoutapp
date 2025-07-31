@@ -27,8 +27,13 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
   // Tab data
   List<Map<String, Object>> _muscleEntries = []; // { 'id': int, 'name': String, 'percent': double }
   List<Map<String, Object>> _bodyEntries = [];   // { 'id': int, 'name': String, 'percent': double }
-  List<String> _equipmentList = [];
+  
   bool _useManualBody = false;
+
+  // new:
+List<Map<String, Object>> _equipmentEntries = []; // { 'id': int, 'name': String }
+late List<int> _originalEquipmentIds;
+
 
   // Notes & Media (stubbed)
   String _setupNotes = '';
@@ -121,7 +126,12 @@ final Map<BodyPart, double> bodyPercents =
         };
       }).toList();
 
-      _equipmentList = def.equipmentList.map((e) => e.name).toList();
+      _equipmentEntries = def.equipmentList
+    .map((e) => {'id': e.id, 'name': e.name})
+    .toList();
+// remember for diffing on save
+_originalEquipmentIds = def.equipmentList.map((e) => e.id).toList();
+
     });
   }
 
@@ -129,9 +139,34 @@ final Map<BodyPart, double> bodyPercents =
    // if we’re about to exit editing mode, commit our muscle changes
    if (_isEditing && _selectedDef != null) {
      await _saveMuscleChanges();
+     await _saveEquipmentChanges();
    }
    setState(() => _isEditing = !_isEditing);
  }
+
+ /// Persist adds/removals on equipment when saving.
+Future<void> _saveEquipmentChanges() async {
+  final defId = _selectedDef!.id;
+
+  final currIds = _equipmentEntries
+      .map((e) => e['id'] as int)
+      .toSet();
+  final origIds = _originalEquipmentIds.toSet();
+
+  // 1) removals
+  for (var removed in origIds.difference(currIds)) {
+    await _repo.deleteExerciseEquipmentMapping(defId, removed);
+  }
+
+  // 2) additions
+  for (var added in currIds.difference(origIds)) {
+    await _repo.addExerciseEquipmentMapping(defId, added);
+  }
+
+  // reset baseline
+  _originalEquipmentIds = currIds.toList();
+}
+
 
 
 /// Compare the original vs. current _muscleEntries and persist adds/removes/percentage‐overrides.
@@ -191,6 +226,7 @@ Future<void> _openAddMuscleDialog() async {
   final selectedIds = <int>{};
 
   // 4) show dialog
+  if (!mounted) return;
   final result = await showDialog<Set<int>>(
     context: context,
     builder: (ctx) => AlertDialog(
@@ -210,10 +246,11 @@ Future<void> _openAddMuscleDialog() async {
                 value: checked,
                 onChanged: (on) {
                   setDialogState(() {
-                    if (on == true)
+                    if (on == true) {
                       selectedIds.add(m.id);
-                    else
+                    } else {
                       selectedIds.remove(m.id);
+                    }
                   });
                 },
               );
@@ -248,6 +285,60 @@ Future<void> _openAddMuscleDialog() async {
     });
   }
 }
+
+/// Let the user pick one or more new equipment items to stage.
+Future<void> _openAddEquipmentDialog() async {
+  final allEq = await _repo.fetchAllEquipment(); // List<Equipment>
+  final existing = _equipmentEntries.map((e) => e['id'] as int).toSet();
+  final available = allEq.where((e) => !existing.contains(e.id)).toList();
+  final selectedIds = <int>{};
+
+if (!mounted) return;
+  final result = await showDialog<Set<int>>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('Add Equipment'),
+      content: SizedBox(
+        width: double.maxFinite,
+        child: StatefulBuilder(builder: (ctx2, setState2) {
+          return ListView.builder(
+            shrinkWrap: true,
+            itemCount: available.length,
+            itemBuilder: (_, i) {
+              final eq = available[i];
+              final checked = selectedIds.contains(eq.id);
+              return CheckboxListTile(
+                title: Text(eq.name),
+                value: checked,
+                onChanged: (on) => setState2(() {
+                  if (on == true) {
+                    selectedIds.add(eq.id);
+                  } else {
+                    selectedIds.remove(eq.id);
+                  }
+                }),
+              );
+            },
+          );
+        }),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.of(ctx).pop(),    child: const Text('Cancel')),
+        TextButton(onPressed: () => Navigator.of(ctx).pop(selectedIds), child: const Text('Add')),
+      ],
+    ),
+  );
+
+  if (result != null) {
+    setState(() {
+      for (var id in result) {
+        final eq = allEq.firstWhere((e) => e.id == id);
+        _equipmentEntries.add({'id': eq.id, 'name': eq.name});
+      }
+    });
+  }
+}
+
 
 
   @override
@@ -292,7 +383,7 @@ Future<void> _openAddMuscleDialog() async {
                   _isEditing = true;
                   _muscleEntries = [];
                   _bodyEntries = [];
-                  _equipmentList = [];
+                  _equipmentEntries  = [];
                 });
               } else {
                 _onExerciseSelected(match);
@@ -531,44 +622,59 @@ Future<void> _openAddMuscleDialog() async {
     );
   }
 
-  Widget _buildEquipmentTab() {
-    return Column(
-      children: [
-        Expanded(
-          child: _equipmentList.isEmpty
-              ? const Center(child: Text('No equipment associated'))
-              : ListView.builder(
-                  itemCount: _equipmentList.length,
-                  itemBuilder: (context, index) {
-                    final eq = _equipmentList[index];
-                    return ListTile(
-                      leading: _isEditing
-                          ? IconButton(
-                              icon: const Icon(Icons.delete),
-                              onPressed: () {
-                                // TODO: remove equipment
-                              },
-                            )
-                          : null,
-                      title: Text(eq),
-                    );
-                  },
-                ),
-        ),
-        if (_isEditing)
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: ElevatedButton.icon(
-              onPressed: () {
-                // TODO: open add-equipment modal
-              },
-              icon: const Icon(Icons.add),
-              label: const Text('Add Equipment'),
-            ),
+ Widget _buildEquipmentTab() {
+  return Column(
+    children: [
+      Expanded(
+        child: _equipmentEntries.isEmpty
+            ? const Center(child: Text('No equipment associated'))
+            : ListView.builder(
+                itemCount: _equipmentEntries.length,
+                itemBuilder: (context, i) {
+                  final entry = _equipmentEntries[i];
+                  return ListTile(
+                    leading: _isEditing
+                        ? IconButton(
+                            icon: const Icon(Icons.delete),
+                            onPressed: () async {
+                              final eqId = entry['id'] as int;
+                              final eqName = entry['name'] as String;
+                              final confirm = await showDialog<bool>(
+                                context: context,
+                                builder: (_) => AlertDialog(
+                                  title: const Text('Remove Equipment'),
+                                  content: Text('Remove "$eqName" from this exercise?'),
+                                  actions: [
+                                    TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
+                                    TextButton(onPressed: () => Navigator.of(context).pop(true),  child: const Text('Remove')),
+                                  ],
+                                ),
+                              );
+                              if (confirm != true) return;
+                              setState(() {
+                                _equipmentEntries.removeAt(i);
+                              });
+                            },
+                          )
+                        : null,
+                    title: Text(entry['name'] as String),
+                  );
+                },
+              ),
+      ),
+      if (_isEditing)
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: ElevatedButton.icon(
+            onPressed: _openAddEquipmentDialog,
+            icon: const Icon(Icons.add),
+            label: const Text('Add Equipment'),
           ),
-      ],
-    );
-  }
+        ),
+    ],
+  );
+}
+
 
   Widget _buildNotesMediaTab() {
     return SingleChildScrollView(
