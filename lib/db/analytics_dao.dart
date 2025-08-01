@@ -434,6 +434,5 @@ static Future<int> deleteExerciseBodyPartPercent(
 
 
 
-
 }
 

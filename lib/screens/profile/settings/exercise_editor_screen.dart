@@ -26,7 +26,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
 
   // Tab data
   List<Map<String, Object>> _muscleEntries = []; // { 'id': int, 'name': String, 'percent': double }
-  List<Map<String, Object>> _bodyEntries = [];   // { 'id': int, 'name': String, 'percent': double }
+// { 'id': int, 'name': String, 'percent': double }
   
   bool _useManualBody = false;
 
@@ -96,25 +96,22 @@ late List<int> _originalBodypartIds;
   /// Populate muscles, bodyparts, equipment for the selected definition
 Future<void> _loadDefinitionDetails(ExerciseDefinition def) async {
   final defId = def.id;
-  final now   = DateTime.now();
   // Pick a range for calculating sets: for “all time”, start at epoch
-  final start = DateTime.fromMillisecondsSinceEpoch(0);
 
   // 1) Muscle‐hit percents (for the Muscles tab)
   final musclePercents = await _repo.computeMusclePercents(defId);
 
   // 2) Muscle‐calculated body‐part counts for this definition
-  final autoBpMap = await _repo.fetchSetsPerBodyPartForDefinition(
-    defId: defId,
-    start: start,
-    end:   now,
-  );
+  final autoBpMap = await _repo.computeMuscleCalculatedBodyparts(defId);
 
   // 3) Manual overrides from your new table
   final manualList = await _repo.fetchBodyPartPercentsManual(defId);
   final manualMap  = { for (var e in manualList) e.bodyPartId : e.percent };
 
+  final useManual = await _repo.getUseManualBodyparts(def.id);
+
   setState(() {
+    _useManualBody = useManual;
     // --- Muscles Tab data (unchanged) ---
     _muscleEntries = def.muscles.map((rm) {
       final override = musclePercents.firstWhere(
@@ -183,9 +180,7 @@ Future<void> _loadDefinitionDetails(ExerciseDefinition def) async {
 Future<void> _saveBodypartChanges() async {
   final defId = _selectedDef!.id;
 
-  final currIds = _bodyEntries
-      .map((e) => e['id'] as int)
-      .toSet();
+  final currIds = _bodyManualEntries.map((e) => e['id'] as int).toSet();
   final origIds = _originalBodypartIds.toSet();
 
   // 1) removals
@@ -199,13 +194,12 @@ Future<void> _saveBodypartChanges() async {
   }
 
   // 3) percent overrides
-for (var entry in _bodyEntries) {
+for (var entry in _bodyManualEntries) {
   final bpId = entry['id'] as int;
   final pct  = entry['percent'] as double;
   if (_useManualBody) {
     await _repo.setExerciseBodyPartPercent(defId, bpId, pct);
   } else {
-    // if they’ve switched back to auto, wipe out any manual override
     await _repo.removeExerciseBodyPartPercent(defId, bpId);
   }
 }
@@ -217,7 +211,7 @@ for (var entry in _bodyEntries) {
 /// Let the user pick one or more new BodyParts to stage.
 Future<void> _openAddBodypartDialog() async {
   final allBps = await _repo.fetchAllBodyPartsFull(); // List<BodyPart>
-  final existing = _bodyEntries.map((e) => e['id'] as int).toSet();
+  final existing = _bodyManualEntries.map((e) => e['id'] as int).toSet();
   final available = allBps.where((bp) => !existing.contains(bp.id)).toList();
   final selectedIds = <int>{};
 
@@ -238,8 +232,11 @@ Future<void> _openAddBodypartDialog() async {
                 title: Text(bp.name),
                 value: checked,
                 onChanged: (on) => setState2(() {
-                  if (on == true) selectedIds.add(bp.id);
-                  else selectedIds.remove(bp.id);
+                  if (on == true) {
+                    selectedIds.add(bp.id);
+                  } else {
+                    selectedIds.remove(bp.id);
+                  }
                 }),
               );
             },
@@ -257,7 +254,7 @@ Future<void> _openAddBodypartDialog() async {
     setState(() {
       for (var id in result) {
         final bp = allBps.firstWhere((b) => b.id == id);
-        _bodyEntries.add({'id': bp.id, 'name': bp.name, 'percent': 0.0});
+        _bodyManualEntries.add({ 'id': bp.id, 'name': bp.name, 'percent': 0.0 });
       }
     });
   }
@@ -493,6 +490,7 @@ if (!mounted) return;
                   equipmentList: [],
                   bodyParts: [],
                   muscles: [],
+                  useManualBodyparts: false,
                 ),
               );
               if (match.id == -1) {
@@ -502,7 +500,6 @@ if (!mounted) return;
                   _selectedDef = null;
                   _isEditing = true;
                   _muscleEntries = [];
-                  _bodyEntries = [];
                   _equipmentEntries  = [];
                 });
               } else {
@@ -672,9 +669,13 @@ Widget _buildBodypartsTab() {
           children: [
             Checkbox(
               value: _useManualBody,
-              onChanged: _isEditing
-                  ? (v) => setState(() => _useManualBody = v ?? false)
-                  : null,
+             onChanged: _isEditing
+  ? (v) async {
+      await _repo.setUseManualBodyparts(_selectedDef!.id, v!);
+      setState(() => _useManualBody = v);
+    }
+  : null,
+
             ),
             const Text('Use Manual Bodyparts'),
           ],
@@ -735,7 +736,6 @@ Widget _buildManualBodyparts() {
     itemCount: _bodyManualEntries.length,
     itemBuilder: (_, i) {
       final entry = _bodyManualEntries[i];
-      final id    = entry['id']      as int;
       final name  = entry['name']    as String;
       final pct   = entry['percent'] as double;
 
@@ -802,7 +802,6 @@ Widget _buildManualBodyparts() {
                         ? IconButton(
                             icon: const Icon(Icons.delete),
                             onPressed: () async {
-                              final eqId = entry['id'] as int;
                               final eqName = entry['name'] as String;
                               final confirm = await showDialog<bool>(
                                 context: context,

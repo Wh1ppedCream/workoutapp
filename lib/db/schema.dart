@@ -567,6 +567,10 @@ static Future<void> migrateV15(Database db) async {
       FOREIGN KEY(bodypart_id)     REFERENCES bodypart(id)           ON DELETE CASCADE
     );
   ''');
+  await db.execute('''
+    ALTER TABLE exercise_definitions
+  ADD COLUMN use_manual_bodyparts INTEGER NOT NULL DEFAULT 0;
+  ''');
 }
 
 

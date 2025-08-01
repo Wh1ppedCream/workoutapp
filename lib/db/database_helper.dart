@@ -1222,26 +1222,121 @@ Future<double?> fetchVolumeMax(int defId, String timeframe) async {
   }
 
 
-  Future<Map<BodyPart,double>> computeBodyPartPercents(int defId) async {
-    final musclePercs = await computeMusclePercents(defId);
-    final percMap = { for (var e in musclePercs) e.muscleId : e.percent };
+Future<Map<BodyPart,double>> computeBodyPartPercents(int defId) async {
+  final db  = await database;
+  final def = await DefinitionDao.getExerciseDefinitionById(db, defId);
+  if (def == null) return {};
 
-    final db = await database;
-    final def = await getExerciseDefinitionById(defId);
-    if (def == null) return {};
-
-    final result = <BodyPart,double>{};
-    for (var bp in def.bodyParts) {
-      final links = await AnalyticsDao.getMusclesForBodyPart(db, bp.id);
-      final hits = links
-        .map((l) => percMap[l.muscleId])
-        .whereType<double>()
-        .toList();
-      if (hits.isEmpty) continue;
-      result[bp] = hits.reduce((a,b) => a+b) / hits.length;
+  // 1) If the exercise is configured for manual body-parts, load those:
+  if (def.useManualBodyparts) {
+    final rows = await AnalyticsDao.getPercentsForExerciseBodyPart(db, defId);
+    // rows: List<ExerciseBodyPartPercent>
+    // build a map from your definition.bodyParts
+    final bpById = { for (var bp in def.bodyParts) bp.id : bp };
+    final out = <BodyPart,double>{};
+    for (var p in rows) {
+      final bp = bpById[p.bodyPartId];
+      if (bp != null) out[bp] = p.percent;
     }
-    return result;
+    return out;
   }
+
+  // 2) otherwise, fall back to “muscle % → body-part %” logic
+  final musclePercs = await computeMusclePercents(defId);
+  final percMap = { for (var e in musclePercs) e.muscleId : e.percent };
+
+  final result = <BodyPart,double>{};
+  for (var bp in def.bodyParts) {
+    final links = await AnalyticsDao.getMusclesForBodyPart(db, bp.id);
+    final hits = links
+      .map((l) => percMap[l.muscleId])
+      .whereType<double>()
+      .toList();
+    if (hits.isEmpty) continue;
+    result[bp] = hits.reduce((a,b) => a + b) / hits.length;
+  }
+  return result;
+}
+
+
+/// Estimate how one single set of [exerciseDefId] splits across its body-parts,
+/// *based on the definition’s muscle-percent hits*, not on logged history.
+Future<Map<BodyPart,double>> estimateBodyPartSetDistribution(int defId) async {
+  final db  = await database;
+  final def = await DefinitionDao.getExerciseDefinitionById(db, defId);
+  if (def == null) return {};
+
+  // 1) grab any manual muscle-% overrides
+  final manualHits = await AnalyticsDao.getPercentsForExercise(db, defId);
+
+  // 2) if there are none, default each linked muscle to 1.0
+  final muscleHits = manualHits.isEmpty
+    ? def.muscles.map((rm) => ExerciseMusclePercent(
+        exerciseDefId: defId,
+        muscleId:      rm.muscle.id,
+        percent:       1.0,
+      )).toList()
+    : manualHits;
+
+  final hitMap = { for (var h in muscleHits) h.muscleId : h.percent };
+
+  // 3) now sum up per body-part
+  final out = <BodyPart,double>{};
+  for (var bp in def.bodyParts) {
+    final links = await AnalyticsDao.getMusclesForBodyPart(db, bp.id);
+    final total = links.fold<double>(
+      0.0,
+      (sum, link) => sum + (hitMap[link.muscleId] ?? 0.0),
+    );
+    if (total > 0) out[bp] = total;
+  }
+
+  return out;
+}
+
+
+/// For a given exercise definition, look at each associated muscle’s %-hit
+/// and push that % into every body-part that muscle maps to.
+Future<Map<BodyPart,double>> computeMuscleCalculatedBodyparts(int defId) async {
+  final db  = await database;
+  // 1) Load the full definition (so we know which muscles are on it)
+  final def = await DefinitionDao.getExerciseDefinitionById(db, defId);
+  if (def == null) return {};
+
+  // 2) Grab per-exercise muscle percentages (overrides or computed)
+  final musclePercs = await computeMusclePercents(defId);
+  final hitMap = { for (var e in musclePercs) e.muscleId : e.percent };
+
+  // 3) Fetch every body-part row once and index by ID (avoid repeated queries)
+  final allBpRows = await db.query('bodypart');
+  final bpById = {
+    for (var r in allBpRows)
+      r['id'] as int : BodyPart(r['id'] as int, r['name'] as String)
+  };
+
+  // 4) For each muscle on the definition, look up its hit % and
+  //    then add that % into each of its linked body-parts.
+  final result = <BodyPart,double>{};
+  for (var rm in def.muscles) {
+    final mid = rm.muscle.id;
+    final p   = hitMap[mid] ?? 0.0;
+    if (p <= 0) continue;
+
+    // which body-parts does this muscle drive?
+    final links = await AnalyticsDao.getBodyPartsForMuscle(db, mid);
+    for (var link in links) {
+      final bp = bpById[link.bodyPartId];
+      if (bp == null) continue;
+      result[bp] = (result[bp] ?? 0.0) + p;
+    }
+  }
+
+  return result;
+}
+
+
+
+
 
   // ─── Session/Set Analytics ───────────────────────────────
 
@@ -1751,6 +1846,28 @@ Future<int> deletePresetSet(int presetSetId) async {
 }
 
 
+Future<bool> getUseManualBodyparts(int defId) async {
+  final db = await database;
+  final row = await db.query(
+    'exercise_definitions',
+    columns: ['use_manual_bodyparts'],
+    where: 'id = ?',
+    whereArgs: [defId],
+    limit: 1,
+  );
+  if (row.isEmpty) return false;
+  return (row.first['use_manual_bodyparts'] as int) == 1;
+}
+
+Future<void> setUseManualBodyparts(int defId, bool value) async {
+  final db = await database;
+  await db.update(
+    'exercise_definitions',
+    {'use_manual_bodyparts': value ? 1 : 0},
+    where: 'id = ?',
+    whereArgs: [defId],
+  );
+}
 
 
 

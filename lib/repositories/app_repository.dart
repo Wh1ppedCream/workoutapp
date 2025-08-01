@@ -455,6 +455,20 @@ Future<int> removeExerciseBodyPartPercent(int defId, int bpId) =>
   /// Computes per-body-part % by averaging muscle percents belonging to each part.
   Future<Map<BodyPart,double>> computeBodyPartPercents(int defId) => _dbHelper.computeBodyPartPercents(defId);
 
+  /// Estimates body-part distribution for a definition by summing
+  /// (1 × muscleHitPercent) for every weight‐exercise set in sessions
+Future<Map<BodyPart,double>> estimateBodyPartSetDistribution(int defId) {
+  return _dbHelper.estimateBodyPartSetDistribution(defId);
+}
+
+/// For each muscle on the exercise, grab its %-hit and
+  /// spread it to all body-parts that muscle maps to.
+  Future<Map<BodyPart,double>> computeMuscleCalculatedBodyparts(int defId) {
+  return _dbHelper.computeMuscleCalculatedBodyparts(defId);
+}
+
+  
+
 /// Returns a map muscleId → total “sets” for that muscle, summing
   /// (1 × muscleHitPercent) for every weight‐exercise set in sessions
   /// between [start] and [end].
@@ -697,5 +711,14 @@ Future<FlowMethod> upsertFlowMethod({
 Future<void> deleteFlowMethod(int methodId) {
   return _dbHelper.deleteFlowMethod(methodId);
 }
+
+Future<bool> getUseManualBodyparts(defId) async {
+    return await _dbHelper.getUseManualBodyparts(defId);
+  }
+
+  Future<void> setUseManualBodyparts(defId, bool) async {
+    await _dbHelper.setUseManualBodyparts(defId, bool);
+  }
+
 
 }

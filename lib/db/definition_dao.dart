@@ -48,6 +48,7 @@ class DefinitionDao {
       final name        = row['name'] as String;
       final equipmentId = row['equipment_id'] as int?;
       final rating      = (row['rating'] as num?)?.toInt() ?? 0;
+      final useManual = (row['use_manual_bodyparts'] as int? ?? 0) == 1;
 
       // equipmentList
       final equipRows = await db.rawQuery('''
@@ -95,7 +96,8 @@ class DefinitionDao {
         rating:        rating,
         equipmentList: equipmentList,
         bodyParts:     bodyParts,
-        muscles:       muscles,
+        muscles:       muscles, 
+        useManualBodyparts: useManual,
       ));
     }
     return defs;
@@ -146,6 +148,7 @@ class DefinitionDao {
         equipmentList: const [],
         bodyParts:     const [],
         muscles:       const [],
+        useManualBodyparts: (r['use_manual_bodyparts'] as int? ?? 0) == 1,
       );
     }).toList();
   }
@@ -196,6 +199,7 @@ class DefinitionDao {
         equipmentList: const [],
         bodyParts:     const [],
         muscles:       const [],
+        useManualBodyparts: (r['use_manual_bodyparts'] as int? ?? 0) == 1,
       );
     }).toList();
   }
@@ -244,7 +248,7 @@ class DefinitionDao {
 
     final sql = StringBuffer()
       ..write('''
-        SELECT DISTINCT ed.id, ed.name, ed.equipment_id, ed.rating
+        SELECT DISTINCT ed.id, ed.name, ed.equipment_id, ed.rating, ed.use_manual_bodyparts
           FROM exercise_definitions ed
       ''')
       ..write(bodypartIds != null && bodypartIds.isNotEmpty
@@ -268,6 +272,7 @@ class DefinitionDao {
         equipmentList: const [],
         bodyParts:     const [],
         muscles:       const [],
+        useManualBodyparts: (r['use_manual_bodyparts'] as int? ?? 0) == 1,
       );
     }).toList();
   }
@@ -382,6 +387,7 @@ static Future<int> updateExerciseDefinition(
       'name': def.name,
       'equipment_id': def.equipmentId,
       'rating': def.rating,
+      'use_manual_bodyparts': def.useManualBodyparts ? 1 : 0,
     },
     where: 'id = ?',
     whereArgs: [def.id],
@@ -429,6 +435,7 @@ static Future<List<ExerciseDefinition>> searchExerciseDefinitions(
     equipmentList: const [],
     bodyParts:     const [],
     muscles:       const [],
+    useManualBodyparts: (r['use_manual_bodyparts'] as int? ?? 0) == 1,
   )).toList();
 }
 
@@ -458,6 +465,7 @@ static Future<List<ExerciseDefinition>> searchExerciseDefinitions(
         equipmentList: const [],
         bodyParts:     const [],
         muscles:       const [],
+        useManualBodyparts: (r['use_manual_bodyparts'] as int? ?? 0) == 1,
       );
     }).toList();
   }
@@ -479,6 +487,7 @@ static Future<ExerciseDefinition?> getExerciseDefinitionById(
   final name        = row['name']            as String;
   final equipmentId = row['equipment_id']    as int?;
   final rating      = (row['rating'] as num?)?.toInt() ?? 0;
+  final useManual = (row['use_manual_bodyparts'] as int? ?? 0) == 1;
 
   // equipmentList
   final equipRows = await db.rawQuery('''
@@ -527,6 +536,7 @@ static Future<ExerciseDefinition?> getExerciseDefinitionById(
     equipmentList: equipmentList,
     bodyParts:     bodyParts,
     muscles:       muscles,
+    useManualBodyparts: useManual,
   );
 }
 
