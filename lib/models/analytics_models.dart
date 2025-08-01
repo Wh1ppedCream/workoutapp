@@ -119,3 +119,34 @@ class VolumeBoundaries {
         'max_recoverable_volume': maxRecoverable,
       };
 }
+
+
+
+/// Percent association between exercise and body-part
+class ExerciseBodyPartPercent {
+  final int exerciseDefId;
+  final int bodyPartId;
+  double percent;
+
+  ExerciseBodyPartPercent({
+    required this.exerciseDefId,
+    required this.bodyPartId,
+    required this.percent,
+  });
+
+  /// Decode from SQL row
+  factory ExerciseBodyPartPercent.fromMap(Map<String, dynamic> m) {
+    return ExerciseBodyPartPercent(
+      exerciseDefId: m['exercise_def_id'] as int,
+      bodyPartId:    m['bodypart_id'] as int,
+      percent:       (m['percent'] as num).toDouble(),
+    );
+  }
+
+  /// Encode to SQL insert/update
+  Map<String, dynamic> toMap() => {
+        'exercise_def_id': exerciseDefId,
+        'bodypart_id':     bodyPartId,
+        'percent':         percent,
+      };
+}

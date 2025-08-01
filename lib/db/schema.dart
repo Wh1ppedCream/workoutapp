@@ -116,6 +116,7 @@ class Schema {
     await migrateV12(db);
     await migrateV13(db);
     await migrateV14(db);
+    await migrateV15(db);
   }
 
   /// Handler for onUpgrade callback.
@@ -133,6 +134,7 @@ class Schema {
     if (oldVersion < 12) await migrateV12(db);
     if (oldVersion < 13) await migrateV13(db);
     if (oldVersion < 14) await migrateV14(db);
+    if (oldVersion < 15) await migrateV15(db);
   }
 
   /// Migration to version 3: adds rating, equipment/muscle tables.
@@ -552,5 +554,20 @@ static Future<void> migrateV14(Database db) async {
       ADD COLUMN manual_selection_json TEXT;
   ''');
 }
+
+/// Migration to version 15: per‐exercise body-part % overrides
+static Future<void> migrateV15(Database db) async {
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS exercise_bodypart_percent (
+      exercise_def_id INTEGER NOT NULL,
+      bodypart_id     INTEGER NOT NULL,
+      percent         REAL    NOT NULL,
+      PRIMARY KEY(exercise_def_id, bodypart_id),
+      FOREIGN KEY(exercise_def_id) REFERENCES exercise_definitions(id) ON DELETE CASCADE,
+      FOREIGN KEY(bodypart_id)     REFERENCES bodypart(id)           ON DELETE CASCADE
+    );
+  ''');
+}
+
 
 }

@@ -48,7 +48,7 @@ class DatabaseHelper {
     final path = join(dbPath, 'fitness_tracker.db');
     return await openDatabase(
       path,
-      version: 14,  
+      version: 15,  
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
@@ -96,6 +96,9 @@ if (oldVersion < 12) {
     }
      if (oldVersion < 14) {
       await Schema.migrateV14(db);
+    }
+    if (oldVersion < 15) {
+      await Schema.migrateV15(db);
     }
   },
 );
@@ -1156,6 +1159,24 @@ Future<int> removeBodyPartVolumeBounds(int bodyPartId) async {
   return AnalyticsDao.deleteBodyPartVolumeBoundaries(db, bodyPartId);
 }
 
+/// Fetch manual body-part percent overrides for an exercise definition
+  Future<List<ExerciseBodyPartPercent>> fetchBodyPartPercentsManual(int defId) async {
+    final db = await database;
+    return AnalyticsDao.getPercentsForExerciseBodyPart(db, defId);
+  }
+
+  /// Upsert a manual body-part percent override
+  Future<int> setExerciseBodyPartPercent(int defId, int bpId, double pct) async {
+    final db = await database;
+    return AnalyticsDao.setExerciseBodyPartPercent(db, defId, bpId, pct);
+  }
+
+  /// Delete a manual body-part percent override
+  Future<int> deleteExerciseBodyPartPercent(int defId, int bpId) async {
+    final db = await database;
+    return AnalyticsDao.deleteExerciseBodyPartPercent(db, defId, bpId);
+  }
+
 /// Fetches rep‐max rows and maps to model.
 Future<List<RepMaxRow>> fetchRepMaxes(int defId, String timeframe) async {
   final db = await database;
@@ -1269,6 +1290,51 @@ Future<double?> fetchVolumeMax(int defId, String timeframe) async {
     }
     return result;
   }
+
+/// Like fetchSetsPerBodyPart, but only counts sets whose
+/// exercise_def_id == defId.
+Future<Map<BodyPart,double>> fetchSetsPerBodyPartForDefinition({
+  required int defId,
+  required DateTime start,
+  required DateTime end,
+}) async {
+  final db = await database;
+
+  // 1) find all sessions in range
+  final sessions = await SessionDao.getSessionsInRange(
+    db, start.toIso8601String(), end.toIso8601String());
+
+  final result = <BodyPart,double>{};
+  // cache BodyPart lookup:
+  final allBps = await LookupDao.getAllBodyParts(db);
+  final bpById = { for (var bp in allBps) bp.id : bp };
+
+  for (var s in sessions) {
+    // 2) find only weight exercises of this definition
+    final exRows = await ExerciseDao.getExercisesForSession(db, s['id'] as int);
+    for (var ex in exRows.where((e) => 
+           e['type']=='weight' && e['exercise_def_id']== defId)) {
+      final eid = ex['id'] as int;
+      // 3) get per-muscle percents
+      final percents = await computeMusclePercents(ex['exercise_def_id'] as int);
+      // 4) count how many sets
+      final sets = await SetDao.getSetsForExercise(db, eid);
+
+      for (var set in sets) {
+        // 5) roll each muscle hit into its bodyparts
+        for (var mp in percents) {
+          final links = await AnalyticsDao.getBodyPartsForMuscle(db, mp.muscleId);
+          for (var link in links) {
+            final bp = bpById[link.bodyPartId]!;
+            result[bp] = (result[bp] ?? 0) + mp.percent;
+          }
+        }
+      }
+    }
+  }
+
+  return result;
+}
 
 
 // GYM PROFILES
@@ -1683,5 +1749,9 @@ Future<int> deletePresetSet(int presetSetId) async {
     presetSetId: presetSetId,
   );
 }
+
+
+
+
 
 }

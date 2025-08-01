@@ -34,6 +34,10 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
 List<Map<String, Object>> _equipmentEntries = []; // { 'id': int, 'name': String }
 late List<int> _originalEquipmentIds;
 
+List<Map<String, Object>> _bodyAutoEntries = [];   // muscle‐calculated values
+List<Map<String, Object>> _bodyManualEntries = []; // manual overrides
+
+
 
   // Notes & Media (stubbed)
   String _setupNotes = '';
@@ -90,58 +94,79 @@ late List<int> _originalBodypartIds;
 
 
   /// Populate muscles, bodyparts, equipment for the selected definition
-  Future<void> _loadDefinitionDetails(ExerciseDefinition def) async {
-    // new: pass the definition ID positionally
-final musclePercents = await _repo.computeMusclePercents(
-  _selectedDef!.id,
-);
-final Map<BodyPart, double> bodyPercents =
-    await _repo.computeBodyPartPercents(
-  _selectedDef!.id,
-);
-    setState(() {
-      // Map muscles by definition order, default percent 0 if missing
-      _muscleEntries = def.muscles.map((rm) {
-        final percentEntry = musclePercents.firstWhere(
-          (e) => e.muscleId == rm.muscle.id,
-          orElse: () => ExerciseMusclePercent(
-            exerciseDefId: def.id, 
-            muscleId: rm.muscle.id,
-            percent: 0.0,
-          ),
-        );
-        return {
-          'id': rm.muscle.id,
-          'name': rm.muscle.name,
-          'percent': percentEntry.percent,
-        };
-      }).toList();
+Future<void> _loadDefinitionDetails(ExerciseDefinition def) async {
+  final defId = def.id;
+  final now   = DateTime.now();
+  // Pick a range for calculating sets: for “all time”, start at epoch
+  final start = DateTime.fromMillisecondsSinceEpoch(0);
 
-      // remember what we started with
+  // 1) Muscle‐hit percents (for the Muscles tab)
+  final musclePercents = await _repo.computeMusclePercents(defId);
+
+  // 2) Muscle‐calculated body‐part counts for this definition
+  final autoBpMap = await _repo.fetchSetsPerBodyPartForDefinition(
+    defId: defId,
+    start: start,
+    end:   now,
+  );
+
+  // 3) Manual overrides from your new table
+  final manualList = await _repo.fetchBodyPartPercentsManual(defId);
+  final manualMap  = { for (var e in manualList) e.bodyPartId : e.percent };
+
+  setState(() {
+    // --- Muscles Tab data (unchanged) ---
+    _muscleEntries = def.muscles.map((rm) {
+      final override = musclePercents.firstWhere(
+        (e) => e.muscleId == rm.muscle.id,
+        orElse: () => ExerciseMusclePercent(
+          exerciseDefId: defId,
+          muscleId:      rm.muscle.id,
+          percent:       0.0,
+        ),
+      );
+      return {
+        'id':      rm.muscle.id,
+        'name':    rm.muscle.name,
+        'percent': override.percent,
+      };
+    }).toList();
     _originalMuscleIds = def.muscles.map((rm) => rm.muscle.id).toList();
 
-    // remember what we started with for bodyparts
-_originalBodypartIds = def.bodyParts.map((bp) => bp.id).toList();
+    // --- Muscle-Calculated Bodyparts ---
+    _bodyAutoEntries = autoBpMap.entries.map((e) {
+  final bp    = e.key;   // a BodyPart instance
+  final count = e.value; // the number of sets for that part
+  return {
+    'id':      bp.id,
+    'name':    bp.name,
+    'percent': count,  // call this 'count' if you like
+  };
+}).toList();
+
+    // Keep original bodypart ids for diffing manual changes
+    _originalBodypartIds = def.bodyParts.map((bp) => bp.id).toList();
+
+    // --- Manual-Assigned Bodyparts ---
+    _bodyManualEntries = def.bodyParts.map((bp) {
+      // seed with override if present, else default 0
+      final pct = manualMap[bp.id] ?? 0.0;
+      return {
+        'id':      bp.id,
+        'name':    bp.name,
+        'percent': pct,
+      };
+    }).toList();
+
+    // Equipment (unchanged)
+    _equipmentEntries = def.equipmentList
+        .map((e) => {'id': e.id, 'name': e.name})
+        .toList();
+    _originalEquipmentIds = def.equipmentList.map((e) => e.id).toList();
+  });
+}
 
 
-      // Map bodyparts by definition, default percent 0 if missing
-      _bodyEntries = def.bodyParts.map((bp) {
-        final p = bodyPercents[bp] ?? 0.0;
-        return {
-          'id': bp.id,
-          'name': bp.name,
-          'percent': p,
-        };
-      }).toList();
-
-      _equipmentEntries = def.equipmentList
-    .map((e) => {'id': e.id, 'name': e.name})
-    .toList();
-// remember for diffing on save
-_originalEquipmentIds = def.equipmentList.map((e) => e.id).toList();
-
-    });
-  }
 
   Future<void> _toggleEdit() async {
    // if we’re about to exit editing mode, commit our muscle changes
@@ -172,6 +197,18 @@ Future<void> _saveBodypartChanges() async {
   for (var added in currIds.difference(origIds)) {
     await _repo.addExerciseBodypartMapping(defId, added);
   }
+
+  // 3) percent overrides
+for (var entry in _bodyEntries) {
+  final bpId = entry['id'] as int;
+  final pct  = entry['percent'] as double;
+  if (_useManualBody) {
+    await _repo.setExerciseBodyPartPercent(defId, bpId, pct);
+  } else {
+    // if they’ve switched back to auto, wipe out any manual override
+    await _repo.removeExerciseBodyPartPercent(defId, bpId);
+  }
+}
 
   // reset baseline
   _originalBodypartIds = currIds.toList();
@@ -625,7 +662,7 @@ if (!mounted) return;
     );
   }
 
-  Widget _buildBodypartsTab() {
+Widget _buildBodypartsTab() {
   return Padding(
     padding: const EdgeInsets.all(16),
     child: Column(
@@ -642,17 +679,30 @@ if (!mounted) return;
             const Text('Use Manual Bodyparts'),
           ],
         ),
+        const SizedBox(height: 16),
+
+        // 1) Muscle-Calculated section
+        const Text('Muscle-Calculated Bodyparts',
+            style: TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
-        Expanded(
-          child: _useManualBody ? _buildManualBodyparts() : _buildAutoBodyparts(),
-        ),
+        Expanded(child: _buildAutoBodyparts()),
+
+        const SizedBox(height: 24),
+
+        // 2) Manually-Assigned section
+        const Text('Manually Assigned Bodyparts',
+            style: TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        Expanded(child: _buildManualBodyparts()),
+
+        // Only allow adding when in edit mode & manual toggled on
         if (_isEditing && _useManualBody)
           Padding(
-            padding: const EdgeInsets.only(top: 8, bottom: 16),
+            padding: const EdgeInsets.only(top: 8),
             child: ElevatedButton.icon(
               onPressed: _openAddBodypartDialog,
               icon: const Icon(Icons.add),
-              label: const Text('Add Associated Bodypart'),
+              label: const Text('Add Bodypart'),
             ),
           ),
       ],
@@ -660,35 +710,45 @@ if (!mounted) return;
   );
 }
 
+
+// ========= Muscle-Calculated Bodyparts =========
 Widget _buildAutoBodyparts() {
-  // just the computed percents, no editing
+  // No editing here, just show the count each muscle contributes to each body-part
   return ListView(
-    children: _bodyEntries.map((e) {
+    children: _bodyAutoEntries.map((e) {
+      final name  = e['name']    as String;
+      final count = e['percent'] as double; // this is actually a count, not a % 
       return ListTile(
-        title: Text(e['name'] as String),
-        trailing: Text('${(e['percent'] as double).toStringAsFixed(1)}%'),
+        title: Text(name),
+        trailing: Text(
+          count.toStringAsFixed(1),
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
       );
     }).toList(),
   );
 }
 
+// ========= Manually-Assigned Bodyparts =========
 Widget _buildManualBodyparts() {
   return ListView.builder(
-    itemCount: _bodyEntries.length,
+    itemCount: _bodyManualEntries.length,
     itemBuilder: (_, i) {
-      final entry = _bodyEntries[i];
+      final entry = _bodyManualEntries[i];
+      final id    = entry['id']      as int;
+      final name  = entry['name']    as String;
+      final pct   = entry['percent'] as double;
+
       return ListTile(
         leading: _isEditing
             ? IconButton(
                 icon: const Icon(Icons.delete),
                 onPressed: () async {
-                  final bpId   = entry['id']   as int;
-                  final bpName = entry['name'] as String;
                   final confirm = await showDialog<bool>(
                     context: context,
                     builder: (_) => AlertDialog(
                       title: const Text('Remove Bodypart'),
-                      content: Text('Remove "$bpName" from this exercise?'),
+                      content: Text('Remove "$name" from this exercise?'),
                       actions: [
                         TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
                         TextButton(onPressed: () => Navigator.of(context).pop(true),  child: const Text('Remove')),
@@ -697,23 +757,23 @@ Widget _buildManualBodyparts() {
                   );
                   if (confirm != true) return;
                   setState(() {
-                    _bodyEntries.removeAt(i);
+                    _bodyManualEntries.removeAt(i);
                   });
                 },
               )
             : null,
-        title: Text(entry['name'] as String),
+        title: Text(name),
         trailing: SizedBox(
           width: 80,
           child: TextFormField(
-            enabled: _isEditing,
-            initialValue: (entry['percent'] as double).toStringAsFixed(1),
+            enabled: _isEditing && _useManualBody,
+            initialValue: pct.toStringAsFixed(1),
             decoration: const InputDecoration(suffixText: '%'),
             keyboardType: TextInputType.numberWithOptions(decimal: true),
             onFieldSubmitted: (val) {
-              final p = double.tryParse(val) ?? 0.0;
+              final newPct = double.tryParse(val) ?? 0.0;
               setState(() {
-                entry['percent'] = p;
+                entry['percent'] = newPct;
               });
             },
           ),
@@ -722,6 +782,7 @@ Widget _buildManualBodyparts() {
     },
   );
 }
+
 
 
   

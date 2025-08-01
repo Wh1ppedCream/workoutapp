@@ -423,6 +423,19 @@ Future<List<Map<String, dynamic>>> fetchAllBodyPartVolumeBounds() => _dbHelper.f
 
 Future<int> removeBodyPartVolumeBounds(int bodyPartId) => _dbHelper.removeBodyPartVolumeBounds(bodyPartId);
 
+/// Fetch manual overrides (or empty if none)
+Future<List<ExerciseBodyPartPercent>> fetchBodyPartPercentsManual(int defId) =>
+    _dbHelper.fetchBodyPartPercentsManual(defId);
+
+/// Upsert a manual override
+Future<int> setExerciseBodyPartPercent(int defId, int bpId, double pct) =>
+    _dbHelper.setExerciseBodyPartPercent(defId, bpId, pct);
+
+/// Remove override (e.g. if user deletes)
+Future<int> removeExerciseBodyPartPercent(int defId, int bpId) =>
+    _dbHelper.deleteExerciseBodyPartPercent(defId, bpId);
+
+
   /// Public getters so screens can read the current formula params:
   Future<double> getFormulaStep() => _dbHelper.getFormulaStep();
   Future<double> getFormulaMin() => _dbHelper.getFormulaMin();
@@ -452,6 +465,16 @@ Future<int> removeBodyPartVolumeBounds(int bodyPartId) => _dbHelper.removeBodyPa
   /// into their linked body‐parts.
   Future<Map<BodyPart,double>> fetchSetsPerBodyPart({required DateTime start, required DateTime end, }) 
    => _dbHelper.fetchSetsPerBodyPart(start: start, end: end);
+
+   /// Returns a map BodyPart → total weighted-set count, but only
+/// for sets of the given exercise definition [defId] in [start…end].
+Future<Map<BodyPart,double>> fetchSetsPerBodyPartForDefinition({
+  required int defId,
+  required DateTime start,
+  required DateTime end,
+}) => _dbHelper.fetchSetsPerBodyPartForDefinition(
+      defId: defId, start: start, end: end);
+
 
   /// Look up an existing definition by name & equipment, but do *not* create it.
 /// Returns the defId, or throws if not found.

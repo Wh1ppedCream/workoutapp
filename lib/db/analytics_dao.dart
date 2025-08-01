@@ -384,4 +384,56 @@ class AnalyticsDao {
       whereArgs: [bodypartId],
     );
   }
+
+// ─── EXERCISE ↔ BODYPART % OVERRIDES ─────────────────────
+
+static Future<int> setExerciseBodyPartPercent(
+    Database db,
+    int exerciseDefId,
+    int bodypartId,
+    double percent,
+  ) {
+  return db.insert(
+    'exercise_bodypart_percent',
+    {
+      'exercise_def_id': exerciseDefId,
+      'bodypart_id':     bodypartId,
+      'percent':         percent,
+    },
+    conflictAlgorithm: ConflictAlgorithm.replace,
+  );
 }
+
+static Future<List<ExerciseBodyPartPercent>> getPercentsForExerciseBodyPart(
+    Database db,
+    int exerciseDefId,
+  ) async {
+  final rows = await db.query(
+    'exercise_bodypart_percent',
+    where: 'exercise_def_id = ?',
+    whereArgs: [exerciseDefId],
+  );
+  return rows.map((r) => ExerciseBodyPartPercent(
+    exerciseDefId: r['exercise_def_id'] as int,
+    bodyPartId:    r['bodypart_id']   as int,
+    percent:       (r['percent']      as num).toDouble(),
+  )).toList();
+}
+
+static Future<int> deleteExerciseBodyPartPercent(
+    Database db,
+    int exerciseDefId,
+    int bodypartId,
+  ) {
+  return db.delete(
+    'exercise_bodypart_percent',
+    where: 'exercise_def_id = ? AND bodypart_id = ?',
+    whereArgs: [exerciseDefId, bodypartId],
+  );
+}
+
+
+
+
+}
+
