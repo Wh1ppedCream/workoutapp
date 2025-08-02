@@ -1388,48 +1388,72 @@ Future<Map<BodyPart,double>> computeMuscleCalculatedBodyparts(int defId) async {
 
 /// Like fetchSetsPerBodyPart, but only counts sets whose
 /// exercise_def_id == defId.
-Future<Map<BodyPart,double>> fetchSetsPerBodyPartForDefinition({
-  required int defId,
-  required DateTime start,
-  required DateTime end,
-}) async {
-  final db = await database;
+  Future<Map<BodyPart,double>> fetchSetsPerBodyPartForDefinition({
+     required int defId,
+     required DateTime start,
+     required DateTime end,
+   }) async {
+     final db = await database;
 
-  // 1) find all sessions in range
-  final sessions = await SessionDao.getSessionsInRange(
-    db, start.toIso8601String(), end.toIso8601String());
+     // 1) find all sessions in range
+     final sessions = await SessionDao.getSessionsInRange(
+       db, start.toIso8601String(), end.toIso8601String());
 
-  final result = <BodyPart,double>{};
-  // cache BodyPart lookup:
-  final allBps = await LookupDao.getAllBodyParts(db);
-  final bpById = { for (var bp in allBps) bp.id : bp };
+     // 2) prepare results & body-part lookup
+     final result = <BodyPart,double>{};
+     final allBps = await LookupDao.getAllBodyParts(db);
+     final bpById = { for (var bp in allBps) bp.id : bp };
 
-  for (var s in sessions) {
-    // 2) find only weight exercises of this definition
-    final exRows = await ExerciseDao.getExercisesForSession(db, s['id'] as int);
-    for (var ex in exRows.where((e) => 
-           e['type']=='weight' && e['exercise_def_id']== defId)) {
-      final eid = ex['id'] as int;
-      // 3) get per-muscle percents
-      final percents = await computeMusclePercents(ex['exercise_def_id'] as int);
-      // 4) count how many sets
-      final sets = await SetDao.getSetsForExercise(db, eid);
+    // 3) check if we should use manual body-part percents
+    final useManual = await getUseManualBodyparts(defId);
 
-      for (var set in sets) {
-        // 5) roll each muscle hit into its bodyparts
-        for (var mp in percents) {
-          final links = await AnalyticsDao.getBodyPartsForMuscle(db, mp.muscleId);
-          for (var link in links) {
-            final bp = bpById[link.bodyPartId]!;
-            result[bp] = (result[bp] ?? 0) + mp.percent;
-          }
+    // 4a) if manual, load the per-def body-part % overrides
+    Map<int,double> manualBpPercent = {};
+    if (useManual) {
+      final manualRows = await AnalyticsDao.getPercentsForExerciseBodyPart(db, defId);
+      manualBpPercent = {
+        for (var row in manualRows) row.bodyPartId : row.percent
+      };
+    }
+
+    // 4b) if not manual, compute the per-set distribution via your existing helper
+    //     this gives you a Map<BodyPart, double> telling you, for one set,
+    //     how many “body-part units” it should count.
+    Map<BodyPart,double> perSetBpMap = {};
+    if (!useManual) {
+      perSetBpMap = await computeMuscleCalculatedBodyparts(defId);
+    }
+
+     for (var s in sessions) {
+       // 5) find only weight exercises of this definition
+       final exRows = await ExerciseDao.getExercisesForSession(db, s['id'] as int);
+       for (var ex in exRows.where((e) =>
+              e['type']=='weight' && e['exercise_def_id']== defId)) {
+         final eid = ex['id'] as int;
+         // 6) fetch all sets for this exercise instance
+         final sets = await SetDao.getSetsForExercise(db, eid);
+
+        // instead of looping per-set+per-muscle, just multiply our per-set map
+        // by the number of sets we actually did
+        if (useManual) {
+          final count = sets.length;
+          manualBpPercent.forEach((bpId, pctPerSet) {
+            final bp = bpById[bpId];
+            if (bp != null) {
+              result[bp] = (result[bp] ?? 0.0) + pctPerSet * count;
+            }
+          });
+        } else {
+          final count = sets.length;
+          perSetBpMap.forEach((bp, valPerSet) {
+            result[bp] = (result[bp] ?? 0.0) + valPerSet * count;
+          });
         }
       }
-    }
-  }
+     }
 
-  return result;
-}
+     return result;
+   }
 
 
 // GYM PROFILES
