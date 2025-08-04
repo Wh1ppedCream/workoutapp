@@ -577,7 +577,7 @@
 
 {
   "name": "Concentration Curl - Dumbbell (Normal Grip)",
-  "rating": 23,
+  "rating": 80,
   "equipment": ["Dumbbell"],
   "bodyparts": ["Biceps", "Forearms"],
   "muscles": [
@@ -593,7 +593,7 @@
 
 {
   "name": "Concentration Curl - Dumbbell (Reverse Grip)",
-  "rating": 23,
+  "rating": 70,
   "equipment": ["Dumbbell"],
   "bodyparts": ["Biceps", "Forearms"],
   "muscles": [
@@ -609,7 +609,7 @@
 
 {
   "name": "Crunch",
-  "rating": 23,
+  "rating": 55,
   "equipment": ["Bodyweight"],
   "bodyparts": ["Core"],
   "muscles": [
@@ -625,7 +625,7 @@
 
 {
   "name": "Crunch - Dumbbell",
-  "rating": 23,
+  "rating": 55,
   "equipment": ["Dumbbell"],
   "bodyparts": ["Core"],
   "muscles": [
@@ -641,7 +641,7 @@
 
 {
   "name": "Crunch - Dumbbell (Crossbody)",
-  "rating": 23,
+  "rating": 50,
   "equipment": ["Dumbbell"],
   "bodyparts": ["Core"],
   "muscles": [
@@ -657,7 +657,7 @@
 
 {
   "name": "Crunch - Dumbbell (Lying)",
-  "rating": 23,
+  "rating": 55,
   "equipment": ["Dumbbell"],
   "bodyparts": ["Core"],
   "muscles": [
@@ -673,7 +673,7 @@
 
 {
   "name": "Crunch - Dumbbell (Seated)",
-  "rating": 23,
+  "rating": 65,
   "equipment": ["Dumbbell"],
   "bodyparts": ["Core"],
   "muscles": [
@@ -689,7 +689,7 @@
 
 {
   "name": "Cuban Rotation",
-  "rating": 23,
+  "rating": 45,
   "equipment": ["Bodyweight"],
   "bodyparts": ["Shoulders"],
   "muscles": [
@@ -705,7 +705,7 @@
 
 {
   "name": "Cuban Rotation - Dumbbell",
-  "rating": 23,
+  "rating": 55,
   "equipment": ["Dumbbell"],
   "bodyparts": ["Shoulders"],
   "muscles": [
@@ -721,7 +721,7 @@
 
 {
   "name": "Curtsey Lunge",
-  "rating": 23,
+  "rating": 55,
   "equipment": ["Bodyweight"],
   "bodyparts": ["Hips", "Quads"],
   "muscles": [
@@ -737,7 +737,7 @@
 
 {
   "name": "Curtsey Lunge - Dumbbell",
-  "rating": 23,
+  "rating": 65,
   "equipment": ["Dumbbell"],
   "bodyparts": ["Hips", "Quads"],
   "muscles": [
@@ -753,7 +753,7 @@
 
 {
   "name": "Deadlift - Landmine Attachment",
-  "rating": 23,
+  "rating": 80,
   "equipment": ["Landmine Attachment", "Barbell", "Weight Plates"],
   "bodyparts": ["Lower Back", "Hamstrings"],
   "muscles": [
@@ -769,7 +769,7 @@
 
 {
   "name": "Deadlift - Barbell",
-  "rating": 23,
+  "rating": 90,
   "equipment": ["Barbell", "Weight Plates"],
   "bodyparts": ["Lower Back", "Hamstrings"],
   "muscles": [
@@ -809,7 +809,7 @@
 
 {
   "name": "Deadlift - Dumbbell",
-  "rating": 23,
+  "rating": 70,
   "equipment": ["Dumbbell"],
   "bodyparts": ["Lower Back", "Hamstrings"],
   "muscles": [
@@ -824,7 +824,7 @@
 },
 {
   "name": "Diamond Push-up",
-  "rating": 23,
+  "rating": 60,
   "equipment": ["Bodyweight"],
   "bodyparts": ["Chest", "Triceps", "Shoulders"],
   "muscles": [
@@ -840,7 +840,7 @@
 
 {
   "name": "Donkey Kick",
-  "rating": 23,
+  "rating": 30,
   "equipment": ["Bodyweight"],
   "bodyparts": ["Hips"],
   "muscles": [
@@ -856,7 +856,7 @@
 
 {
   "name": "Donkey Kick - Leg Extension Machine",
-  "rating": 23,
+  "rating": 50,
   "equipment": ["Leg Extension Machine"],
   "bodyparts": ["Hips", "Hamstrings"],
   "muscles": [
@@ -872,7 +872,7 @@
 
 {
   "name": "Down-Up Twist - Cable Machine",
-  "rating": 23,
+  "rating": 65,
   "equipment": ["Cable Machine", "Cable Handle Attachment"],
   "bodyparts": ["Core"],
   "muscles": [
@@ -888,7 +888,7 @@
 
 {
   "name": "Drag Curl - Cable Machine",
-  "rating": 23,
+  "rating": 70,
   "equipment": ["Cable Machine", "Cable Straight Bar Attachment"],
   "bodyparts": ["Biceps"],
   "muscles": [
@@ -904,7 +904,7 @@
 
 {
   "name": "Drag Curl - Barbell",
-  "rating": 23,
+  "rating": 75,
   "equipment": ["Barbell", "Weight Plates"],
   "bodyparts": ["Biceps"],
   "muscles": [
@@ -920,7 +920,7 @@
 
 {
   "name": "Drag Curl - Dumbbell",
-  "rating": 23,
+  "rating": 70,
   "equipment": ["Dumbbell"],
   "bodyparts": ["Biceps"],
   "muscles": [
