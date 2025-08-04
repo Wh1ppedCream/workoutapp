@@ -104,9 +104,9 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget> {
     final heatmapFutures = List.generate(_tabLabels.length, (i) {
       if (i < _durations.length) {
         final start = now.subtract(Duration(days: _durations[i]));
-        return AppRepository().fetchSetsPerBodyPart(start: start, end: now);
+        return AppRepository().fetchAllBodyPartSetsOverTimeRange(start: start, end: now);
       }
-      return AppRepository().fetchSetsPerBodyPart(start: DateTime.fromMillisecondsSinceEpoch(0), end: now);
+      return AppRepository().fetchAllBodyPartSetsOverTimeRange(start: DateTime.fromMillisecondsSinceEpoch(0), end: now);
     });
 
     // Load all data once

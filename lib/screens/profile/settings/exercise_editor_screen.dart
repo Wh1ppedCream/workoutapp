@@ -30,12 +30,19 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
   
   bool _useManualBody = false;
 
+  // just below `bool _useManualBody = false;`
+bool _useManualMuscles = false;
+List<Map<String, Object>> _muscleAutoEntries = []; // placeholder for “Bodypart-Calculated Muscles”
+
+
   // new:
 List<Map<String, Object>> _equipmentEntries = []; // { 'id': int, 'name': String }
 late List<int> _originalEquipmentIds;
 
 List<Map<String, Object>> _bodyAutoEntries = [];   // muscle‐calculated values
 List<Map<String, Object>> _bodyManualEntries = []; // manual overrides
+
+
 
 
 
@@ -137,7 +144,7 @@ Future<void> _loadDefinitionDetails(ExerciseDefinition def) async {
   return {
     'id':      bp.id,
     'name':    bp.name,
-    'percent': count,  // call this 'count' if you like
+    'count': count,  // call this 'count' if you like
   };
 }).toList();
 
@@ -146,12 +153,13 @@ Future<void> _loadDefinitionDetails(ExerciseDefinition def) async {
 
     // --- Manual-Assigned Bodyparts ---
     _bodyManualEntries = def.bodyParts.map((bp) {
-      // seed with override if present, else default 0
-      final pct = manualMap[bp.id] ?? 0.0;
+      // seed with override if present, else default 1 set per set
+      final autoMap = { for (var e in autoBpMap.entries) e.key.id : e.value };
+final count = manualMap[bp.id] ?? autoMap[bp.id] ?? 0.0;
       return {
         'id':      bp.id,
         'name':    bp.name,
-        'percent': pct,
+        'count':  count,
       };
     }).toList();
 
@@ -166,14 +174,15 @@ Future<void> _loadDefinitionDetails(ExerciseDefinition def) async {
 
 
   Future<void> _toggleEdit() async {
-   // if we’re about to exit editing mode, commit our muscle changes
-   if (_isEditing && _selectedDef != null) {
-     await _saveMuscleChanges();
-     await _saveEquipmentChanges();
-     await _saveBodypartChanges();
-   }
-   setState(() => _isEditing = !_isEditing);
- }
+  if (_isEditing && _selectedDef != null) {
+    await _saveMuscleChanges();
+    await _saveEquipmentChanges();
+    await _saveBodypartChanges();
+    // ——— NEW: reload everything from the DB so we pick up your saved counts ———
+    await _loadDefinitionDetails(_selectedDef!);
+  }
+  setState(() => _isEditing = !_isEditing);
+}
 
 
 /// Persist adds/removals of bodyparts when saving.
@@ -186,23 +195,22 @@ Future<void> _saveBodypartChanges() async {
   // 1) removals
   for (var removed in origIds.difference(currIds)) {
     await _repo.deleteExerciseBodypartMapping(defId, removed);
+    await _repo.removeExerciseBodyPartPercent(defId, removed);
   }
 
   // 2) additions
   for (var added in currIds.difference(origIds)) {
     await _repo.addExerciseBodypartMapping(defId, added);
+    final count = _bodyManualEntries.firstWhere((e) => e['id']==added)['count'] as double;
+   await _repo.setExerciseBodyPartPercent(defId, added, count);
   }
 
   // 3) percent overrides
 for (var entry in _bodyManualEntries) {
-  final bpId = entry['id'] as int;
-  final pct  = entry['percent'] as double;
-  if (_useManualBody) {
-    await _repo.setExerciseBodyPartPercent(defId, bpId, pct);
-  } else {
-    await _repo.removeExerciseBodyPartPercent(defId, bpId);
-  }
-}
+   final bpId  = entry['id'] as int;
+   final count = entry['count'] as double;
+   await _repo.setExerciseBodyPartPercent(defId, bpId, count);
+ }
 
   // reset baseline
   _originalBodypartIds = currIds.toList();
@@ -254,7 +262,7 @@ Future<void> _openAddBodypartDialog() async {
     setState(() {
       for (var id in result) {
         final bp = allBps.firstWhere((b) => b.id == id);
-        _bodyManualEntries.add({ 'id': bp.id, 'name': bp.name, 'percent': 0.0 });
+        _bodyManualEntries.add({ 'id': bp.id, 'name': bp.name, 'count': 1.0 });
       }
     });
   }
@@ -590,65 +598,47 @@ if (!mounted) return;
   }
 
   Widget _buildMusclesTab() {
-    return Column(
+  return Padding(
+    padding: const EdgeInsets.all(16),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: _muscleEntries.isEmpty
-              ? const Center(child: Text('No muscles associated'))
-              : ListView.builder(
-                  itemCount: _muscleEntries.length,
-                  itemBuilder: (context, index) {
-                    final entry = _muscleEntries[index];
-                    return ListTile(
-                      leading: _isEditing
-                          ? IconButton(
-  icon: const Icon(Icons.delete),
-  onPressed: () async {
-    final muscleId   = entry['id']   as int;
-    final muscleName = entry['name'] as String;
-    // 1) confirm
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Remove Muscle'),
-        content: Text('Remove "$muscleName" from this exercise?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.of(ctx).pop(true),  child: const Text('Remove')),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-
-    // 2) queue it and remove from the visible list
-    setState(() {
-      _musclesToRemove.add(muscleId);
-      _muscleEntries.removeAt(index);
-    });
-  },
-)
-
-                          : null,
-                      title: Text(entry['name'] as String),
-                      trailing: SizedBox(
-                        width: 80,
-                        child: TextFormField(
-                          enabled: _isEditing,
-                          initialValue: entry['percent'].toString(),
-                          decoration: const InputDecoration(suffixText: '%'),
-                          keyboardType: TextInputType.number,
-                          onFieldSubmitted: (val) {
-                            // TODO: update percent override
-                          },
-                        ),
-                      ),
-                    );
-                  },
-                ),
+        // Use Manual Muscles toggle
+        Row(
+          children: [
+            Checkbox(
+              value: _useManualMuscles,
+              onChanged: _isEditing
+                  ? (v) => setState(() => _useManualMuscles = v!)
+                  : null,
+            ),
+            const Text('Use Manual Muscles'),
+          ],
         ),
-        if (_isEditing)
+        const SizedBox(height: 16),
+
+        // 1) Bodypart-Calculated Muscles
+        const Text(
+          'Bodypart-Calculated Muscles',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        Expanded(child: _buildAutoMuscles()),
+
+        const SizedBox(height: 24),
+
+        // 2) Manually Assigned Muscles
+        const Text(
+          'Manually Assigned Muscles',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        Expanded(child: _buildManualMuscles()),
+
+        // Add button
+        if (_isEditing && _useManualMuscles)
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.only(top: 8),
             child: ElevatedButton.icon(
               onPressed: _openAddMuscleDialog,
               icon: const Icon(Icons.add),
@@ -656,8 +646,88 @@ if (!mounted) return;
             ),
           ),
       ],
-    );
-  }
+    ),
+  );
+}
+
+/// Placeholder list for the auto-calculated muscles (empty for now).
+Widget _buildAutoMuscles() {
+  return _muscleAutoEntries.isEmpty
+      ? const Center(child: Text('No calculated muscles'))
+      : ListView(
+          children: _muscleAutoEntries.map((e) {
+            final name = e['name'] as String;
+            final count = e['count'] as double;
+            return ListTile(
+              title: Text(name),
+              trailing: Text(
+                count.toString(),
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            );
+          }).toList(),
+        );
+}
+
+/// Mirrors the old _buildMusclesTab list, but showing “sets” instead of “%”.
+Widget _buildManualMuscles() {
+  return ListView.builder(
+    itemCount: _muscleEntries.length,
+    itemBuilder: (_, i) {
+      final entry = _muscleEntries[i];
+      final name = entry['name'] as String;
+      final count = entry['percent'] as double; // still stored under 'percent'
+      return ListTile(
+        leading: _isEditing
+            ? IconButton(
+                icon: const Icon(Icons.delete),
+                onPressed: () async {
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (_) => AlertDialog(
+                      title: const Text('Remove Muscle'),
+                      content: Text('Remove "$name" from this exercise?'),
+                      actions: [
+                        TextButton(
+                            onPressed: () =>
+                                Navigator.of(context).pop(false),
+                            child: const Text('Cancel')),
+                        TextButton(
+                            onPressed: () =>
+                                Navigator.of(context).pop(true),
+                            child: const Text('Remove')),
+                      ],
+                    ),
+                  );
+                  if (confirmed != true) return;
+                  setState(() => _muscleEntries.removeAt(i));
+                },
+              )
+            : null,
+        title: Text(name),
+        trailing: SizedBox(
+          width: 80,
+          child: TextFormField(
+            enabled: _isEditing && _useManualMuscles,
+            initialValue: count.toString(),
+decoration: const InputDecoration(suffixText: 'sets'),
+keyboardType: TextInputType.numberWithOptions(decimal: true),
+onFieldSubmitted: (val) {
+  // keep the old value if parsing fails
+  final oldCount = entry['percent'] as double;
+  final newCount = double.tryParse(val) ?? oldCount;
+  setState(() {
+    entry['percent'] = newCount;
+  });
+},
+
+          ),
+        ),
+      );
+    },
+  );
+}
+
 
 Widget _buildBodypartsTab() {
   return Padding(
@@ -718,7 +788,7 @@ Widget _buildAutoBodyparts() {
   return ListView(
     children: _bodyAutoEntries.map((e) {
       final name  = e['name']    as String;
-      final count = e['percent'] as double; // this is actually a count, not a % 
+      final count = e['count']   as double; // this is actually a count, not a % 
       return ListTile(
         title: Text(name),
         trailing: Text(
@@ -737,7 +807,7 @@ Widget _buildManualBodyparts() {
     itemBuilder: (_, i) {
       final entry = _bodyManualEntries[i];
       final name  = entry['name']    as String;
-      final pct   = entry['percent'] as double;
+      final count = entry['count'] as double;
 
       return ListTile(
         leading: _isEditing
@@ -766,17 +836,16 @@ Widget _buildManualBodyparts() {
         trailing: SizedBox(
           width: 80,
           child: TextFormField(
-            enabled: _isEditing && _useManualBody,
-            initialValue: pct.toStringAsFixed(1),
-            decoration: const InputDecoration(suffixText: '%'),
-            keyboardType: TextInputType.numberWithOptions(decimal: true),
-            onFieldSubmitted: (val) {
-              final newPct = double.tryParse(val) ?? 0.0;
-              setState(() {
-                entry['percent'] = newPct;
-              });
-            },
-          ),
+  enabled: _isEditing && _useManualBody,
+  initialValue: count.toString(),
+  decoration: const InputDecoration(suffixText: 'sets'),
+  keyboardType: TextInputType.numberWithOptions(decimal: true),
+  onChanged: (val) {
+    final newCount = double.tryParse(val) ?? count;
+    entry['count'] = newCount;
+  },
+)
+
         ),
       );
     },

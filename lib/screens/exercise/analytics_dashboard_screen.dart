@@ -60,7 +60,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
       );
 
       // 2) Fetch body‐part totals (BodyPart → double)
-      final bodyMap = await _repo.fetchSetsPerBodyPart(
+      final bodyMap = await _repo.fetchAllBodyPartSetsOverTimeRange(
         start: weekAgo,
         end: now,
       );

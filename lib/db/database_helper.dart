@@ -1366,29 +1366,39 @@ Future<Map<BodyPart,double>> computeMuscleCalculatedBodyparts(int defId) async {
     return result;
   }
 
-  Future<Map<BodyPart,double>> fetchSetsPerBodyPart({
-    required DateTime start,
-    required DateTime end,
-  }) async {
-    final muscleTotals = await fetchSetsPerMuscle(start: start, end: end);
-    final allBps = await LookupDao.getAllBodyParts(await database);
-    final bpById = { for (var bp in allBps) bp.id : bp };
-    final result = <BodyPart,double>{};
-
-    for (var entry in muscleTotals.entries) {
-      final links = await AnalyticsDao.getBodyPartsForMuscle(
-        await database, entry.key);
-      for (var link in links) {
-        final bp = bpById[link.bodyPartId];
-        if (bp!=null) result[bp] = (result[bp] ?? 0) + entry.value;
-      }
+/// Fetches the total number of sets per body-part for a given time range.
+Future<Map<BodyPart,double>> fetchAllBodyPartSetsOverTimeRange({
+  required DateTime start,
+  required DateTime end,
+}) async {
+  // 1) Gather all sessions & their exercise rows
+  final db = await database;
+  final sessions = await SessionDao.getSessionsInRange(
+    db, start.toIso8601String(), end.toIso8601String());
+  final defIds = <int>{};
+  for (final s in sessions) {
+    final exs = await ExerciseDao.getExercisesForSession(db, s['id'] as int);
+    for (final ex in exs.where((e) => e['type']=='weight')) {
+      defIds.add(ex['exercise_def_id'] as int);
     }
-    return result;
   }
 
-/// Like fetchSetsPerBodyPart, but only counts sets whose
-/// exercise_def_id == defId.
-  Future<Map<BodyPart,double>> fetchSetsPerBodyPartForDefinition({
+  // 2) For each definition, fetch its body-part map and sum them
+  final combined = <BodyPart,double>{};
+  for (final defId in defIds) {
+    final perDef = await fetchBodyPartSetsForExerciseOverTimeRange(
+      defId: defId, start: start, end: end);
+    perDef.forEach((bp, val) {
+      combined[bp] = (combined[bp] ?? 0) + val;
+    });
+  }
+  return combined;
+}
+
+
+///// Fetches the total number of sets per body-part for a specific exercise definition
+/// over a given time range.
+   Future<Map<BodyPart,double>> fetchBodyPartSetsForExerciseOverTimeRange({
      required int defId,
      required DateTime start,
      required DateTime end,
@@ -1404,17 +1414,28 @@ Future<Map<BodyPart,double>> computeMuscleCalculatedBodyparts(int defId) async {
      final allBps = await LookupDao.getAllBodyParts(db);
      final bpById = { for (var bp in allBps) bp.id : bp };
 
+     // right after `final bpById = …;`
+final def = await DefinitionDao.getExerciseDefinitionById(db, defId);
+final defBodyPartIds = def?.bodyParts.map((bp) => bp.id).toList() ?? <int>[];
+
+
     // 3) check if we should use manual body-part percents
     final useManual = await getUseManualBodyparts(defId);
 
     // 4a) if manual, load the per-def body-part % overrides
-    Map<int,double> manualBpPercent = {};
-    if (useManual) {
-      final manualRows = await AnalyticsDao.getPercentsForExerciseBodyPart(db, defId);
-      manualBpPercent = {
-        for (var row in manualRows) row.bodyPartId : row.percent
-      };
-    }
+    Map<int,double> manualCountPerSet = {};
+if (useManual) {
+  // 1) default every linked bodyPart to 1.0 per set
+  for (var bpId in defBodyPartIds) {
+    manualCountPerSet[bpId] = 1.0;
+  }
+  // 2) overwrite with any saved overrides
+  final manualRows = await AnalyticsDao.getPercentsForExerciseBodyPart(db, defId);
+  for (var row in manualRows) {
+    manualCountPerSet[row.bodyPartId] = row.percent;
+  }
+}
+
 
     // 4b) if not manual, compute the per-set distribution via your existing helper
     //     this gives you a Map<BodyPart, double> telling you, for one set,
@@ -1436,14 +1457,15 @@ Future<Map<BodyPart,double>> computeMuscleCalculatedBodyparts(int defId) async {
         // instead of looping per-set+per-muscle, just multiply our per-set map
         // by the number of sets we actually did
         if (useManual) {
-          final count = sets.length;
-          manualBpPercent.forEach((bpId, pctPerSet) {
-            final bp = bpById[bpId];
-            if (bp != null) {
-              result[bp] = (result[bp] ?? 0.0) + pctPerSet * count;
-            }
-          });
-        } else {
+  final count = sets.length;
+  manualCountPerSet.forEach((bpId, countPerSet) {
+    final bp = bpById[bpId];
+    if (bp != null) {
+      result[bp] = (result[bp] ?? 0.0) + countPerSet * count;
+    }
+  });
+}
+ else {
           final count = sets.length;
           perSetBpMap.forEach((bp, valPerSet) {
             result[bp] = (result[bp] ?? 0.0) + valPerSet * count;
@@ -1882,6 +1904,8 @@ Future<bool> getUseManualBodyparts(int defId) async {
   if (row.isEmpty) return false;
   return (row.first['use_manual_bodyparts'] as int) == 1;
 }
+
+
 
 Future<void> setUseManualBodyparts(int defId, bool value) async {
   final db = await database;

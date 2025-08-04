@@ -477,16 +477,16 @@ Future<Map<BodyPart,double>> estimateBodyPartSetDistribution(int defId) {
   /// Returns a map BodyPart → total “sets” for that body‐part over
   /// [start]…[end], by summing the muscle‐level contributions
   /// into their linked body‐parts.
-  Future<Map<BodyPart,double>> fetchSetsPerBodyPart({required DateTime start, required DateTime end, }) 
-   => _dbHelper.fetchSetsPerBodyPart(start: start, end: end);
+  Future<Map<BodyPart,double>> fetchAllBodyPartSetsOverTimeRange({required DateTime start, required DateTime end, }) 
+   => _dbHelper.fetchAllBodyPartSetsOverTimeRange(start: start, end: end);
 
    /// Returns a map BodyPart → total weighted-set count, but only
 /// for sets of the given exercise definition [defId] in [start…end].
-Future<Map<BodyPart,double>> fetchSetsPerBodyPartForDefinition({
+Future<Map<BodyPart,double>> fetchBodyPartSetsForExerciseOverTimeRange({
   required int defId,
   required DateTime start,
   required DateTime end,
-}) => _dbHelper.fetchSetsPerBodyPartForDefinition(
+}) => _dbHelper.fetchBodyPartSetsForExerciseOverTimeRange(
       defId: defId, start: start, end: end);
 
 
