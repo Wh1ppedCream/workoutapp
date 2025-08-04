@@ -236,7 +236,7 @@ Future<void> _toggleEdit() async {
         equipmentList:        def.equipmentList,
         bodyParts:            def.bodyParts,
         muscles:              def.muscles,
-        useManualBodyparts:   def.useManualBodyparts,
+        useManualBodyparts: _useManualBody,
         // ← new fields:
         setupNotes:           _setupController.text,
         executionNotes:       _executionController.text,
@@ -577,6 +577,9 @@ if (!mounted) return;
                   _isNewExercise = true;
                   _selectedDef = null;
                   _isEditing = true;
+                  _setupController.clear();
+_executionController.clear();
+_tipsController.clear();
                   _muscleEntries = [];
                   _equipmentEntries  = [];
                 });
@@ -992,23 +995,38 @@ onChanged: (val) {
           const Text('Setup', style: TextStyle(fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
           TextField(
-   enabled: _isEditing,
-   controller: _setupController,
- ),
+  enabled: _isEditing,
+  controller: _setupController,
+  maxLines: null,                              // ← allow multiple lines
+  decoration: const InputDecoration(
+    border: OutlineInputBorder(),
+  ),
+),
           const SizedBox(height: 12),
           const Text('Execution', style: TextStyle(fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
-          TextField(
-   enabled: _isEditing,
-   controller: _executionController,
- ),
+
+TextField(
+  enabled: _isEditing,
+  controller: _executionController,
+  maxLines: null,                              // ← allow multiple lines
+  decoration: const InputDecoration(
+    border: OutlineInputBorder(),
+  ),
+),
           const SizedBox(height: 12),
           const Text('Tips', style: TextStyle(fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
-          TextField(
-   enabled: _isEditing,
-   controller: _tipsController,
- ),
+
+TextField(
+  enabled: _isEditing,
+  controller: _tipsController,
+  maxLines: null,                              // ← allow multiple lines
+  decoration: const InputDecoration(
+    border: OutlineInputBorder(),
+  ),
+),
+
           const SizedBox(height: 24),
           const Text('Media', style: TextStyle(fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
