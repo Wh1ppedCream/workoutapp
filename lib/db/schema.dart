@@ -117,6 +117,7 @@ class Schema {
     await migrateV13(db);
     await migrateV14(db);
     await migrateV15(db);
+    await migrateV16(db);
   }
 
   /// Handler for onUpgrade callback.
@@ -135,6 +136,7 @@ class Schema {
     if (oldVersion < 13) await migrateV13(db);
     if (oldVersion < 14) await migrateV14(db);
     if (oldVersion < 15) await migrateV15(db);
+    if (oldVersion < 16) await migrateV16(db);
   }
 
   /// Migration to version 3: adds rating, equipment/muscle tables.
@@ -576,6 +578,23 @@ static Future<void> migrateV15(Database db) async {
   ADD COLUMN use_manual_muscles INTEGER NOT NULL DEFAULT 1;
   ''');
 }
+
+
+static Future<void> migrateV16(Database db) async {
+  await db.execute("""
+    ALTER TABLE exercise_definitions
+      ADD COLUMN setup_notes     TEXT NOT NULL DEFAULT '';
+  """);
+  await db.execute("""
+    ALTER TABLE exercise_definitions
+      ADD COLUMN execution_notes TEXT NOT NULL DEFAULT '';
+  """);
+  await db.execute("""
+    ALTER TABLE exercise_definitions
+      ADD COLUMN tips_notes      TEXT NOT NULL DEFAULT '';
+  """);
+}
+
 
 
 }

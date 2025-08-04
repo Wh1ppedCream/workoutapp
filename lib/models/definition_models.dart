@@ -14,6 +14,9 @@ class ExerciseDefinition {
   final List<BodyPart> bodyParts;
   final List<RankedMuscle> muscles;
   final bool useManualBodyparts;
+  final String setupNotes;
+  final String executionNotes;
+  final String tipsNotes;
 
   /// Creates an [ExerciseDefinition].
   ExerciseDefinition({
@@ -25,6 +28,9 @@ class ExerciseDefinition {
     this.bodyParts = const [],
     this.muscles = const [],
     required this.useManualBodyparts,
+    this.setupNotes     = '',
+    this.executionNotes = '',
+    this.tipsNotes      = '',
   });
 }
 

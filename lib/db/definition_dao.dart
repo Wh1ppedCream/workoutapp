@@ -50,6 +50,11 @@ class DefinitionDao {
       final rating      = (row['rating'] as num?)?.toInt() ?? 0;
       final useManual = (row['use_manual_bodyparts'] as int? ?? 0) == 1;
 
+      // NEW: read notes columns
+    final setupNotes     = (row['setup_notes']     as String?) ?? '';
+    final executionNotes = (row['execution_notes'] as String?) ?? '';
+    final tipsNotes      = (row['tips_notes']      as String?) ?? '';
+
       // equipmentList
       final equipRows = await db.rawQuery('''
         SELECT e.id, e.name
@@ -98,6 +103,9 @@ class DefinitionDao {
         bodyParts:     bodyParts,
         muscles:       muscles, 
         useManualBodyparts: useManual,
+        setupNotes:     setupNotes,
+      executionNotes: executionNotes,
+      tipsNotes:      tipsNotes,
       ));
     }
     return defs;
@@ -388,6 +396,11 @@ static Future<int> updateExerciseDefinition(
       'equipment_id': def.equipmentId,
       'rating': def.rating,
       'use_manual_bodyparts': def.useManualBodyparts ? 1 : 0,
+      
+      // NEW: persist notes columns
+      'setup_notes':     def.setupNotes,
+      'execution_notes': def.executionNotes,
+      'tips_notes':      def.tipsNotes,
     },
     where: 'id = ?',
     whereArgs: [def.id],
@@ -489,6 +502,11 @@ static Future<ExerciseDefinition?> getExerciseDefinitionById(
   final rating      = (row['rating'] as num?)?.toInt() ?? 0;
   final useManual = (row['use_manual_bodyparts'] as int? ?? 0) == 1;
 
+  // NEW: read notes columns
+  final setupNotes     = (row['setup_notes']     as String?) ?? '';
+  final executionNotes = (row['execution_notes'] as String?) ?? '';
+  final tipsNotes      = (row['tips_notes']      as String?) ?? '';
+
   // equipmentList
   final equipRows = await db.rawQuery('''
     SELECT e.id, e.name
@@ -537,6 +555,9 @@ static Future<ExerciseDefinition?> getExerciseDefinitionById(
     bodyParts:     bodyParts,
     muscles:       muscles,
     useManualBodyparts: useManual,
+    setupNotes:     setupNotes,
+    executionNotes: executionNotes,
+    tipsNotes:      tipsNotes,
   );
 }
 

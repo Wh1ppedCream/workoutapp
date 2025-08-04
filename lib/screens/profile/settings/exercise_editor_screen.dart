@@ -46,13 +46,13 @@ List<Map<String, Object>> _bodyManualEntries = []; // manual overrides
 
 
   // Notes & Media (stubbed)
-  String _setupNotes = '';
-  String _executionNotes = '';
-  String _tipsNotes = '';
   List<Map<String, Object>> _mediaItems = []; // { 'type': 'image'|'video'|'link', 'url': '' }
 
-  /// IDs of muscles the user has deleted in this edit session.
-final Set<int> _musclesToRemove = {};
+
+  late final TextEditingController _setupController;
+late final TextEditingController _executionController;
+late final TextEditingController _tipsController;
+
 
 /// the IDs we loaded initially, so we can diff on Save
 late List<int> _originalMuscleIds;
@@ -67,12 +67,18 @@ late List<int> _originalBodypartIds;
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+  _setupController     = TextEditingController();
+  _executionController = TextEditingController();
+  _tipsController      = TextEditingController();
     _loadExerciseList();
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _setupController.dispose();
+    _executionController.dispose();
+    _tipsController.dispose();
     super.dispose();
   }
 
@@ -199,29 +205,53 @@ final count = manualMap[bp.id] ?? autoMap[bp.id] ?? 0.0;
         .toList();
     _originalEquipmentIds = def.equipmentList.map((e) => e.id).toList();
   });
+      // after your setState block…
+    _setupController.text     = def.setupNotes;
+    _executionController.text = def.executionNotes;
+    _tipsController.text      = def.tipsNotes;
+
 }
 
 
 
-  Future<void> _toggleEdit() async {
+Future<void> _toggleEdit() async {
   if (_isEditing && _selectedDef != null) {
-    final defId = _selectedDef!.id;
+    final def = _selectedDef!;
+    final defId = def.id;
 
-    // persist the flag & all the associations
-  await _repo.setUseManualMuscles(defId, _useManualMuscles);
-
+    // 1) persist the “Use Manual Muscles” flag & all your join-table changes
+    await _repo.setUseManualMuscles(defId, _useManualMuscles);
     await _saveMuscleChanges();
     await _saveEquipmentChanges();
     await _saveBodypartChanges();
 
-    //new
-    // **fetch the fresh definition** (including its updated join-lists)
-  _selectedDef = await _repo.fetchDefinitionById(defId);
+    // 2) now persist the three notes fields by constructing
+    //    a fresh ExerciseDefinition and calling updateExerciseDefinition
+    await _repo.updateExerciseDefinition(
+      ExerciseDefinition(
+        id:                   def.id,
+        name:                 def.name,
+        equipmentId:          def.equipmentId,
+        rating:               def.rating,
+        equipmentList:        def.equipmentList,
+        bodyParts:            def.bodyParts,
+        muscles:              def.muscles,
+        useManualBodyparts:   def.useManualBodyparts,
+        // ← new fields:
+        setupNotes:           _setupController.text,
+        executionNotes:       _executionController.text,
+        tipsNotes:            _tipsController.text,
+      ),
+    );
 
+    // 3) refresh your in-memory copy and the UI
+    _selectedDef = await _repo.fetchDefinitionById(defId);
     await _loadDefinitionDetails(_selectedDef!);
   }
+
   setState(() => _isEditing = !_isEditing);
 }
+
 
 
 /// Persist adds/removals of bodyparts when saving.
@@ -962,38 +992,23 @@ onChanged: (val) {
           const Text('Setup', style: TextStyle(fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
           TextField(
-            enabled: _isEditing,
-            maxLines: null,
-            decoration: const InputDecoration(border: OutlineInputBorder()),
-            controller: TextEditingController(text: _setupNotes),
-            onChanged: (val) {
-              // TODO: update setup notes
-            },
-          ),
+   enabled: _isEditing,
+   controller: _setupController,
+ ),
           const SizedBox(height: 12),
           const Text('Execution', style: TextStyle(fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
           TextField(
-            enabled: _isEditing,
-            maxLines: null,
-            decoration: const InputDecoration(border: OutlineInputBorder()),
-            controller: TextEditingController(text: _executionNotes),
-            onChanged: (val) {
-              // TODO: update execution notes
-            },
-          ),
+   enabled: _isEditing,
+   controller: _executionController,
+ ),
           const SizedBox(height: 12),
           const Text('Tips', style: TextStyle(fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
           TextField(
-            enabled: _isEditing,
-            maxLines: null,
-            decoration: const InputDecoration(border: OutlineInputBorder()),
-            controller: TextEditingController(text: _tipsNotes),
-            onChanged: (val) {
-              // TODO: update tips
-            },
-          ),
+   enabled: _isEditing,
+   controller: _tipsController,
+ ),
           const SizedBox(height: 24),
           const Text('Media', style: TextStyle(fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),

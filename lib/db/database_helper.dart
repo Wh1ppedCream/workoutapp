@@ -48,7 +48,7 @@ class DatabaseHelper {
     final path = join(dbPath, 'fitness_tracker.db');
     return await openDatabase(
       path,
-      version: 15,  
+      version: 16,  
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
@@ -99,6 +99,9 @@ if (oldVersion < 12) {
     }
     if (oldVersion < 15) {
       await Schema.migrateV15(db);
+    }
+    if (oldVersion < 16) {
+      await Schema.migrateV16(db);
     }
   },
 );
