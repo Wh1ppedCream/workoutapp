@@ -1340,6 +1340,8 @@ Future<Map<BodyPart,double>> computeMuscleCalculatedBodyparts(int defId) async {
 
   // ─── Session/Set Analytics ───────────────────────────────
 
+/*
+
   Future<Map<int,double>> fetchSetsPerMuscle({
     required DateTime start,
     required DateTime end,
@@ -1365,6 +1367,7 @@ Future<Map<BodyPart,double>> computeMuscleCalculatedBodyparts(int defId) async {
     }
     return result;
   }
+  */
 
 /// Fetches the total number of sets per body-part for a given time range.
 Future<Map<BodyPart,double>> fetchAllBodyPartSetsOverTimeRange({
@@ -1476,6 +1479,148 @@ if (useManual) {
 
      return result;
    }
+
+
+
+/// Fetches the total number of “muscle-units” for a specific exercise definition
+/// over a given time range. Each set is weighted by that muscle’s hit percent.
+/*
+Future<Map<int,double>> fetchMuscleSetsForExerciseOverTimeRange({
+  required int defId,
+  required DateTime start,
+  required DateTime end,
+}) async {
+  final db = await database;
+  final sessions = await SessionDao.getSessionsInRange(
+    db, start.toIso8601String(), end.toIso8601String());
+  final result = <int,double>{};
+
+  for (final s in sessions) {
+    final exRows = await ExerciseDao.getExercisesForSession(db, s['id'] as int);
+    // only weight exercises of this definition
+    for (final ex in exRows.where((e) =>
+          e['type'] == 'weight' && e['exercise_def_id'] == defId)) {
+      final eid = ex['id'] as int;
+      final sets = await SetDao.getSetsForExercise(db, eid);
+      final count = sets.length;
+
+      // compute per-muscle % (including any manual overrides)
+      final percents = await computeMusclePercents(defId);
+      for (final mp in percents) {
+        result[mp.muscleId] =
+            (result[mp.muscleId] ?? 0) + mp.percent * count;
+      }
+    }
+  }
+
+  return result;
+}
+*/
+
+/// Fetches the total number of “muscle-units” for a specific exercise definition
+/// over a given time range, obeying the “Use Manual Muscles” toggle.
+Future<Map<int,double>> fetchMuscleSetsForExerciseOverTimeRange({
+  required int defId,
+  required DateTime start,
+  required DateTime end,
+}) async {
+  final db = await database;
+  // 1) sessions in range
+  final sessions = await SessionDao.getSessionsInRange(
+    db, start.toIso8601String(), end.toIso8601String());
+  // 2) should we use manual muscles?
+  final useManual = await getUseManualMuscles(defId);
+
+  // 3) load definition & its body-parts
+  final def = await DefinitionDao.getExerciseDefinitionById(db, defId);
+
+  // 4) prepare manual map: muscleId -> countPerSet
+  final manualCountPerSet = <int,double>{};
+  if (useManual) {
+    // default every linked muscle to 1.0 per set
+    for (var rm in def!.muscles) {
+      manualCountPerSet[rm.muscle.id] = 1.0;
+    }
+    // overwrite with any saved overrides
+    final rows = await AnalyticsDao.getPercentsForExercise(db, defId);
+    for (var row in rows) {
+      manualCountPerSet[row.muscleId] = row.percent;
+    }
+  }
+
+  // 5) prepare auto map: muscleId -> countPerSet
+  final autoCountPerSet = <int,double>{};
+  if (!useManual) {
+    // body-part counts per set (mirrors your Bodyparts tab logic)
+    final manualBodyRows = await AnalyticsDao.getPercentsForExerciseBodyPart(db, defId);
+    final manualBodyMap  = { for (var e in manualBodyRows) e.bodyPartId : e.percent };
+    final autoBpMap      = await computeMuscleCalculatedBodyparts(defId);
+    // for each body-part on the def:
+    for (var bp in def!.bodyParts) {
+      // the same count you show under Bodyparts tab:
+      final countPerSet = manualBodyMap[bp.id] ?? autoBpMap[bp] ?? 0.0;
+      // assign it to every muscle linked to that part
+      final links = await AnalyticsDao.getMusclesForBodyPart(db, bp.id);
+      for (var link in links) {
+        autoCountPerSet[link.muscleId] = countPerSet;
+      }
+    }
+  }
+
+  // 6) final: loop all sets & accumulate
+  final result = <int,double>{};
+  for (var s in sessions) {
+    final exRows = await ExerciseDao.getExercisesForSession(db, s['id'] as int);
+    for (var ex in exRows.where((e) =>
+         e['type']=='weight' && e['exercise_def_id']==defId)) {
+      final eid   = ex['id'] as int;
+      final sets  = await SetDao.getSetsForExercise(db, eid);
+      final count = sets.length;
+      // pick the right per-set map
+      final cmap = useManual ? manualCountPerSet : autoCountPerSet;
+      // add count * perSet to each muscle
+      cmap.forEach((mid, perSet) {
+        result[mid] = (result[mid] ?? 0) + perSet * count;
+      });
+    }
+  }
+
+  return result;
+}
+
+
+
+/// Fetches the total number of “muscle-units” across *all* definitions
+/// for weight exercises in the given time window.
+Future<Map<int,double>> fetchAllMuscleSetsOverTimeRange({
+  required DateTime start,
+  required DateTime end,
+}) async {
+  final db = await database;
+  final sessions = await SessionDao.getSessionsInRange(
+    db, start.toIso8601String(), end.toIso8601String());
+  final defIds = <int>{};
+
+  // collect every definition ID used in weight exercises
+  for (final s in sessions) {
+    final exs = await ExerciseDao.getExercisesForSession(db, s['id'] as int);
+    for (final ex in exs.where((e) => e['type']=='weight')) {
+      defIds.add(ex['exercise_def_id'] as int);
+    }
+  }
+
+  // sum each definition’s muscle-units
+  final combined = <int,double>{};
+  for (final defId in defIds) {
+    final perDef = await fetchMuscleSetsForExerciseOverTimeRange(
+      defId: defId, start: start, end: end);
+    perDef.forEach((mid, val) {
+      combined[mid] = (combined[mid] ?? 0) + val;
+    });
+  }
+
+  return combined;
+}
 
 
 // GYM PROFILES
@@ -1912,6 +2057,30 @@ Future<void> setUseManualBodyparts(int defId, bool value) async {
   await db.update(
     'exercise_definitions',
     {'use_manual_bodyparts': value ? 1 : 0},
+    where: 'id = ?',
+    whereArgs: [defId],
+  );
+}
+
+/// Returns whether the exercise definition uses manual muscle selection.
+Future<bool> getUseManualMuscles(int defId) async {
+  final db = await database;
+  final rows = await db.query(
+    'exercise_definitions',
+    columns: ['use_manual_muscles'],
+    where: 'id = ?',
+    whereArgs: [defId],
+    limit: 1,
+  );
+  return rows.isNotEmpty && rows.first['use_manual_muscles'] == 1;
+}
+
+/// Sets whether the exercise definition uses manual muscle selection.
+Future<void> setUseManualMuscles(int defId, bool v) async {
+  final db = await database;
+  await db.update(
+    'exercise_definitions',
+    {'use_manual_muscles': v ? 1 : 0},
     where: 'id = ?',
     whereArgs: [defId],
   );

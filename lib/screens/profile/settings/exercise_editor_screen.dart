@@ -26,13 +26,12 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
 
   // Tab data
   List<Map<String, Object>> _muscleEntries = []; // { 'id': int, 'name': String, 'percent': double }
-// { 'id': int, 'name': String, 'percent': double }
   
   bool _useManualBody = false;
 
   // just below `bool _useManualBody = false;`
 bool _useManualMuscles = false;
-List<Map<String, Object>> _muscleAutoEntries = []; // placeholder for “Bodypart-Calculated Muscles”
+List<Map<String, Object>> _muscleAutoEntries = []; 
 
 
   // new:
@@ -105,21 +104,53 @@ Future<void> _loadDefinitionDetails(ExerciseDefinition def) async {
   final defId = def.id;
   // Pick a range for calculating sets: for “all time”, start at epoch
 
-  // 1) Muscle‐hit percents (for the Muscles tab)
-  final musclePercents = await _repo.computeMusclePercents(defId);
+  // 1) Muscle‐hit percents (for the manual‐override list)
+  final musclePercents    = await _repo.computeMusclePercents(defId);
+  // 1a) Persisted “Use Manual Muscles” flag
+  final useManualMuscles  = await _repo.getUseManualMuscles(defId);
 
-  // 2) Muscle‐calculated body‐part counts for this definition
-  final autoBpMap = await _repo.computeMuscleCalculatedBodyparts(defId);
+  // 2) Build Bodypart‐Calculated Muscles
+  final allMuscles   = await _repo.fetchAllMusclesFull();                  // List<Muscle>
+  final muscleById   = { for (var m in allMuscles) m.id : m };
+  final seenMuscles  = <int>{};
+  final autoMuscles  = <Map<String, Object>>[];
 
-  // 3) Manual overrides from your new table
-  final manualList = await _repo.fetchBodyPartPercentsManual(defId);
-  final manualMap  = { for (var e in manualList) e.bodyPartId : e.percent };
+  // 3) Muscle‐calculated body‐part counts (for the Bodyparts tab)
+  final autoBpMap    = await _repo.computeMuscleCalculatedBodyparts(defId);
 
-  final useManual = await _repo.getUseManualBodyparts(def.id);
+  
+  // 4) Manual overrides for body‐parts
+  final manualList   = await _repo.fetchBodyPartPercentsManual(defId);
+  final manualMap    = { for (var e in manualList) e.bodyPartId : e.percent };
+  final useManualBody = await _repo.getUseManualBodyparts(def.id);
 
+
+  for (var bp in def.bodyParts) {
+    final links = await _repo.fetchMusclesForBodyPart(bp.id);              // List<MuscleBodyPart>
+    for (var link in links) {
+      final mid = link.muscleId;
+      if (!seenMuscles.contains(mid) && muscleById.containsKey(mid)) {
+        seenMuscles.add(mid);
+        final m = muscleById[mid]!;
+        autoMuscles.add({
+          'id':    m.id,
+          'name':  m.name,
+          // use the manual bodypart count if set, otherwise fallback to computed
+       'count': manualMap[bp.id] ?? autoBpMap[bp] ?? 0.0,
+        });
+      }
+    }
+  }
+
+
+  // Now update all UI state in one batch:
   setState(() {
-    _useManualBody = useManual;
-    // --- Muscles Tab data (unchanged) ---
+    // — Toggles
+    _useManualBody     = useManualBody;
+    _useManualMuscles  = useManualMuscles;
+
+    // — Muscles Tab
+    _muscleAutoEntries = autoMuscles;
     _muscleEntries = def.muscles.map((rm) {
       final override = musclePercents.firstWhere(
         (e) => e.muscleId == rm.muscle.id,
@@ -135,18 +166,17 @@ Future<void> _loadDefinitionDetails(ExerciseDefinition def) async {
         'percent': override.percent,
       };
     }).toList();
-    _originalMuscleIds = def.muscles.map((rm) => rm.muscle.id).toList();
+    //(old version)_originalMuscleIds = def.muscles.map((rm) => rm.muscle.id).toList();
+    _originalMuscleIds = _muscleEntries.map((e) => e['id'] as int).toList();
 
     // --- Muscle-Calculated Bodyparts ---
-    _bodyAutoEntries = autoBpMap.entries.map((e) {
-  final bp    = e.key;   // a BodyPart instance
-  final count = e.value; // the number of sets for that part
-  return {
-    'id':      bp.id,
-    'name':    bp.name,
-    'count': count,  // call this 'count' if you like
-  };
-}).toList();
+    _bodyAutoEntries   = autoBpMap.entries.map((e) {
+      return {
+        'id':    e.key.id,
+        'name':  e.key.name,
+        'count': e.value,
+      };
+    }).toList();
 
     // Keep original bodypart ids for diffing manual changes
     _originalBodypartIds = def.bodyParts.map((bp) => bp.id).toList();
@@ -175,10 +205,19 @@ final count = manualMap[bp.id] ?? autoMap[bp.id] ?? 0.0;
 
   Future<void> _toggleEdit() async {
   if (_isEditing && _selectedDef != null) {
+    final defId = _selectedDef!.id;
+
+    // persist the flag & all the associations
+  await _repo.setUseManualMuscles(defId, _useManualMuscles);
+
     await _saveMuscleChanges();
     await _saveEquipmentChanges();
     await _saveBodypartChanges();
-    // ——— NEW: reload everything from the DB so we pick up your saved counts ———
+
+    //new
+    // **fetch the fresh definition** (including its updated join-lists)
+  _selectedDef = await _repo.fetchDefinitionById(defId);
+
     await _loadDefinitionDetails(_selectedDef!);
   }
   setState(() => _isEditing = !_isEditing);
@@ -321,9 +360,10 @@ Future<void> _saveMuscleChanges() async {
     await _repo.addExerciseMuscleMapping(defId, added, rank);
     // if user typed a percent override
     final p = currPct[added]!;
-    if (p != 0.0) {
-      await _repo.setExerciseMuscleHitPercent(defId, added, p);
-    }
+    //if (p != 0.0) {
+     // await _repo.setExerciseMuscleHitPercent(defId, added, p);
+    //}
+    await _repo.setExerciseMuscleHitPercent(defId, added, p);
   }
 
   // 3) updates for existing
@@ -836,16 +876,20 @@ Widget _buildManualBodyparts() {
         trailing: SizedBox(
           width: 80,
           child: TextFormField(
-  enabled: _isEditing && _useManualBody,
-  initialValue: count.toString(),
-  decoration: const InputDecoration(suffixText: 'sets'),
-  keyboardType: TextInputType.numberWithOptions(decimal: true),
-  onChanged: (val) {
-    final newCount = double.tryParse(val) ?? count;
-    entry['count'] = newCount;
-  },
-)
+            // this key changes whenever `count` changes,
+            // forcing Flutter to rebuild the field with the new initialValue
+            key: ValueKey('${entry['id']}_$count'),
+            enabled: _isEditing && _useManualBody,
+            initialValue: count.toString(),
+            decoration: const InputDecoration(suffixText: 'sets'),
+   keyboardType: const TextInputType.numberWithOptions(decimal: true),
+   // AFTER  ─ copies it on every keystroke / focus change
+onChanged: (val) {
+  final parsed = double.tryParse(val);
+      if (parsed != null) entry['count'] = parsed;   // just mutate—no setState
+},
 
+          ),
         ),
       );
     },

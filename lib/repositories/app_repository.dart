@@ -472,7 +472,21 @@ Future<Map<BodyPart,double>> estimateBodyPartSetDistribution(int defId) {
 /// Returns a map muscleId → total “sets” for that muscle, summing
   /// (1 × muscleHitPercent) for every weight‐exercise set in sessions
   /// between [start] and [end].
-  Future<Map<int,double>> fetchSetsPerMuscle({ required DateTime start, required DateTime end, }) => _dbHelper.fetchSetsPerMuscle(start: start, end: end);
+  //Future<Map<int,double>> fetchSetsPerMuscle({ required DateTime start, required DateTime end, }) => _dbHelper.fetchSetsPerMuscle(start: start, end: end);
+
+
+  Future<Map<int,double>> fetchMuscleSetsForExerciseOverTimeRange({
+  required int defId,
+  required DateTime start,
+  required DateTime end,
+}) => _dbHelper.fetchMuscleSetsForExerciseOverTimeRange(
+      defId: defId, start: start, end: end);
+
+  Future<Map<int,double>> fetchSetsPerMuscle({
+  required DateTime start,
+  required DateTime end,
+}) => _dbHelper.fetchAllMuscleSetsOverTimeRange(
+      start: start, end: end);
 
   /// Returns a map BodyPart → total “sets” for that body‐part over
   /// [start]…[end], by summing the muscle‐level contributions
@@ -718,6 +732,15 @@ Future<bool> getUseManualBodyparts(defId) async {
 
   Future<void> setUseManualBodyparts(defId, bool) async {
     await _dbHelper.setUseManualBodyparts(defId, bool);
+  }
+
+
+Future<bool> getUseManualMuscles(defId) async {
+    return await _dbHelper.getUseManualMuscles(defId);
+  }
+
+  Future<void> setUseManualMuscles(defId, bool) async {
+    await _dbHelper.setUseManualMuscles(defId, bool);
   }
 
 

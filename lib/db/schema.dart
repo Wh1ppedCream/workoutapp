@@ -571,6 +571,10 @@ static Future<void> migrateV15(Database db) async {
     ALTER TABLE exercise_definitions
   ADD COLUMN use_manual_bodyparts INTEGER NOT NULL DEFAULT 0;
   ''');
+  await db.execute('''
+    ALTER TABLE exercise_definitions
+  ADD COLUMN use_manual_muscles INTEGER NOT NULL DEFAULT 1;
+  ''');
 }
 
 
