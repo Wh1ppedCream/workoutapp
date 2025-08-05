@@ -49,6 +49,8 @@ class DefinitionDao {
       final equipmentId = row['equipment_id'] as int?;
       final rating      = (row['rating'] as num?)?.toInt() ?? 0;
       final useManual = (row['use_manual_bodyparts'] as int? ?? 0) == 1;
+      // ↓ new, read your INTEGER 0/1 flag
+final multiplyByRating = (row['multiply_by_rating'] as int? ?? 0) == 1;
 
       // NEW: read notes columns
     final setupNotes     = (row['setup_notes']     as String?) ?? '';
@@ -103,6 +105,7 @@ class DefinitionDao {
         bodyParts:     bodyParts,
         muscles:       muscles, 
         useManualBodyparts: useManual,
+        multiplyByRating:   multiplyByRating,
         setupNotes:     setupNotes,
       executionNotes: executionNotes,
       tipsNotes:      tipsNotes,
@@ -157,6 +160,10 @@ class DefinitionDao {
         bodyParts:     const [],
         muscles:       const [],
         useManualBodyparts: (r['use_manual_bodyparts'] as int? ?? 0) == 1,
+        multiplyByRating:    (r['multiply_by_rating']    as int? ?? 0)==1,
+         setupNotes:     '',
+ executionNotes: '',
+ tipsNotes:      '',
       );
     }).toList();
   }
@@ -208,6 +215,10 @@ class DefinitionDao {
         bodyParts:     const [],
         muscles:       const [],
         useManualBodyparts: (r['use_manual_bodyparts'] as int? ?? 0) == 1,
+        multiplyByRating:    (r['multiply_by_rating']    as int? ?? 0)==1,
+         setupNotes:     '',
+ executionNotes: '',
+ tipsNotes:      '',
       );
     }).toList();
   }
@@ -256,7 +267,7 @@ class DefinitionDao {
 
     final sql = StringBuffer()
       ..write('''
-        SELECT DISTINCT ed.id, ed.name, ed.equipment_id, ed.rating, ed.use_manual_bodyparts
+        SELECT DISTINCT ed.id, ed.name, ed.equipment_id, ed.rating, ed.use_manual_bodyparts, ed.multiply_by_rating
           FROM exercise_definitions ed
       ''')
       ..write(bodypartIds != null && bodypartIds.isNotEmpty
@@ -281,6 +292,10 @@ class DefinitionDao {
         bodyParts:     const [],
         muscles:       const [],
         useManualBodyparts: (r['use_manual_bodyparts'] as int? ?? 0) == 1,
+        multiplyByRating:    (r['multiply_by_rating']    as int? ?? 0)==1,
+   setupNotes:          '',
+   executionNotes:      '',
+   tipsNotes:           '',
       );
     }).toList();
   }
@@ -396,6 +411,7 @@ static Future<int> updateExerciseDefinition(
       'equipment_id': def.equipmentId,
       'rating': def.rating,
       'use_manual_bodyparts': def.useManualBodyparts ? 1 : 0,
+      'multiply_by_rating':    def.multiplyByRating   ? 1 : 0,
       
       // NEW: persist notes columns
       'setup_notes':     def.setupNotes,
@@ -449,6 +465,10 @@ static Future<List<ExerciseDefinition>> searchExerciseDefinitions(
     bodyParts:     const [],
     muscles:       const [],
     useManualBodyparts: (r['use_manual_bodyparts'] as int? ?? 0) == 1,
+    multiplyByRating:    (r['multiply_by_rating']    as int? ?? 0)==1,
+         setupNotes:     '',
+ executionNotes: '',
+ tipsNotes:      '',
   )).toList();
 }
 
@@ -479,6 +499,10 @@ static Future<List<ExerciseDefinition>> searchExerciseDefinitions(
         bodyParts:     const [],
         muscles:       const [],
         useManualBodyparts: (r['use_manual_bodyparts'] as int? ?? 0) == 1,
+        multiplyByRating:    (r['multiply_by_rating']    as int? ?? 0)==1,
+   setupNotes:          '',
+   executionNotes:      '',
+   tipsNotes:           '',
       );
     }).toList();
   }
@@ -501,6 +525,8 @@ static Future<ExerciseDefinition?> getExerciseDefinitionById(
   final equipmentId = row['equipment_id']    as int?;
   final rating      = (row['rating'] as num?)?.toInt() ?? 0;
   final useManual = (row['use_manual_bodyparts'] as int? ?? 0) == 1;
+  final multiplyByRating = (row['multiply_by_rating'] as int? ?? 0) == 1;
+
 
   // NEW: read notes columns
   final setupNotes     = (row['setup_notes']     as String?) ?? '';
@@ -555,6 +581,7 @@ static Future<ExerciseDefinition?> getExerciseDefinitionById(
     bodyParts:     bodyParts,
     muscles:       muscles,
     useManualBodyparts: useManual,
+    multiplyByRating:   multiplyByRating,
     setupNotes:     setupNotes,
     executionNotes: executionNotes,
     tipsNotes:      tipsNotes,
@@ -644,6 +671,37 @@ static Future<int> deleteExerciseEquipmentMapping(
     'exercise_equipment',
     where: 'exercise_id = ? AND equipment_id = ?',
     whereArgs: [exerciseId, equipmentId],
+  );
+}
+
+
+/// Reads the “multiply_by_rating” flag from the exercise_definitions row.
+static Future<bool> getMultiplyByRating(
+  Database db,
+  int defId,
+) async {
+  final rows = await db.query(
+    'exercise_definitions',
+    columns: ['multiply_by_rating'],
+    where: 'id = ?',
+    whereArgs: [defId],
+    limit: 1,
+  );
+  if (rows.isEmpty) return false;
+  return (rows.first['multiply_by_rating'] as int? ?? 0) == 1;
+}
+
+/// Updates the “multiply_by_rating” flag for a definition.
+static Future<int> setMultiplyByRating(
+  Database db,
+  int defId,
+  bool enabled,
+) {
+  return db.update(
+    'exercise_definitions',
+    {'multiply_by_rating': enabled ? 1 : 0},
+    where: 'id = ?',
+    whereArgs: [defId],
   );
 }
 

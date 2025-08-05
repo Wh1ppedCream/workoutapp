@@ -1343,34 +1343,6 @@ Future<Map<BodyPart,double>> computeMuscleCalculatedBodyparts(int defId) async {
 
   // ─── Session/Set Analytics ───────────────────────────────
 
-/*
-
-  Future<Map<int,double>> fetchSetsPerMuscle({
-    required DateTime start,
-    required DateTime end,
-  }) async {
-    final db = await database;
-    final sessions = await SessionDao.getSessionsInRange(
-      db, start.toIso8601String(), end.toIso8601String());
-    final result = <int,double>{};
-
-    for (var s in sessions) {
-      final exRows = await ExerciseDao.getExercisesForSession(db, s['id'] as int);
-      for (var ex in exRows.where((e) => e['type']=='weight')) {
-        final eid = ex['id'] as int;
-        final percents = await computeMusclePercents(ex['exercise_def_id'] as int);
-        final sets = await SetDao.getSetsForExercise(db, eid);
-        // ignore: unused_local_variable
-        for (var set in sets) {
-          for (var mp in percents) {
-            result[mp.muscleId] = (result[mp.muscleId] ?? 0) + mp.percent;
-          }
-        }
-      }
-    }
-    return result;
-  }
-  */
 
 /// Fetches the total number of sets per body-part for a given time range.
 Future<Map<BodyPart,double>> fetchAllBodyPartSetsOverTimeRange({
@@ -1422,6 +1394,8 @@ Future<Map<BodyPart,double>> fetchAllBodyPartSetsOverTimeRange({
 
      // right after `final bpById = …;`
 final def = await DefinitionDao.getExerciseDefinitionById(db, defId);
+final multiply = def?.multiplyByRating ?? false;
+final ratingMul = (def?.rating ?? 0) / 100.0;
 final defBodyPartIds = def?.bodyParts.map((bp) => bp.id).toList() ?? <int>[];
 
 
@@ -1480,45 +1454,12 @@ if (useManual) {
       }
      }
 
+if (multiply) {
+  result.updateAll((bp, val) => val * ratingMul);
+}
      return result;
    }
 
-
-
-/// Fetches the total number of “muscle-units” for a specific exercise definition
-/// over a given time range. Each set is weighted by that muscle’s hit percent.
-/*
-Future<Map<int,double>> fetchMuscleSetsForExerciseOverTimeRange({
-  required int defId,
-  required DateTime start,
-  required DateTime end,
-}) async {
-  final db = await database;
-  final sessions = await SessionDao.getSessionsInRange(
-    db, start.toIso8601String(), end.toIso8601String());
-  final result = <int,double>{};
-
-  for (final s in sessions) {
-    final exRows = await ExerciseDao.getExercisesForSession(db, s['id'] as int);
-    // only weight exercises of this definition
-    for (final ex in exRows.where((e) =>
-          e['type'] == 'weight' && e['exercise_def_id'] == defId)) {
-      final eid = ex['id'] as int;
-      final sets = await SetDao.getSetsForExercise(db, eid);
-      final count = sets.length;
-
-      // compute per-muscle % (including any manual overrides)
-      final percents = await computeMusclePercents(defId);
-      for (final mp in percents) {
-        result[mp.muscleId] =
-            (result[mp.muscleId] ?? 0) + mp.percent * count;
-      }
-    }
-  }
-
-  return result;
-}
-*/
 
 /// Fetches the total number of “muscle-units” for a specific exercise definition
 /// over a given time range, obeying the “Use Manual Muscles” toggle.
@@ -1536,6 +1477,10 @@ Future<Map<int,double>> fetchMuscleSetsForExerciseOverTimeRange({
 
   // 3) load definition & its body-parts
   final def = await DefinitionDao.getExerciseDefinitionById(db, defId);
+
+  
+final multiply = def?.multiplyByRating ?? false;
+final ratingMul= (def?.rating ?? 0) / 100.0;
 
   // 4) prepare manual map: muscleId -> countPerSet
   final manualCountPerSet = <int,double>{};
@@ -1588,6 +1533,9 @@ Future<Map<int,double>> fetchMuscleSetsForExerciseOverTimeRange({
     }
   }
 
+if (multiply) {
+  result.updateAll((mid, val) => val * ratingMul);
+}
   return result;
 }
 
@@ -2087,6 +2035,18 @@ Future<void> setUseManualMuscles(int defId, bool v) async {
     where: 'id = ?',
     whereArgs: [defId],
   );
+}
+
+/// Proxy onto DefinitionDao for multiply-by-rating.
+Future<bool> getMultiplyByRating(int defId) async {
+  final db = await database;        // ensure you await your getter
+  return DefinitionDao.getMultiplyByRating(db, defId);
+}
+
+/// Proxy onto DefinitionDao for multiply-by-rating.
+Future<void> setMultiplyByRating(int defId, bool enabled) async {
+  final db = await database;        // unwrap the nullable
+  await DefinitionDao.setMultiplyByRating(db, defId, enabled);
 }
 
 

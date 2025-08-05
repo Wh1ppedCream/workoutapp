@@ -744,4 +744,15 @@ Future<bool> getUseManualMuscles(defId) async {
   }
 
 
+/// Returns whether “Multiply by Exercise Rating” is enabled.
+Future<bool> getMultiplyByRating(int defId) {
+  return _dbHelper.getMultiplyByRating(defId);
+}
+
+/// Persist the “Multiply by Exercise Rating” flag.
+Future<void> setMultiplyByRating(int defId, bool enabled) {
+  return _dbHelper.setMultiplyByRating(defId, enabled);
+}
+
+
 }

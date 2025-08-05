@@ -17,6 +17,7 @@ class ExerciseDefinition {
   final String setupNotes;
   final String executionNotes;
   final String tipsNotes;
+  final bool   multiplyByRating;
 
   /// Creates an [ExerciseDefinition].
   ExerciseDefinition({
@@ -31,6 +32,7 @@ class ExerciseDefinition {
     this.setupNotes     = '',
     this.executionNotes = '',
     this.tipsNotes      = '',
+    required this.multiplyByRating,
   });
 }
 

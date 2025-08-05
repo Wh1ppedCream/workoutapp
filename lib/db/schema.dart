@@ -593,6 +593,10 @@ static Future<void> migrateV16(Database db) async {
     ALTER TABLE exercise_definitions
       ADD COLUMN tips_notes      TEXT NOT NULL DEFAULT '';
   """);
+  await db.execute("""
+    ALTER TABLE exercise_definitions
+      ADD COLUMN multiply_by_rating INTEGER NOT NULL DEFAULT 0;
+  """);
 }
 
 

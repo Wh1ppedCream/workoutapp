@@ -49,6 +49,11 @@ List<Map<String, Object>> _bodyManualEntries = []; // manual overrides
   List<Map<String, Object>> _mediaItems = []; // { 'type': 'image'|'video'|'link', 'url': '' }
 
 
+  int _rating = 0;
+bool _multiplyByRating = false;  // UI-only for now
+
+
+
   late final TextEditingController _setupController;
 late final TextEditingController _executionController;
 late final TextEditingController _tipsController;
@@ -130,6 +135,9 @@ Future<void> _loadDefinitionDetails(ExerciseDefinition def) async {
   final manualMap    = { for (var e in manualList) e.bodyPartId : e.percent };
   final useManualBody = await _repo.getUseManualBodyparts(def.id);
 
+    // 1b) Persisted “Multiply by Rating” flag
+  final multiplyByRating = await _repo.getMultiplyByRating(defId);
+
 
   for (var bp in def.bodyParts) {
     final links = await _repo.fetchMusclesForBodyPart(bp.id);              // List<MuscleBodyPart>
@@ -151,9 +159,11 @@ Future<void> _loadDefinitionDetails(ExerciseDefinition def) async {
 
   // Now update all UI state in one batch:
   setState(() {
+
     // — Toggles
     _useManualBody     = useManualBody;
     _useManualMuscles  = useManualMuscles;
+    _multiplyByRating   = multiplyByRating;
 
     // — Muscles Tab
     _muscleAutoEntries = autoMuscles;
@@ -204,11 +214,16 @@ final count = manualMap[bp.id] ?? autoMap[bp.id] ?? 0.0;
         .map((e) => {'id': e.id, 'name': e.name})
         .toList();
     _originalEquipmentIds = def.equipmentList.map((e) => e.id).toList();
+
+    
+    _rating = def.rating;
+
   });
       // after your setState block…
     _setupController.text     = def.setupNotes;
     _executionController.text = def.executionNotes;
     _tipsController.text      = def.tipsNotes;
+
 
 }
 
@@ -220,6 +235,7 @@ Future<void> _toggleEdit() async {
     final defId = def.id;
 
     // 1) persist the “Use Manual Muscles” flag & all your join-table changes
+      await _repo.setMultiplyByRating(defId, _multiplyByRating);
     await _repo.setUseManualMuscles(defId, _useManualMuscles);
     await _saveMuscleChanges();
     await _saveEquipmentChanges();
@@ -232,12 +248,13 @@ Future<void> _toggleEdit() async {
         id:                   def.id,
         name:                 def.name,
         equipmentId:          def.equipmentId,
-        rating:               def.rating,
+        rating:               _rating,                  // ← use the new rating
         equipmentList:        def.equipmentList,
         bodyParts:            def.bodyParts,
         muscles:              def.muscles,
         useManualBodyparts: _useManualBody,
         // ← new fields:
+         multiplyByRating: _multiplyByRating,
         setupNotes:           _setupController.text,
         executionNotes:       _executionController.text,
         tipsNotes:            _tipsController.text,
@@ -569,6 +586,7 @@ if (!mounted) return;
                   bodyParts: [],
                   muscles: [],
                   useManualBodyparts: false,
+                  multiplyByRating: false,
                 ),
               );
               if (match.id == -1) {
@@ -582,6 +600,8 @@ _executionController.clear();
 _tipsController.clear();
                   _muscleEntries = [];
                   _equipmentEntries  = [];
+                  _rating = 0;
+                  _multiplyByRating = false;
                 });
               } else {
                 _onExerciseSelected(match);
@@ -992,6 +1012,45 @@ onChanged: (val) {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          
+        // ─── RATING EDITOR ──────────────────────
+        Row(
+          children: [
+            const Text('Rating:', style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(width: 8),
+            SizedBox(
+              width: 70,
+              child: TextFormField(
+                key: ValueKey(_rating),
+                enabled: _isEditing,
+                initialValue: _rating.toString(),
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(suffixText: '/100'),
+                onFieldSubmitted: (val) {
+                  final parsed = int.tryParse(val);
+                  if (parsed != null && parsed >= 0 && parsed <= 100) {
+                    setState(() => _rating = parsed);
+                  }
+                },
+              ),
+            ),
+          ],
+        ),
+
+        // ─── MULTIPLY CHECKBOX (UI‐ONLY) ────────
+        Row(
+          children: [
+            Checkbox(
+              value: _multiplyByRating,
+              onChanged: _isEditing
+                ? (v) => setState(() => _multiplyByRating = v!)
+                : null,
+            ),
+            const Expanded(child: Text('Multiply by Exercise Rating when calculating sets')),
+          ],
+        ),
+
+        const Divider(height: 32),
           const Text('Setup', style: TextStyle(fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
           TextField(
