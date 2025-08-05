@@ -12,7 +12,13 @@
       {"name":"Erector Spinae","rank":5},
       {"name":"Latissimus Dorsi","rank":6},
       {"name":"Triceps Brachii","rank":7}
-    ]
+    ],
+  "useManualBodyparts": false,
+  "useManualMuscles": true,
+  "setupNotes": "Kneel on a soft pad, grip the handles tightly, and brace your core.",
+  "executionNotes": "Roll out in a straight line, extend until your hips almost touch the floor, then pull back slowly.",
+  "tipsNotes": "Start with half-rolls if you’re new—work up to full range over several weeks.",
+  "multiplyByRating": true
   },
   {
     "name": "Arm Circles",

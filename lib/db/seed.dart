@@ -60,15 +60,36 @@ class Seed {
           eqId = rows.isNotEmpty ? rows.first['id'] as int : null;
         }
 
-        final defId = await txn.insert(
-          'exercise_definitions',
-          {
-            'name': item['name'],
-            'equipment_id': eqId,
-            'rating': item['rating'],
-          },
-          conflictAlgorithm: ConflictAlgorithm.ignore,
-        );
+        final defMap = <String, dynamic>{
+  'name':         item['name'],
+  'equipment_id': eqId,
+  'rating':       item['rating'],
+};
+
+if (item.containsKey('useManualBodyparts')) {
+  defMap['use_manual_bodyparts'] = item['useManualBodyparts'] ? 1 : 0;
+}
+if (item.containsKey('useManualMuscles')) {
+  defMap['use_manual_muscles'] = item['useManualMuscles'] ? 1 : 0;
+}
+if (item.containsKey('setupNotes')) {
+  defMap['setup_notes'] = item['setupNotes'] as String;
+}
+if (item.containsKey('executionNotes')) {
+  defMap['execution_notes'] = item['executionNotes'] as String;
+}
+if (item.containsKey('tipsNotes')) {
+  defMap['tips_notes'] = item['tipsNotes'] as String;
+}
+if (item.containsKey('multiplyByRating')) {
+  defMap['multiply_by_rating'] = item['multiplyByRating'] ? 1 : 0;
+}
+
+final defId = await txn.insert(
+  'exercise_definitions',
+  defMap,
+  conflictAlgorithm: ConflictAlgorithm.ignore,
+);
 
         for (var eName in eqNames) {
           final rows2 = await txn.query(
