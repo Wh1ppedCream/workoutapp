@@ -338,6 +338,57 @@ Future<void> reseedLookupData() =>  _dbHelper.reseedLookupData();
 /// Exports the entire database to a JSON string for backup.
   Future<String> exportDatabase() async { return _dbHelper.exportDatabase(); }
 
+  /// Export equipment.json asset
+Future<String> exportEquipmentJson() {
+  return _dbHelper.exportEquipmentJson();
+}
+
+/// Export bodyparts.json asset
+Future<String> exportBodypartsJson() {
+  return _dbHelper.exportBodypartsJson();
+}
+
+/// Export muscles.json asset
+Future<String> exportMusclesJson() {
+  return _dbHelper.exportMusclesJson();
+}
+
+/// Export exercises.json asset
+Future<String> exportExercisesJson() {
+  return _dbHelper.exportExercisesJson();
+}
+
+/// Export stretches.json asset
+Future<String> exportStretchesJson() {
+  return _dbHelper.exportStretchesJson();
+}
+
+/// Export muscle_bodypart.json asset
+Future<String> exportMuscleBodypartJson() {
+  return _dbHelper.exportMuscleBodypartJson();
+}
+
+/// Export bodypart_ranking.json asset
+Future<String> exportBodypartRankingJson() {
+  return _dbHelper.exportBodypartRankingJson();
+}
+
+/// Export muscle_ranking.json asset
+Future<String> exportMuscleRankingJson() {
+  return _dbHelper.exportMuscleRankingJson();
+}
+
+/// Export bodypart_muscle_rankings.json asset
+Future<String> exportBodypartMuscleRankingsJson() {
+  return _dbHelper.exportBodypartMuscleRankingsJson();
+}
+
+/// Export volume_boundaries.json asset
+Future<String> exportVolumeBoundariesJson() {
+  return _dbHelper.exportVolumeBoundariesJson();
+}
+
+
   /// Imports the database from a JSON string.
   ///
   /// If [clearFirst] is true, existing rows are deleted before import.
