@@ -48,7 +48,7 @@ class DatabaseHelper {
     final path = join(dbPath, 'fitness_tracker.db');
     return await openDatabase(
       path,
-      version: 16,  
+      version: 17,  
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
@@ -102,6 +102,9 @@ if (oldVersion < 12) {
     }
     if (oldVersion < 16) {
       await Schema.migrateV16(db);
+    }
+    if (oldVersion < 17) {
+      await Schema.migrateV17(db);
     }
   },
 );
@@ -2235,5 +2238,153 @@ Future<void> setMultiplyByRating(int defId, bool enabled) async {
 }
 
 
+// ─── FLOW‐CHART DEFAULTS (v17 tables) ───────────────────────────────────
+
+/// Fetch the saved default flow JSON for either the whole app or a specific profile.
+Future<String> fetchDefaultFlow(
+  String scope, {
+  int? profileId,
+}) async {
+  final db = await database;
+  // profile_id IS NULL when scope=='app'
+  final whereClause = profileId != null
+      ? 'scope = ? AND profile_id = ?'
+      : 'scope = ? AND profile_id IS NULL';
+  final args = profileId != null ? [scope, profileId] : [scope];
+  final rows = await db.query(
+    'flow_defaults',
+    columns: ['flow_json'],
+    where: whereClause,
+    whereArgs: args,
+    limit: 1,
+  );
+  if (rows.isEmpty) return '{}';
+  return rows.first['flow_json'] as String;
+}
+
+/// Upsert default flow JSON for scope=('app' or 'profile') and optional profileId.
+Future<void> upsertDefaultFlow(
+  String scope, {
+  int? profileId,
+  required String flowJson,
+}) async {
+  final db = await database;
+  final values = {
+    'scope': scope,
+    'profile_id': profileId,
+    'flow_json': flowJson,
+  };
+  final updated = await db.update(
+    'flow_defaults',
+    values,
+    where: profileId != null
+        ? 'scope = ? AND profile_id = ?'
+        : 'scope = ? AND profile_id IS NULL',
+    whereArgs: profileId != null ? [scope, profileId] : [scope],
+  );
+  if (updated == 0) {
+    await db.insert('flow_defaults', values);
+  }
+}
+
+/// Delete a default flow entry.
+Future<int> deleteDefaultFlow(
+  String scope, {
+  int? profileId,
+}) async {
+  final db = await database;
+  final whereClause = profileId != null
+      ? 'scope = ? AND profile_id = ?'
+      : 'scope = ? AND profile_id IS NULL';
+  final args = profileId != null ? [scope, profileId] : [scope];
+  return db.delete(
+    'flow_defaults',
+    where: whereClause,
+    whereArgs: args,
+  );
+}
+
+/// Fetch all the methods attached to an app/profile default.
+Future<List<Map<String, dynamic>>> fetchDefaultFlowMethods(
+  String scope, {
+  int? profileId,
+}) async {
+  final db = await database;
+  final whereClause = profileId != null
+      ? 'scope = ? AND profile_id = ?'
+      : 'scope = ? AND profile_id IS NULL';
+  final args = profileId != null ? [scope, profileId] : [scope];
+  return db.query(
+    'flow_default_methods',
+    where: whereClause,
+    whereArgs: args,
+    orderBy: 'name',
+  );
+}
+
+/// Upsert one method into the default‐methods table (conflict on PK(scope,profile_id,name)).
+Future<int> upsertDefaultFlowMethod(
+  String scope, {
+  int? profileId,
+  required String name,
+  required String type,
+  required Map<String, dynamic> params,  // <-- accept a Map
+}) async {
+  final db = await database;
+  final paramsJson = jsonEncode(params);  // <-- encode here
+  return db.insert(
+    'flow_default_methods',
+    {
+      'scope': scope,
+      'profile_id': profileId,
+      'name': name,
+      'type': type,
+      'params': paramsJson,             // <-- store JSON string
+    },
+    conflictAlgorithm: ConflictAlgorithm.replace,
+  );
+}
+
+/// Delete one default method by name.
+Future<int> deleteDefaultFlowMethod(
+  String scope, {
+  int? profileId,
+  required String name,
+}) async {
+  final db = await database;
+  final whereClause = profileId != null
+      ? 'scope = ? AND profile_id = ? AND name = ?'
+      : 'scope = ? AND profile_id IS NULL AND name = ?';
+  final args = profileId != null ? [scope, profileId, name] : [scope, name];
+  return db.delete(
+    'flow_default_methods',
+    where: whereClause,
+    whereArgs: args,
+  );
+}
+
+/// Fetches the “default” FlowDefinition for either the whole app
+/// (scope = 'app', profileId = null) or a particular profile
+/// (scope = 'profile', profileId = that profile’s id>).
+Future<FlowDefinition> fetchDefaultFlowDefinition(
+  String scope, {
+  int? profileId,
+}) async {
+  final db = await database;
+  final rows = await db.query(
+    'default_flow_definitions',
+    columns: ['flow_definition'],
+    // app‐wide defaults are stored with profile_id = NULL
+    where: profileId == null
+        ? 'scope = ? AND profile_id IS NULL'
+        : 'scope = ? AND profile_id = ?',
+    whereArgs: profileId == null ? [scope] : [scope, profileId],
+    limit: 1,
+  );
+  final jsonStr = rows.isNotEmpty
+      ? rows.first['flow_definition'] as String
+      : '{}';
+  return FlowDefinition.fromJson(jsonStr);
+}
 
 }

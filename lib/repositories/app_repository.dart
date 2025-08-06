@@ -806,4 +806,90 @@ Future<void> setMultiplyByRating(int defId, bool enabled) {
 }
 
 
+// ─── FLOW‐CHART DEFAULTS WRAPPERS ─────────────────────────────────────
+
+/// Returns the default flow JSON for the given scope ('app' or 'profile').
+/// If profileId is omitted, returns the app‐wide default.
+Future<String> fetchDefaultFlow(
+  String scope, {
+  int? profileId,
+}) => _dbHelper.fetchDefaultFlow(scope, profileId: profileId);
+
+/// Creates or updates the default flow JSON.
+Future<void> upsertDefaultFlow(
+  String scope, {
+  int? profileId,
+  required String flowJson,
+}) => _dbHelper.upsertDefaultFlow(
+      scope,
+      profileId: profileId,
+      flowJson: flowJson,
+    );
+
+/// Deletes the default flow for a scope.
+Future<void> deleteDefaultFlow(
+  String scope, {
+  int? profileId,
+}) => _dbHelper.deleteDefaultFlow(scope, profileId: profileId);
+
+/// Fetches all methods attached to an app‐wide or profile‐specific default flow.
+Future<List<FlowMethod>> fetchDefaultFlowMethods(
+  String scope, {
+  int? profileId,
+}) async {
+  final rows = await _dbHelper.fetchDefaultFlowMethods(scope, profileId: profileId);
+  return rows.map((r) => FlowMethod.fromMap(r)).toList();
+}
+
+/// Upsert one default flow‐method.
+/// No need to import dart:convert here—just pass a Map!
+Future<FlowMethod> upsertDefaultFlowMethod({
+  required String scope,
+  int? profileId,
+  required String name,
+  required MethodType type,
+  required Map<String, dynamic> params,
+}) async {
+  // delegate JSON‐encoding to the db helper
+  await _dbHelper.upsertDefaultFlowMethod(
+    scope,
+    profileId: profileId,
+    name: name,
+    type: type.toShortString(),
+    params: params,
+  );
+  // return a local FlowMethod; params will be decoded later by .fromMap()
+  return FlowMethod(
+    id: -1, // or leave null if you prefer
+    presetId: profileId ?? -1,
+    name: name,
+    type: type,
+    params: params,
+  );
+}
+
+/// Deletes one default flow‐method.
+Future<void> deleteDefaultFlowMethod({
+  required String scope,
+  int? profileId,
+  required String name,
+}) => _dbHelper.deleteDefaultFlowMethod(
+      scope,
+      profileId: profileId,
+      name: name,
+    );
+
+
+/// App‐wide or per‐profile default flow (before any specific preset).
+  Future<FlowDefinition> fetchDefaultFlowDefinition(
+    String scope, {
+    int? profileId,
+  }) {
+    return _dbHelper.fetchDefaultFlowDefinition(
+      scope,
+      profileId: profileId,
+    );
+  }
+
+
 }

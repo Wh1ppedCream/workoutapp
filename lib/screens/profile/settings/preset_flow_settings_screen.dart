@@ -53,6 +53,7 @@ class _PresetFlowSettingsScreenState extends State<PresetFlowSettingsScreen> {
     super.initState();
     _dashboard = Dashboard(defaultArrowStyle: ArrowStyle.curve);
     _loadProfiles();
+    _loadDefaultFlow(scope: 'app'); // <-- show global default right away
   }
 
   @override
@@ -596,6 +597,30 @@ Future<void> _showAddMethodDialog() async {
     setState(() {});
   }
 
+
+/// scope: 'app' or 'profile'
+Future<void> _loadDefaultFlow({ required String scope, int? profileId }) async {
+  // your new repo methods:
+  final def     = await _repo.fetchDefaultFlowDefinition(scope, profileId: profileId);
+  final methods = await _repo.fetchDefaultFlowMethods(scope, profileId: profileId);
+
+  setState(() {
+    _flowDef  = def;
+    _methods  = methods;
+    _edges    = def.edges.toList();
+    _nodes.clear();
+    _nodeData.clear();
+    _placement.clear();
+    _selectedBranchParent = null;
+    _selectedMethodNode   = null;
+    _selectedMethod       = null;
+  });
+  _buildDashboard();
+  _initializeCounters();
+}
+
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -632,6 +657,8 @@ Future<void> _showAddMethodDialog() async {
                   _methods = [];
                 });
                 _loadPresets();
+                // load the profile‐scoped default flow
+     _loadDefaultFlow(scope: 'profile', profileId: p?.id);
               },
             ),
           ),
@@ -652,13 +679,19 @@ Future<void> _showAddMethodDialog() async {
                     .toList(),
                 onChanged: (pid) {
                   setState(() => _selectedPresetId = pid);
-                  _loadFlowAndMethods();
+                  if (pid == null) {
+       // no specific preset chosen → show that profile’s default
+       _loadDefaultFlow(scope: 'profile', profileId: _selectedProfile!.id);
+     } else {
+       // a real preset → show that preset’s own flow
+       _loadFlowAndMethods();
+     }
                 },
               ),
             ),
 
           // Flow editor
-          if (_selectedPresetId != null && _flowDef != null)
+          if (_flowDef != null)
             Expanded(
               child: Column(
                 children: [

@@ -118,6 +118,7 @@ class Schema {
     await migrateV14(db);
     await migrateV15(db);
     await migrateV16(db);
+    await migrateV17(db);
   }
 
   /// Handler for onUpgrade callback.
@@ -137,6 +138,7 @@ class Schema {
     if (oldVersion < 14) await migrateV14(db);
     if (oldVersion < 15) await migrateV15(db);
     if (oldVersion < 16) await migrateV16(db);
+    if (oldVersion < 17) await migrateV17(db);
   }
 
   /// Migration to version 3: adds rating, equipment/muscle tables.
@@ -599,6 +601,36 @@ static Future<void> migrateV16(Database db) async {
   """);
 }
 
+
+/// Migration to version 17: editable flow‐chart defaults (app & per‐profile)
+static Future<void> migrateV17(Database db) async {
+  await db.transaction((txn) async {
+    // 1) Table holding the JSON blob for each scope (app‐wide or per‐profile)
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS flow_defaults (
+        scope       TEXT    NOT NULL,                               -- 'app' or 'profile'
+        profile_id  INTEGER REFERENCES gym_profiles(id) ON DELETE CASCADE,  -- null when scope='app'
+        flow_json   TEXT    NOT NULL,
+        PRIMARY KEY(scope, profile_id)
+      );
+    ''');
+
+    // 2) Table holding all the user‐defined methods attached to those defaults
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS flow_default_methods (
+        scope       TEXT    NOT NULL,                                -- must match flow_defaults.scope
+        profile_id  INTEGER REFERENCES gym_profiles(id) ON DELETE CASCADE,
+        name        TEXT    NOT NULL,
+        type        TEXT    NOT NULL,
+        params      TEXT    NOT NULL,                               -- JSON blob of params
+        PRIMARY KEY(scope, profile_id, name),
+        FOREIGN KEY(scope, profile_id)
+          REFERENCES flow_defaults(scope, profile_id)
+          ON DELETE CASCADE
+      );
+    ''');
+  });
+}
 
 
 }
