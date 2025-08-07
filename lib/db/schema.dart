@@ -608,8 +608,8 @@ static Future<void> migrateV17(Database db) async {
     // 1) Table holding the JSON blob for each scope (app‐wide or per‐profile)
     await txn.execute('''
       CREATE TABLE IF NOT EXISTS flow_defaults (
-        scope       TEXT    NOT NULL,                               -- 'app' or 'profile'
-        profile_id  INTEGER REFERENCES gym_profiles(id) ON DELETE CASCADE,  -- null when scope='app'
+        scope       TEXT    NOT NULL,                               
+        profile_id  INTEGER REFERENCES gym_profiles(id) ON DELETE CASCADE,  
         flow_json   TEXT    NOT NULL,
         PRIMARY KEY(scope, profile_id)
       );
@@ -618,11 +618,11 @@ static Future<void> migrateV17(Database db) async {
     // 2) Table holding all the user‐defined methods attached to those defaults
     await txn.execute('''
       CREATE TABLE IF NOT EXISTS flow_default_methods (
-        scope       TEXT    NOT NULL,                                -- must match flow_defaults.scope
+        scope       TEXT    NOT NULL,                               
         profile_id  INTEGER REFERENCES gym_profiles(id) ON DELETE CASCADE,
         name        TEXT    NOT NULL,
         type        TEXT    NOT NULL,
-        params      TEXT    NOT NULL,                               -- JSON blob of params
+        params      TEXT    NOT NULL,                              
         PRIMARY KEY(scope, profile_id, name),
         FOREIGN KEY(scope, profile_id)
           REFERENCES flow_defaults(scope, profile_id)

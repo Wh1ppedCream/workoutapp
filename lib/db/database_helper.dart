@@ -1768,7 +1768,18 @@ Future<Map<int,double>> fetchAllMuscleSetsOverTimeRange({
 Future<int> createProfile(String name) async {
   final db = await database;
   final profile = GymProfile(id: null, name: name, createdAt: DateTime.now());
-  return GymProfileDao.insertProfile(db, profile);
+  final newId = await GymProfileDao.insertProfile(db, profile);
+  // copy app‐wide methods into the new profile default:
+  final appMethods = await fetchDefaultFlowMethods('app');
+  for (var m in appMethods) {
+    await upsertDefaultFlowMethod('profile',
+      profileId: newId,
+      name: m['name'] as String,
+      type: m['type'] as String,
+      params: jsonDecode(m['params'] as String),
+    );
+  }
+  return newId;
 }
 
 /// Retrieves all gym profiles.
@@ -1848,11 +1859,24 @@ Future<List<WorkoutSession>> fetchWorkoutSessions() async {
 
 Future<int> createPreset(String name, {int? profileId}) async {
   final db = await database;
-  return PresetDefinitionDao.insertPreset(
+  final newId = await PresetDefinitionDao.insertPreset(
     db,
     name,
     profileId: profileId,
   );
+  // copy profile‐default methods into this preset (if profileId != null)
+  if (profileId != null) {
+    final profMethods = await fetchDefaultFlowMethods('profile', profileId: profileId);
+    for (var m in profMethods) {
+      await upsertDefaultFlowMethod('preset',
+        profileId: profileId,
+        name: m['name'] as String,
+        type: m['type'] as String,
+        params: jsonDecode(m['params'] as String),
+      );
+    }
+  }
+  return newId;
 }
 
 Future<int> findOrCreatePreset(String name, {int? profileId}) async {
@@ -1863,6 +1887,8 @@ Future<int> findOrCreatePreset(String name, {int? profileId}) async {
     profileId: profileId,
   );
 }
+
+
 
 Future<List<Map<String, dynamic>>> fetchAllPresetsRaw({int? profileId}) async {
   final db = await database;
@@ -2363,27 +2389,15 @@ Future<int> deleteDefaultFlowMethod(
   );
 }
 
-/// Fetches the “default” FlowDefinition for either the whole app
-/// (scope = 'app', profileId = null) or a particular profile
-/// (scope = 'profile', profileId = that profile’s id>).
+
+/// Returns a FlowDefinition for the given scope ('app' or 'profile') by
+/// delegating to the flow_defaults table and parsing its JSON.
 Future<FlowDefinition> fetchDefaultFlowDefinition(
   String scope, {
   int? profileId,
 }) async {
-  final db = await database;
-  final rows = await db.query(
-    'default_flow_definitions',
-    columns: ['flow_definition'],
-    // app‐wide defaults are stored with profile_id = NULL
-    where: profileId == null
-        ? 'scope = ? AND profile_id IS NULL'
-        : 'scope = ? AND profile_id = ?',
-    whereArgs: profileId == null ? [scope] : [scope, profileId],
-    limit: 1,
-  );
-  final jsonStr = rows.isNotEmpty
-      ? rows.first['flow_definition'] as String
-      : '{}';
+  // Reuse the string-based helper
+  final jsonStr = await fetchDefaultFlow(scope, profileId: profileId);
   return FlowDefinition.fromJson(jsonStr);
 }
 

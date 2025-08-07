@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'analytics_setting_screen.dart';
 import 'flow_chart_page.dart';
 import 'preset_flow_settings_screen.dart';
+import 'flow_methods_page.dart';
 
 class GymExerciseSettingsPage extends StatelessWidget {
   const GymExerciseSettingsPage({super.key});
@@ -31,6 +32,13 @@ class GymExerciseSettingsPage extends StatelessWidget {
             title: const Text('Preset Flow Settings'),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const PresetFlowSettingsScreen()),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.account_tree_outlined),
+            title: const Text('flowmethodspage'),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const FlowMethodsPage()),
             ),
           ),
         ],
