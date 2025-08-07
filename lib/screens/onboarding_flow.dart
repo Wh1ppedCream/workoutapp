@@ -1,6 +1,8 @@
 // File: lib/screens/onboarding_flow.dart
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../providers/onboarding_provider.dart';
 
 /// A personalized multi-step onboarding flow UI.
 /// TODO: Persist user inputs to provider/storage when integrating.
@@ -122,7 +124,8 @@ double _monthlyRatePct = 2.0;       // TODO: calculate from weekly
         curve: Curves.easeInOut,
       );
     } else {
-      // TODO: Navigate to main dashboard after onboarding
+       // mark onboarding done
+      context.read<OnboardingConfig>().markCompleted();
       Navigator.pushReplacementNamed(context, '/main');
     }
   }
@@ -131,6 +134,8 @@ double _monthlyRatePct = 2.0;       // TODO: calculate from weekly
     final pages = _getOnboardingPages();
     final lastPageIndex = pages.length - 1;
     if (_currentPage == lastPageIndex) {
+      // also mark done if they hit “Finish” via Skip button
+      context.read<OnboardingConfig>().markCompleted();
       Navigator.pushReplacementNamed(context, '/main');
     } else {
       _controller.animateToPage(

@@ -15,6 +15,7 @@ import 'screens/onboarding_flow.dart'; // New import for onboarding
 
 import 'providers/theme_provider.dart';
 import '../theme/app_colors.dart';
+import 'providers/onboarding_provider.dart';
 
 import 'providers/nav_bar_config.dart';
 import 'screens/measurement_trends_page.dart';
@@ -27,6 +28,7 @@ void main() {
   runApp(
     MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => OnboardingConfig()..init()),
         ChangeNotifierProvider(create: (_) => ActiveSession()),
         ChangeNotifierProvider(create: (_) => SelectedProfile()),
         ChangeNotifierProvider(create: (_) => DashboardConfig()),
@@ -43,8 +45,8 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<ThemeProvider>(
-      builder: (context, themeProv, _) {
+    return Consumer2<ThemeProvider, OnboardingConfig>(
+      builder: (context, themeProv, onboardingConf, _) {
         // Light theme with default AppColors
         final lightTheme = ThemeData.from(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
@@ -244,9 +246,9 @@ infoCardBackground: Color(0xFF222222),
           themeMode: themeProv.mode,
 
 
-  // TODO: Replace with conditional logic to show onboarding only once
-      home: const OnboardingFlow(),
-      // TODO: After onboarding completes, navigate to MainScreen
+      home: (onboardingConf.alwaysShow || !onboardingConf.completed)
+      ? const OnboardingFlow()
+      : const MainScreen(),
       routes: {
             '/main': (_) => const MainScreen(),
           },

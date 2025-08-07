@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/theme_provider.dart';
+import '../../../providers/onboarding_provider.dart';
 import 'nav_bar_settings_page.dart';
 
 class UIAppearanceSettingsPage extends StatelessWidget {
@@ -18,6 +19,15 @@ class UIAppearanceSettingsPage extends StatelessWidget {
             onChanged: (on) => context.read<ThemeProvider>().setMode(
                 on ? ThemeMode.dark : ThemeMode.light),
           ),
+
+          SwitchListTile(
+  title: const Text('Show Onboarding on every app launch'),
+  value: context.watch<OnboardingConfig>().alwaysShow,
+  onChanged: (on) =>
+    context.read<OnboardingConfig>().setAlwaysShow(on),
+),
+
+
           ListTile(
             leading: const Icon(Icons.edit),
             title: const Text('Edit Bottom Tabs'),

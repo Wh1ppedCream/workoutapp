@@ -1,5 +1,9 @@
 // File: lib/screens/profile/settings/flow_methods_page.dart
 
+//TODO: VERY INCOMPLETE, LOTS OF DEFAULT-RELATED STUFF NOT WORKING
+//TODO: REMOVING METHODS ALSO DOES NOT REMOVE FROM EXISTING FLOW
+//TODO: FLOW CHART SCREENS ALSO DO NOT NAVIGATE TO THIS STILL
+
 import 'package:flutter/material.dart';
 import '../../../models/preset_models.dart';
 import '../../../models/gym_models.dart';
