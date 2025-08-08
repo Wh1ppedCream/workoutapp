@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/onboarding_provider.dart';
 
+import '../../repositories/app_repository.dart';
+import '../../models/models.dart';
+
 /// A personalized multi-step onboarding flow UI.
 /// TODO: Persist user inputs to provider/storage when integrating.
 class OnboardingFlow extends StatefulWidget {
@@ -19,15 +22,15 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
 
   // ----- Onboarding fields -----
   String _name = '';
-  String _gender = 'Male';
+  String? _gender;
   DateTime? _dob;
   String _height = '';
   String _weight = '';
   bool _weighedHeavy = false;
-  String _weightTrend = 'Maintaining weight';
-  String _bodyFatEstimate = '20-25%';
+  String? _weightTrend;
+  String? _bodyFatEstimate;
   String _exerciseFrequency = '1-3 sessions';
-  String _activityLevel = 'Moderate';
+  String? _activityLevel;
   String _liftingExperience = 'No experience';
   String _cardioExperience = 'No experience';
   String _maintenanceCalories = '';
@@ -66,6 +69,46 @@ double _monthlyRatePct = 2.0;       // TODO: calculate from weekly
     _controller.dispose();
     super.dispose();
   }
+
+bool _hasAnyInput() {
+  return _name.trim().isNotEmpty ||
+         _dob != null ||
+         _height.trim().isNotEmpty ||
+         _weight.trim().isNotEmpty ||
+         (_bodyFatEstimate?.isNotEmpty ?? false) ||
+         (_weightTrend?.isNotEmpty ?? false) ||
+         (_activityLevel?.isNotEmpty ?? false) ||
+         (_gender != null);
+}
+
+
+
+Future<void> _finishOnboarding() async {
+  final repo = context.read<AppRepository>();
+
+final info = PersonalInfo(
+  name:  _name.trim().isEmpty ? null : _name.trim(),
+  gender: _gender,
+  dob:    _dob,
+  height: _height.trim().isEmpty ? null : _height.trim(),
+  weight: _weight.trim().isEmpty ? null : _weight.trim(),
+  bodyFatEstimate: _bodyFatEstimate,
+ weightTrend:     _weightTrend,
+ activityLevel:   _activityLevel,
+);
+
+// Only save if something was provided
+if (_hasAnyInput()) {
+  await repo.savePersonalInfo(info);
+}
+
+await context.read<OnboardingConfig>().markCompleted();
+if (!mounted) return;
+Navigator.pushReplacementNamed(context, '/main');
+
+}
+
+
 
   List<Widget> _getOnboardingPages() {
     final pages = <Widget>[];
@@ -124,9 +167,7 @@ double _monthlyRatePct = 2.0;       // TODO: calculate from weekly
         curve: Curves.easeInOut,
       );
     } else {
-       // mark onboarding done
-      context.read<OnboardingConfig>().markCompleted();
-      Navigator.pushReplacementNamed(context, '/main');
+      _finishOnboarding();
     }
   }
 
@@ -134,9 +175,7 @@ double _monthlyRatePct = 2.0;       // TODO: calculate from weekly
     final pages = _getOnboardingPages();
     final lastPageIndex = pages.length - 1;
     if (_currentPage == lastPageIndex) {
-      // also mark done if they hit “Finish” via Skip button
-      context.read<OnboardingConfig>().markCompleted();
-      Navigator.pushReplacementNamed(context, '/main');
+      _finishOnboarding();
     } else {
       _controller.animateToPage(
         lastPageIndex,
@@ -241,13 +280,14 @@ double _monthlyRatePct = 2.0;       // TODO: calculate from weekly
         ),
         const SizedBox(height: 16),
         const Text('Gender', style: TextStyle(fontWeight: FontWeight.bold)),
-        DropdownButton<String>(
-          value: _gender,
-          items: ['Male', 'Female']
-              .map((g) => DropdownMenuItem(value: g, child: Text(g)))
-              .toList(),
-          onChanged: (v) => setState(() => _gender = v!), // TODO
-        ),
+        DropdownButton<String?>(
+  value: _gender,
+  hint: const Text('Select gender'),
+  items: const ['Male', 'Female']
+      .map((g) => DropdownMenuItem<String?>(value: g, child: Text(g)))
+      .toList(),
+  onChanged: (v) => setState(() => _gender = v),
+),
         const SizedBox(height: 16),
         const Text('Date of birth', style: TextStyle(fontWeight: FontWeight.bold)),
         TextButton(
@@ -769,7 +809,7 @@ Widget _buildNutritionGoalPage() {
         ),
         const SizedBox(height: 12),
         Text('Name: $_name'),
-        Text('Gender: $_gender'),
+        Text('Gender: ${_gender ?? ''}'),
         Text('DOB: ${_dob?.toLocal().toString().split(' ')[0] ?? ''}'),
         const SizedBox(height: 12),
         const Text('Intends to use for:', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -781,10 +821,10 @@ Widget _buildNutritionGoalPage() {
         Text('Height: $_height'),
         Text('Weight: $_weight'),
         Text('Weighed >10lb before: ${_weighedHeavy ? 'Yes' : 'No'}'),
-        Text('Trend: $_weightTrend'),
-        Text('Bodyfat: $_bodyFatEstimate'),
+        Text('Trend: ${_weightTrend ?? ''}'),
+        Text('Bodyfat: ${_bodyFatEstimate ?? ''}'),
         Text('Exercise freq: $_exerciseFrequency'),
-        Text('Activity: $_activityLevel'),
+        Text('Activity: ${_activityLevel ?? ''}'),
         Text('Lifting exp: $_liftingExperience'),
         Text('Cardio exp: $_cardioExperience'),
         Text('Maintenance: $_maintenanceCalories'),

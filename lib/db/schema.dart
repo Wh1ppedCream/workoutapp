@@ -119,6 +119,7 @@ class Schema {
     await migrateV15(db);
     await migrateV16(db);
     await migrateV17(db);
+    await migrateV18(db);
   }
 
   /// Handler for onUpgrade callback.
@@ -139,6 +140,7 @@ class Schema {
     if (oldVersion < 15) await migrateV15(db);
     if (oldVersion < 16) await migrateV16(db);
     if (oldVersion < 17) await migrateV17(db);
+    if (oldVersion < 18) await migrateV18(db);
   }
 
   /// Migration to version 3: adds rating, equipment/muscle tables.
@@ -631,6 +633,26 @@ static Future<void> migrateV17(Database db) async {
     ''');
   });
 }
+
+/// Migration to version 18: personal_info table
+static Future<void> migrateV18(Database db) async {
+  await db.transaction((txn) async {
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS personal_info (
+        id                 INTEGER PRIMARY KEY AUTOINCREMENT,
+        name               TEXT,
+        gender             TEXT,
+        dob                TEXT,
+        height             TEXT,
+        weight             TEXT,
+        bodyfat_estimate   TEXT,
+        weight_trend       TEXT,
+        activity_level     TEXT
+      );
+    ''');
+  });
+}
+
 
 
 }

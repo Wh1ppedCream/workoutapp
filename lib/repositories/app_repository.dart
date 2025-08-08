@@ -892,4 +892,12 @@ Future<void> deleteDefaultFlowMethod({
   }
 
 
+ Future<PersonalInfo?> fetchPersonalInfo() {
+    return _dbHelper.getPersonalInfo();
+  }
+
+  Future<void> savePersonalInfo(PersonalInfo info) async {
+    await _dbHelper.upsertPersonalInfo(info);
+  }
+
 }

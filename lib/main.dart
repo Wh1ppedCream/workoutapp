@@ -23,11 +23,14 @@ import 'screens/nutrition_log_page.dart';
 import 'screens/combined_history_page.dart';
 import 'screens/form_posing_page.dart';
 
+import 'repositories/app_repository.dart';
+
 
 void main() {
   runApp(
     MultiProvider(
       providers: [
+        Provider<AppRepository>(create: (_) => AppRepository()),
         ChangeNotifierProvider(create: (_) => OnboardingConfig()..init()),
         ChangeNotifierProvider(create: (_) => ActiveSession()),
         ChangeNotifierProvider(create: (_) => SelectedProfile()),

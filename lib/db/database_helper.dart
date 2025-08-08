@@ -25,6 +25,7 @@ import '../db/preset_auto_settings_dao.dart';
 import '../db/preset_exercise_auto_dao.dart';
 import '../db/preset_set_auto_dao.dart';
 import '../db/preset_flow_methods_dao.dart';
+import '../db/personal_info_dao.dart';
 
 
 
@@ -48,7 +49,7 @@ class DatabaseHelper {
     final path = join(dbPath, 'fitness_tracker.db');
     return await openDatabase(
       path,
-      version: 17,  
+      version: 18,  
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
@@ -105,6 +106,9 @@ if (oldVersion < 12) {
     }
     if (oldVersion < 17) {
       await Schema.migrateV17(db);
+    }
+    if (oldVersion < 18) {
+      await Schema.migrateV18(db);
     }
   },
 );
@@ -2400,5 +2404,17 @@ Future<FlowDefinition> fetchDefaultFlowDefinition(
   final jsonStr = await fetchDefaultFlow(scope, profileId: profileId);
   return FlowDefinition.fromJson(jsonStr);
 }
+
+ // ── Forwarders that wrap the DAO ─────────────────────────────
+
+  Future<PersonalInfo?> getPersonalInfo() async {
+    final db = await database;
+    return PersonalInfoDao(db).get();
+  }
+
+  Future<int> upsertPersonalInfo(PersonalInfo info) async {
+    final db = await database;
+    return PersonalInfoDao(db).upsert(info);
+  }
 
 }
