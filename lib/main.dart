@@ -23,6 +23,8 @@ import 'screens/nutrition_log_page.dart';
 import 'screens/combined_history_page.dart';
 import 'screens/form_posing_page.dart';
 
+import 'providers/nutrition_profile.dart';
+
 import 'repositories/app_repository.dart';
 
 
@@ -30,6 +32,7 @@ void main() {
   runApp(
     MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => NutritionProfile()),
         Provider<AppRepository>(create: (_) => AppRepository()),
         ChangeNotifierProvider(create: (_) => OnboardingConfig()..init()),
         ChangeNotifierProvider(create: (_) => ActiveSession()),

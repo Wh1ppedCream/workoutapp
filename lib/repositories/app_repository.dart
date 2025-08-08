@@ -900,4 +900,89 @@ Future<void> deleteDefaultFlowMethod({
     await _dbHelper.upsertPersonalInfo(info);
   }
 
+
+
+  // NUTIRITOINNNNN ------------------------------------
+
+ // ─── NUTRITION: Day view ───────────────────────────────────────────────────
+  Future<DayTotals> getDayTotals(int profileId, DateTime date) =>
+      _dbHelper.getDayTotals(profileId, date);
+
+  Future<NutritionGoal?> getActiveGoals(int profileId, DateTime date) =>
+      _dbHelper.getActiveGoals(profileId, date);
+
+  Future<List<DiaryEntry>> getDiaryEntriesForDate(int profileId, DateTime date) =>
+      _dbHelper.getDiaryEntriesForDate(profileId, date);
+
+  // ─── NUTRITION: Logging ────────────────────────────────────────────────────
+  Future<int> addDiaryFood({
+    required int profileId,
+    required DateTime date,
+    required MealType mealType,
+    required int foodId,
+    int? portionId,
+    double quantity = 1.0,
+    double? gramsOverride,
+    String? notes,
+  }) => _dbHelper.addDiaryFood(
+        profileId: profileId,
+        date: date,
+        mealType: mealType,
+        foodId: foodId,
+        portionId: portionId,
+        quantity: quantity,
+        gramsOverride: gramsOverride,
+        notes: notes,
+      );
+
+  Future<int> addDiaryRecipe({
+    required int profileId,
+    required DateTime date,
+    required MealType mealType,
+    required int recipeId,
+    double quantity = 1.0,
+    String? notes,
+  }) => _dbHelper.addDiaryRecipe(
+        profileId: profileId,
+        date: date,
+        mealType: mealType,
+        recipeId: recipeId,
+        quantity: quantity,
+        notes: notes,
+      );
+
+  Future<void> updateDiaryEntry(DiaryEntry e) => _dbHelper.updateDiaryEntry(e);
+  Future<void> deleteDiaryEntry(int id, {required int profileId, required DateTime date}) =>
+      _dbHelper.deleteDiaryEntry(id, profileId: profileId, date: date);
+
+  // ─── NUTRITION: Foods & portions ───────────────────────────────────────────
+  Future<int> upsertFood(Food f) => _dbHelper.upsertFood(f);
+  Future<Food?> getFood(int id) => _dbHelper.getFood(id);
+  Future<List<Food>> searchFoods(String query, {int limit = 50}) =>
+      _dbHelper.searchFoods(query, limit: limit);
+
+  Future<int> upsertFoodPortion(FoodPortion p) => _dbHelper.upsertFoodPortion(p);
+  Future<List<FoodPortion>> getPortionsForFood(int foodId) =>
+      _dbHelper.getPortionsForFood(foodId);
+  Future<void> setDefaultPortion(int foodId, int portionId) =>
+      _dbHelper.setDefaultPortion(foodId, portionId);
+
+  Future<void> upsertFoodNutrients(int foodId, List<FoodNutrient> rows) =>
+      _dbHelper.upsertFoodNutrients(foodId, rows);
+  Future<Map<int, double>> getFoodNutrientsPer100g(int foodId) =>
+      _dbHelper.getFoodNutrientsPer100g(foodId);
+
+  // ─── NUTRITION: Recipes ────────────────────────────────────────────────────
+  Future<int> createOrUpdateRecipe(Recipe r, List<RecipeIngredient> ings) =>
+      _dbHelper.createOrUpdateRecipe(r, ings);
+  Future<Recipe?> getRecipe(int id) => _dbHelper.getRecipe(id);
+  Future<List<RecipeIngredient>> getRecipeIngredients(int recipeId) =>
+      _dbHelper.getRecipeIngredients(recipeId);
+
+  // ─── NUTRITION: Goals & cache ──────────────────────────────────────────────
+  Future<void> setGoals(NutritionGoal goal) => _dbHelper.setGoals(goal);
+  Future<void> recalcDayTotals(int profileId, DateTime date) =>
+      _dbHelper.recalcDayTotals(profileId, date);
+
+
 }

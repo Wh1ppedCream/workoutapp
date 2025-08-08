@@ -1,16 +1,24 @@
-//for logging food intake and measurements
-
 // File: lib/widgets/speed_dial_fab.dart
+// for logging food intake and measurements
 
 import 'package:flutter/material.dart';
 import '../screens/nutrition/food_logging_page.dart';
 import '../screens/nutrition/new_measurement_item_page.dart';
 
 /// A toggleable FAB that expands into two actions:
-/// • Log Food → FoodLoggingPage  
+/// • Log Food → FoodLoggingPage
 /// • Log Measurement → NewMeasurementItemPage
+///
+/// Pass [onFoodLogged] / [onMeasurementLogged] to react after a successful log.
 class SpeedDialFab extends StatefulWidget {
-  const SpeedDialFab({super.key});
+  final Future<void> Function()? onFoodLogged;
+  final Future<void> Function()? onMeasurementLogged;
+
+  const SpeedDialFab({
+    super.key,
+    this.onFoodLogged,
+    this.onMeasurementLogged,
+  });
 
   @override
   State<SpeedDialFab> createState() => _SpeedDialFabState();
@@ -33,11 +41,14 @@ class _SpeedDialFabState extends State<SpeedDialFab> {
               heroTag: 'log_food',
               icon: const Icon(Icons.restaurant),
               label: const Text('Log Food'),
-              onPressed: () {
+              onPressed: () async {
                 _toggle();
-                Navigator.of(context).push(
+                final changed = await Navigator.of(context).push<bool>(
                   MaterialPageRoute(builder: (_) => const FoodLoggingPage()),
                 );
+                if (changed == true) {
+                  await widget.onFoodLogged?.call();
+                }
               },
             ),
             const SizedBox(height: 8),
@@ -45,13 +56,16 @@ class _SpeedDialFabState extends State<SpeedDialFab> {
               heroTag: 'log_measurement',
               icon: const Icon(Icons.straighten),
               label: const Text('Log Measurement'),
-              onPressed: () {
+              onPressed: () async {
                 _toggle();
-                Navigator.of(context).push(
+                final changed = await Navigator.of(context).push<bool>(
                   MaterialPageRoute(
                     builder: (_) => const NewMeasurementItemPage(),
                   ),
                 );
+                if (changed == true) {
+                  await widget.onMeasurementLogged?.call();
+                }
               },
             ),
             const SizedBox(height: 8),

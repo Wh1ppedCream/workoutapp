@@ -17,15 +17,16 @@ import 'lookup_dao.dart';
 import 'stats_dao.dart';
 import 'analytics_dao.dart';
 import 'formula_settings_dao.dart';
-import '../db/gym_profile_dao.dart';
-import '../db/preset_definition_dao.dart';
-import '../db/preset_exercise_dao.dart';
-import '../db/preset_detail_dao.dart';
-import '../db/preset_auto_settings_dao.dart';
-import '../db/preset_exercise_auto_dao.dart';
-import '../db/preset_set_auto_dao.dart';
-import '../db/preset_flow_methods_dao.dart';
-import '../db/personal_info_dao.dart';
+import 'gym_profile_dao.dart';
+import 'preset_definition_dao.dart';
+import 'preset_exercise_dao.dart';
+import 'preset_detail_dao.dart';
+import 'preset_auto_settings_dao.dart';
+import 'preset_exercise_auto_dao.dart';
+import 'preset_set_auto_dao.dart';
+import 'preset_flow_methods_dao.dart';
+import 'personal_info_dao.dart';
+import 'nutrition_dao.dart';
 
 
 
@@ -49,7 +50,7 @@ class DatabaseHelper {
     final path = join(dbPath, 'fitness_tracker.db');
     return await openDatabase(
       path,
-      version: 18,  
+      version: 21,  
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
@@ -110,6 +111,18 @@ if (oldVersion < 12) {
     if (oldVersion < 18) {
       await Schema.migrateV18(db);
     }
+    if (oldVersion < 19) {
+      await Schema.migrateV19(db);
+  await NutritionDao(db).seedNutrientsIfEmpty(); // ✅ use raw db
+  await Seed.seedFoods(db);
+  await _rebuildFoodFtsIfExists(db);             // optional backfill
+    }
+    if (oldVersion < 20) {
+      await Schema.migrateV20(db);
+    }
+    if (oldVersion < 21) {
+      await Schema.migrateV21(db);
+    }
   },
 );
   }
@@ -124,7 +137,28 @@ if (oldVersion < 12) {
     await Seed.seedStretches(db);
     // Seed analytics defaults
     await Seed.seedAnalyticsDefaults(db);
+
+    await NutritionDao(db).seedNutrientsIfEmpty();
+  await Seed.seedFoods(db);
+  // (Optional) If FTS exists, backfill it once:
+  await _rebuildFoodFtsIfExists(db);
   }
+
+  Future<void> _rebuildFoodFtsIfExists(Database db) async {
+  final exists = (Sqflite.firstIntValue(
+    await db.rawQuery(
+      "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='food_search_fts'"
+    ),
+  ) ?? 0) > 0;
+
+  if (!exists) return;
+
+  try {
+    await db.execute("INSERT INTO food_search_fts(food_search_fts) VALUES('rebuild')");
+  } catch (_) {
+    // ignore
+  }
+}
 
   // ────────────────────────────────────────────────────────────────────────────
   // CRUD METHODS
@@ -2416,5 +2450,98 @@ Future<FlowDefinition> fetchDefaultFlowDefinition(
     final db = await database;
     return PersonalInfoDao(db).upsert(info);
   }
+
+  // NUTIRITOINNNNN ------------------------------------
+
+  Future<void> seedNutrientsIfEmpty() async {
+  final d = NutritionDao(await database);
+  await d.seedNutrientsIfEmpty();
+}
+
+// Foods & search
+Future<int> upsertFood(Food f) async => NutritionDao(await database).upsertFood(f);
+Future<Food?> getFood(int id) async => NutritionDao(await database).getFood(id);
+Future<List<Food>> searchFoods(String query, {int limit = 50}) async =>
+    NutritionDao(await database).searchFoods(query, limit: limit);
+Future<int> upsertFoodPortion(FoodPortion p) async =>
+    NutritionDao(await database).upsertFoodPortion(p);
+Future<List<FoodPortion>> getPortionsForFood(int foodId) async =>
+    NutritionDao(await database).getPortionsForFood(foodId);
+Future<void> setDefaultPortion(int foodId, int portionId) async =>
+    NutritionDao(await database).setDefaultPortion(foodId, portionId);
+
+// Nutrients
+Future<void> upsertFoodNutrients(int foodId, List<FoodNutrient> rows) async =>
+    NutritionDao(await database).upsertFoodNutrients(foodId, rows);
+Future<Map<int, double>> getFoodNutrientsPer100g(int foodId) async =>
+    NutritionDao(await database).getFoodNutrientsPer100g(foodId);
+
+// Recipes
+Future<int> createOrUpdateRecipe(Recipe r, List<RecipeIngredient> ings) async =>
+    NutritionDao(await database).createOrUpdateRecipe(r, ings);
+Future<Recipe?> getRecipe(int id) async =>
+    NutritionDao(await database).getRecipe(id);
+Future<List<RecipeIngredient>> getRecipeIngredients(int recipeId) async =>
+    NutritionDao(await database).getRecipeIngredients(recipeId);
+
+// Diary
+Future<int> addDiaryFood({
+  required int profileId,
+  required DateTime date,
+  required MealType mealType,
+  required int foodId,
+  int? portionId,
+  double quantity = 1.0,
+  double? gramsOverride,
+  String? notes,
+}) async => NutritionDao(await database).addDiaryFood(
+      profileId: profileId,
+      date: date,
+      mealType: mealType,
+      foodId: foodId,
+      portionId: portionId,
+      quantity: quantity,
+      gramsOverride: gramsOverride,
+      notes: notes,
+    );
+
+Future<int> addDiaryRecipe({
+  required int profileId,
+  required DateTime date,
+  required MealType mealType,
+  required int recipeId,
+  double quantity = 1.0,
+  String? notes,
+}) async => NutritionDao(await database).addDiaryRecipe(
+      profileId: profileId,
+      date: date,
+      mealType: mealType,
+      recipeId: recipeId,
+      quantity: quantity,
+      notes: notes,
+    );
+
+Future<void> updateDiaryEntry(DiaryEntry e) async =>
+    NutritionDao(await database).updateDiaryEntry(e);
+
+Future<void> deleteDiaryEntry(int id, {required int profileId, required DateTime date}) async =>
+    NutritionDao(await database).deleteDiaryEntry(id, profileId: profileId, date: date);
+
+Future<List<DiaryEntry>> getDiaryEntriesForDate(int profileId, DateTime date) async =>
+    NutritionDao(await database).getDiaryEntriesForDate(profileId, date);
+
+// Goals
+Future<void> setGoals(NutritionGoal goal) async =>
+    NutritionDao(await database).setGoals(goal);
+
+Future<NutritionGoal?> getActiveGoals(int profileId, DateTime date) async =>
+    NutritionDao(await database).getActiveGoals(profileId, date);
+
+// Day totals cache
+Future<DayTotals> getDayTotals(int profileId, DateTime date) async =>
+    NutritionDao(await database).getDayTotals(profileId, date);
+
+Future<void> recalcDayTotals(int profileId, DateTime date) async =>
+    NutritionDao(await database).recalcDayTotals(profileId, date);
 
 }

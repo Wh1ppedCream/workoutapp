@@ -344,4 +344,95 @@ final defId = await txn.insert(
       }
     });
   }
+
+
+/// Seeds starter foods from assets/foods.json.
+  /// Requires that the `nutrients` table be populated first
+  /// (call dbHelper.seedNutrientsIfEmpty() before this).
+  static Future<void> seedFoods(Database db) async {
+    final jsonStr = await rootBundle.loadString('assets/foods.json');
+    final List list = json.decode(jsonStr);
+
+    // Build nutrient code -> id mapping once
+    final nRows = await db.query('nutrients', columns: ['id','code']);
+    final Map<String, int> codeToId = {
+      for (final r in nRows)
+        if (r['code'] != null) (r['code'] as String): (r['id'] as int)
+    };
+
+    await db.transaction((txn) async {
+      for (final raw in list) {
+        final Map<String, dynamic> item = Map<String, dynamic>.from(raw as Map);
+
+        final name   = item['name'] as String;
+        final brand  = item['brand'] as String?;
+        final ds     = 'seed';
+        final barcode = item['barcode'] as String?;
+        final density = (item['density_g_per_ml'] as num?)?.toDouble();
+
+        // Find existing seed food by (name, brand, data_source)
+        final brandKey = brand ?? '';
+final existing = await txn.query(
+  'foods',
+  where: "name = ? AND COALESCE(brand, '') = ? AND COALESCE(data_source, '') = ?",
+  whereArgs: [name, brandKey, ds],
+  limit: 1,
+);
+
+        int foodId;
+        if (existing.isEmpty) {
+          foodId = await txn.insert('foods', {
+            'name': name,
+            'brand': brand,
+            'is_custom': 0,
+            'data_source': ds,
+            'data_source_id': null,
+            'barcode': barcode,
+            'density_g_per_ml': density,
+            'is_deleted': 0,
+            // created_at/updated_at columns have defaults
+          });
+        } else {
+          foodId = existing.first['id'] as int;
+          await txn.update('foods', {
+            'barcode': barcode,
+            'density_g_per_ml': density,
+            'updated_at': DateTime.now().toIso8601String(),
+            'is_deleted': 0,
+          }, where: 'id = ?', whereArgs: [foodId]);
+        }
+
+        // Clear and reinsert portions
+        await txn.delete('food_portions', where: 'food_id = ?', whereArgs: [foodId]);
+        final portions = (item['portions'] as List? ?? []);
+        for (final p in portions) {
+          final mp = Map<String, dynamic>.from(p as Map);
+          await txn.insert('food_portions', {
+            'food_id': foodId,
+            'measure_name': mp['measure_name'] as String,
+            'gram_weight': (mp['gram_weight'] as num?)?.toDouble(),
+            'ml_volume': (mp['ml_volume'] as num?)?.toDouble(),
+            'is_default': (mp['is_default'] == true) ? 1 : 0,
+          });
+        }
+
+        // Clear and reinsert per-100g nutrients
+        await txn.delete('food_nutrients', where: 'food_id = ?', whereArgs: [foodId]);
+        final nutrients = Map<String, dynamic>.from(item['nutrients'] as Map);
+        for (final entry in nutrients.entries) {
+          final code = entry.key;
+          final amount = (entry.value as num).toDouble();
+          final nid = codeToId[code];
+          if (nid == null) continue; // skip unknown codes
+          await txn.insert('food_nutrients', {
+            'food_id': foodId,
+            'nutrient_id': nid,
+            'amount_per_100g': amount,
+          });
+        }
+      }
+    });
+  }
+
+
 }

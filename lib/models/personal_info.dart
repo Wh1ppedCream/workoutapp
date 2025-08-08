@@ -1,3 +1,5 @@
+// lib/models/personal_info.dart
+
 class PersonalInfo {
   final int? id;
   final String? name;

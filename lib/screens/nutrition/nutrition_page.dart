@@ -1,108 +1,76 @@
 // File: lib/screens/nutrition/nutrition_page.dart
-
-// ignore_for_file: unused_local_variable, unused_element_parameter
-
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../../providers/nutrition_profile.dart';
 import '../../widgets/speed_dial_fab.dart';
 import '../../widgets/nutrition_dash.dart';
 import '../../widgets/health_trends_section.dart';
 import '../../widgets/data_records_section.dart';
 import '../../widgets/current_metrics_section.dart';
-
-
 import '../../widgets/drawers.dart';
-
-
 
 class NutritionPage extends StatelessWidget {
   const NutritionPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // TODO: replace with repo call or provider for today's date & stats
-    final today = DateTime.now();
-    final caloriesConsumed = 1200; // TODO
-    final calorieGoal = 2000;      // TODO
-
-    // TODO: wire in your real daily goals later
-final proteinTarget = 100; // grams
-final carbTarget    = 200; // grams
-final fatTarget     =  70; // grams
-
-
-    // TODO: replace with real macro values
-    final proteinGrams = 80;
-    final carbGrams = 150;
-    final fatGrams = 60;
-
-    // TODO: fetch actual meal entries for today
-    final meals = [
-      {'name': 'Breakfast', 'cal': 400, 'time': '8:00 AM'},
-      {'name': 'Lunch',     'cal': 500, 'time': '12:30 PM'},
-      {'name': 'Snack',     'cal': 300, 'time': '3:30 PM'},
-    ];
-
     return Scaffold(
-      drawer: const MainDrawer(), 
-      appBar: AppBar(title: const Text('Nutrition Dashboard'),
-      centerTitle: true,),
-      body: SingleChildScrollView(
-  child: Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-          // 1️⃣ Daily summary: date + two-line numeric tally
-Padding(
-  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-  child: Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
+      drawer: const MainDrawer(),
+      appBar: AppBar(title: const Text('Nutrition Dashboard'), centerTitle: true),
+      body: Consumer<NutritionProfile>(
+        builder: (context, p, _) {
+          if (p.isLoading && p.totals == null) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (p.error != null) {
+            return Center(child: Text('Error: ${p.error}'));
+          }
 
-// ─── Daily summary: date + two-line numeric tally ─────────────────
-NutritionDash(
-  caloriesConsumed: caloriesConsumed,
-  calorieGoal: calorieGoal,
-  proteinConsumed: proteinGrams,
-  proteinTarget: proteinTarget,
-  carbConsumed: carbGrams,
-  carbTarget: carbTarget,
-  fatConsumed: fatGrams,
-  fatTarget: fatTarget,
-),
+          final kcalGoal = (p.activeGoal?.kcalTarget ?? 0).round();
+          final proGoal  = (p.activeGoal?.proteinG   ?? 0).round();
+          final carbGoal = (p.activeGoal?.carbsG     ?? 0).round();
+          final fatGoal  = (p.activeGoal?.fatG       ?? 0).round();
 
+          final kcal = (p.totals?.kcal     ?? 0).round();
+          final pro  = (p.totals?.proteinG ?? 0).round();
+          final carb = (p.totals?.carbsG   ?? 0).round();
+          final fat  = (p.totals?.fatG     ?? 0).round();
 
-
-
-    ],
-  ),
-),
-
-
-
-
-
-
-const Divider(height: 25),
-
-// ─── Health Trends ───────────────────────────────────
-
-
- const HealthTrendsSection(),
-
-
-
-// ─── Data & Records ───────────────────────────────────
-const DataRecordsSection(),
-
-          // ─── Current Metrics ──────────────────────────────────
-           CurrentMetricsSection(),
-        ],
+          return SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: NutritionDash(
+                    caloriesConsumed: kcal,
+                    calorieGoal:      kcalGoal,
+                    proteinConsumed:  pro,
+                    proteinTarget:    proGoal,
+                    carbConsumed:     carb,
+                    carbTarget:       carbGoal,
+                    fatConsumed:      fat,
+                    fatTarget:        fatGoal,
+                  ),
+                ),
+                const Divider(height: 25),
+                const HealthTrendsSection(),
+                const DataRecordsSection(),
+                CurrentMetricsSection(),
+              ],
+            ),
+          );
+        },
       ),
-      ),
-      // 4️⃣ Add new meal
-       floatingActionButton: const SpeedDialFab(),
-
+      floatingActionButton: Consumer<NutritionProfile>(
+  builder: (context, p, _) {
+    return SpeedDialFab(
+      onFoodLogged: () async => p.reloadDay(),
+      onMeasurementLogged: () async => p.reloadDay(), // if you show weight, etc. in dash
+    );
+  },
+),
     );
   }
 }
-
-

@@ -120,6 +120,9 @@ class Schema {
     await migrateV16(db);
     await migrateV17(db);
     await migrateV18(db);
+    await migrateV19(db);
+    await migrateV20(db);
+    await migrateV21(db);
   }
 
   /// Handler for onUpgrade callback.
@@ -141,6 +144,9 @@ class Schema {
     if (oldVersion < 16) await migrateV16(db);
     if (oldVersion < 17) await migrateV17(db);
     if (oldVersion < 18) await migrateV18(db);
+    if (oldVersion < 19) await migrateV19(db);
+    if (oldVersion < 20) await migrateV20(db);
+    if (oldVersion < 21) await migrateV21(db);
   }
 
   /// Migration to version 3: adds rating, equipment/muscle tables.
@@ -652,6 +658,217 @@ static Future<void> migrateV18(Database db) async {
     ''');
   });
 }
+
+
+
+
+
+/// v19 – Nutrition core: nutrients, foods, portions, per-100g nutrients, FTS
+static Future<void> migrateV19(Database db) async {
+  await db.transaction((txn) async {
+    // 1) Nutrient master
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS nutrients (
+        id    INTEGER PRIMARY KEY,
+        code  TEXT UNIQUE,
+        name  TEXT NOT NULL,
+        unit  TEXT NOT NULL
+      );
+    ''');
+
+    // 2) Foods catalog
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS foods (
+        id                INTEGER PRIMARY KEY AUTOINCREMENT,
+        name              TEXT    NOT NULL,
+        brand             TEXT,
+        is_custom         INTEGER NOT NULL DEFAULT 0,
+        data_source       TEXT,
+        data_source_id    TEXT,
+        barcode           TEXT,
+        density_g_per_ml  REAL,
+        is_deleted        INTEGER NOT NULL DEFAULT 0,
+        created_at        TEXT    NOT NULL DEFAULT (datetime('now')),
+        updated_at        TEXT    NOT NULL DEFAULT (datetime('now'))
+      );
+    ''');
+    await txn.execute("CREATE INDEX IF NOT EXISTS idx_foods_name ON foods(name);");
+    await txn.execute("CREATE INDEX IF NOT EXISTS idx_foods_barcode ON foods(barcode);");
+
+    // 3) Portion options per food
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS food_portions (
+        id            INTEGER PRIMARY KEY AUTOINCREMENT,
+        food_id       INTEGER NOT NULL,
+        measure_name  TEXT    NOT NULL,
+        gram_weight   REAL,
+        ml_volume     REAL,
+        is_default    INTEGER NOT NULL DEFAULT 0,
+        FOREIGN KEY(food_id) REFERENCES foods(id) ON DELETE CASCADE
+      );
+    ''');
+    await txn.execute("CREATE INDEX IF NOT EXISTS idx_food_portions_food ON food_portions(food_id);");
+
+    // 4) Per-100g nutrient amounts for each food
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS food_nutrients (
+        id           INTEGER PRIMARY KEY AUTOINCREMENT,
+        food_id      INTEGER NOT NULL,
+        nutrient_id  INTEGER NOT NULL,
+        amount_per_100g REAL NOT NULL,
+        UNIQUE(food_id, nutrient_id),
+        FOREIGN KEY(food_id)     REFERENCES foods(id)     ON DELETE CASCADE,
+        FOREIGN KEY(nutrient_id) REFERENCES nutrients(id) ON DELETE RESTRICT
+      );
+    ''');
+    await txn.execute("CREATE INDEX IF NOT EXISTS idx_food_nutrients_food ON food_nutrients(food_id);");
+    await txn.execute("CREATE INDEX IF NOT EXISTS idx_food_nutrients_nutr ON food_nutrients(nutrient_id);");
+
+    // Try to create FTS5 outside the transaction, only if supported.
+  try {
+    final opts = await txn.rawQuery('PRAGMA compile_options;'); // ✅ use txn
+    final hasFts5 = opts.any((row) => row.values.first.toString().toUpperCase().contains('FTS5'));
+    if (hasFts5) {
+      await txn.execute('''
+        CREATE VIRTUAL TABLE IF NOT EXISTS food_search_fts
+        USING fts5(name, brand, content='foods', content_rowid='id');
+      ''');
+      await txn.execute('''
+        CREATE TRIGGER IF NOT EXISTS foods_ai AFTER INSERT ON foods BEGIN
+          INSERT INTO food_search_fts(rowid, name, brand)
+          VALUES (new.id, new.name, new.brand);
+        END;
+      ''');
+      await txn.execute('''
+        CREATE TRIGGER IF NOT EXISTS foods_ad AFTER DELETE ON foods BEGIN
+          INSERT INTO food_search_fts(food_search_fts, rowid, name, brand)
+          VALUES('delete', old.id, old.name, old.brand);
+        END;
+      ''');
+      await txn.execute('''
+        CREATE TRIGGER IF NOT EXISTS foods_au AFTER UPDATE ON foods BEGIN
+          INSERT INTO food_search_fts(food_search_fts, rowid, name, brand)
+          VALUES('delete', old.id, old.name, old.brand);
+          INSERT INTO food_search_fts(rowid, name, brand)
+          VALUES (new.id, new.name, new.brand);
+        END;
+      ''');
+    }
+  } catch (_) {
+    // Silently skip; DAO already falls back to LIKE search.
+  }
+});
+}
+
+/// v20 – Recipes & diary
+static Future<void> migrateV20(Database db) async {
+  await db.transaction((txn) async {
+    // 1) Recipes
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS recipes (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        name        TEXT    NOT NULL,
+        notes       TEXT,
+        is_custom   INTEGER NOT NULL DEFAULT 1,
+        is_deleted  INTEGER NOT NULL DEFAULT 0,
+        created_at  TEXT    NOT NULL DEFAULT (datetime('now')),
+        updated_at  TEXT    NOT NULL DEFAULT (datetime('now'))
+      );
+    ''');
+
+    // 2) Recipe ingredients
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS recipe_ingredients (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        recipe_id   INTEGER NOT NULL,
+        food_id     INTEGER NOT NULL,
+        portion_id  INTEGER,      -- optional (when used, client should also persist 'grams')
+        quantity    REAL,         -- optional count of portions
+        grams       REAL,         -- resolved mass; prefer filling this on insert
+        FOREIGN KEY(recipe_id)  REFERENCES recipes(id)       ON DELETE CASCADE,
+        FOREIGN KEY(food_id)    REFERENCES foods(id)         ON DELETE RESTRICT,
+        FOREIGN KEY(portion_id) REFERENCES food_portions(id) ON DELETE SET NULL
+      );
+    ''');
+    await txn.execute("CREATE INDEX IF NOT EXISTS idx_recipe_ing_recipe ON recipe_ingredients(recipe_id);");
+
+    // 3) Food diary (per profile)
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS diary_entries (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        profile_id  INTEGER NOT NULL,
+        date        TEXT    NOT NULL,   -- 'YYYY-MM-DD' in local tz
+        meal_type   INTEGER NOT NULL,   -- 0=breakfast,1=lunch,2=dinner,3=snack
+        food_id     INTEGER,
+        recipe_id   INTEGER,
+        portion_id  INTEGER,
+        quantity    REAL    NOT NULL DEFAULT 1.0,
+        grams       REAL,               -- resolved mass at insert time (stable)
+        notes       TEXT,
+        FOREIGN KEY(profile_id) REFERENCES gym_profiles(id)  ON DELETE CASCADE,
+        FOREIGN KEY(food_id)    REFERENCES foods(id)         ON DELETE RESTRICT,
+        FOREIGN KEY(recipe_id)  REFERENCES recipes(id)       ON DELETE RESTRICT,
+        FOREIGN KEY(portion_id) REFERENCES food_portions(id) ON DELETE SET NULL
+      );
+    ''');
+    await txn.execute('''
+      CREATE INDEX IF NOT EXISTS idx_diary_profile_date ON diary_entries(profile_id, date);
+    ''');
+  });
+}
+
+/// v21 – Goals, day totals cache, usage stats
+static Future<void> migrateV21(Database db) async {
+  await db.transaction((txn) async {
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS nutrition_goals (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        profile_id  INTEGER NOT NULL,
+        start_date  TEXT    NOT NULL,
+        end_date    TEXT,
+        kcal_target REAL,
+        protein_g   REAL,
+        fat_g       REAL,
+        carbs_g     REAL,
+        fiber_g     REAL,
+        sugar_g     REAL,
+        sat_fat_g   REAL,
+        sodium_mg   REAL,
+        FOREIGN KEY(profile_id) REFERENCES gym_profiles(id) ON DELETE CASCADE
+      );
+    ''');
+
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS day_totals_cache (
+        profile_id  INTEGER NOT NULL,
+        date        TEXT    NOT NULL,
+        kcal        REAL DEFAULT 0,
+        protein_g   REAL DEFAULT 0,
+        fat_g       REAL DEFAULT 0,
+        carbs_g     REAL DEFAULT 0,
+        fiber_g     REAL DEFAULT 0,
+        sugar_g     REAL DEFAULT 0,
+        sat_fat_g   REAL DEFAULT 0,
+        sodium_mg   REAL DEFAULT 0,
+        PRIMARY KEY(profile_id, date),
+        FOREIGN KEY(profile_id) REFERENCES gym_profiles(id) ON DELETE CASCADE
+      );
+    ''');
+
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS food_usage_stats (
+        profile_id INTEGER NOT NULL,
+        food_id    INTEGER NOT NULL,
+        hits       INTEGER NOT NULL DEFAULT 0,
+        last_used  TEXT,
+        PRIMARY KEY(profile_id, food_id),
+        FOREIGN KEY(profile_id) REFERENCES gym_profiles(id) ON DELETE CASCADE,
+        FOREIGN KEY(food_id)    REFERENCES foods(id)        ON DELETE RESTRICT
+      );
+    ''');
+  });
+}
+
 
 
 
