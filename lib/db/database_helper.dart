@@ -2476,6 +2476,10 @@ Future<void> upsertFoodNutrients(int foodId, List<FoodNutrient> rows) async =>
 Future<Map<int, double>> getFoodNutrientsPer100g(int foodId) async =>
     NutritionDao(await database).getFoodNutrientsPer100g(foodId);
 
+Future<Map<String, double>> getFoodNutrientsPer100gByCode(int foodId) async {
+  return NutritionDao(await database).getFoodNutrientsPer100gByCode(foodId);
+}
+
 // Recipes
 Future<int> createOrUpdateRecipe(Recipe r, List<RecipeIngredient> ings) async =>
     NutritionDao(await database).createOrUpdateRecipe(r, ings);

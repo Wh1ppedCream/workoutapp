@@ -1,8 +1,6 @@
 // File: lib/screens/nutrition/food_logging_page.dart
 
-//TODO: FIX ADDING (SO CAN DO MULTIPLE AND LOOKS RIGHT)
-//TODO: FIX FOOD ITEMS SO THEY SHOW MORE INFO AND CAN BE ADDED INSTANTLY WITH SHOWN SERVING SIZE OR ADDED WITH CUSTOM CHANGES MADE
-// TODO: FIX FOODS SO THEY HAVE ALL THE CORRECT FIELDS AND CUSTOM FOOD ADDING WORKS PROPERLY AND HAS ALL INFO AND EVERYTHING
+
 
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -30,7 +28,71 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
   bool _searching = false;
   List<Food> _results = [];
 
+  
+
   AppRepository get _repo => AppRepository();
+
+  final Map<int, Future<_MacroPreview>> _previewFuture = {};
+
+Future<_MacroPreview> _loadPreview(Food f) async {
+  if (f.id == null) return _MacroPreview.empty('—');
+
+  // 1) choose portion (default → first → 100 g fallback)
+  final portions = await _repo.getPortionsForFood(f.id!);
+  FoodPortion? portion;
+  if (portions.isEmpty) {
+    portion = null;                              // we'll fallback to 100 g below
+  } else {
+    portion = portions.firstWhere(
+      (p) => p.isDefault,
+      orElse: () => portions.first,             // safe; list not empty here
+    );
+  }
+
+  // fallback virtual "100 g"
+  portion ??= FoodPortion(
+    id: null,
+    foodId: f.id!,
+    measureName: '100 g',
+    gramWeight: 100,
+    mlVolume: null,
+    isDefault: true,
+  );
+
+  // 2) resolve grams for 1 portion
+  double? grams = portion.gramWeight;
+  if (grams == null && portion.mlVolume != null && f.densityGPerMl != null) {
+    grams = portion.mlVolume! * f.densityGPerMl!;
+  }
+
+  // 3) fetch nutrients per 100g
+  // 3) fetch nutrients per 100g (code-keyed map)
+final per100 = await _repo.getFoodNutrientsPer100gByCode(f.id!);
+final double? p100 = per100['PROTEIN'];
+final double? f100 = per100['FAT'];
+final double? c100 = per100['CARB'];
+  // 4) scale to the chosen portion (default to 100g if grams unknown)
+  final g = (grams ?? 100).toDouble();
+  final scale = g / 100.0;
+
+  int? pG = p100 == null ? null : (p100 * scale).round();
+  int? fG = f100 == null ? null : (f100 * scale).round();
+  int? cG = c100 == null ? null : (c100 * scale).round();
+
+  return _MacroPreview(
+    proteinG: pG,
+    fatG: fG,
+    carbG: cG,
+    portionLabel: portion.measureName,
+  );
+}
+
+String _fmtInt(int? v) => v == null ? '--' : v.toString();
+
+/// Compose like: "23P 8F 0C • 1 cutlet"
+String _macroLine(_MacroPreview m) =>
+    '${_fmtInt(m.proteinG)}P ${_fmtInt(m.fatG)}F ${_fmtInt(m.carbG)}C • ${m.portionLabel}';
+
 
   @override
   void initState() {
@@ -44,6 +106,7 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
     _searchCtrl.dispose();
     super.dispose();
   }
+  
 
   void _kickoffSearch(String q) {
     _debounce?.cancel();
@@ -170,11 +233,19 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
       separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (context, i) {
         final f = _results[i];
-        final subtitle = (f.brand?.isNotEmpty ?? false) ? f.brand! : 'Generic';
         return Card(
           child: ListTile(
             title: Text(f.name),
-            subtitle: Text(subtitle),
+            subtitle: FutureBuilder<_MacroPreview>(
+              future: _previewFuture[f.id!] ??= _loadPreview(f),
+              builder: (context, snap) {
+                if (snap.connectionState != ConnectionState.done) {
+                  return const Text('—'); // tiny placeholder while loading
+                }
+                final m = snap.data!;
+                return Text(_macroLine(m));
+              },
+            ),
             trailing: IconButton(
               icon: const Icon(Icons.add_circle_outline),
               onPressed: () => _openAddSheet(context, f),
@@ -342,10 +413,10 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                                   : null,
                             );
 
-                            if (mounted) {
-                              Navigator.pop(ctx);          // close sheet
-                              Navigator.pop(context, true); // return success to FAB/page
-                            }
+                            if (!mounted || !(ctx.mounted)) return;   // guard both contexts
+  Navigator.pop(ctx);                       // close sheet
+  Navigator.pop(context, true);             // notify caller
+
                           },
                         ),
                       ),
@@ -358,6 +429,7 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
         );
       },
     );
+
   }
 }
 
@@ -384,4 +456,15 @@ class _StatCard extends StatelessWidget {
       ),
     );
   }
+}
+
+
+class _MacroPreview {
+  final int? proteinG;
+  final int? fatG;
+  final int? carbG;
+  final String portionLabel;
+  _MacroPreview({this.proteinG, this.fatG, this.carbG, required this.portionLabel});
+  factory _MacroPreview.empty(String label) =>
+      _MacroPreview(proteinG: null, fatG: null, carbG: null, portionLabel: label);
 }

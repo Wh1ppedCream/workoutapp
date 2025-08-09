@@ -153,6 +153,25 @@ class NutritionDao {
     return map;
   }
 
+  // keep your existing int-keyed method if you want; add this alongside it
+Future<Map<String, double>> getFoodNutrientsPer100gByCode(int foodId) async {
+  final rows = await db.rawQuery('''
+    SELECT n.code, fn.amount_per_100g
+    FROM food_nutrients fn
+    JOIN nutrients n ON n.id = fn.nutrient_id
+    WHERE fn.food_id = ?
+  ''', [foodId]);
+
+  final out = <String, double>{};
+  for (final r in rows) {
+    final code = r['code'] as String?;
+    final amt  = r['amount_per_100g'] as num?;
+    if (code != null && amt != null) out[code] = amt.toDouble();
+  }
+  return out;
+}
+
+
   // ───────────────────────────────────────────────────────────────────────────
   // RECIPES
   // ───────────────────────────────────────────────────────────────────────────

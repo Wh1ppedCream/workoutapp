@@ -972,6 +972,10 @@ Future<void> deleteDefaultFlowMethod({
   Future<Map<int, double>> getFoodNutrientsPer100g(int foodId) =>
       _dbHelper.getFoodNutrientsPer100g(foodId);
 
+  Future<Map<String, double>> getFoodNutrientsPer100gByCode(int foodId) =>
+      _dbHelper.getFoodNutrientsPer100gByCode(foodId);
+
+
   // ─── NUTRITION: Recipes ────────────────────────────────────────────────────
   Future<int> createOrUpdateRecipe(Recipe r, List<RecipeIngredient> ings) =>
       _dbHelper.createOrUpdateRecipe(r, ings);
