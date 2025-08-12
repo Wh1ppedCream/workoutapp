@@ -22,9 +22,31 @@ String _toYMD(DateTime d) {
   return '$y-$m-$da';
 }
 
+
 class NutritionDao {
   final Database db;
   NutritionDao(this.db);
+
+  // Put near top of NutritionDao (outside methods)
+static const Map<String, String> _CODE_SYNONYMS = {
+  // Calories
+  'KCAL': 'ENERGY_KCAL',
+  'CALORIES': 'ENERGY_KCAL',        // if it ever shows up as a code
+  // Macros
+  'PROTEIN_G': 'PROTEIN',
+  'CARB_G': 'CARB',
+  'FAT_G': 'FAT',
+  // Common extended -> canonical
+  'SUGARS_TOTAL_G': 'SUGARS',
+  'FA_SAT_G': 'FASAT',
+  'SODIUM_MG': 'SODIUM',
+};
+
+String _canonCode(String code) {
+  final up = code.toUpperCase();
+  return _CODE_SYNONYMS[up] ?? up;
+}
+
 
   // ───────────────────────────────────────────────────────────────────────────
   // SEEDING
@@ -148,13 +170,30 @@ class NutritionDao {
   }
 
   Future<Map<int, double>> getFoodNutrientsPer100g(int foodId) async {
-    final rows = await db.query('food_nutrients', where: 'food_id = ?', whereArgs: [foodId]);
-    final map = <int, double>{};
-    for (final r in rows) {
-      map[r['nutrient_id'] as int] = (r['amount_per_100g'] as num).toDouble();
+  // Prefer v22 flexible table
+  final v22 = await db.query(
+    'food_nutrient_values',
+    columns: ['nutrient_id', 'amount'],
+    where: 'food_id = ? AND basis = ?',
+    whereArgs: [foodId, 'per_100g'],
+  );
+  if (v22.isNotEmpty) {
+    final m = <int, double>{};
+    for (final r in v22) {
+      m[r['nutrient_id'] as int] = (r['amount'] as num).toDouble();
     }
-    return map;
+    return m;
   }
+
+  // Fallback to legacy table
+  final rows = await db.query('food_nutrients', where: 'food_id = ?', whereArgs: [foodId]);
+  final map = <int, double>{};
+  for (final r in rows) {
+    map[r['nutrient_id'] as int] = (r['amount_per_100g'] as num).toDouble();
+  }
+  return map;
+}
+
 
   // keep your existing int-keyed method if you want; add this alongside it
 Future<Map<String, double>> getFoodNutrientsPer100gByCode(int foodId) async {
@@ -167,10 +206,13 @@ Future<Map<String, double>> getFoodNutrientsPer100gByCode(int foodId) async {
     ''', [foodId]);
 
     if (rows.isNotEmpty) {
-      return {
-        for (final r in rows) (r['code'] as String): (r['amount'] as num).toDouble(),
-      };
+    final out = <String, double>{};
+    for (final r in rows) {
+      final code = _canonCode(r['code'] as String);
+      out[code] = (r['amount'] as num).toDouble();
     }
+    return out;
+  }
 
     // Fallback to legacy per_100g table (if any)
     final legacy = await db.rawQuery('''
@@ -180,9 +222,12 @@ Future<Map<String, double>> getFoodNutrientsPer100gByCode(int foodId) async {
       WHERE fn.food_id = ?
     ''', [foodId]);
 
-    return {
-      for (final r in legacy) (r['code'] as String): (r['amount'] as num).toDouble(),
-    };
+    final out = <String, double>{};
+  for (final r in legacy) {
+    final code = _canonCode(r['code'] as String);
+    out[code] = (r['amount'] as num).toDouble();
+  }
+  return out;
   }
 
 
@@ -432,37 +477,36 @@ Future<Map<String, double>> getFoodNutrientsPer100gByCode(int foodId) async {
   }
 
   Future<double?> _resolveFoodGrams(int foodId, int? portionId, double quantity) async {
-    if (portionId == null) return null;
-    final rows = await db.query('food_portions', where: 'id = ?', whereArgs: [portionId], limit: 1);
-    if (rows.isEmpty) return null;
-    final p = FoodPortion.fromMap(rows.first);
-    if (p.gramWeight != null) return p.gramWeight! * quantity;
+  if (portionId == null) return null;
+  final rows = await db.query('food_portions', where: 'id = ?', whereArgs: [portionId], limit: 1);
+  if (rows.isEmpty) return null;
+  final p = FoodPortion.fromMap(rows.first);
+  if (p.gramWeight != null) return p.gramWeight! * quantity;
 
-    // try ml → g using density
-    if (p.mlVolume != null) {
-      final food = await getFood(foodId);
-      if (food?.densityGPerMl != null) {
-        return p.mlVolume! * quantity * food!.densityGPerMl!;
-      }
-    }
-    return null;
+  if (p.mlVolume != null) {
+    final food = await getFood(foodId);
+    final density = food?.densityGPerMl ?? 1.0; // TODO: use real density when available
+    return p.mlVolume! * quantity * density;
   }
+  return null;
+}
 
   Future<double?> _resolveIngredientGrams(RecipeIngredient ing) async {
-    if ( ing.grams != null ) return ing.grams;
-    if ( ing.portionId != null && ing.quantity != null ) {
-      final rows = await db.query('food_portions', where: 'id = ?', whereArgs: [ing.portionId], limit: 1);
-      if (rows.isNotEmpty) {
-        final p = FoodPortion.fromMap(rows.first);
-        if (p.gramWeight != null) return p.gramWeight! * ing.quantity!;
-        if (p.mlVolume != null) {
-          final food = await getFood(ing.foodId);
-          if (food?.densityGPerMl != null) return p.mlVolume! * ing.quantity! * food!.densityGPerMl!;
-        }
+  if (ing.grams != null) return ing.grams;
+  if (ing.portionId != null && ing.quantity != null) {
+    final rows = await db.query('food_portions', where: 'id = ?', whereArgs: [ing.portionId], limit: 1);
+    if (rows.isNotEmpty) {
+      final p = FoodPortion.fromMap(rows.first);
+      if (p.gramWeight != null) return p.gramWeight! * ing.quantity!;
+      if (p.mlVolume != null) {
+        final food = await getFood(ing.foodId);
+        final density = food?.densityGPerMl ?? 1.0; // TODO: use real density when available
+        return p.mlVolume! * ing.quantity! * density;
       }
     }
-    return null;
   }
+  return null;
+}
 
   Future<void> _bumpFoodUsage(int profileId, int foodId) async {
     final now = DateTime.now().toIso8601String();
@@ -512,33 +556,33 @@ Future<Map<String, double>> getFoodNutrientsPer100gByCode(int foodId) async {
 
   // --- UPSERT per-100g by code into v22 table ------------------------------
   Future<void> replacePer100gByCode(int foodId, Map<String, double> codeToAmount) async {
-    if (codeToAmount.isEmpty) return;
-    final c2i = await _codeToId(codeToAmount.keys.toSet());
-    await db.transaction((txn) async {
-      // wipe existing per_100g rows for this food
-      await txn.delete(
-        'food_nutrient_values',
-        where: 'food_id = ? AND basis = ?',
-        whereArgs: [foodId, 'per_100g'],
-      );
+  if (codeToAmount.isEmpty) return;
 
-      // insert fresh
-      for (final e in codeToAmount.entries) {
-        final nid = c2i[e.key];
-        if (nid == null) continue; // skip unknown codes
-        await txn.insert(
-          'food_nutrient_values',
-          {
-            'food_id': foodId,
-            'nutrient_id': nid,
-            'amount': e.value,
-            'basis': 'per_100g',
-          },
-          conflictAlgorithm: ConflictAlgorithm.ignore,
-        );
-      }
-    });
-  }
+  // normalize incoming keys first
+  final normalized = <String, double>{};
+  codeToAmount.forEach((k, v) => normalized[_canonCode(k)] = v);
+
+  final c2i = await _codeToId(normalized.keys.toSet());
+  await db.transaction((txn) async {
+    await txn.delete(
+      'food_nutrient_values',
+      where: 'food_id = ? AND basis = ?',
+      whereArgs: [foodId, 'per_100g'],
+    );
+
+    for (final e in normalized.entries) {      // ← use normalized
+      final nid = c2i[e.key];
+      if (nid == null) continue;
+      await txn.insert('food_nutrient_values', {
+        'food_id': foodId,
+        'nutrient_id': nid,
+        'amount': e.value,
+        'basis': 'per_100g',
+      }, conflictAlgorithm: ConflictAlgorithm.ignore);
+    }
+  });
+}
+
 
   // Utility: normalize a UI label like "Vitamin C (mg)" → "vitamin c"
 String _normalizeLabel(String s) {
@@ -584,10 +628,11 @@ Future<Map<String, String>> _buildAliasToCodeMap(Database db) async {
   }
 
   // A few hard defaults that are common in our UI
-  map.putIfAbsent('calories', () => 'KCAL');
+  map.putIfAbsent('calories', () => 'ENERGY_KCAL'); // ← canonical
   map.putIfAbsent('protein',  () => 'PROTEIN');
   map.putIfAbsent('carbs',    () => 'CARB');
   map.putIfAbsent('fats',     () => 'FAT');
+
 
   return map;
 }
@@ -622,13 +667,14 @@ Future<Map<String, double>> mapLabelsToCodes(Database db, Map<String, dynamic> l
 /// This will wipe old per_100g values and replace them with the new set.
 Future<void> savePer100gFromLabelPayload(int foodId, Map<String, dynamic> payload) async {
   // Step 1: pull top-level fields (the simple ones you already show at the top)
-  final base = <String, double>{};
+    final base = <String, double>{};
   double nums(dynamic x) => (x is num) ? x.toDouble() : double.tryParse('$x') ?? 0.0;
 
-  if (payload.containsKey('calories'))  base['KCAL']    = nums(payload['calories']);
-  if (payload.containsKey('protein_g')) base['PROTEIN'] = nums(payload['protein_g']);
-  if (payload.containsKey('carbs_g'))   base['CARB']    = nums(payload['carbs_g']);
-  if (payload.containsKey('fats_g'))    base['FAT']     = nums(payload['fats_g']);
+  if (payload.containsKey('calories'))  base['ENERGY_KCAL'] = nums(payload['calories']); // ← single canonical
+  if (payload.containsKey('protein_g')) base['PROTEIN']     = nums(payload['protein_g']);
+  if (payload.containsKey('carbs_g'))   base['CARB']        = nums(payload['carbs_g']);
+  if (payload.containsKey('fats_g'))    base['FAT']         = nums(payload['fats_g']);
+
 
   // Step 2: convert the rest of the form fields via alias mapping
   // Strip out known meta keys so we only feed nutrient-ish keys into the mapper.
@@ -639,10 +685,18 @@ Future<void> savePer100gFromLabelPayload(int foodId, Map<String, dynamic> payloa
 
   final mapped = await mapLabelsToCodes(db, copy);
 
+  // Canonicalize all codes in one place
+  final mappedNorm = {
+    for (final e in mapped.entries) _canonCode(e.key): e.value,
+  };
+  final baseNorm = {
+    for (final e in base.entries) _canonCode(e.key): e.value,
+  };
+
   // Merge (explicit base wins if there’s conflict)
-  final codeToAmount = <String, double>{}
-    ..addAll(mapped)
-    ..addAll(base);
+  final codeToAmount = <String,double>{}
+    ..addAll(mappedNorm)   // mapped first
+    ..addAll(baseNorm);    // base wins on conflict
 
   // Persist using your v22 table
   await replacePer100gByCode(foodId, codeToAmount);

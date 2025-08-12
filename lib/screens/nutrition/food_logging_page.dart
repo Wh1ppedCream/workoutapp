@@ -12,6 +12,40 @@ import '../../providers/nutrition_profile.dart';
 
 import 'food_customization_page.dart';
 
+class _PlateItem {
+  final Food food;
+  final int? portionId;
+  final String portionLabel;
+  final double quantity;
+  final double? gramsPerPortion; // precomputed (for qty=1)
+  final double? gramsOverride;   // used for virtual “100 g” fallback
+  final MealType meal;
+
+  const _PlateItem({
+    required this.food,
+    required this.portionId,
+    required this.portionLabel,
+    required this.quantity,
+    required this.gramsPerPortion,
+    required this.gramsOverride,
+    required this.meal,
+  });
+
+  double? get gramsTotal {
+    if (gramsOverride != null) return gramsOverride;
+    if (gramsPerPortion != null) return gramsPerPortion! * quantity;
+    return null; // will fallback to 100 g during summary calc
+  }
+}
+
+class _PlateSummary {
+  final int kcal, p, f, c;
+  const _PlateSummary(this.kcal, this.p, this.f, this.c);
+}
+
+final List<_PlateItem> _plate = [];
+
+
 class FoodLoggingPage extends StatefulWidget {
   const FoodLoggingPage({super.key});
 
@@ -33,6 +67,8 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
   AppRepository get _repo => AppRepository();
 
   final Map<int, Future<_MacroPreview>> _previewFuture = {};
+
+  
 
 Future<_MacroPreview> _loadPreview(Food f) async {
   if (f.id == null) return _MacroPreview.empty('—');
@@ -145,7 +181,125 @@ String _macroLine(_MacroPreview m) =>
     final carbTgt = (p.activeGoal?.carbsG ?? 0).round();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Food Logging')),
+      appBar: AppBar(
+  title: const Text('Food Logging'),
+  actions: [
+  if (_plate.isNotEmpty)
+    Builder(
+      builder: (ctx) => FutureBuilder<_PlateSummary>(
+        future: _computePlateSummary(),
+        builder: (context, snap) {
+          final s = snap.data;
+          final top = s == null ? '… kcal' : '${s.kcal} kcal';
+          final bottom = s == null ? '…P …F …C' : '${s.p}P ${s.f}F ${s.c}C';
+
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: InkWell(
+              onTap: () => Scaffold.of(ctx).openEndDrawer(),
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), // was 6
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.green),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                // Keep content within the toolbar height and scale down if needed.
+                child: SizedBox(
+                  height: kToolbarHeight - 12, // give a tiny breathing room
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(top, style: Theme.of(context).textTheme.bodyMedium),
+                        const SizedBox(height: 2),
+                        Text(bottom, style: Theme.of(context).textTheme.labelSmall),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    ),
+],
+
+),
+      endDrawer: Drawer(
+  child: SafeArea(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+          child: FutureBuilder<_PlateSummary>(
+            future: _computePlateSummary(),
+            builder: (context, snap) {
+              final s = snap.data;
+              final title = s == null ? 'Plate' : 'Plate • ${s.kcal} kcal  •  ${s.p}P ${s.f}F ${s.c}C';
+              return Text(title, style: Theme.of(context).textTheme.titleMedium);
+            },
+          ),
+        ),
+        const Divider(height: 1),
+
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.all(8),
+            itemCount: _plate.length,
+            itemBuilder: (_, i) {
+              final it = _plate[i];
+              return Card(
+                child: ListTile(
+                  title: Text(it.food.name),
+                  subtitle: Text('${it.quantity} × ${it.portionLabel}'),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete_outline),
+                    onPressed: () => setState(() => _plate.removeAt(i)),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+
+        Padding(
+          padding: const EdgeInsets.all(12),
+          child: ElevatedButton.icon(
+            icon: const Icon(Icons.check),
+            label: Text(_plate.isEmpty ? 'Log' : 'Log ${_plate.length}'),
+            onPressed: () async {
+              if (_plate.isEmpty) {
+                Navigator.of(context).maybePop(); // just close drawer
+                return;
+              }
+              final profile = context.read<NutritionProfile>();
+              for (final it in _plate) {
+                await profile.addFood(
+                  meal: it.meal,
+                  foodId: it.food.id!,
+                  portionId: it.portionId,
+                  quantity: it.quantity,
+                  gramsOverride: it.gramsOverride, // grams-per-portion is resolved inside DAO if needed
+                );
+              }
+              if (!mounted) return;
+              setState(() => _plate.clear());
+              Navigator.of(context).pop();      // close drawer
+              Navigator.of(context).pop(true);  // leave page
+            },
+          ),
+        ),
+      ],
+    ),
+  ),
+),
+
       body: Column(
         children: [
           // ─── Top stats row (live from provider) ────────────────────────────
@@ -217,9 +371,36 @@ String _macroLine(_MacroPreview m) =>
                 ),
                 const SizedBox(width: 8),
                 ElevatedButton(
-                  onPressed: () => Navigator.of(context).pop(false),
-                  child: const Text('Done'),
-                ),
+  onPressed: () async {
+    final profile = context.read<NutritionProfile>();
+
+    if (_plate.isEmpty) {
+      Navigator.of(context).pop(false);
+      return;
+    }
+
+    // Add all queued items
+    for (final it in _plate) {
+      await profile.addFood(
+        meal: it.meal,
+        foodId: it.food.id!,
+        portionId: it.portionId,
+        quantity: it.quantity,
+        gramsOverride: it.gramsOverride,
+      );
+    }
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Logged ${_plate.length} item${_plate.length == 1 ? "" : "s"}')),
+    );
+
+    setState(() => _plate.clear());
+    Navigator.of(context).pop(true); // leave the page
+  },
+  child: Text(_plate.isEmpty ? 'Done' : 'Log ${_plate.length}'),
+),
+
               ],
             ),
           ),
@@ -526,50 +707,42 @@ Future<void> _saveCustomFoodFromPayload(Map payload) async {
                       const SizedBox(width: 8),
                       Expanded(
                         child: ElevatedButton.icon(
-                          icon: const Icon(Icons.check),
-                          label: const Text('Add to Diary'),
-                          onPressed: () async {
-                            final profile = context.read<NutritionProfile>();
-                            if (profile.current?.id == null) return;
+  icon: const Icon(Icons.add_shopping_cart),
+  label: const Text('Add to Plate'),
+  onPressed: () async {
+  final portionId = selected?.id;
 
-                            final portionId = selected?.id; // may be null for the "100 g" fallback
-                            double? gramsOverride;
-
-  if (portionId == null) {
-    // Virtual fallback portion (e.g., "100 g")
-    if (selected?.gramWeight != null) {
-      gramsOverride = selected!.gramWeight! * qty;
-    } else if (selected?.mlVolume != null) {
-      // TODO(density): fallback to 1 g/mL until a real density is provided
-      final density = food.densityGPerMl ?? 1.0;
-      gramsOverride = selected!.mlVolume! * density * qty;
-    }
-  } else {
-    // Real portion in DB. If it has no gramWeight and the food has no density,
-    // DAO can't resolve; compute here using 1 g/mL so totals still work.
-    if (selected?.gramWeight == null &&
-        selected?.mlVolume != null &&
-        food.densityGPerMl == null) {
-      // TODO(density): fallback to 1 g/mL until a real density is provided
-      gramsOverride = selected!.mlVolume! * 1.0 * qty;
-    }
+  // grams for ONE portion
+  double? gramsPerPortion = selected?.gramWeight;
+  if (gramsPerPortion == null && selected?.mlVolume != null) {
+    final density = food.densityGPerMl ?? 1.0; // TODO: use real density when available
+    gramsPerPortion = selected!.mlVolume! * density;
   }
 
+  // If we’re using the virtual “100 g” fallback, keep gramsOverride
+  final double? gramsOverride = (portionId == null && selected?.gramWeight != null)
+      ? selected!.gramWeight! * qty
+      : null;
 
-                             await profile.addFood(
-    meal: meal,
-    foodId: food.id!,
-    portionId: portionId,
-    quantity: qty,
-    gramsOverride: gramsOverride,
-  );
+  setState(() {
+    _plate.add(_PlateItem(
+      food: food,
+      portionId: portionId,
+      portionLabel: selected?.measureName ?? '100 g',
+      quantity: qty,
+      gramsPerPortion: gramsPerPortion,
+      gramsOverride: gramsOverride,
+      meal: meal,
+    ));
+  });
 
-                            if (!mounted || !(ctx.mounted)) return;   // guard both contexts
-  Navigator.pop(ctx);                       // close sheet
-  Navigator.pop(context, true);             // notify caller
+  Navigator.pop(ctx);
+  if (mounted) {
+  }
+},
 
-                          },
-                        ),
+),
+
                       ),
                     ],
                   ),
@@ -582,6 +755,38 @@ Future<void> _saveCustomFoodFromPayload(Map payload) async {
     );
 
   }
+
+Future<_PlateSummary> _computePlateSummary() async {
+  double kcal = 0, p = 0, f = 0, c = 0;
+
+  // cache per-food lookup
+  final Map<int, Map<String, double>> per100Cache = {};
+
+  for (final it in _plate) {
+    final id = it.food.id!;
+    var per100 = per100Cache[id];
+    per100 ??= per100Cache[id] = await _repo.getMacroPer100gLegacySafe(id);
+
+    final grams = it.gramsTotal ?? 100.0; // fallback if unresolved
+    final scale = grams / 100.0;
+
+    // kcal may be under ENERGY_KCAL or KCAL depending on your helper
+    final kcal100 = per100['ENERGY_KCAL'] ?? per100['KCAL'] ?? 0.0;
+    final p100    = per100['PROTEIN_G']   ?? per100['PROTEIN'] ?? 0.0;
+    final f100    = per100['FAT_G']       ?? per100['FAT']     ?? 0.0;
+    final c100    = per100['CARB_G']      ?? per100['CARB']    ?? 0.0;
+
+    kcal += kcal100 * scale;
+    p    += p100    * scale;
+    f    += f100    * scale;
+    c    += c100    * scale;
+  }
+
+  return _PlateSummary(kcal.round(), p.round(), f.round(), c.round());
+}
+
+
+
 }
 
 class _StatCard extends StatelessWidget {
@@ -619,3 +824,5 @@ class _MacroPreview {
   factory _MacroPreview.empty(String label) =>
       _MacroPreview(proteinG: null, fatG: null, carbG: null, portionLabel: label);
 }
+
+
