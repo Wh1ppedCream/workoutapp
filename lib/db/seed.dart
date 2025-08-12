@@ -434,5 +434,163 @@ final existing = await txn.query(
     });
   }
 
+   /// Seeds the extended nutrient catalog (codes/units), aliases, and group hierarchy.
+  /// Safe to run multiple times.
+  static Future<void> seedExtendedNutrients(Database db) async {
+    final jsonStr = await rootBundle.loadString('assets/nutrients_extended.json');
+    final Map<String, dynamic> data = json.decode(jsonStr) as Map<String, dynamic>;
+
+    final List nutrients = (data['nutrients'] as List? ?? const []);
+    final List aliases   = (data['aliases'] as List? ?? const []);
+    final List groups    = (data['groups'] as List? ?? const []);
+
+    await db.transaction((txn) async {
+  // 1) Upsert nutrients
+  for (final n in nutrients) {
+    final code = (n['code'] as String).trim();
+final name = (n['name'] as String).trim();
+final unit = (n['unit'] as String).trim();
+
+    await txn.insert(
+      'nutrients',
+      {'code': code, 'name': name, 'unit': unit},
+      conflictAlgorithm: ConflictAlgorithm.ignore,
+    );
+    // keep name/unit current on reseed
+    await txn.update(
+      'nutrients',
+      {'name': name, 'unit': unit},
+      where: 'code = ?',
+      whereArgs: [code],
+    );
+  }
+
+  // Build code -> id map
+  final rows = await txn.query('nutrients', columns: ['id','code']);
+  final Map<String, int> codeToId = {
+    for (final r in rows) (r['code'] as String): (r['id'] as int)
+  };
+
+  // 2) Upsert aliases
+  for (final a in aliases) {
+    final code  = (a['code'] as String).trim();
+final alias = (a['alias'] as String).trim();
+    final nid = codeToId[code];
+    if (nid == null) continue;
+
+    await txn.insert(
+      'nutrient_aliases',
+      {'nutrient_id': nid, 'alias': alias},
+      conflictAlgorithm: ConflictAlgorithm.ignore,
+    );
+  }
+
+  // 3) Upsert group tree
+
+  // close over txn so we never pass null in whereArgs
+  Future<int> ensureGroup({
+    required String name,
+    int? parentId,
+    int sortKey = 0,
+  }) async {
+    Map<String, Object?>? row;
+
+    if (parentId == null) {
+      final rs = await txn.query(
+        'nutrient_groups',
+        where: 'name = ? AND parent_id IS NULL',
+        whereArgs: [name],
+        limit: 1,
+      );
+      if (rs.isNotEmpty) row = rs.first;
+    } else {
+      final rs = await txn.query(
+        'nutrient_groups',
+        where: 'name = ? AND parent_id = ?',
+        whereArgs: [name, parentId],
+        limit: 1,
+      );
+      if (rs.isNotEmpty) row = rs.first;
+    }
+
+    if (row != null) {
+      // keep sortKey current
+      final id = row['id'] as int;
+      await txn.update(
+        'nutrient_groups',
+        {'sort_key': sortKey},
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      return id;
+    }
+
+    await txn.insert(
+      'nutrient_groups',
+      {'name': name, 'parent_id': parentId, 'sort_key': sortKey},
+      conflictAlgorithm: ConflictAlgorithm.ignore,
+    );
+
+    if (parentId == null) {
+      final rs2 = await txn.query(
+        'nutrient_groups',
+        where: 'name = ? AND parent_id IS NULL',
+        whereArgs: [name],
+        limit: 1,
+      );
+      return rs2.first['id'] as int;
+    } else {
+      final rs2 = await txn.query(
+        'nutrient_groups',
+        where: 'name = ? AND parent_id = ?',
+        whereArgs: [name, parentId],
+        limit: 1,
+      );
+      return rs2.first['id'] as int;
+    }
+  }
+
+  Future<void> attachMembers(int groupId, List<dynamic>? members) async {
+    if (members == null) return;
+    // replace membership for deterministic reseed
+    await txn.delete(
+      'nutrient_group_members',
+      where: 'group_id = ?',
+      whereArgs: [groupId],
+    );
+    var sort = 0;
+    for (final m in members) {
+      final code = m as String;
+      final nid = codeToId[code];
+      if (nid == null) continue;
+      await txn.insert(
+        'nutrient_group_members',
+        {'group_id': groupId, 'nutrient_id': nid, 'sort_key': sort++},
+        conflictAlgorithm: ConflictAlgorithm.ignore,
+      );
+    }
+  }
+
+  Future<void> walkGroups(List<dynamic> nodes, {int? parentId}) async {
+    for (final g in nodes) {
+      final name = (g['name'] as String).trim();
+      final sort = (g['sort'] as num?)?.toInt() ?? 0;
+
+      final gid = await ensureGroup(name: name, parentId: parentId, sortKey: sort);
+      await attachMembers(gid, g['members'] as List?);
+
+      final children = g['children'] as List?;
+      if (children != null && children.isNotEmpty) {
+        await walkGroups(children, parentId: gid);
+      }
+    }
+  }
+
+  await walkGroups(groups);
+});
+
+  
+  }
+
 
 }

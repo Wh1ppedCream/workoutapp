@@ -1,0 +1,525 @@
+{
+  "nutrients": [
+    { "code": "PROTEIN_G", "name": "Protein", "unit": "g" },
+    { "code": "CARB_G", "name": "Carbohydrate", "unit": "g" },
+    { "code": "FAT_G", "name": "Fat", "unit": "g" },
+    { "code": "FIBER_G", "name": "Fiber", "unit": "g" },
+    { "code": "SUGARS_TOTAL_G", "name": "Sugars, total", "unit": "g" },
+
+    { "code": "SUGAR_GLUCOSE_G", "name": "Glucose", "unit": "g" },
+    { "code": "SUGAR_FRUCTOSE_G", "name": "Fructose", "unit": "g" },
+    { "code": "SUGAR_GALACTOSE_G", "name": "Galactose", "unit": "g" },
+    { "code": "SUGAR_SUCROSE_G", "name": "Sucrose", "unit": "g" },
+    { "code": "SUGAR_LACTOSE_G", "name": "Lactose", "unit": "g" },
+    { "code": "SUGAR_MALTOSE_G", "name": "Maltose", "unit": "g" },
+
+    { "code": "STARCH_G", "name": "Starch", "unit": "g" },
+    { "code": "GI_INDEX", "name": "Glycemic Index", "unit": "index" },
+    { "code": "GL_INDEX", "name": "Glycemic Load", "unit": "index" },
+
+    { "code": "FA_SAT_G", "name": "Saturated fat", "unit": "g" },
+    { "code": "FA_TRANS_G", "name": "Trans fat", "unit": "g" },
+    { "code": "FA_MONO_G", "name": "Monounsaturated fat", "unit": "g" },
+    { "code": "FA_POLY_G", "name": "Polyunsaturated fat", "unit": "g" },
+    { "code": "FA_OMEGA3_DHA_G", "name": "Omega-3 DHA", "unit": "g" },
+    { "code": "FA_OMEGA3_EPA_G", "name": "Omega-3 EPA", "unit": "g" },
+    { "code": "FA_OMEGA3_ALA_G", "name": "Omega-3 ALA", "unit": "g" },
+    { "code": "CHOLESTEROL_MG", "name": "Cholesterol", "unit": "mg" },
+
+    { "code": "AA_LEUCINE_G", "name": "Leucine", "unit": "g" },
+    { "code": "AA_LYSINE_G", "name": "Lysine", "unit": "g" },
+    { "code": "AA_VALINE_G", "name": "Valine", "unit": "g" },
+    { "code": "AA_ISOLEUCINE_G", "name": "Isoleucine", "unit": "g" },
+    { "code": "AA_METHIONINE_G", "name": "Methionine", "unit": "g" },
+    { "code": "AA_PHENYLALANINE_G", "name": "Phenylalanine", "unit": "g" },
+    { "code": "AA_THRIONINE_G", "name": "Threonine", "unit": "g" },
+    { "code": "AA_TRYPTOPHAN_G", "name": "Tryptophan", "unit": "g" },
+    { "code": "AA_TYROSINE_G", "name": "Tyrosine", "unit": "g" },
+    { "code": "AA_HISTIDINE_G", "name": "Histidine", "unit": "g" },
+
+    { "code": "SODIUM_MG", "name": "Sodium", "unit": "mg" },
+    { "code": "POTASSIUM_MG", "name": "Potassium", "unit": "mg" },
+    { "code": "CALCIUM_MG", "name": "Calcium", "unit": "mg" },
+    { "code": "MAGNESIUM_MG", "name": "Magnesium", "unit": "mg" },
+    { "code": "IRON_MG", "name": "Iron", "unit": "mg" },
+    { "code": "ZINC_MG", "name": "Zinc", "unit": "mg" },
+    { "code": "PHOSPHORUS_MG", "name": "Phosphorus", "unit": "mg" },
+
+    { "code": "VIT_C_MG", "name": "Vitamin C", "unit": "mg" },
+    { "code": "VIT_D_MCG", "name": "Vitamin D", "unit": "mcg" },
+    { "code": "VIT_B12_MCG", "name": "Vitamin B12", "unit": "mcg" },
+    { "code": "VIT_A_MCG_RAE", "name": "Vitamin A (RAE)", "unit": "mcg" },
+    { "code": "VIT_K_MCG", "name": "Vitamin K", "unit": "mcg" },
+    { "code": "VIT_E_MG", "name": "Vitamin E", "unit": "mg" },
+
+    { "code": "WATER_G", "name": "Water", "unit": "g" },
+    { "code": "CAFFEINE_MG", "name": "Caffeine", "unit": "mg" },
+
+    { "code": "PROB_LACTOBACILLUS_CFU", "name": "Lactobacillus", "unit": "CFU" },
+    { "code": "PROB_BIFIDOBACTERIUM_CFU", "name": "Bifidobacterium", "unit": "CFU" },
+
+    { "code": "LUTEIN_MG", "name": "Lutein", "unit": "mg" },
+    { "code": "ZEAXANTHIN_MG", "name": "Zeaxanthin", "unit": "mg" },
+    { "code": "KCAL", "name": "Calories", "unit": "kcal" },
+
+  { "code": "CARB_NET_G", "name": "Net carbohydrates", "unit": "g" },
+  { "code": "SUGARS_ADDED_G", "name": "Added sugars", "unit": "g" },
+
+  { "code": "SUGAR_RAFFINOSE_G", "name": "Raffinose", "unit": "g" },
+  { "code": "SUGAR_STACHYOSE_G", "name": "Stachyose", "unit": "g" },
+  { "code": "SUGAR_VERBASCOSE_G", "name": "Verbascose", "unit": "g" },
+
+  { "code": "SUGAR_ALC_XYLITOL_G", "name": "Xylitol", "unit": "g" },
+  { "code": "SUGAR_ALC_ERYTHRITOL_G", "name": "Erythritol", "unit": "g" },
+  { "code": "SUGAR_ALC_SORBITOL_G", "name": "Sorbitol", "unit": "g" },
+  { "code": "SUGAR_ALC_MANNITOL_G", "name": "Mannitol", "unit": "g" },
+  { "code": "SUGAR_ALC_ISOMALT_G", "name": "Isomalt", "unit": "g" },
+  { "code": "SUGAR_ALC_LACTITOL_G", "name": "Lactitol", "unit": "g" },
+
+  { "code": "FIBER_SOLUBLE_G", "name": "Soluble fiber", "unit": "g" },
+  { "code": "FIBER_INSOLUBLE_G", "name": "Insoluble fiber", "unit": "g" },
+  { "code": "FIBER_PECTIN_G", "name": "Pectin", "unit": "g" },
+  { "code": "FIBER_BETA_GLUCAN_G", "name": "Beta-glucans", "unit": "g" },
+  { "code": "FIBER_INULIN_G", "name": "Inulin", "unit": "g" },
+  { "code": "FIBER_PSYLLIUM_G", "name": "Psyllium", "unit": "g" },
+  { "code": "FIBER_GUMS_G", "name": "Gums", "unit": "g" },
+  { "code": "FIBER_CELLULOSE_G", "name": "Cellulose", "unit": "g" },
+  { "code": "FIBER_HEMICELLULOSE_G", "name": "Hemicellulose", "unit": "g" },
+  { "code": "FIBER_LIGNIN_G", "name": "Lignin", "unit": "g" },
+  { "code": "FOS_G", "name": "Fructooligosaccharides (FOS)", "unit": "g" },
+  { "code": "GOS_G", "name": "Galactooligosaccharides (GOS)", "unit": "g" },
+
+  { "code": "RS_TOTAL_G", "name": "Resistant starch (total)", "unit": "g" },
+  { "code": "RS1_G", "name": "Resistant starch RS1", "unit": "g" },
+  { "code": "RS2_G", "name": "Resistant starch RS2", "unit": "g" },
+  { "code": "RS3_G", "name": "Resistant starch RS3", "unit": "g" },
+  { "code": "RS4_G", "name": "Resistant starch RS4", "unit": "g" },
+
+  { "code": "FA_OLEIC_G", "name": "Oleic acid", "unit": "g" },
+  { "code": "FA_PALMITOLEIC_G", "name": "Palmitoleic acid", "unit": "g" },
+  { "code": "FA_VACCENIC_G", "name": "Vaccenic acid", "unit": "g" },
+
+  { "code": "FA_OMEGA3_TOTAL_G", "name": "Omega-3 fatty acids (total)", "unit": "g" },
+  { "code": "FA_OMEGA6_TOTAL_G", "name": "Omega-6 fatty acids (total)", "unit": "g" },
+  { "code": "FA_OMEGA9_TOTAL_G", "name": "Omega-9 fatty acids (total)", "unit": "g" },
+  { "code": "FA_LINOLEIC_G", "name": "Linoleic acid", "unit": "g" },
+  { "code": "FA_ARACHIDONIC_G", "name": "Arachidonic acid", "unit": "g" },
+  { "code": "PHYTOSTEROLS_MG", "name": "Phytosterols", "unit": "mg" },
+  { "code": "TRIGLYCERIDES_G", "name": "Triglycerides", "unit": "g" },
+
+  { "code": "AA_ALANINE_G", "name": "Alanine", "unit": "g" },
+  { "code": "AA_ARGININE_G", "name": "Arginine", "unit": "g" },
+  { "code": "AA_ASPARAGINE_G", "name": "Asparagine", "unit": "g" },
+  { "code": "AA_ASPARTIC_ACID_G", "name": "Aspartic acid", "unit": "g" },
+  { "code": "AA_CYSTEINE_G", "name": "Cysteine", "unit": "g" },
+  { "code": "AA_GLUTAMIC_ACID_G", "name": "Glutamic acid", "unit": "g" },
+  { "code": "AA_GLUTAMINE_G", "name": "Glutamine", "unit": "g" },
+  { "code": "AA_GLYCINE_G", "name": "Glycine", "unit": "g" },
+  { "code": "AA_PROLINE_G", "name": "Proline", "unit": "g" },
+  { "code": "AA_SERINE_G", "name": "Serine", "unit": "g" },
+
+  { "code": "VIT_B1_MG", "name": "Vitamin B1 (Thiamine)", "unit": "mg" },
+  { "code": "VIT_B2_MG", "name": "Vitamin B2 (Riboflavin)", "unit": "mg" },
+  { "code": "VIT_B3_MG", "name": "Vitamin B3 (Niacin)", "unit": "mg" },
+  { "code": "VIT_B5_MG", "name": "Vitamin B5 (Pantothenic Acid)", "unit": "mg" },
+  { "code": "VIT_B6_MG", "name": "Vitamin B6 (Pyridoxine)", "unit": "mg" },
+  { "code": "VIT_B7_MCG", "name": "Vitamin B7 (Biotin)", "unit": "mcg" },
+  { "code": "VIT_B9_MCG", "name": "Vitamin B9 (Folate)", "unit": "mcg" },
+  { "code": "VIT_D2_MCG", "name": "Vitamin D2 (Ergocalciferol)", "unit": "mcg" },
+  { "code": "VIT_D3_MCG", "name": "Vitamin D3 (Cholecalciferol)", "unit": "mcg" },
+  { "code": "VIT_K1_MCG", "name": "Vitamin K1 (Phylloquinone)", "unit": "mcg" },
+  { "code": "VIT_K2_MCG", "name": "Vitamin K2 (Menaquinone)", "unit": "mcg" },
+
+  { "code": "BORON_MG", "name": "Boron", "unit": "mg" },
+  { "code": "COPPER_MG", "name": "Copper", "unit": "mg" },
+  { "code": "CHROMIUM_MCG", "name": "Chromium", "unit": "mcg" },
+  { "code": "CHLORIDE_MG", "name": "Chloride", "unit": "mg" },
+  { "code": "CHOLINE_MG", "name": "Choline", "unit": "mg" },
+  { "code": "FLUORIDE_MG", "name": "Fluoride", "unit": "mg" },
+  { "code": "IODINE_MCG", "name": "Iodine", "unit": "mcg" },
+  { "code": "MOLYBDENUM_MCG", "name": "Molybdenum", "unit": "mcg" },
+  { "code": "MANGANESE_MG", "name": "Manganese", "unit": "mg" },
+  { "code": "SELENIUM_MCG", "name": "Selenium", "unit": "mcg" },
+  { "code": "SULFUR_MG", "name": "Sulfur", "unit": "mg" },
+
+  { "code": "ALCOHOL_G", "name": "Alcohol", "unit": "g" },
+  { "code": "ANTIOXIDANTS_MG", "name": "Antioxidants", "unit": "mg" },
+  { "code": "ADDITIVES_G", "name": "Additives/Preservatives", "unit": "g" },
+
+  { "code": "ASPARTAME_MG", "name": "Aspartame", "unit": "mg" },
+  { "code": "SUCRALOSE_MG", "name": "Sucralose", "unit": "mg" },
+  { "code": "SACCHARIN_MG", "name": "Saccharin", "unit": "mg" },
+  { "code": "ACESULFAMEK_MG", "name": "Acesulfame K", "unit": "mg" },
+
+  { "code": "AMYLASE_MG", "name": "Amylase", "unit": "mg" },
+  { "code": "LACTASE_MG", "name": "Lactase", "unit": "mg" },
+  { "code": "BROMELAIN_MG", "name": "Bromelain", "unit": "mg" },
+  { "code": "PAPAIN_MG", "name": "Papain", "unit": "mg" },
+
+  { "code": "TANNINS_MG", "name": "Tannins", "unit": "mg" },
+  { "code": "OXALATES_MG", "name": "Oxalates", "unit": "mg" },
+  { "code": "LECTINS_MG", "name": "Lectins", "unit": "mg" },
+  { "code": "PHYTATES_MG", "name": "Phytates", "unit": "mg" },
+
+  { "code": "LEAD_MCG", "name": "Lead", "unit": "mcg" },
+  { "code": "MERCURY_MCG", "name": "Mercury", "unit": "mcg" },
+  { "code": "ARSENIC_MCG", "name": "Arsenic", "unit": "mcg" },
+
+  { "code": "CARRAGEENAN_G", "name": "Carrageenan", "unit": "g" },
+  { "code": "XANTHAN_GUM_G", "name": "Xanthan gum", "unit": "g" },
+  { "code": "GUAR_GUM_G", "name": "Guar gum", "unit": "g" },
+  { "code": "COLORANTS_MG", "name": "Colorants", "unit": "mg" },
+  { "code": "FLAVORINGS_MG", "name": "Flavorings", "unit": "mg" }
+  ],
+
+  "aliases": [
+    { "code": "PROTEIN_G", "alias": "Protein (g)" },
+    { "code": "CARB_G", "alias": "Carbs (g)" },
+    { "code": "FAT_G", "alias": "Fats (g)" },
+    { "code": "FA_OMEGA3_ALA_G", "alias": "ALA (Alpha-Linolenic Acid) (g)" },
+    { "code": "FA_OMEGA3_DHA_G", "alias": "DHA (Docosahexaenoic Acid) (g)" },
+    { "code": "FA_OMEGA3_EPA_G", "alias": "EPA (Eicosapentaenoic Acid) (g)" },
+
+    { "code": "KCAL", "alias": "Calories (kcal)" },
+
+  { "code": "PROTEIN_G", "alias": "Protein (g)" },
+  { "code": "CARB_G", "alias": "Carbs (g)" },
+  { "code": "FAT_G", "alias": "Fats (g)" },
+
+  { "code": "CARB_NET_G", "alias": "Net Carbs (g)" },
+  { "code": "GI_INDEX", "alias": "Glycemic Index" },
+  { "code": "GL_INDEX", "alias": "Glycemic Load" },
+
+  { "code": "STARCH_G", "alias": "Starch (g)" },
+  { "code": "RS_TOTAL_G", "alias": "Resistant Starch (RS) (g)" },
+  { "code": "RS1_G", "alias": "RS1 (g)" },
+  { "code": "RS2_G", "alias": "RS2 (g)" },
+  { "code": "RS3_G", "alias": "RS3 (g)" },
+  { "code": "RS4_G", "alias": "RS4 (g)" },
+
+  { "code": "SUGARS_TOTAL_G", "alias": "Sugars (g)" },
+  { "code": "SUGARS_ADDED_G", "alias": "Added Sugars (g)" },
+
+  { "code": "SUGAR_GLUCOSE_G", "alias": "Glucose (g)" },
+  { "code": "SUGAR_FRUCTOSE_G", "alias": "Fructose (g)" },
+  { "code": "SUGAR_GALACTOSE_G", "alias": "Galactose (g)" },
+  { "code": "SUGAR_SUCROSE_G", "alias": "Sucrose (g)" },
+  { "code": "SUGAR_LACTOSE_G", "alias": "Lactose (g)" },
+  { "code": "SUGAR_MALTOSE_G", "alias": "Maltose (g)" },
+
+  { "code": "SUGAR_RAFFINOSE_G", "alias": "Raffinose (g)" },
+  { "code": "SUGAR_STACHYOSE_G", "alias": "Stachyose (g)" },
+  { "code": "SUGAR_VERBASCOSE_G", "alias": "Verbascose (g)" },
+
+  { "code": "SUGAR_ALC_XYLITOL_G", "alias": "Xylitol (g)" },
+  { "code": "SUGAR_ALC_ERYTHRITOL_G", "alias": "Erythritol (g)" },
+  { "code": "SUGAR_ALC_SORBITOL_G", "alias": "Sorbitol (g)" },
+  { "code": "SUGAR_ALC_MANNITOL_G", "alias": "Mannitol (g)" },
+  { "code": "SUGAR_ALC_ISOMALT_G", "alias": "Isomalt (g)" },
+  { "code": "SUGAR_ALC_LACTITOL_G", "alias": "Lactitol (g)" },
+
+  { "code": "FIBER_G", "alias": "Fiber (g)" },
+  { "code": "FIBER_SOLUBLE_G", "alias": "Soluble Fiber (g)" },
+  { "code": "FIBER_INSOLUBLE_G", "alias": "Insoluble (g)" },
+
+  { "code": "FIBER_PECTIN_G", "alias": "Pectin (g)" },
+  { "code": "FIBER_BETA_GLUCAN_G", "alias": "Beta-glucans (g)" },
+  { "code": "FIBER_INULIN_G", "alias": "Inulin (g)" },
+  { "code": "FIBER_PSYLLIUM_G", "alias": "Psyllium (g)" },
+  { "code": "FIBER_GUMS_G", "alias": "Gums (g)" },
+  { "code": "FIBER_CELLULOSE_G", "alias": "Cellulose (g)" },
+  { "code": "FIBER_HEMICELLULOSE_G", "alias": "Hemicellulose (g)" },
+  { "code": "FIBER_LIGNIN_G", "alias": "Lignin (g)" },
+  { "code": "FOS_G", "alias": "Fructooligosaccharides (FOS) (g)" },
+  { "code": "GOS_G", "alias": "Galactooligosaccharides (GOS) (g)" },
+
+  { "code": "FA_SAT_G", "alias": "Saturated Fat (g)" },
+  { "code": "FA_TRANS_G", "alias": "Trans Fat (g)" },
+  { "code": "FA_MONO_G", "alias": "Monounsaturated Fat (g)" },
+  { "code": "FA_POLY_G", "alias": "Polyunsaturated Fat (g)" },
+
+  { "code": "FA_OMEGA3_TOTAL_G", "alias": "Omega-3 Fatty Acids (g)" },
+  { "code": "FA_OMEGA3_ALA_G", "alias": "ALA (Alpha-Linolenic Acid) (g)" },
+  { "code": "FA_OMEGA3_DHA_G", "alias": "DHA (Docosahexaenoic Acid) (g)" },
+  { "code": "FA_OMEGA3_EPA_G", "alias": "EPA (Eicosapentaenoic Acid) (g)" },
+
+  { "code": "FA_OMEGA6_TOTAL_G", "alias": "Omega-6 Fatty Acids (g)" },
+  { "code": "FA_LINOLEIC_G", "alias": "Linoleic Acid (g)" },
+  { "code": "FA_ARACHIDONIC_G", "alias": "Arachidonic Acid (g)" },
+
+  { "code": "FA_OMEGA9_TOTAL_G", "alias": "Omega-9 Fatty Acids (g)" },
+  { "code": "FA_OLEIC_G", "alias": "Oleic Acid (g)" },
+  { "code": "FA_PALMITOLEIC_G", "alias": "Palmitoleic Acid (g)" },
+  { "code": "FA_VACCENIC_G", "alias": "Vaccenic Acid (g)" },
+
+  { "code": "TRIGLYCERIDES_G", "alias": "Triglycerides (g)" },
+  { "code": "CHOLESTEROL_MG", "alias": "Cholesterol (mg)" },
+  { "code": "PHYTOSTEROLS_MG", "alias": "Phytosterols (mg)" },
+
+  { "code": "AA_ALANINE_G", "alias": "Alanine (g)" },
+  { "code": "AA_ARGININE_G", "alias": "Arginine (g)" },
+  { "code": "AA_ASPARAGINE_G", "alias": "Asparagine (g)" },
+  { "code": "AA_ASPARTIC_ACID_G", "alias": "Aspartic acid (g)" },
+  { "code": "AA_CYSTEINE_G", "alias": "Cysteine (g)" },
+  { "code": "AA_GLUTAMIC_ACID_G", "alias": "Glutamic acid (g)" },
+  { "code": "AA_GLUTAMINE_G", "alias": "Glutamine (g)" },
+  { "code": "AA_GLYCINE_G", "alias": "Glycine (g)" },
+  { "code": "AA_PROLINE_G", "alias": "Proline (g)" },
+  { "code": "AA_SERINE_G", "alias": "Serine (g)" },
+
+  { "code": "AA_LEUCINE_G", "alias": "Leucine (g)" },
+  { "code": "AA_LYSINE_G", "alias": "Lysine (g)" },
+  { "code": "AA_VALINE_G", "alias": "Valine (g)" },
+  { "code": "AA_ISOLEUCINE_G", "alias": "Isoleucine (g)" },
+  { "code": "AA_METHIONINE_G", "alias": "Methionine (g)" },
+  { "code": "AA_PHENYLALANINE_G", "alias": "Phenylalanine (g)" },
+  { "code": "AA_THRIONINE_G", "alias": "Threonine (g)" },
+  { "code": "AA_TRYPTOPHAN_G", "alias": "Tryptophan (g)" },
+  { "code": "AA_TYROSINE_G", "alias": "Tyrosine (g)" },
+  { "code": "AA_HISTIDINE_G", "alias": "Histidine (g)" },
+
+  { "code": "VIT_A_MCG_RAE", "alias": "Vitamin A (Retinol & Beta-Carotene) (mg)" },
+  { "code": "VIT_B1_MG", "alias": "Vitamin B1 (Thiamine) (mg)" },
+  { "code": "VIT_B2_MG", "alias": "Vitamin B2 (Riboflavin) (mg)" },
+  { "code": "VIT_B3_MG", "alias": "Vitamin B3 (Niacin) (mg)" },
+  { "code": "VIT_B5_MG", "alias": "Vitamin B5 (Pantothenic Acid) (mg)" },
+  { "code": "VIT_B6_MG", "alias": "Vitamin B6 (Pyridoxine) (mg)" },
+  { "code": "VIT_B7_MCG", "alias": "Vitamin B7 (Biotin) (mcg)" },
+  { "code": "VIT_B9_MCG", "alias": "Vitamin B9 (Folate) (mcg)" },
+  { "code": "VIT_B12_MCG", "alias": "Vitamin B12 (Cobalamin) (mcg)" },
+  { "code": "VIT_C_MG", "alias": "Vitamin C (Ascorbic Acid) (mg)" },
+  { "code": "VIT_D_MCG", "alias": "Vitamin D (mcg)" },
+  { "code": "VIT_D2_MCG", "alias": "D2 (Ergocalciferol) (mcg)" },
+  { "code": "VIT_D3_MCG", "alias": "D3 (Cholecalciferol) (mcg)" },
+  { "code": "VIT_E_MG", "alias": "Vitamin E (Tocopherols) (mg)" },
+  { "code": "VIT_K_MCG", "alias": "Vitamin K (mcg)" },
+  { "code": "VIT_K1_MCG", "alias": "K1 (Phylloquinone) (mcg)" },
+  { "code": "VIT_K2_MCG", "alias": "K2 (Menaquinone) (mcg)" },
+
+  { "code": "BORON_MG", "alias": "Boron (mg)" },
+  { "code": "COPPER_MG", "alias": "Copper (mg)" },
+  { "code": "CHROMIUM_MCG", "alias": "Chromium (mcg)" },
+  { "code": "CHLORIDE_MG", "alias": "Chloride (mg)" },
+  { "code": "CHOLINE_MG", "alias": "Choline (mg)" },
+  { "code": "FLUORIDE_MG", "alias": "Fluoride (mg)" },
+  { "code": "IODINE_MCG", "alias": "Iodine (mcg)" },
+  { "code": "IRON_MG", "alias": "Iron (mg)" },
+  { "code": "MOLYBDENUM_MCG", "alias": "Molybdenum (mcg)" },
+  { "code": "MANGANESE_MG", "alias": "Manganese (mg)" },
+  { "code": "PHOSPHORUS_MG", "alias": "Phosphorus (mg)" },
+  { "code": "SELENIUM_MCG", "alias": "Selenium (mcg)" },
+  { "code": "SULFUR_MG", "alias": "Sulfur (mg)" },
+  { "code": "ZINC_MG", "alias": "Zinc (mg)" },
+
+  { "code": "ALCOHOL_G", "alias": "Alcohol (g)" },
+  { "code": "ANTIOXIDANTS_MG", "alias": "Antioxidants (mg)" },
+  { "code": "ADDITIVES_G", "alias": "Additives/Preservatives (if processed) (g)" },
+
+  { "code": "ASPARTAME_MG", "alias": "Aspartame (mg)" },
+  { "code": "SUCRALOSE_MG", "alias": "Sucralose (mg)" },
+  { "code": "SACCHARIN_MG", "alias": "Saccharin (mg)" },
+  { "code": "ACESULFAMEK_MG", "alias": "Acesulfame K (mg)" },
+
+  { "code": "AMYLASE_MG", "alias": "Amylase (mg)" },
+  { "code": "LACTASE_MG", "alias": "Lactase (mg)" },
+  { "code": "BROMELAIN_MG", "alias": "Bromelain (mg)" },
+  { "code": "PAPAIN_MG", "alias": "Papain (mg)" },
+
+  { "code": "TANNINS_MG", "alias": "Tannins (mg)" },
+  { "code": "OXALATES_MG", "alias": "Oxalates (mg)" },
+  { "code": "LECTINS_MG", "alias": "Lectins (mg)" },
+  { "code": "PHYTATES_MG", "alias": "Phytates (mg)" },
+
+  { "code": "LEAD_MCG", "alias": "Lead (mcg)" },
+  { "code": "MERCURY_MCG", "alias": "Mercury (mcg)" },
+  { "code": "ARSENIC_MCG", "alias": "Arsenic (mcg)" },
+
+  { "code": "CARRAGEENAN_G", "alias": "Carrageenan (g)" },
+  { "code": "XANTHAN_GUM_G", "alias": "Xanthan gum (g)" },
+  { "code": "GUAR_GUM_G", "alias": "Guar gum (g)" },
+  { "code": "COLORANTS_MG", "alias": "Colorants (mg)" },
+  { "code": "FLAVORINGS_MG", "alias": "Flavorings (mg)" }
+  ],
+
+  "groups": [
+  {
+    "name": "Macronutrients",
+    "sort": 0,
+    "members": ["KCAL","PROTEIN_G","CARB_G","CARB_NET_G","FAT_G","FIBER_G","SUGARS_TOTAL_G","SUGARS_ADDED_G","STARCH_G","GI_INDEX","GL_INDEX"],
+    "children": [
+      {
+        "name": "Protein",
+        "sort": 0,
+        "members": ["PROTEIN_G"],
+        "children": [
+          {
+            "name": "Amino acids",
+            "sort": 0,
+            "members": [
+              "AA_LEUCINE_G","AA_LYSINE_G","AA_VALINE_G","AA_ISOLEUCINE_G","AA_METHIONINE_G",
+              "AA_PHENYLALANINE_G","AA_THRIONINE_G","AA_TRYPTOPHAN_G","AA_TYROSINE_G","AA_HISTIDINE_G",
+              "AA_ALANINE_G","AA_ARGININE_G","AA_ASPARAGINE_G","AA_ASPARTIC_ACID_G","AA_CYSTEINE_G",
+              "AA_GLUTAMIC_ACID_G","AA_GLUTAMINE_G","AA_GLYCINE_G","AA_PROLINE_G","AA_SERINE_G"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Carbohydrates",
+        "sort": 1,
+        "members": ["CARB_G","CARB_NET_G","FIBER_G","SUGARS_TOTAL_G","SUGARS_ADDED_G","STARCH_G","GI_INDEX","GL_INDEX"],
+        "children": [
+          {
+            "name": "Sugars",
+            "sort": 0,
+            "children": [
+              {
+                "name": "Monosaccharides",
+                "sort": 0,
+                "members": ["SUGAR_GLUCOSE_G","SUGAR_FRUCTOSE_G","SUGAR_GALACTOSE_G"]
+              },
+              {
+                "name": "Disaccharides",
+                "sort": 1,
+                "members": ["SUGAR_SUCROSE_G","SUGAR_LACTOSE_G","SUGAR_MALTOSE_G"]
+              },
+              {
+                "name": "Oligosaccharides",
+                "sort": 2,
+                "members": ["SUGAR_RAFFINOSE_G","SUGAR_STACHYOSE_G","SUGAR_VERBASCOSE_G"]
+              },
+              {
+                "name": "Sugar Alcohols",
+                "sort": 3,
+                "members": ["SUGAR_ALC_XYLITOL_G","SUGAR_ALC_ERYTHRITOL_G","SUGAR_ALC_SORBITOL_G","SUGAR_ALC_MANNITOL_G","SUGAR_ALC_ISOMALT_G","SUGAR_ALC_LACTITOL_G"]
+              }
+            ]
+          },
+          {
+            "name": "Starch",
+            "sort": 1,
+            "members": ["STARCH_G"],
+            "children": [
+              {
+                "name": "Resistant Starch",
+                "sort": 0,
+                "members": ["RS_TOTAL_G","RS1_G","RS2_G","RS3_G","RS4_G"]
+              }
+            ]
+          },
+          {
+            "name": "Fiber",
+            "sort": 2,
+            "members": ["FIBER_G"],
+            "children": [
+              {
+                "name": "Soluble Fiber",
+                "sort": 0,
+                "members": ["FIBER_SOLUBLE_G","FIBER_PECTIN_G","FIBER_BETA_GLUCAN_G","FIBER_INULIN_G","FIBER_PSYLLIUM_G","FIBER_GUMS_G"]
+              },
+              {
+                "name": "Insoluble Fiber",
+                "sort": 1,
+                "members": ["FIBER_INSOLUBLE_G","FIBER_CELLULOSE_G","FIBER_HEMICELLULOSE_G","FIBER_LIGNIN_G"]
+              },
+              {
+                "name": "Functional Fibers",
+                "sort": 2,
+                "members": ["FOS_G","GOS_G","RS_TOTAL_G"]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Fats",
+        "sort": 2,
+        "members": ["FAT_G","FA_SAT_G","FA_TRANS_G","FA_MONO_G","FA_POLY_G","CHOLESTEROL_MG"],
+        "children": [
+          {
+            "name": "Monounsaturated",
+            "sort": 0,
+            "members": ["FA_MONO_G","FA_OLEIC_G","FA_PALMITOLEIC_G","FA_VACCENIC_G"]
+          },
+          {
+            "name": "Polyunsaturated",
+            "sort": 1,
+            "members": ["FA_POLY_G","FA_OMEGA3_TOTAL_G","FA_OMEGA6_TOTAL_G"],
+            "children": [
+              {
+                "name": "Omega-3",
+                "sort": 0,
+                "members": ["FA_OMEGA3_TOTAL_G","FA_OMEGA3_ALA_G","FA_OMEGA3_DHA_G","FA_OMEGA3_EPA_G"]
+              },
+              {
+                "name": "Omega-6",
+                "sort": 1,
+                "members": ["FA_OMEGA6_TOTAL_G","FA_LINOLEIC_G","FA_ARACHIDONIC_G"]
+              },
+              {
+                "name": "Omega-9",
+                "sort": 2,
+                "members": ["FA_OMEGA9_TOTAL_G","FA_OLEIC_G"]
+              }
+            ]
+          },
+          {
+            "name": "Other Lipid Types",
+            "sort": 2,
+            "members": ["TRIGLYCERIDES_G","PHYTOSTEROLS_MG","CHOLESTEROL_MG"]
+          }
+        ]
+      }
+    ]
+  },
+
+  {
+    "name": "Micronutrients",
+    "sort": 1,
+    "children": [
+      {
+        "name": "Vitamins",
+        "sort": 0,
+        "members": ["VIT_A_MCG_RAE","VIT_B1_MG","VIT_B2_MG","VIT_B3_MG","VIT_B5_MG","VIT_B6_MG","VIT_B7_MCG","VIT_B9_MCG","VIT_B12_MCG","VIT_C_MG","VIT_D_MCG","VIT_E_MG","VIT_K_MCG"],
+        "children": [
+          { "name": "Vitamin D", "sort": 0, "members": ["VIT_D_MCG","VIT_D2_MCG","VIT_D3_MCG"] },
+          { "name": "Vitamin K", "sort": 1, "members": ["VIT_K_MCG","VIT_K1_MCG","VIT_K2_MCG"] }
+        ]
+      },
+      {
+        "name": "Minerals & Electrolytes",
+        "sort": 1,
+        "members": ["BORON_MG","COPPER_MG","CHROMIUM_MCG","CHLORIDE_MG","CHOLINE_MG","FLUORIDE_MG","IODINE_MCG","IRON_MG","MOLYBDENUM_MCG","MANGANESE_MG","PHOSPHORUS_MG","SELENIUM_MCG","SULFUR_MG","ZINC_MG","SODIUM_MG","POTASSIUM_MG","MAGNESIUM_MG","CALCIUM_MG"],
+        "children": [
+          { "name": "Electrolytes", "sort": 0, "members": ["SODIUM_MG","POTASSIUM_MG","CHLORIDE_MG","MAGNESIUM_MG","CALCIUM_MG"] }
+        ]
+      }
+    ]
+  },
+
+  {
+    "name": "Additional Components",
+    "sort": 2,
+    "members": ["WATER_G","ALCOHOL_G","CAFFEINE_MG","ANTIOXIDANTS_MG","ADDITIVES_G","LUTEIN_MG","ZEAXANTHIN_MG"],
+    "children": [
+      { "name": "Artificial Sweeteners", "sort": 0, "members": ["ASPARTAME_MG","SUCRALOSE_MG","SACCHARIN_MG","ACESULFAMEK_MG"] },
+      { "name": "Food Enzymes", "sort": 1, "members": ["AMYLASE_MG","LACTASE_MG","BROMELAIN_MG","PAPAIN_MG"] },
+      { "name": "Prebiotics", "sort": 2, "members": ["FIBER_INULIN_G","FOS_G","GOS_G"] },
+      { "name": "Probiotics (CFU)", "sort": 3, "members": ["PROB_LACTOBACILLUS_CFU","PROB_BIFIDOBACTERIUM_CFU"] },
+      { "name": "Anti-Nutrients", "sort": 4, "members": ["TANNINS_MG","OXALATES_MG","LECTINS_MG","PHYTATES_MG"] },
+      { "name": "Contaminants (mcg)", "sort": 5, "members": ["LEAD_MCG","MERCURY_MCG","ARSENIC_MCG"] },
+      {
+        "name": "Functional Additives",
+        "sort": 6,
+        "children": [
+          { "name": "Emulsifiers", "sort": 0, "members": ["CARRAGEENAN_G"] },
+          { "name": "Thickeners",  "sort": 1, "members": ["XANTHAN_GUM_G","GUAR_GUM_G"] },
+          { "name": "Colorants",   "sort": 2, "members": ["COLORANTS_MG"] },
+          { "name": "Flavorings",  "sort": 3, "members": ["FLAVORINGS_MG"] }
+        ]
+      }
+    ]
+  }
+]
+
+}

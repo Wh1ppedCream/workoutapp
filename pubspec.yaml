@@ -88,6 +88,7 @@ flutter:
     - assets/bodyfat/
     - assets/bodyfat_woman/
     - assets/foods.json
+    - assets/nutrients_extended.json
 
 
   # An image asset can refer to one or more resolution-specific "variants", see

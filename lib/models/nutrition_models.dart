@@ -115,6 +115,13 @@ class FoodPortion {
   final double? mlVolume;   // optional, use density if only volume given
   final bool isDefault;
 
+  // v23
+  final String? listKind;   // 'basis' | 'usual' | null
+  final int?    sortOrder;
+  final double? amount;
+  final String? unit;
+  final String? label;
+
   FoodPortion({
     this.id,
     required this.foodId,
@@ -122,6 +129,11 @@ class FoodPortion {
     this.gramWeight,
     this.mlVolume,
     this.isDefault = false,
+    this.listKind,
+    this.sortOrder,
+    this.amount,
+    this.unit,
+    this.label,
   });
 
   factory FoodPortion.fromMap(Map<String, dynamic> m) => FoodPortion(
@@ -131,6 +143,11 @@ class FoodPortion {
         gramWeight: (m['gram_weight'] as num?)?.toDouble(),
         mlVolume:   (m['ml_volume'] as num?)?.toDouble(),
         isDefault:  (m['is_default'] as int? ?? 0) == 1,
+    listKind    : m['list_kind'] as String?,
+    sortOrder   : m['sort_order'] as int?,
+    amount      : (m['amount'] as num?)?.toDouble(),
+    unit        : m['unit'] as String?,
+    label       : m['label'] as String?,
       );
 
   Map<String, dynamic> toMap() => {
@@ -140,7 +157,12 @@ class FoodPortion {
         'gram_weight':  gramWeight,
         'ml_volume':    mlVolume,
         'is_default':   isDefault ? 1 : 0,
-      };
+    'list_kind'   : listKind,
+    'sort_order'  : sortOrder,
+    'amount'      : amount,
+    'unit'        : unit,
+    'label'       : label,
+  }..removeWhere((_, v) => v == null);
 }
 
 /// Per-100g nutrient amount for a food.

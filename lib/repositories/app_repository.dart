@@ -988,5 +988,82 @@ Future<void> deleteDefaultFlowMethod({
   Future<void> recalcDayTotals(int profileId, DateTime date) =>
       _dbHelper.recalcDayTotals(profileId, date);
 
+Future<int> createCustomFood({required String name, String? brand}) =>
+    _dbHelper.createCustomFood(name: name, brand: brand);
+
+Future<void> savePer100gByCode(int foodId, Map<String, double> codeToAmount) =>
+    _dbHelper.savePer100gByCode(foodId, codeToAmount);
+
+Future<void> savePer100gFromLabelPayload(int foodId, Map<String, dynamic> payload) async =>
+    _dbHelper.savePer100gFromLabelPayload(foodId, payload);
+
+
+/// Returns a per-100g macro map using NEW canonical keys:
+///   'PROTEIN_G', 'CARB_G', 'FAT_G', 'KCAL'
+/// Falls back to legacy codes if the new ones aren't present.
+Future<Map<String, double>> getMacroPer100gLegacySafe(int foodId) async {
+  // All per-100g nutrient values keyed by nutrient code
+  final all = await getFoodNutrientsPer100gByCode(foodId); // Map<String,double>
+
+  double? pick(List<String> codes) {
+    for (final c in codes) {
+      final v = all[c];
+      if (v != null) return v;
+    }
+    return null;
+  }
+
+  final out = <String, double>{};
+
+  final p = pick(['PROTEIN_G', 'PROTEIN']);
+  if (p != null) out['PROTEIN_G'] = p;
+
+  final c = pick(['CARB_G', 'CARB']);
+  if (c != null) out['CARB_G'] = c;
+
+  final f = pick(['FAT_G', 'FAT']);
+  if (f != null) out['FAT_G'] = f;
+
+  final k = pick(['KCAL', 'ENERGY_KCAL', 'CALORIES']);
+  if (k != null) out['KCAL'] = k;
+
+  return out;
+}
+
+Future<void> saveExtendedPer100gFromPayload(int foodId, Map payload) async {
+  // Save extended per-100g data from a payload
+  await _dbHelper.saveExtendedPer100gFromPayload(foodId, payload);
+}
+
+Future<int> addPortion(
+    int foodId, {
+    required String measureName,
+    double? gramWeight,
+    double? mlVolume,
+    bool isDefault = false,
+
+  // v23 fields:
+  String? listKind,
+  int?    sortOrder,
+  double? amount,
+  String? unit,
+  String? label,
+
+  }) =>
+    _dbHelper.addPortion(
+      foodId,
+      measureName: measureName,
+      gramWeight: gramWeight,
+      mlVolume: mlVolume,
+      isDefault: isDefault,
+      listKind: listKind,
+      sortOrder: sortOrder,
+      amount: amount,
+      unit: unit,
+      label: label,
+    );
+
+    Future<void> replacePortions(int foodId, List<FoodPortion> portions) =>
+    _dbHelper.replacePortions(foodId, portions);
 
 }

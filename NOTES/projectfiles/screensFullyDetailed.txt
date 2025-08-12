@@ -1,28 +1,5 @@
 **Comprehensive App UI & Architecture Overview (Expanded Detail)**
 
-**Table of Contents**
-
-1. [App Entry & Top‑Level Configuration](#1-app-entry--top-level-configuration)
-2. [Onboarding Flow](#2-onboarding-flow)
-3. [Dashboard Page](#3-dashboard-page)
-4. [Train Page](#4-train-page)
-5. [History Page](#5-history-page)
-6. [Session Detail Screen](#6-session-detail-screen)
-7. [Analytics Dashboard Screen](#7-analytics-dashboard-screen)
-8. [Automatic‑Preset Flow Screen](#8-automatic‑preset-flow-screen)
-9. [Definitions by Body‑Part Page](#9-definitions-by-body-part-page)
-10. [Definitions by Muscle Page](#10-definitions-by-muscle-page)
-11. [Exercise Catalog Page](#11-exercise-catalog-page)
-12. [Full History Screen](#12-full-history-screen)
-13. [Gym Profile Screen](#13-gym-profile-screen)
-14. [Muscle Filter Page](#14-muscle-filter-page)
-15. [Preset Detail Screen](#15-preset-detail-screen)
-16. [Session Screen](#16-session-screen)
-17. [Nutrition Page](#17-nutrition-page)
-18. [Profile Page](#18-profile-page)
-19. [Bottom Sheets & Dialogs](#19-bottom-sheets--dialogs)
-20. [Widgets Reference](#20-widgets-reference)
-21. [Data Models Overview](#21-data-models-overview)
 
 ---
 

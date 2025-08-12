@@ -32,6 +32,28 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
   String? _foodImagePath;
   String? _labelImagePath;
 
+
+  // ----- Portion Info state -----
+  // Portion lists
+final List<PortionEntry> _basisPortions = [PortionEntry(unit: 'gram (g)', amount: 100, grams: 100)];
+final List<PortionEntry> _usualPortions = [PortionEntry()];
+
+// One "default" per list (radio group)
+int _basisDefaultIndex = 0;
+int _usualDefaultIndex = 0;
+
+// Supported units (you can expand later)
+static const List<String> _massUnits = [
+  'gram (g)', 'milligram (mg)', 'microgram (µg)', 'kilogram (kg)', 'ounce (oz)', 'pound (lb)'
+];
+static const List<String> _volumeUnits = [
+  'milliliter (mL)', 'liter (L)', 'teaspoon (tsp)', 'tablespoon (tbsp)', 'cup', 'fluid ounce (fl oz)'
+];
+static const List<String> _allUnits = [..._massUnits, ..._volumeUnits];
+
+
+  
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -44,6 +66,9 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
     for (final c in _controllers.values) {
       c.dispose();
     }
+    for (final p in _basisPortions) { p.dispose(); }
+for (final p in _usualPortions) { p.dispose(); }
+
     super.dispose();
   }
 
@@ -79,6 +104,13 @@ Map<String, dynamic> _collectPayload() {
     final v = entry.value.text.trim();
     if (v.isNotEmpty) payload[entry.key] = double.tryParse(v) ?? v;
   }
+
+  // NEW: include portions
+  payload['portions'] = _portionsPayload(
+    basisDefaultIndex: _basisDefaultIndex,
+    usualDefaultIndex: _usualDefaultIndex,
+  );
+
   return payload;
 }
 
@@ -195,6 +227,12 @@ void _onSave() {
                 ],
               ),
               const SizedBox(height: 20),
+
+              // 2. Portion Info
+              // After the Images Row:
+const SizedBox(height: 20),
+_buildPortionCard(),        // <<< NEW
+const SizedBox(height: 12),
 
               // 3. Calories (kept separate)
               _buildNumberField(label: 'Calories (kcal)', controller: _calController),
@@ -352,6 +390,334 @@ void _onSave() {
     ),
   );
 }
+
+// Convert "gram (g)" -> "g", "milliliter (mL)" -> "mL", keep others as-is
+String _shortUnit(String u) {
+  switch (u) {
+    case 'gram (g)': return 'g';
+    case 'milligram (mg)': return 'mg';
+    case 'microgram (µg)': return 'µg';
+    case 'kilogram (kg)': return 'kg';
+    case 'ounce (oz)': return 'oz';
+    case 'pound (lb)': return 'lb';
+    case 'milliliter (mL)': return 'mL';
+    case 'liter (L)': return 'L';
+    case 'teaspoon (tsp)': return 'tsp';
+    case 'tablespoon (tbsp)': return 'tbsp';
+    case 'cup': return 'cup';
+    case 'fluid ounce (fl oz)': return 'fl oz';
+  }
+  return u;
+}
+
+// Compose a clean "measure_name" from unit + amount, e.g. "100 g" or "1 cup"
+String _measureNameFrom(PortionEntry e) {
+  final amt = e.amountCtrl.text.trim();
+  final unit = _shortUnit(e.unit);
+  if (amt.isEmpty) return unit;         // fallback "g", "cup", etc.
+  return '$amt $unit';                   // e.g. "100 g", "1 cup"
+}
+
+// Build JSON-ish payload for both lists, collapsing to what DB needs
+List<Map<String, dynamic>> _portionsPayload({
+  required int basisDefaultIndex,
+  required int usualDefaultIndex,
+}) {
+  final all = <({PortionEntry row, String list, int index})>[];
+
+  for (var i = 0; i < _basisPortions.length; i++) {
+    all.add((row: _basisPortions[i], list: 'basis', index: i));
+  }
+  for (var i = 0; i < _usualPortions.length; i++) {
+    all.add((row: _usualPortions[i], list: 'usual', index: i));
+  }
+
+  // Decide single default: prefer "usual", otherwise "basis"
+  int? defaultGlobal;
+  if (_usualPortions.isNotEmpty) {
+    defaultGlobal = _basisPortions.length + usualDefaultIndex; // offset by basis length
+  }
+  if (defaultGlobal == null && _basisPortions.isNotEmpty) {
+    defaultGlobal = basisDefaultIndex;
+  }
+
+  final out = <Map<String, dynamic>>[];
+  for (var i = 0; i < all.length; i++) {
+    final r = all[i];
+    final measureName = _measureNameFrom(r.row);
+    final grams = double.tryParse(r.row.gramsCtrl.text.trim());
+    final ml    = double.tryParse(r.row.mlCtrl.text.trim());
+    final amount = double.tryParse(r.row.amountCtrl.text.trim());
+    if (measureName.isEmpty && grams == null && ml == null) continue; // skip empty rows
+
+    out.add({
+      'measure_name': measureName,
+      'gram_weight': grams,
+      'ml_volume': ml,
+      'is_default': i == defaultGlobal,
+      // v23 extras:
+      'list_kind'   : r.list,                     // 'basis' | 'usual'
+      'sort_order'  : r.index,
+      'amount'      : amount,
+      'unit'        : _shortUnit(r.row.unit),
+      'label'       : null,                
+    });
+  }
+
+  // Ensure at least one sensible default if we have any portions
+  if (out.isNotEmpty && !out.any((m) => m['is_default'] == true)) {
+    out.first['is_default'] = true;
+  }
+
+  // If user left everything empty, inject a safe default "100 g"
+  if (out.isEmpty) {
+    out.add({
+      'measure_name': '100 g',
+      'gram_weight': 100.0,
+      'ml_volume': null,
+      'is_default': true,
+      'list_kind'   : 'basis',
+      'sort_order'  : 0,
+      'amount'      : 100.0,
+      'unit'        : 'g',
+      'label'       : null,
+    });
+  }
+
+  return out;
+}
+
+
+Widget _buildPortionCard() {
+  final theme = Theme.of(context);
+  return Card(
+    elevation: 0,
+    margin: EdgeInsets.zero,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(12),
+      side: BorderSide(color: Colors.grey.shade300),
+    ),
+    child: Theme(
+      data: theme.copyWith(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+        key: const PageStorageKey('group_PortionInfo'),
+        initiallyExpanded: true,
+        tilePadding: const EdgeInsets.symmetric(horizontal: 16),
+        childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+        title: const Text('Portion Info', style: TextStyle(fontWeight: FontWeight.w600)),
+        children: [
+          // A) Basis for given nutrient values
+          _buildPortionList(
+            title: 'Portioning basis for the nutritional values',
+            list: _basisPortions,
+            groupKey: 'basis',
+            defaultIndex: _basisDefaultIndex,
+            onDefaultChanged: (i) => setState(() => _basisDefaultIndex = i),
+            initiallyExpanded: true,
+          ),
+          const SizedBox(height: 12),
+          // B) Usual portion to be consumed by user
+          _buildPortionList(
+            title: 'Usual portion to be consumed by user',
+            list: _usualPortions,
+            groupKey: 'usual',
+            defaultIndex: _usualDefaultIndex,
+            onDefaultChanged: (i) => setState(() => _usualDefaultIndex = i),
+            initiallyExpanded: false,
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+Widget _buildPortionList({
+  required String title,
+  required List<PortionEntry> list,
+  required String groupKey, // 'basis' | 'usual'
+  required int defaultIndex,
+  required ValueChanged<int> onDefaultChanged,
+  bool initiallyExpanded = false, // ← new param
+}) {
+  final theme = Theme.of(context);
+  return Theme(
+    data: theme.copyWith(
+      dividerColor: Colors.transparent,
+      listTileTheme: const ListTileThemeData(
+        dense: true,
+        visualDensity: VisualDensity(horizontal: 0, vertical: -2),
+        contentPadding: EdgeInsets.zero,
+      ),
+      iconTheme: const IconThemeData(size: 18),
+    ),
+    child: ExpansionTile(
+      key: PageStorageKey('portion_list_$groupKey'),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
+      initiallyExpanded: initiallyExpanded,
+      tilePadding: EdgeInsets.zero,
+      childrenPadding: const EdgeInsets.only(bottom: 4),
+      children: [
+        ...List.generate(list.length, (i) {
+          return _portionRow(
+            entry: list[i],
+            index: i,
+            groupKey: groupKey,
+            isDefault: i == defaultIndex,          // keep your current bool approach
+            onDefault: () => onDefaultChanged(i),  // (or switch to Radio<int> later)
+            onRemove: list.length > 1
+                ? () => setState(() {
+                      final removedIndex = i;
+                      final removed = list.removeAt(i);
+                      removed.dispose();
+                      // keep default valid
+                      if (defaultIndex == removedIndex) {
+                        onDefaultChanged((removedIndex - 1).clamp(0, list.length - 1));
+                      } else if (removedIndex < defaultIndex) {
+                        onDefaultChanged(defaultIndex - 1);
+                      }
+                    })
+                : null,
+          );
+        }),
+        const SizedBox(height: 8),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            onPressed: () => setState(() => list.add(PortionEntry())),
+            icon: const Icon(Icons.add),
+            label: const Text('Add portion'),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+
+Widget _portionRow({
+  required PortionEntry entry,
+  required int index,
+  required String groupKey,
+  required bool isDefault,
+  required VoidCallback onDefault,
+  VoidCallback? onRemove,
+}) {
+  final unitKey   = PageStorageKey('portion_${groupKey}_${index}_unit');
+final amountKey = PageStorageKey('portion_${groupKey}_${index}_amount');
+final gramsKey  = PageStorageKey('portion_${groupKey}_${index}_grams');
+final mlKey     = PageStorageKey('portion_${groupKey}_${index}_ml');
+
+  return Card(
+    margin: const EdgeInsets.symmetric(vertical: 6),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+    child: Padding(
+      padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
+      child: Column(
+        children: [
+          // First line: radio + unit + amount
+          Row(
+            children: [
+              Radio<bool>(
+                value: true,
+                groupValue: isDefault,
+                onChanged: (_) => onDefault(),
+                visualDensity: const VisualDensity(horizontal: -4, vertical: -4),
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                flex: 6,
+                child: DropdownButtonFormField<String>(
+                  key: unitKey,
+                  isExpanded: true,
+                  value: _allUnits.contains(entry.unit) ? entry.unit : _allUnits.first,
+                  items: _allUnits
+        .map((u) => DropdownMenuItem(
+              value: u,
+              child: Text(u, overflow: TextOverflow.ellipsis), 
+            ))
+        .toList(),
+                  onChanged: (v) => setState(() => entry.unit = v ?? entry.unit),
+                  decoration: const InputDecoration(
+                    labelText: 'Measurement name',
+                    isDense: true,
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                flex: 3,
+                child: TextFormField(
+                  key: amountKey,
+                  controller: entry.amountCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Amount',
+                    isDense: true,
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: _numericFormatters,
+                  onTapOutside: (_) {}, // keeps focus sane on taps
+                ),
+              ),
+              const SizedBox(width: 4),
+              if (onRemove != null)
+                IconButton(
+                  onPressed: onRemove,
+                  icon: const Icon(Icons.delete_outline),
+                  tooltip: 'Remove',
+                  constraints: const BoxConstraints.tightFor(width: 36, height: 36), // 👈 smaller hitbox
+        visualDensity: const VisualDensity(horizontal: -4, vertical: -4),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // Second line: grams + mL
+          Row(
+            children: [
+              Expanded(
+                child: TextFormField(
+                  key: gramsKey,
+                  controller: entry.gramsCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Weight (g)',
+                    isDense: true,
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: _numericFormatters,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextFormField(
+                  key: mlKey,
+                  controller: entry.mlCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Volume (mL)',
+                    isDense: true,
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: _numericFormatters,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 8, top: 2, bottom: 6),
+              child: Text('Default', style: Theme.of(context).textTheme.bodySmall),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
 
 }
 
@@ -622,3 +988,36 @@ const List<NutrientNode> _additionalNodes = [
     NutrientNode('Flavorings (mg)'),
   ]),
 ];
+
+
+// ----- Portion Info state -----
+
+class PortionEntry {
+  PortionEntry({
+    this.unit = 'gram (g)',
+    double? amount,
+    double? grams,
+    double? ml,
+  })  : amountCtrl = TextEditingController(text: amount?.toString() ?? ''),
+        gramsCtrl  = TextEditingController(text: grams?.toString() ?? ''),
+        mlCtrl     = TextEditingController(text: ml?.toString() ?? '');
+
+  String unit;
+  final TextEditingController amountCtrl;
+  final TextEditingController gramsCtrl;
+  final TextEditingController mlCtrl;
+
+  void dispose() {
+    amountCtrl.dispose();
+    gramsCtrl.dispose();
+    mlCtrl.dispose();
+  }
+
+  Map<String, dynamic> toJson() => {
+        'unit': unit,
+        'amount': double.tryParse(amountCtrl.text),
+        'grams': double.tryParse(gramsCtrl.text),
+        'milliliters': double.tryParse(mlCtrl.text),
+      };
+}
+

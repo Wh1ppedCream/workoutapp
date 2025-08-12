@@ -116,13 +116,16 @@ class NutritionDao {
   }
 
   Future<List<FoodPortion>> getPortionsForFood(int foodId) async {
-    final rows = await db.query('food_portions',
-      where: 'food_id = ?',
-      whereArgs: [foodId],
-      orderBy: 'is_default DESC, id ASC',
-    );
-    return rows.map(FoodPortion.fromMap).toList();
-  }
+  final rows = await db.query(
+    'food_portions',
+    where: 'food_id = ?',
+    whereArgs: [foodId],
+    // default first, then group, then sort_order, then id
+    orderBy: "is_default DESC, COALESCE(list_kind,''), COALESCE(sort_order, 999999), id ASC",
+  );
+  return rows.map(FoodPortion.fromMap).toList();
+}
+
 
   Future<void> setDefaultPortion(int foodId, int portionId) async {
     await db.transaction((txn) async {
@@ -155,21 +158,32 @@ class NutritionDao {
 
   // keep your existing int-keyed method if you want; add this alongside it
 Future<Map<String, double>> getFoodNutrientsPer100gByCode(int foodId) async {
-  final rows = await db.rawQuery('''
-    SELECT n.code, fn.amount_per_100g
-    FROM food_nutrients fn
-    JOIN nutrients n ON n.id = fn.nutrient_id
-    WHERE fn.food_id = ?
-  ''', [foodId]);
+  // Prefer v22 flexible table
+    final rows = await db.rawQuery('''
+      SELECT n.code AS code, fnv.amount AS amount
+      FROM food_nutrient_values fnv
+      JOIN nutrients n ON n.id = fnv.nutrient_id
+      WHERE fnv.food_id = ? AND fnv.basis = 'per_100g'
+    ''', [foodId]);
 
-  final out = <String, double>{};
-  for (final r in rows) {
-    final code = r['code'] as String?;
-    final amt  = r['amount_per_100g'] as num?;
-    if (code != null && amt != null) out[code] = amt.toDouble();
+    if (rows.isNotEmpty) {
+      return {
+        for (final r in rows) (r['code'] as String): (r['amount'] as num).toDouble(),
+      };
+    }
+
+    // Fallback to legacy per_100g table (if any)
+    final legacy = await db.rawQuery('''
+      SELECT n.code AS code, fn.amount_per_100g AS amount
+      FROM food_nutrients fn
+      JOIN nutrients n ON n.id = fn.nutrient_id
+      WHERE fn.food_id = ?
+    ''', [foodId]);
+
+    return {
+      for (final r in legacy) (r['code'] as String): (r['amount'] as num).toDouble(),
+    };
   }
-  return out;
-}
 
 
   // ───────────────────────────────────────────────────────────────────────────
@@ -465,4 +479,333 @@ Future<Map<String, double>> getFoodNutrientsPer100gByCode(int foodId) async {
       WHERE profile_id = ? AND food_id = ?
     ''', [now, profileId, foodId]);
   }
+
+   // --- CREATE a custom food -----------------------------------------------
+  Future<int> insertCustomFood({
+    required String name,
+    String? brand,
+  }) async {
+    return await db.insert('foods', {
+      'name': name,
+      'brand': brand?.trim().isEmpty == true ? null : brand?.trim(),
+      'is_custom': 1,
+      'data_source': 'user',
+      'created_at': DateTime.now().toIso8601String(),
+      'updated_at': DateTime.now().toIso8601String(),
+    });
+  }
+
+  // --- Utility: map nutrient code -> id ------------------------------------
+  Future<Map<String, int>> _codeToId(Set<String> codes) async {
+    if (codes.isEmpty) return {};
+    final placeholders = List.filled(codes.length, '?').join(',');
+    final rows = await db.query(
+      'nutrients',
+      columns: ['id','code'],
+      where: 'code IN ($placeholders)',
+      whereArgs: codes.toList(),
+    );
+    return {
+      for (final r in rows) (r['code'] as String): (r['id'] as int),
+    };
+  }
+
+  // --- UPSERT per-100g by code into v22 table ------------------------------
+  Future<void> replacePer100gByCode(int foodId, Map<String, double> codeToAmount) async {
+    if (codeToAmount.isEmpty) return;
+    final c2i = await _codeToId(codeToAmount.keys.toSet());
+    await db.transaction((txn) async {
+      // wipe existing per_100g rows for this food
+      await txn.delete(
+        'food_nutrient_values',
+        where: 'food_id = ? AND basis = ?',
+        whereArgs: [foodId, 'per_100g'],
+      );
+
+      // insert fresh
+      for (final e in codeToAmount.entries) {
+        final nid = c2i[e.key];
+        if (nid == null) continue; // skip unknown codes
+        await txn.insert(
+          'food_nutrient_values',
+          {
+            'food_id': foodId,
+            'nutrient_id': nid,
+            'amount': e.value,
+            'basis': 'per_100g',
+          },
+          conflictAlgorithm: ConflictAlgorithm.ignore,
+        );
+      }
+    });
+  }
+
+  // Utility: normalize a UI label like "Vitamin C (mg)" → "vitamin c"
+String _normalizeLabel(String s) {
+  // strip trailing " (unit)" if present, then lowercase+trim
+  final i = s.lastIndexOf(' (');
+  final base = i >= 0 ? s.substring(0, i) : s;
+  return base.trim().toLowerCase();
+}
+
+/// Load a mapping of alias/name/code -> code, all normalized.
+/// We include:
+///  - nutrient_aliases.alias
+///  - nutrients.name
+///  - nutrients.code (so direct code matches work too)
+Future<Map<String, String>> _buildAliasToCodeMap(Database db) async {
+  final map = <String, String>{};
+
+  // aliases
+  final aliasRows = await db.rawQuery('''
+    SELECT n.code AS code, a.alias AS alias
+    FROM nutrient_aliases a
+    JOIN nutrients n ON n.id = a.nutrient_id
+  ''');
+  for (final r in aliasRows) {
+    final code = (r['code'] as String);
+    final alias = _normalizeLabel(r['alias'] as String);
+    map[alias] = code;
+  }
+
+  // names
+  final nameRows = await db.query('nutrients', columns: ['code', 'name']);
+  for (final r in nameRows) {
+    final code = (r['code'] as String);
+    final name = _normalizeLabel(r['name'] as String);
+    map[name] = code;
+  }
+
+  // also allow direct code match (already normalized-ish)
+  final codeRows = await db.query('nutrients', columns: ['code']);
+  for (final r in codeRows) {
+    final code = (r['code'] as String);
+    map[code.toLowerCase()] = code;
+  }
+
+  // A few hard defaults that are common in our UI
+  map.putIfAbsent('calories', () => 'KCAL');
+  map.putIfAbsent('protein',  () => 'PROTEIN');
+  map.putIfAbsent('carbs',    () => 'CARB');
+  map.putIfAbsent('fats',     () => 'FAT');
+
+  return map;
+}
+
+/// Convert a “label → value” map (coming from FoodCustomizationPage payload)
+/// into “code → amount” using aliases/names/codes.
+Future<Map<String, double>> mapLabelsToCodes(Database db, Map<String, dynamic> labelToValue) async {
+  final aliasMap = await _buildAliasToCodeMap(db);
+
+  double nums(dynamic x) => (x is num) ? x.toDouble() : double.tryParse('$x') ?? 0.0;
+
+  final out = <String, double>{};
+  for (final e in labelToValue.entries) {
+    final rawKey = e.key;
+
+    // The payload may contain full paths "Micronutrients > Vitamins > Vitamin C (mg)".
+    // We only care about the leaf label.
+    final leaf = rawKey.split('>').last.trim();      // "Vitamin C (mg)"
+    final norm = _normalizeLabel(leaf);              // "vitamin c"
+
+    final code = aliasMap[norm];
+    if (code == null) continue;                      // unknown → skip
+
+    final val = nums(e.value);
+    // keep non-NaN
+    if (val.isFinite) out[code] = val;
+  }
+  return out;
+}
+
+/// Save a payload from FoodCustomizationPage into per_100g values.
+/// This will wipe old per_100g values and replace them with the new set.
+Future<void> savePer100gFromLabelPayload(int foodId, Map<String, dynamic> payload) async {
+  // Step 1: pull top-level fields (the simple ones you already show at the top)
+  final base = <String, double>{};
+  double nums(dynamic x) => (x is num) ? x.toDouble() : double.tryParse('$x') ?? 0.0;
+
+  if (payload.containsKey('calories'))  base['KCAL']    = nums(payload['calories']);
+  if (payload.containsKey('protein_g')) base['PROTEIN'] = nums(payload['protein_g']);
+  if (payload.containsKey('carbs_g'))   base['CARB']    = nums(payload['carbs_g']);
+  if (payload.containsKey('fats_g'))    base['FAT']     = nums(payload['fats_g']);
+
+  // Step 2: convert the rest of the form fields via alias mapping
+  // Strip out known meta keys so we only feed nutrient-ish keys into the mapper.
+  final copy = Map<String, dynamic>.from(payload)
+    ..remove('name') ..remove('brand')
+    ..remove('calories') ..remove('protein_g')
+    ..remove('carbs_g') ..remove('fats_g');
+
+  final mapped = await mapLabelsToCodes(db, copy);
+
+  // Merge (explicit base wins if there’s conflict)
+  final codeToAmount = <String, double>{}
+    ..addAll(mapped)
+    ..addAll(base);
+
+  // Persist using your v22 table
+  await replacePer100gByCode(foodId, codeToAmount);
+}
+
+
+/// Returns (code, unit) for a display alias (e.g., "Lysine (g)").
+Future<Map<String, String>?> resolveAlias(String alias) async {
+  final rows = await db.rawQuery('''
+    SELECT n.code AS code, n.unit AS unit
+    FROM nutrient_aliases a
+    JOIN nutrients n ON n.id = a.nutrient_id
+    WHERE a.alias = ?
+    LIMIT 1
+  ''', [alias.trim()]);
+  if (rows.isEmpty) return null;
+  final r = rows.first;
+  return {'code': r['code'] as String, 'unit': r['unit'] as String};
+}
+
+/// Upsert per-100g values using alias labels as keys.
+Future<void> savePer100gByAlias(int foodId, Map<String, double> aliasToAmount) async {
+  // Build alias -> (code, unit) map on the fly
+  await db.transaction((txn) async {
+    for (final entry in aliasToAmount.entries) {
+      final alias = entry.key.trim();
+      final amount = entry.value;
+
+      final rows = await txn.rawQuery('''
+        SELECT n.id AS nid, n.code AS code, n.unit AS unit
+        FROM nutrient_aliases a
+        JOIN nutrients n ON n.id = a.nutrient_id
+        WHERE a.alias = ?
+        LIMIT 1
+      ''', [alias]);
+
+      if (rows.isEmpty) continue; // unknown alias -> skip silently
+      final nid = rows.first['nid'] as int;
+
+      // Write into the *new* flexible table as per_100g
+      await txn.insert(
+        'food_nutrient_values',
+        {
+          'food_id': foodId,
+          'nutrient_id': nid,
+          'amount': amount,
+          'basis': 'per_100g',
+          'portion_id': null,
+          'unit_override': null,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+
+      // Keep legacy mirror in sync (handy until you fully move off it)
+      await txn.insert(
+        'food_nutrients',
+        {
+          'food_id': foodId,
+          'nutrient_id': nid,
+          'amount_per_100g': amount,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    }
+  });
+}
+
+
+Future<int> addPortion(
+  int foodId, {
+  required String measureName,
+  double? gramWeight,
+  double? mlVolume,
+  bool isDefault = false,
+
+  // v23 fields:
+  String? listKind,
+  int?    sortOrder,
+  double? amount,
+  String? unit,
+  String? label,
+}) async {
+  return await db.transaction((txn) async {
+    if (isDefault) {
+      // ensure only one default per food
+      await txn.update(
+        'food_portions',
+        {'is_default': 0},
+        where: 'food_id = ?',
+        whereArgs: [foodId],
+      );
+    }
+    return await txn.insert('food_portions', {
+      'food_id': foodId,
+      'measure_name': measureName,
+      'gram_weight': gramWeight,
+      'ml_volume': mlVolume,
+      'is_default': isDefault ? 1 : 0,
+      'list_kind'   : listKind,
+      'sort_order'  : sortOrder,
+      'amount'      : amount,
+      'unit'        : unit,
+      'label'       : label,
+    });
+  });
+}
+
+
+Future<void> replacePortions(int foodId, List<FoodPortion> portions) async {
+  await db.transaction((txn) async {
+    // wipe existing
+    await txn.delete('food_portions', where: 'food_id = ?', whereArgs: [foodId]);
+
+    // ensure at least one default
+    final hasDefault = portions.any((p) => p.isDefault);
+    var i = 0;
+
+    for (final p in portions) {
+      final isDef = hasDefault ? p.isDefault : (i == 0);
+
+      // Compose a good display name if none provided
+      final measureName = (p.measureName.trim().isNotEmpty)
+          ? p.measureName.trim()
+          : _composeMeasureName(p);
+
+      await txn.insert('food_portions', {
+        'food_id'     : foodId,
+        'measure_name': measureName,
+        'gram_weight' : p.gramWeight,
+        'ml_volume'   : p.mlVolume,
+        'is_default'  : isDef ? 1 : 0,
+
+        // v23 extras (OK if NULL when you don’t care)
+        'list_kind'   : p.listKind,                 // 'basis' | 'usual' | null
+        'sort_order'  : p.sortOrder ?? i,
+        'amount'      : p.amount,
+        'unit'        : p.unit,
+        'label'       : p.label,
+      });
+
+      i++;
+    }
+  });
+}
+
+// Helpers (keep private in the DAO file)
+String _composeMeasureName(FoodPortion p) {
+  if ((p.label ?? '').trim().isNotEmpty) return p.label!.trim();
+
+  final parts = <String>[];
+  if (p.amount != null && (p.unit?.trim().isNotEmpty ?? false)) {
+    parts.add('${_trimNum(p.amount!)} ${p.unit!.trim()}');
+  }
+  if (p.gramWeight != null) parts.add('• ${_trimNum(p.gramWeight!)} g');
+  if (p.mlVolume   != null) parts.add('• ${_trimNum(p.mlVolume!)} ml');
+
+  return parts.isEmpty ? 'Portion' : parts.join(' ');
+}
+
+String _trimNum(num v) {
+  final s = v.toStringAsFixed(2);
+  return s.replaceFirst(RegExp(r'\.?0+$'), '');
+}
+
+  
 }

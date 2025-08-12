@@ -60,17 +60,21 @@ Future<_MacroPreview> _loadPreview(Food f) async {
   );
 
   // 2) resolve grams for 1 portion
-  double? grams = portion.gramWeight;
-  if (grams == null && portion.mlVolume != null && f.densityGPerMl != null) {
-    grams = portion.mlVolume! * f.densityGPerMl!;
-  }
+double? grams = portion.gramWeight;
+// TODO(density): if gramWeight is missing and only mL is known, we assume 1 g/mL
+// when the food has no stored density. Replace with real density when available.
+if (grams == null && portion.mlVolume != null) {
+  final density = f.densityGPerMl ?? 1.0; // 1 g/mL fallback
+  grams = portion.mlVolume! * density;
+}
 
   // 3) fetch nutrients per 100g
   // 3) fetch nutrients per 100g (code-keyed map)
-final per100 = await _repo.getFoodNutrientsPer100gByCode(f.id!);
-final double? p100 = per100['PROTEIN'];
-final double? f100 = per100['FAT'];
-final double? c100 = per100['CARB'];
+final per100 = await _repo.getMacroPer100gLegacySafe(f.id!);
+final double? p100 = per100['PROTEIN_G'];
+final double? f100 = per100['FAT_G'];
+final double? c100 = per100['CARB_G'];
+
   // 4) scale to the chosen portion (default to 100g if grams unknown)
   final g = (grams ?? 100).toDouble();
   final scale = g / 100.0;
@@ -109,18 +113,22 @@ String _macroLine(_MacroPreview m) =>
   
 
   void _kickoffSearch(String q) {
-    _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 250), () async {
-      setState(() => _searching = true);
-      try {
-        final rows = await _repo.searchFoods(q, limit: 50);
-        if (!mounted) return;
-        setState(() => _results = rows);
-      } finally {
-        if (mounted) setState(() => _searching = false);
-      }
+  _debounce?.cancel();
+  _debounce = Timer(const Duration(milliseconds: 250), () async {
+    setState(() {
+      _searching = true;
+      _previewFuture.clear(); // ← clear cached rows when query changes
     });
-  }
+    try {
+      final rows = await _repo.searchFoods(q, limit: 50);
+      if (!mounted) return;
+      setState(() => _results = rows);
+    } finally {
+      if (mounted) setState(() => _searching = false);
+    }
+  });
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -267,16 +275,138 @@ String _macroLine(_MacroPreview m) =>
           child: ListTile(
             title: const Text('Add New Food Item'),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const FoodCustomizationPage()),
-              );
-            },
+            onTap: () async {
+  final result = await Navigator.of(context).push(
+    MaterialPageRoute(builder: (_) => const FoodCustomizationPage()),
+  );
+
+  if (result is Map) {
+    await _saveCustomFoodFromPayload(result);
+    // optionally refresh results list
+    _kickoffSearch(_searchCtrl.text);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Custom food saved')),
+      );
+    }
+  }
+},
           ),
         );
       },
     );
   }
+
+/* ///OLD VERSION
+Future<void> _saveCustomFoodFromPayload(Map payload) async {
+  // 0) Basic fields
+  final name  = (payload['name'] as String?)?.trim();
+  if (name == null || name.isEmpty) return;
+  final brand = (payload['brand'] as String?)?.trim();
+
+  // 1) Create the food shell
+  final foodId = await _repo.createCustomFood(name: name, brand: brand);
+
+  // 2) Save top-level macros/calories by *code*
+  double? nums(dynamic v) {
+    if (v == null) return null;
+    if (v is num) return v.toDouble();
+    return double.tryParse('$v');
+  }
+
+  final byCode = <String, double>{};
+  final kcal = nums(payload['calories']);   // "Calories (kcal)" field from the form
+  final prot = nums(payload['protein_g']);
+  final carb = nums(payload['carbs_g']);
+  final fat  = nums(payload['fats_g']);
+
+  if (kcal != null) byCode['ENERGY_KCAL'] = kcal; // present in extended seed
+  if (prot != null) byCode['PROTEIN_G']   = prot;
+  if (carb != null) byCode['CARB_G']      = carb;
+  if (fat  != null) byCode['FAT_G']       = fat;
+
+  if (byCode.isNotEmpty) {
+    await _repo.savePer100gByCode(foodId, byCode);
+  }
+
+  // 3) Save *all other* leaf values by alias (labels from your UI/JSON)
+  await _repo.saveExtendedPer100gFromPayload(foodId, payload);
+
+  // 4) Ensure a default "100 g" portion exists (handy for logging right away)
+  final portions = await _repo.getPortionsForFood(foodId);
+  if (portions.isEmpty) {
+    await _repo.addPortion(
+      foodId,
+      measureName: '100 g',
+      gramWeight: 100,
+      mlVolume: null,
+      isDefault: true,
+    );
+  }
+
+  // 5) Optionally refresh current list so the new food shows up immediately
+  _kickoffSearch(_searchCtrl.text);
+}
+*/
+
+Future<void> _saveCustomFoodFromPayload(Map payload) async {
+  final name  = (payload['name'] as String?)?.trim();
+  if (name == null || name.isEmpty) return;
+  final brand = (payload['brand'] as String?)?.trim();
+
+  // 1) Create the food shell
+  final foodId = await _repo.createCustomFood(name: name, brand: brand);
+
+  // 2) Per-100g nutrients from labels/codes/aliases (wipes & replaces)
+  await _repo.savePer100gFromLabelPayload(foodId, Map<String, dynamic>.from(payload));
+
+ 
+
+  // 4) Portions (v23). If none provided, ensure at least a default 100 g.
+  final List portionsJson = (payload['portions'] as List?) ?? [];
+  if (portionsJson.isEmpty) {
+    await _repo.replacePortions(foodId, [
+      FoodPortion(
+        id: null,
+        foodId: foodId,
+        measureName: '100 g',
+        gramWeight: 100,
+        mlVolume: null,
+        isDefault: true,
+        listKind: 'basis',
+        sortOrder: 0,
+        amount: 100,
+        unit: 'g',
+        label: null,
+      ),
+    ]);
+  } else {
+    final portions = <FoodPortion>[];
+    for (final p in portionsJson) {
+      final m = Map<String, dynamic>.from(p as Map);
+  final rawDefault = m['is_default'];
+  final isDefault = rawDefault is bool
+      ? rawDefault
+      : (rawDefault is num ? rawDefault.toInt() == 1 : false);
+
+      portions.add(FoodPortion(
+    id          : null,
+    foodId      : foodId,
+    measureName : m['measure_name'] as String,
+    gramWeight  : (m['gram_weight'] as num?)?.toDouble(),
+    mlVolume    : (m['ml_volume'] as num?)?.toDouble(),
+    isDefault   : isDefault,
+    listKind    : m['list_kind'] as String?,
+    sortOrder   : m['sort_order'] as int?,
+    amount      : (m['amount'] as num?)?.toDouble(),
+    unit        : m['unit'] as String?,
+    label       : m['label'] as String?,
+  ));
+}
+    await _repo.replacePortions(foodId, portions);
+  }
+}
+
 
   Future<void> _openAddSheet(BuildContext context, Food food) async {
     final portions = await _repo.getPortionsForFood(food.id!);
@@ -403,15 +533,36 @@ String _macroLine(_MacroPreview m) =>
                             if (profile.current?.id == null) return;
 
                             final portionId = selected?.id; // may be null for the "100 g" fallback
-                            await profile.addFood(
-                              meal: meal,
-                              foodId: food.id!,
-                              portionId: portionId,
-                              quantity: qty,
-                              gramsOverride: (portionId == null && selected?.gramWeight != null)
-                                  ? selected!.gramWeight! * qty
-                                  : null,
-                            );
+                            double? gramsOverride;
+
+  if (portionId == null) {
+    // Virtual fallback portion (e.g., "100 g")
+    if (selected?.gramWeight != null) {
+      gramsOverride = selected!.gramWeight! * qty;
+    } else if (selected?.mlVolume != null) {
+      // TODO(density): fallback to 1 g/mL until a real density is provided
+      final density = food.densityGPerMl ?? 1.0;
+      gramsOverride = selected!.mlVolume! * density * qty;
+    }
+  } else {
+    // Real portion in DB. If it has no gramWeight and the food has no density,
+    // DAO can't resolve; compute here using 1 g/mL so totals still work.
+    if (selected?.gramWeight == null &&
+        selected?.mlVolume != null &&
+        food.densityGPerMl == null) {
+      // TODO(density): fallback to 1 g/mL until a real density is provided
+      gramsOverride = selected!.mlVolume! * 1.0 * qty;
+    }
+  }
+
+
+                             await profile.addFood(
+    meal: meal,
+    foodId: food.id!,
+    portionId: portionId,
+    quantity: qty,
+    gramsOverride: gramsOverride,
+  );
 
                             if (!mounted || !(ctx.mounted)) return;   // guard both contexts
   Navigator.pop(ctx);                       // close sheet

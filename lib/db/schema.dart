@@ -123,6 +123,8 @@ class Schema {
     await migrateV19(db);
     await migrateV20(db);
     await migrateV21(db);
+    await migrateV22(db);
+    await migrateV23(db);
   }
 
   /// Handler for onUpgrade callback.
@@ -147,6 +149,8 @@ class Schema {
     if (oldVersion < 19) await migrateV19(db);
     if (oldVersion < 20) await migrateV20(db);
     if (oldVersion < 21) await migrateV21(db);
+    if (oldVersion < 22) await migrateV22(db);
+    if (oldVersion < 23) await migrateV23(db);
   }
 
   /// Migration to version 3: adds rating, equipment/muscle tables.
@@ -869,7 +873,103 @@ static Future<void> migrateV21(Database db) async {
   });
 }
 
+static Future<void> migrateV22(Database db) async {
+  await db.transaction((txn) async {
+    // 1) Flexible nutrient values (supports per_100g, per_100ml, per_portion, absolute)
+    await txn.execute("""
+      CREATE TABLE IF NOT EXISTS food_nutrient_values (
+        id            INTEGER PRIMARY KEY AUTOINCREMENT,
+        food_id       INTEGER NOT NULL,
+        nutrient_id   INTEGER NOT NULL,
+        amount        REAL    NOT NULL,
+        basis         TEXT    NOT NULL CHECK (basis IN ('per_100g','per_100ml','per_portion','absolute')),
+        portion_id    INTEGER,        -- used when basis = 'per_portion'
+        unit_override TEXT,           -- optional unit override for odd cases
+        FOREIGN KEY(food_id)     REFERENCES foods(id)          ON DELETE CASCADE,
+        FOREIGN KEY(nutrient_id) REFERENCES nutrients(id)      ON DELETE RESTRICT,
+        FOREIGN KEY(portion_id)  REFERENCES food_portions(id)  ON DELETE SET NULL
+      );
+    """);
 
+    // Uniqueness with NULL-safe portion handling
+    await txn.execute("""
+      CREATE UNIQUE INDEX IF NOT EXISTS ux_fnv_unique
+      ON food_nutrient_values(food_id, nutrient_id, basis, COALESCE(portion_id, -1));
+    """);
+
+    // Helpful indexes for common reads
+    await txn.execute("""
+      CREATE INDEX IF NOT EXISTS idx_fnv_food_nutrient_basis
+      ON food_nutrient_values(food_id, nutrient_id, basis);
+    """);
+
+    // One-time backfill from legacy per-100g table (safe to run multiple times)
+    await txn.execute("""
+      INSERT OR IGNORE INTO food_nutrient_values (food_id, nutrient_id, amount, basis)
+      SELECT food_id, nutrient_id, amount_per_100g, 'per_100g'
+      FROM food_nutrients;
+    """);
+
+    // 2) Optional: grouping for UI organization / ordering
+    await txn.execute("""
+      CREATE TABLE IF NOT EXISTS nutrient_groups (
+        id        INTEGER PRIMARY KEY AUTOINCREMENT,
+        name      TEXT NOT NULL,
+        parent_id INTEGER,
+        sort_key  INTEGER NOT NULL DEFAULT 0,
+        FOREIGN KEY(parent_id) REFERENCES nutrient_groups(id) ON DELETE CASCADE
+      );
+    """);
+
+    await txn.execute("""
+      CREATE TABLE IF NOT EXISTS nutrient_group_members (
+        group_id    INTEGER NOT NULL,
+        nutrient_id INTEGER NOT NULL,
+        sort_key    INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY(group_id, nutrient_id),
+        FOREIGN KEY(group_id)    REFERENCES nutrient_groups(id)  ON DELETE CASCADE,
+        FOREIGN KEY(nutrient_id) REFERENCES nutrients(id)        ON DELETE CASCADE
+      );
+    """);
+
+    await txn.execute("""
+      CREATE INDEX IF NOT EXISTS idx_ngm_group ON nutrient_group_members(group_id);
+    """);
+    await txn.execute("""
+      CREATE INDEX IF NOT EXISTS idx_ngm_nutrient ON nutrient_group_members(nutrient_id);
+    """);
+
+    // 3) Optional: aliases to resolve multiple labels to the same nutrient
+    await txn.execute("""
+      CREATE TABLE IF NOT EXISTS nutrient_aliases (
+        nutrient_id INTEGER NOT NULL,
+        alias       TEXT    NOT NULL,
+        PRIMARY KEY(nutrient_id, alias),
+        FOREIGN KEY(nutrient_id) REFERENCES nutrients(id) ON DELETE CASCADE
+      );
+    """);
+
+    await txn.execute("""
+      CREATE INDEX IF NOT EXISTS idx_aliases_alias ON nutrient_aliases(alias);
+    """);
+  });
+}
+
+static Future<void> migrateV23(Database db) async {
+  await db.transaction((txn) async {
+    // New columns to preserve UI details
+    await txn.execute("ALTER TABLE food_portions ADD COLUMN list_kind TEXT;");
+    await txn.execute("ALTER TABLE food_portions ADD COLUMN sort_order INTEGER NOT NULL DEFAULT 0;");
+    await txn.execute("ALTER TABLE food_portions ADD COLUMN amount REAL;");
+    await txn.execute("ALTER TABLE food_portions ADD COLUMN unit TEXT;");
+    await txn.execute("ALTER TABLE food_portions ADD COLUMN label TEXT;");
+
+    await txn.execute("""
+      CREATE INDEX IF NOT EXISTS idx_food_portions_food_sort
+      ON food_portions(food_id, list_kind, sort_order, id);
+    """);
+  });
+}
 
 
 }

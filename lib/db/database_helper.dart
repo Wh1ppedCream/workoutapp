@@ -123,6 +123,13 @@ if (oldVersion < 12) {
     if (oldVersion < 21) {
       await Schema.migrateV21(db);
     }
+    if (oldVersion < 22) {
+      await Schema.migrateV22(db);
+      await Seed.seedExtendedNutrients(db);
+    }
+    if (oldVersion < 23) {
+      await Schema.migrateV23(db);
+    }
   },
 );
   }
@@ -139,6 +146,7 @@ if (oldVersion < 12) {
     await Seed.seedAnalyticsDefaults(db);
 
     await NutritionDao(db).seedNutrientsIfEmpty();
+    await Seed.seedExtendedNutrients(db);
   await Seed.seedFoods(db);
   // (Optional) If FTS exists, backfill it once:
   await _rebuildFoodFtsIfExists(db);
@@ -2547,5 +2555,82 @@ Future<DayTotals> getDayTotals(int profileId, DateTime date) async =>
 
 Future<void> recalcDayTotals(int profileId, DateTime date) async =>
     NutritionDao(await database).recalcDayTotals(profileId, date);
+
+Future<int> createCustomFood({required String name, String? brand}) async {
+    return NutritionDao(await database).insertCustomFood(name: name, brand: brand);
+  }
+
+  Future<void> savePer100gByCode(int foodId, Map<String, double> codeToAmount) async {
+    await NutritionDao(await database).replacePer100gByCode(foodId, codeToAmount);
+  }
+
+  Future<void> savePer100gFromLabelPayload(int foodId, Map<String, dynamic> payload) async {
+  await NutritionDao(await database).savePer100gFromLabelPayload(foodId, payload);
+}
+
+/// Extracts leaf labels from the customization payload and persists per-100g values
+/// using nutrient_aliases to resolve labels.
+Future<void> saveExtendedPer100gFromPayload(int foodId, Map payload) async {
+  // Keys from your page we should ignore (handled separately)
+  const skip = {
+    'name', 'brand', 'calories', 'protein_g', 'carbs_g', 'fats_g',
+  };
+
+  // Leaf labels are the *last* segment after " > "
+  // e.g. "Macronutrients > Protein (g)" -> "Protein (g)"
+  final aliasMap = <String, double>{};
+
+  for (final entry in payload.entries) {
+    final key = '${entry.key}';
+    if (skip.contains(key)) continue;
+
+    final rawVal = entry.value;
+    if (rawVal == null) continue;
+
+    // numeric only; ignore blanks/strings that don't parse
+    final val = (rawVal is num) ? rawVal.toDouble() : double.tryParse('$rawVal');
+    if (val == null) continue;
+
+    final lastGt = key.lastIndexOf('>');
+    final alias = (lastGt == -1 ? key : key.substring(lastGt + 1)).trim();
+
+    // Store under the display alias; DAO will resolve alias -> nutrient_id
+    aliasMap[alias] = val;
+  }
+
+  if (aliasMap.isEmpty) return;
+  await NutritionDao(await database).savePer100gByAlias(foodId, aliasMap);
+}
+
+Future<int> addPortion(
+    int foodId, {
+    required String measureName,
+    double? gramWeight,
+    double? mlVolume,
+    bool isDefault = false,
+    // v23 fields:
+  String? listKind,
+  int?    sortOrder,
+  double? amount,
+  String? unit,
+  String? label,
+  }) async {
+    return NutritionDao(await database).addPortion(
+      foodId,
+      measureName: measureName,
+      gramWeight: gramWeight,
+      mlVolume: mlVolume,
+      isDefault: isDefault,
+      listKind: listKind,
+      sortOrder: sortOrder,
+      amount: amount,
+      unit: unit,
+      label: label,
+    );
+  }
+
+  Future<void> replacePortions(int foodId, List<FoodPortion> portions) async {
+    await NutritionDao(await database).replacePortions(foodId, portions);
+  }
 
 }

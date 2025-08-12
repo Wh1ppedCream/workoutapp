@@ -1,0 +1,26 @@
+onboarding flow saving
+	personal info:
+		name
+		gender
+		date of birth
+		height
+		weight
+	use of app:
+		nutrition
+		exercise
+		measurements
+	starting nutritional info
+		if weight has been >10 above current weight before (bool)
+		weight trend (gain, lose, maintain or not sure)
+		bodyfat estimate%
+		prefered diet type (balanced, low fat, low carb, keto)
+		calorie floor number
+		what training being done during program (lifting, cardio, both, none)
+		prefered protein intake (low, moderate, high, very high)
+		current target weight
+		taget goal rate (loss or gain of x lbs per week)
+	starting exercise info
+		exercise frequency (per week - 0, 1-3, 4-6, 7+)
+		activity level in steps (low - 0to5k, moderate - 5to15k, high - 15k+)
+		weightlifting experience (none, beginner - <1yr, intermediate - 1to4yr, advanced - 4yr+)
+		cardio experience (none, beginner - <1yr, intermediate - 1to4yr, advanced - 4yr+)

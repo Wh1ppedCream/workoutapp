@@ -1,0 +1,43 @@
+- flow chart
+		- default preset flow
+			- create default version of preset flow
+				- make default for use across all profiles
+				- maybe make defaults for individual profiles also
+			- completely restructure method management
+			- for new presets, these default methods will be coppied over and used as starting point
+		- restructuring method management
+			- new method management screen
+				- shows profiles as large collapsable headlines
+				- shows presets as smaller collapsable headlines under profiles
+				- shows methods as list items
+					- default methods for all profiles (meaning methods for the app-wide-default flow) are shown at top under large collapsable 'default' headline
+						- if new profiles are made, these app-wide-default methods are coppied into the profile's default and are the methods the profile default starts wtih
+					- default methods for a specific profile (meaning methods for the profile-default flow) are shown under the profile headline, under a smaller collapsable 'default' headline, above the first preset headline
+						- if new presets are made under this specific profile, these profile-default methods are coppied into the specific new preset and are the methods the specific new preset starts wtih
+					- specific methods for a specific preset are just under the preset headline
+					- method layout and actions:
+						- drag_handle to far left side of list tile	
+							- method can be dragged out of the collapsable headline it is under, into other smaller or larger collapsable headlines and if let go there, will open up pop up box with options to 'copy' 'move' or 'cancel'
+								- 'copy' will add a copy of this method to the area it was dragged to.
+									- eg:
+								- 'move' will move the method to the new position, where it can only be used there
+									- eg:
+								- 'cancel' will make no changes
+						- method name to right of drag handle
+						- to far right, small edit icon and small delete icon
+							- edit icon will open up method add/edit pop-up
+								- this is the pop up our auto_preset_flow_screen currently uses, with name box, type drop down and the other same fields, it will simply be prepopulated with existing information so users can alter the method
+							- delete icon will open up confirmation pop-up asking 'do you want to delete this method?'.
+						- between method name and edit, delete icons: there will be badges/rounded colored boxes indicating which type of method this is:
+							- each option for type of method will have a different color.
+							- options: weight, rep, addSet, delSet
+				- each list of methods will have a bar at the end of it before the next header for '+ add method' which will open up a pop up box much like the one on our flow pages for creating a method.
+					- filling out the information and creating the method will add it to the list of methods above the '+ add method'
+					- editing a method will also open up the same pop-up box but with the information for the saved method prepopulated
+		- profile settings page version
+			- has drop down to select profile
+				- by default has no profile selected and shows default flow across all profiles
+				- after selecting a profile has dropdown to select specific preset within that profile
+					- by default, after profile selected, no specific preset will be selected and will show default flow for that profile
+					- after preset is selected, will show flow for that preset, the same way it shows up in auto_preset_flow_screen.dart, after opening that from a specifc preset_detail_screen.
+		

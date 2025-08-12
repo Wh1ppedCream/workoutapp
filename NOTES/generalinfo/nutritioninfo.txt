@@ -1,0 +1,228 @@
+calories
+
+proteins:
+	Alanine
+	Arginine
+	Asparagine
+	Aspartic acid
+	Cysteine
+	Glutamic acid
+	Glutamine
+	Glycine
+	Histidine
+	Isoleucine
+	Leucine
+	Lysine
+	Methionine
+	Phenylalanine
+	Proline
+	Serine
+	Threonine
+	Tryptophan
+	Tyrosine
+	Valine
+	
+	
+Carbs:
+	Net Carbs
+    Glycemic Index
+    Glycemic Load
+	Starch
+		- Polysaccharides
+			- Amylose
+			- Amylopectin 
+		- Digestibility
+			- Rapidly Digestible Starch (RDS)
+			- Slowly Digestible Starch (SDS)
+			- Resistant Starch (RS)
+				- RS1
+				- RS2
+				- RS3
+				- RS4
+	Sugars
+		- Monosaccharides
+			- Glucose
+			- Fructose
+			- Calactose
+		- Disaccharides
+			- Sucrose
+			- Lactose
+			- Maltose
+		- Oligosaccharides
+            - Raffinose
+            - Stachyose
+            - Verbascose
+		- Sugar Alcohols
+			- Xylitol
+			- Erythritol
+			- Sorbitol
+			- Mannitol
+			- Isomalt
+			- Lactitol
+		- Added Sugars
+			High-fructose corn syrup
+			Cane sugar
+			Maple syrup
+			Honey
+			Agave nectar
+			Brown sugar
+			Molasses
+	Fiber 
+		- Soluble Fiber
+			- Pectin
+			- Beta-glucans
+			- Inulin
+			- Psyllium
+			- Gums
+		- Insoluble
+			- Cellulose
+			- Hemicellulose
+			- Lignin
+		- Functional Fibers
+			- Resistant Starch (RS1–RS4)
+			- Fructooligosaccharides (FOS)
+			- Galactooligosaccharides (GOS)
+		
+Fats:
+	Saturated Fat
+		Palmitic Acid
+		Stearic Acid
+		Lauric Acid
+		Myristic Acid
+		Capric Acid
+		Caprylic Acid
+		Caproic Acid
+	Trans Fat
+		Artificial Trans Fats
+		Natural Trans Fats
+	Unsaturated Fat
+		Monounsaturated Fat
+			Oleic Acid
+			Palmitoleic Acid
+			Vaccenic Acid
+		Polyunsaturated Fat
+			Omega-3 Fatty Acids
+				ALA (Alpha-Linolenic Acid)
+				DHA (Docosahexaenoic Acid)
+				EPA (Eicosapentaenoic Acid)
+			Omega-6 Fatty Acids
+				Linoleic Acid
+				Arachidonic Acid
+			Omega-9 Fatty Acids
+				- Oleic Acid
+				- Meads Acid
+
+		- Other Lipid Types
+            - Phospholipids (e.g., Lecithin)
+            - Sterols
+                - Cholesterol
+                - Phytosterols
+            - Triglycerides
+			
+Micronutrients:
+	- Vitamins
+		Vitamin A (Retinol & Beta-Carotene)
+		Vitamin B1 (Thiamine)
+		Vitamin B2 (Riboflavin)
+		Vitamin B3 (Niacin)
+		Vitamin B5 (Pantothenic Acid)
+		Vitamin B6 (Pyridoxine)
+		Vitamin B7 (Biotin)		
+		Vitamin B9 (Folate)
+		Vitamin B12 (Cobalamin)
+		Vitamin C (Ascorbic Acid)
+		Vitamin D
+            - D2 (Ergocalciferol)
+            - D3 (Cholecalciferol)
+		Vitamin E (Tocopherols)
+		Vitamin K
+            - K1 (Phylloquinone)
+            - K2 (Menaquinone)
+	- Minerals
+		Boron
+		Copper
+		Chromium
+		Chloride
+		Choline
+		Fluoride
+		Iodine
+		Iron
+		Molybdenum
+		Manganese
+		Phosphorus
+		Selenium
+		Sulfur
+		Zinc
+		- Electrolytes
+            - Sodium
+            - Potassium
+            - Chloride
+            - Magnesium
+            - Calcium
+			
+Additional Components:
+	Cholesterol
+	Water Content
+	Alcohol
+	Caffeine
+	Phytochemicals (e.g., lutein, zeaxanthin)
+	Antioxidants
+	Additives/Preservatives (if processed)
+	Artificial Sweeteners
+        - Aspartame
+        - Sucralose
+        - Saccharin
+        - Acesulfame K
+	Food Enzymes
+        - Amylase
+        - Lactase
+        - Bromelain
+        - Papain
+	Prebiotics
+		- Inulin
+		- FOS
+		- GOS
+	Probiotics
+		- Lactobacillus
+		- Bifidobacterium
+		- Saccharomyces boulardii
+	Anti-Nutrients
+        - Tannins
+        - Oxalates
+        - Lectins
+        - Phytates
+	Contaminants
+        - Lead
+        - Mercury
+        - Arsenic
+	Functional Additives
+        - Emulsifiers (e.g., Carrageenan, Xanthan gum)
+        - Thickeners (e.g., Guar gum)
+        - Colorants
+        - Flavorings
+		
+		
+		
+		
+		
+{
+    "name": "Oats (dry)",
+    "brand": null,
+    "barcode": null,
+    "density_g_per_ml": null,
+    "portions": [
+      { "measure_name": "100 g",     "gram_weight": 100 },
+      { "measure_name": "1/2 cup",   "gram_weight": 40,  "is_default": true },
+      { "measure_name": "1 cup",     "gram_weight": 80 }
+    ],
+    "nutrients": {
+      "ENERGY_KCAL": 389,
+      "PROTEIN": 16.9,
+      "FAT": 6.9,
+      "CARB": 66.3,
+      "FIBER": 10.6,
+      "SUGARS": 0.9,
+      "FASAT": 1.2,
+      "SODIUM": 2
+    }
+  }
