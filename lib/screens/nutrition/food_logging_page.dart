@@ -14,36 +14,24 @@ import 'food_customization_page.dart';
 
 class _PlateItem {
   final Food food;
-  final int? portionId;
-  final String portionLabel;
-  final double quantity;
-  final double? gramsPerPortion; // precomputed (for qty=1)
-  final double? gramsOverride;   // used for virtual “100 g” fallback
-  final MealType meal;
+  FoodPortion? portion; // mutable, may be null for virtual 100 g
+  double qty;           // mutable
+  MealType meal;
 
-  const _PlateItem({
+  _PlateItem({
     required this.food,
-    required this.portionId,
-    required this.portionLabel,
-    required this.quantity,
-    required this.gramsPerPortion,
-    required this.gramsOverride,
+    required this.portion,
+    required this.qty,
     required this.meal,
   });
-
-  double? get gramsTotal {
-    if (gramsOverride != null) return gramsOverride;
-    if (gramsPerPortion != null) return gramsPerPortion! * quantity;
-    return null; // will fallback to 100 g during summary calc
-  }
 }
+
 
 class _PlateSummary {
   final int kcal, p, f, c;
   const _PlateSummary(this.kcal, this.p, this.f, this.c);
 }
 
-final List<_PlateItem> _plate = [];
 
 
 class FoodLoggingPage extends StatefulWidget {
@@ -68,7 +56,81 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
 
   final Map<int, Future<_MacroPreview>> _previewFuture = {};
 
-  
+  final List<_PlateItem> _plate = [];
+
+  // Cache portions per food to avoid repeated queries
+final Map<int, Future<List<FoodPortion>>> _portionCache = {};
+
+// Cache per100g macros per food
+final Map<int, Future<Map<String, double>>> _per100Cache = {};
+
+Color _plateBorderColor(_PlateItem it, int index, BuildContext ctx) {
+  final cs = Theme.of(ctx).colorScheme;
+
+  // Option A: color by meal
+  switch (it.meal) {
+    case MealType.breakfast: return cs.primary.withValues(alpha: 0.55);
+    case MealType.lunch:     return cs.tertiary.withValues(alpha: 0.55);
+    case MealType.dinner:    return cs.secondary.withValues(alpha: 0.55);
+    case MealType.snack:     return cs.error.withValues(alpha: 0.45);
+  }
+}
+
+
+Future<List<FoodPortion>> _getPortions(int foodId) {
+  return _portionCache.putIfAbsent(foodId, () => _repo.getPortionsForFood(foodId));
+}
+
+FoodPortion? _matchPortionById(List<FoodPortion> items, FoodPortion? want) {
+  final wid = want?.id;
+  if (wid == null) return null;
+  for (final p in items) {
+    if (p.id == wid) return p;
+  }
+  return null;
+}
+
+
+Future<Map<String, double>> _getPer100(int foodId) {
+  // Uses your synonym-safe repo method; swap if you prefer another.
+  return _per100Cache.putIfAbsent(foodId, () => _repo.getMacroPer100gLegacySafe(foodId));
+}
+
+// grams for ONE unit of the selected portion (fallbacks to 100g)
+// TODO: replace the 1.0 g/mL fallback with real density when available.
+double _gramsForOne(Food food, FoodPortion? portion) {
+  if (portion == null) return 100.0;            // virtual 100 g
+  if (portion.gramWeight != null) return portion.gramWeight!;
+  if (portion.mlVolume != null) {
+    final density = food.densityGPerMl ?? 1.0;  // ← TODO density
+    return portion.mlVolume! * density;
+  }
+  return 100.0;
+}
+
+// Per-line totals (kcal / P / F / C) for given quantity
+Future<_LineMacros> _calcLine(_PlateItem it) async {
+  final per100 = await _getPer100(it.food.id!);
+  final gOne = _gramsForOne(it.food, it.portion);
+  final gTotal = gOne * (it.qty <= 0 ? 0 : it.qty);
+
+  double pickKeys(List<String> keys) {
+  double sum = 0;
+  for (final k in keys) {
+    final v = per100[k];
+    if (v != null) sum += v;
+  }
+  return sum * (gTotal / 100.0);
+}
+
+final kcal = pickKeys(['ENERGY_KCAL', 'KCAL']);
+final p    = pickKeys(['PROTEIN', 'PROTEIN_G']);
+final f    = pickKeys(['FAT', 'FAT_G']);
+final c    = pickKeys(['CARB', 'CARB_G']);
+
+return _LineMacros(kcal: kcal, p: p, f: f, c: c);
+
+}
 
 Future<_MacroPreview> _loadPreview(Food f) async {
   if (f.id == null) return _MacroPreview.empty('—');
@@ -104,20 +166,26 @@ if (grams == null && portion.mlVolume != null) {
   grams = portion.mlVolume! * density;
 }
 
-  // 3) fetch nutrients per 100g
   // 3) fetch nutrients per 100g (code-keyed map)
 final per100 = await _repo.getMacroPer100gLegacySafe(f.id!);
-final double? p100 = per100['PROTEIN_G'];
-final double? f100 = per100['FAT_G'];
-final double? c100 = per100['CARB_G'];
+double pick(List<String> keys) => keys
+    .map((k) => per100[k])
+    .whereType<num>()
+    .map((n) => n.toDouble())
+    .fold(0.0, (a, b) => a + b);
+
+final p100 = pick(['PROTEIN','PROTEIN_G']);
+final f100 = pick(['FAT','FAT_G']);
+final c100 = pick(['CARB','CARB_G']);
+
 
   // 4) scale to the chosen portion (default to 100g if grams unknown)
   final g = (grams ?? 100).toDouble();
   final scale = g / 100.0;
 
-  int? pG = p100 == null ? null : (p100 * scale).round();
-  int? fG = f100 == null ? null : (f100 * scale).round();
-  int? cG = c100 == null ? null : (c100 * scale).round();
+  final int pG = (p100 * scale).round();
+final int fG = (f100 * scale).round();
+final int cG = (c100 * scale).round();
 
   return _MacroPreview(
     proteinG: pG,
@@ -235,32 +303,181 @@ String _macroLine(_MacroPreview m) =>
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // Header summary
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
           child: FutureBuilder<_PlateSummary>(
-            future: _computePlateSummary(),
+            future: _computePlateSummary(), // you already have this from earlier step
             builder: (context, snap) {
               final s = snap.data;
-              final title = s == null ? 'Plate' : 'Plate • ${s.kcal} kcal  •  ${s.p}P ${s.f}F ${s.c}C';
-              return Text(title, style: Theme.of(context).textTheme.titleMedium);
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(s == null ? '— kcal' : '${s.kcal} kcal',
+                      style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: 2),
+                  Text(s == null ? '—P —F —C' : '${s.p}P ${s.f}F ${s.c}C',
+                      style: Theme.of(context).textTheme.labelMedium),
+                ],
+              );
             },
           ),
         ),
         const Divider(height: 1),
 
+        // Plate lines
         Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.all(8),
+          child: ListView.separated(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
             itemCount: _plate.length,
-            itemBuilder: (_, i) {
+            separatorBuilder: (_, __) => const SizedBox(height: 8),
+            itemBuilder: (context, i) {
               final it = _plate[i];
-              return Card(
-                child: ListTile(
-                  title: Text(it.food.name),
-                  subtitle: Text('${it.quantity} × ${it.portionLabel}'),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete_outline),
-                    onPressed: () => setState(() => _plate.removeAt(i)),
+final borderColor = _plateBorderColor(it, i, context);
+
+return Card(
+  elevation: 0,
+  clipBehavior: Clip.antiAlias, // keeps rounded corners crisp
+  shape: RoundedRectangleBorder(
+    side: BorderSide(color: borderColor, width: 1.25),
+    borderRadius: BorderRadius.circular(12),
+  ),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Row 1: Name + per-line macros + delete
+                      Row(
+                        children: [
+                          Expanded(
+                            child: FutureBuilder<_LineMacros>(
+                              future: _calcLine(it),
+                              builder: (context, snap) {
+                                final m = snap.data;
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(it.food.name,
+                                        style: Theme.of(context).textTheme.bodyLarge,
+                                        maxLines: 1, overflow: TextOverflow.ellipsis),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      m == null
+                                          ? '… kcal • …P …F …C'
+                                          : '${m.kcalText()} • ${m.macroText()}',
+                                      style: Theme.of(context).textTheme.labelSmall,
+                                    ),
+                                  ],
+                                );
+                              },
+                            ),
+                          ),
+                          IconButton(
+                            tooltip: 'Remove',
+                            onPressed: () => setState(() => _plate.removeAt(i)),
+                            icon: const Icon(Icons.delete_outline),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      // Row 2: Portion dropdown
+                      FutureBuilder<List<FoodPortion>>(
+                        future: _getPortions(it.food.id!),
+                        builder: (context, snap) {
+                          final portions = snap.data ?? const <FoodPortion>[];
+                          final fallback = FoodPortion(
+                            id: null,
+                            foodId: it.food.id!,
+                            measureName: '100 g',
+                            gramWeight: 100,
+                            mlVolume: null,
+                            isDefault: portions.isEmpty,
+                          );
+                          final items = portions.isEmpty ? [fallback] : portions;
+
+// Use identical instance from items (by id) or fallbacks
+FoodPortion? current = _matchPortionById(items, it.portion)
+  ?? items.firstWhere((p) => p.isDefault, orElse: () => items.first);
+
+                          return Row(
+                            children: [
+                              const Text('Portion:'),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: DropdownButton<FoodPortion>(
+                                  isExpanded: true,
+                                  value: current,
+                                  items: items.map((p) {
+                                    final label =
+                                        '${p.measureName}'
+                                        '${p.gramWeight != null ? ' • ${p.gramWeight!.round()} g' : ''}'
+                                        '${p.mlVolume != null ? ' • ${p.mlVolume!.round()} ml' : ''}';
+                                    return DropdownMenuItem(value: p, child: Text(label));
+                                  }).toList(),
+                                  onChanged: (v) {
+                                    if (v == null) return;
+                                    setState(() {
+                                      // Change portion
+                                      it.portion = v;
+
+                                      // Merge with any sibling line that now matches (same food & portion)
+                                      final j = _plate.indexWhere((other) =>
+  !identical(other, it) &&
+  other.food.id == it.food.id &&
+  other.meal == it.meal && // ← add this line
+  (other.portion?.id ?? -1) == (it.portion?.id ?? -1)
+);
+
+                                      if (j >= 0) {
+                                        it.qty += _plate[j].qty;
+                                        _plate.removeAt(j);
+                                      }
+                                    });
+                                  },
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      // Row 3: Quantity stepper
+                      Row(
+  children: [
+    const Text('Qty:'),
+    const SizedBox(width: 8),
+    _qtyButton(icon: Icons.remove, onTap: () {
+      setState(() => it.qty = (it.qty - 1).clamp(0, 9999).toDouble());
+    }),
+    SizedBox(
+      width: 60, // was 72 to free a bit of space
+      child: _QtyEditor(
+        qty: it.qty,
+        onChanged: (v) => setState(() => it.qty = v < 0 ? 0 : v),
+      ),
+    ),
+    _qtyButton(icon: Icons.add, onTap: () {
+      setState(() => it.qty += 1);
+    }),
+    const SizedBox(width: 8),
+    Flexible( // <-- let trailing text shrink instead of overflowing
+      child: Text(
+        '${_gramsForOne(it.food, it.portion).round()} g / unit',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        textAlign: TextAlign.right,
+        style: Theme.of(context).textTheme.labelSmall,
+      ),
+    ),
+  ],
+)
+
+                    ],
                   ),
                 ),
               );
@@ -268,33 +485,60 @@ String _macroLine(_MacroPreview m) =>
           ),
         ),
 
-        Padding(
-          padding: const EdgeInsets.all(12),
-          child: ElevatedButton.icon(
-            icon: const Icon(Icons.check),
-            label: Text(_plate.isEmpty ? 'Log' : 'Log ${_plate.length}'),
-            onPressed: () async {
-              if (_plate.isEmpty) {
-                Navigator.of(context).maybePop(); // just close drawer
-                return;
-              }
-              final profile = context.read<NutritionProfile>();
-              for (final it in _plate) {
-                await profile.addFood(
-                  meal: it.meal,
-                  foodId: it.food.id!,
-                  portionId: it.portionId,
-                  quantity: it.quantity,
-                  gramsOverride: it.gramsOverride, // grams-per-portion is resolved inside DAO if needed
-                );
-              }
-              if (!mounted) return;
-              setState(() => _plate.clear());
-              Navigator.of(context).pop();      // close drawer
-              Navigator.of(context).pop(true);  // leave page
-            },
+        // Footer: Log all
+        // Footer: Log all (single full-width button with border)
+SafeArea(
+  top: false,
+  child: Padding(
+    padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+    child: SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        icon: const Icon(Icons.check),
+        label: const Text('Add All to Diary'),
+        onPressed: _plate.isEmpty ? null : () async {
+          final profile = context.read<NutritionProfile>();
+          final pid = profile.current?.id;
+          if (pid == null) return;
+
+          for (final it in _plate) {
+            final portionId = it.portion?.id;
+            // TODO(density): use real density; fallback to 1 g/mL for mL-only
+            final gramsOverride = (portionId == null)
+                ? _gramsForOne(it.food, it.portion) * it.qty
+                : null;
+
+            await profile.addFood(
+              meal: it.meal,
+              foodId: it.food.id!,
+              portionId: portionId,
+              quantity: it.qty,
+              gramsOverride: gramsOverride,
+            );
+          }
+
+          if (!mounted) return;
+          setState(() => _plate.clear());
+          Navigator.of(context).pop(); // close drawer
+          Navigator.of(context).pop(true); // leave page
+        },
+        style: ButtonStyle(
+          padding: WidgetStateProperty.all(const EdgeInsets.symmetric(vertical: 14)),
+          shape: WidgetStateProperty.all(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+              side: BorderSide(
+                color: Theme.of(context).colorScheme.primary, // border color
+                width: 1.25,
+              ),
+            ),
           ),
         ),
+      ),
+    ),
+  ),
+)
+
       ],
     ),
   ),
@@ -371,33 +615,35 @@ String _macroLine(_MacroPreview m) =>
                 ),
                 const SizedBox(width: 8),
                 ElevatedButton(
-  onPressed: () async {
-    final profile = context.read<NutritionProfile>();
+  onPressed: _plate.isEmpty ? null : () async {
+  final profile = context.read<NutritionProfile>();
+  final pid = profile.current?.id;
+  if (pid == null) return;
 
-    if (_plate.isEmpty) {
-      Navigator.of(context).pop(false);
-      return;
-    }
+  for (final it in _plate) {
+    final portionId = it.portion?.id;
+    // TODO(density): replace 1 g/mL fallback when real density is available
+    final gramsOverride = (portionId == null)
+        ? _gramsForOne(it.food, it.portion) * it.qty
+        : null;
 
-    // Add all queued items
-    for (final it in _plate) {
-      await profile.addFood(
-        meal: it.meal,
-        foodId: it.food.id!,
-        portionId: it.portionId,
-        quantity: it.quantity,
-        gramsOverride: it.gramsOverride,
-      );
-    }
-
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Logged ${_plate.length} item${_plate.length == 1 ? "" : "s"}')),
+    await profile.addFood(
+      meal: it.meal,
+      foodId: it.food.id!,
+      portionId: portionId,
+      quantity: it.qty,
+      gramsOverride: gramsOverride,
     );
+  }
 
-    setState(() => _plate.clear());
-    Navigator.of(context).pop(true); // leave the page
-  },
+  if (!mounted) return;
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(content: Text('Logged ${_plate.length} item${_plate.length == 1 ? "" : "s"}')),
+  );
+  setState(() => _plate.clear());
+  Navigator.of(context).pop(true);
+},
+
   child: Text(_plate.isEmpty ? 'Done' : 'Log ${_plate.length}'),
 ),
 
@@ -710,31 +956,24 @@ Future<void> _saveCustomFoodFromPayload(Map payload) async {
   icon: const Icon(Icons.add_shopping_cart),
   label: const Text('Add to Plate'),
   onPressed: () async {
-  final portionId = selected?.id;
 
-  // grams for ONE portion
-  double? gramsPerPortion = selected?.gramWeight;
-  if (gramsPerPortion == null && selected?.mlVolume != null) {
-    final density = food.densityGPerMl ?? 1.0; // TODO: use real density when available
-    gramsPerPortion = selected!.mlVolume! * density;
+  
+
+  final keyId = selected?.id ?? -1;
+final idx = _plate.indexWhere((x) =>
+  x.food.id == food.id &&
+  (x.portion?.id ?? -1) == keyId &&
+  x.meal == meal,
+);
+setState(() {
+  if (idx >= 0) {
+    _plate[idx].qty += qty;
+  } else {
+    _plate.add(_PlateItem(food: food, portion: selected, qty: qty, meal: meal));
   }
+});
 
-  // If we’re using the virtual “100 g” fallback, keep gramsOverride
-  final double? gramsOverride = (portionId == null && selected?.gramWeight != null)
-      ? selected!.gramWeight! * qty
-      : null;
 
-  setState(() {
-    _plate.add(_PlateItem(
-      food: food,
-      portionId: portionId,
-      portionLabel: selected?.measureName ?? '100 g',
-      quantity: qty,
-      gramsPerPortion: gramsPerPortion,
-      gramsOverride: gramsOverride,
-      meal: meal,
-    ));
-  });
 
   Navigator.pop(ctx);
   if (mounted) {
@@ -760,14 +999,12 @@ Future<_PlateSummary> _computePlateSummary() async {
   double kcal = 0, p = 0, f = 0, c = 0;
 
   // cache per-food lookup
-  final Map<int, Map<String, double>> per100Cache = {};
 
   for (final it in _plate) {
     final id = it.food.id!;
-    var per100 = per100Cache[id];
-    per100 ??= per100Cache[id] = await _repo.getMacroPer100gLegacySafe(id);
+    final per100 = await _getPer100(id);
 
-    final grams = it.gramsTotal ?? 100.0; // fallback if unresolved
+    final grams = _gramsForOne(it.food, it.portion) * (it.qty <= 0 ? 0 : it.qty); // fallback if unresolved
     final scale = grams / 100.0;
 
     // kcal may be under ENERGY_KCAL or KCAL depending on your helper
@@ -826,3 +1063,56 @@ class _MacroPreview {
 }
 
 
+
+class _LineMacros {
+  final double kcal, p, f, c;
+  const _LineMacros({required this.kcal, required this.p, required this.f, required this.c});
+  String macroText() => '${p.round()}P ${f.round()}F ${c.round()}C';
+  String kcalText() => '${kcal.round()} kcal';
+}
+
+Widget _qtyButton({required IconData icon, required VoidCallback onTap}) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 6),
+    child: InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(6),
+      child: Container(
+        width: 36, height: 36,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Icon(icon, size: 18),
+      ),
+    ),
+  );
+}
+
+
+class _QtyEditor extends StatefulWidget {
+  final double qty;
+  final ValueChanged<double> onChanged;
+  const _QtyEditor({required this.qty, required this.onChanged});
+  @override State<_QtyEditor> createState() => _QtyEditorState();
+}
+class _QtyEditorState extends State<_QtyEditor> {
+  late final TextEditingController _c;
+  @override void initState() { super.initState(); _c = TextEditingController(text: _fmt(widget.qty)); }
+  @override void didUpdateWidget(covariant _QtyEditor old) {
+    super.didUpdateWidget(old);
+    if (widget.qty != old.qty && _c.text != _fmt(widget.qty)) _c.text = _fmt(widget.qty);
+  }
+  String _fmt(double v)=> (v % 1 == 0) ? v.toStringAsFixed(0) : v.toStringAsFixed(1);
+  @override void dispose(){ _c.dispose(); super.dispose(); }
+  @override Widget build(BuildContext context) {
+    return TextFormField(
+      controller: _c,
+      textAlign: TextAlign.center,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      onChanged: (s){ final v = double.tryParse(s); if (v != null) widget.onChanged(v < 0 ? 0 : v); },
+      decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 8), border: OutlineInputBorder()),
+    );
+  }
+}
