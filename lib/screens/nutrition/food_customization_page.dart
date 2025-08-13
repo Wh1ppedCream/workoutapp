@@ -3,16 +3,39 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../models/nutrition_models.dart';
+
+
 /// A page for adding or editing a food item.
 /// Updated: unified numeric field layout + parents can hold values
 /// and expose a separate "Breakdown" dropdown *under* the field.
 /// Now groups Protein/Carbs/Fats inside a single "Macronutrients" card.
 class FoodCustomizationPage extends StatefulWidget {
-  const FoodCustomizationPage({super.key});
+  const FoodCustomizationPage({
+    super.key,
+    this.initialFoodId,
+    this.initialName,
+    this.initialBrand,
+    this.initialCalories,
+    this.initialProteinG,
+    this.initialCarbsG,
+    this.initialFatsG,
+    this.initialPortions,
+  });
+
+  final int? initialFoodId;
+  final String? initialName;
+  final String? initialBrand;
+  final double? initialCalories;
+  final double? initialProteinG;
+  final double? initialCarbsG;
+  final double? initialFatsG;
+  final List<FoodPortion>? initialPortions;
 
   @override
   State<FoodCustomizationPage> createState() => _FoodCustomizationPageState();
 }
+
 
 class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
   final _formKey = GlobalKey<FormState>();
@@ -53,6 +76,102 @@ static const List<String> _allUnits = [..._massUnits, ..._volumeUnits];
 
 
   
+  @override
+void initState() {
+  super.initState();
+  _prefillIfEditing();
+}
+
+void _prefillIfEditing() {
+  final w = widget;
+
+  if (w.initialName != null)  _nameController.text   = w.initialName!;
+  if (w.initialBrand != null) _brandController.text  = w.initialBrand!;
+
+  if (w.initialCalories != null)  _calController.text     = _fmtNum(w.initialCalories!);
+  if (w.initialProteinG != null)  _proteinController.text = _fmtNum(w.initialProteinG!);
+  if (w.initialCarbsG != null)    _carbController.text    = _fmtNum(w.initialCarbsG!);
+  if (w.initialFatsG != null)     _fatController.text     = _fmtNum(w.initialFatsG!);
+
+  if (w.initialPortions != null && w.initialPortions!.isNotEmpty) {
+    _loadInitialPortions(w.initialPortions!);
+  }
+}
+
+String? _longUnitFromShort(String? s) {
+  switch (s) {
+    case 'g':   return 'gram (g)';
+    case 'mg':  return 'milligram (mg)';
+    case 'µg':  return 'microgram (µg)';
+    case 'kg':  return 'kilogram (kg)';
+    case 'oz':  return 'ounce (oz)';
+    case 'lb':  return 'pound (lb)';
+    case 'mL':  return 'milliliter (mL)';
+    case 'L':   return 'liter (L)';
+    case 'tsp': return 'teaspoon (tsp)';
+    case 'tbsp':return 'tablespoon (tbsp)';
+    case 'cup': return 'cup';
+    case 'fl oz': return 'fluid ounce (fl oz)';
+  }
+  return s;
+}
+
+void _loadInitialPortions(List<FoodPortion> parts) {
+  // clear existing default rows
+  for (final p in _basisPortions) { p.dispose(); }
+  for (final p in _usualPortions) { p.dispose(); }
+  _basisPortions.clear();
+  _usualPortions.clear();
+  _basisDefaultIndex = 0;
+  _usualDefaultIndex = 0;
+
+  // sort: list_kind → sort_order → id
+  parts.sort((a, b) {
+    int rank(String? k) => (k == 'basis') ? 0 : (k == 'usual' ? 1 : 2);
+    final r = rank(a.listKind) - rank(b.listKind);
+    if (r != 0) return r;
+    final sa = a.sortOrder ?? 0;
+    final sb = b.sortOrder ?? 0;
+    if (sa != sb) return sa - sb;
+    return (a.id ?? 0) - (b.id ?? 0);
+  });
+
+  for (final p in parts) {
+    final entry = PortionEntry(
+      unit: _longUnitFromShort(p.unit) ?? 'gram (g)',
+      amount: p.amount,
+      grams: p.gramWeight,
+      ml: p.mlVolume,
+    );
+    final isUsual = p.listKind == 'usual';
+    final list = isUsual ? _usualPortions : _basisPortions;
+    final idx = list.length;
+    list.add(entry);
+
+    if (p.isDefault) {
+      if (isUsual) {
+        _usualDefaultIndex = idx;
+      } else {
+        _basisDefaultIndex = idx;
+      }
+    }
+  }
+
+  if (_basisPortions.isEmpty) {
+    _basisPortions.add(PortionEntry(unit: 'gram (g)', amount: 100, grams: 100));
+  }
+  if (_usualPortions.isEmpty) {
+    _usualPortions.add(PortionEntry());
+  }
+  setState(() {}); // reflect into UI
+}
+
+
+String _fmtNum(num v) {
+  final s = v.toStringAsFixed(2);
+  return s.replaceFirst(RegExp(r'\.?0+$'), '');
+}
+
 
   @override
   void dispose() {
@@ -100,16 +219,25 @@ Map<String, dynamic> _collectPayload() {
     'carbs_g': _toDouble(_carbController.text),
     'fats_g': _toDouble(_fatController.text),
   };
+
+  // include all dynamic leaf/parent values
   for (final entry in _controllers.entries) {
     final v = entry.value.text.trim();
     if (v.isNotEmpty) payload[entry.key] = double.tryParse(v) ?? v;
   }
 
-  // NEW: include portions
+  // portions
   payload['portions'] = _portionsPayload(
     basisDefaultIndex: _basisDefaultIndex,
     usualDefaultIndex: _usualDefaultIndex,
   );
+
+  // ← NEW: if we're editing, return the ID so the caller updates, not inserts
+  // add only if we’re editing
+final id = widget.initialFoodId;   // local var gets promoted by the null-check
+if (id != null) {
+  payload['food_id'] = id;         // id is int, not int?
+}
 
   return payload;
 }
@@ -127,7 +255,7 @@ void _onSave() {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Customize Food'),
+        title: Text(widget.initialFoodId == null ? 'Customize Food' : 'Edit Food'),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
   floatingActionButton: SafeArea(

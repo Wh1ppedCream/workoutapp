@@ -1066,4 +1066,13 @@ Future<int> addPortion(
     Future<void> replacePortions(int foodId, List<FoodPortion> portions) =>
     _dbHelper.replacePortions(foodId, portions);
 
+
+Future<void> updateFoodBasics(int id, {String? name, String? brand}) =>
+    _dbHelper.updateFoodBasics(id, name: name, brand: brand);
+
+  Future<void> updateFoodFromCustomizationPayload(Map payload) async {
+    // Update food from a customization payload
+    await _dbHelper.updateFoodFromCustomizationPayload(payload);
+  }
+
 }

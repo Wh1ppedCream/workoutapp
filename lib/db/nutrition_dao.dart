@@ -861,5 +861,16 @@ String _trimNum(num v) {
   return s.replaceFirst(RegExp(r'\.?0+$'), '');
 }
 
+Future<void> updateFoodBasics(int id, {String? name, String? brand}) async {
+  final map = <String, Object?>{
+    if (name != null) 'name': name.trim(),
+    // store empty brand as NULL
+    'brand': (brand?.trim().isEmpty ?? true) ? null : brand!.trim(),
+    'updated_at': DateTime.now().toIso8601String(),
+  };
+  await db.update('foods', map, where: 'id = ?', whereArgs: [id]);
+}
+
+
   
 }

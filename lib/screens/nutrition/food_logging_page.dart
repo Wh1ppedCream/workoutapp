@@ -637,9 +637,11 @@ SafeArea(
   }
 
   if (!mounted) return;
+  /*
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(content: Text('Logged ${_plate.length} item${_plate.length == 1 ? "" : "s"}')),
   );
+  */
   setState(() => _plate.clear());
   Navigator.of(context).pop(true);
 },
@@ -681,10 +683,38 @@ SafeArea(
                 return Text(_macroLine(m));
               },
             ),
-            trailing: IconButton(
-              icon: const Icon(Icons.add_circle_outline),
-              onPressed: () => _openAddSheet(context, f),
-            ),
+            trailing: Row(
+  mainAxisSize: MainAxisSize.min,
+  children: [
+   
+   // GREY GEAR — customize food (prefilled editor)
+    IconButton(
+      tooltip: 'Customize food',
+      icon: const Icon(Icons.settings),
+      color: Colors.grey,
+      visualDensity: VisualDensity.compact,
+      onPressed: () => _openCustomizeFood(f),
+    ),
+    // YELLOW PEN — open the add sheet (current behavior)
+    IconButton(
+      tooltip: 'Edit & add',
+      icon: const Icon(Icons.edit),
+      color: Colors.amber, // or: Colors.amber.shade700
+      visualDensity: VisualDensity.compact,
+      onPressed: () => _openAddSheet(context, f),
+    ),
+    
+     // GREEN PLUS — quick add 1 default portion to plate
+    IconButton(
+      tooltip: 'Add 1',
+      icon: const Icon(Icons.add_circle),
+      color: Colors.green,
+      visualDensity: VisualDensity.compact,
+      onPressed: () => _quickAddOne(f),
+    ),
+  ],
+),
+
             onTap: () => _openAddSheet(context, f),
           ),
         );
@@ -832,6 +862,46 @@ Future<void> _saveCustomFoodFromPayload(Map payload) async {
 }
     await _repo.replacePortions(foodId, portions);
   }
+}
+
+Future<void> _quickAddOne(Food f) async {
+  final portions = await _getPortions(f.id!);
+
+  // pick default → first → virtual "100 g"
+  FoodPortion? portion;
+  if (portions.isEmpty) {
+    portion = FoodPortion(
+      id: null,
+      foodId: f.id!,
+      measureName: '100 g',
+      gramWeight: 100,
+      mlVolume: null,
+      isDefault: true,
+    );
+  } else {
+    portion = portions.firstWhere((p) => p.isDefault, orElse: () => portions.first);
+  }
+
+  // choose a default meal (you can change this later)
+  const meal = MealType.breakfast;
+
+  setState(() {
+    final keyId = portion?.id ?? -1;
+    final idx = _plate.indexWhere((x) =>
+        x.food.id == f.id && (x.portion?.id ?? -1) == keyId && x.meal == meal);
+    if (idx >= 0) {
+      _plate[idx].qty += 1.0;
+    } else {
+      _plate.add(_PlateItem(food: f, portion: portion, qty: 1.0, meal: meal));
+    }
+  });
+
+  if (!mounted) return;
+  /*
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(content: Text('Added 1 × ${portion.measureName} of ${f.name}')),
+  );
+  */
 }
 
 
@@ -994,6 +1064,86 @@ setState(() {
     );
 
   }
+
+Future<void> _openCustomizeFood(Food f) async {
+  // Pull current per-100g values and portions to prefill the page
+  final byCode = await _getPer100(f.id!);
+  double pick(List<String> keys) =>
+      keys.map((k) => byCode[k]).whereType<num>().fold<double>(0, (a, b) => a + b.toDouble());
+
+  final portions = await _getPortions(f.id!);
+
+  // NOTE: this expects FoodCustomizationPage to support these optional initial* params.
+  // You’ll add them there next.
+  final result = await Navigator.of(context).push(
+    MaterialPageRoute(
+      builder: (_) => FoodCustomizationPage(
+        initialFoodId: f.id!,
+        initialName: f.name,
+        initialBrand: f.brand,
+        initialCalories: (byCode['ENERGY_KCAL'] ?? byCode['KCAL'] ?? 0).toDouble(),
+        initialProteinG: pick(['PROTEIN', 'PROTEIN_G']),
+        initialCarbsG:   pick(['CARB', 'CARB_G']),
+        initialFatsG:    pick(['FAT', 'FAT_G']),
+        initialPortions: portions,
+      ),
+    ),
+  );
+
+  // If user saved, update this food and refresh caches/UI
+  if (result is Map && (result['food_id'] is int)) {
+    await _updateExistingFoodFromPayload(Map<String, dynamic>.from(result));
+
+    // purge caches so previews/portions refresh
+    _portionCache.remove(f.id);
+    _per100Cache.remove(f.id);
+    _previewFuture.remove(f.id);
+
+    if (mounted) _kickoffSearch(_searchCtrl.text);
+  }
+}
+
+Future<void> _updateExistingFoodFromPayload(Map<String, dynamic> payload) async {
+  final int foodId = payload['food_id'] as int;
+  final String? name  = (payload['name'] as String?)?.trim();
+  final String? brand = (payload['brand'] as String?)?.trim();
+
+  // 1) Update basics (name/brand)
+  await _repo.updateFoodBasics(foodId, name: name, brand: brand);
+
+  // 2) Replace per-100g nutrients
+  await _repo.savePer100gFromLabelPayload(foodId, payload);
+
+  // 3) Replace portions if present
+  final List portionsJson = (payload['portions'] as List?) ?? const [];
+  if (portionsJson.isNotEmpty) {
+    final portions = <FoodPortion>[];
+    for (final p in portionsJson) {
+      final m = Map<String, dynamic>.from(p as Map);
+      final rawDefault = m['is_default'];
+      final isDefault = rawDefault is bool
+          ? rawDefault
+          : (rawDefault is num ? rawDefault.toInt() == 1 : false);
+
+      portions.add(FoodPortion(
+        id          : null,
+        foodId      : foodId,
+        measureName : m['measure_name'] as String,
+        gramWeight  : (m['gram_weight'] as num?)?.toDouble(),
+        mlVolume    : (m['ml_volume'] as num?)?.toDouble(),
+        isDefault   : isDefault,
+        listKind    : m['list_kind'] as String?,
+        sortOrder   : m['sort_order'] as int?,
+        amount      : (m['amount'] as num?)?.toDouble(),
+        unit        : m['unit'] as String?,
+        label       : m['label'] as String?,
+      ));
+    }
+    await _repo.replacePortions(foodId, portions);
+  }
+}
+
+
 
 Future<_PlateSummary> _computePlateSummary() async {
   double kcal = 0, p = 0, f = 0, c = 0;
