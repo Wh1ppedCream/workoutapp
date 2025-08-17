@@ -3,27 +3,32 @@
 // Nutrition domain models:
 // - Nutrient master
 // - Foods + portions + per-100g nutrients
+// - Brands, Categories, Barcodes  ← NEW
 // - Recipes + ingredients
-// - Diary entries (per profile, per local day)
+// - Diary entries (per profile, per local day) + snapshots  ← EXPANDED
 // - Goals and per-day rollups (DayTotals)
 //
 // Notes:
 // • Booleans are stored as 0/1 in SQLite.
 // • Dates: diary/goals use local-day 'YYYY-MM-DD' TEXT in DB; here we expose DateTime.
-//• Units: amounts are raw (no rounding); format in UI.
+// • Units: amounts are raw (no rounding); format in UI.
 
 /// The four standard meal buckets.
 enum MealType { breakfast, lunch, dinner, snack }
 
 extension MealTypeX on MealType {
   int toInt() => index;
-  static MealType fromInt(int v) => MealType.values[v.clamp(0, MealType.values.length - 1)];
+  static MealType fromInt(int v) {
+    final i = v.clamp(0, MealType.values.length - 1).toInt();
+    return MealType.values[i];
+  }
 }
+
 
 /// Master list of nutrients (e.g., Energy, Protein, Fat, Carbs).
 class Nutrient {
   final int id;          // e.g., 1008 Energy (kcal), 1003 Protein (g), etc.
-  final String? code;    // optional external code
+  final String? code;    // optional external/code string (e.g., 'KCAL','PROTEIN_G')
   final String name;
   final String unit;     // "kcal","g","mg","µg"
 
@@ -49,28 +54,121 @@ class Nutrient {
       };
 }
 
+/// ────────────────────────────────────────────────────────────────────────────
+/// NEW: Normalized brand & category & barcode models
+/// ────────────────────────────────────────────────────────────────────────────
+
+class Brand {
+  final int? id;
+  final String name;
+  final String? manufacturer;
+
+  Brand({this.id, required this.name, this.manufacturer});
+
+  factory Brand.fromMap(Map<String, dynamic> m) => Brand(
+        id:            m['id'] as int?,
+        name:          m['name'] as String,
+        manufacturer:  m['manufacturer'] as String?,
+      );
+
+  Map<String, dynamic> toMap() => {
+        if (id != null) 'id': id,
+        'name': name,
+        'manufacturer': manufacturer,
+      };
+}
+
+class Category {
+  final int? id;
+  final String name;
+  final int? parentId;
+
+  Category({this.id, required this.name, this.parentId});
+
+  factory Category.fromMap(Map<String, dynamic> m) => Category(
+        id:       m['id'] as int?,
+        name:     m['name'] as String,
+        parentId: m['parent_id'] as int?,
+      );
+
+  Map<String, dynamic> toMap() => {
+        if (id != null) 'id': id,
+        'name': name,
+        'parent_id': parentId,
+      };
+}
+
+/// Separate table so a food can have many UPC/EANs / packaging variants.
+class FoodBarcode {
+  final int? id;
+  final int foodId;
+  final String upc; // UPC/EAN
+
+  FoodBarcode({this.id, required this.foodId, required this.upc});
+
+  factory FoodBarcode.fromMap(Map<String, dynamic> m) => FoodBarcode(
+        id:     m['id'] as int?,
+        foodId: m['food_id'] as int,
+        upc:    m['upc'] as String,
+      );
+
+  Map<String, dynamic> toMap() => {
+        if (id != null) 'id': id,
+        'food_id': foodId,
+        'upc': upc,
+      };
+}
+
 /// A food item (generic, branded, or user-created).
 class Food {
   final int? id;
   final String name;
-  final String? brand;
-  final bool isCustom;
-  final String? dataSource;    // 'seed','fdc','user', etc.
+
+  // Legacy/compat
+  final String? brand;         // DEPRECATED when brandId present (kept for backwards compatibility)
+  final String? barcode;       // DEPRECATED: use FoodBarcode rows
+
+  // Normalization / provenance (NEW)
+  final int? brandId;          // → Brand.id
+  final int? categoryId;       // → Category.id
+  final String? dataSource;    // e.g., 'seed','fdc','user','openfoodfacts'
   final String? dataSourceId;  // external id if imported
-  final String? barcode;       // UPC/EAN
-  final double? densityGPerMl; // for volume → grams conversions
-  final bool isDeleted;        // soft-delete
+  final int? fdcId;            // USDA FDC numeric id (if available)
+  final bool verified;         // trusted/approved source flag
+  final double? qualityScore;  // 0..1 or any scoring scheme
+  final int version;           // increment on import/edits
+
+  // Preparation/state (NEW)
+  final String? preparation;       // 'raw','boiled','grilled','drained','skinless', etc.
+  final double? ediblePortionPct;  // e.g., 100.0 for boneless edible portion, otherwise <100
+  final double? yieldPct;          // cooking yield %, e.g., 70.0 for grilled chicken
+
+  // Physical
+  final double? densityGPerMl;     // for volume → grams conversions
+
+  // Soft-delete & timestamps
+  final bool isCustom;             // user-created
+  final bool isDeleted;            // soft-delete
   final DateTime createdAt;
   final DateTime updatedAt;
 
   Food({
     this.id,
     required this.name,
-    this.brand,
+    this.brand,           // legacy
+    this.barcode,         // legacy
+    this.brandId,         // NEW
+    this.categoryId,      // NEW
     required this.isCustom,
     this.dataSource,
     this.dataSourceId,
-    this.barcode,
+    this.fdcId,           // NEW
+    this.verified = false,// NEW
+    this.qualityScore,    // NEW
+    this.version = 1,     // NEW
+    this.preparation,     // NEW
+    this.ediblePortionPct,// NEW
+    this.yieldPct,        // NEW
     this.densityGPerMl,
     this.isDeleted = false,
     required this.createdAt,
@@ -78,32 +176,57 @@ class Food {
   });
 
   factory Food.fromMap(Map<String, dynamic> m) => Food(
-        id:            m['id'] as int?,
-        name:          m['name'] as String,
-        brand:         m['brand'] as String?,
-        isCustom:     (m['is_custom'] as int) == 1,
-        dataSource:    m['data_source'] as String?,
-        dataSourceId:  m['data_source_id'] as String?,
-        barcode:       m['barcode'] as String?,
-        densityGPerMl:(m['density_g_per_ml'] as num?)?.toDouble(),
-        isDeleted:    (m['is_deleted'] as int? ?? 0) == 1,
-        createdAt:     DateTime.parse(m['created_at'] as String),
-        updatedAt:     DateTime.parse(m['updated_at'] as String),
+        id:              m['id'] as int?,
+        name:            m['name'] as String,
+        brand:           m['brand'] as String?,           // legacy
+        barcode:         m['barcode'] as String?,         // legacy
+        brandId:         m['brand_id'] as int?,           // NEW
+        categoryId:      m['category_id'] as int?,        // NEW
+        isCustom:       (m['is_custom'] as int? ?? 0) == 1,
+        dataSource:      m['data_source'] as String?,
+        dataSourceId:    m['data_source_id'] as String?,
+        fdcId:           m['fdc_id'] as int?,             // NEW
+        verified:       (m['verified'] as int? ?? 0) == 1,// NEW
+        qualityScore:   (m['quality_score'] as num?)?.toDouble(), // NEW
+        version:        (m['version'] as int? ?? 1),      // NEW
+        preparation:     m['preparation'] as String?,     // NEW
+        ediblePortionPct:(m['edible_portion_pct'] as num?)?.toDouble(), // NEW
+        yieldPct:        (m['yield_pct'] as num?)?.toDouble(), // NEW
+        densityGPerMl:  (m['density_g_per_ml'] as num?)?.toDouble(),
+        isDeleted:      (m['is_deleted'] as int? ?? 0) == 1,
+        createdAt:       DateTime.parse(m['created_at'] as String),
+        updatedAt:       DateTime.parse(m['updated_at'] as String),
       );
 
   Map<String, dynamic> toMap() => {
         if (id != null) 'id': id,
         'name':             name,
+
+        // legacy/compat
         'brand':            brand,
+        'barcode':          barcode,
+
+        // normalization / provenance
+        'brand_id':         brandId,
+        'category_id':      categoryId,
         'is_custom':        isCustom ? 1 : 0,
         'data_source':      dataSource,
         'data_source_id':   dataSourceId,
-        'barcode':          barcode,
+        'fdc_id':           fdcId,
+        'verified':         verified ? 1 : 0,
+        'quality_score':    qualityScore,
+        'version':          version,
+
+        // preparation/state
+        'preparation':        preparation,
+        'edible_portion_pct': ediblePortionPct,
+        'yield_pct':          yieldPct,
+
         'density_g_per_ml': densityGPerMl,
         'is_deleted':       isDeleted ? 1 : 0,
         'created_at':       createdAt.toIso8601String(),
         'updated_at':       updatedAt.toIso8601String(),
-      };
+      }..removeWhere((_, v) => v == null);
 }
 
 /// Portion definition for a food (e.g., "cup", "tbsp", "1 bar").
@@ -143,11 +266,11 @@ class FoodPortion {
         gramWeight: (m['gram_weight'] as num?)?.toDouble(),
         mlVolume:   (m['ml_volume'] as num?)?.toDouble(),
         isDefault:  (m['is_default'] as int? ?? 0) == 1,
-    listKind    : m['list_kind'] as String?,
-    sortOrder   : m['sort_order'] as int?,
-    amount      : (m['amount'] as num?)?.toDouble(),
-    unit        : m['unit'] as String?,
-    label       : m['label'] as String?,
+        listKind    : m['list_kind'] as String?,
+        sortOrder   : m['sort_order'] as int?,
+        amount      : (m['amount'] as num?)?.toDouble(),
+        unit        : m['unit'] as String?,
+        label       : m['label'] as String?,
       );
 
   Map<String, dynamic> toMap() => {
@@ -157,19 +280,19 @@ class FoodPortion {
         'gram_weight':  gramWeight,
         'ml_volume':    mlVolume,
         'is_default':   isDefault ? 1 : 0,
-    'list_kind'   : listKind,
-    'sort_order'  : sortOrder,
-    'amount'      : amount,
-    'unit'        : unit,
-    'label'       : label,
-  }..removeWhere((_, v) => v == null);
+        'list_kind'   : listKind,
+        'sort_order'  : sortOrder,
+        'amount'      : amount,
+        'unit'        : unit,
+        'label'       : label,
+      }..removeWhere((_, v) => v == null);
 }
 
 /// Per-100g nutrient amount for a food.
 class FoodNutrient {
   final int? id;
   final int foodId;
-  final int nutrientId;
+  final int nutrientId;        // → Nutrient.id (you can also map from code in repo)
   final double amountPer100g;
 
   FoodNutrient({
@@ -279,14 +402,25 @@ class RecipeIngredient {
 class DiaryEntry {
   final int? id;
   final int profileId;
-  final DateTime date;  // local day
+  final DateTime date;          // local day
   final MealType mealType;
   final int? foodId;
   final int? recipeId;
   final int? portionId;
-  final double quantity;   // portions (or multiplier for grams)
-  final double? grams;     // resolved mass at insert time
+  final double quantity;        // portions (or multiplier for grams)
+
+  // Resolved mass at insert time (compat) + NEW alias
+  final double? grams;          // legacy field kept for backward compatibility
+  final double? loggedGrams;    // NEW preferred field
+
   final String? notes;
+
+  // NEW: nutrient snapshots (freeze values at log time)
+  final double? kcalSnapshot;
+  final double? proteinGSnapshot;
+  final double? carbGSnapshot;
+  final double? fatGSnapshot;
+  final String? nutrientSnapshotJson; // optional sparse map for extended nutrients
 
   DiaryEntry({
     this.id,
@@ -297,8 +431,14 @@ class DiaryEntry {
     this.recipeId,
     this.portionId,
     this.quantity = 1.0,
-    this.grams,
+    this.grams,             // legacy
+    this.loggedGrams,       // NEW
     this.notes,
+    this.kcalSnapshot,      // NEW
+    this.proteinGSnapshot,  // NEW
+    this.carbGSnapshot,     // NEW
+    this.fatGSnapshot,      // NEW
+    this.nutrientSnapshotJson, // NEW
   });
 
   factory DiaryEntry.fromMap(Map<String, dynamic> m) => DiaryEntry(
@@ -310,8 +450,15 @@ class DiaryEntry {
         recipeId:   m['recipe_id'] as int?,
         portionId:  m['portion_id'] as int?,
         quantity:  (m['quantity'] as num?)?.toDouble() ?? 1.0,
-        grams:     (m['grams'] as num?)?.toDouble(),
+        grams:     (m['grams'] as num?)?.toDouble(),                 // legacy
+        loggedGrams:(m['logged_grams'] as num?)?.toDouble(),         // NEW
         notes:      m['notes'] as String?,
+
+        kcalSnapshot:      (m['kcal_snapshot'] as num?)?.toDouble(), // NEW
+        proteinGSnapshot:  (m['protein_g_snapshot'] as num?)?.toDouble(), // NEW
+        carbGSnapshot:     (m['carb_g_snapshot'] as num?)?.toDouble(), // NEW
+        fatGSnapshot:      (m['fat_g_snapshot'] as num?)?.toDouble(), // NEW
+        nutrientSnapshotJson: m['nutrient_snapshot_json'] as String?, // NEW
       );
 
   Map<String, dynamic> toMap() => {
@@ -323,9 +470,20 @@ class DiaryEntry {
         'recipe_id':  recipeId,
         'portion_id': portionId,
         'quantity':   quantity,
-        'grams':      grams,
+
+        // keep both for back/forward compat
+        'grams':        grams,
+        'logged_grams': loggedGrams,
+
         'notes':      notes,
-      };
+
+        // snapshots
+        'kcal_snapshot':        kcalSnapshot,
+        'protein_g_snapshot':   proteinGSnapshot,
+        'carb_g_snapshot':      carbGSnapshot,
+        'fat_g_snapshot':       fatGSnapshot,
+        'nutrient_snapshot_json': nutrientSnapshotJson,
+      }..removeWhere((_, v) => v == null);
 }
 
 /// Nutrition goals for a profile over a time window (open-ended if endDate null).
@@ -388,7 +546,7 @@ class NutritionGoal {
         'sugar_g':     sugarG,
         'sat_fat_g':   satFatG,
         'sodium_mg':   sodiumMg,
-      };
+      }..removeWhere((_, v) => v == null);
 }
 
 /// Cached daily totals per profile/date (fast dashboard reads).

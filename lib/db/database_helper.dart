@@ -50,10 +50,25 @@ class DatabaseHelper {
     final path = join(dbPath, 'fitness_tracker.db');
     return await openDatabase(
       path,
-      version: 21,  
+      version: 27,  
       onConfigure: (db) async {
-        await db.execute('PRAGMA foreign_keys = ON');
-      },
+    // OK with execute (doesn't return rows)
+    await db.execute('PRAGMA foreign_keys = ON');
+
+    // Use rawQuery for PRAGMA that return a value
+    try {
+      await db.rawQuery('PRAGMA journal_mode = WAL');
+      // Optional: log result -> [{'journal_mode': 'wal'}] on success
+      // debugPrint('WAL result: $res');
+    } catch (e) {
+      // Some devices/contexts may reject this; safe to continue without WAL
+      // debugPrint('Could not enable WAL: $e');
+    }
+
+    // If you set other PRAGMAs that return data, also prefer rawQuery:
+    // await db.rawQuery('PRAGMA synchronous = NORMAL');
+  },
+
       onCreate: _onCreate,
   onUpgrade: (db, oldVersion, newVersion) async {
     if (oldVersion < 3) {
@@ -114,8 +129,6 @@ if (oldVersion < 12) {
     if (oldVersion < 19) {
       await Schema.migrateV19(db);
   await NutritionDao(db).seedNutrientsIfEmpty(); // ✅ use raw db
-  await Seed.seedFoods(db);
-  await _rebuildFoodFtsIfExists(db);             // optional backfill
     }
     if (oldVersion < 20) {
       await Schema.migrateV20(db);
@@ -126,10 +139,31 @@ if (oldVersion < 12) {
     if (oldVersion < 22) {
       await Schema.migrateV22(db);
       await Seed.seedExtendedNutrients(db);
+    await Seed.seedFoods(db);              // ✅ now safe
     }
     if (oldVersion < 23) {
       await Schema.migrateV23(db);
     }
+    
+    if (oldVersion < 24) {
+      await Schema.migrateV24(db);
+    }
+    if (oldVersion < 25) {
+      await Schema.migrateV25(db);
+    }
+    if (oldVersion < 26) {
+      await Schema.migrateV26(db);
+    }
+
+    if (oldVersion < 27) {
+      await Schema.migrateV27(db);
+    }
+
+    // 🔽 run once after all structural changes
+  await _backfillNormalizedFoodKeys(db);
+
+    // After structural changes, refresh FTS if present:
+    await _rebuildFoodFtsIfExists(db);
   },
 );
   }
@@ -148,9 +182,117 @@ if (oldVersion < 12) {
     await NutritionDao(db).seedNutrientsIfEmpty();
     await Seed.seedExtendedNutrients(db);
   await Seed.seedFoods(db);
+
+// If you later add a big catalog:
+    // await Seed.seedFoodsExtended(db, assetPath: 'assets/foods_extended.json');
+
+   // Normalize/denormalize into the new tables on a fresh install as well:
+   await _backfillNormalizedFoodKeys(db);
+
   // (Optional) If FTS exists, backfill it once:
   await _rebuildFoodFtsIfExists(db);
   }
+
+
+
+  // ────────────────────────────────────────────────────────────────────────────
+  // BACKFILL METHODS
+  // ────────────────────────────────────────────────────────────────────────────
+
+
+   Future<void> _backfillNormalizedFoodKeys(Database db) async {
+  await db.transaction((txn) async {
+    // 1) Brands
+    await txn.execute("""
+      INSERT OR IGNORE INTO brands(name)
+      SELECT DISTINCT TRIM(brand)
+      FROM foods
+      WHERE brand IS NOT NULL AND TRIM(brand) <> '';
+    """);
+
+    // Use txn, not db, inside the transaction
+    await txn.execute("""
+      UPDATE foods
+      SET brand_id = (
+        SELECT b.id FROM brands b WHERE b.name = TRIM(foods.brand)
+      )
+      WHERE brand_id IS NULL AND brand IS NOT NULL AND TRIM(brand) <> '';
+    """);
+
+    // 2) Barcodes (only if foods.barcode exists)
+    if (await _tableHasColumn(txn, 'foods', 'barcode')) {
+      final rows = await txn.query(
+        'foods',
+        columns: ['id', 'barcode'],
+        where: "barcode IS NOT NULL AND TRIM(barcode) <> ''",
+      );
+      for (final r in rows) {
+        final raw = (r['barcode'] as String?) ?? '';
+        final upc = raw.replaceAll(RegExp(r'\D'), '');
+        if (upc.isEmpty) continue;
+        await txn.insert(
+          'food_barcodes',
+          {'food_id': r['id'], 'upc': upc},
+          conflictAlgorithm: ConflictAlgorithm.ignore,
+        );
+      }
+    }
+
+    // 3) Sources
+    await txn.execute("""
+      INSERT OR IGNORE INTO sources(name)
+      SELECT DISTINCT TRIM(COALESCE(data_source,'')) AS name
+      FROM foods
+      WHERE TRIM(COALESCE(data_source,'')) <> '';
+    """);
+
+    await txn.execute("""
+      UPDATE foods
+      SET source_id = (
+        SELECT s.id
+        FROM sources s
+        WHERE s.name = TRIM(COALESCE(foods.data_source,''))
+      )
+      WHERE source_id IS NULL
+        AND TRIM(COALESCE(data_source,'')) <> '';
+    """);
+
+    // 4) Default portion pointer (only if the column exists)
+    if (await _tableHasColumn(txn, 'foods', 'default_portion_id')) {
+      await txn.execute("""
+        UPDATE foods
+        SET default_portion_id = (
+          SELECT fp.id
+          FROM food_portions fp
+          WHERE fp.food_id = foods.id AND fp.is_default = 1
+          ORDER BY fp.id
+          LIMIT 1
+        )
+        WHERE default_portion_id IS NULL
+          AND EXISTS (
+            SELECT 1 FROM food_portions x
+            WHERE x.food_id = foods.id AND x.is_default = 1
+          );
+      """);
+    }
+
+    // 5) Backfill flexible per_100g from legacy
+    await txn.execute("""
+      INSERT INTO food_nutrient_values(food_id, nutrient_id, amount, basis)
+      SELECT fn.food_id, fn.nutrient_id, fn.amount_per_100g, 'per_100g'
+      FROM food_nutrients fn
+      WHERE NOT EXISTS (
+        SELECT 1
+        FROM food_nutrient_values v
+        WHERE v.food_id = fn.food_id
+          AND v.nutrient_id = fn.nutrient_id
+          AND v.basis = 'per_100g'
+      );
+    """);
+  });
+}
+
+
 
   Future<void> _rebuildFoodFtsIfExists(Database db) async {
   final exists = (Sqflite.firstIntValue(
@@ -926,40 +1068,33 @@ Future<void> reseedLookupData() async {
   Future<String> exportDatabase() async {
     final db = await database;
     final tables = [
-      'sessions',
-      'exercises',
-      'sets',
-      'cardio_details',
-      'stretch_instances',
-      'stretch_instance_items',
-      'measurement_definitions',
-      'measurements',
-      'equipment',
-      'bodypart',
-      'muscles',
-      'exercise_definitions',
-      'exercise_equipment',
-      'exercise_bodypart',
-      'exercise_muscle',
-      'stretch_definitions',
-      'stretch_bodypart',
-      'muscle_bodypart',
-      'bodypart_ranking',
-      'muscle_ranking',
-      'exercise_muscle_percent',
-      'bodypart_muscle_rankings',
-      'muscle_volume_boundaries',
-      'bodypart_volume_boundaries',
-      'preset_definitions',
-      'preset_exercises',
-      'preset_sets',
-      'preset_cardio_details',
-      'preset_stretch_items',
-      'gym_profiles',
-      'profile_equipment',
-      'exercise_rep_max',
-      'exercise_volume_max',
-    ];
+  // existing…
+  'sessions','exercises','sets','cardio_details',
+  'stretch_instances','stretch_instance_items',
+  'measurement_definitions','measurements',
+  'equipment','bodypart','muscles',
+  'exercise_definitions','exercise_equipment','exercise_bodypart','exercise_muscle',
+  'stretch_definitions','stretch_bodypart',
+  'muscle_bodypart','bodypart_ranking','muscle_ranking',
+  'exercise_muscle_percent','bodypart_muscle_rankings',
+  'muscle_volume_boundaries','bodypart_volume_boundaries',
+  'preset_definitions','preset_exercises','preset_sets',
+  'preset_cardio_details','preset_stretch_items',
+  'gym_profiles','profile_equipment',
+  'exercise_rep_max','exercise_volume_max',
+
+  // 🔽 nutrition domain
+  'nutrients','nutrient_aliases','nutrient_groups','nutrient_group_members',
+  'foods','food_portions','food_barcodes',
+  'food_nutrients','food_nutrient_values',
+  'recipes','recipe_ingredients',
+  'diary_entries','day_totals_cache','nutrition_goals',
+  'brands','sources','categories','food_usage_stats',
+  'flow_defaults',
+'flow_default_methods',
+'preset_flow_methods',
+];
+
     final Map<String, dynamic> data = {};
     for (final table in tables) {
       data[table] = await db.query(table);
@@ -987,6 +1122,9 @@ Future<void> reseedLookupData() async {
       }
       await txn.execute('PRAGMA foreign_keys = ON;');
     });
+    await _backfillNormalizedFoodKeys(db);
+await _rebuildFoodFtsIfExists(db);
+
   }
 
    // equipment.json
@@ -2681,5 +2819,60 @@ Future<void> updateFoodFromCustomizationPayload(Map payload) async {
     await replacePortions(foodId, portions);
   }
 }
+
+// Normalized upsert using brand/source/category + barcodes
+Future<int> upsertFoodWithKeys({
+  int? id,
+  required String name,
+  String? brandName,
+  String? sourceName,
+  String? categoryName,
+  List<String> barcodes = const [],
+  double? densityGPerMl,
+  bool isCustom = false,
+  String? dataSource,
+  String? dataSourceId,
+}) async =>
+    NutritionDao(await database).upsertFoodWithKeys(
+      id: id,
+      name: name,
+      brandName: brandName,
+      sourceName: sourceName,
+      categoryName: categoryName,
+      barcodes: barcodes,
+      densityGPerMl: densityGPerMl,
+      isCustom: isCustom,
+      dataSource: dataSource,
+      dataSourceId: dataSourceId,
+    );
+
+Future<Food?> getFoodByBarcode(String code) async =>
+    NutritionDao(await database).getFoodByBarcode(code);
+
+Future<void> addBarcode(int foodId, String code) async =>
+    NutritionDao(await database).addBarcode(foodId, code);
+
+// Quick calculator for a portion selection
+Future<Map<String,double>> calcForPortion({
+  required int foodId,
+  required int portionId,
+  double quantity = 1.0,
+}) async =>
+    NutritionDao(await database).calcForPortion(
+      foodId: foodId,
+      portionId: portionId,
+      quantity: quantity,
+    );
+
+// Optional: manual rebuild for FTS caller
+Future<void> rebuildFoodFts() async =>
+    _rebuildFoodFtsIfExists(await database);
+
+
+Future<bool> _tableHasColumn(DatabaseExecutor db, String table, String col) async {
+  final rows = await db.rawQuery("PRAGMA table_info($table)");
+  return rows.any((r) => (r['name'] as String).toLowerCase() == col.toLowerCase());
+}
+
 
 }

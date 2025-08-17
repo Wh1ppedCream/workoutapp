@@ -52,7 +52,7 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
 
   
 
-  AppRepository get _repo => AppRepository();
+  late final AppRepository _repo = AppRepository();
 
   final Map<int, Future<_MacroPreview>> _previewFuture = {};
 
@@ -108,89 +108,84 @@ double _gramsForOne(Food food, FoodPortion? portion) {
   return 100.0;
 }
 
+double _pick(Map<String, dynamic> m, List<String> keys) {
+  for (final k in keys) {
+    final v = m[k];
+    if (v is num) return v.toDouble();
+  }
+  return 0.0;
+}
+
 // Per-line totals (kcal / P / F / C) for given quantity
 Future<_LineMacros> _calcLine(_PlateItem it) async {
-  final per100 = await _getPer100(it.food.id!);
-  final gOne = _gramsForOne(it.food, it.portion);
-  final gTotal = gOne * (it.qty <= 0 ? 0 : it.qty);
+  final qty = it.qty <= 0 ? 0.0 : it.qty;
+  final portionId = it.portion?.id;
 
-  double pickKeys(List<String> keys) {
-  double sum = 0;
-  for (final k in keys) {
-    final v = per100[k];
-    if (v != null) sum += v;
+  if (portionId != null) {
+    final m = await _repo.calcForPortion(
+      foodId: it.food.id!, portionId: portionId, quantity: qty,
+    );
+    final kcal = _pick(m, ['kcal', 'ENERGY_KCAL', 'KCAL']);
+final p    = _pick(m, ['protein_g', 'PROTEIN', 'PROTEIN_G']);
+final f    = _pick(m, ['fat_g', 'FAT', 'FAT_G']);
+final c    = _pick(m, ['carbs_g', 'CARB', 'CARB_G']);
+    return _LineMacros(kcal: kcal, p: p, f: f, c: c);
   }
-  return sum * (gTotal / 100.0);
+
+  // Fallback: virtual “100 g” row
+  final per100 = await _getPer100(it.food.id!);
+  final grams  = _gramsForOne(it.food, it.portion) * qty;
+  double k(List<String> keys) =>
+      keys.map((k) => per100[k]).whereType<num>().fold<double>(0, (a, b) => a + b.toDouble())
+      * (grams / 100.0);
+
+  return _LineMacros(
+    kcal: k(['ENERGY_KCAL','KCAL']),
+    p   : k(['PROTEIN','PROTEIN_G']),
+    f   : k(['FAT','FAT_G']),
+    c   : k(['CARB','CARB_G']),
+  );
 }
 
-final kcal = pickKeys(['ENERGY_KCAL', 'KCAL']);
-final p    = pickKeys(['PROTEIN', 'PROTEIN_G']);
-final f    = pickKeys(['FAT', 'FAT_G']);
-final c    = pickKeys(['CARB', 'CARB_G']);
-
-return _LineMacros(kcal: kcal, p: p, f: f, c: c);
-
-}
 
 Future<_MacroPreview> _loadPreview(Food f) async {
   if (f.id == null) return _MacroPreview.empty('—');
 
   // 1) choose portion (default → first → 100 g fallback)
+  // pick default portion → first → virtual 100 g
   final portions = await _repo.getPortionsForFood(f.id!);
-  FoodPortion? portion;
-  if (portions.isEmpty) {
-    portion = null;                              // we'll fallback to 100 g below
-  } else {
-    portion = portions.firstWhere(
-      (p) => p.isDefault,
-      orElse: () => portions.first,             // safe; list not empty here
-    );
-  }
+  FoodPortion? portion = portions.isEmpty
+      ? null
+      : portions.firstWhere((p) => p.isDefault, orElse: () => portions.first);
 
   // fallback virtual "100 g"
   portion ??= FoodPortion(
-    id: null,
-    foodId: f.id!,
-    measureName: '100 g',
-    gramWeight: 100,
-    mlVolume: null,
-    isDefault: true,
+    id: null, foodId: f.id!, measureName: '100 g',
+    gramWeight: 100, mlVolume: null, isDefault: true,
   );
 
-  // 2) resolve grams for 1 portion
-double? grams = portion.gramWeight;
-// TODO(density): if gramWeight is missing and only mL is known, we assume 1 g/mL
-// when the food has no stored density. Replace with real density when available.
-if (grams == null && portion.mlVolume != null) {
-  final density = f.densityGPerMl ?? 1.0; // 1 g/mL fallback
-  grams = portion.mlVolume! * density;
-}
 
-  // 3) fetch nutrients per 100g (code-keyed map)
-final per100 = await _repo.getMacroPer100gLegacySafe(f.id!);
-double pick(List<String> keys) => keys
-    .map((k) => per100[k])
-    .whereType<num>()
-    .map((n) => n.toDouble())
-    .fold(0.0, (a, b) => a + b);
+  // If it's a real portion, ask the DAO to compute 1× portion:
+  if (portion.id != null) {
+    final m = await _repo.calcForPortion(
+      foodId: f.id!, portionId: portion.id!, quantity: 1.0,
+    );
+    final p = _pick(m, ['protein_g', 'PROTEIN', 'PROTEIN_G']).round();
+final s = _pick(m, ['fat_g', 'FAT', 'FAT_G']).round();
+final c = _pick(m, ['carbs_g', 'CARB', 'CARB_G']).round();
+    return _MacroPreview(proteinG: p, fatG: s, carbG: c, portionLabel: portion.measureName);
+  }
 
-final p100 = pick(['PROTEIN','PROTEIN_G']);
-final f100 = pick(['FAT','FAT_G']);
-final c100 = pick(['CARB','CARB_G']);
-
-
-  // 4) scale to the chosen portion (default to 100g if grams unknown)
-  final g = (grams ?? 100).toDouble();
-  final scale = g / 100.0;
-
-  final int pG = (p100 * scale).round();
-final int fG = (f100 * scale).round();
-final int cG = (c100 * scale).round();
-
+  // Fallback: virtual “100 g” math
+  final per100 = await _repo.getMacroPer100gLegacySafe(f.id!);
+  double pick(List<String> keys) =>
+      keys.map((k) => per100[k]).whereType<num>().fold<double>(0, (a, b) => a + b.toDouble());
+  final p100 = pick(['PROTEIN','PROTEIN_G']);
+  final f100 = pick(['FAT','FAT_G']);
+  final c100 = pick(['CARB','CARB_G']);
+  // 100 g portion → 1× label is already 100 g
   return _MacroPreview(
-    proteinG: pG,
-    fatG: fG,
-    carbG: cG,
+    proteinG: p100.round(), fatG: f100.round(), carbG: c100.round(),
     portionLabel: portion.measureName,
   );
 }
@@ -216,22 +211,24 @@ String _macroLine(_MacroPreview m) =>
   }
   
 
-  void _kickoffSearch(String q) {
+  int _searchEpoch = 0;
+
+void _kickoffSearch(String q) {
   _debounce?.cancel();
+  final myEpoch = ++_searchEpoch;
   _debounce = Timer(const Duration(milliseconds: 250), () async {
-    setState(() {
-      _searching = true;
-      _previewFuture.clear(); // ← clear cached rows when query changes
-    });
+    if (!mounted) return;
+    setState(() { _searching = true; _previewFuture.clear(); });
     try {
       final rows = await _repo.searchFoods(q, limit: 50);
-      if (!mounted) return;
+      if (!mounted || myEpoch != _searchEpoch) return; // drop stale result
       setState(() => _results = rows);
     } finally {
-      if (mounted) setState(() => _searching = false);
+      if (mounted && myEpoch == _searchEpoch) setState(() => _searching = false);
     }
   });
 }
+
 
 
   @override
@@ -497,6 +494,8 @@ SafeArea(
         icon: const Icon(Icons.check),
         label: const Text('Add All to Diary'),
         onPressed: _plate.isEmpty ? null : () async {
+
+  final navigator = Navigator.of(context);
           final profile = context.read<NutritionProfile>();
           final pid = profile.current?.id;
           if (pid == null) return;
@@ -516,11 +515,13 @@ SafeArea(
               gramsOverride: gramsOverride,
             );
           }
+          
+if (!mounted) return;
+setState(() => _plate.clear());
 
-          if (!mounted) return;
-          setState(() => _plate.clear());
-          Navigator.of(context).pop(); // close drawer
-          Navigator.of(context).pop(true); // leave page
+navigator.pop(); // close drawer
+navigator.pop(true); // leave page
+
         },
         style: ButtonStyle(
           padding: WidgetStateProperty.all(const EdgeInsets.symmetric(vertical: 14)),
@@ -616,6 +617,7 @@ SafeArea(
                 const SizedBox(width: 8),
                 ElevatedButton(
   onPressed: _plate.isEmpty ? null : () async {
+    final navigator = Navigator.of(context); // ✅ capture early
   final profile = context.read<NutritionProfile>();
   final pid = profile.current?.id;
   if (pid == null) return;
@@ -643,7 +645,7 @@ SafeArea(
   );
   */
   setState(() => _plate.clear());
-  Navigator.of(context).pop(true);
+  navigator.pop(true);
 },
 
   child: Text(_plate.isEmpty ? 'Done' : 'Log ${_plate.length}'),
@@ -733,6 +735,8 @@ SafeArea(
             title: const Text('Add New Food Item'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () async {
+final messenger = ScaffoldMessenger.of(context);
+
   final result = await Navigator.of(context).push(
     MaterialPageRoute(builder: (_) => const FoodCustomizationPage()),
   );
@@ -742,7 +746,7 @@ SafeArea(
     // optionally refresh results list
     _kickoffSearch(_searchCtrl.text);
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         const SnackBar(content: Text('Custom food saved')),
       );
     }
@@ -906,7 +910,8 @@ Future<void> _quickAddOne(Food f) async {
 
 
   Future<void> _openAddSheet(BuildContext context, Food food) async {
-    final portions = await _repo.getPortionsForFood(food.id!);
+
+    final portions = await _getPortions(food.id!);
 
     // Choose default portion if flagged; otherwise first; fallback to "100 g" grams-only.
     FoodPortion? selected = portions.firstWhere(
@@ -928,6 +933,7 @@ Future<void> _quickAddOne(Food f) async {
       context: context,
       isScrollControlled: true,
       builder: (ctx) {
+        final navigator = Navigator.of(ctx);
         return Padding(
           padding: EdgeInsets.only(
             bottom: MediaQuery.of(ctx).viewInsets.bottom + 16,
@@ -1045,7 +1051,7 @@ setState(() {
 
 
 
-  Navigator.pop(ctx);
+  navigator.pop();
   if (mounted) {
   }
 },
@@ -1066,6 +1072,7 @@ setState(() {
   }
 
 Future<void> _openCustomizeFood(Food f) async {
+  final navigator = Navigator.of(context);
   // Pull current per-100g values and portions to prefill the page
   final byCode = await _getPer100(f.id!);
   double pick(List<String> keys) =>
@@ -1075,7 +1082,7 @@ Future<void> _openCustomizeFood(Food f) async {
 
   // NOTE: this expects FoodCustomizationPage to support these optional initial* params.
   // You’ll add them there next.
-  final result = await Navigator.of(context).push(
+  final result = await navigator.push(
     MaterialPageRoute(
       builder: (_) => FoodCustomizationPage(
         initialFoodId: f.id!,
@@ -1146,31 +1153,14 @@ Future<void> _updateExistingFoodFromPayload(Map<String, dynamic> payload) async 
 
 
 Future<_PlateSummary> _computePlateSummary() async {
-  double kcal = 0, p = 0, f = 0, c = 0;
-
-  // cache per-food lookup
-
-  for (final it in _plate) {
-    final id = it.food.id!;
-    final per100 = await _getPer100(id);
-
-    final grams = _gramsForOne(it.food, it.portion) * (it.qty <= 0 ? 0 : it.qty); // fallback if unresolved
-    final scale = grams / 100.0;
-
-    // kcal may be under ENERGY_KCAL or KCAL depending on your helper
-    final kcal100 = per100['ENERGY_KCAL'] ?? per100['KCAL'] ?? 0.0;
-    final p100    = per100['PROTEIN_G']   ?? per100['PROTEIN'] ?? 0.0;
-    final f100    = per100['FAT_G']       ?? per100['FAT']     ?? 0.0;
-    final c100    = per100['CARB_G']      ?? per100['CARB']    ?? 0.0;
-
-    kcal += kcal100 * scale;
-    p    += p100    * scale;
-    f    += f100    * scale;
-    c    += c100    * scale;
-  }
-
+  final lines = await Future.wait(_plate.map(_calcLine));
+  final kcal = lines.fold<double>(0, (a, b) => a + b.kcal);
+  final p    = lines.fold<double>(0, (a, b) => a + b.p);
+  final f    = lines.fold<double>(0, (a, b) => a + b.f);
+  final c    = lines.fold<double>(0, (a, b) => a + b.c);
   return _PlateSummary(kcal.round(), p.round(), f.round(), c.round());
 }
+
 
 
 
@@ -1247,6 +1237,7 @@ class _QtyEditor extends StatefulWidget {
   const _QtyEditor({required this.qty, required this.onChanged});
   @override State<_QtyEditor> createState() => _QtyEditorState();
 }
+
 class _QtyEditorState extends State<_QtyEditor> {
   late final TextEditingController _c;
   @override void initState() { super.initState(); _c = TextEditingController(text: _fmt(widget.qty)); }

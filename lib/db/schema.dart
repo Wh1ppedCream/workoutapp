@@ -125,6 +125,10 @@ class Schema {
     await migrateV21(db);
     await migrateV22(db);
     await migrateV23(db);
+await migrateV24(db);
+await migrateV25(db);
+await migrateV26(db);
+await migrateV27(db);
   }
 
   /// Handler for onUpgrade callback.
@@ -151,6 +155,10 @@ class Schema {
     if (oldVersion < 21) await migrateV21(db);
     if (oldVersion < 22) await migrateV22(db);
     if (oldVersion < 23) await migrateV23(db);
+if (oldVersion < 24) await migrateV24(db);
+if (oldVersion < 25) await migrateV25(db);
+if (oldVersion < 26) await migrateV26(db);
+if (oldVersion < 27) await migrateV27(db);
   }
 
   /// Migration to version 3: adds rating, equipment/muscle tables.
@@ -288,7 +296,7 @@ class Schema {
         CREATE TABLE IF NOT EXISTS preset_definitions (
           id          INTEGER PRIMARY KEY AUTOINCREMENT,
           name        TEXT    NOT NULL,
-          created_at  TEXT    NOT NULL DEFAULT (datetime('now'))
+          created_at  TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
         );
       ''');
       await txn.execute('''
@@ -348,7 +356,7 @@ class Schema {
         CREATE TABLE IF NOT EXISTS gym_profiles (
           id          INTEGER PRIMARY KEY AUTOINCREMENT,
           name        TEXT    NOT NULL,
-          created_at  TEXT    NOT NULL DEFAULT (datetime('now'))
+          created_at  TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
         );
       ''');
       // profile_equipment join
@@ -663,10 +671,6 @@ static Future<void> migrateV18(Database db) async {
   });
 }
 
-
-
-
-
 /// v19 – Nutrition core: nutrients, foods, portions, per-100g nutrients, FTS
 static Future<void> migrateV19(Database db) async {
   await db.transaction((txn) async {
@@ -692,8 +696,8 @@ static Future<void> migrateV19(Database db) async {
         barcode           TEXT,
         density_g_per_ml  REAL,
         is_deleted        INTEGER NOT NULL DEFAULT 0,
-        created_at        TEXT    NOT NULL DEFAULT (datetime('now')),
-        updated_at        TEXT    NOT NULL DEFAULT (datetime('now'))
+        created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+  updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
       );
     ''');
     await txn.execute("CREATE INDEX IF NOT EXISTS idx_foods_name ON foods(name);");
@@ -775,8 +779,8 @@ static Future<void> migrateV20(Database db) async {
         notes       TEXT,
         is_custom   INTEGER NOT NULL DEFAULT 1,
         is_deleted  INTEGER NOT NULL DEFAULT 0,
-        created_at  TEXT    NOT NULL DEFAULT (datetime('now')),
-        updated_at  TEXT    NOT NULL DEFAULT (datetime('now'))
+        created_at  TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+        updated_at  TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
       );
     ''');
 
@@ -968,6 +972,277 @@ static Future<void> migrateV23(Database db) async {
       CREATE INDEX IF NOT EXISTS idx_food_portions_food_sort
       ON food_portions(food_id, list_kind, sort_order, id);
     """);
+  });
+}
+
+static Future<void> migrateV24(Database db) async {
+  await db.transaction((txn) async {
+    // 1) Normalized lookups
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS brands (
+        id           INTEGER PRIMARY KEY AUTOINCREMENT,
+        name         TEXT NOT NULL UNIQUE,
+        manufacturer TEXT
+      );
+    ''');
+
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS categories (
+        id        INTEGER PRIMARY KEY AUTOINCREMENT,
+        name      TEXT NOT NULL,
+        parent_id INTEGER,
+        UNIQUE(name, parent_id),
+        FOREIGN KEY(parent_id) REFERENCES categories(id) ON DELETE SET NULL
+      );
+    ''');
+
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS food_barcodes (
+        id      INTEGER PRIMARY KEY AUTOINCREMENT,
+        food_id INTEGER NOT NULL,
+        upc     TEXT    NOT NULL UNIQUE,
+        FOREIGN KEY(food_id) REFERENCES foods(id) ON DELETE CASCADE
+      );
+    ''');
+    await txn.execute("CREATE INDEX IF NOT EXISTS idx_food_barcodes_food ON food_barcodes(food_id);");
+    await txn.execute("CREATE INDEX IF NOT EXISTS idx_food_barcodes_upc  ON food_barcodes(upc);");
+
+    // 2) Extend foods with new columns (guarded adds)
+    Future<void> addCol(String table, String colDef) async {
+      final cols = await txn.rawQuery("PRAGMA table_info('$table');");
+      final name = colDef.split(' ').first;
+      final exists = cols.any((c) => c['name'] == name);
+      if (!exists) await txn.execute("ALTER TABLE $table ADD COLUMN $colDef;");
+    }
+
+    await addCol('foods', 'brand_id INTEGER REFERENCES brands(id) ON DELETE SET NULL');
+    await addCol('foods', 'category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL');
+    await addCol('foods', 'fdc_id INTEGER');
+    await addCol('foods', 'verified INTEGER NOT NULL DEFAULT 0');
+    await addCol('foods', 'quality_score REAL');
+    await addCol('foods', 'version INTEGER NOT NULL DEFAULT 1');
+    await addCol('foods', 'preparation TEXT');
+    await addCol('foods', 'edible_portion_pct REAL');
+    await addCol('foods', 'yield_pct REAL');
+
+    // 3) Helpful indexes (and partial uniqueness for fdc_id when present)
+    await txn.execute("CREATE INDEX  IF NOT EXISTS idx_foods_brand_id     ON foods(brand_id);");
+    await txn.execute("CREATE INDEX  IF NOT EXISTS idx_foods_category_id  ON foods(category_id);");
+    await txn.execute("CREATE INDEX  IF NOT EXISTS idx_foods_verified     ON foods(verified);");
+    // Partial unique index: only enforce uniqueness when fdc_id is not null
+    await txn.execute("CREATE UNIQUE INDEX IF NOT EXISTS ux_foods_fdc_id  ON foods(fdc_id) WHERE fdc_id IS NOT NULL;");
+
+    // 4) Backfill: move legacy brand names & barcodes into normalized tables (idempotent)
+    await txn.execute('''
+      INSERT OR IGNORE INTO brands(name)
+      SELECT DISTINCT TRIM(brand) FROM foods
+      WHERE brand IS NOT NULL AND TRIM(brand) <> '';
+    ''');
+
+    await txn.execute('''
+      UPDATE foods
+      SET brand_id = (
+        SELECT id FROM brands b WHERE b.name = TRIM(foods.brand)
+      )
+      WHERE brand_id IS NULL AND brand IS NOT NULL AND TRIM(brand) <> '';
+    ''');
+
+    await txn.execute('''
+      INSERT OR IGNORE INTO food_barcodes(food_id, upc)
+      SELECT id, barcode FROM foods
+      WHERE barcode IS NOT NULL AND TRIM(barcode) <> '';
+    ''');
+
+    // 5) (Optional) sanity constraints via CHECKs on new numeric fields
+    // Note: SQLite won't add CHECK via ALTER on existing column; keep logical checks in app layer.
+  });
+}
+
+static Future<void> migrateV25(Database db) async {
+  await db.transaction((txn) async {
+    Future<void> addCol(String table, String colDef) async {
+      final cols = await txn.rawQuery("PRAGMA table_info('$table');");
+      final name = colDef.split(' ').first;
+      final exists = cols.any((c) => c['name'] == name);
+      if (!exists) await txn.execute("ALTER TABLE $table ADD COLUMN $colDef;");
+    }
+
+    await addCol('diary_entries', 'logged_grams REAL');
+
+    await addCol('diary_entries', 'kcal_snapshot REAL');
+    await addCol('diary_entries', 'protein_g_snapshot REAL');
+    await addCol('diary_entries', 'carb_g_snapshot REAL');
+    await addCol('diary_entries', 'fat_g_snapshot REAL');
+    await addCol('diary_entries', 'nutrient_snapshot_json TEXT');
+
+    // (Optional) extra index to speed daily readbacks with meal filters
+    await txn.execute('''
+      CREATE INDEX IF NOT EXISTS idx_diary_profile_date_meal
+      ON diary_entries(profile_id, date, meal_type);
+    ''');
+  });
+}
+
+static Future<void> migrateV26(Database db) async {
+  await db.transaction((txn) async {
+    // Helper to (re)create a trigger safely
+    Future<void> createTrigger(String name, String sql) async {
+      await txn.execute("DROP TRIGGER IF EXISTS $name;");
+      await txn.execute(sql);
+    }
+
+    // 1) Foods: bump updated_at on UPDATE to foods
+    await createTrigger('trg_foods_set_updated_at', '''
+      CREATE TRIGGER IF NOT EXISTS trg_foods_set_updated_at
+      AFTER UPDATE ON foods
+      WHEN NEW.updated_at <= OLD.updated_at
+      BEGIN
+        UPDATE foods SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = NEW.id;
+      END;
+    ''');
+
+    // 2) Foods: bump updated_at when portions/nutrients/fnv change
+    await createTrigger('trg_touch_food_on_portion_ins', '''
+      CREATE TRIGGER IF NOT EXISTS trg_touch_food_on_portion_ins
+      AFTER INSERT ON food_portions
+      BEGIN
+        UPDATE foods SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = NEW.food_id;
+      END;
+    ''');
+    await createTrigger('trg_touch_food_on_portion_upd', '''
+      CREATE TRIGGER IF NOT EXISTS trg_touch_food_on_portion_upd
+      AFTER UPDATE ON food_portions
+      BEGIN
+        UPDATE foods SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = NEW.food_id;
+      END;
+    ''');
+    await createTrigger('trg_touch_food_on_portion_del', '''
+      CREATE TRIGGER IF NOT EXISTS trg_touch_food_on_portion_del
+      AFTER DELETE ON food_portions
+      BEGIN
+        UPDATE foods SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = OLD.food_id;
+      END;
+    ''');
+
+    await createTrigger('trg_touch_food_on_nutr_ins', '''
+      CREATE TRIGGER IF NOT EXISTS trg_touch_food_on_nutr_ins
+      AFTER INSERT ON food_nutrients
+      BEGIN
+        UPDATE foods SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = NEW.food_id;
+      END;
+    ''');
+    await createTrigger('trg_touch_food_on_nutr_upd', '''
+      CREATE TRIGGER IF NOT EXISTS trg_touch_food_on_nutr_upd
+      AFTER UPDATE ON food_nutrients
+      BEGIN
+        UPDATE foods SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = NEW.food_id;
+      END;
+    ''');
+    await createTrigger('trg_touch_food_on_nutr_del', '''
+      CREATE TRIGGER IF NOT EXISTS trg_touch_food_on_nutr_del
+      AFTER DELETE ON food_nutrients
+      BEGIN
+        UPDATE foods SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = OLD.food_id;
+      END;
+    ''');
+
+    await createTrigger('trg_touch_food_on_fnv_ins', '''
+      CREATE TRIGGER IF NOT EXISTS trg_touch_food_on_fnv_ins
+      AFTER INSERT ON food_nutrient_values
+      BEGIN
+        UPDATE foods SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = NEW.food_id;
+      END;
+    ''');
+    await createTrigger('trg_touch_food_on_fnv_upd', '''
+      CREATE TRIGGER IF NOT EXISTS trg_touch_food_on_fnv_upd
+      AFTER UPDATE ON food_nutrient_values
+      BEGIN
+        UPDATE foods SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = NEW.food_id;
+      END;
+    ''');
+    await createTrigger('trg_touch_food_on_fnv_del', '''
+      CREATE TRIGGER IF NOT EXISTS trg_touch_food_on_fnv_del
+      AFTER DELETE ON food_nutrient_values
+      BEGIN
+        UPDATE foods SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = OLD.food_id;
+      END;
+    ''');
+
+    // 3) Recipes: bump updated_at on direct update and ingredient changes
+    await createTrigger('trg_recipes_set_updated_at', '''
+      CREATE TRIGGER IF NOT EXISTS trg_recipes_set_updated_at
+      AFTER UPDATE ON recipes
+      WHEN NEW.updated_at <= OLD.updated_at
+      BEGIN
+        UPDATE recipes SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = NEW.id;
+      END;
+    ''');
+
+    await createTrigger('trg_touch_recipe_on_ing_ins', '''
+      CREATE TRIGGER IF NOT EXISTS trg_touch_recipe_on_ing_ins
+      AFTER INSERT ON recipe_ingredients
+      BEGIN
+        UPDATE recipes SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = NEW.recipe_id;
+      END;
+    ''');
+    await createTrigger('trg_touch_recipe_on_ing_upd', '''
+      CREATE TRIGGER IF NOT EXISTS trg_touch_recipe_on_ing_upd
+      AFTER UPDATE ON recipe_ingredients
+      BEGIN
+        UPDATE recipes SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = NEW.recipe_id;
+      END;
+    ''');
+    await createTrigger('trg_touch_recipe_on_ing_del', '''
+      CREATE TRIGGER IF NOT EXISTS trg_touch_recipe_on_ing_del
+      AFTER DELETE ON recipe_ingredients
+      BEGIN
+        UPDATE recipes SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = OLD.recipe_id;
+      END;
+    ''');
+  });
+}
+
+static Future<void> migrateV27(Database db) async {
+  await db.transaction((txn) async {
+    // 1) normalized sources lookup
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS sources (
+        id    INTEGER PRIMARY KEY AUTOINCREMENT,
+        name  TEXT NOT NULL UNIQUE
+      );
+    ''');
+
+    // 2) add foods.source_id if missing
+    final cols = await txn.rawQuery("PRAGMA table_info('foods');");
+    final hasSourceId = cols.any((c) => c['name'] == 'source_id');
+    if (!hasSourceId) {
+      await txn.execute(
+        "ALTER TABLE foods ADD COLUMN source_id INTEGER REFERENCES sources(id) ON DELETE SET NULL;"
+      );
+      await txn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_foods_source_id ON foods(source_id);"
+      );
+    }
+
+    // 3) backfill distinct data_source values into sources
+    await txn.execute('''
+      INSERT OR IGNORE INTO sources(name)
+      SELECT DISTINCT TRIM(COALESCE(data_source,'')) AS name
+      FROM foods
+      WHERE TRIM(COALESCE(data_source,'')) <> '';
+    ''');
+
+    // 4) link foods.source_id from data_source where possible
+    await txn.execute('''
+      UPDATE foods
+SET source_id = (
+  SELECT s.id    
+  FROM sources s
+  WHERE s.name = TRIM(COALESCE(foods.data_source,''))
+)
+WHERE source_id IS NULL
+  AND TRIM(COALESCE(data_source,'')) <> '';
+    ''');
   });
 }
 

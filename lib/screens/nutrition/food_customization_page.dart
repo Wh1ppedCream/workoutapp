@@ -21,6 +21,7 @@ class FoodCustomizationPage extends StatefulWidget {
     this.initialCarbsG,
     this.initialFatsG,
     this.initialPortions,
+    this.initialDensityGPerMl,
   });
 
   final int? initialFoodId;
@@ -31,6 +32,7 @@ class FoodCustomizationPage extends StatefulWidget {
   final double? initialCarbsG;
   final double? initialFatsG;
   final List<FoodPortion>? initialPortions;
+  final double? initialDensityGPerMl;
 
   @override
   State<FoodCustomizationPage> createState() => _FoodCustomizationPageState();
@@ -47,6 +49,8 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
   final _proteinController = TextEditingController();
   final _carbController = TextEditingController();
   final _fatController = TextEditingController();
+  final _densityController = TextEditingController(); // g/mL
+
 
   // Lazily created controllers for every leaf/parent field in the tree
   final Map<String, TextEditingController> _controllers = {};
@@ -74,6 +78,8 @@ static const List<String> _volumeUnits = [
 ];
 static const List<String> _allUnits = [..._massUnits, ..._volumeUnits];
 
+String _lastDefaultGroup = 'basis'; // add to State
+
 
   
   @override
@@ -96,6 +102,9 @@ void _prefillIfEditing() {
   if (w.initialPortions != null && w.initialPortions!.isNotEmpty) {
     _loadInitialPortions(w.initialPortions!);
   }
+  // If you later pass an initial density, prefill here:
+final d = widget.initialDensityGPerMl;   // ← remove the cast
+  if (d != null) _densityController.text = _fmtNum(d);
 }
 
 String? _longUnitFromShort(String? s) {
@@ -136,12 +145,15 @@ void _loadInitialPortions(List<FoodPortion> parts) {
     return (a.id ?? 0) - (b.id ?? 0);
   });
 
+   bool foundBasisDefault = false;
+  bool foundUsualDefault = false;
+
   for (final p in parts) {
     final entry = PortionEntry(
-      unit: _longUnitFromShort(p.unit) ?? 'gram (g)',
+      unit: _longUnitFromShort(p.unit ?? 'g') ?? 'gram (g)',
       amount: p.amount,
-      grams: p.gramWeight,
-      ml: p.mlVolume,
+      grams:  p.gramWeight,
+      ml:     p.mlVolume,
     );
     final isUsual = p.listKind == 'usual';
     final list = isUsual ? _usualPortions : _basisPortions;
@@ -151,19 +163,25 @@ void _loadInitialPortions(List<FoodPortion> parts) {
     if (p.isDefault) {
       if (isUsual) {
         _usualDefaultIndex = idx;
+        foundUsualDefault = true;
       } else {
         _basisDefaultIndex = idx;
+        foundBasisDefault = true;
       }
     }
   }
 
-  if (_basisPortions.isEmpty) {
-    _basisPortions.add(PortionEntry(unit: 'gram (g)', amount: 100, grams: 100));
+  if (_basisPortions.isEmpty) _basisPortions.add(PortionEntry(unit: 'gram (g)', amount: 100, grams: 100));
+  if (_usualPortions.isEmpty) _usualPortions.add(PortionEntry());
+
+  // prefer the user-facing default if present
+  if (foundUsualDefault) {
+    _lastDefaultGroup = 'usual';
+  } else if (foundBasisDefault) {
+    _lastDefaultGroup = 'basis';
   }
-  if (_usualPortions.isEmpty) {
-    _usualPortions.add(PortionEntry());
-  }
-  setState(() {}); // reflect into UI
+
+  setState(() {});
 }
 
 
@@ -181,6 +199,8 @@ String _fmtNum(num v) {
     _proteinController.dispose();
     _carbController.dispose();
     _fatController.dispose();
+    _densityController.dispose();
+
     // Dispose dynamically created controllers
     for (final c in _controllers.values) {
       c.dispose();
@@ -200,47 +220,96 @@ for (final p in _usualPortions) { p.dispose(); }
 String _componentsTitle(String label) => '${_baseName(label)} Components';
 
 
-  double _toDouble(String s) => double.tryParse(s.trim()) ?? 0.0;
 
   TextEditingController _controllerFor(String key) {
     return _controllers.putIfAbsent(key, () => TextEditingController());
   }
 
   List<TextInputFormatter> get _numericFormatters => [
-        FilteringTextInputFormatter.allow(RegExp(r"[0-9.]")),
-      ];
+  FilteringTextInputFormatter.allow(RegExp(r'^(\d+)?\.?\d*$')),
+];
+
 
 Map<String, dynamic> _collectPayload() {
-  final payload = {
-    'name': _nameController.text.trim(),
-    'brand': _brandController.text.trim(),
-    'calories': _toDouble(_calController.text),
-    'protein_g': _toDouble(_proteinController.text),
-    'carbs_g': _toDouble(_carbController.text),
-    'fats_g': _toDouble(_fatController.text),
-  };
-
-  // include all dynamic leaf/parent values
-  for (final entry in _controllers.entries) {
-    final v = entry.value.text.trim();
-    if (v.isNotEmpty) payload[entry.key] = double.tryParse(v) ?? v;
+  double? parseNum(TextEditingController c) {
+    final t = c.text.trim();
+    if (t.isEmpty) return null;
+    return double.tryParse(t);
   }
 
-  // portions
+  final payload = <String, dynamic>{
+    'name' : _nameController.text.trim(),
+    'brand': _brandController.text.trim(),
+  };
+
+  void putNum(String key, TextEditingController c) {
+    final v = parseNum(c);
+    if (v != null) payload[key] = v;
+  }
+
+  // Canonical codes (what your repo maps on), plus friendly aliases for good measure.
+putNum('KCAL',      _calController);
+putNum('PROTEIN_G', _proteinController);
+putNum('CARB_G',    _carbController);
+putNum('FAT_G',     _fatController);
+
+// ✅ Add aliases only if the canonical key was actually set
+void aliasIfSet(String alias, String canonical) {
+  if (payload.containsKey(canonical) && !payload.containsKey(alias)) {
+    payload[alias] = payload[canonical];
+  }
+}
+
+aliasIfSet('calories',  'KCAL');
+aliasIfSet('protein_g', 'PROTEIN_G');
+aliasIfSet('carbs_g',   'CARB_G');
+aliasIfSet('fat_g',     'FAT_G');
+// legacy alias some forms still use
+aliasIfSet('fats_g',    'FAT_G');
+
+  // Optional density (lets your logging page stop assuming 1.0 g/mL later)
+  putNum('density_g_per_ml', _densityController);
+
+  // Dynamic leaves: include valid numbers; avoid overwriting same-named leaves.
+// We keep the first occurrence under its leaf label, and stash any duplicates
+// under a separate map keyed by full breadcrumb path.
+final extendedPaths = <String, double>{};
+
+for (final e in _controllers.entries) {
+  final t = e.value.text.trim();
+  if (t.isEmpty) continue;
+
+  final v = double.tryParse(t);
+  if (v == null) continue;
+
+  final path = e.key;                   // e.g., "Micronutrients > Minerals > Chloride (mg)"
+  final last = path.split(' > ').last;  // e.g., "Chloride (mg)"
+
+  if (!payload.containsKey(last)) {
+    payload[last] = v;                  // mapper-friendly key
+  } else {
+    extendedPaths[path] = v;            // preserve duplicate under full path
+  }
+}
+
+if (extendedPaths.isNotEmpty) {
+  payload['__extended_paths__'] = extendedPaths; // harmless to DAO; future-proof
+}
+
+
+  // v23 portion payload
   payload['portions'] = _portionsPayload(
     basisDefaultIndex: _basisDefaultIndex,
     usualDefaultIndex: _usualDefaultIndex,
   );
 
-  // ← NEW: if we're editing, return the ID so the caller updates, not inserts
-  // add only if we’re editing
-final id = widget.initialFoodId;   // local var gets promoted by the null-check
-if (id != null) {
-  payload['food_id'] = id;         // id is int, not int?
-}
+  // If editing, include the ID so the caller updates instead of inserting.
+  final id = widget.initialFoodId;
+  if (id != null) payload['food_id'] = id;
 
   return payload;
 }
+
 
 void _onCancel() => Navigator.of(context).pop();
 
@@ -361,6 +430,10 @@ void _onSave() {
 const SizedBox(height: 20),
 _buildPortionCard(),        // <<< NEW
 const SizedBox(height: 12),
+
+//TODO: make this density bit properly fit in
+const SizedBox(height: 12),
+_buildNumberField(label: 'Density (g/mL)', controller: _densityController),
 
               // 3. Calories (kept separate)
               _buildNumberField(label: 'Calories (kcal)', controller: _calController),
@@ -540,11 +613,18 @@ String _shortUnit(String u) {
 
 // Compose a clean "measure_name" from unit + amount, e.g. "100 g" or "1 cup"
 String _measureNameFrom(PortionEntry e) {
-  final amt = e.amountCtrl.text.trim();
-  final unit = _shortUnit(e.unit);
-  if (amt.isEmpty) return unit;         // fallback "g", "cup", etc.
-  return '$amt $unit';                   // e.g. "100 g", "1 cup"
+  double? a = double.tryParse(e.amountCtrl.text.trim());
+  final unitShort = _shortUnit(e.unit);
+  if (a == null) {
+    final g  = double.tryParse(e.gramsCtrl.text.trim());
+    final ml = double.tryParse(e.mlCtrl.text.trim());
+    if (unitShort == 'g'  && g  != null) a = g;
+    if (unitShort == 'mL' && ml != null) a = ml;
+  }
+  if (a == null) return unitShort;      // e.g. "cup"
+  return '${_fmtNum(a)} $unitShort';    // e.g. "100 g", "240 mL"
 }
+
 
 // Build JSON-ish payload for both lists, collapsing to what DB needs
 List<Map<String, dynamic>> _portionsPayload({
@@ -560,50 +640,73 @@ List<Map<String, dynamic>> _portionsPayload({
     all.add((row: _usualPortions[i], list: 'usual', index: i));
   }
 
-  // Decide single default: prefer "usual", otherwise "basis"
+  // Decide single global default based on the *last* group the user touched.
   int? defaultGlobal;
-  if (_usualPortions.isNotEmpty) {
-    defaultGlobal = _basisPortions.length + usualDefaultIndex; // offset by basis length
-  }
-  if (defaultGlobal == null && _basisPortions.isNotEmpty) {
-    defaultGlobal = basisDefaultIndex;
+  final basisCount = _basisPortions.length;
+  final usualCount = _usualPortions.length;
+
+  int clampBasis(int idx) =>
+      basisCount == 0 ? 0 : (idx.clamp(0, basisCount - 1)).toInt();
+  int clampUsual(int idx) =>
+      usualCount == 0 ? 0 : (idx.clamp(0, usualCount - 1)).toInt();
+
+  if (_lastDefaultGroup == 'basis' && basisCount > 0) {
+    defaultGlobal = clampBasis(basisDefaultIndex);
+  } else if (_lastDefaultGroup == 'usual' && usualCount > 0) {
+    defaultGlobal = basisCount + clampUsual(usualDefaultIndex);
+  } else if (basisCount > 0) {
+    // fallback if last group is empty
+    defaultGlobal = clampBasis(basisDefaultIndex);
+  } else if (usualCount > 0) {
+    defaultGlobal = basisCount + clampUsual(usualDefaultIndex);
   }
 
   final out = <Map<String, dynamic>>[];
+
   for (var i = 0; i < all.length; i++) {
     final r = all[i];
-    final measureName = _measureNameFrom(r.row);
-    final grams = double.tryParse(r.row.gramsCtrl.text.trim());
-    final ml    = double.tryParse(r.row.mlCtrl.text.trim());
+
+    // Parse current fields
     final amount = double.tryParse(r.row.amountCtrl.text.trim());
-    if (measureName.isEmpty && grams == null && ml == null) continue; // skip empty rows
+    final unitShort = _shortUnit(r.row.unit);
+    double? grams = double.tryParse(r.row.gramsCtrl.text.trim());
+    double? ml    = double.tryParse(r.row.mlCtrl.text.trim());
+
+    // NEW: map Amount + Unit to grams/mL if user left those fields empty
+    if (grams == null && unitShort == 'g'  && amount != null) grams = amount;
+    if (ml    == null && unitShort == 'mL' && amount != null) ml    = amount;
+
+    // If we still can't physically map this row, skip it
+    if (grams == null && ml == null) continue;
+
+    final measureName = _measureNameFrom(r.row);
 
     out.add({
       'measure_name': measureName,
-      'gram_weight': grams,
-      'ml_volume': ml,
-      'is_default': i == defaultGlobal,
+      'gram_weight' : grams,
+      'ml_volume'   : ml,
+      'is_default'  : (defaultGlobal != null && i == defaultGlobal),
       // v23 extras:
-      'list_kind'   : r.list,                     // 'basis' | 'usual'
+      'list_kind'   : r.list,          // 'basis' | 'usual'
       'sort_order'  : r.index,
       'amount'      : amount,
-      'unit'        : _shortUnit(r.row.unit),
-      'label'       : null,                
+      'unit'        : unitShort,
+      'label'       : null,
     });
   }
 
-  // Ensure at least one sensible default if we have any portions
+  // Ensure exactly one default if we have any rows left after filtering
   if (out.isNotEmpty && !out.any((m) => m['is_default'] == true)) {
     out.first['is_default'] = true;
   }
 
-  // If user left everything empty, inject a safe default "100 g"
+  // If nothing provided at all, inject a safe default "100 g"
   if (out.isEmpty) {
     out.add({
       'measure_name': '100 g',
-      'gram_weight': 100.0,
-      'ml_volume': null,
-      'is_default': true,
+      'gram_weight' : 100.0,
+      'ml_volume'   : null,
+      'is_default'  : true,
       'list_kind'   : 'basis',
       'sort_order'  : 0,
       'amount'      : 100.0,
@@ -640,17 +743,24 @@ Widget _buildPortionCard() {
             list: _basisPortions,
             groupKey: 'basis',
             defaultIndex: _basisDefaultIndex,
-            onDefaultChanged: (i) => setState(() => _basisDefaultIndex = i),
+            onDefaultChanged: (i) => setState(() {
+              _basisDefaultIndex = i;
+              _lastDefaultGroup = 'basis';
+            }),
             initiallyExpanded: true,
           ),
           const SizedBox(height: 12),
+
           // B) Usual portion to be consumed by user
           _buildPortionList(
             title: 'Usual portion to be consumed by user',
             list: _usualPortions,
             groupKey: 'usual',
             defaultIndex: _usualDefaultIndex,
-            onDefaultChanged: (i) => setState(() => _usualDefaultIndex = i),
+            onDefaultChanged: (i) => setState(() {
+              _usualDefaultIndex = i;
+              _lastDefaultGroup = 'usual';
+            }),
             initiallyExpanded: false,
           ),
         ],
@@ -658,6 +768,7 @@ Widget _buildPortionCard() {
     ),
   );
 }
+
 
 Widget _buildPortionList({
   required String title,
@@ -690,21 +801,31 @@ Widget _buildPortionList({
             entry: list[i],
             index: i,
             groupKey: groupKey,
-            isDefault: i == defaultIndex,          // keep your current bool approach
             onDefault: () => onDefaultChanged(i),  // (or switch to Radio<int> later)
             onRemove: list.length > 1
-                ? () => setState(() {
-                      final removedIndex = i;
-                      final removed = list.removeAt(i);
-                      removed.dispose();
-                      // keep default valid
-                      if (defaultIndex == removedIndex) {
-                        onDefaultChanged((removedIndex - 1).clamp(0, list.length - 1));
-                      } else if (removedIndex < defaultIndex) {
-                        onDefaultChanged(defaultIndex - 1);
-                      }
-                    })
-                : null,
+    ? () => setState(() {
+          final removedIndex = i;
+          list.removeAt(i).dispose();
+
+          final isUsual = groupKey == 'usual';
+          final currentDefault = isUsual ? _usualDefaultIndex : _basisDefaultIndex;
+
+          int nextDefault = currentDefault;
+          if (currentDefault == removedIndex) {
+  nextDefault = ((removedIndex - 1).clamp(0, list.length - 1));
+} else if (removedIndex < currentDefault) {
+  nextDefault = ((currentDefault - 1).clamp(0, list.length - 1));
+}
+
+          if (isUsual) {
+            _usualDefaultIndex = nextDefault;
+          } else {
+            _basisDefaultIndex = nextDefault;
+          }
+          _lastDefaultGroup = groupKey;
+        })
+    : null,
+
           );
         }),
         const SizedBox(height: 8),
@@ -726,7 +847,6 @@ Widget _portionRow({
   required PortionEntry entry,
   required int index,
   required String groupKey,
-  required bool isDefault,
   required VoidCallback onDefault,
   VoidCallback? onRemove,
 }) {
@@ -734,6 +854,10 @@ Widget _portionRow({
 final amountKey = PageStorageKey('portion_${groupKey}_${index}_amount');
 final gramsKey  = PageStorageKey('portion_${groupKey}_${index}_grams');
 final mlKey     = PageStorageKey('portion_${groupKey}_${index}_ml');
+
+final groupIsUsual = groupKey == 'usual';
+final groupDefaultIndex = groupIsUsual ? _usualDefaultIndex : _basisDefaultIndex;
+
 
   return Card(
     margin: const EdgeInsets.symmetric(vertical: 6),
@@ -745,33 +869,47 @@ final mlKey     = PageStorageKey('portion_${groupKey}_${index}_ml');
           // First line: radio + unit + amount
           Row(
             children: [
-              Radio<bool>(
-                value: true,
-                groupValue: isDefault,
-                onChanged: (_) => onDefault(),
-                visualDensity: const VisualDensity(horizontal: -4, vertical: -4),
-              ),
+              Radio<int>(
+  value: index,
+  groupValue: groupDefaultIndex,
+  onChanged: (_) => onDefault(),
+  visualDensity: const VisualDensity(horizontal: -4, vertical: -4),
+),
               const SizedBox(width: 4),
               Expanded(
-                flex: 6,
-                child: DropdownButtonFormField<String>(
-                  key: unitKey,
-                  isExpanded: true,
-                  value: _allUnits.contains(entry.unit) ? entry.unit : _allUnits.first,
-                  items: _allUnits
-        .map((u) => DropdownMenuItem(
-              value: u,
-              child: Text(u, overflow: TextOverflow.ellipsis), 
-            ))
-        .toList(),
-                  onChanged: (v) => setState(() => entry.unit = v ?? entry.unit),
-                  decoration: const InputDecoration(
-                    labelText: 'Measurement name',
-                    isDense: true,
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-              ),
+  flex: 6,
+  child: Builder(
+    builder: (ctx) {
+      // Build units ONCE and reuse for items + selectedItemBuilder
+      final units = (() {
+        final u = [..._allUnits];
+        if (!u.contains(entry.unit)) u.insert(0, entry.unit); // preserve unknown unit at top
+        return u;
+      })();
+
+      return DropdownButtonFormField<String>(
+        key: unitKey,
+        value: units.contains(entry.unit) ? entry.unit : units.first,
+        isExpanded: true,
+        icon: const Icon(Icons.arrow_drop_down, size: 18),
+        decoration: const InputDecoration(
+          labelText: 'Unit',
+          isDense: true,
+          border: OutlineInputBorder(),
+          contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        ),
+        selectedItemBuilder: (ctx) =>
+            units.map((u) => Text(u, overflow: TextOverflow.ellipsis)).toList(),
+        items: units.map((u) => DropdownMenuItem(value: u, child: Text(u))).toList(),
+        onChanged: (v) => entry.unit = v ?? entry.unit,
+      );
+    },
+  ),
+),
+
+
+
+
               const SizedBox(width: 8),
               Expanded(
                 flex: 3,
@@ -833,13 +971,7 @@ final mlKey     = PageStorageKey('portion_${groupKey}_${index}_ml');
             ],
           ),
           const SizedBox(height: 4),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Padding(
-              padding: const EdgeInsets.only(left: 8, top: 2, bottom: 6),
-              child: Text('Default', style: Theme.of(context).textTheme.bodySmall),
-            ),
-          ),
+          
         ],
       ),
     ),

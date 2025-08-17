@@ -777,23 +777,21 @@ Future<void> deleteFlowMethod(int methodId) {
   return _dbHelper.deleteFlowMethod(methodId);
 }
 
-Future<bool> getUseManualBodyparts(defId) async {
-    return await _dbHelper.getUseManualBodyparts(defId);
-  }
+Future<bool> getUseManualBodyparts(int defId) {
+  return _dbHelper.getUseManualBodyparts(defId);
+}
 
-  Future<void> setUseManualBodyparts(defId, bool) async {
-    await _dbHelper.setUseManualBodyparts(defId, bool);
-  }
+Future<void> setUseManualBodyparts(int defId, bool value) {
+  return _dbHelper.setUseManualBodyparts(defId, value);
+}
 
+Future<bool> getUseManualMuscles(int defId) {
+  return _dbHelper.getUseManualMuscles(defId);
+}
 
-Future<bool> getUseManualMuscles(defId) async {
-    return await _dbHelper.getUseManualMuscles(defId);
-  }
-
-  Future<void> setUseManualMuscles(defId, bool) async {
-    await _dbHelper.setUseManualMuscles(defId, bool);
-  }
-
+Future<void> setUseManualMuscles(int defId, bool value) {
+  return _dbHelper.setUseManualMuscles(defId, value);
+}
 
 /// Returns whether “Multiply by Exercise Rating” is enabled.
 Future<bool> getMultiplyByRating(int defId) {
@@ -994,13 +992,13 @@ Future<int> createCustomFood({required String name, String? brand}) =>
 Future<void> savePer100gByCode(int foodId, Map<String, double> codeToAmount) =>
     _dbHelper.savePer100gByCode(foodId, codeToAmount);
 
-Future<void> savePer100gFromLabelPayload(int foodId, Map<String, dynamic> payload) async =>
+Future<void> savePer100gFromLabelPayload(int foodId, Map<String, dynamic> payload) =>
     _dbHelper.savePer100gFromLabelPayload(foodId, payload);
 
 
-/// Returns a per-100g macro map using NEW canonical keys:
+/// Returns a per-100g macro map using UI keys:
 ///   'PROTEIN_G', 'CARB_G', 'FAT_G', 'KCAL'
-/// Falls back to legacy codes if the new ones aren't present.
+/// Internally reads DAO canonical codes and maps them to these UI keys.
 Future<Map<String, double>> getMacroPer100gLegacySafe(int foodId) async {
   // All per-100g nutrient values keyed by nutrient code
   final all = await getFoodNutrientsPer100gByCode(foodId); // Map<String,double>
@@ -1030,10 +1028,8 @@ Future<Map<String, double>> getMacroPer100gLegacySafe(int foodId) async {
   return out;
 }
 
-Future<void> saveExtendedPer100gFromPayload(int foodId, Map payload) async {
-  // Save extended per-100g data from a payload
-  await _dbHelper.saveExtendedPer100gFromPayload(foodId, payload);
-}
+Future<void> saveExtendedPer100gFromPayload(int foodId, Map<String, dynamic> payload) =>
+    _dbHelper.saveExtendedPer100gFromPayload(foodId, payload);
 
 Future<int> addPortion(
     int foodId, {
@@ -1070,9 +1066,45 @@ Future<int> addPortion(
 Future<void> updateFoodBasics(int id, {String? name, String? brand}) =>
     _dbHelper.updateFoodBasics(id, name: name, brand: brand);
 
-  Future<void> updateFoodFromCustomizationPayload(Map payload) async {
-    // Update food from a customization payload
-    await _dbHelper.updateFoodFromCustomizationPayload(payload);
-  }
+Future<void> updateFoodFromCustomizationPayload(Map<String, dynamic> payload) =>
+    _dbHelper.updateFoodFromCustomizationPayload(payload);
+
+Future<Food?> getFoodByBarcode(String code) => _dbHelper.getFoodByBarcode(code);
+Future<void> addBarcode(int foodId, String code) => _dbHelper.addBarcode(foodId, code);
+
+Future<int> upsertFoodWithKeys({
+  int? id,
+  required String name,
+  String? brandName,
+  String? sourceName,
+  String? categoryName,
+  List<String> barcodes = const [],
+  double? densityGPerMl,
+  bool isCustom = false,
+  String? dataSource,
+  String? dataSourceId,
+}) => _dbHelper.upsertFoodWithKeys(
+      id: id,
+      name: name,
+      brandName: brandName,
+      sourceName: sourceName,
+      categoryName: categoryName,
+      barcodes: barcodes,
+      densityGPerMl: densityGPerMl,
+      isCustom: isCustom,
+      dataSource: dataSource,
+      dataSourceId: dataSourceId,
+    );
+
+Future<Map<String,double>> calcForPortion({
+  required int foodId,
+  required int portionId,
+  double quantity = 1.0,
+}) => _dbHelper.calcForPortion(
+      foodId: foodId,
+      portionId: portionId,
+      quantity: quantity,
+    );
+
 
 }
