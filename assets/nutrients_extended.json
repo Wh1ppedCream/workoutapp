@@ -32,7 +32,7 @@
     { "code": "AA_ISOLEUCINE_G", "name": "Isoleucine", "unit": "g" },
     { "code": "AA_METHIONINE_G", "name": "Methionine", "unit": "g" },
     { "code": "AA_PHENYLALANINE_G", "name": "Phenylalanine", "unit": "g" },
-    { "code": "AA_THRIONINE_G", "name": "Threonine", "unit": "g" },
+    { "code": "AA_THREONINE_G", "name": "Threonine", "unit": "g" },
     { "code": "AA_TRYPTOPHAN_G", "name": "Tryptophan", "unit": "g" },
     { "code": "AA_TYROSINE_G", "name": "Tyrosine", "unit": "g" },
     { "code": "AA_HISTIDINE_G", "name": "Histidine", "unit": "g" },
@@ -176,6 +176,7 @@
     { "code": "PROTEIN_G", "alias": "Protein (g)" },
     { "code": "CARB_G", "alias": "Carbs (g)" },
     { "code": "FAT_G", "alias": "Fats (g)" },
+
     { "code": "FA_OMEGA3_ALA_G", "alias": "ALA (Alpha-Linolenic Acid) (g)" },
     { "code": "FA_OMEGA3_DHA_G", "alias": "DHA (Docosahexaenoic Acid) (g)" },
     { "code": "FA_OMEGA3_EPA_G", "alias": "EPA (Eicosapentaenoic Acid) (g)" },
@@ -273,12 +274,12 @@
   { "code": "AA_ISOLEUCINE_G", "alias": "Isoleucine (g)" },
   { "code": "AA_METHIONINE_G", "alias": "Methionine (g)" },
   { "code": "AA_PHENYLALANINE_G", "alias": "Phenylalanine (g)" },
-  { "code": "AA_THRIONINE_G", "alias": "Threonine (g)" },
+  { "code": "AA_THREONINE_G", "alias": "Threonine (g)" },
   { "code": "AA_TRYPTOPHAN_G", "alias": "Tryptophan (g)" },
   { "code": "AA_TYROSINE_G", "alias": "Tyrosine (g)" },
   { "code": "AA_HISTIDINE_G", "alias": "Histidine (g)" },
 
-  { "code": "VIT_A_MCG_RAE", "alias": "Vitamin A (Retinol & Beta-Carotene) (mg)" },
+  { "code": "VIT_A_MCG_RAE", "alias": "Vitamin A (Retinol & Beta-Carotene) (mcg)" },
   { "code": "VIT_B1_MG", "alias": "Vitamin B1 (Thiamine) (mg)" },
   { "code": "VIT_B2_MG", "alias": "Vitamin B2 (Riboflavin) (mg)" },
   { "code": "VIT_B3_MG", "alias": "Vitamin B3 (Niacin) (mg)" },
@@ -357,7 +358,7 @@
             "sort": 0,
             "members": [
               "AA_LEUCINE_G","AA_LYSINE_G","AA_VALINE_G","AA_ISOLEUCINE_G","AA_METHIONINE_G",
-              "AA_PHENYLALANINE_G","AA_THRIONINE_G","AA_TRYPTOPHAN_G","AA_TYROSINE_G","AA_HISTIDINE_G",
+              "AA_PHENYLALANINE_G","AA_THREONINE_G","AA_TRYPTOPHAN_G","AA_TYROSINE_G","AA_HISTIDINE_G",
               "AA_ALANINE_G","AA_ARGININE_G","AA_ASPARAGINE_G","AA_ASPARTIC_ACID_G","AA_CYSTEINE_G",
               "AA_GLUTAMIC_ACID_G","AA_GLUTAMINE_G","AA_GLYCINE_G","AA_PROLINE_G","AA_SERINE_G"
             ]

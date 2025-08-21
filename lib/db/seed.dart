@@ -847,6 +847,8 @@ static Future<int> _upsertFood({
   double? ediblePortionPct,
   double? yieldPct,
 }) async {
+  final sourceId = await _ensureSource(txn, dataSource);
+
   // try fdc_id
   if (fdcId != null) {
     final row = await txn.query('foods', where: 'fdc_id = ?', whereArgs: [fdcId], limit: 1);
@@ -859,6 +861,7 @@ static Future<int> _upsertFood({
         'category_id': await _ensureCategoryPath(txn, categoryPath),
         'data_source': dataSource,
         'data_source_id': dataSourceId,
+        'source_id': sourceId, 
         'density_g_per_ml': densityGPerMl,
         'verified': (verified ?? false) ? 1 : 0,
         'quality_score': qualityScore,
@@ -887,6 +890,7 @@ static Future<int> _upsertFood({
         'data_source': dataSource,
         'data_source_id': dataSourceId,
         'fdc_id': fdcId,
+        'source_id': sourceId,
         'density_g_per_ml': densityGPerMl,
         'verified': (verified ?? false) ? 1 : 0,
         'quality_score': qualityScore,
@@ -903,7 +907,6 @@ static Future<int> _upsertFood({
   }
 
   // fallback: name + brand_id + data_source
-  // Replace the fallback block in _upsertFood with:
 final bool hasBrand = brandId != null;
 final where = hasBrand
     ? "name = ? AND brand_id = ? AND COALESCE(data_source, '') = ?"
@@ -924,6 +927,7 @@ final row = await txn.query(
       'category_id': await _ensureCategoryPath(txn, categoryPath),
       'data_source_id': dataSourceId,
       'fdc_id': fdcId,
+      'source_id': sourceId,
       'density_g_per_ml': densityGPerMl,
       'verified': (verified ?? false) ? 1 : 0,
       'quality_score': qualityScore,
@@ -947,6 +951,7 @@ final row = await txn.query(
     'data_source': dataSource,
     'data_source_id': dataSourceId,
     'fdc_id': fdcId,
+    'source_id': sourceId,
     'density_g_per_ml': densityGPerMl,
     'verified': (verified ?? false) ? 1 : 0,
     'quality_score': qualityScore,
@@ -1127,6 +1132,53 @@ static Future<void> seedFoodsExtended(Database db, {String assetPath = 'assets/f
     }
   });
 }
+
+static Future<int?> _ensureSource(DatabaseExecutor txn, String? name) async {
+  final s = (name ?? '').trim();
+  if (s.isEmpty) return null;
+  await txn.insert(
+    'sources',
+    {'name': s},
+    conflictAlgorithm: ConflictAlgorithm.ignore,
+  );
+  final row = await txn.query(
+    'sources',
+    where: 'name = ?',
+    whereArgs: [s],
+    limit: 1,
+  );
+  return row.isNotEmpty ? row.first['id'] as int : null;
+}
+
+/// Computes per-100g nutrient cache for all recipes using current ingredients.
+/// Safe to run multiple times; uses REPLACE semantics.
+static Future<void> backfillRecipeNutrientCache(Database db) async {
+  await db.transaction((txn) async {
+    // wipe existing cache for recipes that have ingredients
+    await txn.execute('''
+      DELETE FROM recipe_nutrients
+      WHERE recipe_id IN (SELECT DISTINCT recipe_id FROM recipe_ingredients);
+    ''');
+
+    await txn.execute('''
+      INSERT OR REPLACE INTO recipe_nutrients (recipe_id, code, per_100g)
+      SELECT
+        ri.recipe_id,
+        n.code AS code,
+        CASE
+          WHEN SUM(ri.grams) > 0
+          THEN SUM(ri.grams * fn.amount_per_100g) / SUM(ri.grams)
+          ELSE 0
+        END AS per_100g
+      FROM recipe_ingredients ri
+      JOIN food_nutrients fn ON fn.food_id = ri.food_id
+      JOIN nutrients n       ON n.id      = fn.nutrient_id
+      WHERE ri.grams IS NOT NULL
+      GROUP BY ri.recipe_id, n.code;
+    ''');
+  });
+}
+
 
 
 }

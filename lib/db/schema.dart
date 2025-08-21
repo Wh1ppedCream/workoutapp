@@ -129,6 +129,15 @@ await migrateV24(db);
 await migrateV25(db);
 await migrateV26(db);
 await migrateV27(db);
+await migrateV28(db);
+await migrateV29(db);
+await migrateV30(db);
+await migrateV31(db);
+await migrateV32(db);
+await migrateV33(db);
+await migrateV34(db);
+await migrateV35(db);
+
   }
 
   /// Handler for onUpgrade callback.
@@ -159,6 +168,15 @@ if (oldVersion < 24) await migrateV24(db);
 if (oldVersion < 25) await migrateV25(db);
 if (oldVersion < 26) await migrateV26(db);
 if (oldVersion < 27) await migrateV27(db);
+if (oldVersion < 28) await migrateV28(db);
+if (oldVersion < 29) await migrateV29(db);
+if (oldVersion < 30) await migrateV30(db);
+if (oldVersion < 31) await migrateV31(db);
+if (oldVersion < 32) await migrateV32(db);
+if (oldVersion < 33) await migrateV33(db);
+if (oldVersion < 34) await migrateV34(db);
+if (oldVersion < 35) await migrateV35(db);
+
   }
 
   /// Migration to version 3: adds rating, equipment/muscle tables.
@@ -1242,6 +1260,366 @@ SET source_id = (
 )
 WHERE source_id IS NULL
   AND TRIM(COALESCE(data_source,'')) <> '';
+    ''');
+  });
+}
+
+
+  /// v28 — Diary timestamps & soft delete
+  static Future<void> migrateV28(Database db) async {
+    await db.transaction((txn) async {
+      Future<void> addCol(String table, String colDef) async {
+        final cols = await txn.rawQuery("PRAGMA table_info('$table');");
+        final name = colDef.split(' ').first;
+        final exists = cols.any((c) => c['name'] == name);
+        if (!exists) await txn.execute("ALTER TABLE $table ADD COLUMN $colDef;");
+      }
+
+      // Columns (nullable for legacy; app/trigger will set values)
+      await addCol('diary_entries', 'logged_at INTEGER');
+      await addCol('diary_entries', 'updated_at INTEGER');
+      await addCol('diary_entries', 'is_deleted INTEGER NOT NULL DEFAULT 0');
+
+      // Indexes for fast timelines / recents / live reads
+      await txn.execute('''
+        CREATE INDEX IF NOT EXISTS idx_diary_profile_logged_at
+        ON diary_entries(profile_id, logged_at);
+      ''');
+      await txn.execute('''
+        CREATE INDEX IF NOT EXISTS idx_diary_is_deleted
+        ON diary_entries(is_deleted);
+      ''');
+      // Partial index for common reads (supported on modern SQLite)
+      await txn.execute('''
+        CREATE INDEX IF NOT EXISTS idx_diary_profile_date_live
+        ON diary_entries(profile_id, date)
+        WHERE is_deleted = 0;
+      ''');
+
+      // Triggers: set defaults on insert, bump updated_at on update.
+      // Set logged_at if missing at insert
+      await txn.execute('DROP TRIGGER IF EXISTS trg_diary_set_logged_at_ai;');
+      await txn.execute('''
+        CREATE TRIGGER IF NOT EXISTS trg_diary_set_logged_at_ai
+        AFTER INSERT ON diary_entries
+        WHEN NEW.logged_at IS NULL
+        BEGIN
+          UPDATE diary_entries
+          SET logged_at = CAST(strftime('%s','now') AS INTEGER) * 1000
+          WHERE id = NEW.id;
+        END;
+      ''');
+
+      // Set updated_at if missing at insert
+      await txn.execute('DROP TRIGGER IF EXISTS trg_diary_set_updated_at_ai;');
+      await txn.execute('''
+        CREATE TRIGGER IF NOT EXISTS trg_diary_set_updated_at_ai
+        AFTER INSERT ON diary_entries
+        WHEN NEW.updated_at IS NULL
+        BEGIN
+          UPDATE diary_entries
+          SET updated_at = CAST(strftime('%s','now') AS INTEGER) * 1000
+          WHERE id = NEW.id;
+        END;
+      ''');
+
+      // Bump updated_at on update when not advanced
+      await txn.execute('DROP TRIGGER IF EXISTS trg_diary_bump_updated_at_au;');
+      await txn.execute('''
+        CREATE TRIGGER IF NOT EXISTS trg_diary_bump_updated_at_au
+        AFTER UPDATE ON diary_entries
+        WHEN NEW.updated_at IS NULL OR NEW.updated_at <= OLD.updated_at
+        BEGIN
+          UPDATE diary_entries
+          SET updated_at = CAST(strftime('%s','now') AS INTEGER) * 1000
+          WHERE id = NEW.id;
+        END;
+      ''');
+
+      // Backfill: initialize logged_at from existing date for legacy rows (idempotent)
+      await txn.execute('''
+        UPDATE diary_entries
+        SET logged_at = CAST(strftime('%s', date || 'T00:00:00Z') AS INTEGER) * 1000
+        WHERE logged_at IS NULL;
+      ''');
+    });
+  }
+
+  /// v29 — Entry tags
+  static Future<void> migrateV29(Database db) async {
+    await db.transaction((txn) async {
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS diary_entry_tags (
+          id         INTEGER PRIMARY KEY AUTOINCREMENT,
+          entry_id   INTEGER NOT NULL,
+          tag        TEXT    NOT NULL,
+          created_at INTEGER,
+          FOREIGN KEY(entry_id) REFERENCES diary_entries(id) ON DELETE CASCADE
+        );
+      ''');
+
+      await txn.execute('CREATE INDEX IF NOT EXISTS idx_det_entry ON diary_entry_tags(entry_id);');
+      await txn.execute('CREATE INDEX IF NOT EXISTS idx_det_tag   ON diary_entry_tags(tag);');
+      await txn.execute('CREATE UNIQUE INDEX IF NOT EXISTS ux_det_entry_tag ON diary_entry_tags(entry_id, tag);');
+
+      // Optional: default created_at
+      await txn.execute('DROP TRIGGER IF EXISTS trg_det_set_created_at_ai;');
+      await txn.execute('''
+        CREATE TRIGGER IF NOT EXISTS trg_det_set_created_at_ai
+        AFTER INSERT ON diary_entry_tags
+        WHEN NEW.created_at IS NULL
+        BEGIN
+          UPDATE diary_entry_tags
+          SET created_at = CAST(strftime('%s','now') AS INTEGER) * 1000
+          WHERE id = NEW.id;
+        END;
+      ''');
+    });
+  }
+
+  /// v30 — Recipe nutrient cache (per-100g by code)
+  static Future<void> migrateV30(Database db) async {
+    await db.transaction((txn) async {
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS recipe_nutrients (
+          id         INTEGER PRIMARY KEY AUTOINCREMENT,
+          recipe_id  INTEGER NOT NULL,
+          code       TEXT    NOT NULL,
+          per_100g   REAL    NOT NULL,
+          UNIQUE(recipe_id, code),
+          FOREIGN KEY(recipe_id) REFERENCES recipes(id) ON DELETE CASCADE
+        );
+      ''');
+
+      await txn.execute('CREATE INDEX IF NOT EXISTS idx_rnut_recipe ON recipe_nutrients(recipe_id);');
+    });
+  }
+
+  /// v31 — Favorites (per profile)
+  static Future<void> migrateV31(Database db) async {
+    await db.transaction((txn) async {
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS favorite_foods (
+          id          INTEGER PRIMARY KEY AUTOINCREMENT,
+          profile_id  INTEGER NOT NULL,
+          food_id     INTEGER NOT NULL,
+          created_at  INTEGER,
+          UNIQUE(profile_id, food_id),
+          FOREIGN KEY(profile_id) REFERENCES gym_profiles(id) ON DELETE CASCADE,
+          FOREIGN KEY(food_id)    REFERENCES foods(id)        ON DELETE RESTRICT
+        );
+      ''');
+
+      await txn.execute('CREATE INDEX IF NOT EXISTS idx_fav_profile ON favorite_foods(profile_id);');
+
+      // Optional: default created_at
+      await txn.execute('DROP TRIGGER IF EXISTS trg_fav_set_created_at_ai;');
+      await txn.execute('''
+        CREATE TRIGGER IF NOT EXISTS trg_fav_set_created_at_ai
+        AFTER INSERT ON favorite_foods
+        WHEN NEW.created_at IS NULL
+        BEGIN
+          UPDATE favorite_foods
+          SET created_at = CAST(strftime('%s','now') AS INTEGER) * 1000
+          WHERE id = NEW.id;
+        END;
+      ''');
+    });
+  }
+
+  /// v32 — OPTIONAL: Diary audit trail
+  static Future<void> migrateV32(Database db) async {
+    await db.transaction((txn) async {
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS diary_entry_audit (
+          id          INTEGER PRIMARY KEY AUTOINCREMENT,
+          entry_id    INTEGER NOT NULL,
+          action      TEXT    NOT NULL,  -- 'create'|'update'|'delete'|'restore'
+          at          INTEGER NOT NULL,
+          before_json TEXT,
+          after_json  TEXT,
+          FOREIGN KEY(entry_id) REFERENCES diary_entries(id) ON DELETE CASCADE
+        );
+      ''');
+
+      await txn.execute('CREATE INDEX IF NOT EXISTS idx_dea_entry ON diary_entry_audit(entry_id);');
+    });
+  }
+
+// v33 — Legacy grams_override shim (transition to logged_grams)
+static Future<void> migrateV33(Database db) async {
+  await db.transaction((txn) async {
+    // Add column if missing
+    final cols = await txn.rawQuery("PRAGMA table_info('diary_entries');");
+    final hasCol = cols.any((c) => c['name'] == 'grams_override');
+    if (!hasCol) {
+      await txn.execute("ALTER TABLE diary_entries ADD COLUMN grams_override REAL;");
+      // Backfill from best available source
+      await txn.execute("""
+        UPDATE diary_entries
+        SET grams_override = COALESCE(grams_override, logged_grams, grams)
+        WHERE grams_override IS NULL;
+      """);
+    }
+  });
+}
+
+/// v34
+static Future<void> migrateV34(Database db) async {
+  await db.transaction((txn) async {
+    // 2) One default portion per food
+    await txn.execute("""
+      CREATE UNIQUE INDEX IF NOT EXISTS ux_food_portions_default
+      ON food_portions(food_id)
+      WHERE is_default = 1;
+    """);
+
+    // 3) XOR constraint for diary entries
+    await txn.execute('DROP TRIGGER IF EXISTS trg_diary_entries_xor_ai;');
+    await txn.execute("""
+      CREATE TRIGGER IF NOT EXISTS trg_diary_entries_xor_ai
+      BEFORE INSERT ON diary_entries
+      WHEN (NEW.food_id IS NULL AND NEW.recipe_id IS NULL)
+        OR (NEW.food_id IS NOT NULL AND NEW.recipe_id IS NOT NULL)
+      BEGIN
+        SELECT RAISE(ABORT, 'Exactly one of food_id or recipe_id must be set');
+      END;
+    """);
+    await txn.execute('DROP TRIGGER IF EXISTS trg_diary_entries_xor_au;');
+    await txn.execute("""
+      CREATE TRIGGER IF NOT EXISTS trg_diary_entries_xor_au
+      BEFORE UPDATE ON diary_entries
+      WHEN (NEW.food_id IS NULL AND NEW.recipe_id IS NULL)
+        OR (NEW.food_id IS NOT NULL AND NEW.recipe_id IS NOT NULL)
+      BEGIN
+        SELECT RAISE(ABORT, 'Exactly one of food_id or recipe_id must be set');
+      END;
+    """);
+
+    // 4) Recents performance
+    await txn.execute("""
+      CREATE INDEX IF NOT EXISTS idx_diary_profile_food_logged_at
+      ON diary_entries(profile_id, food_id, logged_at);
+    """);
+    await txn.execute("""
+      CREATE INDEX IF NOT EXISTS idx_diary_profile_recipe_logged_at
+      ON diary_entries(profile_id, recipe_id, logged_at);
+    """);
+
+    // 5) Optional: barcode edits bump foods.updated_at
+    await txn.execute('DROP TRIGGER IF EXISTS trg_touch_food_on_barcode_ins;');
+    await txn.execute("""
+      CREATE TRIGGER IF NOT EXISTS trg_touch_food_on_barcode_ins
+      AFTER INSERT ON food_barcodes
+      BEGIN
+        UPDATE foods SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = NEW.food_id;
+      END;
+    """);
+    await txn.execute('DROP TRIGGER IF EXISTS trg_touch_food_on_barcode_del;');
+    await txn.execute("""
+      CREATE TRIGGER IF NOT EXISTS trg_touch_food_on_barcode_del
+      AFTER DELETE ON food_barcodes
+      BEGIN
+        UPDATE foods SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = OLD.food_id;
+      END;
+    """);
+  });
+}
+
+/// v35 — Data guards & helpful indexes:
+/// - Enforce DiaryEntry.quantity > 0
+/// - Constrain DiaryEntry.meal_type to 0..3
+/// - Enforce per-portion nutrient rows have portion_id
+/// - Limit diary_entry_tags.tag length (<= 40)
+/// - Composite index for tag timelines (tag, created_at)
+static Future<void> migrateV35(Database db) async {
+  await db.transaction((txn) async {
+    // Small helper to (re)create triggers safely.
+    Future<void> createTrigger(String name, String sql) async {
+      await txn.execute('DROP TRIGGER IF EXISTS $name;');
+      await txn.execute(sql);
+    }
+
+    // 1) DiaryEntry.quantity > 0
+    await createTrigger('trg_diary_quantity_check_bi', '''
+      CREATE TRIGGER IF NOT EXISTS trg_diary_quantity_check_bi
+      BEFORE INSERT ON diary_entries
+      WHEN NEW.quantity IS NULL OR NEW.quantity <= 0
+      BEGIN
+        SELECT RAISE(ABORT, 'DiaryEntry.quantity must be > 0');
+      END;
+    ''');
+
+    await createTrigger('trg_diary_quantity_check_bu', '''
+      CREATE TRIGGER IF NOT EXISTS trg_diary_quantity_check_bu
+      BEFORE UPDATE ON diary_entries
+      WHEN NEW.quantity IS NULL OR NEW.quantity <= 0
+      BEGIN
+        SELECT RAISE(ABORT, 'DiaryEntry.quantity must be > 0');
+      END;
+    ''');
+
+    // 2) DiaryEntry.meal_type in 0..3
+    await createTrigger('trg_diary_mealtype_check_bi', '''
+      CREATE TRIGGER IF NOT EXISTS trg_diary_mealtype_check_bi
+      BEFORE INSERT ON diary_entries
+      WHEN NEW.meal_type IS NULL OR NEW.meal_type < 0 OR NEW.meal_type > 3
+      BEGIN
+        SELECT RAISE(ABORT, 'DiaryEntry.meal_type must be 0..3');
+      END;
+    ''');
+
+    await createTrigger('trg_diary_mealtype_check_bu', '''
+      CREATE TRIGGER IF NOT EXISTS trg_diary_mealtype_check_bu
+      BEFORE UPDATE ON diary_entries
+      WHEN NEW.meal_type IS NULL OR NEW.meal_type < 0 OR NEW.meal_type > 3
+      BEGIN
+        SELECT RAISE(ABORT, 'DiaryEntry.meal_type must be 0..3');
+      END;
+    ''');
+
+    // 3) food_nutrient_values: per_portion rows require portion_id
+    await createTrigger('trg_fnv_portion_required_bi', '''
+      CREATE TRIGGER IF NOT EXISTS trg_fnv_portion_required_bi
+      BEFORE INSERT ON food_nutrient_values
+      WHEN NEW.basis = 'per_portion' AND NEW.portion_id IS NULL
+      BEGIN
+        SELECT RAISE(ABORT, 'food_nutrient_values.per_portion requires portion_id');
+      END;
+    ''');
+
+    await createTrigger('trg_fnv_portion_required_bu', '''
+      CREATE TRIGGER IF NOT EXISTS trg_fnv_portion_required_bu
+      BEFORE UPDATE ON food_nutrient_values
+      WHEN NEW.basis = 'per_portion' AND NEW.portion_id IS NULL
+      BEGIN
+        SELECT RAISE(ABORT, 'food_nutrient_values.per_portion requires portion_id');
+      END;
+    ''');
+
+    // 4) diary_entry_tags: limit tag length (<= 40)
+    await createTrigger('trg_det_tag_len_bi', '''
+      CREATE TRIGGER IF NOT EXISTS trg_det_tag_len_bi
+      BEFORE INSERT ON diary_entry_tags
+      WHEN NEW.tag IS NULL OR length(trim(NEW.tag)) > 40
+      BEGIN
+        SELECT RAISE(ABORT, 'diary_entry_tags.tag must be <= 40 chars');
+      END;
+    ''');
+
+    await createTrigger('trg_det_tag_len_bu', '''
+      CREATE TRIGGER IF NOT EXISTS trg_det_tag_len_bu
+      BEFORE UPDATE ON diary_entry_tags
+      WHEN NEW.tag IS NULL OR length(trim(NEW.tag)) > 40
+      BEGIN
+        SELECT RAISE(ABORT, 'diary_entry_tags.tag must be <= 40 chars');
+      END;
+    ''');
+
+    // 5) Helpful composite index for tag timelines (filter + sort)
+    await txn.execute('''
+      CREATE INDEX IF NOT EXISTS idx_det_tag_created_at
+      ON diary_entry_tags(tag, created_at);
     ''');
   });
 }

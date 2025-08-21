@@ -2,6 +2,7 @@
 
 import 'package:sqflite/sqflite.dart';
 import '../models/nutrition_models.dart';
+import 'dart:convert';
 
 
 
@@ -37,6 +38,28 @@ String _canonCode(String code) {
   return _codeSynonyms[up] ?? up;
 }
 
+// Map UI/canonical codes → actual DB codes used in `nutrients.code`
+static const Map<String, String> _toDbCode = {
+  // Energy
+  'ENERGY_KCAL': 'KCAL',
+  'KCAL'       : 'KCAL',
+  'CALORIES'   : 'KCAL',   // ← add this line
+
+  // Macros
+  'PROTEIN'    : 'PROTEIN_G',
+  'CARB'       : 'CARB_G',
+  'FAT'        : 'FAT_G',
+
+  // Common extended -> canonical
+  'SUGARS'     : 'SUGARS_TOTAL_G',
+  'FASAT'      : 'FA_SAT_G',
+  'SODIUM'     : 'SODIUM_MG',
+};
+
+
+String _toDb(String code) => _toDbCode[code.toUpperCase()] ?? code.toUpperCase();
+
+
 
   // ───────────────────────────────────────────────────────────────────────────
   // SEEDING
@@ -50,19 +73,26 @@ String _canonCode(String code) {
 
   final batch = db.batch();
   void add(String code, String name, String unit) {
-    batch.insert('nutrients', {'code': code, 'name': name, 'unit': unit},
-      conflictAlgorithm: ConflictAlgorithm.ignore);
+    batch.insert(
+      'nutrients',
+      {'code': code, 'name': name, 'unit': unit},
+      conflictAlgorithm: ConflictAlgorithm.ignore,
+    );
   }
-  add('ENERGY_KCAL','Energy','kcal');
-  add('PROTEIN','Protein','g');
-  add('FAT','Fat','g');
-  add('CARB','Carbohydrate','g');
-  add('FIBER','Fiber','g');
-  add('SUGARS','Sugars','g');
-  add('FASAT','Sat. Fat','g');
-  add('SODIUM','Sodium','mg');
+
+  // Extended “starter set” that matches nutrients_extended.json
+  add('KCAL',            'Calories',           'kcal');
+  add('PROTEIN_G',       'Protein',            'g');
+  add('CARB_G',          'Carbohydrate',       'g');
+  add('FAT_G',           'Fat',                'g');
+  add('FIBER_G',         'Fiber',              'g');
+  add('SUGARS_TOTAL_G',  'Sugars, total',      'g');
+  add('FA_SAT_G',        'Saturated fat',      'g');
+  add('SODIUM_MG',       'Sodium',             'mg');
+
   await batch.commit(noResult: true);
 }
+
 
 
   // ───────────────────────────────────────────────────────────────────────────
@@ -147,12 +177,15 @@ String _canonCode(String code) {
 
   Future<int> upsertFoodPortion(FoodPortion p) async {
     final map = p.toMap();
+    int id;
     if (p.id == null) {
-      return await db.insert('food_portions', map);
+      id = await db.insert('food_portions', map);
     } else {
       await db.update('food_portions', map, where: 'id = ?', whereArgs: [p.id]);
-      return p.id!;
+      id = p.id!;
     }
+    await _refreshRecipeCachesForFood(p.foodId);
+    return id;
   }
 
   Future<List<FoodPortion>> getPortionsForFood(int foodId) async {
@@ -192,6 +225,8 @@ String _canonCode(String code) {
       }, conflictAlgorithm: ConflictAlgorithm.ignore);
     }
   });
+
+  await _refreshRecipeCachesForFood(foodId);
 }
 
 
@@ -261,29 +296,35 @@ Future<Map<String, double>> getFoodNutrientsPer100gByCode(int foodId) async {
   // RECIPES
   // ───────────────────────────────────────────────────────────────────────────
 
-  Future<int> createOrUpdateRecipe(Recipe r, List<RecipeIngredient> ings) async {
-    return await db.transaction<int>((txn) async {
-      int rid;
-      final map = r.toMap();
-      if (r.id == null) {
-        rid = await txn.insert('recipes', map);
-      } else {
-        rid = r.id!;
-        await txn.update('recipes', map, where: 'id = ?', whereArgs: [rid]);
-        await txn.delete('recipe_ingredients', where: 'recipe_id = ?', whereArgs: [rid]);
-      }
-      for (final ing in ings) {
-        await txn.insert('recipe_ingredients', {
-          'recipe_id': rid,
-          'food_id': ing.foodId,
-          'portion_id': ing.portionId,
-          'quantity': ing.quantity,
-          'grams': ing.grams,
-        });
-      }
-      return rid;
-    });
-  }
+Future<int> createOrUpdateRecipe(Recipe r, List<RecipeIngredient> ings) async {
+  final rid = await db.transaction<int>((txn) async {
+    int outId;
+    final map = r.toMap();
+    if (r.id == null) {
+      outId = await txn.insert('recipes', map);
+    } else {
+      outId = r.id!;
+      await txn.update('recipes', map, where: 'id = ?', whereArgs: [outId]);
+      await txn.delete('recipe_ingredients', where: 'recipe_id = ?', whereArgs: [outId]);
+    }
+    for (final ing in ings) {
+      await txn.insert('recipe_ingredients', {
+        'recipe_id': outId,
+        'food_id': ing.foodId,
+        'portion_id': ing.portionId,
+        'quantity': ing.quantity,
+        'grams': ing.grams,
+      });
+    }
+    return outId;
+  });
+
+  // do this after commit
+  await rebuildRecipeNutrientCache(rid);
+  return rid;
+}
+
+
 
   Future<Recipe?> getRecipe(int id) async {
     final rows = await db.query('recipes', where: 'id = ?', whereArgs: [id], limit: 1);
@@ -304,74 +345,276 @@ Future<Map<String, double>> getFoodNutrientsPer100gByCode(int foodId) async {
   // ───────────────────────────────────────────────────────────────────────────
 
   Future<int> addDiaryFood({
-    required int profileId,
-    required DateTime date,
-    required MealType mealType,
-    required int foodId,
-    int? portionId,
-    double quantity = 1.0,
-    double? gramsOverride,
-    String? notes,
-  }) async {
-    final resolvedGrams = gramsOverride ?? await _resolveFoodGrams(foodId, portionId, quantity);
-    final id = await db.insert('diary_entries', {
-      'profile_id': profileId,
-      'date': _toYMD(date),
-      'meal_type': mealType.index,
-      'food_id': foodId,
-      'recipe_id': null,
-      'portion_id': portionId,
-      'quantity': quantity,
-      'grams': resolvedGrams,
-      'logged_grams': resolvedGrams,   // new
-      'notes': notes,
-    });
-    await recalcDayTotals(profileId, date);
-    await _bumpFoodUsage(profileId, foodId);
-    return id;
+  required int profileId,
+  required DateTime date,
+  required MealType mealType,
+  required int foodId,
+  int? portionId,
+  double quantity = 1.0,
+  double? gramsOverride,   // legacy, still accepted
+  double? loggedGrams,     // NEW preferred override
+  DateTime? loggedAt,      // NEW precise timestamp
+  String? notes,
+}) async {
+  // Resolve grams (loggedGrams > legacy gramsOverride > derive from portion)
+  final resolvedGrams = loggedGrams
+      ?? gramsOverride
+      ?? await _resolveFoodGrams(foodId, portionId, quantity);
+
+  // Compute snapshots once at insert (optional but recommended)
+  Map<String, double>? snap;
+  if (resolvedGrams != null && resolvedGrams > 0) {
+    final per100 = await _per100WithFallback(foodId, portionId: portionId);
+    if (per100.isNotEmpty) {
+      snap = _computeMacroSnapshot(per100, resolvedGrams);
+    }
   }
+
+  final id = await db.insert('diary_entries', {
+    'profile_id' : profileId,
+    'date'       : _toYMD(date),
+    'meal_type'  : mealType.index,
+    'food_id'    : foodId,
+    'recipe_id'  : null,
+    'portion_id' : portionId,
+    'quantity'   : quantity,
+    // mass (keep legacy + new + temporary shim)
+    'grams'         : resolvedGrams,
+    'logged_grams'  : resolvedGrams,
+    'grams_override': resolvedGrams, // TEMP: back-compat column (migr v33)
+
+    'notes'      : notes,
+
+    // snapshots (kcal/P/C/F) + optional JSON (macros-only for now)
+    'kcal_snapshot'       : snap?['kcal'],
+    'protein_g_snapshot'  : snap?['protein_g'],
+    'carb_g_snapshot'     : snap?['carb_g'],
+    'fat_g_snapshot'      : snap?['fat_g'],
+    'nutrient_snapshot_json': (snap == null)
+        ? null
+        : jsonEncode({
+            'KCAL'      : snap['kcal'],
+            'PROTEIN_G' : snap['protein_g'],
+            'CARB_G'    : snap['carb_g'],
+            'FAT_G'     : snap['fat_g'],
+          }),
+
+    // precise timestamp (let trigger fill if null)
+    'logged_at'  : loggedAt?.toUtc().millisecondsSinceEpoch,
+    // leave updated_at null; trigger will set
+  });
+
+  await recalcDayTotals(profileId, date);
+  await _bumpFoodUsage(profileId, foodId);
+  return id;
+}
+
 
   Future<int> addDiaryRecipe({
-    required int profileId,
-    required DateTime date,
-    required MealType mealType,
-    required int recipeId,
-    double quantity = 1.0,
-    String? notes,
-  }) async {
-    final id = await db.insert('diary_entries', {
-      'profile_id': profileId,
-      'date': _toYMD(date),
-      'meal_type': mealType.index,
-      'food_id': null,
-      'recipe_id': recipeId,
-      'portion_id': null,
-      'quantity': quantity,
-      'grams': null, // recipe grams computed from ingredients on recalc
-      'notes': notes,
-    });
-    await recalcDayTotals(profileId, date);
-    return id;
+  required int profileId,
+  required DateTime date,
+  required MealType mealType,
+  required int recipeId,
+  double quantity = 1.0,
+  DateTime? loggedAt,    // NEW
+  String? notes,
+}) async {
+  // Build a snapshot (kcal/P/C/F) for 1x recipe, then scale by quantity.
+  double rK = 0, rP = 0, rF = 0, rC = 0;
+
+  // Try cache first
+  final cached = await getRecipePer100gByCode(recipeId);
+  if (cached.isNotEmpty) {
+    // Need total grams to turn per-100g into absolute. Derive from ingredients quickly.
+    final ings = await getRecipeIngredients(recipeId);
+    double totalGrams = 0;
+    for (final ing in ings) {
+      final g = await _resolveIngredientGrams(ing);
+      if (g != null && g > 0) totalGrams += g;
+    }
+    if (totalGrams > 0) {
+      rP = _calcCode(cached, totalGrams, 'PROTEIN');
+      rF = _calcCode(cached, totalGrams, 'FAT');
+      rC = _calcCode(cached, totalGrams, 'CARB');
+      final kcalDirect = _calcCode(cached, totalGrams, 'ENERGY_KCAL');
+      rK = (kcalDirect > 0) ? kcalDirect : 4 * rP + 4 * rC + 9 * rF;
+    }
   }
+
+  // Fallback: compute from ingredients if cache/grams insufficient
+  if (rK == 0 && rP == 0 && rF == 0 && rC == 0) {
+    final ings = await getRecipeIngredients(recipeId);
+    for (final ing in ings) {
+      final g = await _resolveIngredientGrams(ing);
+      if (g == null || g <= 0) continue;
+      final per100 = await _per100WithFallback(ing.foodId, portionId: ing.portionId);
+      rP += _calcCode(per100, g, 'PROTEIN');
+      rF += _calcCode(per100, g, 'FAT');
+      rC += _calcCode(per100, g, 'CARB');
+      final kcalDirect = _calcCode(per100, g, 'ENERGY_KCAL');
+      rK += (kcalDirect > 0) ? kcalDirect : 4 * _calcCode(per100, g, 'PROTEIN')
+                                           + 4 * _calcCode(per100, g, 'CARB')
+                                           + 9 * _calcCode(per100, g, 'FAT');
+    }
+  }
+
+  // Scale by entry quantity
+  final sK = rK * quantity, sP = rP * quantity, sF = rF * quantity, sC = rC * quantity;
+
+  final id = await db.insert('diary_entries', {
+    'profile_id' : profileId,
+    'date'       : _toYMD(date),
+    'meal_type'  : mealType.index,
+    'food_id'    : null,
+    'recipe_id'  : recipeId,
+    'portion_id' : null,
+    'quantity'   : quantity,
+    'grams'      : null,   // recipes not massed directly at entry
+    'logged_grams': null,
+    'notes'      : notes,
+
+    'kcal_snapshot'       : sK,
+    'protein_g_snapshot'  : sP,
+    'carb_g_snapshot'     : sC,
+    'fat_g_snapshot'      : sF,
+    'nutrient_snapshot_json': jsonEncode({
+      'KCAL'      : sK,
+      'PROTEIN_G' : sP,
+      'CARB_G'    : sC,
+      'FAT_G'     : sF,
+    }),
+
+    'logged_at'  : loggedAt?.toUtc().millisecondsSinceEpoch,
+  });
+
+  await recalcDayTotals(profileId, date);
+  return id;
+}
+
 
   Future<void> updateDiaryEntry(DiaryEntry e) async {
-    await db.update('diary_entries', e.toMap(), where: 'id = ?', whereArgs: [e.id]);
-    await recalcDayTotals(e.profileId, e.date);
+  // Read old entry to know prior date for recalc if the date changed.
+  final oldRows = await db.query('diary_entries', where: 'id = ?', whereArgs: [e.id], limit: 1);
+  DateTime? oldDate = oldRows.isNotEmpty ? _parseYMD(oldRows.first['date'] as String) : null;
+
+  final map = e.toMap();
+
+  // Recompute snapshots if grams/portion/food/recipe changed or if missing.
+  double? grams = e.loggedGrams ?? e.grams;
+  Map<String, double>? snap;
+  if (e.foodId != null) {
+    grams ??= await _resolveFoodGrams(e.foodId!, e.portionId, e.quantity);
+    if (grams != null && grams > 0) {
+      final per100 = await _per100WithFallback(e.foodId!, portionId: e.portionId);
+      if (per100.isNotEmpty) snap = _computeMacroSnapshot(per100, grams);
+    }
+  } else if (e.recipeId != null) {
+    // Use recipe cache path similar to addDiaryRecipe
+    double rK = 0, rP = 0, rF = 0, rC = 0;
+    final cached = await getRecipePer100gByCode(e.recipeId!);
+    double totalGrams = 0;
+    final ings = await getRecipeIngredients(e.recipeId!);
+    for (final ing in ings) {
+      final g = await _resolveIngredientGrams(ing);
+      if (g != null && g > 0) totalGrams += g;
+    }
+    if (cached.isNotEmpty && totalGrams > 0) {
+      rP = _calcCode(cached, totalGrams, 'PROTEIN');
+      rF = _calcCode(cached, totalGrams, 'FAT');
+      rC = _calcCode(cached, totalGrams, 'CARB');
+      final kcalDirect = _calcCode(cached, totalGrams, 'ENERGY_KCAL');
+      rK = (kcalDirect > 0) ? kcalDirect : 4 * rP + 4 * rC + 9 * rF;
+    } else {
+      // fallback: full recompute
+      for (final ing in ings) {
+        final g = await _resolveIngredientGrams(ing);
+        if (g == null || g <= 0) continue;
+        final per100 = await _per100WithFallback(ing.foodId, portionId: ing.portionId);
+        rP += _calcCode(per100, g, 'PROTEIN');
+        rF += _calcCode(per100, g, 'FAT');
+        rC += _calcCode(per100, g, 'CARB');
+        final kcalDirect = _calcCode(per100, g, 'ENERGY_KCAL');
+        rK += (kcalDirect > 0) ? kcalDirect : 4 * _calcCode(per100, g, 'PROTEIN')
+                                             + 4 * _calcCode(per100, g, 'CARB')
+                                             + 9 * _calcCode(per100, g, 'FAT');
+      }
+    }
+    // Scale by quantity
+    rK *= e.quantity; rP *= e.quantity; rF *= e.quantity; rC *= e.quantity;
+    snap = {'kcal': rK, 'protein_g': rP, 'carb_g': rC, 'fat_g': rF};
   }
+
+  if (snap != null) {
+    map['kcal_snapshot']       = snap['kcal'];
+    map['protein_g_snapshot']  = snap['protein_g'];
+    map['carb_g_snapshot']     = snap['carb_g'];
+    map['fat_g_snapshot']      = snap['fat_g'];
+    map['nutrient_snapshot_json'] = jsonEncode({
+      'KCAL'      : snap['kcal'],
+      'PROTEIN_G' : snap['protein_g'],
+      'CARB_G'    : snap['carb_g'],
+      'FAT_G'     : snap['fat_g'],
+    });
+  }
+
+  // Ensure updated_at bumps (even if trigger exists)
+  map['updated_at'] = _nowEpochMs();
+
+  await db.update('diary_entries', map, where: 'id = ?', whereArgs: [e.id]);
+
+  // Recalc day totals (old + new if date changed)
+  if (oldDate != null && oldDate != e.date) {
+    await recalcDayTotals(e.profileId, oldDate);
+  }
+  await recalcDayTotals(e.profileId, e.date);
+}
+
 
   Future<void> deleteDiaryEntry(int id, {required int profileId, required DateTime date}) async {
-    await db.delete('diary_entries', where: 'id = ?', whereArgs: [id]);
-    await recalcDayTotals(profileId, date);
-  }
+  await db.update('diary_entries', {
+    'is_deleted': 1,
+    'updated_at': _nowEpochMs(),
+  }, where: 'id = ?', whereArgs: [id]);
+
+  await recalcDayTotals(profileId, date);
+}
+
 
   Future<List<DiaryEntry>> getDiaryEntriesForDate(int profileId, DateTime date) async {
-    final rows = await db.query('diary_entries',
-      where: 'profile_id = ? AND date = ?',
-      whereArgs: [profileId, _toYMD(date)],
-      orderBy: 'meal_type, id',
+  final rows = await db.query(
+    'diary_entries',
+    where: 'profile_id = ? AND date = ? AND is_deleted = 0',
+    whereArgs: [profileId, _toYMD(date)],
+    // chronological within the day, then meal, then id
+    orderBy: 'COALESCE(logged_at, 0) ASC, meal_type ASC, id ASC',
+  );
+  return rows.map(DiaryEntry.fromMap).toList();
+}
+
+/// Chronological range query by precise timestamps.
+  Future<List<DiaryEntry>> getDiaryEntriesBetween(
+    int profileId,
+    DateTime start,
+    DateTime end, {
+    MealType? mealType,
+    int limit = 1000,
+  }) async {
+    final where = StringBuffer('profile_id = ? AND is_deleted = 0 AND logged_at IS NOT NULL AND logged_at BETWEEN ? AND ?');
+    final args = <Object?>[profileId, start.toUtc().millisecondsSinceEpoch, end.toUtc().millisecondsSinceEpoch];
+    if (mealType != null) {
+      where.write(' AND meal_type = ?');
+      args.add(mealType.index);
+    }
+    final rows = await db.query(
+      'diary_entries',
+      where: where.toString(),
+      whereArgs: args,
+      orderBy: 'logged_at ASC, id ASC',
+      limit: limit,
     );
     return rows.map(DiaryEntry.fromMap).toList();
   }
+
 
   // ───────────────────────────────────────────────────────────────────────────
   // GOALS
@@ -524,7 +767,8 @@ double _calcCode(Map<String, double> per100ByCode, double grams, String code) {
 
   if (p.mlVolume != null) {
     final food = await getFood(foodId);
-    final density = food?.densityGPerMl ?? 1.0; // TODO: use real density when available
+    final density = food?.densityGPerMl;
+    if (density == null) return null; // don't silently assume 1.0 g/mL
     return p.mlVolume! * quantity * density;
   }
   return null;
@@ -539,7 +783,8 @@ double _calcCode(Map<String, double> per100ByCode, double grams, String code) {
       if (p.gramWeight != null) return p.gramWeight! * ing.quantity!;
       if (p.mlVolume != null) {
         final food = await getFood(ing.foodId);
-        final density = food?.densityGPerMl ?? 1.0; // TODO: use real density when available
+        final density = food?.densityGPerMl;
+        if (density == null) return null; // don't silently assume 1.0 g/mL
         return p.mlVolume! * ing.quantity! * density;
       }
     }
@@ -597,19 +842,38 @@ double _calcCode(Map<String, double> per100ByCode, double grams, String code) {
 
 
   // --- Utility: map nutrient code -> id ------------------------------------
-  Future<Map<String, int>> _codeToId(Set<String> codes) async {
-    if (codes.isEmpty) return {};
-    final placeholders = List.filled(codes.length, '?').join(',');
-    final rows = await db.query(
-      'nutrients',
-      columns: ['id','code'],
-      where: 'code IN ($placeholders)',
-      whereArgs: codes.toList(),
-    );
-    return {
-      for (final r in rows) (r['code'] as String): (r['id'] as int),
-    };
+Future<Map<String, int>> _codeToId(Set<String> codes) async {
+  if (codes.isEmpty) return {};
+
+  // collect both the raw and DB-mapped codes to query once
+  final wanted = <String>{};
+  for (final c in codes) {
+    wanted.add(c.toUpperCase());
+    wanted.add(_toDb(c));
   }
+
+  final placeholders = List.filled(wanted.length, '?').join(',');
+  final rows = await db.query(
+    'nutrients',
+    columns: ['id','code'],
+    where: 'UPPER(code) IN ($placeholders)',
+    whereArgs: wanted.toList(),
+  );
+
+  final foundByCode = <String, int>{
+    for (final r in rows) (r['code'] as String).toUpperCase(): (r['id'] as int),
+  };
+
+  // return a map keyed by the original requested code
+  final out = <String, int>{};
+  for (final c in codes) {
+    final dbCode = _toDb(c);
+    out[c] = foundByCode[dbCode] ?? foundByCode[c.toUpperCase()] ?? -1;
+    if (out[c] == -1) out.remove(c);
+  }
+  return out;
+}
+
 
   // --- UPSERT per-100g by code into v22 table ------------------------------
   Future<void> replacePer100gByCode(int foodId, Map<String, double> codeToAmount) async {
@@ -632,11 +896,11 @@ double _calcCode(Map<String, double> per100ByCode, double grams, String code) {
   if (nid == null) continue;
 
   await txn.insert('food_nutrient_values', {
-    'food_id': foodId,
-    'nutrient_id': nid,
-    'amount': e.value,
-    'basis': 'per_100g',
-  }, conflictAlgorithm: ConflictAlgorithm.ignore);
+  'food_id': foodId,
+  'nutrient_id': nid,
+  'amount': e.value,
+  'basis': 'per_100g',
+}, conflictAlgorithm: ConflictAlgorithm.replace);
 
   // legacy mirror (for now)
   await txn.insert('food_nutrients', {
@@ -647,6 +911,9 @@ double _calcCode(Map<String, double> per100ByCode, double grams, String code) {
 }
 
   });
+
+  // Dependent recipe caches may now be stale.
+  await _refreshRecipeCachesForFood(foodId);
 }
 
 
@@ -693,14 +960,19 @@ Future<Map<String, String>> _buildAliasToCodeMap(Database db) async {
     map[code.toLowerCase()] = code;
   }
 
-  // A few hard defaults that are common in our UI
-  map.putIfAbsent('calories', () => 'ENERGY_KCAL'); // ← canonical
-  map.putIfAbsent('protein',  () => 'PROTEIN');
-  map.putIfAbsent('carbs',    () => 'CARB');
-  map.putIfAbsent('fats',     () => 'FAT');
+    // A few hard defaults that are common in our UI
+  map.putIfAbsent('calories',       () => 'ENERGY_KCAL'); // canonical → will map to KCAL via _toDb
+  map.putIfAbsent('protein',        () => 'PROTEIN');
+  map.putIfAbsent('carbs',          () => 'CARB');
+  map.putIfAbsent('fats',           () => 'FAT');
 
+  // Add these three convenience fallbacks:
+  map.putIfAbsent('sugar',          () => 'SUGARS');      // → SUGARS_TOTAL_G via _toDb
+  map.putIfAbsent('saturated fat',  () => 'FASAT');       // → FA_SAT_G via _toDb
+  map.putIfAbsent('sodium',         () => 'SODIUM');      // → SODIUM_MG via _toDb
 
   return map;
+
 }
 
 /// Convert a “label → value” map (coming from FoodCustomizationPage payload)
@@ -906,6 +1178,9 @@ Future<void> replacePortions(int foodId, List<FoodPortion> portions) async {
       i++;
     }
   });
+
+  // Portion gram weights may affect recipe per-100g derivations.
+  await _refreshRecipeCachesForFood(foodId);
 }
 
 // Helpers (keep private in the DAO file)
@@ -983,7 +1258,7 @@ Future<int> upsertFoodWithKeys({
   String? dataSource,     // e.g. 'seed','fdc','user'
   String? dataSourceId,   // external id
 }) async {
-  return await db.transaction<int>((txn) async {
+  final foodId = await db.transaction<int>((txn) async {
   final brandId    = await _ensureBrandTx(txn, brandName);
   final sourceId   = await _ensureSourceTx(txn, sourceName ?? dataSource);
   final categoryId = await _ensureCategoryTx(txn, categoryName);
@@ -1020,6 +1295,11 @@ Future<int> upsertFoodWithKeys({
 
     return foodId;
   });
+
+// Density/category/source/brand changes don't always affect cache,
+  // but density can change per-portion gram resolution in recipes.
+  await _refreshRecipeCachesForFood(foodId);
+  return foodId;
 }
 
 Future<Food?> getFoodByBarcode(String code) async {
@@ -1064,7 +1344,8 @@ Future<Map<String, double>> calcForPortion({
   final grams = await _resolveFoodGrams(foodId, portionId, quantity);
   if (grams == null || grams <= 0) return {};
 
-  final per100 = await getFoodNutrientsPer100gByCode(foodId);
+  // Use the same fallback chain you use for diary totals
+  final per100 = await _per100WithFallback(foodId, portionId: portionId);
   double pick(String code) => _calcCode(per100, grams, code);
   final kcal = pick('ENERGY_KCAL');
 
@@ -1079,6 +1360,7 @@ Future<Map<String, double>> calcForPortion({
     'sodium_mg' : pick('SODIUM'),
   };
 }
+
 
 
 Future<Map<String, double>> _per100WithFallback(int foodId, {int? portionId}) async {
@@ -1130,5 +1412,319 @@ Future<Map<String, double>> _per100WithFallback(int foodId, {int? portionId}) as
 }
 
 
+int _nowEpochMs() => DateTime.now().toUtc().millisecondsSinceEpoch;
+
+/// Compute kcal/protein/carb/fat snapshot for a given grams amount.
+Map<String, double> _computeMacroSnapshot(
+  Map<String, double> per100ByCode,
+  double grams,
+) {
+  double pick(String code) => _calcCode(per100ByCode, grams, code);
+
+  final protein = pick('PROTEIN');
+  final carbs   = pick('CARB');
+  final fat     = pick('FAT');
+
+  final kcalDirect = pick('ENERGY_KCAL');
+  final kcal = (kcalDirect > 0)
+      ? kcalDirect
+      : 4 * protein + 4 * carbs + 9 * fat;
+
+  return {
+    'kcal': kcal,
+    'protein_g': protein,
+    'carb_g': carbs,
+    'fat_g': fat,
+  };
+}
+
   
+/// Compute and persist per-100g nutrients for a recipe into recipe_nutrients.
+/// Uses ingredient grams; if total grams is 0, clears the cache.
+Future<void> rebuildRecipeNutrientCache(int recipeId) async {
+  final ings = await getRecipeIngredients(recipeId);
+
+  // Accumulate absolute totals across ingredients.
+  final totals = <String, double>{};
+  double totalGrams = 0;
+
+  for (final ing in ings) {
+    final g = await _resolveIngredientGrams(ing);
+    if (g == null || g <= 0) continue;
+    totalGrams += g;
+
+    final per100 = await _per100WithFallback(ing.foodId, portionId: ing.portionId);
+    if (per100.isEmpty) continue;
+
+    per100.forEach((code, per100Val) {
+      final add = per100Val * (g / 100.0);
+      totals[code] = (totals[code] ?? 0) + add;
+    });
+  }
+
+  final batch = db.batch();
+  // Wipe previous cache
+  batch.delete('recipe_nutrients', where: 'recipe_id = ?', whereArgs: [recipeId]);
+
+  if (totalGrams > 0) {
+    // Convert absolute totals → per 100g
+    totals.forEach((code, absVal) {
+      final per100g = absVal * (100.0 / totalGrams);
+      // Store DB-friendly codes (e.g., ENERGY_KCAL → KCAL, SUGARS → SUGARS_TOTAL_G)
+      final dbCode = _toDb(code);
+      batch.insert(
+        'recipe_nutrients',
+        {
+          'recipe_id': recipeId,
+          'code': dbCode,
+          'per_100g': per100g,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    });
+  }
+
+  await batch.commit(noResult: true);
+}
+
+/// Read cached per-100g by code for a recipe.
+/// Returns keys canonicalized (ENERGY_KCAL/PROTEIN/CARB/FAT/SUGARS/FASAT/SODIUM...).
+Future<Map<String, double>> getRecipePer100gByCode(int recipeId) async {
+  final rows = await db.query(
+    'recipe_nutrients',
+    columns: ['code', 'per_100g'],
+    where: 'recipe_id = ?',
+    whereArgs: [recipeId],
+  );
+  final out = <String, double>{};
+  for (final r in rows) {
+    final canon = _canonCode(r['code'] as String);
+    out[canon] = (r['per_100g'] as num).toDouble();
+  }
+  return out;
+}
+
+/// All recipes that reference a given food.
+Future<List<int>> _recipeIdsUsingFood(int foodId) async {
+  final rows = await db.rawQuery(
+    'SELECT DISTINCT recipe_id FROM recipe_ingredients WHERE food_id = ?',
+    [foodId],
+  );
+  return rows.map((r) => (r['recipe_id'] as int)).toList();
+}
+
+/// Rebuild caches for any recipes that include this food.
+Future<void> _refreshRecipeCachesForFood(int foodId) async {
+  final recipeIds = await _recipeIdsUsingFood(foodId);
+  for (final rid in recipeIds) {
+    await rebuildRecipeNutrientCache(rid);
+  }
+}
+
+DateTime _parseYMD(String s) {
+  // Stored as 'YYYY-MM-DD' (local-date semantics)
+  final p = s.split('-');
+  if (p.length != 3) throw FormatException('Bad YMD: $s');
+  return DateTime(int.parse(p[0]), int.parse(p[1]), int.parse(p[2]));
+}
+
+
+
+
+
+// ───────────────────────────────────────────────────────────────────────────
+// TAGS (CRUD + filter)
+// ───────────────────────────────────────────────────────────────────────────
+
+Future<void> addDiaryTag(int entryId, String tag) async {
+  final t = normalizeDiaryTag(tag);
+  if (t.isEmpty) return;
+  await db.insert(
+    'diary_entry_tags',
+    {'entry_id': entryId, 'tag': t, 'created_at': _nowEpochMs()},
+    conflictAlgorithm: ConflictAlgorithm.ignore,
+  );
+}
+
+Future<void> removeDiaryTag(int entryId, String tag) async {
+  final t = normalizeDiaryTag(tag);
+  await db.delete('diary_entry_tags',
+      where: 'entry_id = ? AND tag = ?', whereArgs: [entryId, t]);
+}
+
+Future<List<String>> getTagsForEntry(int entryId) async {
+  final rows = await db.query(
+    'diary_entry_tags',
+    columns: ['tag'],
+    where: 'entry_id = ?',
+    whereArgs: [entryId],
+    orderBy: 'tag ASC',
+  );
+  return rows.map((r) => r['tag'] as String).toList();
+}
+
+/// Optional: fetch entries by tag (time window inclusive if provided).
+Future<List<DiaryEntry>> getEntriesByTag({
+  required int profileId,
+  required String tag,
+  DateTime? start,
+  DateTime? end,
+  int limit = 200,
+}) async {
+  final t = normalizeDiaryTag(tag);
+  final args = <Object?>[profileId, t];
+  final where = StringBuffer('e.profile_id = ? AND det.tag = ? AND e.is_deleted = 0');
+
+  if (start != null) {
+    where.write(' AND (e.logged_at IS NOT NULL AND e.logged_at >= ?)');
+    args.add(start.toUtc().millisecondsSinceEpoch);
+  }
+  if (end != null) {
+    where.write(' AND (e.logged_at IS NOT NULL AND e.logged_at <= ?)');
+    args.add(end.toUtc().millisecondsSinceEpoch);
+  }
+
+  final rows = await db.rawQuery('''
+    SELECT e.*
+    FROM diary_entry_tags det
+    JOIN diary_entries e ON e.id = det.entry_id
+    WHERE $where
+    ORDER BY COALESCE(e.logged_at, 0) DESC, e.id DESC
+    LIMIT ?
+  ''', [...args, limit]);
+
+  return rows.map(DiaryEntry.fromMap).toList();
+}
+
+
+// ───────────────────────────────────────────────────────────────────────────
+// FAVORITES (CRUD + list)
+// ───────────────────────────────────────────────────────────────────────────
+
+Future<void> addFavorite(int profileId, int foodId) async {
+  await db.insert(
+    'favorite_foods',
+    {'profile_id': profileId, 'food_id': foodId, 'created_at': _nowEpochMs()},
+    conflictAlgorithm: ConflictAlgorithm.ignore,
+  );
+}
+
+Future<void> removeFavorite(int profileId, int foodId) async {
+  await db.delete(
+    'favorite_foods',
+    where: 'profile_id = ? AND food_id = ?',
+    whereArgs: [profileId, foodId],
+  );
+}
+
+Future<List<Food>> listFavorites(int profileId, {int limit = 100}) async {
+  final rows = await db.rawQuery('''
+    SELECT f.*
+    FROM favorite_foods fav
+    JOIN foods f ON f.id = fav.food_id
+    WHERE fav.profile_id = ? AND f.is_deleted = 0
+    ORDER BY fav.created_at DESC
+    LIMIT ?
+  ''', [profileId, limit]);
+
+  return rows.map(Food.fromMap).toList();
+}
+
+
+// ───────────────────────────────────────────────────────────────────────────
+// RECENTS (by MAX(logged_at))
+// ───────────────────────────────────────────────────────────────────────────
+
+Future<List<Food>> getRecentFoods(int profileId, {int limit = 20}) async {
+  final rows = await db.rawQuery('''
+    SELECT f.*
+    FROM (
+      SELECT food_id, MAX(logged_at) AS last_used
+      FROM diary_entries
+      WHERE profile_id = ? AND is_deleted = 0 AND food_id IS NOT NULL
+      GROUP BY food_id
+      ORDER BY last_used DESC
+      LIMIT ?
+    ) r
+    JOIN foods f ON f.id = r.food_id
+    WHERE f.is_deleted = 0
+    ORDER BY r.last_used DESC
+  ''', [profileId, limit]);
+
+  return rows.map(Food.fromMap).toList();
+}
+
+Future<List<Recipe>> getRecentRecipes(int profileId, {int limit = 20}) async {
+  final rows = await db.rawQuery('''
+    SELECT rc.*
+    FROM (
+      SELECT recipe_id, MAX(logged_at) AS last_used
+      FROM diary_entries
+      WHERE profile_id = ? AND is_deleted = 0 AND recipe_id IS NOT NULL
+      GROUP BY recipe_id
+      ORDER BY last_used DESC
+      LIMIT ?
+    ) r
+    JOIN recipes rc ON rc.id = r.recipe_id
+    WHERE rc.is_deleted = 0
+    ORDER BY r.last_used DESC
+  ''', [profileId, limit]);
+
+  return rows.map(Recipe.fromMap).toList();
+}
+
+
+/// Aggregate selected micronutrient codes for a given profile/day.
+/// `codes` may be in any friendly/canonical form (e.g., 'SODIUM_MG','SODIUM').
+/// The returned map uses the *original* keys you passed in.
+Future<Map<String, double>> getDayMicros(
+  int profileId,
+  DateTime date,
+  List<String> codes,
+) async {
+  if (codes.isEmpty) return {};
+
+  // Map original -> canonical for internal calc
+  final canonList = <String>[];
+  final origToCanon = <String, String>{};
+  for (final c in codes) {
+    final canon = _canonCode(c);
+    origToCanon[c] = canon;
+    canonList.add(canon);
+  }
+
+  final entries = await getDiaryEntriesForDate(profileId, date);
+  final totalsByCanon = <String, double>{ for (final c in canonList) c: 0.0 };
+
+  for (final e in entries) {
+    if (e.foodId != null) {
+      final grams = e.loggedGrams ?? e.grams ?? await _resolveFoodGrams(e.foodId!, e.portionId, e.quantity);
+      if (grams == null || grams <= 0) continue;
+      final per100 = await _per100WithFallback(e.foodId!, portionId: e.portionId);
+      for (final canon in canonList) {
+        totalsByCanon[canon] = (totalsByCanon[canon] ?? 0) + _calcCode(per100, grams, canon);
+      }
+    } else if (e.recipeId != null) {
+      final ings = await getRecipeIngredients(e.recipeId!);
+      for (final ing in ings) {
+        final g = await _resolveIngredientGrams(ing);
+        if (g == null || g <= 0) continue;
+        final per100 = await _per100WithFallback(ing.foodId, portionId: ing.portionId);
+        for (final canon in canonList) {
+          totalsByCanon[canon] = (totalsByCanon[canon] ?? 0) + _calcCode(per100, g * e.quantity, canon);
+        }
+      }
+    }
+  }
+
+  // Return using the original keys provided by caller
+  final out = <String, double>{};
+  origToCanon.forEach((orig, canon) {
+    out[orig] = totalsByCanon[canon] ?? 0.0;
+  });
+  return out;
+}
+
+
+
 }

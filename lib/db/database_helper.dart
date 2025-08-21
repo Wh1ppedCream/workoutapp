@@ -50,7 +50,7 @@ class DatabaseHelper {
     final path = join(dbPath, 'fitness_tracker.db');
     return await openDatabase(
       path,
-      version: 27,  
+      version: 33,  
       onConfigure: (db) async {
     // OK with execute (doesn't return rows)
     await db.execute('PRAGMA foreign_keys = ON');
@@ -157,6 +157,24 @@ if (oldVersion < 12) {
 
     if (oldVersion < 27) {
       await Schema.migrateV27(db);
+    }
+    if (oldVersion < 28) {
+      await Schema.migrateV28(db);
+    }
+    if (oldVersion < 29) {
+      await Schema.migrateV29(db);
+    }
+    if (oldVersion < 30) {
+      await Schema.migrateV30(db);
+    }
+    if (oldVersion < 31) {
+      await Schema.migrateV31(db);
+    }
+    if (oldVersion < 32) {
+      await Schema.migrateV32(db);
+    }
+    if (oldVersion < 33) {
+      await Schema.migrateV33(db);
     }
 
     // 🔽 run once after all structural changes
@@ -1108,20 +1126,27 @@ Future<void> reseedLookupData() async {
     final db = await database;
     final Map<String, dynamic> data = jsonDecode(jsonStr);
     await db.transaction((txn) async {
-      await txn.execute('PRAGMA foreign_keys = OFF;');
-      if (clearFirst) {
-        for (final table in data.keys) {
-          await txn.delete(table);
-        }
-     }
-      for (final table in data.keys) {
-        final rows = List<Map<String, dynamic>>.from(data[table] as List);
-        for (final row in rows) {
-          await txn.insert(table, row);
-        }
+  await txn.execute('PRAGMA foreign_keys = OFF;');
+
+  if (clearFirst) {
+    for (final table in data.keys) {
+      if (await _tableExists(txn, table)) {
+        await txn.delete(table);
       }
-      await txn.execute('PRAGMA foreign_keys = ON;');
-    });
+    }
+  }
+
+  for (final table in data.keys) {
+    if (!await _tableExists(txn, table)) continue; // ⬅️ skip unknown
+    final rows = List<Map<String, dynamic>>.from(data[table] as List);
+    for (final row in rows) {
+      await txn.insert(table, row, conflictAlgorithm: ConflictAlgorithm.replace);
+    }
+  }
+
+  await txn.execute('PRAGMA foreign_keys = ON;');
+});
+
     await _backfillNormalizedFoodKeys(db);
 await _rebuildFoodFtsIfExists(db);
 
@@ -2872,6 +2897,14 @@ Future<void> rebuildFoodFts() async =>
 Future<bool> _tableHasColumn(DatabaseExecutor db, String table, String col) async {
   final rows = await db.rawQuery("PRAGMA table_info($table)");
   return rows.any((r) => (r['name'] as String).toLowerCase() == col.toLowerCase());
+}
+
+Future<bool> _tableExists(DatabaseExecutor db, String name) async {
+  final rows = await db.rawQuery(
+    "SELECT 1 FROM sqlite_master WHERE type='table' AND name=? LIMIT 1",
+    [name],
+  );
+  return rows.isNotEmpty;
 }
 
 
