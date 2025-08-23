@@ -176,14 +176,44 @@ String _toDb(String code) => _toDbCode[code.toUpperCase()] ?? code.toUpperCase()
 
 
   Future<int> upsertFoodPortion(FoodPortion p) async {
-    final map = p.toMap();
-    int id;
-    if (p.id == null) {
-      id = await db.insert('food_portions', map);
-    } else {
-      await db.update('food_portions', map, where: 'id = ?', whereArgs: [p.id]);
-      id = p.id!;
+    final id = await db.transaction<int>((txn) async {
+      final map = Map<String, Object?>.from(p.toMap());
+    // ensure int for SQLite
+    if (map.containsKey('is_default') && map['is_default'] is bool) {
+      map['is_default'] = (map['is_default'] as bool) ? 1 : 0;
     }
+      // If this row should be the default, clear any existing defaults FIRST.
+      if (p.isDefault) {
+        if (p.id == null) {
+          await txn.update('food_portions', {'is_default': 0},
+              where: 'food_id = ?', whereArgs: [p.foodId]);
+        } else {
+          await txn.update('food_portions', {'is_default': 0},
+              where: 'food_id = ? AND id <> ?', whereArgs: [p.foodId, p.id]);
+        }
+      }
+      int outId;
+      if (p.id == null) {
+        outId = await txn.insert('food_portions', map);
+      } else {
+        await txn.update('food_portions', map, where: 'id = ?', whereArgs: [p.id]);
+        outId = p.id!;
+      }
+      return outId;
+    });
+    
+    // Keep foods.default_portion_id in sync when this portion is default.
+  if (p.isDefault) {
+    try {
+      await db.update(
+        'foods',
+        {'default_portion_id': id},
+        where: 'id = ?',
+        whereArgs: [p.foodId],
+      );
+    } catch (_) {/* column may not exist on older DBs */}
+  }
+    
     await _refreshRecipeCachesForFood(p.foodId);
     return id;
   }
@@ -768,7 +798,7 @@ double _calcCode(Map<String, double> per100ByCode, double grams, String code) {
   if (p.mlVolume != null) {
     final food = await getFood(foodId);
     final density = food?.densityGPerMl;
-    if (density == null) return null; // don't silently assume 1.0 g/mL
+    if (density == null || density <= 0) return null; // guard
     return p.mlVolume! * quantity * density;
   }
   return null;
@@ -784,7 +814,7 @@ double _calcCode(Map<String, double> per100ByCode, double grams, String code) {
       if (p.mlVolume != null) {
         final food = await getFood(ing.foodId);
         final density = food?.densityGPerMl;
-        if (density == null) return null; // don't silently assume 1.0 g/mL
+        if (density == null || density <= 0) return null; // guard
         return p.mlVolume! * ing.quantity! * density;
       }
     }
@@ -1100,6 +1130,10 @@ Future<void> savePer100gByAlias(int foodId, Map<String, double> aliasToAmount) a
       );
     }
   });
+
+  // Per-100g changed -> dependent recipe caches may be stale.
+  await _refreshRecipeCachesForFood(foodId);
+
 }
 
 
@@ -1272,28 +1306,30 @@ Future<int> upsertFoodWithKeys({
       'data_source'     : dataSource,
       'data_source_id'  : dataSourceId,
       'source_id'       : sourceId,
-      'density_g_per_ml': densityGPerMl,
+      'density_g_per_ml': (densityGPerMl != null && densityGPerMl > 0)
+     ? densityGPerMl
+       : null,
       'is_deleted'      : 0,
       'updated_at'      : DateTime.now().toIso8601String(),
     };
 
-    int foodId;
+    int outId;
     if (id == null) {
       row['created_at'] = DateTime.now().toIso8601String();
-      foodId = await txn.insert('foods', row);
+      outId = await txn.insert('foods', row);
     } else {
       await txn.update('foods', row, where: 'id = ?', whereArgs: [id]);
-      foodId = id;
+      outId = id;
     }
 
     for (final raw in barcodes) {
       final upc = raw.replaceAll(RegExp(r'\D'), '');
       if (upc.isEmpty) continue;
-      await txn.insert('food_barcodes', {'food_id': foodId, 'upc': upc},
+      await txn.insert('food_barcodes', {'food_id': outId, 'upc': upc},
         conflictAlgorithm: ConflictAlgorithm.ignore);
     }
 
-    return foodId;
+    return outId;
   });
 
 // Density/category/source/brand changes don't always affect cache,
@@ -1387,6 +1423,24 @@ Future<Map<String, double>> _per100WithFallback(int foodId, {int? portionId}) as
   }
 
   // 3) try per_portion → per_100g using the portion’s gram weight
+  //    If no portionId was supplied, try the food's default_portion_id (if column exists).
+  if (portionId == null) {
+    try {
+      final f = await db.query(
+        'foods',
+        columns: ['default_portion_id'],
+        where: 'id = ?',
+        whereArgs: [foodId],
+        limit: 1,
+      );
+      final dp = f.isNotEmpty ? f.first['default_portion_id'] as int? : null;
+      if (dp != null) {
+        return _per100WithFallback(foodId, portionId: dp);
+      }
+    } catch (_) {
+      // Column may not exist on older schemas; ignore and continue.
+    }
+  }
   if (portionId != null) {
     final perPortion = await db.rawQuery('''
       SELECT n.code AS code, fnv.amount AS amount
@@ -1396,17 +1450,24 @@ Future<Map<String, double>> _per100WithFallback(int foodId, {int? portionId}) as
     ''', [foodId, portionId]);
 
     if (perPortion.isNotEmpty) {
-      final pRow = await db.query('food_portions', where: 'id = ?', whereArgs: [portionId], limit: 1);
-      final grams = (pRow.first['gram_weight'] as num?)?.toDouble();
-      if (grams != null && grams > 0) {
-        final factor = 100.0 / grams;
-        return {
-          for (final r in perPortion)
-            _canonCode(r['code'] as String): (r['amount'] as num).toDouble() * factor
-        };
+      final pRow = await db.query(
+        'food_portions',
+        where: 'id = ?',
+        whereArgs: [portionId],
+        limit: 1,
+      );
+      if (pRow.isNotEmpty) {
+        final grams = (pRow.first['gram_weight'] as num?)?.toDouble();
+        if (grams != null && grams > 0) {
+          final factor = 100.0 / grams;
+          return {
+            for (final r in perPortion)
+              _canonCode(r['code'] as String): (r['amount'] as num).toDouble() * factor
+          };
+        }
       }
     }
-  }
+ }
 
   return {};
 }
@@ -1684,24 +1745,19 @@ Future<Map<String, double>> getDayMicros(
 ) async {
   if (codes.isEmpty) return {};
 
-  // Map original -> canonical for internal calc
-  final canonList = <String>[];
-  final origToCanon = <String, String>{};
-  for (final c in codes) {
-    final canon = _canonCode(c);
-    origToCanon[c] = canon;
-    canonList.add(canon);
-  }
+  // Map original -> canonical for internal calc (and dedupe canon codes)
+  final origToCanon = { for (final c in codes) c : _canonCode(c) };
+  final canonSet = origToCanon.values.toSet();
 
   final entries = await getDiaryEntriesForDate(profileId, date);
-  final totalsByCanon = <String, double>{ for (final c in canonList) c: 0.0 };
+  final totalsByCanon = <String, double>{ for (final c in canonSet) c: 0.0 };
 
   for (final e in entries) {
     if (e.foodId != null) {
       final grams = e.loggedGrams ?? e.grams ?? await _resolveFoodGrams(e.foodId!, e.portionId, e.quantity);
       if (grams == null || grams <= 0) continue;
       final per100 = await _per100WithFallback(e.foodId!, portionId: e.portionId);
-      for (final canon in canonList) {
+      for (final canon in canonSet) {
         totalsByCanon[canon] = (totalsByCanon[canon] ?? 0) + _calcCode(per100, grams, canon);
       }
     } else if (e.recipeId != null) {
@@ -1710,7 +1766,7 @@ Future<Map<String, double>> getDayMicros(
         final g = await _resolveIngredientGrams(ing);
         if (g == null || g <= 0) continue;
         final per100 = await _per100WithFallback(ing.foodId, portionId: ing.portionId);
-        for (final canon in canonList) {
+        for (final canon in canonSet) {
           totalsByCanon[canon] = (totalsByCanon[canon] ?? 0) + _calcCode(per100, g * e.quantity, canon);
         }
       }

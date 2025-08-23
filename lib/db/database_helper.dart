@@ -177,11 +177,19 @@ if (oldVersion < 12) {
       await Schema.migrateV33(db);
     }
 
-    // 🔽 run once after all structural changes
-  await _backfillNormalizedFoodKeys(db);
+   // 🔽 run once after all structural changes
+await _backfillNormalizedFoodKeys(db);
 
-    // After structural changes, refresh FTS if present:
-    await _rebuildFoodFtsIfExists(db);
+// Rebuild recipe caches if this install is coming from before the flexible nutrient table.
+// (Safe to run more often; this gate just avoids work on tiny bumps.)
+if (oldVersion < 22) {
+  await _rebuildAllRecipeCaches(db);
+}
+
+// After structural changes, refresh FTS if present:
+await _rebuildFoodFtsIfExists(db);
+await _ensureIndexes(db); 
+
   },
 );
   }
@@ -205,10 +213,15 @@ if (oldVersion < 12) {
     // await Seed.seedFoodsExtended(db, assetPath: 'assets/foods_extended.json');
 
    // Normalize/denormalize into the new tables on a fresh install as well:
-   await _backfillNormalizedFoodKeys(db);
+await _backfillNormalizedFoodKeys(db);
 
-  // (Optional) If FTS exists, backfill it once:
-  await _rebuildFoodFtsIfExists(db);
+// Fresh installs won’t have recipe cache yet; build it once.
+await _rebuildAllRecipeCaches(db);
+
+// (Optional) If FTS exists, backfill it once:
+await _rebuildFoodFtsIfExists(db);
+await _ensureIndexes(db); 
+
   }
 
 
@@ -218,115 +231,186 @@ if (oldVersion < 12) {
   // ────────────────────────────────────────────────────────────────────────────
 
 
-   Future<void> _backfillNormalizedFoodKeys(Database db) async {
-  await db.transaction((txn) async {
-    // 1) Brands
-    await txn.execute("""
-      INSERT OR IGNORE INTO brands(name)
-      SELECT DISTINCT TRIM(brand)
-      FROM foods
-      WHERE brand IS NOT NULL AND TRIM(brand) <> '';
-    """);
+Future<void> _backfillNormalizedFoodKeysTx(DatabaseExecutor ex) async {
+  // 1) Brands
+  await ex.execute("""
+    INSERT OR IGNORE INTO brands(name)
+    SELECT DISTINCT TRIM(brand)
+    FROM foods
+    WHERE brand IS NOT NULL AND TRIM(brand) <> '';
+  """);
 
-    // Use txn, not db, inside the transaction
-    await txn.execute("""
-      UPDATE foods
-      SET brand_id = (
-        SELECT b.id FROM brands b WHERE b.name = TRIM(foods.brand)
-      )
-      WHERE brand_id IS NULL AND brand IS NOT NULL AND TRIM(brand) <> '';
-    """);
+  await ex.execute("""
+    UPDATE foods
+    SET brand_id = (
+      SELECT b.id FROM brands b WHERE b.name = TRIM(foods.brand)
+    )
+    WHERE brand_id IS NULL AND brand IS NOT NULL AND TRIM(brand) <> '';
+  """);
 
-    // 2) Barcodes (only if foods.barcode exists)
-    if (await _tableHasColumn(txn, 'foods', 'barcode')) {
-      final rows = await txn.query(
-        'foods',
-        columns: ['id', 'barcode'],
-        where: "barcode IS NOT NULL AND TRIM(barcode) <> ''",
+  // 2) Barcodes (only if foods.barcode exists)
+  if (await _tableHasColumn(ex, 'foods', 'barcode')) {
+    final rows = await ex.query(
+      'foods',
+      columns: ['id', 'barcode'],
+      where: "barcode IS NOT NULL AND TRIM(barcode) <> ''",
+    );
+    for (final r in rows) {
+      final raw = (r['barcode'] as String?) ?? '';
+      final upc = raw.replaceAll(RegExp(r'\D'), '');
+      if (upc.isEmpty) continue;
+      await ex.insert(
+        'food_barcodes',
+        {'food_id': r['id'], 'upc': upc},
+        conflictAlgorithm: ConflictAlgorithm.ignore,
       );
-      for (final r in rows) {
-        final raw = (r['barcode'] as String?) ?? '';
-        final upc = raw.replaceAll(RegExp(r'\D'), '');
-        if (upc.isEmpty) continue;
-        await txn.insert(
-          'food_barcodes',
-          {'food_id': r['id'], 'upc': upc},
-          conflictAlgorithm: ConflictAlgorithm.ignore,
+    }
+  }
+
+  // 3) Sources
+  await ex.execute("""
+    INSERT OR IGNORE INTO sources(name)
+    SELECT DISTINCT TRIM(COALESCE(data_source,'')) AS name
+    FROM foods
+    WHERE TRIM(COALESCE(data_source,'')) <> '';
+  """);
+
+  await ex.execute("""
+    UPDATE foods
+    SET source_id = (
+      SELECT s.id
+      FROM sources s
+      WHERE s.name = TRIM(COALESCE(foods.data_source,''))
+    )
+    WHERE source_id IS NULL
+      AND TRIM(COALESCE(data_source,'')) <> '';
+  """);
+
+  // 4) Default portion pointer (only if the column exists)
+  if (await _tableHasColumn(ex, 'foods', 'default_portion_id')) {
+    await ex.execute("""
+      UPDATE foods
+      SET default_portion_id = (
+        SELECT fp.id
+        FROM food_portions fp
+        WHERE fp.food_id = foods.id AND fp.is_default = 1
+        ORDER BY fp.id
+        LIMIT 1
+      )
+      WHERE default_portion_id IS NULL
+        AND EXISTS (
+          SELECT 1 FROM food_portions x
+          WHERE x.food_id = foods.id AND x.is_default = 1
         );
-      }
-    }
-
-    // 3) Sources
-    await txn.execute("""
-      INSERT OR IGNORE INTO sources(name)
-      SELECT DISTINCT TRIM(COALESCE(data_source,'')) AS name
-      FROM foods
-      WHERE TRIM(COALESCE(data_source,'')) <> '';
     """);
+  }
 
-    await txn.execute("""
-      UPDATE foods
-      SET source_id = (
-        SELECT s.id
-        FROM sources s
-        WHERE s.name = TRIM(COALESCE(foods.data_source,''))
-      )
-      WHERE source_id IS NULL
-        AND TRIM(COALESCE(data_source,'')) <> '';
-    """);
+  // 5) Backfill flexible per_100g from legacy
+  await ex.execute("""
+    INSERT INTO food_nutrient_values(food_id, nutrient_id, amount, basis)
+    SELECT fn.food_id, fn.nutrient_id, fn.amount_per_100g, 'per_100g'
+    FROM food_nutrients fn
+    WHERE NOT EXISTS (
+      SELECT 1
+      FROM food_nutrient_values v
+      WHERE v.food_id = fn.food_id
+        AND v.nutrient_id = fn.nutrient_id
+        AND v.basis = 'per_100g'
+    );
+  """);
+}
 
-    // 4) Default portion pointer (only if the column exists)
-    if (await _tableHasColumn(txn, 'foods', 'default_portion_id')) {
-      await txn.execute("""
-        UPDATE foods
-        SET default_portion_id = (
-          SELECT fp.id
-          FROM food_portions fp
-          WHERE fp.food_id = foods.id AND fp.is_default = 1
-          ORDER BY fp.id
-          LIMIT 1
-        )
-        WHERE default_portion_id IS NULL
-          AND EXISTS (
-            SELECT 1 FROM food_portions x
-            WHERE x.food_id = foods.id AND x.is_default = 1
-          );
-      """);
-    }
 
-    // 5) Backfill flexible per_100g from legacy
-    await txn.execute("""
-      INSERT INTO food_nutrient_values(food_id, nutrient_id, amount, basis)
-      SELECT fn.food_id, fn.nutrient_id, fn.amount_per_100g, 'per_100g'
-      FROM food_nutrients fn
-      WHERE NOT EXISTS (
-        SELECT 1
-        FROM food_nutrient_values v
-        WHERE v.food_id = fn.food_id
-          AND v.nutrient_id = fn.nutrient_id
-          AND v.basis = 'per_100g'
-      );
-    """);
+Future<void> _backfillNormalizedFoodKeys(Database db) async {
+  await db.transaction((txn) async {
+    await _backfillNormalizedFoodKeysTx(txn);
   });
 }
 
 
-
-  Future<void> _rebuildFoodFtsIfExists(Database db) async {
-  final exists = (Sqflite.firstIntValue(
-    await db.rawQuery(
-      "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='food_search_fts'"
-    ),
-  ) ?? 0) > 0;
+Future<void> _rebuildFoodFtsIfExists(Database db) async {
+  final exists = (Sqflite.firstIntValue(await db.rawQuery(
+    "SELECT COUNT(*) FROM sqlite_master "
+    "WHERE name = 'food_search_fts' "
+    "AND type IN ('table','view') "
+    "AND lower(coalesce(sql,'')) LIKE '%using fts5%'"
+  )) ?? 0) > 0;
 
   if (!exists) return;
-
   try {
     await db.execute("INSERT INTO food_search_fts(food_search_fts) VALUES('rebuild')");
-  } catch (_) {
-    // ignore
-  }
+    await db.execute("INSERT INTO food_search_fts(food_search_fts) VALUES('optimize')");
+  } catch (_) {/* ignore */}
 }
+
+
+Future<void> _ensureIndexes(Database db) async {
+  // existing indexes…
+  await db.execute(
+    'CREATE INDEX IF NOT EXISTS idx_diary_profile_date '
+    'ON diary_entries(profile_id, date, is_deleted)'
+  );
+  await db.execute(
+    'CREATE INDEX IF NOT EXISTS idx_diary_profile_logged '
+    'ON diary_entries(profile_id, logged_at)'
+  );
+  await db.execute(
+    'CREATE INDEX IF NOT EXISTS idx_recipe_ingredients_recipe '
+    'ON recipe_ingredients(recipe_id)'
+  );
+  await db.execute(
+    'CREATE INDEX IF NOT EXISTS idx_food_portions_food '
+    'ON food_portions(food_id, is_default)'
+  );
+  await db.execute(
+    'CREATE INDEX IF NOT EXISTS idx_food_barcodes_upc '
+    'ON food_barcodes(upc)'
+  );
+
+  // 🔽 NEW — speed critical nutrition paths
+
+  // Recipe reads & cache maintenance
+  await db.execute(
+    'CREATE INDEX IF NOT EXISTS idx_recipe_nutrients_recipe '
+    'ON recipe_nutrients(recipe_id)'
+  );
+  await db.execute(
+    'CREATE INDEX IF NOT EXISTS idx_recipe_ingredients_food '
+    'ON recipe_ingredients(food_id)'
+  ); // used by NutritionDao._recipeIdsUsingFood
+
+  // Day totals: fast lookup & enforce uniqueness per profile/day
+  await db.execute(
+    'CREATE UNIQUE INDEX IF NOT EXISTS idx_day_totals_profile_date '
+    'ON day_totals_cache(profile_id, date)'
+  );
+
+  // Flexible nutrient reads/writes & deletes
+  await db.execute(
+    'CREATE INDEX IF NOT EXISTS idx_fnv_food_basis '
+    'ON food_nutrient_values(food_id, basis)'
+  );
+  await db.execute(
+    'CREATE INDEX IF NOT EXISTS idx_fnv_food_basis_portion '
+    'ON food_nutrient_values(food_id, basis, portion_id)'
+  );
+
+  // Tags / favorites helpers
+  await db.execute(
+    'CREATE INDEX IF NOT EXISTS idx_diary_entry_tags_entry '
+    'ON diary_entry_tags(entry_id)'
+  );
+  await db.execute(
+    'CREATE INDEX IF NOT EXISTS idx_diary_entry_tags_tag '
+    'ON diary_entry_tags(tag)'
+  );
+  await db.execute(
+    'CREATE INDEX IF NOT EXISTS idx_favorite_foods_profile '
+    'ON favorite_foods(profile_id)'
+  );
+}
+
+
 
   // ────────────────────────────────────────────────────────────────────────────
   // CRUD METHODS
@@ -1083,74 +1167,104 @@ Future<void> reseedLookupData() async {
 }
 
 /// Export the entire database to a JSON string.
-  Future<String> exportDatabase() async {
-    final db = await database;
-    final tables = [
-  // existing…
-  'sessions','exercises','sets','cardio_details',
-  'stretch_instances','stretch_instance_items',
-  'measurement_definitions','measurements',
-  'equipment','bodypart','muscles',
-  'exercise_definitions','exercise_equipment','exercise_bodypart','exercise_muscle',
-  'stretch_definitions','stretch_bodypart',
-  'muscle_bodypart','bodypart_ranking','muscle_ranking',
-  'exercise_muscle_percent','bodypart_muscle_rankings',
-  'muscle_volume_boundaries','bodypart_volume_boundaries',
-  'preset_definitions','preset_exercises','preset_sets',
-  'preset_cardio_details','preset_stretch_items',
-  'gym_profiles','profile_equipment',
-  'exercise_rep_max','exercise_volume_max',
+Future<String> exportDatabase() async {
+  final db = await database;
+  final tables = [
+    // existing…
+    'sessions','exercises','sets','cardio_details',
+    'stretch_instances','stretch_instance_items',
+    'measurement_definitions','measurements',
+    'equipment','bodypart','muscles',
+    'exercise_definitions','exercise_equipment','exercise_bodypart','exercise_muscle',
+    'stretch_definitions','stretch_bodypart',
+    'muscle_bodypart','bodypart_ranking','muscle_ranking',
+    'exercise_muscle_percent','bodypart_muscle_rankings',
+    'muscle_volume_boundaries','bodypart_volume_boundaries',
+    'preset_definitions','preset_exercises','preset_sets',
+    'preset_cardio_details','preset_stretch_items',
+    'gym_profiles','profile_equipment',
+    'exercise_rep_max','exercise_volume_max',
 
-  // 🔽 nutrition domain
-  'nutrients','nutrient_aliases','nutrient_groups','nutrient_group_members',
-  'foods','food_portions','food_barcodes',
-  'food_nutrients','food_nutrient_values',
-  'recipes','recipe_ingredients',
-  'diary_entries','day_totals_cache','nutrition_goals',
-  'brands','sources','categories','food_usage_stats',
-  'flow_defaults',
-'flow_default_methods',
-'preset_flow_methods',
-];
+    // nutrition domain
+    'nutrients','nutrient_aliases','nutrient_groups','nutrient_group_members',
+    'foods','food_portions','food_barcodes',
+    'food_nutrients','food_nutrient_values',
+    'recipes','recipe_ingredients','recipe_nutrients',
+    'diary_entries','day_totals_cache','nutrition_goals',
+    'brands','sources','categories','food_usage_stats',
+    'favorite_foods','diary_entry_tags',
 
-    final Map<String, dynamic> data = {};
-    for (final table in tables) {
+    'flow_defaults','flow_default_methods','preset_flow_methods',
+
+    // analytics / settings
+    'formula_settings','exercise_bodypart_percent',
+
+    // autopreset feature
+    'preset_auto_settings','preset_exercise_auto','preset_set_auto',
+  ];
+
+  final Map<String, dynamic> data = {};
+  for (final table in tables) {
+    if (await _tableExists(db, table)) {            // ← guard
       data[table] = await db.query(table);
     }
-    return jsonEncode(data);
   }
+  return jsonEncode(data);
+}
 
-  /// Import the database from a JSON string.
-  /// If [clearFirst] is true, all existing rows are deleted before import.
-  Future<void> importDatabase(String jsonStr, {bool clearFirst = true}) async {
-    final db = await database;
-    final Map<String, dynamic> data = jsonDecode(jsonStr);
-    await db.transaction((txn) async {
-  await txn.execute('PRAGMA foreign_keys = OFF;');
+/// Import the database from a JSON string.
+/// If [clearFirst] is true, *all user tables* are cleared before import.
+/// Also re-creates indexes and refreshes caches/FTS afterward.
+Future<void> importDatabase(String jsonStr, {bool clearFirst = true}) async {
+  final db = await database;
+  final Map<String, dynamic> data = jsonDecode(jsonStr) as Map<String, dynamic>;
 
-  if (clearFirst) {
-    for (final table in data.keys) {
-      if (await _tableExists(txn, table)) {
-        await txn.delete(table);
+  await db.transaction((txn) async {
+    // Always guard pragma flips with try/finally in case of mid-import errors.
+    await txn.execute('PRAGMA foreign_keys = OFF;');
+    try {
+      if (clearFirst) {
+        // Clear *every* user table (not only those present in the JSON).
+        final tables = await txn.rawQuery(
+          "SELECT name FROM sqlite_master "
+          "WHERE type='table' AND name NOT LIKE 'sqlite_%'"
+        );
+        for (final r in tables) {
+          final name = (r['name'] as String);
+          // If you keep any temp/meta tables, skip them here.
+          await txn.delete(name);
+        }
       }
+
+      // Insert rows for tables present in the JSON.
+      for (final table in data.keys) {
+        if (!await _tableExists(txn, table)) continue; // skip unknown
+        final rows = List<Map<String, dynamic>>.from(data[table] as List);
+        for (final row in rows) {
+          await txn.insert(table, row, conflictAlgorithm: ConflictAlgorithm.replace);
+        }
+      }
+    } finally {
+      await txn.execute('PRAGMA foreign_keys = ON;');
     }
+  });
+
+  // Post-import normalization & maintenance
+  await _backfillNormalizedFoodKeys(db);
+  await _rebuildFoodFtsIfExists(db);
+  await _ensureIndexes(db); // ← ensure you have all new indexes on imported DBs
+
+  // If recipe nutrients weren’t imported, rebuild them from ingredients.
+  if (!data.keys.contains('recipe_nutrients') && await _tableExists(db, 'recipes')) {
+    await _rebuildAllRecipeCaches(db);
   }
 
-  for (final table in data.keys) {
-    if (!await _tableExists(txn, table)) continue; // ⬅️ skip unknown
-    final rows = List<Map<String, dynamic>>.from(data[table] as List);
-    for (final row in rows) {
-      await txn.insert(table, row, conflictAlgorithm: ConflictAlgorithm.replace);
-    }
+  // If day_totals_cache wasn’t imported but table exists, clear it so reads rebuild on demand.
+  if (!data.keys.contains('day_totals_cache') && await _tableExists(db, 'day_totals_cache')) {
+    await db.delete('day_totals_cache');
   }
+}
 
-  await txn.execute('PRAGMA foreign_keys = ON;');
-});
-
-    await _backfillNormalizedFoodKeys(db);
-await _rebuildFoodFtsIfExists(db);
-
-  }
 
    // equipment.json
   Future<String> exportEquipmentJson() async {
@@ -2667,7 +2781,9 @@ Future<int> addDiaryFood({
   required int foodId,
   int? portionId,
   double quantity = 1.0,
-  double? gramsOverride,
+  double? gramsOverride,   // legacy
+  double? loggedGrams,     // NEW: forward to DAO
+  DateTime? loggedAt,      // NEW: forward to DAO
   String? notes,
 }) async => NutritionDao(await database).addDiaryFood(
       profileId: profileId,
@@ -2677,6 +2793,8 @@ Future<int> addDiaryFood({
       portionId: portionId,
       quantity: quantity,
       gramsOverride: gramsOverride,
+      loggedGrams: loggedGrams,     // <—
+      loggedAt: loggedAt,           // <—
       notes: notes,
     );
 
@@ -2686,6 +2804,7 @@ Future<int> addDiaryRecipe({
   required MealType mealType,
   required int recipeId,
   double quantity = 1.0,
+  DateTime? loggedAt,      // NEW: forward to DAO
   String? notes,
 }) async => NutritionDao(await database).addDiaryRecipe(
       profileId: profileId,
@@ -2693,6 +2812,7 @@ Future<int> addDiaryRecipe({
       mealType: mealType,
       recipeId: recipeId,
       quantity: quantity,
+      loggedAt: loggedAt,           // <—
       notes: notes,
     );
 
@@ -2733,34 +2853,25 @@ Future<int> createCustomFood({required String name, String? brand}) async {
 
 /// Extracts leaf labels from the customization payload and persists per-100g values
 /// using nutrient_aliases to resolve labels.
-Future<void> saveExtendedPer100gFromPayload(int foodId, Map payload) async {
-  // Keys from your page we should ignore (handled separately)
-  const skip = {
-    'name', 'brand', 'calories', 'protein_g', 'carbs_g', 'fats_g',
-  };
+Future<void> saveExtendedPer100gFromPayload(int foodId, Map<String, dynamic> payload) async {
+  const skip = {'name','brand','calories','protein_g','carbs_g','fats_g'};
 
-  // Leaf labels are the *last* segment after " > "
-  // e.g. "Macronutrients > Protein (g)" -> "Protein (g)"
   final aliasMap = <String, double>{};
-
   for (final entry in payload.entries) {
-    final key = '${entry.key}';
+    final key = entry.key;
     if (skip.contains(key)) continue;
 
     final rawVal = entry.value;
     if (rawVal == null) continue;
 
-    // numeric only; ignore blanks/strings that don't parse
     final val = (rawVal is num) ? rawVal.toDouble() : double.tryParse('$rawVal');
     if (val == null) continue;
 
     final lastGt = key.lastIndexOf('>');
     final alias = (lastGt == -1 ? key : key.substring(lastGt + 1)).trim();
 
-    // Store under the display alias; DAO will resolve alias -> nutrient_id
     aliasMap[alias] = val;
   }
-
   if (aliasMap.isEmpty) return;
   await NutritionDao(await database).savePer100gByAlias(foodId, aliasMap);
 }
@@ -2905,6 +3016,97 @@ Future<bool> _tableExists(DatabaseExecutor db, String name) async {
     [name],
   );
   return rows.isNotEmpty;
+}
+
+Future<void> _rebuildAllRecipeCaches(Database db) async {
+  final rows = await db.query('recipes', columns: ['id']);
+  final dao = NutritionDao(db);
+  for (final r in rows) {
+    await dao.rebuildRecipeNutrientCache(r['id'] as int);
+  }
+}
+
+// --- Diary (range) ---------------------------------------------------------
+Future<List<DiaryEntry>> getDiaryEntriesBetween(
+  int profileId,
+  DateTime start,
+  DateTime end, {
+  MealType? mealType,
+  int limit = 1000,
+}) async {
+  var s = start, e = end;
+  if (s.isAfter(e)) { final t = s; s = e; e = t; }
+  return NutritionDao(await database).getDiaryEntriesBetween(
+    profileId,
+    s,
+    e,
+    mealType: mealType,
+    limit: limit,
+  );
+}
+
+// --- Day micro aggregation -------------------------------------------------
+Future<Map<String,double>> getDayMicros(
+  int profileId,
+  DateTime date,
+  List<String> codes,
+) async =>
+    NutritionDao(await database).getDayMicros(profileId, date, codes);
+
+// --- Favorites -------------------------------------------------------------
+Future<void> addFavorite(int profileId, int foodId) async =>
+    NutritionDao(await database).addFavorite(profileId, foodId);
+
+Future<void> removeFavorite(int profileId, int foodId) async =>
+    NutritionDao(await database).removeFavorite(profileId, foodId);
+
+Future<List<Food>> listFavorites(int profileId, {int limit = 100}) async =>
+    NutritionDao(await database).listFavorites(profileId, limit: limit);
+
+// --- Recents ---------------------------------------------------------------
+Future<List<Food>> getRecentFoods(int profileId, {int limit = 20}) async =>
+    NutritionDao(await database).getRecentFoods(profileId, limit: limit);
+
+Future<List<Recipe>> getRecentRecipes(int profileId, {int limit = 20}) async =>
+    NutritionDao(await database).getRecentRecipes(profileId, limit: limit);
+
+// --- Tags ------------------------------------------------------------------
+Future<void> addDiaryTag(int entryId, String tag) async =>
+    NutritionDao(await database).addDiaryTag(entryId, tag);
+
+Future<void> removeDiaryTag(int entryId, String tag) async =>
+    NutritionDao(await database).removeDiaryTag(entryId, tag);
+
+Future<List<String>> getTagsForEntry(int entryId) async =>
+    NutritionDao(await database).getTagsForEntry(entryId);
+
+Future<List<DiaryEntry>> getEntriesByTag({
+  required int profileId,
+  required String tag,
+  DateTime? start,
+  DateTime? end,
+  int limit = 200,
+}) async =>
+    NutritionDao(await database).getEntriesByTag(
+      profileId: profileId,
+      tag: tag,
+      start: start,
+      end: end,
+      limit: limit,
+    );
+
+// --- Recipe cache reads (handy for UI) ------------------------------------
+Future<Map<String,double>> getRecipePer100gByCode(int recipeId) async =>
+    NutritionDao(await database).getRecipePer100gByCode(recipeId);
+
+Future<void> rebuildRecipeNutrientCache(int recipeId) async =>
+    NutritionDao(await database).rebuildRecipeNutrientCache(recipeId);
+
+Future<void> close() async {
+  if (_db != null) {
+    await _db!.close();
+    _db = null;
+  }
 }
 
 

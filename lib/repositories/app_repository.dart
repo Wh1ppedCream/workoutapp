@@ -914,40 +914,50 @@ Future<void> deleteDefaultFlowMethod({
 
   // ─── NUTRITION: Logging ────────────────────────────────────────────────────
   Future<int> addDiaryFood({
-    required int profileId,
-    required DateTime date,
-    required MealType mealType,
-    required int foodId,
-    int? portionId,
-    double quantity = 1.0,
-    double? gramsOverride,
-    String? notes,
-  }) => _dbHelper.addDiaryFood(
-        profileId: profileId,
-        date: date,
-        mealType: mealType,
-        foodId: foodId,
-        portionId: portionId,
-        quantity: quantity,
-        gramsOverride: gramsOverride,
-        notes: notes,
-      );
+  required int profileId,
+  required DateTime date,
+  required MealType mealType,
+  required int foodId,
+  int? portionId,
+  double quantity = 1.0,
+  double? gramsOverride,      // legacy
+  double? loggedGrams,        // NEW
+  DateTime? loggedAt,         // NEW
+  String? notes,
+}) =>
+    _dbHelper.addDiaryFood(
+      profileId: profileId,
+      date: date,
+      mealType: mealType,
+      foodId: foodId,
+      portionId: portionId,
+      quantity: quantity,
+      gramsOverride: gramsOverride,
+      loggedGrams: loggedGrams,  // NEW
+      loggedAt: loggedAt,        // NEW
+      notes: notes,
+    );
 
-  Future<int> addDiaryRecipe({
-    required int profileId,
-    required DateTime date,
-    required MealType mealType,
-    required int recipeId,
-    double quantity = 1.0,
-    String? notes,
-  }) => _dbHelper.addDiaryRecipe(
-        profileId: profileId,
-        date: date,
-        mealType: mealType,
-        recipeId: recipeId,
-        quantity: quantity,
-        notes: notes,
-      );
+Future<int> addDiaryRecipe({
+  required int profileId,
+  required DateTime date,
+  required MealType mealType,
+  required int recipeId,
+  double quantity = 1.0,
+  DateTime? loggedAt,         // NEW
+  String? notes,
+}) =>
+    _dbHelper.addDiaryRecipe(
+      profileId: profileId,
+      date: date,
+      mealType: mealType,
+      recipeId: recipeId,
+      quantity: quantity,
+      loggedAt: loggedAt,       // NEW
+      notes: notes,
+    );
+
+
 
   Future<void> updateDiaryEntry(DiaryEntry e) => _dbHelper.updateDiaryEntry(e);
   Future<void> deleteDiaryEntry(int id, {required int profileId, required DateTime date}) =>
@@ -1105,6 +1115,90 @@ Future<Map<String,double>> calcForPortion({
       portionId: portionId,
       quantity: quantity,
     );
+
+
+// --- Diary (range) ---------------------------------------------------------
+Future<List<DiaryEntry>> getDiaryEntriesBetween(
+  int profileId,
+  DateTime start,
+  DateTime end, {
+  MealType? mealType,
+  int limit = 1000,
+}) =>
+    _dbHelper.getDiaryEntriesBetween(
+      profileId,
+      start,
+      end,
+      mealType: mealType,
+      limit: limit,
+    );
+
+// --- Day micro aggregation -------------------------------------------------
+Future<Map<String, double>> getDayMicros(
+  int profileId,
+  DateTime date,
+  List<String> codes,
+) =>
+    _dbHelper.getDayMicros(profileId, date, codes);
+
+// --- Favorites -------------------------------------------------------------
+Future<void> addFavorite(int profileId, int foodId) =>
+    _dbHelper.addFavorite(profileId, foodId);
+
+Future<void> removeFavorite(int profileId, int foodId) =>
+    _dbHelper.removeFavorite(profileId, foodId);
+
+Future<List<Food>> listFavorites(int profileId, {int limit = 100}) =>
+    _dbHelper.listFavorites(profileId, limit: limit);
+
+// --- Recents ---------------------------------------------------------------
+Future<List<Food>> getRecentFoods(int profileId, {int limit = 20}) =>
+    _dbHelper.getRecentFoods(profileId, limit: limit);
+
+Future<List<Recipe>> getRecentRecipes(int profileId, {int limit = 20}) =>
+    _dbHelper.getRecentRecipes(profileId, limit: limit);
+
+// --- Tags ------------------------------------------------------------------
+Future<void> addDiaryTag(int entryId, String tag) =>
+    _dbHelper.addDiaryTag(entryId, tag);
+
+Future<void> removeDiaryTag(int entryId, String tag) =>
+    _dbHelper.removeDiaryTag(entryId, tag);
+
+Future<List<String>> getTagsForEntry(int entryId) =>
+    _dbHelper.getTagsForEntry(entryId);
+
+Future<List<DiaryEntry>> getEntriesByTag({
+  required int profileId,
+  required String tag,
+  DateTime? start,
+  DateTime? end,
+  int limit = 200,
+}) =>
+    _dbHelper.getEntriesByTag(
+      profileId: profileId,
+      tag: tag,
+      start: start,
+      end: end,
+      limit: limit,
+    );
+
+// --- Recipe cache reads ----------------------------------------------------
+Future<Map<String, double>> getRecipePer100gByCode(int recipeId) =>
+    _dbHelper.getRecipePer100gByCode(recipeId);
+
+Future<void> rebuildRecipeNutrientCache(int recipeId) =>
+    _dbHelper.rebuildRecipeNutrientCache(recipeId);
+
+// --- FTS maintenance -------------------------------------------------------
+Future<void> rebuildFoodFts() => _dbHelper.rebuildFoodFts();
+
+// --- DB lifecycle ----------------------------------------------------------
+Future<void> close() => _dbHelper.close();
+
+
+// Seed core nutrient catalog if the nutrients table is empty.
+Future<void> seedNutrientsIfEmpty() => _dbHelper.seedNutrientsIfEmpty();
 
 
 }

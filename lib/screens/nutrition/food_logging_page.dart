@@ -513,6 +513,7 @@ SafeArea(
               portionId: portionId,
               quantity: it.qty,
               gramsOverride: gramsOverride,
+              loggedAt: DateTime.now(),
             );
           }
           
@@ -635,6 +636,7 @@ navigator.pop(true); // leave page
       portionId: portionId,
       quantity: it.qty,
       gramsOverride: gramsOverride,
+      loggedAt: DateTime.now(),
     );
   }
 
@@ -758,57 +760,6 @@ final messenger = ScaffoldMessenger.of(context);
     );
   }
 
-/* ///OLD VERSION
-Future<void> _saveCustomFoodFromPayload(Map payload) async {
-  // 0) Basic fields
-  final name  = (payload['name'] as String?)?.trim();
-  if (name == null || name.isEmpty) return;
-  final brand = (payload['brand'] as String?)?.trim();
-
-  // 1) Create the food shell
-  final foodId = await _repo.createCustomFood(name: name, brand: brand);
-
-  // 2) Save top-level macros/calories by *code*
-  double? nums(dynamic v) {
-    if (v == null) return null;
-    if (v is num) return v.toDouble();
-    return double.tryParse('$v');
-  }
-
-  final byCode = <String, double>{};
-  final kcal = nums(payload['calories']);   // "Calories (kcal)" field from the form
-  final prot = nums(payload['protein_g']);
-  final carb = nums(payload['carbs_g']);
-  final fat  = nums(payload['fats_g']);
-
-  if (kcal != null) byCode['ENERGY_KCAL'] = kcal; // present in extended seed
-  if (prot != null) byCode['PROTEIN_G']   = prot;
-  if (carb != null) byCode['CARB_G']      = carb;
-  if (fat  != null) byCode['FAT_G']       = fat;
-
-  if (byCode.isNotEmpty) {
-    await _repo.savePer100gByCode(foodId, byCode);
-  }
-
-  // 3) Save *all other* leaf values by alias (labels from your UI/JSON)
-  await _repo.saveExtendedPer100gFromPayload(foodId, payload);
-
-  // 4) Ensure a default "100 g" portion exists (handy for logging right away)
-  final portions = await _repo.getPortionsForFood(foodId);
-  if (portions.isEmpty) {
-    await _repo.addPortion(
-      foodId,
-      measureName: '100 g',
-      gramWeight: 100,
-      mlVolume: null,
-      isDefault: true,
-    );
-  }
-
-  // 5) Optionally refresh current list so the new food shows up immediately
-  _kickoffSearch(_searchCtrl.text);
-}
-*/
 
 Future<void> _saveCustomFoodFromPayload(Map payload) async {
   final name  = (payload['name'] as String?)?.trim();
@@ -1052,8 +1003,6 @@ setState(() {
 
 
   navigator.pop();
-  if (mounted) {
-  }
 },
 
 ),
