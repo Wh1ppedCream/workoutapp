@@ -220,8 +220,8 @@ class Food {
         yieldPct: (m['yield_pct'] as num?)?.toDouble(), // NEW
         densityGPerMl: (m['density_g_per_ml'] as num?)?.toDouble(),
         isDeleted: (m['is_deleted'] as int? ?? 0) == 1,
-        createdAt: DateTime.parse(m['created_at'] as String),
-        updatedAt: DateTime.parse(m['updated_at'] as String),
+        createdAt: _parseIsoOrNow(m['created_at']),
+        updatedAt: _parseIsoOrNow(m['updated_at']),
       );
 
   Map<String, dynamic> toMap() => {
@@ -433,8 +433,8 @@ class Recipe {
         notes: m['notes'] as String?,
         isCustom: (m['is_custom'] as int? ?? 1) == 1,
         isDeleted: (m['is_deleted'] as int? ?? 0) == 1,
-        createdAt: DateTime.parse(m['created_at'] as String),
-        updatedAt: DateTime.parse(m['updated_at'] as String),
+        createdAt: _parseIsoOrNow(m['created_at']),
+        updatedAt: _parseIsoOrNow(m['updated_at']),
       );
 
   Map<String, dynamic> toMap() => {
@@ -1056,6 +1056,14 @@ DateTime? _fromEpochMsOrNull(dynamic v) {
     }
   }
   return null;
+}
+
+DateTime _parseIsoOrNow(dynamic v) {
+  if (v is String) {
+    final dt = DateTime.tryParse(v);
+    if (dt != null) return dt;
+  }
+  return DateTime.now();
 }
 
 /// Convert DateTime? to epoch ms (int), or null.

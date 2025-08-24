@@ -769,6 +769,17 @@ Future<void> _saveCustomFoodFromPayload(Map payload) async {
   // 1) Create the food shell
   final foodId = await _repo.createCustomFood(name: name, brand: brand);
 
+  // NEW: persist density if provided
+final dens = (payload['density_g_per_ml'] as num?)?.toDouble();
+if (dens != null) {
+  await _repo.upsertFoodWithKeys(
+    id: foodId,
+    name: name,               // required by the API
+    brandName: brand,
+    densityGPerMl: dens,
+  );
+}
+
   // 2) Per-100g nutrients from labels/codes/aliases (wipes & replaces)
   await _repo.savePer100gFromLabelPayload(foodId, Map<String, dynamic>.from(payload));
 
@@ -1066,6 +1077,17 @@ Future<void> _updateExistingFoodFromPayload(Map<String, dynamic> payload) async 
 
   // 1) Update basics (name/brand)
   await _repo.updateFoodBasics(foodId, name: name, brand: brand);
+
+  // NEW: persist density on update as well
+final dens = (payload['density_g_per_ml'] as num?)?.toDouble();
+if (dens != null) {
+  await _repo.upsertFoodWithKeys(
+    id: foodId,
+    name: name ?? '',         // required by the API; fall back safely
+    brandName: brand,
+    densityGPerMl: dens,
+  );
+}
 
   // 2) Replace per-100g nutrients
   await _repo.savePer100gFromLabelPayload(foodId, payload);

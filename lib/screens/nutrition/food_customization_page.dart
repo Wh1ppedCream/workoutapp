@@ -112,6 +112,7 @@ String? _longUnitFromShort(String? s) {
     case 'g':   return 'gram (g)';
     case 'mg':  return 'milligram (mg)';
     case 'µg':  return 'microgram (µg)';
+    case 'mcg': return 'microgram (µg)';
     case 'kg':  return 'kilogram (kg)';
     case 'oz':  return 'ounce (oz)';
     case 'lb':  return 'pound (lb)';
@@ -181,7 +182,7 @@ void _loadInitialPortions(List<FoodPortion> parts) {
     _lastDefaultGroup = 'basis';
   }
 
-  setState(() {});
+  if (mounted) setState(() {}); // instead of unconditional setState()
 }
 
 
@@ -350,6 +351,7 @@ void _onSave() {
     ),
   ),
       body: SingleChildScrollView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag, // ← add
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
         child: Form(
           key: _formKey,
@@ -504,7 +506,7 @@ _buildNumberField(label: 'Density (g/mL)', controller: _densityController),
 }
 
   /// Returns a uniform numeric field used everywhere
-  Widget _buildNumberField({required String label, TextEditingController? controller, String? keyPath, int depth = 0}) {
+  Widget _buildNumberField({required String label, TextEditingController? controller, String? keyPath}) {
     final TextEditingController ctrl = controller ?? _controllerFor(keyPath ?? label);
     return Padding(
       padding: EdgeInsets.only(left: 8, right: 8, top: 6, bottom: 6),
@@ -537,7 +539,6 @@ _buildNumberField(label: 'Density (g/mL)', controller: _densityController),
       widgets.add(_buildNumberField(
         label: node.label,
         keyPath: path,
-        depth: depth,
         controller: controllerOverrides != null ? controllerOverrides[path] : null,
       ));
 
@@ -598,6 +599,7 @@ String _shortUnit(String u) {
     case 'gram (g)': return 'g';
     case 'milligram (mg)': return 'mg';
     case 'microgram (µg)': return 'µg';
+    case 'microgram (mcg)': return 'µg';
     case 'kilogram (kg)': return 'kg';
     case 'ounce (oz)': return 'oz';
     case 'pound (lb)': return 'lb';
@@ -802,29 +804,30 @@ Widget _buildPortionList({
             index: i,
             groupKey: groupKey,
             onDefault: () => onDefaultChanged(i),  // (or switch to Radio<int> later)
-            onRemove: list.length > 1
+onRemove: list.length > 1
     ? () => setState(() {
-          final removedIndex = i;
-          list.removeAt(i).dispose();
+        final removedIndex = i;
+        list.removeAt(i).dispose();
 
-          final isUsual = groupKey == 'usual';
-          final currentDefault = isUsual ? _usualDefaultIndex : _basisDefaultIndex;
+        final isUsual = groupKey == 'usual';
+        final currentDefault = isUsual ? _usualDefaultIndex : _basisDefaultIndex;
 
-          int nextDefault = currentDefault;
-          if (currentDefault == removedIndex) {
-  nextDefault = ((removedIndex - 1).clamp(0, list.length - 1));
-} else if (removedIndex < currentDefault) {
-  nextDefault = ((currentDefault - 1).clamp(0, list.length - 1));
-}
+        int nextDefault = currentDefault;
+        if (currentDefault == removedIndex) {
+          nextDefault = ((removedIndex - 1).clamp(0, list.length - 1)).toInt();
+        } else if (removedIndex < currentDefault) {
+          nextDefault = ((currentDefault - 1).clamp(0, list.length - 1)).toInt();
+        }
 
-          if (isUsual) {
-            _usualDefaultIndex = nextDefault;
-          } else {
-            _basisDefaultIndex = nextDefault;
-          }
-          _lastDefaultGroup = groupKey;
-        })
+        if (isUsual) {
+          _usualDefaultIndex = nextDefault;
+        } else {
+          _basisDefaultIndex = nextDefault;
+        }
+        _lastDefaultGroup = groupKey;
+      })
     : null,
+
 
           );
         }),
