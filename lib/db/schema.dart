@@ -137,7 +137,12 @@ await migrateV32(db);
 await migrateV33(db);
 await migrateV34(db);
 await migrateV35(db);
-
+await migrateV36(db);
+await migrateV37(db);
+await migrateV38(db);
+await migrateV39(db);
+await migrateV40(db);
+await migrateV41(db);
   }
 
   /// Handler for onUpgrade callback.
@@ -176,6 +181,14 @@ if (oldVersion < 32) await migrateV32(db);
 if (oldVersion < 33) await migrateV33(db);
 if (oldVersion < 34) await migrateV34(db);
 if (oldVersion < 35) await migrateV35(db);
+if (oldVersion < 36) await migrateV36(db);
+if (oldVersion < 37) await migrateV37(db);
+if (oldVersion < 38) await migrateV38(db);
+if (oldVersion < 39) await migrateV39(db);
+if (oldVersion < 40) await migrateV40(db);
+if (oldVersion < 41) await migrateV41(db);
+
+
 
   }
 
@@ -750,39 +763,61 @@ static Future<void> migrateV19(Database db) async {
     await txn.execute("CREATE INDEX IF NOT EXISTS idx_food_nutrients_food ON food_nutrients(food_id);");
     await txn.execute("CREATE INDEX IF NOT EXISTS idx_food_nutrients_nutr ON food_nutrients(nutrient_id);");
 
-    // Try to create FTS5 outside the transaction, only if supported.
-  try {
-    final opts = await txn.rawQuery('PRAGMA compile_options;'); // ✅ use txn
-    final hasFts5 = opts.any((row) => row.values.first.toString().toUpperCase().contains('FTS5'));
-    if (hasFts5) {
-      await txn.execute('''
+// Try to create FTS4 only if supported.
+try {
+  final hasFts4 = await _fts4Available(txn);
+  if (hasFts4) {
+    // First try with unicode61 + prefix
+    try {
+      await txn.execute("""
         CREATE VIRTUAL TABLE IF NOT EXISTS food_search_fts
-        USING fts5(name, brand, content='foods', content_rowid='id');
-      ''');
-      await txn.execute('''
-        CREATE TRIGGER IF NOT EXISTS foods_ai AFTER INSERT ON foods BEGIN
-          INSERT INTO food_search_fts(rowid, name, brand)
-          VALUES (new.id, new.name, new.brand);
-        END;
-      ''');
-      await txn.execute('''
-        CREATE TRIGGER IF NOT EXISTS foods_ad AFTER DELETE ON foods BEGIN
-          INSERT INTO food_search_fts(food_search_fts, rowid, name, brand)
-          VALUES('delete', old.id, old.name, old.brand);
-        END;
-      ''');
-      await txn.execute('''
-        CREATE TRIGGER IF NOT EXISTS foods_au AFTER UPDATE ON foods BEGIN
-          INSERT INTO food_search_fts(food_search_fts, rowid, name, brand)
-          VALUES('delete', old.id, old.name, old.brand);
-          INSERT INTO food_search_fts(rowid, name, brand)
-          VALUES (new.id, new.name, new.brand);
-        END;
-      ''');
+        USING fts4(
+          name, brand,
+          content=foods,
+          tokenize=unicode61,
+          prefix=2 3
+        );
+      """);
+    } catch (_) {
+      // Fallback: some devices don't ship unicode61
+      await txn.execute("""
+        CREATE VIRTUAL TABLE IF NOT EXISTS food_search_fts
+        USING fts4(
+          name, brand,
+          content=foods,
+          prefix=2 3
+        );
+      """);
     }
-  } catch (_) {
-    // Silently skip; DAO already falls back to LIKE search.
+
+    await txn.execute("""
+      CREATE TRIGGER IF NOT EXISTS foods_ai AFTER INSERT ON foods BEGIN
+        INSERT INTO food_search_fts(rowid, name, brand)
+        VALUES (NEW.id, COALESCE(NEW.name,''), COALESCE(NEW.brand,''));
+      END;
+    """);
+    await txn.execute("""
+      CREATE TRIGGER IF NOT EXISTS foods_ad AFTER DELETE ON foods BEGIN
+        INSERT INTO food_search_fts(food_search_fts, rowid, name, brand)
+        VALUES('delete', OLD.id, COALESCE(OLD.name,''), COALESCE(OLD.brand,''));
+      END;
+    """);
+    await txn.execute("""
+      CREATE TRIGGER IF NOT EXISTS foods_au AFTER UPDATE ON foods BEGIN
+        INSERT INTO food_search_fts(food_search_fts, rowid, name, brand)
+        VALUES('delete', OLD.id, COALESCE(OLD.name,''), COALESCE(OLD.brand,''));
+        INSERT INTO food_search_fts(rowid, name, brand)
+        VALUES (NEW.id, COALESCE(NEW.name,''), COALESCE(NEW.brand,''));
+      END;
+    """);
   }
+} catch (_) {
+  // Silently skip; DAO can fall back to LIKE search.
+}
+
+
+
+
 });
 }
 
@@ -979,12 +1014,18 @@ static Future<void> migrateV22(Database db) async {
 
 static Future<void> migrateV23(Database db) async {
   await db.transaction((txn) async {
-    // New columns to preserve UI details
-    await txn.execute("ALTER TABLE food_portions ADD COLUMN list_kind TEXT;");
-    await txn.execute("ALTER TABLE food_portions ADD COLUMN sort_order INTEGER NOT NULL DEFAULT 0;");
-    await txn.execute("ALTER TABLE food_portions ADD COLUMN amount REAL;");
-    await txn.execute("ALTER TABLE food_portions ADD COLUMN unit TEXT;");
-    await txn.execute("ALTER TABLE food_portions ADD COLUMN label TEXT;");
+    Future<void> addCol(String table, String colDef) async {
+      final cols = await txn.rawQuery("PRAGMA table_info('$table');");
+      final name = colDef.split(' ').first;
+      final exists = cols.any((c) => c['name'] == name);
+      if (!exists) await txn.execute("ALTER TABLE $table ADD COLUMN $colDef;");
+    }
+
+    await addCol('food_portions', 'list_kind TEXT');
+    await addCol('food_portions', 'sort_order INTEGER NOT NULL DEFAULT 0');
+    await addCol('food_portions', 'amount REAL');
+    await addCol('food_portions', 'unit TEXT');
+    await addCol('food_portions', 'label TEXT');
 
     await txn.execute("""
       CREATE INDEX IF NOT EXISTS idx_food_portions_food_sort
@@ -1336,12 +1377,13 @@ WHERE source_id IS NULL
         END;
       ''');
 
-      // Backfill: initialize logged_at from existing date for legacy rows (idempotent)
-      await txn.execute('''
-        UPDATE diary_entries
-        SET logged_at = CAST(strftime('%s', date || 'T00:00:00Z') AS INTEGER) * 1000
-        WHERE logged_at IS NULL;
-      ''');
+      // Backfill: initialize logged_at from existing local day (use local NOON to avoid DST issues)
+await txn.execute('''
+  UPDATE diary_entries
+  SET logged_at = CAST(strftime('%s', date || ' 12:00:00') AS INTEGER) * 1000
+  WHERE logged_at IS NULL;
+''');
+
     });
   }
 
@@ -1467,6 +1509,19 @@ static Future<void> migrateV33(Database db) async {
 /// v34
 static Future<void> migrateV34(Database db) async {
   await db.transaction((txn) async {
+    // 🔹 Normalize duplicate defaults: keep the smallest-id default per food
+    await txn.execute("""
+      UPDATE food_portions
+      SET is_default = 0
+      WHERE is_default = 1
+        AND id NOT IN (
+          SELECT MIN(id)
+          FROM food_portions
+          WHERE is_default = 1
+          GROUP BY food_id
+        );
+    """);
+
     // 2) One default portion per food
     await txn.execute("""
       CREATE UNIQUE INDEX IF NOT EXISTS ux_food_portions_default
@@ -1525,6 +1580,7 @@ static Future<void> migrateV34(Database db) async {
     """);
   });
 }
+
 
 /// v35 — Data guards & helpful indexes:
 /// - Enforce DiaryEntry.quantity > 0
@@ -1623,6 +1679,632 @@ static Future<void> migrateV35(Database db) async {
     ''');
   });
 }
+
+/// v36 — QoL:
+/// - Touch recipes.updated_at when recipe_nutrients change
+/// - Partial index for live recents (profile_id, logged_at) where not deleted
+static Future<void> migrateV36(Database db) async {
+  await db.transaction((txn) async {
+    // Touch recipes on recipe_nutrients changes
+    Future<void> trig(String name, String body) async {
+      await txn.execute('DROP TRIGGER IF EXISTS $name;');
+      await txn.execute(body);
+    }
+
+    await trig('trg_touch_recipe_on_rnut_ins', """
+      CREATE TRIGGER IF NOT EXISTS trg_touch_recipe_on_rnut_ins
+      AFTER INSERT ON recipe_nutrients
+      BEGIN
+        UPDATE recipes
+        SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now')
+        WHERE id = NEW.recipe_id;
+      END;
+    """);
+
+    await trig('trg_touch_recipe_on_rnut_upd', """
+      CREATE TRIGGER IF NOT EXISTS trg_touch_recipe_on_rnut_upd
+      AFTER UPDATE ON recipe_nutrients
+      BEGIN
+        UPDATE recipes
+        SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now')
+        WHERE id = NEW.recipe_id;
+      END;
+    """);
+
+    await trig('trg_touch_recipe_on_rnut_del', """
+      CREATE TRIGGER IF NOT EXISTS trg_touch_recipe_on_rnut_del
+      AFTER DELETE ON recipe_nutrients
+      BEGIN
+        UPDATE recipes
+        SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now')
+        WHERE id = OLD.recipe_id;
+      END;
+    """);
+
+    // Live timeline/recents: profile + time, ignoring deleted
+    await txn.execute("""
+      CREATE INDEX IF NOT EXISTS idx_diary_profile_logged_at_live
+      ON diary_entries(profile_id, logged_at)
+      WHERE is_deleted = 0;
+    """);
+  });
+}
+
+
+static Future<void> migrateV37(Database db) async {
+  await db.transaction((txn) async {
+    Future<void> dropCreateTrig(String name, String sql) async {
+      await txn.execute("DROP TRIGGER IF EXISTS $name;");
+      await txn.execute(sql);
+    }
+
+    // ──────────────────────────────────────────────────────────────────
+    // 1) Keep foods.brand (TEXT) in sync with normalized brands
+    //    so FTS remains correct even when only brand_id changes.
+    // ──────────────────────────────────────────────────────────────────
+
+    // After INSERT: if brand_id present, mirror brand text
+    await dropCreateTrig('trg_foods_sync_brand_ai', """
+      CREATE TRIGGER IF NOT EXISTS trg_foods_sync_brand_ai
+      AFTER INSERT ON foods
+      WHEN NEW.brand_id IS NOT NULL
+           AND COALESCE(NEW.brand,'') <> COALESCE((SELECT name FROM brands WHERE id = NEW.brand_id),'')
+      BEGIN
+        UPDATE foods
+        SET brand = (SELECT name FROM brands WHERE id = NEW.brand_id)
+        WHERE id = NEW.id;
+      END;
+    """);
+
+    // After UPDATE of brand_id: mirror brand text when it actually changes
+    await dropCreateTrig('trg_foods_sync_brand_au', """
+      CREATE TRIGGER IF NOT EXISTS trg_foods_sync_brand_au
+      AFTER UPDATE OF brand_id ON foods
+      WHEN COALESCE(NEW.brand,'') <> COALESCE((SELECT name FROM brands WHERE id = NEW.brand_id),'')
+      BEGIN
+        UPDATE foods
+        SET brand = (SELECT name FROM brands WHERE id = NEW.brand_id)
+        WHERE id = NEW.id;
+      END;
+    """);
+
+    // When a brand name changes, push into all referencing foods
+    await dropCreateTrig('trg_brands_cascade_name_au', """
+      CREATE TRIGGER IF NOT EXISTS trg_brands_cascade_name_au
+      AFTER UPDATE OF name ON brands
+      BEGIN
+        UPDATE foods
+        SET brand = NEW.name
+        WHERE brand_id = NEW.id
+          AND COALESCE(brand,'') <> COALESCE(NEW.name,'');
+      END;
+    """);
+
+    // One-time backfill: ensure foods.brand matches brands.name where brand_id is set
+    await txn.execute("""
+      UPDATE foods
+      SET brand = (SELECT name FROM brands WHERE id = foods.brand_id)
+      WHERE brand_id IS NOT NULL
+        AND EXISTS (SELECT 1 FROM brands b WHERE b.id = foods.brand_id)
+        AND COALESCE(brand,'') <> COALESCE((SELECT name FROM brands WHERE id = foods.brand_id),'');
+    """);
+
+    // Rebuild FTS only if it exists (works for FTS4 or FTS5)
+try {
+  final rows = await txn.rawQuery(
+    "SELECT 1 FROM sqlite_master WHERE type='table' AND name='food_search_fts' LIMIT 1;"
+  );
+  if (rows.isNotEmpty) {
+    await txn.execute("INSERT INTO food_search_fts(food_search_fts) VALUES('rebuild');");
+  }
+} catch (_) { /* ignore */ }
+
+
+
+
+    // ──────────────────────────────────────────────────────────────────
+    // 2) Portion validity: require at least one converter
+    //    (gram_weight OR ml_volume) on insert/update.
+    // ──────────────────────────────────────────────────────────────────
+    await dropCreateTrig('trg_portion_converter_req_bi', """
+      CREATE TRIGGER IF NOT EXISTS trg_portion_converter_req_bi
+      BEFORE INSERT ON food_portions
+      WHEN (NEW.gram_weight IS NULL OR NEW.gram_weight < 0)
+        AND (NEW.ml_volume  IS NULL OR NEW.ml_volume  < 0)
+      BEGIN
+        SELECT RAISE(ABORT, 'food_portions requires gram_weight >= 0 or ml_volume >= 0');
+      END;
+    """);
+
+    await dropCreateTrig('trg_portion_converter_req_bu', """
+      CREATE TRIGGER IF NOT EXISTS trg_portion_converter_req_bu
+      BEFORE UPDATE ON food_portions
+      WHEN (NEW.gram_weight IS NULL OR NEW.gram_weight < 0)
+        AND (NEW.ml_volume  IS NULL OR NEW.ml_volume  < 0)
+      BEGIN
+        SELECT RAISE(ABORT, 'food_portions requires gram_weight >= 0 or ml_volume >= 0');
+      END;
+    """);
+
+    // ──────────────────────────────────────────────────────────────────
+    // 3) Nutrient value sanity: non-negative
+    // ──────────────────────────────────────────────────────────────────
+    await dropCreateTrig('trg_food_nutrients_nonneg_bi', """
+      CREATE TRIGGER IF NOT EXISTS trg_food_nutrients_nonneg_bi
+      BEFORE INSERT ON food_nutrients
+      WHEN NEW.amount_per_100g < 0
+      BEGIN
+        SELECT RAISE(ABORT, 'food_nutrients.amount_per_100g must be >= 0');
+      END;
+    """);
+    await dropCreateTrig('trg_food_nutrients_nonneg_bu', """
+      CREATE TRIGGER IF NOT EXISTS trg_food_nutrients_nonneg_bu
+      BEFORE UPDATE ON food_nutrients
+      WHEN NEW.amount_per_100g < 0
+      BEGIN
+        SELECT RAISE(ABORT, 'food_nutrients.amount_per_100g must be >= 0');
+      END;
+    """);
+
+    await dropCreateTrig('trg_fnv_nonneg_bi', """
+      CREATE TRIGGER IF NOT EXISTS trg_fnv_nonneg_bi
+      BEFORE INSERT ON food_nutrient_values
+      WHEN NEW.amount < 0
+      BEGIN
+        SELECT RAISE(ABORT, 'food_nutrient_values.amount must be >= 0');
+      END;
+    """);
+    await dropCreateTrig('trg_fnv_nonneg_bu', """
+      CREATE TRIGGER IF NOT EXISTS trg_fnv_nonneg_bu
+      BEFORE UPDATE ON food_nutrient_values
+      WHEN NEW.amount < 0
+      BEGIN
+        SELECT RAISE(ABORT, 'food_nutrient_values.amount must be >= 0');
+      END;
+    """);
+
+    // ──────────────────────────────────────────────────────────────────
+    // 4) Nutrient aliases: enforce global uniqueness (case-insensitive)
+    //    Cleanup dupes first, then create a unique index on lower(alias).
+    // ──────────────────────────────────────────────────────────────────
+    await txn.execute("""
+      DELETE FROM nutrient_aliases
+      WHERE rowid NOT IN (
+        SELECT MIN(rowid) FROM nutrient_aliases GROUP BY lower(alias)
+      );
+    """);
+    await txn.execute("""
+      CREATE UNIQUE INDEX IF NOT EXISTS ux_nutrient_alias_nocase
+      ON nutrient_aliases(lower(alias));
+    """);
+
+    // ──────────────────────────────────────────────────────────────────
+    // 5) Helpful NOCASE name index (LIKE/ORDER BY)
+    // ──────────────────────────────────────────────────────────────────
+    await txn.execute("""
+      CREATE INDEX IF NOT EXISTS idx_foods_name_nocase
+      ON foods(name COLLATE NOCASE);
+    """);
+  });
+}
+
+// v38 — Data hygiene, case-insensitive uniqueness, guards
+static Future<void> migrateV38(Database db) async {
+  await db.transaction((txn) async {
+    Future<void> trig(String name, String body) async {
+      await txn.execute('DROP TRIGGER IF EXISTS $name;');
+      await txn.execute(body);
+    }
+
+    // A) De-dupe brands by lower(name); keep smallest id, retarget foods.brand_id, then enforce unique(lower(name))
+    await txn.execute("""
+      WITH d AS (
+        SELECT MIN(id) AS keep_id, lower(trim(name)) AS k
+        FROM brands
+        GROUP BY lower(trim(name))
+      )
+      UPDATE foods
+      SET brand_id = (
+        SELECT d.keep_id
+        FROM brands b
+        JOIN d ON lower(trim(b.name)) = d.k
+        WHERE b.id = foods.brand_id
+      )
+      WHERE brand_id IS NOT NULL;
+    """);
+    await txn.execute("""
+      DELETE FROM brands
+      WHERE id NOT IN (
+        SELECT keep_id FROM (
+          SELECT MIN(id) AS keep_id FROM brands GROUP BY lower(trim(name))
+        )
+      );
+    """);
+    await txn.execute("""
+      CREATE UNIQUE INDEX IF NOT EXISTS ux_brands_name_nocase
+      ON brands(lower(name));
+    """);
+
+    // B) De-dupe categories by (lower(name), parent_id)
+    await txn.execute("""
+      WITH d AS (
+        SELECT MIN(id) AS keep_id, lower(trim(name)) AS k, parent_id
+        FROM categories
+        GROUP BY lower(trim(name)), parent_id
+      )
+      UPDATE foods
+      SET category_id = (
+        SELECT d.keep_id
+        FROM categories c
+        JOIN d ON lower(trim(c.name)) = d.k AND COALESCE(c.parent_id,-1) = COALESCE(d.parent_id,-1)
+        WHERE c.id = foods.category_id
+      )
+      WHERE category_id IS NOT NULL;
+    """);
+    await txn.execute("""
+      DELETE FROM categories
+      WHERE id NOT IN (
+        SELECT keep_id FROM (
+          SELECT MIN(id) AS keep_id
+          FROM categories
+          GROUP BY lower(trim(name)), parent_id
+        )
+      );
+    """);
+    await txn.execute("""
+      CREATE UNIQUE INDEX IF NOT EXISTS ux_categories_name_parent_nocase
+      ON categories(lower(name), parent_id);
+    """);
+
+    // C) Portion converter > 0 (tighten v37 from >= 0 to > 0)
+    await trig('trg_portion_converter_req_bi', """
+      CREATE TRIGGER IF NOT EXISTS trg_portion_converter_req_bi
+      BEFORE INSERT ON food_portions
+      WHEN (NEW.gram_weight IS NULL OR NEW.gram_weight <= 0)
+        AND (NEW.ml_volume  IS NULL OR NEW.ml_volume  <= 0)
+      BEGIN
+        SELECT RAISE(ABORT, 'food_portions requires gram_weight > 0 or ml_volume > 0');
+      END;
+    """);
+    await trig('trg_portion_converter_req_bu', """
+      CREATE TRIGGER IF NOT EXISTS trg_portion_converter_req_bu
+      BEFORE UPDATE ON food_portions
+      WHEN (NEW.gram_weight IS NULL OR NEW.gram_weight <= 0)
+        AND (NEW.ml_volume  IS NULL OR NEW.ml_volume  <= 0)
+      BEGIN
+        SELECT RAISE(ABORT, 'food_portions requires gram_weight > 0 or ml_volume > 0');
+      END;
+    """);
+
+    // D) Recipe ingredients: require grams OR (portion_id & quantity)
+    await trig('trg_recipe_ing_require_mass_or_portion_bi', """
+      CREATE TRIGGER IF NOT EXISTS trg_recipe_ing_require_mass_or_portion_bi
+      BEFORE INSERT ON recipe_ingredients
+      WHEN (NEW.grams IS NULL OR NEW.grams < 0)
+       AND (NEW.portion_id IS NULL OR NEW.quantity IS NULL OR NEW.quantity <= 0)
+      BEGIN
+        SELECT RAISE(ABORT, 'recipe_ingredients requires grams >= 0 OR (portion_id AND quantity > 0)');
+      END;
+    """);
+    await trig('trg_recipe_ing_require_mass_or_portion_bu', """
+      CREATE TRIGGER IF NOT EXISTS trg_recipe_ing_require_mass_or_portion_bu
+      BEFORE UPDATE ON recipe_ingredients
+      WHEN (NEW.grams IS NULL OR NEW.grams < 0)
+       AND (NEW.portion_id IS NULL OR NEW.quantity IS NULL OR NEW.quantity <= 0)
+      BEGIN
+        SELECT RAISE(ABORT, 'recipe_ingredients requires grams >= 0 OR (portion_id AND quantity > 0)');
+      END;
+    """);
+
+    // E) Diary grams non-negative
+    await trig('trg_diary_nonneg_grams_bi', """
+      CREATE TRIGGER IF NOT EXISTS trg_diary_nonneg_grams_bi
+      BEFORE INSERT ON diary_entries
+      WHEN (NEW.grams IS NOT NULL AND NEW.grams < 0)
+        OR (NEW.logged_grams IS NOT NULL AND NEW.logged_grams < 0)
+      BEGIN
+        SELECT RAISE(ABORT, 'DiaryEntry grams must be >= 0');
+      END;
+    """);
+    await trig('trg_diary_nonneg_grams_bu', """
+      CREATE TRIGGER IF NOT EXISTS trg_diary_nonneg_grams_bu
+      BEFORE UPDATE ON diary_entries
+      WHEN (NEW.grams IS NOT NULL AND NEW.grams < 0)
+        OR (NEW.logged_grams IS NOT NULL AND NEW.logged_grams < 0)
+      BEGIN
+        SELECT RAISE(ABORT, 'DiaryEntry grams must be >= 0');
+      END;
+    """);
+
+    // F) Barcode length sanity (8..18)
+    await trig('trg_barcodes_len_bi', """
+      CREATE TRIGGER IF NOT EXISTS trg_barcodes_len_bi
+      BEFORE INSERT ON food_barcodes
+      WHEN length(trim(NEW.upc)) < 8 OR length(trim(NEW.upc)) > 18
+      BEGIN
+        SELECT RAISE(ABORT, 'food_barcodes.upc length must be 8..18');
+      END;
+    """);
+    await trig('trg_barcodes_len_bu', """
+      CREATE TRIGGER IF NOT EXISTS trg_barcodes_len_bu
+      BEFORE UPDATE ON food_barcodes
+      WHEN length(trim(NEW.upc)) < 8 OR length(trim(NEW.upc)) > 18
+      BEGIN
+        SELECT RAISE(ABORT, 'food_barcodes.upc length must be 8..18');
+      END;
+    """);
+
+    // G) Foods numeric guardrails
+    await trig('trg_foods_quality_score_guard_bu', """
+      CREATE TRIGGER IF NOT EXISTS trg_foods_quality_score_guard_bu
+      BEFORE UPDATE OF quality_score ON foods
+      WHEN NEW.quality_score IS NOT NULL AND (NEW.quality_score < 0 OR NEW.quality_score > 1)
+      BEGIN
+        SELECT RAISE(ABORT, 'foods.quality_score must be between 0 and 1');
+      END;
+    """);
+    await trig('trg_foods_pct_guards_bu', """
+      CREATE TRIGGER IF NOT EXISTS trg_foods_pct_guards_bu
+      BEFORE UPDATE OF edible_portion_pct, yield_pct ON foods
+      WHEN (NEW.edible_portion_pct IS NOT NULL AND (NEW.edible_portion_pct < 0 OR NEW.edible_portion_pct > 100))
+        OR (NEW.yield_pct IS NOT NULL AND (NEW.yield_pct < 0 OR NEW.yield_pct > 100))
+      BEGIN
+        SELECT RAISE(ABORT, 'foods edible_portion_pct/yield_pct must be 0..100');
+      END;
+    """);
+    await trig('trg_foods_density_guard_bu', """
+      CREATE TRIGGER IF NOT EXISTS trg_foods_density_guard_bu
+      BEFORE UPDATE OF density_g_per_ml ON foods
+      WHEN NEW.density_g_per_ml IS NOT NULL AND NEW.density_g_per_ml <= 0
+      BEGIN
+        SELECT RAISE(ABORT, 'foods.density_g_per_ml must be > 0');
+      END;
+    """);
+  });
+}
+
+// v39 — Drop redundant indexes and tighten name search
+static Future<void> migrateV39(Database db) async {
+  await db.transaction((txn) async {
+    // Drop redundant explicit index on a UNIQUE column
+    await txn.execute('DROP INDEX IF EXISTS idx_food_barcodes_upc;');
+
+    // Keep NOCASE name index; drop the older plain one to save space
+    await txn.execute('DROP INDEX IF EXISTS idx_foods_name;');
+
+    // nutrient_aliases: old non-unique alias index redundant with ux_nutrient_alias_nocase
+    await txn.execute('DROP INDEX IF EXISTS idx_aliases_alias;');
+  });
+}
+
+// Add near the bottom of schema.dart, after migrateV39
+
+/// v40 — Consolidated:
+/// - Fix diary logged_at backfill to **local** noon for prior backfilled rows
+/// - Recreate FTS with unicode tokenizer + prefix search; rebuild & resync triggers
+/// - Helpful indexes (foods category/brand/name; fnv food/basis)
+/// - (Optional) Guard: sets.parent_set_id must reference an existing set
+static Future<void> migrateV40(Database db) async {
+  await db.transaction((txn) async {
+    Future<void> dropCreateTrig(String name, String sql) async {
+      await txn.execute("DROP TRIGGER IF EXISTS $name;");
+      await txn.execute(sql);
+    }
+
+    // ──────────────────────────────────────────────────────────────────
+    // A) Diary backfill: convert prior “noon” backfill to *local* noon
+    //    Only adjust rows that look like the earlier backfill at exactly 12:00.
+    // ──────────────────────────────────────────────────────────────────
+    await txn.execute("""
+      UPDATE diary_entries
+      SET logged_at = CAST(strftime('%s', date || ' 12:00:00', 'localtime') AS INTEGER) * 1000
+      WHERE logged_at IS NOT NULL
+        AND strftime('%H:%M', logged_at/1000, 'unixepoch') = '12:00';
+    """);
+
+    // ──────────────────────────────────────────────────────────────────
+// B) Recreate FTS (FTS4) with unicode tokenizer + short prefixes; rebuild
+{
+  await txn.execute("DROP TRIGGER IF EXISTS foods_ai;");
+  await txn.execute("DROP TRIGGER IF EXISTS foods_ad;");
+  await txn.execute("DROP TRIGGER IF EXISTS foods_au;");
+  await txn.execute("DROP TABLE IF EXISTS food_search_fts;");
+
+  if (await _fts4Available(txn)) {
+    // Try unicode61 first…
+    bool created = false;
+    try {
+      await txn.execute("""
+        CREATE VIRTUAL TABLE food_search_fts
+        USING fts4(
+          name, brand,
+          content=foods,
+          tokenize=unicode61,
+          prefix=2 3
+        );
+      """);
+      created = true;
+    } catch (_) {
+      // …fallback without tokenizer if it's missing on this device.
+      await txn.execute("""
+        CREATE VIRTUAL TABLE food_search_fts
+        USING fts4(
+          name, brand,
+          content=foods,
+          prefix=2 3
+        );
+      """);
+      created = true;
+    }
+
+    if (created) {
+      await txn.execute("""
+        CREATE TRIGGER IF NOT EXISTS foods_ai
+        AFTER INSERT ON foods BEGIN
+          INSERT INTO food_search_fts(rowid, name, brand)
+          VALUES (NEW.id, COALESCE(NEW.name,''), COALESCE(NEW.brand,''));
+        END;
+      """);
+      await txn.execute("""
+        CREATE TRIGGER IF NOT EXISTS foods_ad
+        AFTER DELETE ON foods BEGIN
+          INSERT INTO food_search_fts(food_search_fts, rowid, name, brand)
+          VALUES('delete', OLD.id, COALESCE(OLD.name,''), COALESCE(OLD.brand,''));
+        END;
+      """);
+      await txn.execute("""
+        CREATE TRIGGER IF NOT EXISTS foods_au
+        AFTER UPDATE ON foods BEGIN
+          INSERT INTO food_search_fts(food_search_fts, rowid, name, brand)
+          VALUES('delete', OLD.id, COALESCE(OLD.name,''), COALESCE(OLD.brand,''));
+          INSERT INTO food_search_fts(rowid, name, brand)
+          VALUES (NEW.id, COALESCE(NEW.name,''), COALESCE(NEW.brand,''));
+        END;
+      """);
+
+      // Rebuild/optimize are supported on FTS3/4.
+      try { await txn.execute("INSERT INTO food_search_fts(food_search_fts) VALUES('rebuild');"); } catch (_) {}
+      try { await txn.execute("INSERT INTO food_search_fts(food_search_fts) VALUES('optimize');"); } catch (_) {}
+    }
+  }
+}
+
+
+
+    // ──────────────────────────────────────────────────────────────────
+    // C) Practical indexes
+    // ──────────────────────────────────────────────────────────────────
+    await txn.execute("""
+      CREATE INDEX IF NOT EXISTS idx_foods_category_brand_name
+      ON foods(category_id, brand_id, name COLLATE NOCASE);
+    """);
+    await txn.execute("""
+      CREATE INDEX IF NOT EXISTS idx_fnv_food_basis
+      ON food_nutrient_values(food_id, basis);
+    """);
+
+    // ──────────────────────────────────────────────────────────────────
+    // D) (Optional) parent_set_id guard (no FK table rebuild needed)
+    //     Blocks insert/update if parent_set_id points to a non-existent set.
+    // ──────────────────────────────────────────────────────────────────
+    await dropCreateTrig('trg_sets_parent_exists_bi', """
+      CREATE TRIGGER IF NOT EXISTS trg_sets_parent_exists_bi
+      BEFORE INSERT ON sets
+      WHEN NEW.parent_set_id IS NOT NULL
+       AND NOT EXISTS (SELECT 1 FROM sets p WHERE p.id = NEW.parent_set_id)
+      BEGIN
+        SELECT RAISE(ABORT, 'parent_set_id must reference an existing set');
+      END;
+    """);
+    await dropCreateTrig('trg_sets_parent_exists_bu', """
+      CREATE TRIGGER IF NOT EXISTS trg_sets_parent_exists_bu
+      BEFORE UPDATE OF parent_set_id ON sets
+      WHEN NEW.parent_set_id IS NOT NULL
+       AND NOT EXISTS (SELECT 1 FROM sets p WHERE p.id = NEW.parent_set_id)
+      BEGIN
+        SELECT RAISE(ABORT, 'parent_set_id must reference an existing set');
+      END;
+    """);
+  });
+}
+
+/// v41 — Final polish:
+/// - INSERT guards for foods (quality_score, pct fields, density > 0)
+/// - Diary grams: include grams_override in non-negative checks
+/// - Index: foods(is_deleted)
+/// - Optional: ANALYZE after big dedupe runs (safe to call anytime)
+static Future<void> migrateV41(Database db) async {
+  await db.transaction((txn) async {
+    Future<void> trig(String name, String body) async {
+      await txn.execute('DROP TRIGGER IF EXISTS $name;');
+      await txn.execute(body);
+    }
+
+    // 1) Foods numeric guards on INSERT (mirror v38 UPDATE guards)
+    await trig('trg_foods_quality_score_guard_bi', """
+      CREATE TRIGGER IF NOT EXISTS trg_foods_quality_score_guard_bi
+      BEFORE INSERT ON foods
+      WHEN NEW.quality_score IS NOT NULL AND (NEW.quality_score < 0 OR NEW.quality_score > 1)
+      BEGIN
+        SELECT RAISE(ABORT, 'foods.quality_score must be between 0 and 1');
+      END;
+    """);
+    await trig('trg_foods_pct_guards_bi', """
+      CREATE TRIGGER IF NOT EXISTS trg_foods_pct_guards_bi
+      BEFORE INSERT ON foods
+      WHEN (NEW.edible_portion_pct IS NOT NULL AND (NEW.edible_portion_pct < 0 OR NEW.edible_portion_pct > 100))
+        OR (NEW.yield_pct IS NOT NULL AND (NEW.yield_pct < 0 OR NEW.yield_pct > 100))
+      BEGIN
+        SELECT RAISE(ABORT, 'foods edible_portion_pct/yield_pct must be 0..100');
+      END;
+    """);
+    await trig('trg_foods_density_guard_bi', """
+      CREATE TRIGGER IF NOT EXISTS trg_foods_density_guard_bi
+      BEFORE INSERT ON foods
+      WHEN NEW.density_g_per_ml IS NOT NULL AND NEW.density_g_per_ml <= 0
+      BEGIN
+        SELECT RAISE(ABORT, 'foods.density_g_per_ml must be > 0');
+      END;
+    """);
+
+    // 2) Diary grams: include grams_override in non-negative checks
+    await trig('trg_diary_nonneg_grams_bi', """
+      CREATE TRIGGER IF NOT EXISTS trg_diary_nonneg_grams_bi
+      BEFORE INSERT ON diary_entries
+      WHEN (NEW.grams IS NOT NULL AND NEW.grams < 0)
+        OR (NEW.logged_grams IS NOT NULL AND NEW.logged_grams < 0)
+        OR (NEW.grams_override IS NOT NULL AND NEW.grams_override < 0)
+      BEGIN
+        SELECT RAISE(ABORT, 'DiaryEntry grams must be >= 0');
+      END;
+    """);
+    await trig('trg_diary_nonneg_grams_bu', """
+      CREATE TRIGGER IF NOT EXISTS trg_diary_nonneg_grams_bu
+      BEFORE UPDATE ON diary_entries
+      WHEN (NEW.grams IS NOT NULL AND NEW.grams < 0)
+        OR (NEW.logged_grams IS NOT NULL AND NEW.logged_grams < 0)
+        OR (NEW.grams_override IS NOT NULL AND NEW.grams_override < 0)
+      BEGIN
+        SELECT RAISE(ABORT, 'DiaryEntry grams must be >= 0');
+      END;
+    """);
+
+    // 3) Helpful index for live food reads (hide deleted)
+    await txn.execute("""
+      CREATE INDEX IF NOT EXISTS idx_foods_is_deleted
+      ON foods(is_deleted);
+    """);
+
+    // 4) (Optional) stats update
+    await txn.execute("ANALYZE;");
+  });
+}
+
+
+
+
+
+
+static Future<bool> _fts4Available(DatabaseExecutor db) async {
+  // 1) Prefer compile_options (avoids "no such module" log spam)
+  try {
+    final opts = await db.rawQuery('PRAGMA compile_options;');
+    if (opts.isNotEmpty) {
+      final up = opts.map((r) => r.values.first.toString().toUpperCase()).join('|');
+      if (up.contains('ENABLE_FTS4') || up.contains('ENABLE_FTS3')) return true;
+    }
+  } catch (_) { /* ignore and probe directly */ }
+
+  // 2) Definitive probe
+  try {
+    await db.execute("CREATE VIRTUAL TABLE temp.__fts4_probe__ USING fts4(x)");
+    await db.execute("DROP TABLE IF EXISTS temp.__fts4_probe__");
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
 
 
 }

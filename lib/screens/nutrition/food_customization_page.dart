@@ -5,6 +5,13 @@ import 'package:flutter/services.dart';
 
 import '../../models/nutrition_models.dart';
 
+// File-level helper: pretty-print numbers like 100 → "100", 100.50 → "100.5"
+String _fmtNum(num v) {
+  final s = v.toStringAsFixed(2);
+  return s.replaceFirst(RegExp(r'\.?0+$'), '');
+}
+
+
 
 /// A page for adding or editing a food item.
 /// Updated: unified numeric field layout + parents can hold values
@@ -103,9 +110,30 @@ void _prefillIfEditing() {
     _loadInitialPortions(w.initialPortions!);
   }
   // If you later pass an initial density, prefill here:
-final d = widget.initialDensityGPerMl;   // ← remove the cast
-  if (d != null) _densityController.text = _fmtNum(d);
+final d = widget.initialDensityGPerMl;   // already a double?
+  if (d != null) {
+    _densityController.text = _fmtNum(d);
+  }
 }
+
+// Keep unit parentheses (e.g., (mg)), but drop a trailing category like "(Minerals)"
+String _stripTrailingGroup(String s) {
+  final r = RegExp(r'^(.*?)(\s+\(([^)]+)\))?$'); // base + last "(xxx)" if any
+  final m = r.firstMatch(s);
+  if (m == null) return s;
+  // group(1) = everything *before* the final (...) — this preserves "(mg)" if it appears earlier
+  final basePlusUnit = m.group(1)!;
+  final lastGroup = m.group(3);
+  if (lastGroup == null) return s;
+
+  const unitSet = {
+    'g','mg','mcg','µg','mL','L','tsp','tbsp','cup','fl oz','CFU'
+  };
+  // If the last (...) is a unit, keep it; otherwise remove it.
+  // If the final (...) was a unit, keep original. Otherwise, drop the last (...) suffix.
+  return unitSet.contains(lastGroup) ? s : basePlusUnit.trim();
+}
+
 
 String? _longUnitFromShort(String? s) {
   switch (s) {
@@ -161,7 +189,7 @@ void _loadInitialPortions(List<FoodPortion> parts) {
     final idx = list.length;
     list.add(entry);
 
-    if (p.isDefault) {
+    if (p.isDefault == true) {
       if (isUsual) {
         _usualDefaultIndex = idx;
         foundUsualDefault = true;
@@ -238,9 +266,11 @@ Map<String, dynamic> _collectPayload() {
     return double.tryParse(t);
   }
 
+  final name  = _nameController.text.trim();
+  final brand = _brandController.text.trim();
   final payload = <String, dynamic>{
-    'name' : _nameController.text.trim(),
-    'brand': _brandController.text.trim(),
+    'name': name,
+    if (brand.isNotEmpty) 'brand': brand,
   };
 
   void putNum(String key, TextEditingController c) {
@@ -262,11 +292,15 @@ void aliasIfSet(String alias, String canonical) {
 }
 
 aliasIfSet('calories',  'KCAL');
+aliasIfSet('ENERGY_KCAL', 'KCAL');
 aliasIfSet('protein_g', 'PROTEIN_G');
+aliasIfSet('PROTEIN',   'PROTEIN_G');
 aliasIfSet('carbs_g',   'CARB_G');
+aliasIfSet('CARB',      'CARB_G');
 aliasIfSet('fat_g',     'FAT_G');
 // legacy alias some forms still use
 aliasIfSet('fats_g',    'FAT_G');
+aliasIfSet('FAT',       'FAT_G');
 
   // Optional density (lets your logging page stop assuming 1.0 g/mL later)
   putNum('density_g_per_ml', _densityController);
@@ -284,7 +318,7 @@ for (final e in _controllers.entries) {
   if (v == null) continue;
 
   final path = e.key;                   // e.g., "Micronutrients > Minerals > Chloride (mg)"
-  final last = path.split(' > ').last;  // e.g., "Chloride (mg)"
+  final last = _stripTrailingGroup(path.split(' > ').last); // -> "Chloride (mg)"
 
   if (!payload.containsKey(last)) {
     payload[last] = v;                  // mapper-friendly key
@@ -296,6 +330,19 @@ for (final e in _controllers.entries) {
 if (extendedPaths.isNotEmpty) {
   payload['__extended_paths__'] = extendedPaths; // harmless to DAO; future-proof
 }
+
+// Optional: auto-calc KCAL if user entered only macros.
+  if (!payload.containsKey('KCAL')) {
+    final p = (payload['PROTEIN_G'] as num?)?.toDouble() ?? 0.0;
+    final c = (payload['CARB_G']    as num?)?.toDouble() ?? 0.0;
+    final f = (payload['FAT_G']     as num?)?.toDouble() ?? 0.0;
+    final kc = 4.0 * p + 4.0 * c + 9.0 * f;
+    if (kc > 0) {
+      payload['KCAL'] = double.parse(kc.toStringAsFixed(1));
+      // keep ENERGY_KCAL in sync for readers that expect it
+      aliasIfSet('ENERGY_KCAL', 'KCAL');
+    }
+  }
 
 
   // v23 portion payload
@@ -436,6 +483,13 @@ const SizedBox(height: 12),
 //TODO: make this density bit properly fit in
 const SizedBox(height: 12),
 _buildNumberField(label: 'Density (g/mL)', controller: _densityController),
+ const Padding(
+   padding: EdgeInsets.only(left: 12, right: 12, top: 4, bottom: 8),
+   child: Text(
+     'Used to convert mL-based portions (cups, tbsp) into grams for macro math.',
+     style: TextStyle(fontSize: 12, color: Colors.black54),
+   ),
+ ),
 
               // 3. Calories (kept separate)
               _buildNumberField(label: 'Calories (kcal)', controller: _calController),
@@ -669,14 +723,39 @@ List<Map<String, dynamic>> _portionsPayload({
     final r = all[i];
 
     // Parse current fields
-    final amount = double.tryParse(r.row.amountCtrl.text.trim());
+    final amount   = double.tryParse(r.row.amountCtrl.text.trim());
     final unitShort = _shortUnit(r.row.unit);
-    double? grams = double.tryParse(r.row.gramsCtrl.text.trim());
-    double? ml    = double.tryParse(r.row.mlCtrl.text.trim());
+    double? grams  = double.tryParse(r.row.gramsCtrl.text.trim());
+    double? ml     = double.tryParse(r.row.mlCtrl.text.trim());
 
-    // NEW: map Amount + Unit to grams/mL if user left those fields empty
-    if (grams == null && unitShort == 'g'  && amount != null) grams = amount;
-    if (ml    == null && unitShort == 'mL' && amount != null) ml    = amount;
+    // 1) Mass units → grams
+    if (grams == null && amount != null) {
+      switch (unitShort) {
+        case 'g':    grams = amount; break;
+        case 'mg':   grams = amount / 1000.0; break;
+        case 'kg':   grams = amount * 1000.0; break;
+        case 'oz':   grams = amount * 28.349523125; break;
+        case 'lb':   grams = amount * 453.59237; break;
+      }
+    }
+
+    // 2) Volume units → milliliters
+    if (ml == null && amount != null) {
+      switch (unitShort) {
+        case 'mL':    ml = amount; break;
+        case 'L':     ml = amount * 1000.0; break;
+        case 'tsp':   ml = amount * 5.0; break;
+        case 'tbsp':  ml = amount * 15.0; break;
+        case 'cup':   ml = amount * 240.0; break;     // US cup
+        case 'fl oz': ml = amount * 29.5735295625; break; // US fl oz
+      }
+    }
+
+    // 3) If we have mL and a density, derive grams too for better downstream math
+    if (grams == null && ml != null) {
+      final dens = double.tryParse(_densityController.text.trim());
+      if (dens != null) grams = ml * dens;
+    }
 
     // If we still can't physically map this row, skip it
     if (grams == null && ml == null) continue;
@@ -1173,7 +1252,7 @@ const List<NutrientNode> _micronutrientNodes = [
     NutrientNode('Boron (mg)'),
     NutrientNode('Copper (mg)'),
     NutrientNode('Chromium (mcg)'),
-    NutrientNode('Chloride (mg)'),
+    NutrientNode('Chloride (mg) (Minerals)'),
     NutrientNode('Choline (mg)'),
     NutrientNode('Fluoride (mg)'),
     NutrientNode('Iodine (mcg)'),
@@ -1261,9 +1340,9 @@ class PortionEntry {
     double? amount,
     double? grams,
     double? ml,
-  })  : amountCtrl = TextEditingController(text: amount?.toString() ?? ''),
-        gramsCtrl  = TextEditingController(text: grams?.toString() ?? ''),
-        mlCtrl     = TextEditingController(text: ml?.toString() ?? '');
+  })  : amountCtrl = TextEditingController(text: amount == null ? '' : _fmtNum(amount)),
+        gramsCtrl  = TextEditingController(text: grams == null ? '' : _fmtNum(grams)),
+        mlCtrl     = TextEditingController(text: ml == null ? '' : _fmtNum(ml));
 
   String unit;
   final TextEditingController amountCtrl;

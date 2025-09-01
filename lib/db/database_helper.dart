@@ -34,6 +34,8 @@ import 'nutrition_dao.dart';
 
 /// Singleton helper for managing the SQLite database.
 class DatabaseHelper {
+   static const int _kDbVersion = 42;
+   static bool? _fts4Available;
   static final DatabaseHelper _instance = DatabaseHelper._internal();
   factory DatabaseHelper() => _instance;
   DatabaseHelper._internal();
@@ -50,7 +52,7 @@ class DatabaseHelper {
     final path = join(dbPath, 'fitness_tracker.db');
     return await openDatabase(
       path,
-      version: 33,  
+      version: _kDbVersion,
       onConfigure: (db) async {
     // OK with execute (doesn't return rows)
     await db.execute('PRAGMA foreign_keys = ON');
@@ -139,7 +141,7 @@ if (oldVersion < 12) {
     if (oldVersion < 22) {
       await Schema.migrateV22(db);
       await Seed.seedExtendedNutrients(db);
-    await Seed.seedFoods(db);              // ✅ now safe
+    await _seedFoodsIfEmpty(db);
     }
     if (oldVersion < 23) {
       await Schema.migrateV23(db);
@@ -176,13 +178,30 @@ if (oldVersion < 12) {
     if (oldVersion < 33) {
       await Schema.migrateV33(db);
     }
+    if (oldVersion < 34) await Schema.migrateV34(db);
+if (oldVersion < 35) await Schema.migrateV35(db);
+if (oldVersion < 36) await Schema.migrateV36(db);
+if (oldVersion < 37) await Schema.migrateV37(db);
+if (oldVersion < 38) { await Schema.migrateV38(db); }
+
+    // After structural changes, backfill/normalize data if needed:
+if (oldVersion < 39) await Schema.migrateV39(db);
+if (oldVersion < 40) await Schema.migrateV40(db);
+if (oldVersion < 41) await Schema.migrateV41(db);
+
+// inside onUpgrade, after your existing steps
+if (oldVersion < 42) {
+  await _seedFoodsIfEmpty(db);   // harmless if already populated
+}
+
+
 
    // 🔽 run once after all structural changes
 await _backfillNormalizedFoodKeys(db);
+await _backfillEnergyKcalFromMacros(db);
 
-// Rebuild recipe caches if this install is coming from before the flexible nutrient table.
-// (Safe to run more often; this gate just avoids work on tiny bumps.)
-if (oldVersion < 22) {
+// Rebuild recipe caches if coming from before v22 (guard tables).
+if (oldVersion < 22 && await _tableExists(db, 'recipes')) {
   await _rebuildAllRecipeCaches(db);
 }
 
@@ -191,6 +210,17 @@ await _rebuildFoodFtsIfExists(db);
 await _ensureIndexes(db); 
 
   },
+
+   // NEW:
+  onOpen: (db) async {
+  final didSeed = await _seedFoodsIfEmpty(db);  // now returns bool
+  await _ensureIndexes(db);                     // still safe if already created
+  if (!didSeed) {
+    // If we didn't just seed, still refresh FTS opportunistically
+    await _rebuildFoodFtsIfExists(db);
+  }
+},
+
 );
   }
 
@@ -207,13 +237,14 @@ await _ensureIndexes(db);
 
     await NutritionDao(db).seedNutrientsIfEmpty();
     await Seed.seedExtendedNutrients(db);
-  await Seed.seedFoods(db);
+  await _seedFoodsIfEmpty(db);
 
 // If you later add a big catalog:
     // await Seed.seedFoodsExtended(db, assetPath: 'assets/foods_extended.json');
 
    // Normalize/denormalize into the new tables on a fresh install as well:
 await _backfillNormalizedFoodKeys(db);
+await _backfillEnergyKcalFromMacros(db);
 
 // Fresh installs won’t have recipe cache yet; build it once.
 await _rebuildAllRecipeCaches(db);
@@ -329,31 +360,43 @@ Future<void> _backfillNormalizedFoodKeys(Database db) async {
 
 
 Future<void> _rebuildFoodFtsIfExists(Database db) async {
+  if (!await _hasFts4(db)) return;  // ← guard for FTS4/3 availability
+
   final exists = (Sqflite.firstIntValue(await db.rawQuery(
     "SELECT COUNT(*) FROM sqlite_master "
     "WHERE name = 'food_search_fts' "
     "AND type IN ('table','view') "
-    "AND lower(coalesce(sql,'')) LIKE '%using fts5%'"
+    "AND (lower(coalesce(sql,'')) LIKE '%using fts4%' "
+    "     OR lower(coalesce(sql,'')) LIKE '%using fts3%')"
   )) ?? 0) > 0;
 
   if (!exists) return;
   try {
+    // Supported by FTS3/4
     await db.execute("INSERT INTO food_search_fts(food_search_fts) VALUES('rebuild')");
     await db.execute("INSERT INTO food_search_fts(food_search_fts) VALUES('optimize')");
   } catch (_) {/* ignore */}
 }
 
 
+
 Future<void> _ensureIndexes(Database db) async {
   // existing indexes…
+ 
   await db.execute(
-    'CREATE INDEX IF NOT EXISTS idx_diary_profile_date '
-    'ON diary_entries(profile_id, date, is_deleted)'
+  'CREATE INDEX IF NOT EXISTS idx_foods_updated_at ON foods(updated_at)'
+);
+// General lookups
+  await db.execute(
+    'CREATE INDEX IF NOT EXISTS idx_foods_name ON foods(name COLLATE NOCASE)'
   );
   await db.execute(
-    'CREATE INDEX IF NOT EXISTS idx_diary_profile_logged '
-    'ON diary_entries(profile_id, logged_at)'
+    'CREATE INDEX IF NOT EXISTS idx_brands_name ON brands(name COLLATE NOCASE)'
   );
+  await db.execute(
+    'CREATE INDEX IF NOT EXISTS idx_sources_name ON sources(name COLLATE NOCASE)'
+  );
+
   await db.execute(
     'CREATE INDEX IF NOT EXISTS idx_recipe_ingredients_recipe '
     'ON recipe_ingredients(recipe_id)'
@@ -365,6 +408,18 @@ Future<void> _ensureIndexes(Database db) async {
   await db.execute(
     'CREATE INDEX IF NOT EXISTS idx_food_barcodes_upc '
     'ON food_barcodes(upc)'
+  );
+
+  // For joins/reads using foods.default_portion_id
+  await db.execute(
+    'CREATE INDEX IF NOT EXISTS idx_foods_default_portion '
+    'ON foods(default_portion_id)'
+  );
+
+  // For usage queries (hits/recents by profile & time)
+ await db.execute(
+    'CREATE INDEX IF NOT EXISTS idx_food_usage_profile_last '
+    'ON food_usage_stats(profile_id, last_used)'
   );
 
   // 🔽 NEW — speed critical nutrition paths
@@ -383,6 +438,30 @@ Future<void> _ensureIndexes(Database db) async {
   await db.execute(
     'CREATE UNIQUE INDEX IF NOT EXISTS idx_day_totals_profile_date '
     'ON day_totals_cache(profile_id, date)'
+  );
+
+  // Diary hot paths
+  await db.execute(
+    'CREATE INDEX IF NOT EXISTS idx_diary_entries_profile_date '
+    'ON diary_entries(profile_id, date, is_deleted)'
+  );
+  await db.execute(
+    'CREATE INDEX IF NOT EXISTS idx_diary_entries_profile_logged '
+    'ON diary_entries(profile_id, logged_at)'
+  );
+
+  // Common filters/joins in food search & recents
+  await db.execute(
+    'CREATE INDEX IF NOT EXISTS idx_foods_is_deleted '
+    'ON foods(is_deleted)'
+  );
+  await db.execute(
+    'CREATE INDEX IF NOT EXISTS idx_diary_food_profile '
+    'ON diary_entries(profile_id, food_id, is_deleted, logged_at)'
+  );
+  await db.execute(
+    'CREATE INDEX IF NOT EXISTS idx_diary_recipe_profile '
+    'ON diary_entries(profile_id, recipe_id, is_deleted, logged_at)'
   );
 
   // Flexible nutrient reads/writes & deletes
@@ -408,6 +487,58 @@ Future<void> _ensureIndexes(Database db) async {
     'CREATE INDEX IF NOT EXISTS idx_favorite_foods_profile '
     'ON favorite_foods(profile_id)'
   );
+
+  // Nutrient lookups (label→code mapper & code joins)
+await db.execute(
+  'CREATE INDEX IF NOT EXISTS idx_nutrient_aliases_alias ON nutrient_aliases(alias COLLATE NOCASE)'
+);
+await db.execute(
+  'CREATE INDEX IF NOT EXISTS idx_nutrients_code ON nutrients(code)'
+);
+
+// Flexible table: speed WHERE food_id=? AND basis='per_100g' AND nutrient_id IN (...)
+await db.execute(
+  'CREATE INDEX IF NOT EXISTS idx_fnv_food_basis_nutrient '
+  'ON food_nutrient_values(food_id, basis, nutrient_id)'
+);
+
+// Foods: speed brand/source/category joins & filters
+await db.execute(
+  'CREATE INDEX IF NOT EXISTS idx_foods_brand_id ON foods(brand_id)'
+);
+await db.execute(
+  'CREATE INDEX IF NOT EXISTS idx_foods_category_id ON foods(category_id)'
+);
+await db.execute(
+  'CREATE INDEX IF NOT EXISTS idx_foods_source_id ON foods(source_id)'
+);
+
+
+}
+
+Future<bool> _seedFoodsIfEmpty(Database db) async {
+  final n = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM foods')) ?? 0;
+  if (n > 0) return false;
+
+  var seeded = false;
+  try {
+    await Seed.seedFoods(db); // defaults to assets/foods/foods.min.jsonl.gz
+    seeded = true;
+  } catch (_) {
+    try {
+      await Seed.seedFoods(db, assetPath: 'assets/foods.json');
+      seeded = true;
+    } catch (_) {/* allow empty */}
+  }
+
+  if (seeded) {
+    // Make the new catalog immediately usable
+    await _backfillNormalizedFoodKeys(db);
+    await _backfillEnergyKcalFromMacros(db);
+    await _ensureIndexes(db);
+    await _rebuildFoodFtsIfExists(db);
+  }
+  return seeded;
 }
 
 
@@ -1193,6 +1324,8 @@ Future<String> exportDatabase() async {
     'diary_entries','day_totals_cache','nutrition_goals',
     'brands','sources','categories','food_usage_stats',
     'favorite_foods','diary_entry_tags',
+  'diary_entry_audit',     // ← ADD
+  'personal_info',         // ← ADD
 
     'flow_defaults','flow_default_methods','preset_flow_methods',
 
@@ -1231,7 +1364,8 @@ Future<void> importDatabase(String jsonStr, {bool clearFirst = true}) async {
         );
         for (final r in tables) {
           final name = (r['name'] as String);
-          // If you keep any temp/meta tables, skip them here.
+          // Skip Android’s metadata table if present.
+          if (name == 'android_metadata') continue;
           await txn.delete(name);
         }
       }
@@ -1251,6 +1385,7 @@ Future<void> importDatabase(String jsonStr, {bool clearFirst = true}) async {
 
   // Post-import normalization & maintenance
   await _backfillNormalizedFoodKeys(db);
+  await _backfillEnergyKcalFromMacros(db);
   await _rebuildFoodFtsIfExists(db);
   await _ensureIndexes(db); // ← ensure you have all new indexes on imported DBs
 
@@ -1263,6 +1398,9 @@ Future<void> importDatabase(String jsonStr, {bool clearFirst = true}) async {
   if (!data.keys.contains('day_totals_cache') && await _tableExists(db, 'day_totals_cache')) {
     await db.delete('day_totals_cache');
   }
+
+  // NEW: keep AUTOINCREMENT sequences aligned with current max(id)
+  await _bumpAutoincrement(db);
 }
 
 
@@ -2527,15 +2665,16 @@ Future<int> deletePresetSet(int presetSetId) async {
 
 Future<bool> getUseManualBodyparts(int defId) async {
   final db = await database;
-  final row = await db.query(
+  final r = await db.query(
     'exercise_definitions',
     columns: ['use_manual_bodyparts'],
     where: 'id = ?',
     whereArgs: [defId],
     limit: 1,
   );
-  if (row.isEmpty) return false;
-  return (row.first['use_manual_bodyparts'] as int) == 1;
+  if (r.isEmpty) return false;
+  final v = r.first['use_manual_bodyparts'];
+  return v is int ? v == 1 : (v is bool ? v : false);
 }
 
 
@@ -2553,14 +2692,16 @@ Future<void> setUseManualBodyparts(int defId, bool value) async {
 /// Returns whether the exercise definition uses manual muscle selection.
 Future<bool> getUseManualMuscles(int defId) async {
   final db = await database;
-  final rows = await db.query(
+  final r = await db.query(
     'exercise_definitions',
     columns: ['use_manual_muscles'],
     where: 'id = ?',
     whereArgs: [defId],
     limit: 1,
   );
-  return rows.isNotEmpty && rows.first['use_manual_muscles'] == 1;
+  if (r.isEmpty) return false;
+  final v = r.first['use_manual_muscles'];
+  return v is int ? v == 1 : (v is bool ? v : false);
 }
 
 /// Sets whether the exercise definition uses manual muscle selection.
@@ -2924,6 +3065,36 @@ Future<void> updateFoodFromCustomizationPayload(Map payload) async {
   final brand = (payload['brand'] as String?)?.trim();
   await updateFoodBasics(foodId, name: name, brand: brand);
 
+  // 2b) Optional: density (g/ml)
+  final densRaw = payload['density_g_per_ml'];
+  if (densRaw != null) {
+    final dens = (densRaw is num) ? densRaw.toDouble() : double.tryParse('$densRaw');
+    if (dens != null) {
+      final db = await database;
+      await db.update(
+        'foods',
+        {
+          'density_g_per_ml': dens > 0 ? dens : null,
+          'updated_at': DateTime.now().toIso8601String(),
+        },
+        where: 'id = ?',
+        whereArgs: [foodId],
+      );
+    }
+  }
+
+  // 2c) Optional: barcode(s)
+  final bc = payload['barcodes'] ?? payload['barcode'];
+  if (bc != null) {
+    final list = (bc is List) ? bc : [bc];
+    for (final v in list) {
+      final s = '$v'.trim();
+     if (s.isNotEmpty) {
+        await addBarcode(foodId, s);
+      }
+    }
+  }
+
   // 3) Replace per-100g values using your flexible label mapper
   await savePer100gFromLabelPayload(foodId, Map<String, dynamic>.from(payload));
 
@@ -3026,6 +3197,44 @@ Future<void> _rebuildAllRecipeCaches(Database db) async {
   }
 }
 
+/// Ensures KCAL exists per_100g for foods that have P/C/F but no KCAL yet.
+  /// Also mirrors into legacy food_nutrients for back-compat reads.
+  Future<void> _backfillEnergyKcalFromMacros(Database db) async {
+    // Find IDs for KCAL/PROTEIN_G/CARB_G/FAT_G
+    final ids = await db.query('nutrients',
+        columns: ['id','code'],
+        where: 'code IN ("KCAL","PROTEIN_G","CARB_G","FAT_G")');
+    int? kcalId, pId, cId, fId;
+    for (final r in ids) {
+      switch (r['code'] as String) {
+        case 'KCAL':      kcalId = r['id'] as int; break;
+        case 'PROTEIN_G': pId    = r['id'] as int; break;
+        case 'CARB_G':    cId    = r['id'] as int; break;
+        case 'FAT_G':     fId    = r['id'] as int; break;
+      }
+    }
+    if (kcalId == null || pId == null || cId == null || fId == null) return;
+
+    // Insert KCAL rows into flexible table when missing but P/C/F exist.
+    await db.rawInsert('''
+      INSERT OR IGNORE INTO food_nutrient_values(food_id, nutrient_id, amount, basis)
+      SELECT p.food_id, ?, (4.0*p.amount + 4.0*c.amount + 9.0*f.amount), 'per_100g'
+      FROM food_nutrient_values p
+      JOIN food_nutrient_values c ON c.food_id = p.food_id AND c.nutrient_id = ? AND c.basis = 'per_100g'
+      JOIN food_nutrient_values f ON f.food_id = p.food_id AND f.nutrient_id = ? AND f.basis = 'per_100g'
+      LEFT JOIN food_nutrient_values k ON k.food_id = p.food_id AND k.nutrient_id = ? AND k.basis = 'per_100g'
+      WHERE p.nutrient_id = ? AND p.basis = 'per_100g' AND k.food_id IS NULL
+    ''', [kcalId, cId, fId, kcalId, pId]);
+
+    // Mirror into legacy table for older code paths.
+    await db.rawInsert('''
+      INSERT OR IGNORE INTO food_nutrients(food_id, nutrient_id, amount_per_100g)
+      SELECT v.food_id, ?, v.amount
+      FROM food_nutrient_values v
+      WHERE v.nutrient_id = ? AND v.basis = 'per_100g'
+    ''', [kcalId, kcalId]);
+  }
+
 // --- Diary (range) ---------------------------------------------------------
 Future<List<DiaryEntry>> getDiaryEntriesBetween(
   int profileId,
@@ -3110,4 +3319,70 @@ Future<void> close() async {
 }
 
 
+
+
+Future<void> _bumpAutoincrement(Database db) async {
+  final tables = await db.rawQuery(
+    "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
+  );
+  for (final t in tables) {
+    final name = t['name'] as String;
+
+    // Only if there's an integer PK called `id`
+    final cols = await db.rawQuery("PRAGMA table_info($name)");
+    final hasIdPk = cols.any((c) =>
+      (c['name'] as String).toLowerCase() == 'id' && (c['pk'] as int) == 1);
+
+    if (!hasIdPk) continue;
+
+    final maxId = Sqflite.firstIntValue(await db.rawQuery("SELECT MAX(id) FROM $name")) ?? 0;
+
+    // Update or insert sqlite_sequence row
+    final exists = Sqflite.firstIntValue(await db.rawQuery(
+      "SELECT COUNT(*) FROM sqlite_sequence WHERE name = ?", [name])) ?? 0;
+
+    if (exists > 0) {
+      await db.rawUpdate("UPDATE sqlite_sequence SET seq = ? WHERE name = ?", [maxId, name]);
+    } else {
+      // Will only succeed for AUTOINCREMENT tables (others won’t have sqlite_sequence rows)
+      try {
+        await db.rawInsert("INSERT INTO sqlite_sequence(name, seq) VALUES(?, ?)", [name, maxId]);
+      } catch (_) {/* ignore */}
+    }
+  }
+}
+
+Future<bool> _hasFts4(DatabaseExecutor db) async {
+  if (_fts4Available != null) return _fts4Available!;
+
+  // 1) cheap check via compile options: accept FTS4 or FTS3
+  try {
+    final rows = await db.rawQuery('PRAGMA compile_options');
+    for (final m in rows) {
+      final v = (m.values.first ?? '').toString().toUpperCase();
+      if (v.contains('ENABLE_FTS4') || v.contains('ENABLE_FTS3')) {
+        _fts4Available = true;
+        return true;
+      }
+    }
+  } catch (_) {/* ignore */}
+
+  // 2) definitive probe: try fts4, then fts3
+  try {
+    await db.execute("CREATE VIRTUAL TABLE temp.__fts4_probe__ USING fts4(x)");
+    await db.execute("DROP TABLE IF EXISTS temp.__fts4_probe__");
+    _fts4Available = true;
+    return true;
+  } catch (_) {
+    try {
+      await db.execute("CREATE VIRTUAL TABLE temp.__fts3_probe__ USING fts3(x)");
+      await db.execute("DROP TABLE IF EXISTS temp.__fts3_probe__");
+      _fts4Available = true; // FTS3 is fine for our uses
+      return true;
+    } catch (_) {
+      _fts4Available = false;
+      return false;
+    }
+  }
+}
 }

@@ -16,6 +16,8 @@
 //    - Food/Recipe created_at / updated_at are stored as ISO 8601 TEXT in DB.
 // • Units: amounts are raw (no rounding); format in UI.
 
+// ignore_for_file: constant_identifier_names
+
 import 'dart:convert' show jsonDecode, jsonEncode;
 
 /// The four standard meal buckets.
@@ -28,6 +30,12 @@ extension MealTypeX on MealType {
     return MealType.values[i];
   }
 }
+
+/// Back-compat toggles for legacy diary columns.
+/// Flip to `true` only if the current DB schema still has these columns.
+const bool kWriteLegacyDiaryGrams = true;          // 'grams' column
+const bool kWriteLegacyDiaryGramsOverride = false; // 'grams_override' column
+
 
 /// Canonical nutrient codes used across DAO/Repo/UI.
 /// Centralizing them avoids stringly-typed bugs.
@@ -98,10 +106,10 @@ class Brand {
       );
 
   Map<String, dynamic> toMap() => {
-        if (id != null) 'id': id,
-        'name': name,
-        'manufacturer': manufacturer,
-      };
+  if (id != null) 'id': id,
+  'name': name,
+  'manufacturer': manufacturer,
+}..removeWhere((_, v) => v == null);
 }
 
 class Category {
@@ -118,10 +126,10 @@ class Category {
       );
 
   Map<String, dynamic> toMap() => {
-        if (id != null) 'id': id,
-        'name': name,
-        'parent_id': parentId,
-      };
+  if (id != null) 'id': id,
+  'name': name,
+  'parent_id': parentId,
+}..removeWhere((_, v) => v == null);
 }
 
 /// Separate table so a food can have many UPC/EANs / packaging variants.
@@ -139,10 +147,10 @@ class FoodBarcode {
       );
 
   Map<String, dynamic> toMap() => {
-        if (id != null) 'id': id,
-        'food_id': foodId,
-        'upc': upc,
-      };
+  if (id != null) 'id': id,
+  'food_id': foodId,
+  'upc': upc,
+}..removeWhere((_, v) => v == null);
 }
 
 /// A food item (generic, branded, or user-created).
@@ -220,8 +228,8 @@ class Food {
         yieldPct: (m['yield_pct'] as num?)?.toDouble(), // NEW
         densityGPerMl: (m['density_g_per_ml'] as num?)?.toDouble(),
         isDeleted: (m['is_deleted'] as int? ?? 0) == 1,
-        createdAt: _parseIsoOrNow(m['created_at']),
-        updatedAt: _parseIsoOrNow(m['updated_at']),
+        createdAt: _parseIsoUtcOrEpoch(m['created_at']),
+        updatedAt: _parseIsoUtcOrEpoch(m['updated_at']),
       );
 
   Map<String, dynamic> toMap() => {
@@ -250,10 +258,59 @@ class Food {
 
         'density_g_per_ml': densityGPerMl,
         'is_deleted': isDeleted ? 1 : 0,
-        'created_at': createdAt.toIso8601String(),
-        'updated_at': updatedAt.toIso8601String(),
+        'created_at': createdAt.toUtc().toIso8601String(),
+        'updated_at': updatedAt.toUtc().toIso8601String(),
       }..removeWhere((_, v) => v == null);
 }
+
+extension FoodCopy on Food {
+  Food copyWith({
+    int? id,
+    String? name,
+    String? brand,
+    String? barcode,
+    int? brandId,
+    int? categoryId,
+    bool? isCustom,
+    String? dataSource,
+    String? dataSourceId,
+    int? fdcId,
+    bool? verified,
+    double? qualityScore,
+    int? version,
+    String? preparation,
+    double? ediblePortionPct,
+    double? yieldPct,
+    double? densityGPerMl,
+    bool? isDeleted,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return Food(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      brand: brand ?? this.brand,
+      barcode: barcode ?? this.barcode,
+      brandId: brandId ?? this.brandId,
+      categoryId: categoryId ?? this.categoryId,
+      isCustom: isCustom ?? this.isCustom,
+      dataSource: dataSource ?? this.dataSource,
+      dataSourceId: dataSourceId ?? this.dataSourceId,
+      fdcId: fdcId ?? this.fdcId,
+      verified: verified ?? this.verified,
+      qualityScore: qualityScore ?? this.qualityScore,
+      version: version ?? this.version,
+      preparation: preparation ?? this.preparation,
+      ediblePortionPct: ediblePortionPct ?? this.ediblePortionPct,
+      yieldPct: yieldPct ?? this.yieldPct,
+      densityGPerMl: densityGPerMl ?? this.densityGPerMl,
+      isDeleted: isDeleted ?? this.isDeleted,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+}
+
 
 /// Portion definition for a food (e.g., "cup", "tbsp", "1 bar").
 class FoodPortion {
@@ -433,8 +490,8 @@ class Recipe {
         notes: m['notes'] as String?,
         isCustom: (m['is_custom'] as int? ?? 1) == 1,
         isDeleted: (m['is_deleted'] as int? ?? 0) == 1,
-        createdAt: _parseIsoOrNow(m['created_at']),
-        updatedAt: _parseIsoOrNow(m['updated_at']),
+        createdAt: _parseIsoUtcOrEpoch(m['created_at']),
+        updatedAt: _parseIsoUtcOrEpoch(m['updated_at']),
       );
 
   Map<String, dynamic> toMap() => {
@@ -443,8 +500,8 @@ class Recipe {
         'notes': notes,
         'is_custom': isCustom ? 1 : 0,
         'is_deleted': isDeleted ? 1 : 0,
-        'created_at': createdAt.toIso8601String(),
-        'updated_at': updatedAt.toIso8601String(),
+        'created_at': createdAt.toUtc().toIso8601String(),
+        'updated_at': updatedAt.toUtc().toIso8601String(),
       };
 }
 
@@ -478,13 +535,13 @@ class RecipeIngredient {
       );
 
   Map<String, dynamic> toMap() => {
-        if (id != null) 'id': id,
-        'recipe_id': recipeId,
-        'food_id': foodId,
-        'portion_id': portionId,
-        'quantity': quantity,
-        'grams': grams,
-      };
+  if (id != null) 'id': id,
+  'recipe_id': recipeId,
+  'food_id': foodId,
+  'portion_id': portionId,
+  'quantity': quantity,
+  'grams': grams,
+}..removeWhere((_, v) => v == null);
 }
 
 /// A diary entry for a given profile and local day.
@@ -552,7 +609,7 @@ class DiaryEntry {
         id: m['id'] as int?,
         profileId: m['profile_id'] as int,
         date: _parseYMD(m['date'] as String),
-        mealType: MealTypeX.fromInt(m['meal_type'] as int),
+        mealType: MealTypeX.fromInt((m['meal_type'] as num?)?.toInt() ?? 0),
         foodId: m['food_id'] as int?,
         recipeId: m['recipe_id'] as int?,
         portionId: m['portion_id'] as int?,
@@ -574,37 +631,38 @@ class DiaryEntry {
       );
 
   Map<String, dynamic> toMap() => {
-        if (id != null) 'id': id,
-        'profile_id': profileId,
-        'date': _toYMD(date),
-        'meal_type': mealType.toInt(),
-        'food_id': foodId,
-        'recipe_id': recipeId,
-        'portion_id': portionId,
-        'quantity': quantity,
+  if (id != null) 'id': id,
+  'profile_id': profileId,
+  'date': _toYMD(date),
+  'meal_type': mealType.toInt(),
+  'food_id': foodId,
+  'recipe_id': recipeId,
+  'portion_id': portionId,
+  'quantity': quantity,
 
-        // keep both for back/forward compat
-        'grams': grams,
-        'logged_grams': loggedGrams,
+  // Prefer new column
+  'logged_grams': loggedGrams ?? grams,
 
-        'notes': notes,
+  // Legacy compatibility: gated writes
+  if (kWriteLegacyDiaryGrams) 'grams': grams,
+  if (kWriteLegacyDiaryGramsOverride && loggedGrams != null)
+    'grams_override': loggedGrams,
 
-        // TEMP back-compat: write legacy column until migrations remove it.
-        // Safe to delete once your schema has fully adopted 'logged_grams'.
-        // TODO(drop-legacy-grams): remove 'grams_override' write after migration v23.1.x
-        'grams_override': loggedGrams,
+  'notes': notes,
 
-        // snapshots
-        'kcal_snapshot': kcalSnapshot,
-        'protein_g_snapshot': proteinGSnapshot,
-        'carb_g_snapshot': carbGSnapshot,
-        'fat_g_snapshot': fatGSnapshot,
-        'nutrient_snapshot_json': nutrientSnapshotJson,
-        // timestamps & soft delete
-        'logged_at': _toEpochMsOrNull(loggedAt),
-        'updated_at': _toEpochMsOrNull(updatedAt),
-        'is_deleted': isDeleted ? 1 : 0,
-      }..removeWhere((_, v) => v == null);
+  // snapshots
+  'kcal_snapshot': kcalSnapshot,
+  'protein_g_snapshot': proteinGSnapshot,
+  'carb_g_snapshot': carbGSnapshot,
+  'fat_g_snapshot': fatGSnapshot,
+  'nutrient_snapshot_json': nutrientSnapshotJson,
+
+  // timestamps & soft delete
+  'logged_at': _toEpochMsOrNull(loggedAt),
+  'updated_at': _toEpochMsOrNull(updatedAt),
+  'is_deleted': isDeleted ? 1 : 0,
+}..removeWhere((_, v) => v == null);
+
 
   /// Convenience: immutably modify a diary entry.
   DiaryEntry copyWith({
@@ -924,7 +982,7 @@ String normalizeDiaryTag(String input) {
   t = t.replaceAll(RegExp(r'[ \t\-]+'), '_');
   t = t.replaceAll(RegExp(r'[^a-z0-9_]'), '');
   if (t.length > 40) t = t.substring(0, 40);
-  return t;
+  return t.isEmpty ? 'tag' : t;
 }
 
 /// Cached per-100g nutrient for a recipe by canonical code (e.g., 'KCAL','PROTEIN_G').
@@ -1058,13 +1116,18 @@ DateTime? _fromEpochMsOrNull(dynamic v) {
   return null;
 }
 
-DateTime _parseIsoOrNow(dynamic v) {
-  if (v is String) {
-    final dt = DateTime.tryParse(v);
-    if (dt != null) return dt;
-  }
-  return DateTime.now();
-}
+DateTime _parseIsoUtcOrEpoch(dynamic v) {
+   if (v is String && v.trim().isNotEmpty) {
+     final dt = DateTime.tryParse(v);
+     if (dt != null) return dt.isUtc ? dt : dt.toUtc();
+   } else if (v is int || v is num) {
+     // Be resilient if an epoch ms accidentally got into a TEXT column.
+     final ms = (v as num).toInt();
+     return DateTime.fromMillisecondsSinceEpoch(ms, isUtc: true);
+   }
+   // Deterministic "unknown"
+   return DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
+ }
 
 /// Convert DateTime? to epoch ms (int), or null.
 int? _toEpochMsOrNull(DateTime? dt) => dt?.toUtc().millisecondsSinceEpoch;

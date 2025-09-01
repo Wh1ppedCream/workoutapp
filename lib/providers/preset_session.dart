@@ -422,10 +422,9 @@ Future<void> saveChanges() async {
 
 
   /// Starts a live session by writing this preset's exercises into the session tables.
-  Future<int> startSession() async {
-    // 1) Create the session row
-    final nowIso = DateTime.now().toIso8601String();
-    final sessionId = await _repo.createSession(nowIso, 0);
+Future<int> startSession() async {
+  // 1) Create the session row (no ISO string needed anymore)
+  final sessionId = await _repo.createSessionAt(DateTime.now(), 0);
 
   // 2) Persist each in-memory exercise
   for (var i = 0; i < exercises.length; i++) {
@@ -434,17 +433,16 @@ Future<void> saveChanges() async {
     // Ensure a definition exists for this exercise (never null)
     final defId = await _repo.findExerciseDefinitionId(we.name, we.equipment);
 
-    // Insert the exercise row—
-    // now exercise_def_id is always non-null
+    // Insert the exercise row — exercise_def_id is always non-null
     final exId = await _repo.addExerciseRow(
-      sessionId:      sessionId,
-      exerciseDefId:  defId,
-      type:           we is WeightExercise
-                       ? 'weight'
-                       : we is CardioExercise
-                         ? 'cardio'
-                         : 'stretch',
-      orderIndex:     i,
+      sessionId:     sessionId,
+      exerciseDefId: defId,
+      type:          we is WeightExercise
+                        ? 'weight'
+                        : we is CardioExercise
+                            ? 'cardio'
+                            : 'stretch',
+      orderIndex:    i,
     );
 
     // And insert its details just like ActiveSession.finish()
@@ -472,6 +470,7 @@ Future<void> saveChanges() async {
 
   return sessionId;
 }
+
 
  // ─── Automatic Settings Actions ───────────────────────────────────────
 

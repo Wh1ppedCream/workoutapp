@@ -45,6 +45,7 @@ dependencies:
   flutter_flow_chart: ^3.2.3
   shared_preferences: ^2.5.3
   flutter_svg: ^2.2.0
+  mobile_scanner: ^7.0.1
 
 
 dev_dependencies:
@@ -89,6 +90,7 @@ flutter:
     - assets/bodyfat_woman/
     - assets/foods.json
     - assets/nutrients_extended.json
+    - assets/foods/foods.min.jsonl.gz
 
 
   # An image asset can refer to one or more resolution-specific "variants", see
