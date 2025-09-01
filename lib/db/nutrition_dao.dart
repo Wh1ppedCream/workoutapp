@@ -456,44 +456,45 @@ try {
       }
     }
 
-    final id = await db.insert('diary_entries', {
-      'profile_id': profileId,
-      'date': _toYMD(date),
-      'meal_type': mealType.index,
-      'food_id': foodId,
-      'recipe_id': null,
-      'portion_id': portionId,
-      'quantity': quantity,
-      // mass (keep legacy + new + temporary shim)
-      'grams': resolvedGrams,
-      'logged_grams': resolvedGrams,
-      'grams_override': resolvedGrams, // TEMP: back-compat column (migr v33)
+    
+  final values = {
+    'profile_id': profileId,
+    'date': _toYMD(date),
+    'meal_type': mealType.index,
+    'food_id': foodId,
+    'recipe_id': null,
+    'portion_id': portionId,
+    'quantity': quantity,
+    'grams': resolvedGrams,
+    'logged_grams': resolvedGrams,
+    'grams_override': resolvedGrams, // legacy shim
+    'notes': notes,
+    'kcal_snapshot': snap?['kcal'],
+    'protein_g_snapshot': snap?['protein_g'],
+    'carb_g_snapshot': snap?['carb_g'],
+    'fat_g_snapshot': snap?['fat_g'],
+    'nutrient_snapshot_json': (snap == null)
+        ? null
+        : jsonEncode({
+            'KCAL': snap['kcal'],
+            'PROTEIN_G': snap['protein_g'],
+            'CARB_G': snap['carb_g'],
+            'FAT_G': snap['fat_g'],
+          }),
+    'logged_at': loggedAt?.toUtc().millisecondsSinceEpoch,
+  };
 
-      'notes': notes,
-
-      // snapshots (kcal/P/C/F) + optional JSON (macros-only for now)
-      'kcal_snapshot': snap?['kcal'],
-      'protein_g_snapshot': snap?['protein_g'],
-      'carb_g_snapshot': snap?['carb_g'],
-      'fat_g_snapshot': snap?['fat_g'],
-      'nutrient_snapshot_json': (snap == null)
-          ? null
-          : jsonEncode({
-              'KCAL': snap['kcal'],
-              'PROTEIN_G': snap['protein_g'],
-              'CARB_G': snap['carb_g'],
-              'FAT_G': snap['fat_g'],
-            }),
-
-      // precise timestamp (let trigger fill if null)
-      'logged_at': loggedAt?.toUtc().millisecondsSinceEpoch,
-      // leave updated_at null; trigger will set
-    });
-
-    await recalcDayTotals(profileId, date);
-    await _bumpFoodUsage(profileId, foodId);
-    return id;
+  // 🔐 Back-compat: drop column if this DB doesn't have it
+  if (!await _hasColumn('diary_entries', 'grams_override')) {
+    values.remove('grams_override');
   }
+
+  final id = await db.insert('diary_entries', values);
+  await recalcDayTotals(profileId, date);
+  await _bumpFoodUsage(profileId, foodId);
+  return id;
+}
+  
 
   Future<int> addDiaryRecipe({
     required int profileId,
@@ -1455,9 +1456,18 @@ Future<Map<String, double>> mapLabelsToCodes(
 
       for (final raw in barcodes) {
         final upc = raw.replaceAll(RegExp(r'\D'), '');
-        if (upc.isEmpty) continue;
-        await txn.insert('food_barcodes', {'food_id': outId, 'upc': upc},
-            conflictAlgorithm: ConflictAlgorithm.ignore);
+if (upc.isEmpty) continue;
+// basic sanity: accept common UPC/EAN lengths (tweak if your CHECK differs)
+if (upc.length < 8 || upc.length > 18) continue;
+try {
+  await txn.insert(
+    'food_barcodes',
+    {'food_id': outId, 'upc': upc},
+    conflictAlgorithm: ConflictAlgorithm.ignore,
+  );
+} catch (_) {
+  // Ignore rows rejected by stricter constraints/triggers
+}
       }
 
       return outId;
@@ -1485,9 +1495,15 @@ Future<Map<String, double>> mapLabelsToCodes(
 
   Future<void> addBarcode(int foodId, String code) async {
     final upc = code.replaceAll(RegExp(r'\D'), '');
-    if (upc.isEmpty) return;
-    await db.insert('food_barcodes', {'food_id': foodId, 'upc': upc},
-        conflictAlgorithm: ConflictAlgorithm.ignore);
+if (upc.isEmpty) return;
+if (upc.length < 8 || upc.length > 18) return;
+try {
+  await db.insert(
+    'food_barcodes',
+    {'food_id': foodId, 'upc': upc},
+    conflictAlgorithm: ConflictAlgorithm.ignore,
+  );
+} catch (_) {/* ignore */}
   }
 
   Future<void> setFoodDefaultPortion(int foodId, int portionId) async {
@@ -1891,9 +1907,12 @@ Future<Map<String, double>> mapLabelsToCodes(
   }
 
   Future<void> _maybeEnsureEnergyKcalInV22(int foodId) async {
-    final ids = await db.query('nutrients',
-        columns: ['id','code'],
-        where: 'code IN ("KCAL","PROTEIN_G","CARB_G","FAT_G")');
+    final ids = await db.query(
+  'nutrients',
+  columns: ['id', 'code'],
+  where: 'code IN (?,?,?,?)',
+  whereArgs: ['KCAL', 'PROTEIN_G', 'CARB_G', 'FAT_G'],
+);
     int? kcalId, pId, cId, fId;
     for (final r in ids) {
       switch (r['code'] as String) {
@@ -1939,6 +1958,11 @@ Future<Map<String, double>> mapLabelsToCodes(
     });
   }
 
+// Add near the bottom of the class (private helper)
+Future<bool> _hasColumn(String table, String col) async {
+  final rows = await db.rawQuery('PRAGMA table_info($table)');
+  return rows.any((r) => (r['name'] as String).toLowerCase() == col.toLowerCase());
+}
 
 
 

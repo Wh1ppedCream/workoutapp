@@ -288,13 +288,19 @@ Future<void> _backfillNormalizedFoodKeysTx(DatabaseExecutor ex) async {
     );
     for (final r in rows) {
       final raw = (r['barcode'] as String?) ?? '';
-      final upc = raw.replaceAll(RegExp(r'\D'), '');
-      if (upc.isEmpty) continue;
-      await ex.insert(
-        'food_barcodes',
-        {'food_id': r['id'], 'upc': upc},
-        conflictAlgorithm: ConflictAlgorithm.ignore,
-      );
+final upc = raw.replaceAll(RegExp(r'\D'), '');
+if (upc.isEmpty) continue;
+// basic sanity: most UPC/EAN are 8–18 digits; adjust if your trigger differs
+if (upc.length < 8 || upc.length > 18) continue;
+try {
+  await ex.insert(
+    'food_barcodes',
+    {'food_id': r['id'], 'upc': upc},
+    conflictAlgorithm: ConflictAlgorithm.ignore,
+  );
+} catch (_) {
+  // Ignore rows rejected by stricter triggers/constraints
+}
     }
   }
 
@@ -411,10 +417,13 @@ Future<void> _ensureIndexes(Database db) async {
   );
 
   // For joins/reads using foods.default_portion_id
+// (Guard because many schemas no longer have this column)
+if (await _tableHasColumn(db, 'foods', 'default_portion_id')) {
   await db.execute(
-    'CREATE INDEX IF NOT EXISTS idx_foods_default_portion '
-    'ON foods(default_portion_id)'
+    'CREATE INDEX IF NOT EXISTS idx_foods_default_portion ON foods(default_portion_id)'
   );
+}
+
 
   // For usage queries (hits/recents by profile & time)
  await db.execute(
@@ -3156,8 +3165,12 @@ Future<int> upsertFoodWithKeys({
 Future<Food?> getFoodByBarcode(String code) async =>
     NutritionDao(await database).getFoodByBarcode(code);
 
-Future<void> addBarcode(int foodId, String code) async =>
-    NutritionDao(await database).addBarcode(foodId, code);
+Future<void> addBarcode(int foodId, String code) async {
+  final cleaned = code.replaceAll(RegExp(r'\D'), '');
+  if (cleaned.length < 8 || cleaned.length > 18) return; // skip invalids
+  await NutritionDao(await database).addBarcode(foodId, cleaned);
+}
+
 
 // Quick calculator for a portion selection
 Future<Map<String,double>> calcForPortion({
@@ -3201,9 +3214,13 @@ Future<void> _rebuildAllRecipeCaches(Database db) async {
   /// Also mirrors into legacy food_nutrients for back-compat reads.
   Future<void> _backfillEnergyKcalFromMacros(Database db) async {
     // Find IDs for KCAL/PROTEIN_G/CARB_G/FAT_G
-    final ids = await db.query('nutrients',
-        columns: ['id','code'],
-        where: 'code IN ("KCAL","PROTEIN_G","CARB_G","FAT_G")');
+final ids = await db.query(
+  'nutrients',
+  columns: ['id', 'code'],
+  where: 'code IN (?,?,?,?)',
+  whereArgs: ['KCAL', 'PROTEIN_G', 'CARB_G', 'FAT_G'],
+);
+
     int? kcalId, pId, cId, fId;
     for (final r in ids) {
       switch (r['code'] as String) {

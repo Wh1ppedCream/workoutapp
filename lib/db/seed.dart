@@ -1595,8 +1595,24 @@ final List<String> barcodes =
     }
   }
   await flush();
+  await _rebuildFoodFtsIfExists(db);
 }
 
+static Future<void> _rebuildFoodFtsIfExists(Database db) async {
+  try {
+    final exists = await db.rawQuery(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='food_search_fts' LIMIT 1;"
+    );
+    if (exists.isNotEmpty) {
+      // Works for FTS4/5; harmless if no pending changes.
+      await db.rawInsert(
+        "INSERT INTO food_search_fts(food_search_fts) VALUES('rebuild');"
+      );
+    }
+  } catch (_) {
+    // If older schemas don't have FTS yet, just ignore.
+  }
+}
 
 
 }
