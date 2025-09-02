@@ -34,7 +34,7 @@ import 'nutrition_dao.dart';
 
 /// Singleton helper for managing the SQLite database.
 class DatabaseHelper {
-   static const int _kDbVersion = 42;
+   static const int _kDbVersion = 45;
    static bool? _fts4Available;
   static final DatabaseHelper _instance = DatabaseHelper._internal();
   factory DatabaseHelper() => _instance;
@@ -73,146 +73,45 @@ class DatabaseHelper {
 
       onCreate: _onCreate,
   onUpgrade: (db, oldVersion, newVersion) async {
-    if (oldVersion < 3) {
-      await Schema.migrateV3(db);
-      await Seed.seedLookupsAndExercises(db);
-    }
-    if (oldVersion < 4) {
-      await Schema.migrateV4(db);
-      await Seed.seedStretches(db);
-    }
-    if (oldVersion < 5) {
-      await Schema.migrateV5(db);
-    }
-   if (oldVersion < 6) {
-     await Schema.migrateV6(db);
-   }
-   // v7: gym_profiles + profile_equipment + preset_definitions.profile_id
-        if (oldVersion < 7) {
-          await Schema.migrateV7(db);
-          await db.execute('CREATE INDEX IF NOT EXISTS idx_preset_profile ON preset_definitions(profile_id);');
-        }
+  // 1) Always let Schema drive structural upgrades
+  await Schema.onUpgrade(db, oldVersion, newVersion);
 
-    if (oldVersion < 8) {
-     await Schema.migrateV8(db);
-   }
-
-   if (oldVersion < 9) {
-  await Schema.migrateV9(db);
-  await Seed.seedAnalyticsDefaults(db);
-}
-if (oldVersion < 10) {
-        await Schema.migrateV10(db);
-      }
-  if (oldVersion < 11) {
-      await Schema.migrateV11(db);
-    }
-if (oldVersion < 12) {
-      await Schema.migrateV12(db);
-    }
-    if (oldVersion < 13) {
-      await Schema.migrateV13(db);
-    }
-     if (oldVersion < 14) {
-      await Schema.migrateV14(db);
-    }
-    if (oldVersion < 15) {
-      await Schema.migrateV15(db);
-    }
-    if (oldVersion < 16) {
-      await Schema.migrateV16(db);
-    }
-    if (oldVersion < 17) {
-      await Schema.migrateV17(db);
-    }
-    if (oldVersion < 18) {
-      await Schema.migrateV18(db);
-    }
-    if (oldVersion < 19) {
-      await Schema.migrateV19(db);
-  await NutritionDao(db).seedNutrientsIfEmpty(); // ✅ use raw db
-    }
-    if (oldVersion < 20) {
-      await Schema.migrateV20(db);
-    }
-    if (oldVersion < 21) {
-      await Schema.migrateV21(db);
-    }
-    if (oldVersion < 22) {
-      await Schema.migrateV22(db);
-      await Seed.seedExtendedNutrients(db);
+  // 2) Data seeding/backfills that aren’t part of schema.dart
+  if (oldVersion < 3) {
+    await Seed.seedLookupsAndExercises(db);
+  }
+  if (oldVersion < 4) {
+    await Seed.seedStretches(db);
+  }
+  if (oldVersion < 9) {
+    await Seed.seedAnalyticsDefaults(db);
+  }
+  if (oldVersion < 19) {
+    await NutritionDao(db).seedNutrientsIfEmpty();
+  }
+  if (oldVersion < 22) {
+    await Seed.seedExtendedNutrients(db);
+    await _resetDbTriggers(db);   // <—
     await _seedFoodsIfEmpty(db);
-    }
-    if (oldVersion < 23) {
-      await Schema.migrateV23(db);
-    }
-    
-    if (oldVersion < 24) {
-      await Schema.migrateV24(db);
-    }
-    if (oldVersion < 25) {
-      await Schema.migrateV25(db);
-    }
-    if (oldVersion < 26) {
-      await Schema.migrateV26(db);
-    }
+  }
+  // 3) One-time normalizations & caches
+  await _backfillNormalizedFoodKeys(db);
+  await _backfillEnergyKcalFromMacros(db);
 
-    if (oldVersion < 27) {
-      await Schema.migrateV27(db);
-    }
-    if (oldVersion < 28) {
-      await Schema.migrateV28(db);
-    }
-    if (oldVersion < 29) {
-      await Schema.migrateV29(db);
-    }
-    if (oldVersion < 30) {
-      await Schema.migrateV30(db);
-    }
-    if (oldVersion < 31) {
-      await Schema.migrateV31(db);
-    }
-    if (oldVersion < 32) {
-      await Schema.migrateV32(db);
-    }
-    if (oldVersion < 33) {
-      await Schema.migrateV33(db);
-    }
-    if (oldVersion < 34) await Schema.migrateV34(db);
-if (oldVersion < 35) await Schema.migrateV35(db);
-if (oldVersion < 36) await Schema.migrateV36(db);
-if (oldVersion < 37) await Schema.migrateV37(db);
-if (oldVersion < 38) { await Schema.migrateV38(db); }
+  if (oldVersion < 22 && await _tableExists(db, 'recipes')) {
+    await _rebuildAllRecipeCaches(db);
+  }
 
-    // After structural changes, backfill/normalize data if needed:
-if (oldVersion < 39) await Schema.migrateV39(db);
-if (oldVersion < 40) await Schema.migrateV40(db);
-if (oldVersion < 41) await Schema.migrateV41(db);
+  // 4) FTS & indexes
+  await _resetDbTriggers(db);
+  await _rebuildFoodFtsIfExists(db);
+  await _ensureIndexes(db);
+},
 
-// inside onUpgrade, after your existing steps
-if (oldVersion < 42) {
-  await _seedFoodsIfEmpty(db);   // harmless if already populated
-}
-
-
-
-   // 🔽 run once after all structural changes
-await _backfillNormalizedFoodKeys(db);
-await _backfillEnergyKcalFromMacros(db);
-
-// Rebuild recipe caches if coming from before v22 (guard tables).
-if (oldVersion < 22 && await _tableExists(db, 'recipes')) {
-  await _rebuildAllRecipeCaches(db);
-}
-
-// After structural changes, refresh FTS if present:
-await _rebuildFoodFtsIfExists(db);
-await _ensureIndexes(db); 
-
-  },
-
+   
    // NEW:
   onOpen: (db) async {
+  await _resetDbTriggers(db);   // <—
   final didSeed = await _seedFoodsIfEmpty(db);  // now returns bool
   await _ensureIndexes(db);                     // still safe if already created
   if (!didSeed) {
@@ -237,6 +136,7 @@ await _ensureIndexes(db);
 
     await NutritionDao(db).seedNutrientsIfEmpty();
     await Seed.seedExtendedNutrients(db);
+    await _resetDbTriggers(db);   // <—
   await _seedFoodsIfEmpty(db);
 
 // If you later add a big catalog:
@@ -261,6 +161,52 @@ await _ensureIndexes(db);
   // BACKFILL METHODS
   // ────────────────────────────────────────────────────────────────────────────
 
+Future<void> _resetDbTriggers(Database db) async {
+  // Drop every trigger on these tables, regardless of contents.
+  const tables = [
+    'foods','food_portions','food_barcodes',
+    'food_nutrients','food_nutrient_values',
+    'recipes','recipe_ingredients'
+  ];
+  final qs = List.filled(tables.length, '?').join(',');
+
+  await db.transaction((txn) async {
+    final rows = await txn.rawQuery(
+      "SELECT name FROM sqlite_master "
+      "WHERE type='trigger' AND tbl_name IN ($qs)",
+      tables,
+    );
+    for (final r in rows) {
+      final name = r['name'] as String;
+      await txn.execute('DROP TRIGGER IF EXISTS $name;');
+    }
+
+    // Recreate ONLY the 2 safe “single default portion” triggers.
+    await txn.execute('''
+      CREATE TRIGGER IF NOT EXISTS trg_portion_single_default_ins
+      AFTER INSERT ON food_portions
+      WHEN NEW.is_default = 1
+      BEGIN
+        UPDATE food_portions
+        SET is_default = 0
+        WHERE food_id = NEW.food_id AND id <> NEW.id;
+      END;
+    ''');
+
+    await txn.execute('''
+      CREATE TRIGGER IF NOT EXISTS trg_portion_single_default_upd
+      AFTER UPDATE OF is_default ON food_portions
+      WHEN NEW.is_default = 1
+      BEGIN
+        UPDATE food_portions
+        SET is_default = 0
+        WHERE food_id = NEW.food_id AND id <> NEW.id;
+      END;
+    ''');
+  });
+}
+
+
 
 Future<void> _backfillNormalizedFoodKeysTx(DatabaseExecutor ex) async {
   // 1) Brands
@@ -279,30 +225,30 @@ Future<void> _backfillNormalizedFoodKeysTx(DatabaseExecutor ex) async {
     WHERE brand_id IS NULL AND brand IS NOT NULL AND TRIM(brand) <> '';
   """);
 
-  // 2) Barcodes (only if foods.barcode exists)
-  if (await _tableHasColumn(ex, 'foods', 'barcode')) {
-    final rows = await ex.query(
-      'foods',
-      columns: ['id', 'barcode'],
-      where: "barcode IS NOT NULL AND TRIM(barcode) <> ''",
-    );
-    for (final r in rows) {
-      final raw = (r['barcode'] as String?) ?? '';
-final upc = raw.replaceAll(RegExp(r'\D'), '');
-if (upc.isEmpty) continue;
-// basic sanity: most UPC/EAN are 8–18 digits; adjust if your trigger differs
-if (upc.length < 8 || upc.length > 18) continue;
-try {
-  await ex.insert(
-    'food_barcodes',
-    {'food_id': r['id'], 'upc': upc},
-    conflictAlgorithm: ConflictAlgorithm.ignore,
+  // 2) Barcodes (only if foods.barcode exists AND food_barcodes table exists)
+if (await _tableHasColumn(ex, 'foods', 'barcode') &&
+    await _tableExists(ex, 'food_barcodes')) {
+  final rows = await ex.query(
+    'foods',
+    columns: ['id', 'barcode'],
+    where: "barcode IS NOT NULL AND TRIM(barcode) <> ''",
   );
-} catch (_) {
-  // Ignore rows rejected by stricter triggers/constraints
-}
+  for (final r in rows) {
+    final raw = (r['barcode'] as String?) ?? '';
+    final upc = raw.replaceAll(RegExp(r'\D'), '');
+    if (!_isValidEanUpc(upc)) continue;
+    try {
+      await ex.insert(
+        'food_barcodes',
+        {'food_id': r['id'], 'upc': upc},
+        conflictAlgorithm: ConflictAlgorithm.ignore,
+      );
+    } catch (_) {
+      // ignore — if some old trigger slips through, the reset on open will clean it up
     }
   }
+}
+
 
   // 3) Sources
   await ex.execute("""
@@ -366,19 +312,19 @@ Future<void> _backfillNormalizedFoodKeys(Database db) async {
 
 
 Future<void> _rebuildFoodFtsIfExists(Database db) async {
-  if (!await _hasFts4(db)) return;  // ← guard for FTS4/3 availability
+  if (!await _hasFts4(db)) return;
 
   final exists = (Sqflite.firstIntValue(await db.rawQuery(
     "SELECT COUNT(*) FROM sqlite_master "
     "WHERE name = 'food_search_fts' "
     "AND type IN ('table','view') "
-    "AND (lower(coalesce(sql,'')) LIKE '%using fts4%' "
-    "     OR lower(coalesce(sql,'')) LIKE '%using fts3%')"
+    "AND lower(coalesce(sql,'')) LIKE '%using fts4%'"
   )) ?? 0) > 0;
 
   if (!exists) return;
+
   try {
-    // Supported by FTS3/4
+    // Supported by FTS4
     await db.execute("INSERT INTO food_search_fts(food_search_fts) VALUES('rebuild')");
     await db.execute("INSERT INTO food_search_fts(food_search_fts) VALUES('optimize')");
   } catch (_) {/* ignore */}
@@ -386,144 +332,153 @@ Future<void> _rebuildFoodFtsIfExists(Database db) async {
 
 
 
+
 Future<void> _ensureIndexes(Database db) async {
-  // existing indexes…
- 
-  await db.execute(
-  'CREATE INDEX IF NOT EXISTS idx_foods_updated_at ON foods(updated_at)'
-);
-// General lookups
-  await db.execute(
-    'CREATE INDEX IF NOT EXISTS idx_foods_name ON foods(name COLLATE NOCASE)'
-  );
-  await db.execute(
-    'CREATE INDEX IF NOT EXISTS idx_brands_name ON brands(name COLLATE NOCASE)'
-  );
-  await db.execute(
-    'CREATE INDEX IF NOT EXISTS idx_sources_name ON sources(name COLLATE NOCASE)'
-  );
+  // ── Foods & lookups ───────────────────────────────────────────────────────
+  if (await _tableExists(db, 'foods')) {
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_foods_updated_at ON foods(updated_at)'
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_foods_name_nocase ON foods(name COLLATE NOCASE)'
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_foods_is_deleted ON foods(is_deleted)'
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_foods_brand_id ON foods(brand_id)'
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_foods_category_id ON foods(category_id)'
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_foods_source_id ON foods(source_id)'
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_foods_category_brand_name '
+      'ON foods(category_id, brand_id, name COLLATE NOCASE)'
+    );
 
-  await db.execute(
-    'CREATE INDEX IF NOT EXISTS idx_recipe_ingredients_recipe '
-    'ON recipe_ingredients(recipe_id)'
-  );
-  await db.execute(
-    'CREATE INDEX IF NOT EXISTS idx_food_portions_food '
-    'ON food_portions(food_id, is_default)'
-  );
-  await db.execute(
-    'CREATE INDEX IF NOT EXISTS idx_food_barcodes_upc '
-    'ON food_barcodes(upc)'
-  );
+    // Only if legacy column still exists in your schema
+    if (await _tableHasColumn(db, 'foods', 'default_portion_id')) {
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_foods_default_portion ON foods(default_portion_id)'
+      );
+    }
+  }
 
-  // For joins/reads using foods.default_portion_id
-// (Guard because many schemas no longer have this column)
-if (await _tableHasColumn(db, 'foods', 'default_portion_id')) {
-  await db.execute(
-    'CREATE INDEX IF NOT EXISTS idx_foods_default_portion ON foods(default_portion_id)'
-  );
+  if (await _tableExists(db, 'brands')) {
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_brands_name ON brands(name COLLATE NOCASE)'
+    );
+  }
+  if (await _tableExists(db, 'sources')) {
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_sources_name ON sources(name COLLATE NOCASE)'
+    );
+  }
+  if (await _tableExists(db, 'categories')) {
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_categories_name ON categories(name COLLATE NOCASE)'
+    );
+  }
+
+  // ── Portions & barcodes ───────────────────────────────────────────────────
+  if (await _tableExists(db, 'food_portions')) {
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_food_portions_food ON food_portions(food_id)'
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_food_portions_default ON food_portions(food_id, is_default)'
+    );
+  }
+  if (await _tableExists(db, 'food_barcodes')) {
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_food_barcodes_food ON food_barcodes(food_id)'
+    );
+  }
+
+  // ── Nutrients (flex + lookups) ────────────────────────────────────────────
+  if (await _tableExists(db, 'food_nutrient_values')) {
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_fnv_food_basis ON food_nutrient_values(food_id, basis)'
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_fnv_food_basis_nutrient '
+      'ON food_nutrient_values(food_id, basis, nutrient_id)'
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_fnv_food_basis_portion '
+      'ON food_nutrient_values(food_id, basis, portion_id)'
+    );
+  }
+  if (await _tableExists(db, 'nutrients')) {
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_nutrients_code ON nutrients(code)'
+    );
+  }
+
+  // ── Recipes ───────────────────────────────────────────────────────────────
+  if (await _tableExists(db, 'recipe_nutrients')) {
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_recipe_nutrients_recipe ON recipe_nutrients(recipe_id)'
+    );
+  }
+  if (await _tableExists(db, 'recipe_ingredients')) {
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_recipe_ingredients_recipe ON recipe_ingredients(recipe_id)'
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_recipe_ingredients_food ON recipe_ingredients(food_id)'
+    );
+  }
+
+  // ── Diary / favorites / usage / tags / day cache ─────────────────────────
+  if (await _tableExists(db, 'diary_entries')) {
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_diary_entries_profile_date '
+      'ON diary_entries(profile_id, date, is_deleted)'
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_diary_entries_profile_logged '
+      'ON diary_entries(profile_id, logged_at)'
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_diary_food_profile '
+      'ON diary_entries(profile_id, food_id, is_deleted, logged_at)'
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_diary_recipe_profile '
+      'ON diary_entries(profile_id, recipe_id, is_deleted, logged_at)'
+    );
+  }
+  if (await _tableExists(db, 'day_totals_cache')) {
+    await db.execute(
+      'CREATE UNIQUE INDEX IF NOT EXISTS idx_day_totals_profile_date '
+      'ON day_totals_cache(profile_id, date)'
+    );
+  }
+  if (await _tableExists(db, 'favorite_foods')) {
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_favorite_foods_profile ON favorite_foods(profile_id)'
+    );
+  }
+  if (await _tableExists(db, 'food_usage_stats')) {
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_food_usage_profile_last '
+      'ON food_usage_stats(profile_id, last_used)'
+    );
+  }
+  if (await _tableExists(db, 'diary_entry_tags')) {
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_diary_entry_tags_entry ON diary_entry_tags(entry_id)'
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_diary_entry_tags_tag ON diary_entry_tags(tag)'
+    );
+  }
 }
 
-
-  // For usage queries (hits/recents by profile & time)
- await db.execute(
-    'CREATE INDEX IF NOT EXISTS idx_food_usage_profile_last '
-    'ON food_usage_stats(profile_id, last_used)'
-  );
-
-  // 🔽 NEW — speed critical nutrition paths
-
-  // Recipe reads & cache maintenance
-  await db.execute(
-    'CREATE INDEX IF NOT EXISTS idx_recipe_nutrients_recipe '
-    'ON recipe_nutrients(recipe_id)'
-  );
-  await db.execute(
-    'CREATE INDEX IF NOT EXISTS idx_recipe_ingredients_food '
-    'ON recipe_ingredients(food_id)'
-  ); // used by NutritionDao._recipeIdsUsingFood
-
-  // Day totals: fast lookup & enforce uniqueness per profile/day
-  await db.execute(
-    'CREATE UNIQUE INDEX IF NOT EXISTS idx_day_totals_profile_date '
-    'ON day_totals_cache(profile_id, date)'
-  );
-
-  // Diary hot paths
-  await db.execute(
-    'CREATE INDEX IF NOT EXISTS idx_diary_entries_profile_date '
-    'ON diary_entries(profile_id, date, is_deleted)'
-  );
-  await db.execute(
-    'CREATE INDEX IF NOT EXISTS idx_diary_entries_profile_logged '
-    'ON diary_entries(profile_id, logged_at)'
-  );
-
-  // Common filters/joins in food search & recents
-  await db.execute(
-    'CREATE INDEX IF NOT EXISTS idx_foods_is_deleted '
-    'ON foods(is_deleted)'
-  );
-  await db.execute(
-    'CREATE INDEX IF NOT EXISTS idx_diary_food_profile '
-    'ON diary_entries(profile_id, food_id, is_deleted, logged_at)'
-  );
-  await db.execute(
-    'CREATE INDEX IF NOT EXISTS idx_diary_recipe_profile '
-    'ON diary_entries(profile_id, recipe_id, is_deleted, logged_at)'
-  );
-
-  // Flexible nutrient reads/writes & deletes
-  await db.execute(
-    'CREATE INDEX IF NOT EXISTS idx_fnv_food_basis '
-    'ON food_nutrient_values(food_id, basis)'
-  );
-  await db.execute(
-    'CREATE INDEX IF NOT EXISTS idx_fnv_food_basis_portion '
-    'ON food_nutrient_values(food_id, basis, portion_id)'
-  );
-
-  // Tags / favorites helpers
-  await db.execute(
-    'CREATE INDEX IF NOT EXISTS idx_diary_entry_tags_entry '
-    'ON diary_entry_tags(entry_id)'
-  );
-  await db.execute(
-    'CREATE INDEX IF NOT EXISTS idx_diary_entry_tags_tag '
-    'ON diary_entry_tags(tag)'
-  );
-  await db.execute(
-    'CREATE INDEX IF NOT EXISTS idx_favorite_foods_profile '
-    'ON favorite_foods(profile_id)'
-  );
-
-  // Nutrient lookups (label→code mapper & code joins)
-await db.execute(
-  'CREATE INDEX IF NOT EXISTS idx_nutrient_aliases_alias ON nutrient_aliases(alias COLLATE NOCASE)'
-);
-await db.execute(
-  'CREATE INDEX IF NOT EXISTS idx_nutrients_code ON nutrients(code)'
-);
-
-// Flexible table: speed WHERE food_id=? AND basis='per_100g' AND nutrient_id IN (...)
-await db.execute(
-  'CREATE INDEX IF NOT EXISTS idx_fnv_food_basis_nutrient '
-  'ON food_nutrient_values(food_id, basis, nutrient_id)'
-);
-
-// Foods: speed brand/source/category joins & filters
-await db.execute(
-  'CREATE INDEX IF NOT EXISTS idx_foods_brand_id ON foods(brand_id)'
-);
-await db.execute(
-  'CREATE INDEX IF NOT EXISTS idx_foods_category_id ON foods(category_id)'
-);
-await db.execute(
-  'CREATE INDEX IF NOT EXISTS idx_foods_source_id ON foods(source_id)'
-);
-
-
-}
 
 Future<bool> _seedFoodsIfEmpty(Database db) async {
   final n = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM foods')) ?? 0;
@@ -1380,13 +1335,17 @@ Future<void> importDatabase(String jsonStr, {bool clearFirst = true}) async {
       }
 
       // Insert rows for tables present in the JSON.
-      for (final table in data.keys) {
-        if (!await _tableExists(txn, table)) continue; // skip unknown
-        final rows = List<Map<String, dynamic>>.from(data[table] as List);
-        for (final row in rows) {
-          await txn.insert(table, row, conflictAlgorithm: ConflictAlgorithm.replace);
-        }
-      }
+      // Insert rows for tables present in the JSON.
+for (final table in data.keys) {
+  if (!await _tableExists(txn, table)) continue; // skip unknown
+  final rows = List<Map<String, dynamic>>.from(data[table] as List);
+  for (final row in rows) {
+    final sane = await _sanitizeRowForTable(txn, table, row);
+    if (sane.isNotEmpty) {
+      await txn.insert(table, sane, conflictAlgorithm: ConflictAlgorithm.replace);
+    }
+  }
+}
     } finally {
       await txn.execute('PRAGMA foreign_keys = ON;');
     }
@@ -3084,7 +3043,7 @@ Future<void> updateFoodFromCustomizationPayload(Map payload) async {
         'foods',
         {
           'density_g_per_ml': dens > 0 ? dens : null,
-          'updated_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toUtc().toIso8601String(),
         },
         where: 'id = ?',
         whereArgs: [foodId],
@@ -3166,10 +3125,9 @@ Future<Food?> getFoodByBarcode(String code) async =>
     NutritionDao(await database).getFoodByBarcode(code);
 
 Future<void> addBarcode(int foodId, String code) async {
-  final cleaned = code.replaceAll(RegExp(r'\D'), '');
-  if (cleaned.length < 8 || cleaned.length > 18) return; // skip invalids
-  await NutritionDao(await database).addBarcode(foodId, cleaned);
+  await NutritionDao(await database).addBarcode(foodId, code);
 }
+
 
 
 // Quick calculator for a portion selection
@@ -3339,9 +3297,13 @@ Future<void> close() async {
 
 
 Future<void> _bumpAutoincrement(Database db) async {
+  // sqlite_sequence only exists if at least one table was created with AUTOINCREMENT
+  if (!await _tableExists(db, 'sqlite_sequence')) return;
+
   final tables = await db.rawQuery(
     "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
   );
+
   for (final t in tables) {
     final name = t['name'] as String;
 
@@ -3349,19 +3311,19 @@ Future<void> _bumpAutoincrement(Database db) async {
     final cols = await db.rawQuery("PRAGMA table_info($name)");
     final hasIdPk = cols.any((c) =>
       (c['name'] as String).toLowerCase() == 'id' && (c['pk'] as int) == 1);
-
     if (!hasIdPk) continue;
 
     final maxId = Sqflite.firstIntValue(await db.rawQuery("SELECT MAX(id) FROM $name")) ?? 0;
 
     // Update or insert sqlite_sequence row
-    final exists = Sqflite.firstIntValue(await db.rawQuery(
-      "SELECT COUNT(*) FROM sqlite_sequence WHERE name = ?", [name])) ?? 0;
+    final exists = Sqflite.firstIntValue(
+      await db.rawQuery("SELECT COUNT(*) FROM sqlite_sequence WHERE name = ?", [name])
+    ) ?? 0;
 
     if (exists > 0) {
       await db.rawUpdate("UPDATE sqlite_sequence SET seq = ? WHERE name = ?", [maxId, name]);
     } else {
-      // Will only succeed for AUTOINCREMENT tables (others won’t have sqlite_sequence rows)
+      // Will succeed only for AUTOINCREMENT tables; ignore otherwise
       try {
         await db.rawInsert("INSERT INTO sqlite_sequence(name, seq) VALUES(?, ?)", [name, maxId]);
       } catch (_) {/* ignore */}
@@ -3369,37 +3331,94 @@ Future<void> _bumpAutoincrement(Database db) async {
   }
 }
 
+
 Future<bool> _hasFts4(DatabaseExecutor db) async {
   if (_fts4Available != null) return _fts4Available!;
 
-  // 1) cheap check via compile options: accept FTS4 or FTS3
+  // Hint via compile options
   try {
     final rows = await db.rawQuery('PRAGMA compile_options');
     for (final m in rows) {
       final v = (m.values.first ?? '').toString().toUpperCase();
-      if (v.contains('ENABLE_FTS4') || v.contains('ENABLE_FTS3')) {
+      if (v.contains('ENABLE_FTS4')) {
         _fts4Available = true;
         return true;
       }
     }
   } catch (_) {/* ignore */}
 
-  // 2) definitive probe: try fts4, then fts3
+  // Definitive probe: FTS4 only
   try {
     await db.execute("CREATE VIRTUAL TABLE temp.__fts4_probe__ USING fts4(x)");
     await db.execute("DROP TABLE IF EXISTS temp.__fts4_probe__");
     _fts4Available = true;
     return true;
   } catch (_) {
-    try {
-      await db.execute("CREATE VIRTUAL TABLE temp.__fts3_probe__ USING fts3(x)");
-      await db.execute("DROP TABLE IF EXISTS temp.__fts3_probe__");
-      _fts4Available = true; // FTS3 is fine for our uses
-      return true;
-    } catch (_) {
-      _fts4Available = false;
-      return false;
-    }
+    _fts4Available = false;
+    return false;
   }
 }
+
+
+bool _isValidEanUpc(String raw) {
+  final code = raw.replaceAll(RegExp(r'\D'), '');
+  const classic = {8, 12, 13, 14}; // EAN-8, UPC-A, EAN-13, ITF-14
+  if (!classic.contains(code.length)) return false;
+
+  final digits = code.split('').map(int.parse).toList(growable: false);
+  final check = digits.removeLast();
+  int sum = 0;
+  for (int i = digits.length - 1, pos = 0; i >= 0; i--, pos++) {
+    sum += digits[i] * ((pos % 2 == 0) ? 3 : 1);
+  }
+  final expected = (10 - (sum % 10)) % 10;
+  return check == expected;
 }
+
+
+// Coerce any bool → 0/1. Leave everything else alone.
+Object? _sqlBool(Object? v) {
+  if (v is bool) return v ? 1 : 0;
+  return v;
+}
+
+// Numeric-ish column?
+bool _isNumericType(String? t) {
+  if (t == null) return false;
+  final up = t.toUpperCase();
+  return up.contains('INT') || up.contains('REAL') || up.contains('NUM');
+}
+
+// Filter a row to existing columns for [table], coerce booleans → 0/1,
+// and turn empty strings into NULL for numeric columns.
+Future<Map<String, Object?>> _sanitizeRowForTable(
+  DatabaseExecutor ex,
+  String table,
+  Map row,
+) async {
+  final cols = await ex.rawQuery('PRAGMA table_info($table)');
+  final info = <String, Map<String, Object?>>{
+    for (final c in cols) (c['name'] as String): c,
+  };
+
+  final out = <String, Object?>{};
+  row.forEach((k, v) {
+    final key = k.toString();
+    final meta = info[key];
+    if (meta == null) return; // drop unknown columns (older schema)
+
+    var val = _sqlBool(v);
+
+    // If the column is numeric and value is an empty string → NULL
+    if (val is String && val.trim().isEmpty && _isNumericType(meta['type'] as String?)) {
+      val = null;
+    }
+    out[key] = val;
+  });
+  return out;
+}
+
+
+
+}
+

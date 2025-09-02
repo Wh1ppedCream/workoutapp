@@ -143,6 +143,10 @@ await migrateV38(db);
 await migrateV39(db);
 await migrateV40(db);
 await migrateV41(db);
+await migrateV42(db);
+await migrateV43(db);
+await migrateV44(db);
+await migrateV45(db);
   }
 
   /// Handler for onUpgrade callback.
@@ -187,6 +191,10 @@ if (oldVersion < 38) await migrateV38(db);
 if (oldVersion < 39) await migrateV39(db);
 if (oldVersion < 40) await migrateV40(db);
 if (oldVersion < 41) await migrateV41(db);
+if (oldVersion < 42) await migrateV42(db);
+if (oldVersion < 43) await migrateV43(db);
+if (oldVersion < 44) await migrateV44(db);
+if (oldVersion < 45) await migrateV45(db);
 
 
 
@@ -2016,23 +2024,24 @@ static Future<void> migrateV38(Database db) async {
       END;
     """);
 
-    // F) Barcode length sanity (8..18)
-    await trig('trg_barcodes_len_bi', """
-      CREATE TRIGGER IF NOT EXISTS trg_barcodes_len_bi
-      BEFORE INSERT ON food_barcodes
-      WHEN length(trim(NEW.upc)) < 8 OR length(trim(NEW.upc)) > 18
-      BEGIN
-        SELECT RAISE(ABORT, 'food_barcodes.upc length must be 8..18');
-      END;
-    """);
-    await trig('trg_barcodes_len_bu', """
-      CREATE TRIGGER IF NOT EXISTS trg_barcodes_len_bu
-      BEFORE UPDATE ON food_barcodes
-      WHEN length(trim(NEW.upc)) < 8 OR length(trim(NEW.upc)) > 18
-      BEGIN
-        SELECT RAISE(ABORT, 'food_barcodes.upc length must be 8..18');
-      END;
-    """);
+    // F) Barcode length sanity (8..18) — use IGNORE to avoid log spam on bad data
+await trig('trg_barcodes_len_bi', """
+  CREATE TRIGGER IF NOT EXISTS trg_barcodes_len_bi
+  BEFORE INSERT ON food_barcodes
+  WHEN length(trim(CAST(NEW.upc AS TEXT))) < 8 OR length(trim(CAST(NEW.upc AS TEXT))) > 18
+  BEGIN
+    SELECT RAISE(IGNORE);
+  END;
+""");
+await trig('trg_barcodes_len_bu', """
+  CREATE TRIGGER IF NOT EXISTS trg_barcodes_len_bu
+  BEFORE UPDATE ON food_barcodes
+  WHEN length(trim(CAST(NEW.upc AS TEXT))) < 8 OR length(trim(CAST(NEW.upc AS TEXT))) > 18
+  BEGIN
+    SELECT RAISE(IGNORE);
+  END;
+""");
+
 
     // G) Foods numeric guardrails
     await trig('trg_foods_quality_score_guard_bu', """
@@ -2281,7 +2290,242 @@ static Future<void> migrateV41(Database db) async {
 }
 
 
+/// v42 — Rebuild `food_barcodes` so `upc` is TEXT (preserve leading zeros),
+///       and recreate length triggers to operate on TEXT explicitly.
+static Future<void> migrateV42(Database db) async {
+  await db.transaction((txn) async {
+    // Detect current column type
+    String? upcType;
+    final info = await txn.rawQuery("PRAGMA table_info('food_barcodes');");
+    for (final r in info) {
+      if ((r['name'] as String?) == 'upc') {
+        upcType = (r['type'] as String?)?.toUpperCase();
+        break;
+      }
+    }
 
+    final needsRebuild = upcType == null || upcType != 'TEXT';
+    if (needsRebuild) {
+      // Build new table with TEXT upc + global uniqueness on upc
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS food_barcodes_new (
+          id      INTEGER PRIMARY KEY AUTOINCREMENT,
+          food_id INTEGER NOT NULL,
+          upc     TEXT    NOT NULL,
+          UNIQUE(upc),
+          FOREIGN KEY(food_id) REFERENCES foods(id) ON DELETE CASCADE
+        );
+      ''');
+
+      await txn.execute('CREATE INDEX IF NOT EXISTS idx_food_barcodes_food_new ON food_barcodes_new(food_id);');
+
+      // Copy valid rows, forcing TEXT and filtering bad lengths
+      await txn.execute('''
+        INSERT OR IGNORE INTO food_barcodes_new (id, food_id, upc)
+        SELECT id, food_id, trim(CAST(upc AS TEXT))
+        FROM food_barcodes
+        WHERE upc IS NOT NULL
+          AND length(trim(CAST(upc AS TEXT))) BETWEEN 8 AND 18;
+      ''');
+
+      await txn.execute('DROP TABLE IF EXISTS food_barcodes;');
+      await txn.execute('ALTER TABLE food_barcodes_new RENAME TO food_barcodes;');
+      await txn.execute('CREATE INDEX IF NOT EXISTS idx_food_barcodes_food ON food_barcodes(food_id);');
+      // no separate index on upc needed; UNIQUE(upc) creates an implicit index
+    }
+
+    // Make the barcode length triggers operate on TEXT explicitly and IGNORE bad rows
+await txn.execute('DROP TRIGGER IF EXISTS trg_barcodes_len_bi;');
+await txn.execute('DROP TRIGGER IF EXISTS trg_barcodes_len_bu;');
+
+await txn.execute("""
+  CREATE TRIGGER IF NOT EXISTS trg_barcodes_len_bi
+  BEFORE INSERT ON food_barcodes
+  WHEN length(trim(CAST(NEW.upc AS TEXT))) < 8 OR length(trim(CAST(NEW.upc AS TEXT))) > 18
+  BEGIN
+    SELECT RAISE(IGNORE);
+  END;
+""");
+await txn.execute("""
+  CREATE TRIGGER IF NOT EXISTS trg_barcodes_len_bu
+  BEFORE UPDATE ON food_barcodes
+  WHEN length(trim(CAST(NEW.upc AS TEXT))) < 8 OR length(trim(CAST(NEW.upc AS TEXT))) > 18
+  BEGIN
+    SELECT RAISE(IGNORE);
+  END;
+""");
+
+  });
+}
+
+// v43 — Nuke legacy barcode triggers (some old builds ABORTed) and recreate safe ones
+static Future<void> migrateV43(Database db) async {
+  await db.transaction((txn) async {
+    // Drop every trigger currently attached to food_barcodes
+    final trigs = await txn.rawQuery(
+      "SELECT name FROM sqlite_master WHERE type='trigger' AND tbl_name='food_barcodes';"
+    );
+    for (final t in trigs) {
+      final name = t['name'] as String;
+      await txn.execute("DROP TRIGGER IF EXISTS $name;");
+    }
+
+    // Guard: ignore invalid length (8..18) — never ABORT
+    await txn.execute("""
+      CREATE TRIGGER IF NOT EXISTS trg_barcodes_len_bi
+      BEFORE INSERT ON food_barcodes
+      WHEN length(trim(CAST(NEW.upc AS TEXT))) < 8 OR length(trim(CAST(NEW.upc AS TEXT))) > 18
+      BEGIN
+        SELECT RAISE(IGNORE);
+      END;
+    """);
+    await txn.execute("""
+      CREATE TRIGGER IF NOT EXISTS trg_barcodes_len_bu
+      BEFORE UPDATE ON food_barcodes
+      WHEN length(trim(CAST(NEW.upc AS TEXT))) < 8 OR length(trim(CAST(NEW.upc AS TEXT))) > 18
+      BEGIN
+        SELECT RAISE(IGNORE);
+      END;
+    """);
+
+    // Keep foods.updated_at in sync when barcodes change
+    await txn.execute("""
+      CREATE TRIGGER IF NOT EXISTS trg_touch_food_on_barcode_ins
+      AFTER INSERT ON food_barcodes
+      BEGIN
+        UPDATE foods SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = NEW.food_id;
+      END;
+    """);
+    await txn.execute("""
+      CREATE TRIGGER IF NOT EXISTS trg_touch_food_on_barcode_del
+      AFTER DELETE ON food_barcodes
+      BEGIN
+        UPDATE foods SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = OLD.food_id;
+      END;
+    """);
+  });
+}
+
+
+static Future<void> migrateV44(Database db) async {
+  await db.transaction((txn) async {
+    // 1) Remove redundant unique index (table already has UNIQUE constraint)
+    await txn.execute('DROP INDEX IF EXISTS idx_ex_def_name_equipment;');
+
+    // 2) Tighten diary tag constraint: 1..40 visible chars
+    await txn.execute('DROP TRIGGER IF EXISTS trg_det_tag_len_bi;');
+    await txn.execute('DROP TRIGGER IF EXISTS trg_det_tag_len_bu;');
+    await txn.execute("""
+      CREATE TRIGGER IF NOT EXISTS trg_det_tag_len_bi
+      BEFORE INSERT ON diary_entry_tags
+      WHEN NEW.tag IS NULL OR length(trim(NEW.tag)) = 0 OR length(trim(NEW.tag)) > 40
+      BEGIN
+        SELECT RAISE(ABORT, 'diary_entry_tags.tag must be 1..40 chars');
+      END;
+    """);
+    await txn.execute("""
+      CREATE TRIGGER IF NOT EXISTS trg_det_tag_len_bu
+      BEFORE UPDATE ON diary_entry_tags
+      WHEN NEW.tag IS NULL OR length(trim(NEW.tag)) = 0 OR length(trim(NEW.tag)) > 40
+      BEGIN
+        SELECT RAISE(ABORT, 'diary_entry_tags.tag must be 1..40 chars');
+      END;
+    """);
+
+    // 3) Optional: if you're deprecating foods.barcode, drop its index
+    await txn.execute('DROP INDEX IF EXISTS idx_foods_barcode;');
+
+    // 4) Optional: helper index for parent_set lookups
+    await txn.execute('CREATE INDEX IF NOT EXISTS idx_sets_parent ON sets(parent_set_id);');
+  });
+}
+
+
+/// v45 — Purge legacy ABORT triggers on barcodes/portions; ensure only safe triggers exist.
+/// Also add safe single-default triggers for portions (no ABORTs).
+static Future<void> migrateV45(Database db) async {
+  await db.transaction((txn) async {
+    // Drop any triggers on these tables that still call RAISE(ABORT|FAIL|ROLLBACK)
+    Future<void> purgeAborty(String table) async {
+      final rows = await txn.rawQuery("""
+        SELECT name, sql FROM sqlite_master
+        WHERE type='trigger' AND tbl_name=?
+      """, [table]);
+      for (final r in rows) {
+        final name = (r['name'] ?? '') as String;
+        final sql  = ((r['sql'] ?? '') as String).toUpperCase();
+        if (sql.contains('RAISE(ABORT') || sql.contains('RAISE(FAIL') || sql.contains('RAISE(ROLLBACK')) {
+          await txn.execute('DROP TRIGGER IF EXISTS "$name";');
+        }
+      }
+    }
+
+    await purgeAborty('food_barcodes');
+    await purgeAborty('food_portions');
+
+    // Recreate ONLY safe barcode length guards (IGNORE bad lengths).
+    await txn.execute('DROP TRIGGER IF EXISTS trg_barcodes_len_bi;');
+    await txn.execute('DROP TRIGGER IF EXISTS trg_barcodes_len_bu;');
+    await txn.execute("""
+      CREATE TRIGGER IF NOT EXISTS trg_barcodes_len_bi
+      BEFORE INSERT ON food_barcodes
+      WHEN length(trim(CAST(NEW.upc AS TEXT))) < 8 OR length(trim(CAST(NEW.upc AS TEXT))) > 18
+      BEGIN
+        SELECT RAISE(IGNORE);
+      END;
+    """);
+    await txn.execute("""
+      CREATE TRIGGER IF NOT EXISTS trg_barcodes_len_bu
+      BEFORE UPDATE ON food_barcodes
+      WHEN length(trim(CAST(NEW.upc AS TEXT))) < 8 OR length(trim(CAST(NEW.upc AS TEXT))) > 18
+      BEGIN
+        SELECT RAISE(IGNORE);
+      END;
+    """);
+
+    // Keep your "touch foods.updated_at" triggers (recreate to be safe)
+    await txn.execute('DROP TRIGGER IF EXISTS trg_touch_food_on_barcode_ins;');
+    await txn.execute("""
+      CREATE TRIGGER IF NOT EXISTS trg_touch_food_on_barcode_ins
+      AFTER INSERT ON food_barcodes
+      BEGIN
+        UPDATE foods SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = NEW.food_id;
+      END;
+    """);
+    await txn.execute('DROP TRIGGER IF EXISTS trg_touch_food_on_barcode_del;');
+    await txn.execute("""
+      CREATE TRIGGER IF NOT EXISTS trg_touch_food_on_barcode_del
+      AFTER DELETE ON food_barcodes
+      BEGIN
+        UPDATE foods SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = OLD.food_id;
+      END;
+    """);
+
+    // SAFE single-default triggers for portions (no ABORT; cooperate with your partial UNIQUE)
+    await txn.execute('DROP TRIGGER IF EXISTS food_portions_single_default_ai;');
+    await txn.execute("""
+      CREATE TRIGGER IF NOT EXISTS food_portions_single_default_ai
+      AFTER INSERT ON food_portions
+      WHEN NEW.is_default = 1
+      BEGIN
+        UPDATE food_portions
+        SET is_default = 0
+        WHERE food_id = NEW.food_id AND id != NEW.id AND is_default = 1;
+      END;
+    """);
+    await txn.execute('DROP TRIGGER IF EXISTS food_portions_single_default_au;');
+    await txn.execute("""
+      CREATE TRIGGER IF NOT EXISTS food_portions_single_default_au
+      AFTER UPDATE OF is_default ON food_portions
+      WHEN NEW.is_default = 1
+      BEGIN
+        UPDATE food_portions
+        SET is_default = 0
+        WHERE food_id = NEW.food_id AND id != NEW.id AND is_default = 1;
+      END;
+    """);
+  });
+}
 
 
 

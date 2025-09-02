@@ -106,6 +106,88 @@ class NutritionDao {
   // SEEDING
   // ───────────────────────────────────────────────────────────────────────────
 
+// Bool → 0/1 (or NULL) and "only write columns that exist" for the current DB.
+int? _b(dynamic v) {
+  if (v == null) return null;
+  if (v is bool) return v ? 1 : 0;
+  if (v is num) return v != 0 ? 1 : 0;
+  if (v is String) return (v.toLowerCase() == 'true') ? 1 : 0;
+  return null;
+}
+
+Future<Map<String, Object?>> _sanitizeFoodWriteTx(
+  DatabaseExecutor ex,
+  Map<String, Object?> inRow,
+) async {
+  final row = Map<String, Object?>.from(inRow);
+
+  // 1) Coerce booleans expected by schema
+  for (final k in const ['is_custom', 'is_deleted', 'verified']) {
+    if (row.containsKey(k)) row[k] = _b(row[k]);
+  }
+
+  // 2) Normalize empty strings → NULL (avoids odd UNIQUE/NOT NULL checks)
+  for (final k in const ['brand', 'data_source', 'preparation']) {
+    final v = row[k];
+    if (v is String && v.trim().isEmpty) row[k] = null;
+  }
+
+  // 3) Drop keys that aren’t real columns on this device’s schema
+  final cols = await ex.rawQuery('PRAGMA table_info(foods)');
+  final have = <String>{for (final r in cols) (r['name'] as String).toLowerCase()};
+  row.removeWhere((k, _) => !have.contains(k.toLowerCase()));
+
+  return row;
+}
+
+
+
+Future<bool> _foodExists(int foodId) async {
+    final r = await db.rawQuery('SELECT 1 FROM foods WHERE id = ? LIMIT 1;', [foodId]);
+    return r.isNotEmpty;
+  }
+
+
+bool _isValidEanUpc(String raw) {
+  final code = raw.replaceAll(RegExp(r'\D'), '');
+  const classic = {8, 12, 13, 14}; // EAN-8, UPC-A, EAN-13, ITF-14
+  if (!classic.contains(code.length)) return false;
+
+  final digits = code.split('').map(int.parse).toList(growable: false);
+  final check = digits.removeLast();
+  int sum = 0;
+  for (int i = digits.length - 1, pos = 0; i >= 0; i--, pos++) {
+    sum += digits[i] * ((pos % 2 == 0) ? 3 : 1);
+  }
+  final expected = (10 - (sum % 10)) % 10;
+  return check == expected;
+}
+
+
+  // Add near the top (private helper)
+Future<void> _insertBarcodeSafe(DatabaseExecutor ex, int foodId, String raw) async {
+  final upc = raw.replaceAll(RegExp(r'\D'), '');
+  if (!_isValidEanUpc(upc)) return;            // <- check digit
+
+  try {
+    await ex.insert(
+      'food_barcodes',
+      {'food_id': foodId, 'upc': upc},
+      conflictAlgorithm: ConflictAlgorithm.ignore,
+    );
+  } on DatabaseException catch (e) {
+    final msg = e.toString();
+    final benign =
+        msg.contains('UNIQUE') ||
+        msg.contains('constraint failed') ||
+        msg.contains('trigger') ||
+        msg.contains('RAISE(');
+    if (!benign) rethrow;
+  }
+}
+
+
+
   Future<void> seedNutrientsIfEmpty() async {
     final count = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM nutrients')) ?? 0;
     if (count > 0) return;
@@ -237,48 +319,65 @@ try {
     return rows.map(Food.fromMap).toList();
   }
 
-  Future<int> upsertFoodPortion(FoodPortion p) async {
-    final id = await db.transaction<int>((txn) async {
-      final map = Map<String, Object?>.from(p.toMap());
-      // ensure int for SQLite
-      if (map.containsKey('is_default') && map['is_default'] is bool) {
-        map['is_default'] = (map['is_default'] as bool) ? 1 : 0;
-      }
-      // If this row should be the default, clear any existing defaults FIRST.
-      if (p.isDefault) {
-        if (p.id == null) {
-          await txn.update('food_portions', {'is_default': 0},
-              where: 'food_id = ?', whereArgs: [p.foodId]);
-        } else {
-          await txn.update('food_portions', {'is_default': 0},
-              where: 'food_id = ? AND id <> ?', whereArgs: [p.foodId, p.id]);
-        }
-      }
-      int outId;
-      if (p.id == null) {
-        outId = await txn.insert('food_portions', map);
-      } else {
-        await txn.update('food_portions', map, where: 'id = ?', whereArgs: [p.id]);
-        outId = p.id!;
-      }
-      return outId;
-    });
-
-    // Keep foods.default_portion_id in sync when this portion is default.
-    if (p.isDefault) {
-      try {
-        await db.update(
-          'foods',
-          {'default_portion_id': id},
-          where: 'id = ?',
-          whereArgs: [p.foodId],
-        );
-      } catch (_) {/* column may not exist on older DBs */}
+Future<int> upsertFoodPortion(FoodPortion p) async {
+  final id = await db.transaction<int>((txn) async {
+    // sanitize converters (0 → NULL)
+    final gw = (p.gramWeight != null && p.gramWeight! > 0) ? p.gramWeight : null;
+    final mv = (p.mlVolume   != null && p.mlVolume!   > 0) ? p.mlVolume   : null;
+    if (gw == null && mv == null) {
+      throw StateError('Portion requires gram_weight > 0 OR ml_volume > 0');
     }
 
-    await _refreshRecipeCachesForFood(p.foodId);
-    return id;
-  }
+    // If this one should be default, clear others for this food in-tx
+    if (p.isDefault) {
+      if (p.id == null) {
+        await txn.update('food_portions', {'is_default': 0},
+            where: 'food_id = ?', whereArgs: [p.foodId]);
+      } else {
+        await txn.update('food_portions', {'is_default': 0},
+            where: 'food_id = ? AND id <> ?', whereArgs: [p.foodId, p.id]);
+      }
+    }
+
+    // Build full row (may include columns not present on older DBs)
+    final raw = {
+      'food_id': p.foodId,
+      'measure_name': (p.measureName.trim().isNotEmpty) ? p.measureName.trim() : 'Portion',
+      'gram_weight': gw,
+      'ml_volume': mv,
+      'is_default': p.isDefault ? 1 : 0,
+      'list_kind': p.listKind,
+      'sort_order': p.sortOrder,
+      'amount': p.amount,
+      'unit': p.unit,
+      'label': p.label,
+    };
+
+    // 🔧 prune to actual table columns to avoid “no such column …”
+    final row = await _pruneToTable('food_portions', raw);
+
+    int outId;
+    if (p.id == null) {
+      outId = await txn.insert('food_portions', row);
+    } else {
+      await txn.update('food_portions', row, where: 'id = ?', whereArgs: [p.id]);
+      outId = p.id!;
+    }
+
+    // Optional: also set foods.default_portion_id if present
+    if (p.isDefault) {
+      try {
+        await txn.update('foods', {'default_portion_id': outId},
+            where: 'id = ?', whereArgs: [p.foodId]);
+      } catch (_) {/* older schema may not have the column */}
+    }
+    return outId;
+  });
+
+  await _refreshRecipeCachesForFood(p.foodId);
+  return id;
+}
+
 
   Future<List<FoodPortion>> getPortionsForFood(int foodId) async {
     final rows = await db.query(
@@ -1260,101 +1359,130 @@ Future<Map<String, double>> mapLabelsToCodes(
     await _refreshRecipeCachesForFood(foodId);
   }
 
-  Future<int> addPortion(
-    int foodId, {
-    required String measureName,
-    double? gramWeight,
-    double? mlVolume,
-    bool isDefault = false,
+Future<int> addPortion(
+  int foodId, {
+  required String measureName,
+  double? gramWeight,
+  double? mlVolume,
+  bool isDefault = false,
+  String? listKind,
+  int? sortOrder,
+  double? amount,
+  String? unit,
+  String? label,
+}) async {
+  return await db.transaction((txn) async {
+    if (isDefault) {
+      await txn.update('food_portions', {'is_default': 0},
+          where: 'food_id = ?', whereArgs: [foodId]);
+    }
 
-    // v23 fields:
-    String? listKind,
-    int? sortOrder,
-    double? amount,
-    String? unit,
-    String? label,
-  }) async {
-    return await db.transaction((txn) async {
-      if (isDefault) {
-        // ensure only one default per food
+    final rawRow = _buildPortionRow(
+      foodId: foodId,
+      measureName: measureName,
+      gramWeight: gramWeight,
+      mlVolume: mlVolume,
+      isDefault: isDefault,
+      listKind: listKind,
+      sortOrder: sortOrder,
+      amount: amount,
+      unit: unit,
+      label: label,
+    );
+
+    final row = await _pruneToTable('food_portions', rawRow); // ← prune here
+    final newId = await txn.insert('food_portions', row);
+
+    if (isDefault) {
+      try {
+        await txn.update('foods', {'default_portion_id': newId},
+            where: 'id = ?', whereArgs: [foodId]);
+      } catch (_) {/* older schema */}
+    }
+    return newId;
+  });
+}
+
+
+
+Future<void> replacePortions(int foodId, List<FoodPortion> portions) async {
+  await db.transaction((txn) async {
+    // Clear existing portions for this food.
+    await txn.delete('food_portions', where: 'food_id = ?', whereArgs: [foodId]);
+
+    // Discover which columns exist on this device's DB.
+    final cols = await txn.rawQuery('PRAGMA table_info(food_portions)');
+    final haveCols = {
+      for (final r in cols) (r['name'] as String),
+    };
+    Map<String, Object?> prune(Map<String, Object?> raw) {
+      final out = <String, Object?>{};
+      raw.forEach((k, v) {
+        if (haveCols.contains(k)) out[k] = v;
+      });
+      return out;
+    }
+
+    final anyDefault = portions.any((p) => p.isDefault);
+    bool assignedDefault = false;
+    int order = 0;
+    int? defaultId;
+
+    for (final p in portions) {
+      final gw = (p.gramWeight != null && p.gramWeight! > 0) ? p.gramWeight : null;
+      final mv = (p.mlVolume   != null && p.mlVolume!   > 0) ? p.mlVolume   : null;
+      if (gw == null && mv == null) continue; // skip invalid portion; don't advance order
+
+      final isDef = anyDefault ? p.isDefault : !assignedDefault;
+
+      final measureName = (p.measureName.trim().isNotEmpty)
+          ? p.measureName.trim()
+          : _composeMeasureName(p);
+
+      // Build full row with new columns…
+      final raw = <String, Object?>{
+        'food_id'     : foodId,
+        'measure_name': measureName,
+        'gram_weight' : gw,
+        'ml_volume'   : mv,
+        'is_default'  : isDef ? 1 : 0,
+        // v23+ (will be pruned on older schemas):
+        'list_kind'   : p.listKind,
+        'sort_order'  : p.sortOrder ?? order,
+        'amount'      : p.amount,
+        'unit'        : p.unit,
+        'label'       : p.label,
+      };
+
+      // …but insert only the columns the table actually has.
+      final row = prune(raw);
+      final newId = await txn.insert('food_portions', row);
+
+      if (isDef) {
+        defaultId = newId;
+        assignedDefault = true;
+      }
+      order++; // advance order only when we inserted a row
+    }
+
+    if (defaultId != null) {
+      try {
         await txn.update(
-          'food_portions',
-          {'is_default': 0},
-          where: 'food_id = ?',
+          'foods',
+          {'default_portion_id': defaultId},
+          where: 'id = ?',
           whereArgs: [foodId],
         );
+      } catch (_) {
+        // older schema without foods.default_portion_id — safe to ignore
       }
-      final newId = await txn.insert('food_portions', {
-        'food_id': foodId,
-        'measure_name': measureName,
-        'gram_weight': gramWeight,
-        'ml_volume': mlVolume,
-        'is_default': isDefault ? 1 : 0,
-        'list_kind': listKind,
-        'sort_order': sortOrder,
-        'amount': amount,
-        'unit': unit,
-        'label': label,
-      });
+    }
+  });
 
-      if (isDefault) {
-        try {
-          await txn.update('foods', {'default_portion_id': newId},
-              where: 'id = ?', whereArgs: [foodId]);
-        } catch (_) {/* older schemas may not have the column */}
-      }
+  // Keep any dependent recipe caches in sync with new portions.
+  await _refreshRecipeCachesForFood(foodId);
+}
 
-      return newId;
-    });
-  }
-
-  Future<void> replacePortions(int foodId, List<FoodPortion> portions) async {
-    await db.transaction((txn) async {
-      // wipe existing
-      await txn.delete('food_portions', where: 'food_id = ?', whereArgs: [foodId]);
-
-      // ensure at least one default
-      final hasDefault = portions.any((p) => p.isDefault);
-      var i = 0;
-      int? defaultId;
-
-      for (final p in portions) {
-        final isDef = hasDefault ? p.isDefault : (i == 0);
-
-        // Compose a good display name if none provided
-        final measureName =
-            (p.measureName.trim().isNotEmpty) ? p.measureName.trim() : _composeMeasureName(p);
-
-        final newId = await txn.insert('food_portions', {
-          'food_id': foodId,
-          'measure_name': measureName,
-          'gram_weight': p.gramWeight,
-          'ml_volume': p.mlVolume,
-          'is_default': isDef ? 1 : 0,
-
-          // v23 extras (OK if NULL when you don’t care)
-          'list_kind': p.listKind, // 'basis' | 'usual' | null
-          'sort_order': p.sortOrder ?? i,
-          'amount': p.amount,
-          'unit': p.unit,
-          'label': p.label,
-        });
-
-        if (isDef) defaultId = newId;
-        i++;
-      }
-
-      if (defaultId != null) {
-        try {
-          await txn.update('foods', {'default_portion_id': defaultId},
-              where: 'id = ?', whereArgs: [foodId]);
-        } catch (_) {/* older schemas may not have the column */}
-      }
-    });
-
-    // Portion gram weights may affect recipe per-100g derivations.
-    await _refreshRecipeCachesForFood(foodId);
-  }
 
   // Helpers (keep private in the DAO file)
   String _composeMeasureName(FoodPortion p) {
@@ -1377,17 +1505,22 @@ Future<Map<String, double>> mapLabelsToCodes(
   }
 
   Future<void> updateFoodBasics(int id, {String? name, String? brand}) async {
-    await db.transaction((txn) async {
-      final brandTrim = brand?.trim();
-      final brandId = await _ensureBrandTx(txn, brandTrim);
-      await txn.update('foods', {
-        if (name != null) 'name': name.trim(),
-        'brand': (brandTrim?.isEmpty ?? true) ? null : brandTrim,
-        'brand_id': brandId,
-        'updated_at': DateTime.now().toIso8601String(),
-      }, where: 'id = ?', whereArgs: [id]);
-    });
-  }
+  await db.transaction((txn) async {
+    final brandTrim = brand?.trim();
+    final brandId = await _ensureBrandTx(txn, brandTrim);
+
+    final raw = <String, Object?>{
+      if (name != null) 'name': name.trim(),
+      'brand': (brandTrim?.isEmpty ?? true) ? null : brandTrim,
+      'brand_id': brandId,
+      'updated_at': DateTime.now().toIso8601String(),
+    };
+
+    final row = await _sanitizeFoodWriteTx(txn, raw);
+    await txn.update('foods', row, where: 'id = ?', whereArgs: [id]);
+  });
+}
+
 
   Future<int?> _ensureBrandTx(DatabaseExecutor ex, String? name) async {
     if (name == null || name.trim().isEmpty) return null;
@@ -1414,70 +1547,66 @@ Future<Map<String, double>> mapLabelsToCodes(
   }
 
   Future<int> upsertFoodWithKeys({
-    int? id,
-    required String name,
-    String? brandName,
-    String? sourceName,
-    String? categoryName,
-    List<String> barcodes = const [],
-    double? densityGPerMl,
-    bool isCustom = false,
-    String? dataSource, // e.g. 'seed','fdc','user'
-    String? dataSourceId, // external id
-  }) async {
-    final foodId = await db.transaction<int>((txn) async {
-      final brandId = await _ensureBrandTx(txn, brandName);
-      final sourceId = await _ensureSourceTx(txn, sourceName ?? dataSource);
-      final categoryId = await _ensureCategoryTx(txn, categoryName);
+  int? id,
+  required String name,
+  String? brandName,
+  String? sourceName,
+  String? categoryName,
+  List<String> barcodes = const [],
+  double? densityGPerMl,
+  bool isCustom = false,
+  String? dataSource,      // e.g. 'seed','fdc','user'
+  String? dataSourceId,    // external id
+  bool? verified,          // ← NEW (coerced to 0/1/NULL)
+  int? version,            // ← NEW (optional)
+  int? qualityScore,       // ← NEW (optional)
+  String? preparation,     // ← NEW (optional)
+}) async {
+  final foodId = await db.transaction<int>((txn) async {
+    final brandId    = await _ensureBrandTx(txn, brandName);
+    final sourceId   = await _ensureSourceTx(txn, sourceName ?? dataSource);
+    final categoryId = await _ensureCategoryTx(txn, categoryName);
 
-      final row = <String, Object?>{
-        'name': name.trim(),
-        'brand': (brandName?.trim().isEmpty ?? true) ? null : brandName!.trim(),
-        'brand_id': brandId,
-        'category_id': categoryId,
-        'is_custom': isCustom ? 1 : 0,
-        'data_source': dataSource,
-        'data_source_id': dataSourceId,
-        'source_id': sourceId,
-        'density_g_per_ml':
-            (densityGPerMl != null && densityGPerMl > 0) ? densityGPerMl : null,
-        'is_deleted': 0,
-        'updated_at': DateTime.now().toIso8601String(),
-      };
+    final raw = <String, Object?>{
+      'name': name.trim(),
+      'brand': (brandName?.trim().isEmpty ?? true) ? null : brandName!.trim(),
+      'brand_id': brandId,
+      'category_id': categoryId,
+      'is_custom': isCustom,                 // coerced later
+      'verified': verified,                  // coerced later
+      'data_source': dataSource,
+      'data_source_id': dataSourceId,
+      'source_id': sourceId,
+      'density_g_per_ml': (densityGPerMl != null && densityGPerMl > 0) ? densityGPerMl : null,
+      'quality_score': qualityScore,
+      'version': version,
+      'preparation': preparation,
+      'is_deleted': 0,                       // coerced later
+      'updated_at': DateTime.now().toIso8601String(),
+    };
 
-      int outId;
-      if (id == null) {
-        row['created_at'] = DateTime.now().toIso8601String();
-        outId = await txn.insert('foods', row);
-      } else {
-        await txn.update('foods', row, where: 'id = ?', whereArgs: [id]);
-        outId = id;
-      }
+    final row = await _sanitizeFoodWriteTx(txn, raw);
 
-      for (final raw in barcodes) {
-        final upc = raw.replaceAll(RegExp(r'\D'), '');
-if (upc.isEmpty) continue;
-// basic sanity: accept common UPC/EAN lengths (tweak if your CHECK differs)
-if (upc.length < 8 || upc.length > 18) continue;
-try {
-  await txn.insert(
-    'food_barcodes',
-    {'food_id': outId, 'upc': upc},
-    conflictAlgorithm: ConflictAlgorithm.ignore,
-  );
-} catch (_) {
-  // Ignore rows rejected by stricter constraints/triggers
+    int outId;
+    if (id == null) {
+      row['created_at'] = DateTime.now().toIso8601String();
+      outId = await txn.insert('foods', row);
+    } else {
+      await txn.update('foods', row, where: 'id = ?', whereArgs: [id]);
+      outId = id;
+    }
+
+    for (final raw in barcodes) {
+      await _insertBarcodeSafe(txn, outId, raw);
+    }
+    return outId;
+  });
+
+  await _refreshRecipeCachesForFood(foodId);
+  return foodId;
 }
-      }
 
-      return outId;
-    });
 
-    // Density/category/source/brand changes don't always affect cache,
-    // but density can change per-portion gram resolution in recipes.
-    await _refreshRecipeCachesForFood(foodId);
-    return foodId;
-  }
 
   Future<Food?> getFoodByBarcode(String code) async {
     final upc = code.replaceAll(RegExp(r'\D'), '');
@@ -1494,31 +1623,22 @@ try {
   }
 
   Future<void> addBarcode(int foodId, String code) async {
-    final upc = code.replaceAll(RegExp(r'\D'), '');
-if (upc.isEmpty) return;
-if (upc.length < 8 || upc.length > 18) return;
-try {
-  await db.insert(
-    'food_barcodes',
-    {'food_id': foodId, 'upc': upc},
-    conflictAlgorithm: ConflictAlgorithm.ignore,
-  );
-} catch (_) {/* ignore */}
-  }
+  await _insertBarcodeSafe(db, foodId, code);
+}
+
 
   Future<void> setFoodDefaultPortion(int foodId, int portionId) async {
-    await db.transaction((txn) async {
-      await txn.update('food_portions', {'is_default': 0},
-          where: 'food_id = ?', whereArgs: [foodId]);
-      await txn.update('food_portions', {'is_default': 1},
-          where: 'id = ?', whereArgs: [portionId]);
-      // Keep a pointer on foods for fast reads
-      try {
-        await txn.update('foods', {'default_portion_id': portionId},
-            where: 'id = ?', whereArgs: [foodId]);
-      } catch (_) {/* column may not exist on older DBs */}
-    });
-  }
+  await db.transaction((txn) async {
+    await txn.update('food_portions', {'is_default': 0},
+        where: 'food_id = ?', whereArgs: [foodId]);
+    await txn.update('food_portions', {'is_default': 1},
+        where: 'id = ?', whereArgs: [portionId]);
+    try {
+      await txn.update('foods', {'default_portion_id': portionId},
+          where: 'id = ?', whereArgs: [foodId]);
+    } catch (_) {/* column may not exist on older DBs */}
+  });
+}
 
   /// Returns a small map of macro totals for a given food/portion/quantity.
   /// Keys: kcal, protein_g, fat_g, carbs_g, fiber_g, sugar_g, sat_fat_g, sodium_mg
@@ -1964,6 +2084,55 @@ Future<bool> _hasColumn(String table, String col) async {
   return rows.any((r) => (r['name'] as String).toLowerCase() == col.toLowerCase());
 }
 
+
+Map<String, Object?> _buildPortionRow({
+  required int foodId,
+  required String measureName,
+  double? gramWeight,
+  double? mlVolume,
+  required bool isDefault,
+  String? listKind,
+  int? sortOrder,
+  double? amount,
+  String? unit,
+  String? label,
+}) {
+  final gw = (gramWeight != null && gramWeight > 0) ? gramWeight : null;
+  final mv = (mlVolume   != null && mlVolume   > 0) ? mlVolume   : null;
+
+  if (gw == null && mv == null) {
+    throw StateError('Portion requires gram_weight > 0 OR ml_volume > 0');
+  }
+
+  return {
+    'food_id': foodId,
+    'measure_name': measureName.trim().isEmpty ? 'Portion' : measureName.trim(),
+    'gram_weight': gw,      // keep NULL, not 0
+    'ml_volume': mv,        // keep NULL, not 0
+    'is_default': isDefault ? 1 : 0,
+    'list_kind': listKind,
+    'sort_order': sortOrder,
+    'amount': amount,
+    'unit': unit,
+    'label': label,
+  };
+}
+
+
+Future<Map<String, Object?>> _pruneToTable(
+  String table,
+  Map<String, Object?> row,
+) async {
+  final cols = await db.rawQuery('PRAGMA table_info($table)');
+  final have = {
+    for (final r in cols) (r['name'] as String),
+  };
+  final out = <String, Object?>{};
+  row.forEach((k, v) {
+    if (have.contains(k)) out[k] = v;
+  });
+  return out;
+}
 
 
 }

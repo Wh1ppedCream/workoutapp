@@ -547,6 +547,8 @@ class Seed {
 }) async {
   if (assetPath.endsWith('.jsonl.gz')) {
     return seedFoodsFromJsonlGzip(db, assetPath: assetPath);
+  } else if (assetPath.endsWith('.jsonl')) {
+    return seedFoodsFromJsonl(db, assetPath: assetPath);
   }
   // Fallback to legacy array JSON (your current implementation):
   final jsonStr = await rootBundle.loadString(assetPath); // e.g., assets/foods.json
@@ -714,33 +716,45 @@ class Seed {
   // ————— Helpers for foods seeding —————
 
   static Future<int?> _ensureBrand(DatabaseExecutor txn, String? name, {String? manufacturer}) async {
-    final brand = _trimOrNull(name);
-    if (brand == null) return null;
+  final brand = _trimOrNull(name);
+  if (brand == null) return null;
 
+  // try insert with manufacturer; fall back if column doesn't exist
+  try {
     await txn.insert(
       'brands',
       {'name': brand, 'manufacturer': _trimOrNull(manufacturer)},
       conflictAlgorithm: ConflictAlgorithm.ignore,
     );
-
-    // Case-insensitive fetch to align with NOCASE unique
-    final row = await txn.query(
+  } catch (_) {
+    await txn.insert(
       'brands',
-      where: 'lower(name) = lower(?)',
-      whereArgs: [brand],
-      limit: 1,
+      {'name': brand},
+      conflictAlgorithm: ConflictAlgorithm.ignore,
     );
-    if (row.isEmpty) return null;
-    final id = row.first['id'] as int;
-
-    // If manufacturer was missing, fill it when we learn it later
-    final currentManu = row.first['manufacturer'] as String?;
-    if ((currentManu == null || currentManu.trim().isEmpty) &&
-        (manufacturer != null && manufacturer.trim().isNotEmpty)) {
-      await txn.update('brands', {'manufacturer': manufacturer.trim()}, where: 'id = ?', whereArgs: [id]);
-    }
-    return id;
   }
+
+  final row = await txn.query(
+    'brands',
+    where: 'lower(name) = lower(?)',
+    whereArgs: [brand],
+    limit: 1,
+  );
+  if (row.isEmpty) return null;
+  final id = row.first['id'] as int;
+
+  // best-effort backfill if the column exists
+  if (manufacturer != null && manufacturer.trim().isNotEmpty) {
+    try {
+      final currentManu = row.first['manufacturer'] as String?;
+      if (currentManu == null || currentManu.trim().isEmpty) {
+        await txn.update('brands', {'manufacturer': manufacturer.trim()}, where: 'id = ?', whereArgs: [id]);
+      }
+    } catch (_) {/* no manufacturer column on this schema */}
+  }
+  return id;
+}
+
 
   /// Accepts a path like ["Beverages","Coffee","Instant"] and returns the leaf category_id.
   /// Creates intermediate nodes if needed. Case-insensitive & idempotent.
@@ -810,17 +824,33 @@ class Seed {
   }
 
   /// Insert/ignore a barcode → food mapping (normalize to digits; check length).
-  static Future<void> _attachBarcode(DatabaseExecutor txn, int foodId, String? barcode) async {
-    if (barcode == null) return;
-    final digits = barcode.replaceAll(RegExp(r'\D'), '');
-    if (digits.isEmpty) return;
-    if (digits.length < 8 || digits.length > 18) return; // keep in sync with schema guards
+  // Replace your current _attachBarcode with this hardened version.
+static Future<void> _attachBarcode(DatabaseExecutor txn, int foodId, String? barcode) async {
+  if (barcode == null) return;
+
+  // Normalize strictly to digits and enforce 8..18 (UPC/EAN-ish).
+  final digits = barcode.replaceAll(RegExp(r'\D'), '');
+  if (!RegExp(r'^\d{8,18}$').hasMatch(digits)) return;
+
+  try {
     await txn.insert(
       'food_barcodes',
       {'food_id': foodId, 'upc': digits},
       conflictAlgorithm: ConflictAlgorithm.ignore,
     );
+  } on DatabaseException catch (e) {
+    // Old installs might still have a BEFORE INSERT trigger that RAISE(ABORT)s.
+    final msg = e.toString();
+    final isBenign =
+        msg.contains('UNIQUE') ||
+        msg.contains('constraint failed') ||
+        msg.contains('SQL logic error') || // legacy trigger RAISE without message
+        msg.contains('RAISE(');            // some SQLite builds include this text
+    if (!isBenign) rethrow;
+    // else ignore: upsert intent achieved / or legacy guard fired
   }
+}
+
 
   /// Upsert a food row using best available dedupe key:
   /// 1) fdc_id if provided
@@ -1433,170 +1463,17 @@ final barcode      = rawBarcode?.replaceAll(RegExp(r'\D'), '');
 /// Seeds foods from a gzip-compressed JSONL asset (one JSON object per line),
 /// e.g. assets/foods/foods.min.jsonl.gz produced by your USDA condense script.
 /// This reuses the same schema helpers used by seedFoods().
-static Future<void> seedFoodsFromJsonlGzip(
-  Database db, {
-  String assetPath = 'assets/foods/foods.min.jsonl.gz',
-  int batchSize = 800,
-}) async {
-  // 1) Build nutrient code maps once
-  final Map<String, int> codeToId = await _nutrientCodeMap(db);
-  final Map<String, int> aliasToId = await _nutrientAliasMap(db);
-  if (codeToId.isEmpty) {
-    throw StateError('Seed nutrients first: call Seed.seedExtendedNutrients(db) before seeding foods.');
-  }
-
-  // 2) Load compressed asset as bytes, then stream-decompress + line-split
+static Future<void> seedFoodsFromJsonlGzip(Database db, {String assetPath='assets/foods/foods.min.jsonl.gz', int batchSize=800}) async {
   final bd = await rootBundle.load(assetPath);
   final bytes = bd.buffer.asUint8List(bd.offsetInBytes, bd.lengthInBytes);
   final lines = Stream<List<int>>.fromIterable([bytes])
       .transform(gzip.decoder)
       .transform(utf8.decoder)
       .transform(const LineSplitter());
-
-  // 3) Buffer lines into transactions for speed
-  final buffer = <Map<String, dynamic>>[];
-
-  Future<void> flush() async {
-    if (buffer.isEmpty) return;
-    await db.transaction((txn) async {
-      for (final raw in buffer) {
-        final item = Map<String, dynamic>.from(raw);
-
-        // ----- Field normalization (accept both new + old keys) -----
-        final name         = _s(item['name']);
-if (name == null) continue;
-
-final brandText    = _s(item['brand'] ?? item['manufacturer']);
-final manufacturer = _s(item['manufacturer']);
-final dataSource   = _s(item['data_source'] ?? item['source']) ?? 'external';
-final dataSourceId = _s(item['data_source_id'] ?? item['source_id']);
-final fdcId        = (item['fdc_id'] as num?)?.toInt() ?? (item['fdcId'] as num?)?.toInt();
-final density      = _posOrNull(_num(item['density_g_per_ml']));
-
-// category can be a single string or a path array
-List<dynamic>? categoryPath;
-if (item['category_path'] is List) {
-  categoryPath = item['category_path'] as List;
-} else {
-  final single = _s(item['category']);
-  categoryPath = single == null ? null : <dynamic>[single];
+  await _ingestJsonlStream(db, lines, batchSize: batchSize);
 }
 
-// barcodes: prefer list; fall back to single
-final List<String> barcodes =
-    (item['barcodes'] is List
-        ? (item['barcodes'] as List)
-            .map((e) => _s(e))
-            .whereType<String>()
-            .toList()
-        : (() { final b = _s(item['barcode']); return b == null ? <String>[] : <String>[b]; })());
 
-
-        // ----- Upsert brand/food -----
-        final brandId = await _ensureBrand(txn, brandText, manufacturer: manufacturer);
-        final foodId = await _upsertFood(
-          txn: txn,
-          name: name,
-          brandId: brandId,
-          brandText: brandText,
-          categoryPath: categoryPath,
-          dataSource: dataSource,
-          dataSourceId: dataSourceId,
-          fdcId: fdcId,
-          barcode: barcodes.isNotEmpty ? barcodes.first : null, // also attached individually below
-          densityGPerMl: density,
-          verified: item['verified'] == true,
-          qualityScore: _clamp01(_num(item['quality_score'])),
-          version: (item['version'] as num?)?.toInt() ?? 1,
-          preparation: _trimOrNull(item['preparation'] as String?),
-          ediblePortionPct: _clampPct(_num(item['edible_portion_pct'])),
-          yieldPct: _clampPct(_num(item['yield_pct'])),
-        );
-
-        // attach all barcodes
-        for (final b in barcodes) {
-          await _attachBarcode(txn, foodId, b);
-        }
-
-        // ----- Portions -----
-        await txn.delete('food_portions', where: 'food_id = ?', whereArgs: [foodId]);
-        for (var i = 0; i < ((item['portions'] as List?)?.length ?? 0); i++) {
-          final p = Map<String, dynamic>.from((item['portions'] as List)[i] as Map);
-          final gw = _posOrNull(_num(p['gram_weight']));
-          final ml = _posOrNull(_num(p['ml_volume']));
-          if (gw == null && ml == null) continue;
-
-          await txn.insert(
-            'food_portions',
-            {
-              'food_id': foodId,
-              'measure_name': _s(p['measure_name']) ?? 'portion',
-              'gram_weight': gw,
-              'ml_volume': ml,
-              'is_default': (p['is_default'] == true) ? 1 : 0,
-              'list_kind': _sLower(p['list_kind']),
-              'sort_order': (p['sort_order'] as num?)?.toInt() ?? i,
-              'amount': _posOrNull(_num(p['amount'])),
-              'unit': _s(p['unit']),
-              'label': _s(p['label']),
-            },
-            conflictAlgorithm: ConflictAlgorithm.ignore,
-          );
-        }
-        await _ensureGramPortion(txn, foodId);
-        await _ensureOneDefaultPortion(txn, foodId);
-
-        // ----- Nutrients -----
-        // Clear flexible + legacy tables deterministically
-        await txn.delete('food_nutrient_values', where: 'food_id = ?', whereArgs: [foodId]);
-        await txn.delete('food_nutrients',       where: 'food_id = ?', whereArgs: [foodId]);
-
-        // Your condensed JSONL puts macros at top-level (e.g., KCAL, PROTEIN_G, ...).
-        // Build a per_100g map on the fly and reuse the legacy-per100g path.
-        final per100g = <String, dynamic>{};
-        for (final k in const ['KCAL','PROTEIN_G','CARB_G','FAT_G','FIBER_G','SODIUM_MG']) {
-          final v = item[k];
-          if (v is num || (v is String && double.tryParse(v) != null)) {
-            per100g[k] = v;
-          }
-        }
-
-        for (final e in per100g.entries) {
-          final nid = _resolveNutrientIdFast(codeToId, aliasToId, e.key);
-          if (nid == null) continue;
-          final amt = _nonNegKcalAware(e.key, e.value);
-          if (amt == null) continue;
-
-          await txn.insert(
-            'food_nutrient_values',
-            {'food_id': foodId, 'nutrient_id': nid, 'amount': amt, 'basis': 'per_100g'},
-            conflictAlgorithm: ConflictAlgorithm.ignore,
-          );
-          await txn.insert(
-            'food_nutrients',
-            {'food_id': foodId, 'nutrient_id': nid, 'amount_per_100g': amt},
-            conflictAlgorithm: ConflictAlgorithm.ignore,
-          );
-        }
-
-        // Ensure KCAL if missing but macros present
-        await _maybeEnsureEnergyKcalPer100g(txn, foodId, codeToId, aliasToId, per100g);
-        await _maybeEnsureEnergyKcalPer100gFromDb(txn, foodId, codeToId);
-      }
-    });
-    buffer.clear();
-  }
-
-  await for (final line in lines) {
-    if (line.isEmpty) continue;
-    buffer.add(json.decode(line) as Map<String, dynamic>);
-    if (buffer.length >= batchSize) {
-      await flush();
-    }
-  }
-  await flush();
-  await _rebuildFoodFtsIfExists(db);
-}
 
 static Future<void> _rebuildFoodFtsIfExists(Database db) async {
   try {
@@ -1612,6 +1489,156 @@ static Future<void> _rebuildFoodFtsIfExists(Database db) async {
   } catch (_) {
     // If older schemas don't have FTS yet, just ignore.
   }
+}
+
+static Future<void> seedFoodsFromJsonl(Database db, {required String assetPath, int batchSize=800}) async {
+  final text = await rootBundle.loadString(assetPath);
+  final lines = Stream.value(text).transform(const LineSplitter());
+  await _ingestJsonlStream(db, lines, batchSize: batchSize);
+}
+
+Future<T> _guardSql<T>(Future<T> Function() op, {String? context}) async {
+  try {
+    return await op();
+  } on DatabaseException catch (e) {
+    // Log context + message; rethrow to fail fast in dev
+    // (or swallow if you want “best-effort seeding”)
+    // ignore: avoid_print
+    print('DB ERROR${context != null ? ' @ $context' : ''}: $e');
+    rethrow;
+  }
+}
+
+
+static Future<void> _ingestJsonlStream(
+  Database db, Stream<String> lines, {int batchSize = 800}
+) async {
+  final codeToId = await _nutrientCodeMap(db);
+  final aliasToId = await _nutrientAliasMap(db);
+  if (codeToId.isEmpty) {
+    throw StateError('Seed nutrients first: call Seed.seedExtendedNutrients(db) before seeding foods.');
+  }
+
+  final buffer = <Map<String, dynamic>>[];
+  Future<void> flush() async {
+    if (buffer.isEmpty) return;
+    await db.transaction((txn) async {
+      for (final raw in buffer) {
+        final item = Map<String, dynamic>.from(raw);
+
+        // —— field normalization (same as gzip version) ——
+        final name = _s(item['name']);
+        if (name == null) continue;
+
+        final brandText    = _s(item['brand'] ?? item['manufacturer']);
+        final manufacturer = _s(item['manufacturer']);
+        final dataSource   = _s(item['data_source'] ?? item['source']) ?? 'external';
+        final dataSourceId = _s(item['data_source_id'] ?? item['source_id']);
+        final fdcId        = (item['fdc_id'] as num?)?.toInt() ?? (item['fdcId'] as num?)?.toInt();
+        final density      = _posOrNull(_num(item['density_g_per_ml']));
+
+        List<dynamic>? categoryPath;
+        if (item['category_path'] is List) {
+          categoryPath = item['category_path'] as List;
+        } else {
+          final single = _s(item['category']);
+          categoryPath = single == null ? null : <dynamic>[single];
+        }
+
+        final barcodes = (item['barcodes'] is List)
+            ? (item['barcodes'] as List).map(_s).whereType<String>().toList()
+            : (() { final b = _s(item['barcode']); return b == null ? <String>[] : <String>[b]; })();
+
+        // —— upsert food/brand ——
+        final brandId = await _ensureBrand(txn, brandText, manufacturer: manufacturer);
+        final foodId = await _upsertFood(
+          txn: txn,
+          name: name,
+          brandId: brandId,
+          brandText: brandText,
+          categoryPath: categoryPath,
+          dataSource: dataSource,
+          dataSourceId: dataSourceId,
+          fdcId: fdcId,
+          barcode: barcodes.isNotEmpty ? barcodes.first : null,
+          densityGPerMl: density,
+          verified: item['verified'] == true,
+          qualityScore: _clamp01(_num(item['quality_score'])),
+          version: (item['version'] as num?)?.toInt() ?? 1,
+          preparation: _trimOrNull(item['preparation'] as String?),
+          ediblePortionPct: _clampPct(_num(item['edible_portion_pct'])),
+          yieldPct: _clampPct(_num(item['yield_pct'])),
+        );
+
+        for (final b in barcodes) { await _attachBarcode(txn, foodId, b); }
+
+        // —— portions ——
+        await txn.delete('food_portions', where: 'food_id = ?', whereArgs: [foodId]);
+        for (var i = 0; i < ((item['portions'] as List?)?.length ?? 0); i++) {
+          final p = Map<String, dynamic>.from((item['portions'] as List)[i] as Map);
+          final gw = _posOrNull(_num(p['gram_weight']));
+          final ml = _posOrNull(_num(p['ml_volume']));
+          if (gw == null && ml == null) continue;
+          await txn.insert('food_portions', {
+            'food_id': foodId,
+            'measure_name': _s(p['measure_name']) ?? 'portion',
+            'gram_weight': gw,
+            'ml_volume': ml,
+            'is_default': (p['is_default'] == true) ? 1 : 0,
+            'list_kind': _sLower(p['list_kind']),
+            'sort_order': (p['sort_order'] as num?)?.toInt() ?? i,
+            'amount': _posOrNull(_num(p['amount'])),
+            'unit': _s(p['unit']),
+            'label': _s(p['label']),
+          }, conflictAlgorithm: ConflictAlgorithm.ignore);
+        }
+        await _ensureGramPortion(txn, foodId);
+        await _ensureOneDefaultPortion(txn, foodId);
+
+        // —— nutrients (per_100g only for condensed JSONL) ——
+        await txn.delete('food_nutrient_values', where: 'food_id = ?', whereArgs: [foodId]);
+        await txn.delete('food_nutrients',       where: 'food_id = ?', whereArgs: [foodId]);
+
+        final per100g = <String, dynamic>{};
+        if (item['per_100g'] is Map) {
+          final m = Map<String, dynamic>.from(item['per_100g'] as Map);
+          for (final e in m.entries) {
+            final key = e.key.toString().trim().toUpperCase();
+            final val = e.value;
+            if (val is num || (val is String && double.tryParse(val) != null)) per100g[key] = val;
+          }
+        }
+        for (final k in const ['KCAL','PROTEIN_G','CARB_G','FAT_G','FIBER_G','SODIUM_MG']) {
+          final v = item[k];
+          if (v is num || (v is String && double.tryParse(v) != null)) per100g[k] = v;
+        }
+
+        for (final e in per100g.entries) {
+          final nid = _resolveNutrientIdFast(codeToId, aliasToId, e.key);
+          if (nid == null) continue;
+          final amt = _nonNegKcalAware(e.key, e.value);
+          if (amt == null) continue;
+          await txn.insert('food_nutrient_values', {
+            'food_id': foodId, 'nutrient_id': nid, 'amount': amt, 'basis': 'per_100g'
+          }, conflictAlgorithm: ConflictAlgorithm.ignore);
+          await txn.insert('food_nutrients', {
+            'food_id': foodId, 'nutrient_id': nid, 'amount_per_100g': amt
+          }, conflictAlgorithm: ConflictAlgorithm.ignore);
+        }
+        await _maybeEnsureEnergyKcalPer100g(txn, foodId, codeToId, aliasToId, per100g);
+        await _maybeEnsureEnergyKcalPer100gFromDb(txn, foodId, codeToId);
+      }
+    });
+    buffer.clear();
+  }
+
+  await for (final line in lines) {
+    if (line.isEmpty) continue;
+    buffer.add(json.decode(line) as Map<String, dynamic>);
+    if (buffer.length >= batchSize) await flush();
+  }
+  await flush();
+  await _rebuildFoodFtsIfExists(db);
 }
 
 
