@@ -5,6 +5,10 @@ import 'dart:convert';
 import 'package:flutter/services.dart'; // For rootBundle.loadString
 import 'package:sqflite/sqflite.dart';
 
+
+typedef SeedProgress = void Function(int inserted);
+
+
 /// Legacy → canonical code hints (UPPERCASE keys).
 /// Also includes a few common external tags (USDA-like) for convenience.
 /// Prefer your house codes where multiple exist (e.g., SUGAR_G, SAT_FAT_G).
@@ -544,16 +548,36 @@ class Seed {
   static Future<void> seedFoods(
   Database db, {
   String assetPath = 'assets/foods/foods.min.jsonl.gz', // default to new file
+  SeedProgress? onProgress,                              // ← add this
 }) async {
+  
   if (assetPath.endsWith('.jsonl.gz')) {
-    return seedFoodsFromJsonlGzip(db, assetPath: assetPath);
+    return seedFoodsFromJsonlGzip(
+      db,
+      assetPath: assetPath,
+      onProgress: onProgress,        // ← pass through
+    );
   } else if (assetPath.endsWith('.jsonl')) {
-    return seedFoodsFromJsonl(db, assetPath: assetPath);
+    return seedFoodsFromJsonl(
+      db,
+      assetPath: assetPath,
+      onProgress: onProgress,        // ← pass through
+    );
   }
-  // Fallback to legacy array JSON (your current implementation):
+  // Fallback to legacy array JSON (rarely used with your big catalog)
   final jsonStr = await rootBundle.loadString(assetPath); // e.g., assets/foods.json
   final List list = json.decode(jsonStr);
-  // ... keep your existing loop here unchanged ...
+  // If you keep a legacy loop here, call onProgress every so often:
+  var processed = 0;
+  const tick = 5000;
+  await db.transaction((txn) async {
+    for (final raw in list) {
+      // ... your existing legacy insert/upsert logic ...
+
+      if (++processed % tick == 0) onProgress?.call(processed);
+    }
+  });
+  onProgress?.call(processed); // final ping
 }
 
 
@@ -1033,7 +1057,7 @@ static Future<void> _attachBarcode(DatabaseExecutor txn, int foodId, String? bar
         final name         = _s(item['name']);
 if (name == null) continue;
 
-final brandText    = _s(item['brand']);
+final brandText    = _s(item['brand']) ?? _s(item['manufacturer']);
 final manufacturer = _s(item['manufacturer']);
 final categoryPath = item['category_path'] as List?; // dataset-defined; usually strings
 final fdcId        = (item['fdc_id'] as num?)?.toInt();
@@ -1172,13 +1196,14 @@ final barcode      = rawBarcode?.replaceAll(RegExp(r'\D'), '');
 
           // per_portion
           final List perPortion = (byBasis['per_portion'] as List? ?? const []);
-          for (final rawPP in perPortion) {
-            final pp = Map<String, dynamic>.from(rawPP as Map);
-            final nid = _resolveNutrientIdFast(codeToId, aliasToId, pp['code'] as String);
-            if (nid == null) continue;
-
-            final amt = _nonNegKcalAware(pp['code'] ?? '', pp['amount']);
-            if (amt == null) continue;
+for (final rawPP in perPortion) {
+  final pp = Map<String, dynamic>.from(rawPP as Map);
+  final code = _s(pp['code']);
+  if (code == null) continue; // <- guard
+  final nid = _resolveNutrientIdFast(codeToId, aliasToId, code);
+  if (nid == null) continue;
+  final amt = _nonNegKcalAware(code, pp['amount']);
+  if (amt == null) continue;
 
             int? portionId;
             if (pp['portion_desc'] != null) {
@@ -1463,15 +1488,27 @@ final barcode      = rawBarcode?.replaceAll(RegExp(r'\D'), '');
 /// Seeds foods from a gzip-compressed JSONL asset (one JSON object per line),
 /// e.g. assets/foods/foods.min.jsonl.gz produced by your USDA condense script.
 /// This reuses the same schema helpers used by seedFoods().
-static Future<void> seedFoodsFromJsonlGzip(Database db, {String assetPath='assets/foods/foods.min.jsonl.gz', int batchSize=800}) async {
+static Future<void> seedFoodsFromJsonlGzip(
+  Database db, {
+  String assetPath = 'assets/foods/foods.min.jsonl.gz',
+  int batchSize = 800,
+  SeedProgress? onProgress,                 // ← add this
+}) async {
   final bd = await rootBundle.load(assetPath);
   final bytes = bd.buffer.asUint8List(bd.offsetInBytes, bd.lengthInBytes);
   final lines = Stream<List<int>>.fromIterable([bytes])
       .transform(gzip.decoder)
       .transform(utf8.decoder)
       .transform(const LineSplitter());
-  await _ingestJsonlStream(db, lines, batchSize: batchSize);
+
+  await _ingestJsonlStream(
+    db,
+    lines,
+    batchSize: batchSize,
+    onProgress: onProgress,                 // ← pass through
+  );
 }
+
 
 
 
@@ -1491,13 +1528,24 @@ static Future<void> _rebuildFoodFtsIfExists(Database db) async {
   }
 }
 
-static Future<void> seedFoodsFromJsonl(Database db, {required String assetPath, int batchSize=800}) async {
+static Future<void> seedFoodsFromJsonl(
+  Database db, {
+  required String assetPath,
+  int batchSize = 800,
+  SeedProgress? onProgress,                 // ← add this
+}) async {
   final text = await rootBundle.loadString(assetPath);
   final lines = Stream.value(text).transform(const LineSplitter());
-  await _ingestJsonlStream(db, lines, batchSize: batchSize);
+  await _ingestJsonlStream(
+    db,
+    lines,
+    batchSize: batchSize,
+    onProgress: onProgress,                 // ← pass through
+  );
 }
 
-Future<T> _guardSql<T>(Future<T> Function() op, {String? context}) async {
+
+static Future<T> _guardSql<T>(Future<T> Function() op, {String? context}) async {
   try {
     return await op();
   } on DatabaseException catch (e) {
@@ -1511,8 +1559,11 @@ Future<T> _guardSql<T>(Future<T> Function() op, {String? context}) async {
 
 
 static Future<void> _ingestJsonlStream(
-  Database db, Stream<String> lines, {int batchSize = 800}
-) async {
+  Database db,
+  Stream<String> lines, {
+  int batchSize = 800,
+  SeedProgress? onProgress,                 // ← add this
+}) async {
   final codeToId = await _nutrientCodeMap(db);
   final aliasToId = await _nutrientAliasMap(db);
   if (codeToId.isEmpty) {
@@ -1520,11 +1571,15 @@ static Future<void> _ingestJsonlStream(
   }
 
   final buffer = <Map<String, dynamic>>[];
+  var processed = 0;                         // ← running total
+
   Future<void> flush() async {
     if (buffer.isEmpty) return;
+    final count = buffer.length;            // ← will add to processed after commit
     await db.transaction((txn) async {
       for (final raw in buffer) {
         final item = Map<String, dynamic>.from(raw);
+
 
         // —— field normalization (same as gzip version) ——
         final name = _s(item['name']);
@@ -1630,7 +1685,10 @@ static Future<void> _ingestJsonlStream(
       }
     });
     buffer.clear();
+    processed += count;                     // ← update total
+    onProgress?.call(processed);            // ← ping caller (DatabaseHelper)
   }
+
 
   await for (final line in lines) {
     if (line.isEmpty) continue;
@@ -1638,8 +1696,10 @@ static Future<void> _ingestJsonlStream(
     if (buffer.length >= batchSize) await flush();
   }
   await flush();
-  await _rebuildFoodFtsIfExists(db);
+
+  await _rebuildFoodFtsIfExists(db);        // keep your existing FTS rebuild
 }
+
 
 
 }

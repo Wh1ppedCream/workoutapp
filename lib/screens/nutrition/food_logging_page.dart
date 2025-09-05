@@ -1168,7 +1168,6 @@ Future<int> _saveCustomFoodFromPayloadReturningId(Map payload) async {
   }
 
   Widget _foodResultTile(BuildContext context, Food f) {
-    final isFav = context.select<NutritionProfile, bool>((p) => p.isFavorite(f.id!));
     return Card(
       child: ListTile(
         title: Text(f.name),
@@ -1184,13 +1183,16 @@ Future<int> _saveCustomFoodFromPayloadReturningId(Map payload) async {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            IconButton(
-              tooltip: isFav ? 'Unfavorite' : 'Favorite',
-              icon: Icon(isFav ? Icons.star : Icons.star_border),
-              color: isFav ? Colors.amber : Colors.grey,
-              visualDensity: VisualDensity.compact,
-              onPressed: () => context.read<NutritionProfile>().toggleFavorite(f.id!),
-            ),
+            Selector<NutritionProfile, bool>(
+  selector: (_, p) => p.isFavorite(f.id!),
+  builder: (ctx, isFav, _) => IconButton(
+    tooltip: isFav ? 'Unfavorite' : 'Favorite',
+    icon: Icon(isFav ? Icons.star : Icons.star_border),
+    color: isFav ? Colors.amber : Colors.grey,
+    visualDensity: VisualDensity.compact,
+    onPressed: () => ctx.read<NutritionProfile>().toggleFavorite(f.id!),
+  ),
+),
             IconButton(
               tooltip: 'Customize food',
               icon: const Icon(Icons.settings),
@@ -1674,11 +1676,13 @@ final pid = prof.profileId;
       // Refresh if we're on today (cheap, provider-coalesced)
       await prof.reloadIfToday();
 
-      if (closeDrawerToo) navigator.pop();     // close endDrawer
-      if (popPageAfter) navigator.pop(true);   // optionally leave page
 messenger.showSnackBar(
   const SnackBar(content: Text('Items logged to diary')),
 );
+
+      if (closeDrawerToo) navigator.pop();     // close endDrawer
+      if (popPageAfter) navigator.pop(true);   // optionally leave page
+
     } catch (e) {
       if (!mounted) return;
       messenger.showSnackBar(SnackBar(content: Text('Failed to log: $e')));

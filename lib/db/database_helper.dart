@@ -28,6 +28,7 @@ import 'preset_flow_methods_dao.dart';
 import 'personal_info_dao.dart';
 import 'nutrition_dao.dart';
 
+import 'package:flutter/foundation.dart' show debugPrint;
 
 
 
@@ -73,6 +74,7 @@ class DatabaseHelper {
 
       onCreate: _onCreate,
   onUpgrade: (db, oldVersion, newVersion) async {
+    debugPrint('[db] onUpgrade $oldVersion → $newVersion (begin)');
   // 1) Always let Schema drive structural upgrades
   await Schema.onUpgrade(db, oldVersion, newVersion);
 
@@ -106,18 +108,21 @@ class DatabaseHelper {
   await _resetDbTriggers(db);
   await _rebuildFoodFtsIfExists(db);
   await _ensureIndexes(db);
+
+  debugPrint('[db] onUpgrade $oldVersion → $newVersion (done)');
 },
 
    
    // NEW:
   onOpen: (db) async {
+  debugPrint('[db] onOpen (begin)');
   await _resetDbTriggers(db);   // <—
   final didSeed = await _seedFoodsIfEmpty(db);  // now returns bool
   await _ensureIndexes(db);                     // still safe if already created
   if (!didSeed) {
-    // If we didn't just seed, still refresh FTS opportunistically
     await _rebuildFoodFtsIfExists(db);
   }
+  debugPrint('[db] onOpen (done) — seeded: $didSeed');
 },
 
 );
@@ -125,6 +130,7 @@ class DatabaseHelper {
 
   /// Builds initial schema and seeds all data.
   Future<void> _onCreate(Database db, int version) async {
+    debugPrint('[db] onCreate → v$version');
     // Create schema v1 + migrations v3–v9
     await Schema.createTables(db);
     // Seed lookup and exercise definitions
@@ -152,6 +158,7 @@ await _rebuildAllRecipeCaches(db);
 // (Optional) If FTS exists, backfill it once:
 await _rebuildFoodFtsIfExists(db);
 await _ensureIndexes(db); 
+debugPrint('[db] onCreate complete');
 
   }
 
@@ -206,6 +213,12 @@ Future<void> _resetDbTriggers(Database db) async {
   });
 }
 
+// Log at 1, 1k, then every 5k to keep console readable.
+void _logProgress(String phase, int total) {
+  if (total == 1 || total == 1000 || total % 5000 == 0) {
+    debugPrint('[$phase] processed $total');
+  }
+}
 
 
 Future<void> _backfillNormalizedFoodKeysTx(DatabaseExecutor ex) async {
@@ -324,10 +337,10 @@ Future<void> _rebuildFoodFtsIfExists(Database db) async {
   if (!exists) return;
 
   try {
-    // Supported by FTS4
-    await db.execute("INSERT INTO food_search_fts(food_search_fts) VALUES('rebuild')");
-    await db.execute("INSERT INTO food_search_fts(food_search_fts) VALUES('optimize')");
-  } catch (_) {/* ignore */}
+  await db.execute("INSERT INTO food_search_fts(food_search_fts) VALUES('rebuild')");
+  await db.execute("INSERT INTO food_search_fts(food_search_fts) VALUES('optimize')");
+  debugPrint('[fts4] food_search_fts rebuild+optimize done');
+} catch (_) {/* ignore */}
 }
 
 
@@ -484,15 +497,27 @@ Future<bool> _seedFoodsIfEmpty(Database db) async {
   final n = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM foods')) ?? 0;
   if (n > 0) return false;
 
+  debugPrint('[foods] seeding start (DB empty)');
   var seeded = false;
+
   try {
-    await Seed.seedFoods(db); // defaults to assets/foods/foods.min.jsonl.gz
+    await Seed.seedFoods(
+      db,
+      onProgress: (c) => _logProgress('foods', c),  // ← progress pings
+    ); // defaults to assets/foods/foods.min.jsonl.gz
     seeded = true;
-  } catch (_) {
+  } catch (e1) {
+    debugPrint('[foods] gzip/jsonl seed failed: $e1 — trying legacy array JSON…');
     try {
-      await Seed.seedFoods(db, assetPath: 'assets/foods.json');
+      await Seed.seedFoods(
+        db,
+        assetPath: 'assets/foods.json',
+        onProgress: (c) => _logProgress('foods', c),
+      );
       seeded = true;
-    } catch (_) {/* allow empty */}
+    } catch (e2) {
+      debugPrint('[foods] legacy seed also failed: $e2');
+    }
   }
 
   if (seeded) {
@@ -501,9 +526,13 @@ Future<bool> _seedFoodsIfEmpty(Database db) async {
     await _backfillEnergyKcalFromMacros(db);
     await _ensureIndexes(db);
     await _rebuildFoodFtsIfExists(db);
+
+    final total = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM foods')) ?? 0;
+    debugPrint('[foods] seeding complete — total rows: $total');
   }
   return seeded;
 }
+
 
 
 

@@ -280,9 +280,9 @@ try {
 
   final rows = await db.rawQuery('''
     SELECT f.*
-    FROM food_search_fts s
-    JOIN foods f ON f.id = s.rowid
-    WHERE s MATCH ?
+    FROM food_search_fts
+    JOIN foods f ON f.id = food_search_fts.rowid
+    WHERE food_search_fts MATCH ?
       AND f.is_deleted = 0
     ORDER BY
       CASE
@@ -297,6 +297,7 @@ try {
 
   if (rows.isNotEmpty) return rows.map(Food.fromMap).toList();
 } catch (_) {}
+
 
 
     // 3) Fallback LIKE, including brand via LEFT JOIN brands
