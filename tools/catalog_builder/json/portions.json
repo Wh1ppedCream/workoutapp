@@ -1,0 +1,15 @@
+[
+  {
+    "ext": "portion_0001",
+    "food_ext": "food_0001",
+    "measure_name": "100 g",
+    "gram_weight": 100,
+    "ml_volume": null,
+    "is_default": 1,
+    "list_kind": "basis",
+    "sort_order": 0,
+    "amount": 100,
+    "unit": "g",
+    "label": null
+  }
+]

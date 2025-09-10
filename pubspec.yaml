@@ -38,7 +38,7 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   sqflite: ^2.0.0+4
-  path: ^1.8.0
+  path: ^1.9.1
   intl: ^0.18.0
   fl_chart: ^1.0.0
   provider: ^6.1.5
@@ -46,6 +46,9 @@ dependencies:
   shared_preferences: ^2.5.3
   flutter_svg: ^2.2.0
   mobile_scanner: ^7.0.1
+  sqlite3: ^2.9.0
+  sqlite3_flutter_libs: ^0.5.39
+  path_provider: ^2.1.5
 
 
 dev_dependencies:
@@ -91,6 +94,7 @@ flutter:
     - assets/foods.json
     - assets/nutrients_extended.json
     - assets/foods/foods.min.jsonl.gz
+    - assets/db/app_nutrition_v22.db
 
 
   # An image asset can refer to one or more resolution-specific "variants", see

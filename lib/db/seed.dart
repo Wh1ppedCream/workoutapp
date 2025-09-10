@@ -1545,17 +1545,6 @@ static Future<void> seedFoodsFromJsonl(
 }
 
 
-static Future<T> _guardSql<T>(Future<T> Function() op, {String? context}) async {
-  try {
-    return await op();
-  } on DatabaseException catch (e) {
-    // Log context + message; rethrow to fail fast in dev
-    // (or swallow if you want “best-effort seeding”)
-    // ignore: avoid_print
-    print('DB ERROR${context != null ? ' @ $context' : ''}: $e');
-    rethrow;
-  }
-}
 
 
 static Future<void> _ingestJsonlStream(
