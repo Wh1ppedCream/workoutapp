@@ -2,28 +2,29 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import 'providers/active_session.dart';
+import 'providers/selected_profile.dart';
+import 'providers/dashboard_config.dart';
+import 'providers/theme_provider.dart';
+import 'providers/onboarding_provider.dart';
+import 'providers/nav_bar_config.dart';
+import 'providers/nutrition_profile.dart';
+
 import 'screens/dashboard_page.dart';
 import 'screens/exercise/history_screen.dart';
 import 'screens/exercise/train_page.dart';          
 import 'screens/nutrition/nutrition_page.dart';
 import 'screens/profile/settings/profile_page.dart';
-import 'widgets/ongoing_session_fab.dart';
-import 'providers/selected_profile.dart';
-import 'providers/dashboard_config.dart';
 import 'screens/onboarding_flow.dart'; // New import for onboarding
-
-import 'providers/theme_provider.dart';
-import '../theme/app_colors.dart';
-import 'providers/onboarding_provider.dart';
-
-import 'providers/nav_bar_config.dart';
 import 'screens/measurement_trends_page.dart';
 import 'screens/nutrition_log_page.dart';
 import 'screens/combined_history_page.dart';
 import 'screens/form_posing_page.dart';
 
-import 'providers/nutrition_profile.dart';
+import 'widgets/ongoing_session_fab.dart';
+
+import '../theme/app_colors.dart';
 
 import 'repositories/app_repository.dart';
 
