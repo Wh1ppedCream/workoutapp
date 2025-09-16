@@ -29,12 +29,16 @@ import '../theme/app_colors.dart';
 import 'repositories/app_repository.dart';
 
 
-void main() {
-  runApp(
-    MultiProvider(
+Future<void> main() async {
+   WidgetsFlutterBinding.ensureInitialized();
+   final repo = AppRepository();
+   await repo.warmUp(verify: true);
+   runApp(RepositoryLifecycle(
+     repo: repo,
+     child: MultiProvider(
       providers: [
+        Provider<AppRepository>.value(value: repo), // repo FIRST
         ChangeNotifierProvider(create: (_) => NutritionProfile()),
-        Provider<AppRepository>(create: (_) => AppRepository()),
         ChangeNotifierProvider(create: (_) => OnboardingConfig()..init()),
         ChangeNotifierProvider(create: (_) => ActiveSession()),
         ChangeNotifierProvider(create: (_) => SelectedProfile()),
@@ -43,9 +47,28 @@ void main() {
        ChangeNotifierProvider(create: (_) => NavBarConfig()),
       ],
       child: const MyApp(),
-    ),
-  );
-}
+     ),
+   ));
+ }
+
+ /// Ensures the repository is closed when the app is disposed (hot restart/quit).
+ class RepositoryLifecycle extends StatefulWidget {
+   final AppRepository repo;
+   final Widget child;
+   const RepositoryLifecycle({super.key, required this.repo, required this.child});
+   @override
+   State<RepositoryLifecycle> createState() => _RepositoryLifecycleState();
+ }
+ class _RepositoryLifecycleState extends State<RepositoryLifecycle> {
+   @override
+   void dispose() {
+     widget.repo.close();
+     super.dispose();
+   }
+   @override
+   Widget build(BuildContext context) => widget.child;
+ }
+
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});

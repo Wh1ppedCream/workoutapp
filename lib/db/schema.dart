@@ -147,6 +147,8 @@ await migrateV42(db);
 await migrateV43(db);
 await migrateV44(db);
 await migrateV45(db);
+await migrateV46(db);
+await migrateV47( db);
   }
 
   /// Handler for onUpgrade callback.
@@ -195,7 +197,8 @@ if (oldVersion < 42) await migrateV42(db);
 if (oldVersion < 43) await migrateV43(db);
 if (oldVersion < 44) await migrateV44(db);
 if (oldVersion < 45) await migrateV45(db);
-
+if (oldVersion < 46) await migrateV46(db);
+if (oldVersion < 47) await migrateV47(db);
 
 
   }
@@ -389,36 +392,46 @@ if (oldVersion < 45) await migrateV45(db);
 
   /// Migration to version 7: adds gym profiles and profile_id on presets.
   static Future<void> migrateV7(Database db) async {
-    await db.transaction((txn) async {
-      // gym profiles
-      await txn.execute('''
-        CREATE TABLE IF NOT EXISTS gym_profiles (
-          id          INTEGER PRIMARY KEY AUTOINCREMENT,
-          name        TEXT    NOT NULL,
-          created_at  TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
-        );
-      ''');
-      // profile_equipment join
-      await txn.execute('''
-        CREATE TABLE IF NOT EXISTS profile_equipment (
-          profile_id    INTEGER NOT NULL,
-          equipment_id  INTEGER NOT NULL,
-          PRIMARY KEY(profile_id, equipment_id),
-          FOREIGN KEY(profile_id)   REFERENCES gym_profiles(id) ON DELETE CASCADE,
-          FOREIGN KEY(equipment_id) REFERENCES equipment(id)     ON DELETE CASCADE
-        );
-      ''');
-      // add profile_id to preset_definitions
-      await txn.execute(
-        "ALTER TABLE preset_definitions ADD COLUMN profile_id INTEGER REFERENCES gym_profiles(id) ON DELETE SET NULL;"
+  await db.transaction((txn) async {
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS gym_profiles (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        name        TEXT    NOT NULL,
+        created_at  TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
       );
-      // 4) enforce uniqueness per (name, profile_id)
+    ''');
+
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS profile_equipment (
+        profile_id    INTEGER NOT NULL,
+        equipment_id  INTEGER NOT NULL,
+        PRIMARY KEY(profile_id, equipment_id),
+        FOREIGN KEY(profile_id)   REFERENCES gym_profiles(id) ON DELETE CASCADE,
+        FOREIGN KEY(equipment_id) REFERENCES equipment(id)     ON DELETE CASCADE
+      );
+    ''');
+
+    final tableExists = (await txn.rawQuery(
+      "SELECT 1 FROM sqlite_master WHERE type='table' AND name='preset_definitions' LIMIT 1;"
+    )).isNotEmpty;
+
+    if (tableExists) {
+      final cols = await txn.rawQuery("PRAGMA table_info('preset_definitions');");
+      final hasProfileId = cols.any((c) => c['name'] == 'profile_id');
+      if (!hasProfileId) {
+        await txn.execute(
+          "ALTER TABLE preset_definitions ADD COLUMN profile_id INTEGER REFERENCES gym_profiles(id) ON DELETE SET NULL;"
+        );
+      }
+    }
+
     await txn.execute('''
       CREATE UNIQUE INDEX IF NOT EXISTS ux_preset_name_profile
-        ON preset_definitions(name, profile_id);
+      ON preset_definitions(name, profile_id);
     ''');
-    });
-  }
+  });
+}
+
 
   /// Migration to version 8: adds rep-max & volume-max tables.
   static Future<void> migrateV8(Database db) async {
@@ -1063,6 +1076,16 @@ static Future<void> migrateV24(Database db) async {
       );
     ''');
 
+    // If a legacy categories table existed without parent_id, add it now.
+final _catCols = await txn.rawQuery("PRAGMA table_info('categories');");
+final _hasParentId = _catCols.any(
+  (c) => (c['name'] as String?)?.toLowerCase() == 'parent_id',
+);
+if (!_hasParentId) {
+  await txn.execute("ALTER TABLE categories ADD COLUMN parent_id INTEGER;");
+}
+
+
     await txn.execute('''
       CREATE TABLE IF NOT EXISTS food_barcodes (
         id      INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1114,11 +1137,20 @@ static Future<void> migrateV24(Database db) async {
       WHERE brand_id IS NULL AND brand IS NOT NULL AND TRIM(brand) <> '';
     ''');
 
-    await txn.execute('''
-      INSERT OR IGNORE INTO food_barcodes(food_id, upc)
-      SELECT id, barcode FROM foods
-      WHERE barcode IS NOT NULL AND TRIM(barcode) <> '';
-    ''');
+    // Backfill barcodes only if the legacy foods.barcode column exists.
+final foodsCols = await txn.rawQuery("PRAGMA table_info('foods');");
+final hasBarcodeCol = foodsCols.any(
+  (c) => (c['name'] as String?)?.toLowerCase() == 'barcode',
+);
+if (hasBarcodeCol) {
+  await txn.execute('''
+    INSERT OR IGNORE INTO food_barcodes(food_id, upc)
+    SELECT id,
+           REPLACE(REPLACE(TRIM(barcode), ' ', ''), '-', '')
+    FROM foods
+    WHERE barcode IS NOT NULL AND TRIM(barcode) <> '';
+  ''');
+}
 
     // 5) (Optional) sanity constraints via CHECKs on new numeric fields
     // Note: SQLite won't add CHECK via ALTER on existing column; keep logical checks in app layer.
@@ -1934,35 +1966,48 @@ static Future<void> migrateV38(Database db) async {
     """);
 
     // B) De-dupe categories by (lower(name), parent_id)
-    await txn.execute("""
-      WITH d AS (
-        SELECT MIN(id) AS keep_id, lower(trim(name)) AS k, parent_id
-        FROM categories
-        GROUP BY lower(trim(name)), parent_id
-      )
-      UPDATE foods
-      SET category_id = (
-        SELECT d.keep_id
-        FROM categories c
-        JOIN d ON lower(trim(c.name)) = d.k AND COALESCE(c.parent_id,-1) = COALESCE(d.parent_id,-1)
-        WHERE c.id = foods.category_id
-      )
-      WHERE category_id IS NOT NULL;
-    """);
-    await txn.execute("""
-      DELETE FROM categories
-      WHERE id NOT IN (
-        SELECT keep_id FROM (
-          SELECT MIN(id) AS keep_id
-          FROM categories
-          GROUP BY lower(trim(name)), parent_id
-        )
-      );
-    """);
-    await txn.execute("""
-      CREATE UNIQUE INDEX IF NOT EXISTS ux_categories_name_parent_nocase
-      ON categories(lower(name), parent_id);
-    """);
+//    Guard for legacy DBs that had `categories` without `parent_id`.
+final catCols = await txn.rawQuery("PRAGMA table_info('categories');");
+final hasParentId = catCols.any(
+  (c) => (c['name'] as String?)?.toLowerCase() == 'parent_id',
+);
+if (!hasParentId) {
+  await txn.execute("ALTER TABLE categories ADD COLUMN parent_id INTEGER;");
+}
+
+await txn.execute("""
+  WITH d AS (
+    SELECT MIN(id) AS keep_id, lower(trim(name)) AS k, parent_id
+    FROM categories
+    GROUP BY lower(trim(name)), parent_id
+  )
+  UPDATE foods
+  SET category_id = (
+    SELECT d.keep_id
+    FROM categories c
+    JOIN d ON lower(trim(c.name)) = d.k
+          AND COALESCE(c.parent_id,-1) = COALESCE(d.parent_id,-1)
+    WHERE c.id = foods.category_id
+  )
+  WHERE category_id IS NOT NULL;
+""");
+
+await txn.execute("""
+  DELETE FROM categories
+  WHERE id NOT IN (
+    SELECT keep_id FROM (
+      SELECT MIN(id) AS keep_id
+      FROM categories
+      GROUP BY lower(trim(name)), parent_id
+    )
+  );
+""");
+
+await txn.execute("""
+  CREATE UNIQUE INDEX IF NOT EXISTS ux_categories_name_parent_nocase
+  ON categories(lower(name), parent_id);
+""");
+
 
     // C) Portion converter > 0 (tighten v37 from >= 0 to > 0)
     await trig('trg_portion_converter_req_bi', """
@@ -2193,27 +2238,35 @@ static Future<void> migrateV40(Database db) async {
     """);
 
     // ──────────────────────────────────────────────────────────────────
-    // D) (Optional) parent_set_id guard (no FK table rebuild needed)
-    //     Blocks insert/update if parent_set_id points to a non-existent set.
-    // ──────────────────────────────────────────────────────────────────
-    await dropCreateTrig('trg_sets_parent_exists_bi', """
-      CREATE TRIGGER IF NOT EXISTS trg_sets_parent_exists_bi
-      BEFORE INSERT ON sets
-      WHEN NEW.parent_set_id IS NOT NULL
-       AND NOT EXISTS (SELECT 1 FROM sets p WHERE p.id = NEW.parent_set_id)
-      BEGIN
-        SELECT RAISE(ABORT, 'parent_set_id must reference an existing set');
-      END;
-    """);
-    await dropCreateTrig('trg_sets_parent_exists_bu', """
-      CREATE TRIGGER IF NOT EXISTS trg_sets_parent_exists_bu
-      BEFORE UPDATE OF parent_set_id ON sets
-      WHEN NEW.parent_set_id IS NOT NULL
-       AND NOT EXISTS (SELECT 1 FROM sets p WHERE p.id = NEW.parent_set_id)
-      BEGIN
-        SELECT RAISE(ABORT, 'parent_set_id must reference an existing set');
-      END;
-    """);
+// D) (Optional) parent_set_id guard (no FK table rebuild needed)
+//    Only create these triggers if the DB actually has a `sets` table.
+// ──────────────────────────────────────────────────────────────────
+final hasSetsTable = (await txn.rawQuery(
+  "SELECT 1 FROM sqlite_master WHERE type='table' AND name='sets' LIMIT 1;"
+)).isNotEmpty;
+
+if (hasSetsTable) {
+  await dropCreateTrig('trg_sets_parent_exists_bi', """
+    CREATE TRIGGER IF NOT EXISTS trg_sets_parent_exists_bi
+    BEFORE INSERT ON sets
+    WHEN NEW.parent_set_id IS NOT NULL
+     AND NOT EXISTS (SELECT 1 FROM sets p WHERE p.id = NEW.parent_set_id)
+    BEGIN
+      SELECT RAISE(ABORT, 'parent_set_id must reference an existing set');
+    END;
+  """);
+
+  await dropCreateTrig('trg_sets_parent_exists_bu', """
+    CREATE TRIGGER IF NOT EXISTS trg_sets_parent_exists_bu
+    BEFORE UPDATE OF parent_set_id ON sets
+    WHEN NEW.parent_set_id IS NOT NULL
+     AND NOT EXISTS (SELECT 1 FROM sets p WHERE p.id = NEW.parent_set_id)
+    BEGIN
+      SELECT RAISE(ABORT, 'parent_set_id must reference an existing set');
+    END;
+  """);
+}
+
   });
 }
 
@@ -2436,7 +2489,12 @@ static Future<void> migrateV44(Database db) async {
     await txn.execute('DROP INDEX IF EXISTS idx_foods_barcode;');
 
     // 4) Optional: helper index for parent_set lookups
-    await txn.execute('CREATE INDEX IF NOT EXISTS idx_sets_parent ON sets(parent_set_id);');
+    final _hasSets = (await txn.rawQuery(
+  "SELECT 1 FROM sqlite_master WHERE type='table' AND name='sets' LIMIT 1;"
+)).isNotEmpty;
+if (_hasSets) {
+  await txn.execute('CREATE INDEX IF NOT EXISTS idx_sets_parent ON sets(parent_set_id);');
+}
   });
 }
 
@@ -2527,6 +2585,250 @@ static Future<void> migrateV45(Database db) async {
   });
 }
 
+
+// v46 — Catch-up for devices that missed v6/v7 (presets + gym_profiles)
+static Future<void> migrateV46(Database db) async {
+  await db.transaction((txn) async {
+    // ── Ensure v7: profiles & equipment join ──────────────────────────
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS gym_profiles (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        name        TEXT    NOT NULL,
+        created_at  TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+      );
+    ''');
+
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS profile_equipment (
+        profile_id    INTEGER NOT NULL,
+        equipment_id  INTEGER NOT NULL,
+        PRIMARY KEY(profile_id, equipment_id),
+        FOREIGN KEY(profile_id)   REFERENCES gym_profiles(id) ON DELETE CASCADE,
+        FOREIGN KEY(equipment_id) REFERENCES equipment(id)     ON DELETE CASCADE
+      );
+    ''');
+
+    // ── Ensure v6: all preset tables exist (create with profile_id already present) ──
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS preset_definitions (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        name        TEXT    NOT NULL,
+        created_at  TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+        profile_id  INTEGER REFERENCES gym_profiles(id) ON DELETE SET NULL
+      );
+    ''');
+
+    // If the table existed from old builds without profile_id, add it.
+    final cols = await txn.rawQuery("PRAGMA table_info('preset_definitions');");
+    final hasProfileId = cols.any((c) => c['name'] == 'profile_id');
+    if (!hasProfileId) {
+      await txn.execute(
+        "ALTER TABLE preset_definitions ADD COLUMN profile_id INTEGER REFERENCES gym_profiles(id) ON DELETE SET NULL;"
+      );
+    }
+
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS preset_exercises (
+        id                INTEGER PRIMARY KEY AUTOINCREMENT,
+        preset_id         INTEGER NOT NULL,
+        exercise_def_id   INTEGER,
+        type              TEXT    NOT NULL,
+        order_index       INTEGER NOT NULL,
+        FOREIGN KEY(preset_id)       REFERENCES preset_definitions(id) ON DELETE CASCADE,
+        FOREIGN KEY(exercise_def_id) REFERENCES exercise_definitions(id)
+      );
+    ''');
+
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS preset_sets (
+        id                   INTEGER PRIMARY KEY AUTOINCREMENT,
+        preset_exercise_id   INTEGER NOT NULL,
+        weight               REAL    NOT NULL,
+        reps                 INTEGER NOT NULL,
+        order_index          INTEGER NOT NULL,
+        parent_set_id        INTEGER,
+        FOREIGN KEY(preset_exercise_id) REFERENCES preset_exercises(id) ON DELETE CASCADE
+      );
+    ''');
+
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS preset_cardio_details (
+        id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+        preset_exercise_id  INTEGER NOT NULL UNIQUE,
+        cardio_name         TEXT    NOT NULL,
+        note                TEXT,
+        planned_minutes     INTEGER NOT NULL,
+        elapsed_seconds     INTEGER NOT NULL DEFAULT 0,
+        FOREIGN KEY(preset_exercise_id) REFERENCES preset_exercises(id) ON DELETE CASCADE
+      );
+    ''');
+
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS preset_stretch_items (
+        id                   INTEGER PRIMARY KEY AUTOINCREMENT,
+        preset_exercise_id   INTEGER NOT NULL,
+        stretch_id           INTEGER,
+        is_custom            INTEGER NOT NULL DEFAULT 0,
+        custom_name          TEXT,
+        custom_desc          TEXT,
+        order_index          INTEGER NOT NULL,
+        FOREIGN KEY(preset_exercise_id) REFERENCES preset_exercises(id) ON DELETE CASCADE,
+        FOREIGN KEY(stretch_id)         REFERENCES stretch_definitions(id)
+      );
+    ''');
+
+    // Uniqueness per (name, profile_id)
+    await txn.execute('''
+      CREATE UNIQUE INDEX IF NOT EXISTS ux_preset_name_profile
+      ON preset_definitions(name, profile_id);
+    ''');
+  });
+}
+
+/// v47 — Repair sweep for out-of-sync DBs
+/// Creates critical tables if they were skipped on some devices:
+/// - Base training tables from v1 (sessions/exercises/sets/...).
+/// - Flow tables from v17 (flow_defaults / flow_default_methods).
+/// - Auto-preset tables from v11 (so createProfile never explodes).
+static Future<void> migrateV47(Database db) async {
+  await db.transaction((txn) async {
+    // ── v1 core (CREATE IF NOT EXISTS; safe on all DBs) ───────────────
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS sessions (
+        id       INTEGER PRIMARY KEY AUTOINCREMENT,
+        date     TEXT    NOT NULL,
+        duration INTEGER NOT NULL
+      );
+    ''');
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS equipment (
+        id   INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT    NOT NULL UNIQUE
+      );
+    ''');
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS bodypart (
+        id   INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT    NOT NULL UNIQUE
+      );
+    ''');
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS exercise_definitions (
+        id           INTEGER PRIMARY KEY AUTOINCREMENT,
+        name         TEXT NOT NULL,
+        equipment_id INTEGER,
+        rating       INTEGER NOT NULL DEFAULT 0,
+        FOREIGN KEY(equipment_id) REFERENCES equipment(id),
+        UNIQUE(name, equipment_id)
+      );
+    ''');
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS exercise_bodypart (
+        exercise_id INTEGER NOT NULL,
+        bodypart_id INTEGER NOT NULL,
+        PRIMARY KEY(exercise_id, bodypart_id),
+        FOREIGN KEY(exercise_id)  REFERENCES exercise_definitions(id) ON DELETE CASCADE,
+        FOREIGN KEY(bodypart_id)  REFERENCES bodypart(id)            ON DELETE CASCADE
+      );
+    ''');
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS exercises (
+        id              INTEGER PRIMARY KEY AUTOINCREMENT,
+        session_id      INTEGER NOT NULL,
+        exercise_def_id INTEGER,
+        type            TEXT    NOT NULL,
+        order_index     INTEGER NOT NULL,
+        FOREIGN KEY(session_id)      REFERENCES sessions(id)            ON DELETE CASCADE,
+        FOREIGN KEY(exercise_def_id) REFERENCES exercise_definitions(id)
+      );
+    ''');
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS sets (
+        id            INTEGER PRIMARY KEY AUTOINCREMENT,
+        exercise_id   INTEGER NOT NULL,
+        weight        REAL    NOT NULL,
+        reps          INTEGER NOT NULL,
+        order_index   INTEGER NOT NULL,
+        parent_set_id INTEGER,
+        FOREIGN KEY(exercise_id) REFERENCES exercises(id) ON DELETE CASCADE
+      );
+    ''');
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS measurement_definitions (
+        id   INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT    NOT NULL UNIQUE,
+        type TEXT    NOT NULL
+      );
+    ''');
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS measurements (
+        id        INTEGER PRIMARY KEY AUTOINCREMENT,
+        def_id    INTEGER NOT NULL,
+        timestamp TEXT    NOT NULL,
+        value     REAL    NOT NULL,
+        unit      TEXT    NOT NULL,
+        note      TEXT,
+        FOREIGN KEY(def_id) REFERENCES measurement_definitions(id) ON DELETE CASCADE
+      );
+    ''');
+
+    // ── v11: auto-preset tables (used by createProfile on first run) ──
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS preset_auto_settings (
+        preset_id        INTEGER PRIMARY KEY,
+        is_automatic     INTEGER NOT NULL DEFAULT 0,
+        global_increment REAL    NOT NULL DEFAULT 5,
+        skip_first_set   INTEGER NOT NULL DEFAULT 1,
+        weight_check     INTEGER NOT NULL DEFAULT 1,
+        rep_check        INTEGER NOT NULL DEFAULT 1,
+        volume_check     INTEGER NOT NULL DEFAULT 0,
+        adjust_all_sets  INTEGER NOT NULL DEFAULT 0,
+        flow_definition  TEXT    NOT NULL DEFAULT '{}',
+        use_manual_select INTEGER NOT NULL DEFAULT 0,
+        manual_selection_json TEXT,
+        FOREIGN KEY(preset_id) REFERENCES preset_definitions(id) ON DELETE CASCADE
+      );
+    ''');
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS preset_exercise_auto (
+        preset_exercise_id INTEGER PRIMARY KEY,
+        increment_amount   REAL,
+        last_set_index     INTEGER NOT NULL DEFAULT 1,
+        last_node          TEXT,
+        FOREIGN KEY(preset_exercise_id) REFERENCES preset_exercises(id) ON DELETE CASCADE
+      );
+    ''');
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS preset_set_auto (
+        preset_set_id    INTEGER PRIMARY KEY,
+        increment_amount REAL,
+        FOREIGN KEY(preset_set_id) REFERENCES preset_sets(id) ON DELETE CASCADE
+      );
+    ''');
+
+    // ── v17: flow tables (the ones your crash complained about) ───────
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS flow_defaults (
+        scope       TEXT    NOT NULL,
+        profile_id  INTEGER REFERENCES gym_profiles(id) ON DELETE CASCADE,
+        flow_json   TEXT    NOT NULL,
+        PRIMARY KEY(scope, profile_id)
+      );
+    ''');
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS flow_default_methods (
+        scope       TEXT    NOT NULL,
+        profile_id  INTEGER REFERENCES gym_profiles(id) ON DELETE CASCADE,
+        name        TEXT    NOT NULL,
+        type        TEXT    NOT NULL,
+        params      TEXT    NOT NULL,
+        PRIMARY KEY(scope, profile_id, name),
+        FOREIGN KEY(scope, profile_id)
+          REFERENCES flow_defaults(scope, profile_id) ON DELETE CASCADE
+      );
+    ''');
+  });
+}
 
 
 static Future<bool> _fts4Available(DatabaseExecutor db) async {

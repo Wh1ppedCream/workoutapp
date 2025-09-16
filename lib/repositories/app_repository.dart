@@ -1202,4 +1202,16 @@ class AppRepository {
 
   // Seed core nutrient catalog if the nutrients table is empty.
   Future<void> seedNutrientsIfEmpty() => _dbHelper.seedNutrientsIfEmpty();
+
+/// Opens the DB once so first-run copy/migrations happen before UI.
+/// Optionally runs a quick integrity check.
+Future<bool> warmUp({bool verify = false}) async {
+  final db = await _dbHelper.database;
+  if (!verify) return true;
+  try { await db.rawQuery('PRAGMA quick_check'); return true; }
+  catch (_) { return false; }
+}
+
+
+
 }

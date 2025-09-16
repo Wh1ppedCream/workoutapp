@@ -30,6 +30,10 @@ import 'nutrition_dao.dart';
 
 import 'package:flutter/foundation.dart' show debugPrint;
 
+import 'package:flutter/services.dart' show rootBundle;
+
+import 'prebuilt_db.dart'; // asset path + baked user_version=22
+import 'dart:io' show File, Directory;
 
 
 
@@ -49,8 +53,19 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDatabase() async {
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, 'fitness_tracker.db');
+    //old
+///final dbPath = await getDatabasesPath();
+///final path = join(dbPath, 'fitness_tracker.db');
+
+
+
+///new:
+  final path = await _dbFilePath();
+// ← NEW: put the prebuilt DB in place on first run
+
+  await _materializePrebuiltIfNeeded(path);
+
+
     return await openDatabase(
       path,
       version: _kDbVersion,
@@ -3447,7 +3462,22 @@ Future<Map<String, Object?>> _sanitizeRowForTable(
   return out;
 }
 
+Future<String> _dbFilePath() async {
+  final dbPath = await getDatabasesPath();
+  return join(dbPath, 'fitness_tracker.db'); // keep your existing filename
+}
+
+Future<void> _materializePrebuiltIfNeeded(String path) async {
+  final exists = await databaseExists(path);
+  if (exists) return;
+  // Ensure parent dir exists
+  await Directory(dirname(path)).create(recursive: true);
+  // Copy the prebuilt catalog asset to the sqflite location
+  final bytes = (await rootBundle.load(PrebuiltDb.assetPath)).buffer.asUint8List();
+  final file = File(path);
+  await file.writeAsBytes(bytes, flush: true);
+}
+
 
 
 }
-
