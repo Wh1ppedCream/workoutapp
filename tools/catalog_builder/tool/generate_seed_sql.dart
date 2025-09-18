@@ -63,10 +63,27 @@ Iterable<Map<String, dynamic>> _readJsonlGz(File f) sync* {
   }
 }
 
+// Small records for batching
+class _NutRow {
+  final String ext;
+  final String code;
+  final num amount;
+  _NutRow(this.ext, this.code, this.amount);
+}
+
+class _BcRow {
+  final String ext;
+  final String upc;
+  _BcRow(this.ext, this.upc);
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Main
 // ─────────────────────────────────────────────────────────────────────────────
 void main(List<String> argv) {
+  const int kNutrientBatch = 2000; // rows per INSERT for nutrients
+  const int kBarcodeBatch = 3000;  // rows per INSERT for barcodes
+
   final ap = ArgParser()
     ..addOption('in',
         help: 'Input directory containing JSON files (legacy path)',
@@ -95,13 +112,62 @@ void main(List<String> argv) {
   outFile.createSync(recursive: true);
   final sink = outFile.openWrite();
 
+  void writeLine(String s) => sink.writeln(s);
+
   // NOTE: No BEGIN/COMMIT here — the build step wraps with savepoints/txn.
 
   // Temp mapping tables used by the builder import phase.
-  sink.writeln("CREATE TEMP TABLE IF NOT EXISTS _import_food_map (ext TEXT PRIMARY KEY, food_id INTEGER NOT NULL);");
-  sink.writeln("CREATE TEMP TABLE IF NOT EXISTS _import_portion_map (ext TEXT PRIMARY KEY, portion_id INTEGER NOT NULL);");
+  writeLine("CREATE TEMP TABLE IF NOT EXISTS _import_food_map (ext TEXT PRIMARY KEY, food_id INTEGER NOT NULL);");
+  writeLine("CREATE TEMP TABLE IF NOT EXISTS _import_portion_map (ext TEXT PRIMARY KEY, portion_id INTEGER NOT NULL);");
 
   int foodsCount = 0, portionsCount = 0, per100gCount = 0, perPortionCount = 0, barcodesCount = 0;
+
+  // Dedup sets (reduce tiny INSERT chatter)
+  final seenBrands = <String>{};
+  final seenCategories = <String>{};
+  final seenSources = <String>{};
+
+  // Batched buffers
+  final nutBatch = <_NutRow>[];
+  final bcBatch = <_BcRow>[];
+
+  void flushNutrientBatch() {
+    if (nutBatch.isEmpty) return;
+    // Emit as a single VALUES-table then SELECT into target
+    final rows = nutBatch
+        .map((n) => "(${q(n.ext)}, ${q(n.code)}, ${qNum(n.amount)})")
+        .join(",\n  ");
+    writeLine("""
+INSERT INTO food_nutrient_values(food_id, nutrient_id, amount, basis, portion_id)
+SELECT
+  (SELECT food_id FROM _import_food_map WHERE ext=v.ext),
+  (SELECT id FROM nutrients WHERE code=v.code),
+  v.amount,
+  'per_100g',
+  NULL
+FROM (VALUES
+  $rows
+) AS v(ext, code, amount)
+WHERE EXISTS (SELECT 1 FROM nutrients WHERE code=v.code);
+""");
+    nutBatch.clear();
+  }
+
+  void flushBarcodeBatch() {
+    if (bcBatch.isEmpty) return;
+    final rows =
+        bcBatch.map((b) => "(${q(b.ext)}, ${q(b.upc)})").join(",\n  ");
+    writeLine("""
+INSERT OR IGNORE INTO food_barcodes(food_id, upc)
+SELECT
+  (SELECT food_id FROM _import_food_map WHERE ext=v.ext),
+  v.upc
+FROM (VALUES
+  $rows
+) AS v(ext, upc);
+""");
+    bcBatch.clear();
+  }
 
   // ── Fast lane: JSONL / JSONL.GZ ────────────────────────────────────────────
   if ((jsonlPath != null && jsonlPath.isNotEmpty) ||
@@ -129,13 +195,27 @@ void main(List<String> argv) {
       final dataSource = sourceName ?? 'prebuilt';
       final dataSourceId = sourceId == null ? null : '$sourceId';
 
+      // dedup small dictionaries
+      if (brand != null && brand.isNotEmpty && seenBrands.add(brand)) {
+        writeLine("INSERT OR IGNORE INTO brands(name) VALUES (${q(brand)});");
+      }
+      if (category != null && category.isNotEmpty && seenCategories.add(category)) {
+        writeLine("INSERT OR IGNORE INTO categories(name) VALUES (${q(category)});");
+      }
+      if (sourceName != null && sourceName.isNotEmpty && seenSources.add(sourceName)) {
+        writeLine("INSERT OR IGNORE INTO sources(name) VALUES (${q(sourceName)});");
+      }
+
       // normalize barcodes
       final rawBcs = (m['barcodes'] is List) ? List.from(m['barcodes'] as List) : const [];
-      final barcodes = <String>[];
       for (final b in rawBcs) {
         final digits = '$b'.replaceAll(RegExp(r'\D'), '');
         if (digits.isEmpty) continue;
-        if (_isLikelyUpc(digits)) barcodes.add(digits);
+        if (_isLikelyUpc(digits)) {
+          bcBatch.add(_BcRow(ext, digits));
+          barcodesCount++;
+          if (bcBatch.length >= kBarcodeBatch) flushBarcodeBatch();
+        }
       }
 
       // portions (with synthesized fallback)
@@ -192,8 +272,7 @@ void main(List<String> argv) {
         portions[idx]['is_default'] = 1;
       }
 
-      // nutrients per_100g (extendable to per_100ml later)
-      final per100g = <Map<String, dynamic>>[];
+      // nutrients per_100g
       if (m['per_100g'] is Map) {
         final nmap = Map<String, dynamic>.from(m['per_100g'] as Map);
         for (final entry in nmap.entries) {
@@ -202,23 +281,14 @@ void main(List<String> argv) {
           if (val == null) continue;
           final amount = (val is num) ? val.toDouble() : double.tryParse('$val');
           if (amount == null) continue;
-          per100g.add({'code': code, 'amount': amount});
+          nutBatch.add(_NutRow(ext, code, amount));
+          per100gCount++;
+          if (nutBatch.length >= kNutrientBatch) flushNutrientBatch();
         }
       }
 
-      // ── SQL: brands/categories/sources
-      if (brand != null && brand.isNotEmpty) {
-        sink.writeln("INSERT OR IGNORE INTO brands(name) VALUES (${q(brand)});");
-      }
-      if (category != null && category.isNotEmpty) {
-        sink.writeln("INSERT OR IGNORE INTO categories(name) VALUES (${q(category)});");
-      }
-      if (sourceName != null && sourceName.isNotEmpty) {
-        sink.writeln("INSERT OR IGNORE INTO sources(name) VALUES (${q(sourceName)});");
-      }
-
       // ── SQL: foods (created_at/updated_at use SQLite date('now'))
-      sink.writeln("""
+      writeLine("""
 INSERT INTO foods(
   name, brand, brand_id, category_id, is_custom, verified,
   data_source, data_source_id, source_id, density_g_per_ml, quality_score,
@@ -245,12 +315,12 @@ INSERT INTO _import_food_map(ext, food_id) VALUES (${q(ext)}, last_insert_rowid(
 """);
       foodsCount++;
 
-      // ── SQL: portions
+      // ── SQL: portions (per-row to capture mapping reliably)
       int localPortionIdx = 0;
       for (final pmap in portions) {
         localPortionIdx++;
         final pext = '${ext}_p${localPortionIdx.toString().padLeft(3, '0')}';
-        sink.writeln("""
+        writeLine("""
 INSERT INTO food_portions(
   food_id, measure_name, gram_weight, ml_volume, is_default, list_kind,
   sort_order, amount, unit, label
@@ -270,34 +340,14 @@ INSERT INTO _import_portion_map(ext, portion_id) VALUES (${q(pext)}, last_insert
 """);
         portionsCount++;
       }
-
-      // ── SQL: per_100g nutrient values (guard unknown codes)
-      for (final n in per100g) {
-        sink.writeln("""
-INSERT INTO food_nutrient_values(food_id, nutrient_id, amount, basis, portion_id)
-SELECT
-  (SELECT food_id FROM _import_food_map WHERE ext=${q(ext)}),
-  (SELECT id FROM nutrients WHERE code=${q(n['code'] as String)}),
-  ${qNum(n['amount'] as num?)},
-  'per_100g',
-  NULL
-WHERE EXISTS (SELECT 1 FROM nutrients WHERE code=${q(n['code'] as String)});
-""");
-        per100gCount++;
-      }
-
-      // ── SQL: barcodes
-      for (final bc in barcodes) {
-        sink.writeln("""
-INSERT OR IGNORE INTO food_barcodes(food_id, upc)
-SELECT (SELECT food_id FROM _import_food_map WHERE ext=${q(ext)}), ${q(bc)};
-""");
-        barcodesCount++;
-      }
     }
 
+    // final flush for batched tables
+    flushNutrientBatch();
+    flushBarcodeBatch();
+
     // Normalize to one default portion per food (keep lowest id).
-    sink.writeln("""
+    writeLine("""
 WITH d AS (
   SELECT food_id, MIN(id) AS keep_id
   FROM food_portions
@@ -311,7 +361,7 @@ WHERE COALESCE(is_default,0)=1
 """);
 
     // Set foods.default_portion_id when a default exists.
-    sink.writeln("""
+    writeLine("""
 UPDATE foods
 SET default_portion_id = (
   SELECT id FROM food_portions p
@@ -324,7 +374,7 @@ WHERE default_portion_id IS NULL
 """);
 
     // Mirror per_100g into legacy table for back-compat reads.
-    sink.writeln("""
+    writeLine("""
 INSERT OR IGNORE INTO food_nutrients(food_id, nutrient_id, amount_per_100g)
 SELECT food_id, nutrient_id, amount
 FROM food_nutrient_values
@@ -338,7 +388,7 @@ WHERE basis='per_100g';
     return;
   }
 
-  // ── Legacy path: separate JSON files ──────────────────────────────────────
+  // ── Legacy path: separate JSON files (kept mostly intact; add batching) ────
   final foodsPath      = p.join(inDir, 'foods.json');
   final portionsPath   = p.join(inDir, 'portions.json');
   final per100gPath    = p.join(inDir, 'per100g.json');
@@ -365,16 +415,16 @@ WHERE basis='per_100g';
   final recipes    = _loadJsonArray(recipesPath);
   final rings      = _loadJsonArray(ringsPath);
 
-  // Optional sources/aliases/recipes
   for (final e in sources) {
     final m = Map<String, dynamic>.from(e as Map);
-    if ((m['name'] as String?)?.trim().isNotEmpty == true) {
-      sink.writeln("INSERT OR IGNORE INTO sources(name) VALUES (${q(m['name'] as String)});");
+    final n = (m['name'] as String?)?.trim();
+    if (n != null && n.isNotEmpty && seenSources.add(n)) {
+      writeLine("INSERT OR IGNORE INTO sources(name) VALUES (${q(n)});");
     }
   }
   for (final e in aliases) {
     final m = Map<String, dynamic>.from(e as Map);
-    sink.writeln("""
+    writeLine("""
 INSERT OR IGNORE INTO nutrient_aliases(nutrient_id, alias)
 SELECT id, ${q(m['alias'] as String)} FROM nutrients WHERE code=${q(m['code'] as String)};
 """);
@@ -384,17 +434,17 @@ SELECT id, ${q(m['alias'] as String)} FROM nutrients WHERE code=${q(m['code'] as
     final m = Map<String, dynamic>.from(e as Map);
     final ext = m['ext'] as String;
     final name = m['name'] as String;
-    final brand = m['brand'] as String?;
-    final category = m['category'] as String?;
+    final brand = (m['brand'] as String?)?.trim();
+    final category = (m['category'] as String?)?.trim();
 
-    if (brand != null && brand.trim().isNotEmpty) {
-      sink.writeln("INSERT OR IGNORE INTO brands(name) VALUES (${q(brand)});");
+    if (brand != null && brand.isNotEmpty && seenBrands.add(brand)) {
+      writeLine("INSERT OR IGNORE INTO brands(name) VALUES (${q(brand)});");
     }
-    if (category != null && category.trim().isNotEmpty) {
-      sink.writeln("INSERT OR IGNORE INTO categories(name) VALUES (${q(category)});");
+    if (category != null && category.isNotEmpty && seenCategories.add(category)) {
+      writeLine("INSERT OR IGNORE INTO categories(name) VALUES (${q(category)});");
     }
 
-    sink.writeln("""
+    writeLine("""
 INSERT INTO foods (
   name, brand, brand_id, category_id, is_custom, verified, data_source, data_source_id,
   density_g_per_ml, quality_score, version, preparation, created_at, updated_at, is_deleted
@@ -426,7 +476,7 @@ INSERT INTO _import_food_map(ext, food_id) VALUES (${q(ext)}, last_insert_rowid(
     final ext = m['ext'] as String;
     final foodExt = m['food_ext'] as String;
 
-    sink.writeln("""
+    writeLine("""
 INSERT INTO food_portions(
   food_id, measure_name, gram_weight, ml_volume, is_default, list_kind,
   sort_order, amount, unit, label
@@ -447,34 +497,26 @@ INSERT INTO _import_portion_map(ext, portion_id) VALUES (${q(ext)}, last_insert_
     portionsCount++;
   }
 
-  // per_100g with guard
+  // per_100g batched
   for (final e in per100g) {
     final m = Map<String, dynamic>.from(e as Map);
     final foodExt = m['food_ext'] as String;
-    final code = m['nutrient_code'] as String;
-    final amount = (m['amount'] as num).toString();
-    final basis = q(m['basis'] as String? ?? 'per_100g');
-    sink.writeln("""
-INSERT INTO food_nutrient_values(food_id, nutrient_id, amount, basis, portion_id)
-SELECT
-  (SELECT food_id FROM _import_food_map WHERE ext=${q(foodExt)}),
-  (SELECT id FROM nutrients WHERE code=${q(code)}),
-  $amount,
-  $basis,
-  NULL
-WHERE EXISTS (SELECT 1 FROM nutrients WHERE code=${q(code)});
-""");
+    final code = (m['nutrient_code'] as String).trim().toUpperCase();
+    final amount = m['amount'] as num;
+    nutBatch.add(_NutRow(foodExt, code, amount));
     per100gCount++;
+    if (nutBatch.length >= kNutrientBatch) flushNutrientBatch();
   }
+  flushNutrientBatch();
 
-  // per_portion with guard (nutrient + portion)
+  // per_portion (kept per-row: needs portion map)
   for (final e in perPortion) {
     final m = Map<String, dynamic>.from(e as Map);
     final foodExt = m['food_ext'] as String;
     final portionExt = m['portion_ext'] as String;
-    final code = m['nutrient_code'] as String;
+    final code = (m['nutrient_code'] as String).trim().toUpperCase();
     final amount = (m['amount'] as num).toString();
-    sink.writeln("""
+    writeLine("""
 INSERT INTO food_nutrient_values(food_id, nutrient_id, amount, basis, portion_id)
 SELECT
   (SELECT food_id FROM _import_food_map WHERE ext=${q(foodExt)}),
@@ -488,30 +530,30 @@ WHERE EXISTS (SELECT 1 FROM nutrients WHERE code=${q(code)})
     perPortionCount++;
   }
 
+  // barcodes batched
   for (final e in barcodes) {
     final m = Map<String, dynamic>.from(e as Map);
     final foodExt = m['food_ext'] as String;
     final upc = (m['upc'] as String).replaceAll(RegExp(r'\D'), '');
     if (_isLikelyUpc(upc)) {
-      sink.writeln("""
-INSERT OR IGNORE INTO food_barcodes(food_id, upc)
-SELECT (SELECT food_id FROM _import_food_map WHERE ext=${q(foodExt)}), ${q(upc)};
-""");
+      bcBatch.add(_BcRow(foodExt, upc));
       barcodesCount++;
+      if (bcBatch.length >= kBarcodeBatch) flushBarcodeBatch();
     }
   }
+  flushBarcodeBatch();
 
   // (Optional) recipes & ingredients (simple passthrough)
   for (final e in recipes) {
     final m = Map<String, dynamic>.from(e as Map);
-    sink.writeln("""
+    writeLine("""
 INSERT INTO recipes(name, notes, is_deleted, created_at, updated_at)
 VALUES(${q(m['name'] as String)}, ${q(m['notes'] as String?)}, 0, ${q(m['created_at'] as String? ?? '2025-01-01')}, ${q(m['updated_at'] as String? ?? '2025-01-01')});
 """);
   }
   for (final e in rings) {
     final m = Map<String, dynamic>.from(e as Map);
-    sink.writeln("""
+    writeLine("""
 INSERT INTO recipe_ingredients(recipe_id, food_id, portion_id, quantity, grams)
 VALUES(
   ${qNum(m['recipe_id'] as num?)},
@@ -524,7 +566,7 @@ VALUES(
   }
 
   // Normalize to one default portion per food (keep lowest id).
-  sink.writeln("""
+  writeLine("""
 WITH d AS (
   SELECT food_id, MIN(id) AS keep_id
   FROM food_portions
@@ -538,7 +580,7 @@ WHERE COALESCE(is_default,0)=1
 """);
 
   // Set foods.default_portion_id where a default exists.
-  sink.writeln("""
+  writeLine("""
 UPDATE foods
 SET default_portion_id = (
   SELECT id FROM food_portions p
@@ -551,7 +593,7 @@ WHERE default_portion_id IS NULL
 """);
 
   // Mirror per_100g into legacy table for back-compat reads.
-  sink.writeln("""
+  writeLine("""
 INSERT OR IGNORE INTO food_nutrients(food_id, nutrient_id, amount_per_100g)
 SELECT food_id, nutrient_id, amount
 FROM food_nutrient_values

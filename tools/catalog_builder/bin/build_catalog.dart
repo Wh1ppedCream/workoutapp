@@ -69,13 +69,22 @@ void main(List<String> argv) async {
         help: 'Output SQLite DB path',
         defaultsTo: p.normalize(p.join('build', 'app_nutrition.db')))
     ..addOption('page-size',
-        help: 'Final page size (power of two 512..65536). Applied on VACUUM.',
+        help: 'Desired page size (power of two 512..65536). Set BEFORE writes.',
         defaultsTo: '4096')
     ..addFlag('turbo',
         abbr: 'T',
         help:
             'Use fast PRAGMAs during build; builder restores safe defaults after.',
         defaultsTo: true)
+    ..addOption('cache-mb',
+        help: 'Pass-through: cache size in MB for builder turbo mode.',
+        defaultsTo: '800')
+    ..addOption('mmap-mb',
+        help: 'Pass-through: MMAP size in MB for builder turbo mode (0=off).',
+        defaultsTo: '256')
+    ..addFlag('vacuum',
+        help: 'Request a final VACUUM at end of build (slow; usually unnecessary).',
+        defaultsTo: false)
     ..addOption('seed-sql',
         help: 'Where to write the generated SQL seeds.',
         defaultsTo: p.normalize(
@@ -98,11 +107,7 @@ void main(List<String> argv) async {
         help: 'Fail if PRAGMA user_version does not equal this value.',
         defaultsTo: '22')
     ..addOption('cwd',
-        help: 'Run the dart subcommands from this directory (optional).')
-    // Pass-through to build_food_db.dart
-    ..addFlag('validate',
-        help: 'Run builder validations (pass-through to build_food_db.dart).',
-        defaultsTo: true);
+        help: 'Run the dart subcommands from this directory (optional).');
 
   final a = ap.parse(argv);
 
@@ -122,10 +127,11 @@ void main(List<String> argv) async {
       int.tryParse(a['expect-user-version'] as String) ?? 22;
   final rawCwd = (a['cwd'] as String?)?.trim();
   final runCwd = (rawCwd == null || rawCwd.isEmpty) ? null : p.normalize(rawCwd);
-  final validate = a['validate'] as bool;
+  final cacheMb = a['cache-mb'] as String;
+  final mmapMb = a['mmap-mb'] as String;
+  final doVacuum = a['vacuum'] as bool;
   final extraSql =
-      (a['extra-sql'] as List<String>?)?.map(p.normalize).toList() ??
-          const <String>[];
+      (a['extra-sql'] as List<String>?)?.map(p.normalize).toList() ?? const <String>[];
 
   if ((jsonl != null && jsonl.isNotEmpty) &&
       (jsonlGz != null && jsonlGz.isNotEmpty)) {
@@ -136,9 +142,8 @@ void main(List<String> argv) async {
 
   // Early input check: if neither jsonl* provided, ensure legacy input dir exists
   final dirExists = Directory(inDir).existsSync();
-  if ((jsonl == null || jsonl.isEmpty) &&
-      (jsonlGz == null || jsonlGz.isNotEmpty == false) &&
-      !dirExists) {
+  final noJsonlProvided = (jsonl == null || jsonl.isEmpty) && (jsonlGz == null || jsonlGz.isEmpty);
+  if (noJsonlProvided && !dirExists) {
     _fail('No --jsonl/--jsonl-gz provided and input dir does not exist: $inDir');
   }
 
@@ -186,30 +191,29 @@ void main(List<String> argv) async {
   final seedFile = File(seedSql);
   if (!seedFile.existsSync() || seedFile.lengthSync() == 0) {
     _fail('Generated seed SQL missing or empty at $seedSql');
+  } else if (verbose) {
+    final sz = (seedFile.lengthSync() / (1024 * 1024)).toStringAsFixed(2);
+    stdout.writeln('  seed size: ${sz} MB');
   }
 
   // 2) Build DB
   final buildArgs = <String>[
     'run',
     p.join('tools', 'catalog_builder', 'tool', 'build_food_db.dart'),
-    '--schema',
-    schema,
-    '--import-sql',
-    seedSql,
+    '--schema', schema,
+    '--import-sql', seedSql,
     ...extraSql.expand((e) => ['--import-sql', e]),
-    '--page-size',
-    pageSize,
-    '--out',
-    outDb,
+    '--page-size', pageSize,
+    '--out', outDb,
+    '--cache-mb', cacheMb,
+    '--mmap-mb', mmapMb,
   ];
   if (turbo) buildArgs.add('--turbo');
+  if (doVacuum) buildArgs.add('--vacuum');
   if (verbose) {
     buildArgs.add('--verbose');
   } else {
     buildArgs.add('--no-verbose');
-  }
-  if (!validate) {
-    buildArgs.add('--no-validate');
   }
 
   final res2 = await _run('dart', buildArgs, cwd: runCwd, verbose: verbose);
