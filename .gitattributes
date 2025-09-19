@@ -1,0 +1,1 @@
+tools/catalog_builder/data/seed_catalog.sql filter=lfs diff=lfs merge=lfs -text
