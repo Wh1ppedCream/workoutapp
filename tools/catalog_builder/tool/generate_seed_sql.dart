@@ -148,7 +148,9 @@ SELECT
 FROM (VALUES
   $rows
 ) AS v(ext, code, amount)
-WHERE EXISTS (SELECT 1 FROM nutrients WHERE code=v.code);
+WHERE EXISTS (SELECT 1 FROM nutrients WHERE code=v.code)
+  AND EXISTS (SELECT 1 FROM _import_food_map WHERE ext=v.ext);
+
 """);
     nutBatch.clear();
   }
@@ -164,7 +166,9 @@ SELECT
   v.upc
 FROM (VALUES
   $rows
-) AS v(ext, upc);
+) AS v(ext, upc)
+WHERE EXISTS (SELECT 1 FROM _import_food_map WHERE ext=v.ext);
+
 """);
     bcBatch.clear();
   }
@@ -182,6 +186,10 @@ FROM (VALUES
 
     final rows = jsonlPath != null ? _readJsonl(file) : _readJsonlGz(file);
     int i = 0;
+
+    bool needFlushNuts = false;
+    bool needFlushBcs  = false;
+
 
     for (final m in rows) {
       i++;
@@ -214,7 +222,7 @@ FROM (VALUES
         if (_isLikelyUpc(digits)) {
           bcBatch.add(_BcRow(ext, digits));
           barcodesCount++;
-          if (bcBatch.length >= kBarcodeBatch) flushBarcodeBatch();
+          if (bcBatch.length >= kBarcodeBatch) needFlushBcs = true;
         }
       }
 
@@ -263,6 +271,41 @@ FROM (VALUES
         }
       }
 
+      // If serving_size exists but portions don't include that serving (non-100 g),
+// append a synthesized serving portion (e.g., seaweed: "serving (1 SHEET)" 2.5 g).
+if (m['serving_size'] is Map) {
+  final ss   = Map<String, dynamic>.from(m['serving_size'] as Map);
+  final amt  = (ss['amount'] as num?)?.toDouble();
+  final unit = (ss['unit'] as String?)?.toLowerCase();
+  final text = (ss['text'] as String?)?.trim();
+  final isMl = unit == 'ml' || unit == 'milliliter' || unit == 'milliliters';
+
+  bool hasServing = portions.any((p) {
+    final name = ((p['measure_name'] as String?) ?? '').toLowerCase();
+    final gw   = (p['gram_weight'] as num?)?.toDouble();
+    final mv   = (p['ml_volume'] as num?)?.toDouble();
+    final is100g = name.replaceAll(' ', '') == '100g' || gw == 100.0;
+    final matchesAmt = isMl ? (mv == amt) : (gw == amt);
+    final mentionsText = text != null && name.contains(text.toLowerCase());
+    return !is100g && (matchesAmt || mentionsText);
+  });
+
+  if (!hasServing && amt != null) {
+    portions.insert(0, {
+      'measure_name': 'serving (${text ?? '${amt} ${ss['unit'] ?? ''}'.trim()})',
+      'gram_weight': isMl ? null : amt,
+      'ml_volume':   isMl ? amt : null,
+      'is_default': 0,
+      'list_kind': 'basis',
+      'sort_order': 0,
+      'amount': amt,
+      'unit': isMl ? 'ml' : 'g',
+      'label': null,
+    });
+  }
+}
+
+
       // ensure exactly one default
       if (portions.isNotEmpty && !portions.any((p) => p['is_default'] == 1)) {
         final idx100 = portions.indexWhere((p) =>
@@ -283,7 +326,7 @@ FROM (VALUES
           if (amount == null) continue;
           nutBatch.add(_NutRow(ext, code, amount));
           per100gCount++;
-          if (nutBatch.length >= kNutrientBatch) flushNutrientBatch();
+          if (nutBatch.length >= kNutrientBatch) needFlushNuts = true;
         }
       }
 
@@ -340,6 +383,17 @@ INSERT INTO _import_portion_map(ext, portion_id) VALUES (${q(pext)}, last_insert
 """);
         portionsCount++;
       }
+    
+        if (needFlushNuts) {
+      flushNutrientBatch();
+      needFlushNuts = false;
+    }
+    if (needFlushBcs) {
+      flushBarcodeBatch();
+      needFlushBcs = false;
+    }
+
+    
     }
 
     // final flush for batched tables
@@ -362,24 +416,32 @@ WHERE COALESCE(is_default,0)=1
 
     // Set foods.default_portion_id when a default exists.
     writeLine("""
-UPDATE foods
+UPDATE foods AS f
 SET default_portion_id = (
-  SELECT id FROM food_portions p
-  WHERE p.food_id = foods.id AND COALESCE(p.is_default,0) = 1
+  SELECT p.id
+  FROM food_portions p
+  WHERE p.food_id = f.id AND COALESCE(p.is_default, 0) = 1
   ORDER BY p.id LIMIT 1
 )
-WHERE default_portion_id IS NULL
-  AND EXISTS (SELECT 1 FROM food_portions x
-              WHERE x.food_id = foods.id AND COALESCE(x.is_default,0) = 1);
+WHERE f.default_portion_id IS NULL
+  AND EXISTS (
+    SELECT 1 FROM food_portions x
+    WHERE x.food_id = f.id AND COALESCE(x.is_default, 0) = 1
+  );
+
 """);
 
-    // Mirror per_100g into legacy table for back-compat reads.
-    writeLine("""
+// Legacy back-compat: only mirror if the legacy table+column exist.
+writeLine("""
 INSERT OR IGNORE INTO food_nutrients(food_id, nutrient_id, amount_per_100g)
-SELECT food_id, nutrient_id, amount
-FROM food_nutrient_values
-WHERE basis='per_100g';
+SELECT v.food_id, v.nutrient_id, v.amount
+FROM food_nutrient_values v
+WHERE v.basis='per_100g'
+  AND EXISTS (SELECT 1 FROM sqlite_master WHERE type='table' AND name='food_nutrients')
+  AND EXISTS (SELECT 1 FROM pragma_table_info('food_nutrients') WHERE name='amount_per_100g');
 """);
+
+
 
     sink.close();
     stdout.writeln('> Wrote ${p.normalize(outPath)} '
@@ -581,24 +643,32 @@ WHERE COALESCE(is_default,0)=1
 
   // Set foods.default_portion_id where a default exists.
   writeLine("""
-UPDATE foods
+UPDATE foods AS f
 SET default_portion_id = (
-  SELECT id FROM food_portions p
-  WHERE p.food_id = foods.id AND COALESCE(p.is_default,0) = 1
+  SELECT p.id
+  FROM food_portions p
+  WHERE p.food_id = f.id AND COALESCE(p.is_default, 0) = 1
   ORDER BY p.id LIMIT 1
 )
-WHERE default_portion_id IS NULL
-  AND EXISTS (SELECT 1 FROM food_portions x
-              WHERE x.food_id = foods.id AND COALESCE(x.is_default,0) = 1);
+WHERE f.default_portion_id IS NULL
+  AND EXISTS (
+    SELECT 1 FROM food_portions x
+    WHERE x.food_id = f.id AND COALESCE(x.is_default, 0) = 1
+  );
 """);
 
-  // Mirror per_100g into legacy table for back-compat reads.
-  writeLine("""
+  // Legacy back-compat: ensure table exists, then mirror per_100g.
+writeLine("""
 INSERT OR IGNORE INTO food_nutrients(food_id, nutrient_id, amount_per_100g)
-SELECT food_id, nutrient_id, amount
-FROM food_nutrient_values
-WHERE basis='per_100g';
+SELECT v.food_id, v.nutrient_id, v.amount
+FROM food_nutrient_values v
+WHERE v.basis='per_100g'
+  AND EXISTS (SELECT 1 FROM sqlite_master WHERE type='table' AND name='food_nutrients')
+  AND EXISTS (SELECT 1 FROM pragma_table_info('food_nutrients') WHERE name='amount_per_100g');
+
 """);
+
+
 
   sink.close();
   stdout.writeln('> Wrote ${p.normalize(outPath)} '
