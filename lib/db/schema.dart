@@ -1077,11 +1077,11 @@ static Future<void> migrateV24(Database db) async {
     ''');
 
     // If a legacy categories table existed without parent_id, add it now.
-final _catCols = await txn.rawQuery("PRAGMA table_info('categories');");
-final _hasParentId = _catCols.any(
+final catCols = await txn.rawQuery("PRAGMA table_info('categories');");
+final hasParentId = catCols.any(
   (c) => (c['name'] as String?)?.toLowerCase() == 'parent_id',
 );
-if (!_hasParentId) {
+if (!hasParentId) {
   await txn.execute("ALTER TABLE categories ADD COLUMN parent_id INTEGER;");
 }
 
@@ -2489,10 +2489,10 @@ static Future<void> migrateV44(Database db) async {
     await txn.execute('DROP INDEX IF EXISTS idx_foods_barcode;');
 
     // 4) Optional: helper index for parent_set lookups
-    final _hasSets = (await txn.rawQuery(
+    final hasSets = (await txn.rawQuery(
   "SELECT 1 FROM sqlite_master WHERE type='table' AND name='sets' LIMIT 1;"
 )).isNotEmpty;
-if (_hasSets) {
+if (hasSets) {
   await txn.execute('CREATE INDEX IF NOT EXISTS idx_sets_parent ON sets(parent_set_id);');
 }
   });
