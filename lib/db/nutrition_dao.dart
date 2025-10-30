@@ -141,12 +141,13 @@ Future<Map<String, Object?>> _sanitizeFoodWriteTx(
 }
 
 
-
+/// TODO: DOUBLE CHECK REQUIREMENT AND USE
+/*
 Future<bool> _foodExists(int foodId) async {
     final r = await db.rawQuery('SELECT 1 FROM foods WHERE id = ? LIMIT 1;', [foodId]);
     return r.isNotEmpty;
   }
-
+*/
 
 bool _isValidEanUpc(String raw) {
   final code = raw.replaceAll(RegExp(r'\D'), '');

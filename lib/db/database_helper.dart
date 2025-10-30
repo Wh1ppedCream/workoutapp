@@ -39,7 +39,7 @@ import 'dart:io' show File, Directory;
 
 /// Singleton helper for managing the SQLite database.
 class DatabaseHelper {
-   static const int _kDbVersion = 45;
+   static const int _kDbVersion = 48;
    static bool? _fts4Available;
   static final DatabaseHelper _instance = DatabaseHelper._internal();
   factory DatabaseHelper() => _instance;

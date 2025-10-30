@@ -148,7 +148,8 @@ await migrateV43(db);
 await migrateV44(db);
 await migrateV45(db);
 await migrateV46(db);
-await migrateV47( db);
+await migrateV47(db);
+await migrateV48(db);
   }
 
   /// Handler for onUpgrade callback.
@@ -199,7 +200,7 @@ if (oldVersion < 44) await migrateV44(db);
 if (oldVersion < 45) await migrateV45(db);
 if (oldVersion < 46) await migrateV46(db);
 if (oldVersion < 47) await migrateV47(db);
-
+if (oldVersion < 48) await migrateV48(db);
 
   }
 
@@ -2829,6 +2830,109 @@ static Future<void> migrateV47(Database db) async {
     ''');
   });
 }
+
+/// v48 — Repair: ensure muscle + analytics lookups exist on out-of-sync DBs
+static Future<void> migrateV48(Database db) async {
+  await db.transaction((txn) async {
+    // -- Core muscle lookups (from v3 & v9 family) --------------------
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS muscles (
+        id   INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL UNIQUE
+      );
+    ''');
+
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS exercise_muscle (
+        exercise_id INTEGER NOT NULL,
+        muscle_id   INTEGER NOT NULL,
+        rank        INTEGER NOT NULL,
+        PRIMARY KEY(exercise_id, rank),
+        UNIQUE(exercise_id, muscle_id),
+        FOREIGN KEY(exercise_id) REFERENCES exercise_definitions(id) ON DELETE CASCADE,
+        FOREIGN KEY(muscle_id)   REFERENCES muscles(id)              ON DELETE CASCADE
+      );
+    ''');
+
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS muscle_bodypart (
+        muscle_id    INTEGER NOT NULL,
+        bodypart_id  INTEGER NOT NULL,
+        PRIMARY KEY(muscle_id, bodypart_id),
+        FOREIGN KEY(muscle_id)   REFERENCES muscles(id)  ON DELETE CASCADE,
+        FOREIGN KEY(bodypart_id) REFERENCES bodypart(id) ON DELETE CASCADE
+      );
+    ''');
+
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS bodypart_ranking (
+        bodypart_id INTEGER PRIMARY KEY,
+        rank        INTEGER NOT NULL,
+        FOREIGN KEY(bodypart_id) REFERENCES bodypart(id) ON DELETE CASCADE
+      );
+    ''');
+
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS muscle_ranking (
+        muscle_id INTEGER PRIMARY KEY,
+        rank      INTEGER NOT NULL,
+        FOREIGN KEY(muscle_id) REFERENCES muscles(id) ON DELETE CASCADE
+      );
+    ''');
+
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS exercise_muscle_percent (
+        exercise_def_id INTEGER NOT NULL,
+        muscle_id       INTEGER NOT NULL,
+        percent         REAL    NOT NULL,
+        PRIMARY KEY(exercise_def_id, muscle_id),
+        FOREIGN KEY(exercise_def_id) REFERENCES exercise_definitions(id) ON DELETE CASCADE,
+        FOREIGN KEY(muscle_id)       REFERENCES muscles(id)              ON DELETE CASCADE
+      );
+    ''');
+
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS muscle_volume_boundaries (
+        muscle_id              INTEGER PRIMARY KEY,
+        maintenance_volume     REAL NOT NULL,
+        min_effective_volume   REAL NOT NULL,
+        max_adaptive_volume    REAL NOT NULL,
+        max_recoverable_volume REAL NOT NULL,
+        FOREIGN KEY(muscle_id) REFERENCES muscles(id) ON DELETE CASCADE
+      );
+    ''');
+
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS bodypart_volume_boundaries (
+        bodypart_id            INTEGER PRIMARY KEY,
+        maintenance_volume     REAL NOT NULL,
+        min_effective_volume   REAL NOT NULL,
+        max_adaptive_volume    REAL NOT NULL,
+        max_recoverable_volume REAL NOT NULL,
+        FOREIGN KEY(bodypart_id) REFERENCES bodypart(id) ON DELETE CASCADE
+      );
+    ''');
+
+    await txn.execute('''
+      CREATE TABLE IF NOT EXISTS bodypart_muscle_rankings (
+        bodypart_id INTEGER NOT NULL,
+        muscle_id   INTEGER NOT NULL,
+        rank        INTEGER NOT NULL,
+        PRIMARY KEY(bodypart_id, muscle_id),
+        FOREIGN KEY(bodypart_id) REFERENCES bodypart(id) ON DELETE CASCADE,
+        FOREIGN KEY(muscle_id)   REFERENCES muscles(id)  ON DELETE CASCADE
+      );
+    ''');
+
+    // Helpful indexes for common reads (idempotent)
+    await txn.execute('CREATE INDEX IF NOT EXISTS idx_exmuscle_ex ON exercise_muscle(exercise_id);');
+    await txn.execute('CREATE INDEX IF NOT EXISTS idx_exmuscle_muscle ON exercise_muscle(muscle_id);');
+    await txn.execute('CREATE INDEX IF NOT EXISTS idx_exmusclepct_ex ON exercise_muscle_percent(exercise_def_id);');
+    await txn.execute('CREATE INDEX IF NOT EXISTS idx_muscle_bodypart_m ON muscle_bodypart(muscle_id);');
+    await txn.execute('CREATE INDEX IF NOT EXISTS idx_muscle_bodypart_b ON muscle_bodypart(bodypart_id);');
+  });
+}
+
 
 
 static Future<bool> _fts4Available(DatabaseExecutor db) async {
