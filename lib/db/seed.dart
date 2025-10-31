@@ -1692,3 +1692,73 @@ static Future<void> _ingestJsonlStream(
 
 
 }
+
+
+/// One-shot helper to seed only what’s missing (runs safely after your migrations).
+/// It inspects each table and only invokes the corresponding seeder if that table
+/// (or group of tables) is empty. Existing data is never duplicated.
+class SeedBootstrap {
+  static Future<void> seedMissingBlocks(
+    Database db, {
+    SeedProgress? onFoodProgress,
+  }) async {
+    // ——— tiny local helpers ———
+    Future<bool> hasTable(String name) async {
+      final r = await db.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name = ? LIMIT 1;",
+        [name],
+      );
+      return r.isNotEmpty;
+    }
+
+    Future<bool> tableEmpty(String name) async {
+      if (!await hasTable(name)) return false; // table not present yet → skip
+      final r = await db.rawQuery("SELECT 1 FROM $name LIMIT 1;");
+      return r.isEmpty;
+    }
+
+    // ——— 1) Lookups + exercises (seed if ANY of these are empty) ———
+    final needEquipment  = await tableEmpty('equipment');
+    final needBodypart   = await tableEmpty('bodypart');
+    final needMuscles    = await tableEmpty('muscles');
+    final needExDefs     = await tableEmpty('exercise_definitions');
+
+    if (needEquipment || needBodypart || needMuscles || needExDefs) {
+      await Seed.seedLookupsAndExercises(db);
+    }
+
+    // ——— 2) Stretches (hangs off stretch_definitions) ———
+    final needStretches = await tableEmpty('stretch_definitions');
+    if (needStretches) {
+      await Seed.seedStretches(db);
+    }
+
+    // ——— 3) Analytics defaults (seed if ANY of these are empty) ———
+    final needMBP   = await tableEmpty('muscle_bodypart');
+    final needBPR   = await tableEmpty('bodypart_ranking');
+    final needMR    = await tableEmpty('muscle_ranking');
+    final needBPMR  = await tableEmpty('bodypart_muscle_rankings');
+    final needBPVB  = await tableEmpty('bodypart_volume_boundaries');
+    final needMVB   = await tableEmpty('muscle_volume_boundaries');
+
+    if (needMBP || needBPR || needMR || needBPMR || needBPVB || needMVB) {
+      await Seed.seedAnalyticsDefaults(db);
+    }
+
+    // ——— 4) Nutrients catalog must exist before foods ———
+    final needNutrients = await tableEmpty('nutrients');
+    if (needNutrients) {
+      await Seed.seedExtendedNutrients(db);
+    }
+
+    // ——— 5) Foods (optional; only if you ship the asset) ———
+    final needFoods = await tableEmpty('foods');
+    if (needFoods) {
+      try {
+        await Seed.seedFoods(db, onProgress: onFoodProgress);
+      } catch (_) {
+        // If the foods asset isn't bundled on some builds, ignore gracefully.
+      }
+    }
+  }
+}
