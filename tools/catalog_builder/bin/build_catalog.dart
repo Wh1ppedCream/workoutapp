@@ -60,10 +60,10 @@ void main(List<String> argv) async {
     ..addOption('in',
         help: 'Input directory with JSON seed files (legacy path)',
         defaultsTo: p.normalize(p.join('tools', 'catalog_builder', 'json')))
-    ..addOption('jsonl',
-        help: 'Path to foods JSONL (one JSON object per line). Optional.')
-    ..addOption('jsonl-gz',
-        help: 'Path to foods JSONL.GZ (gzipped jsonl). Optional.')
+    ..addMultiOption('jsonl',
+        help: 'Path(s) to foods JSONL file(s) (one JSON object per line). Optional.')
+    ..addMultiOption('jsonl-gz',
+        help: 'Path(s) to gzipped JSONL file(s). Optional.')
     ..addOption('out',
         abbr: 'o',
         help: 'Output SQLite DB path',
@@ -113,8 +113,8 @@ void main(List<String> argv) async {
 
   final schema = p.normalize(a['schema'] as String);
   final inDir = p.normalize(a['in'] as String);
-  final jsonl = a['jsonl'] as String?;
-  final jsonlGz = a['jsonl-gz'] as String?;
+  final jsonlList = (a['jsonl'] as List<String>? ?? const <String>[]);
+  final jsonlGzList = (a['jsonl-gz'] as List<String>? ?? const <String>[]);
   final outDb = p.normalize(a['out'] as String);
   final pageSize = a['page-size'] as String;
   final turbo = a['turbo'] as bool;
@@ -133,16 +133,11 @@ void main(List<String> argv) async {
   final extraSql =
       (a['extra-sql'] as List<String>?)?.map(p.normalize).toList() ?? const <String>[];
 
-  if ((jsonl != null && jsonl.isNotEmpty) &&
-      (jsonlGz != null && jsonlGz.isNotEmpty)) {
-    if (verbose) {
-      stdout.writeln('! Both --jsonl and --jsonl-gz provided; preferring --jsonl.');
-    }
-  }
+  
 
   // Early input check: if neither jsonl* provided, ensure legacy input dir exists
   final dirExists = Directory(inDir).existsSync();
-  final noJsonlProvided = (jsonl == null || jsonl.isEmpty) && (jsonlGz == null || jsonlGz.isEmpty);
+  final noJsonlProvided = jsonlList.isEmpty && jsonlGzList.isEmpty;
   if (noJsonlProvided && !dirExists) {
     _fail('No --jsonl/--jsonl-gz provided and input dir does not exist: $inDir');
   }
@@ -167,10 +162,11 @@ void main(List<String> argv) async {
     '--out',
     seedSql,
   ];
-  if (jsonl != null && jsonl.isNotEmpty) {
-    genArgs..add('--jsonl')..add(jsonl);
-  } else if (jsonlGz != null && jsonlGz.isNotEmpty) {
-    genArgs..add('--jsonl-gz')..add(jsonlGz);
+  for (final p in jsonlList) {
+    genArgs..add('--jsonl')..add(p);
+  }
+  for (final p in jsonlGzList) {
+    genArgs..add('--jsonl-gz')..add(p);
   }
 
   final res1 = await _run('dart', genArgs, cwd: runCwd, verbose: verbose);

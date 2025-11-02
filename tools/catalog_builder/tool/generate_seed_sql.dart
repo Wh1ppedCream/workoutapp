@@ -92,19 +92,19 @@ void main(List<String> argv) {
         help: 'Output SQL file (no BEGIN/COMMIT; builder wraps in a txn)',
         valueHelp: 'tools/catalog_builder/data/seed_catalog.sql',
         defaultsTo: 'tools/catalog_builder/data/seed_catalog.sql')
-    ..addOption('jsonl',
-        help: 'Path to foods JSONL (one JSON object per line)',
-        valueHelp: 'tools/catalog_builder/jsonl/foods.jsonl')
-    ..addOption('jsonl-gz',
-        help: 'Path to foods JSONL.GZ (gzipped jsonl)',
-        valueHelp: 'tools/catalog_builder/jsonl/foods.min.jsonl.gz')
+    ..addMultiOption('jsonl',
+        help: 'Path(s) to foods JSONL file(s) (one JSON object per line)',
+        valueHelp: 'tools/catalog_builder/jsonl/*.jsonl')
+    ..addMultiOption('jsonl-gz',
+        help: 'Path(s) to gzipped JSONL file(s)',
+        valueHelp: 'tools/catalog_builder/jsonl/*.jsonl.gz')
     ..addFlag('verbose', defaultsTo: false); // accepted, but not used
 
   final args = ap.parse(argv);
   final inDir = args['in'] as String;
   final outPath = args['out'] as String;
-  final jsonlPath = args['jsonl'] as String?;
-  final jsonlGzPath = args['jsonl-gz'] as String?;
+  final jsonlPaths = (args['jsonl'] as List<String>? ?? const <String>[]);
+  final jsonlGzPaths = (args['jsonl-gz'] as List<String>? ?? const <String>[]);
 
   // Output
   final outFile = File(outPath);
@@ -182,23 +182,27 @@ JOIN _import_food_map m ON m.ext = s.ext;
     bcBatch.clear();
   }
 
-  // ── Fast lane: JSONL / JSONL.GZ ────────────────────────────────────────────
-  if ((jsonlPath != null && jsonlPath.isNotEmpty) ||
-      (jsonlGzPath != null && jsonlGzPath.isNotEmpty)) {
-    final file = jsonlPath != null ? File(jsonlPath) : File(jsonlGzPath!);
-    if (!file.existsSync()) {
-      stderr.writeln('Input JSONL file not found: ${file.path}');
+  // ── Fast lane: JSONL / JSONL.GZ (multi-file) ───────────────────────────────
+if (jsonlPaths.isNotEmpty || jsonlGzPaths.isNotEmpty) {
+  // Validate existence of all declared files (fail fast on any missing).
+  for (final path in [...jsonlPaths, ...jsonlGzPaths]) {
+    final f = File(path);
+    if (!f.existsSync()) {
+      stderr.writeln('Input JSONL file not found: ${f.path}');
       exitCode = 2;
       sink.close();
       return;
     }
+  }
 
-    final rows = jsonlPath != null ? _readJsonl(file) : _readJsonlGz(file);
-    int i = 0;
+  // One global counter across all files to keep ext unique.
+  int i = 0;
 
+  // Local helper to process a sequence of rows with the original per-row logic.
+  void _processRows(Iterable<Map<String, dynamic>> rows) {
     for (final m in rows) {
       i++;
-      final ext = 'food_${i.toString().padLeft(6, '0')}';
+      final ext = 'food_${i.toString().padLeft(7, '0')}';
 
       final name = (m['name'] as String).trim();
       final brand = (m['brand'] as String?)?.trim();
@@ -416,13 +420,22 @@ INSERT INTO _import_portion_map(ext, portion_id) VALUES (${q(pext)}, last_insert
       if (nutBatch.length >= kNutrientBatch) flushNutrientBatch();
       if (bcBatch.length >= kBarcodeBatch) flushBarcodeBatch();
     }
+  }
 
-    // final flushes
-    flushNutrientBatch();
-    flushBarcodeBatch();
+  // Process all provided JSONL then JSONL.GZ files in-order.
+  for (final path in jsonlPaths) {
+    _processRows(_readJsonl(File(path)));
+  }
+  for (final path in jsonlGzPaths) {
+    _processRows(_readJsonlGz(File(path)));
+  }
 
-    // Normalize to one default portion per food (keep lowest id of claimed defaults)
-    writeLine("""
+  // final flushes
+  flushNutrientBatch();
+  flushBarcodeBatch();
+
+  // Normalize to one default portion per food (keep lowest id of claimed defaults)
+  writeLine("""
 -- Normalize: keep exactly one default portion per food (lowest id among rows that claim default)
 CREATE TEMP TABLE IF NOT EXISTS _keep_default_ids(id INTEGER);
 DELETE FROM _keep_default_ids;
@@ -440,8 +453,8 @@ WHERE COALESCE(is_default,0)=1;
 DROP TABLE IF EXISTS _keep_default_ids;
 """);
 
-    // Set foods.default_portion_id where a default exists.
-    writeLine("""
+  // Set foods.default_portion_id where a default exists.
+  writeLine("""
 UPDATE foods
 SET default_portion_id = (
   SELECT id FROM food_portions p
@@ -453,20 +466,21 @@ WHERE default_portion_id IS NULL
               WHERE x.food_id = foods.id AND COALESCE(x.is_default,0) = 1);
 """);
 
-    // Mirror per_100g into legacy table for back-compat reads.
-    writeLine("""
+  // Mirror per_100g into legacy table for back-compat reads.
+  writeLine("""
 INSERT OR IGNORE INTO food_nutrients(food_id, nutrient_id, amount_per_100g)
 SELECT food_id, nutrient_id, amount
 FROM food_nutrient_values
 WHERE basis='per_100g';
 """);
 
-    sink.close();
-    stdout.writeln('> Wrote ${p.normalize(outPath)} '
-        '(foods=$foodsCount, portions=$portionsCount, '
-        'per_100g=$per100gCount, per_portion=$perPortionCount, barcodes=$barcodesCount)');
-    return;
-  }
+  sink.close();
+  stdout.writeln('> Wrote ${p.normalize(outPath)} '
+      '(foods=$foodsCount, portions=$portionsCount, '
+      'per_100g=$per100gCount, per_portion=$perPortionCount, barcodes=$barcodesCount)');
+  return;
+}
+
 
   // ── Legacy path: separate JSON files (kept, with batching where safe) ──────
   final foodsPath = p.join(inDir, 'foods.json');
