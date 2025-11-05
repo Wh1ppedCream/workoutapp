@@ -1214,6 +1214,7 @@ Future<int> _saveCustomFoodFromPayloadReturningId(Map payload) async {
               visualDensity: VisualDensity.compact,
               onPressed: () => _quickAddOne(f),
             ),
+            /* NOT IN USE CURRENTLY
             IconButton(
               tooltip: 'Log 1× now',
               icon: const Icon(Icons.flash_on),
@@ -1221,6 +1222,7 @@ Future<int> _saveCustomFoodFromPayloadReturningId(Map payload) async {
               visualDensity: VisualDensity.compact,
               onPressed: () => _logOneNow(f),
             ),
+            */
           ],
         ),
         onTap: () => _openAddSheet(context, f),
@@ -1691,7 +1693,7 @@ messenger.showSnackBar(
     }
   }
 
-  // Add helper:
+  /*
   Future<void> _logOneNow(Food f) async {
     final prof = context.read<NutritionProfile>();
     final meal = _defaultMealForNow(prof);
@@ -1725,6 +1727,7 @@ messenger.showSnackBar(
       }
     }
   }
+  */
 
 void _mergeIfDuplicate(_PlateItem it) {
   final keyId = it.portion?.id ?? -1;

@@ -102,6 +102,7 @@ class DatabaseHelper {
   await _ensureExerciseBodypartPercent(db);   // ← add
    await _ensureNutritionGoalsColumns(db);
    await ensureSchemaRepairs(db);
+     await _ensureFavoriteFoodsShape(db);
 
 
 
@@ -587,6 +588,75 @@ Future<void> ensureSchemaRepairs(Database db) async {
   await addCol('diary_entries', 'updated_at', 'INTEGER');
   await addCol('diary_entries', 'is_deleted', 'INTEGER NOT NULL DEFAULT 0');
   await addCol('diary_entries', 'grams_override', 'REAL');
+}
+
+Future<void> _ensureFavoriteFoodsShape(Database db) async {
+  // 1) Create from scratch if missing
+  final exists = await _tableExists(db, 'favorite_foods');
+  if (!exists) {
+    await db.execute('''
+      CREATE TABLE favorite_foods (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        profile_id  INTEGER NOT NULL,
+        food_id     INTEGER NOT NULL,
+        created_at  INTEGER,
+        UNIQUE(profile_id, food_id)
+      );
+    ''');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_fav_profile ON favorite_foods(profile_id);');
+  } else {
+    // 2) Inspect current columns
+    final cols = await db.rawQuery("PRAGMA table_info('favorite_foods');");
+    bool hasId        = cols.any((c) => (c['name'] as String?) == 'id');
+    bool hasCreatedAt = cols.any((c) => (c['name'] as String?) == 'created_at');
+
+    // 2a) If there’s no `id`, rebuild the table with the proper schema
+    if (!hasId) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS favorite_foods_new (
+          id          INTEGER PRIMARY KEY AUTOINCREMENT,
+          profile_id  INTEGER NOT NULL,
+          food_id     INTEGER NOT NULL,
+          created_at  INTEGER,
+          UNIQUE(profile_id, food_id)
+        );
+      ''');
+
+      // copy rows (created_at may not exist in legacy table; COALESCE handles that)
+      await db.execute('''
+        INSERT OR IGNORE INTO favorite_foods_new (profile_id, food_id, created_at)
+        SELECT profile_id, food_id,
+               COALESCE(created_at, NULL)
+        FROM favorite_foods;
+      ''');
+
+      await db.execute('DROP TABLE favorite_foods;');
+      await db.execute('ALTER TABLE favorite_foods_new RENAME TO favorite_foods;');
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_fav_profile ON favorite_foods(profile_id);');
+    } else {
+      // 2b) If `id` exists but `created_at` is missing, just add it
+      if (!hasCreatedAt) {
+        await db.execute("ALTER TABLE favorite_foods ADD COLUMN created_at INTEGER;");
+      }
+      // Ensure uniqueness even on odd legacy shapes
+      await db.execute('CREATE UNIQUE INDEX IF NOT EXISTS ux_fav_profile_food ON favorite_foods(profile_id, food_id);');
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_fav_profile ON favorite_foods(profile_id);');
+    }
+  }
+
+  // 3) Recreate a safe created_at trigger (works on all shapes)
+  await db.execute('DROP TRIGGER IF EXISTS trg_fav_set_created_at_ai;');
+  await db.execute('''
+    CREATE TRIGGER IF NOT EXISTS trg_fav_set_created_at_ai
+    AFTER INSERT ON favorite_foods
+    WHEN NEW.created_at IS NULL
+    BEGIN
+      UPDATE favorite_foods
+      SET created_at = CAST(strftime('%s','now') AS INTEGER) * 1000
+      WHERE id = NEW.id
+         OR (id IS NULL AND profile_id = NEW.profile_id AND food_id = NEW.food_id);
+    END;
+  ''');
 }
 
 
