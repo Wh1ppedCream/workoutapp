@@ -1670,73 +1670,73 @@ Future<void> replacePortions(int foodId, List<FoodPortion> portions) async {
   }
 
   Future<Map<String, double>> _per100WithFallback(int foodId, {int? portionId}) async {
-    // 1) per_100g first
-    final per100 = await getFoodNutrientsPer100gByCode(foodId);
-    if (per100.isNotEmpty) return per100;
+  // 1) Prefer per_portion for the selected (or default) portion, converting to per-100g
+  int? pid = portionId;
+  if (pid == null) {
+    try {
+      final f = await db.query(
+        'foods',
+        columns: ['default_portion_id'],
+        where: 'id = ?',
+        whereArgs: [foodId],
+        limit: 1,
+      );
+      pid = f.isNotEmpty ? f.first['default_portion_id'] as int? : null;
+    } catch (_) {
+      // older schema may not have foods.default_portion_id; ignore
+    }
+  }
 
-    // 2) try per_100ml → per_100g using density
-    final per100ml = await db.rawQuery('''
+  if (pid != null) {
+    final perPortion = await db.rawQuery('''
+      SELECT n.code AS code, fnv.amount AS amount
+      FROM food_nutrient_values fnv
+      JOIN nutrients n ON n.id = fnv.nutrient_id
+      WHERE fnv.food_id = ? AND fnv.basis = 'per_portion' AND fnv.portion_id = ?
+    ''', [foodId, pid]);
+
+    if (perPortion.isNotEmpty) {
+      final pRow = await db.query('food_portions', where: 'id = ?', whereArgs: [pid], limit: 1);
+      if (pRow.isNotEmpty) {
+        final grams = (pRow.first['gram_weight'] as num?)?.toDouble();
+        if (grams != null && grams > 0) {
+          final factor = 100.0 / grams;
+          return {
+            for (final r in perPortion)
+              _canonCode(r['code'] as String): (r['amount'] as num).toDouble() * factor
+          };
+        }
+      }
+    }
+  }
+
+  // 2) Fall back to stored per_100g
+  final per100 = await getFoodNutrientsPer100gByCode(foodId);
+  if (per100.isNotEmpty) return per100;
+
+  // 3) Fall back to per_100ml → per_100g using density
+  final per100ml = await db.rawQuery('''
     SELECT n.code AS code, fnv.amount AS amount
     FROM food_nutrient_values fnv
     JOIN nutrients n ON n.id = fnv.nutrient_id
     WHERE fnv.food_id = ? AND fnv.basis = 'per_100ml'
   ''', [foodId]);
-    if (per100ml.isNotEmpty) {
-      final food = await getFood(foodId);
-      final rho = food?.densityGPerMl;
-      if (rho != null && rho > 0) {
-        return {
-          for (final r in per100ml)
-            _canonCode(r['code'] as String): (r['amount'] as num).toDouble() / rho
-        };
-      }
-    }
 
-    // 3) try per_portion → per_100g using the portion’s gram weight
-    //    If no portionId was supplied, try the food's default_portion_id (if column exists).
-    if (portionId == null) {
-      try {
-        final f = await db.query(
-          'foods',
-          columns: ['default_portion_id'],
-          where: 'id = ?',
-          whereArgs: [foodId],
-          limit: 1,
-        );
-        final dp = f.isNotEmpty ? f.first['default_portion_id'] as int? : null;
-        if (dp != null) {
-          return _per100WithFallback(foodId, portionId: dp);
-        }
-      } catch (_) {
-        // Column may not exist on older schemas; ignore and continue.
-      }
+  if (per100ml.isNotEmpty) {
+    final food = await getFood(foodId);
+    final rho = food?.densityGPerMl;
+    if (rho != null && rho > 0) {
+      return {
+        for (final r in per100ml)
+          _canonCode(r['code'] as String): (r['amount'] as num).toDouble() / rho
+      };
     }
-    if (portionId != null) {
-      final perPortion = await db.rawQuery('''
-      SELECT n.code AS code, fnv.amount AS amount
-      FROM food_nutrient_values fnv
-      JOIN nutrients n ON n.id = fnv.nutrient_id
-      WHERE fnv.food_id = ? AND fnv.basis = 'per_portion' AND fnv.portion_id = ?
-    ''', [foodId, portionId]);
-
-      if (perPortion.isNotEmpty) {
-        final pRow =
-            await db.query('food_portions', where: 'id = ?', whereArgs: [portionId], limit: 1);
-        if (pRow.isNotEmpty) {
-          final grams = (pRow.first['gram_weight'] as num?)?.toDouble();
-          if (grams != null && grams > 0) {
-            final factor = 100.0 / grams;
-            return {
-              for (final r in perPortion)
-                _canonCode(r['code'] as String): (r['amount'] as num).toDouble() * factor
-            };
-          }
-        }
-      }
-    }
-
-    return {};
   }
+
+  // Nothing available
+  return {};
+}
+
 
   int _nowEpochMs() => DateTime.now().toUtc().millisecondsSinceEpoch;
 
