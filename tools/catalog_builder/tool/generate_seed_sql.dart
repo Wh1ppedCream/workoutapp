@@ -241,108 +241,227 @@ if (jsonlPaths.isNotEmpty || jsonlGzPaths.isNotEmpty) {
       }
 
       // portions (with synthesized fallback)
-      final portions = <Map<String, dynamic>>[];
-      if (m['portions'] is List) {
-        for (final p0 in (m['portions'] as List)) {
-          final mp = Map<String, dynamic>.from(p0 as Map);
-          final measure = (mp['measure_name'] as String).trim();
-          final gw = (mp['gram_weight'] as num?)?.toDouble();
-          final isDefault = (mp['is_default'] == true) ||
-              (measure.toLowerCase() == '100 g') ||
-              (measure.toLowerCase() == '100g') ||
-              (gw == 100.0);
-          portions.add({
-            'measure_name': measure,
-            'gram_weight': gw,
-            'ml_volume': null,
-            'is_default': isDefault ? 1 : 0,
-            'list_kind': 'basis',
-            'sort_order': portions.length,
-            'amount': gw,
-            'unit': gw == null ? null : 'g',
-            'label': null,
-          });
+final portions = <Map<String, dynamic>>[];
+if (m['portions'] is List) {
+  for (final p0 in (m['portions'] as List)) {
+    final mp = Map<String, dynamic>.from(p0 as Map);
+    final measure = (mp['measure_name'] as String).trim();
+    final gw = (mp['gram_weight'] as num?)?.toDouble();
+
+    // Preserve *source* default only; do NOT force 100g to default.
+    final isDefault = (mp['is_default'] == true);
+
+    // Try to keep semantic units (piece/serving/slice) when the measure name implies them.
+    String? semanticUnit;
+    num? semanticAmount;
+    final lname = measure.toLowerCase();
+    if (lname.contains('serving')) {
+      semanticUnit = 'serving';
+      semanticAmount = 1;
+    } else if (lname.contains('piece')) {
+      semanticUnit = 'piece';
+      semanticAmount = 1;
+    } else if (lname.contains('slice')) {
+      semanticUnit = 'slice';
+      semanticAmount = 1;
+    } else if (lname.replaceAll(' ', '') == '100g' || gw == 100.0) {
+      // Explicit 100g measure
+      semanticUnit = 'g';
+      semanticAmount = 100;
+    }
+
+        // Fallbacks when no semantic unit and no gram weight are available:
+    String? fallbackUnit;
+    num? fallbackAmount;
+    if (semanticUnit == null && gw == null) {
+      final tokens = lname
+          .split(RegExp(r'\s+'))
+          .where((t) => t.isNotEmpty)
+          .toList();
+
+            num _parseNumberToken(String s) {
+        // Strip common punctuation like commas and trailing parentheses
+        final t = s.replaceAll(RegExp(r'[(),]'), '');
+        // Mixed fraction: "2 1/2"
+        final mixed = RegExp(r'^(\d+)\s+(\d+)/(\d+)$');
+        final m = mixed.firstMatch(t);
+        if (m != null) {
+          final whole = num.parse(m.group(1)!);
+          final nume  = num.parse(m.group(2)!);
+          final den   = num.parse(m.group(3)!);
+          return whole + (nume / den);
         }
-      } else if (m['serving_size'] is Map) {
-        // synthesize one portion from serving_size
+        // Simple fraction: "1/2"
+        final frac = RegExp(r'^(\d+)\s*/\s*(\d+)$');
+        final f = frac.firstMatch(t);
+        if (f != null) {
+          final nume = num.parse(f.group(1)!);
+          final den  = num.parse(f.group(2)!);
+          return nume / den;
+        }
+        // Decimal or integer
+        return num.parse(t);
+      }
+
+      bool _looksNumeric(String s) =>
+          RegExp(r'^\d+([.,]\d+)?$').hasMatch(s) ||
+          RegExp(r'^\d+\s+\d+/\d+$').hasMatch(s) ||
+          RegExp(r'^\d+/\d+$').hasMatch(s);
+
+      const stop = {'of', 'a', 'an', 'the'};
+
+      // pick first non-numeric, non-stopword token as the unit (strip punctuation)
+      String? picked;
+      for (var t in tokens) {
+        t = t.replaceAll(RegExp(r'[().,]'), '');
+        if (t.isEmpty) continue;
+        if (_looksNumeric(t) || stop.contains(t)) continue;
+        picked = t;
+        break;
+      }
+      if (picked != null) {
+        fallbackUnit = picked; // e.g., "cup", "tbsp"
+        // Leading amount like "1", "1/2", or mixed "2 1/2"
+ num? _maybeMixedFractionAmount() {
+   if (tokens.isEmpty) return null;
+   final first = tokens[0].replaceAll(RegExp(r'[().,]'), '');
+   if (tokens.length >= 2) {
+     final second = tokens[1].replaceAll(RegExp(r'[().,]'), '');
+     if (RegExp(r'^\d+$').hasMatch(first) && RegExp(r'^\d+/\d+$').hasMatch(second)) {
+       final parts = second.split('/');
+       final whole = num.parse(first);
+       final nume  = num.parse(parts[0]);
+       final den   = num.parse(parts[1]);
+       return whole + (nume / den);
+     }
+   }
+   return _looksNumeric(first) ? _parseNumberToken(first) : null;
+ }
+ final maybe = _maybeMixedFractionAmount();
+ fallbackAmount = (maybe == null || maybe <= 0 || maybe.isNaN) ? 1 : maybe;
+      }
+
+    }
+
+
+    portions.add({
+      'measure_name': measure,
+      'gram_weight': gw, // conversion anchor if present
+      'ml_volume': null,
+      'is_default': isDefault ? 1 : 0,
+      'list_kind': 'basis',
+      'sort_order': portions.length,
+      'amount': semanticAmount ?? fallbackAmount ?? gw,
+      'unit': semanticUnit ?? fallbackUnit ?? (gw != null ? 'g' : null),
+      'label': null,
+    });
+  }
+} else if (m['serving_size'] is Map) {
+        // synthesize one portion from serving_size (preserve semantic unit)
         final ss = Map<String, dynamic>.from(m['serving_size'] as Map);
         final amount = (ss['amount'] as num?)?.toDouble();
-        final unit = (ss['unit'] as String?)?.toLowerCase();
-        final isMl =
-            unit == 'ml' || unit == 'milliliter' || unit == 'milliliters';
-        final text =
-            (ss['text'] as String?) ?? '${amount ?? ''} ${ss['unit'] ?? ''}'.trim();
+        final unitRaw = (ss['unit'] as String?)?.toLowerCase();
+        final isMl = unitRaw == 'ml' || unitRaw == 'milliliter' || unitRaw == 'milliliters';
+        final isGram = unitRaw == 'g' || unitRaw == 'gram' || unitRaw == 'grams';
+        final text = (ss['text'] as String?) ?? '${amount ?? ''} ${ss['unit'] ?? ''}'.trim();
+
         if (amount != null) {
           portions.add({
-            'measure_name': 'serving ($text)',
-            'gram_weight': isMl ? null : amount,
+            'measure_name': text,
+            'gram_weight': isMl ? null : (isGram ? amount : null),
             'ml_volume': isMl ? amount : null,
             'is_default': 1,
             'list_kind': 'basis',
             'sort_order': 0,
             'amount': amount,
-            'unit': isMl ? 'ml' : 'g',
+            'unit': isMl ? 'ml' : (unitRaw ?? (isGram ? 'g' : null)), // keep 'serving', 'piece', etc. if provided
             'label': null,
           });
         }
       }
 
       // Append serving_size portion if missing (non-100 g)
-      if (m['serving_size'] is Map) {
-        final ss = Map<String, dynamic>.from(m['serving_size'] as Map);
-        final amt = (ss['amount'] as num?)?.toDouble();
-        final unit = (ss['unit'] as String?)?.toLowerCase();
-        final text = (ss['text'] as String?)?.trim();
-        final isMl =
-            unit == 'ml' || unit == 'milliliter' || unit == 'milliliters';
+if (m['serving_size'] is Map) {
+  final ss = Map<String, dynamic>.from(m['serving_size'] as Map);
+  final amt = (ss['amount'] as num?)?.toDouble();
+  final unitRaw = (ss['unit'] as String?)?.toLowerCase();
+  final text = (ss['text'] as String?)?.trim();
+  final isMl = unitRaw == 'ml' || unitRaw == 'milliliter' || unitRaw == 'milliliters';
+  final isGram = unitRaw == 'g' || unitRaw == 'gram' || unitRaw == 'grams';
 
-        bool hasServing = portions.any((p) {
-          final name = ((p['measure_name'] as String?) ?? '').toLowerCase();
-          final gw = (p['gram_weight'] as num?)?.toDouble();
-          final mv = (p['ml_volume'] as num?)?.toDouble();
-          final is100g = name.replaceAll(' ', '') == '100g' || gw == 100.0;
-          final matchesAmt = isMl ? (mv == amt) : (gw == amt);
-          final mentionsText = text != null && name.contains(text.toLowerCase());
-          return !is100g && (matchesAmt || mentionsText);
-        });
+  bool hasServing = portions.any((p) {
+    final name = ((p['measure_name'] as String?) ?? '').toLowerCase();
+    final gw = (p['gram_weight'] as num?)?.toDouble();
+    final mv = (p['ml_volume'] as num?)?.toDouble();
+    final is100g = name.replaceAll(' ', '') == '100g' || gw == 100.0;
+    final matchesAmt = isMl ? (mv == amt) : (gw == amt);
+    final mentionsText = text != null && name.contains(text.toLowerCase());
+    return !is100g && (matchesAmt || mentionsText);
+  });
 
-        if (!hasServing && amt != null) {
-          portions.insert(0, {
-            'measure_name':
-                'serving (${text ?? '${amt.toString()} ${ss['unit'] ?? ''}'.trim()})',
-            'gram_weight': isMl ? null : amt,
-            'ml_volume': isMl ? amt : null,
-            'is_default': 0,
-            'list_kind': 'basis',
-            'sort_order': 0,
-            'amount': amt,
-            'unit': isMl ? 'ml' : 'g',
-            'label': null,
-          });
-        }
-      }
+  if (!hasServing && amt != null) {
+    portions.insert(0, {
+      'measure_name': text ?? '${amt.toString()} ${ss['unit'] ?? ''}'.trim(),
+      // ✅ Only set gram_weight when serving unit is grams; otherwise leave null.
+      'gram_weight': isMl ? null : (isGram ? amt : null),
+      'ml_volume': isMl ? amt : null,
+      'is_default': 0,
+      'list_kind': 'basis',
+      'sort_order': 0,
+      'amount': amt,
+      // ✅ Preserve the semantic unit instead of forcing 'g'
+      'unit': isMl ? 'ml' : (unitRaw ?? (isGram ? 'g' : null)),
+      'label': null,
+    });
+  }
+}
 
-      // Re-sequence & ensure exactly one default
+
+            // Re-sequence & ensure exactly one sensible default (prefer non-100g semantic servings)
       for (var idx = 0; idx < portions.length; idx++) {
         portions[idx]['sort_order'] = idx;
       }
       if (portions.isNotEmpty) {
-        int firstDefault = portions.indexWhere((p) => p['is_default'] == 1);
-        if (firstDefault < 0) {
-          firstDefault = portions.indexWhere((p) {
-            final name = ((p['measure_name'] as String?) ?? '')
-                .toLowerCase()
-                .replaceAll(' ', '');
-            final gw = (p['gram_weight'] as num?)?.toDouble();
-            return name == '100g' || gw == 100.0;
-          });
-          if (firstDefault < 0) firstDefault = 0;
-          portions[firstDefault]['is_default'] = 1;
+        bool _is100g(Map<String, dynamic> p) {
+          final name = ((p['measure_name'] as String?) ?? '').toLowerCase().replaceAll(' ', '');
+          final gw = (p['gram_weight'] as num?)?.toDouble();
+          return name == '100g' || gw == 100.0;
         }
-        for (var k = 0; k < portions.length; k++) {
-          if (k != firstDefault && portions[k]['is_default'] == 1) {
-            portions[k]['is_default'] = 0;
+        bool _looksSemantic(Map<String, dynamic> p) {
+          final name = ((p['measure_name'] as String?) ?? '').toLowerCase();
+          final unit = ((p['unit'] as String?) ?? '').toLowerCase();
+          const sem = {
+            'serving','piece','slice','portion','each','cup','tbsp','tsp','oz',
+            'packet','pack','bar','bottle','can'
+          };
+          final inName = sem.any((s) => name.contains(s));
+          final inUnit = sem.contains(unit);
+          return inName || inUnit;
+        }
+
+        int defaultIdx = portions.indexWhere((p) => p['is_default'] == 1);
+
+        // If there is a default but it's 100 g, move it to a better candidate when possible.
+        if (defaultIdx >= 0 && _is100g(portions[defaultIdx])) {
+          int cand = portions.indexWhere((p) => _looksSemantic(p) && !_is100g(p));
+          if (cand < 0) {
+            cand = portions.indexWhere((p) => !_is100g(p)); // any non-100 g
           }
+          if (cand >= 0) defaultIdx = cand;
+        }
+
+        // If none was marked default, choose one now.
+        if (defaultIdx < 0) {
+          defaultIdx = portions.indexWhere((p) => _looksSemantic(p) && !_is100g(p));
+          if (defaultIdx < 0) {
+            defaultIdx = portions.indexWhere((p) => !_is100g(p));
+          }
+          if (defaultIdx < 0) defaultIdx = 0; // last resort
+        }
+
+        // Apply exactly one default flag
+        for (var k = 0; k < portions.length; k++) {
+          portions[k]['is_default'] = (k == defaultIdx) ? 1 : 0;
         }
       }
 
