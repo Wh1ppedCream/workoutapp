@@ -4,6 +4,14 @@ import 'package:sqflite/sqflite.dart';
 import '../models/nutrition_models.dart';
 import 'dart:convert';
 
+// Row used by the day view: a DiaryEntry plus its display name.
+class DiaryEntryRow {
+  final DiaryEntry entry;
+  final String displayTitle;
+  DiaryEntryRow({required this.entry, required this.displayTitle});
+}
+
+
 String _toYMD(DateTime d) {
   final y = d.year.toString().padLeft(4, '0');
   final m = d.month.toString().padLeft(2, '0');
@@ -2135,6 +2143,34 @@ Future<Map<String, Object?>> _pruneToTable(
   });
   return out;
 }
+
+
+Future<List<DiaryEntryRow>> getDiaryEntryRowsForDate(
+  int profileId,
+  DateTime date,
+) async {
+  final rows = await db.rawQuery('''
+    SELECT e.*,
+           COALESCE(f.name, r.name) AS display_title
+    FROM diary_entries e
+    LEFT JOIN foods   f ON e.food_id   = f.id
+    LEFT JOIN recipes r ON e.recipe_id = r.id
+    WHERE e.profile_id = ? AND e.date = ? AND e.is_deleted = 0
+    ORDER BY COALESCE(e.logged_at, 0) ASC, e.meal_type ASC, e.id ASC
+  ''', [profileId, _toYMD(date)]);
+
+  return rows.map((m) {
+    final entry = DiaryEntry.fromMap(m);
+    final title = (m['display_title'] as String?)?.trim();
+    return DiaryEntryRow(
+      entry: entry,
+      displayTitle: (title == null || title.isEmpty)
+          ? entry.defaultTitle
+          : title,
+    );
+  }).toList();
+}
+
 
 
 }

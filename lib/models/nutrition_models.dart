@@ -37,6 +37,36 @@ const bool kWriteLegacyDiaryGrams = true;          // 'grams' column
 const bool kWriteLegacyDiaryGramsOverride = false; // 'grams_override' column
 
 
+
+/// Compact totals used for chips, headers, etc.
+class EntryMacros {
+  final double kcal;
+  final double fatG;
+  final double proteinG;
+  final double carbsG;
+
+  const EntryMacros({
+    required this.kcal,
+    required this.fatG,
+    required this.proteinG,
+    required this.carbsG,
+  });
+
+  EntryMacros operator +(EntryMacros other) => EntryMacros(
+    kcal: kcal + other.kcal,
+    fatG: fatG + other.fatG,
+    proteinG: proteinG + other.proteinG,
+    carbsG: carbsG + other.carbsG,
+  );
+}
+
+extension EntryMacrosFmt on EntryMacros {
+  /// UI-friendly one-liner for chips: "Cal 320 • F 10 • P 24 • C 37"
+  String toShortString() =>
+      'Cal ${kcal.round()} • F ${fatG.round()} • P ${proteinG.round()} • C ${carbsG.round()}';
+}
+
+
 /// Canonical nutrient codes used across DAO/Repo/UI.
 /// Centralizing them avoids stringly-typed bugs.
 class NutrientCodes {
@@ -830,6 +860,46 @@ class DiaryEntry {
       isDeleted: isDeleted,
     );
   }
+
+  /// Prefer the scalar snapshot columns; if missing, fall back to JSON map.
+  EntryMacros? get snapshotMacros {
+    // If any scalar is present, treat missing ones as 0.
+    final hasScalars = kcalSnapshot != null ||
+        proteinGSnapshot != null ||
+        carbGSnapshot != null ||
+        fatGSnapshot != null;
+
+    if (hasScalars) {
+      return EntryMacros(
+        kcal: kcalSnapshot ?? 0,
+        fatG: fatGSnapshot ?? 0,
+        proteinG: proteinGSnapshot ?? 0,
+        carbsG: carbGSnapshot ?? 0,
+      );
+    }
+
+    // Fallback: look into nutrientSnapshot JSON using canonical codes.
+    final snap = nutrientSnapshot;
+    if (snap.isEmpty) return null;
+
+    double g(String code) => (snap[code] ?? 0).toDouble();
+
+    return EntryMacros(
+      kcal: g(NutrientCodes.KCAL),
+      fatG: g(NutrientCodes.FAT_G),
+      proteinG: g(NutrientCodes.PROTEIN_G),
+      carbsG: g(NutrientCodes.CARB_G),
+    );
+  }
+
+  /// Generic safe title used when we don't join item names (DAO may override).
+  String get defaultTitle {
+    final n = notes?.trim();
+    if (n != null && n.isNotEmpty) return n;
+    return 'Entry ${id ?? ''}'.trim();
+  }
+
+
 }
 
 /// Nutrition goals for a profile over a time window (open-ended if endDate null).
@@ -1131,3 +1201,15 @@ DateTime _parseIsoUtcOrEpoch(dynamic v) {
 
 /// Convert DateTime? to epoch ms (int), or null.
 int? _toEpochMsOrNull(DateTime? dt) => dt?.toUtc().millisecondsSinceEpoch;
+
+
+extension EntryListTotals on Iterable<DiaryEntry> {
+  EntryMacros sumSnapshotMacros() {
+    EntryMacros acc = const EntryMacros(kcal: 0, fatG: 0, proteinG: 0, carbsG: 0);
+    for (final e in this) {
+      final m = e.snapshotMacros;
+      if (m != null) acc = acc + m;
+    }
+    return acc;
+  }
+}
