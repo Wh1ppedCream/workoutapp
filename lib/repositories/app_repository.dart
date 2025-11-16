@@ -934,6 +934,9 @@ class AppRepository {
           int profileId, DateTime date) =>
       _dbHelper.getDiaryEntriesForDate(profileId, date);
 
+  Future<List<DiaryEntryWithItem>> getDiaryEntriesWithItemsForDate(int profileId, DateTime day) async =>
+    _dbHelper.getDiaryEntriesWithItemsForDate(profileId, day);
+
   // Logging
   Future<int> addDiaryFood({
     required int profileId,

@@ -22,7 +22,7 @@ class _LogEntryPageState extends State<LogEntryPage> {
   static const double _rowHeight = 64; // 24 rows → 1536px scroll height
   static const double _gutterW = 72;   // time labels
  static const double _chipH = 52;         // keep
-static const double _chipW = 160;        // NEW: fixed width for each entry chip
+static const double _chipW = 195;        // NEW: fixed width for each entry chip
 
   @override
   void didChangeDependencies() {
@@ -186,21 +186,22 @@ int bucketKeyFor(DateTime stamp) {
 }
 
 // 1) Bucket ALL entries by time bucket (ignore meal for positioning)
-final buckets = <int, List<DiaryEntry>>{};
-for (final e in p.meals) {
+final buckets = <int, List<DiaryEntryWithItem>>{};
+for (final row in p.mealsWithItems) {
+  final e = row.entry;
   final stamp = (e.loggedAt ?? date).toLocal();
-  buckets.putIfAbsent(bucketKeyFor(stamp), () => <DiaryEntry>[]).add(e);
+  buckets.putIfAbsent(bucketKeyFor(stamp), () => <DiaryEntryWithItem>[]).add(row);
 }
 
 // 2) For each bucket, place a horizontally scrollable row that starts at the LEFT edge
 buckets.forEach((key, entries) {
   // Stable order within the bucket
   entries.sort((a, b) {
-    final ta = (a.loggedAt ?? date).toLocal();
-    final tb = (b.loggedAt ?? date).toLocal();
+    final ta = (a.entry.loggedAt ?? date).toLocal();
+    final tb = (b.entry.loggedAt ?? date).toLocal();
     final c = ta.compareTo(tb);
     if (c != 0) return c;
-    return (a.id ?? 0).compareTo(b.id ?? 0);
+    return (a.entry.id ?? 0).compareTo(b.entry.id ?? 0);
   });
 
   final bucketMinutes = key * bucketSizeMin;
@@ -209,34 +210,35 @@ buckets.forEach((key, entries) {
   chips.add(
     Positioned(
       top: (y.clamp(4, totalHeight - _chipH - 4) as num).toDouble(),
-      left: _gutterW + 1,   // <-- always start at left edge after time gutter
-      right: 0,             // allow the row to scroll to the right
+      left: _gutterW + 1,
+      right: 0,
       height: _chipH,
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         physics: const ClampingScrollPhysics(),
         child: Row(
           children: [
-            for (final e in entries) ...[
+            for (final row in entries) ...[
               SizedBox(
-                width: _chipW, // <-- fixed width; no squeezing
+                width: _chipW,
                 child: _EntryChip(
-                  title: (() {
-                    final notes = e.notes?.trim();
-                    return (notes != null && notes.isNotEmpty)
-                        ? notes
-                        : 'Entry ${e.id ?? ''}';
-                  })(),
+                  // 👇 First line: FOOD / RECIPE NAME
+                  title: row.chipTitle,
+
+                  // Second line: macros (reuse your existing formatter)
                   subtitle: (() {
-                    final stamp = (e.loggedAt ?? date).toLocal();
-                    final hh = stamp.hour.toString().padLeft(2, '0');
-                    final mm = stamp.minute.toString().padLeft(2, '0');
-                    final meal = e.mealType.name[0].toUpperCase() + e.mealType.name.substring(1);
-                    return '$meal • $hh:$mm';
+                    final macros = row.snapshotMacros;
+                    if (macros == null) return '';
+                    final kcal  = macros.kcal.round();
+                    final proG  = macros.proteinG.round();
+                    final carbG = macros.carbsG.round();
+                    final fatG  = macros.fatG.round();
+                    return '$kcal kcal • P $proG g • C $carbG g • F $fatG g';
                   })(),
-                  bg: _mealFill(e.mealType, cs),     // solid fill by meal
-                  fg: _mealOnFill(e.mealType, cs),   // readable text color
-                  onTap: () => _showEntryActions(context, e),
+
+                  bg: _mealFill(row.entry.mealType, cs),
+                  fg: _mealOnFill(row.entry.mealType, cs),
+                  onTap: () => _showEntryActions(context, row.entry),
                 ),
               ),
               const SizedBox(width: innerGap),

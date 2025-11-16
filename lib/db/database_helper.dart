@@ -3459,6 +3459,9 @@ Future<void> deleteDiaryEntry(int id, {required int profileId, required DateTime
 Future<List<DiaryEntry>> getDiaryEntriesForDate(int profileId, DateTime date) async =>
     NutritionDao(await database).getDiaryEntriesForDate(profileId, date);
 
+Future<List<DiaryEntryWithItem>> getDiaryEntriesWithItemsForDate(int profileId, DateTime day) async =>
+    NutritionDao(await database).getDiaryEntriesWithItemsForDate(profileId, day);
+
 // Goals
 Future<void> setGoals(NutritionGoal goal) async =>
     NutritionDao(await database).setGoals(goal);

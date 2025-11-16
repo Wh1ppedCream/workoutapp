@@ -19,8 +19,15 @@ class NutritionProfile extends ChangeNotifier {
 
   // Data for the day
   DayTotals? totals;
-  NutritionGoal? activeGoal;
-  List<DiaryEntry> meals = [];
+NutritionGoal? activeGoal;
+
+// Store rich rows internally...
+List<DiaryEntryWithItem> _meals = [];
+
+// ...but keep a back-compat view that returns plain DiaryEntry.
+List<DiaryEntryWithItem> get mealsWithItems => _meals;
+List<DiaryEntry> get meals => _meals.map((r) => r.entry).toList();
+
 
   bool isLoading = false;
   String? error;
@@ -186,17 +193,21 @@ class NutritionProfile extends ChangeNotifier {
     try {
       // Fetch in parallel for snappier UI.
       final results = await Future.wait([
-        _repo.getDayTotals(profileId!, day),
-        _repo.getActiveGoals(profileId!, day),
-        _repo.getDiaryEntriesForDate(profileId!, day),
-      ]);
+  _repo.getDayTotals(profileId!, day),
+  _repo.getActiveGoals(profileId!, day),
+  _repo.getDiaryEntriesWithItemsForDate(profileId!, day),
+]);
 
       // If a newer reload started or we got disposed, drop these results.
       if (_disposed || seq != _reloadSeq) return;
 
       totals = results[0] as DayTotals;
-      activeGoal = results[1] as NutritionGoal?;
-      meals = (results[2] as List<DiaryEntry>)..sort(_compareMeals);
+activeGoal = results[1] as NutritionGoal?;
+
+final rows = results[2] as List<DiaryEntryWithItem>;
+rows.sort((a, b) => _compareMeals(a.entry, b.entry)); // reuse your sorter
+_meals = rows;
+
 
       _safeNotify();
     } catch (e) {

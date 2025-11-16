@@ -902,6 +902,37 @@ class DiaryEntry {
 
 }
 
+/// Diary row + resolved item name ("Chicken & Rice" or recipe name).
+class DiaryEntryWithItem {
+  final DiaryEntry entry;
+  final String itemName;
+
+  DiaryEntryWithItem({
+    required this.entry,
+    required this.itemName,
+  });
+
+  /// Convenience: macros just proxy from the entry.
+  EntryMacros? get snapshotMacros => entry.snapshotMacros;
+
+  /// What the UI should show on the first line.
+  String get chipTitle {
+    final n = itemName.trim();
+    if (n.isNotEmpty) return n;
+    return entry.defaultTitle;
+  }
+
+  /// Factory for a row coming from a JOIN query:
+  /// SELECT d.*, COALESCE(f.name, r.name) AS item_name ...
+  factory DiaryEntryWithItem.fromJoinedMap(Map<String, dynamic> m) {
+    return DiaryEntryWithItem(
+      entry: DiaryEntry.fromMap(m),
+      itemName: (m['item_name'] as String?) ?? '',
+    );
+  }
+}
+
+
 /// Nutrition goals for a profile over a time window (open-ended if endDate null).
 class NutritionGoal {
   final int? id;

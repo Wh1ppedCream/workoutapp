@@ -792,6 +792,32 @@ Future<int> upsertFoodPortion(FoodPortion p) async {
     return rows.map(DiaryEntry.fromMap).toList();
   }
 
+
+Future<List<DiaryEntryWithItem>> getDiaryEntriesWithItemsForDate(
+  int profileId,
+  DateTime day,
+) async {
+  final ymd = _toYMD(day); // same helper you use elsewhere for 'YYYY-MM-DD'
+
+  final rows = await db.rawQuery('''
+    SELECT
+      d.*,
+      COALESCE(f.name, r.name) AS item_name
+    FROM diary_entries d
+    LEFT JOIN foods   f ON d.food_id   = f.id
+    LEFT JOIN recipes r ON d.recipe_id = r.id
+    WHERE
+      d.profile_id = ? AND
+      d.date = ? AND
+      d.is_deleted = 0
+  ''', [profileId, ymd]);
+
+  return rows
+      .map((m) => DiaryEntryWithItem.fromJoinedMap(m))
+      .toList();
+}
+
+
   /// Chronological range query by precise timestamps.
   Future<List<DiaryEntry>> getDiaryEntriesBetween(
     int profileId,
