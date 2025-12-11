@@ -1,3 +1,5 @@
+// file: lib/widgets/presets_loaded.dart
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -6,7 +8,7 @@ import '../repositories/app_repository.dart';
 import 'preset_bar.dart';
 
 /// Fetches & displays presets for the current profile.
-/// Handles loading, empty, and error states, then renders a column of [PresetBar]s.
+/// Handles loading, empty, and error states, then renders a scrollable list of [PresetBar]s.
 class PresetsLoaded extends StatelessWidget {
   /// Uniform scale factor for paddings and font sizes.
   final double scale;
@@ -27,7 +29,7 @@ class PresetsLoaded extends StatelessWidget {
     final profileId = sel.currentProfile?.id;
 
     if (profileId == null) {
-      return Center(child: Text('No profile selected.'));
+      return const Center(child: Text('No profile selected.'));
     }
 
     return FutureBuilder<List<Map<String, dynamic>>>(
@@ -39,14 +41,15 @@ class PresetsLoaded extends StatelessWidget {
         if (snap.hasError) {
           return Padding(
             padding: EdgeInsets.all(16 * scale),
-            child: Text('Error loading presets'),
+            child: const Text('Error loading presets'),
           );
         }
-        final rows = snap.data!;
+
+        final rows = snap.data ?? [];
         if (rows.isEmpty) {
           return Padding(
             padding: EdgeInsets.all(16 * scale),
-            child: Text('No presets found.'),
+            child: const Text('No presets found.'),
           );
         }
 
@@ -58,35 +61,43 @@ class PresetsLoaded extends StatelessWidget {
           Colors.teal,
         ];
 
-        return Column(
-          children: rows.asMap().entries.map((entry) {
-            final i        = entry.key;
-            final row      = entry.value;
+                // 🔁 Use a ListView that shrink-wraps so it can live inside another scrollable
+        return ListView.builder(
+          padding: EdgeInsets.symmetric(vertical: 6 * scale),
+          itemCount: rows.length,
+
+          // 👇 These two lines fix the "Vertical viewport was given unbounded height" error
+          shrinkWrap: true,
+
+          itemBuilder: (ctx2, i) {
+
+            final row      = rows[i];
             final presetId = row['id'] as int;
             final name     = row['name'] as String;
             final color    = palette[i % palette.length];
 
             return FutureBuilder<Map<String, dynamic>?>(
               future: repo.fetchPresetAutoSettings(presetId),
-              builder: (ctx2, autoSnap) {
-                final isAuto = autoSnap.connectionState == ConnectionState.done
-                    && (autoSnap.data?['is_automatic'] as int? ?? 0) == 1;
+              builder: (ctx3, autoSnap) {
+                final isAuto =
+                    autoSnap.connectionState == ConnectionState.done &&
+                    (autoSnap.data?['is_automatic'] as int? ?? 0) == 1;
 
                 return Padding(
                   padding: EdgeInsets.symmetric(vertical: 6 * scale),
                   child: PresetBar(
-                    presetId:   presetId,
-                    label:      name,
-                    color:      color,
-                    index:      i,
-                    isAutomatic:isAuto,
-                    scale:      scale,
-                    onRefresh:  onRefresh,
+                    presetId:    presetId,
+                    label:       name,
+                    color:       color,
+                    index:       i,
+                    isAutomatic: isAuto,
+                    scale:       scale,
+                    onRefresh:   onRefresh,
                   ),
                 );
               },
             );
-          }).toList(),
+          },
         );
       },
     );
