@@ -208,16 +208,29 @@ class _TrainPageState extends State<TrainPage> {
 
         const SizedBox(height: 8),
         GenericBar(
-          label: 'Generate Custom Presets',
-          color: Colors.purple,
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => const PresetGenerationQaScreen(),
-              ),
-            );
-          },
+  label: 'Generate Custom Presets',
+  color: Colors.purple,
+  onTap: () {
+    final profileId = sel.currentProfile?.id;
+    if (profileId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a gym profile first.'),
         ),
+      );
+      return;
+    }
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => PresetGenerationQaScreen(
+          profileId: profileId,
+        ),
+      ),
+    );
+  },
+),
+
 
         const SizedBox(height: 8),
         GenericBar(

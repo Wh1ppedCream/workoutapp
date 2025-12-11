@@ -4,6 +4,11 @@ import 'package:flutter/material.dart';
 import '../profile/settings/bodypart_ranking_screen.dart';
 import '../profile/settings/muscle_ranking_screen.dart';
 
+// NEW imports
+import '../../repositories/app_repository.dart';
+import '../../services/preset_generation_service.dart';
+import '../../models/training_plan_models.dart';
+
 // Enums must be top-level declarations
 enum RequirementOption {
   equalSplitBodyPart,
@@ -17,16 +22,25 @@ enum VolumeOption { defaultBounds, combinedMuscle, combinedBodyPart }
 enum FailureOption { never, once, twice, everySet }
 
 class PresetGenerationQaScreen extends StatefulWidget {
-  const PresetGenerationQaScreen({super.key});
+  /// We need the current gym profile to filter exercises.
+  final int profileId;
+
+  const PresetGenerationQaScreen({
+    super.key,
+    required this.profileId,
+  });
 
   @override
-  State<PresetGenerationQaScreen> createState() => _PresetGenerationQaScreenState();
+  State<PresetGenerationQaScreen> createState() =>
+      _PresetGenerationQaScreenState();
 }
 
 class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
   // Controllers for basic questions
-  final TextEditingController _sessionDurationController = TextEditingController();
-  final TextEditingController _weeklyFrequencyController = TextEditingController();
+  final TextEditingController _sessionDurationController =
+      TextEditingController();
+  final TextEditingController _weeklyFrequencyController =
+      TextEditingController();
 
   // Requirement choice
   RequirementOption? _requirementOption;
@@ -36,6 +50,9 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
 
   // Failure times choice
   FailureOption _failureOption = FailureOption.never;
+
+  // NEW: loading state while generating
+  bool _isGenerating = false;
 
   @override
   void dispose() {
@@ -64,6 +81,92 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
     );
   }
 
+  // ─────────────────────────────────────────────────────────────
+  // NEW: handler for "Continue" → generate preset
+  // ─────────────────────────────────────────────────────────────
+
+  Future<void> _handleContinue() async {
+    final minutesStr = _sessionDurationController.text.trim();
+    final freqStr = _weeklyFrequencyController.text.trim();
+
+    final sessionMinutes = int.tryParse(minutesStr);
+    final weeklyFrequency = int.tryParse(freqStr);
+
+    if (sessionMinutes == null ||
+        sessionMinutes <= 0 ||
+        weeklyFrequency == null ||
+        weeklyFrequency <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter valid numbers for duration and frequency.'),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isGenerating = true);
+
+    try {
+      final repo = AppRepository();
+      final generator = PresetGenerationService(repo);
+
+      // For now, we keep this simple:
+      // - use all bodyparts (focusBodypartIds = [])
+      // - sets/exercises based roughly on session length
+      //
+      // You can later refine this to use _requirementOption, _volumeOption,
+      // and _failureOption to tweak maxExercises / minSets / etc.
+      final now = DateTime.now();
+
+      // Rough heuristic: more minutes → more exercises
+      final maxExercises = (sessionMinutes / 10).clamp(4, 10).toInt();
+
+      // Simple sets per exercise; you can tweak this later
+      final minSets = 3;
+      final maxSets = 5;
+
+      final spec = SessionSpec(
+        profileId: widget.profileId,
+        name: 'Auto preset ${now.year}-${now.month}-${now.day}',
+        focusBodypartIds: const [], // TODO: later tie this to requirementOption
+        maxExercises: maxExercises,
+        minSetsPerExercise: minSets,
+        maxSetsPerExercise: maxSets,
+        // For now, look at the last 7 days of history
+        historyWindow: const Duration(days: 7),
+        now: now,
+      );
+
+      final presetId = await generator.generatePreset(spec);
+
+if (!mounted) return;
+
+ScaffoldMessenger.of(context).showSnackBar(
+  SnackBar(content: Text('Preset #$presetId generated successfully!')),
+);
+
+
+      // TODO: Navigate to your preset editor/details screen.
+      // For example, if you have a screen that uses PresetSession:
+      //
+      // Navigator.of(context).push(
+      //   MaterialPageRoute(
+      //     builder: (_) => PresetDetailScreen(presetId: presetId),
+      //   ),
+      // );
+    } catch (e, st) {
+      debugPrint('Error generating preset: $e\n$st');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to generate preset: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isGenerating = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -76,9 +179,7 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Session duration
-            const Text(
-              'How many minutes do you spend in the gym per session?'
-            ),
+            const Text('How many minutes do you spend in the gym per session?'),
             const SizedBox(height: 8),
             TextFormField(
               controller: _sessionDurationController,
@@ -91,9 +192,7 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
             const SizedBox(height: 16),
 
             // Weekly frequency
-            const Text(
-              'How many times per week do you work out?'
-            ),
+            const Text('How many times per week do you work out?'),
             const SizedBox(height: 8),
             TextFormField(
               controller: _weeklyFrequencyController,
@@ -236,9 +335,16 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
             ),
             const SizedBox(height: 24),
 
+            // NEW: Generate button
             ElevatedButton(
-              onPressed: null,
-              child: const Text('Continue'),
+              onPressed: _isGenerating ? null : _handleContinue,
+              child: _isGenerating
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('Generate preset'),
             ),
           ],
         ),

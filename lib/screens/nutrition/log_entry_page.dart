@@ -209,7 +209,7 @@ buckets.forEach((key, entries) {
 
   chips.add(
     Positioned(
-      top: (y.clamp(4, totalHeight - _chipH - 4) as num).toDouble(),
+      top: (y.clamp(4, totalHeight - _chipH - 4)).toDouble(),
       left: _gutterW + 1,
       right: 0,
       height: _chipH,
