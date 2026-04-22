@@ -1,3 +1,5 @@
+// file: lib/models/analytics_models.dart
+
 /// A single rep-max record (for the Metrics tab).
 class RepMaxRow {
   /// NEW: the exercise definition ID (`def_id` in the table)
@@ -115,5 +117,36 @@ class VolumeBoundaries {
         'min_effective_volume':  minEffective,
         'max_adaptive_volume':   maxAdaptive,
         'max_recoverable_volume': maxRecoverable,
+      };
+}
+
+
+
+/// Percent association between exercise and body-part
+class ExerciseBodyPartPercent {
+  final int exerciseDefId;
+  final int bodyPartId;
+  double percent;
+
+  ExerciseBodyPartPercent({
+    required this.exerciseDefId,
+    required this.bodyPartId,
+    required this.percent,
+  });
+
+  /// Decode from SQL row
+  factory ExerciseBodyPartPercent.fromMap(Map<String, dynamic> m) {
+    return ExerciseBodyPartPercent(
+      exerciseDefId: m['exercise_def_id'] as int,
+      bodyPartId:    m['bodypart_id'] as int,
+      percent:       (m['percent'] as num).toDouble(),
+    );
+  }
+
+  /// Encode to SQL insert/update
+  Map<String, dynamic> toMap() => {
+        'exercise_def_id': exerciseDefId,
+        'bodypart_id':     bodyPartId,
+        'percent':         percent,
       };
 }

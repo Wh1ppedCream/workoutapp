@@ -1,12 +1,13 @@
 // File: lib/widgets/automatic_settings_sheet.dart
 
 import 'package:flutter/material.dart';
+// kept from new version
 import '../providers/preset_session.dart';
 import '../models/models.dart';
 import 'dart:convert';
+import '../theme/app_colors.dart';               // new theming extension
 
 enum SuccessCountMode { session, exercise, set }
-
 
 /// Bottom sheet for editing Automatic Preset settings:
 /// - Global increment amount
@@ -33,28 +34,23 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet>
   final Map<int, TextEditingController> _setControllers = {};
 
   // Whether we’re in “auto” (rotating pointer) or “manual” mode
-bool _manualSelect = false;
+  bool _manualSelect = false;
 
-// Holds per-set checkbox state when in manual mode
-final Map<int, bool> _setSelections = {};
+  // Holds per-set checkbox state when in manual mode
+  final Map<int, bool> _setSelections = {};
 
-SuccessCountMode _successCountMode = SuccessCountMode.session;
-
-
+  SuccessCountMode _successCountMode = SuccessCountMode.session;
 
   @override
   void initState() {
     super.initState();
-
     final preset = widget.preset;
 
-    // 1) Seed the global/manual flag
-  _manualSelect = preset.manualSelect;
+    // Seed the global/manual flag
+    _manualSelect = preset.manualSelect;
 
-    // Global
-    _globalController = TextEditingController(
-      text: preset.globalIncrement.toString(),
-    );
+    // Global increment & skip-first
+    _globalController = TextEditingController(text: preset.globalIncrement.toString());
     _skipFirst = preset.skipFirstSet;
 
     // Per-exercise controllers
@@ -83,17 +79,15 @@ SuccessCountMode _successCountMode = SuccessCountMode.session;
       }
     }
 
-
-    // Seed _setSelections from whatever was saved in PresetSession.manualSelections
-  final allIds = <int>[
-    for (var list in preset.presetParentSetIds)      ...list,
-    for (var childMap in preset.presetChildSetIds)
-      for (var list in childMap.values)              ...list,
-  ];
-  for (var id in allIds) {
-    _setSelections[id] = preset.manualSelections[id] ?? false;
-  }
-
+    // Seed manual selections
+    final allIds = <int>[
+      for (var list in preset.presetParentSetIds) ...list,
+      for (var childMap in preset.presetChildSetIds)
+        for (var list in childMap.values) ...list,
+    ];
+    for (var id in allIds) {
+      _setSelections[id] = preset.manualSelections[id] ?? false;
+    }
   }
 
   @override
@@ -112,11 +106,10 @@ SuccessCountMode _successCountMode = SuccessCountMode.session;
     final preset = widget.preset;
 
     // 1) Global settings + manual flags
-final globalParsed = double.tryParse(_globalController.text) ?? preset.globalIncrement;
-final manualJson   = json.encode(
-  _setSelections.map((key, value) => MapEntry(key.toString(), value))
-);
-
+    final globalParsed = double.tryParse(_globalController.text) ?? preset.globalIncrement;
+    final manualJson = json.encode(
+      _setSelections.map((key, value) => MapEntry(key.toString(), value)),
+    );
 
     await preset.saveAutoSettings(
       newGlobalIncrement: globalParsed,
@@ -125,9 +118,8 @@ final manualJson   = json.encode(
       newRepCheck: preset.repCheck,
       newVolumeCheck: preset.volumeCheck,
       newAdjustAllSets: preset.adjustAllSets,
-
-      newUseManualSelect:   _manualSelect,
-      newManualSelectionJson:  manualJson,
+      newUseManualSelect: _manualSelect,
+      newManualSelectionJson: manualJson,
     );
 
     // 2) Per-exercise overrides
@@ -147,39 +139,43 @@ final manualJson   = json.encode(
 
   @override
   Widget build(BuildContext context) {
-    final preset = widget.preset;
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final extras = theme.extension<AppColors>();
+    final sheetBg = extras?.sheetBackground ?? cs.surface;
+    final labelColor = cs.onSurface;
+    final dividerColor = cs.onSurface.withValues(alpha: 0.12);
+
     return DraggableScrollableSheet(
       expand: false,
       initialChildSize: 0.8,
-      builder: (ctx, scrollCtrl) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(ctx).viewInsets.bottom,
-        ),
+      builder: (ctx, scrollCtrl) => Container(
+        color: sheetBg,
+        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
         child: DefaultTabController(
           length: 2,
           child: Column(
             children: [
               TabBar(
-                tabs: const [
-                  Tab(text: 'Values'),
-                  Tab(text: 'Methods'),
-                ],
-                labelPadding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 8.0),
+                tabs: const [Tab(text: 'Values'), Tab(text: 'Methods')],
+                labelColor: cs.primary,
+                unselectedLabelColor: labelColor.withValues(alpha: 0.6),
+                indicatorColor: cs.primary,
               ),
               Expanded(
                 child: TabBarView(
                   children: [
-                    // Values Tab
+                    // ── Values Tab ────────────────────────────────────
                     ListView(
                       controller: scrollCtrl,
                       padding: const EdgeInsets.all(16),
-                      children: [ 
+                      children: [
                         const SizedBox(height: 12),
                         // Global Increment
                         TextField(
                           controller: _globalController,
                           keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             labelText: 'Global Increment Amount',
                             suffixText: 'lbs',
                             border: OutlineInputBorder(),
@@ -187,100 +183,205 @@ final manualJson   = json.encode(
                         ),
                         const SizedBox(height: 12),
 
-                        // 2) Auto vs Manual toggle
-    Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Expanded(
-          child: ChoiceChip(
-          label: const Text('Auto Select'),
-          selected: !_manualSelect,
-          onSelected: (_) => setState(() => _manualSelect = false),
-        ),
-        ),
-
-        const SizedBox(width: 8),
-        Expanded(
-          child: ChoiceChip(
-          label: const Text('Manual Select'),
-          selected: _manualSelect,
-          onSelected: (_) => setState(() => _manualSelect = true),
-        ),
-        ),
-      ],
-    ),
-    const SizedBox(height: 16),
-
-    if (!_manualSelect) ...[
-
-                        CheckboxListTile(
-                          title: const Text('Skip First Set?'),
-                          value: _skipFirst,
-                          onChanged: (checked) {
-                            if (checked == null) return;
-                            setState(() => _skipFirst = checked);
-                          },
+                        // Auto vs Manual toggle
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Expanded(
+                              child: ChoiceChip(
+                                label: const Text('Auto Select'),
+                                selected: !_manualSelect,
+                                onSelected: (_) => setState(() => _manualSelect = false),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: ChoiceChip(
+                                label: const Text('Manual Select'),
+                                selected: _manualSelect,
+                                onSelected: (_) => setState(() => _manualSelect = true),
+                              ),
+                            ),
+                          ],
                         ),
-                        const Divider(),
-                        // Per-Exercise Overrides
-                        ...preset.exercises.asMap().entries.map((entry) {
-                          final i = entry.key;
-                          final ex = entry.value;
-                          final exId = preset.presetExerciseIds[i];
-                          final controller = _exControllers[exId]!;
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      ex.name,
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                                  SizedBox(
-                                    width: 80,
-                                    child: TextField(
-                                      controller: controller,
-                                      keyboardType:
-                                          const TextInputType.numberWithOptions(
-                                              decimal: true),
-                                      decoration: const InputDecoration(
-                                        labelText: 'IA',
-                                        hintText: 'ex',
-                                        border: OutlineInputBorder(),
+                        const SizedBox(height: 16),
+
+                        if (!_manualSelect) ...[
+                          CheckboxListTile(
+                            title: const Text('Skip First Set?'),
+                            value: _skipFirst,
+                            activeColor: cs.primary,
+                            onChanged: (checked) {
+                              if (checked == null) return;
+                              setState(() => _skipFirst = checked);
+                            },
+                          ),
+                          Divider(color: dividerColor),
+
+                          // Per-Exercise Overrides
+                          ...widget.preset.exercises.asMap().entries.map((entry) {
+                            final i = entry.key;
+                            final ex = entry.value;
+                            final exId = widget.preset.presetExerciseIds[i];
+                            final controller = _exControllers[exId]!;
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        ex.name,
+                                        style: const TextStyle(fontWeight: FontWeight.bold),
                                       ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              // Per-Set Overrides (parents)
-                              ...List.generate(
-                                preset.presetParentSetIds[i].length,
-                                (pi) {
-                                  final setId =
-                                      preset.presetParentSetIds[i][pi];
-                                  final set = (ex as WeightExercise).sets[pi];
+                                    SizedBox(
+                                      width: 80,
+                                      child: TextField(
+                                        controller: controller,
+                                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                        decoration: const InputDecoration(
+                                          labelText: 'IA',
+                                          hintText: 'ex',
+                                          border: OutlineInputBorder(),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+
+                                // Parent sets
+                                ...List.generate(
+                                  widget.preset.presetParentSetIds[i].length,
+                                  (pi) {
+                                    final setId = widget.preset.presetParentSetIds[i][pi];
+                                    final set = (ex as WeightExercise).sets[pi];
+                                    final setCtrl = _setControllers[setId]!;
+                                    return Padding(
+                                      padding: const EdgeInsets.only(left: 16, bottom: 8),
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text('Set ${pi + 1}: ${set.weight} × ${set.reps}'),
+                                          ),
+                                          SizedBox(
+                                            width: 60,
+                                            child: TextField(
+                                              controller: setCtrl,
+                                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                              decoration: const InputDecoration(
+                                                labelText: 'IA',
+                                                hintText: 'set',
+                                                border: OutlineInputBorder(),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                ),
+
+                                // Child sets
+                                ...widget.preset.presetChildSetIds[i].entries.expand((e) {
+                                  final parentIdx = e.key;
+                                  return e.value.map((cid) {
+                                    final childIndex = e.value.indexOf(cid);
+                                    final childSet = (ex as WeightExercise).changeSets[parentIdx]![childIndex];
+                                    final childCtrl = _setControllers[cid]!;
+                                    return Padding(
+                                      padding: const EdgeInsets.only(left: 16, bottom: 8),
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                                'Set ${parentIdx + 1}.${childIndex + 1}: ${childSet.weight} × ${childSet.reps}'),
+                                          ),
+                                          SizedBox(
+                                            width: 60,
+                                            child: TextField(
+                                              controller: childCtrl,
+                                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                              decoration: const InputDecoration(
+                                                labelText: 'IA',
+                                                hintText: 'set',
+                                                border: OutlineInputBorder(),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  });
+                                }),
+
+                                const Divider(),
+                              ],
+                            );
+                          }),
+                          const SizedBox(height: 16),
+
+                          ElevatedButton(
+                            onPressed: _saveAllAndClose,
+                            child: const Text('Save'),
+                          ),
+                          const SizedBox(height: 24),
+                        ] else ...[
+                          // ── Manual mode ─────────────────────
+                          const Divider(),
+                          // Exercise-level IA stays the same
+                          ...widget.preset.exercises.asMap().entries.map((entry) {
+                            final i = entry.key;
+                            final ex = entry.value as WeightExercise;
+                            final exId = widget.preset.presetExerciseIds[i];
+                            final exCtrl = _exControllers[exId]!;
+
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(ex.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                    ),
+                                    SizedBox(
+                                      width: 80,
+                                      child: TextField(
+                                        controller: exCtrl,
+                                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                        decoration: const InputDecoration(
+                                          labelText: 'IA',
+                                          hintText: 'ex',
+                                          border: OutlineInputBorder(),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+
+                                // Parent sets with checkbox
+                                ...List.generate(widget.preset.presetParentSetIds[i].length, (pi) {
+                                  final setId = widget.preset.presetParentSetIds[i][pi];
+                                  final set = ex.sets[pi];
                                   final setCtrl = _setControllers[setId]!;
+
                                   return Padding(
-                                    padding: const EdgeInsets.only(
-                                        left: 16, bottom: 8),
+                                    padding: const EdgeInsets.only(left: 16, bottom: 8),
                                     child: Row(
                                       children: [
-                                        Expanded(
-                                          child: Text(
-                                              'Set ${pi + 1}: ${set.weight} × ${set.reps}'),
+                                        Checkbox(
+                                          value: _setSelections[setId] ?? false,
+                                          onChanged: (v) => setState(() => _setSelections[setId] = v!),
+                                          activeColor: cs.primary,
                                         ),
+                                        Expanded(child: Text('Set ${pi + 1}: ${set.weight} × ${set.reps}')),
                                         SizedBox(
                                           width: 60,
                                           child: TextField(
                                             controller: setCtrl,
-                                            keyboardType: const TextInputType
-                                                .numberWithOptions(
-                                                    decimal: true),
+                                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
                                             decoration: const InputDecoration(
                                               labelText: 'IA',
                                               hintText: 'set',
@@ -291,270 +392,130 @@ final manualJson   = json.encode(
                                       ],
                                     ),
                                   );
-                                },
-                              ),
-                              // Per-Set Overrides (children)
-                              ...preset
-                                  .presetChildSetIds[i]
-                                  .entries
-                                  .expand((e) {
-                                final parentIdx = e.key;
-                                return e.value.map((cid) {
-                                  final childIndex =
-                                      e.value.indexOf(cid);
-                                  final childSet = (ex as WeightExercise)
-                                      .changeSets[parentIdx]![childIndex];
-                                  final childCtrl = _setControllers[cid]!;
-                                  return Padding(
-                                    padding: const EdgeInsets.only(
-                                        left: 16, bottom: 8),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                              'Set ${parentIdx + 1}.${childIndex + 1}: ${childSet.weight} × ${childSet.reps}'),
-                                        ),
-                                        SizedBox(
-                                          width: 60,
-                                          child: TextField(
-                                            controller: childCtrl,
-                                            keyboardType: const TextInputType
-                                                .numberWithOptions(
-                                                    decimal: true),
-                                            decoration: const InputDecoration(
-                                              labelText: 'IA',
-                                              hintText: 'set',
-                                              border: OutlineInputBorder(),
+                                }),
+
+                                // Child sets with checkbox
+                                ...widget.preset.presetChildSetIds[i].entries.expand((e) {
+                                  final parentIdx = e.key;
+                                  return e.value.asMap().entries.map((childEntry) {
+                                    final ci = childEntry.key;
+                                    final cid = childEntry.value;
+                                    final child = ex.changeSets[parentIdx]![ci];
+                                    final childCtrl = _setControllers[cid]!;
+
+                                    return Padding(
+                                      padding: const EdgeInsets.only(left: 16, bottom: 8),
+                                      child: Row(
+                                        children: [
+                                          Checkbox(
+                                            value: _setSelections[cid] ?? false,
+                                            onChanged: (v) => setState(() => _setSelections[cid] = v!),
+                                            activeColor: cs.primary,
+                                          ),
+                                          Expanded(child: Text('Set ${parentIdx + 1}.${ci + 1}: ${child.weight} × ${child.reps}')),
+                                          SizedBox(
+                                            width: 60,
+                                            child: TextField(
+                                              controller: childCtrl,
+                                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                              decoration: const InputDecoration(
+                                                labelText: 'IA',
+                                                hintText: 'set',
+                                                border: OutlineInputBorder(),
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                });
-                              }),
-                              const Divider(),
-                            ],
-                          );
-                        }),
-                        const SizedBox(height: 16),
+                                        ],
+                                      ),
+                                    );
+                                  });
+                                }),
 
-ElevatedButton(
-                          onPressed: _saveAllAndClose,
-                          child: const Text('Save'),
-                        ),
+                                const Divider(),
+                              ],
+                            );
+                          }),
+                          const SizedBox(height: 16),
 
-    const SizedBox(height: 24),
-
-
-    ]
-                     
-                     // 3b) Manual mode: per-set checkboxes
-    else ...[
-  // We hide Skip First entirely in manual mode
-  const Divider(),
-
-  // For each exercise:
-  ...preset.exercises.asMap().entries.map((entry) {
-    final i      = entry.key;
-    final ex     = entry.value as WeightExercise;
-    final exId   = preset.presetExerciseIds[i];
-    final exCtrl = _exControllers[exId]!;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Exercise-level IA field stays the same
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                ex.name,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-            SizedBox(
-              width: 80,
-              child: TextField(
-                controller: exCtrl,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(
-                  labelText: 'IA',
-                  hintText: 'ex',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-
-        // Parent sets, with a Checkbox to the left
-        ...List.generate(preset.presetParentSetIds[i].length, (pi) {
-          final setId   = preset.presetParentSetIds[i][pi];
-          final set     = ex.sets[pi];
-          final setCtrl = _setControllers[setId]!;
-
-          return Padding(
-            padding: const EdgeInsets.only(left: 16, bottom: 8),
-            child: Row(
-              children: [
-                Checkbox(
-                  value: _setSelections[setId] ?? false,
-                  onChanged: (v) => setState(() => _setSelections[setId] = v!),
-                ),
-                Expanded(
-                  child: Text('Set ${pi + 1}: ${set.weight} × ${set.reps}'),
-                ),
-                SizedBox(
-                  width: 60,
-                  child: TextField(
-                    controller: setCtrl,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    decoration: const InputDecoration(
-                      labelText: 'IA',
-                      hintText: 'set',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        }),
-
-        // Child sets, same pattern
-        ...preset.presetChildSetIds[i].entries.expand((e) {
-          final parentIdx = e.key;
-          return e.value.asMap().entries.map((childEntry) {
-            final ci        = childEntry.key;
-            final cid       = childEntry.value;
-            final child     = ex.changeSets[parentIdx]![ci];
-            final childCtrl = _setControllers[cid]!;
-
-            return Padding(
-              padding: const EdgeInsets.only(left: 16, bottom: 8),
-              child: Row(
-                children: [
-                  Checkbox(
-                    value: _setSelections[cid] ?? false,
-                    onChanged: (v) => setState(() => _setSelections[cid] = v!),
-                  ),
-                  Expanded(
-                    child: Text('Set ${parentIdx + 1}.${ci + 1}: ${child.weight} × ${child.reps}'),
-                  ),
-                  SizedBox(
-                    width: 60,
-                    child: TextField(
-                      controller: childCtrl,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      decoration: const InputDecoration(
-                        labelText: 'IA',
-                        hintText: 'set',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          });
-        }),
-
-        const Divider(),
-      ],
-    );
-  }),
-
-  const SizedBox(height: 16),
-
-  ElevatedButton(
-                          onPressed: _saveAllAndClose,
-                          child: const Text('Save'),
-                        ),
-
-    const SizedBox(height: 24),
-],
-
-                     
-                     
+                          ElevatedButton(
+                            onPressed: _saveAllAndClose,
+                            child: const Text('Save'),
+                          ),
+                          const SizedBox(height: 24),
+                        ],
                       ],
                     ),
-                    // Methods Tab
+
+                    // ── Methods Tab ───────────────────────────────────
                     ListView(
                       controller: scrollCtrl,
                       padding: const EdgeInsets.all(16),
                       children: [
                         const Text('Increment When (decrement otherwise):'),
                         CheckboxListTile(
-                          title:
-                              const Text('Completed weight ≥ target weight'),
-                          value: preset.weightCheck,
-                          onChanged: (b) => setState(() => preset.weightCheck = b!),
+                          title: const Text('Completed weight ≥ target weight'),
+                          value: widget.preset.weightCheck,
+                          activeColor: cs.primary,
+                          onChanged: (b) => setState(() => widget.preset.weightCheck = b!),
                         ),
                         CheckboxListTile(
-                          title:
-                              const Text('Completed reps ≥ target reps'),
-                          value: preset.repCheck,
-                          onChanged: (b) => setState(() => preset.repCheck = b!),
+                          title: const Text('Completed reps ≥ target reps'),
+                          value: widget.preset.repCheck,
+                          activeColor: cs.primary,
+                          onChanged: (b) => setState(() => widget.preset.repCheck = b!),
                         ),
                         CheckboxListTile(
-                          title:
-                              const Text('Completed volume ≥ target volume'),
-                          value: preset.volumeCheck,
-                          onChanged: (b) => setState(() => preset.volumeCheck = b!),
+                          title: const Text('Completed volume ≥ target volume'),
+                          value: widget.preset.volumeCheck,
+                          activeColor: cs.primary,
+                          onChanged: (b) => setState(() => widget.preset.volumeCheck = b!),
                         ),
                         const SizedBox(height: 16),
 
-                        // ── New section header ───────────────────────────────
-const Text(
-  'Success/Fails counted and increments/decrements made based off:',
-  style: TextStyle(fontWeight: FontWeight.bold),
-),
-const SizedBox(height: 8),
+                        const Text(
+                          'Success/Fails counted and increments/decrements made based off:',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        RadioListTile<SuccessCountMode>(
+                          title: const Text('Workout Session'),
+                          value: SuccessCountMode.session,
+                          groupValue: _successCountMode,
+                          activeColor: cs.primary,
+                          onChanged: (m) => setState(() => _successCountMode = m!),
+                        ),
+                        RadioListTile<SuccessCountMode>(
+                          title: const Text('per Exercise'),
+                          value: SuccessCountMode.exercise,
+                          groupValue: _successCountMode,
+                          activeColor: cs.primary,
+                          onChanged: (m) => setState(() => _successCountMode = m!),
+                        ),
+                        RadioListTile<SuccessCountMode>(
+                          title: const Text('per Set'),
+                          value: SuccessCountMode.set,
+                          groupValue: _successCountMode,
+                          activeColor: cs.primary,
+                          onChanged: (m) => setState(() => _successCountMode = m!),
+                        ),
 
-// ── Three radio options ──────────────────────────────
-// TODO: code and enable these options, currently only works per session ('Workout Session') here (the codes default, the boxes don't work at all)
-RadioListTile<SuccessCountMode>(
-  title: const Text('Workout Session'),
-  value: SuccessCountMode.session,
-  groupValue: _successCountMode,
-  onChanged: (mode) => setState(() => _successCountMode = mode!),
-),
-RadioListTile<SuccessCountMode>(
-  title: const Text('per Exercise'),
-  value: SuccessCountMode.exercise,
-  groupValue: _successCountMode,
-  onChanged: (mode) => setState(() => _successCountMode = mode!),
-),
-RadioListTile<SuccessCountMode>(
-  title: const Text('per Set'),
-  value: SuccessCountMode.set,
-  groupValue: _successCountMode,
-  onChanged: (mode) => setState(() => _successCountMode = mode!),
-),
-
-const SizedBox(height: 16),
-
-                        Text('For Every Exercise:',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium),
+                        const SizedBox(height: 16),
+                        const Text('For Every Exercise:', style: TextStyle(fontWeight: FontWeight.bold)),
                         RadioListTile<bool>(
                           title: const Text('Adjust 1 set'),
                           value: false,
-                          groupValue: preset.adjustAllSets,
-                          onChanged: (v) => setState(
-                              () => preset.adjustAllSets = v!),
+                          groupValue: widget.preset.adjustAllSets,
+                          activeColor: cs.primary,
+                          onChanged: (b) => setState(() => widget.preset.adjustAllSets = b!),
                         ),
                         RadioListTile<bool>(
                           title: const Text('Adjust All sets'),
                           value: true,
-                          groupValue: preset.adjustAllSets,
-                          onChanged: (v) => setState(
-                              () => preset.adjustAllSets = v!),
+                          groupValue: widget.preset.adjustAllSets,
+                          activeColor: cs.primary,
+                          onChanged: (b) => setState(() => widget.preset.adjustAllSets = b!),
                         ),
                         const SizedBox(height: 16),
+
                         ElevatedButton(
                           onPressed: _saveAllAndClose,
                           child: const Text('Save'),
@@ -562,8 +523,6 @@ const SizedBox(height: 16),
                         const SizedBox(height: 24),
                       ],
                     ),
-                    
-                  
                   ],
                 ),
               ),

@@ -1,0 +1,91 @@
+Here’s a condensed, high‑level overview that preserves key architecture and UI details in as few words as possible:
+
+---
+
+## 1. App Entry & State
+
+* **`main.dart`**:
+
+  * Wraps `MyApp` in `MultiProvider` for `ActiveSession`, `SelectedProfile`, `DashboardConfig` (persisted via SharedPreferences).
+  * `MyApp` uses a `FutureBuilder` on `onboardingComplete` to show `OnboardingFlow` or `MainScreen`.
+* **`MainScreen`**:
+
+  * 5‑tab `BottomNavigationBar` (Dashboard, Train, History, Nutrition, Profile).
+  * FAB shows `OngoingSessionFab` when a session is active.
+
+---
+
+## 2. Onboarding Flow
+
+* Multi‑page setup (`PageController`): Welcome → Personal Info → Usage Intent → optionally Anthropometry, Weight History, Activity, Nutrition & Training Preferences → Summary.
+* Fields: name, gender, DOB, height, weight, calories/goals, diet/program type.
+* Validation on each page; “Skip/Finish” and “Next” buttons.
+
+---
+
+## 3. Dashboard Page
+
+* **View Mode**: list of enabled widgets in user‑defined order.
+* **Edit Mode**: drag‑reorder `ReorderableListView`, toggle visibility, “Add Widget” dialog.
+* Widgets include QuickBar, NutritionDash, WorkoutDashboard, HistorySummary, PastSessionsList, DataRecords, HealthTrends, CurrentMetrics.
+
+---
+
+## 4. Train & Presets
+
+* **TrainPage**: left drawer, right profile drawer, list of presets (`PresetBar`), “Generate” & “Add Preset” actions, “New Session” button.
+* **PresetDetailScreen**: view/edit exercise list, toggle automatic, edit name/flow, start session.
+* **Auto‑Preset Flow**: graph editor with `flutter_flow_chart`, manage methods/events.
+
+---
+
+## 5. History & Analytics
+
+* **HistoryScreen**: buttons to Exercises/Muscle filters, `HistorySummaryWidget`, “7‑Day Analytics” navigates to `AnalyticsDashboardScreen`.
+* **SessionDetailScreen**: list of exercises (`ExerciseCard`), edit/delete, save changes.
+* **AnalyticsDashboardScreen**: tabbed view of sets by muscle/body‑part over last 7 days.
+
+---
+
+## 6. Exercise Catalog & Filters
+
+* **ExerciseCatalogPage**: search, filter dialog (equipment, area, muscle, profile), list of definitions, detail bottom sheet with tabs (Details, Metrics, Records).
+* **DefinitionsByBodyPart/Muscle**: list exercises grouped by body‑part or muscle.
+
+---
+
+## 7. Nutrition & Food Logging
+
+* **NutritionPage**: scrollable column of `NutritionDash`, HealthTrendsSection, DataRecordsSection, CurrentMetricsSection; `SpeedDialFab`.
+* **FoodLoggingPage**: tabs (Scan/Search/Pre‑Planned/Custom), search results list, add‑food flow to `FoodCustomizationPage`.
+* **FoodCustomizationPage**: form for name, brand, images, macros + breakdown expansions.
+
+---
+
+## 8. Measurements & Logs
+
+* **MeasuredItemsPage** → **NewMeasurementItemPage** → **SpecificMeasurementPage**: list of tracked measurements, presets/custom inputs, charts with filters, add new entries.
+
+---
+
+## 9. Profile & Settings
+
+* **ProfilePage**: unit toggles, reminders, body‑part mapping, list of gym profiles (add/edit).
+* **AppSettingsPage**: export/import DB JSON.
+* **AnalyticsSettingsScreen**: navigation to body‑part/muscle mapping, ranking, percent‑per‑exercise, volume boundaries.
+* **FlowChartPage**: demo tree editor.
+
+---
+
+## 10. Data Models
+
+* **workout\_models.dart**: sessions, weight/cardio/stretch exercises, sets/instances.
+* **definition\_models.dart**: ExerciseDefinition, Equipment, BodyPart, Muscle.
+* **measurement\_models.dart**: definitions & entries.
+* **gym\_models.dart**: GymProfile + equipment map.
+* **preset\_models.dart**: presets, flow definitions/methods/edges.
+* **analytics\_models.dart**: RepMaxRow, VolumeBoundaries.
+
+---
+
+This trims \~1,900 lines into a \~300‑word overview, retaining each screen’s purpose, key widgets, state management, and data models. Let me know if you’d like further tweaks!

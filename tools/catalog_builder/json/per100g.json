@@ -1,0 +1,6 @@
+[
+  { "food_ext": "food_0001", "nutrient_code": "KCAL", "amount": 52 },
+  { "food_ext": "food_0001", "nutrient_code": "CARB_G", "amount": 14 },
+  { "food_ext": "food_0001", "nutrient_code": "PROTEIN_G", "amount": 0.3 },
+  { "food_ext": "food_0001", "nutrient_code": "FAT_G", "amount": 0.2 }
+]

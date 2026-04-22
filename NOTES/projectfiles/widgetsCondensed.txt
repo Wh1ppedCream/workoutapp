@@ -1,0 +1,110 @@
+Here’s a streamlined widget reference, highlighting purpose and key structure for each custom component:
+
+---
+
+### QuickBar
+
+• **What:** Three‑segment action bar (Measurement, Food, Workout)
+• **Key Props:** `scale`
+• **Structure:** Rounded `Container` → `Row` of three `InkWell` segments (containers with background colors, labels scaled) separated by dividers
+• **Actions:** Pushes measurement, food, or workout screens via `Navigator`/`ActiveSession`
+
+---
+
+### NutritionDash
+
+• **What:** Swipeable nutrition views + pager dots + add‑meal bar
+• **Key Props:** nutrient ints, `scale`
+• **Structure:** `PageView` of `[NutritionCircleDetails, NutritionBarDetails, NutritionTextDetails]` inside fixed‑height box, animated dot indicators, `MealPlanAddBar`
+
+---
+
+### NutritionTextDetails & ValueCard
+
+• **What:** Text overview of calories/macros in labeled cards
+• **Key Props (TextDetails):** nutrient ints, `scale`
+• **ValueCard Props:** `label`, `value`, optional `borderColor`, `scale`
+• **Structure:** Rows of `Expanded ValueCard` showing “Remaining/Consumed/Target” and “Protein/Carbs/Fat”
+
+---
+
+### RoundedProgressIndicator
+
+• **What:** Circular progress with rounded ends
+• **Key Props:** `progress` (0–1), `size`, `progressColor`, `backgroundColor`, `strokeWidth`, `scale`
+• **Structure:** `CustomPaint` draws background circle + arc with `strokeCap.round`
+
+---
+
+### WorkoutDashboard
+
+• **What:** Profile selector, preset list, “Start Workout” button
+• **Key Props:** `scale`
+• **Structure:** `DropdownButtonFormField` for profiles; `FutureBuilder` list of `PresetBar`; bottom large button to kick off session
+
+---
+
+### PresetBar
+
+• **What:** Colored bar for a workout preset with menu & auto badge
+• **Key Props:** `presetId`, `label`, `color`, `isAutomatic`, `scale`
+• **Structure:** `GenericBar` background, label tap → detail screen, trailing row with auto icon + `PopupMenuButton` (Edit/Rename/Delete)
+
+---
+
+### PastSessionsList
+
+• **What:** Filterable carousel of recent sessions
+• **Key Props:** `height`, `onReload`
+• **Structure:** `Card` with header (filter dropdown + fullscreen icon) + `FutureBuilder` list of session cards → detail screen on tap
+
+---
+
+### OngoingSessionFab
+
+• **What:** Toggles between single FAB and resume/exit actions for active session
+• **Key Props:** —
+• **Structure:** Stateful switch: compact green FAB vs. row of two extended FABs (Resume, Exit) with confirmation
+
+---
+
+### SessionCompleteSheet
+
+• **What:** Draggable summary of just‑finished workout
+• **Key Props:** `sessionId`
+• **Structure:** `FutureBuilder` loads session+exercises → `DraggableScrollableSheet` with header (date, duration, volume, calories, score) and scrollable list of each exercise summary; close FAB
+
+---
+
+### SpeedDialFab
+
+• **What:** Expanding FAB to log food or measurements
+• **Key Props:** —
+• **Structure:** Main FAB toggles two extended FABs (“Log Food”, “Log Measurement”) with animated rotation
+
+---
+
+### StretchSearchDialog
+
+• **What:** Dialog to pick a stretch by body part
+• **Flow:** Body‑part dropdown → fetch stretches → stretch dropdown → “Add”/“Cancel”
+
+---
+
+### StretchCard
+
+• **What:** Manage a stretch exercise’s instances
+• **Key Props:** `exercise`, `readOnlyMode`, callbacks
+• **Structure:** Card with header menu, search/custom add row, list of checkable instances with delete icons
+
+---
+
+### WeightCard
+
+• **What:** Edit weight exercise sets (and optional change‑sets)
+• **Key Props:** `exercise`, `readOnlyMode`, callbacks
+• **Structure:** Card with header (name, note edit, info/details, menu), parent sets list (checkbox, weight/reps fields, remove), optional change‑set section, “Add Set” button
+
+---
+
+Each widget emphasizes a clear, scaled layout, consistent padding, and callback hooks for navigation or state updates.

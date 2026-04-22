@@ -87,14 +87,31 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
           const SizedBox(height: 8),
           Text('FOCUS MUSCLES: ${def.muscles.map((m) => m.muscle.name).join(', ')}'),
           const SizedBox(height: 16),
-          const Text('EXAMPLE: to be added', style: TextStyle(fontStyle: FontStyle.italic)),
+          // --- Notes from the database ---
+          const Text('SET-UP:', style: TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 4),
+          Text(
+            def.setupNotes.isNotEmpty == true
+              ? def.setupNotes
+              : 'No setup instructions provided.',
+          ),
           const SizedBox(height: 12),
-          const Text('SET‑UP: to be added', style: TextStyle(fontStyle: FontStyle.italic)),
+          const Text('EXECUTION:', style: TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 4),
+          Text(
+            def.executionNotes.isNotEmpty == true
+              ? def.executionNotes
+              : 'No execution notes provided.',
+          ),
           const SizedBox(height: 12),
-          const Text('EXECUTION: to be added', style: TextStyle(fontStyle: FontStyle.italic)),
-          const SizedBox(height: 12),
-          const Text('TIPS: to be added', style: TextStyle(fontStyle: FontStyle.italic)),
-        ],
+          const Text('TIPS:', style: TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 4),
+          Text(
+            def.tipsNotes.isNotEmpty == true
+              ? def.tipsNotes
+              : 'No additional tips.',
+          ),
+       ],
       ),
     );
   }

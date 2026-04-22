@@ -1,0 +1,16 @@
+[
+  {
+    "ext": "food_0001",
+    "name": "Apple, raw",
+    "brand": null,
+    "category": "Fruits",
+    "is_custom": 0,
+    "verified": 1,
+    "density_g_per_ml": null,
+    "quality_score": null,
+    "version": 1,
+    "preparation": null,
+    "created_at": "2025-01-01",
+    "updated_at": "2025-01-01"
+  }
+]

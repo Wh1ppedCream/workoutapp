@@ -1,8 +1,9 @@
 // File: lib/widgets/add_exercise_fab.dart
 
 import 'package:flutter/material.dart';
-import '../screens/exercise_catalog_page.dart';
+import '../screens/exercise/exercise_catalog_page.dart';
 import '../models/models.dart';
+import '../theme/app_colors.dart';
 
 /// Callback when a weight exercise definition is picked.
 typedef WeightPicker = Future<void> Function(ExerciseDefinition definition);
@@ -11,18 +12,11 @@ typedef CardioPicker = Future<void> Function(String cardioName);
 /// Callback when a stretch exercise is picked.
 typedef StretchPicker = Future<void> Function();
 
-/// A FAB that opens a dialog to add a new exercise card (Weight, Cardio, Stretch).
-///
-/// Accepts callbacks to handle each choice, so it can be used for sessions or presets.
 class AddExerciseFab extends StatelessWidget {
   final WeightPicker? onWeightPicked;
   final CardioPicker? onCardioPicked;
   final StretchPicker? onStretchPicked;
 
-  /// Creates an AddExerciseFab.
-  ///
-  /// Provide any combination of [onWeightPicked], [onCardioPicked], [onStretchPicked]
-  /// to handle the respective selection.
   const AddExerciseFab({
     super.key,
     this.onWeightPicked,
@@ -30,8 +24,6 @@ class AddExerciseFab extends StatelessWidget {
     this.onStretchPicked,
   });
 
-  // Cardio options for bodyweight vs. equipment-based activities.
-  // TODO: put in database and put these in json files
   static const List<String> _bodyweightCardioOptions = [
     'Aerobics', 'Box Jumps', 'Jump Squats', 'Running', 'Swimming', 'Walking', 'Zumba',
   ];
@@ -43,17 +35,30 @@ class AddExerciseFab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final extras = theme.extension<AppColors>();
+    final fabBg = extras?.addExerciseFabBg ?? cs.primary;
+    final fabFg = extras?.addExerciseFabIcon ?? cs.onPrimary;
+
     return FloatingActionButton(
+      backgroundColor: fabBg,
+      foregroundColor: fabFg,
       onPressed: () => _showAddCardTypeDialog(context),
       child: const Icon(Icons.add),
     );
   }
 
   void _showAddCardTypeDialog(BuildContext ctx) {
+    final theme = Theme.of(ctx);
+    final extras = theme.extension<AppColors>();
+    final dialogBg = extras?.dialogBackground ?? theme.dialogTheme.backgroundColor;
+
     showDialog(
       context: ctx,
       builder: (_) => AlertDialog(
-        title: const Text('Add a Card'),
+        backgroundColor: dialogBg,
+        title: Text('Add a Card', style: theme.textTheme.titleLarge),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -65,9 +70,7 @@ class AddExerciseFab extends StatelessWidget {
                   MaterialPageRoute(
                     builder: (_) => ExerciseCatalogPage(
                       onExercisePicked: (def) async {
-                        if (onWeightPicked != null) {
-                          await onWeightPicked!(def);
-                        }
+                        if (onWeightPicked != null) await onWeightPicked!(def);
                       },
                     ),
                   ),
@@ -94,7 +97,7 @@ class AddExerciseFab extends StatelessWidget {
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
             child: const Text('Cancel'),
-          )
+          ),
         ],
       ),
     );
@@ -103,6 +106,9 @@ class AddExerciseFab extends StatelessWidget {
   void _showCardioDetailDialog(BuildContext dialogCtx) {
     String? selectedCategory;
     String? selectedExercise;
+    final theme = Theme.of(dialogCtx);
+    final extras = theme.extension<AppColors>();
+    final dialogBg = extras?.dialogBackground ?? theme.dialogTheme.backgroundColor;
 
     showDialog(
       context: dialogCtx,
@@ -115,7 +121,8 @@ class AddExerciseFab extends StatelessWidget {
                   : <String>[];
 
           return AlertDialog(
-            title: const Text('Choose Cardio Type'),
+            backgroundColor: dialogBg,
+            title: Text('Choose Cardio Type', style: theme.textTheme.titleLarge),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -126,12 +133,10 @@ class AddExerciseFab extends StatelessWidget {
                         title: const Text('Bodyweight'),
                         value: 'Bodyweight',
                         groupValue: selectedCategory,
-                        onChanged: (v) {
-                          setState(() {
-                            selectedCategory = v;
-                            selectedExercise = null;
-                          });
-                        },
+                        onChanged: (v) => setState(() {
+                          selectedCategory = v;
+                          selectedExercise = null;
+                        }),
                       ),
                     ),
                     Expanded(
@@ -139,12 +144,10 @@ class AddExerciseFab extends StatelessWidget {
                         title: const Text('Equipment Based'),
                         value: 'Equipment Based',
                         groupValue: selectedCategory,
-                        onChanged: (v) {
-                          setState(() {
-                            selectedCategory = v;
-                            selectedExercise = null;
-                          });
-                        },
+                        onChanged: (v) => setState(() {
+                          selectedCategory = v;
+                          selectedExercise = null;
+                        }),
                       ),
                     ),
                   ],
@@ -169,14 +172,10 @@ class AddExerciseFab extends StatelessWidget {
                 child: const Text('Cancel'),
               ),
               ElevatedButton(
-                onPressed: (selectedExercise == null)
-                    ? null
-                    : () async {
-                        Navigator.of(innerCtx).pop();
-                        if (onCardioPicked != null) {
-                          await onCardioPicked!(selectedExercise!);
-                        }
-                      },
+                onPressed: (selectedExercise == null) ? null : () async {
+                    Navigator.of(innerCtx).pop();
+                    if (onCardioPicked != null) await onCardioPicked!(selectedExercise!);
+                  },
                 child: const Text('Save'),
               ),
             ],

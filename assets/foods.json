@@ -1,0 +1,83 @@
+[
+  {
+    "name": "Banana",
+    "brand": null,
+    "barcode": null,
+    "density_g_per_ml": null,
+    "portions": [
+      { "measure_name": "100 g", "gram_weight": 100, "is_default": true },
+      { "measure_name": "1 medium (118 g)", "gram_weight": 118 }
+    ],
+    "nutrients": {
+      "KCAL": 89,
+      "PROTEIN_G": 1.1,
+      "FAT_G": 0.3,
+      "CARB_G": 22.8,
+      "FIBER_G": 2.6,
+      "SUGAR_G": 12.2,
+      "SAT_FAT_G": 0.1,
+      "SODIUM_MG": 1
+    }
+  },
+  {
+    "name": "Chicken Breast (cooked, skinless)",
+    "brand": null,
+    "barcode": null,
+    "density_g_per_ml": null,
+    "portions": [
+      { "measure_name": "100 g", "gram_weight": 100, "is_default": true },
+      { "measure_name": "1 breast (120 g)", "gram_weight": 120 }
+    ],
+    "nutrients": {
+      "KCAL": 165,
+      "PROTEIN_G": 31,
+      "FAT_G": 3.6,
+      "CARB_G": 0,
+      "FIBER_G": 0,
+      "SUGAR_G": 0,
+      "SAT_FAT_G": 1.0,
+      "SODIUM_MG": 74
+    }
+  },
+  {
+    "name": "Olive Oil",
+    "brand": "Generic",
+    "barcode": null,
+    "density_g_per_ml": 0.91,
+    "portions": [
+      { "measure_name": "1 tbsp", "gram_weight": 14, "is_default": true },
+      { "measure_name": "1 tsp",  "gram_weight": 5 }
+    ],
+    "nutrients": {
+      "KCAL": 884,
+      "PROTEIN_G": 0,
+      "FAT_G": 100,
+      "CARB_G": 0,
+      "FIBER_G": 0,
+      "SUGAR_G": 0,
+      "SAT_FAT_G": 14,
+      "SODIUM_MG": 2
+    }
+  },
+  {
+    "name": "Oats (dry)",
+    "brand": null,
+    "barcode": null,
+    "density_g_per_ml": null,
+    "portions": [
+      { "measure_name": "100 g",     "gram_weight": 100 },
+      { "measure_name": "1/2 cup",   "gram_weight": 40,  "is_default": true },
+      { "measure_name": "1 cup",     "gram_weight": 80 }
+    ],
+    "nutrients": {
+      "KCAL": 389,
+      "PROTEIN_G": 16.9,
+      "FAT_G": 6.9,
+      "CARB_G": 66.3,
+      "FIBER_G": 10.6,
+      "SUGAR_G": 0.9,
+      "SAT_FAT_G": 1.2,
+      "SODIUM_MG": 2
+    }
+  }
+]

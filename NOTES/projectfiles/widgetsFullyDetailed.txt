@@ -1,0 +1,615 @@
+This document provides comprehensive, widget‑by‑widget documentation for all custom UI components in the Flutter Fitness Tracker app.
+
+---
+
+## QuickBar (`lib/widgets/quick_bar.dart`)
+
+**Description:** A three‑segment quick‑action bar for adding measurements, logging food, or starting workouts.
+
+**Class Signature:**
+
+```dart
+class QuickBar extends StatelessWidget {
+  final double scale;
+  const QuickBar({Key? key, this.scale = 1.0}) : super(key: key);
+  @override
+  Widget build(BuildContext context) => ...
+}
+```
+
+**Properties:**
+
+* `scale` (`double`): Uniform scale factor applied to padding, heights, border radii, and font sizes.
+
+**Build Hierarchy:**
+
+1. `Container` (margin: `EdgeInsets.symmetric(horizontal:16*scale, vertical:8*scale)`, shape: rounded via `BorderRadius.circular(24*scale)`)
+2. `Row` of three `Expanded` children:
+
+   * **Measurement Segment:**
+
+     * `Container` (background: `Colors.teal.shade100`, left corner radius)
+     * `InkWell` (borderRadius, onTap pushes `NewMeasurementItemPage()`)
+     * `Padding` → `SizedBox(height:40*scale)` → `Center(Text('+ Measurement', style: fontSize12*scale, weight600, color: teal800))`
+   * **Divider:** `Container(width:1*scale, height:40*scale, color: grey.shade400)`
+   * **Food Segment:** similar, background `orange.shade100`, onTap pushes `FoodLoggingPage()`, label '+ Food', fontSize14\*scale.
+   * **Divider** (same)
+   * **Workout Segment:**
+
+     * `Container` (background `green.shade100`, right corner radius)
+     * `InkWell`: onTap calls `context.read<ActiveSession>().start()`, pushes `SessionScreen()`
+     * Label '+ Workout', fontSize14\*scale, color green800.
+
+**Interactions:**
+
+* Navigations via `Navigator.of(context).push(...)`.
+* Session start via Provider `ActiveSession`.
+
+---
+
+## NutritionDash (`lib/widgets/nutrition_dash.dart`)
+
+**Description:** Swipeable section displaying nutrition details in circle, bar, and text formats, with a meal plan/add bar below.
+
+**Class Signature:**
+
+```dart
+class NutritionDash extends StatefulWidget {
+  final int caloriesConsumed, calorieGoal;
+  final int proteinConsumed, proteinTarget;
+  final int carbConsumed, carbTarget;
+  final int fatConsumed, fatTarget;
+  final double scale;
+  const NutritionDash({ ..., this.scale = 1.0 });
+  @override State<NutritionDash> createState() => _NutritionDashState();
+}
+```
+
+**State:**
+
+* `_currentPage` (`int`): currently selected detail page index.
+
+**Build Hierarchy:**
+
+1. Compute `s = widget.scale`.
+2. `detailWidgets` list of three:
+
+   * `NutritionCircleDetails`(all values + `scale: s`)
+   * `NutritionBarDetails`(all values + `scale: s`)
+   * `NutritionTextDetails`(all values + `scale: s`)
+3. `Column`:
+
+   * `SizedBox(height:330*s)` → `PageView(onPageChanged: update _currentPage, children: detailWidgets)`.
+   * `Row` of `AnimatedContainer` dots: size & color depend on `_currentPage`.
+   * `MealPlanAddBar(scale: s)`.
+
+**Interactions:**
+
+* Swiping pages updates `_currentPage` with `setState`.
+* Animated dots reflect page transitions.
+
+---
+
+## NutritionTextDetails & ValueCard (`lib/widgets/nutrition_text_details.dart`)
+
+### NutritionTextDetails
+
+**Description:** Displays calorie and macro statistics in text cards.
+
+**Class Signature:**
+
+```dart
+class NutritionTextDetails extends StatelessWidget {
+  final int caloriesConsumed, calorieGoal;
+  final int proteinConsumed, proteinTarget;
+  final int carbConsumed, carbTarget;
+  final int fatConsumed, fatTarget;
+  final double scale;
+  const NutritionTextDetails({ ..., this.scale = 1.0 });
+  @override Widget build(BuildContext context) => ...;
+}
+```
+
+**Properties:** Same nutrient ints + `scale`.
+
+**Build Hierarchy:**
+
+1. Compute `remaining = calorieGoal - caloriesConsumed`.
+2. `Padding(horizontal:16*scale, vertical:12*scale)` → `Column`:
+
+   * **Calorie Row:** `Padding(vertical:8*scale)` → `Row` of three `Expanded ValueCard` for 'Remaining', 'Consumed', 'Target'.
+   * `SizedBox(height:16*scale)`.
+   * **Macro Row:** `Padding(vertical:8*scale)` → `Row` of three `Expanded ValueCard` for 'Protein', 'Carbs', 'Fat'.
+
+### ValueCard
+
+**Description:** Generic labeled value container with border.
+
+**Class Signature:**
+
+```dart
+class ValueCard extends StatelessWidget {
+  final String label, value;
+  final Color? borderColor;
+  final double scale;
+  const ValueCard({ ..., this.borderColor, this.scale = 1.0 });
+  @override Widget build(BuildContext context) => ...;
+}
+```
+
+**Build Hierarchy:**
+
+* Compute `borderClr = borderColor ?? Colors.grey[300]!`.
+* Base text styles from `theme.textTheme.bodySmall` & `titleMedium`, scaled fonts.
+* `Container(padding:EdgeInsets.all(8*scale), decoration:BoxDecoration(border:Border.all(color:borderClr), borderRadius:8*scale))`:
+
+  * `Column(mainAxisSize:min)`:
+
+    * `Text(label, style:labelStyle)`
+    * `SizedBox(height:4*scale)`
+    * `Text(value, style:valueStyle)`
+
+---
+
+## RoundedProgressIndicator (`lib/widgets/rounded_progress_indicator.dart`)
+
+**Description:** Donut‑style progress indicator with rounded ends.
+
+**Class Signature:**
+
+```dart
+class RoundedProgressIndicator extends StatelessWidget {
+  final double progress; // 0.0–1.0
+  final double size;
+  final Color progressColor, backgroundColor;
+  final double strokeWidth, scale;
+  const RoundedProgressIndicator({ ..., this.strokeWidth=12, this.scale=1.0 });
+  @override Widget build(BuildContext context) => ...;
+}
+```
+
+**Build Hierarchy:**
+
+* Compute `actualSize = size*scale`, `actualStroke = strokeWidth*scale`.
+* `SizedBox(width:actualSize, height:actualSize)` → `CustomPaint(painter: _RoundedProgressPainter(...))`.
+
+**Painter (`_RoundedProgressPainter`):**
+
+* **paint(Canvas, Size):**
+
+  * Determine `center`, `radius = (min(width,height) - strokeWidth) / 2`.
+  * Draw full circle track with `backgroundColor`.
+  * Draw arc from `-pi/2` over `2*pi*progress` with `progressColor`, `strokeCap.round`.
+* **shouldRepaint:** returns `true` if any parameter changed.
+
+---
+
+## WorkoutDashboard (`lib/widgets/workout_dashboard.dart`)
+
+**Description:** Profile selector, preset list, and Start Workout button.
+
+**Class Signature:**
+
+```dart
+class WorkoutDashboard extends StatefulWidget {
+  final double scale;
+  const WorkoutDashboard({Key? key, this.scale = 1}) : super(key: key);
+  @override State<WorkoutDashboard> createState() => _WorkoutDashboardState();
+}
+```
+
+**State Variables:**
+
+* `_palette`: List<Color> for bar backgrounds.
+* `_repo`: `AppRepository()` instance.
+
+**Build Hierarchy:**
+
+1. `Column(crossAxisStretch)`:
+
+   * **Profile Selector:** `Padding` → `DropdownButtonFormField<String>`:
+
+     * `value = sel.currentProfile?.name`
+     * Items: `sel.profiles.map((p) => DropdownMenuItem(value: p.name, child:Text(p.name, style:fontSize14*scale)))`
+     * `onChanged`: updates `sel.selectProfile()` and `setState()`.
+   * **Presets List:** `Padding` → `FutureBuilder<List<Map<String,dynamic>>>` from `_repo.fetchAllPresetsRaw(profileId)`:
+
+     * Loading: `CircularProgressIndicator()`.
+     * Error: Text('Error loading presets').
+     * Data empty: Text('No presets found.').
+     * Data present: `Column` of entries:
+
+       * For each entry at index `i`: extract `presetId` & `name`.
+       * `FutureBuilder<Map<String,dynamic>?>` for `_repo.fetchPresetAutoSettings(presetId)` to detect auto flag.
+       * Wrap in `Padding(vertical:6*scale)` and build `PresetBar(...)` with `scale:0.8*scale`.
+   * **Start Workout Button:** `Padding` → `ElevatedButton`:
+
+     * `onPressed`: start session & navigate to `SessionScreen()`.
+     * Styled via `styleFrom`: green background, `minimumSize: Size.fromHeight(55*scale)`, corner radius `10*scale`.
+
+---
+
+## PresetBar (`lib/widgets/preset_bar.dart`)
+
+**Description:** Colored bar representing a workout preset, with context menu and auto badge.
+
+**Class Signature:**
+
+```dart
+class PresetBar extends StatelessWidget {
+  final int presetId, index;
+  final String label;
+  final Color color;
+  final bool isAutomatic;
+  final VoidCallback onRefresh;
+  final double scale;
+  const PresetBar({Key? key, required this.presetId, required this.label, required this.color, required this.index, this.isAutomatic=false, required this.onRefresh, this.scale=1.0}) : super(key: key);
+  @override Widget build(BuildContext context) => ...;
+}
+```
+
+**Build Hierarchy:**
+
+* `GenericBar` (background `color`, `scale`):
+
+  * `label`: trimmed or default 'Preset \${index+1}'.
+  * `onTap`: pushes `PresetDetailScreen` wrapped in `MultiProvider` for `ActiveSession` & new `PresetSession(presetId)`.
+  * `trailing`: `Row` including optional `_AutomaticBadge(scale)` and `PopupMenuButton<String>`:
+
+    * Icon size `24*scale`, color `color`.
+    * Menu items: Edit, Delete, Rename.
+
+**Menu Actions:**
+
+* **Edit:** calls `_openDetail(context)`.
+* **Delete:** confirmation dialog, onYes calls `repo.deletePreset(presetId)` then `onRefresh()`.
+* **Rename:** input dialog with `TextEditingController`, onConfirm calls `repo.updatePresetName(presetId, newName)` then `onRefresh()`.
+
+---
+
+## PastSessionsList (`lib/widgets/past_sessions_list.dart`)
+
+**Description:** Card containing a filterable, scrollable list of past workout sessions.
+
+**Class Signature:**
+
+```dart
+class PastSessionsList extends StatefulWidget {
+  final VoidCallback? onReload;
+  final double height;
+  const PastSessionsList({Key? key, this.onReload, this.height = 300}) : super(key: key);
+  @override State<PastSessionsList> createState() => _PastSessionsListState();
+}
+```
+
+**State Variables:**
+
+* `_options`: Map\<String,int?> for filters ('Week':7, 'Month':30, 'Year':365, 'All'\:null).
+* `_selected`: current filter key.
+* `_sessionsFuture`: Future\<List<WorkoutSession>>.
+* `_repo = AppRepository()`.
+
+**Lifecycle:**
+
+* `initState()`: calls `_loadSessions()`.
+* `_loadSessions()`: computes `start = now.subtract(Duration(days: days))` or fetch all, sets `_sessionsFuture` and calls `setState()`.
+
+**Build Hierarchy:**
+
+* `SizedBox(height: widget.height)` → `Card(margin vertical8)` → `Padding(all:12)` → `Column`:
+
+  * **Header Row:**
+
+    * `Text('Show:')`, `DropdownButton(value:_selected, items:_options.keys...)`, `Spacer()`, `IconButton(Icons.fullscreen, onPressed push FullHistoryScreen)`.
+  * **Expanded** → `FutureBuilder<List<WorkoutSession>>(future:_sessionsFuture)`:
+
+    * `ConnectionState.waiting`: `CircularProgressIndicator()`.
+    * `hasError`: `Text('Error: ${snap.error}')`.
+    * Data empty: `Text('No sessions yet.')`.
+    * Data present: `ListView.separated(itemCount:sessions.length)`:
+
+      * For each session:
+
+        * Format `dateStr = DateFormat('yyyy-MM-dd').format(ses.date)`.
+        * Compute `durationMin = (ses.duration/60).ceil()`.
+        * `Card(margin: horizontal2, vertical4)` → `ListTile(title: Text('$dateStr — $durationMin min'), onTap: push SessionDetailScreen(ses).then(() => {widget.onReload?.call(); _loadSessions();}))`.
+
+---
+
+## OngoingSessionFab (`lib/widgets/ongoing_session_fab.dart`)
+
+**Description:** FAB that toggles between a single icon and resume/exit options for active workout.
+
+**Class Signature:**
+
+```dart
+class OngoingSessionFab extends StatefulWidget {
+  const OngoingSessionFab({Key? key}) : super(key: key);
+  @override State<OngoingSessionFab> createState() => _OngoingSessionFabState();
+}
+```
+
+**State Variables:**
+
+* `_open` (`bool`): whether the resume/exit buttons are visible.
+
+**Build Hierarchy:**
+
+* If `_open == false`:
+
+  * `FloatingActionButton(backgroundColor: Colors.green, child: Icon(Icons.fitness_center), onPressed:() => setState(() => _open=true))`
+* Else:
+
+  * `Row(mainAxisSize:min)`:
+
+    * `FloatingActionButton.extended` (green, `Icons.play_arrow`, label 'Resume', onPressed: pop to SessionScreen and set `_open=false`).
+    * `SizedBox(width:8)`.
+    * `FloatingActionButton.extended` (red, `Icons.exit_to_app`, label 'Exit'):
+
+      * OnPressed: show `AlertDialog('Exit your ongoing workout?')` with Cancel/Exit; if confirmed, call `activeSession.finish()` then `setState(() => _open=false)`.
+
+---
+
+## SessionCompleteSheet (`lib/widgets/session_complete_sheet.dart`)
+
+**Description:** Draggable bottom sheet summarizing a completed session.
+
+**Class Signature:**
+
+```dart
+class SessionCompleteSheet extends StatelessWidget {
+  final int sessionId;
+  const SessionCompleteSheet({Key? key, required this.sessionId}) : super(key: key);
+  @override Widget build(BuildContext context) => ...;
+}
+```
+
+**Helpers:**
+
+* **`_SessionData`** container holding `WorkoutSession` and `List<WorkoutExercise>`.
+* **`_loadData(repo)`**: async fetch session and detailed exercises.
+
+**Build Hierarchy:**
+
+* `FutureBuilder<_SessionData>(future:_loadData(repo))`:
+
+  * Loading/Error: `SizedBox(height:200, child: Center(CircularProgressIndicator() or Text('Error')))`.
+  * Data ready: call `_buildContent(context, data)`.
+
+### `_buildContent`
+
+* Compute `totalVol` by summing `weight*reps` for each `WeightExercise` and its sets.
+
+* Format `dateStr = DateFormat('MMM dd • HH:mm').format(session.date)`.
+
+* Format `durStr` from `session.duration` seconds into `HH:mm:ss`.
+
+* Hardcode `calories = 100`, `gymScore = '5/10'` (placeholders).
+
+* `DraggableScrollableSheet(expand:false, initialChildSize:0.5, maxChildSize:0.95)` → `Stack`:
+
+  1. **Column:**
+
+     * **Header:** `Padding(all:16)` → `Column`:
+
+       * Text 'SESSION COMPLETE!' styled
+       * Row(dateStr, 'Duration: durStr')
+       * Text('Volume: totalVol lbs • Calories: 100 kcal')
+       * Text('Gym Score: 5/10')
+     * `Divider()`
+     * **Expanded** → `ListView.builder(controller:scrollCtrl, padding horizontal16 vertical8)`:
+
+       * For each exercise:
+
+         * `WeightExercise`: call `_buildWeightSection(ex)`
+         * `CardioExercise`: `ListTile(leading Icon(Icons.fitness_center), title Text('${ex.cardioName} • ${minutes} min'))`
+         * `StretchExercise`: `ListTile(leading Icon(Icons.self_improvement), title Text(ex.name))`
+  2. **Positioned** bottom-right: `FloatingActionButton` (green, icon `Icons.check`, onPressed pop).
+
+### `_buildWeightSection`
+
+* Header `Text('■ ${ex.name}')`
+* For each set:
+
+  * Row(text '\${i+1}. weight lbs × reps', Spacer(), Text('ERM=...', italic, fontSize12)).
+
+---
+
+## SpeedDialFab (`lib/widgets/speed_dial_fab.dart`)
+
+**Description:** Expanding FAB revealing two actions for logging food or measurements.
+
+**Class Signature:**
+
+```dart
+class SpeedDialFab extends StatefulWidget {
+  const SpeedDialFab({Key? key}) : super(key: key);
+  @override State<SpeedDialFab> createState() => _SpeedDialFabState();
+}
+```
+
+**State Variables:**
+
+* `_open` (`bool`): whether the secondary actions are visible.
+
+**Build Hierarchy:**
+
+* `SizedBox(width:160)` → `Column(crossAxisEnd)`:
+
+  * If `_open`:
+
+    * `FloatingActionButton.extended(heroTag:'log_food', icon:Icons.restaurant, label:'Log Food', onPressed: toggle & push FoodLoggingPage)`.
+    * `SizedBox(height:8)`.
+    * `FloatingActionButton.extended(heroTag:'log_measurement', icon:Icons.straighten, label:'Log Measurement', onPressed: toggle & push NewMeasurementItemPage)`.
+    * `SizedBox(height:8)`.
+  * Main `FloatingActionButton(heroTag:'toggle', onPressed: _toggle, child:AnimatedRotation(turns: _open?0.125:0, duration:200ms) Icon(Icons.add))`.
+
+---
+
+## StretchSearchDialog (`lib/widgets/stretch_search_dialog.dart`)
+
+**Description:** Modal dialog to select a predefined stretch by body part.
+
+**Class Signature:**
+
+```dart
+class StretchSearchDialog {
+  static Future<StretchDefinition?> show(BuildContext context) => ...;
+}
+```
+
+**Implementation:**
+
+* Uses `showDialog<StretchDefinition>`.
+* Inside, a `StatefulBuilder` to manage local state:
+
+  * `int? selectedBodyPartId, selectedStretchId`
+  * `List<StretchDefinition> currentStretches = []`
+* **Content Column:**
+
+  1. `FutureBuilder<List<BodyPart>>` from `repo.fetchAllBodyParts()`:
+
+     * Dropdown of body parts. On change:
+
+       * Clear `selectedStretchId`, `currentStretches`.
+       * Fetch stretches via `repo.fetchStretches(bodypartId)` and `setState`.
+  2. If `selectedBodyPartId != null`, show `DropdownButtonFormField<int>` with `currentStretches`.
+* **Actions:**
+
+  * `TextButton('Cancel')` → pop null.
+  * `ElevatedButton('Add')`, enabled if `selectedStretchId!=null`, onPressed returns chosen `StretchDefinition`.
+
+---
+
+## StretchCard (`lib/widgets/stretch_card.dart`)
+
+**Description:** Card for editing or viewing a stretch exercise, including adding/removing instances.
+
+**Class Signature:**
+
+```dart
+class StretchCard extends StatefulWidget {
+  final StretchExercise exercise;
+  final bool readOnlyMode;
+  final VoidCallback? onDeleteExercise;
+  final VoidCallback? onValueChanged;
+  const StretchCard({Key? key, required this.exercise, this.readOnlyMode=false, this.onDeleteExercise, this.onValueChanged}) : super(key: key);
+  @override State<StretchCard> createState() => _StretchCardState();
+}
+```
+
+**State Variables:**
+
+* `_stretchCustomController`: `TextEditingController` for custom name input.
+* `_completedStretches`: `Set<int>` of checked instance indices.
+
+**initState():**
+
+* Initialize `_stretchCustomController`.
+* Seed `_completedStretches` by iterating `exercise.stretchInstances`.
+
+**build(context):**
+
+* `Card(margin:bottom16) -> Padding(all:16) -> Column`:
+
+  1. **Header Row:**
+
+     * `Text(exercise.name)` with `titleMedium` style.
+     * `PopupMenuButton('Remove Stretch')`, onRemove calls `onDeleteExercise`.
+  2. `Row` for adding:
+
+     * `ElevatedButton.icon(Icons.search)` → calls `StretchSearchDialog.show`, on chosen adds to `stretchList` and marks checked.
+     * `Expanded(TextFormField(controller:_stretchCustomController, hint:'Custom', isDense))`.
+     * `IconButton(Icons.add_circle_outline)` enabled if custom text nonempty, onTap adds new custom `StretchInstance`.
+  3. `SizedBox(height:16)`.
+  4. **Instances List:** for each instance:
+
+     * `Row` with `Checkbox(value: instance.isChecked)`, onChanged toggles `isChecked` and `_completedStretches`.
+     * `Expanded(Column(Text(customName), optional description))`.
+     * `IconButton(Icons.remove_circle_outline)`, onTap removes instance, reindexes subsequent instances and adjusts `_completedStretches`.
+
+**Callbacks:**
+
+* Each mutation calls `widget.onValueChanged?.call()`.
+* `readOnlyMode` disables inputs and buttons.
+
+---
+
+## WeightCard (`lib/widgets/weight_card.dart`)
+
+**Description:** Card for editing weight exercises, sets, and optional change sets.
+
+**Class Signature:**
+
+```dart
+class WeightCard extends StatefulWidget {
+  final WeightExercise exercise;
+  final bool readOnlyMode;
+  final Set<int>? initialCompletedParents;
+  final Map<int,Set<int>>? initialCompletedChildren;
+  final VoidCallback? onDeleteExercise;
+  final VoidCallback? onSetAdded;
+  final VoidCallback? onSetDeleted;
+  final VoidCallback? onValueChanged;
+  final VoidCallback? onDetails;
+  const WeightCard({Key? key, required this.exercise, this.readOnlyMode=false, this.initialCompletedParents, this.initialCompletedChildren, this.onDeleteExercise, this.onSetAdded, this.onSetDeleted, this.onValueChanged, this.onDetails}) : super(key: key);
+  @override State<WeightCard> createState() => _WeightCardState();
+}
+```
+
+**State Variables:**
+
+* `_note` (`String`): equipment/note text.
+* `_isEditingNote` (`bool`).
+* `_weightControllers`, `_repsControllers`: lists of `TextEditingController` per parent set.
+* `_isChangeSetMode` (`bool`): whether CSet UI is shown.
+* `_cSets`: `Map<int,List<ExerciseSet>>` of change sets.
+* `_completedSets`: `Set<int>` of checked parent sets.
+
+**initState():**
+
+* Seed `_note` from `exercise.equipment`.
+* Initialize controllers for each `exercise.sets` entry.
+* Populate `_completedSets` from `initialCompletedParents` or `exercise.completedParents`.
+* Populate `_cSets` from `exercise.changeSets` and enable `_isChangeSetMode` if any.
+
+**dispose():**
+
+* Dispose all controllers.
+
+**Methods:**
+
+* `_updateWeightSet(int index)`: parse controllers, update `exercise.sets[index]`, call `onValueChanged()`.
+
+**build(context):**
+
+* `Card -> Padding -> Column`:
+
+  1. **Header Row:**
+
+     * `Text(exercise.name, style:titleMedium)`.
+     * If `_isEditingNote`: `TextFormField(initialValue:_note)`, onSubmit updates `_note` and toggles off edit.
+     * Else: `GestureDetector` wraps `Text(_note.isNotEmpty?_note:'Tap to add note')` toggles edit on tap.
+     * `IconButton(icon:Icons.info_outline)` calls `widget.onDetails`.
+     * `PopupMenuButton` ('Remove Exercise', 'Make ChangeSet') toggles `_isChangeSetMode` or calls `onDeleteExercise`.
+  2. `Divider(height:16)`.
+  3. **Parent Sets List:** generate for each index:
+
+     * `Container` (border if changeSetMode) → `Row`:
+
+       * `Checkbox(value:_completedSets.contains(idx))`, onChanged updates `_completedSets` and `exercise.completedParents`.
+       * `Expanded(Text('Set ${idx+1}'))`.
+       * `TextFormField(controller:_weightControllers[idx], label:'Weight')`, `onChanged`: `_updateWeightSet(idx)`.
+       * `TextFormField(controller:_repsControllers[idx], label:'Reps')`, `onChanged`: `_updateWeightSet(idx)`.
+       * `IconButton(Icons.remove_circle_outline)` confirmation, remove set, dispose controllers, call `onSetDeleted`.
+  4. **ChangeSets UI:** if enabled/available:
+
+     * For each CSet in `_cSets[idx]`, render scaled-down `Container` with fields for weight/reps and remove button.
+     * "Add CSet" button: clones last parent set into `_cSets[idx]` and updates `exercise.changeSets`, calls `onValueChanged`.
+  5. **Add Set Button:** `TextButton.icon(Icons.add, label:'Add Set')`, duplicates last set and controllers, calls `onSetAdded`.
+
+**Callbacks:** all data mutations trigger the appropriate widget callbacks for external state updates.
+
+---
+
+*End of widget documentation.*

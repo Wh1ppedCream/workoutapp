@@ -1,49 +1,18 @@
 FITNESS APP PROJECT: 
 	DONE:
-		8. Gym profiles (base)
-		9. exericse presets
-		
-	UPCOMING:
-		
+	
+	DOING:
 		- redoing exercise info
-		- muscles connected to bodyParts
-			- maybe editable table
-			- might want page
-		- bodypart ranking
-			- maybe editable table
-			- might want page
-		- muscle ranking
-			- maybe editable table
-			- might want page
+		
 		- muscle ranking under bodyparts
 			- maybe editable table
 			- might want page
-		- % muscle hit per exercise
-			- maybe editable table
-		- % bodypart hit per exercise (maybe i won't need this because im now connecting bodyparts to muscles)
-			- maybe editable table
 		- sets per bodypart
 			- maybe editable table
 		- sets per muscle
 			- maybe editable table
-		- optimal set boundaries per bodypart
-			- maybe editable table
-			- might want page
-		- optimal set boundaries per muscle
-			- maybe editable table
-			- might want page
-			
-			
-		- refactor old code for better and easier code later
-			- (done) fixing directory structure
-			- (done) move all instances of screen or widget code directly altering database to controlled repository file
-			- (done) all non database managing files no longer have direct access to the database
-			- (done) added in more database methods for future use
-			- (done) Full documentation for all database files (except database_helper)
-		- gym profiles (fully built out)
-			- fix stretches and cardio
-				- stretches not showing up
-				- cardio equipment selectable
+		
+	UPCOMING:
 		- expanded history details widget
 			- amount work on each bodypart
 			- amount work on each muscle
@@ -53,25 +22,67 @@ FITNESS APP PROJECT:
 			- food item barcode scanning
 			- recipes
 			- filter recipes by fridge items
-		- .txt files for each files overview
-			- details of each file's contents, use and goal
-			- current code for file section
-			- past code which might be useful section
 		- compile for ios
 			- landscape mode designing
 			- fixing for web
-
+		- double check 
+			- if deleting sesisons in history works
+			- if making alterations to historic sessions works
+			- if altering older sessions has an undo button which works
 		
 		
+	THOUGHTS:
+		- exercise ranking to muscle usage% conversion
+			1. 30%	= 30
+			2. 25%	= 55
+			3. 15%	= 70
+			4. 10%	= 80
+			5. 10%	= 90
+			6. 5%	= 95
+			7. 5%	= 100
+			
+		- 1rm calc ideas: 
+			each set is checked if it is the new recorded rep max (if the previous recorded 8 rep max was 
+			- rep max estimates 
+					- 1rm formula: 1rm = weight x (1 + 0.0333 x reps)
+					- 1rm to x rep max (x rm) formula: 
+							1	100%
+							2	97%
+							3	94%
+							4	92%
+							5	89%
+							6	86%
+							7	83%
+							8	81%
+							9	78%
+							10	75%
+							11	73%
+							12	71%
+							13	70%
+							14	68%
+							15	67%
+							16	65%
+							17	64%
+							18	63%
+							19	61%
+							20	60%
+							21	59%
+							22	58%
+							23	57%
+							24	56%
+							25	55%
+							26	54%
+							27	53%
+							28	52%
+							29	51%
+							30	50%
+				- Recorded Rep Maxes (RM's)
+					- RM's for each number of reps (eg: 5 RM, 10 RM are different for same exercise, also different from estimated rm)
+		
+		session completion popup:
+			- comparison or increments compared to older sessions
+			- exertion related questions, eg: muscle soreness, reps in reserve (optional for answering)
 
-	- exercise ranking to muscle usage% conversion
-		1. 30%	= 30
-		2. 25%	= 55
-		3. 15%	= 70
-		4. 10%	= 80
-		5. 10%	= 90
-		6. 5%	= 95
-		7. 5%	= 100
 
 
 	

@@ -12,7 +12,13 @@
       {"name":"Erector Spinae","rank":5},
       {"name":"Latissimus Dorsi","rank":6},
       {"name":"Triceps Brachii","rank":7}
-    ]
+    ],
+  "useManualBodyparts": false,
+  "useManualMuscles": true,
+  "setupNotes": "Kneel on a soft pad, grip the handles tightly, and brace your core.",
+  "executionNotes": "Roll out in a straight line, extend until your hips almost touch the floor, then pull back slowly.",
+  "tipsNotes": "Start with half-rolls if you’re new—work up to full range over several weeks.",
+  "multiplyByRating": true
   },
   {
     "name": "Arm Circles",
@@ -183,7 +189,7 @@
 
 {
   "name": "Bicep Curl - Bodyweight",
-  "rating": 60,
+  "rating": 50,
   "equipment": ["Bodyweight"],
   "bodyparts": ["Biceps", "Forearms"],
   "muscles": [
@@ -231,7 +237,7 @@
 
 {
   "name": "Bicep Curl - Resistance Band",
-  "rating": 60,
+  "rating": 50,
   "equipment": ["Barbell"],
   "bodyparts": ["Biceps", "Forearms"],
   "muscles": [
@@ -308,7 +314,7 @@
 },
 {
   "name": "Bulgarian Split Squat - Barbell",
-  "rating": 23,
+  "rating": 55,
   "equipment": ["Barbell", "Weight Plates", "Squat Rack"],
   "bodyparts": ["Quads", "Hips"],
   "muscles": [
@@ -323,7 +329,7 @@
 },
 {
   "name": "Burpee",
-  "rating": 23,
+  "rating": 50,
   "equipment": ["Bodyweight"],
   "bodyparts": ["Core"],
   "muscles": [
@@ -338,7 +344,7 @@
 },
 {
   "name": "Calf Press",
-  "rating": 23,
+  "rating": 75,
   "equipment": ["Leg Press Machine", "Weight Plates"],
   "bodyparts": ["Calves"],
   "muscles": [
@@ -354,7 +360,7 @@
 
 {
   "name": "Calf Raise - Seated Calf Raise Machine",
-  "rating": 23,
+  "rating": 65,
   "equipment": ["Seated Calf Raise Machine", "Weight Plates"],
   "bodyparts": ["Calves"],
   "muscles": [
@@ -370,7 +376,7 @@
 
 {
   "name": "Calf Raise - Standing Calf Raise Machine",
-  "rating": 23,
+  "rating": 75,
   "equipment": ["Standing Calf Raise Machine", "Weight Plates"],
   "bodyparts": ["Calves"],
   "muscles": [
@@ -386,7 +392,7 @@
 
 {
   "name": "Calf Raise - Dumbbell",
-  "rating": 23,
+  "rating": 55,
   "equipment": ["Dumbbell"],
   "bodyparts": ["Calves"],
   "muscles": [
@@ -402,7 +408,7 @@
 
 {
   "name": "Chest Dip",
-  "rating": 23,
+  "rating": 75,
   "equipment": ["Bodyweight"],
   "bodyparts": ["Chest", "Triceps", "Shoulders"],
   "muscles": [
@@ -417,7 +423,7 @@
 },
 {
   "name": "Chest Dip - Dip Bars",
-  "rating": 23,
+  "rating": 80,
   "equipment": ["Dip Bars"],
   "bodyparts": ["Chest", "Triceps", "Shoulders"],
   "muscles": [
@@ -433,7 +439,7 @@
 
 {
   "name": "Chest Dip - Assisted Dip/Pull-Up Machine",
-  "rating": 23,
+  "rating": 85,
   "equipment": ["Assisted Dip/Pull-Up Machine"],
   "bodyparts": ["Chest", "Triceps", "Shoulders"],
   "muscles": [
@@ -449,7 +455,7 @@
 
 {
   "name": "Chest Fly - Cable Machine",
-  "rating": 23,
+  "rating": 80,
   "equipment": ["Cable Machine", "Cable Handle Attachment", "Adjustable Bench"],
   "bodyparts": ["Chest", "Shoulders"],
   "muscles": [
@@ -465,7 +471,7 @@
 
 {
   "name": "Chest Fly - Dumbbell",
-  "rating": 23,
+  "rating": 65,
   "equipment": ["Dumbbell", "Adjustable Bench"],
   "bodyparts": ["Chest", "Shoulders"],
   "muscles": [
@@ -481,7 +487,7 @@
 
 {
   "name": "Chest Press - Chest Press Machine",
-  "rating": 23,
+  "rating": 90,
   "equipment": ["Chest Press Machine"],
   "bodyparts": ["Chest", "Triceps", "Shoulders"],
   "muscles": [
@@ -497,7 +503,7 @@
 
 {
   "name": "Chin Up",
-  "rating": 23,
+  "rating": 70,
   "equipment": ["Bodyweight"],
   "bodyparts": ["Upper Back", "Shoulders"],
   "muscles": [
@@ -513,7 +519,7 @@
 
 {
   "name": "Chin Up - Assisted Dip/Pull-Up Machine",
-  "rating": 23,
+  "rating": 80,
   "equipment": ["Assisted Dip/Pull-Up Machine"],
   "bodyparts": ["Upper Back", "Shoulders"],
   "muscles": [
@@ -529,7 +535,7 @@
 
 {
   "name": "Clean - Barbell",
-  "rating": 23,
+  "rating": 70,
   "equipment": ["Barbell", "Weight Plates"],
   "bodyparts": ["Upper Back", "Shoulders"],
   "muscles": [
@@ -545,7 +551,7 @@
 
 {
   "name": "Clean and Press - Barbell",
-  "rating": 23,
+  "rating": 70,
   "equipment": ["Barbell", "Weight Plates"],
   "bodyparts": ["Shoulders"],
   "muscles": [
@@ -561,7 +567,7 @@
 
 {
   "name": "Concentration Curl - Cable Machine",
-  "rating": 23,
+  "rating": 75,
   "equipment": ["Cable Machine", "Cable Handle Attachment"],
   "bodyparts": ["Biceps", "Forearms"],
   "muscles": [
@@ -577,7 +583,7 @@
 
 {
   "name": "Concentration Curl - Dumbbell (Normal Grip)",
-  "rating": 23,
+  "rating": 80,
   "equipment": ["Dumbbell"],
   "bodyparts": ["Biceps", "Forearms"],
   "muscles": [
@@ -593,7 +599,7 @@
 
 {
   "name": "Concentration Curl - Dumbbell (Reverse Grip)",
-  "rating": 23,
+  "rating": 70,
   "equipment": ["Dumbbell"],
   "bodyparts": ["Biceps", "Forearms"],
   "muscles": [
@@ -609,7 +615,7 @@
 
 {
   "name": "Crunch",
-  "rating": 23,
+  "rating": 55,
   "equipment": ["Bodyweight"],
   "bodyparts": ["Core"],
   "muscles": [
@@ -625,7 +631,7 @@
 
 {
   "name": "Crunch - Dumbbell",
-  "rating": 23,
+  "rating": 55,
   "equipment": ["Dumbbell"],
   "bodyparts": ["Core"],
   "muscles": [
@@ -641,7 +647,7 @@
 
 {
   "name": "Crunch - Dumbbell (Crossbody)",
-  "rating": 23,
+  "rating": 50,
   "equipment": ["Dumbbell"],
   "bodyparts": ["Core"],
   "muscles": [
@@ -657,7 +663,7 @@
 
 {
   "name": "Crunch - Dumbbell (Lying)",
-  "rating": 23,
+  "rating": 55,
   "equipment": ["Dumbbell"],
   "bodyparts": ["Core"],
   "muscles": [
@@ -673,7 +679,7 @@
 
 {
   "name": "Crunch - Dumbbell (Seated)",
-  "rating": 23,
+  "rating": 65,
   "equipment": ["Dumbbell"],
   "bodyparts": ["Core"],
   "muscles": [
@@ -689,7 +695,7 @@
 
 {
   "name": "Cuban Rotation",
-  "rating": 23,
+  "rating": 45,
   "equipment": ["Bodyweight"],
   "bodyparts": ["Shoulders"],
   "muscles": [
@@ -705,7 +711,7 @@
 
 {
   "name": "Cuban Rotation - Dumbbell",
-  "rating": 23,
+  "rating": 55,
   "equipment": ["Dumbbell"],
   "bodyparts": ["Shoulders"],
   "muscles": [
@@ -721,7 +727,7 @@
 
 {
   "name": "Curtsey Lunge",
-  "rating": 23,
+  "rating": 55,
   "equipment": ["Bodyweight"],
   "bodyparts": ["Hips", "Quads"],
   "muscles": [
@@ -737,7 +743,7 @@
 
 {
   "name": "Curtsey Lunge - Dumbbell",
-  "rating": 23,
+  "rating": 65,
   "equipment": ["Dumbbell"],
   "bodyparts": ["Hips", "Quads"],
   "muscles": [
@@ -753,7 +759,7 @@
 
 {
   "name": "Deadlift - Landmine Attachment",
-  "rating": 23,
+  "rating": 80,
   "equipment": ["Landmine Attachment", "Barbell", "Weight Plates"],
   "bodyparts": ["Lower Back", "Hamstrings"],
   "muscles": [
@@ -769,23 +775,47 @@
 
 {
   "name": "Deadlift - Barbell",
-  "rating": 23,
+  "rating": 90,
   "equipment": ["Barbell", "Weight Plates"],
   "bodyparts": ["Lower Back", "Hamstrings"],
   "muscles": [
-    { "name": "Gluteus Maximus", "rank": 1 },
-    { "name": "Biceps Femoris", "rank": 2 },
-    { "name": "Erector Spinae", "rank": 3 },
-    { "name": "Rectus Femoris", "rank": 4 },
-    { "name": "Adductor Magnus", "rank": 5 },
-    { "name": "Latissimus Dorsi", "rank": 6 },
-    { "name": "Trapezius (Upper)", "rank": 7 }
+    { "name": "Erector Spinae", "rank": 1 },
+    { "name": "Gluteus Maximus", "rank": 2 },
+    { "name": "Biceps Femoris", "rank": 3 },
+    { "name": "Semitendinosus", "rank": 4 },
+    { "name": "Semimembranosus", "rank": 5 },
+    { "name": "Adductor Magnus", "rank": 6 },
+    { "name": "Rectus Femoris", "rank": 7 },
+    { "name": "Vastus Lateralis", "rank": 8 },
+    { "name": "Vastus Medialis", "rank": 9 },
+    { "name": "Vastus Intermedius", "rank": 10 },
+    { "name": "Gluteus Medius", "rank": 11 },
+    { "name": "Adductor Longus", "rank": 12 },
+    { "name": "Adductor Brevis", "rank": 13 },
+    { "name": "Gracilis", "rank": 14 },
+    { "name": "Latissimus Dorsi", "rank": 15 },
+    { "name": "Trapezius (Upper)", "rank": 16 },
+    { "name": "Trapezius (Middle)", "rank": 17 },
+    { "name": "Rhomboids", "rank": 18 },
+    { "name": "Brachioradialis", "rank": 19 },
+    { "name": "Brachialis", "rank": 20 },
+    { "name": "Wrist Extensors", "rank": 21 },
+    { "name": "Wrist Flexors", "rank": 22 },
+    { "name": "Rectus Abdominis", "rank": 23 },
+    { "name": "Obliques", "rank": 24 },
+    { "name": "Transverse Abdominis", "rank": 25 },
+    { "name": "Multifidus", "rank": 26 },
+    { "name": "Quadratus Lumborum", "rank": 27 },
+    { "name": "Levator Scapulae", "rank": 28 },
+    { "name": "Gastrocnemius", "rank": 29 },
+    { "name": "Soleus", "rank": 30 }
   ]
 },
 
+
 {
   "name": "Deadlift - Dumbbell",
-  "rating": 23,
+  "rating": 70,
   "equipment": ["Dumbbell"],
   "bodyparts": ["Lower Back", "Hamstrings"],
   "muscles": [
@@ -800,7 +830,7 @@
 },
 {
   "name": "Diamond Push-up",
-  "rating": 23,
+  "rating": 60,
   "equipment": ["Bodyweight"],
   "bodyparts": ["Chest", "Triceps", "Shoulders"],
   "muscles": [
@@ -816,7 +846,7 @@
 
 {
   "name": "Donkey Kick",
-  "rating": 23,
+  "rating": 30,
   "equipment": ["Bodyweight"],
   "bodyparts": ["Hips"],
   "muscles": [
@@ -832,7 +862,7 @@
 
 {
   "name": "Donkey Kick - Leg Extension Machine",
-  "rating": 23,
+  "rating": 50,
   "equipment": ["Leg Extension Machine"],
   "bodyparts": ["Hips", "Hamstrings"],
   "muscles": [
@@ -848,7 +878,7 @@
 
 {
   "name": "Down-Up Twist - Cable Machine",
-  "rating": 23,
+  "rating": 65,
   "equipment": ["Cable Machine", "Cable Handle Attachment"],
   "bodyparts": ["Core"],
   "muscles": [
@@ -864,7 +894,7 @@
 
 {
   "name": "Drag Curl - Cable Machine",
-  "rating": 23,
+  "rating": 70,
   "equipment": ["Cable Machine", "Cable Straight Bar Attachment"],
   "bodyparts": ["Biceps"],
   "muscles": [
@@ -880,7 +910,7 @@
 
 {
   "name": "Drag Curl - Barbell",
-  "rating": 23,
+  "rating": 75,
   "equipment": ["Barbell", "Weight Plates"],
   "bodyparts": ["Biceps"],
   "muscles": [
@@ -896,7 +926,7 @@
 
 {
   "name": "Drag Curl - Dumbbell",
-  "rating": 23,
+  "rating": 70,
   "equipment": ["Dumbbell"],
   "bodyparts": ["Biceps"],
   "muscles": [

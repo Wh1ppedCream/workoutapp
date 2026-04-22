@@ -6,3 +6,8 @@ export 'measurement_models.dart';
 export 'analytics_models.dart';
 export 'gym_models.dart';
 export 'preset_models.dart';
+export 'personal_info.dart';
+export 'nutrition_models.dart';
+
+//new:
+export 'training_plan_models.dart';

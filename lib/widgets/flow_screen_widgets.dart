@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_flow_chart/flutter_flow_chart.dart';
 import '../models/preset_models.dart';
+import '../theme/theme_extensions.dart';
 
 // Callback types for reusability
 typedef BranchParentChanged = void Function(String? newParent);
@@ -33,7 +34,7 @@ class FlowChartCanvas extends StatelessWidget {
   }
 }
 
-/// Controls row for adding branches (success/failure).
+/// Controls row for adding branches (success/failure), themed.
 class BranchControls extends StatelessWidget {
   final List<String> branchable;
   final String? selectedParent;
@@ -56,6 +57,13 @@ class BranchControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs     = context.cs;
+    final extras = context.colors;
+    final dropdownBg = extras.dialogBackground ?? cs.surface;
+    final textColor = cs.onSurface;
+    final btnBg = extras.buttonBg ?? cs.primary;
+    final btnText = extras.buttonText ?? cs.onPrimary;
+
     return Wrap(
       spacing: 12,
       runSpacing: 8,
@@ -64,20 +72,32 @@ class BranchControls extends StatelessWidget {
         SizedBox(
           width: 140,
           child: DropdownButton<String>(
+            dropdownColor: dropdownBg,
             isExpanded: true,
-            hint: const Text('Branch From'),
+            hint: Text('Branch From', style: TextStyle(color: textColor)),
             value: branchable.contains(selectedParent) ? selectedParent : null,
             items: branchable.map((name) {
-              return DropdownMenuItem(value: name, child: Text(name));
+              return DropdownMenuItem(
+                value: name,
+                child: Text(name, style: TextStyle(color: textColor)),
+              );
             }).toList(),
             onChanged: onParentChanged,
           ),
         ),
         ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: btnBg,
+            foregroundColor: btnText,
+          ),
           onPressed: (selectedParent == null || existingSuccess >= 1) ? null : onAddSuccess,
           child: const Text('+ Success'),
         ),
         ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: btnBg,
+            foregroundColor: btnText,
+          ),
           onPressed: (selectedParent == null || existingFailure >= 1) ? null : onAddFailure,
           child: const Text('+ Failure'),
         ),
@@ -86,7 +106,7 @@ class BranchControls extends StatelessWidget {
   }
 }
 
-/// Controls for attaching/detaching methods to nodes.
+/// Controls for attaching/detaching methods to nodes, themed.
 class MethodControls extends StatelessWidget {
   final List<String> methodTargets;
   final String? selectedNode;
@@ -119,6 +139,13 @@ class MethodControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs     = context.cs;
+    final extras = context.colors;
+    final dropdownBg = extras.dialogBackground ?? cs.surface;
+    final textColor = cs.onSurface;
+    final btnBg = extras.buttonBg ?? cs.primary;
+    final btnText = extras.buttonText ?? cs.onPrimary;
+
     return Wrap(
       spacing: 12,
       runSpacing: 8,
@@ -127,11 +154,15 @@ class MethodControls extends StatelessWidget {
         SizedBox(
           width: 140,
           child: DropdownButton<String>(
+            dropdownColor: dropdownBg,
             isExpanded: true,
-            hint: const Text('Select Node'),
+            hint: Text('Select Node', style: TextStyle(color: textColor)),
             value: methodTargets.contains(selectedNode) ? selectedNode : null,
             items: methodTargets.map((name) {
-              return DropdownMenuItem(value: name, child: Text(name));
+              return DropdownMenuItem(
+                value: name,
+                child: Text(name, style: TextStyle(color: textColor)),
+              );
             }).toList(),
             onChanged: onNodeChanged,
           ),
@@ -139,24 +170,40 @@ class MethodControls extends StatelessWidget {
         SizedBox(
           width: 140,
           child: DropdownButton<FlowMethod>(
+            dropdownColor: dropdownBg,
             isExpanded: true,
-            hint: const Text('Select Method'),
+            hint: Text('Select Method', style: TextStyle(color: textColor)),
             value: availableMethods.contains(selectedMethod) ? selectedMethod : null,
             items: availableMethods.map((m) {
-              return DropdownMenuItem(value: m, child: Text(m.name));
+              return DropdownMenuItem(
+                value: m,
+                child: Text(m.name, style: TextStyle(color: textColor)),
+              );
             }).toList(),
             onChanged: onMethodChanged,
           ),
         ),
         ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: btnBg,
+            foregroundColor: btnText,
+          ),
           onPressed: canAdd ? onAddMethod : null,
           child: const Text('+ Method'),
         ),
         ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: btnBg,
+            foregroundColor: btnText,
+          ),
           onPressed: hasMethods ? onRemoveMethod : null,
           child: const Text('- Method'),
         ),
         ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: btnBg,
+            foregroundColor: btnText,
+          ),
           onPressed: canDeleteNode ? onRemoveNode : null,
           child: const Text('- Node'),
         ),
