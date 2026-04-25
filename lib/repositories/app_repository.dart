@@ -2,6 +2,7 @@
 
 import '../db/database_helper.dart';
 import '../models/models.dart';
+import 'food_catalog_repository.dart';
 
 /// Central repository providing a unified interface for all
 /// database operations in the UI layer.
@@ -11,6 +12,8 @@ class AppRepository {
   AppRepository({DatabaseHelper? db}) : _dbHelper = db ?? DatabaseHelper();
 
   final DatabaseHelper _dbHelper;
+  late final FoodCatalogRepository foodCatalog =
+      FoodCatalogRepository(source: LocalFoodCatalogSource(_dbHelper));
 
   /// Exposes the internal DatabaseHelper instance for extensions.
   DatabaseHelper get dbHelper => _dbHelper;
@@ -312,6 +315,14 @@ class AppRepository {
 
   Future<ExerciseDefinition?> fetchDefinitionById(int defId) =>
       _dbHelper.getExerciseDefinitionById(defId);
+
+  Future<List<ExerciseMediaItem>> fetchExerciseMedia(int defId) =>
+      _dbHelper.getExerciseMedia(defId);
+
+  Future<void> replaceExerciseMedia(
+    int defId,
+    List<ExerciseMediaItem> items,
+  ) => _dbHelper.replaceExerciseMedia(defId, items);
 
   // ─── MEASUREMENTS & LOOKUPS ────────────────────────────
 

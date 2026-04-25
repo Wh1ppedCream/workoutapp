@@ -45,8 +45,8 @@ List<Map<String, Object>> _bodyManualEntries = []; // manual overrides
 
 
 
-  // Notes & Media (stubbed)
-  List<Map<String, Object>> _mediaItems = []; // { 'type': 'image'|'video'|'link', 'url': '' }
+  // Notes & media metadata. Remote URLs are durable; local cache paths are optional.
+  List<ExerciseMediaItem> _mediaItems = [];
 
 
   int _rating = 0;
@@ -134,6 +134,7 @@ Future<void> _loadDefinitionDetails(ExerciseDefinition def) async {
   final manualList   = await _repo.fetchBodyPartPercentsManual(defId);
   final manualMap    = { for (var e in manualList) e.bodyPartId : e.percent };
   final useManualBody = await _repo.getUseManualBodyparts(def.id);
+  final mediaItems = await _repo.fetchExerciseMedia(defId);
 
     // 1b) Persisted “Multiply by Rating” flag
   final multiplyByRating = await _repo.getMultiplyByRating(defId);
@@ -217,6 +218,7 @@ final count = manualMap[bp.id] ?? autoMap[bp.id] ?? 0.0;
 
     
     _rating = def.rating;
+    _mediaItems = mediaItems;
 
   });
       // after your setState block…
@@ -260,6 +262,7 @@ Future<void> _toggleEdit() async {
         tipsNotes:            _tipsController.text,
       ),
     );
+    await _repo.replaceExerciseMedia(defId, _mediaItems);
 
     // 3) refresh your in-memory copy and the UI
     _selectedDef = await _repo.fetchDefinitionById(defId);
@@ -953,7 +956,7 @@ onChanged: (val) {
 
   
 
- Widget _buildEquipmentTab() {
+Widget _buildEquipmentTab() {
   return Column(
     children: [
       Expanded(
@@ -1005,6 +1008,194 @@ onChanged: (val) {
   );
 }
 
+String? _trimToNull(String? value) {
+  final trimmed = value?.trim();
+  if (trimmed == null || trimmed.isEmpty) return null;
+  return trimmed;
+}
+
+IconData _mediaIcon(String mediaType) {
+  switch (mediaType) {
+    case 'image':
+      return Icons.image_outlined;
+    case 'video':
+      return Icons.play_circle_outline;
+    default:
+      return Icons.link;
+  }
+}
+
+String _mediaLabel(ExerciseMediaItem item) {
+  final title = _trimToNull(item.title);
+  if (title != null) return title;
+  final uri = Uri.tryParse(item.remoteUrl);
+  final host = uri?.host;
+  if (host != null && host.isNotEmpty) return host;
+  return item.remoteUrl;
+}
+
+Future<ExerciseMediaItem?> _showMediaEditor({
+  ExerciseMediaItem? initial,
+}) async {
+  if (!mounted) return null;
+
+  final remoteUrlController =
+      TextEditingController(text: initial?.remoteUrl ?? '');
+  final titleController =
+      TextEditingController(text: initial?.title ?? '');
+  final thumbnailUrlController =
+      TextEditingController(text: initial?.thumbnailUrl ?? '');
+  final cachePathController =
+      TextEditingController(text: initial?.localCachePath ?? '');
+  final thumbnailCacheController =
+      TextEditingController(text: initial?.localThumbnailPath ?? '');
+  var mediaType = initial?.mediaType ?? 'image';
+
+  final result = await showDialog<ExerciseMediaItem>(
+    context: context,
+    builder: (ctx) {
+      return StatefulBuilder(
+        builder: (ctx2, setDialogState) {
+          return AlertDialog(
+            title: Text(initial == null ? 'Add Media' : 'Edit Media'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DropdownButtonFormField<String>(
+                    value: mediaType,
+                    items: const [
+                      DropdownMenuItem(value: 'image', child: Text('Image')),
+                      DropdownMenuItem(value: 'video', child: Text('Video')),
+                      DropdownMenuItem(value: 'link', child: Text('Link')),
+                    ],
+                    onChanged: (value) {
+                      if (value == null) return;
+                      setDialogState(() => mediaType = value);
+                    },
+                    decoration: const InputDecoration(labelText: 'Type'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: titleController,
+                    decoration: const InputDecoration(
+                      labelText: 'Title',
+                      hintText: 'Optional display label',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: remoteUrlController,
+                    decoration: const InputDecoration(
+                      labelText: 'Remote URL',
+                      hintText: 'https://...',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: thumbnailUrlController,
+                    decoration: const InputDecoration(
+                      labelText: 'Thumbnail URL',
+                      hintText: 'Optional image preview URL',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: cachePathController,
+                    decoration: const InputDecoration(
+                      labelText: 'Local Cache Path',
+                      hintText: 'Optional downloaded file path',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: thumbnailCacheController,
+                    decoration: const InputDecoration(
+                      labelText: 'Local Thumbnail Path',
+                      hintText: 'Optional cached thumbnail path',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  final remoteUrl = _trimToNull(remoteUrlController.text);
+                  if (remoteUrl == null) return;
+                  Navigator.of(ctx).pop(
+                    ExerciseMediaItem(
+                      id: initial?.id,
+                      exerciseDefId:
+                          initial?.exerciseDefId ?? _selectedDef?.id ?? -1,
+                      mediaType: mediaType,
+                      remoteUrl: remoteUrl,
+                      thumbnailUrl: _trimToNull(thumbnailUrlController.text),
+                      localCachePath: _trimToNull(cachePathController.text),
+                      localThumbnailPath:
+                          _trimToNull(thumbnailCacheController.text),
+                      title: _trimToNull(titleController.text),
+                      sortOrder: initial?.sortOrder ?? _mediaItems.length,
+                    ),
+                  );
+                },
+                child: const Text('Save'),
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
+
+  remoteUrlController.dispose();
+  titleController.dispose();
+  thumbnailUrlController.dispose();
+  cachePathController.dispose();
+  thumbnailCacheController.dispose();
+
+  return result;
+}
+
+Future<void> _openAddMediaDialog() async {
+  if (_selectedDef == null) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Select an existing exercise before attaching media.'),
+      ),
+    );
+    return;
+  }
+
+  final created = await _showMediaEditor();
+  if (created == null) return;
+
+  setState(() {
+    _mediaItems.add(
+      created.copyWith(
+        exerciseDefId: _selectedDef!.id,
+        sortOrder: _mediaItems.length,
+      ),
+    );
+  });
+}
+
+Future<void> _editMediaItem(int index) async {
+  final updated = await _showMediaEditor(initial: _mediaItems[index]);
+  if (updated == null) return;
+
+  setState(() {
+    _mediaItems[index] = updated.copyWith(
+      exerciseDefId: _selectedDef?.id ?? updated.exerciseDefId,
+      sortOrder: index,
+    );
+  });
+}
 
   Widget _buildNotesMediaTab() {
     return SingleChildScrollView(
@@ -1093,30 +1284,67 @@ TextField(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
+              crossAxisCount: 2,
               crossAxisSpacing: 8,
               mainAxisSpacing: 8,
+              childAspectRatio: 1.15,
             ),
             itemCount: _mediaItems.length + (_isEditing ? 1 : 0),
             itemBuilder: (context, index) {
               if (_isEditing && index == _mediaItems.length) {
                 return GestureDetector(
-                  onTap: () {
-                    // TODO: add media
-                  },
+                  onTap: _openAddMediaDialog,
                   child: Container(
-                    color: Colors.grey[200],
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     child: const Icon(Icons.add),
                   ),
                 );
               }
               final media = _mediaItems[index];
-              // TODO: render actual media thumbnail
               return Stack(
                 children: [
-                  Container(
-                    color: Colors.grey[300],
-                    child: Center(child: Text(media['url'] as String)),
+                  InkWell(
+                    onTap: _isEditing ? () => _editMediaItem(index) : null,
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            _mediaIcon(media.mediaType),
+                            size: 28,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            _mediaLabel(media),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            media.mediaType.toUpperCase(),
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                          const Spacer(),
+                          if ((media.localCachePath ?? media.localThumbnailPath) != null)
+                            Text(
+                              'Cached locally',
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                        ],
+                      ),
+                    ),
                   ),
                   if (_isEditing)
                     Positioned(
@@ -1124,7 +1352,9 @@ TextField(
                       right: 2,
                       child: GestureDetector(
                         onTap: () {
-                          // TODO: remove media
+                          setState(() {
+                            _mediaItems.removeAt(index);
+                          });
                         },
                         child: const Icon(Icons.close, size: 20),
                       ),

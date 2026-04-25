@@ -545,9 +545,11 @@ class Seed {
   /// - brand/manufacturer, category_path, fdc_id, data_source, data_source_id
   /// - portions: list_kind, sort_order, amount, unit, label, ml_volume
   /// - nutrients_by_basis: { per_100g: {CODE:amt,...}, per_100ml:{...}, per_portion:[{code,amount,portion_desc}], absolute:{...} }
+  static const String defaultFoodsAssetPath = 'assets/foods.json';
+  static const String extendedFoodsAssetPath = 'assets/foods/foods.min.jsonl.gz';
   static Future<void> seedFoods(
   Database db, {
-  String assetPath = 'assets/foods/foods.min.jsonl.gz', // default to new file
+  String assetPath = defaultFoodsAssetPath,
   SeedProgress? onProgress,                              // ← add this
 }) async {
   
@@ -564,21 +566,292 @@ class Seed {
       onProgress: onProgress,        // ← pass through
     );
   }
-  // Fallback to legacy array JSON (rarely used with your big catalog)
-  final jsonStr = await rootBundle.loadString(assetPath); // e.g., assets/foods.json
-  final List list = json.decode(jsonStr);
-  // If you keep a legacy loop here, call onProgress every so often:
-  var processed = 0;
-  const tick = 5000;
-  await db.transaction((txn) async {
-    for (final raw in list) {
-      // ... your existing legacy insert/upsert logic ...
-
-      if (++processed % tick == 0) onProgress?.call(processed);
-    }
-  });
-  onProgress?.call(processed); // final ping
+  return _seedFoodsFromLegacyArray(
+    db,
+    assetPath: assetPath,
+    onProgress: onProgress,
+  );
 }
+
+  static Future<void> _seedFoodsFromLegacyArray(
+    Database db, {
+    required String assetPath,
+    SeedProgress? onProgress,
+  }) async {
+    final jsonStr = await rootBundle.loadString(assetPath);
+    final List list = json.decode(jsonStr);
+
+    final codeToId = await _nutrientCodeMap(db);
+    final aliasToId = await _nutrientAliasMap(db);
+    if (codeToId.isEmpty) {
+      throw StateError(
+        'Seed nutrients first: call Seed.seedExtendedNutrients(db) before seeding foods.',
+      );
+    }
+
+    var processed = 0;
+    const tick = 250;
+
+    await db.transaction((txn) async {
+      for (final raw in list) {
+        final item = Map<String, dynamic>.from(raw as Map);
+        final name = _s(item['name']);
+        if (name == null) continue;
+
+        final brandText = _s(item['brand']) ?? _s(item['manufacturer']);
+        final manufacturer = _s(item['manufacturer']);
+        final dataSource = _s(item['data_source'] ?? item['source']) ?? 'starter_local';
+        final dataSourceId = _s(item['data_source_id'] ?? item['source_id']);
+        final fdcId =
+            (item['fdc_id'] as num?)?.toInt() ??
+            (item['fdcId'] as num?)?.toInt();
+        final density = _posOrNull(_num(item['density_g_per_ml']));
+        final verified = item['verified'] == true;
+        final qualityScore = _clamp01(_num(item['quality_score']));
+        final version = (item['version'] as num?)?.toInt() ?? 1;
+        final preparation = _trimOrNull(item['preparation'] as String?);
+        final ediblePct = _clampPct(_num(item['edible_portion_pct']));
+        final yieldPct = _clampPct(_num(item['yield_pct']));
+
+        List<dynamic>? categoryPath;
+        if (item['category_path'] is List) {
+          categoryPath = List<dynamic>.from(item['category_path'] as List);
+        } else {
+          final category = _s(item['category']);
+          categoryPath = category == null ? null : <dynamic>[category];
+        }
+
+        final brandId = await _ensureBrand(
+          txn,
+          brandText,
+          manufacturer: manufacturer,
+        );
+        final foodId = await _upsertFood(
+          txn: txn,
+          name: name,
+          brandId: brandId,
+          brandText: brandText,
+          categoryPath: categoryPath,
+          dataSource: dataSource,
+          dataSourceId: dataSourceId,
+          fdcId: fdcId,
+          barcode: _s(item['barcode']),
+          densityGPerMl: density,
+          verified: verified,
+          qualityScore: qualityScore,
+          version: version,
+          preparation: preparation,
+          ediblePortionPct: ediblePct,
+          yieldPct: yieldPct,
+        );
+
+        if (item['barcodes'] is List) {
+          for (final b in (item['barcodes'] as List)) {
+            await _attachBarcode(txn, foodId, _s(b));
+          }
+        } else {
+          await _attachBarcode(txn, foodId, _s(item['barcode']));
+        }
+
+        await txn.delete('food_portions', where: 'food_id = ?', whereArgs: [foodId]);
+        final portions = (item['portions'] as List? ?? const []);
+        for (var i = 0; i < portions.length; i++) {
+          final p = Map<String, dynamic>.from(portions[i] as Map);
+          final gw = _posOrNull(_num(p['gram_weight']));
+          final ml = _posOrNull(_num(p['ml_volume']));
+          if (gw == null && ml == null) continue;
+
+          await txn.insert(
+            'food_portions',
+            {
+              'food_id': foodId,
+              'measure_name': _s(p['measure_name']) ?? 'portion',
+              'gram_weight': gw,
+              'ml_volume': ml,
+              'is_default': (p['is_default'] == true) ? 1 : 0,
+              'list_kind': _sLower(p['list_kind']),
+              'sort_order': (p['sort_order'] as num?)?.toInt() ?? i,
+              'amount': _posOrNull(_num(p['amount'])),
+              'unit': _s(p['unit']),
+              'label': _s(p['label']),
+            },
+            conflictAlgorithm: ConflictAlgorithm.ignore,
+          );
+        }
+
+        await _ensureGramPortion(txn, foodId);
+        await _ensureOneDefaultPortion(txn, foodId);
+
+        await _replaceLegacyFoodNutrients(
+          txn: txn,
+          foodId: foodId,
+          item: item,
+          densityGPerMl: density,
+          codeToId: codeToId,
+          aliasToId: aliasToId,
+        );
+
+        processed++;
+        if (processed % tick == 0) onProgress?.call(processed);
+      }
+    });
+
+    onProgress?.call(processed);
+  }
+
+  static Future<void> _replaceLegacyFoodNutrients({
+    required DatabaseExecutor txn,
+    required int foodId,
+    required Map<String, dynamic> item,
+    required double? densityGPerMl,
+    required Map<String, int> codeToId,
+    required Map<String, int> aliasToId,
+  }) async {
+    await txn.delete('food_nutrient_values', where: 'food_id = ?', whereArgs: [foodId]);
+    await txn.delete('food_nutrients', where: 'food_id = ?', whereArgs: [foodId]);
+
+    final byBasis =
+        item['nutrients_by_basis'] is Map
+            ? Map<String, dynamic>.from(item['nutrients_by_basis'] as Map)
+            : null;
+
+    final per100g = <String, dynamic>{};
+    void absorb(Map? raw) {
+      if (raw == null) return;
+      for (final e in raw.entries) {
+        final key = e.key.toString().trim().toUpperCase();
+        if (key.isEmpty) continue;
+        per100g[key] = e.value;
+      }
+    }
+
+    if (item['nutrients'] is Map) {
+      absorb(Map<String, dynamic>.from(item['nutrients'] as Map));
+    }
+    if (item['per_100g'] is Map) {
+      absorb(Map<String, dynamic>.from(item['per_100g'] as Map));
+    }
+    if (byBasis != null && byBasis['per_100g'] is Map) {
+      absorb(Map<String, dynamic>.from(byBasis['per_100g'] as Map));
+    }
+
+    for (final k in const [
+      'KCAL',
+      'PROTEIN_G',
+      'CARB_G',
+      'FAT_G',
+      'FIBER_G',
+      'SODIUM_MG',
+    ]) {
+      final v = item[k];
+      if (v is num || (v is String && double.tryParse(v) != null)) {
+        per100g[k] = v;
+      }
+    }
+
+    for (final e in per100g.entries) {
+      final nid = _resolveNutrientIdFast(codeToId, aliasToId, e.key);
+      if (nid == null) continue;
+      final amt = _nonNegKcalAware(e.key, e.value);
+      if (amt == null) continue;
+
+      await txn.insert(
+        'food_nutrient_values',
+        {'food_id': foodId, 'nutrient_id': nid, 'amount': amt, 'basis': 'per_100g'},
+        conflictAlgorithm: ConflictAlgorithm.ignore,
+      );
+      await txn.insert(
+        'food_nutrients',
+        {'food_id': foodId, 'nutrient_id': nid, 'amount_per_100g': amt},
+        conflictAlgorithm: ConflictAlgorithm.ignore,
+      );
+    }
+
+    await _maybeEnsureEnergyKcalPer100g(txn, foodId, codeToId, aliasToId, per100g);
+
+    if (byBasis == null) return;
+
+    final per100ml =
+        (byBasis['per_100ml'] as Map? ?? const {}).cast<String, dynamic>();
+    for (final e in per100ml.entries) {
+      final nid = _resolveNutrientIdFast(codeToId, aliasToId, e.key);
+      if (nid == null) continue;
+      final amt = _nonNegKcalAware(e.key, e.value);
+      if (amt == null) continue;
+
+      await txn.insert(
+        'food_nutrient_values',
+        {'food_id': foodId, 'nutrient_id': nid, 'amount': amt, 'basis': 'per_100ml'},
+        conflictAlgorithm: ConflictAlgorithm.ignore,
+      );
+    }
+
+    await _maybeBackfillPer100gFromPer100ml(
+      txn,
+      foodId,
+      per100ml,
+      densityGPerMl,
+      codeToId,
+      aliasToId,
+    );
+    await _maybeEnsureEnergyKcalPer100gFromDb(txn, foodId, codeToId);
+
+    final perPortion = (byBasis['per_portion'] as List? ?? const []);
+    for (final rawPP in perPortion) {
+      final pp = Map<String, dynamic>.from(rawPP as Map);
+      final code = _s(pp['code']);
+      if (code == null) continue;
+      final nid = _resolveNutrientIdFast(codeToId, aliasToId, code);
+      if (nid == null) continue;
+      final amt = _nonNegKcalAware(code, pp['amount']);
+      if (amt == null) continue;
+
+      int? portionId;
+      if (pp['portion_desc'] != null) {
+        portionId = await _findPortionId(txn, foodId, pp['portion_desc'] as String);
+      } else if (pp['portion_index'] != null) {
+        final idx = (pp['portion_index'] as num).toInt();
+        final rows = await txn.query(
+          'food_portions',
+          where: 'food_id = ?',
+          whereArgs: [foodId],
+          orderBy: 'sort_order, id',
+        );
+        if (idx >= 0 && idx < rows.length) {
+          portionId = rows[idx]['id'] as int;
+        }
+      }
+
+      if (portionId != null) {
+        await txn.insert(
+          'food_nutrient_values',
+          {
+            'food_id': foodId,
+            'nutrient_id': nid,
+            'amount': amt,
+            'basis': 'per_portion',
+            'portion_id': portionId,
+          },
+          conflictAlgorithm: ConflictAlgorithm.ignore,
+        );
+      }
+    }
+
+    final absolute =
+        (byBasis['absolute'] as Map? ?? const {}).cast<String, dynamic>();
+    for (final e in absolute.entries) {
+      final nid = _resolveNutrientIdFast(codeToId, aliasToId, e.key);
+      if (nid == null) continue;
+      final amt = _nonNegKcalAware(e.key, e.value);
+      if (amt == null) continue;
+
+      await txn.insert(
+        'food_nutrient_values',
+        {'food_id': foodId, 'nutrient_id': nid, 'amount': amt, 'basis': 'absolute'},
+        conflictAlgorithm: ConflictAlgorithm.ignore,
+      );
+    }
+  }
 
 
 
@@ -975,8 +1248,46 @@ static Future<void> _attachBarcode(DatabaseExecutor txn, int foodId, String? bar
       }
     }
 
-    // fallback: name + brand_id + data_source (case-insensitive name)
     final bool hasBrand = brandId != null;
+
+    if (dataSource == 'starter_local') {
+      final crossSourceWhere = hasBrand
+          ? "lower(name) = lower(?) AND brand_id = ?"
+          : "lower(name) = lower(?) AND brand_id IS NULL";
+      final crossSourceArgs = hasBrand ? [name, brandId] : [name];
+      final crossSourceRow = await txn.query(
+        'foods',
+        where: crossSourceWhere,
+        whereArgs: crossSourceArgs,
+        limit: 1,
+      );
+
+      if (crossSourceRow.isNotEmpty) {
+        final id = crossSourceRow.first['id'] as int;
+        await txn.update(
+          'foods',
+          {
+            'brand': brandText,
+            'category_id': categoryId,
+            'density_g_per_ml': densityGPerMl,
+            'verified': (verified ?? false) ? 1 : 0,
+            'quality_score': qualityScore,
+            'version': version,
+            'preparation': preparation,
+            'edible_portion_pct': ediblePortionPct,
+            'yield_pct': yieldPct,
+            'updated_at': DateTime.now().toUtc().toIso8601String(),
+            'is_deleted': 0,
+          },
+          where: 'id = ?',
+          whereArgs: [id],
+        );
+        await _attachBarcode(txn, id, normalizedBarcode);
+        return id;
+      }
+    }
+
+    // fallback: name + brand_id + data_source (case-insensitive name)
     final where = hasBrand
         ? "lower(name) = lower(?) AND brand_id = ? AND COALESCE(data_source, '') = ?"
         : "lower(name) = lower(?) AND brand_id IS NULL AND COALESCE(data_source, '') = ?";
@@ -1490,7 +1801,7 @@ for (final rawPP in perPortion) {
 /// This reuses the same schema helpers used by seedFoods().
 static Future<void> seedFoodsFromJsonlGzip(
   Database db, {
-  String assetPath = 'assets/foods/foods.min.jsonl.gz',
+  String assetPath = extendedFoodsAssetPath,
   int batchSize = 800,
   SeedProgress? onProgress,                 // ← add this
 }) async {

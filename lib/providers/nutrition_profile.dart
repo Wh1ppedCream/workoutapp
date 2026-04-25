@@ -3,11 +3,13 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 import '../repositories/app_repository.dart';
+import '../repositories/food_catalog_repository.dart';
 import '../models/gym_models.dart';
 import '../models/nutrition_models.dart';
 
 class NutritionProfile extends ChangeNotifier {
   final AppRepository _repo;
+  late final FoodCatalogRepository _catalog;
 
   // Profile state (still backed by gym_profiles in DB)
   List<GymProfile> profiles = [];
@@ -54,6 +56,7 @@ List<DiaryEntry> get meals => _meals.map((r) => r.entry).toList();
 
   NutritionProfile({AppRepository? repository})
       : _repo = repository ?? AppRepository() {
+    _catalog = _repo.foodCatalog;
     _init();
   }
 
@@ -250,11 +253,11 @@ _meals = rows;
 
   /// Search foods by name/brand/etc. (uses FTS if available).
   Future<List<Food>> searchFoods(String query, {int limit = 50}) =>
-      _repo.searchFoods(query, limit: limit);
+      _catalog.searchFoods(query, limit: limit);
 
   /// Fetch all portions for a selected food (default first, if present).
   Future<List<FoodPortion>> portionsFor(int foodId) =>
-      _repo.getPortionsForFood(foodId);
+      _catalog.getPortionsForFood(foodId);
 
   /// Preview macros/micros for a portion selection before logging.
   Future<Map<String, double>> previewPortion({
@@ -262,7 +265,7 @@ _meals = rows;
     required int portionId,
     double quantity = 1.0,
   }) =>
-      _repo.calcForPortion(
+      _catalog.calcForPortion(
         foodId: foodId,
         portionId: portionId,
         quantity: quantity,
@@ -270,7 +273,7 @@ _meals = rows;
 
   /// Macro snapshot per 100g with legacy-safe keys.
   Future<Map<String, double>> macroPer100g(int foodId) =>
-      _repo.getMacroPer100gLegacySafe(foodId);
+      _catalog.getMacroPer100gLegacySafe(foodId);
 
   // ── Logging helpers (accept new fields) ─────────────────────────────
 
@@ -314,7 +317,7 @@ _meals = rows;
   }) async {
     var pid = portionId;
     if (pid == null) {
-      final portions = await _repo.getPortionsForFood(foodId);
+      final portions = await _catalog.getPortionsForFood(foodId);
       FoodPortion? def;
       try {
         def = portions.firstWhere((p) => p.isDefault == true);
@@ -583,7 +586,7 @@ _meals = rows;
     String? notes,
   }) async {
     final normalized = _digitsOnly(barcode);
-    final food = await _repo.getFoodByBarcode(normalized);
+    final food = await _catalog.getFoodByBarcode(normalized);
     if (food == null) {
       // Surface a clear, user-friendly message; UI can catch and display.
       throw StateError('No food found for barcode: $barcode');
@@ -608,7 +611,7 @@ _meals = rows;
     String? notes,
   }) async {
     final normalized = _digitsOnly(barcode);
-    final food = await _repo.getFoodByBarcode(normalized);
+    final food = await _catalog.getFoodByBarcode(normalized);
     if (food == null) {
       throw StateError('No food found for barcode: $barcode');
     }

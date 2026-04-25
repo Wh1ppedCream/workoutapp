@@ -1,5 +1,7 @@
 // File: lib/screens/dashboard_page.dart
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -89,7 +91,7 @@ class _DashboardPageState extends State<DashboardPage> {
     final tileContent = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _buildDashboardTile(id),
+        _buildDashboardTile(id, index, deferLoad: !isEditing),
         if (index < visibleCount - 1)
           const Divider(height: 1, thickness: 1),
       ],
@@ -187,43 +189,71 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildDashboardTile(String id) {
+  Widget _buildDashboardTile(String id, int index, {required bool deferLoad}) {
+    Widget buildSection() {
+      switch (id) {
+        case 'quickBar':
+          return const QuickBar();
+        case 'nutritionDash':
+          return Padding(
+            padding: const EdgeInsets.all(8),
+            child: NutritionDash(
+              caloriesConsumed: 500,
+              calorieGoal: 2000,
+              proteinConsumed: 20,
+              proteinTarget: 100,
+              carbConsumed: 50,
+              carbTarget: 200,
+              fatConsumed: 10,
+              fatTarget: 70,
+              scale: 0.7,
+            ),
+          );
+        case 'dataRecords':
+          return const DataRecordsSection();
+        case 'healthTrends':
+          return const HealthTrendsSection();
+        case 'workoutDashboard':
+          return const WorkoutDashboard(scale: 0.7);
+        case 'historySummary':
+          return const HistorySummaryWidget();
+        case 'sessionList':
+          return PastSessionsList(
+            key: const ValueKey('sessionList'),
+            height: 320,
+            onReload: () {},
+          );
+        case 'CurrentMetricsSection':
+          return const CurrentMetricsSection();
+        default:
+          return const SizedBox.shrink();
+      }
+    }
+
+    if (!deferLoad) return buildSection();
+
+    return _DeferredDashboardSection(
+      key: ValueKey('deferred_$id'),
+      label: _labelFor(id),
+      placeholderHeight: _placeholderHeightFor(id),
+      delay: Duration(milliseconds: index * 120),
+      builder: (_) => buildSection(),
+    );
+  }
+
+  double _placeholderHeightFor(String id) {
     switch (id) {
       case 'quickBar':
-        return const QuickBar();
-      case 'nutritionDash':
-        return Padding(
-          padding: const EdgeInsets.all(8),
-          child: NutritionDash(
-            caloriesConsumed: 500,
-            calorieGoal: 2000,
-            proteinConsumed: 20,
-            proteinTarget: 100,
-            carbConsumed: 50,
-            carbTarget: 200,
-            fatConsumed: 10,
-            fatTarget: 70,
-            scale: 0.7,
-          ),
-        );
-      case 'dataRecords':
-        return const DataRecordsSection();
-      case 'healthTrends':
-        return const HealthTrendsSection();
-      case 'workoutDashboard':
-        return const WorkoutDashboard(scale: 0.7);
-      case 'historySummary':
-        return const HistorySummaryWidget();
+        return 96;
       case 'sessionList':
-        return PastSessionsList(
-          key: const ValueKey('sessionList'),
-          height: 320,
-          onReload: () {},
-        );
-      case 'CurrentMetricsSection':
-        return const CurrentMetricsSection();
+        return 320;
+      case 'historySummary':
+        return 220;
+      case 'nutritionDash':
+      case 'workoutDashboard':
+        return 190;
       default:
-        return const SizedBox.shrink();
+        return 150;
     }
   }
 
@@ -248,5 +278,107 @@ class _DashboardPageState extends State<DashboardPage> {
       default:
         return id;
     }
+  }
+}
+
+class _DeferredDashboardSection extends StatefulWidget {
+  const _DeferredDashboardSection({
+    super.key,
+    required this.label,
+    required this.placeholderHeight,
+    required this.delay,
+    required this.builder,
+  });
+
+  final String label;
+  final double placeholderHeight;
+  final Duration delay;
+  final WidgetBuilder builder;
+
+  @override
+  State<_DeferredDashboardSection> createState() =>
+      _DeferredDashboardSectionState();
+}
+
+class _DeferredDashboardSectionState extends State<_DeferredDashboardSection> {
+  Timer? _timer;
+  bool _ready = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.delay == Duration.zero) {
+      _ready = true;
+      return;
+    }
+    _timer = Timer(widget.delay, () {
+      if (!mounted) return;
+      setState(() => _ready = true);
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 220),
+      child: _ready
+          ? widget.builder(context)
+          : _DashboardPlaceholder(
+              key: ValueKey('placeholder_${widget.label}'),
+              label: widget.label,
+              height: widget.placeholderHeight,
+            ),
+    );
+  }
+}
+
+class _DashboardPlaceholder extends StatelessWidget {
+  const _DashboardPlaceholder({
+    super.key,
+    required this.label,
+    required this.height,
+  });
+
+  final String label;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      height: height,
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.45),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 140,
+            height: 14,
+            decoration: BoxDecoration(
+              color: scheme.onSurface.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(999),
+            ),
+          ),
+          const Spacer(),
+          Text(
+            'Loading $label',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
+          ),
+        ],
+      ),
+    );
   }
 }

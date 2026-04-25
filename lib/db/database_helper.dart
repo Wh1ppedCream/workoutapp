@@ -1,7 +1,7 @@
 // File: lib/db/database_helper.dart
 
-import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/models.dart';
@@ -30,10 +30,6 @@ import 'nutrition_dao.dart';
 
 import 'package:flutter/foundation.dart' show debugPrint;
 
-import 'package:flutter/services.dart' show rootBundle;
-
-import 'prebuilt_db.dart'; // asset path + baked user_version=22
-import 'dart:io' show File, Directory;
 
 
 
@@ -46,27 +42,35 @@ class DatabaseHelper {
   DatabaseHelper._internal();
 
   static Database? _db;
-  Future<Database> get database async {
-    if (_db != null) return _db!;
-    _db = await _initDatabase();
-    return _db!;
+  static Future<Database>? _dbFuture;
+  Future<Database> get database {
+    if (_db != null) return Future.value(_db!);
+    return _dbFuture ??= _initDatabase().then((db) {
+      _db = db;
+      return db;
+    }).catchError((error) {
+      _dbFuture = null;
+      throw error;
+    });
   }
 
   Future<Database> _initDatabase() async {
-    //old
-///final dbPath = await getDatabasesPath();
-///final path = join(dbPath, 'fitness_tracker.db');
+    final sw = Stopwatch()..start();
 
 
 
-///new:
-  final path = await _dbFilePath();
-// ← NEW: put the prebuilt DB in place on first run
+    final path = await _dbFilePath();
+    final dbFile = File(path);
+    final existedBeforeOpen = await dbFile.exists();
+    final existingBytes = existedBeforeOpen ? await dbFile.length() : 0;
+    debugPrint(
+      '[db] opening ${existedBeforeOpen ? 'existing' : 'new'} database '
+      '(size=${existingBytes}B)',
+    );
 
-  await _materializePrebuiltIfNeeded(path);
 
 
-    return await openDatabase(
+    final db = await openDatabase(
       path,
       version: _kDbVersion,
       onConfigure: (db) async {
@@ -89,7 +93,8 @@ class DatabaseHelper {
 
       onCreate: _onCreate,
   onUpgrade: (db, oldVersion, newVersion) async {
-  debugPrint('[db] onUpgrade $oldVersion → $newVersion (begin)');
+  final sw = Stopwatch()..start();
+  debugPrint('[db] onUpgrade $oldVersion -> $newVersion (begin)');
 
   await Schema.onUpgrade(db, oldVersion, newVersion);
   await _ensureExerciseDefNewCols(db);     // from previous step
@@ -100,6 +105,7 @@ class DatabaseHelper {
   await _ensureCardioTables(db);          // ← add this
   await _ensureFormulaSettings(db);           // ← add
   await _ensureExerciseBodypartPercent(db);   // ← add
+  await _ensureExerciseMediaTable(db);
    await _ensureNutritionGoalsColumns(db);
    await ensureSchemaRepairs(db);
      await _ensureFavoriteFoodsShape(db);
@@ -121,7 +127,7 @@ class DatabaseHelper {
   await _rebuildFoodFtsIfExists(db);
   await _ensureIndexes(db);
 
-  debugPrint('[db] onUpgrade $oldVersion → $newVersion (done)');
+  debugPrint('[db] onUpgrade $oldVersion -> $newVersion (done in ${sw.elapsedMilliseconds}ms)');
 },
 
 
@@ -130,25 +136,37 @@ class DatabaseHelper {
    
    // NEW:
   onOpen: (db) async {
+  final sw = Stopwatch()..start();
   debugPrint('[db] onOpen (begin)');
+  await _ensureAppMetaTable(db);
+  await _ensureExerciseMediaTable(db);
   await _resetDbTriggers(db);   // <—
+  await _maybeCompactLegacyFoodCatalog(db);
   final didSeed = await _seedFoodsIfEmpty(db);  // now returns bool
   await _ensureIndexes(db);                     // still safe if already created
   if (!didSeed) {
     await _ensureFoodFtsReady(db);
   }
-  debugPrint('[db] onOpen (done) — seeded: $didSeed');
+  debugPrint('[db] onOpen (done in ${sw.elapsedMilliseconds}ms) - seeded: $didSeed');
 },
 
 );
+    debugPrint(
+      '[db] openDatabase ready in ${sw.elapsedMilliseconds}ms '
+      '(existingDb: $existedBeforeOpen)',
+    );
+    return db;
   }
 
   /// Builds initial schema and seeds all data.
   Future<void> _onCreate(Database db, int version) async {
-  debugPrint('[db] onCreate → v$version');
+  final sw = Stopwatch()..start();
+  debugPrint('[db] onCreate -> v$version');
 
   // 1) Create schema
   await Schema.createTables(db);
+  await _ensureAppMetaTable(db);
+  await _ensureExerciseMediaTable(db);
 
   // 2) Triggers that are safe to have before foods seeding
   await _resetDbTriggers(db);
@@ -167,7 +185,7 @@ class DatabaseHelper {
   await _rebuildFoodFtsIfExists(db);   // if FTS exists, backfill it once
   await _ensureIndexes(db);
 
-  debugPrint('[db] onCreate complete');
+  debugPrint('[db] onCreate complete in ${sw.elapsedMilliseconds}ms');
 }
 
 
@@ -457,6 +475,28 @@ Future<void> _ensureExerciseBodypartPercent(Database db) async {
   ''');
 
   await db.execute('CREATE INDEX IF NOT EXISTS idx_ebp_def ON exercise_bodypart_percent(exercise_def_id)');
+}
+
+Future<void> _ensureExerciseMediaTable(Database db) async {
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS exercise_media (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      exercise_def_id INTEGER NOT NULL,
+      media_type TEXT NOT NULL,
+      remote_url TEXT NOT NULL,
+      thumbnail_url TEXT,
+      local_cache_path TEXT,
+      local_thumbnail_path TEXT,
+      title TEXT,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT,
+      updated_at TEXT,
+      FOREIGN KEY(exercise_def_id) REFERENCES exercise_definitions(id) ON DELETE CASCADE
+    );
+  ''');
+  await db.execute(
+    'CREATE INDEX IF NOT EXISTS idx_exercise_media_def_sort ON exercise_media(exercise_def_id, sort_order, id)'
+  );
 }
 
 Future<void> _addColumnIfMissing(
@@ -1046,22 +1086,198 @@ Future<void> _ensureIndexes(Database db) async {
   }
 }
 
+Future<void> _ensureAppMetaTable(DatabaseExecutor db) async {
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS app_meta(
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+  ''');
+}
+
+Future<String?> _getAppMeta(DatabaseExecutor db, String key) async {
+  final rows = await db.query(
+    'app_meta',
+    columns: ['value'],
+    where: 'key = ?',
+    whereArgs: [key],
+    limit: 1,
+  );
+  if (rows.isEmpty) return null;
+  return rows.first['value'] as String?;
+}
+
+Future<void> _setAppMeta(DatabaseExecutor db, String key, String value) async {
+  await db.insert(
+    'app_meta',
+    {
+      'key': key,
+      'value': value,
+      'updated_at': DateTime.now().toUtc().toIso8601String(),
+    },
+    conflictAlgorithm: ConflictAlgorithm.replace,
+  );
+}
+
+Future<void> _maybeCompactLegacyFoodCatalog(Database db) async {
+  if (!await _tableExists(db, 'foods')) return;
+
+  const flagKey = 'catalog_cleanup_v1';
+  final previous = await _getAppMeta(db, flagKey);
+  if (previous != null) return;
+
+  final totalFoods =
+      Sqflite.firstIntValue(await db.rawQuery(
+        'SELECT COUNT(*) FROM foods WHERE COALESCE(is_deleted, 0) = 0',
+      )) ??
+      0;
+  final importedFoods =
+      Sqflite.firstIntValue(await db.rawQuery('''
+        SELECT COUNT(*)
+        FROM foods
+        WHERE COALESCE(is_deleted, 0) = 0
+          AND COALESCE(is_custom, 0) = 0
+          AND COALESCE(data_source, '') <> 'starter_local'
+      ''')) ??
+      0;
+
+  if (totalFoods < 500 || importedFoods < 500) {
+    await _setAppMeta(db, flagKey, 'not_needed:$totalFoods:$importedFoods');
+    return;
+  }
+
+  final hasDiaryEntries = await _tableExists(db, 'diary_entries');
+  final hasRecipeIngredients = await _tableExists(db, 'recipe_ingredients');
+  final hasFavoriteFoods = await _tableExists(db, 'favorite_foods');
+  final hasFoodUsageStats = await _tableExists(db, 'food_usage_stats');
+  final hasBrands = await _tableExists(db, 'brands');
+  final hasCategories = await _tableExists(db, 'categories');
+  final hasSources = await _tableExists(db, 'sources');
+
+  final sw = Stopwatch()..start();
+  debugPrint('[foods] compacting legacy local catalog ($totalFoods rows, $importedFoods imported)');
+
+  final deleted = await db.transaction<int>((txn) async {
+    final deletePredicates = <String>[
+      'COALESCE(is_custom, 0) = 0',
+      "COALESCE(data_source, '') <> 'starter_local'",
+    ];
+    if (hasDiaryEntries) {
+      deletePredicates.add('''
+        id NOT IN (
+          SELECT DISTINCT food_id
+          FROM diary_entries
+          WHERE food_id IS NOT NULL
+        )
+      ''');
+    }
+    if (hasRecipeIngredients) {
+      deletePredicates.add('''
+        id NOT IN (
+          SELECT DISTINCT food_id
+          FROM recipe_ingredients
+          WHERE food_id IS NOT NULL
+        )
+      ''');
+    }
+    if (hasFavoriteFoods) {
+      deletePredicates.add('''
+        id NOT IN (
+          SELECT DISTINCT food_id
+          FROM favorite_foods
+          WHERE food_id IS NOT NULL
+        )
+      ''');
+    }
+    if (hasFoodUsageStats) {
+      deletePredicates.add('''
+        id NOT IN (
+          SELECT DISTINCT food_id
+          FROM food_usage_stats
+          WHERE food_id IS NOT NULL
+        )
+      ''');
+    }
+
+    final deleted = await txn.rawDelete('''
+      DELETE FROM foods
+      WHERE ${deletePredicates.join('\n        AND ')}
+    ''');
+
+    if (hasBrands) {
+      await txn.execute('''
+        DELETE FROM brands
+        WHERE id NOT IN (
+          SELECT DISTINCT brand_id
+          FROM foods
+          WHERE brand_id IS NOT NULL
+        )
+      ''');
+    }
+    if (hasCategories) {
+      await txn.execute('''
+        DELETE FROM categories
+        WHERE id NOT IN (
+          SELECT DISTINCT category_id
+          FROM foods
+          WHERE category_id IS NOT NULL
+        )
+      ''');
+    }
+    if (hasSources) {
+      await txn.execute('''
+        DELETE FROM sources
+        WHERE id NOT IN (
+          SELECT DISTINCT source_id
+          FROM foods
+          WHERE source_id IS NOT NULL
+        )
+      ''');
+    }
+
+    return deleted;
+  });
+
+  await Seed.seedFoods(
+    db,
+    onProgress: (c) => _logProgress('starter-foods', c),
+  );
+  await _backfillNormalizedFoodKeys(db);
+  await _backfillEnergyKcalFromMacros(db);
+  await _ensureIndexes(db);
+  await _rebuildFoodFtsIfExists(db);
+
+  final remaining =
+      Sqflite.firstIntValue(await db.rawQuery(
+        'SELECT COUNT(*) FROM foods WHERE COALESCE(is_deleted, 0) = 0',
+      )) ??
+      0;
+  await _setAppMeta(
+    db,
+    flagKey,
+    'done:$deleted:$remaining:${sw.elapsedMilliseconds}',
+  );
+  debugPrint('[foods] legacy catalog compacted in ${sw.elapsedMilliseconds}ms - removed: $deleted, remaining: $remaining');
+}
+
 
 Future<bool> _seedFoodsIfEmpty(Database db) async {
   final n = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM foods')) ?? 0;
   if (n > 0) return false;
 
-  debugPrint('[foods] seeding start (DB empty)');
+  final sw = Stopwatch()..start();
+  debugPrint('[foods] seeding starter catalog from ${Seed.defaultFoodsAssetPath}');
   var seeded = false;
 
   try {
     await Seed.seedFoods(
       db,
       onProgress: (c) => _logProgress('foods', c),  // ← progress pings
-    ); // defaults to assets/foods/foods.min.jsonl.gz
+    ); // defaults to the lightweight local starter catalog
     seeded = true;
   } catch (e1) {
-    debugPrint('[foods] gzip/jsonl seed failed: $e1 — trying legacy array JSON…');
+    debugPrint('[foods] primary starter seed failed: $e1 - trying explicit legacy asset');
     try {
       await Seed.seedFoods(
         db,
@@ -1070,7 +1286,7 @@ Future<bool> _seedFoodsIfEmpty(Database db) async {
       );
       seeded = true;
     } catch (e2) {
-      debugPrint('[foods] legacy seed also failed: $e2');
+      debugPrint('[foods] fallback starter seed also failed: $e2');
     }
   }
 
@@ -1082,7 +1298,7 @@ Future<bool> _seedFoodsIfEmpty(Database db) async {
     await _rebuildFoodFtsIfExists(db);
 
     final total = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM foods')) ?? 0;
-    debugPrint('[foods] seeding complete — total rows: $total');
+    debugPrint('[foods] seeding complete in ${sw.elapsedMilliseconds}ms - total rows: $total');
   }
   return seeded;
 }
@@ -1580,6 +1796,49 @@ Future<List<ExerciseDefinition>> searchExerciseDefinitions(String query) async {
 Future<ExerciseDefinition?> getExerciseDefinitionById(int defId) async {
   final db = await database;
   return DefinitionDao.getExerciseDefinitionById(db, defId);
+}
+
+Future<List<ExerciseMediaItem>> getExerciseMedia(int defId) async {
+  final db = await database;
+  final rows = await db.query(
+    'exercise_media',
+    where: 'exercise_def_id = ?',
+    whereArgs: [defId],
+    orderBy: 'sort_order, id',
+  );
+  return rows.map(ExerciseMediaItem.fromMap).toList();
+}
+
+Future<void> replaceExerciseMedia(
+  int defId,
+  List<ExerciseMediaItem> items,
+) async {
+  final db = await database;
+  await db.transaction((txn) async {
+    await txn.delete(
+      'exercise_media',
+      where: 'exercise_def_id = ?',
+      whereArgs: [defId],
+    );
+    for (var i = 0; i < items.length; i++) {
+      final item = items[i];
+      await txn.insert(
+        'exercise_media',
+        {
+          'exercise_def_id': defId,
+          'media_type': item.mediaType,
+          'remote_url': item.remoteUrl,
+          'thumbnail_url': item.thumbnailUrl,
+          'local_cache_path': item.localCachePath,
+          'local_thumbnail_path': item.localThumbnailPath,
+          'title': item.title,
+          'sort_order': i,
+          'created_at': DateTime.now().toUtc().toIso8601String(),
+          'updated_at': DateTime.now().toUtc().toIso8601String(),
+        },
+      );
+    }
+  });
 }
 
 
@@ -3457,6 +3716,29 @@ Future<Map<String, double>> getFoodNutrientsPer100gByCode(int foodId) async {
   return NutritionDao(await database).getFoodNutrientsPer100gByCode(foodId);
 }
 
+Future<Map<String, double>> getMacroPer100gLegacySafe(int foodId) async {
+  final all = await getFoodNutrientsPer100gByCode(foodId);
+
+  double? pick(List<String> codes) {
+    for (final code in codes) {
+      final value = all[code];
+      if (value != null) return value;
+    }
+    return null;
+  }
+
+  final out = <String, double>{};
+  final protein = pick(['PROTEIN_G', 'PROTEIN']);
+  if (protein != null) out['PROTEIN_G'] = protein;
+  final carbs = pick(['CARB_G', 'CARB']);
+  if (carbs != null) out['CARB_G'] = carbs;
+  final fat = pick(['FAT_G', 'FAT']);
+  if (fat != null) out['FAT_G'] = fat;
+  final kcal = pick(['KCAL', 'ENERGY_KCAL', 'CALORIES']);
+  if (kcal != null) out['KCAL'] = kcal;
+  return out;
+}
+
 // Recipes
 Future<int> createOrUpdateRecipe(Recipe r, List<RecipeIngredient> ings) async =>
     NutritionDao(await database).createOrUpdateRecipe(r, ings);
@@ -3877,6 +4159,7 @@ Future<void> close() async {
     await _db!.close();
     _db = null;
   }
+  _dbFuture = null;
 }
 
 
@@ -4007,17 +4290,6 @@ Future<Map<String, Object?>> _sanitizeRowForTable(
 Future<String> _dbFilePath() async {
   final dbPath = await getDatabasesPath();
   return join(dbPath, 'fitness_tracker.db'); // keep your existing filename
-}
-
-Future<void> _materializePrebuiltIfNeeded(String path) async {
-  final exists = await databaseExists(path);
-  if (exists) return;
-  // Ensure parent dir exists
-  await Directory(dirname(path)).create(recursive: true);
-  // Copy the prebuilt catalog asset to the sqflite location
-  final bytes = (await rootBundle.load(PrebuiltDb.assetPath)).buffer.asUint8List();
-  final file = File(path);
-  await file.writeAsBytes(bytes, flush: true);
 }
 
 

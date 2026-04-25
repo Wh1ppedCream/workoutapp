@@ -979,7 +979,7 @@ Future<void> _processBarcode(String normalized) async {
 
   // Edit-first path
   try {
-    final food = await _repo.getFoodByBarcode(normalized);
+    final food = await _repo.foodCatalog.getFoodByBarcode(normalized);
     if (!mounted) return;
 
     if (food != null) {

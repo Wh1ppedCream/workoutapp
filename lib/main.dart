@@ -1,5 +1,8 @@
 // File: lib/main.dart
 
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -30,9 +33,9 @@ import 'repositories/app_repository.dart';
 
 
 Future<void> main() async {
+   final launchStopwatch = Stopwatch()..start();
    WidgetsFlutterBinding.ensureInitialized();
    final repo = AppRepository();
-   await repo.warmUp();
    runApp(RepositoryLifecycle(
      repo: repo,
      child: MultiProvider(
@@ -49,6 +52,9 @@ Future<void> main() async {
       child: const MyApp(),
      ),
    ));
+   WidgetsBinding.instance.addPostFrameCallback((_) {
+     debugPrint('[startup] first frame rendered in ${launchStopwatch.elapsedMilliseconds}ms');
+   });
  }
 
  /// Ensures the repository is closed when the app is disposed (hot restart/quit).
@@ -61,8 +67,26 @@ Future<void> main() async {
  }
  class _RepositoryLifecycleState extends State<RepositoryLifecycle> {
    @override
+   void initState() {
+     super.initState();
+     WidgetsBinding.instance.addPostFrameCallback((_) {
+       unawaited(_warmUpRepository());
+     });
+   }
+
+   Future<void> _warmUpRepository() async {
+     final sw = Stopwatch()..start();
+     try {
+       await widget.repo.warmUp();
+       debugPrint('[startup] repository warm-up finished in ${sw.elapsedMilliseconds}ms');
+     } catch (e) {
+       debugPrint('[startup] repository warm-up failed: $e');
+     }
+   }
+
+   @override
    void dispose() {
-     widget.repo.close();
+     unawaited(widget.repo.close());
      super.dispose();
    }
    @override
