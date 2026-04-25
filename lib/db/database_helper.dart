@@ -135,7 +135,7 @@ class DatabaseHelper {
   final didSeed = await _seedFoodsIfEmpty(db);  // now returns bool
   await _ensureIndexes(db);                     // still safe if already created
   if (!didSeed) {
-    await _rebuildFoodFtsIfExists(db);
+    await _ensureFoodFtsReady(db);
   }
   debugPrint('[db] onOpen (done) — seeded: $didSeed');
 },
@@ -823,20 +823,78 @@ Future<void> _backfillNormalizedFoodKeys(Database db) async {
 Future<void> _rebuildFoodFtsIfExists(Database db) async {
   if (!await _hasFts4(db)) return;
 
-  final exists = (Sqflite.firstIntValue(await db.rawQuery(
-    "SELECT COUNT(*) FROM sqlite_master "
-    "WHERE name = 'food_search_fts' "
-    "AND type IN ('table','view') "
-    "AND lower(coalesce(sql,'')) LIKE '%using fts4%'"
-  )) ?? 0) > 0;
+  final exists = await _hasFoodFtsTable(db);
 
   if (!exists) return;
 
   try {
   await db.execute("INSERT INTO food_search_fts(food_search_fts) VALUES('rebuild')");
   await db.execute("INSERT INTO food_search_fts(food_search_fts) VALUES('optimize')");
+  await _ensureFoodFtsTriggers(db);
   debugPrint('[fts4] food_search_fts rebuild+optimize done');
 } catch (_) {/* ignore */}
+}
+
+Future<void> _ensureFoodFtsReady(Database db) async {
+  if (!await _hasFts4(db)) return;
+  if (!await _hasFoodFtsTable(db)) return;
+  if (!await _tableExists(db, 'foods')) return;
+
+  try {
+    await _ensureFoodFtsTriggers(db);
+
+    final foodCount = Sqflite.firstIntValue(await db.rawQuery(
+      'SELECT COUNT(*) FROM foods',
+    )) ?? 0;
+    if (foodCount == 0) return;
+
+    final ftsCount = Sqflite.firstIntValue(
+      await db.rawQuery('SELECT COUNT(*) FROM food_search_fts'),
+    ) ?? 0;
+
+    // Rebuild only when the FTS table is clearly missing its catalog rows.
+    // Normal INSERT/UPDATE/DELETE triggers keep it in sync after that.
+    if (ftsCount == 0 || ftsCount < (foodCount * 0.9).floor()) {
+      await _rebuildFoodFtsIfExists(db);
+    }
+  } catch (_) {
+    // Search can still fall back to LIKE if FTS is unavailable or unhealthy.
+  }
+}
+
+Future<void> _ensureFoodFtsTriggers(DatabaseExecutor db) async {
+  if (!await _hasFoodFtsTable(db)) return;
+
+  await db.execute("""
+    CREATE TRIGGER IF NOT EXISTS foods_ai AFTER INSERT ON foods BEGIN
+      INSERT INTO food_search_fts(rowid, name, brand)
+      VALUES (NEW.id, COALESCE(NEW.name,''), COALESCE(NEW.brand,''));
+    END;
+  """);
+  await db.execute("""
+    CREATE TRIGGER IF NOT EXISTS foods_ad AFTER DELETE ON foods BEGIN
+      INSERT INTO food_search_fts(food_search_fts, rowid, name, brand)
+      VALUES('delete', OLD.id, COALESCE(OLD.name,''), COALESCE(OLD.brand,''));
+    END;
+  """);
+  await db.execute("""
+    CREATE TRIGGER IF NOT EXISTS foods_au AFTER UPDATE ON foods BEGIN
+      INSERT INTO food_search_fts(food_search_fts, rowid, name, brand)
+      VALUES('delete', OLD.id, COALESCE(OLD.name,''), COALESCE(OLD.brand,''));
+      INSERT INTO food_search_fts(rowid, name, brand)
+      VALUES (NEW.id, COALESCE(NEW.name,''), COALESCE(NEW.brand,''));
+    END;
+  """);
+}
+
+Future<bool> _hasFoodFtsTable(DatabaseExecutor db) async {
+  final exists = (Sqflite.firstIntValue(await db.rawQuery(
+    "SELECT COUNT(*) FROM sqlite_master "
+    "WHERE name = 'food_search_fts' "
+    "AND type IN ('table','view') "
+    "AND lower(coalesce(sql,'')) LIKE '%using fts4%'"
+  )) ?? 0) > 0;
+  return exists;
 }
 
 

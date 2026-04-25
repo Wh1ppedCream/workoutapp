@@ -32,7 +32,7 @@ import 'repositories/app_repository.dart';
 Future<void> main() async {
    WidgetsFlutterBinding.ensureInitialized();
    final repo = AppRepository();
-   await repo.warmUp(verify: true);
+   await repo.warmUp();
    runApp(RepositoryLifecycle(
      repo: repo,
      child: MultiProvider(
