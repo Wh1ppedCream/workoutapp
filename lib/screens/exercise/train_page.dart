@@ -79,16 +79,18 @@ class _TrainPageState extends State<TrainPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer2<ActiveSession, SelectedProfile>(
-      builder: (_, session, sel, __) {
-        final completedSessionVersion = session.completedSessionVersion;
-        if (_seenCompletedSessionVersion == null) {
-          _seenCompletedSessionVersion = completedSessionVersion;
-        } else if (_seenCompletedSessionVersion != completedSessionVersion) {
-          _seenCompletedSessionVersion = completedSessionVersion;
-          _historyRefreshToken++;
-        }
+    final completedSessionVersion = context.select<ActiveSession, int>(
+      (session) => session.completedSessionVersion,
+    );
+    if (_seenCompletedSessionVersion == null) {
+      _seenCompletedSessionVersion = completedSessionVersion;
+    } else if (_seenCompletedSessionVersion != completedSessionVersion) {
+      _seenCompletedSessionVersion = completedSessionVersion;
+      _historyRefreshToken++;
+    }
 
+    return Consumer<SelectedProfile>(
+      builder: (_, sel, __) {
         return Scaffold(
         key: _scaffoldKey,
         drawer: MainDrawer(
@@ -201,7 +203,7 @@ class _TrainPageState extends State<TrainPage> {
           child: IndexedStack(
             index: _selectedTab,
             children: [
-              _buildTrainContent(session, sel),
+              _buildTrainContent(sel),
               _buildHistoryContent(),
             ],
           ),
@@ -211,7 +213,7 @@ class _TrainPageState extends State<TrainPage> {
     );
   }
 
-  Widget _buildTrainContent(ActiveSession session, SelectedProfile sel) {
+  Widget _buildTrainContent(SelectedProfile sel) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -292,7 +294,7 @@ class _TrainPageState extends State<TrainPage> {
           padding: const EdgeInsets.all(16),
           child: ElevatedButton(
             onPressed: () {
-              session.start();
+              context.read<ActiveSession>().start();
               Navigator.of(context)
                   .push(
                     MaterialPageRoute(builder: (_) => const SessionScreen()),

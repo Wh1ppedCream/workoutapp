@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../providers/active_session.dart';
 import '../providers/dashboard_config.dart';
+import '../providers/nutrition_profile.dart';
 import '../widgets/current_metrics_section.dart';
 import '../widgets/data_records_section.dart';
 import '../widgets/health_trends_section.dart';
@@ -225,16 +226,20 @@ class _DashboardPageState extends State<DashboardPage> {
       case 'nutritionDash':
         return Padding(
           padding: const EdgeInsets.all(8),
-          child: NutritionDash(
-            caloriesConsumed: 500,
-            calorieGoal: 2000,
-            proteinConsumed: 20,
-            proteinTarget: 100,
-            carbConsumed: 50,
-            carbTarget: 200,
-            fatConsumed: 10,
-            fatTarget: 70,
-            scale: 0.7,
+          child: Consumer<NutritionProfile>(
+            builder: (context, p, _) {
+              return NutritionDash(
+                caloriesConsumed: (p.totals?.kcal ?? 0).round(),
+                calorieGoal: (p.activeGoal?.kcalTarget ?? 0).round(),
+                proteinConsumed: (p.totals?.proteinG ?? 0).round(),
+                proteinTarget: (p.activeGoal?.proteinG ?? 0).round(),
+                carbConsumed: (p.totals?.carbsG ?? 0).round(),
+                carbTarget: (p.activeGoal?.carbsG ?? 0).round(),
+                fatConsumed: (p.totals?.fatG ?? 0).round(),
+                fatTarget: (p.activeGoal?.fatG ?? 0).round(),
+                scale: 0.7,
+              );
+            },
           ),
         );
       case 'dataRecords':

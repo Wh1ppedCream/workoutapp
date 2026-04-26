@@ -24,6 +24,12 @@ class _MeasuredItemsPageState extends State<MeasuredItemsPage> {
     _defsFuture = _repo.fetchUsedClassMeasurementDefinitions();
   }
 
+  void _reloadDefinitions() {
+    setState(() {
+      _defsFuture = _repo.fetchUsedClassMeasurementDefinitions();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -54,11 +60,16 @@ class _MeasuredItemsPageState extends State<MeasuredItemsPage> {
                 tileColor: Colors.deepPurple,
                 textColor: Colors.white,
                 title: const Text('Track a New Measurement'),
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const NewMeasurementItemPage(),
-                  ),
-                ),
+                onTap: () async {
+                  final changed = await Navigator.of(context).push<bool>(
+                    MaterialPageRoute(
+                      builder: (_) => const NewMeasurementItemPage(),
+                    ),
+                  );
+                  if (changed == true && mounted) {
+                    _reloadDefinitions();
+                  }
+                },
               ),
             ],
           );

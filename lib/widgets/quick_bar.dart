@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/active_session.dart';
+import '../providers/nutrition_profile.dart';
 import '../screens/nutrition/new_measurement_item_page.dart';
 import '../screens/nutrition/food_logging_page.dart';
 import '../screens/exercise/session_screen.dart';
@@ -53,10 +54,13 @@ class QuickBar extends StatelessWidget {
               borderRadius: BorderRadius.horizontal(left: radii.topLeft),
               label: '+ Measurement',
               fontSize: 12 * scale,
-              onTap: () {
-                Navigator.of(context).push(
+              onTap: () async {
+                final changed = await Navigator.of(context).push<bool>(
                   MaterialPageRoute(builder: (_) => const NewMeasurementItemPage()),
                 );
+                if (changed == true && context.mounted) {
+                  await context.read<NutritionProfile>().reloadDay();
+                }
               },
             ),
           ),

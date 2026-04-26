@@ -130,7 +130,7 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
     );
 
     if (!mounted) return;
-    Navigator.of(context).pop();
+    Navigator.of(context).pop(true);
   }
 
   @override
