@@ -18,9 +18,11 @@ class ActiveSession extends ChangeNotifier {
 
   Timer? _timer;
   int _elapsedSeconds = 0;
+  int _completedSessionVersion = 0;
 
   bool get isActive => _timer != null;
   int get elapsedSeconds => _elapsedSeconds;
+  int get completedSessionVersion => _completedSessionVersion;
   String get formattedTime {
     final m = _elapsedSeconds ~/ 60;
     final s = _elapsedSeconds % 60;
@@ -203,6 +205,7 @@ Future<int?> finish() async {
   exercises.clear();
   cardTypes.clear();
   _elapsedSeconds = 0;
+  _completedSessionVersion++;
   notifyListeners();
   return sid;
 }

@@ -18,18 +18,26 @@ import 'presets_loaded.dart';
 class WorkoutDashboard extends StatefulWidget {
   /// Uniform scale factor for all paddings, fonts, and sizes.
   final double scale;
+  final VoidCallback? onSessionComplete;
 
-  const WorkoutDashboard({super.key, this.scale = 1});
+  const WorkoutDashboard({
+    super.key,
+    this.scale = 1,
+    this.onSessionComplete,
+  });
 
   @override
   State<WorkoutDashboard> createState() => _WorkoutDashboardState();
 }
 
-class _WorkoutDashboardState extends State<WorkoutDashboard> {
-
+class _WorkoutDashboardState extends State<WorkoutDashboard>
+    with AutomaticKeepAliveClientMixin<WorkoutDashboard> {
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final s = widget.scale;
     final sel = context.watch<SelectedProfile>();
     final colors = context.colors;
@@ -87,9 +95,14 @@ class _WorkoutDashboardState extends State<WorkoutDashboard> {
           child: ElevatedButton(
             onPressed: () {
               context.read<ActiveSession>().start();
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const SessionScreen()),
-              );
+              Navigator.of(context)
+                  .push(
+                    MaterialPageRoute(builder: (_) => const SessionScreen()),
+                  )
+                  .then((_) {
+                    if (!mounted) return;
+                    widget.onSessionComplete?.call();
+                  });
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: colors.workoutStartBg!,

@@ -16,8 +16,6 @@ import 'gym_profile_screen.dart';
 import 'preset_detail_screen.dart';
 import 'session_screen.dart';
 import 'preset_generation_qa.dart';
-
-
 import '../../widgets/history_content.dart';
 
 import 'exercise_catalog_page.dart';
@@ -36,6 +34,9 @@ class _TrainPageState extends State<TrainPage> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   int? _lastProfileId;
   int _selectedTab = 0; // 0 = Train, 1 = History
+  int _presetsRefreshToken = 0;
+  int _historyRefreshToken = 0;
+  int? _seenCompletedSessionVersion;
 
   @override
   void didChangeDependencies() {
@@ -54,7 +55,8 @@ class _TrainPageState extends State<TrainPage> {
     if (existing.isNotEmpty) return;
     await _repo.findOrCreatePreset('Preset 1', profileId: profileId);
     await _repo.findOrCreatePreset('Preset 2', profileId: profileId);
-    setState(() {});
+    if (!mounted) return;
+    setState(() => _presetsRefreshToken++);
   }
 
   void _openPreset(int presetId, {bool edit = false}) {
@@ -78,7 +80,16 @@ class _TrainPageState extends State<TrainPage> {
   @override
   Widget build(BuildContext context) {
     return Consumer2<ActiveSession, SelectedProfile>(
-      builder: (_, session, sel, __) => Scaffold(
+      builder: (_, session, sel, __) {
+        final completedSessionVersion = session.completedSessionVersion;
+        if (_seenCompletedSessionVersion == null) {
+          _seenCompletedSessionVersion = completedSessionVersion;
+        } else if (_seenCompletedSessionVersion != completedSessionVersion) {
+          _seenCompletedSessionVersion = completedSessionVersion;
+          _historyRefreshToken++;
+        }
+
+        return Scaffold(
         key: _scaffoldKey,
         drawer: MainDrawer(
           headerTitle: 'Training Menu',
@@ -103,7 +114,10 @@ class _TrainPageState extends State<TrainPage> {
           onSelect: (profile) {
             sel.selectProfile(profile);
             Navigator.of(context).pop();
-            setState(() {});
+            setState(() {
+              _presetsRefreshToken++;
+              _historyRefreshToken++;
+            });
           },
           onEdit: (profile) {
             Navigator.of(context).pop();
@@ -115,7 +129,10 @@ class _TrainPageState extends State<TrainPage> {
           },
           onDeleteAll: () {
             sel.deleteProfile(sel.currentProfile!.id!);
-            setState(() {});
+            setState(() {
+              _presetsRefreshToken++;
+              _historyRefreshToken++;
+            });
           },
         ),
 
@@ -147,7 +164,14 @@ class _TrainPageState extends State<TrainPage> {
                   _selectedTab == 0,
                   _selectedTab == 1,
                 ],
-                onPressed: (idx) => setState(() => _selectedTab = idx),
+                onPressed: (idx) {
+                  setState(() {
+                    _selectedTab = idx;
+                    if (idx == 1) {
+                      _historyRefreshToken++;
+                    }
+                  });
+                },
                 children: const [
                   Text('Train'),
                   Text('History'),
@@ -174,16 +198,20 @@ class _TrainPageState extends State<TrainPage> {
         ),
 
         body: SafeArea(
-          child: _selectedTab == 0
-              ? _buildTrainContent(session, sel)
-              : _buildHistoryContent(),
+          child: IndexedStack(
+            index: _selectedTab,
+            children: [
+              _buildTrainContent(session, sel),
+              _buildHistoryContent(),
+            ],
+          ),
         ),
-      ),
+      );
+      },
     );
   }
 
-  Widget _buildTrainContent(
-      ActiveSession session, SelectedProfile sel) {
+  Widget _buildTrainContent(ActiveSession session, SelectedProfile sel) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -200,6 +228,7 @@ class _TrainPageState extends State<TrainPage> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: PresetsLoaded(
               scale: 1.0,
+              refreshToken: _presetsRefreshToken,
               onRefresh: () => setState(() {}),
             ),
           ),
@@ -208,30 +237,28 @@ class _TrainPageState extends State<TrainPage> {
 
         const SizedBox(height: 8),
         GenericBar(
-  label: 'Generate Custom Presets',
-  color: Colors.purple,
-  onTap: () {
-    final profileId = sel.currentProfile?.id;
-    if (profileId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a gym profile first.'),
+          label: 'Generate Custom Presets',
+          color: Colors.purple,
+          onTap: () {
+            final profileId = sel.currentProfile?.id;
+            if (profileId == null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Please select a gym profile first.'),
+                ),
+              );
+              return;
+            }
+
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => PresetGenerationQaScreen(
+                  profileId: profileId,
+                ),
+              ),
+            );
+          },
         ),
-      );
-      return;
-    }
-
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => PresetGenerationQaScreen(
-          profileId: profileId,
-        ),
-      ),
-    );
-  },
-),
-
-
         const SizedBox(height: 8),
         GenericBar(
           label: 'Manually Add Preset',
@@ -247,10 +274,11 @@ class _TrainPageState extends State<TrainPage> {
             final newId =
                 await _repo.createPreset(name, profileId: profileId);
             _openPreset(newId, edit: true);
-            setState(() {});
+            if (!mounted) return;
+            setState(() => _presetsRefreshToken++);
           },
         ),
-        
+
         const SizedBox(height: 8),
 
         GenericBar(
@@ -258,16 +286,21 @@ class _TrainPageState extends State<TrainPage> {
           color: Colors.green,
           onTap: null,
         ),
-        
+
         const SizedBox(height: 8),
         Padding(
           padding: const EdgeInsets.all(16),
           child: ElevatedButton(
             onPressed: () {
               session.start();
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const SessionScreen()),
-              );
+              Navigator.of(context)
+                  .push(
+                    MaterialPageRoute(builder: (_) => const SessionScreen()),
+                  )
+                  .then((_) {
+                    if (!mounted) return;
+                    setState(() => _historyRefreshToken++);
+                  });
             },
             child: const Text('New Session'),
           ),
@@ -276,10 +309,10 @@ class _TrainPageState extends State<TrainPage> {
     );
   }
 
- Widget _buildHistoryContent() {
-  return HistoryContent(
-    onReload: () => setState(() {}),
-  );
-}
-
+  Widget _buildHistoryContent() {
+    return HistoryContent(
+      refreshToken: _historyRefreshToken,
+      onReload: () => setState(() {}),
+    );
+  }
 }

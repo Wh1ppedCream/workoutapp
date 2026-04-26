@@ -33,8 +33,8 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   String? _activityLevel;
   String _liftingExperience = 'No experience';
   String _cardioExperience = 'No experience';
-  String _maintenanceCalories = '';
-  String _targetWeight = '';
+  final String _maintenanceCalories = '';
+  final String _targetWeight = '';
   String _preferredDiet = 'Balanced';
   String _calorieFloor = '';
   String _trainingType = 'Lifting and cardio';
@@ -47,7 +47,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
 
   // —— add these state fields at the top of your State class —— 
 double _goalWeightValue = 140;      // TODO: initialize from user input / profile
-DateTime _projectedEndDate =        // TODO: calculate based on goal
+final DateTime _projectedEndDate =        // TODO: calculate based on goal
     DateTime.now().add(const Duration(days: 30));
 double _weeklyRateLbs = 0.7;        // TODO: bind to goal-rate slider
 double _weeklyRatePct = 0.5;        // TODO: bind to goal-rate slider
@@ -85,6 +85,7 @@ bool _hasAnyInput() {
 
 Future<void> _finishOnboarding() async {
   final repo = context.read<AppRepository>();
+  final onboardingConfig = context.read<OnboardingConfig>();
 
 final info = PersonalInfo(
   name:  _name.trim().isEmpty ? null : _name.trim(),
@@ -102,7 +103,7 @@ if (_hasAnyInput()) {
   await repo.savePersonalInfo(info);
 }
 
-await context.read<OnboardingConfig>().markCompleted();
+await onboardingConfig.markCompleted();
 if (!mounted) return;
 Navigator.pushReplacementNamed(context, '/main');
 

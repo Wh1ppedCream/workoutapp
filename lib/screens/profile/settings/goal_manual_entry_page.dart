@@ -160,7 +160,7 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
                       );
 
                       await p.setGoals(goal);   // calls repo + reloadDay()
-                      if (!mounted) return;
+                      if (!context.mounted) return;
                       Navigator.pop(context, true);
                     },
                   ),

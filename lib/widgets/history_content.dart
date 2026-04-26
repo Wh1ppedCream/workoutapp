@@ -9,8 +9,13 @@ import '../widgets/past_sessions_list.dart';
 class HistoryContent extends StatelessWidget {
   /// Callback to reload the past sessions list.
   final VoidCallback onReload;
+  final int refreshToken;
 
-  const HistoryContent({super.key, required this.onReload});
+  const HistoryContent({
+    super.key,
+    required this.onReload,
+    this.refreshToken = 0,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +44,7 @@ class HistoryContent extends StatelessWidget {
         ),
 
         // 7-day summary panel
-        const HistorySummaryWidget(),
+        HistorySummaryWidget(refreshToken: refreshToken),
 
         // Analytics dashboard button
         Padding(
@@ -55,7 +60,10 @@ class HistoryContent extends StatelessWidget {
 
         // Past sessions list
         Expanded(
-          child: PastSessionsList(onReload: onReload),
+          child: PastSessionsList(
+            onReload: onReload,
+            refreshToken: refreshToken,
+          ),
         ),
       ],
     );

@@ -2,7 +2,6 @@
 
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -321,6 +320,7 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
+  final Map<TabItem, Widget> _pageCache = {};
 
   void _onItemTapped(int index) {
     setState(() {
@@ -328,20 +328,8 @@ class _MainScreenState extends State<MainScreen> {
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final navConfig = context.watch<NavBarConfig>();
-
-    // 1) While loading, show a spinner
-    if (!navConfig.loaded) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    // 2) Grab the *current* list of tabs & pages
-    final tabs = navConfig.items;
-    final pages = tabs.map((tab) {
+  Widget _pageForTab(TabItem tab) {
+    return _pageCache.putIfAbsent(tab, () {
       switch (tab) {
         case TabItem.dashboard:
           return const DashboardPage();
@@ -362,7 +350,30 @@ class _MainScreenState extends State<MainScreen> {
         case TabItem.formAndPosing:
           return const FormPosingPage();
       }
-    }).toList();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final navConfig = context.watch<NavBarConfig>();
+
+    // 1) While loading, show a spinner
+    if (!navConfig.loaded) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    // 2) Grab the *current* list of tabs & pages
+    final tabs = navConfig.items;
+    final pages = tabs
+        .map(
+          (tab) => KeyedSubtree(
+            key: ValueKey(tab),
+            child: _pageForTab(tab),
+          ),
+        )
+        .toList();
 
     // 3) If the current index is now too big, clamp it
     if (_selectedIndex >= pages.length) {
@@ -370,7 +381,10 @@ class _MainScreenState extends State<MainScreen> {
     }
 
     return Scaffold(
-      body: pages[_selectedIndex],
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: pages,
+      ),
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Theme.of(context).colorScheme.surface,
         selectedItemColor: Theme.of(context).colorScheme.primary,

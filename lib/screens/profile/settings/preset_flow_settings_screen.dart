@@ -18,7 +18,7 @@ class PresetFlowSettingsScreen extends StatefulWidget {
   const PresetFlowSettingsScreen({super.key});
 
   @override
-  _PresetFlowSettingsScreenState createState() =>
+  State<PresetFlowSettingsScreen> createState() =>
       _PresetFlowSettingsScreenState();
 }
 
@@ -387,8 +387,10 @@ class _PresetFlowSettingsScreenState extends State<PresetFlowSettingsScreen> {
                     icon: const Icon(Icons.delete),
                     onPressed: () async {
                       await _repo.deleteFlowMethod(m.id);
+                      if (!ctx.mounted) return;
                       Navigator.of(ctx).pop();
                       _methods = await _repo.fetchFlowMethods(_selectedPresetId!);
+                      if (!mounted) return;
                       setState(() {});
                     },
                   ),

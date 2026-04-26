@@ -318,7 +318,7 @@ buckets.forEach((key, entries) {
 class _MiniStat extends StatelessWidget {
   final String label;
   final String value;
-  const _MiniStat({super.key, required this.label, required this.value});
+  const _MiniStat({required this.label, required this.value});
 
 @override
 Widget build(BuildContext context) {

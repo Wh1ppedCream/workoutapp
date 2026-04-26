@@ -218,8 +218,9 @@ _meals = rows;
       error = e.toString();
       _safeNotify();
     } finally {
-      if (_disposed || seq != _reloadSeq) return;
-      _setLoading(false);
+      if (!_disposed && seq == _reloadSeq) {
+        _setLoading(false);
+      }
     }
   }
 
@@ -244,8 +245,9 @@ _meals = rows;
       error = e.toString();
       _safeNotify();
     } finally {
-      if (_disposed) return;
-      _requestReload(); // debounced instead of immediate await reloadDay()
+      if (!_disposed) {
+        _requestReload(); // debounced instead of immediate await reloadDay()
+      }
     }
   }
 

@@ -189,7 +189,7 @@ void main(List<String> argv) async {
     _fail('Generated seed SQL missing or empty at $seedSql');
   } else if (verbose) {
     final sz = (seedFile.lengthSync() / (1024 * 1024)).toStringAsFixed(2);
-    stdout.writeln('  seed size: ${sz} MB');
+    stdout.writeln('  seed size: $sz MB');
   }
 
   // 2) Build DB

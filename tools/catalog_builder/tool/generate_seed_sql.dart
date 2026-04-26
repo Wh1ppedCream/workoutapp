@@ -199,7 +199,7 @@ if (jsonlPaths.isNotEmpty || jsonlGzPaths.isNotEmpty) {
   int i = 0;
 
   // Local helper to process a sequence of rows with the original per-row logic.
-  void _processRows(Iterable<Map<String, dynamic>> rows) {
+  void processRows(Iterable<Map<String, dynamic>> rows) {
     for (final m in rows) {
       i++;
       final ext = 'food_${i.toString().padLeft(7, '0')}';
@@ -279,7 +279,7 @@ if (m['portions'] is List) {
           .where((t) => t.isNotEmpty)
           .toList();
 
-            num _parseNumberToken(String s) {
+            num parseNumberToken(String s) {
         // Strip common punctuation like commas and trailing parentheses
         final t = s.replaceAll(RegExp(r'[(),]'), '');
         // Mixed fraction: "2 1/2"
@@ -303,7 +303,7 @@ if (m['portions'] is List) {
         return num.parse(t);
       }
 
-      bool _looksNumeric(String s) =>
+      bool looksNumeric(String s) =>
           RegExp(r'^\d+([.,]\d+)?$').hasMatch(s) ||
           RegExp(r'^\d+\s+\d+/\d+$').hasMatch(s) ||
           RegExp(r'^\d+/\d+$').hasMatch(s);
@@ -315,14 +315,14 @@ if (m['portions'] is List) {
       for (var t in tokens) {
         t = t.replaceAll(RegExp(r'[().,]'), '');
         if (t.isEmpty) continue;
-        if (_looksNumeric(t) || stop.contains(t)) continue;
+        if (looksNumeric(t) || stop.contains(t)) continue;
         picked = t;
         break;
       }
       if (picked != null) {
         fallbackUnit = picked; // e.g., "cup", "tbsp"
         // Leading amount like "1", "1/2", or mixed "2 1/2"
- num? _maybeMixedFractionAmount() {
+ num? maybeMixedFractionAmount() {
    if (tokens.isEmpty) return null;
    final first = tokens[0].replaceAll(RegExp(r'[().,]'), '');
    if (tokens.length >= 2) {
@@ -335,9 +335,9 @@ if (m['portions'] is List) {
        return whole + (nume / den);
      }
    }
-   return _looksNumeric(first) ? _parseNumberToken(first) : null;
+   return looksNumeric(first) ? parseNumberToken(first) : null;
  }
- final maybe = _maybeMixedFractionAmount();
+ final maybe = maybeMixedFractionAmount();
  fallbackAmount = (maybe == null || maybe <= 0 || maybe.isNaN) ? 1 : maybe;
       }
 
@@ -422,12 +422,12 @@ if (m['serving_size'] is Map) {
         portions[idx]['sort_order'] = idx;
       }
       if (portions.isNotEmpty) {
-        bool _is100g(Map<String, dynamic> p) {
+        bool is100g(Map<String, dynamic> p) {
           final name = ((p['measure_name'] as String?) ?? '').toLowerCase().replaceAll(' ', '');
           final gw = (p['gram_weight'] as num?)?.toDouble();
           return name == '100g' || gw == 100.0;
         }
-        bool _looksSemantic(Map<String, dynamic> p) {
+        bool looksSemantic(Map<String, dynamic> p) {
           final name = ((p['measure_name'] as String?) ?? '').toLowerCase();
           final unit = ((p['unit'] as String?) ?? '').toLowerCase();
           const sem = {
@@ -442,19 +442,19 @@ if (m['serving_size'] is Map) {
         int defaultIdx = portions.indexWhere((p) => p['is_default'] == 1);
 
         // If there is a default but it's 100 g, move it to a better candidate when possible.
-        if (defaultIdx >= 0 && _is100g(portions[defaultIdx])) {
-          int cand = portions.indexWhere((p) => _looksSemantic(p) && !_is100g(p));
+        if (defaultIdx >= 0 && is100g(portions[defaultIdx])) {
+          int cand = portions.indexWhere((p) => looksSemantic(p) && !is100g(p));
           if (cand < 0) {
-            cand = portions.indexWhere((p) => !_is100g(p)); // any non-100 g
+            cand = portions.indexWhere((p) => !is100g(p)); // any non-100 g
           }
           if (cand >= 0) defaultIdx = cand;
         }
 
         // If none was marked default, choose one now.
         if (defaultIdx < 0) {
-          defaultIdx = portions.indexWhere((p) => _looksSemantic(p) && !_is100g(p));
+          defaultIdx = portions.indexWhere((p) => looksSemantic(p) && !is100g(p));
           if (defaultIdx < 0) {
-            defaultIdx = portions.indexWhere((p) => !_is100g(p));
+            defaultIdx = portions.indexWhere((p) => !is100g(p));
           }
           if (defaultIdx < 0) defaultIdx = 0; // last resort
         }
@@ -543,10 +543,10 @@ INSERT INTO _import_portion_map(ext, portion_id) VALUES (${q(pext)}, last_insert
 
   // Process all provided JSONL then JSONL.GZ files in-order.
   for (final path in jsonlPaths) {
-    _processRows(_readJsonl(File(path)));
+    processRows(_readJsonl(File(path)));
   }
   for (final path in jsonlGzPaths) {
-    _processRows(_readJsonlGz(File(path)));
+    processRows(_readJsonlGz(File(path)));
   }
 
   // final flushes

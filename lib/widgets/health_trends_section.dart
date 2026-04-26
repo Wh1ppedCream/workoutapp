@@ -27,7 +27,8 @@ class HealthTrendsSection extends StatefulWidget {
   HealthTrendsSectionState createState() => HealthTrendsSectionState();
 }
 
-class HealthTrendsSectionState extends State<HealthTrendsSection> {
+class HealthTrendsSectionState extends State<HealthTrendsSection>
+    with AutomaticKeepAliveClientMixin<HealthTrendsSection> {
   // start with your two demo tiles
   final List<TrendData> _tiles = [
     TrendData(
@@ -68,8 +69,12 @@ class HealthTrendsSectionState extends State<HealthTrendsSection> {
   }
 
   @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
-      final colors = context.colors;
+    super.build(context);
+    final colors = context.colors;
 
 
     return Column(

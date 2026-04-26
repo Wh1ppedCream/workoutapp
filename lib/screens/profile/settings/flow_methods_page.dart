@@ -21,7 +21,7 @@ class FlowMethodsPage extends StatefulWidget {
   const FlowMethodsPage({super.key});
 
   @override
-  _FlowMethodsPageState createState() => _FlowMethodsPageState();
+  State<FlowMethodsPage> createState() => _FlowMethodsPageState();
 }
 
 class _FlowMethodsPageState extends State<FlowMethodsPage> {
@@ -567,6 +567,7 @@ class AddPresetMethodDialogState extends State<AddPresetMethodDialog> {
               type: _type,
               params: params,
             );
+            if (!context.mounted) return;
             Navigator.pop(context, FlowMethod(
               id: -1,
               presetId: widget.presetId,

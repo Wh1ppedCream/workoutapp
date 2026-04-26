@@ -1,30 +1,44 @@
 // File: lib/widgets/history_summary_widget.dart
 
 import 'package:flutter/material.dart';
+
 import '../models/models.dart';
 import '../repositories/app_repository.dart';
+import '../theme/theme_extensions.dart';
 import 'body_heatmap.dart';
 
-import '../theme/theme_extensions.dart';
-
-// Mapping DB BodyPart.name → all SVG <path id="…"> strings
+// Mapping DB BodyPart.name -> all SVG <path id="..."> strings
 const Map<String, List<String>> _bodyPartNameToSvgIds = {
   'Neck': ['Neck_frontal', 'neck_rear'],
-  'Shoulders': ['Shoulder_frontal_left', 'Shoulder_frontal_right', 'shoulder_left_back', 'shoulder_right_rear'],
+  'Shoulders': [
+    'Shoulder_frontal_left',
+    'Shoulder_frontal_right',
+    'shoulder_left_back',
+    'shoulder_right_rear',
+  ],
   'Chest': ['Chest_left', 'Chest_right'],
   'Core': ['Core_front'],
   'Upper Back': ['Upper_Back'],
   'Lower Back': ['lower_back'],
   'Biceps': ['bicep_left', 'Bicep_right'],
   'Triceps': ['tricep_left_back', 'tricep_right_rear'],
-  'Forearms': ['Forearm_Right_front', 'forearm_frontal_left', 'forearm_left_back', 'forearm_right_rear'],
+  'Forearms': [
+    'Forearm_Right_front',
+    'forearm_frontal_left',
+    'forearm_left_back',
+    'forearm_right_rear',
+  ],
   'Hips': ['Hip_back_left', 'hip_right_rear'],
   'Hamstrings': ['hamstring_left_back', 'Hamstring_right_back'],
   'Quads': ['Quad_Front_Right', 'Quad_Left_front'],
-  'Calves': ['Calf_Front_Right', 'Calf_front_left', 'Calf_left_back', 'Calf_right_back'],
+  'Calves': [
+    'Calf_Front_Right',
+    'Calf_front_left',
+    'Calf_left_back',
+    'Calf_right_back',
+  ],
 };
 
-/// A little card for showing one piece of info (value + label).
 class InfoCard extends StatelessWidget {
   final String value;
   final String label;
@@ -44,7 +58,13 @@ class InfoCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: colors.infoCardBackground,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: colors.infoCardShadow!, blurRadius: 4, offset: Offset(0, 2))],
+        boxShadow: [
+          BoxShadow(
+            color: colors.infoCardShadow!,
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -59,7 +79,7 @@ class InfoCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-           label,
+            label,
             style: TextStyle(
               fontSize: 10,
               color: colors.infoCardLabelText,
@@ -68,66 +88,115 @@ class InfoCard extends StatelessWidget {
         ],
       ),
     );
- }
+  }
 }
 
-/// Widget showing history summary across selectable timeframes via segmented button bar.
 class HistorySummaryWidget extends StatefulWidget {
-  const HistorySummaryWidget({super.key});
+  final int refreshToken;
+
+  const HistorySummaryWidget({
+    super.key,
+    this.refreshToken = 0,
+  });
 
   @override
   HistorySummaryWidgetState createState() => HistorySummaryWidgetState();
 }
 
-class HistorySummaryWidgetState extends State<HistorySummaryWidget> {
+class HistorySummaryWidgetState extends State<HistorySummaryWidget>
+    with AutomaticKeepAliveClientMixin<HistorySummaryWidget> {
   static const _tabLabels = ['1W', '1M', '3M', '6M', '1Y', 'All'];
   static const _durations = [7, 30, 90, 180, 365];
 
-  late final Future<void> _initialLoadFuture;
-  late final List<List<WorkoutSession>> _sessionsList;
-  late final List<Map<BodyPart, double>> _heatmapList;
+  late Future<void> _loadFuture;
+  late List<List<WorkoutSession>> _sessionsList;
+  late List<Map<BodyPart, double>> _heatmapList;
+  late List<double> _volumeList;
   int _selectedIndex = 0;
+  int _loadGeneration = 0;
+  bool _hasLoadedData = false;
 
   @override
   void initState() {
     super.initState();
-    final now = DateTime.now();
-
-    // Prepare futures
-    final sessionFutures = List.generate(_tabLabels.length, (i) {
-      if (i < _durations.length) {
-        final start = now.subtract(Duration(days: _durations[i]));
-        return AppRepository().fetchSessionsInRange(start, now);
-      }
-      return AppRepository().fetchSessionsInRange(DateTime.fromMillisecondsSinceEpoch(0), now);
-    });
-    final heatmapFutures = List.generate(_tabLabels.length, (i) {
-      if (i < _durations.length) {
-        final start = now.subtract(Duration(days: _durations[i]));
-        return AppRepository().fetchAllBodyPartSetsOverTimeRange(start: start, end: now);
-      }
-      return AppRepository().fetchAllBodyPartSetsOverTimeRange(start: DateTime.fromMillisecondsSinceEpoch(0), end: now);
-    });
-
-    // Load all data once
-    _initialLoadFuture = Future.wait([...sessionFutures, ...heatmapFutures]).then((results) {
-      _sessionsList = List<List<WorkoutSession>>.from(
-        results.sublist(0, _tabLabels.length).map((e) => e as List<WorkoutSession>),
-      );
-      _heatmapList = List<Map<BodyPart, double>>.from(
-        results.sublist(_tabLabels.length).map((e) => e as Map<BodyPart, double>),
-      );
-    });
+    _reloadData();
   }
 
   @override
+  void didUpdateWidget(covariant HistorySummaryWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.refreshToken != widget.refreshToken) {
+      setState(_reloadData);
+    }
+  }
+
+  void _reloadData() {
+    final loadGeneration = ++_loadGeneration;
+    final repo = AppRepository();
+    final now = DateTime.now();
+
+    final sessionFutures = List.generate(_tabLabels.length, (i) {
+      if (i < _durations.length) {
+        final start = now.subtract(Duration(days: _durations[i]));
+        return repo.fetchSessionsInRange(start, now);
+      }
+      return repo.fetchSessionsInRange(
+        DateTime.fromMillisecondsSinceEpoch(0),
+        now,
+      );
+    });
+
+    final heatmapFutures = List.generate(_tabLabels.length, (i) {
+      if (i < _durations.length) {
+        final start = now.subtract(Duration(days: _durations[i]));
+        return repo.fetchAllBodyPartSetsOverTimeRange(start: start, end: now);
+      }
+      return repo.fetchAllBodyPartSetsOverTimeRange(
+        start: DateTime.fromMillisecondsSinceEpoch(0),
+        end: now,
+      );
+    });
+
+    _loadFuture = () async {
+      final results = await Future.wait([...sessionFutures, ...heatmapFutures]);
+      final sessionsList = List<List<WorkoutSession>>.from(
+        results
+            .sublist(0, _tabLabels.length)
+            .map((e) => e as List<WorkoutSession>),
+      );
+      final heatmapList = List<Map<BodyPart, double>>.from(
+        results
+            .sublist(_tabLabels.length)
+            .map((e) => e as Map<BodyPart, double>),
+      );
+      final volumeList = await Future.wait(
+        sessionsList.map(
+          (sessions) => repo.calculateTotalVolumeForSessions(
+            sessions.map((s) => s.id).toList(),
+          ),
+        ),
+      );
+
+      if (loadGeneration != _loadGeneration) return;
+      _sessionsList = sessionsList;
+      _heatmapList = heatmapList;
+      _volumeList = volumeList;
+      _hasLoadedData = true;
+    }();
+  }
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
     final theme = Theme.of(context);
     final colors = context.colors;
     return FutureBuilder<void>(
-      future: _initialLoadFuture,
+      future: _loadFuture,
       builder: (ctx, snap) {
-        if (snap.connectionState != ConnectionState.done) {
+        if (snap.connectionState != ConnectionState.done && !_hasLoadedData) {
           return SizedBox(
             height: 300,
             child: Center(
@@ -137,14 +206,13 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget> {
             ),
           );
         }
-        if (snap.hasError) {
+        if (snap.hasError && !_hasLoadedData) {
           return const Padding(
             padding: EdgeInsets.all(16),
             child: Center(child: Text('Error loading history')),
           );
         }
 
-        // All data ready
         return Card(
           margin: const EdgeInsets.symmetric(vertical: 8),
           child: Padding(
@@ -152,7 +220,6 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Segmented appbar-style button bar
                 Container(
                   height: 40,
                   decoration: BoxDecoration(
@@ -164,12 +231,12 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget> {
                       final isSelected = i == _selectedIndex;
                       BorderRadius segmentRadius;
                       if (i == 0) {
-                        segmentRadius = BorderRadius.only(
+                        segmentRadius = const BorderRadius.only(
                           topLeft: Radius.circular(8),
                           bottomLeft: Radius.circular(8),
                         );
                       } else if (i == _tabLabels.length - 1) {
-                        segmentRadius = BorderRadius.only(
+                        segmentRadius = const BorderRadius.only(
                           topRight: Radius.circular(8),
                           bottomRight: Radius.circular(8),
                         );
@@ -203,7 +270,6 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                // Content panel
                 SizedBox(
                   height: 250,
                   child: _buildLoadedTab(_selectedIndex),
@@ -226,15 +292,15 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget> {
     final hours = totalSeconds ~/ 3600;
     final mins = (totalSeconds % 3600) ~/ 60;
     final timeStr = '${hours}h ${mins}m';
-    final sessionIds = sessions.map((s) => s.id).toList();
+    final totalVolume = _volumeList[index];
 
-    // Heatmap frequency map
-    final maxCount = rawHeatmap.values.fold<double>(0.0, (prev, v) => v > prev ? v : prev);
+    final maxCount =
+        rawHeatmap.values.fold<double>(0.0, (prev, v) => v > prev ? v : prev);
     final freqMap = <String, double>{};
     rawHeatmap.forEach((bp, count) {
       final ids = _bodyPartNameToSvgIds[bp.name] ?? [];
       final norm = maxCount == 0.0 ? 0.0 : count / maxCount;
-      for (var id in ids) {
+      for (final id in ids) {
         freqMap[id] = norm;
       }
     });
@@ -246,12 +312,12 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget> {
           width: 250,
           height: 250,
           child: BodyHeatmap(
-                  frequencyMap: freqMap,
-                  lowColor:  colors.historySummaryHeatmapLow!,
-                  highColor: colors.historySummaryHeatmapHigh!,
-                  width: 200,
-                  height: 200,
-                ),
+            frequencyMap: freqMap,
+            lowColor: colors.historySummaryHeatmapLow!,
+            highColor: colors.historySummaryHeatmapHigh!,
+            width: 200,
+            height: 200,
+          ),
         ),
         const SizedBox(width: 16),
         Expanded(
@@ -261,20 +327,9 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget> {
               children: [
                 InfoCard(value: workoutCount.toString(), label: 'Workouts'),
                 InfoCard(value: timeStr, label: 'Total Time'),
-                FutureBuilder<double>(
-                  future: AppRepository().calculateTotalVolumeForSessions(sessionIds),
-                  builder: (ctx3, volSnap) {
-                    String volText;
-                    if (volSnap.connectionState != ConnectionState.done) {
-                      volText = '…';
-                    } else if (volSnap.hasError) {
-                      volText = 'Err';
-                    } else {
-                      final k = (volSnap.data! / 1000).toStringAsFixed(1);
-                      volText = '${k}k lbs';
-                    }
-                    return InfoCard(value: volText, label: 'Total Volume');
-                  },
+                InfoCard(
+                  value: '${(totalVolume / 1000).toStringAsFixed(1)}k lbs',
+                  label: 'Total Volume',
                 ),
               ],
             ),

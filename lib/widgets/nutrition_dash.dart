@@ -41,11 +41,16 @@ class NutritionDash extends StatefulWidget {
   State<NutritionDash> createState() => _NutritionDashState();
 }
 
-class _NutritionDashState extends State<NutritionDash> {
+class _NutritionDashState extends State<NutritionDash>
+    with AutomaticKeepAliveClientMixin<NutritionDash> {
   int _currentPage = 0;
 
   @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
     final s = widget.scale;
 
     // pull in our theme extension

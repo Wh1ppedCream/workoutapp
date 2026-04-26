@@ -308,6 +308,7 @@ for (var entry in _bodyManualEntries) {
 /// Let the user pick one or more new BodyParts to stage.
 Future<void> _openAddBodypartDialog() async {
   final allBps = await _repo.fetchAllBodyPartsFull(); // List<BodyPart>
+  if (!mounted) return;
   final existing = _bodyManualEntries.map((e) => e['id'] as int).toSet();
   final available = allBps.where((bp) => !existing.contains(bp.id)).toList();
   final selectedIds = <int>{};

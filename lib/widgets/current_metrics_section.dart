@@ -48,7 +48,8 @@ class CurrentMetricsSection extends StatefulWidget {
   CurrentMetricsSectionState createState() => CurrentMetricsSectionState();
 }
 
-class CurrentMetricsSectionState extends State<CurrentMetricsSection> {
+class CurrentMetricsSectionState extends State<CurrentMetricsSection>
+    with AutomaticKeepAliveClientMixin<CurrentMetricsSection> {
   final DateTime _lastMeasured = DateTime.now();
   final int _daysAgo = 0;
 
@@ -71,7 +72,11 @@ class CurrentMetricsSectionState extends State<CurrentMetricsSection> {
   }
 
   @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
     final fmtDate = '${_lastMeasured.month}/${_lastMeasured.day}';
     final colors = context.colors;
     return Padding(

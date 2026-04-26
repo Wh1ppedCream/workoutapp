@@ -102,11 +102,10 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage>
     // toggleTorch() throws and we show a message instead.
     setState(() => _torchOn = !_torchOn);
   } catch (_) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Torch not available on this device')),
-      );
-    }
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Torch not available on this device')),
+    );
   }
 },
 

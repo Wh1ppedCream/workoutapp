@@ -2,32 +2,35 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+
 import '../models/models.dart';
 import '../repositories/app_repository.dart';
-import '../screens/exercise/session_detail_screen.dart';
 import '../screens/exercise/full_history_screen.dart';
-
+import '../screens/exercise/session_detail_screen.dart';
 import '../theme/theme_extensions.dart';
 
-
-/// A scrollable, filterable list of past WorkoutSessions.
-/// Offers a dropdown for “Week”, “Month”, “Year”, “All” timeframes,
-/// and shows itself inside a Card with a fullscreen button.
+/// A scrollable, filterable list of past workout sessions.
 class PastSessionsList extends StatefulWidget {
   /// Called after returning from a session detail, so parent can reload.
   final VoidCallback? onReload;
   final double height;
+  final int refreshToken;
 
-  const PastSessionsList({super.key, this.onReload, this.height = 300});
+  const PastSessionsList({
+    super.key,
+    this.onReload,
+    this.height = 300,
+    this.refreshToken = 0,
+  });
 
   @override
   State<PastSessionsList> createState() => _PastSessionsListState();
 }
 
-class _PastSessionsListState extends State<PastSessionsList> {
+class _PastSessionsListState extends State<PastSessionsList>
+    with AutomaticKeepAliveClientMixin<PastSessionsList> {
   final _repo = AppRepository();
 
-  // The dropdown options and how many days ago each represents.
   static const _options = {
     'Week': 7,
     'Month': 30,
@@ -35,136 +38,168 @@ class _PastSessionsListState extends State<PastSessionsList> {
     'All': null,
   };
 
-  // Current selection:
   String _selected = 'Week';
-
-  // The future we’re building off of:
   late Future<List<WorkoutSession>> _sessionsFuture;
+  List<WorkoutSession>? _lastSessions;
 
   @override
   void initState() {
     super.initState();
-    _loadSessions();
-  }
-
-  void _loadSessions() {
-    final days = _options[_selected];
-    if (days != null) {
-      final now = DateTime.now();
-      final start = now.subtract(Duration(days: days));
-      _sessionsFuture = _repo.fetchSessionsInRange(start, now);
-    } else {
-      // “All” case
-      _sessionsFuture = _repo.fetchWorkoutSessions();
-    }
-    setState(() {});
+    _sessionsFuture = _sessionsForSelectedRange();
   }
 
   @override
+  void didUpdateWidget(covariant PastSessionsList oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.refreshToken != widget.refreshToken) {
+      _reloadSessions();
+    }
+  }
+
+  Future<List<WorkoutSession>> _sessionsForSelectedRange() {
+    final days = _options[_selected];
+    if (days == null) {
+      return _repo.fetchWorkoutSessions();
+    }
+
+    final now = DateTime.now();
+    final start = now.subtract(Duration(days: days));
+    return _repo.fetchSessionsInRange(start, now);
+  }
+
+  void _reloadSessions() {
+    setState(() {
+      _sessionsFuture = _sessionsForSelectedRange();
+    });
+  }
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
-    // grab our theme extension
+    super.build(context);
     final colors = context.colors;
-    final cs     = context.cs;
+    final cs = context.cs;
+
     return SizedBox(
-  height: widget.height,
-  child: Card(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // ─── Header Row: Dropdown + Fullscreen Icon ──────
-            Row(
-              children: [
-                Text('Show:', style: TextStyle(color: cs.onSurface)),
-                const SizedBox(width: 8),
-                DropdownButton<String>(
-                  value: _selected,
-                  items: _options.keys
-                      .map((label) => DropdownMenuItem(
+      height: widget.height,
+      child: Card(
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  Text('Show:', style: TextStyle(color: cs.onSurface)),
+                  const SizedBox(width: 8),
+                  DropdownButton<String>(
+                    value: _selected,
+                    items: _options.keys
+                        .map(
+                          (label) => DropdownMenuItem(
                             value: label,
                             child: Text(label),
-                          ))
-                      .toList(),
-                  onChanged: (label) {
-                    if (label == null) return;
-                    setState(() => _selected = label);
-                    _loadSessions();
-                  },
-                ),
-                const Spacer(),
-                IconButton(
-                  icon: Icon(Icons.fullscreen, color: colors.pastSessionsIcon!),
-                  tooltip: 'Fullscreen',
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const FullHistoryScreen(),
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-
-
-            // ─── Session List ───────────────────────────
-               Expanded(
-              child: FutureBuilder<List<WorkoutSession>>(
-                future: _sessionsFuture,
-                builder: (ctx, snap) {
-                  if (snap.connectionState == ConnectionState.waiting) {
-                    return Center(child: CircularProgressIndicator(
-                      color: colors.pastSessionsProgress!,
-                    ));
-                  }
-                  if (snap.hasError) {
-                    return Center(child: Text('Error: ${snap.error}'));
-                  }
-                  final sessions = snap.data!;
-                  if (sessions.isEmpty) {
-                    return const Center(child: Text('No sessions yet.'));
-                  }
-                  return ListView.separated(
-                    padding: const EdgeInsets.symmetric(vertical: 2),
-                    itemCount: sessions.length,
-                    separatorBuilder: (_, __) => Divider(
-                      height: 1,
-                      color: colors.pastSessionsDivider!,
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (label) {
+                      if (label == null) return;
+                      setState(() {
+                        _selected = label;
+                        _sessionsFuture = _sessionsForSelectedRange();
+                      });
+                    },
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    icon: Icon(
+                      Icons.fullscreen,
+                      color: colors.pastSessionsIcon!,
                     ),
-                    itemBuilder: (ctx, i) {
-                      final ses = sessions[i];
-                      final dateStr =
-                          DateFormat('yyyy-MM-dd').format(ses.date);
-                      final durationMin = (ses.duration / 60).ceil();
-                      return Card(
-                        margin: const EdgeInsets.symmetric(
-                            horizontal: 2, vertical: 4),
-                        child: ListTile(
-                          title: Text('$dateStr — $durationMin min'),
-                          onTap: () => Navigator.of(context)
-                              .push(
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      SessionDetailScreen(ses),
-                                ),
-                              )
-                              .then((_) {
-                                widget.onReload?.call();
-                                _loadSessions();
-                              }),
+                    tooltip: 'Fullscreen',
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const FullHistoryScreen(),
                         ),
                       );
                     },
-                  );
-                },
+                  ),
+                ],
               ),
-               ),
-          ],
+              Expanded(
+                child: FutureBuilder<List<WorkoutSession>>(
+                  future: _sessionsFuture,
+                  initialData: _lastSessions,
+                  builder: (ctx, snap) {
+                    if (snap.connectionState == ConnectionState.waiting &&
+                        !snap.hasData) {
+                      return Center(
+                        child: CircularProgressIndicator(
+                          color: colors.pastSessionsProgress!,
+                        ),
+                      );
+                    }
+                    if (snap.hasError && !snap.hasData) {
+                      return Center(child: Text('Error: ${snap.error}'));
+                    }
+
+                    final sessions = snap.data ?? const <WorkoutSession>[];
+                    if (snap.connectionState == ConnectionState.done &&
+                        snap.hasData) {
+                      _lastSessions = sessions;
+                    }
+                    if (sessions.isEmpty) {
+                      return const Center(child: Text('No sessions yet.'));
+                    }
+
+                    return ListView.separated(
+                      padding: const EdgeInsets.symmetric(vertical: 2),
+                      itemCount: sessions.length,
+                      separatorBuilder: (_, __) => Divider(
+                        height: 1,
+                        color: colors.pastSessionsDivider!,
+                      ),
+                      itemBuilder: (ctx, i) {
+                        final ses = sessions[i];
+                        final dateStr = DateFormat('yyyy-MM-dd').format(
+                          ses.date,
+                        );
+                        final durationMin = (ses.duration / 60).ceil();
+
+                        return Card(
+                          margin: const EdgeInsets.symmetric(
+                            horizontal: 2,
+                            vertical: 4,
+                          ),
+                          child: ListTile(
+                            title: Text('$dateStr - $durationMin min'),
+                            onTap: () => Navigator.of(context)
+                                .push(
+                                  MaterialPageRoute(
+                                    builder: (_) => SessionDetailScreen(ses),
+                                  ),
+                                )
+                                .then((_) {
+                                  widget.onReload?.call();
+                                  if (mounted) {
+                                    _reloadSessions();
+                                  }
+                                }),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-    ),
     );
   }
 }
