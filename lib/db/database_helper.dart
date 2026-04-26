@@ -36,6 +36,8 @@ import 'package:flutter/foundation.dart' show debugPrint;
 /// Singleton helper for managing the SQLite database.
 class DatabaseHelper {
    static const int _kDbVersion = 48;
+   static const String _kOpenTriggerResetKey = 'open_trigger_reset_v1';
+   static const String _kOpenIndexEnsureKey = 'open_index_ensure_v1';
    static bool? _fts4Available;
   static final DatabaseHelper _instance = DatabaseHelper._internal();
   factory DatabaseHelper() => _instance;
@@ -97,6 +99,7 @@ class DatabaseHelper {
   debugPrint('[db] onUpgrade $oldVersion -> $newVersion (begin)');
 
   await Schema.onUpgrade(db, oldVersion, newVersion);
+  await _ensureAppMetaTable(db);
   await _ensureExerciseDefNewCols(db);     // from previous step
   await _ensureExerciseJoinTables(db);     // ← add this line
   await _ensureStatsTables(db);   // ← add here
@@ -113,7 +116,7 @@ class DatabaseHelper {
 
 
   // triggers, seeding, backfills, FTS, indexes…
-  await _resetDbTriggers(db);
+  await _resetDbTriggers(db, force: true);
   await SeedBootstrap.seedMissingBlocks(
     db,
     onFoodProgress: (c) => _logProgress('foods', c),
@@ -162,24 +165,50 @@ class DatabaseHelper {
   Future<void> _onCreate(Database db, int version) async {
   final sw = Stopwatch()..start();
   debugPrint('[db] onCreate -> v$version');
+  final stepSw = Stopwatch();
 
   // 1) Create schema
+  stepSw
+    ..reset()
+    ..start();
   await Schema.createTables(db);
+  _logDbInitStep('onCreate', 'create-schema', stepSw.elapsedMilliseconds);
+
+  stepSw
+    ..reset()
+    ..start();
   await _ensureAppMetaTable(db);
   await _ensureExerciseMediaTable(db);
+  _logDbInitStep('onCreate', 'ensure-meta-media', stepSw.elapsedMilliseconds);
 
   // 2) Triggers that are safe to have before foods seeding
+  stepSw
+    ..reset()
+    ..start();
   await _resetDbTriggers(db);
+  _logDbInitStep('onCreate', 'prepare-triggers', stepSw.elapsedMilliseconds);
 
   // 3) Seed only the missing blocks (lookups, stretches, analytics, nutrients, foods)
+  stepSw
+    ..reset()
+    ..start();
   await SeedBootstrap.seedMissingBlocks(
     db,
     onFoodProgress: (c) => _logProgress('foods', c),
   );
+  _logDbInitStep('onCreate', 'seed-missing-blocks', stepSw.elapsedMilliseconds);
 
   // 4) Normalizations & caches (safe no-ops when nothing was seeded)
+  stepSw
+    ..reset()
+    ..start();
   await _backfillNormalizedFoodKeys(db);
+  _logDbInitStep('onCreate', 'backfill-food-keys', stepSw.elapsedMilliseconds);
+  stepSw
+    ..reset()
+    ..start();
   await _backfillEnergyKcalFromMacros(db);
+  _logDbInitStep('onCreate', 'backfill-energy', stepSw.elapsedMilliseconds);
 
   await _rebuildAllRecipeCaches(db);   // fresh installs won’t have cache yet
   await _rebuildFoodFtsIfExists(db);   // if FTS exists, backfill it once
@@ -704,7 +733,16 @@ Future<void> _ensureFavoriteFoodsShape(Database db) async {
   // BACKFILL METHODS
   // ────────────────────────────────────────────────────────────────────────────
 
-Future<void> _resetDbTriggers(Database db) async {
+Future<void> _resetDbTriggers(Database db, {bool force = false}) async {
+  if (!force) {
+    final previous = await _getAppMeta(db, _kOpenTriggerResetKey);
+    if (previous != null) {
+      _logOnOpenStep('trigger-reset', 0, 'skipped ($previous)');
+      return;
+    }
+  }
+
+  final sw = Stopwatch()..start();
   // Drop every trigger on these tables, regardless of contents.
   const tables = [
     'foods','food_portions','food_barcodes',
@@ -747,6 +785,23 @@ Future<void> _resetDbTriggers(Database db) async {
       END;
     ''');
   });
+
+  if (!force) {
+    await _setAppMeta(
+      db,
+      _kOpenTriggerResetKey,
+      'done:${sw.elapsedMilliseconds}',
+    );
+    _logOnOpenStep('trigger-reset', sw.elapsedMilliseconds, 'repaired');
+  }
+}
+
+void _logOnOpenStep(String label, int elapsedMs, String detail) {
+  debugPrint('[db] onOpen step $label: ${elapsedMs}ms - $detail');
+}
+
+void _logDbInitStep(String phase, String label, int elapsedMs) {
+  debugPrint('[db] $phase step $label: ${elapsedMs}ms');
 }
 
 // Log at 1, 1k, then every 5k to keep console readable.
@@ -876,9 +931,19 @@ Future<void> _rebuildFoodFtsIfExists(Database db) async {
 }
 
 Future<void> _ensureFoodFtsReady(Database db) async {
-  if (!await _hasFts4(db)) return;
-  if (!await _hasFoodFtsTable(db)) return;
-  if (!await _tableExists(db, 'foods')) return;
+  final sw = Stopwatch()..start();
+  if (!await _hasFts4(db)) {
+    _logOnOpenStep('fts-ready', sw.elapsedMilliseconds, 'skipped (fts4 unavailable)');
+    return;
+  }
+  if (!await _hasFoodFtsTable(db)) {
+    _logOnOpenStep('fts-ready', sw.elapsedMilliseconds, 'skipped (fts table missing)');
+    return;
+  }
+  if (!await _tableExists(db, 'foods')) {
+    _logOnOpenStep('fts-ready', sw.elapsedMilliseconds, 'skipped (no foods table)');
+    return;
+  }
 
   try {
     await _ensureFoodFtsTriggers(db);
@@ -886,19 +951,36 @@ Future<void> _ensureFoodFtsReady(Database db) async {
     final foodCount = Sqflite.firstIntValue(await db.rawQuery(
       'SELECT COUNT(*) FROM foods',
     )) ?? 0;
-    if (foodCount == 0) return;
+    if (foodCount == 0) {
+      _logOnOpenStep('fts-ready', sw.elapsedMilliseconds, 'skipped (no foods)');
+      return;
+    }
 
     final ftsCount = Sqflite.firstIntValue(
       await db.rawQuery('SELECT COUNT(*) FROM food_search_fts'),
     ) ?? 0;
+    var rebuilt = false;
 
     // Rebuild only when the FTS table is clearly missing its catalog rows.
     // Normal INSERT/UPDATE/DELETE triggers keep it in sync after that.
     if (ftsCount == 0 || ftsCount < (foodCount * 0.9).floor()) {
       await _rebuildFoodFtsIfExists(db);
+      rebuilt = true;
     }
+    _logOnOpenStep(
+      'fts-ready',
+      sw.elapsedMilliseconds,
+      rebuilt
+          ? 'rebuilt (foods=$foodCount, fts=$ftsCount)'
+          : 'ok (foods=$foodCount, fts=$ftsCount)',
+    );
   } catch (_) {
     // Search can still fall back to LIKE if FTS is unavailable or unhealthy.
+    _logOnOpenStep(
+      'fts-ready',
+      sw.elapsedMilliseconds,
+      'fallback (fts check failed)',
+    );
   }
 }
 
@@ -940,7 +1022,16 @@ Future<bool> _hasFoodFtsTable(DatabaseExecutor db) async {
 
 
 
-Future<void> _ensureIndexes(Database db) async {
+Future<void> _ensureIndexes(Database db, {bool force = false}) async {
+  if (!force) {
+    final previous = await _getAppMeta(db, _kOpenIndexEnsureKey);
+    if (previous != null) {
+      _logOnOpenStep('ensure-indexes', 0, 'skipped ($previous)');
+      return;
+    }
+  }
+
+  final sw = Stopwatch()..start();
   // ── Foods & lookups ───────────────────────────────────────────────────────
   if (await _tableExists(db, 'foods')) {
     await db.execute(
@@ -1084,6 +1175,15 @@ Future<void> _ensureIndexes(Database db) async {
       'CREATE INDEX IF NOT EXISTS idx_diary_entry_tags_tag ON diary_entry_tags(tag)'
     );
   }
+
+  if (!force) {
+    await _setAppMeta(
+      db,
+      _kOpenIndexEnsureKey,
+      'done:${sw.elapsedMilliseconds}',
+    );
+    _logOnOpenStep('ensure-indexes', sw.elapsedMilliseconds, 'ensured');
+  }
 }
 
 Future<void> _ensureAppMetaTable(DatabaseExecutor db) async {
@@ -1121,11 +1221,18 @@ Future<void> _setAppMeta(DatabaseExecutor db, String key, String value) async {
 }
 
 Future<void> _maybeCompactLegacyFoodCatalog(Database db) async {
-  if (!await _tableExists(db, 'foods')) return;
+  final sw = Stopwatch()..start();
+  if (!await _tableExists(db, 'foods')) {
+    _logOnOpenStep('legacy-catalog-compact', sw.elapsedMilliseconds, 'skipped (no foods table)');
+    return;
+  }
 
   const flagKey = 'catalog_cleanup_v1';
   final previous = await _getAppMeta(db, flagKey);
-  if (previous != null) return;
+  if (previous != null) {
+    _logOnOpenStep('legacy-catalog-compact', sw.elapsedMilliseconds, 'skipped ($previous)');
+    return;
+  }
 
   final totalFoods =
       Sqflite.firstIntValue(await db.rawQuery(
@@ -1144,6 +1251,11 @@ Future<void> _maybeCompactLegacyFoodCatalog(Database db) async {
 
   if (totalFoods < 500 || importedFoods < 500) {
     await _setAppMeta(db, flagKey, 'not_needed:$totalFoods:$importedFoods');
+    _logOnOpenStep(
+      'legacy-catalog-compact',
+      sw.elapsedMilliseconds,
+      'not needed (foods=$totalFoods, imported=$importedFoods)',
+    );
     return;
   }
 
@@ -1155,7 +1267,6 @@ Future<void> _maybeCompactLegacyFoodCatalog(Database db) async {
   final hasCategories = await _tableExists(db, 'categories');
   final hasSources = await _tableExists(db, 'sources');
 
-  final sw = Stopwatch()..start();
   debugPrint('[foods] compacting legacy local catalog ($totalFoods rows, $importedFoods imported)');
 
   final deleted = await db.transaction<int>((txn) async {
@@ -1259,14 +1370,22 @@ Future<void> _maybeCompactLegacyFoodCatalog(Database db) async {
     'done:$deleted:$remaining:${sw.elapsedMilliseconds}',
   );
   debugPrint('[foods] legacy catalog compacted in ${sw.elapsedMilliseconds}ms - removed: $deleted, remaining: $remaining');
+  _logOnOpenStep(
+    'legacy-catalog-compact',
+    sw.elapsedMilliseconds,
+    'removed=$deleted, remaining=$remaining',
+  );
 }
 
 
 Future<bool> _seedFoodsIfEmpty(Database db) async {
-  final n = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM foods')) ?? 0;
-  if (n > 0) return false;
-
   final sw = Stopwatch()..start();
+  final n = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM foods')) ?? 0;
+  if (n > 0) {
+    _logOnOpenStep('seed-foods', sw.elapsedMilliseconds, 'skipped (count=$n)');
+    return false;
+  }
+
   debugPrint('[foods] seeding starter catalog from ${Seed.defaultFoodsAssetPath}');
   var seeded = false;
 
@@ -1299,6 +1418,9 @@ Future<bool> _seedFoodsIfEmpty(Database db) async {
 
     final total = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM foods')) ?? 0;
     debugPrint('[foods] seeding complete in ${sw.elapsedMilliseconds}ms - total rows: $total');
+    _logOnOpenStep('seed-foods', sw.elapsedMilliseconds, 'seeded ($total rows)');
+  } else {
+    _logOnOpenStep('seed-foods', sw.elapsedMilliseconds, 'failed');
   }
   return seeded;
 }
@@ -2197,6 +2319,7 @@ for (final table in data.keys) {
   await _backfillNormalizedFoodKeys(db);
   await _backfillEnergyKcalFromMacros(db);
   await _rebuildFoodFtsIfExists(db);
+  await _ensureAppMetaTable(db);
   await _ensureIndexes(db); // ← ensure you have all new indexes on imported DBs
 
   // If recipe nutrients weren’t imported, rebuild them from ingredients.

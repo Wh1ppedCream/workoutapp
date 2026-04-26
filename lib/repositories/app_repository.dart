@@ -1000,14 +1000,14 @@ class AppRepository {
 
   // Foods & portions
   Future<int> upsertFood(Food f) => _dbHelper.upsertFood(f);
-  Future<Food?> getFood(int id) => _dbHelper.getFood(id);
+  Future<Food?> getFood(int id) => foodCatalog.getFood(id);
   Future<List<Food>> searchFoods(String query, {int limit = 50}) =>
-      _dbHelper.searchFoods(query, limit: limit);
+      foodCatalog.searchFoods(query, limit: limit);
 
   Future<int> upsertFoodPortion(FoodPortion p) =>
       _dbHelper.upsertFoodPortion(p);
   Future<List<FoodPortion>> getPortionsForFood(int foodId) =>
-     _dbHelper.getPortionsForFood(foodId);
+      foodCatalog.getPortionsForFood(foodId);
   Future<void> setDefaultPortion(int foodId, int portionId) =>
       _dbHelper.setDefaultPortion(foodId, portionId);
 
@@ -1044,26 +1044,8 @@ class AppRepository {
 
   /// Returns a per-100g macro map using UI keys:
   ///   'PROTEIN_G', 'CARB_G', 'FAT_G', 'KCAL'
-  Future<Map<String, double>> getMacroPer100gLegacySafe(int foodId) async {
-    final all = await getFoodNutrientsPer100gByCode(foodId);
-    double? pick(List<String> codes) {
-      for (final c in codes) {
-        final v = all[c];
-        if (v != null) return v;
-      }
-      return null;
-    }
-    final out = <String, double>{};
-    final p = pick(['PROTEIN_G', 'PROTEIN']);
-    if (p != null) out['PROTEIN_G'] = p;
-    final c = pick(['CARB_G', 'CARB']);
-    if (c != null) out['CARB_G'] = c;
-    final f = pick(['FAT_G', 'FAT']);
-    if (f != null) out['FAT_G'] = f;
-    final k = pick(['KCAL', 'ENERGY_KCAL', 'CALORIES']);
-    if (k != null) out['KCAL'] = k;
-    return out;
-  }
+  Future<Map<String, double>> getMacroPer100gLegacySafe(int foodId) =>
+      foodCatalog.getMacroPer100gLegacySafe(foodId);
 
   Future<void> saveExtendedPer100gFromPayload(
           int foodId, Map<String, dynamic> payload) =>
@@ -1105,7 +1087,7 @@ class AppRepository {
       _dbHelper.updateFoodFromCustomizationPayload(payload);
 
   Future<Food?> getFoodByBarcode(String code) =>
-      _dbHelper.getFoodByBarcode(code);
+      foodCatalog.getFoodByBarcode(code);
   Future<void> addBarcode(int foodId, String code) =>
       _dbHelper.addBarcode(foodId, code);
 
@@ -1139,7 +1121,7 @@ class AppRepository {
     required int portionId,
     double quantity = 1.0,
   }) =>
-      _dbHelper.calcForPortion(
+      foodCatalog.calcForPortion(
         foodId: foodId,
         portionId: portionId,
         quantity: quantity,

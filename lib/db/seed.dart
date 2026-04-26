@@ -3,6 +3,7 @@
 import 'dart:io'; // for gzip.decoder
 import 'dart:convert';
 import 'package:flutter/services.dart'; // For rootBundle.loadString
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:sqflite/sqflite.dart';
 
 
@@ -184,8 +185,20 @@ class Seed {
     final List exList = json.decode(exJson);
 
     await db.transaction((txn) async {
+      Future<Map<String, int>> loadIdMap(String table) async {
+        final rows = await txn.query(table, columns: ['id', 'name']);
+        return {
+          for (final row in rows)
+            (row['name'] as String): row['id'] as int,
+        };
+      }
+
+      String defKey(String name, int? equipmentId) =>
+          '$name\x1f${equipmentId ?? 'null'}';
+
+      final lookupBatch = txn.batch();
       for (var item in eqList) {
-        await txn.insert(
+        lookupBatch.insert(
           'equipment',
           {'name': item['name']},
           conflictAlgorithm: ConflictAlgorithm.ignore,
@@ -193,7 +206,7 @@ class Seed {
       }
 
       for (var item in bpList) {
-        await txn.insert(
+        lookupBatch.insert(
           'bodypart',
           {'name': item['name']},
           conflictAlgorithm: ConflictAlgorithm.ignore,
@@ -201,25 +214,24 @@ class Seed {
       }
 
       for (var item in mList) {
-        await txn.insert(
+        lookupBatch.insert(
           'muscles',
           {'name': item['name']},
           conflictAlgorithm: ConflictAlgorithm.ignore,
         );
       }
+      await lookupBatch.commit(noResult: true);
 
+      final equipmentIds = await loadIdMap('equipment');
+      final bodypartIds = await loadIdMap('bodypart');
+      final muscleIds = await loadIdMap('muscles');
+
+      final definitionBatch = txn.batch();
       for (var item in exList) {
         final List eqNames = (item['equipment'] as List?) ?? const [];
-        int? eqId;
-        if (eqNames.isNotEmpty) {
-          final primary = eqNames.first as String;
-          final rows = await txn.query(
-            'equipment',
-            where: 'name = ?',
-            whereArgs: [primary],
-          );
-          eqId = rows.isNotEmpty ? rows.first['id'] as int : null;
-        }
+        final eqId = eqNames.isNotEmpty
+            ? equipmentIds[eqNames.first as String]
+            : null;
 
         final defMap = <String, dynamic>{
           'name': item['name'],
@@ -250,39 +262,45 @@ class Seed {
           defMap['multiply_by_rating'] = item['multiplyByRating'] ? 1 : 0;
         }
 
-        final defIdRaw = await txn.insert(
+        definitionBatch.insert(
           'exercise_definitions',
           defMap,
           conflictAlgorithm: ConflictAlgorithm.ignore,
         );
+      }
+      await definitionBatch.commit(noResult: true);
 
-        // Get the real id if ignored
-        int defId = defIdRaw;
-        if (defId == 0) {
-          final rows = await txn.query(
-            'exercise_definitions',
-            where: 'name = ? AND equipment_id ${eqId == null ? "IS NULL" : "= ?"}',
-            whereArgs: eqId == null ? [item['name']] : [item['name'], eqId],
-            limit: 1,
-          );
-          if (rows.isEmpty) {
-            throw Exception('exercise_def not found after ignore: ${item['name']}');
-          }
-          defId = rows.first['id'] as int;
+      final defRows = await txn.query(
+        'exercise_definitions',
+        columns: ['id', 'name', 'equipment_id'],
+      );
+      final definitionIds = <String, int>{
+        for (final row in defRows)
+          defKey(
+            row['name'] as String,
+            row['equipment_id'] as int?,
+          ): row['id'] as int,
+      };
+
+      final relationBatch = txn.batch();
+      for (var item in exList) {
+        final List eqNames = (item['equipment'] as List?) ?? const [];
+        final eqId = eqNames.isNotEmpty
+            ? equipmentIds[eqNames.first as String]
+            : null;
+        final resolvedDefId = definitionIds[defKey(item['name'] as String, eqId)];
+        if (resolvedDefId == null) {
+          throw Exception('exercise_def not found after seed: ${item['name']}');
         }
 
         for (var eName in eqNames) {
-          final rows2 = await txn.query(
-            'equipment',
-            where: 'name = ?',
-            whereArgs: [eName],
-          );
-          if (rows2.isNotEmpty) {
-            await txn.insert(
+          final equipmentId = equipmentIds[eName as String];
+          if (equipmentId != null) {
+            relationBatch.insert(
               'exercise_equipment',
               {
-                'exercise_id': defId,
-                'equipment_id': rows2.first['id'] as int,
+                'exercise_id': resolvedDefId,
+                'equipment_id': equipmentId,
               },
               conflictAlgorithm: ConflictAlgorithm.ignore,
             );
@@ -291,17 +309,13 @@ class Seed {
 
         final List bpNames = (item['bodyparts'] as List?) ?? const [];
         for (var bpName in bpNames) {
-          final bRows = await txn.query(
-            'bodypart',
-            where: 'name = ?',
-            whereArgs: [bpName],
-          );
-          if (bRows.isNotEmpty) {
-            await txn.insert(
+          final bodypartId = bodypartIds[bpName as String];
+          if (bodypartId != null) {
+            relationBatch.insert(
               'exercise_bodypart',
               {
-                'exercise_id': defId,
-                'bodypart_id': bRows.first['id'] as int,
+                'exercise_id': resolvedDefId,
+                'bodypart_id': bodypartId,
               },
               conflictAlgorithm: ConflictAlgorithm.ignore,
             );
@@ -312,17 +326,13 @@ class Seed {
         for (var mEntry in muscles) {
           final name = mEntry['name'] as String;
           final rank = (mEntry['rank'] as num).toInt();
-          final mRows = await txn.query(
-            'muscles',
-            where: 'name = ?',
-            whereArgs: [name],
-          );
-          if (mRows.isNotEmpty) {
-            await txn.insert(
+          final muscleId = muscleIds[name];
+          if (muscleId != null) {
+            relationBatch.insert(
               'exercise_muscle',
               {
-                'exercise_id': defId,
-                'muscle_id': mRows.first['id'] as int,
+                'exercise_id': resolvedDefId,
+                'muscle_id': muscleId,
                 'rank': rank,
               },
               conflictAlgorithm: ConflictAlgorithm.ignore,
@@ -330,6 +340,7 @@ class Seed {
           }
         }
       }
+      await relationBatch.commit(noResult: true);
     });
   }
 
@@ -339,8 +350,17 @@ class Seed {
     final List stList = json.decode(stJson);
 
     await db.transaction((txn) async {
+      Future<Map<String, int>> loadIdMap(String table) async {
+        final rows = await txn.query(table, columns: ['id', 'name']);
+        return {
+          for (final row in rows)
+            (row['name'] as String): row['id'] as int,
+        };
+      }
+
+      final stretchBatch = txn.batch();
       for (var item in stList) {
-        final sidRaw = await txn.insert(
+        stretchBatch.insert(
           'stretch_definitions',
           {
             'name': item['name'],
@@ -348,38 +368,34 @@ class Seed {
           },
           conflictAlgorithm: ConflictAlgorithm.ignore,
         );
+      }
+      await stretchBatch.commit(noResult: true);
 
-        int sid = sidRaw;
-        if (sid == 0) {
-          final r = await txn.query(
-            'stretch_definitions',
-            where: 'name = ?',
-            whereArgs: [item['name']],
-            limit: 1,
-          );
-          if (r.isEmpty) throw Exception('stretch not found after ignore: ${item['name']}');
-          sid = r.first['id'] as int;
+      final stretchIds = await loadIdMap('stretch_definitions');
+      final bodypartIds = await loadIdMap('bodypart');
+
+      final relationBatch = txn.batch();
+      for (var item in stList) {
+        final sid = stretchIds[item['name'] as String];
+        if (sid == null) {
+          throw Exception('stretch not found after seed: ${item['name']}');
         }
-
         final List bpNames = (item['bodyparts'] as List?) ?? const [];
         for (var bpName in bpNames) {
-          final bRows = await txn.query(
-            'bodypart',
-            where: 'name = ?',
-            whereArgs: [bpName],
-          );
-          if (bRows.isNotEmpty) {
-            await txn.insert(
+          final bodypartId = bodypartIds[bpName as String];
+          if (bodypartId != null) {
+            relationBatch.insert(
               'stretch_bodypart',
               {
                 'stretch_id': sid,
-                'bodypart_id': bRows.first['id'] as int,
+                'bodypart_id': bodypartId,
               },
               conflictAlgorithm: ConflictAlgorithm.ignore,
             );
           }
         }
       }
+      await relationBatch.commit(noResult: true);
     });
   }
 
@@ -398,27 +414,27 @@ class Seed {
     final Map<String, dynamic> volMap = json.decode(volJson);
 
     await db.transaction((txn) async {
+      Future<Map<String, int>> loadIdMap(String table) async {
+        final rows = await txn.query(table, columns: ['id', 'name']);
+        return {
+          for (final row in rows)
+            (row['name'] as String): row['id'] as int,
+        };
+      }
+
+      final bodypartIds = await loadIdMap('bodypart');
+      final muscleIds = await loadIdMap('muscles');
+      final batch = txn.batch();
+
       for (var entry in mbpList) {
-        final bpRows = await txn.query(
-          'bodypart',
-          where: 'name = ?',
-          whereArgs: [entry['bodypart']],
-          limit: 1,
-        );
-        if (bpRows.isEmpty) continue;
-        final bpId = bpRows.first['id'] as int;
+        final bpId = bodypartIds[entry['bodypart'] as String];
+        if (bpId == null) continue;
 
         for (var mName in (entry['muscles'] as List)) {
-          final mRows = await txn.query(
-            'muscles',
-            where: 'name = ?',
-            whereArgs: [mName],
-            limit: 1,
-          );
-          if (mRows.isEmpty) continue;
-          final mId = mRows.first['id'] as int;
+          final mId = muscleIds[mName as String];
+          if (mId == null) continue;
 
-          await txn.insert(
+          batch.insert(
             'muscle_bodypart',
             {'bodypart_id': bpId, 'muscle_id': mId},
             conflictAlgorithm: ConflictAlgorithm.ignore,
@@ -427,17 +443,12 @@ class Seed {
       }
 
       for (var entry in bpRankList) {
-        final bpRows = await txn.query(
-          'bodypart',
-          where: 'name = ?',
-          whereArgs: [entry['bodypart']],
-          limit: 1,
-        );
-        if (bpRows.isEmpty) continue;
-        await txn.insert(
+        final bpId = bodypartIds[entry['bodypart'] as String];
+        if (bpId == null) continue;
+        batch.insert(
           'bodypart_ranking',
           {
-            'bodypart_id': bpRows.first['id'],
+            'bodypart_id': bpId,
             'rank': entry['rank'],
           },
           conflictAlgorithm: ConflictAlgorithm.replace,
@@ -445,17 +456,12 @@ class Seed {
       }
 
       for (var entry in mRankList) {
-        final mRows = await txn.query(
-          'muscles',
-          where: 'name = ?',
-          whereArgs: [entry['muscle']],
-          limit: 1,
-        );
-        if (mRows.isEmpty) continue;
-        await txn.insert(
+        final muscleId = muscleIds[entry['muscle'] as String];
+        if (muscleId == null) continue;
+        batch.insert(
           'muscle_ranking',
           {
-            'muscle_id': mRows.first['id'],
+            'muscle_id': muscleId,
             'rank': entry['rank'],
           },
           conflictAlgorithm: ConflictAlgorithm.replace,
@@ -463,28 +469,17 @@ class Seed {
       }
 
       for (var entry in bpmRankList) {
-        final bpRows = await txn.query(
-          'bodypart',
-          where: 'name = ?',
-          whereArgs: [entry['bodypart']],
-          limit: 1,
-        );
-        if (bpRows.isEmpty) continue;
-        final bpId = bpRows.first['id'] as int;
+        final bpId = bodypartIds[entry['bodypart'] as String];
+        if (bpId == null) continue;
 
         for (var mr in (entry['muscleRanks'] as List)) {
-          final mRows = await txn.query(
-            'muscles',
-            where: 'name = ?',
-            whereArgs: [mr['muscle']],
-            limit: 1,
-          );
-          if (mRows.isEmpty) continue;
-          await txn.insert(
+          final muscleId = muscleIds[mr['muscle'] as String];
+          if (muscleId == null) continue;
+          batch.insert(
             'bodypart_muscle_rankings',
             {
               'bodypart_id': bpId,
-              'muscle_id': mRows.first['id'],
+              'muscle_id': muscleId,
               'rank': mr['rank'],
             },
             conflictAlgorithm: ConflictAlgorithm.replace,
@@ -493,16 +488,10 @@ class Seed {
       }
 
       for (var bpEntry in (volMap['bodyparts'] as List)) {
-        final bpRows = await txn.query(
-          'bodypart',
-          where: 'name = ?',
-          whereArgs: [bpEntry['bodypart']],
-          limit: 1,
-        );
-        if (bpRows.isEmpty) continue;
-        final bpId = bpRows.first['id'] as int;
+        final bpId = bodypartIds[bpEntry['bodypart'] as String];
+        if (bpId == null) continue;
 
-        await txn.insert(
+        batch.insert(
           'bodypart_volume_boundaries',
           {
             'bodypart_id': bpId,
@@ -516,16 +505,10 @@ class Seed {
       }
 
       for (var mEntry in (volMap['muscles'] as List)) {
-        final mRows = await txn.query(
-          'muscles',
-          where: 'name = ?',
-          whereArgs: [mEntry['muscle']],
-          limit: 1,
-        );
-        if (mRows.isEmpty) continue;
-        final mId = mRows.first['id'] as int;
+        final mId = muscleIds[mEntry['muscle'] as String];
+        if (mId == null) continue;
 
-        await txn.insert(
+        batch.insert(
           'muscle_volume_boundaries',
           {
             'muscle_id': mId,
@@ -537,6 +520,7 @@ class Seed {
           conflictAlgorithm: ConflictAlgorithm.replace,
         );
       }
+      await batch.commit(noResult: true);
     });
   }
 
@@ -2013,6 +1997,16 @@ class SeedBootstrap {
     Database db, {
     SeedProgress? onFoodProgress,
   }) async {
+    Future<void> runStep(String label, Future<void> Function() action) async {
+      final sw = Stopwatch()..start();
+      await action();
+      debugPrint('[seed] $label in ${sw.elapsedMilliseconds}ms');
+    }
+
+    void logSkip(String label) {
+      debugPrint('[seed] $label skipped');
+    }
+
     // ——— tiny local helpers ———
     Future<bool> hasTable(String name) async {
       final r = await db.rawQuery(
@@ -2035,13 +2029,17 @@ class SeedBootstrap {
     final needExDefs     = await tableEmpty('exercise_definitions');
 
     if (needEquipment || needBodypart || needMuscles || needExDefs) {
-      await Seed.seedLookupsAndExercises(db);
+      await runStep('lookups-and-exercises', () => Seed.seedLookupsAndExercises(db));
+    } else {
+      logSkip('lookups-and-exercises');
     }
 
     // ——— 2) Stretches (hangs off stretch_definitions) ———
     final needStretches = await tableEmpty('stretch_definitions');
     if (needStretches) {
-      await Seed.seedStretches(db);
+      await runStep('stretches', () => Seed.seedStretches(db));
+    } else {
+      logSkip('stretches');
     }
 
     // ——— 3) Analytics defaults (seed if ANY of these are empty) ———
@@ -2053,23 +2051,33 @@ class SeedBootstrap {
     final needMVB   = await tableEmpty('muscle_volume_boundaries');
 
     if (needMBP || needBPR || needMR || needBPMR || needBPVB || needMVB) {
-      await Seed.seedAnalyticsDefaults(db);
+      await runStep('analytics-defaults', () => Seed.seedAnalyticsDefaults(db));
+    } else {
+      logSkip('analytics-defaults');
     }
 
     // ——— 4) Nutrients catalog must exist before foods ———
     final needNutrients = await tableEmpty('nutrients');
     if (needNutrients) {
-      await Seed.seedExtendedNutrients(db);
+      await runStep('extended-nutrients', () => Seed.seedExtendedNutrients(db));
+    } else {
+      logSkip('extended-nutrients');
     }
 
     // ——— 5) Foods (optional; only if you ship the asset) ———
     final needFoods = await tableEmpty('foods');
     if (needFoods) {
       try {
-        await Seed.seedFoods(db, onProgress: onFoodProgress);
+        await runStep(
+          'starter-foods',
+          () => Seed.seedFoods(db, onProgress: onFoodProgress),
+        );
       } catch (_) {
         // If the foods asset isn't bundled on some builds, ignore gracefully.
+        debugPrint('[seed] starter-foods failed');
       }
+    } else {
+      logSkip('starter-foods');
     }
   }
 }
