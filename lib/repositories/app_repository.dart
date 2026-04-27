@@ -1,6 +1,7 @@
 // File: lib/repositories/app_repository.dart
 
 import '../db/database_helper.dart';
+import '../db/database_maintenance.dart';
 import '../models/models.dart';
 import 'food_catalog_repository.dart';
 
@@ -432,6 +433,24 @@ class AppRepository {
   Future<void> reseedLookupData() => _dbHelper.reseedLookupData();
 
   // Exporters
+  Future<DatabaseHealthSnapshot> getDatabaseHealthSnapshot() =>
+      _dbHelper.getDatabaseHealthSnapshot();
+
+  Future<DatabaseMaintenanceResult> runDatabaseIntegrityCheck() =>
+      _dbHelper.runDatabaseIntegrityCheck();
+
+  Future<DatabaseMaintenanceResult> optimizeDatabase() =>
+      _dbHelper.optimizeDatabase();
+
+  Future<DatabaseMaintenanceResult> checkpointWal() =>
+      _dbHelper.checkpointWal();
+
+  Future<DatabaseMaintenanceResult> vacuumDatabase() =>
+      _dbHelper.vacuumDatabase();
+
+  DatabaseImportPreview previewDatabaseImport(String jsonStr) =>
+      _dbHelper.previewDatabaseImport(jsonStr);
+
   Future<String> exportDatabase() => _dbHelper.exportDatabase();
   Future<String> exportEquipmentJson() => _dbHelper.exportEquipmentJson();
   Future<String> exportBodypartsJson() => _dbHelper.exportBodypartsJson();

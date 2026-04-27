@@ -27,6 +27,7 @@ import 'preset_set_auto_dao.dart';
 import 'preset_flow_methods_dao.dart';
 import 'personal_info_dao.dart';
 import 'nutrition_dao.dart';
+import 'database_maintenance.dart';
 
 import 'package:flutter/foundation.dart' show debugPrint;
 
@@ -36,6 +37,7 @@ import 'package:flutter/foundation.dart' show debugPrint;
 /// Singleton helper for managing the SQLite database.
 class DatabaseHelper {
    static const int _kDbVersion = 48;
+   static int get currentSchemaVersion => _kDbVersion;
    static const String _kOpenTriggerResetKey = 'open_trigger_reset_v1';
    static const String _kOpenIndexEnsureKey = 'open_index_ensure_v1';
    static bool? _fts4Available;
@@ -2225,6 +2227,127 @@ Future<void> reseedLookupData() async {
   await Seed.seedStretches(db);
 }
 
+Future<DatabaseHealthSnapshot> getDatabaseHealthSnapshot() async {
+  final db = await database;
+  final path = await _dbFilePath();
+  final dbFile = File(path);
+  final walFile = File('$path-wal');
+  final shmFile = File('$path-shm');
+
+  Future<int> fileLength(File file) async {
+    try {
+      return await file.exists() ? await file.length() : 0;
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  Future<int> intPragma(String pragma) async {
+    try {
+      return Sqflite.firstIntValue(await db.rawQuery('PRAGMA $pragma')) ?? 0;
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  String journalMode = 'unknown';
+  try {
+    final rows = await db.rawQuery('PRAGMA journal_mode');
+    if (rows.isNotEmpty && rows.first.values.isNotEmpty) {
+      journalMode = rows.first.values.first.toString();
+    }
+  } catch (_) {
+    journalMode = 'unknown';
+  }
+
+  final schemaVersion = await db.getVersion();
+  final pageCount = await intPragma('page_count');
+  final pageSize = await intPragma('page_size');
+  final tableCount = Sqflite.firstIntValue(await db.rawQuery(
+        "SELECT COUNT(*) FROM sqlite_master "
+        "WHERE type = 'table' AND name NOT LIKE 'sqlite_%'",
+      )) ??
+      0;
+  final indexCount = Sqflite.firstIntValue(await db.rawQuery(
+        "SELECT COUNT(*) FROM sqlite_master "
+        "WHERE type = 'index' AND name NOT LIKE 'sqlite_%'",
+      )) ??
+      0;
+  final triggerCount = Sqflite.firstIntValue(await db.rawQuery(
+        "SELECT COUNT(*) FROM sqlite_master WHERE type = 'trigger'",
+      )) ??
+      0;
+
+  return DatabaseHealthSnapshot(
+    path: path,
+    schemaVersion: schemaVersion,
+    targetSchemaVersion: _kDbVersion,
+    journalMode: journalMode,
+    databaseBytes: await fileLength(dbFile),
+    walBytes: await fileLength(walFile),
+    shmBytes: await fileLength(shmFile),
+    pageCount: pageCount,
+    pageSize: pageSize,
+    tableCount: tableCount,
+    indexCount: indexCount,
+    triggerCount: triggerCount,
+    foodCount: await _countRowsIfTableExists(db, 'foods'),
+    foodFtsCount: await _countRowsIfTableExists(db, 'food_search_fts'),
+    checkedAt: DateTime.now(),
+  );
+}
+
+Future<DatabaseMaintenanceResult> runDatabaseIntegrityCheck() async {
+  final db = await database;
+  final rows = await db.rawQuery('PRAGMA integrity_check');
+  final messages = rows
+      .map((row) => row.values.isEmpty ? '' : row.values.first.toString())
+      .where((message) => message.isNotEmpty)
+      .toList();
+  final ok = messages.length == 1 && messages.first.toLowerCase() == 'ok';
+
+  return DatabaseMaintenanceResult(
+    title: 'Integrity Check',
+    message: ok ? 'Database integrity check passed.' : messages.join('\n'),
+    rows: rows.map((row) => Map<String, Object?>.from(row)).toList(),
+  );
+}
+
+Future<DatabaseMaintenanceResult> optimizeDatabase() async {
+  final db = await database;
+  await db.rawQuery('PRAGMA optimize');
+  return const DatabaseMaintenanceResult(
+    title: 'Optimize Database',
+    message: 'SQLite optimize completed.',
+  );
+}
+
+Future<DatabaseMaintenanceResult> checkpointWal() async {
+  final db = await database;
+  final rows = await db.rawQuery('PRAGMA wal_checkpoint(TRUNCATE)');
+  return DatabaseMaintenanceResult(
+    title: 'WAL Checkpoint',
+    message: 'Write-ahead log checkpoint completed.',
+    rows: rows.map((row) => Map<String, Object?>.from(row)).toList(),
+  );
+}
+
+Future<DatabaseMaintenanceResult> vacuumDatabase() async {
+  final db = await database;
+  await db.execute('VACUUM');
+  return const DatabaseMaintenanceResult(
+    title: 'Vacuum Database',
+    message: 'Database vacuum completed.',
+  );
+}
+
+DatabaseImportPreview previewDatabaseImport(String jsonStr) {
+  return inspectDatabaseImport(
+    jsonStr,
+    currentSchemaVersion: _kDbVersion,
+  );
+}
+
 /// Export the entire database to a JSON string.
 Future<String> exportDatabase() async {
   final db = await database;
@@ -2270,46 +2393,53 @@ Future<String> exportDatabase() async {
       data[table] = await db.query(table);
     }
   }
-  return jsonEncode(data);
+  return jsonEncode(buildDatabaseExportEnvelope(
+    schemaVersion: _kDbVersion,
+    tables: data,
+  ));
 }
 
 /// Import the database from a JSON string.
-/// If [clearFirst] is true, *all user tables* are cleared before import.
+/// If [clearFirst] is true, app-managed import/export tables are cleared first.
 /// Also re-creates indexes and refreshes caches/FTS afterward.
 Future<void> importDatabase(String jsonStr, {bool clearFirst = true}) async {
   final db = await database;
-  final Map<String, dynamic> data = jsonDecode(jsonStr) as Map<String, dynamic>;
+  final preview = previewDatabaseImport(jsonStr);
+  if (!preview.canImport) {
+    throw FormatException(preview.message);
+  }
+  final data = decodeDatabaseExportTables(jsonStr);
 
   await db.transaction((txn) async {
     // Always guard pragma flips with try/finally in case of mid-import errors.
     await txn.execute('PRAGMA foreign_keys = OFF;');
     try {
       if (clearFirst) {
-        // Clear *every* user table (not only those present in the JSON).
-        final tables = await txn.rawQuery(
-          "SELECT name FROM sqlite_master "
-          "WHERE type='table' AND name NOT LIKE 'sqlite_%'"
-        );
-        for (final r in tables) {
-          final name = (r['name'] as String);
-          // Skip Android’s metadata table if present.
-          if (name == 'android_metadata') continue;
-          await txn.delete(name);
+        // Clear app-managed import/export tables only.
+        final tablesToClear = kDatabaseExportTableNames.reversed;
+        for (final table in tablesToClear) {
+          if (await _tableExists(txn, table)) {
+            await txn.delete(table);
+          }
         }
       }
 
       // Insert rows for tables present in the JSON.
-      // Insert rows for tables present in the JSON.
-for (final table in data.keys) {
-  if (!await _tableExists(txn, table)) continue; // skip unknown
-  final rows = List<Map<String, dynamic>>.from(data[table] as List);
-  for (final row in rows) {
-    final sane = await _sanitizeRowForTable(txn, table, row);
-    if (sane.isNotEmpty) {
-      await txn.insert(table, sane, conflictAlgorithm: ConflictAlgorithm.replace);
-    }
-  }
-}
+      for (final table in data.keys) {
+        if (!kDatabaseExportTableNames.contains(table)) continue;
+        if (!await _tableExists(txn, table)) continue; // skip unknown
+        final rows = List<Map<String, dynamic>>.from(data[table] as List);
+        for (final row in rows) {
+          final sane = await _sanitizeRowForTable(txn, table, row);
+          if (sane.isNotEmpty) {
+            await txn.insert(
+              table,
+              sane,
+              conflictAlgorithm: ConflictAlgorithm.replace,
+            );
+          }
+        }
+      }
     } finally {
       await txn.execute('PRAGMA foreign_keys = ON;');
     }
@@ -4149,6 +4279,15 @@ Future<bool> _tableExists(DatabaseExecutor db, String name) async {
     [name],
   );
   return rows.isNotEmpty;
+}
+
+Future<int> _countRowsIfTableExists(DatabaseExecutor db, String name) async {
+  if (!await _tableExists(db, name)) return 0;
+  try {
+    return Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM $name')) ?? 0;
+  } catch (_) {
+    return 0;
+  }
 }
 
 Future<void> _rebuildAllRecipeCaches(Database db) async {
