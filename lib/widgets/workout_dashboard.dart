@@ -41,6 +41,11 @@ class _WorkoutDashboardState extends State<WorkoutDashboard>
     final s = widget.scale;
     final sel = context.watch<SelectedProfile>();
     final colors = context.colors;
+    final profiles = sel.profiles.where((p) => p.id != null).toList();
+    final selectedProfileId = sel.currentProfile?.id;
+    final dropdownValue = profiles.any((p) => p.id == selectedProfileId)
+        ? selectedProfileId
+        : null;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -49,8 +54,8 @@ class _WorkoutDashboardState extends State<WorkoutDashboard>
         // 1️⃣ Profile selector
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 16 * s, vertical: 12 * s),
-          child: DropdownButtonFormField<String>(
-            value: sel.currentProfile?.name,
+          child: DropdownButtonFormField<int>(
+            value: dropdownValue,
             decoration: InputDecoration(
               contentPadding:
                   EdgeInsets.symmetric(horizontal: 12 * s, vertical: 8 * s),
@@ -58,16 +63,16 @@ class _WorkoutDashboardState extends State<WorkoutDashboard>
                 borderRadius: BorderRadius.circular(8 * s),
               ),
             ),
-            items: sel.profiles
-                .map((p) => DropdownMenuItem(
-                      value: p.name,
+            items: profiles
+                .map((p) => DropdownMenuItem<int>(
+                      value: p.id!,
                       child: Text(p.name, style: TextStyle(fontSize: 14 * s)),
                     ))
                 .toList(),
-            onChanged: (newName) {
-              if (newName == null) return;
+            onChanged: (newProfileId) {
+              if (newProfileId == null) return;
               final newProfile =
-                  sel.profiles.firstWhere((p) => p.name == newName);
+                  profiles.firstWhere((p) => p.id == newProfileId);
               sel.selectProfile(newProfile);
               setState(() {});
             },

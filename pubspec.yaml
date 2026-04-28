@@ -41,6 +41,7 @@ dependencies:
   path: ^1.9.1
   intl: ^0.18.0
   fl_chart: ^1.0.0
+  file_picker: ^10.1.2
   provider: ^6.1.5
   flutter_flow_chart: ^3.2.3
   shared_preferences: ^2.5.3

@@ -31,16 +31,13 @@ import 'database_maintenance.dart';
 
 import 'package:flutter/foundation.dart' show debugPrint;
 
-
-
-
 /// Singleton helper for managing the SQLite database.
 class DatabaseHelper {
-   static const int _kDbVersion = 48;
-   static int get currentSchemaVersion => _kDbVersion;
-   static const String _kOpenTriggerResetKey = 'open_trigger_reset_v1';
-   static const String _kOpenIndexEnsureKey = 'open_index_ensure_v1';
-   static bool? _fts4Available;
+  static const int _kDbVersion = 48;
+  static int get currentSchemaVersion => _kDbVersion;
+  static const String _kOpenTriggerResetKey = 'open_trigger_reset_v1';
+  static const String _kOpenIndexEnsureKey = 'open_index_ensure_v1';
+  static bool? _fts4Available;
   static final DatabaseHelper _instance = DatabaseHelper._internal();
   factory DatabaseHelper() => _instance;
   DatabaseHelper._internal();
@@ -49,19 +46,19 @@ class DatabaseHelper {
   static Future<Database>? _dbFuture;
   Future<Database> get database {
     if (_db != null) return Future.value(_db!);
-    return _dbFuture ??= _initDatabase().then((db) {
-      _db = db;
-      return db;
-    }).catchError((error) {
-      _dbFuture = null;
-      throw error;
-    });
+    return _dbFuture ??= _initDatabase()
+        .then((db) {
+          _db = db;
+          return db;
+        })
+        .catchError((error) {
+          _dbFuture = null;
+          throw error;
+        });
   }
 
   Future<Database> _initDatabase() async {
     final sw = Stopwatch()..start();
-
-
 
     final path = await _dbFilePath();
     final dbFile = File(path);
@@ -72,90 +69,85 @@ class DatabaseHelper {
       '(size=${existingBytes}B)',
     );
 
-
-
     final db = await openDatabase(
       path,
       version: _kDbVersion,
       onConfigure: (db) async {
-    // OK with execute (doesn't return rows)
-    await db.execute('PRAGMA foreign_keys = ON');
+        // OK with execute (doesn't return rows)
+        await db.execute('PRAGMA foreign_keys = ON');
 
-    // Use rawQuery for PRAGMA that return a value
-    try {
-      await db.rawQuery('PRAGMA journal_mode = WAL');
-      // Optional: log result -> [{'journal_mode': 'wal'}] on success
-      // debugPrint('WAL result: $res');
-    } catch (e) {
-      // Some devices/contexts may reject this; safe to continue without WAL
-      // debugPrint('Could not enable WAL: $e');
-    }
+        // Use rawQuery for PRAGMA that return a value
+        try {
+          await db.rawQuery('PRAGMA journal_mode = WAL');
+          // Optional: log result -> [{'journal_mode': 'wal'}] on success
+          // debugPrint('WAL result: $res');
+        } catch (e) {
+          // Some devices/contexts may reject this; safe to continue without WAL
+          // debugPrint('Could not enable WAL: $e');
+        }
 
-    // If you set other PRAGMAs that return data, also prefer rawQuery:
-    // await db.rawQuery('PRAGMA synchronous = NORMAL');
-  },
+        // If you set other PRAGMAs that return data, also prefer rawQuery:
+        // await db.rawQuery('PRAGMA synchronous = NORMAL');
+      },
 
       onCreate: _onCreate,
-  onUpgrade: (db, oldVersion, newVersion) async {
-  final sw = Stopwatch()..start();
-  debugPrint('[db] onUpgrade $oldVersion -> $newVersion (begin)');
+      onUpgrade: (db, oldVersion, newVersion) async {
+        final sw = Stopwatch()..start();
+        debugPrint('[db] onUpgrade $oldVersion -> $newVersion (begin)');
 
-  await Schema.onUpgrade(db, oldVersion, newVersion);
-  await _ensureAppMetaTable(db);
-  await _ensureExerciseDefNewCols(db);     // from previous step
-  await _ensureExerciseJoinTables(db);     // ← add this line
-  await _ensureStatsTables(db);   // ← add here
-  await _ensureStretchLookups(db);
-  await _ensureAutoPresetFlowTables(db); // ← add this line
-  await _ensureCardioTables(db);          // ← add this
-  await _ensureFormulaSettings(db);           // ← add
-  await _ensureExerciseBodypartPercent(db);   // ← add
-  await _ensureExerciseMediaTable(db);
-   await _ensureNutritionGoalsColumns(db);
-   await ensureSchemaRepairs(db);
-     await _ensureFavoriteFoodsShape(db);
+        await Schema.onUpgrade(db, oldVersion, newVersion);
+        await _ensureAppMetaTable(db);
+        await _ensureExerciseDefNewCols(db); // from previous step
+        await _ensureExerciseJoinTables(db); // ← add this line
+        await _ensureStatsTables(db); // ← add here
+        await _ensureStretchLookups(db);
+        await _ensureAutoPresetFlowTables(db); // ← add this line
+        await _ensureCardioTables(db); // ← add this
+        await _ensureFormulaSettings(db); // ← add
+        await _ensureExerciseBodypartPercent(db); // ← add
+        await _ensureExerciseMediaTable(db);
+        await _ensureNutritionGoalsColumns(db);
+        await ensureSchemaRepairs(db);
+        await _ensureFavoriteFoodsShape(db);
 
+        // triggers, seeding, backfills, FTS, indexes…
+        await _resetDbTriggers(db, force: true);
+        await SeedBootstrap.seedMissingBlocks(
+          db,
+          onFoodProgress: (c) => _logProgress('foods', c),
+        );
+        await _backfillNormalizedFoodKeys(db);
+        await _backfillEnergyKcalFromMacros(db);
+        if (oldVersion < 22 && await _tableExists(db, 'recipes')) {
+          await _rebuildAllRecipeCaches(db);
+        }
+        await _resetDbTriggers(db);
+        await _rebuildFoodFtsIfExists(db);
+        await _ensureIndexes(db);
 
+        debugPrint(
+          '[db] onUpgrade $oldVersion -> $newVersion (done in ${sw.elapsedMilliseconds}ms)',
+        );
+      },
 
-  // triggers, seeding, backfills, FTS, indexes…
-  await _resetDbTriggers(db, force: true);
-  await SeedBootstrap.seedMissingBlocks(
-    db,
-    onFoodProgress: (c) => _logProgress('foods', c),
-  );
-  await _backfillNormalizedFoodKeys(db);
-  await _backfillEnergyKcalFromMacros(db);
-  if (oldVersion < 22 && await _tableExists(db, 'recipes')) {
-    await _rebuildAllRecipeCaches(db);
-  }
-  await _resetDbTriggers(db);
-  await _rebuildFoodFtsIfExists(db);
-  await _ensureIndexes(db);
-
-  debugPrint('[db] onUpgrade $oldVersion -> $newVersion (done in ${sw.elapsedMilliseconds}ms)');
-},
-
-
-
-
-   
-   // NEW:
-  onOpen: (db) async {
-  final sw = Stopwatch()..start();
-  debugPrint('[db] onOpen (begin)');
-  await _ensureAppMetaTable(db);
-  await _ensureExerciseMediaTable(db);
-  await _resetDbTriggers(db);   // <—
-  await _maybeCompactLegacyFoodCatalog(db);
-  final didSeed = await _seedFoodsIfEmpty(db);  // now returns bool
-  await _ensureIndexes(db);                     // still safe if already created
-  if (!didSeed) {
-    await _ensureFoodFtsReady(db);
-  }
-  debugPrint('[db] onOpen (done in ${sw.elapsedMilliseconds}ms) - seeded: $didSeed');
-},
-
-);
+      // NEW:
+      onOpen: (db) async {
+        final sw = Stopwatch()..start();
+        debugPrint('[db] onOpen (begin)');
+        await _ensureAppMetaTable(db);
+        await _ensureExerciseMediaTable(db);
+        await _resetDbTriggers(db); // <—
+        await _maybeCompactLegacyFoodCatalog(db);
+        final didSeed = await _seedFoodsIfEmpty(db); // now returns bool
+        await _ensureIndexes(db); // still safe if already created
+        if (!didSeed) {
+          await _ensureFoodFtsReady(db);
+        }
+        debugPrint(
+          '[db] onOpen (done in ${sw.elapsedMilliseconds}ms) - seeded: $didSeed',
+        );
+      },
+    );
     debugPrint(
       '[db] openDatabase ready in ${sw.elapsedMilliseconds}ms '
       '(existingDb: $existedBeforeOpen)',
@@ -165,96 +157,120 @@ class DatabaseHelper {
 
   /// Builds initial schema and seeds all data.
   Future<void> _onCreate(Database db, int version) async {
-  final sw = Stopwatch()..start();
-  debugPrint('[db] onCreate -> v$version');
-  final stepSw = Stopwatch();
+    final sw = Stopwatch()..start();
+    debugPrint('[db] onCreate -> v$version');
+    final stepSw = Stopwatch();
 
-  // 1) Create schema
-  stepSw
-    ..reset()
-    ..start();
-  await Schema.createTables(db);
-  _logDbInitStep('onCreate', 'create-schema', stepSw.elapsedMilliseconds);
+    // 1) Create schema
+    stepSw
+      ..reset()
+      ..start();
+    await Schema.createTables(db);
+    _logDbInitStep('onCreate', 'create-schema', stepSw.elapsedMilliseconds);
 
-  stepSw
-    ..reset()
-    ..start();
-  await _ensureAppMetaTable(db);
-  await _ensureExerciseMediaTable(db);
-  _logDbInitStep('onCreate', 'ensure-meta-media', stepSw.elapsedMilliseconds);
+    stepSw
+      ..reset()
+      ..start();
+    await _ensureAppMetaTable(db);
+    await _ensureExerciseMediaTable(db);
+    _logDbInitStep('onCreate', 'ensure-meta-media', stepSw.elapsedMilliseconds);
 
-  // 2) Triggers that are safe to have before foods seeding
-  stepSw
-    ..reset()
-    ..start();
-  await _resetDbTriggers(db);
-  _logDbInitStep('onCreate', 'prepare-triggers', stepSw.elapsedMilliseconds);
+    // 2) Triggers that are safe to have before foods seeding
+    stepSw
+      ..reset()
+      ..start();
+    await _resetDbTriggers(db);
+    _logDbInitStep('onCreate', 'prepare-triggers', stepSw.elapsedMilliseconds);
 
-  // 3) Seed only the missing blocks (lookups, stretches, analytics, nutrients, foods)
-  stepSw
-    ..reset()
-    ..start();
-  await SeedBootstrap.seedMissingBlocks(
-    db,
-    onFoodProgress: (c) => _logProgress('foods', c),
-  );
-  _logDbInitStep('onCreate', 'seed-missing-blocks', stepSw.elapsedMilliseconds);
-
-  // 4) Normalizations & caches (safe no-ops when nothing was seeded)
-  stepSw
-    ..reset()
-    ..start();
-  await _backfillNormalizedFoodKeys(db);
-  _logDbInitStep('onCreate', 'backfill-food-keys', stepSw.elapsedMilliseconds);
-  stepSw
-    ..reset()
-    ..start();
-  await _backfillEnergyKcalFromMacros(db);
-  _logDbInitStep('onCreate', 'backfill-energy', stepSw.elapsedMilliseconds);
-
-  await _rebuildAllRecipeCaches(db);   // fresh installs won’t have cache yet
-  await _rebuildFoodFtsIfExists(db);   // if FTS exists, backfill it once
-  await _ensureIndexes(db);
-
-  debugPrint('[db] onCreate complete in ${sw.elapsedMilliseconds}ms');
-}
-
-
-
-Future<void> _ensureExerciseDefNewCols(Database db) async {
-  // Flags
-  if (!await _tableHasColumn(db, 'exercise_definitions', 'use_manual_bodyparts')) {
-    await db.execute(
-      'ALTER TABLE exercise_definitions ADD COLUMN use_manual_bodyparts INTEGER NOT NULL DEFAULT 0'
+    // 3) Seed only the missing blocks (lookups, stretches, analytics, nutrients, foods)
+    stepSw
+      ..reset()
+      ..start();
+    await SeedBootstrap.seedMissingBlocks(
+      db,
+      onFoodProgress: (c) => _logProgress('foods', c),
     );
-  }
-  if (!await _tableHasColumn(db, 'exercise_definitions', 'use_manual_muscles')) {
-    await db.execute(
-      'ALTER TABLE exercise_definitions ADD COLUMN use_manual_muscles INTEGER NOT NULL DEFAULT 0'
+    _logDbInitStep(
+      'onCreate',
+      'seed-missing-blocks',
+      stepSw.elapsedMilliseconds,
     );
-  }
-  if (!await _tableHasColumn(db, 'exercise_definitions', 'multiply_by_rating')) {
-    await db.execute(
-      'ALTER TABLE exercise_definitions ADD COLUMN multiply_by_rating INTEGER NOT NULL DEFAULT 0'
+
+    // 4) Normalizations & caches (safe no-ops when nothing was seeded)
+    stepSw
+      ..reset()
+      ..start();
+    await _backfillNormalizedFoodKeys(db);
+    _logDbInitStep(
+      'onCreate',
+      'backfill-food-keys',
+      stepSw.elapsedMilliseconds,
     );
+    stepSw
+      ..reset()
+      ..start();
+    await _backfillEnergyKcalFromMacros(db);
+    _logDbInitStep('onCreate', 'backfill-energy', stepSw.elapsedMilliseconds);
+
+    await _rebuildAllRecipeCaches(db); // fresh installs won’t have cache yet
+    await _rebuildFoodFtsIfExists(db); // if FTS exists, backfill it once
+    await _ensureIndexes(db);
+
+    debugPrint('[db] onCreate complete in ${sw.elapsedMilliseconds}ms');
   }
 
-  // Optional text fields used by your seeder
-  if (!await _tableHasColumn(db, 'exercise_definitions', 'setup_notes')) {
-    await db.execute('ALTER TABLE exercise_definitions ADD COLUMN setup_notes TEXT');
-  }
-  if (!await _tableHasColumn(db, 'exercise_definitions', 'execution_notes')) {
-    await db.execute('ALTER TABLE exercise_definitions ADD COLUMN execution_notes TEXT');
-  }
-  if (!await _tableHasColumn(db, 'exercise_definitions', 'tips_notes')) {
-    await db.execute('ALTER TABLE exercise_definitions ADD COLUMN tips_notes TEXT');
-  }
-}
+  Future<void> _ensureExerciseDefNewCols(Database db) async {
+    // Flags
+    if (!await _tableHasColumn(
+      db,
+      'exercise_definitions',
+      'use_manual_bodyparts',
+    )) {
+      await db.execute(
+        'ALTER TABLE exercise_definitions ADD COLUMN use_manual_bodyparts INTEGER NOT NULL DEFAULT 0',
+      );
+    }
+    if (!await _tableHasColumn(
+      db,
+      'exercise_definitions',
+      'use_manual_muscles',
+    )) {
+      await db.execute(
+        'ALTER TABLE exercise_definitions ADD COLUMN use_manual_muscles INTEGER NOT NULL DEFAULT 0',
+      );
+    }
+    if (!await _tableHasColumn(
+      db,
+      'exercise_definitions',
+      'multiply_by_rating',
+    )) {
+      await db.execute(
+        'ALTER TABLE exercise_definitions ADD COLUMN multiply_by_rating INTEGER NOT NULL DEFAULT 0',
+      );
+    }
 
-Future<void> _ensureExerciseJoinTables(Database db) async {
-  // exercise_equipment (M:N)
-  if (!await _tableExists(db, 'exercise_equipment')) {
-    await db.execute('''
+    // Optional text fields used by your seeder
+    if (!await _tableHasColumn(db, 'exercise_definitions', 'setup_notes')) {
+      await db.execute(
+        'ALTER TABLE exercise_definitions ADD COLUMN setup_notes TEXT',
+      );
+    }
+    if (!await _tableHasColumn(db, 'exercise_definitions', 'execution_notes')) {
+      await db.execute(
+        'ALTER TABLE exercise_definitions ADD COLUMN execution_notes TEXT',
+      );
+    }
+    if (!await _tableHasColumn(db, 'exercise_definitions', 'tips_notes')) {
+      await db.execute(
+        'ALTER TABLE exercise_definitions ADD COLUMN tips_notes TEXT',
+      );
+    }
+  }
+
+  Future<void> _ensureExerciseJoinTables(Database db) async {
+    // exercise_equipment (M:N)
+    if (!await _tableExists(db, 'exercise_equipment')) {
+      await db.execute('''
       CREATE TABLE exercise_equipment(
         exercise_id INTEGER NOT NULL,
         equipment_id INTEGER NOT NULL,
@@ -263,13 +279,17 @@ Future<void> _ensureExerciseJoinTables(Database db) async {
         FOREIGN KEY(equipment_id) REFERENCES equipment(id) ON DELETE RESTRICT
       );
     ''');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_exeq_exercise  ON exercise_equipment(exercise_id)');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_exeq_equipment ON exercise_equipment(equipment_id)');
-  }
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_exeq_exercise  ON exercise_equipment(exercise_id)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_exeq_equipment ON exercise_equipment(equipment_id)',
+      );
+    }
 
-  // exercise_bodypart (M:N)
-  if (!await _tableExists(db, 'exercise_bodypart')) {
-    await db.execute('''
+    // exercise_bodypart (M:N)
+    if (!await _tableExists(db, 'exercise_bodypart')) {
+      await db.execute('''
       CREATE TABLE exercise_bodypart(
         exercise_id INTEGER NOT NULL,
         bodypart_id INTEGER NOT NULL,
@@ -278,13 +298,17 @@ Future<void> _ensureExerciseJoinTables(Database db) async {
         FOREIGN KEY(bodypart_id) REFERENCES bodypart(id)             ON DELETE RESTRICT
       );
     ''');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_exbp_exercise ON exercise_bodypart(exercise_id)');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_exbp_bodypart ON exercise_bodypart(bodypart_id)');
-  }
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_exbp_exercise ON exercise_bodypart(exercise_id)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_exbp_bodypart ON exercise_bodypart(bodypart_id)',
+      );
+    }
 
-  // exercise_muscle (M:N + rank)
-  if (!await _tableExists(db, 'exercise_muscle')) {
-    await db.execute('''
+    // exercise_muscle (M:N + rank)
+    if (!await _tableExists(db, 'exercise_muscle')) {
+      await db.execute('''
       CREATE TABLE exercise_muscle(
         exercise_id INTEGER NOT NULL,
         muscle_id   INTEGER NOT NULL,
@@ -294,16 +318,19 @@ Future<void> _ensureExerciseJoinTables(Database db) async {
         FOREIGN KEY(muscle_id)   REFERENCES muscles(id)              ON DELETE RESTRICT
       );
     ''');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_exmu_exercise ON exercise_muscle(exercise_id)');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_exmu_muscle   ON exercise_muscle(muscle_id)');
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_exmu_exercise ON exercise_muscle(exercise_id)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_exmu_muscle   ON exercise_muscle(muscle_id)',
+      );
+    }
   }
-}
 
-
-Future<void> _ensureStatsTables(Database db) async {
-  // exercise_rep_max
-  if (!await _tableExists(db, 'exercise_rep_max')) {
-    await db.execute('''
+  Future<void> _ensureStatsTables(Database db) async {
+    // exercise_rep_max
+    if (!await _tableExists(db, 'exercise_rep_max')) {
+      await db.execute('''
       CREATE TABLE exercise_rep_max(
         def_id     INTEGER NOT NULL,
         rep_count  INTEGER NOT NULL,
@@ -315,14 +342,14 @@ Future<void> _ensureStatsTables(Database db) async {
         FOREIGN KEY(def_id) REFERENCES exercise_definitions(id) ON DELETE CASCADE
       );
     ''');
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_rm_def_time ON exercise_rep_max(def_id, timeframe)'
-    );
-  }
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_rm_def_time ON exercise_rep_max(def_id, timeframe)',
+      );
+    }
 
-  // exercise_volume_max
-  if (!await _tableExists(db, 'exercise_volume_max')) {
-    await db.execute('''
+    // exercise_volume_max
+    if (!await _tableExists(db, 'exercise_volume_max')) {
+      await db.execute('''
       CREATE TABLE exercise_volume_max(
         def_id    INTEGER NOT NULL,
         timeframe TEXT    NOT NULL,
@@ -331,51 +358,52 @@ Future<void> _ensureStatsTables(Database db) async {
         FOREIGN KEY(def_id) REFERENCES exercise_definitions(id) ON DELETE CASCADE
       );
     ''');
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_vm_def_time ON exercise_volume_max(def_id, timeframe)'
-    );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_vm_def_time ON exercise_volume_max(def_id, timeframe)',
+      );
+    }
   }
-}
 
-Future<void> _ensureStretchLookups(Database db) async {
-  // Base tables used by lookups and presets
-  if (!await _tableExists(db, 'stretch_definitions')) {
-    await db.execute('''
+  Future<void> _ensureStretchLookups(Database db) async {
+    // Base tables used by lookups and presets
+    if (!await _tableExists(db, 'stretch_definitions')) {
+      await db.execute('''
       CREATE TABLE stretch_definitions(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL UNIQUE,
         description TEXT
       );
     ''');
-  }
+    }
 
-  if (!await _tableExists(db, 'stretch_bodypart')) {
-    await db.execute('''
+    if (!await _tableExists(db, 'stretch_bodypart')) {
+      await db.execute('''
       CREATE TABLE stretch_bodypart(
         stretch_id  INTEGER NOT NULL,
         bodypart_id INTEGER NOT NULL,
         PRIMARY KEY(stretch_id, bodypart_id)
       );
     ''');
-    // Optional but nice-to-have
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_stretch_bp_bp ON stretch_bodypart(bodypart_id)'
-    );
+      // Optional but nice-to-have
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_stretch_bp_bp ON stretch_bodypart(bodypart_id)',
+      );
+    }
+
+    // Seed if newly created / empty
+    final n =
+        Sqflite.firstIntValue(
+          await db.rawQuery('SELECT COUNT(*) FROM stretch_definitions'),
+        ) ??
+        0;
+    if (n == 0) {
+      await Seed.seedStretches(db);
+    }
   }
 
-  // Seed if newly created / empty
-  final n = Sqflite.firstIntValue(
-    await db.rawQuery('SELECT COUNT(*) FROM stretch_definitions')
-  ) ?? 0;
-  if (n == 0) {
-    await Seed.seedStretches(db);
-  }
-}
-
-
-Future<void> _ensureAutoPresetFlowTables(Database db) async {
-  // 1) preset_flow_methods (per-preset custom methods)
-  await db.execute('''
+  Future<void> _ensureAutoPresetFlowTables(Database db) async {
+    // 1) preset_flow_methods (per-preset custom methods)
+    await db.execute('''
     CREATE TABLE IF NOT EXISTS preset_flow_methods(
       id         INTEGER PRIMARY KEY AUTOINCREMENT,
       preset_id  INTEGER NOT NULL,
@@ -386,8 +414,8 @@ Future<void> _ensureAutoPresetFlowTables(Database db) async {
     );
   ''');
 
-  // 2) flow_defaults (app/profile default flow JSON)
-  await db.execute('''
+    // 2) flow_defaults (app/profile default flow JSON)
+    await db.execute('''
     CREATE TABLE IF NOT EXISTS flow_defaults(
       scope      TEXT    NOT NULL,   -- 'app' | 'profile'
       profile_id INTEGER,
@@ -396,8 +424,8 @@ Future<void> _ensureAutoPresetFlowTables(Database db) async {
     );
   ''');
 
-  // 3) flow_default_methods (methods attached to defaults)
-  await db.execute('''
+    // 3) flow_default_methods (methods attached to defaults)
+    await db.execute('''
     CREATE TABLE IF NOT EXISTS flow_default_methods(
       scope      TEXT    NOT NULL,   -- 'app' | 'profile'
       profile_id INTEGER,
@@ -408,8 +436,8 @@ Future<void> _ensureAutoPresetFlowTables(Database db) async {
     );
   ''');
 
-  // 4) preset_auto_settings (global preset auto/flow settings)
-  await db.execute('''
+    // 4) preset_auto_settings (global preset auto/flow settings)
+    await db.execute('''
     CREATE TABLE IF NOT EXISTS preset_auto_settings(
       preset_id           INTEGER PRIMARY KEY,
       is_automatic        INTEGER NOT NULL DEFAULT 0,
@@ -425,8 +453,8 @@ Future<void> _ensureAutoPresetFlowTables(Database db) async {
     );
   ''');
 
-  // 5) preset_exercise_auto (per-exercise overrides)
-  await db.execute('''
+    // 5) preset_exercise_auto (per-exercise overrides)
+    await db.execute('''
     CREATE TABLE IF NOT EXISTS preset_exercise_auto(
       preset_exercise_id INTEGER PRIMARY KEY,
       increment_amount   REAL,
@@ -435,23 +463,23 @@ Future<void> _ensureAutoPresetFlowTables(Database db) async {
     );
   ''');
 
-  // 6) preset_set_auto (per-set overrides)
-  await db.execute('''
+    // 6) preset_set_auto (per-set overrides)
+    await db.execute('''
     CREATE TABLE IF NOT EXISTS preset_set_auto(
       preset_set_id    INTEGER PRIMARY KEY,
       increment_amount REAL
     );
   ''');
 
-  // Small, helpful indexes
-  await db.execute(
-    'CREATE INDEX IF NOT EXISTS idx_pfm_preset ON preset_flow_methods(preset_id)'
-  );
-}
+    // Small, helpful indexes
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_pfm_preset ON preset_flow_methods(preset_id)',
+    );
+  }
 
-Future<void> _ensureCardioTables(Database db) async {
-  // One row per exercise entry that represents a cardio block.
-  await db.execute('''
+  Future<void> _ensureCardioTables(Database db) async {
+    // One row per exercise entry that represents a cardio block.
+    await db.execute('''
     CREATE TABLE IF NOT EXISTS cardio_details(
       exercise_id      INTEGER PRIMARY KEY,   -- ties to your exercise row
       cardio_name      TEXT    NOT NULL,      -- e.g., "Running"
@@ -462,38 +490,42 @@ Future<void> _ensureCardioTables(Database db) async {
     );
   ''');
 
-  // Helpful index if you ever join/filter by name
-  await db.execute('CREATE INDEX IF NOT EXISTS idx_cardio_name ON cardio_details(cardio_name)');
-}
+    // Helpful index if you ever join/filter by name
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_cardio_name ON cardio_details(cardio_name)',
+    );
+  }
 
-Future<void> _ensureFormulaSettings(Database db) async {
-  await db.execute('''
+  Future<void> _ensureFormulaSettings(Database db) async {
+    await db.execute('''
     CREATE TABLE IF NOT EXISTS formula_settings (
       key   TEXT PRIMARY KEY,
       value TEXT NOT NULL
     );
   ''');
 
-  // Optional: seed sane defaults only if missing
-  final defaults = <String, String>{
-    // tweak to whatever keys your app expects:
-    'one_rm_formula': 'epley',         // e.g., 'epley' | 'brzycki' | 'lombardi'
-    'rounding_mode': 'nearest',        // 'floor' | 'ceil' | 'nearest'
-    'default_timeframe': 'all',        // 'all' | '90d' | etc.
-  };
+    // Optional: seed sane defaults only if missing
+    final defaults = <String, String>{
+      // tweak to whatever keys your app expects:
+      'one_rm_formula': 'epley', // e.g., 'epley' | 'brzycki' | 'lombardi'
+      'rounding_mode': 'nearest', // 'floor' | 'ceil' | 'nearest'
+      'default_timeframe': 'all', // 'all' | '90d' | etc.
+    };
 
-  for (final e in defaults.entries) {
+    for (final e in defaults.entries) {
+      await db.execute(
+        'INSERT OR IGNORE INTO formula_settings(key, value) VALUES(?, ?)',
+        [e.key, e.value],
+      );
+    }
+
     await db.execute(
-      'INSERT OR IGNORE INTO formula_settings(key, value) VALUES(?, ?)',
-      [e.key, e.value],
+      'CREATE INDEX IF NOT EXISTS idx_formula_key ON formula_settings(key)',
     );
   }
 
-  await db.execute('CREATE INDEX IF NOT EXISTS idx_formula_key ON formula_settings(key)');
-}
-
-Future<void> _ensureExerciseBodypartPercent(Database db) async {
-  await db.execute('''
+  Future<void> _ensureExerciseBodypartPercent(Database db) async {
+    await db.execute('''
     CREATE TABLE IF NOT EXISTS exercise_bodypart_percent (
       exercise_def_id INTEGER NOT NULL,
       bodypart_id     INTEGER NOT NULL,
@@ -505,11 +537,13 @@ Future<void> _ensureExerciseBodypartPercent(Database db) async {
     );
   ''');
 
-  await db.execute('CREATE INDEX IF NOT EXISTS idx_ebp_def ON exercise_bodypart_percent(exercise_def_id)');
-}
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_ebp_def ON exercise_bodypart_percent(exercise_def_id)',
+    );
+  }
 
-Future<void> _ensureExerciseMediaTable(Database db) async {
-  await db.execute('''
+  Future<void> _ensureExerciseMediaTable(Database db) async {
+    await db.execute('''
     CREATE TABLE IF NOT EXISTS exercise_media (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       exercise_def_id INTEGER NOT NULL,
@@ -525,71 +559,83 @@ Future<void> _ensureExerciseMediaTable(Database db) async {
       FOREIGN KEY(exercise_def_id) REFERENCES exercise_definitions(id) ON DELETE CASCADE
     );
   ''');
-  await db.execute(
-    'CREATE INDEX IF NOT EXISTS idx_exercise_media_def_sort ON exercise_media(exercise_def_id, sort_order, id)'
-  );
-}
-
-Future<void> _addColumnIfMissing(
-  Database db, {
-  required String table,
-  required String column,
-  required String typeAndDefaultSql, // e.g. 'REAL NOT NULL DEFAULT 0'
-}) async {
-  final rows = await db.rawQuery('PRAGMA table_info($table)');
-  final hasCol = rows.any((r) => (r['name'] as String).toLowerCase() == column.toLowerCase());
-  if (!hasCol) {
-    await db.execute('ALTER TABLE $table ADD COLUMN $column $typeAndDefaultSql;');
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_exercise_media_def_sort ON exercise_media(exercise_def_id, sort_order, id)',
+    );
   }
-}
 
-Future<void> _ensureNutritionGoalsColumns(Database db) async {
-  // If you prefer nullable columns, drop the "NOT NULL DEFAULT 0" bits.
-  await _addColumnIfMissing(
-    db,
-    table: 'nutrition_goals',
-    column: 'protein_g',
-    typeAndDefaultSql: 'REAL NOT NULL DEFAULT 0',
-  );
-  await _addColumnIfMissing(
-    db,
-    table: 'nutrition_goals',
-    column: 'fat_g',
-    typeAndDefaultSql: 'REAL NOT NULL DEFAULT 0',
-  );
-  await _addColumnIfMissing(
-    db,
-    table: 'nutrition_goals',
-    column: 'carbs_g',
-    typeAndDefaultSql: 'REAL NOT NULL DEFAULT 0',
-  );
-
-  // Optional: helpful index when you lookup by profile & date
-  await db.execute('''
-    CREATE INDEX IF NOT EXISTS idx_nutrition_goals_profile_date
-    ON nutrition_goals(profile_id, start_date);
-  ''');
-}
-
-Future<void> ensureSchemaRepairs(Database db) async {
-  Future<void> addCol(String table, String name, String typeAndDefault) async {
-    final cols = await db.rawQuery("PRAGMA table_info('$table')");
-    final exists = cols.any((c) => (c['name'] as String).toLowerCase() == name.toLowerCase());
-    if (!exists) {
-      await db.execute("ALTER TABLE $table ADD COLUMN $name $typeAndDefault;");
+  Future<void> _addColumnIfMissing(
+    Database db, {
+    required String table,
+    required String column,
+    required String typeAndDefaultSql, // e.g. 'REAL NOT NULL DEFAULT 0'
+  }) async {
+    final rows = await db.rawQuery('PRAGMA table_info($table)');
+    final hasCol = rows.any(
+      (r) => (r['name'] as String).toLowerCase() == column.toLowerCase(),
+    );
+    if (!hasCol) {
+      await db.execute(
+        'ALTER TABLE $table ADD COLUMN $column $typeAndDefaultSql;',
+      );
     }
   }
 
-  // —— ensure critical tables exist (cheap if already present) ——
-  Future<void> ensureTable(String sqlCreate) async => db.execute(sqlCreate);
+  Future<void> _ensureNutritionGoalsColumns(Database db) async {
+    // If you prefer nullable columns, drop the "NOT NULL DEFAULT 0" bits.
+    await _addColumnIfMissing(
+      db,
+      table: 'nutrition_goals',
+      column: 'protein_g',
+      typeAndDefaultSql: 'REAL NOT NULL DEFAULT 0',
+    );
+    await _addColumnIfMissing(
+      db,
+      table: 'nutrition_goals',
+      column: 'fat_g',
+      typeAndDefaultSql: 'REAL NOT NULL DEFAULT 0',
+    );
+    await _addColumnIfMissing(
+      db,
+      table: 'nutrition_goals',
+      column: 'carbs_g',
+      typeAndDefaultSql: 'REAL NOT NULL DEFAULT 0',
+    );
 
-  // Training / stretch / cardio / presets / flows
-  await ensureTable("""
+    // Optional: helpful index when you lookup by profile & date
+    await db.execute('''
+    CREATE INDEX IF NOT EXISTS idx_nutrition_goals_profile_date
+    ON nutrition_goals(profile_id, start_date);
+  ''');
+  }
+
+  Future<void> ensureSchemaRepairs(Database db) async {
+    Future<void> addCol(
+      String table,
+      String name,
+      String typeAndDefault,
+    ) async {
+      final cols = await db.rawQuery("PRAGMA table_info('$table')");
+      final exists = cols.any(
+        (c) => (c['name'] as String).toLowerCase() == name.toLowerCase(),
+      );
+      if (!exists) {
+        await db.execute(
+          "ALTER TABLE $table ADD COLUMN $name $typeAndDefault;",
+        );
+      }
+    }
+
+    // —— ensure critical tables exist (cheap if already present) ——
+    Future<void> ensureTable(String sqlCreate) async => db.execute(sqlCreate);
+
+    // Training / stretch / cardio / presets / flows
+    await ensureTable("""
     CREATE TABLE IF NOT EXISTS stretch_definitions(
       id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, description TEXT NOT NULL
     );
   """);
-  await ensureTable("""
+    await ensureTable("""
     CREATE TABLE IF NOT EXISTS preset_flow_methods(
       id INTEGER PRIMARY KEY AUTOINCREMENT, preset_id INTEGER NOT NULL, name TEXT NOT NULL,
       type TEXT NOT NULL, params TEXT NOT NULL,
@@ -597,7 +643,7 @@ Future<void> ensureSchemaRepairs(Database db) async {
       UNIQUE(preset_id, name)
     );
   """);
-  await ensureTable("""
+    await ensureTable("""
     CREATE TABLE IF NOT EXISTS cardio_details(
       id INTEGER PRIMARY KEY AUTOINCREMENT, exercise_id INTEGER NOT NULL UNIQUE,
       cardio_name TEXT NOT NULL, note TEXT, planned_minutes INTEGER NOT NULL,
@@ -605,67 +651,123 @@ Future<void> ensureSchemaRepairs(Database db) async {
       FOREIGN KEY(exercise_id) REFERENCES exercises(id) ON DELETE CASCADE
     );
   """);
-  await ensureTable("""
+    await ensureTable("""
     CREATE TABLE IF NOT EXISTS formula_settings(
       key TEXT PRIMARY KEY, value REAL NOT NULL
     );
   """);
 
-  // —— column ensures ——
-  await addCol('exercises', 'type', "TEXT NOT NULL DEFAULT 'weight'");
-  await addCol('sets', 'parent_set_id', 'INTEGER');
-  await addCol('preset_definitions', 'profile_id', 'INTEGER REFERENCES gym_profiles(id) ON DELETE SET NULL');
-  await addCol('preset_exercise_auto', 'last_node', 'TEXT');
+    // —— column ensures ——
+    await addCol('exercises', 'type', "TEXT NOT NULL DEFAULT 'weight'");
+    await addCol('sets', 'parent_set_id', 'INTEGER');
+    await addCol(
+      'preset_definitions',
+      'profile_id',
+      'INTEGER REFERENCES gym_profiles(id) ON DELETE SET NULL',
+    );
+    await addCol('preset_exercise_auto', 'last_node', 'TEXT');
 
-  await addCol('preset_auto_settings', 'flow_definition', "TEXT NOT NULL DEFAULT '{}'");
-  await addCol('preset_auto_settings', 'use_manual_select', 'INTEGER NOT NULL DEFAULT 0');
-  await addCol('preset_auto_settings', 'manual_selection_json', 'TEXT');
+    await addCol(
+      'preset_auto_settings',
+      'flow_definition',
+      "TEXT NOT NULL DEFAULT '{}'",
+    );
+    await addCol(
+      'preset_auto_settings',
+      'use_manual_select',
+      'INTEGER NOT NULL DEFAULT 0',
+    );
+    await addCol('preset_auto_settings', 'manual_selection_json', 'TEXT');
 
-  await addCol('exercise_definitions', 'use_manual_bodyparts', 'INTEGER NOT NULL DEFAULT 0');
-  await addCol('exercise_definitions', 'use_manual_muscles', 'INTEGER NOT NULL DEFAULT 1');
-  await addCol('exercise_definitions', 'setup_notes', "TEXT NOT NULL DEFAULT ''");
-  await addCol('exercise_definitions', 'execution_notes', "TEXT NOT NULL DEFAULT ''");
-  await addCol('exercise_definitions', 'tips_notes', "TEXT NOT NULL DEFAULT ''");
-  await addCol('exercise_definitions', 'multiply_by_rating', 'INTEGER NOT NULL DEFAULT 0');
+    await addCol(
+      'exercise_definitions',
+      'use_manual_bodyparts',
+      'INTEGER NOT NULL DEFAULT 0',
+    );
+    await addCol(
+      'exercise_definitions',
+      'use_manual_muscles',
+      'INTEGER NOT NULL DEFAULT 1',
+    );
+    await addCol(
+      'exercise_definitions',
+      'setup_notes',
+      "TEXT NOT NULL DEFAULT ''",
+    );
+    await addCol(
+      'exercise_definitions',
+      'execution_notes',
+      "TEXT NOT NULL DEFAULT ''",
+    );
+    await addCol(
+      'exercise_definitions',
+      'tips_notes',
+      "TEXT NOT NULL DEFAULT ''",
+    );
+    await addCol(
+      'exercise_definitions',
+      'multiply_by_rating',
+      'INTEGER NOT NULL DEFAULT 0',
+    );
 
-  await addCol('foods', 'brand_id', 'INTEGER REFERENCES brands(id) ON DELETE SET NULL');
-  await addCol('foods', 'category_id', 'INTEGER REFERENCES categories(id) ON DELETE SET NULL');
-  await addCol('foods', 'fdc_id', 'INTEGER');
-  await addCol('foods', 'verified', 'INTEGER NOT NULL DEFAULT 0');
-  await addCol('foods', 'quality_score', 'REAL');
-  await addCol('foods', 'version', 'INTEGER NOT NULL DEFAULT 1');
-  await addCol('foods', 'preparation', 'TEXT');
-  await addCol('foods', 'edible_portion_pct', 'REAL');
-  await addCol('foods', 'yield_pct', 'REAL');
-  await addCol('foods', 'source_id', 'INTEGER REFERENCES sources(id) ON DELETE SET NULL');
+    await addCol(
+      'foods',
+      'brand_id',
+      'INTEGER REFERENCES brands(id) ON DELETE SET NULL',
+    );
+    await addCol(
+      'foods',
+      'category_id',
+      'INTEGER REFERENCES categories(id) ON DELETE SET NULL',
+    );
+    await addCol('foods', 'fdc_id', 'INTEGER');
+    await addCol('foods', 'verified', 'INTEGER NOT NULL DEFAULT 0');
+    await addCol('foods', 'quality_score', 'REAL');
+    await addCol('foods', 'version', 'INTEGER NOT NULL DEFAULT 1');
+    await addCol('foods', 'preparation', 'TEXT');
+    await addCol('foods', 'edible_portion_pct', 'REAL');
+    await addCol('foods', 'yield_pct', 'REAL');
+    await addCol(
+      'foods',
+      'source_id',
+      'INTEGER REFERENCES sources(id) ON DELETE SET NULL',
+    );
 
-  await addCol('food_portions', 'list_kind', 'TEXT');
-  await addCol('food_portions', 'sort_order', 'INTEGER NOT NULL DEFAULT 0');
-  await addCol('food_portions', 'amount', 'REAL');
-  await addCol('food_portions', 'unit', 'TEXT');
-  await addCol('food_portions', 'label', 'TEXT');
+    await addCol('food_portions', 'list_kind', 'TEXT');
+    await addCol('food_portions', 'sort_order', 'INTEGER NOT NULL DEFAULT 0');
+    await addCol('food_portions', 'amount', 'REAL');
+    await addCol('food_portions', 'unit', 'TEXT');
+    await addCol('food_portions', 'label', 'TEXT');
 
-  for (final c in ['protein_g','fat_g','carbs_g','fiber_g','sugar_g','sat_fat_g','sodium_mg']) {
-    await addCol('nutrition_goals', c, 'REAL');
+    for (final c in [
+      'protein_g',
+      'fat_g',
+      'carbs_g',
+      'fiber_g',
+      'sugar_g',
+      'sat_fat_g',
+      'sodium_mg',
+    ]) {
+      await addCol('nutrition_goals', c, 'REAL');
+    }
+
+    await addCol('diary_entries', 'logged_grams', 'REAL');
+    await addCol('diary_entries', 'kcal_snapshot', 'REAL');
+    await addCol('diary_entries', 'protein_g_snapshot', 'REAL');
+    await addCol('diary_entries', 'carb_g_snapshot', 'REAL');
+    await addCol('diary_entries', 'fat_g_snapshot', 'REAL');
+    await addCol('diary_entries', 'nutrient_snapshot_json', 'TEXT');
+    await addCol('diary_entries', 'logged_at', 'INTEGER');
+    await addCol('diary_entries', 'updated_at', 'INTEGER');
+    await addCol('diary_entries', 'is_deleted', 'INTEGER NOT NULL DEFAULT 0');
+    await addCol('diary_entries', 'grams_override', 'REAL');
   }
 
-  await addCol('diary_entries', 'logged_grams', 'REAL');
-  await addCol('diary_entries', 'kcal_snapshot', 'REAL');
-  await addCol('diary_entries', 'protein_g_snapshot', 'REAL');
-  await addCol('diary_entries', 'carb_g_snapshot', 'REAL');
-  await addCol('diary_entries', 'fat_g_snapshot', 'REAL');
-  await addCol('diary_entries', 'nutrient_snapshot_json', 'TEXT');
-  await addCol('diary_entries', 'logged_at', 'INTEGER');
-  await addCol('diary_entries', 'updated_at', 'INTEGER');
-  await addCol('diary_entries', 'is_deleted', 'INTEGER NOT NULL DEFAULT 0');
-  await addCol('diary_entries', 'grams_override', 'REAL');
-}
-
-Future<void> _ensureFavoriteFoodsShape(Database db) async {
-  // 1) Create from scratch if missing
-  final exists = await _tableExists(db, 'favorite_foods');
-  if (!exists) {
-    await db.execute('''
+  Future<void> _ensureFavoriteFoodsShape(Database db) async {
+    // 1) Create from scratch if missing
+    final exists = await _tableExists(db, 'favorite_foods');
+    if (!exists) {
+      await db.execute('''
       CREATE TABLE favorite_foods (
         id          INTEGER PRIMARY KEY AUTOINCREMENT,
         profile_id  INTEGER NOT NULL,
@@ -674,16 +776,20 @@ Future<void> _ensureFavoriteFoodsShape(Database db) async {
         UNIQUE(profile_id, food_id)
       );
     ''');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_fav_profile ON favorite_foods(profile_id);');
-  } else {
-    // 2) Inspect current columns
-    final cols = await db.rawQuery("PRAGMA table_info('favorite_foods');");
-    bool hasId        = cols.any((c) => (c['name'] as String?) == 'id');
-    bool hasCreatedAt = cols.any((c) => (c['name'] as String?) == 'created_at');
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_fav_profile ON favorite_foods(profile_id);',
+      );
+    } else {
+      // 2) Inspect current columns
+      final cols = await db.rawQuery("PRAGMA table_info('favorite_foods');");
+      bool hasId = cols.any((c) => (c['name'] as String?) == 'id');
+      bool hasCreatedAt = cols.any(
+        (c) => (c['name'] as String?) == 'created_at',
+      );
 
-    // 2a) If there’s no `id`, rebuild the table with the proper schema
-    if (!hasId) {
-      await db.execute('''
+      // 2a) If there’s no `id`, rebuild the table with the proper schema
+      if (!hasId) {
+        await db.execute('''
         CREATE TABLE IF NOT EXISTS favorite_foods_new (
           id          INTEGER PRIMARY KEY AUTOINCREMENT,
           profile_id  INTEGER NOT NULL,
@@ -693,31 +799,41 @@ Future<void> _ensureFavoriteFoodsShape(Database db) async {
         );
       ''');
 
-      // copy rows (created_at may not exist in legacy table; COALESCE handles that)
-      await db.execute('''
+        // copy rows (created_at may not exist in legacy table; COALESCE handles that)
+        await db.execute('''
         INSERT OR IGNORE INTO favorite_foods_new (profile_id, food_id, created_at)
         SELECT profile_id, food_id,
                COALESCE(created_at, NULL)
         FROM favorite_foods;
       ''');
 
-      await db.execute('DROP TABLE favorite_foods;');
-      await db.execute('ALTER TABLE favorite_foods_new RENAME TO favorite_foods;');
-      await db.execute('CREATE INDEX IF NOT EXISTS idx_fav_profile ON favorite_foods(profile_id);');
-    } else {
-      // 2b) If `id` exists but `created_at` is missing, just add it
-      if (!hasCreatedAt) {
-        await db.execute("ALTER TABLE favorite_foods ADD COLUMN created_at INTEGER;");
+        await db.execute('DROP TABLE favorite_foods;');
+        await db.execute(
+          'ALTER TABLE favorite_foods_new RENAME TO favorite_foods;',
+        );
+        await db.execute(
+          'CREATE INDEX IF NOT EXISTS idx_fav_profile ON favorite_foods(profile_id);',
+        );
+      } else {
+        // 2b) If `id` exists but `created_at` is missing, just add it
+        if (!hasCreatedAt) {
+          await db.execute(
+            "ALTER TABLE favorite_foods ADD COLUMN created_at INTEGER;",
+          );
+        }
+        // Ensure uniqueness even on odd legacy shapes
+        await db.execute(
+          'CREATE UNIQUE INDEX IF NOT EXISTS ux_fav_profile_food ON favorite_foods(profile_id, food_id);',
+        );
+        await db.execute(
+          'CREATE INDEX IF NOT EXISTS idx_fav_profile ON favorite_foods(profile_id);',
+        );
       }
-      // Ensure uniqueness even on odd legacy shapes
-      await db.execute('CREATE UNIQUE INDEX IF NOT EXISTS ux_fav_profile_food ON favorite_foods(profile_id, food_id);');
-      await db.execute('CREATE INDEX IF NOT EXISTS idx_fav_profile ON favorite_foods(profile_id);');
     }
-  }
 
-  // 3) Recreate a safe created_at trigger (works on all shapes)
-  await db.execute('DROP TRIGGER IF EXISTS trg_fav_set_created_at_ai;');
-  await db.execute('''
+    // 3) Recreate a safe created_at trigger (works on all shapes)
+    await db.execute('DROP TRIGGER IF EXISTS trg_fav_set_created_at_ai;');
+    await db.execute('''
     CREATE TRIGGER IF NOT EXISTS trg_fav_set_created_at_ai
     AFTER INSERT ON favorite_foods
     WHEN NEW.created_at IS NULL
@@ -728,44 +844,47 @@ Future<void> _ensureFavoriteFoodsShape(Database db) async {
          OR (id IS NULL AND profile_id = NEW.profile_id AND food_id = NEW.food_id);
     END;
   ''');
-}
-
+  }
 
   // ────────────────────────────────────────────────────────────────────────────
   // BACKFILL METHODS
   // ────────────────────────────────────────────────────────────────────────────
 
-Future<void> _resetDbTriggers(Database db, {bool force = false}) async {
-  if (!force) {
-    final previous = await _getAppMeta(db, _kOpenTriggerResetKey);
-    if (previous != null) {
-      _logOnOpenStep('trigger-reset', 0, 'skipped ($previous)');
-      return;
-    }
-  }
-
-  final sw = Stopwatch()..start();
-  // Drop every trigger on these tables, regardless of contents.
-  const tables = [
-    'foods','food_portions','food_barcodes',
-    'food_nutrients','food_nutrient_values',
-    'recipes','recipe_ingredients'
-  ];
-  final qs = List.filled(tables.length, '?').join(',');
-
-  await db.transaction((txn) async {
-    final rows = await txn.rawQuery(
-      "SELECT name FROM sqlite_master "
-      "WHERE type='trigger' AND tbl_name IN ($qs)",
-      tables,
-    );
-    for (final r in rows) {
-      final name = r['name'] as String;
-      await txn.execute('DROP TRIGGER IF EXISTS $name;');
+  Future<void> _resetDbTriggers(Database db, {bool force = false}) async {
+    if (!force) {
+      final previous = await _getAppMeta(db, _kOpenTriggerResetKey);
+      if (previous != null) {
+        _logOnOpenStep('trigger-reset', 0, 'skipped ($previous)');
+        return;
+      }
     }
 
-    // Recreate ONLY the 2 safe “single default portion” triggers.
-    await txn.execute('''
+    final sw = Stopwatch()..start();
+    // Drop every trigger on these tables, regardless of contents.
+    const tables = [
+      'foods',
+      'food_portions',
+      'food_barcodes',
+      'food_nutrients',
+      'food_nutrient_values',
+      'recipes',
+      'recipe_ingredients',
+    ];
+    final qs = List.filled(tables.length, '?').join(',');
+
+    await db.transaction((txn) async {
+      final rows = await txn.rawQuery(
+        "SELECT name FROM sqlite_master "
+        "WHERE type='trigger' AND tbl_name IN ($qs)",
+        tables,
+      );
+      for (final r in rows) {
+        final name = r['name'] as String;
+        await txn.execute('DROP TRIGGER IF EXISTS $name;');
+      }
+
+      // Recreate ONLY the 2 safe “single default portion” triggers.
+      await txn.execute('''
       CREATE TRIGGER IF NOT EXISTS trg_portion_single_default_ins
       AFTER INSERT ON food_portions
       WHEN NEW.is_default = 1
@@ -776,7 +895,7 @@ Future<void> _resetDbTriggers(Database db, {bool force = false}) async {
       END;
     ''');
 
-    await txn.execute('''
+      await txn.execute('''
       CREATE TRIGGER IF NOT EXISTS trg_portion_single_default_upd
       AFTER UPDATE OF is_default ON food_portions
       WHEN NEW.is_default = 1
@@ -786,44 +905,43 @@ Future<void> _resetDbTriggers(Database db, {bool force = false}) async {
         WHERE food_id = NEW.food_id AND id <> NEW.id;
       END;
     ''');
-  });
+    });
 
-  if (!force) {
-    await _setAppMeta(
-      db,
-      _kOpenTriggerResetKey,
-      'done:${sw.elapsedMilliseconds}',
-    );
-    _logOnOpenStep('trigger-reset', sw.elapsedMilliseconds, 'repaired');
+    if (!force) {
+      await _setAppMeta(
+        db,
+        _kOpenTriggerResetKey,
+        'done:${sw.elapsedMilliseconds}',
+      );
+      _logOnOpenStep('trigger-reset', sw.elapsedMilliseconds, 'repaired');
+    }
   }
-}
 
-void _logOnOpenStep(String label, int elapsedMs, String detail) {
-  debugPrint('[db] onOpen step $label: ${elapsedMs}ms - $detail');
-}
-
-void _logDbInitStep(String phase, String label, int elapsedMs) {
-  debugPrint('[db] $phase step $label: ${elapsedMs}ms');
-}
-
-// Log at 1, 1k, then every 5k to keep console readable.
-void _logProgress(String phase, int total) {
-  if (total == 1 || total == 1000 || total % 5000 == 0) {
-    debugPrint('[$phase] processed $total');
+  void _logOnOpenStep(String label, int elapsedMs, String detail) {
+    debugPrint('[db] onOpen step $label: ${elapsedMs}ms - $detail');
   }
-}
 
+  void _logDbInitStep(String phase, String label, int elapsedMs) {
+    debugPrint('[db] $phase step $label: ${elapsedMs}ms');
+  }
 
-Future<void> _backfillNormalizedFoodKeysTx(DatabaseExecutor ex) async {
-  // 1) Brands
-  await ex.execute("""
+  // Log at 1, 1k, then every 5k to keep console readable.
+  void _logProgress(String phase, int total) {
+    if (total == 1 || total == 1000 || total % 5000 == 0) {
+      debugPrint('[$phase] processed $total');
+    }
+  }
+
+  Future<void> _backfillNormalizedFoodKeysTx(DatabaseExecutor ex) async {
+    // 1) Brands
+    await ex.execute("""
     INSERT OR IGNORE INTO brands(name)
     SELECT DISTINCT TRIM(brand)
     FROM foods
     WHERE brand IS NOT NULL AND TRIM(brand) <> '';
   """);
 
-  await ex.execute("""
+    await ex.execute("""
     UPDATE foods
     SET brand_id = (
       SELECT b.id FROM brands b WHERE b.name = TRIM(foods.brand)
@@ -831,40 +949,38 @@ Future<void> _backfillNormalizedFoodKeysTx(DatabaseExecutor ex) async {
     WHERE brand_id IS NULL AND brand IS NOT NULL AND TRIM(brand) <> '';
   """);
 
-  // 2) Barcodes (only if foods.barcode exists AND food_barcodes table exists)
-if (await _tableHasColumn(ex, 'foods', 'barcode') &&
-    await _tableExists(ex, 'food_barcodes')) {
-  final rows = await ex.query(
-    'foods',
-    columns: ['id', 'barcode'],
-    where: "barcode IS NOT NULL AND TRIM(barcode) <> ''",
-  );
-  for (final r in rows) {
-    final raw = (r['barcode'] as String?) ?? '';
-    final upc = raw.replaceAll(RegExp(r'\D'), '');
-    if (!_isValidEanUpc(upc)) continue;
-    try {
-      await ex.insert(
-        'food_barcodes',
-        {'food_id': r['id'], 'upc': upc},
-        conflictAlgorithm: ConflictAlgorithm.ignore,
+    // 2) Barcodes (only if foods.barcode exists AND food_barcodes table exists)
+    if (await _tableHasColumn(ex, 'foods', 'barcode') &&
+        await _tableExists(ex, 'food_barcodes')) {
+      final rows = await ex.query(
+        'foods',
+        columns: ['id', 'barcode'],
+        where: "barcode IS NOT NULL AND TRIM(barcode) <> ''",
       );
-    } catch (_) {
-      // ignore — if some old trigger slips through, the reset on open will clean it up
+      for (final r in rows) {
+        final raw = (r['barcode'] as String?) ?? '';
+        final upc = raw.replaceAll(RegExp(r'\D'), '');
+        if (!_isValidEanUpc(upc)) continue;
+        try {
+          await ex.insert('food_barcodes', {
+            'food_id': r['id'],
+            'upc': upc,
+          }, conflictAlgorithm: ConflictAlgorithm.ignore);
+        } catch (_) {
+          // ignore — if some old trigger slips through, the reset on open will clean it up
+        }
+      }
     }
-  }
-}
 
-
-  // 3) Sources
-  await ex.execute("""
+    // 3) Sources
+    await ex.execute("""
     INSERT OR IGNORE INTO sources(name)
     SELECT DISTINCT TRIM(COALESCE(data_source,'')) AS name
     FROM foods
     WHERE TRIM(COALESCE(data_source,'')) <> '';
   """);
 
-  await ex.execute("""
+    await ex.execute("""
     UPDATE foods
     SET source_id = (
       SELECT s.id
@@ -875,9 +991,9 @@ if (await _tableHasColumn(ex, 'foods', 'barcode') &&
       AND TRIM(COALESCE(data_source,'')) <> '';
   """);
 
-  // 4) Default portion pointer (only if the column exists)
-  if (await _tableHasColumn(ex, 'foods', 'default_portion_id')) {
-    await ex.execute("""
+    // 4) Default portion pointer (only if the column exists)
+    if (await _tableHasColumn(ex, 'foods', 'default_portion_id')) {
+      await ex.execute("""
       UPDATE foods
       SET default_portion_id = (
         SELECT fp.id
@@ -892,10 +1008,10 @@ if (await _tableHasColumn(ex, 'foods', 'barcode') &&
           WHERE x.food_id = foods.id AND x.is_default = 1
         );
     """);
-  }
+    }
 
-  // 5) Backfill flexible per_100g from legacy
-  await ex.execute("""
+    // 5) Backfill flexible per_100g from legacy
+    await ex.execute("""
     INSERT INTO food_nutrient_values(food_id, nutrient_id, amount, basis)
     SELECT fn.food_id, fn.nutrient_id, fn.amount_per_100g, 'per_100g'
     FROM food_nutrients fn
@@ -907,419 +1023,465 @@ if (await _tableHasColumn(ex, 'foods', 'barcode') &&
         AND v.basis = 'per_100g'
     );
   """);
-}
-
-
-Future<void> _backfillNormalizedFoodKeys(Database db) async {
-  await db.transaction((txn) async {
-    await _backfillNormalizedFoodKeysTx(txn);
-  });
-}
-
-
-Future<void> _rebuildFoodFtsIfExists(Database db) async {
-  if (!await _hasFts4(db)) return;
-
-  final exists = await _hasFoodFtsTable(db);
-
-  if (!exists) return;
-
-  try {
-  await db.execute("INSERT INTO food_search_fts(food_search_fts) VALUES('rebuild')");
-  await db.execute("INSERT INTO food_search_fts(food_search_fts) VALUES('optimize')");
-  await _ensureFoodFtsTriggers(db);
-  debugPrint('[fts4] food_search_fts rebuild+optimize done');
-} catch (_) {/* ignore */}
-}
-
-Future<void> _ensureFoodFtsReady(Database db) async {
-  final sw = Stopwatch()..start();
-  if (!await _hasFts4(db)) {
-    _logOnOpenStep('fts-ready', sw.elapsedMilliseconds, 'skipped (fts4 unavailable)');
-    return;
-  }
-  if (!await _hasFoodFtsTable(db)) {
-    _logOnOpenStep('fts-ready', sw.elapsedMilliseconds, 'skipped (fts table missing)');
-    return;
-  }
-  if (!await _tableExists(db, 'foods')) {
-    _logOnOpenStep('fts-ready', sw.elapsedMilliseconds, 'skipped (no foods table)');
-    return;
   }
 
-  try {
-    await _ensureFoodFtsTriggers(db);
+  Future<void> _backfillNormalizedFoodKeys(Database db) async {
+    await db.transaction((txn) async {
+      await _backfillNormalizedFoodKeysTx(txn);
+    });
+  }
 
-    final foodCount = Sqflite.firstIntValue(await db.rawQuery(
-      'SELECT COUNT(*) FROM foods',
-    )) ?? 0;
-    if (foodCount == 0) {
-      _logOnOpenStep('fts-ready', sw.elapsedMilliseconds, 'skipped (no foods)');
+  Future<void> _rebuildFoodFtsIfExists(Database db) async {
+    if (!await _hasFts4(db)) return;
+
+    final exists = await _hasFoodFtsTable(db);
+
+    if (!exists) return;
+
+    try {
+      await db.execute(
+        "INSERT INTO food_search_fts(food_search_fts) VALUES('rebuild')",
+      );
+      await db.execute(
+        "INSERT INTO food_search_fts(food_search_fts) VALUES('optimize')",
+      );
+      await _ensureFoodFtsTriggers(db);
+      debugPrint('[fts4] food_search_fts rebuild+optimize done');
+    } catch (_) {
+      /* ignore */
+    }
+  }
+
+  Future<void> _ensureFoodFtsReady(Database db) async {
+    final sw = Stopwatch()..start();
+    if (!await _hasFts4(db)) {
+      _logOnOpenStep(
+        'fts-ready',
+        sw.elapsedMilliseconds,
+        'skipped (fts4 unavailable)',
+      );
+      return;
+    }
+    if (!await _hasFoodFtsTable(db)) {
+      _logOnOpenStep(
+        'fts-ready',
+        sw.elapsedMilliseconds,
+        'skipped (fts table missing)',
+      );
+      return;
+    }
+    if (!await _tableExists(db, 'foods')) {
+      _logOnOpenStep(
+        'fts-ready',
+        sw.elapsedMilliseconds,
+        'skipped (no foods table)',
+      );
       return;
     }
 
-    final ftsCount = Sqflite.firstIntValue(
-      await db.rawQuery('SELECT COUNT(*) FROM food_search_fts'),
-    ) ?? 0;
-    var rebuilt = false;
+    try {
+      await _ensureFoodFtsTriggers(db);
 
-    // Rebuild only when the FTS table is clearly missing its catalog rows.
-    // Normal INSERT/UPDATE/DELETE triggers keep it in sync after that.
-    if (ftsCount == 0 || ftsCount < (foodCount * 0.9).floor()) {
-      await _rebuildFoodFtsIfExists(db);
-      rebuilt = true;
+      final foodCount =
+          Sqflite.firstIntValue(
+            await db.rawQuery('SELECT COUNT(*) FROM foods'),
+          ) ??
+          0;
+      if (foodCount == 0) {
+        _logOnOpenStep(
+          'fts-ready',
+          sw.elapsedMilliseconds,
+          'skipped (no foods)',
+        );
+        return;
+      }
+
+      final ftsCount =
+          Sqflite.firstIntValue(
+            await db.rawQuery('SELECT COUNT(*) FROM food_search_fts'),
+          ) ??
+          0;
+      var rebuilt = false;
+
+      // Rebuild only when the FTS table is clearly missing its catalog rows.
+      // Normal INSERT/UPDATE/DELETE triggers keep it in sync after that.
+      if (ftsCount == 0 || ftsCount < (foodCount * 0.9).floor()) {
+        await _rebuildFoodFtsIfExists(db);
+        rebuilt = true;
+      }
+      _logOnOpenStep(
+        'fts-ready',
+        sw.elapsedMilliseconds,
+        rebuilt
+            ? 'rebuilt (foods=$foodCount, fts=$ftsCount)'
+            : 'ok (foods=$foodCount, fts=$ftsCount)',
+      );
+    } catch (_) {
+      // Search can still fall back to LIKE if FTS is unavailable or unhealthy.
+      _logOnOpenStep(
+        'fts-ready',
+        sw.elapsedMilliseconds,
+        'fallback (fts check failed)',
+      );
     }
-    _logOnOpenStep(
-      'fts-ready',
-      sw.elapsedMilliseconds,
-      rebuilt
-          ? 'rebuilt (foods=$foodCount, fts=$ftsCount)'
-          : 'ok (foods=$foodCount, fts=$ftsCount)',
-    );
-  } catch (_) {
-    // Search can still fall back to LIKE if FTS is unavailable or unhealthy.
-    _logOnOpenStep(
-      'fts-ready',
-      sw.elapsedMilliseconds,
-      'fallback (fts check failed)',
-    );
   }
-}
 
-Future<void> _ensureFoodFtsTriggers(DatabaseExecutor db) async {
-  if (!await _hasFoodFtsTable(db)) return;
+  Future<void> _ensureFoodFtsTriggers(DatabaseExecutor db) async {
+    if (!await _hasFoodFtsTable(db)) return;
 
-  await db.execute("""
+    await db.execute("""
     CREATE TRIGGER IF NOT EXISTS foods_ai AFTER INSERT ON foods BEGIN
       INSERT INTO food_search_fts(rowid, name, brand)
       VALUES (NEW.id, COALESCE(NEW.name,''), COALESCE(NEW.brand,''));
     END;
   """);
-  await db.execute("""
+    await db.execute("""
     CREATE TRIGGER IF NOT EXISTS foods_ad AFTER DELETE ON foods BEGIN
       INSERT INTO food_search_fts(food_search_fts, rowid, name, brand)
       VALUES('delete', OLD.id, COALESCE(OLD.name,''), COALESCE(OLD.brand,''));
     END;
   """);
-  await db.execute("""
+    await db.execute("""
     CREATE TRIGGER IF NOT EXISTS foods_au AFTER UPDATE ON foods BEGIN
       INSERT INTO food_search_fts(food_search_fts, rowid, name, brand)
       VALUES('delete', OLD.id, COALESCE(OLD.name,''), COALESCE(OLD.brand,''));
       INSERT INTO food_search_fts(rowid, name, brand)
       VALUES (NEW.id, COALESCE(NEW.name,''), COALESCE(NEW.brand,''));
     END;
-  """);
-}
-
-Future<bool> _hasFoodFtsTable(DatabaseExecutor db) async {
-  final exists = (Sqflite.firstIntValue(await db.rawQuery(
-    "SELECT COUNT(*) FROM sqlite_master "
-    "WHERE name = 'food_search_fts' "
-    "AND type IN ('table','view') "
-    "AND lower(coalesce(sql,'')) LIKE '%using fts4%'"
-  )) ?? 0) > 0;
-  return exists;
-}
-
-
-
-
-Future<void> _ensureIndexes(Database db, {bool force = false}) async {
-  if (!force) {
-    final previous = await _getAppMeta(db, _kOpenIndexEnsureKey);
-    if (previous != null) {
-      _logOnOpenStep('ensure-indexes', 0, 'skipped ($previous)');
-      return;
-    }
+    """);
   }
 
-  final sw = Stopwatch()..start();
-  // ── Foods & lookups ───────────────────────────────────────────────────────
-  if (await _tableExists(db, 'foods')) {
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_foods_updated_at ON foods(updated_at)'
-    );
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_foods_name_nocase ON foods(name COLLATE NOCASE)'
-    );
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_foods_is_deleted ON foods(is_deleted)'
-    );
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_foods_brand_id ON foods(brand_id)'
-    );
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_foods_category_id ON foods(category_id)'
-    );
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_foods_source_id ON foods(source_id)'
-    );
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_foods_category_brand_name '
-      'ON foods(category_id, brand_id, name COLLATE NOCASE)'
-    );
+  Future<void> _dropFoodFtsTriggers(DatabaseExecutor db) async {
+    await db.execute('DROP TRIGGER IF EXISTS foods_ai;');
+    await db.execute('DROP TRIGGER IF EXISTS foods_ad;');
+    await db.execute('DROP TRIGGER IF EXISTS foods_au;');
+  }
 
-    // Only if legacy column still exists in your schema
-    if (await _tableHasColumn(db, 'foods', 'default_portion_id')) {
+  Future<bool> _hasFoodFtsTable(DatabaseExecutor db) async {
+    final exists =
+        (Sqflite.firstIntValue(
+              await db.rawQuery(
+                "SELECT COUNT(*) FROM sqlite_master "
+                "WHERE name = 'food_search_fts' "
+                "AND type IN ('table','view') "
+                "AND lower(coalesce(sql,'')) LIKE '%using fts4%'",
+              ),
+            ) ??
+            0) >
+        0;
+    return exists;
+  }
+
+  Future<void> _ensureIndexes(Database db, {bool force = false}) async {
+    if (!force) {
+      final previous = await _getAppMeta(db, _kOpenIndexEnsureKey);
+      if (previous != null) {
+        _logOnOpenStep('ensure-indexes', 0, 'skipped ($previous)');
+        return;
+      }
+    }
+
+    final sw = Stopwatch()..start();
+    // ── Foods & lookups ───────────────────────────────────────────────────────
+    if (await _tableExists(db, 'foods')) {
       await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_foods_default_portion ON foods(default_portion_id)'
+        'CREATE INDEX IF NOT EXISTS idx_foods_updated_at ON foods(updated_at)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_foods_name_nocase ON foods(name COLLATE NOCASE)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_foods_is_deleted ON foods(is_deleted)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_foods_brand_id ON foods(brand_id)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_foods_category_id ON foods(category_id)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_foods_source_id ON foods(source_id)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_foods_category_brand_name '
+        'ON foods(category_id, brand_id, name COLLATE NOCASE)',
+      );
+
+      // Only if legacy column still exists in your schema
+      if (await _tableHasColumn(db, 'foods', 'default_portion_id')) {
+        await db.execute(
+          'CREATE INDEX IF NOT EXISTS idx_foods_default_portion ON foods(default_portion_id)',
+        );
+      }
+    }
+
+    if (await _tableExists(db, 'brands')) {
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_brands_name ON brands(name COLLATE NOCASE)',
       );
     }
+    if (await _tableExists(db, 'sources')) {
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_sources_name ON sources(name COLLATE NOCASE)',
+      );
+    }
+    if (await _tableExists(db, 'categories')) {
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_categories_name ON categories(name COLLATE NOCASE)',
+      );
+    }
+
+    // ── Portions & barcodes ───────────────────────────────────────────────────
+    if (await _tableExists(db, 'food_portions')) {
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_food_portions_food ON food_portions(food_id)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_food_portions_default ON food_portions(food_id, is_default)',
+      );
+    }
+    if (await _tableExists(db, 'food_barcodes')) {
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_food_barcodes_food ON food_barcodes(food_id)',
+      );
+    }
+
+    // ── Nutrients (flex + lookups) ────────────────────────────────────────────
+    if (await _tableExists(db, 'food_nutrient_values')) {
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_fnv_food_basis ON food_nutrient_values(food_id, basis)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_fnv_food_basis_nutrient '
+        'ON food_nutrient_values(food_id, basis, nutrient_id)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_fnv_food_basis_portion '
+        'ON food_nutrient_values(food_id, basis, portion_id)',
+      );
+    }
+    if (await _tableExists(db, 'nutrients')) {
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_nutrients_code ON nutrients(code)',
+      );
+    }
+
+    // ── Recipes ───────────────────────────────────────────────────────────────
+    if (await _tableExists(db, 'recipe_nutrients')) {
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_recipe_nutrients_recipe ON recipe_nutrients(recipe_id)',
+      );
+    }
+    if (await _tableExists(db, 'recipe_ingredients')) {
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_recipe_ingredients_recipe ON recipe_ingredients(recipe_id)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_recipe_ingredients_food ON recipe_ingredients(food_id)',
+      );
+    }
+
+    // ── Diary / favorites / usage / tags / day cache ─────────────────────────
+    if (await _tableExists(db, 'diary_entries')) {
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_diary_entries_profile_date '
+        'ON diary_entries(profile_id, date, is_deleted)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_diary_entries_profile_logged '
+        'ON diary_entries(profile_id, logged_at)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_diary_food_profile '
+        'ON diary_entries(profile_id, food_id, is_deleted, logged_at)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_diary_recipe_profile '
+        'ON diary_entries(profile_id, recipe_id, is_deleted, logged_at)',
+      );
+    }
+    if (await _tableExists(db, 'day_totals_cache')) {
+      await db.execute(
+        'CREATE UNIQUE INDEX IF NOT EXISTS idx_day_totals_profile_date '
+        'ON day_totals_cache(profile_id, date)',
+      );
+    }
+    if (await _tableExists(db, 'favorite_foods')) {
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_favorite_foods_profile ON favorite_foods(profile_id)',
+      );
+    }
+    if (await _tableExists(db, 'food_usage_stats')) {
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_food_usage_profile_last '
+        'ON food_usage_stats(profile_id, last_used)',
+      );
+    }
+    if (await _tableExists(db, 'diary_entry_tags')) {
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_diary_entry_tags_entry ON diary_entry_tags(entry_id)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_diary_entry_tags_tag ON diary_entry_tags(tag)',
+      );
+    }
+
+    if (!force) {
+      await _setAppMeta(
+        db,
+        _kOpenIndexEnsureKey,
+        'done:${sw.elapsedMilliseconds}',
+      );
+      _logOnOpenStep('ensure-indexes', sw.elapsedMilliseconds, 'ensured');
+    }
   }
 
-  if (await _tableExists(db, 'brands')) {
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_brands_name ON brands(name COLLATE NOCASE)'
-    );
-  }
-  if (await _tableExists(db, 'sources')) {
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_sources_name ON sources(name COLLATE NOCASE)'
-    );
-  }
-  if (await _tableExists(db, 'categories')) {
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_categories_name ON categories(name COLLATE NOCASE)'
-    );
-  }
-
-  // ── Portions & barcodes ───────────────────────────────────────────────────
-  if (await _tableExists(db, 'food_portions')) {
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_food_portions_food ON food_portions(food_id)'
-    );
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_food_portions_default ON food_portions(food_id, is_default)'
-    );
-  }
-  if (await _tableExists(db, 'food_barcodes')) {
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_food_barcodes_food ON food_barcodes(food_id)'
-    );
-  }
-
-  // ── Nutrients (flex + lookups) ────────────────────────────────────────────
-  if (await _tableExists(db, 'food_nutrient_values')) {
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_fnv_food_basis ON food_nutrient_values(food_id, basis)'
-    );
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_fnv_food_basis_nutrient '
-      'ON food_nutrient_values(food_id, basis, nutrient_id)'
-    );
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_fnv_food_basis_portion '
-      'ON food_nutrient_values(food_id, basis, portion_id)'
-    );
-  }
-  if (await _tableExists(db, 'nutrients')) {
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_nutrients_code ON nutrients(code)'
-    );
-  }
-
-  // ── Recipes ───────────────────────────────────────────────────────────────
-  if (await _tableExists(db, 'recipe_nutrients')) {
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_recipe_nutrients_recipe ON recipe_nutrients(recipe_id)'
-    );
-  }
-  if (await _tableExists(db, 'recipe_ingredients')) {
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_recipe_ingredients_recipe ON recipe_ingredients(recipe_id)'
-    );
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_recipe_ingredients_food ON recipe_ingredients(food_id)'
-    );
-  }
-
-  // ── Diary / favorites / usage / tags / day cache ─────────────────────────
-  if (await _tableExists(db, 'diary_entries')) {
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_diary_entries_profile_date '
-      'ON diary_entries(profile_id, date, is_deleted)'
-    );
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_diary_entries_profile_logged '
-      'ON diary_entries(profile_id, logged_at)'
-    );
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_diary_food_profile '
-      'ON diary_entries(profile_id, food_id, is_deleted, logged_at)'
-    );
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_diary_recipe_profile '
-      'ON diary_entries(profile_id, recipe_id, is_deleted, logged_at)'
-    );
-  }
-  if (await _tableExists(db, 'day_totals_cache')) {
-    await db.execute(
-      'CREATE UNIQUE INDEX IF NOT EXISTS idx_day_totals_profile_date '
-      'ON day_totals_cache(profile_id, date)'
-    );
-  }
-  if (await _tableExists(db, 'favorite_foods')) {
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_favorite_foods_profile ON favorite_foods(profile_id)'
-    );
-  }
-  if (await _tableExists(db, 'food_usage_stats')) {
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_food_usage_profile_last '
-      'ON food_usage_stats(profile_id, last_used)'
-    );
-  }
-  if (await _tableExists(db, 'diary_entry_tags')) {
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_diary_entry_tags_entry ON diary_entry_tags(entry_id)'
-    );
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_diary_entry_tags_tag ON diary_entry_tags(tag)'
-    );
-  }
-
-  if (!force) {
-    await _setAppMeta(
-      db,
-      _kOpenIndexEnsureKey,
-      'done:${sw.elapsedMilliseconds}',
-    );
-    _logOnOpenStep('ensure-indexes', sw.elapsedMilliseconds, 'ensured');
-  }
-}
-
-Future<void> _ensureAppMetaTable(DatabaseExecutor db) async {
-  await db.execute('''
+  Future<void> _ensureAppMetaTable(DatabaseExecutor db) async {
+    await db.execute('''
     CREATE TABLE IF NOT EXISTS app_meta(
       key TEXT PRIMARY KEY,
       value TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
   ''');
-}
+  }
 
-Future<String?> _getAppMeta(DatabaseExecutor db, String key) async {
-  final rows = await db.query(
-    'app_meta',
-    columns: ['value'],
-    where: 'key = ?',
-    whereArgs: [key],
-    limit: 1,
-  );
-  if (rows.isEmpty) return null;
-  return rows.first['value'] as String?;
-}
+  Future<String?> _getAppMeta(DatabaseExecutor db, String key) async {
+    final rows = await db.query(
+      'app_meta',
+      columns: ['value'],
+      where: 'key = ?',
+      whereArgs: [key],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return rows.first['value'] as String?;
+  }
 
-Future<void> _setAppMeta(DatabaseExecutor db, String key, String value) async {
-  await db.insert(
-    'app_meta',
-    {
+  Future<void> _setAppMeta(
+    DatabaseExecutor db,
+    String key,
+    String value,
+  ) async {
+    await db.insert('app_meta', {
       'key': key,
       'value': value,
       'updated_at': DateTime.now().toUtc().toIso8601String(),
-    },
-    conflictAlgorithm: ConflictAlgorithm.replace,
-  );
-}
-
-Future<void> _maybeCompactLegacyFoodCatalog(Database db) async {
-  final sw = Stopwatch()..start();
-  if (!await _tableExists(db, 'foods')) {
-    _logOnOpenStep('legacy-catalog-compact', sw.elapsedMilliseconds, 'skipped (no foods table)');
-    return;
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
-  const flagKey = 'catalog_cleanup_v1';
-  final previous = await _getAppMeta(db, flagKey);
-  if (previous != null) {
-    _logOnOpenStep('legacy-catalog-compact', sw.elapsedMilliseconds, 'skipped ($previous)');
-    return;
-  }
+  Future<void> _maybeCompactLegacyFoodCatalog(Database db) async {
+    final sw = Stopwatch()..start();
+    if (!await _tableExists(db, 'foods')) {
+      _logOnOpenStep(
+        'legacy-catalog-compact',
+        sw.elapsedMilliseconds,
+        'skipped (no foods table)',
+      );
+      return;
+    }
 
-  final totalFoods =
-      Sqflite.firstIntValue(await db.rawQuery(
-        'SELECT COUNT(*) FROM foods WHERE COALESCE(is_deleted, 0) = 0',
-      )) ??
-      0;
-  final importedFoods =
-      Sqflite.firstIntValue(await db.rawQuery('''
+    const flagKey = 'catalog_cleanup_v1';
+    final previous = await _getAppMeta(db, flagKey);
+    if (previous != null) {
+      _logOnOpenStep(
+        'legacy-catalog-compact',
+        sw.elapsedMilliseconds,
+        'skipped ($previous)',
+      );
+      return;
+    }
+
+    final totalFoods =
+        Sqflite.firstIntValue(
+          await db.rawQuery(
+            'SELECT COUNT(*) FROM foods WHERE COALESCE(is_deleted, 0) = 0',
+          ),
+        ) ??
+        0;
+    final importedFoods =
+        Sqflite.firstIntValue(
+          await db.rawQuery('''
         SELECT COUNT(*)
         FROM foods
         WHERE COALESCE(is_deleted, 0) = 0
           AND COALESCE(is_custom, 0) = 0
           AND COALESCE(data_source, '') <> 'starter_local'
-      ''')) ??
-      0;
+      '''),
+        ) ??
+        0;
 
-  if (totalFoods < 500 || importedFoods < 500) {
-    await _setAppMeta(db, flagKey, 'not_needed:$totalFoods:$importedFoods');
-    _logOnOpenStep(
-      'legacy-catalog-compact',
-      sw.elapsedMilliseconds,
-      'not needed (foods=$totalFoods, imported=$importedFoods)',
+    if (totalFoods < 500 || importedFoods < 500) {
+      await _setAppMeta(db, flagKey, 'not_needed:$totalFoods:$importedFoods');
+      _logOnOpenStep(
+        'legacy-catalog-compact',
+        sw.elapsedMilliseconds,
+        'not needed (foods=$totalFoods, imported=$importedFoods)',
+      );
+      return;
+    }
+
+    final hasDiaryEntries = await _tableExists(db, 'diary_entries');
+    final hasRecipeIngredients = await _tableExists(db, 'recipe_ingredients');
+    final hasFavoriteFoods = await _tableExists(db, 'favorite_foods');
+    final hasFoodUsageStats = await _tableExists(db, 'food_usage_stats');
+    final hasBrands = await _tableExists(db, 'brands');
+    final hasCategories = await _tableExists(db, 'categories');
+    final hasSources = await _tableExists(db, 'sources');
+
+    debugPrint(
+      '[foods] compacting legacy local catalog ($totalFoods rows, $importedFoods imported)',
     );
-    return;
-  }
 
-  final hasDiaryEntries = await _tableExists(db, 'diary_entries');
-  final hasRecipeIngredients = await _tableExists(db, 'recipe_ingredients');
-  final hasFavoriteFoods = await _tableExists(db, 'favorite_foods');
-  final hasFoodUsageStats = await _tableExists(db, 'food_usage_stats');
-  final hasBrands = await _tableExists(db, 'brands');
-  final hasCategories = await _tableExists(db, 'categories');
-  final hasSources = await _tableExists(db, 'sources');
-
-  debugPrint('[foods] compacting legacy local catalog ($totalFoods rows, $importedFoods imported)');
-
-  final deleted = await db.transaction<int>((txn) async {
-    final deletePredicates = <String>[
-      'COALESCE(is_custom, 0) = 0',
-      "COALESCE(data_source, '') <> 'starter_local'",
-    ];
-    if (hasDiaryEntries) {
-      deletePredicates.add('''
+    final deleted = await db.transaction<int>((txn) async {
+      final deletePredicates = <String>[
+        'COALESCE(is_custom, 0) = 0',
+        "COALESCE(data_source, '') <> 'starter_local'",
+      ];
+      if (hasDiaryEntries) {
+        deletePredicates.add('''
         id NOT IN (
           SELECT DISTINCT food_id
           FROM diary_entries
           WHERE food_id IS NOT NULL
         )
       ''');
-    }
-    if (hasRecipeIngredients) {
-      deletePredicates.add('''
+      }
+      if (hasRecipeIngredients) {
+        deletePredicates.add('''
         id NOT IN (
           SELECT DISTINCT food_id
           FROM recipe_ingredients
           WHERE food_id IS NOT NULL
         )
       ''');
-    }
-    if (hasFavoriteFoods) {
-      deletePredicates.add('''
+      }
+      if (hasFavoriteFoods) {
+        deletePredicates.add('''
         id NOT IN (
           SELECT DISTINCT food_id
           FROM favorite_foods
           WHERE food_id IS NOT NULL
         )
       ''');
-    }
-    if (hasFoodUsageStats) {
-      deletePredicates.add('''
+      }
+      if (hasFoodUsageStats) {
+        deletePredicates.add('''
         id NOT IN (
           SELECT DISTINCT food_id
           FROM food_usage_stats
           WHERE food_id IS NOT NULL
         )
       ''');
-    }
+      }
 
-    final deleted = await txn.rawDelete('''
+      final deleted = await txn.rawDelete('''
       DELETE FROM foods
       WHERE ${deletePredicates.join('\n        AND ')}
     ''');
 
-    if (hasBrands) {
-      await txn.execute('''
+      if (hasBrands) {
+        await txn.execute('''
         DELETE FROM brands
         WHERE id NOT IN (
           SELECT DISTINCT brand_id
@@ -1327,9 +1489,9 @@ Future<void> _maybeCompactLegacyFoodCatalog(Database db) async {
           WHERE brand_id IS NOT NULL
         )
       ''');
-    }
-    if (hasCategories) {
-      await txn.execute('''
+      }
+      if (hasCategories) {
+        await txn.execute('''
         DELETE FROM categories
         WHERE id NOT IN (
           SELECT DISTINCT category_id
@@ -1337,9 +1499,9 @@ Future<void> _maybeCompactLegacyFoodCatalog(Database db) async {
           WHERE category_id IS NOT NULL
         )
       ''');
-    }
-    if (hasSources) {
-      await txn.execute('''
+      }
+      if (hasSources) {
+        await txn.execute('''
         DELETE FROM sources
         WHERE id NOT IN (
           SELECT DISTINCT source_id
@@ -1347,167 +1509,199 @@ Future<void> _maybeCompactLegacyFoodCatalog(Database db) async {
           WHERE source_id IS NOT NULL
         )
       ''');
-    }
+      }
 
-    return deleted;
-  });
+      return deleted;
+    });
 
-  await Seed.seedFoods(
-    db,
-    onProgress: (c) => _logProgress('starter-foods', c),
-  );
-  await _backfillNormalizedFoodKeys(db);
-  await _backfillEnergyKcalFromMacros(db);
-  await _ensureIndexes(db);
-  await _rebuildFoodFtsIfExists(db);
-
-  final remaining =
-      Sqflite.firstIntValue(await db.rawQuery(
-        'SELECT COUNT(*) FROM foods WHERE COALESCE(is_deleted, 0) = 0',
-      )) ??
-      0;
-  await _setAppMeta(
-    db,
-    flagKey,
-    'done:$deleted:$remaining:${sw.elapsedMilliseconds}',
-  );
-  debugPrint('[foods] legacy catalog compacted in ${sw.elapsedMilliseconds}ms - removed: $deleted, remaining: $remaining');
-  _logOnOpenStep(
-    'legacy-catalog-compact',
-    sw.elapsedMilliseconds,
-    'removed=$deleted, remaining=$remaining',
-  );
-}
-
-
-Future<bool> _seedFoodsIfEmpty(Database db) async {
-  final sw = Stopwatch()..start();
-  final n = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM foods')) ?? 0;
-  if (n > 0) {
-    _logOnOpenStep('seed-foods', sw.elapsedMilliseconds, 'skipped (count=$n)');
-    return false;
-  }
-
-  debugPrint('[foods] seeding starter catalog from ${Seed.defaultFoodsAssetPath}');
-  var seeded = false;
-
-  try {
     await Seed.seedFoods(
       db,
-      onProgress: (c) => _logProgress('foods', c),  // ← progress pings
-    ); // defaults to the lightweight local starter catalog
-    seeded = true;
-  } catch (e1) {
-    debugPrint('[foods] primary starter seed failed: $e1 - trying explicit legacy asset');
-    try {
-      await Seed.seedFoods(
-        db,
-        assetPath: 'assets/foods.json',
-        onProgress: (c) => _logProgress('foods', c),
-      );
-      seeded = true;
-    } catch (e2) {
-      debugPrint('[foods] fallback starter seed also failed: $e2');
-    }
-  }
-
-  if (seeded) {
-    // Make the new catalog immediately usable
+      onProgress: (c) => _logProgress('starter-foods', c),
+    );
     await _backfillNormalizedFoodKeys(db);
     await _backfillEnergyKcalFromMacros(db);
     await _ensureIndexes(db);
     await _rebuildFoodFtsIfExists(db);
 
-    final total = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM foods')) ?? 0;
-    debugPrint('[foods] seeding complete in ${sw.elapsedMilliseconds}ms - total rows: $total');
-    _logOnOpenStep('seed-foods', sw.elapsedMilliseconds, 'seeded ($total rows)');
-  } else {
-    _logOnOpenStep('seed-foods', sw.elapsedMilliseconds, 'failed');
+    final remaining =
+        Sqflite.firstIntValue(
+          await db.rawQuery(
+            'SELECT COUNT(*) FROM foods WHERE COALESCE(is_deleted, 0) = 0',
+          ),
+        ) ??
+        0;
+    await _setAppMeta(
+      db,
+      flagKey,
+      'done:$deleted:$remaining:${sw.elapsedMilliseconds}',
+    );
+    debugPrint(
+      '[foods] legacy catalog compacted in ${sw.elapsedMilliseconds}ms - removed: $deleted, remaining: $remaining',
+    );
+    _logOnOpenStep(
+      'legacy-catalog-compact',
+      sw.elapsedMilliseconds,
+      'removed=$deleted, remaining=$remaining',
+    );
   }
-  return seeded;
-}
 
+  Future<bool> _seedFoodsIfEmpty(Database db) async {
+    final sw = Stopwatch()..start();
+    final n =
+        Sqflite.firstIntValue(
+          await db.rawQuery('SELECT COUNT(*) FROM foods'),
+        ) ??
+        0;
+    if (n > 0) {
+      _logOnOpenStep(
+        'seed-foods',
+        sw.elapsedMilliseconds,
+        'skipped (count=$n)',
+      );
+      return false;
+    }
 
+    debugPrint(
+      '[foods] seeding starter catalog from ${Seed.defaultFoodsAssetPath}',
+    );
+    var seeded = false;
 
+    try {
+      await Seed.seedFoods(
+        db,
+        onProgress: (c) => _logProgress('foods', c), // ← progress pings
+      ); // defaults to the lightweight local starter catalog
+      seeded = true;
+    } catch (e1) {
+      debugPrint(
+        '[foods] primary starter seed failed: $e1 - trying explicit legacy asset',
+      );
+      try {
+        await Seed.seedFoods(
+          db,
+          assetPath: 'assets/foods.json',
+          onProgress: (c) => _logProgress('foods', c),
+        );
+        seeded = true;
+      } catch (e2) {
+        debugPrint('[foods] fallback starter seed also failed: $e2');
+      }
+    }
+
+    if (seeded) {
+      // Make the new catalog immediately usable
+      await _backfillNormalizedFoodKeys(db);
+      await _backfillEnergyKcalFromMacros(db);
+      await _ensureIndexes(db);
+      await _rebuildFoodFtsIfExists(db);
+
+      final total =
+          Sqflite.firstIntValue(
+            await db.rawQuery('SELECT COUNT(*) FROM foods'),
+          ) ??
+          0;
+      debugPrint(
+        '[foods] seeding complete in ${sw.elapsedMilliseconds}ms - total rows: $total',
+      );
+      _logOnOpenStep(
+        'seed-foods',
+        sw.elapsedMilliseconds,
+        'seeded ($total rows)',
+      );
+    } else {
+      _logOnOpenStep('seed-foods', sw.elapsedMilliseconds, 'failed');
+    }
+    return seeded;
+  }
 
   // ────────────────────────────────────────────────────────────────────────────
   // CRUD METHODS
   // ────────────────────────────────────────────────────────────────────────────
 
-//session_dao
+  //session_dao
 
-Future<int> createSession(String date, int duration) async {
-  final db = await database;
-  return SessionDao.insertSession(db, date, duration);
-}
+  Future<int> createSession(String date, int duration) async {
+    final db = await database;
+    return SessionDao.insertSession(db, date, duration);
+  }
 
-Future<List<Map<String, dynamic>>> getAllSessionsRaw() async {
-  final db = await database;
-  return SessionDao.getAllSessionsRaw(db);
-}
+  Future<List<Map<String, dynamic>>> getAllSessionsRaw() async {
+    final db = await database;
+    return SessionDao.getAllSessionsRaw(db);
+  }
 
-Future<void> deleteSession(int sid) async {
-  final db = await database;
-  return SessionDao.deleteSession(db, sid);
-}
+  Future<void> deleteSession(int sid) async {
+    final db = await database;
+    return SessionDao.deleteSession(db, sid);
+  }
 
-
-Future<WorkoutSession?> fetchSessionById(int sessionId) async {
-  final db = await database;
-  final row = await SessionDao.getSessionById(db, sessionId);
-  if (row == null) return null;
-  return WorkoutSession(
-      id:       row['id']       as int,
-      date:     DateTime.parse(row['date'] as String),
+  Future<WorkoutSession?> fetchSessionById(int sessionId) async {
+    final db = await database;
+    final row = await SessionDao.getSessionById(db, sessionId);
+    if (row == null) return null;
+    return WorkoutSession(
+      id: row['id'] as int,
+      date: DateTime.parse(row['date'] as String),
       duration: row['duration'] as int,
     );
-}
+  }
 
-Future<void> updateSession(int id, DateTime newDate, int newDuration) async {
-  final db = await database;
-  await SessionDao.updateSession(
-    db,
-    id,
-    newDate.toIso8601String(),
-    newDuration,
-  );
-}
+  Future<void> updateSession(int id, DateTime newDate, int newDuration) async {
+    final db = await database;
+    await SessionDao.updateSession(
+      db,
+      id,
+      newDate.toIso8601String(),
+      newDuration,
+    );
+  }
 
-// Fetch range + map
-Future<List<WorkoutSession>> fetchSessionsInRange(
-    DateTime start, DateTime end) async {
-  final db = await database;
-  final rows = await SessionDao.getSessionsInRange(
-    db, start.toIso8601String(), end.toIso8601String());
-  return rows.map((row) => WorkoutSession(
-      id:       row['id']       as int,
-      date:     DateTime.parse(row['date'] as String),
-      duration: row['duration'] as int,
-    )).toList();
-}
+  // Fetch range + map
+  Future<List<WorkoutSession>> fetchSessionsInRange(
+    DateTime start,
+    DateTime end,
+  ) async {
+    final db = await database;
+    final rows = await SessionDao.getSessionsInRange(
+      db,
+      start.toIso8601String(),
+      end.toIso8601String(),
+    );
+    return rows
+        .map(
+          (row) => WorkoutSession(
+            id: row['id'] as int,
+            date: DateTime.parse(row['date'] as String),
+            duration: row['duration'] as int,
+          ),
+        )
+        .toList();
+  }
 
+  //exercise_dao
 
+  Future<int> addExercise(
+    int sessionId,
+    String name,
+    String equipment,
+    int idx,
+  ) async {
+    final db = await database;
+    return ExerciseDao.insertExercise(db, sessionId, name, equipment, idx);
+  }
 
-
-//exercise_dao
-
-Future<int> addExercise(int sessionId, String name, String equipment, int idx) async {
-  final db = await database;
-  return ExerciseDao.insertExercise(db, sessionId, name, equipment, idx);
-}
-
-Future<List<Map<String,dynamic>>> fetchExercisesRaw(int sessionId) async {
-  final db = await database;
-  return ExerciseDao.getExercisesForSession(db, sessionId);
-}
+  Future<List<Map<String, dynamic>>> fetchExercisesRaw(int sessionId) async {
+    final db = await database;
+    return ExerciseDao.getExercisesForSession(db, sessionId);
+  }
 
   Future<void> deleteExercises(int sessionId) async {
-  final db = await database;
-  await ExerciseDao.deleteExercisesForSession(db, sessionId);
-}
+    final db = await database;
+    await ExerciseDao.deleteExercisesForSession(db, sessionId);
+  }
 
   Future<int> addExerciseRow({
-    int?    exerciseDefId,
+    int? exerciseDefId,
     required String type,
     required int orderIndex,
     required int sessionId,
@@ -1522,433 +1716,459 @@ Future<List<Map<String,dynamic>>> fetchExercisesRaw(int sessionId) async {
     );
   }
 
- /// Fetches a fully-detailed WorkoutExercise (Weight/Cardio/Stretch).
-Future<WorkoutExercise?> fetchDetailedExercise(int exerciseId) async {
-  final db = await database;
+  /// Fetches a fully-detailed WorkoutExercise (Weight/Cardio/Stretch).
+  Future<WorkoutExercise?> fetchDetailedExercise(int exerciseId) async {
+    final db = await database;
 
-  // 1) Base row
-  final exRow = await ExerciseDao.getExerciseById(db, exerciseId);
-  if (exRow == null) return null;
-  final type = exRow['type'] as String;
+    // 1) Base row
+    final exRow = await ExerciseDao.getExerciseById(db, exerciseId);
+    if (exRow == null) return null;
+    final type = exRow['type'] as String;
 
-  if (type == 'weight') {
-    // — definition info (name+equipment)
-    final defInfo = await DefinitionDao.getDefinitionInfo(db, exRow['exercise_def_id'] as int);
+    if (type == 'weight') {
+      // — definition info (name+equipment)
+      final defInfo = await DefinitionDao.getDefinitionInfo(
+        db,
+        exRow['exercise_def_id'] as int,
+      );
 
-    // — sets & changeSets
-    final parentRows = await db.query(
-      'sets',
-      where: 'exercise_id = ? AND parent_set_id IS NULL',
-      whereArgs: [exerciseId],
-      orderBy: 'order_index',
-    );
-    final sets = <ExerciseSet>[];
-    final changeSets = <int, List<ExerciseSet>>{};
-    final completedParents = <int>{};
-    final completedChildren = <int, Set<int>>{};
-
-    for (var i = 0; i < parentRows.length; i++) {
-      final p = parentRows[i];
-      sets.add(ExerciseSet(weight: (p['weight'] as num).toDouble(), reps: p['reps'] as int));
-      completedParents.add(i);
-
-      final children = await db.query(
+      // — sets & changeSets
+      final parentRows = await db.query(
         'sets',
-        where: 'parent_set_id = ?',
-        whereArgs: [p['id']],
+        where: 'exercise_id = ? AND parent_set_id IS NULL',
+        whereArgs: [exerciseId],
         orderBy: 'order_index',
       );
-      if (children.isNotEmpty) {
-        changeSets[i] = children.map((c) => ExerciseSet(
-          weight: (c['weight'] as num).toDouble(),
-          reps:   c['reps']   as int,
-        )).toList();
-        completedChildren[i] = Set.from(List.generate(children.length, (j) => j));
+      final sets = <ExerciseSet>[];
+      final changeSets = <int, List<ExerciseSet>>{};
+      final completedParents = <int>{};
+      final completedChildren = <int, Set<int>>{};
+
+      for (var i = 0; i < parentRows.length; i++) {
+        final p = parentRows[i];
+        sets.add(
+          ExerciseSet(
+            weight: (p['weight'] as num).toDouble(),
+            reps: p['reps'] as int,
+          ),
+        );
+        completedParents.add(i);
+
+        final children = await db.query(
+          'sets',
+          where: 'parent_set_id = ?',
+          whereArgs: [p['id']],
+          orderBy: 'order_index',
+        );
+        if (children.isNotEmpty) {
+          changeSets[i] =
+              children
+                  .map(
+                    (c) => ExerciseSet(
+                      weight: (c['weight'] as num).toDouble(),
+                      reps: c['reps'] as int,
+                    ),
+                  )
+                  .toList();
+          completedChildren[i] = Set.from(
+            List.generate(children.length, (j) => j),
+          );
+        }
       }
+
+      return WeightExercise(
+        name: defInfo['name']!,
+        equipment: defInfo['equipmentName'] ?? '',
+        sets: sets,
+        changeSets: changeSets,
+        completedParents: completedParents,
+        completedChildren: completedChildren,
+      );
     }
 
-    return WeightExercise(
-      name:              defInfo['name']!,
-      equipment:         defInfo['equipmentName'] ?? '',
-      sets:              sets,
-      changeSets:        changeSets,
-      completedParents:  completedParents,
-      completedChildren: completedChildren,
-    );
-  }
+    if (type == 'cardio') {
+      final c = await getCardioDetailsForExercise(exerciseId);
+      if (c == null) return null;
+      return CardioExercise(
+        name: c['cardio_name'] as String,
+        equipment: '',
+        cardioName: c['cardio_name'] as String,
+        cardioNote: c['note'] as String?,
+        plannedMinutes: (c['planned_minutes'] as num).toInt(),
+        elapsedSeconds: (c['elapsed_seconds'] as num).toInt(),
+      );
+    }
 
-  if (type == 'cardio') {
-    final c = await getCardioDetailsForExercise(exerciseId);
-    if (c == null) return null;
-    return CardioExercise(
-      name:           c['cardio_name']    as String,
-      equipment:      '',
-      cardioName:     c['cardio_name']    as String,
-      cardioNote:     c['note']           as String?,
-      plannedMinutes: (c['planned_minutes'] as num).toInt(),
-      elapsedSeconds: (c['elapsed_seconds'] as num).toInt(),
-    );
-  }
-
-  if (type == 'stretch') {
-    final items = await getStretchItemsForExercise(exerciseId);
+    if (type == 'stretch') {
+      final items = await getStretchItemsForExercise(exerciseId);
       // Decode rows into our StretchInstance models
-   final insts = items
-       .map((r) => StretchInstance.fromMap(r))
-       .toList();
-   // Track which indices were checked
-   final completed = <int>{};
-   for (var i = 0; i < insts.length; i++) {
-     if (insts[i].isChecked) completed.add(i);
-   }
-    // determine header name…
-    String hdr = 'Stretch';
-       if (insts.isNotEmpty && insts.first.stretchId != null) {
-     final sd = await DefinitionDao.getDefinitionInfo(db, insts.first.stretchId!);
-      hdr = sd['name']!;
+      final insts = items.map((r) => StretchInstance.fromMap(r)).toList();
+      // Track which indices were checked
+      final completed = <int>{};
+      for (var i = 0; i < insts.length; i++) {
+        if (insts[i].isChecked) completed.add(i);
+      }
+      // determine header name…
+      String hdr = 'Stretch';
+      if (insts.isNotEmpty && insts.first.stretchId != null) {
+        final sd = await DefinitionDao.getDefinitionInfo(
+          db,
+          insts.first.stretchId!,
+        );
+        hdr = sd['name']!;
+      }
+      return StretchExercise(
+        name: hdr,
+        equipment: '',
+        stretchInstances: insts,
+        completedStretchIndices: completed,
+      );
     }
-    return StretchExercise(
-      name:                    hdr,
-      equipment:               '',
-      stretchInstances:        insts,
-      completedStretchIndices: completed,
-    );
+
+    return null;
   }
 
-  return null;
-}
+  /// Deletes a single exercise (and all its child rows) by ID.
+  Future<void> deleteExercise(int exerciseId) async {
+    final db = await database;
+    // Delegate to the DAO
+    await ExerciseDao.deleteExerciseById(db, exerciseId);
+  }
 
-/// Deletes a single exercise (and all its child rows) by ID.
-Future<void> deleteExercise(int exerciseId) async {
-  final db = await database;
-  // Delegate to the DAO
-  await ExerciseDao.deleteExerciseById(db, exerciseId);
-}
-
- // set_dao.dart
+  // set_dao.dart
 
   /// Inserts a set belonging to an exercise instance.
-  Future<int> addSet(int exerciseId, double weight, int reps, int orderIndex) async {
-  final db = await database;
-  return SetDao.insertSet(db, exerciseId, weight, reps, orderIndex);
-}
+  Future<int> addSet(
+    int exerciseId,
+    double weight,
+    int reps,
+    int orderIndex,
+  ) async {
+    final db = await database;
+    return SetDao.insertSet(db, exerciseId, weight, reps, orderIndex);
+  }
 
   /// Given a parentSets list and childChangeSets map, insert into sets.
   /// parentSets is List < ExerciseSet >  where each is a top-level set.
   /// childChangeSets is a Map < parentIndex, List < ExerciseSet>>.
   Future<void> addWeightSets({
-  required int exerciseId,
-  required List<ExerciseSet> parentSets,
-  required Map<int,List<ExerciseSet>> childChangeSets,
-}) async {
-  final db = await database;
-  await SetDao.insertWeightSets(
-    db: db,
-    exerciseId: exerciseId,
-    parentSets: parentSets,
-    childChangeSets: childChangeSets,
-  );
-}
+    required int exerciseId,
+    required List<ExerciseSet> parentSets,
+    required Map<int, List<ExerciseSet>> childChangeSets,
+  }) async {
+    final db = await database;
+    await SetDao.insertWeightSets(
+      db: db,
+      exerciseId: exerciseId,
+      parentSets: parentSets,
+      childChangeSets: childChangeSets,
+    );
+  }
 
-   // Fetch raw set-rows.
-Future<List<Map<String,dynamic>>> fetchSetsRaw(int exerciseId) async {
-  final db = await database;
-  return SetDao.getSetsForExercise(db, exerciseId);
-}
+  // Fetch raw set-rows.
+  Future<List<Map<String, dynamic>>> fetchSetsRaw(int exerciseId) async {
+    final db = await database;
+    return SetDao.getSetsForExercise(db, exerciseId);
+  }
 
- // Update a single set.
-Future<void> updateSet(int setId, double weight, int reps) async {
-  final db = await database;
-  await SetDao.updateSet(db, setId, weight, reps);
-}
+  // Update a single set.
+  Future<void> updateSet(int setId, double weight, int reps) async {
+    final db = await database;
+    await SetDao.updateSet(db, setId, weight, reps);
+  }
 
-// Delete a single set.
-Future<void> deleteSet(int setId) async {
-  final db = await database;
-  await SetDao.deleteSet(db, setId);
-}
+  // Delete a single set.
+  Future<void> deleteSet(int setId) async {
+    final db = await database;
+    await SetDao.deleteSet(db, setId);
+  }
 
-// Reorder sets.
-Future<void> reorderSets(int exerciseId, List<int> setIds) async {
-  final db = await database;
-  await SetDao.reorderSets(db, exerciseId, setIds);
-}
+  // Reorder sets.
+  Future<void> reorderSets(int exerciseId, List<int> setIds) async {
+    final db = await database;
+    await SetDao.reorderSets(db, exerciseId, setIds);
+  }
 
-
-  
   //cardio_dao.dart
-  
+
   /// After you create a cardio exercise row (type='cardio'), call:
- Future<void> saveCardioDetails({
-  required int exerciseId,
-  required String cardioName,
-  String? note,
-  required int plannedMinutes,
-  required int elapsedSeconds,
-}) async {
-  final db = await database;
-  await CardioDao.insertCardioDetails(
-    db: db,
-    exerciseId: exerciseId,
-    cardioName: cardioName,
-    note: note,
-    plannedMinutes: plannedMinutes,
-    elapsedSeconds: elapsedSeconds,
-  );
-}
-  
- /// Fetch cardio_details for a session.
- Future<Map<String, dynamic>?> getCardioDetailsForExercise(int eid) async {
-   final db = await database;
-   return CardioDao.getCardioDetailsForExercise(db, eid);
- }
+  Future<void> saveCardioDetails({
+    required int exerciseId,
+    required String cardioName,
+    String? note,
+    required int plannedMinutes,
+    required int elapsedSeconds,
+  }) async {
+    final db = await database;
+    await CardioDao.insertCardioDetails(
+      db: db,
+      exerciseId: exerciseId,
+      cardioName: cardioName,
+      note: note,
+      plannedMinutes: plannedMinutes,
+      elapsedSeconds: elapsedSeconds,
+    );
+  }
 
-// Fetch raw cardio map.
-Future<Map<String,dynamic>?> fetchCardioDetails(int exerciseId) async {
-  final db = await database;
-  return CardioDao.getCardioDetailsForExercise(db, exerciseId);
-}
+  /// Fetch cardio_details for a session.
+  Future<Map<String, dynamic>?> getCardioDetailsForExercise(int eid) async {
+    final db = await database;
+    return CardioDao.getCardioDetailsForExercise(db, eid);
+  }
 
-// Update cardio details.
-Future<void> updateCardioDetails({
-  required int exerciseId,
-  required String cardioName,
-  String? note,
-  required int plannedMinutes,
-  required int elapsedSeconds,
-}) async {
-  final db = await database;
-  await CardioDao.updateCardioDetails(
-    db: db,
-    exerciseId: exerciseId,
-    cardioName: cardioName,
-    note: note,
-    plannedMinutes: plannedMinutes,
-    elapsedSeconds: elapsedSeconds,
-  );
-}
+  // Fetch raw cardio map.
+  Future<Map<String, dynamic>?> fetchCardioDetails(int exerciseId) async {
+    final db = await database;
+    return CardioDao.getCardioDetailsForExercise(db, exerciseId);
+  }
 
-// Delete cardio details.
-Future<void> deleteCardioDetails(int exerciseId) async {
-  final db = await database;
-  await CardioDao.deleteCardioDetails(db, exerciseId);
-}
+  // Update cardio details.
+  Future<void> updateCardioDetails({
+    required int exerciseId,
+    required String cardioName,
+    String? note,
+    required int plannedMinutes,
+    required int elapsedSeconds,
+  }) async {
+    final db = await database;
+    await CardioDao.updateCardioDetails(
+      db: db,
+      exerciseId: exerciseId,
+      cardioName: cardioName,
+      note: note,
+      plannedMinutes: plannedMinutes,
+      elapsedSeconds: elapsedSeconds,
+    );
+  }
 
-//stretch_dao.dart
+  // Delete cardio details.
+  Future<void> deleteCardioDetails(int exerciseId) async {
+    final db = await database;
+    await CardioDao.deleteCardioDetails(db, exerciseId);
+  }
+
+  //stretch_dao.dart
 
   /// After you create a stretch-type exercise row, call:
   /// Inserts one stretch-type exercise’s “instance” and all of its items.
   /// uses class StretchInstance.
-Future<void> saveClassStretchInstance({
-  required int exerciseId,
-  required List<StretchInstance> instances,
-}) async {
-  final db = await database;
-  await StretchDao.insertStretchInstance(
-    db: db,
-    exerciseId: exerciseId,
-    items: instances,
-  );
-}
+  Future<void> saveClassStretchInstance({
+    required int exerciseId,
+    required List<StretchInstance> instances,
+  }) async {
+    final db = await database;
+    await StretchDao.insertStretchInstance(
+      db: db,
+      exerciseId: exerciseId,
+      items: instances,
+    );
+  }
 
-Future<void> saveStretchInstance({
-  required int exerciseId,
-  required List<Map<String, dynamic>> items,
-}) async {
-  final db = await database;
-  final instances = items.map((m) => StretchInstance.fromMap(m)).toList();
-  await StretchDao.insertStretchInstance(
-    db: db,
-    exerciseId: exerciseId,
-    items: instances,
-  );
-}
+  Future<void> saveStretchInstance({
+    required int exerciseId,
+    required List<Map<String, dynamic>> items,
+  }) async {
+    final db = await database;
+    final instances = items.map((m) => StretchInstance.fromMap(m)).toList();
+    await StretchDao.insertStretchInstance(
+      db: db,
+      exerciseId: exerciseId,
+      items: instances,
+    );
+  }
 
   /// Fetch all items in a stretch instance for a given exercise.
-Future<List<Map<String, dynamic>>> getStretchItemsForExercise(int eid) async {
-  final db = await database;
-  // DAO now returns List<StretchInstance>
-  final instances = await StretchDao.getStretchItemsForExercise(db, eid);
-  // convert back to the old map format so callers see the same type
-  return instances.map((inst) => inst.toMap()).toList();
-}
+  Future<List<Map<String, dynamic>>> getStretchItemsForExercise(int eid) async {
+    final db = await database;
+    // DAO now returns List<StretchInstance>
+    final instances = await StretchDao.getStretchItemsForExercise(db, eid);
+    // convert back to the old map format so callers see the same type
+    return instances.map((inst) => inst.toMap()).toList();
+  }
 
-// Fetch raw stretch-item maps.
-Future<List<Map<String,dynamic>>> fetchStretchItemsRaw(int exerciseId) async {
-  final db = await database;
-  final insts = await StretchDao.getStretchItemsForExercise(db, exerciseId);
-  return insts.map((i) => i.toMap()).toList();
-}
+  // Fetch raw stretch-item maps.
+  Future<List<Map<String, dynamic>>> fetchStretchItemsRaw(
+    int exerciseId,
+  ) async {
+    final db = await database;
+    final insts = await StretchDao.getStretchItemsForExercise(db, exerciseId);
+    return insts.map((i) => i.toMap()).toList();
+  }
 
+  // Update one stretch item.
+  Future<int> updateStretchItem({
+    required int itemId,
+    int? stretchId,
+    bool? isCustom,
+    String? customName,
+    String? customDesc,
+    bool? isChecked,
+    int? orderIndex,
+  }) async {
+    final db = await database;
+    return StretchDao.updateStretchItem(
+      db: db,
+      itemId: itemId,
+      stretchId: stretchId,
+      isCustom: isCustom,
+      customName: customName,
+      customDesc: customDesc,
+      isChecked: isChecked,
+      orderIndex: orderIndex,
+    );
+  }
 
-// Update one stretch item.
-Future<int> updateStretchItem({
-  required int itemId,
-  int? stretchId,
-  bool? isCustom,
-  String? customName,
-  String? customDesc,
-  bool? isChecked,
-  int? orderIndex,
-}) async {
-  final db = await database;
-  return StretchDao.updateStretchItem(
-    db: db,
-    itemId: itemId,
-    stretchId: stretchId,
-    isCustom: isCustom,
-    customName: customName,
-    customDesc: customDesc,
-    isChecked: isChecked,
-    orderIndex: orderIndex,
-  );
-}
+  // Delete a stretch item.
+  Future<void> deleteStretchItem(int itemId) async {
+    final db = await database;
+    await StretchDao.deleteStretchItem(db, itemId);
+  }
 
-// Delete a stretch item.
-Future<void> deleteStretchItem(int itemId) async {
-  final db = await database;
-  await StretchDao.deleteStretchItem(db, itemId);
-}
+  // Delete whole stretch instance.
+  Future<void> deleteStretchInstance(int exerciseId) async {
+    final db = await database;
+    await StretchDao.deleteStretchInstance(db, exerciseId);
+  }
 
-// Delete whole stretch instance.
-Future<void> deleteStretchInstance(int exerciseId) async {
-  final db = await database;
-  await StretchDao.deleteStretchInstance(db, exerciseId);
-}
+  // Reorder stretch items.
+  Future<void> reorderStretchItems(int exerciseId, List<int> itemIds) async {
+    final db = await database;
+    await StretchDao.reorderStretchItems(db, exerciseId, itemIds);
+  }
 
-// Reorder stretch items.
-Future<void> reorderStretchItems(int exerciseId, List<int> itemIds) async {
-  final db = await database;
-  await StretchDao.reorderStretchItems(db, exerciseId, itemIds);
-}
-
-
-//definition_dao.dart
+  //definition_dao.dart
 
   /// Fetch exercise definitions by bodyPart ID.
-  Future<List<Map<String,dynamic>>> lookupDefsByBodyPart(int bodyPartId) async {
-  final db = await database;
-  return DefinitionDao.getExerciseDefsByBodyPart(db, bodyPartId);
-}
+  Future<List<Map<String, dynamic>>> lookupDefsByBodyPart(
+    int bodyPartId,
+  ) async {
+    final db = await database;
+    return DefinitionDao.getExerciseDefsByBodyPart(db, bodyPartId);
+  }
 
   /// Fetch every definition with its full equipmentList, bodyParts, and muscles.
   Future<List<ExerciseDefinition>> lookupDefsDetailed() async {
-  final db = await database;
-  return DefinitionDao.getAllExerciseDefinitionsDetailed(db);
-}
+    final db = await database;
+    return DefinitionDao.getAllExerciseDefinitionsDetailed(db);
+  }
 
-/// Fetch all exercise definitions (shallow, without join lists).
-Future<List<Map<String,dynamic>>> fetchAllExercisesRaw() async {
-  final db = await database;
-  return DefinitionDao.getAllExercisesRaw(db);
-}
+  /// Fetch all exercise definitions (shallow, without join lists).
+  Future<List<Map<String, dynamic>>> fetchAllExercisesRaw() async {
+    final db = await database;
+    return DefinitionDao.getAllExercisesRaw(db);
+  }
 
- /// Fetch all exercises whose equipment is *at least one* of [equipmentNames].
- Future<List<ExerciseDefinition>> lookupDefsWithAnyEquipment(List<String> equipmentNames) async {
-  final db = await database;
-  return DefinitionDao.getExerciseDefsWithAnyEquipment(db, equipmentNames);
-}
+  /// Fetch all exercises whose equipment is *at least one* of [equipmentNames].
+  Future<List<ExerciseDefinition>> lookupDefsWithAnyEquipment(
+    List<String> equipmentNames,
+  ) async {
+    final db = await database;
+    return DefinitionDao.getExerciseDefsWithAnyEquipment(db, equipmentNames);
+  }
 
   /// Fetch all exercises whose equipment is *only* drawn from [equipmentNames].
   ///
   /// Because each definition has a single equipment_id, this currently
   /// returns those whose equipment_id ∈ list, or NULL if you consider
   /// “bodyweight/no equipment” as allowed.
- Future<List<ExerciseDefinition>> lookupDefsOnlyWithEquipment(
-  List<String> equipmentNames, {
-  bool includeNone = true,
-}) async {
-  final db = await database;
-  return DefinitionDao.getExerciseDefsOnlyWithEquipment(
-    db,
-    equipmentNames,
-    includeNone: includeNone,
-  );
-}
+  Future<List<ExerciseDefinition>> lookupDefsOnlyWithEquipment(
+    List<String> equipmentNames, {
+    bool includeNone = true,
+  }) async {
+    final db = await database;
+    return DefinitionDao.getExerciseDefsOnlyWithEquipment(
+      db,
+      equipmentNames,
+      includeNone: includeNone,
+    );
+  }
 
-/// Fetch exercise definitions, optionally filtering by:
+  /// Fetch exercise definitions, optionally filtering by:
   ///  – equipmentNames: list of equipment.name
   ///  – bodypartIds:    list of bodypart.id
   ///  – muscleIds:      list of muscle.id
   ///
   /// Each non-null filter list requires the definition to be associated
   /// with *at least one* entry in that list. All supplied filters are ANDed.
-Future<List<ExerciseDefinition>> lookupDefsFiltered({
-  List<String>? equipmentNames,
-  List<int>?    bodypartIds,
-  List<int>?    muscleIds,
-}) async {
-  final db = await database;
-  return DefinitionDao.getExerciseDefinitionsFiltered(
-    db,
-    equipmentNames: equipmentNames,
-    bodypartIds: bodypartIds,
-    muscleIds: muscleIds,
-  );
-}
+  Future<List<ExerciseDefinition>> lookupDefsFiltered({
+    List<String>? equipmentNames,
+    List<int>? bodypartIds,
+    List<int>? muscleIds,
+  }) async {
+    final db = await database;
+    return DefinitionDao.getExerciseDefinitionsFiltered(
+      db,
+      equipmentNames: equipmentNames,
+      bodypartIds: bodypartIds,
+      muscleIds: muscleIds,
+    );
+  }
 
-Future<int> findOrCreateExerciseDefinition(String name, String equipmentName) async {
-  final db = await database;
-  return DefinitionDao.findOrCreateExerciseDefinition(
-    db,
-    name,
-    equipmentName,
-  );
-}
+  Future<int> findOrCreateExerciseDefinition(
+    String name,
+    String equipmentName,
+  ) async {
+    final db = await database;
+    return DefinitionDao.findOrCreateExerciseDefinition(
+      db,
+      name,
+      equipmentName,
+    );
+  }
 
-Future<Map<String, String?>> fetchDefinitionInfo(int defId) async {
-  final db = await database;
-  return DefinitionDao.getDefinitionInfo(db, defId);
-}
+  Future<Map<String, String?>> fetchDefinitionInfo(int defId) async {
+    final db = await database;
+    return DefinitionDao.getDefinitionInfo(db, defId);
+  }
 
-Future<void> updateExerciseDefinition(ExerciseDefinition def) async {
-  final db = await database;
-  await DefinitionDao.updateExerciseDefinition(db, def);
-}
+  Future<void> updateExerciseDefinition(ExerciseDefinition def) async {
+    final db = await database;
+    await DefinitionDao.updateExerciseDefinition(db, def);
+  }
 
-Future<void> deleteExerciseDefinition(int defId) async {
-  final db = await database;
-  await DefinitionDao.deleteExerciseDefinition(db, defId);
-}
+  Future<void> deleteExerciseDefinition(int defId) async {
+    final db = await database;
+    await DefinitionDao.deleteExerciseDefinition(db, defId);
+  }
 
-Future<List<ExerciseDefinition>> searchExerciseDefinitions(String query) async {
-  final db = await database;
-  return DefinitionDao.searchExerciseDefinitions(db, query);
-}
+  Future<List<ExerciseDefinition>> searchExerciseDefinitions(
+    String query,
+  ) async {
+    final db = await database;
+    return DefinitionDao.searchExerciseDefinitions(db, query);
+  }
 
-/// Fetch a single detailed ExerciseDefinition by its ID.
-Future<ExerciseDefinition?> getExerciseDefinitionById(int defId) async {
-  final db = await database;
-  return DefinitionDao.getExerciseDefinitionById(db, defId);
-}
+  /// Fetch a single detailed ExerciseDefinition by its ID.
+  Future<ExerciseDefinition?> getExerciseDefinitionById(int defId) async {
+    final db = await database;
+    return DefinitionDao.getExerciseDefinitionById(db, defId);
+  }
 
-Future<List<ExerciseMediaItem>> getExerciseMedia(int defId) async {
-  final db = await database;
-  final rows = await db.query(
-    'exercise_media',
-    where: 'exercise_def_id = ?',
-    whereArgs: [defId],
-    orderBy: 'sort_order, id',
-  );
-  return rows.map(ExerciseMediaItem.fromMap).toList();
-}
-
-Future<void> replaceExerciseMedia(
-  int defId,
-  List<ExerciseMediaItem> items,
-) async {
-  final db = await database;
-  await db.transaction((txn) async {
-    await txn.delete(
+  Future<List<ExerciseMediaItem>> getExerciseMedia(int defId) async {
+    final db = await database;
+    final rows = await db.query(
       'exercise_media',
       where: 'exercise_def_id = ?',
       whereArgs: [defId],
+      orderBy: 'sort_order, id',
     );
-    for (var i = 0; i < items.length; i++) {
-      final item = items[i];
-      await txn.insert(
+    return rows.map(ExerciseMediaItem.fromMap).toList();
+  }
+
+  Future<void> replaceExerciseMedia(
+    int defId,
+    List<ExerciseMediaItem> items,
+  ) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      await txn.delete(
         'exercise_media',
-        {
+        where: 'exercise_def_id = ?',
+        whereArgs: [defId],
+      );
+      for (var i = 0; i < items.length; i++) {
+        final item = items[i];
+        await txn.insert('exercise_media', {
           'exercise_def_id': defId,
           'media_type': item.mediaType,
           'remote_url': item.remoteUrl,
@@ -1959,521 +2179,581 @@ Future<void> replaceExerciseMedia(
           'sort_order': i,
           'created_at': DateTime.now().toUtc().toIso8601String(),
           'updated_at': DateTime.now().toUtc().toIso8601String(),
-        },
+        });
+      }
+    });
+  }
+
+  /// Fetches catalog definitions with optional profile & filters.
+  Future<List<ExerciseDefinition>> fetchCatalogDefinitions({
+    required bool useProfileFilter,
+    int? profileId,
+    String? equipmentFilter,
+    List<int>? bodypartIds,
+    List<int>? muscleIds,
+  }) async {
+    // 1) Base equipment names from profile
+    List<String>? eqNames;
+    if (useProfileFilter && profileId != null) {
+      final eqMaps = await fetchEquipmentForProfile(profileId);
+      eqNames = eqMaps.map((e) => e['name'] as String).toList();
+    }
+    // 2) Override by single filter
+    if (equipmentFilter != null) {
+      eqNames = [equipmentFilter];
+    }
+
+    // 3) Get defs
+    List<ExerciseDefinition> defs;
+    if (eqNames != null && eqNames.isNotEmpty) {
+      defs = await lookupDefsOnlyWithEquipment(eqNames);
+    } else {
+      defs = await lookupDefsFiltered(
+        equipmentNames: eqNames,
+        bodypartIds: bodypartIds,
+        muscleIds: muscleIds,
       );
     }
-  });
-}
 
+    // 4) Post‐filter by body/muscle
+    if (eqNames != null && eqNames.isNotEmpty) {
+      defs =
+          defs.where((d) {
+            final areaOk =
+                bodypartIds == null ||
+                bodypartIds.any((id) => d.bodyParts.any((bp) => bp.id == id));
+            final muscleOk =
+                muscleIds == null ||
+                muscleIds.any(
+                  (id) => d.muscles.any((rm) => rm.muscle.id == id),
+                );
+            return areaOk && muscleOk;
+          }).toList();
+    }
 
-/// Fetches catalog definitions with optional profile & filters.
-Future<List<ExerciseDefinition>> fetchCatalogDefinitions({
-  required bool useProfileFilter,
-  int? profileId,
-  String? equipmentFilter,
-  List<int>? bodypartIds,
-  List<int>? muscleIds,
-}) async {
-  // 1) Base equipment names from profile
-  List<String>? eqNames;
-  if (useProfileFilter && profileId != null) {
-    final eqMaps = await fetchEquipmentForProfile(profileId);
-    eqNames = eqMaps.map((e) => e['name'] as String).toList();
-  }
-  // 2) Override by single filter
-  if (equipmentFilter != null) {
-    eqNames = [equipmentFilter];
+    return defs;
   }
 
-  // 3) Get defs
-  List<ExerciseDefinition> defs;
-  if (eqNames != null && eqNames.isNotEmpty) {
-    defs = await lookupDefsOnlyWithEquipment(eqNames);
-  } else {
-    defs = await lookupDefsFiltered(
-      equipmentNames: eqNames,
-      bodypartIds: bodypartIds,
-      muscleIds: muscleIds,
+  Future<int> insertExerciseMuscleMapping(
+    int defId,
+    int muscleId,
+    int rank,
+  ) async {
+    final db = await database;
+    return DefinitionDao.insertExerciseMuscleMapping(db, defId, muscleId, rank);
+  }
+
+  /// Deletes the link between a definition and a muscle.
+  Future<int> deleteExerciseMuscleMapping(int defId, int muscleId) async {
+    final db = await database;
+    return DefinitionDao.deleteExerciseMuscleMapping(db, defId, muscleId);
+  }
+
+  Future<int> insertExerciseBodypartMapping(int defId, int bpId) async {
+    final db = await database;
+    return DefinitionDao.insertExerciseBodypartMapping(db, defId, bpId);
+  }
+
+  Future<int> deleteExerciseBodypartMapping(int defId, int bpId) async {
+    final db = await database;
+    return DefinitionDao.deleteExerciseBodypartMapping(db, defId, bpId);
+  }
+
+  Future<int> insertExerciseEquipmentMapping(int defId, int eqId) async {
+    final db = await database;
+    return DefinitionDao.insertExerciseEquipmentMapping(db, defId, eqId);
+  }
+
+  Future<int> deleteExerciseEquipmentMapping(int defId, int eqId) async {
+    final db = await database;
+    return DefinitionDao.deleteExerciseEquipmentMapping(db, defId, eqId);
+  }
+
+  //lookup_dao.dart
+
+  /// Fetch all measurement definitions.
+  Future<List<Map<String, dynamic>>> fetchMeasurementDefinitions() async {
+    final db = await database;
+    return LookupDao.getMeasurementDefinitions(db);
+  }
+
+  Future<int?> fetchMeasurementDefinitionId(String name) async {
+    final db = await database;
+    return LookupDao.getMeasurementDefinitionId(db, name);
+  }
+
+  /// Insert a new measurement instance.
+  Future<int> insertMeasurement(
+    int defId,
+    DateTime timestamp,
+    double value,
+    String unit,
+    String? note,
+  ) async {
+    final db = await database;
+    return LookupDao.insertMeasurement(db, defId, timestamp, value, unit, note);
+  }
+
+  /// Fetch all measurements for a definition.
+  Future<List<Map<String, dynamic>>> fetchMeasurementsRaw(int defId) async {
+    final db = await database;
+    return LookupDao.getMeasurementsForDefinition(db, defId);
+  }
+
+  Future<List<Measurement>> fetchClassMeasurementsForDefinition(
+    int defId,
+  ) async {
+    final rows = await fetchMeasurementsRaw(defId);
+    return rows
+        .map(
+          (r) => Measurement(
+            id: r['id'] as int,
+            defId: r['def_id'] as int,
+            timestamp: DateTime.parse(r['timestamp'] as String),
+            value: (r['value'] as num).toDouble(),
+            unit: r['unit'] as String,
+            note: r['note'] as String?,
+          ),
+        )
+        .toList();
+  }
+
+  /// Returns only the definitions that have at least one measurement recorded.
+  Future<List<Map<String, dynamic>>>
+  fetchUsedMeasurementDefinitionsRaw() async {
+    final db = await database;
+    return LookupDao.getUsedMeasurementDefinitions(db);
+  }
+
+  Future<List<MeasurementDefinition>>
+  fetchUsedClassMeasurementDefinitions() async {
+    final raw = await fetchUsedMeasurementDefinitionsRaw();
+    return raw
+        .map(
+          (r) => MeasurementDefinition(
+            id: r['id'] as int,
+            name: r['name'] as String,
+            type: MeasurementType.values.firstWhere(
+              (mt) => mt.name == (r['type'] as String),
+            ),
+          ),
+        )
+        .toList();
+  }
+
+  Future<Map<String, dynamic>?> fetchMeasurementById(int id) async {
+    final db = await database;
+    return LookupDao.getMeasurementById(db, id);
+  }
+
+  Future<void> updateMeasurement({
+    required int measurementId,
+    required DateTime timestamp,
+    required double value,
+    required String unit,
+    String? note,
+  }) async {
+    final db = await database;
+    await LookupDao.updateMeasurement(
+      db: db,
+      measurementId: measurementId,
+      timestamp: timestamp,
+      value: value,
+      unit: unit,
+      note: note,
     );
   }
 
-  // 4) Post‐filter by body/muscle
-  if (eqNames != null && eqNames.isNotEmpty) {
-    defs = defs.where((d) {
-      final areaOk = bodypartIds == null ||
-          bodypartIds.any((id) => d.bodyParts.any((bp) => bp.id == id));
-      final muscleOk = muscleIds == null ||
-          muscleIds.any((id) =>
-              d.muscles.any((rm) => rm.muscle.id == id));
-      return areaOk && muscleOk;
-    }).toList();
+  Future<void> deleteMeasurement(int measurementId) async {
+    final db = await database;
+    await LookupDao.deleteMeasurement(db, measurementId);
   }
-
-  return defs;
-}
-
-Future<int> insertExerciseMuscleMapping(int defId, int muscleId, int rank) async {
-  final db = await database;
-  return DefinitionDao.insertExerciseMuscleMapping(db, defId, muscleId, rank);
-}
-
-/// Deletes the link between a definition and a muscle.
-Future<int> deleteExerciseMuscleMapping(int defId, int muscleId) async {
-  final db = await database;
-  return DefinitionDao.deleteExerciseMuscleMapping(db, defId, muscleId);
-}
-
-
-Future<int> insertExerciseBodypartMapping(int defId, int bpId) async {
-  final db = await database;
-  return DefinitionDao.insertExerciseBodypartMapping(db, defId, bpId);
-}
-Future<int> deleteExerciseBodypartMapping(int defId, int bpId) async {
-  final db = await database;
-  return DefinitionDao.deleteExerciseBodypartMapping(db, defId, bpId);
-}
-
-Future<int> insertExerciseEquipmentMapping(int defId, int eqId) async {
-  final db = await database;
-  return DefinitionDao.insertExerciseEquipmentMapping(db, defId, eqId);
-}
-Future<int> deleteExerciseEquipmentMapping(int defId, int eqId) async {
-  final db = await database;
-  return DefinitionDao.deleteExerciseEquipmentMapping(db, defId, eqId);
-}
-
-
-
-//lookup_dao.dart
-  
-  /// Fetch all measurement definitions.
-Future<List<Map<String, dynamic>>> fetchMeasurementDefinitions() async {
-  final db = await database;
-  return LookupDao.getMeasurementDefinitions(db);
-}
-
-Future<int?> fetchMeasurementDefinitionId(String name) async {
-  final db = await database;
-  return LookupDao.getMeasurementDefinitionId(db, name);
-}
-
-
-  /// Insert a new measurement instance.
-Future<int> insertMeasurement(  int defId,  DateTime timestamp,  double value,  String unit,  String? note,
-) async {
-  final db = await database;
-  return LookupDao.insertMeasurement(db, defId, timestamp, value, unit, note);
-}
-
-/// Fetch all measurements for a definition.
- Future<List<Map<String, dynamic>>> fetchMeasurementsRaw(int defId) async {
-  final db = await database;
-  return LookupDao.getMeasurementsForDefinition(db, defId);
-}
-
-Future<List<Measurement>> fetchClassMeasurementsForDefinition(int defId) async {
-  final rows = await fetchMeasurementsRaw(defId);
-  return rows.map((r) => Measurement(
-      id:        r['id'] as int,
-      defId:     r['def_id'] as int,
-      timestamp: DateTime.parse(r['timestamp'] as String),
-      value:     (r['value'] as num).toDouble(),
-      unit:      r['unit'] as String,
-      note:      r['note'] as String?,
-    )).toList();
-}
-
-  /// Returns only the definitions that have at least one measurement recorded.
- Future<List<Map<String, dynamic>>> fetchUsedMeasurementDefinitionsRaw() async {
-  final db = await database;
-  return LookupDao.getUsedMeasurementDefinitions(db);
-}
-
-Future<List<MeasurementDefinition>> fetchUsedClassMeasurementDefinitions() async {
-  final raw = await fetchUsedMeasurementDefinitionsRaw();
-  return raw.map((r) => MeasurementDefinition(
-    id:   r['id']   as int,
-    name: r['name'] as String,
-    type: MeasurementType.values.firstWhere((mt) => mt.name == (r['type'] as String)),
-  )).toList();
-}
-
-Future<Map<String, dynamic>?> fetchMeasurementById(int id) async {
-  final db = await database;
-  return LookupDao.getMeasurementById(db, id);
-}
-
-Future<void> updateMeasurement({
-  required int measurementId,
-  required DateTime timestamp,
-  required double value,
-  required String unit,
-  String? note,
-}) async {
-  final db = await database;
-  await LookupDao.updateMeasurement(
-    db: db,
-    measurementId: measurementId,
-    timestamp: timestamp,
-    value: value,
-    unit: unit,
-    note: note,
-  );
-}
-
-Future<void> deleteMeasurement(int measurementId) async {
-  final db = await database;
-  await LookupDao.deleteMeasurement(db, measurementId);
-}
 
   /// Fetch all equipment names.
-Future<List<String>> fetchAllEquipmentNames() async {
-  final db = await database;
-  return LookupDao.getAllEquipmentNames(db);
-}
+  Future<List<String>> fetchAllEquipmentNames() async {
+    final db = await database;
+    return LookupDao.getAllEquipmentNames(db);
+  }
 
   /// Fetch all body-part IDs and names.
-Future<List<BodyPart>> fetchAllBodyParts() async {
-  final db = await database;
-  return LookupDao.getAllBodyParts(db);
-}
+  Future<List<BodyPart>> fetchAllBodyParts() async {
+    final db = await database;
+    return LookupDao.getAllBodyParts(db);
+  }
 
   /// Fetch all muscle names.
-Future<List<Muscle>> fetchAllMuscles() async {
-  final db = await database;
-  return LookupDao.getAllMuscles(db);
-}
+  Future<List<Muscle>> fetchAllMuscles() async {
+    final db = await database;
+    return LookupDao.getAllMuscles(db);
+  }
 
-Future<List<String>> fetchAllMuscleNames() async {
-  final db = await database;
-  return LookupDao.getAllMuscleNames(db);
-}
+  Future<List<String>> fetchAllMuscleNames() async {
+    final db = await database;
+    return LookupDao.getAllMuscleNames(db);
+  }
 
   /// Fetch stretches by an optional bodypart ID (or all if null).
-Future<List<StretchDefinition>> fetchStretches({int? bodypartId}) async {
-  final db = await database;
-  return LookupDao.getStretches(db, bodypartId);
-}
-
-Future<String?> fetchStretchDefinitionNameById(int stretchId) async {
-  final db = await database;
-  return LookupDao.getStretchDefinitionNameById(db, stretchId);
-}
-
-Future<List<Equipment>> fetchAllEquipment() async {
-  final db = await database;
-  return LookupDao.getAllEquipment(db);
-}
-
-Future<int> createEquipment(String name) async {
-  final db = await database;
-  return LookupDao.insertEquipment(db, name);
-}
-
-Future<void> updateEquipment(int id, String name) async {
-  final db = await database;
-  await LookupDao.updateEquipment(db, id, name);
-}
-
-Future<void> deleteEquipment(int id) async {
-  final db = await database;
-  await LookupDao.deleteEquipment(db, id);
-}
-
-Future<List<BodyPart>> fetchAllBodyPartsFull() async {
-  final db = await database;
-  return LookupDao.getAllBodyParts(db);
-}
-
-Future<int> createBodyPart(String name) async {
-  final db = await database;
-  return LookupDao.insertBodyPart(db, name);
-}
-
-Future<void> updateBodyPartEntry(int id, String name) async {
-  final db = await database;
-  await LookupDao.updateBodyPart(db, id, name);
-}
-
-Future<void> deleteBodyPartEntry(int id) async {
-  final db = await database;
-  await LookupDao.deleteBodyPart(db, id);
-}
-
-Future<List<Muscle>> fetchAllMusclesFull() async {
-  final db = await database;
-  return LookupDao.getAllMuscles(db);
-}
-
-Future<int> createMuscle(String name) async {
-  final db = await database;
-  return LookupDao.insertMuscle(db, name);
-}
-
-Future<void> updateMuscleEntry(int id, String name) async {
-  final db = await database;
-  await LookupDao.updateMuscle(db, id, name);
-}
-
-Future<void> deleteMuscleEntry(int id) async {
-  final db = await database;
-  await LookupDao.deleteMuscle(db, id);
-}
-
-/// Rerun JSON-seeding for lookup tables & stretches.
-Future<void> reseedLookupData() async {
-  final db = await database;
-  await Seed.seedLookupsAndExercises(db);
-  await Seed.seedStretches(db);
-}
-
-Future<DatabaseHealthSnapshot> getDatabaseHealthSnapshot() async {
-  final db = await database;
-  final path = await _dbFilePath();
-  final dbFile = File(path);
-  final walFile = File('$path-wal');
-  final shmFile = File('$path-shm');
-
-  Future<int> fileLength(File file) async {
-    try {
-      return await file.exists() ? await file.length() : 0;
-    } catch (_) {
-      return 0;
-    }
+  Future<List<StretchDefinition>> fetchStretches({int? bodypartId}) async {
+    final db = await database;
+    return LookupDao.getStretches(db, bodypartId);
   }
 
-  Future<int> intPragma(String pragma) async {
-    try {
-      return Sqflite.firstIntValue(await db.rawQuery('PRAGMA $pragma')) ?? 0;
-    } catch (_) {
-      return 0;
-    }
+  Future<String?> fetchStretchDefinitionNameById(int stretchId) async {
+    final db = await database;
+    return LookupDao.getStretchDefinitionNameById(db, stretchId);
   }
 
-  String journalMode = 'unknown';
-  try {
-    final rows = await db.rawQuery('PRAGMA journal_mode');
-    if (rows.isNotEmpty && rows.first.values.isNotEmpty) {
-      journalMode = rows.first.values.first.toString();
-    }
-  } catch (_) {
-    journalMode = 'unknown';
+  Future<List<Equipment>> fetchAllEquipment() async {
+    final db = await database;
+    return LookupDao.getAllEquipment(db);
   }
 
-  final schemaVersion = await db.getVersion();
-  final pageCount = await intPragma('page_count');
-  final pageSize = await intPragma('page_size');
-  final tableCount = Sqflite.firstIntValue(await db.rawQuery(
-        "SELECT COUNT(*) FROM sqlite_master "
-        "WHERE type = 'table' AND name NOT LIKE 'sqlite_%'",
-      )) ??
-      0;
-  final indexCount = Sqflite.firstIntValue(await db.rawQuery(
-        "SELECT COUNT(*) FROM sqlite_master "
-        "WHERE type = 'index' AND name NOT LIKE 'sqlite_%'",
-      )) ??
-      0;
-  final triggerCount = Sqflite.firstIntValue(await db.rawQuery(
-        "SELECT COUNT(*) FROM sqlite_master WHERE type = 'trigger'",
-      )) ??
-      0;
-
-  return DatabaseHealthSnapshot(
-    path: path,
-    schemaVersion: schemaVersion,
-    targetSchemaVersion: _kDbVersion,
-    journalMode: journalMode,
-    databaseBytes: await fileLength(dbFile),
-    walBytes: await fileLength(walFile),
-    shmBytes: await fileLength(shmFile),
-    pageCount: pageCount,
-    pageSize: pageSize,
-    tableCount: tableCount,
-    indexCount: indexCount,
-    triggerCount: triggerCount,
-    foodCount: await _countRowsIfTableExists(db, 'foods'),
-    foodFtsCount: await _countRowsIfTableExists(db, 'food_search_fts'),
-    checkedAt: DateTime.now(),
-  );
-}
-
-Future<DatabaseMaintenanceResult> runDatabaseIntegrityCheck() async {
-  final db = await database;
-  final rows = await db.rawQuery('PRAGMA integrity_check');
-  final messages = rows
-      .map((row) => row.values.isEmpty ? '' : row.values.first.toString())
-      .where((message) => message.isNotEmpty)
-      .toList();
-  final ok = messages.length == 1 && messages.first.toLowerCase() == 'ok';
-
-  return DatabaseMaintenanceResult(
-    title: 'Integrity Check',
-    message: ok ? 'Database integrity check passed.' : messages.join('\n'),
-    rows: rows.map((row) => Map<String, Object?>.from(row)).toList(),
-  );
-}
-
-Future<DatabaseMaintenanceResult> optimizeDatabase() async {
-  final db = await database;
-  await db.rawQuery('PRAGMA optimize');
-  return const DatabaseMaintenanceResult(
-    title: 'Optimize Database',
-    message: 'SQLite optimize completed.',
-  );
-}
-
-Future<DatabaseMaintenanceResult> checkpointWal() async {
-  final db = await database;
-  final rows = await db.rawQuery('PRAGMA wal_checkpoint(TRUNCATE)');
-  return DatabaseMaintenanceResult(
-    title: 'WAL Checkpoint',
-    message: 'Write-ahead log checkpoint completed.',
-    rows: rows.map((row) => Map<String, Object?>.from(row)).toList(),
-  );
-}
-
-Future<DatabaseMaintenanceResult> vacuumDatabase() async {
-  final db = await database;
-  await db.execute('VACUUM');
-  return const DatabaseMaintenanceResult(
-    title: 'Vacuum Database',
-    message: 'Database vacuum completed.',
-  );
-}
-
-DatabaseImportPreview previewDatabaseImport(String jsonStr) {
-  return inspectDatabaseImport(
-    jsonStr,
-    currentSchemaVersion: _kDbVersion,
-  );
-}
-
-/// Export the entire database to a JSON string.
-Future<String> exportDatabase() async {
-  final db = await database;
-  final tables = [
-    // existing…
-    'sessions','exercises','sets','cardio_details',
-    'stretch_instances','stretch_instance_items',
-    'measurement_definitions','measurements',
-    'equipment','bodypart','muscles',
-    'exercise_definitions','exercise_equipment','exercise_bodypart','exercise_muscle',
-    'stretch_definitions','stretch_bodypart',
-    'muscle_bodypart','bodypart_ranking','muscle_ranking',
-    'exercise_muscle_percent','bodypart_muscle_rankings',
-    'muscle_volume_boundaries','bodypart_volume_boundaries',
-    'preset_definitions','preset_exercises','preset_sets',
-    'preset_cardio_details','preset_stretch_items',
-    'gym_profiles','profile_equipment',
-    'exercise_rep_max','exercise_volume_max',
-
-    // nutrition domain
-    'nutrients','nutrient_aliases','nutrient_groups','nutrient_group_members',
-    'foods','food_portions','food_barcodes',
-    'food_nutrients','food_nutrient_values',
-    'recipes','recipe_ingredients','recipe_nutrients',
-    'diary_entries','day_totals_cache','nutrition_goals',
-    'brands','sources','categories','food_usage_stats',
-    'favorite_foods','diary_entry_tags',
-  'diary_entry_audit',     // ← ADD
-  'personal_info',         // ← ADD
-
-    'flow_defaults','flow_default_methods','preset_flow_methods',
-
-    // analytics / settings
-    'formula_settings','exercise_bodypart_percent',
-
-    // autopreset feature
-    'preset_auto_settings','preset_exercise_auto','preset_set_auto',
-  ];
-
-  final Map<String, dynamic> data = {};
-  for (final table in tables) {
-    if (await _tableExists(db, table)) {            // ← guard
-      data[table] = await db.query(table);
-    }
+  Future<int> createEquipment(String name) async {
+    final db = await database;
+    return LookupDao.insertEquipment(db, name);
   }
-  return jsonEncode(buildDatabaseExportEnvelope(
-    schemaVersion: _kDbVersion,
-    tables: data,
-  ));
-}
 
-/// Import the database from a JSON string.
-/// If [clearFirst] is true, app-managed import/export tables are cleared first.
-/// Also re-creates indexes and refreshes caches/FTS afterward.
-Future<void> importDatabase(String jsonStr, {bool clearFirst = true}) async {
-  final db = await database;
-  final preview = previewDatabaseImport(jsonStr);
-  if (!preview.canImport) {
-    throw FormatException(preview.message);
+  Future<void> updateEquipment(int id, String name) async {
+    final db = await database;
+    await LookupDao.updateEquipment(db, id, name);
   }
-  final data = decodeDatabaseExportTables(jsonStr);
 
-  await db.transaction((txn) async {
-    // Always guard pragma flips with try/finally in case of mid-import errors.
-    await txn.execute('PRAGMA foreign_keys = OFF;');
-    try {
-      if (clearFirst) {
-        // Clear app-managed import/export tables only.
-        final tablesToClear = kDatabaseExportTableNames.reversed;
-        for (final table in tablesToClear) {
-          if (await _tableExists(txn, table)) {
-            await txn.delete(table);
-          }
-        }
+  Future<void> deleteEquipment(int id) async {
+    final db = await database;
+    await LookupDao.deleteEquipment(db, id);
+  }
+
+  Future<List<BodyPart>> fetchAllBodyPartsFull() async {
+    final db = await database;
+    return LookupDao.getAllBodyParts(db);
+  }
+
+  Future<int> createBodyPart(String name) async {
+    final db = await database;
+    return LookupDao.insertBodyPart(db, name);
+  }
+
+  Future<void> updateBodyPartEntry(int id, String name) async {
+    final db = await database;
+    await LookupDao.updateBodyPart(db, id, name);
+  }
+
+  Future<void> deleteBodyPartEntry(int id) async {
+    final db = await database;
+    await LookupDao.deleteBodyPart(db, id);
+  }
+
+  Future<List<Muscle>> fetchAllMusclesFull() async {
+    final db = await database;
+    return LookupDao.getAllMuscles(db);
+  }
+
+  Future<int> createMuscle(String name) async {
+    final db = await database;
+    return LookupDao.insertMuscle(db, name);
+  }
+
+  Future<void> updateMuscleEntry(int id, String name) async {
+    final db = await database;
+    await LookupDao.updateMuscle(db, id, name);
+  }
+
+  Future<void> deleteMuscleEntry(int id) async {
+    final db = await database;
+    await LookupDao.deleteMuscle(db, id);
+  }
+
+  /// Rerun JSON-seeding for lookup tables & stretches.
+  Future<void> reseedLookupData() async {
+    final db = await database;
+    await Seed.seedLookupsAndExercises(db);
+    await Seed.seedStretches(db);
+  }
+
+  Future<DatabaseHealthSnapshot> getDatabaseHealthSnapshot() async {
+    final db = await database;
+    final path = await _dbFilePath();
+    final dbFile = File(path);
+    final walFile = File('$path-wal');
+    final shmFile = File('$path-shm');
+
+    Future<int> fileLength(File file) async {
+      try {
+        return await file.exists() ? await file.length() : 0;
+      } catch (_) {
+        return 0;
       }
+    }
 
-      // Insert rows for tables present in the JSON.
-      for (final table in data.keys) {
-        if (!kDatabaseExportTableNames.contains(table)) continue;
-        if (!await _tableExists(txn, table)) continue; // skip unknown
-        final rows = List<Map<String, dynamic>>.from(data[table] as List);
-        for (final row in rows) {
-          final sane = await _sanitizeRowForTable(txn, table, row);
-          if (sane.isNotEmpty) {
-            await txn.insert(
-              table,
-              sane,
-              conflictAlgorithm: ConflictAlgorithm.replace,
+    Future<int> intPragma(String pragma) async {
+      try {
+        return Sqflite.firstIntValue(await db.rawQuery('PRAGMA $pragma')) ?? 0;
+      } catch (_) {
+        return 0;
+      }
+    }
+
+    String journalMode = 'unknown';
+    try {
+      final rows = await db.rawQuery('PRAGMA journal_mode');
+      if (rows.isNotEmpty && rows.first.values.isNotEmpty) {
+        journalMode = rows.first.values.first.toString();
+      }
+    } catch (_) {
+      journalMode = 'unknown';
+    }
+
+    final schemaVersion = await db.getVersion();
+    final pageCount = await intPragma('page_count');
+    final pageSize = await intPragma('page_size');
+    final tableCount =
+        Sqflite.firstIntValue(
+          await db.rawQuery(
+            "SELECT COUNT(*) FROM sqlite_master "
+            "WHERE type = 'table' AND name NOT LIKE 'sqlite_%'",
+          ),
+        ) ??
+        0;
+    final indexCount =
+        Sqflite.firstIntValue(
+          await db.rawQuery(
+            "SELECT COUNT(*) FROM sqlite_master "
+            "WHERE type = 'index' AND name NOT LIKE 'sqlite_%'",
+          ),
+        ) ??
+        0;
+    final triggerCount =
+        Sqflite.firstIntValue(
+          await db.rawQuery(
+            "SELECT COUNT(*) FROM sqlite_master WHERE type = 'trigger'",
+          ),
+        ) ??
+        0;
+
+    return DatabaseHealthSnapshot(
+      path: path,
+      schemaVersion: schemaVersion,
+      targetSchemaVersion: _kDbVersion,
+      journalMode: journalMode,
+      databaseBytes: await fileLength(dbFile),
+      walBytes: await fileLength(walFile),
+      shmBytes: await fileLength(shmFile),
+      pageCount: pageCount,
+      pageSize: pageSize,
+      tableCount: tableCount,
+      indexCount: indexCount,
+      triggerCount: triggerCount,
+      foodCount: await _countRowsIfTableExists(db, 'foods'),
+      foodFtsCount: await _countRowsIfTableExists(db, 'food_search_fts'),
+      checkedAt: DateTime.now(),
+    );
+  }
+
+  Future<DatabaseMaintenanceResult> runDatabaseIntegrityCheck() async {
+    final db = await database;
+    final rows = await db.rawQuery('PRAGMA integrity_check');
+    final messages =
+        rows
+            .map((row) => row.values.isEmpty ? '' : row.values.first.toString())
+            .where((message) => message.isNotEmpty)
+            .toList();
+    final ok = messages.length == 1 && messages.first.toLowerCase() == 'ok';
+
+    return DatabaseMaintenanceResult(
+      title: 'Integrity Check',
+      message: ok ? 'Database integrity check passed.' : messages.join('\n'),
+      rows: rows.map((row) => Map<String, Object?>.from(row)).toList(),
+    );
+  }
+
+  Future<DatabaseMaintenanceResult> optimizeDatabase() async {
+    final db = await database;
+    await db.rawQuery('PRAGMA optimize');
+    return const DatabaseMaintenanceResult(
+      title: 'Optimize Database',
+      message: 'SQLite optimize completed.',
+    );
+  }
+
+  Future<DatabaseMaintenanceResult> checkpointWal() async {
+    final db = await database;
+    final rows = await db.rawQuery('PRAGMA wal_checkpoint(TRUNCATE)');
+    return DatabaseMaintenanceResult(
+      title: 'WAL Checkpoint',
+      message: 'Write-ahead log checkpoint completed.',
+      rows: rows.map((row) => Map<String, Object?>.from(row)).toList(),
+    );
+  }
+
+  Future<DatabaseMaintenanceResult> vacuumDatabase() async {
+    final db = await database;
+    await db.execute('VACUUM');
+    return const DatabaseMaintenanceResult(
+      title: 'Vacuum Database',
+      message: 'Database vacuum completed.',
+    );
+  }
+
+  DatabaseImportPreview previewDatabaseImport(String jsonStr) {
+    return inspectDatabaseImport(jsonStr, currentSchemaVersion: _kDbVersion);
+  }
+
+  /// Export the entire database to a JSON string.
+  Future<String> exportDatabase() async {
+    final db = await database;
+    final tables = [
+      // existing…
+      'sessions', 'exercises', 'sets', 'cardio_details',
+      'stretch_instances', 'stretch_instance_items',
+      'measurement_definitions', 'measurements',
+      'equipment', 'bodypart', 'muscles',
+      'exercise_definitions',
+      'exercise_equipment',
+      'exercise_bodypart',
+      'exercise_muscle',
+      'stretch_definitions', 'stretch_bodypart',
+      'muscle_bodypart', 'bodypart_ranking', 'muscle_ranking',
+      'exercise_muscle_percent', 'bodypart_muscle_rankings',
+      'muscle_volume_boundaries', 'bodypart_volume_boundaries',
+      'preset_definitions', 'preset_exercises', 'preset_sets',
+      'preset_cardio_details', 'preset_stretch_items',
+      'gym_profiles', 'profile_equipment',
+      'exercise_rep_max', 'exercise_volume_max',
+
+      // nutrition domain
+      'nutrients',
+      'nutrient_aliases',
+      'nutrient_groups',
+      'nutrient_group_members',
+      'foods', 'food_portions', 'food_barcodes',
+      'food_nutrients', 'food_nutrient_values',
+      'recipes', 'recipe_ingredients', 'recipe_nutrients',
+      'diary_entries', 'day_totals_cache', 'nutrition_goals',
+      'brands', 'sources', 'categories', 'food_usage_stats',
+      'favorite_foods', 'diary_entry_tags',
+      'diary_entry_audit', // ← ADD
+      'personal_info', // ← ADD
+
+      'flow_defaults', 'flow_default_methods', 'preset_flow_methods',
+
+      // analytics / settings
+      'formula_settings', 'exercise_bodypart_percent',
+
+      // autopreset feature
+      'preset_auto_settings', 'preset_exercise_auto', 'preset_set_auto',
+    ];
+
+    final Map<String, dynamic> data = {};
+    for (final table in tables) {
+      if (await _tableExists(db, table)) {
+        // ← guard
+        data[table] = await db.query(table);
+      }
+    }
+    return jsonEncode(
+      buildDatabaseExportEnvelope(schemaVersion: _kDbVersion, tables: data),
+    );
+  }
+
+  /// Import the database from a JSON string.
+  /// If [clearFirst] is true, app-managed import/export tables are cleared first.
+  /// Also re-creates indexes and refreshes caches/FTS afterward.
+  Future<void> importDatabase(String jsonStr, {bool clearFirst = true}) async {
+    final db = await database;
+    final preview = previewDatabaseImport(jsonStr);
+    if (!preview.canImport) {
+      throw FormatException(preview.message);
+    }
+    final data = decodeDatabaseExportTables(jsonStr);
+
+    final suspendFoodFtsTriggers = await _hasFoodFtsTable(db);
+    if (suspendFoodFtsTriggers) {
+      await _dropFoodFtsTriggers(db);
+    }
+
+    try {
+      final foreignKeySetting =
+          Sqflite.firstIntValue(await db.rawQuery('PRAGMA foreign_keys')) ?? 0;
+      await db.execute('PRAGMA foreign_keys = OFF;');
+      try {
+        await db.transaction((txn) async {
+          if (clearFirst) {
+            // Clear app-managed import/export tables only.
+            final tablesToClear = kDatabaseExportTableNames.reversed;
+            for (final table in tablesToClear) {
+              if (await _tableExists(txn, table)) {
+                await txn.delete(table);
+              }
+            }
+          }
+
+          // Insert rows for tables present in the JSON.
+          for (final table in data.keys) {
+            if (!kDatabaseExportTableNames.contains(table)) continue;
+            if (!await _tableExists(txn, table)) continue; // skip unknown
+            final rows = List<Map<String, dynamic>>.from(data[table] as List);
+            for (final row in rows) {
+              final sane = await _sanitizeRowForTable(txn, table, row);
+              if (sane.isNotEmpty) {
+                await txn.insert(
+                  table,
+                  sane,
+                  conflictAlgorithm: ConflictAlgorithm.replace,
+                );
+              }
+            }
+          }
+
+          final foreignKeyViolations = await txn.rawQuery(
+            'PRAGMA foreign_key_check',
+          );
+          if (foreignKeyViolations.isNotEmpty) {
+            throw StateError(
+              'Imported database has ${foreignKeyViolations.length} foreign key '
+              'violation(s).',
             );
           }
+        });
+      } finally {
+        if (foreignKeySetting == 1) {
+          await db.execute('PRAGMA foreign_keys = ON;');
         }
       }
+      // Post-import normalization & maintenance
+      await _backfillNormalizedFoodKeys(db);
+      await _backfillEnergyKcalFromMacros(db);
+      await _rebuildFoodFtsIfExists(db);
+      await _ensureAppMetaTable(db);
+      await _ensureIndexes(
+        db,
+      ); // ← ensure you have all new indexes on imported DBs
+
+      // If recipe nutrients weren’t imported, rebuild them from ingredients.
+      if (!data.keys.contains('recipe_nutrients') &&
+          await _tableExists(db, 'recipes')) {
+        await _rebuildAllRecipeCaches(db);
+      }
+
+      // If day_totals_cache wasn’t imported but table exists, clear it so reads rebuild on demand.
+      if (!data.keys.contains('day_totals_cache') &&
+          await _tableExists(db, 'day_totals_cache')) {
+        await db.delete('day_totals_cache');
+      }
+
+      // NEW: keep AUTOINCREMENT sequences aligned with current max(id)
+      await _bumpAutoincrement(db);
     } finally {
-      await txn.execute('PRAGMA foreign_keys = ON;');
+      if (suspendFoodFtsTriggers) {
+        await _ensureFoodFtsTriggers(db);
+      }
     }
-  });
-
-  // Post-import normalization & maintenance
-  await _backfillNormalizedFoodKeys(db);
-  await _backfillEnergyKcalFromMacros(db);
-  await _rebuildFoodFtsIfExists(db);
-  await _ensureAppMetaTable(db);
-  await _ensureIndexes(db); // ← ensure you have all new indexes on imported DBs
-
-  // If recipe nutrients weren’t imported, rebuild them from ingredients.
-  if (!data.keys.contains('recipe_nutrients') && await _tableExists(db, 'recipes')) {
-    await _rebuildAllRecipeCaches(db);
   }
 
-  // If day_totals_cache wasn’t imported but table exists, clear it so reads rebuild on demand.
-  if (!data.keys.contains('day_totals_cache') && await _tableExists(db, 'day_totals_cache')) {
-    await db.delete('day_totals_cache');
-  }
-
-  // NEW: keep AUTOINCREMENT sequences aligned with current max(id)
-  await _bumpAutoincrement(db);
-}
-
-
-   // equipment.json
+  // equipment.json
   Future<String> exportEquipmentJson() async {
     final db = await database;
     final rows = await db.query('equipment');
-    final out = rows.map((r) => {
-      'name': r['name'] as String,
-    }).toList();
+    final out = rows.map((r) => {'name': r['name'] as String}).toList();
     return jsonEncode(out);
   }
 
@@ -2481,9 +2761,7 @@ Future<void> importDatabase(String jsonStr, {bool clearFirst = true}) async {
   Future<String> exportBodypartsJson() async {
     final db = await database;
     final rows = await db.query('bodypart');
-    final out = rows.map((r) => {
-      'name': r['name'] as String,
-    }).toList();
+    final out = rows.map((r) => {'name': r['name'] as String}).toList();
     return jsonEncode(out);
   }
 
@@ -2491,9 +2769,7 @@ Future<void> importDatabase(String jsonStr, {bool clearFirst = true}) async {
   Future<String> exportMusclesJson() async {
     final db = await database;
     final rows = await db.query('muscles');
-    final out = rows.map((r) => {
-      'name': r['name'] as String,
-    }).toList();
+    final out = rows.map((r) => {'name': r['name'] as String}).toList();
     return jsonEncode(out);
   }
 
@@ -2501,34 +2777,35 @@ Future<void> importDatabase(String jsonStr, {bool clearFirst = true}) async {
   Future<String> exportExercisesJson() async {
     final db = await database;
     final defs = await DefinitionDao.getAllExerciseDefinitionsDetailed(db);
-    final out = defs.map((def) {
-      final map = <String, dynamic>{
-        'name':      def.name,
-        'rating':    def.rating,
-        'equipment': def.equipmentList.map((e) => e.name).toList(),
-        'bodyparts': def.bodyParts.map((bp) => bp.name).toList(),
-        'muscles':   def.muscles.map((rm) => {
-          'name': rm.muscle.name,
-          'rank': rm.rank,
-        }).toList(),
-      };
-      if (def.useManualBodyparts) {
-        map['useManualBodyparts'] = true;
-      }
-      if (def.setupNotes.isNotEmpty) {
-        map['setupNotes'] = def.setupNotes;
-      }
-      if (def.executionNotes.isNotEmpty) {
-        map['executionNotes'] = def.executionNotes;
-      }
-      if (def.tipsNotes.isNotEmpty) {
-        map['tipsNotes'] = def.tipsNotes;
-      }
-      if (def.multiplyByRating) {
-        map['multiplyByRating'] = true;
-      }
-      return map;
-    }).toList();
+    final out =
+        defs.map((def) {
+          final map = <String, dynamic>{
+            'name': def.name,
+            'rating': def.rating,
+            'equipment': def.equipmentList.map((e) => e.name).toList(),
+            'bodyparts': def.bodyParts.map((bp) => bp.name).toList(),
+            'muscles':
+                def.muscles
+                    .map((rm) => {'name': rm.muscle.name, 'rank': rm.rank})
+                    .toList(),
+          };
+          if (def.useManualBodyparts) {
+            map['useManualBodyparts'] = true;
+          }
+          if (def.setupNotes.isNotEmpty) {
+            map['setupNotes'] = def.setupNotes;
+          }
+          if (def.executionNotes.isNotEmpty) {
+            map['executionNotes'] = def.executionNotes;
+          }
+          if (def.tipsNotes.isNotEmpty) {
+            map['tipsNotes'] = def.tipsNotes;
+          }
+          if (def.multiplyByRating) {
+            map['multiplyByRating'] = true;
+          }
+          return map;
+        }).toList();
     return jsonEncode(out);
   }
 
@@ -2536,11 +2813,16 @@ Future<void> importDatabase(String jsonStr, {bool clearFirst = true}) async {
   Future<String> exportStretchesJson() async {
     final db = await database;
     final defs = await LookupDao.getStretches(db, null);
-    final out = defs.map((s) => {
-      'name':        s.name,
-      'bodyparts':   s.bodyParts.map((bp) => bp.name).toList(),
-      'description': s.description,
-    }).toList();
+    final out =
+        defs
+            .map(
+              (s) => {
+                'name': s.name,
+                'bodyparts': s.bodyParts.map((bp) => bp.name).toList(),
+                'description': s.description,
+              },
+            )
+            .toList();
     return jsonEncode(out);
   }
 
@@ -2558,10 +2840,10 @@ Future<void> importDatabase(String jsonStr, {bool clearFirst = true}) async {
       final bp = r['bodypart'] as String;
       grouped.putIfAbsent(bp, () => []).add(r['muscle'] as String);
     }
-    final out = grouped.entries.map((e) => {
-      'bodypart': e.key,
-      'muscles':  e.value,
-    }).toList();
+    final out =
+        grouped.entries
+            .map((e) => {'bodypart': e.key, 'muscles': e.value})
+            .toList();
     return jsonEncode(out);
   }
 
@@ -2574,10 +2856,15 @@ Future<void> importDatabase(String jsonStr, {bool clearFirst = true}) async {
         FROM bodypart_ranking r
         JOIN bodypart bp ON r.bodypart_id = bp.id
     ''');
-    final out = rows.map((r) => {
-      'bodypart': r['bodypart'] as String,
-      'rank':      r['rank']     as int,
-    }).toList();
+    final out =
+        rows
+            .map(
+              (r) => {
+                'bodypart': r['bodypart'] as String,
+                'rank': r['rank'] as int,
+              },
+            )
+            .toList();
     return jsonEncode(out);
   }
 
@@ -2590,10 +2877,15 @@ Future<void> importDatabase(String jsonStr, {bool clearFirst = true}) async {
         FROM muscle_ranking r
         JOIN muscles m ON r.muscle_id = m.id
     ''');
-    final out = rows.map((r) => {
-      'muscle': r['muscle'] as String,
-      'rank':    r['rank']   as int,
-    }).toList();
+    final out =
+        rows
+            .map(
+              (r) => {
+                'muscle': r['muscle'] as String,
+                'rank': r['rank'] as int,
+              },
+            )
+            .toList();
     return jsonEncode(out);
   }
 
@@ -2614,13 +2906,13 @@ Future<void> importDatabase(String jsonStr, {bool clearFirst = true}) async {
       final bp = row['bodypart'] as String;
       grouped.putIfAbsent(bp, () => []).add({
         'muscle': row['muscle'] as String,
-        'rank':   row['rank']   as int,
+        'rank': row['rank'] as int,
       });
     }
-    final out = grouped.entries.map((e) => {
-      'bodypart':    e.key,
-      'muscleRanks': e.value,
-    }).toList();
+    final out =
+        grouped.entries
+            .map((e) => {'bodypart': e.key, 'muscleRanks': e.value})
+            .toList();
     return jsonEncode(out);
   }
 
@@ -2646,242 +2938,264 @@ Future<void> importDatabase(String jsonStr, {bool clearFirst = true}) async {
         JOIN muscles m ON v.muscle_id = m.id
     ''');
 
-    return jsonEncode({
-      'bodyparts': bpRows,
-      'muscles':   mRows,
-    });
+    return jsonEncode({'bodyparts': bpRows, 'muscles': mRows});
   }
 
-/// Performs fuzzy search on exercise definition names.
+  /// Performs fuzzy search on exercise definition names.
   Future<List<ExerciseDefinition>> fuzzsearchExercises(String term) async {
     final db = await database;
     return DefinitionDao.fuzzsearchExerciseDefinitions(db, term);
   }
 
+  // stats_dao.dart methods:
 
-// stats_dao.dart methods:
+  /// Upsert a rep-max stat row.
+  Future<void> upsertRepMax(
+    int defId,
+    int repCount,
+    String timeframe,
+    double rmValue,
+    double oneErm,
+    bool isErm,
+  ) async {
+    final db = await database;
+    return StatsDao.upsertRepMax(
+      db,
+      defId,
+      repCount,
+      timeframe,
+      rmValue,
+      oneErm,
+      isErm,
+    );
+  }
 
-/// Upsert a rep-max stat row.
-Future<void> upsertRepMax(
-  int defId,
-  int repCount,
-  String timeframe,
-  double rmValue,
-  double oneErm,
-  bool isErm,
-) async {
-  final db = await database;
-  return StatsDao.upsertRepMax(db, defId, repCount, timeframe, rmValue, oneErm, isErm);
-}
+  /// Upsert a volume-max stat row.
+  Future<void> upsertVolumeMax(
+    int defId,
+    String timeframe,
+    double vmValue,
+  ) async {
+    final db = await database;
+    return StatsDao.upsertVolumeMax(db, defId, timeframe, vmValue);
+  }
 
-/// Upsert a volume-max stat row.
-Future<void> upsertVolumeMax(
-  int defId,
-  String timeframe,
-  double vmValue,
-) async {
-  final db = await database;
-  return StatsDao.upsertVolumeMax(db, defId, timeframe, vmValue);
-}
+  // —————————————— Rep-Max + Volume-Max Queries ——————————————
 
-// —————————————— Rep-Max + Volume-Max Queries ——————————————
+  /// Returns list of rep-max rows for [defId] & [timeframe].
+  Future<List<Map<String, dynamic>>> getRepMaxes(
+    int defId,
+    String timeframe,
+  ) async {
+    final db = await database;
+    return StatsDao.getRepMaxes(db, defId, timeframe);
+  }
 
-/// Returns list of rep-max rows for [defId] & [timeframe].
-Future<List<Map<String, dynamic>>> getRepMaxes(
-  int defId,
-  String timeframe,
-) async {
-  final db = await database;
-  return StatsDao.getRepMaxes(db, defId, timeframe);
-}
+  /// Returns the volume-max row (or null) for [defId] & [timeframe].
+  Future<Map<String, dynamic>?> getVolumeMax(
+    int defId,
+    String timeframe,
+  ) async {
+    final db = await database;
+    return StatsDao.getVolumeMax(db, defId, timeframe);
+  }
 
-/// Returns the volume-max row (or null) for [defId] & [timeframe].
-Future<Map<String, dynamic>?> getVolumeMax(
-  int defId,
-  String timeframe,
-) async {
-  final db = await database;
-  return StatsDao.getVolumeMax(db, defId, timeframe);
-}
-
-Future<double> calculateTotalVolumeForSessions(List<int> sessionIds) async {
-  final db = await database;
-  double volume = 0;
-  for (var sid in sessionIds) {
-    final exRows = await ExerciseDao.getExercisesForSession(db, sid);
-    for (var ex in exRows.where((e) => e['type']=='weight')) {
-      final eid = ex['id'] as int;
-      final setRows = await SetDao.getSetsForExercise(db, eid);
-      for (var s in setRows) {
-        volume += (s['weight'] as num) * (s['reps'] as num);
+  Future<double> calculateTotalVolumeForSessions(List<int> sessionIds) async {
+    final db = await database;
+    double volume = 0;
+    for (var sid in sessionIds) {
+      final exRows = await ExerciseDao.getExercisesForSession(db, sid);
+      for (var ex in exRows.where((e) => e['type'] == 'weight')) {
+        final eid = ex['id'] as int;
+        final setRows = await SetDao.getSetsForExercise(db, eid);
+        for (var s in setRows) {
+          volume += (s['weight'] as num) * (s['reps'] as num);
+        }
       }
     }
+    return volume;
   }
-  return volume;
-}
 
-
- // ─── Formula Settings ──────────────────────────────────────
+  // ─── Formula Settings ──────────────────────────────────────
 
   static const _stepKey = 'step';
-  static const _minKey  = 'min';
-  static const _maxKey  = 'max';
+  static const _minKey = 'min';
+  static const _maxKey = 'max';
 
   /// Reads a formula parameter or returns [fallback].
   Future<double> _getFormulaParam(String key, double fallback) async {
     final db = await database;
-    final v  = await FormulaSettingsDao.getParam(db, key);
+    final v = await FormulaSettingsDao.getParam(db, key);
     return v ?? fallback;
   }
 
   Future<double> getFormulaStep() => _getFormulaParam(_stepKey, 0.05);
-  Future<double> getFormulaMin()  => _getFormulaParam(_minKey,  0.0);
-  Future<double> getFormulaMax()  => _getFormulaParam(_maxKey,  1.0);
+  Future<double> getFormulaMin() => _getFormulaParam(_minKey, 0.0);
+  Future<double> getFormulaMax() => _getFormulaParam(_maxKey, 1.0);
 
   Future<void> setFormulaStep(double step) async {
     final db = await database;
     await FormulaSettingsDao.setParam(db, _stepKey, step);
   }
+
   Future<void> setFormulaMin(double min) async {
     final db = await database;
     await FormulaSettingsDao.setParam(db, _minKey, min);
   }
+
   Future<void> setFormulaMax(double max) async {
     final db = await database;
     await FormulaSettingsDao.setParam(db, _maxKey, max);
   }
 
+  // ─── ANALYTICS ─────────────────────────────────────────────
 
-// ─── ANALYTICS ─────────────────────────────────────────────
+  Future<int> linkMuscleToBodyPart(int muscleId, int bodypartId) async {
+    final db = await database;
+    return AnalyticsDao.insertMuscleBodyPart(db, muscleId, bodypartId);
+  }
 
-Future<int> linkMuscleToBodyPart(int muscleId, int bodypartId) async {
-  final db = await database;
-  return AnalyticsDao.insertMuscleBodyPart(db, muscleId, bodypartId);
-}
+  Future<int> unlinkMuscleFromBodyPart(int muscleId, int bodypartId) async {
+    final db = await database;
+    return AnalyticsDao.deleteMuscleBodyPart(db, muscleId, bodypartId);
+  }
 
-Future<int> unlinkMuscleFromBodyPart(int muscleId, int bodypartId) async {
-  final db = await database;
-  return AnalyticsDao.deleteMuscleBodyPart(db, muscleId, bodypartId);
-}
+  Future<List<MuscleBodyPart>> fetchBodyPartsForMuscle(int muscleId) async {
+    final db = await database;
+    return AnalyticsDao.getBodyPartsForMuscle(db, muscleId);
+  }
 
-Future<List<MuscleBodyPart>> fetchBodyPartsForMuscle(int muscleId) async {
-  final db = await database;
-  return AnalyticsDao.getBodyPartsForMuscle(db, muscleId);
-}
+  Future<List<MuscleBodyPart>> fetchMusclesForBodyPart(int bodypartId) async {
+    final db = await database;
+    return AnalyticsDao.getMusclesForBodyPart(db, bodypartId);
+  }
 
-Future<List<MuscleBodyPart>> fetchMusclesForBodyPart(int bodypartId) async {
-  final db = await database;
-  return AnalyticsDao.getMusclesForBodyPart(db, bodypartId);
-}
+  Future<int> setBodyPartRank(int bodypartId, int rank) async {
+    final db = await database;
+    return AnalyticsDao.setBodyPartRanking(db, bodypartId, rank);
+  }
 
-Future<int> setBodyPartRank(int bodypartId, int rank) async {
-  final db = await database;
-  return AnalyticsDao.setBodyPartRanking(db, bodypartId, rank);
-}
+  Future<BodyPartRanking?> getBodyPartRank(int bodypartId) async {
+    final db = await database;
+    return AnalyticsDao.getBodyPartRanking(db, bodypartId);
+  }
 
-Future<BodyPartRanking?> getBodyPartRank(int bodypartId) async {
-  final db = await database;
-  return AnalyticsDao.getBodyPartRanking(db, bodypartId);
-}
+  Future<List<BodyPartRanking>> getAllBodyPartRanks() async {
+    final db = await database;
+    return AnalyticsDao.getAllBodyPartRankings(db);
+  }
 
-Future<List<BodyPartRanking>> getAllBodyPartRanks() async {
-  final db = await database;
-  return AnalyticsDao.getAllBodyPartRankings(db);
-}
+  Future<int> deleteBodyPartRank(int bodypartId) async {
+    final db = await database;
+    return AnalyticsDao.deleteBodyPartRanking(db, bodypartId);
+  }
 
-Future<int> deleteBodyPartRank(int bodypartId) async {
-  final db = await database;
-  return AnalyticsDao.deleteBodyPartRanking(db, bodypartId);
-}
+  Future<int> setMuscleRank(int muscleId, int rank) async {
+    final db = await database;
+    return AnalyticsDao.setMuscleRanking(db, muscleId, rank);
+  }
 
-Future<int> setMuscleRank(int muscleId, int rank) async {
-  final db = await database;
-  return AnalyticsDao.setMuscleRanking(db, muscleId, rank);
-}
+  Future<MuscleRanking?> getMuscleRank(int muscleId) async {
+    final db = await database;
+    return AnalyticsDao.getMuscleRanking(db, muscleId);
+  }
 
-Future<MuscleRanking?> getMuscleRank(int muscleId) async {
-  final db = await database;
-  return AnalyticsDao.getMuscleRanking(db, muscleId);
-}
+  Future<List<MuscleRanking>> getAllMuscleRanks() async {
+    final db = await database;
+    return AnalyticsDao.getAllMuscleRankings(db);
+  }
 
-Future<List<MuscleRanking>> getAllMuscleRanks() async {
-  final db = await database;
-  return AnalyticsDao.getAllMuscleRankings(db);
-}
+  Future<int> deleteMuscleRank(int muscleId) async {
+    final db = await database;
+    return AnalyticsDao.deleteMuscleRanking(db, muscleId);
+  }
 
-Future<int> deleteMuscleRank(int muscleId) async {
-  final db = await database;
-  return AnalyticsDao.deleteMuscleRanking(db, muscleId);
-}
+  Future<int> setExerciseMuscleHitPercent(
+    int defId,
+    int muscleId,
+    double pct,
+  ) async {
+    final db = await database;
+    return AnalyticsDao.setExerciseMusclePercent(db, defId, muscleId, pct);
+  }
 
-Future<int> setExerciseMuscleHitPercent(int defId, int muscleId, double pct) async {
-  final db = await database;
-  return AnalyticsDao.setExerciseMusclePercent(db, defId, muscleId, pct);
-}
+  Future<ExerciseMusclePercent?> fetchExerciseMusclePercent(
+    int defId,
+    int muscleId,
+  ) async {
+    final db = await database;
+    return AnalyticsDao.getExerciseMusclePercent(db, defId, muscleId);
+  }
 
-Future<ExerciseMusclePercent?> fetchExerciseMusclePercent(int defId, int muscleId) async {
-  final db = await database;
-  return AnalyticsDao.getExerciseMusclePercent(db, defId, muscleId);
-}
+  Future<int> removeExerciseMusclePercent(int defId, int muscleId) async {
+    final db = await database;
+    return AnalyticsDao.deleteExerciseMusclePercent(db, defId, muscleId);
+  }
 
-Future<int> removeExerciseMusclePercent(int defId, int muscleId) async {
-  final db = await database;
-  return AnalyticsDao.deleteExerciseMusclePercent(db, defId, muscleId);
-}
+  Future<List<ExerciseMusclePercent>> fetchPercentsForExercise(
+    int defId,
+  ) async {
+    final db = await database;
+    return AnalyticsDao.getPercentsForExercise(db, defId);
+  }
 
-Future<List<ExerciseMusclePercent>> fetchPercentsForExercise(int defId) async {
-  final db = await database;
-  return AnalyticsDao.getPercentsForExercise(db, defId);
-}
+  Future<int> setMuscleVolumeBounds(int muscleId, VolumeBoundaries b) async {
+    final db = await database;
+    return AnalyticsDao.setMuscleVolumeBoundaries(db, muscleId, b);
+  }
 
-Future<int> setMuscleVolumeBounds(int muscleId, VolumeBoundaries b) async {
-  final db = await database;
-  return AnalyticsDao.setMuscleVolumeBoundaries(db, muscleId, b);
-}
+  Future<VolumeBoundaries?> fetchMuscleVolumeBounds(int muscleId) async {
+    final db = await database;
+    return AnalyticsDao.getMuscleVolumeBoundaries(db, muscleId);
+  }
 
-Future<VolumeBoundaries?> fetchMuscleVolumeBounds(int muscleId) async {
-  final db = await database;
-  return AnalyticsDao.getMuscleVolumeBoundaries(db, muscleId);
-}
+  Future<List<Map<String, dynamic>>> fetchAllMuscleVolumeBounds() async {
+    final db = await database;
+    return AnalyticsDao.getAllMuscleVolumeBoundaries(db);
+  }
 
-Future<List<Map<String, dynamic>>> fetchAllMuscleVolumeBounds() async {
-  final db = await database;
-  return AnalyticsDao.getAllMuscleVolumeBoundaries(db);
-}
+  Future<int> removeMuscleVolumeBounds(int muscleId) async {
+    final db = await database;
+    return AnalyticsDao.deleteMuscleVolumeBoundaries(db, muscleId);
+  }
 
-Future<int> removeMuscleVolumeBounds(int muscleId) async {
-  final db = await database;
-  return AnalyticsDao.deleteMuscleVolumeBoundaries(db, muscleId);
-}
+  Future<int> setBodyPartVolumeBounds(
+    int bodyPartId,
+    VolumeBoundaries bounds,
+  ) async {
+    final db = await database;
+    return AnalyticsDao.setBodyPartVolumeBoundaries(db, bodyPartId, bounds);
+  }
 
-Future<int> setBodyPartVolumeBounds(int bodyPartId, VolumeBoundaries bounds) async {
-  final db = await database;
-  return AnalyticsDao.setBodyPartVolumeBoundaries(db, bodyPartId, bounds);
-}
+  Future<VolumeBoundaries?> fetchBodyPartVolumeBounds(int bodyPartId) async {
+    final db = await database;
+    return AnalyticsDao.getBodyPartVolumeBoundaries(db, bodyPartId);
+  }
 
-Future<VolumeBoundaries?> fetchBodyPartVolumeBounds(int bodyPartId) async {
-  final db = await database;
-  return AnalyticsDao.getBodyPartVolumeBoundaries(db, bodyPartId);
-}
+  Future<List<Map<String, dynamic>>> fetchAllBodyPartVolumeBounds() async {
+    final db = await database;
+    return AnalyticsDao.getAllBodyPartVolumeBoundaries(db);
+  }
 
-Future<List<Map<String, dynamic>>> fetchAllBodyPartVolumeBounds() async {
-  final db = await database;
-  return AnalyticsDao.getAllBodyPartVolumeBoundaries(db);
-}
+  Future<int> removeBodyPartVolumeBounds(int bodyPartId) async {
+    final db = await database;
+    return AnalyticsDao.deleteBodyPartVolumeBoundaries(db, bodyPartId);
+  }
 
-Future<int> removeBodyPartVolumeBounds(int bodyPartId) async {
-  final db = await database;
-  return AnalyticsDao.deleteBodyPartVolumeBoundaries(db, bodyPartId);
-}
-
-/// Fetch manual body-part percent overrides for an exercise definition
-  Future<List<ExerciseBodyPartPercent>> fetchBodyPartPercentsManual(int defId) async {
+  /// Fetch manual body-part percent overrides for an exercise definition
+  Future<List<ExerciseBodyPartPercent>> fetchBodyPartPercentsManual(
+    int defId,
+  ) async {
     final db = await database;
     return AnalyticsDao.getPercentsForExerciseBodyPart(db, defId);
   }
 
   /// Upsert a manual body-part percent override
-  Future<int> setExerciseBodyPartPercent(int defId, int bpId, double pct) async {
+  Future<int> setExerciseBodyPartPercent(
+    int defId,
+    int bpId,
+    double pct,
+  ) async {
     final db = await database;
     return AnalyticsDao.setExerciseBodyPartPercent(db, defId, bpId, pct);
   }
@@ -2892,39 +3206,45 @@ Future<int> removeBodyPartVolumeBounds(int bodyPartId) async {
     return AnalyticsDao.deleteExerciseBodyPartPercent(db, defId, bpId);
   }
 
-/// Fetches rep‐max rows and maps to model.
-Future<List<RepMaxRow>> fetchRepMaxes(int defId, String timeframe) async {
-  final db = await database;
-  final raw = await StatsDao.getRepMaxes(db, defId, timeframe);
-  return raw.map((r) => RepMaxRow(
-    repCount: r['rep_count'] as int,
-    rmValue:  (r['rm_value']   as num).toDouble(),
-    oneErm:   (r['one_erm']    as num).toDouble(),
-    isErm:    (r['is_erm']     as int) == 1,
-  )).toList();
-}
+  /// Fetches rep‐max rows and maps to model.
+  Future<List<RepMaxRow>> fetchRepMaxes(int defId, String timeframe) async {
+    final db = await database;
+    final raw = await StatsDao.getRepMaxes(db, defId, timeframe);
+    return raw
+        .map(
+          (r) => RepMaxRow(
+            repCount: r['rep_count'] as int,
+            rmValue: (r['rm_value'] as num).toDouble(),
+            oneErm: (r['one_erm'] as num).toDouble(),
+            isErm: (r['is_erm'] as int) == 1,
+          ),
+        )
+        .toList();
+  }
 
-/// Fetches a volume‐max value (or null).
-Future<double?> fetchVolumeMax(int defId, String timeframe) async {
-  final db = await database;
-  final row = await StatsDao.getVolumeMax(db, defId, timeframe);
-  if (row == null) return null;
-  return (row['vm_value'] as num).toDouble();
-}
+  /// Fetches a volume‐max value (or null).
+  Future<double?> fetchVolumeMax(int defId, String timeframe) async {
+    final db = await database;
+    final row = await StatsDao.getVolumeMax(db, defId, timeframe);
+    if (row == null) return null;
+    return (row['vm_value'] as num).toDouble();
+  }
 
   // ─── Muscle % Computations ────────────────────────────────
-
 
   Future<List<ExerciseMusclePercent>> computeMusclePercents(int defId) async {
     final def = await getExerciseDefinitionById(defId);
     if (def == null) return [];
 
     final step = await getFormulaStep();
-    final mn   = await getFormulaMin();
-    final mx   = await getFormulaMax();
+    final mn = await getFormulaMin();
+    final mx = await getFormulaMax();
 
-    final overrides = await AnalyticsDao.getPercentsForExercise(await database, defId);
-    final overrideMap = { for (var e in overrides) e.muscleId : e.percent };
+    final overrides = await AnalyticsDao.getPercentsForExercise(
+      await database,
+      defId,
+    );
+    final overrideMap = {for (var e in overrides) e.muscleId: e.percent};
 
     return def.muscles.map((rm) {
       final defaultPct = (1.0 - step * (rm.rank - 1)).clamp(mn, mx);
@@ -2936,602 +3256,648 @@ Future<double?> fetchVolumeMax(int defId, String timeframe) async {
     }).toList();
   }
 
+  Future<Map<BodyPart, double>> computeBodyPartPercents(int defId) async {
+    final db = await database;
+    final def = await DefinitionDao.getExerciseDefinitionById(db, defId);
+    if (def == null) return {};
 
-Future<Map<BodyPart,double>> computeBodyPartPercents(int defId) async {
-  final db  = await database;
-  final def = await DefinitionDao.getExerciseDefinitionById(db, defId);
-  if (def == null) return {};
-
-  // 1) If the exercise is configured for manual body-parts, load those:
-  if (def.useManualBodyparts) {
-    final rows = await AnalyticsDao.getPercentsForExerciseBodyPart(db, defId);
-    // rows: List<ExerciseBodyPartPercent>
-    // build a map from your definition.bodyParts
-    final bpById = { for (var bp in def.bodyParts) bp.id : bp };
-    final out = <BodyPart,double>{};
-    for (var p in rows) {
-      final bp = bpById[p.bodyPartId];
-      if (bp != null) out[bp] = p.percent;
+    // 1) If the exercise is configured for manual body-parts, load those:
+    if (def.useManualBodyparts) {
+      final rows = await AnalyticsDao.getPercentsForExerciseBodyPart(db, defId);
+      // rows: List<ExerciseBodyPartPercent>
+      // build a map from your definition.bodyParts
+      final bpById = {for (var bp in def.bodyParts) bp.id: bp};
+      final out = <BodyPart, double>{};
+      for (var p in rows) {
+        final bp = bpById[p.bodyPartId];
+        if (bp != null) out[bp] = p.percent;
+      }
+      return out;
     }
+
+    // 2) otherwise, fall back to “muscle % → body-part %” logic
+    final musclePercs = await computeMusclePercents(defId);
+    final percMap = {for (var e in musclePercs) e.muscleId: e.percent};
+
+    final result = <BodyPart, double>{};
+    for (var bp in def.bodyParts) {
+      final links = await AnalyticsDao.getMusclesForBodyPart(db, bp.id);
+      final hits =
+          links.map((l) => percMap[l.muscleId]).whereType<double>().toList();
+      if (hits.isEmpty) continue;
+      result[bp] = hits.reduce((a, b) => a + b) / hits.length;
+    }
+    return result;
+  }
+
+  /// Estimate how one single set of [exerciseDefId] splits across its body-parts,
+  /// *based on the definition’s muscle-percent hits*, not on logged history.
+  Future<Map<BodyPart, double>> estimateBodyPartSetDistribution(
+    int defId,
+  ) async {
+    final db = await database;
+    final def = await DefinitionDao.getExerciseDefinitionById(db, defId);
+    if (def == null) return {};
+
+    // 1) grab any manual muscle-% overrides
+    final manualHits = await AnalyticsDao.getPercentsForExercise(db, defId);
+
+    // 2) if there are none, default each linked muscle to 1.0
+    final muscleHits =
+        manualHits.isEmpty
+            ? def.muscles
+                .map(
+                  (rm) => ExerciseMusclePercent(
+                    exerciseDefId: defId,
+                    muscleId: rm.muscle.id,
+                    percent: 1.0,
+                  ),
+                )
+                .toList()
+            : manualHits;
+
+    final hitMap = {for (var h in muscleHits) h.muscleId: h.percent};
+
+    // 3) now sum up per body-part
+    final out = <BodyPart, double>{};
+    for (var bp in def.bodyParts) {
+      final links = await AnalyticsDao.getMusclesForBodyPart(db, bp.id);
+      final total = links.fold<double>(
+        0.0,
+        (sum, link) => sum + (hitMap[link.muscleId] ?? 0.0),
+      );
+      if (total > 0) out[bp] = total;
+    }
+
     return out;
   }
 
-  // 2) otherwise, fall back to “muscle % → body-part %” logic
-  final musclePercs = await computeMusclePercents(defId);
-  final percMap = { for (var e in musclePercs) e.muscleId : e.percent };
+  /// For a given exercise definition, look at each associated muscle’s %-hit
+  /// and push that % into every body-part that muscle maps to.
+  Future<Map<BodyPart, double>> computeMuscleCalculatedBodyparts(
+    int defId,
+  ) async {
+    final db = await database;
+    // 1) Load the full definition (so we know which muscles are on it)
+    final def = await DefinitionDao.getExerciseDefinitionById(db, defId);
+    if (def == null) return {};
 
-  final result = <BodyPart,double>{};
-  for (var bp in def.bodyParts) {
-    final links = await AnalyticsDao.getMusclesForBodyPart(db, bp.id);
-    final hits = links
-      .map((l) => percMap[l.muscleId])
-      .whereType<double>()
-      .toList();
-    if (hits.isEmpty) continue;
-    result[bp] = hits.reduce((a,b) => a + b) / hits.length;
-  }
-  return result;
-}
+    // 2) Grab per-exercise muscle percentages (overrides or computed)
+    final musclePercs = await computeMusclePercents(defId);
+    final hitMap = {for (var e in musclePercs) e.muscleId: e.percent};
 
+    // 3) Fetch every body-part row once and index by ID (avoid repeated queries)
+    final allBpRows = await db.query('bodypart');
+    final bpById = {
+      for (var r in allBpRows)
+        r['id'] as int: BodyPart(r['id'] as int, r['name'] as String),
+    };
 
-/// Estimate how one single set of [exerciseDefId] splits across its body-parts,
-/// *based on the definition’s muscle-percent hits*, not on logged history.
-Future<Map<BodyPart,double>> estimateBodyPartSetDistribution(int defId) async {
-  final db  = await database;
-  final def = await DefinitionDao.getExerciseDefinitionById(db, defId);
-  if (def == null) return {};
+    // 4) For each muscle on the definition, look up its hit % and
+    //    then add that % into each of its linked body-parts.
+    final result = <BodyPart, double>{};
+    for (var rm in def.muscles) {
+      final mid = rm.muscle.id;
+      final p = hitMap[mid] ?? 0.0;
+      if (p <= 0) continue;
 
-  // 1) grab any manual muscle-% overrides
-  final manualHits = await AnalyticsDao.getPercentsForExercise(db, defId);
-
-  // 2) if there are none, default each linked muscle to 1.0
-  final muscleHits = manualHits.isEmpty
-    ? def.muscles.map((rm) => ExerciseMusclePercent(
-        exerciseDefId: defId,
-        muscleId:      rm.muscle.id,
-        percent:       1.0,
-      )).toList()
-    : manualHits;
-
-  final hitMap = { for (var h in muscleHits) h.muscleId : h.percent };
-
-  // 3) now sum up per body-part
-  final out = <BodyPart,double>{};
-  for (var bp in def.bodyParts) {
-    final links = await AnalyticsDao.getMusclesForBodyPart(db, bp.id);
-    final total = links.fold<double>(
-      0.0,
-      (sum, link) => sum + (hitMap[link.muscleId] ?? 0.0),
-    );
-    if (total > 0) out[bp] = total;
-  }
-
-  return out;
-}
-
-
-/// For a given exercise definition, look at each associated muscle’s %-hit
-/// and push that % into every body-part that muscle maps to.
-Future<Map<BodyPart,double>> computeMuscleCalculatedBodyparts(int defId) async {
-  final db  = await database;
-  // 1) Load the full definition (so we know which muscles are on it)
-  final def = await DefinitionDao.getExerciseDefinitionById(db, defId);
-  if (def == null) return {};
-
-  // 2) Grab per-exercise muscle percentages (overrides or computed)
-  final musclePercs = await computeMusclePercents(defId);
-  final hitMap = { for (var e in musclePercs) e.muscleId : e.percent };
-
-  // 3) Fetch every body-part row once and index by ID (avoid repeated queries)
-  final allBpRows = await db.query('bodypart');
-  final bpById = {
-    for (var r in allBpRows)
-      r['id'] as int : BodyPart(r['id'] as int, r['name'] as String)
-  };
-
-  // 4) For each muscle on the definition, look up its hit % and
-  //    then add that % into each of its linked body-parts.
-  final result = <BodyPart,double>{};
-  for (var rm in def.muscles) {
-    final mid = rm.muscle.id;
-    final p   = hitMap[mid] ?? 0.0;
-    if (p <= 0) continue;
-
-    // which body-parts does this muscle drive?
-    final links = await AnalyticsDao.getBodyPartsForMuscle(db, mid);
-    for (var link in links) {
-      final bp = bpById[link.bodyPartId];
-      if (bp == null) continue;
-      result[bp] = (result[bp] ?? 0.0) + p;
+      // which body-parts does this muscle drive?
+      final links = await AnalyticsDao.getBodyPartsForMuscle(db, mid);
+      for (var link in links) {
+        final bp = bpById[link.bodyPartId];
+        if (bp == null) continue;
+        result[bp] = (result[bp] ?? 0.0) + p;
+      }
     }
+
+    return result;
   }
-
-  return result;
-}
-
-
-
-
 
   // ─── Session/Set Analytics ───────────────────────────────
 
-
-/// Fetches the total number of sets per body-part for a given time range.
-Future<Map<BodyPart,double>> fetchAllBodyPartSetsOverTimeRange({
-  required DateTime start,
-  required DateTime end,
-}) async {
-  // 1) Gather all sessions & their exercise rows
-  final db = await database;
-  final sessions = await SessionDao.getSessionsInRange(
-    db, start.toIso8601String(), end.toIso8601String());
-  final defIds = <int>{};
-  for (final s in sessions) {
-    final exs = await ExerciseDao.getExercisesForSession(db, s['id'] as int);
-    for (final ex in exs.where((e) => e['type']=='weight')) {
-      defIds.add(ex['exercise_def_id'] as int);
+  /// Fetches the total number of sets per body-part for a given time range.
+  Future<Map<BodyPart, double>> fetchAllBodyPartSetsOverTimeRange({
+    required DateTime start,
+    required DateTime end,
+  }) async {
+    // 1) Gather all sessions & their exercise rows
+    final db = await database;
+    final sessions = await SessionDao.getSessionsInRange(
+      db,
+      start.toIso8601String(),
+      end.toIso8601String(),
+    );
+    final defIds = <int>{};
+    for (final s in sessions) {
+      final exs = await ExerciseDao.getExercisesForSession(db, s['id'] as int);
+      for (final ex in exs.where((e) => e['type'] == 'weight')) {
+        defIds.add(ex['exercise_def_id'] as int);
+      }
     }
+
+    // 2) For each definition, fetch its body-part map and sum them
+    final combined = <BodyPart, double>{};
+    for (final defId in defIds) {
+      final perDef = await fetchBodyPartSetsForExerciseOverTimeRange(
+        defId: defId,
+        start: start,
+        end: end,
+      );
+      perDef.forEach((bp, val) {
+        combined[bp] = (combined[bp] ?? 0) + val;
+      });
+    }
+    return combined;
   }
 
-  // 2) For each definition, fetch its body-part map and sum them
-  final combined = <BodyPart,double>{};
-  for (final defId in defIds) {
-    final perDef = await fetchBodyPartSetsForExerciseOverTimeRange(
-      defId: defId, start: start, end: end);
-    perDef.forEach((bp, val) {
-      combined[bp] = (combined[bp] ?? 0) + val;
-    });
-  }
-  return combined;
-}
+  ///// Fetches the total number of sets per body-part for a specific exercise definition
+  /// over a given time range.
+  Future<Map<BodyPart, double>> fetchBodyPartSetsForExerciseOverTimeRange({
+    required int defId,
+    required DateTime start,
+    required DateTime end,
+  }) async {
+    final db = await database;
 
+    // 1) find all sessions in range
+    final sessions = await SessionDao.getSessionsInRange(
+      db,
+      start.toIso8601String(),
+      end.toIso8601String(),
+    );
 
-///// Fetches the total number of sets per body-part for a specific exercise definition
-/// over a given time range.
-   Future<Map<BodyPart,double>> fetchBodyPartSetsForExerciseOverTimeRange({
-     required int defId,
-     required DateTime start,
-     required DateTime end,
-   }) async {
-     final db = await database;
+    // 2) prepare results & body-part lookup
+    final result = <BodyPart, double>{};
+    final allBps = await LookupDao.getAllBodyParts(db);
+    final bpById = {for (var bp in allBps) bp.id: bp};
 
-     // 1) find all sessions in range
-     final sessions = await SessionDao.getSessionsInRange(
-       db, start.toIso8601String(), end.toIso8601String());
-
-     // 2) prepare results & body-part lookup
-     final result = <BodyPart,double>{};
-     final allBps = await LookupDao.getAllBodyParts(db);
-     final bpById = { for (var bp in allBps) bp.id : bp };
-
-     // right after `final bpById = …;`
-final def = await DefinitionDao.getExerciseDefinitionById(db, defId);
-final multiply = def?.multiplyByRating ?? false;
-final ratingMul = (def?.rating ?? 0) / 100.0;
-final defBodyPartIds = def?.bodyParts.map((bp) => bp.id).toList() ?? <int>[];
-
+    // right after `final bpById = …;`
+    final def = await DefinitionDao.getExerciseDefinitionById(db, defId);
+    final multiply = def?.multiplyByRating ?? false;
+    final ratingMul = (def?.rating ?? 0) / 100.0;
+    final defBodyPartIds =
+        def?.bodyParts.map((bp) => bp.id).toList() ?? <int>[];
 
     // 3) check if we should use manual body-part percents
     final useManual = await getUseManualBodyparts(defId);
 
     // 4a) if manual, load the per-def body-part % overrides
-    Map<int,double> manualCountPerSet = {};
-if (useManual) {
-  // 1) default every linked bodyPart to 1.0 per set
-  for (var bpId in defBodyPartIds) {
-    manualCountPerSet[bpId] = 1.0;
-  }
-  // 2) overwrite with any saved overrides
-  final manualRows = await AnalyticsDao.getPercentsForExerciseBodyPart(db, defId);
-  for (var row in manualRows) {
-    manualCountPerSet[row.bodyPartId] = row.percent;
-  }
-}
-
+    Map<int, double> manualCountPerSet = {};
+    if (useManual) {
+      // 1) default every linked bodyPart to 1.0 per set
+      for (var bpId in defBodyPartIds) {
+        manualCountPerSet[bpId] = 1.0;
+      }
+      // 2) overwrite with any saved overrides
+      final manualRows = await AnalyticsDao.getPercentsForExerciseBodyPart(
+        db,
+        defId,
+      );
+      for (var row in manualRows) {
+        manualCountPerSet[row.bodyPartId] = row.percent;
+      }
+    }
 
     // 4b) if not manual, compute the per-set distribution via your existing helper
     //     this gives you a Map<BodyPart, double> telling you, for one set,
     //     how many “body-part units” it should count.
-    Map<BodyPart,double> perSetBpMap = {};
+    Map<BodyPart, double> perSetBpMap = {};
     if (!useManual) {
       perSetBpMap = await computeMuscleCalculatedBodyparts(defId);
     }
 
-     for (var s in sessions) {
-       // 5) find only weight exercises of this definition
-       final exRows = await ExerciseDao.getExercisesForSession(db, s['id'] as int);
-       for (var ex in exRows.where((e) =>
-              e['type']=='weight' && e['exercise_def_id']== defId)) {
-         final eid = ex['id'] as int;
-         // 6) fetch all sets for this exercise instance
-         final sets = await SetDao.getSetsForExercise(db, eid);
+    for (var s in sessions) {
+      // 5) find only weight exercises of this definition
+      final exRows = await ExerciseDao.getExercisesForSession(
+        db,
+        s['id'] as int,
+      );
+      for (var ex in exRows.where(
+        (e) => e['type'] == 'weight' && e['exercise_def_id'] == defId,
+      )) {
+        final eid = ex['id'] as int;
+        // 6) fetch all sets for this exercise instance
+        final sets = await SetDao.getSetsForExercise(db, eid);
 
         // instead of looping per-set+per-muscle, just multiply our per-set map
         // by the number of sets we actually did
         if (useManual) {
-  final count = sets.length;
-  manualCountPerSet.forEach((bpId, countPerSet) {
-    final bp = bpById[bpId];
-    if (bp != null) {
-      result[bp] = (result[bp] ?? 0.0) + countPerSet * count;
-    }
-  });
-}
- else {
+          final count = sets.length;
+          manualCountPerSet.forEach((bpId, countPerSet) {
+            final bp = bpById[bpId];
+            if (bp != null) {
+              result[bp] = (result[bp] ?? 0.0) + countPerSet * count;
+            }
+          });
+        } else {
           final count = sets.length;
           perSetBpMap.forEach((bp, valPerSet) {
             result[bp] = (result[bp] ?? 0.0) + valPerSet * count;
           });
         }
       }
-     }
-
-if (multiply) {
-  result.updateAll((bp, val) => val * ratingMul);
-}
-     return result;
-   }
-
-
-/// Fetches the total number of “muscle-units” for a specific exercise definition
-/// over a given time range, obeying the “Use Manual Muscles” toggle.
-Future<Map<int,double>> fetchMuscleSetsForExerciseOverTimeRange({
-  required int defId,
-  required DateTime start,
-  required DateTime end,
-}) async {
-  final db = await database;
-  // 1) sessions in range
-  final sessions = await SessionDao.getSessionsInRange(
-    db, start.toIso8601String(), end.toIso8601String());
-  // 2) should we use manual muscles?
-  final useManual = await getUseManualMuscles(defId);
-
-  // 3) load definition & its body-parts
-  final def = await DefinitionDao.getExerciseDefinitionById(db, defId);
-
-  
-final multiply = def?.multiplyByRating ?? false;
-final ratingMul= (def?.rating ?? 0) / 100.0;
-
-  // 4) prepare manual map: muscleId -> countPerSet
-  final manualCountPerSet = <int,double>{};
-  if (useManual) {
-    // default every linked muscle to 1.0 per set
-    for (var rm in def!.muscles) {
-      manualCountPerSet[rm.muscle.id] = 1.0;
     }
-    // overwrite with any saved overrides
-    final rows = await AnalyticsDao.getPercentsForExercise(db, defId);
-    for (var row in rows) {
-      manualCountPerSet[row.muscleId] = row.percent;
+
+    if (multiply) {
+      result.updateAll((bp, val) => val * ratingMul);
     }
+    return result;
   }
 
-  // 5) prepare auto map: muscleId -> countPerSet
-  final autoCountPerSet = <int,double>{};
-  if (!useManual) {
-    // body-part counts per set (mirrors your Bodyparts tab logic)
-    final manualBodyRows = await AnalyticsDao.getPercentsForExerciseBodyPart(db, defId);
-    final manualBodyMap  = { for (var e in manualBodyRows) e.bodyPartId : e.percent };
-    final autoBpMap      = await computeMuscleCalculatedBodyparts(defId);
-    // for each body-part on the def:
-    for (var bp in def!.bodyParts) {
-      // the same count you show under Bodyparts tab:
-      final countPerSet = manualBodyMap[bp.id] ?? autoBpMap[bp] ?? 0.0;
-      // assign it to every muscle linked to that part
-      final links = await AnalyticsDao.getMusclesForBodyPart(db, bp.id);
-      for (var link in links) {
-        autoCountPerSet[link.muscleId] = countPerSet;
+  /// Fetches the total number of “muscle-units” for a specific exercise definition
+  /// over a given time range, obeying the “Use Manual Muscles” toggle.
+  Future<Map<int, double>> fetchMuscleSetsForExerciseOverTimeRange({
+    required int defId,
+    required DateTime start,
+    required DateTime end,
+  }) async {
+    final db = await database;
+    // 1) sessions in range
+    final sessions = await SessionDao.getSessionsInRange(
+      db,
+      start.toIso8601String(),
+      end.toIso8601String(),
+    );
+    // 2) should we use manual muscles?
+    final useManual = await getUseManualMuscles(defId);
+
+    // 3) load definition & its body-parts
+    final def = await DefinitionDao.getExerciseDefinitionById(db, defId);
+
+    final multiply = def?.multiplyByRating ?? false;
+    final ratingMul = (def?.rating ?? 0) / 100.0;
+
+    // 4) prepare manual map: muscleId -> countPerSet
+    final manualCountPerSet = <int, double>{};
+    if (useManual) {
+      // default every linked muscle to 1.0 per set
+      for (var rm in def!.muscles) {
+        manualCountPerSet[rm.muscle.id] = 1.0;
+      }
+      // overwrite with any saved overrides
+      final rows = await AnalyticsDao.getPercentsForExercise(db, defId);
+      for (var row in rows) {
+        manualCountPerSet[row.muscleId] = row.percent;
       }
     }
+
+    // 5) prepare auto map: muscleId -> countPerSet
+    final autoCountPerSet = <int, double>{};
+    if (!useManual) {
+      // body-part counts per set (mirrors your Bodyparts tab logic)
+      final manualBodyRows = await AnalyticsDao.getPercentsForExerciseBodyPart(
+        db,
+        defId,
+      );
+      final manualBodyMap = {
+        for (var e in manualBodyRows) e.bodyPartId: e.percent,
+      };
+      final autoBpMap = await computeMuscleCalculatedBodyparts(defId);
+      // for each body-part on the def:
+      for (var bp in def!.bodyParts) {
+        // the same count you show under Bodyparts tab:
+        final countPerSet = manualBodyMap[bp.id] ?? autoBpMap[bp] ?? 0.0;
+        // assign it to every muscle linked to that part
+        final links = await AnalyticsDao.getMusclesForBodyPart(db, bp.id);
+        for (var link in links) {
+          autoCountPerSet[link.muscleId] = countPerSet;
+        }
+      }
+    }
+
+    // 6) final: loop all sets & accumulate
+    final result = <int, double>{};
+    for (var s in sessions) {
+      final exRows = await ExerciseDao.getExercisesForSession(
+        db,
+        s['id'] as int,
+      );
+      for (var ex in exRows.where(
+        (e) => e['type'] == 'weight' && e['exercise_def_id'] == defId,
+      )) {
+        final eid = ex['id'] as int;
+        final sets = await SetDao.getSetsForExercise(db, eid);
+        final count = sets.length;
+        // pick the right per-set map
+        final cmap = useManual ? manualCountPerSet : autoCountPerSet;
+        // add count * perSet to each muscle
+        cmap.forEach((mid, perSet) {
+          result[mid] = (result[mid] ?? 0) + perSet * count;
+        });
+      }
+    }
+
+    if (multiply) {
+      result.updateAll((mid, val) => val * ratingMul);
+    }
+    return result;
   }
 
-  // 6) final: loop all sets & accumulate
-  final result = <int,double>{};
-  for (var s in sessions) {
-    final exRows = await ExerciseDao.getExercisesForSession(db, s['id'] as int);
-    for (var ex in exRows.where((e) =>
-         e['type']=='weight' && e['exercise_def_id']==defId)) {
-      final eid   = ex['id'] as int;
-      final sets  = await SetDao.getSetsForExercise(db, eid);
-      final count = sets.length;
-      // pick the right per-set map
-      final cmap = useManual ? manualCountPerSet : autoCountPerSet;
-      // add count * perSet to each muscle
-      cmap.forEach((mid, perSet) {
-        result[mid] = (result[mid] ?? 0) + perSet * count;
+  /// Fetches the total number of “muscle-units” across *all* definitions
+  /// for weight exercises in the given time window.
+  Future<Map<int, double>> fetchAllMuscleSetsOverTimeRange({
+    required DateTime start,
+    required DateTime end,
+  }) async {
+    final db = await database;
+    final sessions = await SessionDao.getSessionsInRange(
+      db,
+      start.toIso8601String(),
+      end.toIso8601String(),
+    );
+    final defIds = <int>{};
+
+    // collect every definition ID used in weight exercises
+    for (final s in sessions) {
+      final exs = await ExerciseDao.getExercisesForSession(db, s['id'] as int);
+      for (final ex in exs.where((e) => e['type'] == 'weight')) {
+        defIds.add(ex['exercise_def_id'] as int);
+      }
+    }
+
+    // sum each definition’s muscle-units
+    final combined = <int, double>{};
+    for (final defId in defIds) {
+      final perDef = await fetchMuscleSetsForExerciseOverTimeRange(
+        defId: defId,
+        start: start,
+        end: end,
+      );
+      perDef.forEach((mid, val) {
+        combined[mid] = (combined[mid] ?? 0) + val;
       });
     }
+
+    return combined;
   }
 
-if (multiply) {
-  result.updateAll((mid, val) => val * ratingMul);
-}
-  return result;
-}
+  // GYM PROFILES
 
-
-
-/// Fetches the total number of “muscle-units” across *all* definitions
-/// for weight exercises in the given time window.
-Future<Map<int,double>> fetchAllMuscleSetsOverTimeRange({
-  required DateTime start,
-  required DateTime end,
-}) async {
-  final db = await database;
-  final sessions = await SessionDao.getSessionsInRange(
-    db, start.toIso8601String(), end.toIso8601String());
-  final defIds = <int>{};
-
-  // collect every definition ID used in weight exercises
-  for (final s in sessions) {
-    final exs = await ExerciseDao.getExercisesForSession(db, s['id'] as int);
-    for (final ex in exs.where((e) => e['type']=='weight')) {
-      defIds.add(ex['exercise_def_id'] as int);
-    }
-  }
-
-  // sum each definition’s muscle-units
-  final combined = <int,double>{};
-  for (final defId in defIds) {
-    final perDef = await fetchMuscleSetsForExerciseOverTimeRange(
-      defId: defId, start: start, end: end);
-    perDef.forEach((mid, val) {
-      combined[mid] = (combined[mid] ?? 0) + val;
-    });
-  }
-
-  return combined;
-}
-
-
-// GYM PROFILES
-
-/// Creates a new gym profile and returns its ID.
-Future<int> createProfile(String name) async {
-  final db = await database;
-  final profile = GymProfile(id: null, name: name, createdAt: DateTime.now());
-  final newId = await GymProfileDao.insertProfile(db, profile);
-  // copy app‐wide methods into the new profile default:
-  final appMethods = await fetchDefaultFlowMethods('app');
-  for (var m in appMethods) {
-    await upsertDefaultFlowMethod('profile',
-      profileId: newId,
-      name: m['name'] as String,
-      type: m['type'] as String,
-      params: jsonDecode(m['params'] as String),
-    );
-  }
-  return newId;
-}
-
-/// Retrieves all gym profiles.
-Future<List<GymProfile>> fetchAllProfiles() async {
-  final db = await database;
-  return GymProfileDao.getAllProfiles(db);
-}
-
-/// Updates an existing gym profile.
-Future<int> updateProfile(GymProfile profile) async {
-  final db = await database;
-  return GymProfileDao.updateProfile(db, profile);
-}
-
-/// Deletes a gym profile by ID.
-Future<int> deleteProfile(int profileId) async {
-  final db = await database;
-  return GymProfileDao.deleteProfile(db, profileId);
-}
-
-/// Adds equipment to a gym profile.
-Future<void> addEquipmentToProfile(int profileId, int equipmentId) async {
-  final db = await database;
-  await GymProfileDao.insertProfileEquipment(db, profileId, equipmentId);
-}
-
-/// Removes equipment from a gym profile.
-Future<void> removeEquipmentFromProfile(int profileId, int equipmentId) async {
-  final db = await database;
-  await GymProfileDao.deleteProfileEquipment(db, profileId, equipmentId);
-}
-
-/// Fetches equipment for a specific gym profile.
-Future<List<Map<String, dynamic>>> fetchEquipmentForProfile(int profileId) async {
-  final db = await database;
-  return GymProfileDao.getEquipmentForProfile(db, profileId);
-}
-
-/// Look up an existing definition by name+equipment; throws if not found.
-Future<int> findExerciseDefinitionId(String name, String equipmentName) async {
-  final db = await database;
-  int? eqId;
-  if (equipmentName.isNotEmpty) {
-    final eqRows = await db.query(
-      'equipment', where: 'name = ?', whereArgs: [equipmentName]);
-    if (eqRows.isNotEmpty) eqId = eqRows.first['id'] as int;
-  }
-  final whereClause = eqId != null
-      ? 'name = ? AND equipment_id = ?'
-      : 'name = ? AND equipment_id IS NULL';
-  final args = eqId != null ? [name, eqId] : [name];
-  final rows = await db.query(
-    'exercise_definitions',
-    columns: ['id'],
-    where: whereClause,
-    whereArgs: args,
-  );
-  if (rows.isEmpty) {
-    throw Exception('ExerciseDefinition("$name",$equipmentName) not found');
-  }
-  return rows.first['id'] as int;
-}
-
-/// Returns all sessions as WorkoutSession objects, sorted by date desc.
-Future<List<WorkoutSession>> fetchWorkoutSessions() async {
-  // raw maps
-  final raw = await getAllSessionsRaw();
-  // map to model
-  return raw.map((row) => WorkoutSession(
-    id:       row['id']       as int,
-    date:     DateTime.parse(row['date'] as String),
-    duration: row['duration'] as int,
-  )).toList();
-}
-
-// ─── PRESETS: Definition CRUD ─────────────────────────────
-
-Future<int> createPreset(String name, {int? profileId}) async {
-  final db = await database;
-  final newId = await PresetDefinitionDao.insertPreset(
-    db,
-    name,
-    profileId: profileId,
-  );
-  // copy profile‐default methods into this preset (if profileId != null)
-  if (profileId != null) {
-    final profMethods = await fetchDefaultFlowMethods('profile', profileId: profileId);
-    for (var m in profMethods) {
-      await upsertDefaultFlowMethod('preset',
-        profileId: profileId,
+  /// Creates a new gym profile and returns its ID.
+  Future<int> createProfile(String name) async {
+    final db = await database;
+    final profile = GymProfile(id: null, name: name, createdAt: DateTime.now());
+    final newId = await GymProfileDao.insertProfile(db, profile);
+    // copy app‐wide methods into the new profile default:
+    final appMethods = await fetchDefaultFlowMethods('app');
+    for (var m in appMethods) {
+      await upsertDefaultFlowMethod(
+        'profile',
+        profileId: newId,
         name: m['name'] as String,
         type: m['type'] as String,
         params: jsonDecode(m['params'] as String),
       );
     }
+    return newId;
   }
-  return newId;
-}
 
-Future<int> findOrCreatePreset(String name, {int? profileId}) async {
-  final db = await database;
-  return PresetDefinitionDao.findOrCreatePresetDefinition(
-    db,
-    name,
-    profileId: profileId,
-  );
-}
+  /// Retrieves all gym profiles.
+  Future<List<GymProfile>> fetchAllProfiles() async {
+    final db = await database;
+    return GymProfileDao.getAllProfiles(db);
+  }
 
+  /// Updates an existing gym profile.
+  Future<int> updateProfile(GymProfile profile) async {
+    final db = await database;
+    return GymProfileDao.updateProfile(db, profile);
+  }
 
+  /// Deletes a gym profile by ID.
+  Future<int> deleteProfile(int profileId) async {
+    final db = await database;
+    return GymProfileDao.deleteProfile(db, profileId);
+  }
 
-Future<List<Map<String, dynamic>>> fetchAllPresetsRaw({int? profileId}) async {
-  final db = await database;
-  return PresetDefinitionDao.getAllPresetsRaw(
-    db,
-    profileId: profileId,
-  );
-}
+  /// Adds equipment to a gym profile.
+  Future<void> addEquipmentToProfile(int profileId, int equipmentId) async {
+    final db = await database;
+    await GymProfileDao.insertProfileEquipment(db, profileId, equipmentId);
+  }
 
-Future<PresetDefinition?> fetchPresetById(int presetId) async {
-  final db = await database;
-  final row = await PresetDefinitionDao.getPresetById(db, presetId);
-  if (row == null) return null;
-  return PresetDefinition(
-    id:        row['id']         as int,
-    name:      row['name']       as String,
-    createdAt: DateTime.parse(row['created_at'] as String),
-  );
-}
+  /// Removes equipment from a gym profile.
+  Future<void> removeEquipmentFromProfile(
+    int profileId,
+    int equipmentId,
+  ) async {
+    final db = await database;
+    await GymProfileDao.deleteProfileEquipment(db, profileId, equipmentId);
+  }
 
-Future<void> updatePresetName(int presetId, String name) async {
-  final db = await database;
-  await PresetDefinitionDao.updatePresetName(db, presetId, name);
-}
+  /// Fetches equipment for a specific gym profile.
+  Future<List<Map<String, dynamic>>> fetchEquipmentForProfile(
+    int profileId,
+  ) async {
+    final db = await database;
+    return GymProfileDao.getEquipmentForProfile(db, profileId);
+  }
 
-Future<void> deletePreset(int presetId) async {
-  final db = await database;
-  await PresetDefinitionDao.deletePreset(db, presetId);
-}
+  /// Look up an existing definition by name+equipment; throws if not found.
+  Future<int> findExerciseDefinitionId(
+    String name,
+    String equipmentName,
+  ) async {
+    final db = await database;
+    int? eqId;
+    if (equipmentName.isNotEmpty) {
+      final eqRows = await db.query(
+        'equipment',
+        where: 'name = ?',
+        whereArgs: [equipmentName],
+      );
+      if (eqRows.isNotEmpty) eqId = eqRows.first['id'] as int;
+    }
+    final whereClause =
+        eqId != null
+            ? 'name = ? AND equipment_id = ?'
+            : 'name = ? AND equipment_id IS NULL';
+    final args = eqId != null ? [name, eqId] : [name];
+    final rows = await db.query(
+      'exercise_definitions',
+      columns: ['id'],
+      where: whereClause,
+      whereArgs: args,
+    );
+    if (rows.isEmpty) {
+      throw Exception('ExerciseDefinition("$name",$equipmentName) not found');
+    }
+    return rows.first['id'] as int;
+  }
 
-// ─── PRESETS: Exercise CRUD ───────────────────────────────
+  /// Returns all sessions as WorkoutSession objects, sorted by date desc.
+  Future<List<WorkoutSession>> fetchWorkoutSessions() async {
+    // raw maps
+    final raw = await getAllSessionsRaw();
+    // map to model
+    return raw
+        .map(
+          (row) => WorkoutSession(
+            id: row['id'] as int,
+            date: DateTime.parse(row['date'] as String),
+            duration: row['duration'] as int,
+          ),
+        )
+        .toList();
+  }
 
-Future<int> addExerciseToPreset(
-  int presetId,
-  int? exerciseDefId,
-  String type,
-  int orderIndex,
-) async {
-  final db = await database;
-  return PresetExerciseDao.insertPresetExercise(
-    db: db,
-    presetId: presetId,
-    exerciseDefId: exerciseDefId,
-    type: type,
-    orderIndex: orderIndex,
-  );
-}
+  // ─── PRESETS: Definition CRUD ─────────────────────────────
 
-Future<List<Map<String, dynamic>>> fetchPresetExercises(int presetId) async {
-  final db = await database;
-  return PresetExerciseDao.getExercisesForPreset(db, presetId);
-}
+  Future<int> createPreset(String name, {int? profileId}) async {
+    final db = await database;
+    final newId = await PresetDefinitionDao.insertPreset(
+      db,
+      name,
+      profileId: profileId,
+    );
+    // copy profile‐default methods into this preset (if profileId != null)
+    if (profileId != null) {
+      final profMethods = await fetchDefaultFlowMethods(
+        'profile',
+        profileId: profileId,
+      );
+      for (var m in profMethods) {
+        await upsertDefaultFlowMethod(
+          'preset',
+          profileId: profileId,
+          name: m['name'] as String,
+          type: m['type'] as String,
+          params: jsonDecode(m['params'] as String),
+        );
+      }
+    }
+    return newId;
+  }
 
-Future<void> deletePresetExercises(int presetId) async {
-  final db = await database;
-  await PresetExerciseDao.deleteExercisesForPreset(db, presetId);
-}
+  Future<int> findOrCreatePreset(String name, {int? profileId}) async {
+    final db = await database;
+    return PresetDefinitionDao.findOrCreatePresetDefinition(
+      db,
+      name,
+      profileId: profileId,
+    );
+  }
 
-// ─── PRESETS: Detail CRUD ─────────────────────────────────
+  Future<List<Map<String, dynamic>>> fetchAllPresetsRaw({
+    int? profileId,
+  }) async {
+    final db = await database;
+    return PresetDefinitionDao.getAllPresetsRaw(db, profileId: profileId);
+  }
 
-Future<void> savePresetWeightSets(
-  int presetExerciseId,
-  List<ExerciseSet> parents,
-  Map<int, List<ExerciseSet>> children,
-) async {
-  final db = await database;
-  await PresetDetailDao.insertPresetSets(
-    db: db,
-    presetExerciseId: presetExerciseId,
-    parentSets: parents,
-    childChangeSets: children,
-  );
-}
+  Future<PresetDefinition?> fetchPresetById(int presetId) async {
+    final db = await database;
+    final row = await PresetDefinitionDao.getPresetById(db, presetId);
+    if (row == null) return null;
+    return PresetDefinition(
+      id: row['id'] as int,
+      name: row['name'] as String,
+      createdAt: DateTime.parse(row['created_at'] as String),
+    );
+  }
 
-Future<List<Map<String, dynamic>>> fetchPresetSets(int presetExerciseId) async {
-  final db = await database;
-  return PresetDetailDao.getPresetSets(db, presetExerciseId);
-}
+  Future<void> updatePresetName(int presetId, String name) async {
+    final db = await database;
+    await PresetDefinitionDao.updatePresetName(db, presetId, name);
+  }
 
-Future<void> savePresetCardio(
-  int presetExerciseId,
-  String cardioName,
-  String? note,
-  int plannedMinutes,
-  int elapsedSeconds,
-) async {
-  final db = await database;
-  await PresetDetailDao.insertPresetCardioDetails(
-    db: db,
-    presetExerciseId: presetExerciseId,
-    cardioName: cardioName,
-    note: note,
-    plannedMinutes: plannedMinutes,
-    elapsedSeconds: elapsedSeconds,
-  );
-}
+  Future<void> deletePreset(int presetId) async {
+    final db = await database;
+    await PresetDefinitionDao.deletePreset(db, presetId);
+  }
 
-Future<Map<String, dynamic>?> fetchPresetCardio(int presetExerciseId) async {
-  final db = await database;
-  return PresetDetailDao.getPresetCardioDetails(db, presetExerciseId);
-}
+  // ─── PRESETS: Exercise CRUD ───────────────────────────────
 
-Future<void> savePresetStretch(
-  int presetExerciseId,
-  List<Map<String, dynamic>> items,
-) async {
-  final db = await database;
-  await PresetDetailDao.insertPresetStretchItems(
-    db: db,
-    presetExerciseId: presetExerciseId,
-    items: items,
-  );
-}
+  Future<int> addExerciseToPreset(
+    int presetId,
+    int? exerciseDefId,
+    String type,
+    int orderIndex,
+  ) async {
+    final db = await database;
+    return PresetExerciseDao.insertPresetExercise(
+      db: db,
+      presetId: presetId,
+      exerciseDefId: exerciseDefId,
+      type: type,
+      orderIndex: orderIndex,
+    );
+  }
 
-Future<List<Map<String, dynamic>>> fetchPresetStretchItems(int presetExerciseId) async {
-  final db = await database;
-  return PresetDetailDao.getPresetStretchItems(db, presetExerciseId);
-}
+  Future<List<Map<String, dynamic>>> fetchPresetExercises(int presetId) async {
+    final db = await database;
+    return PresetExerciseDao.getExercisesForPreset(db, presetId);
+  }
 
+  Future<void> deletePresetExercises(int presetId) async {
+    final db = await database;
+    await PresetExerciseDao.deleteExercisesForPreset(db, presetId);
+  }
+
+  // ─── PRESETS: Detail CRUD ─────────────────────────────────
+
+  Future<void> savePresetWeightSets(
+    int presetExerciseId,
+    List<ExerciseSet> parents,
+    Map<int, List<ExerciseSet>> children,
+  ) async {
+    final db = await database;
+    await PresetDetailDao.insertPresetSets(
+      db: db,
+      presetExerciseId: presetExerciseId,
+      parentSets: parents,
+      childChangeSets: children,
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> fetchPresetSets(
+    int presetExerciseId,
+  ) async {
+    final db = await database;
+    return PresetDetailDao.getPresetSets(db, presetExerciseId);
+  }
+
+  Future<void> savePresetCardio(
+    int presetExerciseId,
+    String cardioName,
+    String? note,
+    int plannedMinutes,
+    int elapsedSeconds,
+  ) async {
+    final db = await database;
+    await PresetDetailDao.insertPresetCardioDetails(
+      db: db,
+      presetExerciseId: presetExerciseId,
+      cardioName: cardioName,
+      note: note,
+      plannedMinutes: plannedMinutes,
+      elapsedSeconds: elapsedSeconds,
+    );
+  }
+
+  Future<Map<String, dynamic>?> fetchPresetCardio(int presetExerciseId) async {
+    final db = await database;
+    return PresetDetailDao.getPresetCardioDetails(db, presetExerciseId);
+  }
+
+  Future<void> savePresetStretch(
+    int presetExerciseId,
+    List<Map<String, dynamic>> items,
+  ) async {
+    final db = await database;
+    await PresetDetailDao.insertPresetStretchItems(
+      db: db,
+      presetExerciseId: presetExerciseId,
+      items: items,
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> fetchPresetStretchItems(
+    int presetExerciseId,
+  ) async {
+    final db = await database;
+    return PresetDetailDao.getPresetStretchItems(db, presetExerciseId);
+  }
 
   // ─── AUTOPRESET SETTINGS WRAPPERS ───────────────────────────────────────
 
@@ -3547,12 +3913,12 @@ Future<List<Map<String, dynamic>>> fetchPresetStretchItems(int presetExerciseId)
     required bool isAutomatic,
     required double globalIncrement,
     required bool skipFirstSet,
-  required bool   weightCheck,
-  required bool   repCheck,
-  required bool   volumeCheck,
-  required bool   adjustAllSets,
-  required bool useManualSelect,         // ← NEW
-  String? manualSelectionJson,           // ← NEW
+    required bool weightCheck,
+    required bool repCheck,
+    required bool volumeCheck,
+    required bool adjustAllSets,
+    required bool useManualSelect, // ← NEW
+    String? manualSelectionJson, // ← NEW
   }) async {
     final db = await database;
     await PresetAutoSettingsDao.upsertAutoSettings(
@@ -3561,16 +3927,14 @@ Future<List<Map<String, dynamic>>> fetchPresetStretchItems(int presetExerciseId)
       isAutomatic: isAutomatic,
       globalIncrement: globalIncrement,
       skipFirstSet: skipFirstSet,
-    weightCheck:     weightCheck,
-    repCheck:        repCheck,
-    volumeCheck:     volumeCheck,
-    adjustAllSets:     adjustAllSets,
-    useManualSelect:      useManualSelect,        // ← PASS THROUGH
-    manualSelectionJson:  manualSelectionJson,    // ← PASS THROUGH
-    
+      weightCheck: weightCheck,
+      repCheck: repCheck,
+      volumeCheck: volumeCheck,
+      adjustAllSets: adjustAllSets,
+      useManualSelect: useManualSelect, // ← PASS THROUGH
+      manualSelectionJson: manualSelectionJson, // ← PASS THROUGH
     );
   }
-
 
   /// Deletes the auto‐preset settings (disables automatic) for a preset.
   Future<void> deletePresetAutoSettings(int presetId) async {
@@ -3582,30 +3946,31 @@ Future<List<Map<String, dynamic>>> fetchPresetStretchItems(int presetExerciseId)
 
   /// Fetches the auto override (IA + rotation) for a specific preset exercise.
   /// Fetches auto overrides _including_ last_node.
-Future<Map<String, dynamic>?> fetchPresetExerciseAuto(int presetExerciseId) async {
-  final db = await database;
-  return PresetExerciseAutoDao.getExerciseAuto(db, presetExerciseId);
-}
+  Future<Map<String, dynamic>?> fetchPresetExerciseAuto(
+    int presetExerciseId,
+  ) async {
+    final db = await database;
+    return PresetExerciseAutoDao.getExerciseAuto(db, presetExerciseId);
+  }
 
   /// Inserts or updates the per-exercise IA override and last_set_index.
   /// Upsert with lastNode.
-Future<void> upsertPresetExerciseAuto({
-  required int presetExerciseId,
-  double? incrementAmount,
-  required int lastSetIndex,
-  String? lastNode,
-}) async {
-  final db = await database;
-  await PresetExerciseAutoDao.upsertExerciseAuto(
-    db,
-    presetExerciseId: presetExerciseId,
-    incrementAmount: incrementAmount,
-    lastSetIndex: lastSetIndex,
-    lastNode: lastNode,
-  );
-}
-  
-  
+  Future<void> upsertPresetExerciseAuto({
+    required int presetExerciseId,
+    double? incrementAmount,
+    required int lastSetIndex,
+    String? lastNode,
+  }) async {
+    final db = await database;
+    await PresetExerciseAutoDao.upsertExerciseAuto(
+      db,
+      presetExerciseId: presetExerciseId,
+      incrementAmount: incrementAmount,
+      lastSetIndex: lastSetIndex,
+      lastNode: lastNode,
+    );
+  }
+
   /// Deletes the per-exercise auto override for a preset exercise.
   Future<void> deletePresetExerciseAuto(int presetExerciseId) async {
     final db = await database;
@@ -3639,296 +4004,280 @@ Future<void> upsertPresetExerciseAuto({
     await PresetSetAutoDao.deleteSetAuto(db, presetSetId);
   }
 
-
   /// Update the target weight of a preset set.
   Future<void> updatePresetSetWeight(int presetSetId, double weight) async {
     final db = await database;
-    await PresetDetailDao.updatePresetSetWeight(db: db, presetSetId: presetSetId, weight: weight);
+    await PresetDetailDao.updatePresetSetWeight(
+      db: db,
+      presetSetId: presetSetId,
+      weight: weight,
+    );
   }
-
 
   /// Fetch the flow‐graph JSON for a preset.
-Future<String> fetchFlowDefinition(int presetId) async {
-  final db = await database;
-  return PresetAutoSettingsDao.getFlowDefinition(db, presetId);
-}
-
-/// Save the flow‐graph JSON for a preset.
-Future<void> upsertFlowDefinition(int presetId, String flowJson) async {
-  final db = await database;
-  await PresetAutoSettingsDao.upsertFlowDefinition(db, presetId, flowJson);
-}
-
-/// Fetch all user‐defined methods for a preset.
-Future<List<Map<String, dynamic>>> fetchFlowMethods(int presetId) async {
-  final db = await database;
-  return PresetFlowMethodsDao.getMethods(db, presetId);
-}
-
-/// Insert or update a flow method; returns its new row ID.
-Future<int> upsertFlowMethod({
-  required int presetId,
-  required String name,
-  required String type,
-  required Map<String, dynamic> params,
-}) async {
-  final db = await database;
-  final paramsJson = jsonEncode(params);
-  return PresetFlowMethodsDao.upsertMethod(
-    db,
-    presetId: presetId,
-    name: name,
-    type: type,
-    paramsJson: paramsJson,
-  );
-}
-
-/// Delete a flow method by ID.
-Future<int> deleteFlowMethod(int methodId) async {
-  final db = await database;
-  return PresetFlowMethodsDao.deleteMethod(db, methodId);
-}
-
-
-Future<void> updatePresetSetReps(int presetSetId, int reps) async {
-  final db = await database;
-  await PresetDetailDao.updatePresetSetReps(
-    db: db,
-    presetSetId: presetSetId,
-    reps: reps,
-  );
-}
-
-Future<int> addPresetSet({
-  required int presetExerciseId,
-  required double weight,
-  required int reps,
-  required int orderIndex,
-  int? parentSetId,
-}) async {
-  final db = await database;
-  return PresetDetailDao.addPresetSet(
-    db: db,
-    presetExerciseId: presetExerciseId,
-    weight: weight,
-    reps: reps,
-    orderIndex: orderIndex,
-    parentSetId: parentSetId,
-  );
-}
-
-Future<int> deletePresetSet(int presetSetId) async {
-  final db = await database;
-  return PresetDetailDao.deletePresetSet(
-    db: db,
-    presetSetId: presetSetId,
-  );
-}
-
-
-Future<bool> getUseManualBodyparts(int defId) async {
-  final db = await database;
-  final r = await db.query(
-    'exercise_definitions',
-    columns: ['use_manual_bodyparts'],
-    where: 'id = ?',
-    whereArgs: [defId],
-    limit: 1,
-  );
-  if (r.isEmpty) return false;
-  final v = r.first['use_manual_bodyparts'];
-  return v is int ? v == 1 : (v is bool ? v : false);
-}
-
-
-
-Future<void> setUseManualBodyparts(int defId, bool value) async {
-  final db = await database;
-  await db.update(
-    'exercise_definitions',
-    {'use_manual_bodyparts': value ? 1 : 0},
-    where: 'id = ?',
-    whereArgs: [defId],
-  );
-}
-
-/// Returns whether the exercise definition uses manual muscle selection.
-Future<bool> getUseManualMuscles(int defId) async {
-  final db = await database;
-  final r = await db.query(
-    'exercise_definitions',
-    columns: ['use_manual_muscles'],
-    where: 'id = ?',
-    whereArgs: [defId],
-    limit: 1,
-  );
-  if (r.isEmpty) return false;
-  final v = r.first['use_manual_muscles'];
-  return v is int ? v == 1 : (v is bool ? v : false);
-}
-
-/// Sets whether the exercise definition uses manual muscle selection.
-Future<void> setUseManualMuscles(int defId, bool v) async {
-  final db = await database;
-  await db.update(
-    'exercise_definitions',
-    {'use_manual_muscles': v ? 1 : 0},
-    where: 'id = ?',
-    whereArgs: [defId],
-  );
-}
-
-/// Proxy onto DefinitionDao for multiply-by-rating.
-Future<bool> getMultiplyByRating(int defId) async {
-  final db = await database;        // ensure you await your getter
-  return DefinitionDao.getMultiplyByRating(db, defId);
-}
-
-/// Proxy onto DefinitionDao for multiply-by-rating.
-Future<void> setMultiplyByRating(int defId, bool enabled) async {
-  final db = await database;        // unwrap the nullable
-  await DefinitionDao.setMultiplyByRating(db, defId, enabled);
-}
-
-
-// ─── FLOW‐CHART DEFAULTS (v17 tables) ───────────────────────────────────
-
-/// Fetch the saved default flow JSON for either the whole app or a specific profile.
-Future<String> fetchDefaultFlow(
-  String scope, {
-  int? profileId,
-}) async {
-  final db = await database;
-  // profile_id IS NULL when scope=='app'
-  final whereClause = profileId != null
-      ? 'scope = ? AND profile_id = ?'
-      : 'scope = ? AND profile_id IS NULL';
-  final args = profileId != null ? [scope, profileId] : [scope];
-  final rows = await db.query(
-    'flow_defaults',
-    columns: ['flow_json'],
-    where: whereClause,
-    whereArgs: args,
-    limit: 1,
-  );
-  if (rows.isEmpty) return '{}';
-  return rows.first['flow_json'] as String;
-}
-
-/// Upsert default flow JSON for scope=('app' or 'profile') and optional profileId.
-Future<void> upsertDefaultFlow(
-  String scope, {
-  int? profileId,
-  required String flowJson,
-}) async {
-  final db = await database;
-  final values = {
-    'scope': scope,
-    'profile_id': profileId,
-    'flow_json': flowJson,
-  };
-  final updated = await db.update(
-    'flow_defaults',
-    values,
-    where: profileId != null
-        ? 'scope = ? AND profile_id = ?'
-        : 'scope = ? AND profile_id IS NULL',
-    whereArgs: profileId != null ? [scope, profileId] : [scope],
-  );
-  if (updated == 0) {
-    await db.insert('flow_defaults', values);
+  Future<String> fetchFlowDefinition(int presetId) async {
+    final db = await database;
+    return PresetAutoSettingsDao.getFlowDefinition(db, presetId);
   }
-}
 
-/// Delete a default flow entry.
-Future<int> deleteDefaultFlow(
-  String scope, {
-  int? profileId,
-}) async {
-  final db = await database;
-  final whereClause = profileId != null
-      ? 'scope = ? AND profile_id = ?'
-      : 'scope = ? AND profile_id IS NULL';
-  final args = profileId != null ? [scope, profileId] : [scope];
-  return db.delete(
-    'flow_defaults',
-    where: whereClause,
-    whereArgs: args,
-  );
-}
+  /// Save the flow‐graph JSON for a preset.
+  Future<void> upsertFlowDefinition(int presetId, String flowJson) async {
+    final db = await database;
+    await PresetAutoSettingsDao.upsertFlowDefinition(db, presetId, flowJson);
+  }
 
-/// Fetch all the methods attached to an app/profile default.
-Future<List<Map<String, dynamic>>> fetchDefaultFlowMethods(
-  String scope, {
-  int? profileId,
-}) async {
-  final db = await database;
-  final whereClause = profileId != null
-      ? 'scope = ? AND profile_id = ?'
-      : 'scope = ? AND profile_id IS NULL';
-  final args = profileId != null ? [scope, profileId] : [scope];
-  return db.query(
-    'flow_default_methods',
-    where: whereClause,
-    whereArgs: args,
-    orderBy: 'name',
-  );
-}
+  /// Fetch all user‐defined methods for a preset.
+  Future<List<Map<String, dynamic>>> fetchFlowMethods(int presetId) async {
+    final db = await database;
+    return PresetFlowMethodsDao.getMethods(db, presetId);
+  }
 
-/// Upsert one method into the default‐methods table (conflict on PK(scope,profile_id,name)).
-Future<int> upsertDefaultFlowMethod(
-  String scope, {
-  int? profileId,
-  required String name,
-  required String type,
-  required Map<String, dynamic> params,  // <-- accept a Map
-}) async {
-  final db = await database;
-  final paramsJson = jsonEncode(params);  // <-- encode here
-  return db.insert(
-    'flow_default_methods',
-    {
+  /// Insert or update a flow method; returns its new row ID.
+  Future<int> upsertFlowMethod({
+    required int presetId,
+    required String name,
+    required String type,
+    required Map<String, dynamic> params,
+  }) async {
+    final db = await database;
+    final paramsJson = jsonEncode(params);
+    return PresetFlowMethodsDao.upsertMethod(
+      db,
+      presetId: presetId,
+      name: name,
+      type: type,
+      paramsJson: paramsJson,
+    );
+  }
+
+  /// Delete a flow method by ID.
+  Future<int> deleteFlowMethod(int methodId) async {
+    final db = await database;
+    return PresetFlowMethodsDao.deleteMethod(db, methodId);
+  }
+
+  Future<void> updatePresetSetReps(int presetSetId, int reps) async {
+    final db = await database;
+    await PresetDetailDao.updatePresetSetReps(
+      db: db,
+      presetSetId: presetSetId,
+      reps: reps,
+    );
+  }
+
+  Future<int> addPresetSet({
+    required int presetExerciseId,
+    required double weight,
+    required int reps,
+    required int orderIndex,
+    int? parentSetId,
+  }) async {
+    final db = await database;
+    return PresetDetailDao.addPresetSet(
+      db: db,
+      presetExerciseId: presetExerciseId,
+      weight: weight,
+      reps: reps,
+      orderIndex: orderIndex,
+      parentSetId: parentSetId,
+    );
+  }
+
+  Future<int> deletePresetSet(int presetSetId) async {
+    final db = await database;
+    return PresetDetailDao.deletePresetSet(db: db, presetSetId: presetSetId);
+  }
+
+  Future<bool> getUseManualBodyparts(int defId) async {
+    final db = await database;
+    final r = await db.query(
+      'exercise_definitions',
+      columns: ['use_manual_bodyparts'],
+      where: 'id = ?',
+      whereArgs: [defId],
+      limit: 1,
+    );
+    if (r.isEmpty) return false;
+    final v = r.first['use_manual_bodyparts'];
+    return v is int ? v == 1 : (v is bool ? v : false);
+  }
+
+  Future<void> setUseManualBodyparts(int defId, bool value) async {
+    final db = await database;
+    await db.update(
+      'exercise_definitions',
+      {'use_manual_bodyparts': value ? 1 : 0},
+      where: 'id = ?',
+      whereArgs: [defId],
+    );
+  }
+
+  /// Returns whether the exercise definition uses manual muscle selection.
+  Future<bool> getUseManualMuscles(int defId) async {
+    final db = await database;
+    final r = await db.query(
+      'exercise_definitions',
+      columns: ['use_manual_muscles'],
+      where: 'id = ?',
+      whereArgs: [defId],
+      limit: 1,
+    );
+    if (r.isEmpty) return false;
+    final v = r.first['use_manual_muscles'];
+    return v is int ? v == 1 : (v is bool ? v : false);
+  }
+
+  /// Sets whether the exercise definition uses manual muscle selection.
+  Future<void> setUseManualMuscles(int defId, bool v) async {
+    final db = await database;
+    await db.update(
+      'exercise_definitions',
+      {'use_manual_muscles': v ? 1 : 0},
+      where: 'id = ?',
+      whereArgs: [defId],
+    );
+  }
+
+  /// Proxy onto DefinitionDao for multiply-by-rating.
+  Future<bool> getMultiplyByRating(int defId) async {
+    final db = await database; // ensure you await your getter
+    return DefinitionDao.getMultiplyByRating(db, defId);
+  }
+
+  /// Proxy onto DefinitionDao for multiply-by-rating.
+  Future<void> setMultiplyByRating(int defId, bool enabled) async {
+    final db = await database; // unwrap the nullable
+    await DefinitionDao.setMultiplyByRating(db, defId, enabled);
+  }
+
+  // ─── FLOW‐CHART DEFAULTS (v17 tables) ───────────────────────────────────
+
+  /// Fetch the saved default flow JSON for either the whole app or a specific profile.
+  Future<String> fetchDefaultFlow(String scope, {int? profileId}) async {
+    final db = await database;
+    // profile_id IS NULL when scope=='app'
+    final whereClause =
+        profileId != null
+            ? 'scope = ? AND profile_id = ?'
+            : 'scope = ? AND profile_id IS NULL';
+    final args = profileId != null ? [scope, profileId] : [scope];
+    final rows = await db.query(
+      'flow_defaults',
+      columns: ['flow_json'],
+      where: whereClause,
+      whereArgs: args,
+      limit: 1,
+    );
+    if (rows.isEmpty) return '{}';
+    return rows.first['flow_json'] as String;
+  }
+
+  /// Upsert default flow JSON for scope=('app' or 'profile') and optional profileId.
+  Future<void> upsertDefaultFlow(
+    String scope, {
+    int? profileId,
+    required String flowJson,
+  }) async {
+    final db = await database;
+    final values = {
+      'scope': scope,
+      'profile_id': profileId,
+      'flow_json': flowJson,
+    };
+    final updated = await db.update(
+      'flow_defaults',
+      values,
+      where:
+          profileId != null
+              ? 'scope = ? AND profile_id = ?'
+              : 'scope = ? AND profile_id IS NULL',
+      whereArgs: profileId != null ? [scope, profileId] : [scope],
+    );
+    if (updated == 0) {
+      await db.insert('flow_defaults', values);
+    }
+  }
+
+  /// Delete a default flow entry.
+  Future<int> deleteDefaultFlow(String scope, {int? profileId}) async {
+    final db = await database;
+    final whereClause =
+        profileId != null
+            ? 'scope = ? AND profile_id = ?'
+            : 'scope = ? AND profile_id IS NULL';
+    final args = profileId != null ? [scope, profileId] : [scope];
+    return db.delete('flow_defaults', where: whereClause, whereArgs: args);
+  }
+
+  /// Fetch all the methods attached to an app/profile default.
+  Future<List<Map<String, dynamic>>> fetchDefaultFlowMethods(
+    String scope, {
+    int? profileId,
+  }) async {
+    final db = await database;
+    final whereClause =
+        profileId != null
+            ? 'scope = ? AND profile_id = ?'
+            : 'scope = ? AND profile_id IS NULL';
+    final args = profileId != null ? [scope, profileId] : [scope];
+    return db.query(
+      'flow_default_methods',
+      where: whereClause,
+      whereArgs: args,
+      orderBy: 'name',
+    );
+  }
+
+  /// Upsert one method into the default‐methods table (conflict on PK(scope,profile_id,name)).
+  Future<int> upsertDefaultFlowMethod(
+    String scope, {
+    int? profileId,
+    required String name,
+    required String type,
+    required Map<String, dynamic> params, // <-- accept a Map
+  }) async {
+    final db = await database;
+    final paramsJson = jsonEncode(params); // <-- encode here
+    return db.insert('flow_default_methods', {
       'scope': scope,
       'profile_id': profileId,
       'name': name,
       'type': type,
-      'params': paramsJson,             // <-- store JSON string
-    },
-    conflictAlgorithm: ConflictAlgorithm.replace,
-  );
-}
+      'params': paramsJson, // <-- store JSON string
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
 
-/// Delete one default method by name.
-Future<int> deleteDefaultFlowMethod(
-  String scope, {
-  int? profileId,
-  required String name,
-}) async {
-  final db = await database;
-  final whereClause = profileId != null
-      ? 'scope = ? AND profile_id = ? AND name = ?'
-      : 'scope = ? AND profile_id IS NULL AND name = ?';
-  final args = profileId != null ? [scope, profileId, name] : [scope, name];
-  return db.delete(
-    'flow_default_methods',
-    where: whereClause,
-    whereArgs: args,
-  );
-}
+  /// Delete one default method by name.
+  Future<int> deleteDefaultFlowMethod(
+    String scope, {
+    int? profileId,
+    required String name,
+  }) async {
+    final db = await database;
+    final whereClause =
+        profileId != null
+            ? 'scope = ? AND profile_id = ? AND name = ?'
+            : 'scope = ? AND profile_id IS NULL AND name = ?';
+    final args = profileId != null ? [scope, profileId, name] : [scope, name];
+    return db.delete(
+      'flow_default_methods',
+      where: whereClause,
+      whereArgs: args,
+    );
+  }
 
+  /// Returns a FlowDefinition for the given scope ('app' or 'profile') by
+  /// delegating to the flow_defaults table and parsing its JSON.
+  Future<FlowDefinition> fetchDefaultFlowDefinition(
+    String scope, {
+    int? profileId,
+  }) async {
+    // Reuse the string-based helper
+    final jsonStr = await fetchDefaultFlow(scope, profileId: profileId);
+    return FlowDefinition.fromJson(jsonStr);
+  }
 
-/// Returns a FlowDefinition for the given scope ('app' or 'profile') by
-/// delegating to the flow_defaults table and parsing its JSON.
-Future<FlowDefinition> fetchDefaultFlowDefinition(
-  String scope, {
-  int? profileId,
-}) async {
-  // Reuse the string-based helper
-  final jsonStr = await fetchDefaultFlow(scope, profileId: profileId);
-  return FlowDefinition.fromJson(jsonStr);
-}
-
- // ── Forwarders that wrap the DAO ─────────────────────────────
+  // ── Forwarders that wrap the DAO ─────────────────────────────
 
   Future<PersonalInfo?> getPersonalInfo() async {
     final db = await database;
@@ -3943,181 +4292,220 @@ Future<FlowDefinition> fetchDefaultFlowDefinition(
   // NUTIRITOINNNNN ------------------------------------
 
   Future<void> seedNutrientsIfEmpty() async {
-  final d = NutritionDao(await database);
-  await d.seedNutrientsIfEmpty();
-}
+    final d = NutritionDao(await database);
+    await d.seedNutrientsIfEmpty();
+  }
 
-// Foods & search
-Future<int> upsertFood(Food f) async => NutritionDao(await database).upsertFood(f);
-Future<Food?> getFood(int id) async => NutritionDao(await database).getFood(id);
-Future<List<Food>> searchFoods(String query, {int limit = 50}) async =>
-    NutritionDao(await database).searchFoods(query, limit: limit);
-Future<int> upsertFoodPortion(FoodPortion p) async =>
-    NutritionDao(await database).upsertFoodPortion(p);
-Future<List<FoodPortion>> getPortionsForFood(int foodId) async =>
-    NutritionDao(await database).getPortionsForFood(foodId);
-Future<void> setDefaultPortion(int foodId, int portionId) async =>
-    NutritionDao(await database).setDefaultPortion(foodId, portionId);
+  // Foods & search
+  Future<int> upsertFood(Food f) async =>
+      NutritionDao(await database).upsertFood(f);
+  Future<Food?> getFood(int id) async =>
+      NutritionDao(await database).getFood(id);
+  Future<List<Food>> searchFoods(String query, {int limit = 50}) async =>
+      NutritionDao(await database).searchFoods(query, limit: limit);
+  Future<int> upsertFoodPortion(FoodPortion p) async =>
+      NutritionDao(await database).upsertFoodPortion(p);
+  Future<List<FoodPortion>> getPortionsForFood(int foodId) async =>
+      NutritionDao(await database).getPortionsForFood(foodId);
+  Future<void> setDefaultPortion(int foodId, int portionId) async =>
+      NutritionDao(await database).setDefaultPortion(foodId, portionId);
 
-// Nutrients
-Future<void> upsertFoodNutrients(int foodId, List<FoodNutrient> rows) async =>
-    NutritionDao(await database).upsertFoodNutrients(foodId, rows);
-Future<Map<int, double>> getFoodNutrientsPer100g(int foodId) async =>
-    NutritionDao(await database).getFoodNutrientsPer100g(foodId);
+  // Nutrients
+  Future<void> upsertFoodNutrients(int foodId, List<FoodNutrient> rows) async =>
+      NutritionDao(await database).upsertFoodNutrients(foodId, rows);
+  Future<Map<int, double>> getFoodNutrientsPer100g(int foodId) async =>
+      NutritionDao(await database).getFoodNutrientsPer100g(foodId);
 
-Future<Map<String, double>> getFoodNutrientsPer100gByCode(int foodId) async {
-  return NutritionDao(await database).getFoodNutrientsPer100gByCode(foodId);
-}
+  Future<Map<String, double>> getFoodNutrientsPer100gByCode(int foodId) async {
+    return NutritionDao(await database).getFoodNutrientsPer100gByCode(foodId);
+  }
 
-Future<Map<String, double>> getMacroPer100gLegacySafe(int foodId) async {
-  final all = await getFoodNutrientsPer100gByCode(foodId);
+  Future<Map<String, double>> getMacroPer100gLegacySafe(int foodId) async {
+    final all = await getFoodNutrientsPer100gByCode(foodId);
 
-  double? pick(List<String> codes) {
-    for (final code in codes) {
-      final value = all[code];
-      if (value != null) return value;
+    double? pick(List<String> codes) {
+      for (final code in codes) {
+        final value = all[code];
+        if (value != null) return value;
+      }
+      return null;
     }
-    return null;
+
+    final out = <String, double>{};
+    final protein = pick(['PROTEIN_G', 'PROTEIN']);
+    if (protein != null) out['PROTEIN_G'] = protein;
+    final carbs = pick(['CARB_G', 'CARB']);
+    if (carbs != null) out['CARB_G'] = carbs;
+    final fat = pick(['FAT_G', 'FAT']);
+    if (fat != null) out['FAT_G'] = fat;
+    final kcal = pick(['KCAL', 'ENERGY_KCAL', 'CALORIES']);
+    if (kcal != null) out['KCAL'] = kcal;
+    return out;
   }
 
-  final out = <String, double>{};
-  final protein = pick(['PROTEIN_G', 'PROTEIN']);
-  if (protein != null) out['PROTEIN_G'] = protein;
-  final carbs = pick(['CARB_G', 'CARB']);
-  if (carbs != null) out['CARB_G'] = carbs;
-  final fat = pick(['FAT_G', 'FAT']);
-  if (fat != null) out['FAT_G'] = fat;
-  final kcal = pick(['KCAL', 'ENERGY_KCAL', 'CALORIES']);
-  if (kcal != null) out['KCAL'] = kcal;
-  return out;
-}
+  // Recipes
+  Future<int> createOrUpdateRecipe(
+    Recipe r,
+    List<RecipeIngredient> ings,
+  ) async => NutritionDao(await database).createOrUpdateRecipe(r, ings);
+  Future<Recipe?> getRecipe(int id) async =>
+      NutritionDao(await database).getRecipe(id);
+  Future<List<RecipeIngredient>> getRecipeIngredients(int recipeId) async =>
+      NutritionDao(await database).getRecipeIngredients(recipeId);
 
-// Recipes
-Future<int> createOrUpdateRecipe(Recipe r, List<RecipeIngredient> ings) async =>
-    NutritionDao(await database).createOrUpdateRecipe(r, ings);
-Future<Recipe?> getRecipe(int id) async =>
-    NutritionDao(await database).getRecipe(id);
-Future<List<RecipeIngredient>> getRecipeIngredients(int recipeId) async =>
-    NutritionDao(await database).getRecipeIngredients(recipeId);
+  // Diary
+  Future<int> addDiaryFood({
+    required int profileId,
+    required DateTime date,
+    required MealType mealType,
+    required int foodId,
+    int? portionId,
+    double quantity = 1.0,
+    double? gramsOverride, // legacy
+    double? loggedGrams, // NEW: forward to DAO
+    DateTime? loggedAt, // NEW: forward to DAO
+    String? notes,
+  }) async => NutritionDao(await database).addDiaryFood(
+    profileId: profileId,
+    date: date,
+    mealType: mealType,
+    foodId: foodId,
+    portionId: portionId,
+    quantity: quantity,
+    gramsOverride: gramsOverride,
+    loggedGrams: loggedGrams, // <—
+    loggedAt: loggedAt, // <—
+    notes: notes,
+  );
 
-// Diary
-Future<int> addDiaryFood({
-  required int profileId,
-  required DateTime date,
-  required MealType mealType,
-  required int foodId,
-  int? portionId,
-  double quantity = 1.0,
-  double? gramsOverride,   // legacy
-  double? loggedGrams,     // NEW: forward to DAO
-  DateTime? loggedAt,      // NEW: forward to DAO
-  String? notes,
-}) async => NutritionDao(await database).addDiaryFood(
-      profileId: profileId,
-      date: date,
-      mealType: mealType,
-      foodId: foodId,
-      portionId: portionId,
-      quantity: quantity,
-      gramsOverride: gramsOverride,
-      loggedGrams: loggedGrams,     // <—
-      loggedAt: loggedAt,           // <—
-      notes: notes,
-    );
+  Future<int> addDiaryRecipe({
+    required int profileId,
+    required DateTime date,
+    required MealType mealType,
+    required int recipeId,
+    double quantity = 1.0,
+    DateTime? loggedAt, // NEW: forward to DAO
+    String? notes,
+  }) async => NutritionDao(await database).addDiaryRecipe(
+    profileId: profileId,
+    date: date,
+    mealType: mealType,
+    recipeId: recipeId,
+    quantity: quantity,
+    loggedAt: loggedAt, // <—
+    notes: notes,
+  );
 
-Future<int> addDiaryRecipe({
-  required int profileId,
-  required DateTime date,
-  required MealType mealType,
-  required int recipeId,
-  double quantity = 1.0,
-  DateTime? loggedAt,      // NEW: forward to DAO
-  String? notes,
-}) async => NutritionDao(await database).addDiaryRecipe(
-      profileId: profileId,
-      date: date,
-      mealType: mealType,
-      recipeId: recipeId,
-      quantity: quantity,
-      loggedAt: loggedAt,           // <—
-      notes: notes,
-    );
+  Future<void> updateDiaryEntry(DiaryEntry e) async =>
+      NutritionDao(await database).updateDiaryEntry(e);
 
-Future<void> updateDiaryEntry(DiaryEntry e) async =>
-    NutritionDao(await database).updateDiaryEntry(e);
+  Future<void> deleteDiaryEntry(
+    int id, {
+    required int profileId,
+    required DateTime date,
+  }) async => NutritionDao(
+    await database,
+  ).deleteDiaryEntry(id, profileId: profileId, date: date);
 
-Future<void> deleteDiaryEntry(int id, {required int profileId, required DateTime date}) async =>
-    NutritionDao(await database).deleteDiaryEntry(id, profileId: profileId, date: date);
+  Future<List<DiaryEntry>> getDiaryEntriesForDate(
+    int profileId,
+    DateTime date,
+  ) async =>
+      NutritionDao(await database).getDiaryEntriesForDate(profileId, date);
 
-Future<List<DiaryEntry>> getDiaryEntriesForDate(int profileId, DateTime date) async =>
-    NutritionDao(await database).getDiaryEntriesForDate(profileId, date);
+  Future<List<DiaryEntryWithItem>> getDiaryEntriesWithItemsForDate(
+    int profileId,
+    DateTime day,
+  ) async => NutritionDao(
+    await database,
+  ).getDiaryEntriesWithItemsForDate(profileId, day);
 
-Future<List<DiaryEntryWithItem>> getDiaryEntriesWithItemsForDate(int profileId, DateTime day) async =>
-    NutritionDao(await database).getDiaryEntriesWithItemsForDate(profileId, day);
+  // Goals
+  Future<void> setGoals(NutritionGoal goal) async =>
+      NutritionDao(await database).setGoals(goal);
 
-// Goals
-Future<void> setGoals(NutritionGoal goal) async =>
-    NutritionDao(await database).setGoals(goal);
+  Future<NutritionGoal?> getActiveGoals(int profileId, DateTime date) async =>
+      NutritionDao(await database).getActiveGoals(profileId, date);
 
-Future<NutritionGoal?> getActiveGoals(int profileId, DateTime date) async =>
-    NutritionDao(await database).getActiveGoals(profileId, date);
+  // Day totals cache
+  Future<DayTotals> getDayTotals(int profileId, DateTime date) async =>
+      NutritionDao(await database).getDayTotals(profileId, date);
 
-// Day totals cache
-Future<DayTotals> getDayTotals(int profileId, DateTime date) async =>
-    NutritionDao(await database).getDayTotals(profileId, date);
+  Future<void> recalcDayTotals(int profileId, DateTime date) async =>
+      NutritionDao(await database).recalcDayTotals(profileId, date);
 
-Future<void> recalcDayTotals(int profileId, DateTime date) async =>
-    NutritionDao(await database).recalcDayTotals(profileId, date);
-
-Future<int> createCustomFood({required String name, String? brand}) async {
-    return NutritionDao(await database).insertCustomFood(name: name, brand: brand);
+  Future<int> createCustomFood({required String name, String? brand}) async {
+    return NutritionDao(
+      await database,
+    ).insertCustomFood(name: name, brand: brand);
   }
 
-  Future<void> savePer100gByCode(int foodId, Map<String, double> codeToAmount) async {
-    await NutritionDao(await database).replacePer100gByCode(foodId, codeToAmount);
+  Future<void> savePer100gByCode(
+    int foodId,
+    Map<String, double> codeToAmount,
+  ) async {
+    await NutritionDao(
+      await database,
+    ).replacePer100gByCode(foodId, codeToAmount);
   }
 
-  Future<void> savePer100gFromLabelPayload(int foodId, Map<String, dynamic> payload) async {
-  await NutritionDao(await database).savePer100gFromLabelPayload(foodId, payload);
-}
-
-/// Extracts leaf labels from the customization payload and persists per-100g values
-/// using nutrient_aliases to resolve labels.
-Future<void> saveExtendedPer100gFromPayload(int foodId, Map<String, dynamic> payload) async {
-  const skip = {'name','brand','calories','protein_g','carbs_g','fats_g'};
-
-  final aliasMap = <String, double>{};
-  for (final entry in payload.entries) {
-    final key = entry.key;
-    if (skip.contains(key)) continue;
-
-    final rawVal = entry.value;
-    if (rawVal == null) continue;
-
-    final val = (rawVal is num) ? rawVal.toDouble() : double.tryParse('$rawVal');
-    if (val == null) continue;
-
-    final lastGt = key.lastIndexOf('>');
-    final alias = (lastGt == -1 ? key : key.substring(lastGt + 1)).trim();
-
-    aliasMap[alias] = val;
+  Future<void> savePer100gFromLabelPayload(
+    int foodId,
+    Map<String, dynamic> payload,
+  ) async {
+    await NutritionDao(
+      await database,
+    ).savePer100gFromLabelPayload(foodId, payload);
   }
-  if (aliasMap.isEmpty) return;
-  await NutritionDao(await database).savePer100gByAlias(foodId, aliasMap);
-}
 
-Future<int> addPortion(
+  /// Extracts leaf labels from the customization payload and persists per-100g values
+  /// using nutrient_aliases to resolve labels.
+  Future<void> saveExtendedPer100gFromPayload(
+    int foodId,
+    Map<String, dynamic> payload,
+  ) async {
+    const skip = {
+      'name',
+      'brand',
+      'calories',
+      'protein_g',
+      'carbs_g',
+      'fats_g',
+    };
+
+    final aliasMap = <String, double>{};
+    for (final entry in payload.entries) {
+      final key = entry.key;
+      if (skip.contains(key)) continue;
+
+      final rawVal = entry.value;
+      if (rawVal == null) continue;
+
+      final val =
+          (rawVal is num) ? rawVal.toDouble() : double.tryParse('$rawVal');
+      if (val == null) continue;
+
+      final lastGt = key.lastIndexOf('>');
+      final alias = (lastGt == -1 ? key : key.substring(lastGt + 1)).trim();
+
+      aliasMap[alias] = val;
+    }
+    if (aliasMap.isEmpty) return;
+    await NutritionDao(await database).savePer100gByAlias(foodId, aliasMap);
+  }
+
+  Future<int> addPortion(
     int foodId, {
     required String measureName,
     double? gramWeight,
     double? mlVolume,
     bool isDefault = false,
     // v23 fields:
-  String? listKind,
-  int?    sortOrder,
-  double? amount,
-  String? unit,
-  String? label,
+    String? listKind,
+    int? sortOrder,
+    double? amount,
+    String? unit,
+    String? label,
   }) async {
     return NutritionDao(await database).addPortion(
       foodId,
@@ -4137,191 +4525,210 @@ Future<int> addPortion(
     await NutritionDao(await database).replacePortions(foodId, portions);
   }
 
-
   Future<void> updateFoodBasics(int id, {String? name, String? brand}) async {
-  return NutritionDao(await database).updateFoodBasics(id, name: name, brand: brand);
-}
-
-Future<void> updateFoodFromCustomizationPayload(Map payload) async {
-  // 1) ID is required for updates
-  final foodId = (payload['food_id'] as num?)?.toInt();
-  if (foodId == null) {
-    throw ArgumentError('food_id is required for updates');
+    return NutritionDao(
+      await database,
+    ).updateFoodBasics(id, name: name, brand: brand);
   }
 
-  // 2) Update basic shell (name/brand)
-  final name  = (payload['name'] as String?)?.trim();
-  final brand = (payload['brand'] as String?)?.trim();
-  await updateFoodBasics(foodId, name: name, brand: brand);
-
-  // 2b) Optional: density (g/ml)
-  final densRaw = payload['density_g_per_ml'];
-  if (densRaw != null) {
-    final dens = (densRaw is num) ? densRaw.toDouble() : double.tryParse('$densRaw');
-    if (dens != null) {
-      final db = await database;
-      await db.update(
-        'foods',
-        {
-          'density_g_per_ml': dens > 0 ? dens : null,
-          'updated_at': DateTime.now().toUtc().toIso8601String(),
-        },
-        where: 'id = ?',
-        whereArgs: [foodId],
-      );
+  Future<void> updateFoodFromCustomizationPayload(Map payload) async {
+    // 1) ID is required for updates
+    final foodId = (payload['food_id'] as num?)?.toInt();
+    if (foodId == null) {
+      throw ArgumentError('food_id is required for updates');
     }
-  }
 
-  // 2c) Optional: barcode(s)
-  final bc = payload['barcodes'] ?? payload['barcode'];
-  if (bc != null) {
-    final list = (bc is List) ? bc : [bc];
-    for (final v in list) {
-      final s = '$v'.trim();
-     if (s.isNotEmpty) {
-        await addBarcode(foodId, s);
+    // 2) Update basic shell (name/brand)
+    final name = (payload['name'] as String?)?.trim();
+    final brand = (payload['brand'] as String?)?.trim();
+    await updateFoodBasics(foodId, name: name, brand: brand);
+
+    // 2b) Optional: density (g/ml)
+    final densRaw = payload['density_g_per_ml'];
+    if (densRaw != null) {
+      final dens =
+          (densRaw is num) ? densRaw.toDouble() : double.tryParse('$densRaw');
+      if (dens != null) {
+        final db = await database;
+        await db.update(
+          'foods',
+          {
+            'density_g_per_ml': dens > 0 ? dens : null,
+            'updated_at': DateTime.now().toUtc().toIso8601String(),
+          },
+          where: 'id = ?',
+          whereArgs: [foodId],
+        );
       }
     }
-  }
 
-  // 3) Replace per-100g values using your flexible label mapper
-  await savePer100gFromLabelPayload(foodId, Map<String, dynamic>.from(payload));
-
-  // 4) Replace portions
-  final List portionsJson = (payload['portions'] as List?) ?? const [];
-  if (portionsJson.isNotEmpty) {
-    final portions = <FoodPortion>[];
-    for (final p in portionsJson) {
-      final m = Map<String, dynamic>.from(p as Map);
-      final rawDefault = m['is_default'];
-      final isDefault = rawDefault is bool
-          ? rawDefault
-          : (rawDefault is num ? rawDefault.toInt() == 1 : false);
-
-      portions.add(FoodPortion(
-        id         : null,            // replacePortions wipes & re-inserts
-        foodId     : foodId,
-        measureName: m['measure_name'] as String,
-        gramWeight : (m['gram_weight'] as num?)?.toDouble(),
-        mlVolume   : (m['ml_volume'] as num?)?.toDouble(),
-        isDefault  : isDefault,
-        listKind   : m['list_kind'] as String?,   // 'basis' | 'usual'
-        sortOrder  : m['sort_order'] as int?,
-        amount     : (m['amount'] as num?)?.toDouble(),
-        unit       : m['unit'] as String?,
-        label      : m['label'] as String?,
-      ));
+    // 2c) Optional: barcode(s)
+    final bc = payload['barcodes'] ?? payload['barcode'];
+    if (bc != null) {
+      final list = (bc is List) ? bc : [bc];
+      for (final v in list) {
+        final s = '$v'.trim();
+        if (s.isNotEmpty) {
+          await addBarcode(foodId, s);
+        }
+      }
     }
-    await replacePortions(foodId, portions);
+
+    // 3) Replace per-100g values using your flexible label mapper
+    await savePer100gFromLabelPayload(
+      foodId,
+      Map<String, dynamic>.from(payload),
+    );
+
+    // 4) Replace portions
+    final List portionsJson = (payload['portions'] as List?) ?? const [];
+    if (portionsJson.isNotEmpty) {
+      final portions = <FoodPortion>[];
+      for (final p in portionsJson) {
+        final m = Map<String, dynamic>.from(p as Map);
+        final rawDefault = m['is_default'];
+        final isDefault =
+            rawDefault is bool
+                ? rawDefault
+                : (rawDefault is num ? rawDefault.toInt() == 1 : false);
+
+        portions.add(
+          FoodPortion(
+            id: null, // replacePortions wipes & re-inserts
+            foodId: foodId,
+            measureName: m['measure_name'] as String,
+            gramWeight: (m['gram_weight'] as num?)?.toDouble(),
+            mlVolume: (m['ml_volume'] as num?)?.toDouble(),
+            isDefault: isDefault,
+            listKind: m['list_kind'] as String?, // 'basis' | 'usual'
+            sortOrder: m['sort_order'] as int?,
+            amount: (m['amount'] as num?)?.toDouble(),
+            unit: m['unit'] as String?,
+            label: m['label'] as String?,
+          ),
+        );
+      }
+      await replacePortions(foodId, portions);
+    }
   }
-}
 
-// Normalized upsert using brand/source/category + barcodes
-Future<int> upsertFoodWithKeys({
-  int? id,
-  required String name,
-  String? brandName,
-  String? sourceName,
-  String? categoryName,
-  List<String> barcodes = const [],
-  double? densityGPerMl,
-  bool isCustom = false,
-  String? dataSource,
-  String? dataSourceId,
-}) async =>
-    NutritionDao(await database).upsertFoodWithKeys(
-      id: id,
-      name: name,
-      brandName: brandName,
-      sourceName: sourceName,
-      categoryName: categoryName,
-      barcodes: barcodes,
-      densityGPerMl: densityGPerMl,
-      isCustom: isCustom,
-      dataSource: dataSource,
-      dataSourceId: dataSourceId,
-    );
-
-Future<Food?> getFoodByBarcode(String code) async =>
-    NutritionDao(await database).getFoodByBarcode(code);
-
-Future<void> addBarcode(int foodId, String code) async {
-  await NutritionDao(await database).addBarcode(foodId, code);
-}
-
-
-
-// Quick calculator for a portion selection
-Future<Map<String,double>> calcForPortion({
-  required int foodId,
-  required int portionId,
-  double quantity = 1.0,
-}) async =>
-    NutritionDao(await database).calcForPortion(
-      foodId: foodId,
-      portionId: portionId,
-      quantity: quantity,
-    );
-
-// Optional: manual rebuild for FTS caller
-Future<void> rebuildFoodFts() async =>
-    _rebuildFoodFtsIfExists(await database);
-
-
-Future<bool> _tableHasColumn(DatabaseExecutor db, String table, String col) async {
-  final rows = await db.rawQuery("PRAGMA table_info($table)");
-  return rows.any((r) => (r['name'] as String).toLowerCase() == col.toLowerCase());
-}
-
-Future<bool> _tableExists(DatabaseExecutor db, String name) async {
-  final rows = await db.rawQuery(
-    "SELECT 1 FROM sqlite_master WHERE type='table' AND name=? LIMIT 1",
-    [name],
+  // Normalized upsert using brand/source/category + barcodes
+  Future<int> upsertFoodWithKeys({
+    int? id,
+    required String name,
+    String? brandName,
+    String? sourceName,
+    String? categoryName,
+    List<String> barcodes = const [],
+    double? densityGPerMl,
+    bool isCustom = false,
+    String? dataSource,
+    String? dataSourceId,
+  }) async => NutritionDao(await database).upsertFoodWithKeys(
+    id: id,
+    name: name,
+    brandName: brandName,
+    sourceName: sourceName,
+    categoryName: categoryName,
+    barcodes: barcodes,
+    densityGPerMl: densityGPerMl,
+    isCustom: isCustom,
+    dataSource: dataSource,
+    dataSourceId: dataSourceId,
   );
-  return rows.isNotEmpty;
-}
 
-Future<int> _countRowsIfTableExists(DatabaseExecutor db, String name) async {
-  if (!await _tableExists(db, name)) return 0;
-  try {
-    return Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM $name')) ?? 0;
-  } catch (_) {
-    return 0;
+  Future<Food?> getFoodByBarcode(String code) async =>
+      NutritionDao(await database).getFoodByBarcode(code);
+
+  Future<void> addBarcode(int foodId, String code) async {
+    await NutritionDao(await database).addBarcode(foodId, code);
   }
-}
 
-Future<void> _rebuildAllRecipeCaches(Database db) async {
-  final rows = await db.query('recipes', columns: ['id']);
-  final dao = NutritionDao(db);
-  for (final r in rows) {
-    await dao.rebuildRecipeNutrientCache(r['id'] as int);
+  // Quick calculator for a portion selection
+  Future<Map<String, double>> calcForPortion({
+    required int foodId,
+    required int portionId,
+    double quantity = 1.0,
+  }) async => NutritionDao(
+    await database,
+  ).calcForPortion(foodId: foodId, portionId: portionId, quantity: quantity);
+
+  // Optional: manual rebuild for FTS caller
+  Future<void> rebuildFoodFts() async =>
+      _rebuildFoodFtsIfExists(await database);
+
+  Future<bool> _tableHasColumn(
+    DatabaseExecutor db,
+    String table,
+    String col,
+  ) async {
+    final rows = await db.rawQuery("PRAGMA table_info($table)");
+    return rows.any(
+      (r) => (r['name'] as String).toLowerCase() == col.toLowerCase(),
+    );
   }
-}
 
-/// Ensures KCAL exists per_100g for foods that have P/C/F but no KCAL yet.
+  Future<bool> _tableExists(DatabaseExecutor db, String name) async {
+    final rows = await db.rawQuery(
+      "SELECT 1 FROM sqlite_master WHERE type='table' AND name=? LIMIT 1",
+      [name],
+    );
+    return rows.isNotEmpty;
+  }
+
+  Future<int> _countRowsIfTableExists(DatabaseExecutor db, String name) async {
+    if (!await _tableExists(db, name)) return 0;
+    try {
+      return Sqflite.firstIntValue(
+            await db.rawQuery('SELECT COUNT(*) FROM $name'),
+          ) ??
+          0;
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  Future<void> _rebuildAllRecipeCaches(Database db) async {
+    final rows = await db.query('recipes', columns: ['id']);
+    final dao = NutritionDao(db);
+    for (final r in rows) {
+      await dao.rebuildRecipeNutrientCache(r['id'] as int);
+    }
+  }
+
+  /// Ensures KCAL exists per_100g for foods that have P/C/F but no KCAL yet.
   /// Also mirrors into legacy food_nutrients for back-compat reads.
   Future<void> _backfillEnergyKcalFromMacros(Database db) async {
     // Find IDs for KCAL/PROTEIN_G/CARB_G/FAT_G
-final ids = await db.query(
-  'nutrients',
-  columns: ['id', 'code'],
-  where: 'code IN (?,?,?,?)',
-  whereArgs: ['KCAL', 'PROTEIN_G', 'CARB_G', 'FAT_G'],
-);
+    final ids = await db.query(
+      'nutrients',
+      columns: ['id', 'code'],
+      where: 'code IN (?,?,?,?)',
+      whereArgs: ['KCAL', 'PROTEIN_G', 'CARB_G', 'FAT_G'],
+    );
 
     int? kcalId, pId, cId, fId;
     for (final r in ids) {
       switch (r['code'] as String) {
-        case 'KCAL':      kcalId = r['id'] as int; break;
-        case 'PROTEIN_G': pId    = r['id'] as int; break;
-        case 'CARB_G':    cId    = r['id'] as int; break;
-        case 'FAT_G':     fId    = r['id'] as int; break;
+        case 'KCAL':
+          kcalId = r['id'] as int;
+          break;
+        case 'PROTEIN_G':
+          pId = r['id'] as int;
+          break;
+        case 'CARB_G':
+          cId = r['id'] as int;
+          break;
+        case 'FAT_G':
+          fId = r['id'] as int;
+          break;
       }
     }
     if (kcalId == null || pId == null || cId == null || fId == null) return;
 
     // Insert KCAL rows into flexible table when missing but P/C/F exist.
-    await db.rawInsert('''
+    await db.rawInsert(
+      '''
       INSERT OR IGNORE INTO food_nutrient_values(food_id, nutrient_id, amount, basis)
       SELECT p.food_id, ?, (4.0*p.amount + 4.0*c.amount + 9.0*f.amount), 'per_100g'
       FROM food_nutrient_values p
@@ -4329,231 +4736,254 @@ final ids = await db.query(
       JOIN food_nutrient_values f ON f.food_id = p.food_id AND f.nutrient_id = ? AND f.basis = 'per_100g'
       LEFT JOIN food_nutrient_values k ON k.food_id = p.food_id AND k.nutrient_id = ? AND k.basis = 'per_100g'
       WHERE p.nutrient_id = ? AND p.basis = 'per_100g' AND k.food_id IS NULL
-    ''', [kcalId, cId, fId, kcalId, pId]);
+    ''',
+      [kcalId, cId, fId, kcalId, pId],
+    );
 
     // Mirror into legacy table for older code paths.
-    await db.rawInsert('''
+    await db.rawInsert(
+      '''
       INSERT OR IGNORE INTO food_nutrients(food_id, nutrient_id, amount_per_100g)
       SELECT v.food_id, ?, v.amount
       FROM food_nutrient_values v
       WHERE v.nutrient_id = ? AND v.basis = 'per_100g'
-    ''', [kcalId, kcalId]);
+    ''',
+      [kcalId, kcalId],
+    );
   }
 
-// --- Diary (range) ---------------------------------------------------------
-Future<List<DiaryEntry>> getDiaryEntriesBetween(
-  int profileId,
-  DateTime start,
-  DateTime end, {
-  MealType? mealType,
-  int limit = 1000,
-}) async {
-  var s = start, e = end;
-  if (s.isAfter(e)) { final t = s; s = e; e = t; }
-  return NutritionDao(await database).getDiaryEntriesBetween(
-    profileId,
-    s,
-    e,
-    mealType: mealType,
+  // --- Diary (range) ---------------------------------------------------------
+  Future<List<DiaryEntry>> getDiaryEntriesBetween(
+    int profileId,
+    DateTime start,
+    DateTime end, {
+    MealType? mealType,
+    int limit = 1000,
+  }) async {
+    var s = start, e = end;
+    if (s.isAfter(e)) {
+      final t = s;
+      s = e;
+      e = t;
+    }
+    return NutritionDao(
+      await database,
+    ).getDiaryEntriesBetween(profileId, s, e, mealType: mealType, limit: limit);
+  }
+
+  // --- Day micro aggregation -------------------------------------------------
+  Future<Map<String, double>> getDayMicros(
+    int profileId,
+    DateTime date,
+    List<String> codes,
+  ) async => NutritionDao(await database).getDayMicros(profileId, date, codes);
+
+  // --- Favorites -------------------------------------------------------------
+  Future<void> addFavorite(int profileId, int foodId) async =>
+      NutritionDao(await database).addFavorite(profileId, foodId);
+
+  Future<void> removeFavorite(int profileId, int foodId) async =>
+      NutritionDao(await database).removeFavorite(profileId, foodId);
+
+  Future<List<Food>> listFavorites(int profileId, {int limit = 100}) async =>
+      NutritionDao(await database).listFavorites(profileId, limit: limit);
+
+  // --- Recents ---------------------------------------------------------------
+  Future<List<Food>> getRecentFoods(int profileId, {int limit = 20}) async =>
+      NutritionDao(await database).getRecentFoods(profileId, limit: limit);
+
+  Future<List<Recipe>> getRecentRecipes(
+    int profileId, {
+    int limit = 20,
+  }) async =>
+      NutritionDao(await database).getRecentRecipes(profileId, limit: limit);
+
+  // --- Tags ------------------------------------------------------------------
+  Future<void> addDiaryTag(int entryId, String tag) async =>
+      NutritionDao(await database).addDiaryTag(entryId, tag);
+
+  Future<void> removeDiaryTag(int entryId, String tag) async =>
+      NutritionDao(await database).removeDiaryTag(entryId, tag);
+
+  Future<List<String>> getTagsForEntry(int entryId) async =>
+      NutritionDao(await database).getTagsForEntry(entryId);
+
+  Future<List<DiaryEntry>> getEntriesByTag({
+    required int profileId,
+    required String tag,
+    DateTime? start,
+    DateTime? end,
+    int limit = 200,
+  }) async => NutritionDao(await database).getEntriesByTag(
+    profileId: profileId,
+    tag: tag,
+    start: start,
+    end: end,
     limit: limit,
   );
-}
 
-// --- Day micro aggregation -------------------------------------------------
-Future<Map<String,double>> getDayMicros(
-  int profileId,
-  DateTime date,
-  List<String> codes,
-) async =>
-    NutritionDao(await database).getDayMicros(profileId, date, codes);
+  // --- Recipe cache reads (handy for UI) ------------------------------------
+  Future<Map<String, double>> getRecipePer100gByCode(int recipeId) async =>
+      NutritionDao(await database).getRecipePer100gByCode(recipeId);
 
-// --- Favorites -------------------------------------------------------------
-Future<void> addFavorite(int profileId, int foodId) async =>
-    NutritionDao(await database).addFavorite(profileId, foodId);
+  Future<void> rebuildRecipeNutrientCache(int recipeId) async =>
+      NutritionDao(await database).rebuildRecipeNutrientCache(recipeId);
 
-Future<void> removeFavorite(int profileId, int foodId) async =>
-    NutritionDao(await database).removeFavorite(profileId, foodId);
+  Future<void> close() async {
+    if (_db != null) {
+      await _db!.close();
+      _db = null;
+    }
+    _dbFuture = null;
+  }
 
-Future<List<Food>> listFavorites(int profileId, {int limit = 100}) async =>
-    NutritionDao(await database).listFavorites(profileId, limit: limit);
+  Future<void> _bumpAutoincrement(Database db) async {
+    // sqlite_sequence only exists if at least one table was created with AUTOINCREMENT
+    if (!await _tableExists(db, 'sqlite_sequence')) return;
 
-// --- Recents ---------------------------------------------------------------
-Future<List<Food>> getRecentFoods(int profileId, {int limit = 20}) async =>
-    NutritionDao(await database).getRecentFoods(profileId, limit: limit);
-
-Future<List<Recipe>> getRecentRecipes(int profileId, {int limit = 20}) async =>
-    NutritionDao(await database).getRecentRecipes(profileId, limit: limit);
-
-// --- Tags ------------------------------------------------------------------
-Future<void> addDiaryTag(int entryId, String tag) async =>
-    NutritionDao(await database).addDiaryTag(entryId, tag);
-
-Future<void> removeDiaryTag(int entryId, String tag) async =>
-    NutritionDao(await database).removeDiaryTag(entryId, tag);
-
-Future<List<String>> getTagsForEntry(int entryId) async =>
-    NutritionDao(await database).getTagsForEntry(entryId);
-
-Future<List<DiaryEntry>> getEntriesByTag({
-  required int profileId,
-  required String tag,
-  DateTime? start,
-  DateTime? end,
-  int limit = 200,
-}) async =>
-    NutritionDao(await database).getEntriesByTag(
-      profileId: profileId,
-      tag: tag,
-      start: start,
-      end: end,
-      limit: limit,
+    final tables = await db.rawQuery(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'",
     );
 
-// --- Recipe cache reads (handy for UI) ------------------------------------
-Future<Map<String,double>> getRecipePer100gByCode(int recipeId) async =>
-    NutritionDao(await database).getRecipePer100gByCode(recipeId);
+    for (final t in tables) {
+      final name = t['name'] as String;
 
-Future<void> rebuildRecipeNutrientCache(int recipeId) async =>
-    NutritionDao(await database).rebuildRecipeNutrientCache(recipeId);
+      // Only if there's an integer PK called `id`
+      final cols = await db.rawQuery("PRAGMA table_info($name)");
+      final hasIdPk = cols.any(
+        (c) =>
+            (c['name'] as String).toLowerCase() == 'id' &&
+            (c['pk'] as int) == 1,
+      );
+      if (!hasIdPk) continue;
 
-Future<void> close() async {
-  if (_db != null) {
-    await _db!.close();
-    _db = null;
-  }
-  _dbFuture = null;
-}
+      final maxId =
+          Sqflite.firstIntValue(
+            await db.rawQuery("SELECT MAX(id) FROM $name"),
+          ) ??
+          0;
 
+      // Update or insert sqlite_sequence row
+      final exists =
+          Sqflite.firstIntValue(
+            await db.rawQuery(
+              "SELECT COUNT(*) FROM sqlite_sequence WHERE name = ?",
+              [name],
+            ),
+          ) ??
+          0;
 
-
-
-Future<void> _bumpAutoincrement(Database db) async {
-  // sqlite_sequence only exists if at least one table was created with AUTOINCREMENT
-  if (!await _tableExists(db, 'sqlite_sequence')) return;
-
-  final tables = await db.rawQuery(
-    "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
-  );
-
-  for (final t in tables) {
-    final name = t['name'] as String;
-
-    // Only if there's an integer PK called `id`
-    final cols = await db.rawQuery("PRAGMA table_info($name)");
-    final hasIdPk = cols.any((c) =>
-      (c['name'] as String).toLowerCase() == 'id' && (c['pk'] as int) == 1);
-    if (!hasIdPk) continue;
-
-    final maxId = Sqflite.firstIntValue(await db.rawQuery("SELECT MAX(id) FROM $name")) ?? 0;
-
-    // Update or insert sqlite_sequence row
-    final exists = Sqflite.firstIntValue(
-      await db.rawQuery("SELECT COUNT(*) FROM sqlite_sequence WHERE name = ?", [name])
-    ) ?? 0;
-
-    if (exists > 0) {
-      await db.rawUpdate("UPDATE sqlite_sequence SET seq = ? WHERE name = ?", [maxId, name]);
-    } else {
-      // Will succeed only for AUTOINCREMENT tables; ignore otherwise
-      try {
-        await db.rawInsert("INSERT INTO sqlite_sequence(name, seq) VALUES(?, ?)", [name, maxId]);
-      } catch (_) {/* ignore */}
-    }
-  }
-}
-
-
-Future<bool> _hasFts4(DatabaseExecutor db) async {
-  if (_fts4Available != null) return _fts4Available!;
-
-  // Hint via compile options
-  try {
-    final rows = await db.rawQuery('PRAGMA compile_options');
-    for (final m in rows) {
-      final v = (m.values.first ?? '').toString().toUpperCase();
-      if (v.contains('ENABLE_FTS4')) {
-        _fts4Available = true;
-        return true;
+      if (exists > 0) {
+        await db.rawUpdate(
+          "UPDATE sqlite_sequence SET seq = ? WHERE name = ?",
+          [maxId, name],
+        );
+      } else {
+        // Will succeed only for AUTOINCREMENT tables; ignore otherwise
+        try {
+          await db.rawInsert(
+            "INSERT INTO sqlite_sequence(name, seq) VALUES(?, ?)",
+            [name, maxId],
+          );
+        } catch (_) {
+          /* ignore */
+        }
       }
     }
-  } catch (_) {/* ignore */}
-
-  // Definitive probe: FTS4 only
-  try {
-    await db.execute("CREATE VIRTUAL TABLE temp.__fts4_probe__ USING fts4(x)");
-    await db.execute("DROP TABLE IF EXISTS temp.__fts4_probe__");
-    _fts4Available = true;
-    return true;
-  } catch (_) {
-    _fts4Available = false;
-    return false;
   }
-}
 
+  Future<bool> _hasFts4(DatabaseExecutor db) async {
+    if (_fts4Available != null) return _fts4Available!;
 
-bool _isValidEanUpc(String raw) {
-  final code = raw.replaceAll(RegExp(r'\D'), '');
-  const classic = {8, 12, 13, 14}; // EAN-8, UPC-A, EAN-13, ITF-14
-  if (!classic.contains(code.length)) return false;
-
-  final digits = code.split('').map(int.parse).toList(growable: false);
-  final check = digits.removeLast();
-  int sum = 0;
-  for (int i = digits.length - 1, pos = 0; i >= 0; i--, pos++) {
-    sum += digits[i] * ((pos % 2 == 0) ? 3 : 1);
-  }
-  final expected = (10 - (sum % 10)) % 10;
-  return check == expected;
-}
-
-
-// Coerce any bool → 0/1. Leave everything else alone.
-Object? _sqlBool(Object? v) {
-  if (v is bool) return v ? 1 : 0;
-  return v;
-}
-
-// Numeric-ish column?
-bool _isNumericType(String? t) {
-  if (t == null) return false;
-  final up = t.toUpperCase();
-  return up.contains('INT') || up.contains('REAL') || up.contains('NUM');
-}
-
-// Filter a row to existing columns for [table], coerce booleans → 0/1,
-// and turn empty strings into NULL for numeric columns.
-Future<Map<String, Object?>> _sanitizeRowForTable(
-  DatabaseExecutor ex,
-  String table,
-  Map row,
-) async {
-  final cols = await ex.rawQuery('PRAGMA table_info($table)');
-  final info = <String, Map<String, Object?>>{
-    for (final c in cols) (c['name'] as String): c,
-  };
-
-  final out = <String, Object?>{};
-  row.forEach((k, v) {
-    final key = k.toString();
-    final meta = info[key];
-    if (meta == null) return; // drop unknown columns (older schema)
-
-    var val = _sqlBool(v);
-
-    // If the column is numeric and value is an empty string → NULL
-    if (val is String && val.trim().isEmpty && _isNumericType(meta['type'] as String?)) {
-      val = null;
+    // Hint via compile options
+    try {
+      final rows = await db.rawQuery('PRAGMA compile_options');
+      for (final m in rows) {
+        final v = (m.values.first ?? '').toString().toUpperCase();
+        if (v.contains('ENABLE_FTS4')) {
+          _fts4Available = true;
+          return true;
+        }
+      }
+    } catch (_) {
+      /* ignore */
     }
-    out[key] = val;
-  });
-  return out;
-}
 
-Future<String> _dbFilePath() async {
-  final dbPath = await getDatabasesPath();
-  return join(dbPath, 'fitness_tracker.db'); // keep your existing filename
-}
+    // Definitive probe: FTS4 only
+    try {
+      await db.execute(
+        "CREATE VIRTUAL TABLE temp.__fts4_probe__ USING fts4(x)",
+      );
+      await db.execute("DROP TABLE IF EXISTS temp.__fts4_probe__");
+      _fts4Available = true;
+      return true;
+    } catch (_) {
+      _fts4Available = false;
+      return false;
+    }
+  }
 
+  bool _isValidEanUpc(String raw) {
+    final code = raw.replaceAll(RegExp(r'\D'), '');
+    const classic = {8, 12, 13, 14}; // EAN-8, UPC-A, EAN-13, ITF-14
+    if (!classic.contains(code.length)) return false;
 
+    final digits = code.split('').map(int.parse).toList(growable: false);
+    final check = digits.removeLast();
+    int sum = 0;
+    for (int i = digits.length - 1, pos = 0; i >= 0; i--, pos++) {
+      sum += digits[i] * ((pos % 2 == 0) ? 3 : 1);
+    }
+    final expected = (10 - (sum % 10)) % 10;
+    return check == expected;
+  }
 
+  // Coerce any bool → 0/1. Leave everything else alone.
+  Object? _sqlBool(Object? v) {
+    if (v is bool) return v ? 1 : 0;
+    return v;
+  }
+
+  // Numeric-ish column?
+  bool _isNumericType(String? t) {
+    if (t == null) return false;
+    final up = t.toUpperCase();
+    return up.contains('INT') || up.contains('REAL') || up.contains('NUM');
+  }
+
+  // Filter a row to existing columns for [table], coerce booleans → 0/1,
+  // and turn empty strings into NULL for numeric columns.
+  Future<Map<String, Object?>> _sanitizeRowForTable(
+    DatabaseExecutor ex,
+    String table,
+    Map row,
+  ) async {
+    final cols = await ex.rawQuery('PRAGMA table_info($table)');
+    final info = <String, Map<String, Object?>>{
+      for (final c in cols) (c['name'] as String): c,
+    };
+
+    final out = <String, Object?>{};
+    row.forEach((k, v) {
+      final key = k.toString();
+      final meta = info[key];
+      if (meta == null) return; // drop unknown columns (older schema)
+
+      var val = _sqlBool(v);
+
+      // If the column is numeric and value is an empty string → NULL
+      if (val is String &&
+          val.trim().isEmpty &&
+          _isNumericType(meta['type'] as String?)) {
+        val = null;
+      }
+      out[key] = val;
+    });
+    return out;
+  }
+
+  Future<String> _dbFilePath() async {
+    final dbPath = await getDatabasesPath();
+    return join(dbPath, 'fitness_tracker.db'); // keep your existing filename
+  }
 }
