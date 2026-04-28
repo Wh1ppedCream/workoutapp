@@ -1,16 +1,18 @@
 // file: lib/widgets/drawers.dart
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import '../screens/exercise/gym_profile_screen.dart';
 
 /// Represents an entry in the main drawer.
 class DrawerItem {
   final String title;
-  final WidgetBuilder builder;
+  final WidgetBuilder? builder;
+  final IconData? icon;
+  final Future<void> Function(BuildContext context)? onTap;
 
-  const DrawerItem({
-    required this.title,
-    required this.builder,
-  });
+  const DrawerItem({required this.title, this.builder, this.icon, this.onTap})
+    : assert(builder != null || onTap != null);
 }
 
 /// A simple, configurable drawer for main navigation options.
@@ -19,11 +21,7 @@ class MainDrawer extends StatelessWidget {
   final String headerTitle;
   final List<DrawerItem>? items;
 
-  const MainDrawer({
-    super.key,
-    this.headerTitle = 'Navigation',
-    this.items,
-  });
+  const MainDrawer({super.key, this.headerTitle = 'Navigation', this.items});
 
   @override
   Widget build(BuildContext context) {
@@ -38,27 +36,34 @@ class MainDrawer extends StatelessWidget {
             ),
             child: Text(
               headerTitle,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-              ),
+              style: const TextStyle(color: Colors.white, fontSize: 18),
             ),
           ),
           if (useDefault) ...[
             const ListTile(title: Text('Option A')),
             const ListTile(title: Text('Option B')),
             const ListTile(title: Text('Option C')),
-          ] else ...items!.map((item) {
-            return ListTile(
-              title: Text(item.title),
-              onTap: () {
-                Navigator.of(context).pop();
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: item.builder),
-                );
-              },
-            );
-          }),
+          ] else
+            ...items!.map((item) {
+              return ListTile(
+                leading: item.icon == null ? null : Icon(item.icon),
+                title: Text(item.title),
+                onTap: () {
+                  final customTap = item.onTap;
+                  if (customTap != null) {
+                    unawaited(customTap(context));
+                    return;
+                  }
+
+                  final builder = item.builder;
+                  if (builder == null) return;
+                  Navigator.of(context).pop();
+                  Navigator.of(
+                    context,
+                  ).push(MaterialPageRoute(builder: builder));
+                },
+              );
+            }),
         ],
       ),
     );
@@ -130,9 +135,7 @@ class ProfileDrawer extends StatelessWidget {
             onTap: () {
               Navigator.of(context).pop();
               Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const GymProfileScreen(),
-                ),
+                MaterialPageRoute(builder: (_) => const GymProfileScreen()),
               );
             },
           ),
@@ -187,10 +190,11 @@ class ProfileTile extends StatelessWidget {
               onDelete();
             }
           },
-          itemBuilder: (_) => const [
-            PopupMenuItem(value: 'edit', child: Text('Edit')),
-            PopupMenuItem(value: 'delete', child: Text('Delete')),
-          ],
+          itemBuilder:
+              (_) => const [
+                PopupMenuItem(value: 'edit', child: Text('Edit')),
+                PopupMenuItem(value: 'delete', child: Text('Delete')),
+              ],
         ),
       ),
     );

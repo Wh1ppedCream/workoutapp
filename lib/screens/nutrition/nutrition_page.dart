@@ -9,6 +9,11 @@ import '../../widgets/health_trends_section.dart';
 import '../../widgets/data_records_section.dart';
 import '../../widgets/current_metrics_section.dart';
 import '../../widgets/drawers.dart';
+import '../profile/settings/diet_nutrition_settings_page.dart';
+import 'food_logging_page.dart';
+import 'log_entry_page.dart';
+import 'measured_items_page.dart';
+import 'new_measurement_item_page.dart';
 
 class NutritionPage extends StatelessWidget {
   const NutritionPage({super.key});
@@ -16,8 +21,11 @@ class NutritionPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: const MainDrawer(),
-      appBar: AppBar(title: const Text('Nutrition Dashboard'), centerTitle: true),
+      drawer: _buildNutritionDrawer(),
+      appBar: AppBar(
+        title: const Text('Nutrition Dashboard'),
+        centerTitle: true,
+      ),
       body: Consumer<NutritionProfile>(
         builder: (context, p, _) {
           if (p.isLoading && p.totals == null) {
@@ -28,30 +36,33 @@ class NutritionPage extends StatelessWidget {
           }
 
           final kcalGoal = (p.activeGoal?.kcalTarget ?? 0).round();
-          final proGoal  = (p.activeGoal?.proteinG   ?? 0).round();
-          final carbGoal = (p.activeGoal?.carbsG     ?? 0).round();
-          final fatGoal  = (p.activeGoal?.fatG       ?? 0).round();
+          final proGoal = (p.activeGoal?.proteinG ?? 0).round();
+          final carbGoal = (p.activeGoal?.carbsG ?? 0).round();
+          final fatGoal = (p.activeGoal?.fatG ?? 0).round();
 
-          final kcal = (p.totals?.kcal     ?? 0).round();
-          final pro  = (p.totals?.proteinG ?? 0).round();
-          final carb = (p.totals?.carbsG   ?? 0).round();
-          final fat  = (p.totals?.fatG     ?? 0).round();
+          final kcal = (p.totals?.kcal ?? 0).round();
+          final pro = (p.totals?.proteinG ?? 0).round();
+          final carb = (p.totals?.carbsG ?? 0).round();
+          final fat = (p.totals?.fatG ?? 0).round();
 
           return SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   child: NutritionDash(
                     caloriesConsumed: kcal,
-                    calorieGoal:      kcalGoal,
-                    proteinConsumed:  pro,
-                    proteinTarget:    proGoal,
-                    carbConsumed:     carb,
-                    carbTarget:       carbGoal,
-                    fatConsumed:      fat,
-                    fatTarget:        fatGoal,
+                    calorieGoal: kcalGoal,
+                    proteinConsumed: pro,
+                    proteinTarget: proGoal,
+                    carbConsumed: carb,
+                    carbTarget: carbGoal,
+                    fatConsumed: fat,
+                    fatTarget: fatGoal,
                   ),
                 ),
                 const Divider(height: 25),
@@ -64,13 +75,73 @@ class NutritionPage extends StatelessWidget {
         },
       ),
       floatingActionButton: Consumer<NutritionProfile>(
-  builder: (context, p, _) {
-    return SpeedDialFab(
-      onFoodLogged: () async => p.reloadDay(),
-      onMeasurementLogged: () async => p.reloadDay(), // if you show weight, etc. in dash
+        builder: (context, p, _) {
+          return SpeedDialFab(
+            onFoodLogged: () async => p.reloadDay(),
+            onMeasurementLogged:
+                () async => p.reloadDay(), // if you show weight, etc. in dash
+          );
+        },
+      ),
     );
-  },
-),
+  }
+
+  MainDrawer _buildNutritionDrawer() {
+    return MainDrawer(
+      headerTitle: 'Nutrition Menu',
+      items: [
+        DrawerItem(
+          title: 'Log Food',
+          icon: Icons.restaurant,
+          onTap: _openFoodLogger,
+        ),
+        DrawerItem(
+          title: 'Track Measurement',
+          icon: Icons.straighten,
+          onTap: _openMeasurementLogger,
+        ),
+        DrawerItem(
+          title: 'Measured Items',
+          icon: Icons.monitor_weight,
+          builder: (_) => const MeasuredItemsPage(),
+        ),
+        DrawerItem(
+          title: "Today's Records",
+          icon: Icons.calendar_today,
+          builder: (_) => LogEntryPage(date: DateTime.now()),
+        ),
+        DrawerItem(
+          title: 'Nutrition Goals',
+          icon: Icons.flag,
+          builder: (_) => const DietNutritionSettingsPage(),
+        ),
+      ],
     );
+  }
+
+  Future<void> _openFoodLogger(BuildContext drawerContext) async {
+    final navigator = Navigator.of(drawerContext);
+    final profile = drawerContext.read<NutritionProfile>();
+    navigator.pop();
+
+    final changed = await navigator.push<bool>(
+      MaterialPageRoute(builder: (_) => const FoodLoggingPage()),
+    );
+    if (changed == true) {
+      await profile.reloadDay();
+    }
+  }
+
+  Future<void> _openMeasurementLogger(BuildContext drawerContext) async {
+    final navigator = Navigator.of(drawerContext);
+    final profile = drawerContext.read<NutritionProfile>();
+    navigator.pop();
+
+    final changed = await navigator.push<bool>(
+      MaterialPageRoute(builder: (_) => const NewMeasurementItemPage()),
+    );
+    if (changed == true) {
+      await profile.reloadDay();
+    }
   }
 }
