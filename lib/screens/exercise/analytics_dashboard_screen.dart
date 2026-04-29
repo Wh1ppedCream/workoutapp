@@ -4,11 +4,19 @@
 import 'package:flutter/material.dart';
 import '../../repositories/app_repository.dart';
 
-/// Simple pair of a name and an integer count.
+/// Simple pair of a name and set-unit count.
 class _ItemCount {
   final String name;
-  final int count;
+  final double count;
   _ItemCount(this.name, this.count);
+
+  String get displayCount {
+    final rounded = count.roundToDouble();
+    if ((count - rounded).abs() < 0.05) {
+      return rounded.toInt().toString();
+    }
+    return count.toStringAsFixed(1);
+  }
 }
 
 class AnalyticsDashboardScreen extends StatefulWidget {
@@ -70,20 +78,22 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
       final muscleNames = {for (var m in muscles) m.id: m.name};
 
       // 4) Convert & filter muscle list
-      final mList = muscleMap.entries
-          .map((e) {
-            final name = muscleNames[e.key] ?? 'Unknown';
-            return _ItemCount(name, e.value.floor());
-          })
-          .where((ic) => ic.count > 0)
-          .toList();
+      final mList =
+          muscleMap.entries
+              .map((e) {
+                final name = muscleNames[e.key] ?? 'Unknown';
+                return _ItemCount(name, e.value);
+              })
+              .where((ic) => ic.count > 0.0)
+              .toList();
       mList.sort((a, b) => b.count.compareTo(a.count));
 
       // 5) Convert & filter body‐part list
-      final bList = bodyMap.entries
-          .map((e) => _ItemCount(e.key.name, e.value.floor()))
-          .where((ic) => ic.count > 0)
-          .toList();
+      final bList =
+          bodyMap.entries
+              .map((e) => _ItemCount(e.key.name, e.value))
+              .where((ic) => ic.count > 0.0)
+              .toList();
       bList.sort((a, b) => b.count.compareTo(a.count));
 
       if (!mounted) return;
@@ -108,56 +118,56 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
         title: const Text('Sets in Last 7 Days'),
         bottom: TabBar(
           controller: _tabController,
-          tabs: const [
-            Tab(text: 'By Muscle'),
-            Tab(text: 'By BodyPart'),
-          ],
+          tabs: const [Tab(text: 'By Muscle'), Tab(text: 'By BodyPart')],
         ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : (_error != null
-              ? Center(child: Text('Error: $_error'))
-              : TabBarView(
-                  controller: _tabController,
-                  children: [
-                    // --- By Muscle ---
-                    _muscleCounts.isEmpty
-                        ? const Center(child: Text('No muscle sets'))
-                        : ListView.builder(
+      body:
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : (_error != null
+                  ? Center(child: Text('Error: $_error'))
+                  : TabBarView(
+                    controller: _tabController,
+                    children: [
+                      // --- By Muscle ---
+                      _muscleCounts.isEmpty
+                          ? const Center(child: Text('No muscle sets'))
+                          : ListView.builder(
                             itemCount: _muscleCounts.length,
                             itemBuilder: (ctx, i) {
                               final ic = _muscleCounts[i];
                               return ListTile(
                                 title: Text(ic.name),
                                 trailing: Text(
-                                  ic.count.toString(),
+                                  ic.displayCount,
                                   style: const TextStyle(
-                                      fontWeight: FontWeight.bold),
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               );
                             },
                           ),
 
-                    // --- By BodyPart ---
-                    _bodyPartCounts.isEmpty
-                        ? const Center(child: Text('No bodypart sets'))
-                        : ListView.builder(
+                      // --- By BodyPart ---
+                      _bodyPartCounts.isEmpty
+                          ? const Center(child: Text('No bodypart sets'))
+                          : ListView.builder(
                             itemCount: _bodyPartCounts.length,
                             itemBuilder: (ctx, i) {
                               final ic = _bodyPartCounts[i];
                               return ListTile(
                                 title: Text(ic.name),
                                 trailing: Text(
-                                  ic.count.toString(),
+                                  ic.displayCount,
                                   style: const TextStyle(
-                                      fontWeight: FontWeight.bold),
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               );
                             },
                           ),
-                  ],
-                )),
+                    ],
+                  )),
     );
   }
 }

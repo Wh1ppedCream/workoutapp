@@ -33,7 +33,7 @@ class GenericBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // pick the theme’s accent if none was passed in
-   final accent = color ?? context.colors.genericBarAccent!;
+    final accent = color ?? context.colors.genericBarAccent!;
     // base constants × scale
     final borderRadius = BorderRadius.circular(8 * scale);
     final horizontalPadding = 12 * scale;
@@ -60,12 +60,14 @@ class GenericBar extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 15,
-                  color: accent,
-                  fontWeight: FontWeight.w600,
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: accent,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
               if (trailing != null) trailing!,

@@ -3232,13 +3232,41 @@ class DatabaseHelper {
 
   // ─── Muscle % Computations ────────────────────────────────
 
+  static const List<double> _rankedMuscleUnitsPerSet = <double>[
+    1.0,
+    0.85,
+    0.60,
+    0.35,
+    0.25,
+    0.15,
+    0.10,
+  ];
+
+  static double _defaultMuscleUnitsForRank(int rank) {
+    if (rank <= 0 || rank > _rankedMuscleUnitsPerSet.length) return 0.0;
+    return _rankedMuscleUnitsPerSet[rank - 1];
+  }
+
+  static Map<BodyPart, double> _normalizeBodyPartUnits(
+    Map<BodyPart, double> units,
+  ) {
+    if (units.isEmpty) return units;
+
+    final maxUnits = units.values.fold<double>(
+      0.0,
+      (max, value) => value > max ? value : max,
+    );
+    if (maxUnits <= 0.0) return units;
+
+    return {
+      for (final entry in units.entries)
+        if (entry.value > 0.0) entry.key: entry.value / maxUnits,
+    };
+  }
+
   Future<List<ExerciseMusclePercent>> computeMusclePercents(int defId) async {
     final def = await getExerciseDefinitionById(defId);
     if (def == null) return [];
-
-    final step = await getFormulaStep();
-    final mn = await getFormulaMin();
-    final mx = await getFormulaMax();
 
     final overrides = await AnalyticsDao.getPercentsForExercise(
       await database,
@@ -3247,7 +3275,7 @@ class DatabaseHelper {
     final overrideMap = {for (var e in overrides) e.muscleId: e.percent};
 
     return def.muscles.map((rm) {
-      final defaultPct = (1.0 - step * (rm.rank - 1)).clamp(mn, mx);
+      final defaultPct = _defaultMuscleUnitsForRank(rm.rank);
       return ExerciseMusclePercent(
         exerciseDefId: defId,
         muscleId: rm.muscle.id,
@@ -3275,19 +3303,9 @@ class DatabaseHelper {
       return out;
     }
 
-    // 2) otherwise, fall back to “muscle % → body-part %” logic
-    final musclePercs = await computeMusclePercents(defId);
-    final percMap = {for (var e in musclePercs) e.muscleId: e.percent};
-
-    final result = <BodyPart, double>{};
-    for (var bp in def.bodyParts) {
-      final links = await AnalyticsDao.getMusclesForBodyPart(db, bp.id);
-      final hits =
-          links.map((l) => percMap[l.muscleId]).whereType<double>().toList();
-      if (hits.isEmpty) continue;
-      result[bp] = hits.reduce((a, b) => a + b) / hits.length;
-    }
-    return result;
+    // 2) Otherwise, calculate from ranked muscle hits and normalize the final
+    // body-part totals so the strongest body-part contribution equals 1 set.
+    return computeMuscleCalculatedBodyparts(defId);
   }
 
   /// Estimate how one single set of [exerciseDefId] splits across its body-parts,
@@ -3295,41 +3313,7 @@ class DatabaseHelper {
   Future<Map<BodyPart, double>> estimateBodyPartSetDistribution(
     int defId,
   ) async {
-    final db = await database;
-    final def = await DefinitionDao.getExerciseDefinitionById(db, defId);
-    if (def == null) return {};
-
-    // 1) grab any manual muscle-% overrides
-    final manualHits = await AnalyticsDao.getPercentsForExercise(db, defId);
-
-    // 2) if there are none, default each linked muscle to 1.0
-    final muscleHits =
-        manualHits.isEmpty
-            ? def.muscles
-                .map(
-                  (rm) => ExerciseMusclePercent(
-                    exerciseDefId: defId,
-                    muscleId: rm.muscle.id,
-                    percent: 1.0,
-                  ),
-                )
-                .toList()
-            : manualHits;
-
-    final hitMap = {for (var h in muscleHits) h.muscleId: h.percent};
-
-    // 3) now sum up per body-part
-    final out = <BodyPart, double>{};
-    for (var bp in def.bodyParts) {
-      final links = await AnalyticsDao.getMusclesForBodyPart(db, bp.id);
-      final total = links.fold<double>(
-        0.0,
-        (sum, link) => sum + (hitMap[link.muscleId] ?? 0.0),
-      );
-      if (total > 0) out[bp] = total;
-    }
-
-    return out;
+    return computeMuscleCalculatedBodyparts(defId);
   }
 
   /// For a given exercise definition, look at each associated muscle’s %-hit
@@ -3370,7 +3354,7 @@ class DatabaseHelper {
       }
     }
 
-    return result;
+    return _normalizeBodyPartUnits(result);
   }
 
   // ─── Session/Set Analytics ───────────────────────────────
@@ -3395,8 +3379,14 @@ class DatabaseHelper {
       }
     }
 
-    // 2) For each definition, fetch its body-part map and sum them
-    final combined = <BodyPart, double>{};
+    // 2) For each definition, fetch its body-part map and sum by lookup ID.
+    // BodyPart is a plain value object, so two BodyPart(Chest) instances from
+    // different exercise definitions are not equal as Map keys.
+    final allBodyParts = await LookupDao.getAllBodyParts(db);
+    final bodyPartById = {
+      for (final bodyPart in allBodyParts) bodyPart.id: bodyPart,
+    };
+    final combinedById = <int, double>{};
     for (final defId in defIds) {
       final perDef = await fetchBodyPartSetsForExerciseOverTimeRange(
         defId: defId,
@@ -3404,9 +3394,16 @@ class DatabaseHelper {
         end: end,
       );
       perDef.forEach((bp, val) {
-        combined[bp] = (combined[bp] ?? 0) + val;
+        combinedById[bp.id] = (combinedById[bp.id] ?? 0.0) + val;
       });
     }
+    final combined = <BodyPart, double>{};
+    combinedById.forEach((bodyPartId, val) {
+      final bodyPart = bodyPartById[bodyPartId];
+      if (bodyPart != null) {
+        combined[bodyPart] = val;
+      }
+    });
     return combined;
   }
 
@@ -3544,23 +3541,10 @@ class DatabaseHelper {
     // 5) prepare auto map: muscleId -> countPerSet
     final autoCountPerSet = <int, double>{};
     if (!useManual) {
-      // body-part counts per set (mirrors your Bodyparts tab logic)
-      final manualBodyRows = await AnalyticsDao.getPercentsForExerciseBodyPart(
-        db,
-        defId,
-      );
-      final manualBodyMap = {
-        for (var e in manualBodyRows) e.bodyPartId: e.percent,
-      };
-      final autoBpMap = await computeMuscleCalculatedBodyparts(defId);
-      // for each body-part on the def:
-      for (var bp in def!.bodyParts) {
-        // the same count you show under Bodyparts tab:
-        final countPerSet = manualBodyMap[bp.id] ?? autoBpMap[bp] ?? 0.0;
-        // assign it to every muscle linked to that part
-        final links = await AnalyticsDao.getMusclesForBodyPart(db, bp.id);
-        for (var link in links) {
-          autoCountPerSet[link.muscleId] = countPerSet;
+      final musclePercs = await computeMusclePercents(defId);
+      for (final row in musclePercs) {
+        if (row.percent > 0) {
+          autoCountPerSet[row.muscleId] = row.percent;
         }
       }
     }
