@@ -15,6 +15,8 @@ class SessionSpec {
   static const int maxAllowedSetsPerExercise = 5;
   static const double defaultWeeklyTargetSetUnits = 20.0;
   static const double maxBodyPartSetUnitsPerSession = 15.0;
+  static const double preferredBodypartBiasMultiplier = 8.0;
+  static const double preferredBodypartCandidateScoreMultiplier = 16.0;
   static const int restWarningBodyPartLimitCount = 4;
   static const int oneSetExerciseRestWarningCount = 2;
 
@@ -27,12 +29,21 @@ class SessionSpec {
   /// Bodyparts we want this session to primarily target.
   final List<int> focusBodypartIds;
 
+  /// Bodyparts to bias upward for this generated session.
+  final List<int> preferredBodypartIds;
+
+  /// Bodyparts to exclude from this generated session.
+  final List<int> blacklistedBodypartIds;
+
   /// How generated volume should be prioritized across bodyparts/muscles.
   final TrainingPriorityMode priorityMode;
 
   /// Whether optimized generation should avoid the most-worked bodypart from
   /// the most recent session when other viable options exist.
   final bool avoidMostRecentBodyPart;
+
+  /// Whether generation should use recent completed workout volume.
+  final bool useRecentTrainingHistory;
 
   /// Upper bound on how many exercises to include.
   final int maxExercises;
@@ -62,8 +73,11 @@ class SessionSpec {
     required this.profileId,
     required this.name,
     required this.focusBodypartIds,
+    this.preferredBodypartIds = const [],
+    this.blacklistedBodypartIds = const [],
     this.priorityMode = TrainingPriorityMode.equalBodyPart,
     this.avoidMostRecentBodyPart = false,
+    this.useRecentTrainingHistory = true,
     this.maxExercises = 8,
     this.minSetsPerExercise = defaultMinSetsPerExercise,
     this.maxSetsPerExercise = defaultMaxSetsPerExercise,

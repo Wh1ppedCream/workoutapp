@@ -4,16 +4,18 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../models/definition_models.dart';
+import '../../models/training_plan_models.dart';
 import '../../providers/active_session.dart';
 import '../../providers/preset_session.dart';
 import '../../providers/selected_profile.dart';
 import '../../repositories/app_repository.dart';
 import '../../services/preset_generation_service.dart';
-import '../../models/training_plan_models.dart';
 
 import '../../widgets/generic_bar.dart';
 import '../../widgets/presets_loaded.dart';
 import '../../widgets/drawers.dart';
+import '../../widgets/bodypart_focus_chips.dart';
 
 import 'gym_profile_screen.dart';
 import 'preset_detail_screen.dart';
@@ -24,6 +26,20 @@ import '../../widgets/history_content.dart';
 import 'exercise_catalog_page.dart';
 import 'muscle_filter_page.dart';
 import '../profile/settings/gym_exercise_settings_page.dart';
+
+class _OptimizedWorkoutSettingsResult {
+  final int minutes;
+  final int maxSets;
+  final Set<int> preferredBodypartIds;
+  final Set<int> blacklistedBodypartIds;
+
+  const _OptimizedWorkoutSettingsResult({
+    required this.minutes,
+    required this.maxSets,
+    required this.preferredBodypartIds,
+    required this.blacklistedBodypartIds,
+  });
+}
 
 class TrainPage extends StatefulWidget {
   const TrainPage({super.key});
@@ -46,6 +62,8 @@ class _TrainPageState extends State<TrainPage> {
   bool _isStartingOptimized = false;
   int _optimizedSessionMinutes = SessionSpec.defaultSessionDurationMinutes;
   int _optimizedMaxSetsPerExercise = SessionSpec.defaultMaxSetsPerExercise;
+  Set<int> _optimizedPreferredBodypartIds = <int>{};
+  Set<int> _optimizedBlacklistedBodypartIds = <int>{};
 
   @override
   void initState() {
@@ -122,6 +140,8 @@ class _TrainPageState extends State<TrainPage> {
       profileId: profileId,
       name: 'Optimized workout $date $time',
       focusBodypartIds: const [],
+      preferredBodypartIds: _optimizedPreferredBodypartIds.toList(),
+      blacklistedBodypartIds: _optimizedBlacklistedBodypartIds.toList(),
       maxExercises: SessionSpec.maxExercisesForDuration(
         sessionDurationMinutes: sessionMinutes,
         minSetsPerExercise: minSets,
@@ -136,85 +156,135 @@ class _TrainPageState extends State<TrainPage> {
   }
 
   Future<void> _openOptimizedWorkoutSettings() async {
+    List<BodyPart> bodyParts = const <BodyPart>[];
+    try {
+      bodyParts = await _repo.fetchAllBodyParts();
+    } catch (e) {
+      debugPrint('Failed to load bodyparts for optimized settings: $e');
+    }
+    if (!mounted) return;
+
     var draftMinutes = _optimizedSessionMinutes.toString();
     var draftMaxSets = _optimizedMaxSetsPerExercise.toString();
-    final settings = await showDialog<Map<String, int>>(
+    final draftPreferred = {..._optimizedPreferredBodypartIds};
+    final draftBlacklisted = {..._optimizedBlacklistedBodypartIds};
+
+    final settings = await showDialog<_OptimizedWorkoutSettingsResult>(
       context: context,
       builder:
-          (dialogContext) => AlertDialog(
-            title: const Text('Optimized workout settings'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Used to budget 3 minutes per set plus 5 minutes to start each exercise.',
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  initialValue: draftMinutes,
-                  autofocus: true,
-                  keyboardType: TextInputType.number,
-                  onChanged: (value) => draftMinutes = value,
-                  decoration: const InputDecoration(
-                    labelText: 'Workout duration',
-                    suffixText: 'min',
-                    border: OutlineInputBorder(),
+          (dialogContext) => StatefulBuilder(
+            builder: (dialogContext, setDialogState) {
+              return AlertDialog(
+                title: const Text('Optimized workout settings'),
+                content: SizedBox(
+                  width: double.maxFinite,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Used to budget 3 minutes per set plus 5 minutes to start each exercise.',
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Bodypart picks apply only to the next optimized workout you start.',
+                          style: TextStyle(fontSize: 12),
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          initialValue: draftMinutes,
+                          keyboardType: TextInputType.number,
+                          onChanged: (value) => draftMinutes = value,
+                          decoration: const InputDecoration(
+                            labelText: 'Workout duration',
+                            suffixText: 'min',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          initialValue: draftMaxSets,
+                          keyboardType: TextInputType.number,
+                          onChanged: (value) => draftMaxSets = value,
+                          decoration: const InputDecoration(
+                            labelText: 'Up to sets per exercise',
+                            suffixText: 'sets',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Bodypart focus',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Tap once to prefer a bodypart, tap again to avoid it, and tap a third time to clear it.',
+                          style: TextStyle(fontSize: 12),
+                        ),
+                        const SizedBox(height: 8),
+                        BodypartFocusChips(
+                          bodyParts: bodyParts,
+                          preferredBodypartIds: draftPreferred,
+                          blacklistedBodypartIds: draftBlacklisted,
+                          emptyText: 'Bodyparts could not be loaded.',
+                          onChanged:
+                              (selection) => setDialogState(() {
+                                draftPreferred
+                                  ..clear()
+                                  ..addAll(selection.preferredBodypartIds);
+                                draftBlacklisted
+                                  ..clear()
+                                  ..addAll(selection.blacklistedBodypartIds);
+                              }),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  initialValue: draftMaxSets,
-                  keyboardType: TextInputType.number,
-                  onChanged: (value) => draftMaxSets = value,
-                  decoration: const InputDecoration(
-                    labelText: 'Up to sets per exercise',
-                    suffixText: 'sets',
-                    border: OutlineInputBorder(),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(),
+                    child: const Text('Cancel'),
                   ),
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  'More controls for workout focus can live here later.',
-                  style: TextStyle(fontSize: 12),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(),
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () {
-                  final minutes = int.tryParse(draftMinutes.trim());
-                  final maxSets = int.tryParse(draftMaxSets.trim());
-                  if (minutes == null ||
-                      minutes <= 0 ||
-                      maxSets == null ||
-                      maxSets < SessionSpec.defaultMinSetsPerExercise ||
-                      maxSets > SessionSpec.maxAllowedSetsPerExercise) {
-                    return;
-                  }
-                  Navigator.of(
-                    dialogContext,
-                  ).pop({'minutes': minutes, 'maxSets': maxSets});
-                },
-                child: const Text('Save'),
-              ),
-            ],
+                  TextButton(
+                    onPressed: () {
+                      final minutes = int.tryParse(draftMinutes.trim());
+                      final maxSets = int.tryParse(draftMaxSets.trim());
+                      if (minutes == null ||
+                          minutes <= 0 ||
+                          maxSets == null ||
+                          maxSets < SessionSpec.defaultMinSetsPerExercise ||
+                          maxSets > SessionSpec.maxAllowedSetsPerExercise) {
+                        return;
+                      }
+                      Navigator.of(dialogContext).pop(
+                        _OptimizedWorkoutSettingsResult(
+                          minutes: minutes,
+                          maxSets: maxSets,
+                          preferredBodypartIds: {...draftPreferred},
+                          blacklistedBodypartIds: {...draftBlacklisted},
+                        ),
+                      );
+                    },
+                    child: const Text('Save'),
+                  ),
+                ],
+              );
+            },
           ),
     );
     if (!mounted || settings == null) return;
-    final minutes = settings['minutes']!;
-    final maxSets = settings['maxSets']!;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_optimizedSessionMinutesKey, minutes);
-    await prefs.setInt(_optimizedMaxSetsKey, maxSets);
+    await prefs.setInt(_optimizedSessionMinutesKey, settings.minutes);
+    await prefs.setInt(_optimizedMaxSetsKey, settings.maxSets);
     if (!mounted) return;
     setState(() {
-      _optimizedSessionMinutes = minutes;
-      _optimizedMaxSetsPerExercise = maxSets;
+      _optimizedSessionMinutes = settings.minutes;
+      _optimizedMaxSetsPerExercise = settings.maxSets;
+      _optimizedPreferredBodypartIds = settings.preferredBodypartIds;
+      _optimizedBlacklistedBodypartIds = settings.blacklistedBodypartIds;
     });
   }
 
@@ -326,7 +396,11 @@ class _TrainPageState extends State<TrainPage> {
       active.start();
 
       if (!mounted) return;
-      setState(() => _presetsRefreshToken++);
+      setState(() {
+        _presetsRefreshToken++;
+        _optimizedPreferredBodypartIds.clear();
+        _optimizedBlacklistedBodypartIds.clear();
+      });
       await Navigator.of(
         context,
       ).push(MaterialPageRoute(builder: (_) => const SessionScreen()));

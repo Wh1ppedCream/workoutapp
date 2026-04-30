@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import '../profile/settings/bodypart_ranking_screen.dart';
 import '../profile/settings/muscle_ranking_screen.dart';
 
+import '../../models/definition_models.dart';
 import '../../repositories/app_repository.dart';
 import '../../services/preset_generation_service.dart';
 import '../../models/training_plan_models.dart';
+import '../../widgets/bodypart_focus_chips.dart';
 
 enum RequirementOption { equalSplitBodyPart, biasRankBodyPart, biasRankMuscle }
 
@@ -22,6 +24,7 @@ class PresetGenerationQaScreen extends StatefulWidget {
 }
 
 class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
+  final AppRepository _repo = AppRepository();
   final TextEditingController _sessionDurationController =
       TextEditingController();
   final TextEditingController _weeklyFrequencyController =
@@ -29,7 +32,11 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
   final TextEditingController _maxSetsController = TextEditingController();
 
   RequirementOption? _requirementOption;
+  List<BodyPart> _bodyParts = const <BodyPart>[];
+  Set<int> _preferredBodypartIds = <int>{};
+  Set<int> _blacklistedBodypartIds = <int>{};
 
+  bool _useRecentTrainingHistory = false;
   bool _isGenerating = false;
 
   @override
@@ -39,6 +46,7 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
     _weeklyFrequencyController.text = '3';
     _maxSetsController.text = SessionSpec.defaultMaxSetsPerExercise.toString();
     _requirementOption = RequirementOption.equalSplitBodyPart;
+    _loadBodyParts();
   }
 
   @override
@@ -58,6 +66,16 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
       case RequirementOption.equalSplitBodyPart:
       case null:
         return TrainingPriorityMode.equalBodyPart;
+    }
+  }
+
+  Future<void> _loadBodyParts() async {
+    try {
+      final bodyParts = await _repo.fetchAllBodyParts();
+      if (!mounted) return;
+      setState(() => _bodyParts = bodyParts);
+    } catch (e) {
+      debugPrint('Failed to load bodyparts for preset generation: $e');
     }
   }
 
@@ -90,8 +108,7 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
     setState(() => _isGenerating = true);
 
     try {
-      final repo = AppRepository();
-      final generator = PresetGenerationService(repo);
+      final generator = PresetGenerationService(_repo);
       final priorityMode = _priorityModeForRequirement();
 
       final now = DateTime.now();
@@ -106,11 +123,14 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
         profileId: widget.profileId,
         name: 'Custom preset ${now.year}-${now.month}-${now.day}',
         focusBodypartIds: const [],
+        preferredBodypartIds: _preferredBodypartIds.toList(),
+        blacklistedBodypartIds: _blacklistedBodypartIds.toList(),
         priorityMode: priorityMode,
         maxExercises: maxExercises,
         minSetsPerExercise: minSets,
         maxSetsPerExercise: maxSets,
         sessionDurationMinutes: sessionMinutes,
+        useRecentTrainingHistory: _useRecentTrainingHistory,
         historyWindow: const Duration(days: 7),
         now: now,
       );
@@ -181,6 +201,43 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
                 border: OutlineInputBorder(),
                 hintText: 'e.g. 5',
               ),
+            ),
+            const SizedBox(height: 24),
+
+            CheckboxListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Generate based on 7-day workout history'),
+              subtitle: const Text(
+                'Uses recent completed sets to bias toward under-trained bodyparts and muscles.',
+              ),
+              value: _useRecentTrainingHistory,
+              onChanged:
+                  (value) => setState(
+                    () => _useRecentTrainingHistory = value ?? false,
+                  ),
+            ),
+            const SizedBox(height: 16),
+
+            const Text(
+              'Bodypart focus',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Tap once to prefer a bodypart, tap again to avoid it, and tap a third time to clear it.',
+              style: TextStyle(fontSize: 12),
+            ),
+            const SizedBox(height: 8),
+            BodypartFocusChips(
+              bodyParts: _bodyParts,
+              preferredBodypartIds: _preferredBodypartIds,
+              blacklistedBodypartIds: _blacklistedBodypartIds,
+              emptyText: 'Bodyparts could not be loaded.',
+              onChanged:
+                  (selection) => setState(() {
+                    _preferredBodypartIds = selection.preferredBodypartIds;
+                    _blacklistedBodypartIds = selection.blacklistedBodypartIds;
+                  }),
             ),
             const SizedBox(height: 24),
 

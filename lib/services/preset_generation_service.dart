@@ -113,7 +113,9 @@ class PresetGenerationService {
   }
 
   Future<Set<int>> _bodyPartIdsToAvoid(SessionSpec spec) async {
-    if (!spec.avoidMostRecentBodyPart) return const <int>{};
+    if (!spec.avoidMostRecentBodyPart || !spec.useRecentTrainingHistory) {
+      return const <int>{};
+    }
 
     final sessions = await _repo.fetchAllSessions();
     if (sessions.isEmpty) return const <int>{};
@@ -169,6 +171,16 @@ class PresetGenerationService {
     return preferred.isEmpty ? candidates : preferred;
   }
 
+  Set<int> _autoAvoidedBodyPartIdsForSpec(
+    SessionSpec spec,
+    Set<int> avoidedBodyPartIds,
+  ) {
+    if (avoidedBodyPartIds.isEmpty || spec.preferredBodypartIds.isEmpty) {
+      return avoidedBodyPartIds;
+    }
+    return avoidedBodyPartIds.difference(spec.preferredBodypartIds.toSet());
+  }
+
   bool _hitsAnyBodyPart(
     Map<BodyPart, double> unitsPerSet,
     Set<int> bodyPartIds,
@@ -178,20 +190,37 @@ class PresetGenerationService {
     );
   }
 
+  double _hitUnitsForBodyParts(
+    Map<BodyPart, double> unitsPerSet,
+    Set<int> bodyPartIds,
+  ) {
+    if (bodyPartIds.isEmpty) return 0.0;
+    var total = 0.0;
+    for (final entry in unitsPerSet.entries) {
+      if (entry.value <= 0.0 || !bodyPartIds.contains(entry.key.id)) {
+        continue;
+      }
+      total += entry.value;
+    }
+    return total;
+  }
+
   Future<List<BodyPartTarget>> _loadBodyPartTargets({
     required SessionSpec spec,
     required DateTime start,
     required DateTime end,
   }) async {
     final allBodyParts = await _repo.fetchAllBodyParts();
-    final historyMap = await _repo.fetchAllBodyPartSetsOverTimeRange(
-      start: start,
-      end: end,
-    );
     final historyById = <int, double>{};
-    historyMap.forEach((bp, value) {
-      historyById[bp.id] = value;
-    });
+    if (spec.useRecentTrainingHistory) {
+      final historyMap = await _repo.fetchAllBodyPartSetsOverTimeRange(
+        start: start,
+        end: end,
+      );
+      historyMap.forEach((bp, value) {
+        historyById[bp.id] = value;
+      });
+    }
 
     final bodyPartRankWeights =
         spec.priorityMode == TrainingPriorityMode.bodyPartRanking
@@ -240,7 +269,10 @@ class PresetGenerationService {
     if (ranks.isEmpty) return const [];
 
     final rankWeights = _muscleRankWeights(ranks);
-    final historyById = await _repo.fetchSetsPerMuscle(start: start, end: end);
+    final historyById =
+        spec.useRecentTrainingHistory
+            ? await _repo.fetchSetsPerMuscle(start: start, end: end)
+            : <int, double>{};
     final result = <MuscleTarget>[];
 
     for (final rank in ranks) {
@@ -287,10 +319,12 @@ class PresetGenerationService {
       return const [];
     }
     if (spec.priorityMode == TrainingPriorityMode.muscleRanking &&
-        activeMuscleIds.isEmpty) {
+        activeMuscleIds.isEmpty &&
+        spec.preferredBodypartIds.isEmpty) {
       return const [];
     }
 
+    final preferredBodyPartIds = spec.preferredBodypartIds.toSet();
     final defs = await _repo.fetchCatalogDefinitions(
       useProfileFilter: true,
       profileId: spec.profileId,
@@ -302,22 +336,31 @@ class PresetGenerationService {
               ? null
               : spec.focusBodypartIds,
       muscleIds:
-          spec.priorityMode == TrainingPriorityMode.muscleRanking
+          spec.priorityMode == TrainingPriorityMode.muscleRanking &&
+                  preferredBodyPartIds.isEmpty
               ? activeMuscleIds
               : null,
     );
 
     final candidates = <CandidateExercisePlan>[];
+    final blacklistedBodyPartIds = spec.blacklistedBodypartIds.toSet();
     for (final def in defs) {
       final unitsPerSet = await _repo.computeBodyPartPercents(def.id);
       if (unitsPerSet.isEmpty) continue;
+      if (_hitsAnyBodyPart(unitsPerSet, blacklistedBodyPartIds)) {
+        continue;
+      }
+      final preferredHitUnits = _hitUnitsForBodyParts(
+        unitsPerSet,
+        preferredBodyPartIds,
+      );
 
       final muscleUnitsPerSet = {
         for (final row in await _repo.computeMusclePercents(def.id))
           if (row.percent > 0) row.muscleId: row.percent,
       };
 
-      final scoreResult =
+      var scoreResult =
           spec.priorityMode == TrainingPriorityMode.muscleRanking &&
                   muscleTargetById.isNotEmpty
               ? _scoreAgainstMuscles(
@@ -328,13 +371,26 @@ class PresetGenerationService {
                 unitsPerSet: unitsPerSet,
                 targetById: targetById,
               );
+      if ((scoreResult.score <= 0 || scoreResult.hitUnits <= 0) &&
+          preferredHitUnits > 0.0) {
+        scoreResult = _scoreAgainstBodyParts(
+          unitsPerSet: unitsPerSet,
+          targetById: targetById,
+        );
+      }
 
       if (scoreResult.score <= 0 || scoreResult.hitUnits <= 0) continue;
 
       final rating = def.rating.toDouble();
       final ratingFactor =
           rating <= 0 ? 1.0 : (0.5 + rating / 100.0).clamp(0.5, 2.0);
-      final score = scoreResult.score * ratingFactor;
+      var score = scoreResult.score * ratingFactor;
+      if (preferredHitUnits > 0.0) {
+        score *=
+            1.0 +
+            preferredHitUnits *
+                SessionSpec.preferredBodypartCandidateScoreMultiplier;
+      }
       if (score <= 0.0) continue;
 
       final deficitRatio = scoreResult.deficitRatio;
@@ -356,7 +412,10 @@ class PresetGenerationService {
       );
     }
 
-    return _avoidBodyPartsWhenPossible(candidates, avoidedBodyPartIds);
+    return _avoidBodyPartsWhenPossible(
+      candidates,
+      _autoAvoidedBodyPartIdsForSpec(spec, avoidedBodyPartIds),
+    );
   }
 
   List<CandidateExercisePlan> _selectWithinTimeBudget(
@@ -716,9 +775,18 @@ class PresetGenerationService {
     );
 
     final candidates = <CandidateExercisePlan>[];
+    final blacklistedBodyPartIds = spec.blacklistedBodypartIds.toSet();
+    final preferredBodyPartIds = spec.preferredBodypartIds.toSet();
     for (final def in defs) {
       final unitsPerSet = await _repo.computeBodyPartPercents(def.id);
       if (unitsPerSet.isEmpty) continue;
+      if (_hitsAnyBodyPart(unitsPerSet, blacklistedBodyPartIds)) {
+        continue;
+      }
+      final preferredHitUnits = _hitUnitsForBodyParts(
+        unitsPerSet,
+        preferredBodyPartIds,
+      );
       final muscleUnitsPerSet = {
         for (final row in await _repo.computeMusclePercents(def.id))
           if (row.percent > 0) row.muscleId: row.percent,
@@ -728,13 +796,20 @@ class PresetGenerationService {
           def: def,
           unitsPerSet: unitsPerSet,
           muscleUnitsPerSet: muscleUnitsPerSet,
-          score: 1.0,
+          score:
+              1.0 +
+              preferredHitUnits *
+                  SessionSpec.preferredBodypartCandidateScoreMultiplier,
           suggestedSets: spec.minSetsPerExercise,
         ),
       );
     }
 
-    return _avoidBodyPartsWhenPossible(candidates, avoidedBodyPartIds);
+    candidates.sort((a, b) => b.score.compareTo(a.score));
+    return _avoidBodyPartsWhenPossible(
+      candidates,
+      _autoAvoidedBodyPartIdsForSpec(spec, avoidedBodyPartIds),
+    );
   }
 
   _CandidateScore _scoreAgainstBodyParts({
@@ -807,21 +882,30 @@ class PresetGenerationService {
     required Map<int, double> rankedWeights,
     required Set<int> rankedMuscleBodyParts,
   }) {
+    if (spec.blacklistedBodypartIds.contains(bodyPartId)) {
+      return 0.0;
+    }
+
+    double baseWeight;
     if (spec.priorityMode == TrainingPriorityMode.bodyPartRanking &&
         rankedWeights.isNotEmpty) {
-      return rankedWeights[bodyPartId] ?? 0.0;
-    }
-
-    if (spec.priorityMode == TrainingPriorityMode.muscleRanking &&
+      baseWeight = rankedWeights[bodyPartId] ?? 0.0;
+    } else if (spec.priorityMode == TrainingPriorityMode.muscleRanking &&
         rankedMuscleBodyParts.isNotEmpty) {
-      return rankedMuscleBodyParts.contains(bodyPartId) ? 1.0 : 0.0;
+      baseWeight = rankedMuscleBodyParts.contains(bodyPartId) ? 1.0 : 0.0;
+    } else if (spec.focusBodypartIds.isNotEmpty) {
+      baseWeight = spec.focusBodypartIds.contains(bodyPartId) ? 1.0 : 0.0;
+    } else {
+      baseWeight = 1.0;
     }
 
-    if (spec.focusBodypartIds.isNotEmpty) {
-      return spec.focusBodypartIds.contains(bodyPartId) ? 1.0 : 0.0;
+    final isPreferred = spec.preferredBodypartIds.contains(bodyPartId);
+    if (baseWeight <= 0.0) {
+      return isPreferred ? SessionSpec.preferredBodypartBiasMultiplier : 0.0;
     }
-
-    return 1.0;
+    return isPreferred
+        ? baseWeight * SessionSpec.preferredBodypartBiasMultiplier
+        : baseWeight;
   }
 
   Future<Set<int>> _bodyPartIdsForRankedMuscles() async {

@@ -10,6 +10,7 @@ import '../../providers/preset_session.dart';
 import '../../widgets/exercise_card.dart';
 import '../../widgets/add_exercise_fab.dart';
 import '../../widgets/automatic_settings_sheet.dart';
+import '../../widgets/exercise_detail_sheet.dart';
 import 'session_screen.dart';
 import 'auto_preset_flow_screen.dart';
 
@@ -53,6 +54,27 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
       ),
     );
     return discard == true;
+  }
+
+  Future<void> _showExerciseDetails(PresetSession preset, int index) async {
+    final exercise = preset.exercises[index];
+    if (exercise is! WeightExercise) return;
+
+    final repo = AppRepository();
+    final defId =
+        preset.definitionIdForExercise(index) ??
+        await repo.findOrCreateExerciseDefinition(
+          exercise.name,
+          exercise.equipment,
+        );
+    final def = await repo.fetchDefinitionById(defId);
+    if (def == null || !mounted) return;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => ExerciseDetailSheet(definition: def, defId: defId),
+    );
   }
 
   @override
@@ -190,6 +212,9 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                           initialCompletedChildren: preset.exercises[i] is WeightExercise
                               ? (preset.exercises[i] as WeightExercise).completedChildren
                               : null,
+                          onDetails: preset.cardTypes[i] == CardType.weight
+                              ? () => _showExerciseDetails(preset, i)
+                              : null,
                           onDeleteExercise: () => context.read<PresetSession>().removeExercise(i),
                           onSetAdded: () => context.read<PresetSession>().refresh(),
                           onSetDeleted: () => context.read<PresetSession>().refresh(),
@@ -210,13 +235,19 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                       initialCompletedChildren: preset.exercises[i] is WeightExercise
                           ? (preset.exercises[i] as WeightExercise).completedChildren
                           : null,
+                      onDetails: preset.cardTypes[i] == CardType.weight
+                          ? () => _showExerciseDetails(preset, i)
+                          : null,
                     ),
                   ),
 
         floatingActionButton: _isEditing
             ? AddExerciseFab(
                 onWeightPicked: (def) async {
-                  final we = WeightExercise(name: def.name, equipment: def.equipmentList.join(', '), sets: [ExerciseSet()], changeSets: {});
+                  final equipment = def.equipmentList
+                      .map((equipment) => equipment.name)
+                      .join(', ');
+                  final we = WeightExercise(name: def.name, equipment: equipment, sets: [ExerciseSet()], changeSets: {});
                   context.read<PresetSession>().addExercise(we, CardType.weight, defId: def.id);
                 },
                 onCardioPicked: (name) async {

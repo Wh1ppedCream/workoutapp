@@ -290,6 +290,11 @@ class PresetSession extends ChangeNotifier {
     notifyListeners();
   }
 
+  int? definitionIdForExercise(int index) {
+    if (index < 0 || index >= _originalDefIds.length) return null;
+    return _originalDefIds[index];
+  }
+
   /// Mirrors ActiveSession.removeExercise.
   void removeExercise(int index) {
     exercises.removeAt(index);
