@@ -15,6 +15,8 @@ class WeightCard extends StatefulWidget {
   final VoidCallback? onSetDeleted;
   final VoidCallback? onValueChanged;
   final VoidCallback? onDetails;
+  final VoidCallback? onSwapExercise;
+  final bool forceCollapsed;
 
   const WeightCard({
     super.key,
@@ -27,6 +29,8 @@ class WeightCard extends StatefulWidget {
     this.onSetDeleted,
     this.onValueChanged,
     this.onDetails,
+    this.onSwapExercise,
+    this.forceCollapsed = false,
   });
 
   @override
@@ -125,6 +129,7 @@ class _WeightCardState extends State<WeightCard> {
     final readOnly = widget.readOnlyMode;
     final completedCount = _completedSetCount(sets);
     final allSetsComplete = _allSetsComplete(sets);
+    final effectiveCollapsed = widget.forceCollapsed || _isCollapsed;
     final doneColor =
         allSetsComplete
             ? Colors.green
@@ -144,12 +149,15 @@ class _WeightCardState extends State<WeightCard> {
               children: [
                 IconButton(
                   icon: Icon(
-                    _isCollapsed
+                    effectiveCollapsed
                         ? Icons.keyboard_arrow_down
                         : Icons.keyboard_arrow_up,
                   ),
-                  tooltip: _isCollapsed ? 'Expand sets' : 'Collapse sets',
-                  onPressed: () => setState(() => _isCollapsed = !_isCollapsed),
+                  tooltip: effectiveCollapsed ? 'Expand sets' : 'Collapse sets',
+                  onPressed:
+                      widget.forceCollapsed
+                          ? null
+                          : () => setState(() => _isCollapsed = !_isCollapsed),
                 ),
                 Expanded(
                   child: Column(
@@ -218,15 +226,22 @@ class _WeightCardState extends State<WeightCard> {
                       if (confirm == true) widget.onDeleteExercise?.call();
                     } else if (choice == 'changeSet') {
                       setState(() => _isChangeSetMode = !_isChangeSetMode);
+                    } else if (choice == 'swap') {
+                      widget.onSwapExercise?.call();
                     }
                   },
                   itemBuilder:
-                      (_) => const [
-                        PopupMenuItem(
+                      (_) => [
+                        if (widget.onSwapExercise != null)
+                          const PopupMenuItem(
+                            value: 'swap',
+                            child: Text('Swap Exercise'),
+                          ),
+                        const PopupMenuItem(
                           value: 'remove',
                           child: Text('Remove Exercise'),
                         ),
-                        PopupMenuItem(
+                        const PopupMenuItem(
                           value: 'changeSet',
                           child: Text('Make ChangeSet'),
                         ),
@@ -234,7 +249,7 @@ class _WeightCardState extends State<WeightCard> {
                 ),
               ],
             ),
-            if (!_isCollapsed) ...[
+            if (!effectiveCollapsed) ...[
               const Divider(height: 16),
               // Sets + ChangeSets
               ...List.generate(sets.length, (index) {
@@ -243,8 +258,8 @@ class _WeightCardState extends State<WeightCard> {
                 // Parent set row
                 children.add(
                   Container(
-                  decoration: BoxDecoration(
-                    color: isSetComplete ? Colors.green.withAlpha(76) : null,
+                    decoration: BoxDecoration(
+                      color: isSetComplete ? Colors.green.withAlpha(76) : null,
                       border:
                           _isChangeSetMode
                               ? Border.all(color: Colors.grey)

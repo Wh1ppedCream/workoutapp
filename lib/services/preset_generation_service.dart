@@ -441,10 +441,24 @@ class PresetGenerationService {
     };
 
     final selected = <CandidateExercisePlan>[];
+    final remainingCandidates = [...rankedCandidates];
     final budget = spec.sessionDurationMinutes;
     var usedMinutes = 0;
 
-    for (final candidate in rankedCandidates) {
+    usedMinutes = _coverPreferredBodyParts(
+      spec: spec,
+      remainingCandidates: remainingCandidates,
+      selected: selected,
+      usedMinutes: usedMinutes,
+      budget: budget,
+      bodyTargetById: bodyTargetById,
+      muscleTargetById: muscleTargetById,
+      projectedBodyUnits: projectedBodyUnits,
+      projectedSessionBodyUnits: projectedSessionBodyUnits,
+      projectedMuscleUnits: projectedMuscleUnits,
+    );
+
+    for (final candidate in remainingCandidates) {
       if (selected.length >= spec.maxExercises) break;
 
       final targetLimitedSets = _maxAllowedSetsForTargets(
@@ -548,6 +562,174 @@ class PresetGenerationService {
     }
 
     return selected;
+  }
+
+  int _coverPreferredBodyParts({
+    required SessionSpec spec,
+    required List<CandidateExercisePlan> remainingCandidates,
+    required List<CandidateExercisePlan> selected,
+    required int usedMinutes,
+    required int budget,
+    required Map<int, BodyPartTarget> bodyTargetById,
+    required Map<int, MuscleTarget> muscleTargetById,
+    required Map<int, double> projectedBodyUnits,
+    required Map<int, double> projectedSessionBodyUnits,
+    required Map<int, double> projectedMuscleUnits,
+  }) {
+    if (spec.preferredBodypartIds.isEmpty) return usedMinutes;
+
+    var minutesUsed = usedMinutes;
+    for (final preferredBodyPartId in spec.preferredBodypartIds) {
+      if (selected.length >= spec.maxExercises) break;
+      if (_hasFocusedBodyPart(selected, preferredBodyPartId)) continue;
+
+      var coverage = _bestPreferredCoverageCandidate(
+        bodyPartId: preferredBodyPartId,
+        requirePrimaryBodyPart: true,
+        remainingCandidates: remainingCandidates,
+        spec: spec,
+        usedMinutes: minutesUsed,
+        budget: budget,
+        bodyTargetById: bodyTargetById,
+        muscleTargetById: muscleTargetById,
+        projectedBodyUnits: projectedBodyUnits,
+        projectedSessionBodyUnits: projectedSessionBodyUnits,
+        projectedMuscleUnits: projectedMuscleUnits,
+      );
+
+      coverage ??= _bestPreferredCoverageCandidate(
+        bodyPartId: preferredBodyPartId,
+        requirePrimaryBodyPart: false,
+        remainingCandidates: remainingCandidates,
+        spec: spec,
+        usedMinutes: minutesUsed,
+        budget: budget,
+        bodyTargetById: bodyTargetById,
+        muscleTargetById: muscleTargetById,
+        projectedBodyUnits: projectedBodyUnits,
+        projectedSessionBodyUnits: projectedSessionBodyUnits,
+        projectedMuscleUnits: projectedMuscleUnits,
+      );
+
+      if (coverage == null) continue;
+
+      final candidate = remainingCandidates.removeAt(coverage.index);
+      selected.add(candidate.copyWith(suggestedSets: coverage.sets));
+      minutesUsed += _estimatedMinutesForExercise(coverage.sets, spec);
+      _applyProjectedVolume(
+        candidate: candidate,
+        sets: coverage.sets,
+        bodyTargetById: bodyTargetById,
+        muscleTargetById: muscleTargetById,
+        projectedBodyUnits: projectedBodyUnits,
+        projectedSessionBodyUnits: projectedSessionBodyUnits,
+        projectedMuscleUnits: projectedMuscleUnits,
+      );
+    }
+
+    return minutesUsed;
+  }
+
+  _PreferredCoveragePick? _bestPreferredCoverageCandidate({
+    required int bodyPartId,
+    required bool requirePrimaryBodyPart,
+    required List<CandidateExercisePlan> remainingCandidates,
+    required SessionSpec spec,
+    required int usedMinutes,
+    required int budget,
+    required Map<int, BodyPartTarget> bodyTargetById,
+    required Map<int, MuscleTarget> muscleTargetById,
+    required Map<int, double> projectedBodyUnits,
+    required Map<int, double> projectedSessionBodyUnits,
+    required Map<int, double> projectedMuscleUnits,
+  }) {
+    _PreferredCoveragePick? bestPick;
+    var bestScore = double.negativeInfinity;
+
+    for (var i = 0; i < remainingCandidates.length; i++) {
+      final candidate = remainingCandidates[i];
+      final bodyPartUnits = _unitsForBodyPart(candidate, bodyPartId);
+      if (bodyPartUnits <= 0.0) continue;
+      if (requirePrimaryBodyPart &&
+          _primaryBodyPartId(candidate) != bodyPartId) {
+        continue;
+      }
+
+      final targetLimitedSets = _maxAllowedSetsForTargets(
+        candidate: candidate,
+        spec: spec,
+        bodyTargetById: bodyTargetById,
+        muscleTargetById: muscleTargetById,
+        projectedBodyUnits: projectedBodyUnits,
+        projectedSessionBodyUnits: projectedSessionBodyUnits,
+        projectedMuscleUnits: projectedMuscleUnits,
+      );
+      if (targetLimitedSets < spec.minSetsPerExercise) continue;
+
+      final desiredSets = _preferredMinSetsFor(
+        spec: spec,
+        targetLimitedSets: targetLimitedSets,
+      );
+      final fittedSets = _fitSetsWithinBudget(
+        desiredSets: desiredSets,
+        targetLimitedSets: targetLimitedSets,
+        minSets: spec.minSetsPerExercise,
+        usedMinutes: usedMinutes,
+        budget: budget,
+        spec: spec,
+      );
+      if (fittedSets < spec.minSetsPerExercise) continue;
+
+      final score = bodyPartUnits * fittedSets + candidate.score * 0.001;
+      if (score > bestScore) {
+        bestScore = score;
+        bestPick = _PreferredCoveragePick(index: i, sets: fittedSets);
+      }
+    }
+
+    return bestPick;
+  }
+
+  int _fitSetsWithinBudget({
+    required int desiredSets,
+    required int targetLimitedSets,
+    required int minSets,
+    required int usedMinutes,
+    required int budget,
+    required SessionSpec spec,
+  }) {
+    if (usedMinutes + _estimatedMinutesForExercise(desiredSets, spec) <=
+        budget) {
+      return desiredSets;
+    }
+
+    final affordableSets =
+        (budget - usedMinutes - spec.setupMinutesPerExercise) ~/
+        spec.minutesPerSet;
+    final reducedSets = math.min(
+      desiredSets,
+      math.min(affordableSets, targetLimitedSets),
+    );
+    return reducedSets >= minSets ? reducedSets.toInt() : 0;
+  }
+
+  bool _hasFocusedBodyPart(
+    List<CandidateExercisePlan> selected,
+    int bodyPartId,
+  ) {
+    return selected.any(
+      (candidate) => _primaryBodyPartId(candidate) == bodyPartId,
+    );
+  }
+
+  double _unitsForBodyPart(CandidateExercisePlan candidate, int bodyPartId) {
+    var total = 0.0;
+    candidate.unitsPerSet.forEach((bodyPart, units) {
+      if (bodyPart.id == bodyPartId && units > 0.0) {
+        total += units;
+      }
+    });
+    return total;
   }
 
   int _preferredMinSetsFor({
@@ -720,7 +902,7 @@ class PresetGenerationService {
     SessionSpec spec,
     List<CandidateExercisePlan> selected,
   ) async {
-    final name = await _pickUniquePresetName(spec);
+    final name = await _pickUniquePresetName(spec, selected);
     final presetId = await _repo.createPreset(name, profileId: spec.profileId);
 
     var orderIndex = 0;
@@ -945,11 +1127,16 @@ class PresetGenerationService {
         SessionSpec.defaultWeeklyTargetSetUnits;
   }
 
-  Future<String> _pickUniquePresetName(SessionSpec spec) async {
+  Future<String> _pickUniquePresetName(
+    SessionSpec spec,
+    List<CandidateExercisePlan> selected,
+  ) async {
+    final generatedName = _bodyPartSummaryName(selected);
     final baseName =
         spec.name.isNotEmpty
             ? spec.name
-            : 'Auto preset ${spec.now.toIso8601String().split('T').first}';
+            : generatedName ??
+                'Auto preset ${spec.now.toIso8601String().split('T').first}';
 
     final rows = await _repo.fetchAllPresetsRaw(profileId: spec.profileId);
     final existingNames =
@@ -964,6 +1151,40 @@ class PresetGenerationService {
 
     return name;
   }
+
+  String? _bodyPartSummaryName(List<CandidateExercisePlan> selected) {
+    final bodyPartNamesById = <int, String>{};
+    final bodyPartTotalsById = <int, double>{};
+
+    for (final plan in selected) {
+      plan.unitsPerSet.forEach((bodyPart, unitsPerSet) {
+        if (unitsPerSet <= 0.0 || plan.suggestedSets <= 0) return;
+        bodyPartNamesById[bodyPart.id] = bodyPart.name;
+        bodyPartTotalsById[bodyPart.id] =
+            (bodyPartTotalsById[bodyPart.id] ?? 0.0) +
+            unitsPerSet * plan.suggestedSets;
+      });
+    }
+
+    final ranked =
+        bodyPartTotalsById.entries.where((entry) => entry.value > 0.0).toList()
+          ..sort((a, b) {
+            final byUnits = b.value.compareTo(a.value);
+            if (byUnits != 0) return byUnits;
+            return (bodyPartNamesById[a.key] ?? '').compareTo(
+              bodyPartNamesById[b.key] ?? '',
+            );
+          });
+
+    final names =
+        ranked
+            .take(2)
+            .map((entry) => bodyPartNamesById[entry.key])
+            .whereType<String>()
+            .toList();
+    if (names.isEmpty) return null;
+    return names.join(', ');
+  }
 }
 
 class _CandidateScore {
@@ -976,4 +1197,11 @@ class _CandidateScore {
     required this.hitUnits,
     required this.deficitRatio,
   });
+}
+
+class _PreferredCoveragePick {
+  final int index;
+  final int sets;
+
+  const _PreferredCoveragePick({required this.index, required this.sets});
 }

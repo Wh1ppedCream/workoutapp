@@ -304,6 +304,86 @@ class PresetSession extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Swaps a weight exercise to a new definition while preserving its sets.
+  void replaceWeightExerciseDefinition(
+    int index,
+    ExerciseDefinition replacement,
+  ) {
+    if (index < 0 || index >= exercises.length) return;
+    final current = exercises[index];
+    if (current is! WeightExercise) return;
+
+    final equipment = replacement.equipmentList
+        .map((equipment) => equipment.name)
+        .where((name) => name.trim().isNotEmpty)
+        .join(', ');
+
+    exercises[index] = WeightExercise(
+      name: replacement.name,
+      equipment: equipment,
+      sets: current.sets,
+      changeSets: current.changeSets,
+      completedParents: current.completedParents,
+      completedChildren: current.completedChildren,
+    );
+
+    if (index < _originalDefIds.length) {
+      _originalDefIds[index] = replacement.id;
+    }
+
+    _hasChanges = true;
+    notifyListeners();
+  }
+
+  /// Reorders a preset exercise and any aligned metadata that belongs to it.
+  void reorderExercise(int oldIndex, int newIndex) {
+    if (oldIndex < 0 || oldIndex >= exercises.length) return;
+    if (newIndex > oldIndex) newIndex--;
+    if (newIndex < 0) newIndex = 0;
+    if (newIndex >= exercises.length) newIndex = exercises.length - 1;
+    if (oldIndex == newIndex) return;
+
+    final previousLength = exercises.length;
+    _moveListItem(exercises, oldIndex, newIndex);
+    _moveListItemIfAligned(cardTypes, previousLength, oldIndex, newIndex);
+    _moveListItemIfAligned(_originalDefIds, previousLength, oldIndex, newIndex);
+    _moveListItemIfAligned(
+      _presetExerciseIds,
+      previousLength,
+      oldIndex,
+      newIndex,
+    );
+    _moveListItemIfAligned(
+      _presetParentSetIds,
+      previousLength,
+      oldIndex,
+      newIndex,
+    );
+    _moveListItemIfAligned(
+      _presetChildSetIds,
+      previousLength,
+      oldIndex,
+      newIndex,
+    );
+    _hasChanges = true;
+    notifyListeners();
+  }
+
+  void _moveListItemIfAligned<T>(
+    List<T> list,
+    int expectedLength,
+    int oldIndex,
+    int newIndex,
+  ) {
+    if (list.length != expectedLength) return;
+    _moveListItem(list, oldIndex, newIndex);
+  }
+
+  void _moveListItem<T>(List<T> list, int oldIndex, int newIndex) {
+    final item = list.removeAt(oldIndex);
+    list.insert(newIndex, item);
+  }
+
   /// Marks in-memory state dirty without modifying lists.
   void refresh() {
     _hasChanges = true;

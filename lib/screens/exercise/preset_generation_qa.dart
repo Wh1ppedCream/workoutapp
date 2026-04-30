@@ -121,7 +121,7 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
 
       final spec = SessionSpec(
         profileId: widget.profileId,
-        name: 'Custom preset ${now.year}-${now.month}-${now.day}',
+        name: '',
         focusBodypartIds: const [],
         preferredBodypartIds: _preferredBodypartIds.toList(),
         blacklistedBodypartIds: _blacklistedBodypartIds.toList(),

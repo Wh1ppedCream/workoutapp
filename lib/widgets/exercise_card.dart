@@ -9,16 +9,18 @@ import 'stretch_card.dart';
 enum CardType { weight, cardio, stretch }
 
 class ExerciseCard extends StatelessWidget {
-  final WorkoutExercise           exercise;
-  final CardType                  cardType;
-  final bool                      readOnlyMode;
-  final Set<int>?                 initialCompletedParents;
-  final Map<int, Set<int>>?       initialCompletedChildren;
-  final VoidCallback?             onDeleteExercise;
-  final VoidCallback?             onSetAdded;
-  final VoidCallback?             onSetDeleted;
-  final VoidCallback?             onValueChanged;
-  final VoidCallback?             onDetails;
+  final WorkoutExercise exercise;
+  final CardType cardType;
+  final bool readOnlyMode;
+  final Set<int>? initialCompletedParents;
+  final Map<int, Set<int>>? initialCompletedChildren;
+  final VoidCallback? onDeleteExercise;
+  final VoidCallback? onSetAdded;
+  final VoidCallback? onSetDeleted;
+  final VoidCallback? onValueChanged;
+  final VoidCallback? onDetails;
+  final VoidCallback? onSwapExercise;
+  final bool forceCollapsed;
 
   const ExerciseCard({
     super.key,
@@ -32,6 +34,8 @@ class ExerciseCard extends StatelessWidget {
     this.onSetDeleted,
     this.onValueChanged,
     this.onDetails,
+    this.onSwapExercise,
+    this.forceCollapsed = false,
   });
 
   @override
@@ -48,6 +52,8 @@ class ExerciseCard extends StatelessWidget {
           onSetDeleted: onSetDeleted,
           onValueChanged: onValueChanged,
           onDetails: onDetails,
+          onSwapExercise: onSwapExercise,
+          forceCollapsed: forceCollapsed,
         );
       case CardType.cardio:
         return CardioCard(
