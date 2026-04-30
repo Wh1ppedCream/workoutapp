@@ -11,6 +11,7 @@ import '../../widgets/exercise_card.dart';
 import '../../widgets/add_exercise_fab.dart';
 import '../../widgets/automatic_settings_sheet.dart';
 import '../../widgets/exercise_detail_sheet.dart';
+import '../../widgets/preset_info_card.dart';
 import 'session_screen.dart';
 import 'auto_preset_flow_screen.dart';
 
@@ -224,21 +225,42 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                   )
                 : ListView.builder(
                     padding: const EdgeInsets.all(16),
-                    itemCount: preset.exercises.length,
-                    itemBuilder: (ctx, i) => ExerciseCard(
-                      exercise: preset.exercises[i],
-                      cardType: preset.cardTypes[i],
-                      readOnlyMode: true,
-                      initialCompletedParents: preset.exercises[i] is WeightExercise
-                          ? (preset.exercises[i] as WeightExercise).completedParents
-                          : null,
-                      initialCompletedChildren: preset.exercises[i] is WeightExercise
-                          ? (preset.exercises[i] as WeightExercise).completedChildren
-                          : null,
-                      onDetails: preset.cardTypes[i] == CardType.weight
-                          ? () => _showExerciseDetails(preset, i)
-                          : null,
-                    ),
+                    itemCount: preset.exercises.length + 1,
+                    itemBuilder: (ctx, i) {
+                      if (i == 0) {
+                        return PresetInfoCard(
+                          exercises: preset.exercises,
+                          cardTypes: preset.cardTypes,
+                          definitionIds: List<int?>.generate(
+                            preset.exercises.length,
+                            preset.definitionIdForExercise,
+                          ),
+                        );
+                      }
+
+                      final exerciseIndex = i - 1;
+                      return ExerciseCard(
+                        exercise: preset.exercises[exerciseIndex],
+                        cardType: preset.cardTypes[exerciseIndex],
+                        readOnlyMode: true,
+                        initialCompletedParents:
+                            preset.exercises[exerciseIndex] is WeightExercise
+                                ? (preset.exercises[exerciseIndex]
+                                        as WeightExercise)
+                                    .completedParents
+                                : null,
+                        initialCompletedChildren:
+                            preset.exercises[exerciseIndex] is WeightExercise
+                                ? (preset.exercises[exerciseIndex]
+                                        as WeightExercise)
+                                    .completedChildren
+                                : null,
+                        onDetails: preset.cardTypes[exerciseIndex] ==
+                                CardType.weight
+                            ? () => _showExerciseDetails(preset, exerciseIndex)
+                            : null,
+                      );
+                    },
                   ),
 
         floatingActionButton: _isEditing

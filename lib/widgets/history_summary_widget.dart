@@ -7,38 +7,6 @@ import '../repositories/app_repository.dart';
 import '../theme/theme_extensions.dart';
 import 'body_heatmap.dart';
 
-// Mapping DB BodyPart.name -> all SVG <path id="..."> strings
-const Map<String, List<String>> _bodyPartNameToSvgIds = {
-  'Neck': ['Neck_frontal', 'neck_rear'],
-  'Shoulders': [
-    'Shoulder_frontal_left',
-    'Shoulder_frontal_right',
-    'shoulder_left_back',
-    'shoulder_right_rear',
-  ],
-  'Chest': ['Chest_left', 'Chest_right'],
-  'Core': ['Core_front'],
-  'Upper Back': ['Upper_Back'],
-  'Lower Back': ['lower_back'],
-  'Biceps': ['bicep_left', 'Bicep_right'],
-  'Triceps': ['tricep_left_back', 'tricep_right_rear'],
-  'Forearms': [
-    'Forearm_Right_front',
-    'forearm_frontal_left',
-    'forearm_left_back',
-    'forearm_right_rear',
-  ],
-  'Hips': ['Hip_back_left', 'hip_right_rear'],
-  'Hamstrings': ['hamstring_left_back', 'Hamstring_right_back'],
-  'Quads': ['Quad_Front_Right', 'Quad_Left_front'],
-  'Calves': [
-    'Calf_Front_Right',
-    'Calf_front_left',
-    'Calf_left_back',
-    'Calf_right_back',
-  ],
-};
-
 class InfoCard extends StatelessWidget {
   final String value;
   final String label;
@@ -298,7 +266,7 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
         rawHeatmap.values.fold<double>(0.0, (prev, v) => v > prev ? v : prev);
     final freqMap = <String, double>{};
     rawHeatmap.forEach((bp, count) {
-      final ids = _bodyPartNameToSvgIds[bp.name] ?? [];
+      final ids = bodyPartNameToSvgIds[bp.name] ?? [];
       final norm = maxCount == 0.0 ? 0.0 : count / maxCount;
       for (final id in ids) {
         freqMap[id] = norm;

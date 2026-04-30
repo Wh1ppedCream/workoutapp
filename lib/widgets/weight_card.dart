@@ -34,9 +34,6 @@ class WeightCard extends StatefulWidget {
 }
 
 class _WeightCardState extends State<WeightCard> {
-  late String _note;
-  bool _isEditingNote = false;
-
   late List<TextEditingController> _weightControllers;
   late List<TextEditingController> _repsControllers;
 
@@ -48,7 +45,6 @@ class _WeightCardState extends State<WeightCard> {
   @override
   void initState() {
     super.initState();
-    _note = widget.exercise.equipment;
 
     // Seed controllers for parent sets
     final sets = widget.exercise.sets;
@@ -163,38 +159,6 @@ class _WeightCardState extends State<WeightCard> {
                         we.name,
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
-                      const SizedBox(height: 4),
-                      _isEditingNote
-                          ? TextFormField(
-                            readOnly: readOnly,
-                            initialValue: _note,
-                            decoration: const InputDecoration(
-                              isDense: true,
-                              labelText: 'Note',
-                            ),
-                            onFieldSubmitted:
-                                readOnly
-                                    ? null
-                                    : (val) {
-                                      setState(() {
-                                        _note = val.trim();
-                                        _isEditingNote = false;
-                                      });
-                                      widget.onValueChanged?.call();
-                                    },
-                          )
-                          : GestureDetector(
-                            onTap:
-                                readOnly
-                                    ? null
-                                    : () =>
-                                        setState(() => _isEditingNote = true),
-                            child: Text(
-                              _note.isNotEmpty ? _note : 'Tap to add note',
-                              style: Theme.of(context).textTheme.bodySmall!
-                                  .copyWith(fontStyle: FontStyle.italic),
-                            ),
-                          ),
                       const SizedBox(height: 4),
                       Row(
                         children: [
