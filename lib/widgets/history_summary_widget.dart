@@ -71,18 +71,28 @@ class HistorySummaryWidget extends StatefulWidget {
   HistorySummaryWidgetState createState() => HistorySummaryWidgetState();
 }
 
+class _HistoryTabData {
+  final List<WorkoutSession> sessions;
+  final Map<BodyPart, double> heatmap;
+  final double totalVolume;
+
+  const _HistoryTabData({
+    required this.sessions,
+    required this.heatmap,
+    required this.totalVolume,
+  });
+}
+
 class HistorySummaryWidgetState extends State<HistorySummaryWidget>
     with AutomaticKeepAliveClientMixin<HistorySummaryWidget> {
   static const _tabLabels = ['1W', '1M', '3M', '6M', '1Y', 'All'];
   static const _durations = [7, 30, 90, 180, 365];
 
   late Future<void> _loadFuture;
-  late List<List<WorkoutSession>> _sessionsList;
-  late List<Map<BodyPart, double>> _heatmapList;
-  late List<double> _volumeList;
+  late List<Future<_HistoryTabData>?> _tabFutures;
+  late List<_HistoryTabData?> _tabData;
   int _selectedIndex = 0;
   int _loadGeneration = 0;
-  bool _hasLoadedData = false;
 
   @override
   void initState() {
@@ -99,58 +109,54 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
   }
 
   void _reloadData() {
-    final loadGeneration = ++_loadGeneration;
+    _loadGeneration++;
+    _tabFutures = List<Future<_HistoryTabData>?>.filled(
+      _tabLabels.length,
+      null,
+    );
+    _tabData = List<_HistoryTabData?>.filled(_tabLabels.length, null);
+    _loadFuture = _ensureTabLoaded(_selectedIndex);
+  }
+
+  Future<void> _ensureTabLoaded(int index) {
+    final existing = _tabFutures[index];
+    if (existing != null) {
+      _loadFuture = existing.then((_) {});
+      return _loadFuture;
+    }
+
+    final loadGeneration = _loadGeneration;
+    final future = _loadTab(index).then((data) {
+      if (loadGeneration == _loadGeneration) {
+        _tabData[index] = data;
+      }
+      return data;
+    });
+    _tabFutures[index] = future;
+    _loadFuture = future.then((_) {});
+    return _loadFuture;
+  }
+
+  Future<_HistoryTabData> _loadTab(int index) async {
     final repo = AppRepository();
     final now = DateTime.now();
-
-    final sessionFutures = List.generate(_tabLabels.length, (i) {
-      if (i < _durations.length) {
-        final start = now.subtract(Duration(days: _durations[i]));
-        return repo.fetchSessionsInRange(start, now);
-      }
-      return repo.fetchSessionsInRange(
-        DateTime.fromMillisecondsSinceEpoch(0),
-        now,
-      );
-    });
-
-    final heatmapFutures = List.generate(_tabLabels.length, (i) {
-      if (i < _durations.length) {
-        final start = now.subtract(Duration(days: _durations[i]));
-        return repo.fetchAllBodyPartSetsOverTimeRange(start: start, end: now);
-      }
-      return repo.fetchAllBodyPartSetsOverTimeRange(
-        start: DateTime.fromMillisecondsSinceEpoch(0),
-        end: now,
-      );
-    });
-
-    _loadFuture = () async {
-      final results = await Future.wait([...sessionFutures, ...heatmapFutures]);
-      final sessionsList = List<List<WorkoutSession>>.from(
-        results
-            .sublist(0, _tabLabels.length)
-            .map((e) => e as List<WorkoutSession>),
-      );
-      final heatmapList = List<Map<BodyPart, double>>.from(
-        results
-            .sublist(_tabLabels.length)
-            .map((e) => e as Map<BodyPart, double>),
-      );
-      final volumeList = await Future.wait(
-        sessionsList.map(
-          (sessions) => repo.calculateTotalVolumeForSessions(
-            sessions.map((s) => s.id).toList(),
-          ),
-        ),
-      );
-
-      if (loadGeneration != _loadGeneration) return;
-      _sessionsList = sessionsList;
-      _heatmapList = heatmapList;
-      _volumeList = volumeList;
-      _hasLoadedData = true;
-    }();
+    final start = index < _durations.length
+        ? now.subtract(Duration(days: _durations[index]))
+        : DateTime.fromMillisecondsSinceEpoch(0);
+    final results = await Future.wait([
+      repo.fetchSessionsInRange(start, now),
+      repo.fetchAllBodyPartSetsOverTimeRange(start: start, end: now),
+    ]);
+    final sessions = results[0] as List<WorkoutSession>;
+    final heatmap = results[1] as Map<BodyPart, double>;
+    final volume = await repo.calculateTotalVolumeForSessions(
+      sessions.map((s) => s.id).toList(),
+    );
+    return _HistoryTabData(
+      sessions: sessions,
+      heatmap: heatmap,
+      totalVolume: volume,
+    );
   }
 
   @override
@@ -164,7 +170,8 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
     return FutureBuilder<void>(
       future: _loadFuture,
       builder: (ctx, snap) {
-        if (snap.connectionState != ConnectionState.done && !_hasLoadedData) {
+        if (snap.connectionState != ConnectionState.done &&
+            _tabData[_selectedIndex] == null) {
           return SizedBox(
             height: 300,
             child: Center(
@@ -174,7 +181,7 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
             ),
           );
         }
-        if (snap.hasError && !_hasLoadedData) {
+        if (snap.hasError && _tabData[_selectedIndex] == null) {
           return const Padding(
             padding: EdgeInsets.all(16),
             child: Center(child: Text('Error loading history')),
@@ -213,7 +220,12 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
                       }
                       return Expanded(
                         child: GestureDetector(
-                          onTap: () => setState(() => _selectedIndex = i),
+                          onTap: () {
+                            setState(() {
+                              _selectedIndex = i;
+                              _ensureTabLoaded(i);
+                            });
+                          },
                           child: Container(
                             decoration: BoxDecoration(
                               color: isSelected
@@ -252,15 +264,23 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
 
   Widget _buildLoadedTab(int index) {
     final colors = context.colors;
-    final sessions = _sessionsList[index];
-    final rawHeatmap = _heatmapList[index];
+    final data = _tabData[index];
+    if (data == null) {
+      return Center(
+        child: CircularProgressIndicator(
+          color: colors.historySummaryProgress!,
+        ),
+      );
+    }
+    final sessions = data.sessions;
+    final rawHeatmap = data.heatmap;
 
     final workoutCount = sessions.length;
     final totalSeconds = sessions.fold<int>(0, (sum, s) => sum + s.duration);
     final hours = totalSeconds ~/ 3600;
     final mins = (totalSeconds % 3600) ~/ 60;
     final timeStr = '${hours}h ${mins}m';
-    final totalVolume = _volumeList[index];
+    final totalVolume = data.totalVolume;
 
     final maxCount =
         rawHeatmap.values.fold<double>(0.0, (prev, v) => v > prev ? v : prev);

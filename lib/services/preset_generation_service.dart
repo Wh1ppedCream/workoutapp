@@ -4,11 +4,20 @@ import '../repositories/app_repository.dart';
 import '../models/models.dart';
 
 class PresetGenerationService {
+  static const int _candidateAnalysisConcurrency = 4;
+
   final AppRepository _repo;
 
   PresetGenerationService(this._repo);
 
   Future<int> generatePreset(SessionSpec spec) async {
+    final result = await generatePresetWithDetails(spec);
+    return result.presetId;
+  }
+
+  Future<PresetGenerationResult> generatePresetWithDetails(
+    SessionSpec spec,
+  ) async {
     final end = spec.now;
     final start = end.subtract(spec.historyWindow);
 
@@ -29,9 +38,9 @@ class PresetGenerationService {
       muscleTargets: muscleTargets,
     );
 
-    final presetId = await _createPresetInDb(spec, selected);
-    await _initAutoSettings(presetId);
-    return presetId;
+    final result = await _createPresetInDb(spec, selected);
+    await _initAutoSettings(result.presetId);
+    return result;
   }
 
   Future<bool> shouldRestBeforeOptimizedWorkout(SessionSpec spec) async {
@@ -342,13 +351,12 @@ class PresetGenerationService {
               : null,
     );
 
-    final candidates = <CandidateExercisePlan>[];
     final blacklistedBodyPartIds = spec.blacklistedBodypartIds.toSet();
-    for (final def in defs) {
+    final candidates = await _mapDefinitionsWithConcurrency(defs, (def) async {
       final unitsPerSet = await _repo.computeBodyPartPercents(def.id);
-      if (unitsPerSet.isEmpty) continue;
+      if (unitsPerSet.isEmpty) return null;
       if (_hitsAnyBodyPart(unitsPerSet, blacklistedBodyPartIds)) {
-        continue;
+        return null;
       }
       final preferredHitUnits = _hitUnitsForBodyParts(
         unitsPerSet,
@@ -379,7 +387,7 @@ class PresetGenerationService {
         );
       }
 
-      if (scoreResult.score <= 0 || scoreResult.hitUnits <= 0) continue;
+      if (scoreResult.score <= 0 || scoreResult.hitUnits <= 0) return null;
 
       final rating = def.rating.toDouble();
       final ratingFactor =
@@ -391,7 +399,7 @@ class PresetGenerationService {
             preferredHitUnits *
                 SessionSpec.preferredBodypartCandidateScoreMultiplier;
       }
-      if (score <= 0.0) continue;
+      if (score <= 0.0) return null;
 
       final deficitRatio = scoreResult.deficitRatio;
       final setRange = spec.maxSetsPerExercise - spec.minSetsPerExercise;
@@ -401,16 +409,14 @@ class PresetGenerationService {
               .clamp(spec.minSetsPerExercise, spec.maxSetsPerExercise)
               .toInt();
 
-      candidates.add(
-        CandidateExercisePlan(
-          def: def,
-          unitsPerSet: unitsPerSet,
-          muscleUnitsPerSet: muscleUnitsPerSet,
-          score: score,
-          suggestedSets: suggestedSets,
-        ),
+      return CandidateExercisePlan(
+        def: def,
+        unitsPerSet: unitsPerSet,
+        muscleUnitsPerSet: muscleUnitsPerSet,
+        score: score,
+        suggestedSets: suggestedSets,
       );
-    }
+    });
 
     return _avoidBodyPartsWhenPossible(
       candidates,
@@ -898,12 +904,13 @@ class PresetGenerationService {
     return spec.setupMinutesPerExercise + sets * spec.minutesPerSet;
   }
 
-  Future<int> _createPresetInDb(
+  Future<PresetGenerationResult> _createPresetInDb(
     SessionSpec spec,
     List<CandidateExercisePlan> selected,
   ) async {
     final name = await _pickUniquePresetName(spec, selected);
     final presetId = await _repo.createPreset(name, profileId: spec.profileId);
+    final missingWeightHistoryNames = <String>{};
 
     var orderIndex = 0;
     for (final candidate in selected) {
@@ -914,9 +921,10 @@ class PresetGenerationService {
         orderIndex++,
       );
 
-      final parents = List<ExerciseSet>.generate(
-        candidate.suggestedSets,
-        (_) => ExerciseSet(weight: 0, reps: 10),
+      final parents = await _buildGeneratedSets(
+        spec: spec,
+        candidate: candidate,
+        missingWeightHistoryNames: missingWeightHistoryNames,
       );
 
       await _repo.savePresetWeightSets(
@@ -926,7 +934,103 @@ class PresetGenerationService {
       );
     }
 
-    return presetId;
+    return PresetGenerationResult(
+      presetId: presetId,
+      exercisesMissingWeightHistory: missingWeightHistoryNames.toList()..sort(),
+    );
+  }
+
+  Future<List<ExerciseSet>> _buildGeneratedSets({
+    required SessionSpec spec,
+    required CandidateExercisePlan candidate,
+    required Set<String> missingWeightHistoryNames,
+  }) async {
+    if (!spec.useGeneratedRepWeights) {
+      return List<ExerciseSet>.generate(
+        candidate.suggestedSets,
+        (_) => ExerciseSet(weight: 0, reps: 10),
+      );
+    }
+
+    final targetReps = math.max(1, spec.targetRepCount).toInt();
+    final peakWeight = await _targetWeightForReps(
+      defId: candidate.def.id,
+      targetReps: targetReps,
+      exerciseName: candidate.def.name,
+      missingWeightHistoryNames: missingWeightHistoryNames,
+    );
+
+    final mode = _resolvedRepWeightMode(
+      spec.repWeightMode,
+      candidate.suggestedSets,
+    );
+    switch (mode) {
+      case RepWeightGenerationMode.pyramid:
+        return _buildPyramidSets(
+          totalSets: candidate.suggestedSets,
+          peakReps: targetReps,
+          peakWeight: peakWeight,
+        );
+      case RepWeightGenerationMode.consistent:
+      case RepWeightGenerationMode.mixed:
+        return List<ExerciseSet>.generate(
+          candidate.suggestedSets,
+          (_) => ExerciseSet(weight: peakWeight, reps: targetReps),
+        );
+    }
+  }
+
+  RepWeightGenerationMode _resolvedRepWeightMode(
+    RepWeightGenerationMode mode,
+    int totalSets,
+  ) {
+    if (mode != RepWeightGenerationMode.mixed) return mode;
+    return totalSets >= 3
+        ? RepWeightGenerationMode.pyramid
+        : RepWeightGenerationMode.consistent;
+  }
+
+  List<ExerciseSet> _buildPyramidSets({
+    required int totalSets,
+    required int peakReps,
+    required double peakWeight,
+  }) {
+    final peakIndex = totalSets ~/ 2;
+    return List<ExerciseSet>.generate(totalSets, (index) {
+      final distanceFromPeak = (index - peakIndex).abs();
+      final weightMultiplier = math.max(0.0, 1.0 - distanceFromPeak * 0.10);
+      return ExerciseSet(
+        weight: peakWeight <= 0 ? 0 : peakWeight * weightMultiplier,
+        reps: peakReps + distanceFromPeak * 2,
+      );
+    });
+  }
+
+  Future<double> _targetWeightForReps({
+    required int defId,
+    required int targetReps,
+    required String exerciseName,
+    required Set<String> missingWeightHistoryNames,
+  }) async {
+    final repMaxRows = await _repo.fetchRepMaxes(defId, 'all');
+    if (repMaxRows.isEmpty) {
+      missingWeightHistoryNames.add(exerciseName);
+      return 0.0;
+    }
+
+    for (final row in repMaxRows) {
+      if (row.repCount == targetReps) {
+        return row.rmValue;
+      }
+    }
+
+    final bestOneRepMax = repMaxRows.fold<double>(
+      0.0,
+      (best, row) => row.oneErm > best ? row.oneErm : best,
+    );
+    if (bestOneRepMax <= 0) return 0.0;
+
+    return bestOneRepMax / (1 + targetReps / 30.0);
   }
 
   Future<void> _initAutoSettings(int presetId) async {
@@ -956,14 +1060,13 @@ class PresetGenerationService {
       muscleIds: null,
     );
 
-    final candidates = <CandidateExercisePlan>[];
     final blacklistedBodyPartIds = spec.blacklistedBodypartIds.toSet();
     final preferredBodyPartIds = spec.preferredBodypartIds.toSet();
-    for (final def in defs) {
+    final candidates = await _mapDefinitionsWithConcurrency(defs, (def) async {
       final unitsPerSet = await _repo.computeBodyPartPercents(def.id);
-      if (unitsPerSet.isEmpty) continue;
+      if (unitsPerSet.isEmpty) return null;
       if (_hitsAnyBodyPart(unitsPerSet, blacklistedBodyPartIds)) {
-        continue;
+        return null;
       }
       final preferredHitUnits = _hitUnitsForBodyParts(
         unitsPerSet,
@@ -973,19 +1076,17 @@ class PresetGenerationService {
         for (final row in await _repo.computeMusclePercents(def.id))
           if (row.percent > 0) row.muscleId: row.percent,
       };
-      candidates.add(
-        CandidateExercisePlan(
-          def: def,
-          unitsPerSet: unitsPerSet,
-          muscleUnitsPerSet: muscleUnitsPerSet,
-          score:
-              1.0 +
-              preferredHitUnits *
-                  SessionSpec.preferredBodypartCandidateScoreMultiplier,
-          suggestedSets: spec.minSetsPerExercise,
-        ),
+      return CandidateExercisePlan(
+        def: def,
+        unitsPerSet: unitsPerSet,
+        muscleUnitsPerSet: muscleUnitsPerSet,
+        score:
+            1.0 +
+            preferredHitUnits *
+                SessionSpec.preferredBodypartCandidateScoreMultiplier,
+        suggestedSets: spec.minSetsPerExercise,
       );
-    }
+    });
 
     candidates.sort((a, b) => b.score.compareTo(a.score));
     return _avoidBodyPartsWhenPossible(
@@ -1184,6 +1285,36 @@ class PresetGenerationService {
             .toList();
     if (names.isEmpty) return null;
     return names.join(', ');
+  }
+
+  Future<List<T>> _mapDefinitionsWithConcurrency<T>(
+    List<ExerciseDefinition> definitions,
+    Future<T?> Function(ExerciseDefinition definition) mapper,
+  ) async {
+    if (definitions.isEmpty) return const [];
+
+    final results = List<T?>.filled(definitions.length, null);
+    var nextIndex = 0;
+
+    Future<void> worker() async {
+      while (true) {
+        final index = nextIndex;
+        if (index >= definitions.length) return;
+        nextIndex += 1;
+        results[index] = await mapper(definitions[index]);
+      }
+    }
+
+    final workerCount = math.min(
+      _candidateAnalysisConcurrency,
+      definitions.length,
+    );
+    await Future.wait(List.generate(workerCount, (_) => worker()));
+
+    return [
+      for (final result in results)
+        if (result != null) result,
+    ];
   }
 }
 

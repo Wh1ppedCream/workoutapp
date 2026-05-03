@@ -27,7 +27,17 @@ class SessionScreen extends StatelessWidget {
                 padding: EdgeInsets.all(16),
                 child: Text('Workout Timer', style: TextStyle(fontSize: 20)),
               ),
-              Text(session.formattedTime, style: const TextStyle(fontSize: 48)),
+              ValueListenableBuilder<int>(
+                valueListenable: session.elapsedSecondsListenable,
+                builder: (_, seconds, __) {
+                  final m = seconds ~/ 60;
+                  final s = seconds % 60;
+                  return Text(
+                    '$m:${s.toString().padLeft(2, '0')}',
+                    style: const TextStyle(fontSize: 48),
+                  );
+                },
+              ),
             ],
           ),
         ),

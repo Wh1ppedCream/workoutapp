@@ -18,6 +18,9 @@ class GenericBar extends StatelessWidget {
   /// An optional widget displayed at the trailing end.
   final Widget? trailing;
 
+  /// An optional widget displayed before the label.
+  final Widget? leading;
+
   /// Uniform scale factor for all dimensions (padding, radius, border width, font size).
   final double scale;
 
@@ -27,6 +30,7 @@ class GenericBar extends StatelessWidget {
     this.color,
     this.onTap,
     this.trailing,
+    this.leading,
     this.scale = 1.0,
   });
 
@@ -60,6 +64,10 @@ class GenericBar extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              if (leading != null) ...[
+                leading!,
+                SizedBox(width: 10 * scale),
+              ],
               Expanded(
                 child: Text(
                   label,

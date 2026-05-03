@@ -18,6 +18,7 @@ class ActiveSession extends ChangeNotifier {
   Timer? _timer;
   int _elapsedSeconds = 0;
   int _completedSessionVersion = 0;
+  final ValueNotifier<int> elapsedSecondsListenable = ValueNotifier<int>(0);
 
   bool get isActive => _timer != null;
   int get elapsedSeconds => _elapsedSeconds;
@@ -37,9 +38,10 @@ class ActiveSession extends ChangeNotifier {
     if (_timer != null) return;
     _autoPresetId = presetId;
     _elapsedSeconds = 0;
+    elapsedSecondsListenable.value = _elapsedSeconds;
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       _elapsedSeconds++;
-      notifyListeners();
+      elapsedSecondsListenable.value = _elapsedSeconds;
     });
     notifyListeners();
   }
@@ -203,8 +205,16 @@ class ActiveSession extends ChangeNotifier {
     exercises.clear();
     cardTypes.clear();
     _elapsedSeconds = 0;
+    elapsedSecondsListenable.value = _elapsedSeconds;
     _completedSessionVersion++;
     notifyListeners();
     return sid;
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    elapsedSecondsListenable.dispose();
+    super.dispose();
   }
 }

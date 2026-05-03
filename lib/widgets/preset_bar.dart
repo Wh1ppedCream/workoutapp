@@ -6,6 +6,7 @@ import '../repositories/app_repository.dart';
 import '../providers/active_session.dart';
 import '../providers/preset_session.dart';
 import '../screens/exercise/preset_detail_screen.dart';
+import 'body_heatmap.dart';
 import 'generic_bar.dart';
 import '../theme/theme_extensions.dart';
 
@@ -16,6 +17,7 @@ class PresetBar extends StatelessWidget {
   final Color color;
   final int index;
   final bool isAutomatic;
+  final Map<String, double> focusFrequencyMap;
   final VoidCallback onRefresh;
 
   /// Uniform scale factor for padding, font sizes, badge sizes, etc.
@@ -28,6 +30,7 @@ class PresetBar extends StatelessWidget {
     required this.color,
     required this.index,
     this.isAutomatic = false,
+    this.focusFrequencyMap = const <String, double>{},
     required this.onRefresh,
     this.scale = 1.0,
   });
@@ -44,6 +47,10 @@ class PresetBar extends StatelessWidget {
       color: accent,
       onTap: () => _openDetail(context),
       scale: scale,  // <-- pass down scale
+      leading: _PresetFocusBadge(
+        frequencyMap: focusFrequencyMap,
+        scale: scale,
+      ),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -129,6 +136,39 @@ class PresetBar extends StatelessWidget {
         onRefresh();
       }
     }
+  }
+}
+
+class _PresetFocusBadge extends StatelessWidget {
+  final Map<String, double> frequencyMap;
+  final double scale;
+
+  const _PresetFocusBadge({
+    required this.frequencyMap,
+    required this.scale,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final size = 60 * scale;
+
+    return Container(
+      width: size,
+      height: size,
+      padding: EdgeInsets.all(3 * scale),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.35),
+        borderRadius: BorderRadius.circular(10 * scale),
+      ),
+      child: BodyHeatmap(
+        frequencyMap: frequencyMap,
+        lowColor: colors.historySummaryHeatmapLow!,
+        highColor: colors.historySummaryHeatmapHigh!,
+        width: size - 6 * scale,
+        height: size - 6 * scale,
+      ),
+    );
   }
 }
 

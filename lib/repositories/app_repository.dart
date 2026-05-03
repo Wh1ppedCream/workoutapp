@@ -10,14 +10,44 @@ import 'food_catalog_repository.dart';
 /// Screens/widgets call into [AppRepository]; this forwards to DAOs via [DatabaseHelper].
 class AppRepository {
   // ✨ Allow DI in tests; default to the singleton helper.
-  AppRepository({DatabaseHelper? db}) : _dbHelper = db ?? DatabaseHelper();
+  AppRepository({DatabaseHelper? db}) : _dbHelper = db ?? DatabaseHelper() {
+    if (db != null) {
+      clearExerciseAnalysisCache();
+    }
+  }
+
+  static const int _maxExerciseAnalysisCacheEntries = 250;
+  static final Map<int, Future<List<ExerciseMusclePercent>>>
+  _musclePercentCache = <int, Future<List<ExerciseMusclePercent>>>{};
+  static final Map<int, Future<Map<BodyPart, double>>> _bodyPartPercentCache =
+      <int, Future<Map<BodyPart, double>>>{};
 
   final DatabaseHelper _dbHelper;
-  late final FoodCatalogRepository foodCatalog =
-      FoodCatalogRepository(source: LocalFoodCatalogSource(_dbHelper));
+  late final FoodCatalogRepository foodCatalog = FoodCatalogRepository(
+    source: LocalFoodCatalogSource(_dbHelper),
+  );
 
   /// Exposes the internal DatabaseHelper instance for extensions.
   DatabaseHelper get dbHelper => _dbHelper;
+
+  static void clearExerciseAnalysisCache() {
+    _musclePercentCache.clear();
+    _bodyPartPercentCache.clear();
+  }
+
+  static void clearExerciseAnalysisCacheFor(int defId) {
+    _musclePercentCache.remove(defId);
+    _bodyPartPercentCache.remove(defId);
+  }
+
+  static void _trimExerciseAnalysisCache() {
+    while (_musclePercentCache.length > _maxExerciseAnalysisCacheEntries) {
+      _musclePercentCache.remove(_musclePercentCache.keys.first);
+    }
+    while (_bodyPartPercentCache.length > _maxExerciseAnalysisCacheEntries) {
+      _bodyPartPercentCache.remove(_bodyPartPercentCache.keys.first);
+    }
+  }
 
   // ─── SESSIONS ───────────────────────────────────────────
 
@@ -47,8 +77,7 @@ class AppRepository {
       _dbHelper.updateSession(id, d, dur);
 
   /// Retrieves sessions between [start] and [end] dates.
-  Future<List<WorkoutSession>> fetchSessionsInRange(
-          DateTime s, DateTime e) =>
+  Future<List<WorkoutSession>> fetchSessionsInRange(DateTime s, DateTime e) =>
       _dbHelper.fetchSessionsInRange(s, e);
 
   // ─── EXERCISES ──────────────────────────────────────────
@@ -70,13 +99,12 @@ class AppRepository {
     required String type,
     required int orderIndex,
     required int sessionId,
-  }) =>
-      _dbHelper.addExerciseRow(
-        exerciseDefId: exerciseDefId,
-        type: type,
-        orderIndex: orderIndex,
-        sessionId: sessionId,
-      );
+  }) => _dbHelper.addExerciseRow(
+    exerciseDefId: exerciseDefId,
+    type: type,
+    orderIndex: orderIndex,
+    sessionId: sessionId,
+  );
 
   /// Fetches a fully-detailed [WorkoutExercise] by its ID.
   Future<WorkoutExercise?> fetchDetailedExercise(int id) =>
@@ -96,12 +124,11 @@ class AppRepository {
     required int exerciseId,
     required List<ExerciseSet> parentSets,
     required Map<int, List<ExerciseSet>> childChangeSets,
-  }) =>
-      _dbHelper.addWeightSets(
-        exerciseId: exerciseId,
-        parentSets: parentSets,
-        childChangeSets: childChangeSets,
-      );
+  }) => _dbHelper.addWeightSets(
+    exerciseId: exerciseId,
+    parentSets: parentSets,
+    childChangeSets: childChangeSets,
+  );
 
   /// Fetches all sets for an exercise.
   Future<List<Map<String, dynamic>>> fetchSets(int exerciseId) =>
@@ -131,14 +158,13 @@ class AppRepository {
     String? note,
     required int plannedMinutes,
     required int elapsedSeconds,
-  }) =>
-      _dbHelper.saveCardioDetails(
-        exerciseId: exerciseId,
-        cardioName: cardioName,
-        note: note,
-        plannedMinutes: plannedMinutes,
-        elapsedSeconds: elapsedSeconds,
-      );
+  }) => _dbHelper.saveCardioDetails(
+    exerciseId: exerciseId,
+    cardioName: cardioName,
+    note: note,
+    plannedMinutes: plannedMinutes,
+    elapsedSeconds: elapsedSeconds,
+  );
 
   /// Legacy alias of [saveCardioDetails]. Prefer the canonical name.
   @Deprecated('Use saveCardioDetails(...)')
@@ -148,14 +174,13 @@ class AppRepository {
     String? note,
     required int plannedMinutes,
     required int elapsedSeconds,
-  }) =>
-      _dbHelper.saveCardioDetails(
-        exerciseId: exerciseId,
-        cardioName: cardioName,
-        note: note,
-        plannedMinutes: plannedMinutes,
-        elapsedSeconds: elapsedSeconds,
-      );
+  }) => _dbHelper.saveCardioDetails(
+    exerciseId: exerciseId,
+    cardioName: cardioName,
+    note: note,
+    plannedMinutes: plannedMinutes,
+    elapsedSeconds: elapsedSeconds,
+  );
 
   /// Fetches cardio details by exercise ID.
   Future<Map<String, dynamic>?> fetchCardioDetails(int exerciseId) =>
@@ -168,14 +193,13 @@ class AppRepository {
     String? note,
     required int plannedMinutes,
     required int elapsedSeconds,
-  }) =>
-      _dbHelper.updateCardioDetails(
-        exerciseId: exerciseId,
-        cardioName: cardioName,
-        note: note,
-        plannedMinutes: plannedMinutes,
-        elapsedSeconds: elapsedSeconds,
-      );
+  }) => _dbHelper.updateCardioDetails(
+    exerciseId: exerciseId,
+    cardioName: cardioName,
+    note: note,
+    plannedMinutes: plannedMinutes,
+    elapsedSeconds: elapsedSeconds,
+  );
 
   /// Delete cardio details for a specific exercise.
   Future<void> deleteCardioDetails(int exerciseId) =>
@@ -187,18 +211,16 @@ class AppRepository {
   Future<void> saveClassStretchInstance({
     required int exerciseId,
     required List<StretchInstance> instances,
-  }) =>
-      _dbHelper.saveClassStretchInstance(
-        exerciseId: exerciseId,
-        instances: instances,
-      );
+  }) => _dbHelper.saveClassStretchInstance(
+    exerciseId: exerciseId,
+    instances: instances,
+  );
 
   /// Saves a stretch instance and its items for an exercise.
   Future<void> saveStretchInstance({
     required int exerciseId,
     required List<Map<String, dynamic>> items,
-  }) =>
-      _dbHelper.saveStretchInstance(exerciseId: exerciseId, items: items);
+  }) => _dbHelper.saveStretchInstance(exerciseId: exerciseId, items: items);
 
   /// Fetches stretch items for an exercise.
   Future<List<Map<String, dynamic>>> fetchStretchItems(int id) =>
@@ -213,16 +235,15 @@ class AppRepository {
     String? customDesc,
     bool? isChecked,
     int? orderIndex,
-  }) =>
-      _dbHelper.updateStretchItem(
-        itemId: itemId,
-        stretchId: stretchId,
-        isCustom: isCustom,
-        customName: customName,
-        customDesc: customDesc,
-        isChecked: isChecked,
-        orderIndex: orderIndex,
-      );
+  }) => _dbHelper.updateStretchItem(
+    itemId: itemId,
+    stretchId: stretchId,
+    isCustom: isCustom,
+    customName: customName,
+    customDesc: customDesc,
+    isChecked: isChecked,
+    orderIndex: orderIndex,
+  );
 
   /// Deletes a single stretch item by ID.
   Future<void> deleteStretchItem(int itemId) =>
@@ -248,25 +269,26 @@ class AppRepository {
       _dbHelper.fetchAllExercisesRaw();
 
   Future<List<ExerciseDefinition>> lookupDefsWithAnyEquipment(
-          List<String> equipmentNames) =>
-      _dbHelper.lookupDefsWithAnyEquipment(equipmentNames);
+    List<String> equipmentNames,
+  ) => _dbHelper.lookupDefsWithAnyEquipment(equipmentNames);
 
   Future<List<ExerciseDefinition>> lookupDefsOnlyWithEquipment(
-          List<String> equipmentNames,
-          {bool includeNone = true}) =>
-      _dbHelper.lookupDefsOnlyWithEquipment(equipmentNames,
-          includeNone: includeNone);
+    List<String> equipmentNames, {
+    bool includeNone = true,
+  }) => _dbHelper.lookupDefsOnlyWithEquipment(
+    equipmentNames,
+    includeNone: includeNone,
+  );
 
   Future<List<ExerciseDefinition>> lookupDefsFiltered({
     List<String>? equipmentNames,
     List<int>? bodypartIds,
     List<int>? muscleIds,
-  }) =>
-      _dbHelper.lookupDefsFiltered(
-        equipmentNames: equipmentNames,
-        bodypartIds: bodypartIds,
-        muscleIds: muscleIds,
-      );
+  }) => _dbHelper.lookupDefsFiltered(
+    equipmentNames: equipmentNames,
+    bodypartIds: bodypartIds,
+    muscleIds: muscleIds,
+  );
 
   Future<List<ExerciseDefinition>> fetchCatalogDefinitions({
     required bool useProfileFilter,
@@ -274,24 +296,45 @@ class AppRepository {
     String? equipmentFilter,
     List<int>? bodypartIds,
     List<int>? muscleIds,
-  }) =>
-      _dbHelper.fetchCatalogDefinitions(
-        useProfileFilter: useProfileFilter,
-        profileId: profileId,
-        equipmentFilter: equipmentFilter,
-        bodypartIds: bodypartIds,
-        muscleIds: muscleIds,
-      );
+  }) => _dbHelper.fetchCatalogDefinitions(
+    useProfileFilter: useProfileFilter,
+    profileId: profileId,
+    equipmentFilter: equipmentFilter,
+    bodypartIds: bodypartIds,
+    muscleIds: muscleIds,
+  );
 
-  Future<int> addExerciseMuscleMapping(int defId, int muscleId, int rank) =>
-      _dbHelper.insertExerciseMuscleMapping(defId, muscleId, rank);
-  Future<int> deleteExerciseMuscleMapping(int defId, int muscleId) =>
-      _dbHelper.deleteExerciseMuscleMapping(defId, muscleId);
+  Future<int> addExerciseMuscleMapping(
+    int defId,
+    int muscleId,
+    int rank,
+  ) async {
+    final id = await _dbHelper.insertExerciseMuscleMapping(
+      defId,
+      muscleId,
+      rank,
+    );
+    clearExerciseAnalysisCacheFor(defId);
+    return id;
+  }
 
-  Future<int> addExerciseBodypartMapping(int defId, int bpId) =>
-      _dbHelper.insertExerciseBodypartMapping(defId, bpId);
-  Future<int> deleteExerciseBodypartMapping(int defId, int bpId) =>
-      _dbHelper.deleteExerciseBodypartMapping(defId, bpId);
+  Future<int> deleteExerciseMuscleMapping(int defId, int muscleId) async {
+    final id = await _dbHelper.deleteExerciseMuscleMapping(defId, muscleId);
+    clearExerciseAnalysisCacheFor(defId);
+    return id;
+  }
+
+  Future<int> addExerciseBodypartMapping(int defId, int bpId) async {
+    final id = await _dbHelper.insertExerciseBodypartMapping(defId, bpId);
+    clearExerciseAnalysisCacheFor(defId);
+    return id;
+  }
+
+  Future<int> deleteExerciseBodypartMapping(int defId, int bpId) async {
+    final id = await _dbHelper.deleteExerciseBodypartMapping(defId, bpId);
+    clearExerciseAnalysisCacheFor(defId);
+    return id;
+  }
 
   Future<int> addExerciseEquipmentMapping(int defId, int eqId) =>
       _dbHelper.insertExerciseEquipmentMapping(defId, eqId);
@@ -299,17 +342,22 @@ class AppRepository {
       _dbHelper.deleteExerciseEquipmentMapping(defId, eqId);
 
   Future<int> findOrCreateExerciseDefinition(
-          String name, String equipmentName) =>
-      _dbHelper.findOrCreateExerciseDefinition(name, equipmentName);
+    String name,
+    String equipmentName,
+  ) => _dbHelper.findOrCreateExerciseDefinition(name, equipmentName);
 
   Future<Map<String, String?>> fetchDefinitionInfo(int defId) =>
       _dbHelper.fetchDefinitionInfo(defId);
 
-  Future<void> updateExerciseDefinition(ExerciseDefinition def) =>
-      _dbHelper.updateExerciseDefinition(def);
+  Future<void> updateExerciseDefinition(ExerciseDefinition def) async {
+    await _dbHelper.updateExerciseDefinition(def);
+    clearExerciseAnalysisCacheFor(def.id);
+  }
 
-  Future<void> deleteExerciseDefinition(int defId) =>
-      _dbHelper.deleteExerciseDefinition(defId);
+  Future<void> deleteExerciseDefinition(int defId) async {
+    await _dbHelper.deleteExerciseDefinition(defId);
+    clearExerciseAnalysisCacheFor(defId);
+  }
 
   Future<List<ExerciseDefinition>> searchExerciseDefinitions(String query) =>
       _dbHelper.searchExerciseDefinitions(query);
@@ -320,10 +368,8 @@ class AppRepository {
   Future<List<ExerciseMediaItem>> fetchExerciseMedia(int defId) =>
       _dbHelper.getExerciseMedia(defId);
 
-  Future<void> replaceExerciseMedia(
-    int defId,
-    List<ExerciseMediaItem> items,
-  ) => _dbHelper.replaceExerciseMedia(defId, items);
+  Future<void> replaceExerciseMedia(int defId, List<ExerciseMediaItem> items) =>
+      _dbHelper.replaceExerciseMedia(defId, items);
 
   // ─── MEASUREMENTS & LOOKUPS ────────────────────────────
 
@@ -334,12 +380,16 @@ class AppRepository {
       _dbHelper.fetchMeasurementDefinitionId(name);
 
   Future<int> insertMeasurement(
-          int defId, DateTime timestamp, double value, String unit, String? note) =>
-      _dbHelper.insertMeasurement(defId, timestamp, value, unit, note);
+    int defId,
+    DateTime timestamp,
+    double value,
+    String unit,
+    String? note,
+  ) => _dbHelper.insertMeasurement(defId, timestamp, value, unit, note);
 
   Future<List<Map<String, dynamic>>> fetchMeasurementsForDefinition(
-          int defId) =>
-      _dbHelper.fetchMeasurementsRaw(defId);
+    int defId,
+  ) => _dbHelper.fetchMeasurementsRaw(defId);
 
   Future<List<Measurement>> fetchClassMeasurementsForDefinition(int defId) =>
       _dbHelper.fetchClassMeasurementsForDefinition(defId);
@@ -359,14 +409,13 @@ class AppRepository {
     required double value,
     required String unit,
     String? note,
-  }) =>
-      _dbHelper.updateMeasurement(
-        measurementId: measurementId,
-        timestamp: timestamp,
-        value: value,
-        unit: unit,
-        note: note,
-      );
+  }) => _dbHelper.updateMeasurement(
+    measurementId: measurementId,
+    timestamp: timestamp,
+    value: value,
+    unit: unit,
+    note: note,
+  );
 
   Future<void> deleteMeasurement(int measurementId) =>
       _dbHelper.deleteMeasurement(measurementId);
@@ -378,8 +427,7 @@ class AppRepository {
 
   Future<List<Muscle>> fetchAllMuscles() => _dbHelper.fetchAllMuscles();
 
-  Future<List<String>> fetchAllMuscleNames() =>
-      _dbHelper.fetchAllMuscleNames();
+  Future<List<String>> fetchAllMuscleNames() => _dbHelper.fetchAllMuscleNames();
 
   Future<List<StretchDefinition>> fetchStretches({int? bodypartId}) =>
       _dbHelper.fetchStretches(bodypartId: bodypartId);
@@ -391,17 +439,15 @@ class AppRepository {
     List<String>? equipmentNames,
     List<int>? bodypartIds,
     List<int>? muscleIds,
-  }) =>
-      _dbHelper.lookupDefsFiltered(
-        equipmentNames: equipmentNames,
-        bodypartIds: bodypartIds,
-        muscleIds: muscleIds,
-      );
+  }) => _dbHelper.lookupDefsFiltered(
+    equipmentNames: equipmentNames,
+    bodypartIds: bodypartIds,
+    muscleIds: muscleIds,
+  );
 
   Future<List<Equipment>> fetchAllEquipment() => _dbHelper.fetchAllEquipment();
 
-  Future<int> createEquipment(String name) =>
-      _dbHelper.createEquipment(name);
+  Future<int> createEquipment(String name) => _dbHelper.createEquipment(name);
 
   Future<void> updateEquipment(int id, String name) =>
       _dbHelper.updateEquipment(id, name);
@@ -411,26 +457,44 @@ class AppRepository {
   Future<List<BodyPart>> fetchAllBodyPartsFull() =>
       _dbHelper.fetchAllBodyPartsFull();
 
-  Future<int> createBodyPart(String name) => _dbHelper.createBodyPart(name);
+  Future<int> createBodyPart(String name) async {
+    final id = await _dbHelper.createBodyPart(name);
+    clearExerciseAnalysisCache();
+    return id;
+  }
 
-  Future<void> updateBodyPartEntry(int id, String name) =>
-      _dbHelper.updateBodyPartEntry(id, name);
+  Future<void> updateBodyPartEntry(int id, String name) async {
+    await _dbHelper.updateBodyPartEntry(id, name);
+    clearExerciseAnalysisCache();
+  }
 
-  Future<void> deleteBodyPartEntry(int id) =>
-      _dbHelper.deleteBodyPartEntry(id);
+  Future<void> deleteBodyPartEntry(int id) async {
+    await _dbHelper.deleteBodyPartEntry(id);
+    clearExerciseAnalysisCache();
+  }
 
-  Future<List<Muscle>> fetchAllMusclesFull() =>
-      _dbHelper.fetchAllMusclesFull();
+  Future<List<Muscle>> fetchAllMusclesFull() => _dbHelper.fetchAllMusclesFull();
 
-  Future<int> createMuscle(String name) => _dbHelper.createMuscle(name);
+  Future<int> createMuscle(String name) async {
+    final id = await _dbHelper.createMuscle(name);
+    clearExerciseAnalysisCache();
+    return id;
+  }
 
-  Future<void> updateMuscleEntry(int id, String name) =>
-      _dbHelper.updateMuscleEntry(id, name);
+  Future<void> updateMuscleEntry(int id, String name) async {
+    await _dbHelper.updateMuscleEntry(id, name);
+    clearExerciseAnalysisCache();
+  }
 
-  Future<void> deleteMuscleEntry(int id) =>
-      _dbHelper.deleteMuscleEntry(id);
+  Future<void> deleteMuscleEntry(int id) async {
+    await _dbHelper.deleteMuscleEntry(id);
+    clearExerciseAnalysisCache();
+  }
 
-  Future<void> reseedLookupData() => _dbHelper.reseedLookupData();
+  Future<void> reseedLookupData() async {
+    await _dbHelper.reseedLookupData();
+    clearExerciseAnalysisCache();
+  }
 
   // Exporters
   Future<DatabaseHealthSnapshot> getDatabaseHealthSnapshot() =>
@@ -483,14 +547,20 @@ class AppRepository {
   // ─── STATS ───────────────────────────────────────────────────────────────
 
   Future<void> updateRepMax(
-          int defId,
-          int repCount,
-          String timeframe,
-          double rmValue,
-          double oneErm,
-          bool isErm) =>
-      _dbHelper.upsertRepMax(
-          defId, repCount, timeframe, rmValue, oneErm, isErm);
+    int defId,
+    int repCount,
+    String timeframe,
+    double rmValue,
+    double oneErm,
+    bool isErm,
+  ) => _dbHelper.upsertRepMax(
+    defId,
+    repCount,
+    timeframe,
+    rmValue,
+    oneErm,
+    isErm,
+  );
 
   Future<void> updateVolumeMax(int defId, String timeframe, double vmValue) =>
       _dbHelper.upsertVolumeMax(defId, timeframe, vmValue);
@@ -507,11 +577,17 @@ class AppRepository {
 
   // ─── ANALYTICS ─────────────────────────────────────────────
 
-  Future<int> linkMuscleToBodyPart(int muscleId, int bodypartId) =>
-      _dbHelper.linkMuscleToBodyPart(muscleId, bodypartId);
+  Future<int> linkMuscleToBodyPart(int muscleId, int bodypartId) async {
+    final id = await _dbHelper.linkMuscleToBodyPart(muscleId, bodypartId);
+    clearExerciseAnalysisCache();
+    return id;
+  }
 
-  Future<int> unlinkMuscleFromBodyPart(int muscleId, int bodypartId) =>
-      _dbHelper.unlinkMuscleFromBodyPart(muscleId, bodypartId);
+  Future<int> unlinkMuscleFromBodyPart(int muscleId, int bodypartId) async {
+    final id = await _dbHelper.unlinkMuscleFromBodyPart(muscleId, bodypartId);
+    clearExerciseAnalysisCache();
+    return id;
+  }
 
   Future<List<MuscleBodyPart>> fetchBodyPartsForMuscle(int muscleId) =>
       _dbHelper.fetchBodyPartsForMuscle(muscleId);
@@ -544,15 +620,29 @@ class AppRepository {
       _dbHelper.deleteMuscleRank(muscleId);
 
   Future<int> setExerciseMuscleHitPercent(
-          int defId, int muscleId, double pct) =>
-      _dbHelper.setExerciseMuscleHitPercent(defId, muscleId, pct);
+    int defId,
+    int muscleId,
+    double pct,
+  ) async {
+    final id = await _dbHelper.setExerciseMuscleHitPercent(
+      defId,
+      muscleId,
+      pct,
+    );
+    clearExerciseAnalysisCacheFor(defId);
+    return id;
+  }
 
   Future<ExerciseMusclePercent?> fetchExerciseMusclePercent(
-          int defId, int muscleId) =>
-      _dbHelper.fetchExerciseMusclePercent(defId, muscleId);
+    int defId,
+    int muscleId,
+  ) => _dbHelper.fetchExerciseMusclePercent(defId, muscleId);
 
-  Future<int> removeExerciseMusclePercent(int defId, int muscleId) =>
-      _dbHelper.removeExerciseMusclePercent(defId, muscleId);
+  Future<int> removeExerciseMusclePercent(int defId, int muscleId) async {
+    final id = await _dbHelper.removeExerciseMusclePercent(defId, muscleId);
+    clearExerciseAnalysisCacheFor(defId);
+    return id;
+  }
 
   Future<List<ExerciseMusclePercent>> fetchPercentsForExercise(int defId) =>
       _dbHelper.fetchPercentsForExercise(defId);
@@ -570,8 +660,9 @@ class AppRepository {
       _dbHelper.removeMuscleVolumeBounds(muscleId);
 
   Future<int> setBodyPartVolumeBounds(
-          int bodyPartId, VolumeBoundaries bounds) =>
-      _dbHelper.setBodyPartVolumeBounds(bodyPartId, bounds);
+    int bodyPartId,
+    VolumeBoundaries bounds,
+  ) => _dbHelper.setBodyPartVolumeBounds(bodyPartId, bounds);
 
   Future<VolumeBoundaries?> fetchBodyPartVolumeBounds(int bodyPartId) =>
       _dbHelper.fetchBodyPartVolumeBounds(bodyPartId);
@@ -583,28 +674,81 @@ class AppRepository {
       _dbHelper.removeBodyPartVolumeBounds(bodyPartId);
 
   Future<List<ExerciseBodyPartPercent>> fetchBodyPartPercentsManual(
-          int defId) =>
-      _dbHelper.fetchBodyPartPercentsManual(defId);
+    int defId,
+  ) => _dbHelper.fetchBodyPartPercentsManual(defId);
 
-  Future<int> setExerciseBodyPartPercent(int defId, int bpId, double pct) =>
-      _dbHelper.setExerciseBodyPartPercent(defId, bpId, pct);
+  Future<int> setExerciseBodyPartPercent(
+    int defId,
+    int bpId,
+    double pct,
+  ) async {
+    final id = await _dbHelper.setExerciseBodyPartPercent(defId, bpId, pct);
+    clearExerciseAnalysisCacheFor(defId);
+    return id;
+  }
 
-  Future<int> removeExerciseBodyPartPercent(int defId, int bpId) =>
-      _dbHelper.deleteExerciseBodyPartPercent(defId, bpId);
+  Future<int> removeExerciseBodyPartPercent(int defId, int bpId) async {
+    final id = await _dbHelper.deleteExerciseBodyPartPercent(defId, bpId);
+    clearExerciseAnalysisCacheFor(defId);
+    return id;
+  }
 
   Future<double> getFormulaStep() => _dbHelper.getFormulaStep();
   Future<double> getFormulaMin() => _dbHelper.getFormulaMin();
   Future<double> getFormulaMax() => _dbHelper.getFormulaMax();
 
-  Future<void> setFormulaStep(double s) => _dbHelper.setFormulaStep(s);
-  Future<void> setFormulaMin(double m) => _dbHelper.setFormulaMin(m);
-  Future<void> setFormulaMax(double m) => _dbHelper.setFormulaMax(m);
+  Future<void> setFormulaStep(double s) async {
+    await _dbHelper.setFormulaStep(s);
+    clearExerciseAnalysisCache();
+  }
 
-  Future<List<ExerciseMusclePercent>> computeMusclePercents(int defId) =>
-      _dbHelper.computeMusclePercents(defId);
+  Future<void> setFormulaMin(double m) async {
+    await _dbHelper.setFormulaMin(m);
+    clearExerciseAnalysisCache();
+  }
 
-  Future<Map<BodyPart, double>> computeBodyPartPercents(int defId) =>
-      _dbHelper.computeBodyPartPercents(defId);
+  Future<void> setFormulaMax(double m) async {
+    await _dbHelper.setFormulaMax(m);
+    clearExerciseAnalysisCache();
+  }
+
+  Future<List<ExerciseMusclePercent>> computeMusclePercents(int defId) {
+    final cached = _musclePercentCache.remove(defId);
+    if (cached != null) {
+      _musclePercentCache[defId] = cached;
+      return cached;
+    }
+
+    final future = _dbHelper.computeMusclePercents(defId).catchError((
+      Object error,
+      StackTrace stackTrace,
+    ) {
+      _musclePercentCache.remove(defId);
+      Error.throwWithStackTrace(error, stackTrace);
+    });
+    _musclePercentCache[defId] = future;
+    _trimExerciseAnalysisCache();
+    return future;
+  }
+
+  Future<Map<BodyPart, double>> computeBodyPartPercents(int defId) {
+    final cached = _bodyPartPercentCache.remove(defId);
+    if (cached != null) {
+      _bodyPartPercentCache[defId] = cached;
+      return cached;
+    }
+
+    final future = _dbHelper.computeBodyPartPercents(defId).catchError((
+      Object error,
+      StackTrace stackTrace,
+    ) {
+      _bodyPartPercentCache.remove(defId);
+      Error.throwWithStackTrace(error, stackTrace);
+    });
+    _bodyPartPercentCache[defId] = future;
+    _trimExerciseAnalysisCache();
+    return future;
+  }
 
   Future<Map<BodyPart, double>> estimateBodyPartSetDistribution(int defId) =>
       _dbHelper.estimateBodyPartSetDistribution(defId);
@@ -616,29 +760,31 @@ class AppRepository {
     required int defId,
     required DateTime start,
     required DateTime end,
-  }) =>
-      _dbHelper.fetchMuscleSetsForExerciseOverTimeRange(
-          defId: defId, start: start, end: end);
+  }) => _dbHelper.fetchMuscleSetsForExerciseOverTimeRange(
+    defId: defId,
+    start: start,
+    end: end,
+  );
 
   Future<Map<int, double>> fetchSetsPerMuscle({
     required DateTime start,
     required DateTime end,
-  }) =>
-      _dbHelper.fetchAllMuscleSetsOverTimeRange(start: start, end: end);
+  }) => _dbHelper.fetchAllMuscleSetsOverTimeRange(start: start, end: end);
 
   Future<Map<BodyPart, double>> fetchAllBodyPartSetsOverTimeRange({
     required DateTime start,
     required DateTime end,
-  }) =>
-      _dbHelper.fetchAllBodyPartSetsOverTimeRange(start: start, end: end);
+  }) => _dbHelper.fetchAllBodyPartSetsOverTimeRange(start: start, end: end);
 
   Future<Map<BodyPart, double>> fetchBodyPartSetsForExerciseOverTimeRange({
     required int defId,
     required DateTime start,
     required DateTime end,
-  }) =>
-      _dbHelper.fetchBodyPartSetsForExerciseOverTimeRange(
-          defId: defId, start: start, end: end);
+  }) => _dbHelper.fetchBodyPartSetsForExerciseOverTimeRange(
+    defId: defId,
+    start: start,
+    end: end,
+  );
 
   Future<int> findExerciseDefinitionId(String name, String equipmentName) =>
       _dbHelper.findExerciseDefinitionId(name, equipmentName);
@@ -646,8 +792,7 @@ class AppRepository {
   // ─── GYM PROFILES ────────────────────────────────────────
 
   Future<int> createProfile(String name) => _dbHelper.createProfile(name);
-  Future<List<GymProfile>> fetchAllProfiles() =>
-      _dbHelper.fetchAllProfiles();
+  Future<List<GymProfile>> fetchAllProfiles() => _dbHelper.fetchAllProfiles();
   Future<int> updateProfile(GymProfile profile) =>
       _dbHelper.updateProfile(profile);
   Future<int> deleteProfile(int profileId) =>
@@ -670,20 +815,32 @@ class AppRepository {
   Future<List<Map<String, dynamic>>> fetchAllPresetsRaw({int? profileId}) =>
       _dbHelper.fetchAllPresetsRaw(profileId: profileId);
 
+  Future<List<Map<String, dynamic>>> fetchPresetSummariesRaw({
+    int? profileId,
+  }) =>
+      _dbHelper.fetchPresetSummariesRaw(profileId: profileId);
+
+  Future<List<Map<String, dynamic>>> fetchPresetFocusSetCountsRaw({
+    required List<int> presetIds,
+  }) =>
+      _dbHelper.fetchPresetFocusSetCountsRaw(presetIds: presetIds);
+
   Future<PresetDefinition?> fetchPresetById(int presetId) =>
       _dbHelper.fetchPresetById(presetId);
 
   Future<void> updatePresetName(int presetId, String name) =>
       _dbHelper.updatePresetName(presetId, name);
 
-  Future<void> deletePreset(int presetId) =>
-      _dbHelper.deletePreset(presetId);
+  Future<void> deletePreset(int presetId) => _dbHelper.deletePreset(presetId);
 
   // ─── PRESETS: Exercise CRUD ───────────────────────────────
 
   Future<int> addExerciseToPreset(
-          int presetId, int? exerciseDefId, String type, int orderIndex) =>
-      _dbHelper.addExerciseToPreset(presetId, exerciseDefId, type, orderIndex);
+    int presetId,
+    int? exerciseDefId,
+    String type,
+    int orderIndex,
+  ) => _dbHelper.addExerciseToPreset(presetId, exerciseDefId, type, orderIndex);
 
   Future<List<Map<String, dynamic>>> fetchPresetExercises(int presetId) =>
       _dbHelper.fetchPresetExercises(presetId);
@@ -694,33 +851,39 @@ class AppRepository {
   // ─── PRESETS: Detail CRUD ─────────────────────────────────
 
   Future<void> savePresetWeightSets(
-          int presetExerciseId,
-          List<ExerciseSet> parents,
-          Map<int, List<ExerciseSet>> children) =>
-      _dbHelper.savePresetWeightSets(presetExerciseId, parents, children);
+    int presetExerciseId,
+    List<ExerciseSet> parents,
+    Map<int, List<ExerciseSet>> children,
+  ) => _dbHelper.savePresetWeightSets(presetExerciseId, parents, children);
 
   Future<List<Map<String, dynamic>>> fetchPresetSets(int presetExerciseId) =>
       _dbHelper.fetchPresetSets(presetExerciseId);
 
   Future<void> savePresetCardio(
-          int presetExerciseId,
-          String cardioName,
-          String? note,
-          int plannedMinutes,
-          int elapsedSeconds) =>
-      _dbHelper.savePresetCardio(
-          presetExerciseId, cardioName, note, plannedMinutes, elapsedSeconds);
+    int presetExerciseId,
+    String cardioName,
+    String? note,
+    int plannedMinutes,
+    int elapsedSeconds,
+  ) => _dbHelper.savePresetCardio(
+    presetExerciseId,
+    cardioName,
+    note,
+    plannedMinutes,
+    elapsedSeconds,
+  );
 
   Future<Map<String, dynamic>?> fetchPresetCardio(int presetExerciseId) =>
       _dbHelper.fetchPresetCardio(presetExerciseId);
 
   Future<void> savePresetStretch(
-          int presetExerciseId, List<Map<String, dynamic>> items) =>
-      _dbHelper.savePresetStretch(presetExerciseId, items);
+    int presetExerciseId,
+    List<Map<String, dynamic>> items,
+  ) => _dbHelper.savePresetStretch(presetExerciseId, items);
 
   Future<List<Map<String, dynamic>>> fetchPresetStretchItems(
-          int presetExerciseId) =>
-      _dbHelper.fetchPresetStretchItems(presetExerciseId);
+    int presetExerciseId,
+  ) => _dbHelper.fetchPresetStretchItems(presetExerciseId);
 
   // ─── AUTOPRESET SETTINGS ───────────────────────────────────────────────
 
@@ -738,27 +901,25 @@ class AppRepository {
     required bool adjustAllSets,
     required bool useManualSelect,
     String? manualSelectionJson,
-  }) =>
-      _dbHelper.upsertPresetAutoSettings(
-        presetId: presetId,
-        isAutomatic: isAutomatic,
-        globalIncrement: globalIncrement,
-        skipFirstSet: skipFirstSet,
-        weightCheck: weightCheck,
-        repCheck: repCheck,
-        volumeCheck: volumeCheck,
-        adjustAllSets: adjustAllSets,
-        useManualSelect: useManualSelect,
-        manualSelectionJson: manualSelectionJson,
-      );
+  }) => _dbHelper.upsertPresetAutoSettings(
+    presetId: presetId,
+    isAutomatic: isAutomatic,
+    globalIncrement: globalIncrement,
+    skipFirstSet: skipFirstSet,
+    weightCheck: weightCheck,
+    repCheck: repCheck,
+    volumeCheck: volumeCheck,
+    adjustAllSets: adjustAllSets,
+    useManualSelect: useManualSelect,
+    manualSelectionJson: manualSelectionJson,
+  );
 
   Future<void> deletePresetAutoSettings(int presetId) =>
       _dbHelper.deletePresetAutoSettings(presetId);
 
   // ─── PER-EXERCISE OVERRIDES ───────────────────────────────────────────
 
-  Future<Map<String, dynamic>?> fetchPresetExerciseAuto(
-          int presetExerciseId) =>
+  Future<Map<String, dynamic>?> fetchPresetExerciseAuto(int presetExerciseId) =>
       _dbHelper.fetchPresetExerciseAuto(presetExerciseId);
 
   Future<void> upsertPresetExerciseAuto({
@@ -766,13 +927,12 @@ class AppRepository {
     double? incrementAmount,
     required int lastSetIndex,
     String? lastNode,
-  }) =>
-      _dbHelper.upsertPresetExerciseAuto(
-        presetExerciseId: presetExerciseId,
-        incrementAmount: incrementAmount,
-        lastSetIndex: lastSetIndex,
-        lastNode: lastNode,
-      );
+  }) => _dbHelper.upsertPresetExerciseAuto(
+    presetExerciseId: presetExerciseId,
+    incrementAmount: incrementAmount,
+    lastSetIndex: lastSetIndex,
+    lastNode: lastNode,
+  );
 
   Future<void> deletePresetExerciseAuto(int presetExerciseId) =>
       _dbHelper.deletePresetExerciseAuto(presetExerciseId);
@@ -785,11 +945,10 @@ class AppRepository {
   Future<void> upsertPresetSetAuto({
     required int presetSetId,
     double? incrementAmount,
-  }) =>
-      _dbHelper.upsertPresetSetAuto(
-        presetSetId: presetSetId,
-        incrementAmount: incrementAmount,
-      );
+  }) => _dbHelper.upsertPresetSetAuto(
+    presetSetId: presetSetId,
+    incrementAmount: incrementAmount,
+  );
 
   Future<void> deletePresetSetAuto(int presetSetId) =>
       _dbHelper.deletePresetSetAuto(presetSetId);
@@ -806,14 +965,13 @@ class AppRepository {
     required int reps,
     required int orderIndex,
     int? parentSetId,
-  }) =>
-      _dbHelper.addPresetSet(
-        presetExerciseId: presetExerciseId,
-        weight: weight,
-        reps: reps,
-        orderIndex: orderIndex,
-        parentSetId: parentSetId,
-      );
+  }) => _dbHelper.addPresetSet(
+    presetExerciseId: presetExerciseId,
+    weight: weight,
+    reps: reps,
+    orderIndex: orderIndex,
+    parentSetId: parentSetId,
+  );
 
   Future<int> deletePresetSet(int presetSetId) =>
       _dbHelper.deletePresetSet(presetSetId);
@@ -858,50 +1016,51 @@ class AppRepository {
 
   Future<bool> getUseManualBodyparts(int defId) =>
       _dbHelper.getUseManualBodyparts(defId);
-  Future<void> setUseManualBodyparts(int defId, bool value) =>
-      _dbHelper.setUseManualBodyparts(defId, value);
+  Future<void> setUseManualBodyparts(int defId, bool value) async {
+    await _dbHelper.setUseManualBodyparts(defId, value);
+    clearExerciseAnalysisCacheFor(defId);
+  }
 
   Future<bool> getUseManualMuscles(int defId) =>
       _dbHelper.getUseManualMuscles(defId);
-  Future<void> setUseManualMuscles(int defId, bool value) =>
-      _dbHelper.setUseManualMuscles(defId, value);
+  Future<void> setUseManualMuscles(int defId, bool value) async {
+    await _dbHelper.setUseManualMuscles(defId, value);
+    clearExerciseAnalysisCacheFor(defId);
+  }
 
   Future<bool> getMultiplyByRating(int defId) =>
       _dbHelper.getMultiplyByRating(defId);
-  Future<void> setMultiplyByRating(int defId, bool enabled) =>
-      _dbHelper.setMultiplyByRating(defId, enabled);
+  Future<void> setMultiplyByRating(int defId, bool enabled) async {
+    await _dbHelper.setMultiplyByRating(defId, enabled);
+    clearExerciseAnalysisCacheFor(defId);
+  }
 
   // ─── FLOW‐CHART DEFAULTS WRAPPERS ─────────────────────────────────────
 
-  Future<String> fetchDefaultFlow(
-    String scope, {
-    int? profileId,
-  }) =>
+  Future<String> fetchDefaultFlow(String scope, {int? profileId}) =>
       _dbHelper.fetchDefaultFlow(scope, profileId: profileId);
 
   Future<void> upsertDefaultFlow(
     String scope, {
     int? profileId,
     required String flowJson,
-  }) =>
-      _dbHelper.upsertDefaultFlow(
-        scope,
-        profileId: profileId,
-        flowJson: flowJson,
-      );
+  }) => _dbHelper.upsertDefaultFlow(
+    scope,
+    profileId: profileId,
+    flowJson: flowJson,
+  );
 
-  Future<void> deleteDefaultFlow(
-    String scope, {
-    int? profileId,
-  }) =>
+  Future<void> deleteDefaultFlow(String scope, {int? profileId}) =>
       _dbHelper.deleteDefaultFlow(scope, profileId: profileId);
 
   Future<List<FlowMethod>> fetchDefaultFlowMethods(
     String scope, {
     int? profileId,
   }) async {
-    final rows =
-        await _dbHelper.fetchDefaultFlowMethods(scope, profileId: profileId);
+    final rows = await _dbHelper.fetchDefaultFlowMethods(
+      scope,
+      profileId: profileId,
+    );
     return rows.map((r) => FlowMethod.fromMap(r)).toList();
   }
 
@@ -934,18 +1093,16 @@ class AppRepository {
     required String scope,
     int? profileId,
     required String name,
-  }) =>
-      _dbHelper.deleteDefaultFlowMethod(
-        scope,
-        profileId: profileId,
-        name: name,
-      );
+  }) => _dbHelper.deleteDefaultFlowMethod(
+    scope,
+    profileId: profileId,
+    name: name,
+  );
 
   Future<FlowDefinition> fetchDefaultFlowDefinition(
     String scope, {
     int? profileId,
-  }) =>
-      _dbHelper.fetchDefaultFlowDefinition(scope, profileId: profileId);
+  }) => _dbHelper.fetchDefaultFlowDefinition(scope, profileId: profileId);
 
   // ─── Personal info ─────────────────────────────────────
 
@@ -961,11 +1118,14 @@ class AppRepository {
   Future<NutritionGoal?> getActiveGoals(int profileId, DateTime date) =>
       _dbHelper.getActiveGoals(profileId, date);
   Future<List<DiaryEntry>> getDiaryEntriesForDate(
-          int profileId, DateTime date) =>
-      _dbHelper.getDiaryEntriesForDate(profileId, date);
+    int profileId,
+    DateTime date,
+  ) => _dbHelper.getDiaryEntriesForDate(profileId, date);
 
-  Future<List<DiaryEntryWithItem>> getDiaryEntriesWithItemsForDate(int profileId, DateTime day) async =>
-    _dbHelper.getDiaryEntriesWithItemsForDate(profileId, day);
+  Future<List<DiaryEntryWithItem>> getDiaryEntriesWithItemsForDate(
+    int profileId,
+    DateTime day,
+  ) async => _dbHelper.getDiaryEntriesWithItemsForDate(profileId, day);
 
   // Logging
   Future<int> addDiaryFood({
@@ -979,19 +1139,18 @@ class AppRepository {
     double? loggedGrams,
     DateTime? loggedAt,
     String? notes,
-  }) =>
-      _dbHelper.addDiaryFood(
-        profileId: profileId,
-        date: date,
-        mealType: mealType,
-        foodId: foodId,
-        portionId: portionId,
-        quantity: quantity,
-        gramsOverride: gramsOverride,
-        loggedGrams: loggedGrams,
-        loggedAt: loggedAt,
-        notes: notes,
-      );
+  }) => _dbHelper.addDiaryFood(
+    profileId: profileId,
+    date: date,
+    mealType: mealType,
+    foodId: foodId,
+    portionId: portionId,
+    quantity: quantity,
+    gramsOverride: gramsOverride,
+    loggedGrams: loggedGrams,
+    loggedAt: loggedAt,
+    notes: notes,
+  );
 
   Future<int> addDiaryRecipe({
     required int profileId,
@@ -1001,21 +1160,22 @@ class AppRepository {
     double quantity = 1.0,
     DateTime? loggedAt,
     String? notes,
-  }) =>
-      _dbHelper.addDiaryRecipe(
-        profileId: profileId,
-        date: date,
-        mealType: mealType,
-        recipeId: recipeId,
-        quantity: quantity,
-        loggedAt: loggedAt,
-        notes: notes,
-      );
+  }) => _dbHelper.addDiaryRecipe(
+    profileId: profileId,
+    date: date,
+    mealType: mealType,
+    recipeId: recipeId,
+    quantity: quantity,
+    loggedAt: loggedAt,
+    notes: notes,
+  );
 
   Future<void> updateDiaryEntry(DiaryEntry e) => _dbHelper.updateDiaryEntry(e);
-  Future<void> deleteDiaryEntry(int id,
-          {required int profileId, required DateTime date}) =>
-      _dbHelper.deleteDiaryEntry(id, profileId: profileId, date: date);
+  Future<void> deleteDiaryEntry(
+    int id, {
+    required int profileId,
+    required DateTime date,
+  }) => _dbHelper.deleteDiaryEntry(id, profileId: profileId, date: date);
 
   // Foods & portions
   Future<int> upsertFood(Food f) => _dbHelper.upsertFood(f);
@@ -1038,8 +1198,7 @@ class AppRepository {
       _dbHelper.getFoodNutrientsPer100gByCode(foodId);
 
   // Recipes
-  Future<int> createOrUpdateRecipe(
-          Recipe r, List<RecipeIngredient> ings) =>
+  Future<int> createOrUpdateRecipe(Recipe r, List<RecipeIngredient> ings) =>
       _dbHelper.createOrUpdateRecipe(r, ings);
   Future<Recipe?> getRecipe(int id) => _dbHelper.getRecipe(id);
   Future<List<RecipeIngredient>> getRecipeIngredients(int recipeId) =>
@@ -1054,12 +1213,14 @@ class AppRepository {
       _dbHelper.createCustomFood(name: name, brand: brand);
 
   Future<void> savePer100gByCode(
-          int foodId, Map<String, double> codeToAmount) =>
-      _dbHelper.savePer100gByCode(foodId, codeToAmount);
+    int foodId,
+    Map<String, double> codeToAmount,
+  ) => _dbHelper.savePer100gByCode(foodId, codeToAmount);
 
   Future<void> savePer100gFromLabelPayload(
-          int foodId, Map<String, dynamic> payload) =>
-      _dbHelper.savePer100gFromLabelPayload(foodId, payload);
+    int foodId,
+    Map<String, dynamic> payload,
+  ) => _dbHelper.savePer100gFromLabelPayload(foodId, payload);
 
   /// Returns a per-100g macro map using UI keys:
   ///   'PROTEIN_G', 'CARB_G', 'FAT_G', 'KCAL'
@@ -1067,8 +1228,9 @@ class AppRepository {
       foodCatalog.getMacroPer100gLegacySafe(foodId);
 
   Future<void> saveExtendedPer100gFromPayload(
-          int foodId, Map<String, dynamic> payload) =>
-      _dbHelper.saveExtendedPer100gFromPayload(foodId, payload);
+    int foodId,
+    Map<String, dynamic> payload,
+  ) => _dbHelper.saveExtendedPer100gFromPayload(foodId, payload);
 
   Future<int> addPortion(
     int foodId, {
@@ -1081,19 +1243,18 @@ class AppRepository {
     double? amount,
     String? unit,
     String? label,
-  }) =>
-      _dbHelper.addPortion(
-        foodId,
-        measureName: measureName,
-        gramWeight: gramWeight,
-        mlVolume: mlVolume,
-        isDefault: isDefault,
-        listKind: listKind,
-        sortOrder: sortOrder,
-        amount: amount,
-        unit: unit,
-        label: label,
-      );
+  }) => _dbHelper.addPortion(
+    foodId,
+    measureName: measureName,
+    gramWeight: gramWeight,
+    mlVolume: mlVolume,
+    isDefault: isDefault,
+    listKind: listKind,
+    sortOrder: sortOrder,
+    amount: amount,
+    unit: unit,
+    label: label,
+  );
 
   Future<void> replacePortions(int foodId, List<FoodPortion> portions) =>
       _dbHelper.replacePortions(foodId, portions);
@@ -1102,8 +1263,8 @@ class AppRepository {
       _dbHelper.updateFoodBasics(id, name: name, brand: brand);
 
   Future<void> updateFoodFromCustomizationPayload(
-          Map<String, dynamic> payload) =>
-      _dbHelper.updateFoodFromCustomizationPayload(payload);
+    Map<String, dynamic> payload,
+  ) => _dbHelper.updateFoodFromCustomizationPayload(payload);
 
   Future<Food?> getFoodByBarcode(String code) =>
       foodCatalog.getFoodByBarcode(code);
@@ -1121,30 +1282,28 @@ class AppRepository {
     bool isCustom = false,
     String? dataSource,
     String? dataSourceId,
-  }) =>
-      _dbHelper.upsertFoodWithKeys(
-        id: id,
-        name: name,
-        brandName: brandName,
-        sourceName: sourceName,
-        categoryName: categoryName,
-        barcodes: barcodes,
-        densityGPerMl: densityGPerMl,
-        isCustom: isCustom,
-        dataSource: dataSource,
-        dataSourceId: dataSourceId,
-      );
+  }) => _dbHelper.upsertFoodWithKeys(
+    id: id,
+    name: name,
+    brandName: brandName,
+    sourceName: sourceName,
+    categoryName: categoryName,
+    barcodes: barcodes,
+    densityGPerMl: densityGPerMl,
+    isCustom: isCustom,
+    dataSource: dataSource,
+    dataSourceId: dataSourceId,
+  );
 
   Future<Map<String, double>> calcForPortion({
     required int foodId,
     required int portionId,
     double quantity = 1.0,
-  }) =>
-      foodCatalog.calcForPortion(
-        foodId: foodId,
-        portionId: portionId,
-        quantity: quantity,
-      );
+  }) => foodCatalog.calcForPortion(
+    foodId: foodId,
+    portionId: portionId,
+    quantity: quantity,
+  );
 
   // Diary (range)
   Future<List<DiaryEntry>> getDiaryEntriesBetween(
@@ -1153,19 +1312,20 @@ class AppRepository {
     DateTime end, {
     MealType? mealType,
     int limit = 1000,
-  }) =>
-      _dbHelper.getDiaryEntriesBetween(
-        profileId,
-        start,
-        end,
-        mealType: mealType,
-        limit: limit,
-      );
+  }) => _dbHelper.getDiaryEntriesBetween(
+    profileId,
+    start,
+    end,
+    mealType: mealType,
+    limit: limit,
+  );
 
   // Day micro aggregation
   Future<Map<String, double>> getDayMicros(
-          int profileId, DateTime date, List<String> codes) =>
-      _dbHelper.getDayMicros(profileId, date, codes);
+    int profileId,
+    DateTime date,
+    List<String> codes,
+  ) => _dbHelper.getDayMicros(profileId, date, codes);
 
   // Favorites
   Future<void> addFavorite(int profileId, int foodId) =>
@@ -1194,14 +1354,13 @@ class AppRepository {
     DateTime? start,
     DateTime? end,
     int limit = 200,
-  }) =>
-      _dbHelper.getEntriesByTag(
-        profileId: profileId,
-        tag: tag,
-        start: start,
-        end: end,
-        limit: limit,
-      );
+  }) => _dbHelper.getEntriesByTag(
+    profileId: profileId,
+    tag: tag,
+    start: start,
+    end: end,
+    limit: limit,
+  );
 
   // Recipe cache reads
   Future<Map<String, double>> getRecipePer100gByCode(int recipeId) =>
@@ -1218,15 +1377,16 @@ class AppRepository {
   // Seed core nutrient catalog if the nutrients table is empty.
   Future<void> seedNutrientsIfEmpty() => _dbHelper.seedNutrientsIfEmpty();
 
-/// Opens the DB once so first-run copy/migrations happen before UI.
-/// Optionally runs a quick integrity check.
-Future<bool> warmUp({bool verify = false}) async {
-  final db = await _dbHelper.database;
-  if (!verify) return true;
-  try { await db.rawQuery('PRAGMA quick_check'); return true; }
-  catch (_) { return false; }
-}
-
-
-
+  /// Opens the DB once so first-run copy/migrations happen before UI.
+  /// Optionally runs a quick integrity check.
+  Future<bool> warmUp({bool verify = false}) async {
+    final db = await _dbHelper.database;
+    if (!verify) return true;
+    try {
+      await db.rawQuery('PRAGMA quick_check');
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
 }

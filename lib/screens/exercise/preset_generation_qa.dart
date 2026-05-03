@@ -30,8 +30,11 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
   final TextEditingController _weeklyFrequencyController =
       TextEditingController();
   final TextEditingController _maxSetsController = TextEditingController();
+  final TextEditingController _targetRepCountController =
+      TextEditingController();
 
   RequirementOption? _requirementOption;
+  RepWeightGenerationMode _repWeightMode = RepWeightGenerationMode.mixed;
   List<BodyPart> _bodyParts = const <BodyPart>[];
   Set<int> _preferredBodypartIds = <int>{};
   Set<int> _blacklistedBodypartIds = <int>{};
@@ -45,6 +48,8 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
     _sessionDurationController.text = '60';
     _weeklyFrequencyController.text = '3';
     _maxSetsController.text = SessionSpec.defaultMaxSetsPerExercise.toString();
+    _targetRepCountController.text =
+        SessionSpec.defaultTargetRepCount.toString();
     _requirementOption = RequirementOption.equalSplitBodyPart;
     _loadBodyParts();
   }
@@ -54,6 +59,7 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
     _sessionDurationController.dispose();
     _weeklyFrequencyController.dispose();
     _maxSetsController.dispose();
+    _targetRepCountController.dispose();
     super.dispose();
   }
 
@@ -83,10 +89,12 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
     final minutesStr = _sessionDurationController.text.trim();
     final freqStr = _weeklyFrequencyController.text.trim();
     final maxSetsStr = _maxSetsController.text.trim();
+    final targetRepCountStr = _targetRepCountController.text.trim();
 
     final sessionMinutes = int.tryParse(minutesStr);
     final weeklyFrequency = int.tryParse(freqStr);
     final maxSets = int.tryParse(maxSetsStr);
+    final targetRepCount = int.tryParse(targetRepCountStr);
 
     if (sessionMinutes == null ||
         sessionMinutes <= 0 ||
@@ -94,11 +102,13 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
         weeklyFrequency <= 0 ||
         maxSets == null ||
         maxSets < SessionSpec.defaultMinSetsPerExercise ||
-        maxSets > SessionSpec.maxAllowedSetsPerExercise) {
+        maxSets > SessionSpec.maxAllowedSetsPerExercise ||
+        targetRepCount == null ||
+        targetRepCount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Please enter valid duration, frequency, and set limit values.',
+            'Please enter valid duration, frequency, set limit, and rep values.',
           ),
         ),
       );
@@ -126,6 +136,9 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
         preferredBodypartIds: _preferredBodypartIds.toList(),
         blacklistedBodypartIds: _blacklistedBodypartIds.toList(),
         priorityMode: priorityMode,
+        useGeneratedRepWeights: true,
+        repWeightMode: _repWeightMode,
+        targetRepCount: targetRepCount,
         maxExercises: maxExercises,
         minSetsPerExercise: minSets,
         maxSetsPerExercise: maxSets,
@@ -135,10 +148,16 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
         now: now,
       );
 
-      final presetId = await generator.generatePreset(spec);
+      final result = await generator.generatePresetWithDetails(spec);
 
       if (!mounted) return;
-      Navigator.of(context).pop(presetId);
+      if (result.exercisesMissingWeightHistory.isNotEmpty) {
+        await _showMissingWeightHistoryDialog(
+          result.exercisesMissingWeightHistory,
+        );
+      }
+      if (!mounted) return;
+      Navigator.of(context).pop(result.presetId);
     } catch (e, st) {
       debugPrint('Error generating preset: $e\n$st');
       if (!mounted) return;
@@ -152,152 +171,309 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
     }
   }
 
+  Widget _buildSettingsSection({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required List<Widget> children,
+  }) {
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: ExpansionTile(
+        leading: Icon(icon),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        subtitle: Text(subtitle),
+        childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        children: children,
+      ),
+    );
+  }
+
+  String _requirementSummary() {
+    switch (_requirementOption) {
+      case RequirementOption.biasRankBodyPart:
+        return 'Bodypart ranking';
+      case RequirementOption.biasRankMuscle:
+        return 'Muscle ranking';
+      case RequirementOption.equalSplitBodyPart:
+      case null:
+        return 'All bodyparts equally';
+    }
+  }
+
+  String _repWeightModeLabel(RepWeightGenerationMode mode) {
+    switch (mode) {
+      case RepWeightGenerationMode.pyramid:
+        return 'Pyramid';
+      case RepWeightGenerationMode.consistent:
+        return 'Consistent';
+      case RepWeightGenerationMode.mixed:
+        return 'Mixed';
+    }
+  }
+
+  Future<void> _showMissingWeightHistoryDialog(List<String> exerciseNames) {
+    final visibleNames = exerciseNames.take(6).toList();
+    final extraCount = exerciseNames.length - visibleNames.length;
+    final namesText = [
+      ...visibleNames.map((name) => '- $name'),
+      if (extraCount > 0) '- $extraCount more',
+    ].join('\n');
+
+    return showDialog<void>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Some weights were left at 0 lbs'),
+            content: Text(
+              'You have not logged these exercises before, so we could not generate correct weights for them yet.\n\n$namesText',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Generate Custom Presets')),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _isGenerating ? null : _handleContinue,
+        icon:
+            _isGenerating
+                ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+                : const Icon(Icons.auto_awesome),
+        label: Text(_isGenerating ? 'Generating...' : 'Generate preset'),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('How many minutes do you spend in the gym per session?'),
-            const SizedBox(height: 4),
             const Text(
-              'Estimated as 3 minutes per set plus 5 minutes to start each exercise.',
-              style: TextStyle(fontSize: 12),
+              'Use the defaults, or open a section to tune how the preset is generated.',
             ),
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: _sessionDurationController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: 'e.g. 60',
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            const Text('How many times per week do you work out?'),
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: _weeklyFrequencyController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: 'e.g. 5',
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            Text(
-              'Up to how many sets per exercise? (${SessionSpec.defaultMinSetsPerExercise}-${SessionSpec.maxAllowedSetsPerExercise})',
-            ),
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: _maxSetsController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: 'e.g. 5',
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            CheckboxListTile(
-              contentPadding: EdgeInsets.zero,
-              title: const Text('Generate based on 7-day workout history'),
-              subtitle: const Text(
-                'Uses recent completed sets to bias toward under-trained bodyparts and muscles.',
-              ),
-              value: _useRecentTrainingHistory,
-              onChanged:
-                  (value) => setState(
-                    () => _useRecentTrainingHistory = value ?? false,
+            const SizedBox(height: 12),
+            _buildSettingsSection(
+              icon: Icons.timer_outlined,
+              title: 'Workout setup',
+              subtitle:
+                  '${_sessionDurationController.text.trim()} min session, '
+                  '${_maxSetsController.text.trim()} sets max per exercise',
+              children: [
+                const Text(
+                  'How many minutes do you spend in the gym per session?',
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Estimated as 3 minutes per set plus 5 minutes to start each exercise.',
+                  style: TextStyle(fontSize: 12),
+                ),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _sessionDurationController,
+                  keyboardType: TextInputType.number,
+                  onChanged: (_) => setState(() {}),
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    hintText: 'e.g. 60',
                   ),
-            ),
-            const SizedBox(height: 16),
-
-            const Text(
-              'Bodypart focus',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              'Tap once to prefer a bodypart, tap again to avoid it, and tap a third time to clear it.',
-              style: TextStyle(fontSize: 12),
+                ),
+                const SizedBox(height: 16),
+                const Text('How many times per week do you work out?'),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _weeklyFrequencyController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    hintText: 'e.g. 5',
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Up to how many sets per exercise? (${SessionSpec.defaultMinSetsPerExercise}-${SessionSpec.maxAllowedSetsPerExercise})',
+                ),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _maxSetsController,
+                  keyboardType: TextInputType.number,
+                  onChanged: (_) => setState(() {}),
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    hintText: 'e.g. 5',
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 8),
-            BodypartFocusChips(
-              bodyParts: _bodyParts,
-              preferredBodypartIds: _preferredBodypartIds,
-              blacklistedBodypartIds: _blacklistedBodypartIds,
-              emptyText: 'Bodyparts could not be loaded.',
-              onChanged:
-                  (selection) => setState(() {
-                    _preferredBodypartIds = selection.preferredBodypartIds;
-                    _blacklistedBodypartIds = selection.blacklistedBodypartIds;
-                  }),
+            _buildSettingsSection(
+              icon: Icons.track_changes_outlined,
+              title: 'Training focus',
+              subtitle:
+                  '${_preferredBodypartIds.length} preferred, '
+                  '${_blacklistedBodypartIds.length} avoided, '
+                  '${_useRecentTrainingHistory ? 'using' : 'not using'} 7-day history',
+              children: [
+                CheckboxListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Generate based on 7-day workout history'),
+                  subtitle: const Text(
+                    'Uses recent completed sets to bias toward under-trained bodyparts and muscles.',
+                  ),
+                  value: _useRecentTrainingHistory,
+                  onChanged:
+                      (value) => setState(
+                        () => _useRecentTrainingHistory = value ?? false,
+                      ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Bodypart focus',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Tap once to prefer a bodypart, tap again to avoid it, and tap a third time to clear it.',
+                  style: TextStyle(fontSize: 12),
+                ),
+                const SizedBox(height: 8),
+                BodypartFocusChips(
+                  bodyParts: _bodyParts,
+                  preferredBodypartIds: _preferredBodypartIds,
+                  blacklistedBodypartIds: _blacklistedBodypartIds,
+                  emptyText: 'Bodyparts could not be loaded.',
+                  onChanged:
+                      (selection) => setState(() {
+                        _preferredBodypartIds = selection.preferredBodypartIds;
+                        _blacklistedBodypartIds =
+                            selection.blacklistedBodypartIds;
+                      }),
+                ),
+              ],
             ),
-            const SizedBox(height: 24),
-
-            const Text(
-              'Set requirements for generated preset',
-              style: TextStyle(fontWeight: FontWeight.bold),
+            const SizedBox(height: 8),
+            _buildSettingsSection(
+              icon: Icons.fitness_center_outlined,
+              title: 'Rep and weight generation',
+              subtitle:
+                  '${_repWeightModeLabel(_repWeightMode)}, '
+                  '${_targetRepCountController.text.trim()} target reps',
+              children: [
+                RadioListTile<RepWeightGenerationMode>(
+                  title: const Text('Mixed'),
+                  subtitle: const Text(
+                    'Pyramid for 3+ sets, consistent for 1-2 sets.',
+                  ),
+                  value: RepWeightGenerationMode.mixed,
+                  groupValue: _repWeightMode,
+                  onChanged:
+                      (value) => setState(
+                        () =>
+                            _repWeightMode =
+                                value ?? RepWeightGenerationMode.mixed,
+                      ),
+                ),
+                RadioListTile<RepWeightGenerationMode>(
+                  title: const Text('Pyramid'),
+                  subtitle: const Text(
+                    'Peak set uses your PR or Epley estimate; surrounding sets drop 10% weight and add 2 reps per step.',
+                  ),
+                  value: RepWeightGenerationMode.pyramid,
+                  groupValue: _repWeightMode,
+                  onChanged:
+                      (value) => setState(
+                        () =>
+                            _repWeightMode =
+                                value ?? RepWeightGenerationMode.pyramid,
+                      ),
+                ),
+                RadioListTile<RepWeightGenerationMode>(
+                  title: const Text('Consistent'),
+                  subtitle: const Text(
+                    'Every set uses the same reps and suggested weight.',
+                  ),
+                  value: RepWeightGenerationMode.consistent,
+                  groupValue: _repWeightMode,
+                  onChanged:
+                      (value) => setState(
+                        () =>
+                            _repWeightMode =
+                                value ?? RepWeightGenerationMode.consistent,
+                      ),
+                ),
+                const SizedBox(height: 8),
+                const Text('Peak / target reps'),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _targetRepCountController,
+                  keyboardType: TextInputType.number,
+                  onChanged: (_) => setState(() {}),
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    hintText: 'e.g. 6',
+                  ),
+                ),
+              ],
             ),
-            RadioListTile<RequirementOption>(
-              title: const Text('Equal split per BodyPart'),
-              value: RequirementOption.equalSplitBodyPart,
-              groupValue: _requirementOption,
-              onChanged: (v) => setState(() => _requirementOption = v),
+            const SizedBox(height: 8),
+            _buildSettingsSection(
+              icon: Icons.tune_outlined,
+              title: 'Set allocation',
+              subtitle: _requirementSummary(),
+              children: [
+                RadioListTile<RequirementOption>(
+                  title: const Text('Train all bodyparts equally'),
+                  value: RequirementOption.equalSplitBodyPart,
+                  groupValue: _requirementOption,
+                  onChanged: (v) => setState(() => _requirementOption = v),
+                ),
+                RadioListTile<RequirementOption>(
+                  title: const Text('Train based on bodypart ranking'),
+                  value: RequirementOption.biasRankBodyPart,
+                  groupValue: _requirementOption,
+                  onChanged: (v) => setState(() => _requirementOption = v),
+                ),
+                if (_requirementOption == RequirementOption.biasRankBodyPart)
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const BodyPartRankingScreen(),
+                        ),
+                      );
+                    },
+                    child: const Text('Rank Body Parts'),
+                  ),
+                RadioListTile<RequirementOption>(
+                  title: const Text('Train based on muscle ranking'),
+                  value: RequirementOption.biasRankMuscle,
+                  groupValue: _requirementOption,
+                  onChanged: (v) => setState(() => _requirementOption = v),
+                ),
+                if (_requirementOption == RequirementOption.biasRankMuscle)
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const MuscleRankingScreen(),
+                        ),
+                      );
+                    },
+                    child: const Text('Rank Muscles'),
+                  ),
+              ],
             ),
-            RadioListTile<RequirementOption>(
-              title: const Text('Based on BodyPart ranking bias'),
-              value: RequirementOption.biasRankBodyPart,
-              groupValue: _requirementOption,
-              onChanged: (v) => setState(() => _requirementOption = v),
-            ),
-            if (_requirementOption == RequirementOption.biasRankBodyPart)
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const BodyPartRankingScreen(),
-                    ),
-                  );
-                },
-                child: const Text('Rank Body Parts'),
-              ),
-            RadioListTile<RequirementOption>(
-              title: const Text('Based on Muscle ranking bias'),
-              value: RequirementOption.biasRankMuscle,
-              groupValue: _requirementOption,
-              onChanged: (v) => setState(() => _requirementOption = v),
-            ),
-            if (_requirementOption == RequirementOption.biasRankMuscle)
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const MuscleRankingScreen(),
-                    ),
-                  );
-                },
-                child: const Text('Rank Muscles'),
-              ),
-            const SizedBox(height: 24),
-
-            ElevatedButton(
-              onPressed: _isGenerating ? null : _handleContinue,
-              child:
-                  _isGenerating
-                      ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                      : const Text('Generate preset'),
-            ),
+            const SizedBox(height: 88),
           ],
         ),
       ),

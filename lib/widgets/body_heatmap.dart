@@ -37,6 +37,8 @@ const Map<String, List<String>> bodyPartNameToSvgIds = {
 };
 
 class BodyHeatmap extends StatelessWidget {
+  static const int _maxRenderCacheEntries = 80;
+  static const int _frequencyBuckets = 20;
   static Future<String>? _svgTemplateFuture;
   static String? _svgTemplate;
   static final Map<String, String> _renderCache = <String, String>{};
@@ -88,19 +90,36 @@ class BodyHeatmap extends StatelessWidget {
     return '#${r.padLeft(2, '0')}${g.padLeft(2, '0')}${b.padLeft(2, '0')}';
   }
 
-  String _cacheKey() {
-    final entries = frequencyMap.entries.toList()
+  static double _bucketFrequency(double value) {
+    final clamped = value.clamp(0.0, 1.0).toDouble();
+    if (clamped <= 0.0) return 0.0;
+    if (clamped >= 1.0) return 1.0;
+    return (clamped * _frequencyBuckets).round() / _frequencyBuckets;
+  }
+
+  List<MapEntry<String, double>> _normalizedFrequencyEntries() {
+    return frequencyMap.entries
+        .map((entry) => MapEntry(entry.key, _bucketFrequency(entry.value)))
+        .where((entry) => entry.value > 0.0)
+        .toList()
       ..sort((a, b) => a.key.compareTo(b.key));
+  }
+
+  String _cacheKey(List<MapEntry<String, double>> entries) {
     final encodedEntries = entries
-        .map((entry) => '${entry.key}:${entry.value.toStringAsFixed(4)}')
+        .map((entry) => '${entry.key}:${entry.value.toStringAsFixed(2)}')
         .join(',');
     return '${_toRgbHex(lowColor)}|${_toRgbHex(highColor)}|$encodedEntries';
   }
 
   String _renderSvg(String template) {
-    final cacheKey = _cacheKey();
-    final cachedSvg = _renderCache[cacheKey];
-    if (cachedSvg != null) return cachedSvg;
+    final entries = _normalizedFrequencyEntries();
+    final cacheKey = _cacheKey(entries);
+    final cachedSvg = _renderCache.remove(cacheKey);
+    if (cachedSvg != null) {
+      _renderCache[cacheKey] = cachedSvg;
+      return cachedSvg;
+    }
 
     var svgContent = template;
 
@@ -113,8 +132,9 @@ class BodyHeatmap extends StatelessWidget {
       (m) => '${m[1]} fill="$defaultHex"${m[2]}>',
     );
 
-    frequencyMap.forEach((id, freq) {
-      final t = freq.clamp(0.0, 1.0);
+    for (final entry in entries) {
+      final id = entry.key;
+      final t = entry.value;
       final paintColor = Color.lerp(lowColor, highColor, t)!;
       final hex = _toRgbHex(paintColor);
 
@@ -129,24 +149,26 @@ class BodyHeatmap extends StatelessWidget {
         re,
         (m) => '${m[1]} fill="$hex"${m[2]}${m[3]}>',
       );
-    });
+    }
 
-    if (_renderCache.length > 40) {
+    _renderCache[cacheKey] = svgContent;
+    while (_renderCache.length > _maxRenderCacheEntries) {
       _renderCache.remove(_renderCache.keys.first);
     }
-    _renderCache[cacheKey] = svgContent;
     return svgContent;
   }
 
   Widget _buildSvg(String svgContent) {
-    return SizedBox(
-      width: width,
-      height: height,
-      child: SvgPicture.string(
-        svgContent,
-        fit: BoxFit.contain,
+    return RepaintBoundary(
+      child: SizedBox(
         width: width,
         height: height,
+        child: SvgPicture.string(
+          svgContent,
+          fit: BoxFit.contain,
+          width: width,
+          height: height,
+        ),
       ),
     );
   }
@@ -162,10 +184,7 @@ class BodyHeatmap extends StatelessWidget {
       future: _loadSvgTemplate(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
-          return SizedBox(
-            width: width,
-            height: height,
-          );
+          return SizedBox(width: width, height: height);
         }
         return _buildSvg(_renderSvg(snapshot.data!));
       },

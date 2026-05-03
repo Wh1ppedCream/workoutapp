@@ -1,5 +1,7 @@
 // File: lib/screens/exercise/exercise_catalog_page.dart
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/models.dart';
@@ -18,6 +20,8 @@ class ExerciseCatalogPage extends StatefulWidget {
 
 class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
   final _repo = AppRepository();
+  Timer? _searchDebounce;
+  int _filterGeneration = 0;
 
   // All loaded definitions (fully detailed)
   List<ExerciseDefinition> _allDefs = [];
@@ -39,6 +43,8 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
   List<String> _equipmentOptions = ['All'];
   List<String> _areaOptions = ['All'];
   List<String> _muscleOptions = ['All'];
+  List<String>? _allEquipmentNames;
+  final Map<int, List<String>> _equipmentNamesByProfileId = {};
 
   ExerciseDefinition? _selectedDef;
 
@@ -46,6 +52,12 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
   void initState() {
     super.initState();
     _loadInitialData();
+  }
+
+  @override
+  void dispose() {
+    _searchDebounce?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadInitialData() async {
@@ -56,29 +68,29 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
     setState(() {
       _isLoading = true;
     });
-    // Load full definitions
-    _allDefs = await _repo.lookupDefsDetailed();
+    final definitionsFuture = _repo.lookupDefsDetailed();
+    final profilesFuture = _repo.dbHelper.fetchAllProfiles();
+    final areasFuture = _repo.fetchAllBodyParts();
+    final musclesFuture = _repo.fetchAllMuscles();
+    final equipmentFuture = _useProfileFilter && initialProfileId != null
+        ? _equipmentForProfile(initialProfileId)
+        : _allEquipment();
+
+    final definitions = await definitionsFuture;
+    _allDefs = definitions;
     _displayedDefs = List.from(_allDefs);
     // Load profiles list
-    _profiles = await _repo.dbHelper.fetchAllProfiles();
+    _profiles = await profilesFuture;
     _dialogProfileId = initialProfileId;
 
     // Load body-part, muscle, and equipment options
-    final areas = await _repo.fetchAllBodyParts();
-    final muscles = await _repo.fetchAllMuscles();
+    final areas = await areasFuture;
+    final muscles = await musclesFuture;
 
     // Figure out initial equipment list
-    List<String> initialEquipment;
-    if (_useProfileFilter && initialProfileId != null) {
+    final initialEquipment = await equipmentFuture;
       // only that profile’s gear
-      final eqMaps = await _repo.dbHelper.fetchEquipmentForProfile(
-        initialProfileId,
-      );
-      initialEquipment = eqMaps.map((e) => e['name'] as String).toList();
-    } else {
-      // everything
-      initialEquipment = await _repo.fetchAllEquipmentNames();
-    }
+    // Equipment names are loaded through the cached future above.
 
     if (!mounted) return;
     setState(() {
@@ -90,40 +102,59 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
     });
   }
 
-  Future<void> _applyAllFilters() async {
-    setState(() {
+  Future<List<String>> _allEquipment() async {
+    final cached = _allEquipmentNames;
+    if (cached != null) return cached;
+    final names = await _repo.fetchAllEquipmentNames();
+    _allEquipmentNames = names;
+    return names;
+  }
+
+  Future<List<String>> _equipmentForProfile(int profileId) async {
+    final cached = _equipmentNamesByProfileId[profileId];
+    if (cached != null) return cached;
+    final eqMaps = await _repo.dbHelper.fetchEquipmentForProfile(profileId);
+    final names = eqMaps.map((e) => e['name'] as String).toList();
+    _equipmentNamesByProfileId[profileId] = names;
+    return names;
+  }
+
+  Future<void> _applyAllFilters({bool showLoading = true}) async {
+    final generation = ++_filterGeneration;
+    if (showLoading) {
+      setState(() {
       _isLoading = true;
-    });
+      });
+    }
     List<ExerciseDefinition> filtered = List.from(_allDefs);
+    List<String> nextEquipmentOptions;
 
     // 1) Workspace profile subset-of filter
     if (_useProfileFilter && _dialogProfileId != null) {
-      final eqMaps = await _repo.dbHelper.fetchEquipmentForProfile(
-        _dialogProfileId!,
-      );
-      final allowed = eqMaps.map((e) => e['name'] as String).toSet();
+      final allowedList = await _equipmentForProfile(_dialogProfileId!);
+      if (generation != _filterGeneration || !mounted) return;
+      final allowed = allowedList.toSet();
       filtered =
           filtered.where((d) {
             return d.equipmentList.every((eq) => allowed.contains(eq.name));
           }).toList();
-      // Also populate equipment options from profile gear
-      setState(() {
-        _equipmentOptions = ['All', ...allowed];
-      });
+      nextEquipmentOptions = ['All', ...allowedList];
     } else {
       // Profile off: use global equipment list
-      final allEq = await _repo.fetchAllEquipmentNames();
-      setState(() {
-        _equipmentOptions = ['All', ...allEq];
-      });
+      final allEq = await _allEquipment();
+      if (generation != _filterGeneration || !mounted) return;
+      nextEquipmentOptions = ['All', ...allEq];
     }
+    final equipmentFilter = nextEquipmentOptions.contains(_filterEquipment)
+        ? _filterEquipment
+        : 'All';
 
     // 2) Single-equipment any-of filter
-    if (_filterEquipment != 'All') {
+    if (equipmentFilter != 'All') {
       filtered =
           filtered
               .where(
-                (d) => d.equipmentList.any((eq) => eq.name == _filterEquipment),
+                (d) => d.equipmentList.any((eq) => eq.name == equipmentFilter),
               )
               .toList();
     }
@@ -153,7 +184,10 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
             .where((d) => q.isEmpty || d.name.toLowerCase().contains(q))
             .toList();
 
+    if (generation != _filterGeneration || !mounted) return;
     setState(() {
+      _filterEquipment = equipmentFilter;
+      _equipmentOptions = nextEquipmentOptions;
       _displayedDefs = filtered;
       _isLoading = false;
     });
@@ -163,7 +197,10 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
     setState(() {
       _searchQuery = q;
     });
-    _applyAllFilters();
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 250), () {
+      _applyAllFilters(showLoading: false);
+    });
   }
 
   void _openFilterDialog() {

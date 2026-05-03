@@ -1,10 +1,13 @@
 // file: lib/widgets/presets_loaded.dart
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/selected_profile.dart';
 import '../repositories/app_repository.dart';
+import 'body_heatmap.dart';
 import 'preset_bar.dart';
 
 /// Fetches & displays presets for the current profile.
@@ -32,11 +35,13 @@ class _PresetListItem {
   final int presetId;
   final String name;
   final bool isAutomatic;
+  final Map<String, double> focusFrequencyMap;
 
   const _PresetListItem({
     required this.presetId,
     required this.name,
     required this.isAutomatic,
+    required this.focusFrequencyMap,
   });
 }
 
@@ -57,20 +62,92 @@ class _PresetsLoadedState extends State<PresetsLoaded>
   ];
 
   Future<List<_PresetListItem>> _loadPresets(int profileId) async {
-    final rows = await _repo.fetchAllPresetsRaw(profileId: profileId);
-    return Future.wait(
-      rows.map((row) async {
-        final presetId = row['id'] as int;
-        final autoSettings = await _repo.fetchPresetAutoSettings(presetId);
-        final isAutomatic =
-            (autoSettings?['is_automatic'] as int? ?? 0) == 1;
-        return _PresetListItem(
-          presetId: presetId,
-          name: row['name'] as String,
-          isAutomatic: isAutomatic,
-        );
-      }),
+    unawaited(BodyHeatmap.preload());
+    final rows = await _repo.fetchPresetSummariesRaw(profileId: profileId);
+    final presetIds = rows.map((row) => row['id'] as int).toList();
+    final focusRows = await _repo.fetchPresetFocusSetCountsRaw(
+      presetIds: presetIds,
     );
+    final focusSetCountsByPreset = _groupFocusSetCounts(focusRows);
+    final unitsByDefinition = await _loadBodyPartUnitsByDefinition(
+      focusSetCountsByPreset,
+    );
+
+    return rows.map((row) {
+      final presetId = row['id'] as int;
+      return _PresetListItem(
+        presetId: presetId,
+        name: row['name'] as String,
+        isAutomatic: (row['is_automatic'] as int? ?? 0) == 1,
+        focusFrequencyMap: _buildFocusFrequencyMap(
+          focusSetCountsByPreset[presetId] ?? const <int, int>{},
+          unitsByDefinition,
+        ),
+      );
+    }).toList();
+  }
+
+  Map<int, Map<int, int>> _groupFocusSetCounts(
+    List<Map<String, dynamic>> rows,
+  ) {
+    final grouped = <int, Map<int, int>>{};
+    for (final row in rows) {
+      final presetId = row['preset_id'] as int;
+      final defId = row['def_id'] as int;
+      final setCount = ((row['set_count'] as num?) ?? 0).toInt();
+      if (setCount <= 0) continue;
+      grouped.putIfAbsent(presetId, () => <int, int>{})[defId] = setCount;
+    }
+    return grouped;
+  }
+
+  Future<Map<int, Map<String, double>>> _loadBodyPartUnitsByDefinition(
+    Map<int, Map<int, int>> focusSetCountsByPreset,
+  ) async {
+    final defIds = <int>{
+      for (final counts in focusSetCountsByPreset.values) ...counts.keys,
+    };
+    final unitsByDefinition = <int, Map<String, double>>{};
+    for (final defId in defIds) {
+      final units = await _repo.computeBodyPartPercents(defId);
+      unitsByDefinition[defId] = {
+        for (final entry in units.entries)
+          if (entry.value > 0.0) entry.key.name: entry.value,
+      };
+    }
+    return unitsByDefinition;
+  }
+
+  Map<String, double> _buildFocusFrequencyMap(
+    Map<int, int> setCountsByDefinition,
+    Map<int, Map<String, double>> unitsByDefinition,
+  ) {
+    final bodyPartTotals = <String, double>{};
+    setCountsByDefinition.forEach((defId, setCount) {
+      final units = unitsByDefinition[defId];
+      if (units == null || setCount <= 0) return;
+      units.forEach((bodyPartName, unitsPerSet) {
+        bodyPartTotals[bodyPartName] =
+            (bodyPartTotals[bodyPartName] ?? 0.0) + unitsPerSet * setCount;
+      });
+    });
+
+    if (bodyPartTotals.isEmpty) return const <String, double>{};
+    final maxUnits = bodyPartTotals.values.fold<double>(
+      0.0,
+      (max, value) => value > max ? value : max,
+    );
+    if (maxUnits <= 0.0) return const <String, double>{};
+
+    final frequencyMap = <String, double>{};
+    bodyPartTotals.forEach((bodyPartName, units) {
+      final svgIds = bodyPartNameToSvgIds[bodyPartName] ?? const <String>[];
+      final normalized = units / maxUnits;
+      for (final svgId in svgIds) {
+        frequencyMap[svgId] = normalized;
+      }
+    });
+    return frequencyMap;
   }
 
   void _refreshPresets() {
@@ -146,6 +223,7 @@ class _PresetsLoadedState extends State<PresetsLoaded>
                 color: color,
                 index: i,
                 isAutomatic: row.isAutomatic,
+                focusFrequencyMap: row.focusFrequencyMap,
                 scale: widget.scale,
                 onRefresh: _refreshPresets,
               ),

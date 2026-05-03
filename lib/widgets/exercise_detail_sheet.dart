@@ -174,7 +174,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                               Expanded(
                                   child: Text(r.isErm
                                       ? '${r.oneErm.toStringAsFixed(1)} (ERM)'
-                                      : r.rmValue.toStringAsFixed(1))),
+                                      : r.oneErm.toStringAsFixed(1))),
                               Expanded(child: Text((r.rmValue * r.repCount).toStringAsFixed(1))),
                             ],
                           );

@@ -4,6 +4,8 @@ import 'definition_models.dart'; // for BodyPart, ExerciseDefinition
 
 enum TrainingPriorityMode { equalBodyPart, bodyPartRanking, muscleRanking }
 
+enum RepWeightGenerationMode { pyramid, consistent, mixed }
+
 /// Specification for the kind of session we want to auto-generate.
 class SessionSpec {
   static const int defaultSessionDurationMinutes = 60;
@@ -19,6 +21,7 @@ class SessionSpec {
   static const double preferredBodypartCandidateScoreMultiplier = 16.0;
   static const int restWarningBodyPartLimitCount = 4;
   static const int oneSetExerciseRestWarningCount = 2;
+  static const int defaultTargetRepCount = 6;
 
   /// Which gym profile this is for (equipment filters, etc.).
   final int profileId;
@@ -37,6 +40,15 @@ class SessionSpec {
 
   /// How generated volume should be prioritized across bodyparts/muscles.
   final TrainingPriorityMode priorityMode;
+
+  /// Whether generated presets should fill in reps and suggested weights.
+  final bool useGeneratedRepWeights;
+
+  /// How reps and weights should be arranged across sets.
+  final RepWeightGenerationMode repWeightMode;
+
+  /// Peak reps for pyramid mode, or target reps for consistent mode.
+  final int targetRepCount;
 
   /// Whether optimized generation should avoid the most-worked bodypart from
   /// the most recent session when other viable options exist.
@@ -76,6 +88,9 @@ class SessionSpec {
     this.preferredBodypartIds = const [],
     this.blacklistedBodypartIds = const [],
     this.priorityMode = TrainingPriorityMode.equalBodyPart,
+    this.useGeneratedRepWeights = false,
+    this.repWeightMode = RepWeightGenerationMode.mixed,
+    this.targetRepCount = defaultTargetRepCount,
     this.avoidMostRecentBodyPart = false,
     this.useRecentTrainingHistory = true,
     this.maxExercises = 8,
@@ -102,6 +117,16 @@ class SessionSpec {
         .clamp(1, cap)
         .toInt();
   }
+}
+
+class PresetGenerationResult {
+  final int presetId;
+  final List<String> exercisesMissingWeightHistory;
+
+  const PresetGenerationResult({
+    required this.presetId,
+    this.exercisesMissingWeightHistory = const [],
+  });
 }
 
 /// Target & progress for a single bodypart over a week.

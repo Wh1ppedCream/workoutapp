@@ -3001,19 +3001,19 @@ class DatabaseHelper {
   }
 
   Future<double> calculateTotalVolumeForSessions(List<int> sessionIds) async {
+    if (sessionIds.isEmpty) return 0.0;
+
     final db = await database;
-    double volume = 0;
-    for (var sid in sessionIds) {
-      final exRows = await ExerciseDao.getExercisesForSession(db, sid);
-      for (var ex in exRows.where((e) => e['type'] == 'weight')) {
-        final eid = ex['id'] as int;
-        final setRows = await SetDao.getSetsForExercise(db, eid);
-        for (var s in setRows) {
-          volume += (s['weight'] as num) * (s['reps'] as num);
-        }
-      }
-    }
-    return volume;
+    final placeholders = List.filled(sessionIds.length, '?').join(',');
+    final rows = await db.rawQuery('''
+      SELECT COALESCE(SUM(s.weight * s.reps), 0) AS total_volume
+      FROM sets s
+      INNER JOIN exercises e ON e.id = s.exercise_id
+      WHERE e.type = 'weight'
+        AND e.session_id IN ($placeholders)
+      ''', sessionIds);
+
+    return ((rows.first['total_volume'] as num?) ?? 0).toDouble();
   }
 
   // ─── Formula Settings ──────────────────────────────────────
@@ -3330,28 +3330,37 @@ class DatabaseHelper {
     final musclePercs = await computeMusclePercents(defId);
     final hitMap = {for (var e in musclePercs) e.muscleId: e.percent};
 
-    // 3) Fetch every body-part row once and index by ID (avoid repeated queries)
-    final allBpRows = await db.query('bodypart');
-    final bpById = {
-      for (var r in allBpRows)
-        r['id'] as int: BodyPart(r['id'] as int, r['name'] as String),
-    };
+    final muscleIds = def.muscles.map((rm) => rm.muscle.id).toSet().toList();
+    if (muscleIds.isEmpty) return {};
 
-    // 4) For each muscle on the definition, look up its hit % and
-    //    then add that % into each of its linked body-parts.
+    // 3) Load every muscle -> body-part link for this exercise in one query.
+    final placeholders = List.filled(muscleIds.length, '?').join(',');
+    final linkRows = await db.rawQuery('''
+      SELECT
+        mb.muscle_id AS muscle_id,
+        bp.id AS bodypart_id,
+        bp.name AS bodypart_name
+      FROM muscle_bodypart mb
+      JOIN bodypart bp ON bp.id = mb.bodypart_id
+      WHERE mb.muscle_id IN ($placeholders)
+      ''', muscleIds);
+
+    final bpById = <int, BodyPart>{};
+
+    // 4) Add each linked body-part contribution. This used to query once per
+    // muscle, which made first-time exercise analysis much more expensive.
     final result = <BodyPart, double>{};
-    for (var rm in def.muscles) {
-      final mid = rm.muscle.id;
+    for (final row in linkRows) {
+      final mid = row['muscle_id'] as int;
       final p = hitMap[mid] ?? 0.0;
       if (p <= 0) continue;
 
-      // which body-parts does this muscle drive?
-      final links = await AnalyticsDao.getBodyPartsForMuscle(db, mid);
-      for (var link in links) {
-        final bp = bpById[link.bodyPartId];
-        if (bp == null) continue;
-        result[bp] = (result[bp] ?? 0.0) + p;
-      }
+      final bodyPartId = row['bodypart_id'] as int;
+      final bp = bpById.putIfAbsent(
+        bodyPartId,
+        () => BodyPart(bodyPartId, row['bodypart_name'] as String),
+      );
+      result[bp] = (result[bp] ?? 0.0) + p;
     }
 
     return _normalizeBodyPartUnits(result);
@@ -3360,26 +3369,46 @@ class DatabaseHelper {
   // ─── Session/Set Analytics ───────────────────────────────
 
   /// Fetches the total number of sets per body-part for a given time range.
+  Future<Map<int, int>> _fetchWeightSetCountsByDefinition({
+    required DateTime start,
+    required DateTime end,
+    int? defId,
+  }) async {
+    final db = await database;
+    final args = <Object?>[start.toIso8601String(), end.toIso8601String()];
+    final defFilter = defId == null ? '' : 'AND e.exercise_def_id = ?';
+    if (defId != null) args.add(defId);
+
+    final rows = await db.rawQuery('''
+      SELECT e.exercise_def_id AS def_id, COUNT(s.id) AS set_count
+      FROM sets s
+      INNER JOIN exercises e ON e.id = s.exercise_id
+      INNER JOIN sessions sess ON sess.id = e.session_id
+      WHERE e.type = 'weight'
+        AND e.exercise_def_id IS NOT NULL
+        AND sess.date BETWEEN ? AND ?
+        $defFilter
+      GROUP BY e.exercise_def_id
+      ''', args);
+
+    return {
+      for (final row in rows)
+        row['def_id'] as int: ((row['set_count'] as num?) ?? 0).toInt(),
+    };
+  }
+
   Future<Map<BodyPart, double>> fetchAllBodyPartSetsOverTimeRange({
     required DateTime start,
     required DateTime end,
   }) async {
-    // 1) Gather all sessions & their exercise rows
     final db = await database;
-    final sessions = await SessionDao.getSessionsInRange(
-      db,
-      start.toIso8601String(),
-      end.toIso8601String(),
+    final setCounts = await _fetchWeightSetCountsByDefinition(
+      start: start,
+      end: end,
     );
-    final defIds = <int>{};
-    for (final s in sessions) {
-      final exs = await ExerciseDao.getExercisesForSession(db, s['id'] as int);
-      for (final ex in exs.where((e) => e['type'] == 'weight')) {
-        defIds.add(ex['exercise_def_id'] as int);
-      }
-    }
+    if (setCounts.isEmpty) return {};
 
-    // 2) For each definition, fetch its body-part map and sum by lookup ID.
+    // For each definition, fetch its body-part map and sum by lookup ID.
     // BodyPart is a plain value object, so two BodyPart(Chest) instances from
     // different exercise definitions are not equal as Map keys.
     final allBodyParts = await LookupDao.getAllBodyParts(db);
@@ -3387,11 +3416,13 @@ class DatabaseHelper {
       for (final bodyPart in allBodyParts) bodyPart.id: bodyPart,
     };
     final combinedById = <int, double>{};
-    for (final defId in defIds) {
+    for (final entry in setCounts.entries) {
       final perDef = await fetchBodyPartSetsForExerciseOverTimeRange(
-        defId: defId,
+        defId: entry.key,
         start: start,
         end: end,
+        setCountOverride: entry.value,
+        bodyPartByIdOverride: bodyPartById,
       );
       perDef.forEach((bp, val) {
         combinedById[bp.id] = (combinedById[bp.id] ?? 0.0) + val;
@@ -3413,27 +3444,32 @@ class DatabaseHelper {
     required int defId,
     required DateTime start,
     required DateTime end,
+    int? setCountOverride,
+    Map<int, BodyPart>? bodyPartByIdOverride,
   }) async {
     final db = await database;
-
-    // 1) find all sessions in range
-    final sessions = await SessionDao.getSessionsInRange(
-      db,
-      start.toIso8601String(),
-      end.toIso8601String(),
-    );
+    final setCount =
+        setCountOverride ??
+        (await _fetchWeightSetCountsByDefinition(
+          start: start,
+          end: end,
+          defId: defId,
+        ))[defId] ??
+        0;
+    if (setCount <= 0) return {};
 
     // 2) prepare results & body-part lookup
     final result = <BodyPart, double>{};
-    final allBps = await LookupDao.getAllBodyParts(db);
-    final bpById = {for (var bp in allBps) bp.id: bp};
+    final bpById =
+        bodyPartByIdOverride ??
+        {for (final bp in await LookupDao.getAllBodyParts(db)) bp.id: bp};
 
     // right after `final bpById = …;`
     final def = await DefinitionDao.getExerciseDefinitionById(db, defId);
-    final multiply = def?.multiplyByRating ?? false;
-    final ratingMul = (def?.rating ?? 0) / 100.0;
-    final defBodyPartIds =
-        def?.bodyParts.map((bp) => bp.id).toList() ?? <int>[];
+    if (def == null) return {};
+    final multiply = def.multiplyByRating;
+    final ratingMul = def.rating / 100.0;
+    final defBodyPartIds = def.bodyParts.map((bp) => bp.id).toList();
 
     // 3) check if we should use manual body-part percents
     final useManual = await getUseManualBodyparts(defId);
@@ -3463,36 +3499,17 @@ class DatabaseHelper {
       perSetBpMap = await computeMuscleCalculatedBodyparts(defId);
     }
 
-    for (var s in sessions) {
-      // 5) find only weight exercises of this definition
-      final exRows = await ExerciseDao.getExercisesForSession(
-        db,
-        s['id'] as int,
-      );
-      for (var ex in exRows.where(
-        (e) => e['type'] == 'weight' && e['exercise_def_id'] == defId,
-      )) {
-        final eid = ex['id'] as int;
-        // 6) fetch all sets for this exercise instance
-        final sets = await SetDao.getSetsForExercise(db, eid);
-
-        // instead of looping per-set+per-muscle, just multiply our per-set map
-        // by the number of sets we actually did
-        if (useManual) {
-          final count = sets.length;
-          manualCountPerSet.forEach((bpId, countPerSet) {
-            final bp = bpById[bpId];
-            if (bp != null) {
-              result[bp] = (result[bp] ?? 0.0) + countPerSet * count;
-            }
-          });
-        } else {
-          final count = sets.length;
-          perSetBpMap.forEach((bp, valPerSet) {
-            result[bp] = (result[bp] ?? 0.0) + valPerSet * count;
-          });
+    if (useManual) {
+      manualCountPerSet.forEach((bpId, countPerSet) {
+        final bp = bpById[bpId];
+        if (bp != null) {
+          result[bp] = (result[bp] ?? 0.0) + countPerSet * setCount;
         }
-      }
+      });
+    } else {
+      perSetBpMap.forEach((bp, valPerSet) {
+        result[bp] = (result[bp] ?? 0.0) + valPerSet * setCount;
+      });
     }
 
     if (multiply) {
@@ -3507,28 +3524,34 @@ class DatabaseHelper {
     required int defId,
     required DateTime start,
     required DateTime end,
+    int? setCountOverride,
   }) async {
     final db = await database;
-    // 1) sessions in range
-    final sessions = await SessionDao.getSessionsInRange(
-      db,
-      start.toIso8601String(),
-      end.toIso8601String(),
-    );
+    final setCount =
+        setCountOverride ??
+        (await _fetchWeightSetCountsByDefinition(
+          start: start,
+          end: end,
+          defId: defId,
+        ))[defId] ??
+        0;
+    if (setCount <= 0) return {};
+
     // 2) should we use manual muscles?
     final useManual = await getUseManualMuscles(defId);
 
     // 3) load definition & its body-parts
     final def = await DefinitionDao.getExerciseDefinitionById(db, defId);
+    if (def == null) return {};
 
-    final multiply = def?.multiplyByRating ?? false;
-    final ratingMul = (def?.rating ?? 0) / 100.0;
+    final multiply = def.multiplyByRating;
+    final ratingMul = def.rating / 100.0;
 
     // 4) prepare manual map: muscleId -> countPerSet
     final manualCountPerSet = <int, double>{};
     if (useManual) {
       // default every linked muscle to 1.0 per set
-      for (var rm in def!.muscles) {
+      for (var rm in def.muscles) {
         manualCountPerSet[rm.muscle.id] = 1.0;
       }
       // overwrite with any saved overrides
@@ -3549,27 +3572,12 @@ class DatabaseHelper {
       }
     }
 
-    // 6) final: loop all sets & accumulate
+    // 6) final: multiply per-set units by the SQL-counted completed rows.
     final result = <int, double>{};
-    for (var s in sessions) {
-      final exRows = await ExerciseDao.getExercisesForSession(
-        db,
-        s['id'] as int,
-      );
-      for (var ex in exRows.where(
-        (e) => e['type'] == 'weight' && e['exercise_def_id'] == defId,
-      )) {
-        final eid = ex['id'] as int;
-        final sets = await SetDao.getSetsForExercise(db, eid);
-        final count = sets.length;
-        // pick the right per-set map
-        final cmap = useManual ? manualCountPerSet : autoCountPerSet;
-        // add count * perSet to each muscle
-        cmap.forEach((mid, perSet) {
-          result[mid] = (result[mid] ?? 0) + perSet * count;
-        });
-      }
-    }
+    final countPerSet = useManual ? manualCountPerSet : autoCountPerSet;
+    countPerSet.forEach((mid, perSet) {
+      result[mid] = (result[mid] ?? 0) + perSet * setCount;
+    });
 
     if (multiply) {
       result.updateAll((mid, val) => val * ratingMul);
@@ -3583,29 +3591,20 @@ class DatabaseHelper {
     required DateTime start,
     required DateTime end,
   }) async {
-    final db = await database;
-    final sessions = await SessionDao.getSessionsInRange(
-      db,
-      start.toIso8601String(),
-      end.toIso8601String(),
+    final setCounts = await _fetchWeightSetCountsByDefinition(
+      start: start,
+      end: end,
     );
-    final defIds = <int>{};
-
-    // collect every definition ID used in weight exercises
-    for (final s in sessions) {
-      final exs = await ExerciseDao.getExercisesForSession(db, s['id'] as int);
-      for (final ex in exs.where((e) => e['type'] == 'weight')) {
-        defIds.add(ex['exercise_def_id'] as int);
-      }
-    }
+    if (setCounts.isEmpty) return {};
 
     // sum each definition’s muscle-units
     final combined = <int, double>{};
-    for (final defId in defIds) {
+    for (final entry in setCounts.entries) {
       final perDef = await fetchMuscleSetsForExerciseOverTimeRange(
-        defId: defId,
+        defId: entry.key,
         start: start,
         end: end,
+        setCountOverride: entry.value,
       );
       perDef.forEach((mid, val) {
         combined[mid] = (combined[mid] ?? 0) + val;
@@ -3767,6 +3766,49 @@ class DatabaseHelper {
   }) async {
     final db = await database;
     return PresetDefinitionDao.getAllPresetsRaw(db, profileId: profileId);
+  }
+
+  Future<List<Map<String, dynamic>>> fetchPresetSummariesRaw({
+    int? profileId,
+  }) async {
+    final db = await database;
+    final where = profileId != null ? 'WHERE p.profile_id = ?' : '';
+    return db.rawQuery('''
+      SELECT
+        p.id AS id,
+        p.name AS name,
+        p.created_at AS created_at,
+        p.profile_id AS profile_id,
+        COALESCE(a.is_automatic, 0) AS is_automatic
+      FROM preset_definitions p
+      LEFT JOIN preset_auto_settings a ON a.preset_id = p.id
+      $where
+      ORDER BY p.created_at
+      ''', profileId != null ? [profileId] : const <Object?>[]);
+  }
+
+  Future<List<Map<String, dynamic>>> fetchPresetFocusSetCountsRaw({
+    required List<int> presetIds,
+  }) async {
+    if (presetIds.isEmpty) return const <Map<String, dynamic>>[];
+
+    final db = await database;
+    final placeholders = List.filled(presetIds.length, '?').join(',');
+    return db.rawQuery(
+      '''
+      SELECT
+        pe.preset_id AS preset_id,
+        pe.exercise_def_id AS def_id,
+        COUNT(ps.id) AS set_count
+      FROM preset_exercises pe
+      LEFT JOIN preset_sets ps ON ps.preset_exercise_id = pe.id
+      WHERE pe.type = 'weight'
+        AND pe.exercise_def_id IS NOT NULL
+        AND pe.preset_id IN ($placeholders)
+      GROUP BY pe.preset_id, pe.exercise_def_id
+      ''',
+      presetIds,
+    );
   }
 
   Future<PresetDefinition?> fetchPresetById(int presetId) async {
