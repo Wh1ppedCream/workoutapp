@@ -1,6 +1,7 @@
 // File: lib/db/cardio_dao.dart
 
 import 'package:sqflite/sqflite.dart';
+import 'db_query_utils.dart';
 
 /// Data Access Object for cardio exercise details.
 ///
@@ -10,6 +11,22 @@ import 'package:sqflite/sqflite.dart';
 ///  • Update existing details
 ///  • Delete details by exercise
 class CardioDao {
+  static Map<String, Object?> _cardioValues({
+    int? exerciseId,
+    required String cardioName,
+    String? note,
+    required int plannedMinutes,
+    required int elapsedSeconds,
+  }) {
+    return {
+      if (exerciseId != null) 'exercise_id': exerciseId,
+      'cardio_name': cardioName,
+      'note': note,
+      'planned_minutes': plannedMinutes,
+      'elapsed_seconds': elapsedSeconds,
+    };
+  }
+
   /// Inserts or replaces the cardio details for a specific exercise.
   ///
   /// Parameters:
@@ -31,13 +48,13 @@ class CardioDao {
   }) async {
     await db.insert(
       'cardio_details',
-      {
-        'exercise_id':     exerciseId,
-        'cardio_name':     cardioName,
-        'note':            note,
-        'planned_minutes': plannedMinutes,
-        'elapsed_seconds': elapsedSeconds,
-      },
+      _cardioValues(
+        exerciseId: exerciseId,
+        cardioName: cardioName,
+        note: note,
+        plannedMinutes: plannedMinutes,
+        elapsedSeconds: elapsedSeconds,
+      ),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
@@ -57,7 +74,7 @@ class CardioDao {
       whereArgs: [exerciseId],
       limit: 1,
     );
-    return rows.isNotEmpty ? rows.first : null;
+    return firstDynamicRow(rows);
   }
 
   /// Updates the cardio details for a specific exercise.
@@ -75,12 +92,12 @@ class CardioDao {
   }) {
     return db.update(
       'cardio_details',
-      {
-        'cardio_name':     cardioName,
-        'note':            note,
-        'planned_minutes': plannedMinutes,
-        'elapsed_seconds': elapsedSeconds,
-      },
+      _cardioValues(
+        cardioName: cardioName,
+        note: note,
+        plannedMinutes: plannedMinutes,
+        elapsedSeconds: elapsedSeconds,
+      ),
       where: 'exercise_id = ?',
       whereArgs: [exerciseId],
     );
@@ -92,10 +109,7 @@ class CardioDao {
   /// - [exerciseId]: Foreign key referencing the exercise.
   ///
   /// Returns the number of rows removed (should be 0 or 1).
-  static Future<int> deleteCardioDetails(
-    Database db,
-    int exerciseId,
-  ) {
+  static Future<int> deleteCardioDetails(Database db, int exerciseId) {
     return db.delete(
       'cardio_details',
       where: 'exercise_id = ?',

@@ -2,6 +2,7 @@
 
 import 'package:sqflite/sqflite.dart';
 import '../models/models.dart';
+import 'db_query_utils.dart';
 
 /// Data Access Object for exercise definitions and related lookups.
 ///
@@ -39,79 +40,238 @@ class DefinitionDao {
   /// Returns a list of [ExerciseDefinition] with all join lists populated.
   static Future<List<ExerciseDefinition>> getAllExerciseDefinitionsDetailed(
     Database db,
-  ) async {
+  ) {
+    return getAllExerciseDefinitionsDetailedBatched(db);
+  }
+
+  /// Batched detailed-definition loader used by all detailed lookup paths.
+  ///
+  /// Reads each join table once, groups the rows in memory, and keeps the
+  /// resulting model shape identical for callers.
+  static Future<List<ExerciseDefinition>>
+  getAllExerciseDefinitionsDetailedBatched(Database db) async {
     final defRows = await db.query('exercise_definitions', orderBy: 'name');
-    final List<ExerciseDefinition> defs = [];
+    if (defRows.isEmpty) return const <ExerciseDefinition>[];
 
-    for (final row in defRows) {
-      final defId       = row['id'] as int;
-      final name        = row['name'] as String;
-      final equipmentId = row['equipment_id'] as int?;
-      final rating      = (row['rating'] as num?)?.toInt() ?? 0;
-      final useManual = (row['use_manual_bodyparts'] as int? ?? 0) == 1;
-      // ↓ new, read your INTEGER 0/1 flag
-final multiplyByRating = (row['multiply_by_rating'] as int? ?? 0) == 1;
+    final equipmentRowsFuture = db.rawQuery('''
+      SELECT
+        ee.exercise_id AS exercise_id,
+        e.id AS equipment_id,
+        e.name AS equipment_name
+      FROM exercise_equipment ee
+      JOIN equipment e ON e.id = ee.equipment_id
+      ORDER BY ee.exercise_id, e.name
+    ''');
+    final bodyPartRowsFuture = db.rawQuery('''
+      SELECT
+        eb.exercise_id AS exercise_id,
+        b.id AS bodypart_id,
+        b.name AS bodypart_name
+      FROM exercise_bodypart eb
+      JOIN bodypart b ON b.id = eb.bodypart_id
+      ORDER BY eb.exercise_id, b.name
+    ''');
+    final muscleRowsFuture = db.rawQuery('''
+      SELECT
+        em.exercise_id AS exercise_id,
+        m.id AS muscle_id,
+        m.name AS muscle_name,
+        em.rank AS rank
+      FROM exercise_muscle em
+      JOIN muscles m ON m.id = em.muscle_id
+      ORDER BY em.exercise_id, em.rank, m.name
+    ''');
 
-      // NEW: read notes columns
-    final setupNotes     = (row['setup_notes']     as String?) ?? '';
-    final executionNotes = (row['execution_notes'] as String?) ?? '';
-    final tipsNotes      = (row['tips_notes']      as String?) ?? '';
+    final equipmentRows = await equipmentRowsFuture;
+    final bodyPartRows = await bodyPartRowsFuture;
+    final muscleRows = await muscleRowsFuture;
 
-      // equipmentList
-      final equipRows = await db.rawQuery('''
-        SELECT e.id, e.name
-          FROM equipment e
-          JOIN exercise_equipment ee ON ee.equipment_id = e.id
-         WHERE ee.exercise_id = ?
-         ORDER BY e.name
-      ''', [defId]);
-      final equipmentList = equipRows
-          .map((e) => Equipment(e['id'] as int, e['name'] as String))
-          .toList();
+    return _hydrateDefinitions(
+      defRows: defRows,
+      equipmentRows: equipmentRows,
+      bodyPartRows: bodyPartRows,
+      muscleRows: muscleRows,
+    );
+  }
 
-      // bodyParts
-      final bpRows = await db.rawQuery('''
-        SELECT b.id, b.name
-          FROM bodypart b
-          JOIN exercise_bodypart eb ON eb.bodypart_id = b.id
-         WHERE eb.exercise_id = ?
-         ORDER BY b.name
-      ''', [defId]);
-      final bodyParts = bpRows
-          .map((b) => BodyPart(b['id'] as int, b['name'] as String))
-          .toList();
-
-      // muscles
-      final mRows = await db.rawQuery('''
-        SELECT m.id AS muscle_id, m.name AS muscle_name, em.rank
-          FROM muscles m
-          JOIN exercise_muscle em ON em.muscle_id = m.id
-         WHERE em.exercise_id = ?
-         ORDER BY em.rank
-      ''', [defId]);
-      final muscles = mRows.map((m) {
-        return RankedMuscle(
-          muscle: Muscle(id: m['muscle_id'] as int, name: m['muscle_name'] as String),
-          rank: (m['rank'] as num).toInt(),
-        );
-      }).toList();
-
-      defs.add(ExerciseDefinition(
-        id:            defId,
-        name:          name,
-        equipmentId:   equipmentId,
-        rating:        rating,
-        equipmentList: equipmentList,
-        bodyParts:     bodyParts,
-        muscles:       muscles, 
-        useManualBodyparts: useManual,
-        multiplyByRating:   multiplyByRating,
-        setupNotes:     setupNotes,
-      executionNotes: executionNotes,
-      tipsNotes:      tipsNotes,
-      ));
+  static List<ExerciseDefinition> _hydrateDefinitions({
+    required List<Map<String, Object?>> defRows,
+    required List<Map<String, Object?>> equipmentRows,
+    required List<Map<String, Object?>> bodyPartRows,
+    required List<Map<String, Object?>> muscleRows,
+  }) {
+    final equipmentByDefinition = <int, List<Equipment>>{};
+    for (final row in equipmentRows) {
+      final defId = row['exercise_id'] as int;
+      equipmentByDefinition
+          .putIfAbsent(defId, () => <Equipment>[])
+          .add(
+            Equipment(
+              row['equipment_id'] as int,
+              row['equipment_name'] as String,
+            ),
+          );
     }
-    return defs;
+
+    final bodyPartsByDefinition = <int, List<BodyPart>>{};
+    for (final row in bodyPartRows) {
+      final defId = row['exercise_id'] as int;
+      bodyPartsByDefinition
+          .putIfAbsent(defId, () => <BodyPart>[])
+          .add(
+            BodyPart(row['bodypart_id'] as int, row['bodypart_name'] as String),
+          );
+    }
+
+    final musclesByDefinition = <int, List<RankedMuscle>>{};
+    for (final row in muscleRows) {
+      final defId = row['exercise_id'] as int;
+      musclesByDefinition
+          .putIfAbsent(defId, () => <RankedMuscle>[])
+          .add(
+            RankedMuscle(
+              muscle: Muscle(
+                id: row['muscle_id'] as int,
+                name: row['muscle_name'] as String,
+              ),
+              rank: (row['rank'] as num).toInt(),
+            ),
+          );
+    }
+
+    return defRows
+        .map(
+          (row) => _definitionFromRow(
+            row,
+            equipmentList:
+                equipmentByDefinition[row['id'] as int] ?? const <Equipment>[],
+            bodyParts:
+                bodyPartsByDefinition[row['id'] as int] ?? const <BodyPart>[],
+            muscles:
+                musclesByDefinition[row['id'] as int] ?? const <RankedMuscle>[],
+          ),
+        )
+        .toList();
+  }
+
+  static ExerciseDefinition _definitionFromRow(
+    Map<String, Object?> row, {
+    List<Equipment> equipmentList = const <Equipment>[],
+    List<BodyPart> bodyParts = const <BodyPart>[],
+    List<RankedMuscle> muscles = const <RankedMuscle>[],
+  }) {
+    return ExerciseDefinition(
+      id: row['id'] as int,
+      name: row['name'] as String,
+      equipmentId: row['equipment_id'] as int?,
+      rating: (row['rating'] as num?)?.toInt() ?? 0,
+      equipmentList: equipmentList,
+      bodyParts: bodyParts,
+      muscles: muscles,
+      useManualBodyparts: (row['use_manual_bodyparts'] as int? ?? 0) == 1,
+      multiplyByRating: (row['multiply_by_rating'] as int? ?? 0) == 1,
+      setupNotes: (row['setup_notes'] as String?) ?? '',
+      executionNotes: (row['execution_notes'] as String?) ?? '',
+      tipsNotes: (row['tips_notes'] as String?) ?? '',
+    );
+  }
+
+  static List<ExerciseDefinition> _shallowDefinitions(
+    List<Map<String, Object?>> rows,
+  ) {
+    return rows.map(_definitionFromRow).toList();
+  }
+
+  static Future<List<int>> _equipmentIdsForNames(
+    Database db,
+    List<String> equipmentNames,
+  ) async {
+    if (equipmentNames.isEmpty) return const <int>[];
+
+    final rows = await db.query(
+      'equipment',
+      columns: ['id'],
+      where: 'name IN (${sqlitePlaceholders(equipmentNames.length)})',
+      whereArgs: equipmentNames,
+    );
+    return rows.map((row) => row['id'] as int).toList();
+  }
+
+  /// Batched detailed-definition lookup for a known subset of exercise IDs.
+  static Future<List<ExerciseDefinition>> getExerciseDefinitionsDetailedByIds(
+    Database db,
+    List<int> definitionIds,
+  ) async {
+    if (definitionIds.isEmpty) return const <ExerciseDefinition>[];
+
+    final uniqueDefinitionIds = definitionIds.toSet().toList();
+    final defRows = <Map<String, Object?>>[];
+    for (final chunk in sqliteChunks(uniqueDefinitionIds)) {
+      final placeholders = sqlitePlaceholders(chunk.length);
+      defRows.addAll(
+        await db.query(
+          'exercise_definitions',
+          where: 'id IN ($placeholders)',
+          whereArgs: chunk,
+          orderBy: 'name',
+        ),
+      );
+    }
+    if (defRows.isEmpty) return const <ExerciseDefinition>[];
+    defRows.sort(
+      (a, b) => (a['name'] as String).compareTo(b['name'] as String),
+    );
+
+    final selectedIds = defRows.map((row) => row['id'] as int).toList();
+    final equipmentRows = <Map<String, Object?>>[];
+    final bodyPartRows = <Map<String, Object?>>[];
+    final muscleRows = <Map<String, Object?>>[];
+
+    for (final chunk in sqliteChunks(selectedIds)) {
+      final placeholders = sqlitePlaceholders(chunk.length);
+      final equipmentRowsFuture = db.rawQuery('''
+        SELECT
+          ee.exercise_id AS exercise_id,
+          e.id AS equipment_id,
+          e.name AS equipment_name
+        FROM exercise_equipment ee
+        JOIN equipment e ON e.id = ee.equipment_id
+        WHERE ee.exercise_id IN ($placeholders)
+        ORDER BY ee.exercise_id, e.name
+      ''', chunk);
+      final bodyPartRowsFuture = db.rawQuery('''
+        SELECT
+          eb.exercise_id AS exercise_id,
+          b.id AS bodypart_id,
+          b.name AS bodypart_name
+        FROM exercise_bodypart eb
+        JOIN bodypart b ON b.id = eb.bodypart_id
+        WHERE eb.exercise_id IN ($placeholders)
+        ORDER BY eb.exercise_id, b.name
+      ''', chunk);
+      final muscleRowsFuture = db.rawQuery('''
+        SELECT
+          em.exercise_id AS exercise_id,
+          m.id AS muscle_id,
+          m.name AS muscle_name,
+          em.rank AS rank
+        FROM exercise_muscle em
+        JOIN muscles m ON m.id = em.muscle_id
+        WHERE em.exercise_id IN ($placeholders)
+        ORDER BY em.exercise_id, em.rank, m.name
+      ''', chunk);
+
+      equipmentRows.addAll(await equipmentRowsFuture);
+      bodyPartRows.addAll(await bodyPartRowsFuture);
+      muscleRows.addAll(await muscleRowsFuture);
+    }
+
+    return _hydrateDefinitions(
+      defRows: defRows,
+      equipmentRows: equipmentRows,
+      bodyPartRows: bodyPartRows,
+      muscleRows: muscleRows,
+    );
   }
 
   /// Retrieves a shallow list of all exercise definition rows.
@@ -119,9 +279,7 @@ final multiplyByRating = (row['multiply_by_rating'] as int? ?? 0) == 1;
   /// - [db]: Open database instance.
   ///
   /// Returns list of maps with keys directly from the table (no joins).
-  static Future<List<Map<String, dynamic>>> getAllExercisesRaw(
-    Database db,
-  ) {
+  static Future<List<Map<String, dynamic>>> getAllExercisesRaw(Database db) {
     return db.query('exercise_definitions', orderBy: 'name');
   }
 
@@ -136,36 +294,16 @@ final multiplyByRating = (row['multiply_by_rating'] as int? ?? 0) == 1;
     List<String> equipmentNames,
   ) async {
     if (equipmentNames.isEmpty) return [];
-    final eqRows = await db.query(
-      'equipment',
-      where:    'name IN (${List.filled(equipmentNames.length, '?').join(',')})',
-      whereArgs: equipmentNames,
-    );
-    final eqIds = eqRows.map((r) => r['id'] as int).toList();
+    final eqIds = await _equipmentIdsForNames(db, equipmentNames);
     if (eqIds.isEmpty) return [];
 
     final defRows = await db.query(
       'exercise_definitions',
-      where:    'equipment_id IN (${List.filled(eqIds.length, '?').join(',')})',
+      where: 'equipment_id IN (${sqlitePlaceholders(eqIds.length)})',
       whereArgs: eqIds,
-      orderBy:  'name',
+      orderBy: 'name',
     );
-    return defRows.map((r) {
-      return ExerciseDefinition(
-        id:            r['id']   as int,
-        name:          r['name'] as String,
-        equipmentId:   r['equipment_id'] as int?,
-        rating:        r['rating'] as int,
-        equipmentList: const [],
-        bodyParts:     const [],
-        muscles:       const [],
-        useManualBodyparts: (r['use_manual_bodyparts'] as int? ?? 0) == 1,
-        multiplyByRating:    (r['multiply_by_rating']    as int? ?? 0)==1,
-         setupNotes:     '',
- executionNotes: '',
- tipsNotes:      '',
-      );
-    }).toList();
+    return _shallowDefinitions(defRows);
   }
 
   /// Filters definitions to only those matching given equipment names, and
@@ -180,47 +318,27 @@ final multiplyByRating = (row['multiply_by_rating'] as int? ?? 0) == 1;
     bool includeNone = true,
   }) async {
     // lookup IDs
-    final eqRows = await db.query(
-      'equipment',
-      where:    'name IN (${List.filled(equipmentNames.length, '?').join(',')})',
-      whereArgs: equipmentNames,
-    );
-    final eqIds = eqRows.map((r) => r['id'] as int).toList();
+    final eqIds = await _equipmentIdsForNames(db, equipmentNames);
 
     // build WHERE
     final whereClauses = <String>[];
-    final args         = <Object?>[];
+    final args = <Object?>[];
     if (eqIds.isNotEmpty) {
-      whereClauses.add('equipment_id IN (${List.filled(eqIds.length, '?').join(',')})');
+      whereClauses.add('equipment_id IN (${sqlitePlaceholders(eqIds.length)})');
       args.addAll(eqIds);
     }
     if (includeNone) whereClauses.add('equipment_id IS NULL');
     if (whereClauses.isEmpty) {
-      return getAllExerciseDefinitionsDetailed(db);
+      return getAllExerciseDefinitionsDetailedBatched(db);
     }
 
     final defRows = await db.query(
       'exercise_definitions',
-      where:     whereClauses.join(' OR '),
+      where: whereClauses.join(' OR '),
       whereArgs: args,
-      orderBy:   'name',
+      orderBy: 'name',
     );
-    return defRows.map((r) {
-      return ExerciseDefinition(
-        id:            r['id']   as int,
-        name:          r['name'] as String,
-        equipmentId:   r['equipment_id'] as int?,
-        rating:        r['rating'] as int,
-        equipmentList: const [],
-        bodyParts:     const [],
-        muscles:       const [],
-        useManualBodyparts: (r['use_manual_bodyparts'] as int? ?? 0) == 1,
-        multiplyByRating:    (r['multiply_by_rating']    as int? ?? 0)==1,
-         setupNotes:     '',
- executionNotes: '',
- tipsNotes:      '',
-      );
-    }).toList();
+    return _shallowDefinitions(defRows);
   }
 
   /// Applies combined filters for equipment, body parts, and muscles.
@@ -234,95 +352,87 @@ final multiplyByRating = (row['multiply_by_rating'] as int? ?? 0) == 1;
   static Future<List<ExerciseDefinition>> getExerciseDefinitionsFiltered(
     Database db, {
     List<String>? equipmentNames,
-    List<int>?    bodypartIds,
-    List<int>?    muscleIds,
+    List<int>? bodypartIds,
+    List<int>? muscleIds,
   }) async {
     // Resolve equipment → IDs
     List<int> equipmentIds = [];
     if (equipmentNames != null && equipmentNames.isNotEmpty) {
-      final eqRows = await db.query(
-        'equipment',
-        columns:   ['id'],
-        where:     'name IN (${List.filled(equipmentNames.length, '?').join(',')})',
-        whereArgs: equipmentNames,
-      );
-      equipmentIds = eqRows.map((r) => r['id'] as int).toList();
+      equipmentIds = await _equipmentIdsForNames(db, equipmentNames);
     }
 
     final whereClauses = <String>[];
-    final whereArgs    = <Object?>[];
+    final whereArgs = <Object?>[];
 
     if (equipmentIds.isNotEmpty) {
-      whereClauses.add('ed.equipment_id IN (${List.filled(equipmentIds.length, '?').join(',')})');
+      whereClauses.add(
+        'ed.equipment_id IN (${sqlitePlaceholders(equipmentIds.length)})',
+      );
       whereArgs.addAll(equipmentIds);
     }
     if (bodypartIds != null && bodypartIds.isNotEmpty) {
-      whereClauses.add('eb.bodypart_id IN (${List.filled(bodypartIds.length, '?').join(',')})');
+      whereClauses.add(
+        'eb.bodypart_id IN (${sqlitePlaceholders(bodypartIds.length)})',
+      );
       whereArgs.addAll(bodypartIds);
     }
     if (muscleIds != null && muscleIds.isNotEmpty) {
-      whereClauses.add('em.muscle_id IN (${List.filled(muscleIds.length, '?').join(',')})');
+      whereClauses.add(
+        'em.muscle_id IN (${sqlitePlaceholders(muscleIds.length)})',
+      );
       whereArgs.addAll(muscleIds);
     }
 
-    final sql = StringBuffer()
-      ..write('''
+    final sql =
+        StringBuffer()
+          ..write('''
         SELECT DISTINCT ed.id, ed.name, ed.equipment_id, ed.rating, ed.use_manual_bodyparts, ed.multiply_by_rating
           FROM exercise_definitions ed
       ''')
-      ..write(bodypartIds != null && bodypartIds.isNotEmpty
-        ? 'JOIN exercise_bodypart eb ON eb.exercise_id = ed.id '
-        : '')
-      ..write(muscleIds != null && muscleIds.isNotEmpty
-        ? 'JOIN exercise_muscle em ON em.exercise_id = ed.id '
-        : '')
-      ..write(whereClauses.isNotEmpty
-        ? 'WHERE ${whereClauses.join(' AND ')} '
-        : '')
-      ..write('ORDER BY ed.name');
+          ..write(
+            bodypartIds != null && bodypartIds.isNotEmpty
+                ? 'JOIN exercise_bodypart eb ON eb.exercise_id = ed.id '
+                : '',
+          )
+          ..write(
+            muscleIds != null && muscleIds.isNotEmpty
+                ? 'JOIN exercise_muscle em ON em.exercise_id = ed.id '
+                : '',
+          )
+          ..write(
+            whereClauses.isNotEmpty
+                ? 'WHERE ${whereClauses.join(' AND ')} '
+                : '',
+          )
+          ..write('ORDER BY ed.name');
 
     final rows = await db.rawQuery(sql.toString(), whereArgs);
-    return rows.map((r) {
-      return ExerciseDefinition(
-        id:            r['id']   as int,
-        name:          r['name'] as String,
-        equipmentId:   r['equipment_id'] as int?,
-        rating:        r['rating'] as int,
-        equipmentList: const [],
-        bodyParts:     const [],
-        muscles:       const [],
-        useManualBodyparts: (r['use_manual_bodyparts'] as int? ?? 0) == 1,
-        multiplyByRating:    (r['multiply_by_rating']    as int? ?? 0)==1,
-   setupNotes:          '',
-   executionNotes:      '',
-   tipsNotes:           '',
+    return _shallowDefinitions(rows);
+  }
+
+  /// Finds or creates an [ExerciseDefinition] by [name] and [equipmentName].
+  /// Returns the definition ID.
+  static Future<int> findOrCreateExerciseDefinition(
+    Database db,
+    String name,
+    String equipmentName,
+  ) async {
+    // 1) Resolve equipment_id if provided
+    int? eqId;
+    if (equipmentName.isNotEmpty) {
+      final eqRows = await db.query(
+        'equipment',
+        where: 'name = ?',
+        whereArgs: [equipmentName],
+        limit: 1,
       );
-    }).toList();
-  }
+      if (eqRows.isNotEmpty) eqId = eqRows.first['id'] as int;
+    }
 
-/// Finds or creates an [ExerciseDefinition] by [name] and [equipmentName].
-/// Returns the definition ID.
-static Future<int> findOrCreateExerciseDefinition(
-  Database db,
-  String name,
-  String equipmentName,
-) async {
-  // 1) Resolve equipment_id if provided
-  int? eqId;
-  if (equipmentName.isNotEmpty) {
-    final eqRows = await db.query(
-      'equipment',
-      where: 'name = ?',
-      whereArgs: [equipmentName],
-      limit: 1,
-    );
-    if (eqRows.isNotEmpty) eqId = eqRows.first['id'] as int;
-  }
-
-  // 2) Lookup existing definition by name + any equipment (primary or via join table)
-  final lookupArgs = eqId != null ? [name, eqId, eqId] : [name];
-  // new: interpolated string (Dart will replace ${…})
-final defRows = await db.rawQuery('''
+    // 2) Lookup existing definition by name + any equipment (primary or via join table)
+    final lookupArgs = eqId != null ? [name, eqId, eqId] : [name];
+    // new: interpolated string (Dart will replace ${…})
+    final defRows = await db.rawQuery('''
   SELECT ed.id
     FROM exercise_definitions ed
     LEFT JOIN exercise_equipment ee ON ee.exercise_id = ed.id
@@ -333,25 +443,20 @@ final defRows = await db.rawQuery('''
    LIMIT 1
 ''', lookupArgs);
 
+    if (defRows.isNotEmpty) {
+      // Found an existing definition
+      return defRows.first['id'] as int;
+    }
 
-  if (defRows.isNotEmpty) {
-    // Found an existing definition
-    return defRows.first['id'] as int;
-  }
-
-  // 3) Not found — insert a new definition
-  await db.insert(
-    'exercise_definitions',
-    {
+    // 3) Not found — insert a new definition
+    await db.insert('exercise_definitions', {
       'name': name,
       'equipment_id': eqId,
       'rating': 0,
-    },
-    conflictAlgorithm: ConflictAlgorithm.ignore,
-  );
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
 
-  // 4) Re-query for the ID (either our insert or an existing one)
-  final requery = await db.rawQuery('''
+    // 4) Re-query for the ID (either our insert or an existing one)
+    final requery = await db.rawQuery('''
   SELECT ed.id
     FROM exercise_definitions ed
     LEFT JOIN exercise_equipment ee ON ee.exercise_id = ed.id
@@ -361,9 +466,8 @@ final defRows = await db.rawQuery('''
      )
    LIMIT 1
 ''', lookupArgs);
-  return requery.first['id'] as int;
-}
-
+    return requery.first['id'] as int;
+  }
 
   /// Retrieves the name and equipmentName for a definition ID.
   ///
@@ -375,102 +479,89 @@ final defRows = await db.rawQuery('''
     Database db,
     int defId,
   ) async {
-    final rows = await db.rawQuery('''
+    final rows = await db.rawQuery(
+      '''
       SELECT 
         ed.name            AS name,
         e.name            AS equipment_name
       FROM exercise_definitions ed
       LEFT JOIN equipment e ON ed.equipment_id = e.id
       WHERE ed.id = ?
-    ''', [defId]);
+    ''',
+      [defId],
+    );
 
     if (rows.isEmpty) {
       throw Exception('Definition $defId not found');
     }
     final row = rows.first;
     return {
-      'name':           row['name'] as String,
-      'equipmentName':  row['equipment_name'] as String?,
+      'name': row['name'] as String,
+      'equipmentName': row['equipment_name'] as String?,
     };
   }
 
-/// Updates core fields of an existing [ExerciseDefinition].
+  /// Updates core fields of an existing [ExerciseDefinition].
   ///
   /// - [db]: Open database instance.
   /// - [def]: Definition object with updated fields.
   ///
   /// Returns number of rows affected.
-static Future<int> updateExerciseDefinition(
-  Database db,
-  ExerciseDefinition def,
-) {
-  return db.update(
-    'exercise_definitions',
-    {
-      'name': def.name,
-      'equipment_id': def.equipmentId,
-      'rating': def.rating,
-      'use_manual_bodyparts': def.useManualBodyparts ? 1 : 0,
-      'multiply_by_rating':    def.multiplyByRating   ? 1 : 0,
-      
-      // NEW: persist notes columns
-      'setup_notes':     def.setupNotes,
-      'execution_notes': def.executionNotes,
-      'tips_notes':      def.tipsNotes,
-    },
-    where: 'id = ?',
-    whereArgs: [def.id],
-  );
-}
+  static Future<int> updateExerciseDefinition(
+    Database db,
+    ExerciseDefinition def,
+  ) {
+    return db.update(
+      'exercise_definitions',
+      {
+        'name': def.name,
+        'equipment_id': def.equipmentId,
+        'rating': def.rating,
+        'use_manual_bodyparts': def.useManualBodyparts ? 1 : 0,
+        'multiply_by_rating': def.multiplyByRating ? 1 : 0,
 
- /// Deletes an exercise definition, cascading to join tables.
+        // NEW: persist notes columns
+        'setup_notes': def.setupNotes,
+        'execution_notes': def.executionNotes,
+        'tips_notes': def.tipsNotes,
+      },
+      where: 'id = ?',
+      whereArgs: [def.id],
+    );
+  }
+
+  /// Deletes an exercise definition, cascading to join tables.
   ///
   /// - [db]: Open database instance.
   /// - [defId]: Definition ID to delete.
   ///
   /// Returns number of rows removed.
-static Future<int> deleteExerciseDefinition(
-  Database db,
-  int defId,
-) {
-  return db.delete(
-    'exercise_definitions',
-    where: 'id = ?',
-    whereArgs: [defId],
-  );
-}
+  static Future<int> deleteExerciseDefinition(Database db, int defId) {
+    return db.delete(
+      'exercise_definitions',
+      where: 'id = ?',
+      whereArgs: [defId],
+    );
+  }
 
-/// Performs case-insensitive name search on definitions.
+  /// Performs case-insensitive name search on definitions.
   ///
   /// - [db]: Open database instance.
   /// - [query]: Substring to search in lower-case.
   ///
   /// Returns shallow [ExerciseDefinition] list.
-static Future<List<ExerciseDefinition>> searchExerciseDefinitions(
-  Database db,
-  String query,
-) async {
-  final rows = await db.query(
-    'exercise_definitions',
-    where: 'LOWER(name) LIKE ?',
-    whereArgs: ['%${query.toLowerCase()}%'],
-    orderBy: 'name',
-  );
-  return rows.map((r) => ExerciseDefinition(
-    id:           r['id'] as int,
-    name:         r['name'] as String,
-    equipmentId:  r['equipment_id'] as int?,
-    rating:       (r['rating'] as num).toInt(),
-    equipmentList: const [],
-    bodyParts:     const [],
-    muscles:       const [],
-    useManualBodyparts: (r['use_manual_bodyparts'] as int? ?? 0) == 1,
-    multiplyByRating:    (r['multiply_by_rating']    as int? ?? 0)==1,
-         setupNotes:     '',
- executionNotes: '',
- tipsNotes:      '',
-  )).toList();
-}
+  static Future<List<ExerciseDefinition>> searchExerciseDefinitions(
+    Database db,
+    String query,
+  ) async {
+    final rows = await db.query(
+      'exercise_definitions',
+      where: 'LOWER(name) LIKE ?',
+      whereArgs: ['%${query.toLowerCase()}%'],
+      orderBy: 'name',
+    );
+    return _shallowDefinitions(rows);
+  }
 
   /// Performs fuzzy search on definition names with SQL LIKE.
   ///
@@ -489,221 +580,115 @@ static Future<List<ExerciseDefinition>> searchExerciseDefinitions(
       whereArgs: [likeArg],
       orderBy: 'name',
     );
-    return rows.map((r) {
-      return ExerciseDefinition(
-        id:            r['id']            as int,
-        name:          r['name']          as String,
-        equipmentId:   r['equipment_id']  as int?,
-        rating:       (r['rating'] as num?)?.toInt() ?? 0,
-        equipmentList: const [],
-        bodyParts:     const [],
-        muscles:       const [],
-        useManualBodyparts: (r['use_manual_bodyparts'] as int? ?? 0) == 1,
-        multiplyByRating:    (r['multiply_by_rating']    as int? ?? 0)==1,
-   setupNotes:          '',
-   executionNotes:      '',
-   tipsNotes:           '',
-      );
-    }).toList();
+    return _shallowDefinitions(rows);
   }
 
+  /// Fetches a single ExerciseDefinition with all joins populated.
+  static Future<ExerciseDefinition?> getExerciseDefinitionById(
+    Database db,
+    int defId,
+  ) async {
+    final definitions = await getExerciseDefinitionsDetailedByIds(db, [defId]);
+    return definitions.isEmpty ? null : definitions.first;
+  }
 
-/// Fetches a single ExerciseDefinition with all joins populated.
-static Future<ExerciseDefinition?> getExerciseDefinitionById(
-  Database db,
-  int defId,
-) async {
-  final rows = await db.query(
-    'exercise_definitions',
-    where: 'id = ?',
-    whereArgs: [defId],
-    limit: 1,
-  );
-  if (rows.isEmpty) return null;
-  final row = rows.first;
-  final name        = row['name']            as String;
-  final equipmentId = row['equipment_id']    as int?;
-  final rating      = (row['rating'] as num?)?.toInt() ?? 0;
-  final useManual = (row['use_manual_bodyparts'] as int? ?? 0) == 1;
-  final multiplyByRating = (row['multiply_by_rating'] as int? ?? 0) == 1;
-
-
-  // NEW: read notes columns
-  final setupNotes     = (row['setup_notes']     as String?) ?? '';
-  final executionNotes = (row['execution_notes'] as String?) ?? '';
-  final tipsNotes      = (row['tips_notes']      as String?) ?? '';
-
-  // equipmentList
-  final equipRows = await db.rawQuery('''
-    SELECT e.id, e.name
-      FROM equipment e
-      JOIN exercise_equipment ee ON ee.equipment_id = e.id
-     WHERE ee.exercise_id = ?
-     ORDER BY e.name
-  ''', [defId]);
-  final equipmentList = equipRows
-      .map((e) => Equipment(e['id'] as int, e['name'] as String))
-      .toList();
-
-  // bodyParts
-  final bpRows = await db.rawQuery('''
-    SELECT b.id, b.name
-      FROM bodypart b
-      JOIN exercise_bodypart eb ON eb.bodypart_id = b.id
-     WHERE eb.exercise_id = ?
-     ORDER BY b.name
-  ''', [defId]);
-  final bodyParts = bpRows
-      .map((b) => BodyPart(b['id'] as int, b['name'] as String))
-      .toList();
-
-  // muscles
-  final mRows = await db.rawQuery('''
-    SELECT m.id AS muscle_id, m.name AS muscle_name, em.rank
-      FROM muscles m
-      JOIN exercise_muscle em ON em.muscle_id = m.id
-     WHERE em.exercise_id = ?
-     ORDER BY em.rank
-  ''', [defId]);
-  final muscles = mRows.map((m) {
-    return RankedMuscle(
-      muscle: Muscle(id: m['muscle_id'] as int, name: m['muscle_name'] as String),
-      rank:  (m['rank'] as num).toInt(),
-    );
-  }).toList();
-
-  return ExerciseDefinition(
-    id:            defId,
-    name:          name,
-    equipmentId:   equipmentId,
-    rating:        rating,
-    equipmentList: equipmentList,
-    bodyParts:     bodyParts,
-    muscles:       muscles,
-    useManualBodyparts: useManual,
-    multiplyByRating:   multiplyByRating,
-    setupNotes:     setupNotes,
-    executionNotes: executionNotes,
-    tipsNotes:      tipsNotes,
-  );
-}
-
-/// Inserts a muscle↔exercise link at a given rank.
-static Future<int> insertExerciseMuscleMapping(
-  Database db,
-  int exerciseId,
-  int muscleId,
-  int rank,
-) {
-  return db.insert(
-    'exercise_muscle',
-    {
+  /// Inserts a muscle↔exercise link at a given rank.
+  static Future<int> insertExerciseMuscleMapping(
+    Database db,
+    int exerciseId,
+    int muscleId,
+    int rank,
+  ) {
+    return db.insert('exercise_muscle', {
       'exercise_id': exerciseId,
-      'muscle_id':   muscleId,
-      'rank':        rank,
-    },
-  );
-}
+      'muscle_id': muscleId,
+      'rank': rank,
+    });
+  }
 
-/// Deletes the association between an exercise definition and a muscle.
-static Future<int> deleteExerciseMuscleMapping(
-  Database db,
-  int exerciseId,
-  int muscleId,
-) {
-  return db.delete(
-    'exercise_muscle',
-    where: 'exercise_id = ? AND muscle_id = ?',
-    whereArgs: [exerciseId, muscleId],
-  );
-}
+  /// Deletes the association between an exercise definition and a muscle.
+  static Future<int> deleteExerciseMuscleMapping(
+    Database db,
+    int exerciseId,
+    int muscleId,
+  ) {
+    return db.delete(
+      'exercise_muscle',
+      where: 'exercise_id = ? AND muscle_id = ?',
+      whereArgs: [exerciseId, muscleId],
+    );
+  }
 
-/// Inserts a body-part↔exercise link.
-static Future<int> insertExerciseBodypartMapping(
-  Database db,
-  int exerciseId,
-  int bodypartId,
-) {
-  return db.insert(
-    'exercise_bodypart',
-    {
+  /// Inserts a body-part↔exercise link.
+  static Future<int> insertExerciseBodypartMapping(
+    Database db,
+    int exerciseId,
+    int bodypartId,
+  ) {
+    return db.insert('exercise_bodypart', {
       'exercise_id': exerciseId,
       'bodypart_id': bodypartId,
-    },
-  );
-}
+    });
+  }
 
-/// Deletes a body-part↔exercise link.
-static Future<int> deleteExerciseBodypartMapping(
-  Database db,
-  int exerciseId,
-  int bodypartId,
-) {
-  return db.delete(
-    'exercise_bodypart',
-    where: 'exercise_id = ? AND bodypart_id = ?',
-    whereArgs: [exerciseId, bodypartId],
-  );
-}
+  /// Deletes a body-part↔exercise link.
+  static Future<int> deleteExerciseBodypartMapping(
+    Database db,
+    int exerciseId,
+    int bodypartId,
+  ) {
+    return db.delete(
+      'exercise_bodypart',
+      where: 'exercise_id = ? AND bodypart_id = ?',
+      whereArgs: [exerciseId, bodypartId],
+    );
+  }
 
-/// Inserts an equipment↔exercise link.
-static Future<int> insertExerciseEquipmentMapping(
-  Database db,
-  int exerciseId,
-  int equipmentId,
-) {
-  return db.insert(
-    'exercise_equipment',
-    {
-      'exercise_id':  exerciseId,
+  /// Inserts an equipment↔exercise link.
+  static Future<int> insertExerciseEquipmentMapping(
+    Database db,
+    int exerciseId,
+    int equipmentId,
+  ) {
+    return db.insert('exercise_equipment', {
+      'exercise_id': exerciseId,
       'equipment_id': equipmentId,
-    },
-  );
-}
+    });
+  }
 
-/// Deletes an equipment↔exercise link.
-static Future<int> deleteExerciseEquipmentMapping(
-  Database db,
-  int exerciseId,
-  int equipmentId,
-) {
-  return db.delete(
-    'exercise_equipment',
-    where: 'exercise_id = ? AND equipment_id = ?',
-    whereArgs: [exerciseId, equipmentId],
-  );
-}
+  /// Deletes an equipment↔exercise link.
+  static Future<int> deleteExerciseEquipmentMapping(
+    Database db,
+    int exerciseId,
+    int equipmentId,
+  ) {
+    return db.delete(
+      'exercise_equipment',
+      where: 'exercise_id = ? AND equipment_id = ?',
+      whereArgs: [exerciseId, equipmentId],
+    );
+  }
 
+  /// Reads the “multiply_by_rating” flag from the exercise_definitions row.
+  static Future<bool> getMultiplyByRating(Database db, int defId) async {
+    final rows = await db.query(
+      'exercise_definitions',
+      columns: ['multiply_by_rating'],
+      where: 'id = ?',
+      whereArgs: [defId],
+      limit: 1,
+    );
+    if (rows.isEmpty) return false;
+    return (rows.first['multiply_by_rating'] as int? ?? 0) == 1;
+  }
 
-/// Reads the “multiply_by_rating” flag from the exercise_definitions row.
-static Future<bool> getMultiplyByRating(
-  Database db,
-  int defId,
-) async {
-  final rows = await db.query(
-    'exercise_definitions',
-    columns: ['multiply_by_rating'],
-    where: 'id = ?',
-    whereArgs: [defId],
-    limit: 1,
-  );
-  if (rows.isEmpty) return false;
-  return (rows.first['multiply_by_rating'] as int? ?? 0) == 1;
-}
-
-/// Updates the “multiply_by_rating” flag for a definition.
-static Future<int> setMultiplyByRating(
-  Database db,
-  int defId,
-  bool enabled,
-) {
-  return db.update(
-    'exercise_definitions',
-    {'multiply_by_rating': enabled ? 1 : 0},
-    where: 'id = ?',
-    whereArgs: [defId],
-  );
-}
-
-
+  /// Updates the “multiply_by_rating” flag for a definition.
+  static Future<int> setMultiplyByRating(Database db, int defId, bool enabled) {
+    return db.update(
+      'exercise_definitions',
+      {'multiply_by_rating': enabled ? 1 : 0},
+      where: 'id = ?',
+      whereArgs: [defId],
+    );
+  }
 }

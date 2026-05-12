@@ -1,7 +1,8 @@
 import 'dart:math' as math;
 
-import '../repositories/app_repository.dart';
 import '../models/models.dart';
+import '../repositories/app_repository.dart';
+import '../utils/async_pool.dart';
 
 class PresetGenerationService {
   static const int _candidateAnalysisConcurrency = 4;
@@ -1291,26 +1292,11 @@ class PresetGenerationService {
     List<ExerciseDefinition> definitions,
     Future<T?> Function(ExerciseDefinition definition) mapper,
   ) async {
-    if (definitions.isEmpty) return const [];
-
-    final results = List<T?>.filled(definitions.length, null);
-    var nextIndex = 0;
-
-    Future<void> worker() async {
-      while (true) {
-        final index = nextIndex;
-        if (index >= definitions.length) return;
-        nextIndex += 1;
-        results[index] = await mapper(definitions[index]);
-      }
-    }
-
-    final workerCount = math.min(
-      _candidateAnalysisConcurrency,
-      definitions.length,
+    final results = await mapWithConcurrency<ExerciseDefinition, T?>(
+      definitions,
+      maxConcurrency: _candidateAnalysisConcurrency,
+      mapper: (definition, _) => mapper(definition),
     );
-    await Future.wait(List.generate(workerCount, (_) => worker()));
-
     return [
       for (final result in results)
         if (result != null) result,

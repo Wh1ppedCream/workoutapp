@@ -1,27 +1,19 @@
 // File: lib/db/preset_definition_dao.dart
 
 import 'package:sqflite/sqflite.dart';
+import 'db_query_utils.dart';
 
 /// DAO for accessing preset_definitions table, with optional profile filtering.
 class PresetDefinitionDao {
   /// Inserts a new preset and returns its ID.
   ///
   /// Optionally scopes the preset to [profileId].
-  static Future<int> insertPreset(
-    Database db,
-    String name, {
-    int? profileId,
-  }) async {
-    final data = <String, dynamic>{
-      'name': name,
-    };
+  static Future<int> insertPreset(Database db, String name, {int? profileId}) {
+    final data = <String, dynamic>{'name': name};
     if (profileId != null) {
       data['profile_id'] = profileId;
     }
-    return await db.insert(
-      'preset_definitions',
-      data,
-    );
+    return db.insert('preset_definitions', data);
   }
 
   /// Finds a preset by [name] and optional [profileId], or inserts it if missing.
@@ -32,9 +24,10 @@ class PresetDefinitionDao {
     String name, {
     int? profileId,
   }) async {
-    final whereClause = profileId != null
-        ? 'name = ? AND profile_id = ?'
-        : 'name = ? AND profile_id IS NULL';
+    final whereClause =
+        profileId != null
+            ? 'name = ? AND profile_id = ?'
+            : 'name = ? AND profile_id IS NULL';
     final whereArgs = profileId != null ? [name, profileId] : [name];
     final rows = await db.query(
       'preset_definitions',
@@ -62,10 +55,7 @@ class PresetDefinitionDao {
         orderBy: 'created_at',
       );
     }
-    return db.query(
-      'preset_definitions',
-      orderBy: 'created_at',
-    );
+    return db.query('preset_definitions', orderBy: 'created_at');
   }
 
   /// Retrieves a single preset definition by ID.
@@ -79,7 +69,7 @@ class PresetDefinitionDao {
       whereArgs: [presetId],
       limit: 1,
     );
-    return rows.isNotEmpty ? rows.first : null;
+    return firstDynamicRow(rows);
   }
 
   /// Updates the name of an existing preset.
@@ -87,8 +77,8 @@ class PresetDefinitionDao {
     Database db,
     int presetId,
     String newName,
-  ) async {
-    return await db.update(
+  ) {
+    return db.update(
       'preset_definitions',
       {'name': newName},
       where: 'id = ?',
@@ -97,11 +87,8 @@ class PresetDefinitionDao {
   }
 
   /// Deletes a preset and cascades to its exercises.
-  static Future<int> deletePreset(
-    Database db,
-    int presetId,
-  ) async {
-    return await db.delete(
+  static Future<int> deletePreset(Database db, int presetId) {
+    return db.delete(
       'preset_definitions',
       where: 'id = ?',
       whereArgs: [presetId],

@@ -107,16 +107,17 @@ class PresetBar extends StatelessWidget {
           ],
         ),
       );
+      if (!context.mounted) return;
       if (confirm == true) {
         await repo.deletePreset(presetId);
         onRefresh();
       }
 
     } else if (action == 'rename') {
+      final ctl = TextEditingController(text: label);
       final newName = await showDialog<String>(
         context: context,
         builder: (dCtx) {
-          final ctl = TextEditingController(text: label);
           return AlertDialog(
             title: const Text('Rename Preset'),
             content: TextField(
@@ -131,6 +132,8 @@ class PresetBar extends StatelessWidget {
           );
         },
       );
+      ctl.dispose();
+      if (!context.mounted) return;
       if (newName != null && newName.isNotEmpty && newName != label) {
         await repo.updatePresetName(presetId, newName);
         onRefresh();

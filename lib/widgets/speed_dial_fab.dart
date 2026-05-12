@@ -46,6 +46,7 @@ class _SpeedDialFabState extends State<SpeedDialFab> {
                 final changed = await Navigator.of(context).push<bool>(
                   MaterialPageRoute(builder: (_) => const FoodLoggingPage()),
                 );
+                if (!mounted) return;
                 if (changed == true) {
                   await widget.onFoodLogged?.call();
                 }
@@ -63,6 +64,7 @@ class _SpeedDialFabState extends State<SpeedDialFab> {
                     builder: (_) => const NewMeasurementItemPage(),
                   ),
                 );
+                if (!mounted) return;
                 if (changed == true) {
                   await widget.onMeasurementLogged?.call();
                 }

@@ -114,9 +114,10 @@ class CurrentMetricsSectionState extends State<CurrentMetricsSection>
         const SizedBox(height: 12),
         Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
           Text('$_daysAgo days ago', style: Theme.of(context).textTheme.bodySmall),
-          GestureDetector(
-            onTap: () {},
-            child: const Icon(Icons.chevron_right, size: 16),
+          Icon(
+            Icons.chevron_right,
+            size: 16,
+            color: Theme.of(context).iconTheme.color?.withValues(alpha: 0.45),
           ),
         ]),
         const Divider(height: 32),

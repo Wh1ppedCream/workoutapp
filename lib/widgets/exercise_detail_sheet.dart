@@ -24,7 +24,11 @@ class ExerciseDetailSheet extends StatefulWidget {
   final ExerciseDefinition definition;
   final int defId;
 
-  const ExerciseDetailSheet({super.key, required this.definition, required this.defId});
+  const ExerciseDetailSheet({
+    super.key,
+    required this.definition,
+    required this.defId,
+  });
 
   @override
   State<ExerciseDetailSheet> createState() => _ExerciseDetailSheetState();
@@ -32,7 +36,9 @@ class ExerciseDetailSheet extends StatefulWidget {
 
 class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
   late final AppRepository _repo;
-  late final Future<List<HistoryRecord>> _historyFuture;
+  late Future<List<HistoryRecord>> _historyFuture;
+  final Map<String, Future<List<RepMaxRow>>> _repMaxFutures = {};
+  final Map<String, Future<double?>> _volumeMaxFutures = {};
 
   // Timeframe toggles
   final List<String> _timeframes = ['week', 'month', 'all'];
@@ -46,28 +52,55 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     _historyFuture = _loadHistory();
   }
 
+  @override
+  void didUpdateWidget(covariant ExerciseDetailSheet oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.defId != widget.defId) {
+      _repMaxFutures.clear();
+      _volumeMaxFutures.clear();
+      _historyFuture = _loadHistory();
+    }
+  }
+
+  Future<List<RepMaxRow>> _repMaxFuture(String timeframe) {
+    return _repMaxFutures.putIfAbsent(
+      timeframe,
+      () => _repo.fetchRepMaxes(widget.defId, timeframe),
+    );
+  }
+
+  Future<double?> _volumeMaxFuture(String timeframe) {
+    return _volumeMaxFutures.putIfAbsent(
+      timeframe,
+      () => _repo.fetchVolumeMax(widget.defId, timeframe),
+    );
+  }
+
   /// Load up to 10 recent weight-exercise records for this definition
   Future<List<HistoryRecord>> _loadHistory() async {
-    final sessions = await _repo.fetchWorkoutSessions(); // newest first
+    final historyRows = await _repo.fetchRecentWeightExerciseHistoryRows(
+      definitionId: widget.defId,
+      limit: 10,
+    );
+    final exercises = await Future.wait(
+      historyRows.map(
+        (row) => _repo.fetchDetailedExercise(row['exercise_id'] as int),
+      ),
+    );
+
     final records = <HistoryRecord>[];
-
-    for (var session in sessions) {
-      final exRows = await _repo.fetchExercises(session.id);
-      for (var exRow in exRows) {
-        if (exRow['type'] == 'weight' && exRow['exercise_def_id'] == widget.defId) {
-          final we = await _repo.fetchDetailedExercise(exRow['id'] as int);
-          if (we is WeightExercise) {
-            records.add(HistoryRecord(
-              date: session.date,
-              sessionId: session.id,
-              sets: we.sets,
-            ));
-          }
-        }
-      }
-      if (records.length >= 10) break;
+    for (var i = 0; i < historyRows.length; i++) {
+      final exercise = exercises[i];
+      if (exercise is! WeightExercise) continue;
+      final row = historyRows[i];
+      records.add(
+        HistoryRecord(
+          date: DateTime.parse(row['session_date'] as String),
+          sessionId: row['session_id'] as int,
+          sets: exercise.sets,
+        ),
+      );
     }
-
     return records;
   }
 
@@ -85,33 +118,38 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
           const SizedBox(height: 8),
           Text('FOCUS AREA: ${def.bodyParts.map((b) => b.name).join(', ')}'),
           const SizedBox(height: 8),
-          Text('FOCUS MUSCLES: ${def.muscles.map((m) => m.muscle.name).join(', ')}'),
+          Text(
+            'FOCUS MUSCLES: ${def.muscles.map((m) => m.muscle.name).join(', ')}',
+          ),
           const SizedBox(height: 16),
           // --- Notes from the database ---
           const Text('SET-UP:', style: TextStyle(fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
           Text(
             def.setupNotes.isNotEmpty == true
-              ? def.setupNotes
-              : 'No setup instructions provided.',
+                ? def.setupNotes
+                : 'No setup instructions provided.',
           ),
           const SizedBox(height: 12),
-          const Text('EXECUTION:', style: TextStyle(fontWeight: FontWeight.bold)),
+          const Text(
+            'EXECUTION:',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 4),
           Text(
             def.executionNotes.isNotEmpty == true
-              ? def.executionNotes
-              : 'No execution notes provided.',
+                ? def.executionNotes
+                : 'No execution notes provided.',
           ),
           const SizedBox(height: 12),
           const Text('TIPS:', style: TextStyle(fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
           Text(
             def.tipsNotes.isNotEmpty == true
-              ? def.tipsNotes
-              : 'No additional tips.',
+                ? def.tipsNotes
+                : 'No additional tips.',
           ),
-       ],
+        ],
       ),
     );
   }
@@ -125,18 +163,22 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
         const SizedBox(height: 12),
         ToggleButtons(
           isSelected: _tfSelected,
-          onPressed: (i) => setState(() {
-            _tfSelected = List.generate(_timeframes.length, (j) => j == i);
-          }),
+          onPressed:
+              (i) => setState(() {
+                _tfSelected = List.generate(_timeframes.length, (j) => j == i);
+              }),
           children: const [Text('Week'), Text('Month'), Text('All‑time')],
         ),
         const SizedBox(height: 12),
         Expanded(
           child: FutureBuilder<List<RepMaxRow>>(
-            future: _repo.fetchRepMaxes(widget.defId, timeframe),
+            future: _repMaxFuture(timeframe),
             builder: (ctx, snap) {
               if (snap.connectionState != ConnectionState.done) {
                 return const Center(child: CircularProgressIndicator());
+              }
+              if (snap.hasError) {
+                return const Center(child: Text('Unable to load metrics.'));
               }
               final rows = snap.data ?? <RepMaxRow>[];
               if (rows.isEmpty) {
@@ -148,10 +190,15 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                 child: Column(
                   children: [
                     FutureBuilder<double?>(
-                      future: _repo.fetchVolumeMax(widget.defId, timeframe),
+                      future: _volumeMaxFuture(timeframe),
                       builder: (ctx2, snap2) {
                         final vm = snap2.data;
-                        return Text('Volume Max: ${vm?.toStringAsFixed(1) ?? '--'} lbs');
+                        if (snap2.hasError) {
+                          return const Text('Volume Max: --');
+                        }
+                        return Text(
+                          'Volume Max: ${vm?.toStringAsFixed(1) ?? '--'} lbs',
+                        );
                       },
                     ),
                     const SizedBox(height: 12),
@@ -159,7 +206,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                       children: const [
                         Expanded(child: Text('Reps')),
                         Expanded(child: Text('1RM')),
-                        Expanded(child: Text('Volume'))
+                        Expanded(child: Text('Volume')),
                       ],
                     ),
                     const Divider(),
@@ -172,10 +219,17 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                             children: [
                               Expanded(child: Text(r.repCount.toString())),
                               Expanded(
-                                  child: Text(r.isErm
+                                child: Text(
+                                  r.isErm
                                       ? '${r.oneErm.toStringAsFixed(1)} (ERM)'
-                                      : r.oneErm.toStringAsFixed(1))),
-                              Expanded(child: Text((r.rmValue * r.repCount).toStringAsFixed(1))),
+                                      : r.oneErm.toStringAsFixed(1),
+                                ),
+                              ),
+                              Expanded(
+                                child: Text(
+                                  (r.rmValue * r.repCount).toStringAsFixed(1),
+                                ),
+                              ),
                             ],
                           );
                         },
@@ -198,7 +252,10 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
         if (snap.connectionState != ConnectionState.done) {
           return const Center(child: CircularProgressIndicator());
         }
-        final history = snap.data!;
+        if (snap.hasError) {
+          return const Center(child: Text('Unable to load exercise history.'));
+        }
+        final history = snap.data ?? const <HistoryRecord>[];
         if (history.isEmpty) {
           return const Center(child: Text('No history for this exercise.'));
         }
@@ -243,12 +300,15 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
               child: BarChart(
                 BarChartData(
                   alignment: BarChartAlignment.spaceEvenly,
-                  maxY: history
-                      .map((rec) => rec.sets
-                          .map((s) => s.weight * (1 + 0.0333 * s.reps))
-                          .fold<double>(0, (a, b) => b > a ? b : a))
-                      .fold<double>(0, (a, b) => b > a ? b : a)
-                      .ceilToDouble() *
+                  maxY:
+                      history
+                          .map(
+                            (rec) => rec.sets
+                                .map((s) => s.weight * (1 + 0.0333 * s.reps))
+                                .fold<double>(0, (a, b) => b > a ? b : a),
+                          )
+                          .fold<double>(0, (a, b) => b > a ? b : a)
+                          .ceilToDouble() *
                       1.2,
                   barGroups: barGroups,
                   groupsSpace: 16,
@@ -274,10 +334,17 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                       ),
                     ),
                     leftTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: true, reservedSize: 40),
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 40,
+                      ),
                     ),
-                    topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    topTitles: AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    rightTitles: AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
                   ),
                   gridData: FlGridData(show: true),
                   borderData: FlBorderData(show: false),
@@ -298,7 +365,10 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(dateStr, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      Text(
+                        dateStr,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
                       const SizedBox(height: 4),
                       ...rec.sets.asMap().entries.map((entry) {
                         final j = entry.key;
@@ -306,11 +376,15 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                         final oneErm = s.weight * (1 + 0.0333 * s.reps);
                         return Row(
                           children: [
-                            Text('${j + 1}. ${s.weight.toInt()} lbs × ${s.reps}'),
+                            Text(
+                              '${j + 1}. ${s.weight.toInt()} lbs × ${s.reps}',
+                            ),
                             const Spacer(),
                             Text(
                               'ERM=${oneErm.toStringAsFixed(1)}',
-                              style: const TextStyle(fontStyle: FontStyle.italic),
+                              style: const TextStyle(
+                                fontStyle: FontStyle.italic,
+                              ),
                             ),
                           ],
                         );
@@ -332,55 +406,61 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
       expand: false,
       initialChildSize: 0.7,
       maxChildSize: 0.95,
-      builder: (_, scrollCtrl) => DefaultTabController(
-        length: 3,
-        child: Material(
-          elevation: 12,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-          clipBehavior: Clip.hardEdge,
-          child: Column(
-            children: [
-              // Header with Close Icon
-              Padding(
-                padding: const EdgeInsets.only(top: 8, left: 16, right: 16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const SizedBox(width: 48),
-                    Text('Exercise Detail', style: Theme.of(context).textTheme.titleLarge),
-                    IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                  ],
-                ),
+      builder:
+          (_, scrollCtrl) => DefaultTabController(
+            length: 3,
+            child: Material(
+              elevation: 12,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(16),
               ),
+              clipBehavior: Clip.hardEdge,
+              child: Column(
+                children: [
+                  // Header with Close Icon
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8, left: 16, right: 16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const SizedBox(width: 48),
+                        Text(
+                          'Exercise Detail',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => Navigator.of(context).pop(),
+                        ),
+                      ],
+                    ),
+                  ),
 
-              // Tab Bar
-              const TabBar(
-                tabs: [
-                  Tab(text: 'Details'),
-                  Tab(text: 'Metrics'),
-                  Tab(text: 'Records'),
+                  // Tab Bar
+                  const TabBar(
+                    tabs: [
+                      Tab(text: 'Details'),
+                      Tab(text: 'Metrics'),
+                      Tab(text: 'Records'),
+                    ],
+                  ),
+                  const Divider(height: 1),
+
+                  // Tab Views
+                  Expanded(
+                    child: TabBarView(
+                      physics: const NeverScrollableScrollPhysics(),
+                      children: [
+                        _buildDetailsTab(scrollCtrl),
+                        _buildMetricsTab(scrollCtrl),
+                        _buildRecordsTab(scrollCtrl),
+                      ],
+                    ),
+                  ),
                 ],
               ),
-              const Divider(height: 1),
-
-              // Tab Views
-              Expanded(
-                child: TabBarView(
-                  physics: const NeverScrollableScrollPhysics(),
-                  children: [
-                    _buildDetailsTab(scrollCtrl),
-                    _buildMetricsTab(scrollCtrl),
-                    _buildRecordsTab(scrollCtrl),
-                  ],
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
-      ),
     );
   }
 }

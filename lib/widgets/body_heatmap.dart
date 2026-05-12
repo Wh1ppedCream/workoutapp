@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '../theme/theme_extensions.dart';
+
 // Mapping DB BodyPart.name -> all SVG <path id="..."> strings.
 const Map<String, List<String>> bodyPartNameToSvgIds = {
   'Neck': ['Neck_frontal', 'neck_rear'],
@@ -35,6 +37,61 @@ const Map<String, List<String>> bodyPartNameToSvgIds = {
     'Calf_right_back',
   ],
 };
+
+class SingleBodyPartHeatmap extends StatelessWidget {
+  final String bodyPartName;
+  final double size;
+  final double padding;
+  final Color? lowColor;
+  final Color? highColor;
+  final Color? backgroundColor;
+  final BorderRadiusGeometry borderRadius;
+
+  const SingleBodyPartHeatmap({
+    super.key,
+    required this.bodyPartName,
+    this.size = 56,
+    this.padding = 4,
+    this.lowColor,
+    this.highColor,
+    this.backgroundColor,
+    this.borderRadius = const BorderRadius.all(Radius.circular(14)),
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = context.colors;
+    final svgIds = bodyPartNameToSvgIds[bodyPartName] ?? const <String>[];
+    final frequencyMap = {for (final svgId in svgIds) svgId: 1.0};
+    final contentSize = size - (padding * 2);
+
+    return Semantics(
+      label: '$bodyPartName body heatmap',
+      child: Container(
+        width: size,
+        height: size,
+        padding: EdgeInsets.all(padding),
+        decoration: BoxDecoration(
+          color: backgroundColor ?? theme.colorScheme.surfaceContainerHighest,
+          borderRadius: borderRadius,
+        ),
+        child: svgIds.isEmpty
+            ? Icon(
+                Icons.accessibility_new,
+                size: contentSize.clamp(18, 28).toDouble(),
+              )
+            : BodyHeatmap(
+                frequencyMap: frequencyMap,
+                lowColor: lowColor ?? colors.historySummaryHeatmapLow!,
+                highColor: highColor ?? colors.historySummaryHeatmapHigh!,
+                width: contentSize,
+                height: contentSize,
+              ),
+      ),
+    );
+  }
+}
 
 class BodyHeatmap extends StatelessWidget {
   static const int _maxRenderCacheEntries = 80;

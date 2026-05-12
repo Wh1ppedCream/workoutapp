@@ -90,9 +90,10 @@ class DataRecordsSection extends StatelessWidget {
             children: [
               Text('1/7 this week', style: Theme.of(context).textTheme.bodySmall),
               Text('1 all time',    style: Theme.of(context).textTheme.bodySmall),
-              GestureDetector(
-                onTap: () { /* TODO */ },
-                child: Icon(Icons.chevron_right, size: 16, color: colors.dataRecordsChevron!),
+              Icon(
+                Icons.chevron_right,
+                size: 16,
+                color: colors.dataRecordsChevron!.withValues(alpha: 0.45),
               ),
             ],
           ),

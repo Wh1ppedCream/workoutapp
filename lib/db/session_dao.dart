@@ -1,6 +1,7 @@
 // File: lib/db/session_dao.dart
 
 import 'package:sqflite/sqflite.dart';
+import 'db_query_utils.dart';
 
 /// Data Access Object for workout sessions.
 ///
@@ -14,15 +15,8 @@ class SessionDao {
   /// - [duration]: Total session duration in seconds.
   ///
   /// Returns the new session row ID.
-  static Future<int> insertSession(
-    Database db,
-    String date,
-    int duration,
-  ) {
-    return db.insert('sessions', {
-      'date': date,
-      'duration': duration,
-    });
+  static Future<int> insertSession(Database db, String date, int duration) {
+    return db.insert('sessions', {'date': date, 'duration': duration});
   }
 
   /// Retrieves all sessions as raw maps, ordered by date descending.
@@ -30,13 +24,8 @@ class SessionDao {
   /// - [db]: Open SQLite database instance.
   ///
   /// Returns a list of maps with keys: `id`, `date`, `duration`.
-  static Future<List<Map<String, dynamic>>> getAllSessionsRaw(
-    Database db,
-  ) {
-    return db.query(
-      'sessions',
-      orderBy: 'date DESC',
-    );
+  static Future<List<Map<String, dynamic>>> getAllSessionsRaw(Database db) {
+    return db.query('sessions', orderBy: 'date DESC');
   }
 
   /// Deletes the session with the given ID.
@@ -45,15 +34,8 @@ class SessionDao {
   ///
   /// - [db]: Open SQLite database instance.
   /// - [sessionId]: ID of the session to delete.
-  static Future<void> deleteSession(
-    Database db,
-    int sessionId,
-  ) async {
-  await db.delete(
-      'sessions',
-      where: 'id = ?',
-      whereArgs: [sessionId],
-    );
+  static Future<void> deleteSession(Database db, int sessionId) async {
+    await db.delete('sessions', where: 'id = ?', whereArgs: [sessionId]);
   }
 
   /// Fetches a single session by its ID.
@@ -72,7 +54,7 @@ class SessionDao {
       whereArgs: [sessionId],
       limit: 1,
     );
-    return rows.isNotEmpty ? rows.first : null;
+    return firstDynamicRow(rows);
   }
 
   /// Updates the date and duration of an existing session.

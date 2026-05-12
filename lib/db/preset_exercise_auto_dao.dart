@@ -1,10 +1,25 @@
 // File: lib/db/preset_exercise_auto_dao.dart
 
 import 'package:sqflite/sqflite.dart';
+import 'db_query_utils.dart';
 
-/// DAO for managing per-exercise automatic‐preset overrides.
+/// DAO for managing per-exercise automatic-preset overrides.
 class PresetExerciseAutoDao {
-  /// Reads the auto settings for a given preset_exercise.
+  static Map<String, Object?> _autoValues({
+    required int presetExerciseId,
+    double? incrementAmount,
+    required int lastSetIndex,
+    String? lastNode,
+  }) {
+    return {
+      'preset_exercise_id': presetExerciseId,
+      'increment_amount': incrementAmount,
+      'last_set_index': lastSetIndex,
+      'last_node': lastNode,
+    };
+  }
+
+  /// Reads the auto settings for a given preset exercise.
   static Future<Map<String, dynamic>?> getExerciseAuto(
     Database db,
     int presetExerciseId,
@@ -15,7 +30,7 @@ class PresetExerciseAutoDao {
       whereArgs: [presetExerciseId],
       limit: 1,
     );
-    return rows.isNotEmpty ? rows.first : null;
+    return firstDynamicRow(rows);
   }
 
   /// Inserts or updates the auto override for a preset exercise.
@@ -24,30 +39,26 @@ class PresetExerciseAutoDao {
     required int presetExerciseId,
     double? incrementAmount,
     required int lastSetIndex,
-    String? lastNode,               // ← new
+    String? lastNode,
   }) async {
     await db.insert(
       'preset_exercise_auto',
-      {
-        'preset_exercise_id': presetExerciseId,
-        'increment_amount':   incrementAmount,
-        'last_set_index':     lastSetIndex,
-        'last_node':          lastNode,   // ← store the key of the last node
-      },
+      _autoValues(
+        presetExerciseId: presetExerciseId,
+        incrementAmount: incrementAmount,
+        lastSetIndex: lastSetIndex,
+        lastNode: lastNode,
+      ),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
 
   /// Deletes the auto override for a preset exercise.
-  static Future<int> deleteExerciseAuto(
-    Database db,
-    int presetExerciseId,
-  ) {
+  static Future<int> deleteExerciseAuto(Database db, int presetExerciseId) {
     return db.delete(
       'preset_exercise_auto',
       where: 'preset_exercise_id = ?',
       whereArgs: [presetExerciseId],
     );
   }
-
 }

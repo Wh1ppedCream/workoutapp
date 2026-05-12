@@ -8,6 +8,22 @@ import '../models/models.dart';
 /// Provides CRUD operations on the `sets` table, including parent-child
 /// relationships for supersets or change sets.
 class SetDao {
+  static Map<String, Object?> _setValues({
+    required int exerciseId,
+    required double weight,
+    required int reps,
+    required int orderIndex,
+    int? parentSetId,
+  }) {
+    return {
+      'exercise_id': exerciseId,
+      'weight': weight,
+      'reps': reps,
+      'order_index': orderIndex,
+      'parent_set_id': parentSetId,
+    };
+  }
+
   /// Inserts a single parent set row for an exercise.
   ///
   /// - [db]: Open SQLite database instance.
@@ -24,13 +40,15 @@ class SetDao {
     int reps,
     int orderIndex,
   ) {
-    return db.insert('sets', {
-      'exercise_id':   exerciseId,
-      'weight':        weight,
-      'reps':          reps,
-      'order_index':   orderIndex,
-      'parent_set_id': null,
-    });
+    return db.insert(
+      'sets',
+      _setValues(
+        exerciseId: exerciseId,
+        weight: weight,
+        reps: reps,
+        orderIndex: orderIndex,
+      ),
+    );
   }
 
   /// Inserts a list of parent sets and their optional child changesets.
@@ -48,31 +66,39 @@ class SetDao {
     required List<ExerciseSet> parentSets,
     required Map<int, List<ExerciseSet>> childChangeSets,
   }) async {
-    for (var i = 0; i < parentSets.length; i++) {
-      final parent = parentSets[i];
-      // 1) Insert parent row
-      final parentId = await db.insert('sets', {
-        'exercise_id':   exerciseId,
-        'weight':        parent.weight,
-        'reps':          parent.reps,
-        'order_index':   i,
-        'parent_set_id': null,
-      });
-      // 2) Insert child change sets if any
-      if (childChangeSets.containsKey(i)) {
-        for (var ci = 0; ci < childChangeSets[i]!.length; ci++) {
+    if (parentSets.isEmpty) return;
 
-          final child = childChangeSets[i]![ci];
-          await db.insert('sets', {
-            'exercise_id':   exerciseId,
-            'weight':        child.weight,
-            'reps':          child.reps,
-            'order_index':   ci,
-            'parent_set_id': parentId,
-          });
+    await db.transaction((txn) async {
+      for (var i = 0; i < parentSets.length; i++) {
+        final parent = parentSets[i];
+        // Parent IDs are needed for child changesets, so keep the inserts
+        // sequential while making the whole set write atomic.
+        final parentId = await txn.insert(
+          'sets',
+          _setValues(
+            exerciseId: exerciseId,
+            weight: parent.weight,
+            reps: parent.reps,
+            orderIndex: i,
+          ),
+        );
+        final children = childChangeSets[i];
+        if (children == null) continue;
+        for (var ci = 0; ci < children.length; ci++) {
+          final child = children[ci];
+          await txn.insert(
+            'sets',
+            _setValues(
+              exerciseId: exerciseId,
+              weight: child.weight,
+              reps: child.reps,
+              orderIndex: ci,
+              parentSetId: parentId,
+            ),
+          );
         }
       }
-    }
+    });
   }
 
   /// Retrieves all sets (parent and child) for an exercise, ordered.
@@ -145,10 +171,7 @@ class SetDao {
   ) {
     return db.update(
       'sets',
-      {
-        'weight': weight,
-        'reps':   reps,
-      },
+      {'weight': weight, 'reps': reps},
       where: 'id = ?',
       whereArgs: [setId],
     );
@@ -160,15 +183,8 @@ class SetDao {
   /// - [setId]: ID of the set to delete.
   ///
   /// Returns when deletion completes.
-  static Future<void> deleteSet(
-    Database db,
-    int setId,
-  ) async {
-  await db.delete(
-      'sets',
-      where: 'id = ?',
-      whereArgs: [setId],
-    );
+  static Future<void> deleteSet(Database db, int setId) async {
+    await db.delete('sets', where: 'id = ?', whereArgs: [setId]);
   }
 
   /// Reorders a flat list of set IDs by applying `order_index` based on list position.
@@ -183,13 +199,17 @@ class SetDao {
     int exerciseId,
     List<int> setIds,
   ) async {
+    if (setIds.isEmpty) return;
+
+    final batch = db.batch();
     for (var i = 0; i < setIds.length; i++) {
-      await db.update(
+      batch.update(
         'sets',
         {'order_index': i},
-        where: 'id = ?',
-        whereArgs: [setIds[i]],
+        where: 'exercise_id = ? AND id = ?',
+        whereArgs: [exerciseId, setIds[i]],
       );
     }
+    await batch.commit(noResult: true);
   }
 }

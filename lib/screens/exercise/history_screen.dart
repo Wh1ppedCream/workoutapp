@@ -29,7 +29,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             builder: (_) => const ExerciseCatalogPage(),
           ),
           DrawerItem(
-            title: 'Muscle Filter',
+            title: 'Exercise Focus Library',
             icon: Icons.accessibility_new,
             builder: (_) => const MuscleFilterPage(),
           ),

@@ -65,6 +65,27 @@ class AppRepository {
   Future<List<Map<String, dynamic>>> fetchAllSessions() =>
       _dbHelper.getAllSessionsRaw();
 
+  Future<List<WorkoutReportSession>> fetchWorkoutReportSessions({
+    DateTime? start,
+    DateTime? end,
+  }) async {
+    final rows = await _dbHelper.fetchWorkoutReportSessionsRaw(
+      start: start,
+      end: end,
+    );
+    return rows
+        .map(
+          (row) => WorkoutReportSession(
+            id: row['session_id'] as int,
+            date: DateTime.parse(row['date'] as String),
+            durationSeconds: (row['duration'] as num).toInt(),
+            totalVolume: ((row['total_volume'] as num?) ?? 0).toDouble(),
+            exerciseCount: ((row['exercise_count'] as num?) ?? 0).toInt(),
+          ),
+        )
+        .toList();
+  }
+
   /// Deletes a session by its ID, cascading to related exercises & sets.
   Future<void> deleteSession(int id) => _dbHelper.deleteSession(id);
 
@@ -89,6 +110,15 @@ class AppRepository {
   /// Fetches exercise rows for a session.
   Future<List<Map<String, dynamic>>> fetchExercises(int sid) =>
       _dbHelper.fetchExercisesRaw(sid);
+
+  Future<List<Map<String, dynamic>>> fetchRecentWeightExerciseHistoryRows({
+    required int definitionId,
+    int limit = 10,
+  }) =>
+      _dbHelper.fetchRecentWeightExerciseHistoryRows(
+        definitionId: definitionId,
+        limit: limit,
+      );
 
   /// Deletes all exercises (and related details) in a session.
   Future<void> deleteExercises(int sid) => _dbHelper.deleteExercises(sid);
@@ -264,6 +294,10 @@ class AppRepository {
 
   Future<List<ExerciseDefinition>> lookupDefsDetailed() =>
       _dbHelper.lookupDefsDetailed();
+
+  Future<List<ExerciseDefinition>> lookupDefsDetailedByIds(
+    List<int> definitionIds,
+  ) => _dbHelper.lookupDefsDetailedByIds(definitionIds);
 
   Future<List<Map<String, dynamic>>> fetchAllExercisesRaw() =>
       _dbHelper.fetchAllExercisesRaw();
@@ -817,13 +851,11 @@ class AppRepository {
 
   Future<List<Map<String, dynamic>>> fetchPresetSummariesRaw({
     int? profileId,
-  }) =>
-      _dbHelper.fetchPresetSummariesRaw(profileId: profileId);
+  }) => _dbHelper.fetchPresetSummariesRaw(profileId: profileId);
 
   Future<List<Map<String, dynamic>>> fetchPresetFocusSetCountsRaw({
     required List<int> presetIds,
-  }) =>
-      _dbHelper.fetchPresetFocusSetCountsRaw(presetIds: presetIds);
+  }) => _dbHelper.fetchPresetFocusSetCountsRaw(presetIds: presetIds);
 
   Future<PresetDefinition?> fetchPresetById(int presetId) =>
       _dbHelper.fetchPresetById(presetId);

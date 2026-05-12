@@ -4,6 +4,20 @@ import 'package:sqflite/sqflite.dart';
 
 /// Data Access Object for exercises within a preset.
 class PresetExerciseDao {
+  static Map<String, Object?> _exerciseValues({
+    required int presetId,
+    int? exerciseDefId,
+    required String type,
+    required int orderIndex,
+  }) {
+    return {
+      'preset_id': presetId,
+      'exercise_def_id': exerciseDefId,
+      'type': type,
+      'order_index': orderIndex,
+    };
+  }
+
   /// Inserts a new exercise into a preset.
   static Future<int> insertPresetExercise({
     required Database db,
@@ -14,12 +28,12 @@ class PresetExerciseDao {
   }) {
     return db.insert(
       'preset_exercises',
-      {
-        'preset_id': presetId,
-        'exercise_def_id': exerciseDefId,
-        'type': type,
-        'order_index': orderIndex,
-      },
+      _exerciseValues(
+        presetId: presetId,
+        exerciseDefId: exerciseDefId,
+        type: type,
+        orderIndex: orderIndex,
+      ),
     );
   }
 
@@ -37,10 +51,7 @@ class PresetExerciseDao {
   }
 
   /// Deletes all exercises for a preset.
-  static Future<int> deleteExercisesForPreset(
-    Database db,
-    int presetId,
-  ) {
+  static Future<int> deleteExercisesForPreset(Database db, int presetId) {
     return db.delete(
       'preset_exercises',
       where: 'preset_id = ?',

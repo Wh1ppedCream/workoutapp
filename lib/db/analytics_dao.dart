@@ -11,6 +11,74 @@ import '../models/models.dart';
 ///  • muscle_volume_boundaries
 ///  • bodypart_volume_boundaries
 class AnalyticsDao {
+  static MuscleBodyPart _muscleBodyPartFromRow(Map<String, Object?> row) {
+    return MuscleBodyPart(
+      muscleId: row['muscle_id'] as int,
+      bodyPartId: row['bodypart_id'] as int,
+    );
+  }
+
+  static BodyPartRanking _bodyPartRankingFromRow(Map<String, Object?> row) {
+    return BodyPartRanking(
+      bodyPartId: row['bodypart_id'] as int,
+      rank: row['rank'] as int,
+    );
+  }
+
+  static MuscleRanking _muscleRankingFromRow(Map<String, Object?> row) {
+    return MuscleRanking(
+      muscleId: row['muscle_id'] as int,
+      rank: row['rank'] as int,
+    );
+  }
+
+  static ExerciseMusclePercent _exerciseMusclePercentFromRow(
+    Map<String, Object?> row,
+  ) {
+    return ExerciseMusclePercent(
+      exerciseDefId: row['exercise_def_id'] as int,
+      muscleId: row['muscle_id'] as int,
+      percent: (row['percent'] as num).toDouble(),
+    );
+  }
+
+  static ExerciseBodyPartPercent _exerciseBodyPartPercentFromRow(
+    Map<String, Object?> row,
+  ) {
+    return ExerciseBodyPartPercent(
+      exerciseDefId: row['exercise_def_id'] as int,
+      bodyPartId: row['bodypart_id'] as int,
+      percent: (row['percent'] as num).toDouble(),
+    );
+  }
+
+  static VolumeBoundaries _volumeBoundariesFromRow(
+    Map<String, Object?> row,
+    String idColumn,
+  ) {
+    return VolumeBoundaries(
+      id: row[idColumn] as int,
+      maintenance: (row['maintenance_volume'] as num).toDouble(),
+      minEffective: (row['min_effective_volume'] as num).toDouble(),
+      maxAdaptive: (row['max_adaptive_volume'] as num).toDouble(),
+      maxRecoverable: (row['max_recoverable_volume'] as num).toDouble(),
+    );
+  }
+
+  static Map<String, Object?> _volumeBoundaryValues(
+    String idColumn,
+    int id,
+    VolumeBoundaries bounds,
+  ) {
+    return {
+      idColumn: id,
+      'maintenance_volume': bounds.maintenance,
+      'min_effective_volume': bounds.minEffective,
+      'max_adaptive_volume': bounds.maxAdaptive,
+      'max_recoverable_volume': bounds.maxRecoverable,
+    };
+  }
+
   // ─── MUSCLE ←→ BODYPART ─────────────────────────────────
 
   /// Link a muscle to a body part.
@@ -18,15 +86,11 @@ class AnalyticsDao {
     Database db,
     int muscleId,
     int bodypartId,
-  ) async {
-    return await db.insert(
-      'muscle_bodypart',
-      {
-        'muscle_id': muscleId,
-        'bodypart_id': bodypartId,
-      },
-      conflictAlgorithm: ConflictAlgorithm.ignore,
-    );
+  ) {
+    return db.insert('muscle_bodypart', {
+      'muscle_id': muscleId,
+      'bodypart_id': bodypartId,
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 
   /// Remove a link between a muscle and a body part.
@@ -52,10 +116,7 @@ class AnalyticsDao {
       where: 'muscle_id = ?',
       whereArgs: [muscleId],
     );
-    return rows.map((r) => MuscleBodyPart(
-      muscleId: r['muscle_id'] as int,
-      bodyPartId: r['bodypart_id'] as int,
-    )).toList();
+    return rows.map(_muscleBodyPartFromRow).toList();
   }
 
   /// Get all muscle links for a given body part.
@@ -68,28 +129,17 @@ class AnalyticsDao {
       where: 'bodypart_id = ?',
       whereArgs: [bodypartId],
     );
-    return rows.map((r) => MuscleBodyPart(
-      muscleId: r['muscle_id'] as int,
-      bodyPartId: r['bodypart_id'] as int,
-    )).toList();
+    return rows.map(_muscleBodyPartFromRow).toList();
   }
 
   // ─── RANKING ─────────────────────────────────────────────
 
   /// Upsert a body-part ranking.
-  static Future<int> setBodyPartRanking(
-    Database db,
-    int bodypartId,
-    int rank,
-  ) async {
-    return await db.insert(
-      'bodypart_ranking',
-      {
-        'bodypart_id': bodypartId,
-        'rank': rank,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+  static Future<int> setBodyPartRanking(Database db, int bodypartId, int rank) {
+    return db.insert('bodypart_ranking', {
+      'bodypart_id': bodypartId,
+      'rank': rank,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   /// Fetch ranking for one body part.
@@ -104,11 +154,7 @@ class AnalyticsDao {
       limit: 1,
     );
     if (rows.isEmpty) return null;
-    final r = rows.first;
-    return BodyPartRanking(
-      bodyPartId: r['bodypart_id'] as int,
-      rank: r['rank'] as int,
-    );
+    return _bodyPartRankingFromRow(rows.first);
   }
 
   /// Fetch all body-part rankings.
@@ -116,17 +162,11 @@ class AnalyticsDao {
     Database db,
   ) async {
     final rows = await db.query('bodypart_ranking', orderBy: 'rank');
-    return rows.map((r) => BodyPartRanking(
-      bodyPartId: r['bodypart_id'] as int,
-      rank: r['rank'] as int,
-    )).toList();
+    return rows.map(_bodyPartRankingFromRow).toList();
   }
 
   /// Remove a body-part ranking.
-  static Future<int> deleteBodyPartRanking(
-    Database db,
-    int bodypartId,
-  ) {
+  static Future<int> deleteBodyPartRanking(Database db, int bodypartId) {
     return db.delete(
       'bodypart_ranking',
       where: 'bodypart_id = ?',
@@ -135,19 +175,11 @@ class AnalyticsDao {
   }
 
   /// Upsert a muscle ranking.
-  static Future<int> setMuscleRanking(
-    Database db,
-    int muscleId,
-    int rank,
-  ) async {
-    return await db.insert(
-      'muscle_ranking',
-      {
-        'muscle_id': muscleId,
-        'rank': rank,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+  static Future<int> setMuscleRanking(Database db, int muscleId, int rank) {
+    return db.insert('muscle_ranking', {
+      'muscle_id': muscleId,
+      'rank': rank,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   /// Fetch ranking for one muscle.
@@ -162,29 +194,17 @@ class AnalyticsDao {
       limit: 1,
     );
     if (rows.isEmpty) return null;
-    final r = rows.first;
-    return MuscleRanking(
-      muscleId: r['muscle_id'] as int,
-      rank: r['rank'] as int,
-    );
+    return _muscleRankingFromRow(rows.first);
   }
 
   /// Fetch all muscle rankings.
-  static Future<List<MuscleRanking>> getAllMuscleRankings(
-    Database db,
-  ) async {
+  static Future<List<MuscleRanking>> getAllMuscleRankings(Database db) async {
     final rows = await db.query('muscle_ranking', orderBy: 'rank');
-    return rows.map((r) => MuscleRanking(
-      muscleId: r['muscle_id'] as int,
-      rank: r['rank'] as int,
-    )).toList();
+    return rows.map(_muscleRankingFromRow).toList();
   }
 
   /// Remove a muscle ranking.
-  static Future<int> deleteMuscleRanking(
-    Database db,
-    int muscleId,
-  ) {
+  static Future<int> deleteMuscleRanking(Database db, int muscleId) {
     return db.delete(
       'muscle_ranking',
       where: 'muscle_id = ?',
@@ -200,16 +220,12 @@ class AnalyticsDao {
     int exerciseDefId,
     int muscleId,
     double percent,
-  ) async {
-    return await db.insert(
-      'exercise_muscle_percent',
-      {
-        'exercise_def_id': exerciseDefId,
-        'muscle_id': muscleId,
-        'percent': percent,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+  ) {
+    return db.insert('exercise_muscle_percent', {
+      'exercise_def_id': exerciseDefId,
+      'muscle_id': muscleId,
+      'percent': percent,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   /// Fetch one %-hit entry.
@@ -225,12 +241,7 @@ class AnalyticsDao {
       limit: 1,
     );
     if (rows.isEmpty) return null;
-    final r = rows.first;
-    return ExerciseMusclePercent(
-      exerciseDefId: r['exercise_def_id'] as int,
-      muscleId: r['muscle_id'] as int,
-      percent: (r['percent'] as num).toDouble(),
-    );
+    return _exerciseMusclePercentFromRow(rows.first);
   }
 
   /// Fetch all %-hits for an exercise.
@@ -243,11 +254,7 @@ class AnalyticsDao {
       where: 'exercise_def_id = ?',
       whereArgs: [exerciseDefId],
     );
-    return rows.map((r) => ExerciseMusclePercent(
-      exerciseDefId: r['exercise_def_id'] as int,
-      muscleId: r['muscle_id'] as int,
-      percent: (r['percent'] as num).toDouble(),
-    )).toList();
+    return rows.map(_exerciseMusclePercentFromRow).toList();
   }
 
   /// Remove one %-hit entry.
@@ -270,16 +277,10 @@ class AnalyticsDao {
     Database db,
     int muscleId,
     VolumeBoundaries bounds,
-  ) async {
-    return await db.insert(
+  ) {
+    return db.insert(
       'muscle_volume_boundaries',
-      {
-        'muscle_id': muscleId,
-        'maintenance_volume': bounds.maintenance,
-        'min_effective_volume': bounds.minEffective,
-        'max_adaptive_volume': bounds.maxAdaptive,
-        'max_recoverable_volume': bounds.maxRecoverable,
-      },
+      _volumeBoundaryValues('muscle_id', muscleId, bounds),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
@@ -296,14 +297,7 @@ class AnalyticsDao {
       limit: 1,
     );
     if (rows.isEmpty) return null;
-    final r = rows.first;
-    return VolumeBoundaries(
-      id:              r['muscle_id']            as int,
-      maintenance:     (r['maintenance_volume']   as num).toDouble(),
-      minEffective:    (r['min_effective_volume'] as num).toDouble(),
-      maxAdaptive:     (r['max_adaptive_volume']  as num).toDouble(),
-      maxRecoverable:  (r['max_recoverable_volume'] as num).toDouble(),
-    );
+    return _volumeBoundariesFromRow(rows.first, 'muscle_id');
   }
 
   /// Fetch all muscle boundaries (raw map).
@@ -314,10 +308,7 @@ class AnalyticsDao {
   }
 
   /// Remove muscle boundaries.
-  static Future<int> deleteMuscleVolumeBoundaries(
-    Database db,
-    int muscleId,
-  ) {
+  static Future<int> deleteMuscleVolumeBoundaries(Database db, int muscleId) {
     return db.delete(
       'muscle_volume_boundaries',
       where: 'muscle_id = ?',
@@ -330,16 +321,10 @@ class AnalyticsDao {
     Database db,
     int bodypartId,
     VolumeBoundaries bounds,
-  ) async {
-    return await db.insert(
+  ) {
+    return db.insert(
       'bodypart_volume_boundaries',
-      {
-        'bodypart_id': bodypartId,
-        'maintenance_volume': bounds.maintenance,
-        'min_effective_volume': bounds.minEffective,
-        'max_adaptive_volume': bounds.maxAdaptive,
-        'max_recoverable_volume': bounds.maxRecoverable,
-      },
+      _volumeBoundaryValues('bodypart_id', bodypartId, bounds),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
@@ -356,14 +341,7 @@ class AnalyticsDao {
       limit: 1,
     );
     if (rows.isEmpty) return null;
-    final r = rows.first;
-    return VolumeBoundaries(
-      id:              r['bodypart_id']           as int,
-      maintenance:     (r['maintenance_volume']   as num).toDouble(),
-      minEffective:    (r['min_effective_volume'] as num).toDouble(),
-      maxAdaptive:     (r['max_adaptive_volume']  as num).toDouble(),
-      maxRecoverable:  (r['max_recoverable_volume'] as num).toDouble(),
-    );
+    return _volumeBoundariesFromRow(rows.first, 'bodypart_id');
   }
 
   /// Fetch all body-part boundaries (raw map).
@@ -385,54 +363,42 @@ class AnalyticsDao {
     );
   }
 
-// ─── EXERCISE ↔ BODYPART % OVERRIDES ─────────────────────
+  // ─── EXERCISE ↔ BODYPART % OVERRIDES ─────────────────────
 
-static Future<int> setExerciseBodyPartPercent(
+  static Future<int> setExerciseBodyPartPercent(
     Database db,
     int exerciseDefId,
     int bodypartId,
     double percent,
   ) {
-  return db.insert(
-    'exercise_bodypart_percent',
-    {
+    return db.insert('exercise_bodypart_percent', {
       'exercise_def_id': exerciseDefId,
-      'bodypart_id':     bodypartId,
-      'percent':         percent,
-    },
-    conflictAlgorithm: ConflictAlgorithm.replace,
-  );
-}
+      'bodypart_id': bodypartId,
+      'percent': percent,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
 
-static Future<List<ExerciseBodyPartPercent>> getPercentsForExerciseBodyPart(
+  static Future<List<ExerciseBodyPartPercent>> getPercentsForExerciseBodyPart(
     Database db,
     int exerciseDefId,
   ) async {
-  final rows = await db.query(
-    'exercise_bodypart_percent',
-    where: 'exercise_def_id = ?',
-    whereArgs: [exerciseDefId],
-  );
-  return rows.map((r) => ExerciseBodyPartPercent(
-    exerciseDefId: r['exercise_def_id'] as int,
-    bodyPartId:    r['bodypart_id']   as int,
-    percent:       (r['percent']      as num).toDouble(),
-  )).toList();
-}
+    final rows = await db.query(
+      'exercise_bodypart_percent',
+      where: 'exercise_def_id = ?',
+      whereArgs: [exerciseDefId],
+    );
+    return rows.map(_exerciseBodyPartPercentFromRow).toList();
+  }
 
-static Future<int> deleteExerciseBodyPartPercent(
+  static Future<int> deleteExerciseBodyPartPercent(
     Database db,
     int exerciseDefId,
     int bodypartId,
   ) {
-  return db.delete(
-    'exercise_bodypart_percent',
-    where: 'exercise_def_id = ? AND bodypart_id = ?',
-    whereArgs: [exerciseDefId, bodypartId],
-  );
+    return db.delete(
+      'exercise_bodypart_percent',
+      where: 'exercise_def_id = ? AND bodypart_id = ?',
+      whereArgs: [exerciseDefId, bodypartId],
+    );
+  }
 }
-
-
-
-}
-

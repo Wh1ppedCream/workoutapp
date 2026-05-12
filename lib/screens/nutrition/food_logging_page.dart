@@ -341,6 +341,8 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
     final fatTgt = (p.activeGoal?.fatG ?? 0).round();
     final carb = (p.totals?.carbsG ?? 0).round();
     final carbTgt = (p.activeGoal?.carbsG ?? 0).round();
+    final plateSummaryFuture =
+        _plate.isEmpty ? null : _computePlateSummary();
 
     return Scaffold(
       appBar: AppBar(
@@ -349,7 +351,7 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
           if (_plate.isNotEmpty)
             Builder(
               builder: (ctx) => FutureBuilder<_PlateSummary>(
-                future: _computePlateSummary(),
+                future: plateSummaryFuture,
                 builder: (context, snap) {
                   final s = snap.data;
                   final top = s == null ? '… kcal' : '${s.kcal} kcal';
@@ -399,7 +401,7 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                 child: FutureBuilder<_PlateSummary>(
-                  future: _computePlateSummary(),
+                  future: plateSummaryFuture,
                   builder: (context, snap) {
                     final s = snap.data;
                     return Column(

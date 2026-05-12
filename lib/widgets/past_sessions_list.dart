@@ -184,10 +184,9 @@ class _PastSessionsListState extends State<PastSessionsList>
                                   ),
                                 )
                                 .then((_) {
+                                  if (!mounted) return;
                                   widget.onReload?.call();
-                                  if (mounted) {
-                                    _reloadSessions();
-                                  }
+                                  _reloadSessions();
                                 }),
                           ),
                         );

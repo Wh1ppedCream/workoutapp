@@ -39,7 +39,6 @@ class QuickBar extends StatelessWidget {
     final dividerColor = cs.onSurface.withValues(alpha: 0.12);
     final segmentHeight = 40 * scale;
     final radii = BorderRadius.circular(24 * scale);
-    theme.textTheme.bodySmall!.copyWith(fontWeight: FontWeight.w600);
 
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 16 * scale, vertical: 8 * scale),
@@ -73,10 +72,13 @@ class QuickBar extends StatelessWidget {
               borderRadius: BorderRadius.zero,
               label: '+ Food',
               fontSize: 14 * scale,
-              onTap: () {
-                Navigator.of(context).push(
+              onTap: () async {
+                final changed = await Navigator.of(context).push<bool>(
                   MaterialPageRoute(builder: (_) => const FoodLoggingPage()),
                 );
+                if (changed == true && context.mounted) {
+                  await context.read<NutritionProfile>().reloadDay();
+                }
               },
             ),
           ),

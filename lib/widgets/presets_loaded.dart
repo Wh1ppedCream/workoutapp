@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 
 import '../providers/selected_profile.dart';
 import '../repositories/app_repository.dart';
+import '../utils/async_pool.dart';
 import 'body_heatmap.dart';
 import 'preset_bar.dart';
 
@@ -47,6 +48,8 @@ class _PresetListItem {
 
 class _PresetsLoadedState extends State<PresetsLoaded>
     with AutomaticKeepAliveClientMixin<PresetsLoaded> {
+  static const int _bodyPartAnalysisConcurrency = 6;
+
   final _repo = AppRepository();
   int? _loadedProfileId;
   int? _loadedRefreshToken;
@@ -104,18 +107,25 @@ class _PresetsLoadedState extends State<PresetsLoaded>
   Future<Map<int, Map<String, double>>> _loadBodyPartUnitsByDefinition(
     Map<int, Map<int, int>> focusSetCountsByPreset,
   ) async {
-    final defIds = <int>{
-      for (final counts in focusSetCountsByPreset.values) ...counts.keys,
-    };
-    final unitsByDefinition = <int, Map<String, double>>{};
-    for (final defId in defIds) {
-      final units = await _repo.computeBodyPartPercents(defId);
-      unitsByDefinition[defId] = {
-        for (final entry in units.entries)
-          if (entry.value > 0.0) entry.key.name: entry.value,
-      };
-    }
-    return unitsByDefinition;
+    final defIds =
+        <int>{
+          for (final counts in focusSetCountsByPreset.values) ...counts.keys,
+        }.toList();
+    if (defIds.isEmpty) return const <int, Map<String, double>>{};
+
+    final entries =
+        await mapWithConcurrency<int, MapEntry<int, Map<String, double>>>(
+          defIds,
+          maxConcurrency: _bodyPartAnalysisConcurrency,
+          mapper: (defId, _) async {
+            final units = await _repo.computeBodyPartPercents(defId);
+            return MapEntry(defId, {
+              for (final entry in units.entries)
+                if (entry.value > 0.0) entry.key.name: entry.value,
+            });
+          },
+        );
+    return Map<int, Map<String, double>>.fromEntries(entries);
   }
 
   Map<String, double> _buildFocusFrequencyMap(

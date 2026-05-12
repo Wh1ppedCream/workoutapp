@@ -1,6 +1,7 @@
 // File: lib/db/stats_dao.dart
 
 import 'package:sqflite/sqflite.dart';
+import 'db_query_utils.dart';
 
 /// DAO for rep-max and volume-max stats.
 class StatsDao {
@@ -33,23 +34,20 @@ class StatsDao {
       final current = existing.first;
       final currentRmValue = (current['rm_value'] as num).toDouble();
       final currentOneErm = (current['one_erm'] as num).toDouble();
-      final isDowngrade = oneErm < currentOneErm ||
+      final isDowngrade =
+          oneErm < currentOneErm ||
           (oneErm == currentOneErm && rmValue <= currentRmValue);
       if (isDowngrade) return;
     }
 
-    await db.insert(
-      'exercise_rep_max',
-      {
-        'def_id': defId,
-        'rep_count': repCount,
-        'timeframe': timeframe,
-        'rm_value': rmValue,
-        'one_erm': oneErm,
-        'is_erm': isErm ? 1 : 0,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('exercise_rep_max', {
+      'def_id': defId,
+      'rep_count': repCount,
+      'timeframe': timeframe,
+      'rm_value': rmValue,
+      'one_erm': oneErm,
+      'is_erm': isErm ? 1 : 0,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   /// Inserts a volume-max entry only when it improves the stored max.
@@ -72,15 +70,11 @@ class StatsDao {
       if (vmValue <= currentVmValue) return;
     }
 
-    await db.insert(
-      'exercise_volume_max',
-      {
-        'def_id': defId,
-        'timeframe': timeframe,
-        'vm_value': vmValue,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('exercise_volume_max', {
+      'def_id': defId,
+      'timeframe': timeframe,
+      'vm_value': vmValue,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   /// Fetches rep-max rows for a given exercise definition and timeframe.
@@ -97,7 +91,8 @@ class StatsDao {
     final args = <Object?>[defId];
     if (cutoff != null) args.add(cutoff.toIso8601String());
 
-    final rows = await db.rawQuery('''
+    final rows = await db.rawQuery(
+      '''
       SELECT
         e.exercise_def_id AS def_id,
         s.reps AS rep_count,
@@ -114,9 +109,11 @@ class StatsDao {
         $dateClause
       GROUP BY e.exercise_def_id, s.reps
       ORDER BY s.reps
-    ''', <Object?>[timeframe, ...args]);
+    ''',
+      <Object?>[timeframe, ...args],
+    );
 
-    final mappedRows = _asDynamicRows(rows);
+    final mappedRows = dynamicRows(rows);
     if (mappedRows.isNotEmpty || timeframe != 'all') return mappedRows;
 
     return _getStoredRepMaxes(db, defId, timeframe);
@@ -151,9 +148,9 @@ class StatsDao {
       )
     ''', args);
 
-    final row = rows.isNotEmpty ? rows.first : null;
+    final row = firstDynamicRow(rows);
     if (row != null && row['vm_value'] != null) {
-      return Map<String, dynamic>.from(row);
+      return row;
     }
     if (timeframe != 'all') return null;
 
@@ -171,7 +168,7 @@ class StatsDao {
       whereArgs: [defId, timeframe],
       orderBy: 'rep_count',
     );
-    return _asDynamicRows(rows);
+    return dynamicRows(rows);
   }
 
   static Future<Map<String, dynamic>?> _getStoredVolumeMax(
@@ -185,13 +182,7 @@ class StatsDao {
       whereArgs: [defId, timeframe],
       limit: 1,
     );
-    return rows.isNotEmpty ? Map<String, dynamic>.from(rows.first) : null;
-  }
-
-  static List<Map<String, dynamic>> _asDynamicRows(
-    List<Map<String, Object?>> rows,
-  ) {
-    return rows.map((row) => Map<String, dynamic>.from(row)).toList();
+    return firstDynamicRow(rows);
   }
 
   static DateTime? _cutoffForTimeframe(String timeframe) {

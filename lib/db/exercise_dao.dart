@@ -1,6 +1,7 @@
 // File: lib/db/exercise_dao.dart
 
 import 'package:sqflite/sqflite.dart';
+import 'db_query_utils.dart';
 
 /// Data Access Object for exercise instances within workout sessions.
 ///
@@ -8,6 +9,37 @@ import 'package:sqflite/sqflite.dart';
 /// including legacy support for weight-only insertions and
 /// generic CRUD operations by exercise type.
 class ExerciseDao {
+  static Map<String, Object?> _exerciseValues({
+    required int sessionId,
+    int? exerciseDefId,
+    String? type,
+    required int orderIndex,
+  }) {
+    final values = <String, Object?>{
+      'session_id': sessionId,
+      'exercise_def_id': exerciseDefId,
+      'order_index': orderIndex,
+    };
+    if (type != null) {
+      values['type'] = type;
+    }
+    return values;
+  }
+
+  static Future<Map<String, dynamic>?> _exerciseByWhere(
+    Database db,
+    String where,
+    List<Object?> whereArgs,
+  ) async {
+    final rows = await db.query(
+      'exercises',
+      where: where,
+      whereArgs: whereArgs,
+      limit: 1,
+    );
+    return firstDynamicRow(rows);
+  }
+
   /// Legacy helper for inserting weight-only exercises.
   ///
   /// Steps:
@@ -32,35 +64,38 @@ class ExerciseDao {
     );
     final eqId = eq.isNotEmpty ? eq.first['id'] as int : null;
 
-    // 2. Lookup or insert into exercise_definitions
-//    match on name + any equipment (primary or via the join table)
-final defRows = await db.rawQuery(r'''
-  SELECT ed.id
-    FROM exercise_definitions ed
-    LEFT JOIN exercise_equipment ee
-      ON ee.exercise_id = ed.id
-   WHERE ed.name = ?
-     AND (
-       ${eqId != null ? 'ed.equipment_id = ? OR ee.equipment_id = ?' : 'ed.equipment_id IS NULL'}
-     )
-   LIMIT 1
-''', eqId != null ? [name, eqId, eqId] : [name]);
+    // 2. Lookup or insert into exercise_definitions.
+    // Match on name + any equipment (primary or via the join table).
+    final equipmentClause =
+        eqId != null
+            ? 'ed.equipment_id = ? OR ee.equipment_id = ?'
+            : 'ed.equipment_id IS NULL';
+    final defRows = await db.rawQuery('''
+      SELECT ed.id
+        FROM exercise_definitions ed
+        LEFT JOIN exercise_equipment ee ON ee.exercise_id = ed.id
+       WHERE ed.name = ?
+         AND ($equipmentClause)
+       LIMIT 1
+    ''', eqId != null ? [name, eqId, eqId] : [name]);
 
-final defId = defRows.isNotEmpty
-    ? defRows.first['id'] as int
-    : await db.insert(
-        'exercise_definitions',
-        {'name': name, 'equipment_id': eqId},
-      );
-
+    final defId =
+        defRows.isNotEmpty
+            ? defRows.first['id'] as int
+            : await db.insert('exercise_definitions', {
+              'name': name,
+              'equipment_id': eqId,
+            });
 
     // 3. Insert the exercise instance
-    return db.insert('exercises', {
-      'session_id':      sessionId,
-      'exercise_def_id': defId,
-      'order_index':     orderIndex,
-      // 'type' omitted => defaults to 'weight'
-    });
+    return db.insert(
+      'exercises',
+      _exerciseValues(
+        sessionId: sessionId,
+        exerciseDefId: defId,
+        orderIndex: orderIndex,
+      ),
+    );
   }
 
   /// Inserts an exercise row of any type ('weight', 'cardio', 'stretch').
@@ -79,12 +114,15 @@ final defId = defRows.isNotEmpty
     required int orderIndex,
     required int sessionId,
   }) {
-    return db.insert('exercises', {
-      'session_id':      sessionId,
-      'exercise_def_id': exerciseDefId,
-      'type':            type,
-      'order_index':     orderIndex,
-    });
+    return db.insert(
+      'exercises',
+      _exerciseValues(
+        sessionId: sessionId,
+        exerciseDefId: exerciseDefId,
+        type: type,
+        orderIndex: orderIndex,
+      ),
+    );
   }
 
   /// Retrieves all exercises for a given session, ordered by `order_index`.
@@ -114,7 +152,7 @@ final defId = defRows.isNotEmpty
     Database db,
     int sessionId,
   ) async {
-  await db.delete(
+    await db.delete(
       'exercises',
       where: 'session_id = ?',
       whereArgs: [sessionId],
@@ -128,15 +166,10 @@ final defId = defRows.isNotEmpty
   ///
   /// Returns a map of column values or null.
   static Future<Map<String, dynamic>?> getExerciseById(
-      Database db, int exerciseId) {
-    return db
-        .query(
-          'exercises',
-          where: 'id = ?',
-          whereArgs: [exerciseId],
-          limit: 1,
-        )
-        .then((rows) => rows.isNotEmpty ? rows.first : null);
+    Database db,
+    int exerciseId,
+  ) {
+    return _exerciseByWhere(db, 'id = ?', [exerciseId]);
   }
 
   /// Deletes a single exercise by its ID.
@@ -145,12 +178,7 @@ final defId = defRows.isNotEmpty
   /// - [exerciseId]: ID of the exercise to remove.
   ///
   /// Returns the number of rows deleted (0 or 1).
-  static Future<int> deleteExerciseById(
-      Database db, int exerciseId) {
-    return db.delete(
-      'exercises',
-      where: 'id = ?',
-      whereArgs: [exerciseId],
-    );
+  static Future<int> deleteExerciseById(Database db, int exerciseId) {
+    return db.delete('exercises', where: 'id = ?', whereArgs: [exerciseId]);
   }
 }

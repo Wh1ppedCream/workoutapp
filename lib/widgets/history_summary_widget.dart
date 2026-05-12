@@ -11,11 +11,7 @@ class InfoCard extends StatelessWidget {
   final String value;
   final String label;
 
-  const InfoCard({
-    super.key,
-    required this.value,
-    required this.label,
-  });
+  const InfoCard({super.key, required this.value, required this.label});
 
   @override
   Widget build(BuildContext context) {
@@ -48,10 +44,7 @@ class InfoCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             label,
-            style: TextStyle(
-              fontSize: 10,
-              color: colors.infoCardLabelText,
-            ),
+            style: TextStyle(fontSize: 10, color: colors.infoCardLabelText),
           ),
         ],
       ),
@@ -62,22 +55,21 @@ class InfoCard extends StatelessWidget {
 class HistorySummaryWidget extends StatefulWidget {
   final int refreshToken;
 
-  const HistorySummaryWidget({
-    super.key,
-    this.refreshToken = 0,
-  });
+  const HistorySummaryWidget({super.key, this.refreshToken = 0});
 
   @override
   HistorySummaryWidgetState createState() => HistorySummaryWidgetState();
 }
 
 class _HistoryTabData {
-  final List<WorkoutSession> sessions;
+  final int workoutCount;
+  final int totalDurationSeconds;
   final Map<BodyPart, double> heatmap;
   final double totalVolume;
 
   const _HistoryTabData({
-    required this.sessions,
+    required this.workoutCount,
+    required this.totalDurationSeconds,
     required this.heatmap,
     required this.totalVolume,
   });
@@ -140,22 +132,27 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
   Future<_HistoryTabData> _loadTab(int index) async {
     final repo = AppRepository();
     final now = DateTime.now();
-    final start = index < _durations.length
-        ? now.subtract(Duration(days: _durations[index]))
-        : DateTime.fromMillisecondsSinceEpoch(0);
+    final start =
+        index < _durations.length
+            ? now.subtract(Duration(days: _durations[index]))
+            : DateTime.fromMillisecondsSinceEpoch(0);
     final results = await Future.wait([
-      repo.fetchSessionsInRange(start, now),
+      repo.fetchWorkoutReportSessions(start: start, end: now),
       repo.fetchAllBodyPartSetsOverTimeRange(start: start, end: now),
     ]);
-    final sessions = results[0] as List<WorkoutSession>;
+    final sessions = results[0] as List<WorkoutReportSession>;
     final heatmap = results[1] as Map<BodyPart, double>;
-    final volume = await repo.calculateTotalVolumeForSessions(
-      sessions.map((s) => s.id).toList(),
-    );
     return _HistoryTabData(
-      sessions: sessions,
+      workoutCount: sessions.length,
+      totalDurationSeconds: sessions.fold<int>(
+        0,
+        (sum, session) => sum + session.durationSeconds,
+      ),
       heatmap: heatmap,
-      totalVolume: volume,
+      totalVolume: sessions.fold<double>(
+        0.0,
+        (sum, session) => sum + session.totalVolume,
+      ),
     );
   }
 
@@ -228,18 +225,20 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
                           },
                           child: Container(
                             decoration: BoxDecoration(
-                              color: isSelected
-                                  ? theme.colorScheme.primary
-                                  : Colors.transparent,
+                              color:
+                                  isSelected
+                                      ? theme.colorScheme.primary
+                                      : Colors.transparent,
                               borderRadius: segmentRadius,
                             ),
                             alignment: Alignment.center,
                             child: Text(
                               _tabLabels[i],
                               style: TextStyle(
-                                color: isSelected
-                                    ? theme.colorScheme.onPrimary
-                                    : theme.colorScheme.onSurfaceVariant,
+                                color:
+                                    isSelected
+                                        ? theme.colorScheme.onPrimary
+                                        : theme.colorScheme.onSurfaceVariant,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -250,10 +249,7 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
                   ),
                 ),
                 const SizedBox(height: 12),
-                SizedBox(
-                  height: 250,
-                  child: _buildLoadedTab(_selectedIndex),
-                ),
+                SizedBox(height: 250, child: _buildLoadedTab(_selectedIndex)),
               ],
             ),
           ),
@@ -267,23 +263,22 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
     final data = _tabData[index];
     if (data == null) {
       return Center(
-        child: CircularProgressIndicator(
-          color: colors.historySummaryProgress!,
-        ),
+        child: CircularProgressIndicator(color: colors.historySummaryProgress!),
       );
     }
-    final sessions = data.sessions;
     final rawHeatmap = data.heatmap;
 
-    final workoutCount = sessions.length;
-    final totalSeconds = sessions.fold<int>(0, (sum, s) => sum + s.duration);
+    final workoutCount = data.workoutCount;
+    final totalSeconds = data.totalDurationSeconds;
     final hours = totalSeconds ~/ 3600;
     final mins = (totalSeconds % 3600) ~/ 60;
     final timeStr = '${hours}h ${mins}m';
     final totalVolume = data.totalVolume;
 
-    final maxCount =
-        rawHeatmap.values.fold<double>(0.0, (prev, v) => v > prev ? v : prev);
+    final maxCount = rawHeatmap.values.fold<double>(
+      0.0,
+      (prev, v) => v > prev ? v : prev,
+    );
     final freqMap = <String, double>{};
     rawHeatmap.forEach((bp, count) {
       final ids = bodyPartNameToSvgIds[bp.name] ?? [];

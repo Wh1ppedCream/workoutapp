@@ -7,17 +7,29 @@ import '../../repositories/app_repository.dart';
 import 'session_detail_screen.dart';
 
 /// Shows every workout session in a simple scrollable list.
-class FullHistoryScreen extends StatelessWidget {
+class FullHistoryScreen extends StatefulWidget {
   const FullHistoryScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final repo = AppRepository();
+  State<FullHistoryScreen> createState() => _FullHistoryScreenState();
+}
 
+class _FullHistoryScreenState extends State<FullHistoryScreen> {
+  final _repo = AppRepository();
+  late Future<List<WorkoutSession>> _sessionsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _sessionsFuture = _repo.fetchWorkoutSessions();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('All Sessions')),
       body: FutureBuilder<List<WorkoutSession>>(
-        future: repo.fetchWorkoutSessions(),
+        future: _sessionsFuture,
         builder: (ctx, snap) {
           if (snap.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -38,19 +50,19 @@ class FullHistoryScreen extends StatelessWidget {
               final dateStr = DateFormat('yyyy-MM-dd').format(s.date);
               final durationMin = (s.duration / 60).ceil();
               return Card(
-                margin:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: ListTile(
                   title: Text('$dateStr — $durationMin min'),
-                  onTap: () => Navigator.of(context)
-                      .push(
-                        MaterialPageRoute(
-                          builder: (_) => SessionDetailScreen(s),
-                        ),
-                      )
-                      .then((_) {
-                    // nothing extra here
-                  }),
+                  onTap:
+                      () => Navigator.of(context)
+                          .push(
+                            MaterialPageRoute(
+                              builder: (_) => SessionDetailScreen(s),
+                            ),
+                          )
+                          .then((_) {
+                            // nothing extra here
+                          }),
                 ),
               );
             },

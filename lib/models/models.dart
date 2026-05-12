@@ -11,3 +11,4 @@ export 'nutrition_models.dart';
 
 //new:
 export 'training_plan_models.dart';
+export 'history_report_models.dart';

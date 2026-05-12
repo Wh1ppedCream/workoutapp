@@ -111,6 +111,14 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
         ? (existing.params['copyFromSetIndex']?.toString() ?? '-1')
         : '-1';
     final copyIndexCtl = TextEditingController(text: copyIndex);
+    void disposeControllers() {
+      nameCtl.dispose();
+      factorCtl.dispose();
+      amountCtl.dispose();
+      weightCtl.dispose();
+      repsCtl.dispose();
+      copyIndexCtl.dispose();
+    }
 
     final saved = await showDialog<bool>(
       context: context,
@@ -220,7 +228,10 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
         ),
       ),
     );
-    if (saved != true) return;
+    if (saved != true) {
+      disposeControllers();
+      return;
+    }
 
     // build params
     final params = <String, dynamic>{};
@@ -244,14 +255,17 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
       case MethodType.delSet:
         break;
     }
+    final methodName = nameCtl.text.trim();
+    disposeControllers();
 
     await _repo.upsertDefaultFlowMethod(
       scope: scope,
       profileId: profileId,
-      name: nameCtl.text.trim(),
+      name: methodName,
       type: type,
       params: params,
     );
+    if (!mounted) return;
     await _loadAll();
   }
 
@@ -266,7 +280,7 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
         existing: existing,
       ),
     );
-    if (updated != null) await _loadAll();
+    if (updated != null && mounted) await _loadAll();
   }
 
   Widget _methodTile(
@@ -441,6 +455,17 @@ class AddPresetMethodDialogState extends State<AddPresetMethodDialog> {
     _repsCtl = TextEditingController(text: ex?.params['reps']?.toString());
     _copyIndexCtl = TextEditingController(
         text: ex?.params['copyFromSetIndex']?.toString() ?? '-1');
+  }
+
+  @override
+  void dispose() {
+    _nameCtl.dispose();
+    _factorCtl.dispose();
+    _amountCtl.dispose();
+    _weightCtl.dispose();
+    _repsCtl.dispose();
+    _copyIndexCtl.dispose();
+    super.dispose();
   }
 
   @override

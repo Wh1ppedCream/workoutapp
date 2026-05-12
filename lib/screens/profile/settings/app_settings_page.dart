@@ -57,35 +57,39 @@ class _AppSettingsPageState extends State<AppSettingsPage> {
 
   Future<void> _importDatabase() async {
     final controller = TextEditingController();
-
-    if (!mounted) return;                 // guard before dialog
-    final result = await showDialog<String?>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Import Database'),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: TextField(
-            controller: controller,
-            maxLines: 10,
-            decoration: const InputDecoration(
-              hintText: 'Paste JSON here',
-              border: OutlineInputBorder(),
+    String? result;
+    try {
+      if (!mounted) return;                 // guard before dialog
+      result = await showDialog<String?>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Import Database'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: TextField(
+              controller: controller,
+              maxLines: 10,
+              decoration: const InputDecoration(
+                hintText: 'Paste JSON here',
+                border: OutlineInputBorder(),
+              ),
             ),
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(null),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(ctx).pop(controller.text),
+              child: const Text('Import'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(null),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(ctx).pop(controller.text),
-            child: const Text('Import'),
-          ),
-        ],
-      ),
-    );
+      );
+    } finally {
+      controller.dispose();
+    }
 
     if (result == null) return;
     try {

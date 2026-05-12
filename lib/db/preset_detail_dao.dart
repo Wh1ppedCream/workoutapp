@@ -2,10 +2,47 @@
 
 import 'package:sqflite/sqflite.dart';
 import '../models/models.dart';
+import 'db_query_utils.dart';
 
 /// Data Access Object for preset-specific detail tables:
 /// sets, cardio details, and stretch items.
 class PresetDetailDao {
+  static Map<String, Object?> _presetSetValues({
+    required int presetExerciseId,
+    required double weight,
+    required int reps,
+    required int orderIndex,
+    int? parentSetId,
+  }) {
+    return {
+      'preset_exercise_id': presetExerciseId,
+      'weight': weight,
+      'reps': reps,
+      'order_index': orderIndex,
+      'parent_set_id': parentSetId,
+    };
+  }
+
+  static Map<String, Object?> _presetCardioValues({
+    required int presetExerciseId,
+    required String cardioName,
+    String? note,
+    required int plannedMinutes,
+    required int elapsedSeconds,
+  }) {
+    return {
+      'preset_exercise_id': presetExerciseId,
+      'cardio_name': cardioName,
+      'note': note,
+      'planned_minutes': plannedMinutes,
+      'elapsed_seconds': elapsedSeconds,
+    };
+  }
+
+  static int _intFlag(Object? rawValue) {
+    return rawValue is bool ? (rawValue ? 1 : 0) : rawValue as int;
+  }
+
   /// Inserts parent and child weight sets for a preset exercise.
   static Future<void> insertPresetSets({
     required Database db,
@@ -13,28 +50,37 @@ class PresetDetailDao {
     required List<ExerciseSet> parentSets,
     required Map<int, List<ExerciseSet>> childChangeSets,
   }) async {
-    for (var i = 0; i < parentSets.length; i++) {
-      final parent = parentSets[i];
-      final parentId = await db.insert('preset_sets', {
-        'preset_exercise_id': presetExerciseId,
-        'weight': parent.weight,
-        'reps': parent.reps,
-        'order_index': i,
-        'parent_set_id': null,
-      });
-      if (childChangeSets.containsKey(i)) {
-        for (var j = 0; j < childChangeSets[i]!.length; j++) {
-          final child = childChangeSets[i]![j];
-          await db.insert('preset_sets', {
-            'preset_exercise_id': presetExerciseId,
-            'weight': child.weight,
-            'reps': child.reps,
-            'order_index': j,
-            'parent_set_id': parentId,
-          });
+    if (parentSets.isEmpty) return;
+
+    await db.transaction((txn) async {
+      for (var i = 0; i < parentSets.length; i++) {
+        final parent = parentSets[i];
+        final parentId = await txn.insert(
+          'preset_sets',
+          _presetSetValues(
+            presetExerciseId: presetExerciseId,
+            weight: parent.weight,
+            reps: parent.reps,
+            orderIndex: i,
+          ),
+        );
+        final children = childChangeSets[i];
+        if (children == null) continue;
+        for (var j = 0; j < children.length; j++) {
+          final child = children[j];
+          await txn.insert(
+            'preset_sets',
+            _presetSetValues(
+              presetExerciseId: presetExerciseId,
+              weight: child.weight,
+              reps: child.reps,
+              orderIndex: j,
+              parentSetId: parentId,
+            ),
+          );
         }
       }
-    }
+    });
   }
 
   /// Retrieves all weight sets (parent and child) for a preset exercise.
@@ -59,18 +105,18 @@ class PresetDetailDao {
     required int plannedMinutes,
     required int elapsedSeconds,
   }) async {
-  await db.insert(
-    'preset_cardio_details',
-    {
-      'preset_exercise_id': presetExerciseId,
-      'cardio_name':        cardioName,
-      'note':               note,
-      'planned_minutes':    plannedMinutes,
-      'elapsed_seconds':    elapsedSeconds,
-    },
-    conflictAlgorithm: ConflictAlgorithm.replace,
-  );
-}
+    await db.insert(
+      'preset_cardio_details',
+      _presetCardioValues(
+        presetExerciseId: presetExerciseId,
+        cardioName: cardioName,
+        note: note,
+        plannedMinutes: plannedMinutes,
+        elapsedSeconds: elapsedSeconds,
+      ),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
 
   /// Retrieves cardio details for a preset exercise.
   static Future<Map<String, dynamic>?> getPresetCardioDetails(
@@ -78,48 +124,38 @@ class PresetDetailDao {
     int presetExerciseId,
   ) async {
     final rows = await db.query(
-    'preset_cardio_details',
-    columns: ['*'],   // includes elapsed_seconds
-    where: 'preset_exercise_id = ?',
-    whereArgs: [presetExerciseId],
-    limit: 1,
-  );
-    return rows.isNotEmpty ? rows.first : null;
+      'preset_cardio_details',
+      columns: ['*'], // includes elapsed_seconds
+      where: 'preset_exercise_id = ?',
+      whereArgs: [presetExerciseId],
+      limit: 1,
+    );
+    return firstDynamicRow(rows);
   }
 
   /// Inserts stretch items for a preset exercise.
- static Future<void> insertPresetStretchItems({
-  required Database db,
-  required int presetExerciseId,
-  required List<Map<String, dynamic>> items,
-}) async {
-  for (var i = 0; i < items.length; i++) {
-    final m = items[i];
+  static Future<void> insertPresetStretchItems({
+    required Database db,
+    required int presetExerciseId,
+    required List<Map<String, dynamic>> items,
+  }) async {
+    if (items.isEmpty) return;
 
-    // Normalize is_custom (could be bool or int) to 0/1:
-    final rawIsCustom = m['is_custom'];
-    final int isCustomFlag = rawIsCustom is bool
-        ? (rawIsCustom ? 1 : 0)
-        : (rawIsCustom as int);
-
-    // Normalize is_checked if you ever store it here (presets don't, but safe):
-
-    await db.insert(
-      'preset_stretch_items',
-      {
+    final batch = db.batch();
+    for (var i = 0; i < items.length; i++) {
+      final m = items[i];
+      batch.insert('preset_stretch_items', {
         'preset_exercise_id': presetExerciseId,
-        'stretch_id':         m['stretch_id'],
-        'is_custom':          isCustomFlag,
+        'stretch_id': m['stretch_id'],
+        'is_custom': _intFlag(m['is_custom']),
         // no 'is_checked' column in preset_stretch_items
-        'custom_name':        m['custom_name'],
-        'custom_desc':        m['custom_desc'],
-        'order_index':        m['order_index'] as int,
-      },
-      conflictAlgorithm: ConflictAlgorithm.ignore,
-    );
+        'custom_name': m['custom_name'],
+        'custom_desc': m['custom_desc'],
+        'order_index': m['order_index'] as int,
+      }, conflictAlgorithm: ConflictAlgorithm.ignore);
+    }
+    await batch.commit(noResult: true);
   }
-}
-
 
   /// Retrieves stretch items for a preset exercise.
   static Future<List<Map<String, dynamic>>> getPresetStretchItems(
@@ -134,22 +170,21 @@ class PresetDetailDao {
     );
   }
 
+  /// Updates the weight for a preset set.
+  static Future<int> updatePresetSetWeight({
+    required Database db,
+    required int presetSetId,
+    required double weight,
+  }) {
+    return db.update(
+      'preset_sets',
+      {'weight': weight},
+      where: 'id = ?',
+      whereArgs: [presetSetId],
+    );
+  }
 
-/// Updates the weight for a preset set.
-static Future<int> updatePresetSetWeight({
-  required Database db,
-  required int presetSetId,
-  required double weight,
-}) {
-  return db.update(
-    'preset_sets',
-    {'weight': weight},
-    where: 'id = ?',
-    whereArgs: [presetSetId],
-  );
-}
-
-/// Update just the `reps` column for one preset_set.
+  /// Update just the `reps` column for one preset_set.
   static Future<void> updatePresetSetReps({
     required Database db,
     required int presetSetId,
@@ -157,7 +192,7 @@ static Future<int> updatePresetSetWeight({
   }) async {
     await db.update(
       'preset_sets',
-      { 'reps': reps },
+      {'reps': reps},
       where: 'id = ?',
       whereArgs: [presetSetId],
     );
@@ -175,13 +210,13 @@ static Future<int> updatePresetSetWeight({
   }) async {
     return db.insert(
       'preset_sets',
-      {
-        'preset_exercise_id': presetExerciseId,
-        'weight': weight,
-        'reps': reps,
-        'order_index': orderIndex,
-        'parent_set_id': parentSetId,
-      },
+      _presetSetValues(
+        presetExerciseId: presetExerciseId,
+        weight: weight,
+        reps: reps,
+        orderIndex: orderIndex,
+        parentSetId: parentSetId,
+      ),
     );
   }
 
@@ -190,11 +225,6 @@ static Future<int> updatePresetSetWeight({
     required Database db,
     required int presetSetId,
   }) {
-    return db.delete(
-      'preset_sets',
-      where: 'id = ?',
-      whereArgs: [presetSetId],
-    );
+    return db.delete('preset_sets', where: 'id = ?', whereArgs: [presetSetId]);
   }
-
 }

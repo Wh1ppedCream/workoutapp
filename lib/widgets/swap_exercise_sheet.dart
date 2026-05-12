@@ -6,6 +6,7 @@ import '../models/models.dart';
 import '../repositories/app_repository.dart';
 import '../screens/exercise/exercise_catalog_page.dart';
 import '../theme/theme_extensions.dart';
+import '../utils/async_pool.dart';
 import 'body_heatmap.dart';
 
 class SwapExerciseSheet extends StatefulWidget {
@@ -18,6 +19,8 @@ class SwapExerciseSheet extends StatefulWidget {
 }
 
 class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
+  static const int _candidateBuildConcurrency = 4;
+
   final _repo = AppRepository();
   late final Future<_SwapExerciseData> _dataFuture;
   int _selectedIndex = 0;
@@ -34,15 +37,12 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
   Future<_SwapExerciseData> _loadData() async {
     final current = await _buildEntry(widget.currentDefinition);
     final definitions = await _loadCandidateDefinitions(current);
-    final candidates = <_ExerciseSwapEntry>[];
-
-    for (final definition in definitions) {
-      if (definition.id == widget.currentDefinition.id) continue;
-      final entry = await _buildEntry(definition);
-      final score = _similarityScore(current, entry);
-      if (score <= 0.05) continue;
-      candidates.add(entry.copyWith(score: score));
-    }
+    final candidates = await _buildCandidateEntries(
+      definitions
+          .where((definition) => definition.id != widget.currentDefinition.id)
+          .toList(),
+      current,
+    );
 
     candidates.sort((a, b) => b.score.compareTo(a.score));
 
@@ -74,18 +74,26 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
     }
 
     if (definitions.where((def) => def.id != current.definition.id).isEmpty) {
-      definitions = await _repo.lookupDefsDetailed();
+      return _repo.lookupDefsDetailed();
     }
 
-    return definitions;
+    return _repo.lookupDefsDetailedByIds(
+      definitions.map((definition) => definition.id).toList(),
+    );
   }
 
-  Future<_ExerciseSwapEntry> _buildEntry(ExerciseDefinition definition) async {
-    final detailedDefinition = await _hydrateDefinition(definition);
-    final bodyPartUnits = await _repo.computeBodyPartPercents(
+  Future<_ExerciseSwapEntry> _buildEntry(
+    ExerciseDefinition definition, {
+    bool hydrateDefinition = true,
+  }) async {
+    final detailedDefinition =
+        hydrateDefinition ? await _hydrateDefinition(definition) : definition;
+    final bodyPartUnitsFuture = _repo.computeBodyPartPercents(
       detailedDefinition.id,
     );
-    final muscleRows = await _repo.computeMusclePercents(detailedDefinition.id);
+    final muscleRowsFuture = _repo.computeMusclePercents(detailedDefinition.id);
+    final bodyPartUnits = await bodyPartUnitsFuture;
+    final muscleRows = await muscleRowsFuture;
     final muscleUnitsById = <int, double>{
       for (final row in muscleRows)
         if (row.percent > 0.0) row.muscleId: row.percent,
@@ -134,6 +142,32 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
       frequencyMap: frequencyMap,
       equipmentText: _equipmentText(detailedDefinition),
     );
+  }
+
+  Future<List<_ExerciseSwapEntry>> _buildCandidateEntries(
+    List<ExerciseDefinition> definitions,
+    _ExerciseSwapEntry current,
+  ) async {
+    final results =
+        await mapWithConcurrency<ExerciseDefinition, _ExerciseSwapEntry?>(
+          definitions,
+          maxConcurrency: _candidateBuildConcurrency,
+          mapper: (definition, _) async {
+            final entry = await _buildEntry(
+              definition,
+              hydrateDefinition: false,
+            );
+            final score = _similarityScore(current, entry);
+            if (score > 0.05) {
+              return entry.copyWith(score: score);
+            }
+            return null;
+          },
+        );
+    return [
+      for (final result in results)
+        if (result != null) result,
+    ];
   }
 
   Future<ExerciseDefinition> _hydrateDefinition(

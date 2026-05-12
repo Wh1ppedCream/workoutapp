@@ -28,6 +28,7 @@ import 'preset_flow_methods_dao.dart';
 import 'personal_info_dao.dart';
 import 'nutrition_dao.dart';
 import 'database_maintenance.dart';
+import 'db_query_utils.dart';
 
 import 'package:flutter/foundation.dart' show debugPrint;
 
@@ -36,7 +37,7 @@ class DatabaseHelper {
   static const int _kDbVersion = 48;
   static int get currentSchemaVersion => _kDbVersion;
   static const String _kOpenTriggerResetKey = 'open_trigger_reset_v1';
-  static const String _kOpenIndexEnsureKey = 'open_index_ensure_v1';
+  static const String _kOpenIndexEnsureKey = 'open_index_ensure_v3';
   static bool? _fts4Available;
   static final DatabaseHelper _instance = DatabaseHelper._internal();
   factory DatabaseHelper() => _instance;
@@ -44,6 +45,7 @@ class DatabaseHelper {
 
   static Database? _db;
   static Future<Database>? _dbFuture;
+
   Future<Database> get database {
     if (_db != null) return Future.value(_db!);
     return _dbFuture ??= _initDatabase()
@@ -870,7 +872,7 @@ class DatabaseHelper {
       'recipes',
       'recipe_ingredients',
     ];
-    final qs = List.filled(tables.length, '?').join(',');
+    final qs = sqlitePlaceholders(tables.length);
 
     await db.transaction((txn) async {
       final rows = await txn.rawQuery(
@@ -1182,6 +1184,41 @@ class DatabaseHelper {
     }
 
     final sw = Stopwatch()..start();
+    // ── Workout sessions & exercise logs ─────────────────────────────────────
+    if (await _tableExists(db, 'sessions')) {
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_sessions_date ON sessions(date)',
+      );
+    }
+    if (await _tableExists(db, 'exercises')) {
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_exercises_session_order '
+        'ON exercises(session_id, order_index)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_exercises_def ON exercises(exercise_def_id)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_exercises_def_type_session '
+        'ON exercises(exercise_def_id, type, session_id)',
+      );
+    }
+    if (await _tableExists(db, 'sets')) {
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_sets_exercise_order '
+        'ON sets(exercise_id, order_index)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_sets_parent ON sets(parent_set_id)',
+      );
+    }
+    if (await _tableExists(db, 'preset_exercises')) {
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_preset_exercises_focus '
+        'ON preset_exercises(preset_id, type, exercise_def_id)',
+      );
+    }
+
     // ── Foods & lookups ───────────────────────────────────────────────────────
     if (await _tableExists(db, 'foods')) {
       await db.execute(
@@ -1630,6 +1667,47 @@ class DatabaseHelper {
     return SessionDao.getAllSessionsRaw(db);
   }
 
+  Future<List<Map<String, dynamic>>> fetchWorkoutReportSessionsRaw({
+    DateTime? start,
+    DateTime? end,
+  }) async {
+    final db = await database;
+    final whereClauses = <String>[];
+    final args = <Object?>[];
+
+    if (start != null) {
+      whereClauses.add('sess.date >= ?');
+      args.add(start.toIso8601String());
+    }
+    if (end != null) {
+      whereClauses.add('sess.date <= ?');
+      args.add(end.toIso8601String());
+    }
+
+    final whereSql =
+        whereClauses.isEmpty ? '' : 'WHERE ${whereClauses.join(' AND ')}';
+
+    return db.rawQuery('''
+      SELECT
+        sess.id AS session_id,
+        sess.date AS date,
+        sess.duration AS duration,
+        COUNT(DISTINCT e.id) AS exercise_count,
+        COALESCE(SUM(
+          CASE
+            WHEN e.type = 'weight' THEN st.weight * st.reps
+            ELSE 0
+          END
+        ), 0) AS total_volume
+      FROM sessions sess
+      LEFT JOIN exercises e ON e.session_id = sess.id
+      LEFT JOIN sets st ON st.exercise_id = e.id
+      $whereSql
+      GROUP BY sess.id
+      ORDER BY sess.date ASC
+      ''', args);
+  }
+
   Future<void> deleteSession(int sid) async {
     final db = await database;
     return SessionDao.deleteSession(db, sid);
@@ -1695,6 +1773,30 @@ class DatabaseHelper {
     return ExerciseDao.getExercisesForSession(db, sessionId);
   }
 
+  Future<List<Map<String, dynamic>>> fetchRecentWeightExerciseHistoryRows({
+    required int definitionId,
+    int limit = 10,
+  }) async {
+    if (limit <= 0) return const <Map<String, dynamic>>[];
+
+    final db = await database;
+    return db.rawQuery(
+      '''
+      SELECT
+        e.id AS exercise_id,
+        s.id AS session_id,
+        s.date AS session_date
+      FROM exercises e
+      INNER JOIN sessions s ON s.id = e.session_id
+      WHERE e.type = 'weight'
+        AND e.exercise_def_id = ?
+      ORDER BY s.date DESC, e.order_index ASC
+      LIMIT ?
+      ''',
+      [definitionId, limit],
+    );
+  }
+
   Future<void> deleteExercises(int sessionId) async {
     final db = await database;
     await ExerciseDao.deleteExercisesForSession(db, sessionId);
@@ -1727,18 +1829,25 @@ class DatabaseHelper {
 
     if (type == 'weight') {
       // — definition info (name+equipment)
-      final defInfo = await DefinitionDao.getDefinitionInfo(
+      final defInfoFuture = DefinitionDao.getDefinitionInfo(
         db,
         exRow['exercise_def_id'] as int,
       );
 
       // — sets & changeSets
-      final parentRows = await db.query(
-        'sets',
-        where: 'exercise_id = ? AND parent_set_id IS NULL',
-        whereArgs: [exerciseId],
-        orderBy: 'order_index',
-      );
+      final allSetRowsFuture = SetDao.getSetsForExercise(db, exerciseId);
+      final defInfo = await defInfoFuture;
+      final allSetRows = await allSetRowsFuture;
+      final parentRows =
+          allSetRows.where((row) => row['parent_set_id'] == null).toList();
+      final childRowsByParentId = <int, List<Map<String, dynamic>>>{};
+      for (final row in allSetRows) {
+        final parentId = row['parent_set_id'] as int?;
+        if (parentId == null) continue;
+        childRowsByParentId
+            .putIfAbsent(parentId, () => <Map<String, dynamic>>[])
+            .add(row);
+      }
       final sets = <ExerciseSet>[];
       final changeSets = <int, List<ExerciseSet>>{};
       final completedParents = <int>{};
@@ -1754,12 +1863,9 @@ class DatabaseHelper {
         );
         completedParents.add(i);
 
-        final children = await db.query(
-          'sets',
-          where: 'parent_set_id = ?',
-          whereArgs: [p['id']],
-          orderBy: 'order_index',
-        );
+        final children =
+            childRowsByParentId[p['id'] as int] ??
+            const <Map<String, dynamic>>[];
         if (children.isNotEmpty) {
           changeSets[i] =
               children
@@ -2049,7 +2155,15 @@ class DatabaseHelper {
   /// Fetch every definition with its full equipmentList, bodyParts, and muscles.
   Future<List<ExerciseDefinition>> lookupDefsDetailed() async {
     final db = await database;
-    return DefinitionDao.getAllExerciseDefinitionsDetailed(db);
+    return DefinitionDao.getAllExerciseDefinitionsDetailedBatched(db);
+  }
+
+  /// Fetch a selected subset of definitions with their full join data.
+  Future<List<ExerciseDefinition>> lookupDefsDetailedByIds(
+    List<int> definitionIds,
+  ) async {
+    final db = await database;
+    return DefinitionDao.getExerciseDefinitionsDetailedByIds(db, definitionIds);
   }
 
   /// Fetch all exercise definitions (shallow, without join lists).
@@ -2601,51 +2715,12 @@ class DatabaseHelper {
   /// Export the entire database to a JSON string.
   Future<String> exportDatabase() async {
     final db = await database;
-    final tables = [
-      // existing…
-      'sessions', 'exercises', 'sets', 'cardio_details',
-      'stretch_instances', 'stretch_instance_items',
-      'measurement_definitions', 'measurements',
-      'equipment', 'bodypart', 'muscles',
-      'exercise_definitions',
-      'exercise_equipment',
-      'exercise_bodypart',
-      'exercise_muscle',
-      'stretch_definitions', 'stretch_bodypart',
-      'muscle_bodypart', 'bodypart_ranking', 'muscle_ranking',
-      'exercise_muscle_percent', 'bodypart_muscle_rankings',
-      'muscle_volume_boundaries', 'bodypart_volume_boundaries',
-      'preset_definitions', 'preset_exercises', 'preset_sets',
-      'preset_cardio_details', 'preset_stretch_items',
-      'gym_profiles', 'profile_equipment',
-      'exercise_rep_max', 'exercise_volume_max',
-
-      // nutrition domain
-      'nutrients',
-      'nutrient_aliases',
-      'nutrient_groups',
-      'nutrient_group_members',
-      'foods', 'food_portions', 'food_barcodes',
-      'food_nutrients', 'food_nutrient_values',
-      'recipes', 'recipe_ingredients', 'recipe_nutrients',
-      'diary_entries', 'day_totals_cache', 'nutrition_goals',
-      'brands', 'sources', 'categories', 'food_usage_stats',
-      'favorite_foods', 'diary_entry_tags',
-      'diary_entry_audit', // ← ADD
-      'personal_info', // ← ADD
-
-      'flow_defaults', 'flow_default_methods', 'preset_flow_methods',
-
-      // analytics / settings
-      'formula_settings', 'exercise_bodypart_percent',
-
-      // autopreset feature
-      'preset_auto_settings', 'preset_exercise_auto', 'preset_set_auto',
-    ];
+    final tables = kDatabaseExportTableNames;
+    final existingTables = await _tableNames(db);
 
     final Map<String, dynamic> data = {};
     for (final table in tables) {
-      if (await _tableExists(db, table)) {
+      if (existingTables.contains(table)) {
         // ← guard
         data[table] = await db.query(table);
       }
@@ -2677,11 +2752,12 @@ class DatabaseHelper {
       await db.execute('PRAGMA foreign_keys = OFF;');
       try {
         await db.transaction((txn) async {
+          final existingTables = await _tableNames(txn);
           if (clearFirst) {
             // Clear app-managed import/export tables only.
             final tablesToClear = kDatabaseExportTableNames.reversed;
             for (final table in tablesToClear) {
-              if (await _tableExists(txn, table)) {
+              if (existingTables.contains(table)) {
                 await txn.delete(table);
               }
             }
@@ -2690,7 +2766,7 @@ class DatabaseHelper {
           // Insert rows for tables present in the JSON.
           for (final table in data.keys) {
             if (!kDatabaseExportTableNames.contains(table)) continue;
-            if (!await _tableExists(txn, table)) continue; // skip unknown
+            if (!existingTables.contains(table)) continue; // skip unknown
             final rows = List<Map<String, dynamic>>.from(data[table] as List);
             for (final row in rows) {
               final sane = await _sanitizeRowForTable(txn, table, row);
@@ -2749,34 +2825,28 @@ class DatabaseHelper {
     }
   }
 
-  // equipment.json
-  Future<String> exportEquipmentJson() async {
+  Future<String> _exportNameListJson(String table) async {
     final db = await database;
-    final rows = await db.query('equipment');
+    final rows = await db.query(table);
     final out = rows.map((r) => {'name': r['name'] as String}).toList();
     return jsonEncode(out);
   }
+
+  // equipment.json
+  Future<String> exportEquipmentJson() => _exportNameListJson('equipment');
 
   /// bodyparts.json
-  Future<String> exportBodypartsJson() async {
-    final db = await database;
-    final rows = await db.query('bodypart');
-    final out = rows.map((r) => {'name': r['name'] as String}).toList();
-    return jsonEncode(out);
-  }
+  Future<String> exportBodypartsJson() => _exportNameListJson('bodypart');
 
   /// muscles.json
-  Future<String> exportMusclesJson() async {
-    final db = await database;
-    final rows = await db.query('muscles');
-    final out = rows.map((r) => {'name': r['name'] as String}).toList();
-    return jsonEncode(out);
-  }
+  Future<String> exportMusclesJson() => _exportNameListJson('muscles');
 
   /// exercises.json
   Future<String> exportExercisesJson() async {
     final db = await database;
-    final defs = await DefinitionDao.getAllExerciseDefinitionsDetailed(db);
+    final defs = await DefinitionDao.getAllExerciseDefinitionsDetailedBatched(
+      db,
+    );
     final out =
         defs.map((def) {
           final map = <String, dynamic>{
@@ -3004,16 +3074,21 @@ class DatabaseHelper {
     if (sessionIds.isEmpty) return 0.0;
 
     final db = await database;
-    final placeholders = List.filled(sessionIds.length, '?').join(',');
-    final rows = await db.rawQuery('''
-      SELECT COALESCE(SUM(s.weight * s.reps), 0) AS total_volume
-      FROM sets s
-      INNER JOIN exercises e ON e.id = s.exercise_id
-      WHERE e.type = 'weight'
-        AND e.session_id IN ($placeholders)
-      ''', sessionIds);
+    var totalVolume = 0.0;
+    final uniqueSessionIds = sessionIds.toSet().toList();
+    for (final chunk in sqliteChunks(uniqueSessionIds)) {
+      final placeholders = sqlitePlaceholders(chunk.length);
+      final rows = await db.rawQuery('''
+        SELECT COALESCE(SUM(s.weight * s.reps), 0) AS total_volume
+        FROM sets s
+        INNER JOIN exercises e ON e.id = s.exercise_id
+        WHERE e.type = 'weight'
+          AND e.session_id IN ($placeholders)
+        ''', chunk);
+      totalVolume += ((rows.first['total_volume'] as num?) ?? 0).toDouble();
+    }
 
-    return ((rows.first['total_volume'] as num?) ?? 0).toDouble();
+    return totalVolume;
   }
 
   // ─── Formula Settings ──────────────────────────────────────
@@ -3334,7 +3409,7 @@ class DatabaseHelper {
     if (muscleIds.isEmpty) return {};
 
     // 3) Load every muscle -> body-part link for this exercise in one query.
-    final placeholders = List.filled(muscleIds.length, '?').join(',');
+    final placeholders = sqlitePlaceholders(muscleIds.length);
     final linkRows = await db.rawQuery('''
       SELECT
         mb.muscle_id AS muscle_id,
@@ -3793,22 +3868,27 @@ class DatabaseHelper {
     if (presetIds.isEmpty) return const <Map<String, dynamic>>[];
 
     final db = await database;
-    final placeholders = List.filled(presetIds.length, '?').join(',');
-    return db.rawQuery(
-      '''
-      SELECT
-        pe.preset_id AS preset_id,
-        pe.exercise_def_id AS def_id,
-        COUNT(ps.id) AS set_count
-      FROM preset_exercises pe
-      LEFT JOIN preset_sets ps ON ps.preset_exercise_id = pe.id
-      WHERE pe.type = 'weight'
-        AND pe.exercise_def_id IS NOT NULL
-        AND pe.preset_id IN ($placeholders)
-      GROUP BY pe.preset_id, pe.exercise_def_id
-      ''',
-      presetIds,
-    );
+    final rows = <Map<String, dynamic>>[];
+    final uniquePresetIds = presetIds.toSet().toList();
+    for (final chunk in sqliteChunks(uniquePresetIds)) {
+      final placeholders = sqlitePlaceholders(chunk.length);
+      rows.addAll(
+        await db.rawQuery('''
+          SELECT
+            pe.preset_id AS preset_id,
+            pe.exercise_def_id AS def_id,
+            COUNT(ps.id) AS set_count
+          FROM preset_exercises pe
+          LEFT JOIN preset_sets ps ON ps.preset_exercise_id = pe.id
+          WHERE pe.type = 'weight'
+            AND pe.exercise_def_id IS NOT NULL
+            AND pe.preset_id IN ($placeholders)
+          GROUP BY pe.preset_id, pe.exercise_def_id
+          ''', chunk),
+      );
+    }
+
+    return rows;
   }
 
   Future<PresetDefinition?> fetchPresetById(int presetId) async {
@@ -4700,6 +4780,13 @@ class DatabaseHelper {
       [name],
     );
     return rows.isNotEmpty;
+  }
+
+  Future<Set<String>> _tableNames(DatabaseExecutor db) async {
+    final rows = await db.rawQuery(
+      "SELECT name FROM sqlite_master WHERE type='table'",
+    );
+    return rows.map((row) => row['name']).whereType<String>().toSet();
   }
 
   Future<int> _countRowsIfTableExists(DatabaseExecutor db, String name) async {

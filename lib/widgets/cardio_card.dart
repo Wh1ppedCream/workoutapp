@@ -28,29 +28,82 @@ class _CardioCardState extends State<CardioCard> {
   bool _isEditingNote = false;
 
   late int _cardioMinutes;
+  late int _elapsedSeconds;
   late int _secondsLeft;
   Timer? _cardioTimer;
-  late TextEditingController _cardioNameController;       //TODO: idk why this has a controller
 
   @override
   void initState() {
     super.initState();
-    //TODO: use actual equipment for equipment field and have note for note field
-    // 1) Seed the note from the model’s equipment field
-    _note = widget.exercise.equipment;
+    _syncFromExercise();
 
-    // 2) Seed cardio‐specific fields
-    _cardioMinutes = widget.exercise.plannedMinutes;
-    _secondsLeft   = widget.exercise.elapsedSeconds;
-    _cardioNameController =
-        TextEditingController(text: widget.exercise.cardioName);
   }
 
   @override
   void dispose() {
     _cardioTimer?.cancel();
-    _cardioNameController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(covariant CardioCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.exercise != widget.exercise) {
+      _cardioTimer?.cancel();
+      _syncFromExercise();
+    }
+  }
+
+  void _syncFromExercise() {
+    _note = widget.exercise.cardioNote ?? '';
+    _cardioMinutes = widget.exercise.plannedMinutes;
+    _elapsedSeconds = widget.exercise.elapsedSeconds;
+    _secondsLeft = _remainingSeconds();
+  }
+
+  int _remainingSeconds() {
+    final remaining = (_cardioMinutes * 60) - _elapsedSeconds;
+    return remaining > 0 ? remaining : 0;
+  }
+
+  void _startTimer({bool reset = false}) {
+    _cardioTimer?.cancel();
+    if (reset) {
+      _elapsedSeconds = 0;
+      widget.exercise.elapsedSeconds = 0;
+    }
+
+    _secondsLeft = _remainingSeconds();
+    widget.onValueChanged?.call();
+    if (_secondsLeft <= 0) {
+      setState(() {});
+      return;
+    }
+
+    _cardioTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+
+      if (_secondsLeft <= 0) {
+        timer.cancel();
+        setState(() {});
+        return;
+      }
+
+      setState(() {
+        _elapsedSeconds++;
+        _secondsLeft = _remainingSeconds();
+        widget.exercise.elapsedSeconds = _elapsedSeconds;
+      });
+      widget.onValueChanged?.call();
+
+      if (_secondsLeft <= 0) {
+        timer.cancel();
+      }
+    });
+    setState(() {});
   }
 
   @override
@@ -108,6 +161,8 @@ class _CardioCardState extends State<CardioCard> {
                         _note = val.trim();
                         _isEditingNote = false;
                       });
+                      widget.exercise.cardioNote =
+                          _note.isEmpty ? null : _note;
                       widget.onValueChanged?.call();
                     },
                   )
@@ -138,6 +193,7 @@ class _CardioCardState extends State<CardioCard> {
                 SizedBox(
                   width: 80,
                   child: TextFormField(
+                    key: ValueKey(widget.exercise),
                     initialValue: '$_cardioMinutes',
                     readOnly: readOnly,
                     keyboardType: TextInputType.number,
@@ -147,6 +203,7 @@ class _CardioCardState extends State<CardioCard> {
                       final mins = int.tryParse(v) ?? 0;
                       setState(() {
                         _cardioMinutes = mins;
+                        _secondsLeft = _remainingSeconds();
                       });
                       widget.exercise.plannedMinutes = mins;
                       widget.onValueChanged?.call();
@@ -156,24 +213,7 @@ class _CardioCardState extends State<CardioCard> {
                 const SizedBox(width: 8),
                 ElevatedButton(
                   onPressed: readOnly ? null : () {
-                    setState(() => _secondsLeft = _cardioMinutes * 60);
-                    widget.exercise.elapsedSeconds = _secondsLeft;
-                    widget.onValueChanged?.call();
-
-                    _cardioTimer?.cancel();
-                    _cardioTimer = Timer.periodic(
-                      const Duration(seconds: 1),
-                      (_) {
-                        if (_secondsLeft > 0) {
-                          setState(() => _secondsLeft--);
-                          widget.exercise.elapsedSeconds =
-                              _secondsLeft;
-                          widget.onValueChanged?.call();
-                        } else {
-                          _cardioTimer?.cancel();
-                        }
-                      },
-                    );
+                    _startTimer(reset: true);
                   },
                   child: const Text('GO'),
                 ),
@@ -205,21 +245,7 @@ class _CardioCardState extends State<CardioCard> {
                         _cardioTimer!.cancel();
                         setState(() {});
                       } else if (_secondsLeft > 0) {
-                        _cardioTimer = Timer.periodic(
-                          const Duration(seconds: 1),
-                          (_) {
-                            if (_secondsLeft > 0) {
-                              setState(() => _secondsLeft--);
-                              widget.exercise.elapsedSeconds =
-                                  _secondsLeft;
-                              widget.onValueChanged?.call();
-                            } else {
-                              _cardioTimer?.cancel();
-                              setState(() {});
-                            }
-                          },
-                        );
-                        setState(() {});
+                        _startTimer();
                       }
                     },
                     child: Text(

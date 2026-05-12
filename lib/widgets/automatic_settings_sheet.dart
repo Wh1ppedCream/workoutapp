@@ -40,6 +40,7 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet>
   final Map<int, bool> _setSelections = {};
 
   SuccessCountMode _successCountMode = SuccessCountMode.session;
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -103,38 +104,53 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet>
   }
 
   Future<void> _saveAllAndClose() async {
+    if (_isSaving) return;
     final preset = widget.preset;
+    setState(() => _isSaving = true);
+    var closedSheet = false;
 
-    // 1) Global settings + manual flags
-    final globalParsed = double.tryParse(_globalController.text) ?? preset.globalIncrement;
-    final manualJson = json.encode(
-      _setSelections.map((key, value) => MapEntry(key.toString(), value)),
-    );
+    try {
+      // 1) Global settings + manual flags
+      final globalParsed = double.tryParse(_globalController.text) ?? preset.globalIncrement;
+      final manualJson = json.encode(
+        _setSelections.map((key, value) => MapEntry(key.toString(), value)),
+      );
 
-    await preset.saveAutoSettings(
-      newGlobalIncrement: globalParsed,
-      newSkipFirstSet: _skipFirst,
-      newWeightCheck: preset.weightCheck,
-      newRepCheck: preset.repCheck,
-      newVolumeCheck: preset.volumeCheck,
-      newAdjustAllSets: preset.adjustAllSets,
-      newUseManualSelect: _manualSelect,
-      newManualSelectionJson: manualJson,
-    );
+      await preset.saveAutoSettings(
+        newGlobalIncrement: globalParsed,
+        newSkipFirstSet: _skipFirst,
+        newWeightCheck: preset.weightCheck,
+        newRepCheck: preset.repCheck,
+        newVolumeCheck: preset.volumeCheck,
+        newAdjustAllSets: preset.adjustAllSets,
+        newUseManualSelect: _manualSelect,
+        newManualSelectionJson: manualJson,
+      );
 
-    // 2) Per-exercise overrides
-    for (var exId in preset.presetExerciseIds) {
-      final parsed = double.tryParse(_exControllers[exId]!.text);
-      await preset.saveExerciseOverride(exId, parsed);
+      // 2) Per-exercise overrides
+      for (var exId in preset.presetExerciseIds) {
+        final parsed = double.tryParse(_exControllers[exId]!.text);
+        await preset.saveExerciseOverride(exId, parsed);
+      }
+
+      // 3) Per-set overrides
+      for (var setId in _setControllers.keys) {
+        final parsed = double.tryParse(_setControllers[setId]!.text);
+        await preset.saveSetOverride(setId, parsed);
+      }
+
+      if (mounted) {
+        closedSheet = true;
+        Navigator.of(context).pop();
+      }
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not save settings: $error')));
+    } finally {
+      if (mounted && !closedSheet) setState(() => _isSaving = false);
     }
-
-    // 3) Per-set overrides
-    for (var setId in _setControllers.keys) {
-      final parsed = double.tryParse(_setControllers[setId]!.text);
-      await preset.saveSetOverride(setId, parsed);
-    }
-
-    if (mounted) Navigator.of(context).pop();
   }
 
   @override
@@ -323,8 +339,8 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet>
                           const SizedBox(height: 16),
 
                           ElevatedButton(
-                            onPressed: _saveAllAndClose,
-                            child: const Text('Save'),
+                            onPressed: _isSaving ? null : _saveAllAndClose,
+                            child: Text(_isSaving ? 'Saving...' : 'Save'),
                           ),
                           const SizedBox(height: 24),
                         ] else ...[
@@ -438,8 +454,8 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet>
                           const SizedBox(height: 16),
 
                           ElevatedButton(
-                            onPressed: _saveAllAndClose,
-                            child: const Text('Save'),
+                            onPressed: _isSaving ? null : _saveAllAndClose,
+                            child: Text(_isSaving ? 'Saving...' : 'Save'),
                           ),
                           const SizedBox(height: 24),
                         ],
@@ -517,8 +533,8 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet>
                         const SizedBox(height: 16),
 
                         ElevatedButton(
-                          onPressed: _saveAllAndClose,
-                          child: const Text('Save'),
+                          onPressed: _isSaving ? null : _saveAllAndClose,
+                          child: Text(_isSaving ? 'Saving...' : 'Save'),
                         ),
                         const SizedBox(height: 24),
                       ],

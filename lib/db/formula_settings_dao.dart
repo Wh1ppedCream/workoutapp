@@ -11,24 +11,21 @@ import 'package:sqflite/sqflite.dart';
 class FormulaSettingsDao {
   static const _table = 'formula_settings';
 
+  static Map<String, Object?> _paramValues(String key, double value) {
+    return {'key': key, 'value': value};
+  }
+
   /// Sets (inserts or replaces) a formula parameter.
-  static Future<void> setParam(
-    Database db,
-    String key,
-    double value,
-  ) async {
-  await db.insert(
+  static Future<void> setParam(Database db, String key, double value) async {
+    await db.insert(
       _table,
-      {'key': key, 'value': value},
+      _paramValues(key, value),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
 
   /// Reads a formula parameter by [key], or null if none set.
-  static Future<double?> getParam(
-    Database db,
-    String key,
-  ) async {
+  static Future<double?> getParam(Database db, String key) async {
     final rows = await db.query(
       _table,
       columns: ['value'],

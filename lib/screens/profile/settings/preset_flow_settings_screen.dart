@@ -410,6 +410,7 @@ class _PresetFlowSettingsScreenState extends State<PresetFlowSettingsScreen> {
     );
     // refresh after manage
     _methods = await _repo.fetchFlowMethods(_selectedPresetId!);
+    if (!mounted) return;
     setState(() {});
   }
 
@@ -423,6 +424,14 @@ Future<void> _showAddMethodDialog() async {
     final weightCtl = TextEditingController(text: '0.0');
     final repsCtl = TextEditingController(text: '0');
     final copyIndexCtl = TextEditingController(text: '-1');
+    void disposeControllers() {
+      nameCtl.dispose();
+      factorCtl.dispose();
+      amountCtl.dispose();
+      weightCtl.dispose();
+      repsCtl.dispose();
+      copyIndexCtl.dispose();
+    }
 
     final saved = await showDialog<bool>(
       context: context,
@@ -522,7 +531,10 @@ Future<void> _showAddMethodDialog() async {
         ),
       ),
     );
-    if (saved != true) return;
+    if (saved != true) {
+      disposeControllers();
+      return;
+    }
 
     late Map<String, dynamic> params;
     switch (type) {
@@ -544,13 +556,17 @@ Future<void> _showAddMethodDialog() async {
         params = {};
         break;
     }
+    final methodName = nameCtl.text.trim();
+    disposeControllers();
+
       await _repo.upsertFlowMethod(
       presetId: _selectedPresetId!,
-      name: nameCtl.text.trim(),
+      name: methodName,
       type: type,
       params: params,
     );
     _methods = await _repo.fetchFlowMethods(_selectedPresetId!);
+    if (!mounted) return;
     setState(() {});
   }
 

@@ -90,6 +90,7 @@ class _StretchCardState extends State<StretchCard> {
                       ? null
                       : () async {
                           final chosen = await StretchSearchDialog.show(context);
+                          if (!mounted) return;
                           if (chosen != null) {
                             setState(() {
                               stretchList.add(StretchInstance(
@@ -133,7 +134,6 @@ class _StretchCardState extends State<StretchCard> {
                               isChecked: false,
                               orderIndex: stretchList.length,
                             ));
-                            _completedStretches.add(stretchList.length - 1);
                             _stretchCustomController.clear();
                           });
                           widget.onValueChanged?.call();

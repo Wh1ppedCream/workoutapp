@@ -10,12 +10,14 @@ class StretchSearchDialog {
   static Future<StretchDefinition?> show(BuildContext context) {
     // Use the repository instead of DatabaseHelper directly
     final repo = AppRepository();
+    final bodyPartsFuture = repo.fetchAllBodyParts();
 
     return showDialog<StretchDefinition>(
       context: context,
       builder: (dialogCtx) {
         int? selectedBodyPartId;
         int? selectedStretchId;
+        var stretchLoadGeneration = 0;
         List<StretchDefinition> currentStretches = [];
 
         return StatefulBuilder(
@@ -27,7 +29,7 @@ class StretchSearchDialog {
                 children: [
                   // 1) Body-part dropdown
                   FutureBuilder<List<BodyPart>>(
-                    future: repo.fetchAllBodyParts(),
+                    future: bodyPartsFuture,
                     builder: (ctx, snap) {
                       if (snap.connectionState != ConnectionState.done) {
                         return const Padding(
@@ -38,23 +40,31 @@ class StretchSearchDialog {
                       final parts = snap.data ?? [];
                       return DropdownButtonFormField<int>(
                         isExpanded: true,
-                        decoration: const InputDecoration(labelText: 'Body Part'),
+                        decoration: const InputDecoration(
+                          labelText: 'Body Part',
+                        ),
                         value: selectedBodyPartId,
-                        items: parts.map((bp) {
-                          return DropdownMenuItem<int>(
-                            value: bp.id,
-                            child: Text(bp.name),
-                          );
-                        }).toList(),
+                        items:
+                            parts.map((bp) {
+                              return DropdownMenuItem<int>(
+                                value: bp.id,
+                                child: Text(bp.name),
+                              );
+                            }).toList(),
                         onChanged: (newBpId) {
+                          final loadGeneration = ++stretchLoadGeneration;
                           setState(() {
                             selectedBodyPartId = newBpId;
                             selectedStretchId = null;
                             currentStretches = [];
                           });
                           if (newBpId != null) {
-                            // Fetch stretches via repo
-                                repo.fetchStretches(bodypartId: newBpId).then((list) {
+                            repo.fetchStretches(bodypartId: newBpId).then((
+                              list,
+                            ) {
+                              if (loadGeneration != stretchLoadGeneration) {
+                                return;
+                              }
                               setState(() {
                                 currentStretches = list;
                               });
@@ -68,17 +78,18 @@ class StretchSearchDialog {
                   const SizedBox(height: 12),
 
                   // 2) Stretch dropdown (once a body part is chosen)
-                  if (selectedBodyPartId != null) 
+                  if (selectedBodyPartId != null)
                     DropdownButtonFormField<int>(
                       isExpanded: true,
                       decoration: const InputDecoration(labelText: 'Stretch'),
                       value: selectedStretchId,
-                      items: currentStretches.map((st) {
-                        return DropdownMenuItem<int>(
-                          value: st.id,
-                          child: Text(st.name),
-                        );
-                      }).toList(),
+                      items:
+                          currentStretches.map((st) {
+                            return DropdownMenuItem<int>(
+                              value: st.id,
+                              child: Text(st.name),
+                            );
+                          }).toList(),
                       onChanged: (newStId) {
                         setState(() {
                           selectedStretchId = newStId;
@@ -93,14 +104,15 @@ class StretchSearchDialog {
                   child: const Text('Cancel'),
                 ),
                 ElevatedButton(
-                  onPressed: selectedStretchId != null
-                      ? () {
-                          final chosen = currentStretches.firstWhere(
-                            (st) => st.id == selectedStretchId,
-                          );
-                          Navigator.of(dialogCtx).pop(chosen);
-                        }
-                      : null,
+                  onPressed:
+                      selectedStretchId != null
+                          ? () {
+                            final chosen = currentStretches.firstWhere(
+                              (st) => st.id == selectedStretchId,
+                            );
+                            Navigator.of(dialogCtx).pop(chosen);
+                          }
+                          : null,
                   child: const Text('Add'),
                 ),
               ],

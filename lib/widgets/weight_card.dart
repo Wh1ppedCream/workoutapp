@@ -8,8 +8,7 @@ class WeightCard extends StatefulWidget {
   final WeightExercise exercise;
   final bool readOnlyMode;
   final Set<int>? initialCompletedParents;
-  final Map<int, Set<int>>?
-  initialCompletedChildren; //TODO: maybe fix model to store this too
+  final Map<int, Set<int>>? initialCompletedChildren;
   final VoidCallback? onDeleteExercise;
   final VoidCallback? onSetAdded;
   final VoidCallback? onSetDeleted;
@@ -38,8 +37,8 @@ class WeightCard extends StatefulWidget {
 }
 
 class _WeightCardState extends State<WeightCard> {
-  late List<TextEditingController> _weightControllers;
-  late List<TextEditingController> _repsControllers;
+  List<TextEditingController> _weightControllers = [];
+  List<TextEditingController> _repsControllers = [];
 
   bool _isChangeSetMode = false;
   bool _isCollapsed = false;
@@ -49,8 +48,20 @@ class _WeightCardState extends State<WeightCard> {
   @override
   void initState() {
     super.initState();
+    _syncFromExercise(resetCollapsed: true);
+  }
 
-    // Seed controllers for parent sets
+  @override
+  void didUpdateWidget(covariant WeightCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.exercise != widget.exercise) {
+      _syncFromExercise(resetCollapsed: true);
+    }
+  }
+
+  void _syncFromExercise({required bool resetCollapsed}) {
+    final oldWeightControllers = _weightControllers;
+    final oldRepsControllers = _repsControllers;
     final sets = widget.exercise.sets;
     _weightControllers =
         sets
@@ -61,34 +72,51 @@ class _WeightCardState extends State<WeightCard> {
             .map((s) => TextEditingController(text: s.reps.toString()))
             .toList();
 
-    // Seed completed parents from model
+    _completedSets.clear();
     if (widget.initialCompletedParents != null) {
       _completedSets.addAll(widget.initialCompletedParents!);
-    }
-    if (_allSetsComplete(sets)) {
-      _isCollapsed = true;
+    } else {
+      _completedSets.addAll(widget.exercise.completedParents);
     }
 
-    // Seed existing ChangeSets from model
+    _cSets.clear();
     widget.exercise.changeSets.forEach((parentIdx, children) {
       _cSets[parentIdx] = List<ExerciseSet>.from(children);
     });
 
-    // Show ChangeSets UI if model has any
-    if (widget.exercise.changeSets.isNotEmpty) {
-      _isChangeSetMode = true;
+    _isChangeSetMode = widget.exercise.changeSets.isNotEmpty;
+    if (resetCollapsed) {
+      _isCollapsed = _allSetsComplete(sets);
     }
+    _disposeControllersAfterFrame([
+      ...oldWeightControllers,
+      ...oldRepsControllers,
+    ]);
   }
 
   @override
   void dispose() {
-    for (var c in _weightControllers) {
-      c.dispose();
-    }
-    for (var c in _repsControllers) {
-      c.dispose();
-    }
+    _disposeSetControllers();
     super.dispose();
+  }
+
+  void _disposeSetControllers() {
+    _disposeControllers([..._weightControllers, ..._repsControllers]);
+    _weightControllers = [];
+    _repsControllers = [];
+  }
+
+  void _disposeControllers(List<TextEditingController> controllers) {
+    for (var c in controllers) {
+      c.dispose();
+    }
+  }
+
+  void _disposeControllersAfterFrame(List<TextEditingController> controllers) {
+    if (controllers.isEmpty) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _disposeControllers(controllers);
+    });
   }
 
   void _updateWeightSet(int index) {
@@ -120,6 +148,22 @@ class _WeightCardState extends State<WeightCard> {
     widget.exercise.completedParents
       ..clear()
       ..addAll(shifted);
+  }
+
+  void _removeChangeSetsForParentIndex(int index) {
+    final shifted = <int, List<ExerciseSet>>{};
+    _cSets.forEach((parentIndex, children) {
+      if (parentIndex == index) return;
+      shifted[parentIndex > index ? parentIndex - 1 : parentIndex] = children;
+    });
+    _cSets
+      ..clear()
+      ..addAll(shifted);
+    widget.exercise.changeSets
+      ..clear()
+      ..addAll({
+        for (final entry in shifted.entries) entry.key: List.from(entry.value),
+      });
   }
 
   @override
@@ -223,6 +267,7 @@ class _WeightCardState extends State<WeightCard> {
                               ],
                             ),
                       );
+                      if (!mounted) return;
                       if (confirm == true) widget.onDeleteExercise?.call();
                     } else if (choice == 'changeSet') {
                       setState(() => _isChangeSetMode = !_isChangeSetMode);
@@ -364,6 +409,7 @@ class _WeightCardState extends State<WeightCard> {
                                             ],
                                           ),
                                     );
+                                    if (!mounted) return;
                                     if (confirm == true) {
                                       setState(() {
                                         sets.removeAt(index);
@@ -374,8 +420,13 @@ class _WeightCardState extends State<WeightCard> {
                                             .removeAt(index)
                                             .dispose();
                                         _removeCompletedSetIndex(index);
+                                        _removeChangeSetsForParentIndex(index);
+                                        _isChangeSetMode =
+                                            _cSets.isNotEmpty &&
+                                            _isChangeSetMode;
                                       });
                                       widget.onSetDeleted?.call();
+                                      widget.onValueChanged?.call();
                                     }
                                   },
                         ),
@@ -482,11 +533,19 @@ class _WeightCardState extends State<WeightCard> {
                                             ],
                                           ),
                                     );
+                                    if (!mounted) return;
                                     if (confirm == true) {
                                       setState(() {
                                         _cSets[index]!.removeAt(ci);
-                                        widget.exercise.changeSets[index] =
-                                            List.from(_cSets[index]!);
+                                        if (_cSets[index]!.isEmpty) {
+                                          _cSets.remove(index);
+                                          widget.exercise.changeSets.remove(
+                                            index,
+                                          );
+                                        } else {
+                                          widget.exercise.changeSets[index] =
+                                              List.from(_cSets[index]!);
+                                        }
                                       });
                                       widget.onValueChanged?.call();
                                     }

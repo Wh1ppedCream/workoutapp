@@ -134,43 +134,48 @@ class FlowChartWidgetState extends State<FlowChartWidget> {
     if (_selectedTargetNode == null) return;
     final keyCtrl = TextEditingController();
     final labelCtrl = TextEditingController();
-    final key = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('New Event'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: keyCtrl,
-              decoration: const InputDecoration(labelText: 'Event key'),
+    try {
+      final key = await showDialog<String>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('New Event'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: keyCtrl,
+                decoration: const InputDecoration(labelText: 'Event key'),
+              ),
+              TextField(
+                controller: labelCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Display label (optional)',
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(null),
+              child: const Text('Cancel'),
             ),
-            TextField(
-              controller: labelCtrl,
-              decoration:
-                  const InputDecoration(labelText: 'Display label (optional)'),
+            ElevatedButton(
+              onPressed: () {
+                final k = keyCtrl.text.trim();
+                if (k.isEmpty) return;
+                Navigator.of(ctx).pop(k);
+              },
+              child: const Text('Add'),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(null),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            
-            onPressed: () {
-              final k = keyCtrl.text.trim();
-              if (k.isEmpty) return;
-              Navigator.of(ctx).pop(k);
-            },
-            child: const Text('Add'),
-          ),
-        ],
-      ),
-    );
-    if (key == null) return;
-    _onAddEvent(key, labelCtrl.text.trim());
+      );
+      if (key == null || !mounted) return;
+      _onAddEvent(key, labelCtrl.text.trim());
+    } finally {
+      keyCtrl.dispose();
+      labelCtrl.dispose();
+    }
   }
 
   void _onAddEvent(String newKey, String display) {

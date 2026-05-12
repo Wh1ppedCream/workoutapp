@@ -272,45 +272,54 @@ Future<void> _showAddEventDialog() async {
   final keyController   = TextEditingController();
   final labelController = TextEditingController();
 
-  final key = await showDialog<String?>(
-    context: context,
-    builder: (ctx) => AlertDialog(
-      title: const Text('New Event'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-            controller: keyController,
-            decoration: const InputDecoration(
-              labelText: 'Event key',
-              hintText: 'e.g. event1',
+  String? key;
+  String label = '';
+  try {
+    key = await showDialog<String?>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('New Event'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: keyController,
+              decoration: const InputDecoration(
+                labelText: 'Event key',
+                hintText: 'e.g. event1',
+              ),
             ),
-          ),
-          TextField(
-            controller: labelController,
-            decoration: const InputDecoration(
-              labelText: 'Display label (optional)',
-              hintText: 'What shows in the list',
+            TextField(
+              controller: labelController,
+              decoration: const InputDecoration(
+                labelText: 'Display label (optional)',
+                hintText: 'What shows in the list',
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
+        actions: [
+        TextButton(onPressed: () => Navigator.of(ctx).pop(null), child: Text('Cancel')),
+        ElevatedButton(
+          onPressed: () {
+            final k = keyController.text.trim();
+            if (k.isEmpty) return;
+            Navigator.of(ctx).pop(k);
+          },
+          child: Text('Add'),
+        ),
+      ],
       ),
-      actions: [
-      TextButton(onPressed: () => Navigator.of(ctx).pop(null), child: Text('Cancel')),
-      ElevatedButton(
-        onPressed: () {
-          final k = keyController.text.trim();
-          if (k.isEmpty) return;
-          Navigator.of(ctx).pop(k);
-        },
-        child: Text('Add'),
-      ),
-    ],
-    ),
-  );
+    );
+    label = labelController.text.trim();
+  } finally {
+    keyController.dispose();
+    labelController.dispose();
+  }
 
   if (key == null) return;
-_onAddEvent(key, labelController.text.trim());
+if (!mounted) return;
+_onAddEvent(key, label);
   }
 
 /// Pulls the given element to the *end* of the draw order,

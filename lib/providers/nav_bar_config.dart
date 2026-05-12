@@ -91,10 +91,11 @@ class NavBarConfig extends ChangeNotifier {
   // User-defined order of all tabs
   List<TabItem> _order = TabItem.values;
 
-  // Which tabs are enabled (visible)
-  // Tabs enabled by default: hide history on first install
+  // Which tabs are enabled (visible).
+  // First install defaults: Train, Workout Log, Profile.
   Set<TabItem> _enabled = TabItem.values.toSet()
-    ..remove(TabItem.history)
+    ..remove(TabItem.dashboard)
+    ..remove(TabItem.nutrition)
     ..remove(TabItem.measurementsTrends)
     ..remove(TabItem.nutritionLog)
     ..remove(TabItem.combinedHistory)
