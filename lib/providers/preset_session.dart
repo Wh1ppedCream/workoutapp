@@ -5,7 +5,13 @@ import '../repositories/app_repository.dart';
 import '../widgets/exercise_card.dart'; // for CardType
 import 'dart:convert';
 
-/// ChangeNotifier driving the Preset detail/edit UI, with Automatic Preset support.
+/// Source of truth for the preset detail/edit UI.
+///
+/// The database stores a preset as a definition row plus ordered exercise rows,
+/// parent set rows, child/change-set rows, and automatic progression settings.
+/// This provider loads that shape into mutable UI-friendly lists, while keeping
+/// the original database row IDs beside each exercise/set so edits can be saved
+/// without refetching everything.
 class PresetSession extends ChangeNotifier {
   final int presetId;
   final _repo = AppRepository();
@@ -30,11 +36,10 @@ class PresetSession extends ChangeNotifier {
   bool volumeCheck = false;
   bool adjustAllSets = false;
 
-  // NEW:
-  /// Whether the user picked manual-select mode
+  /// Whether the user picked manual-select mode.
   bool manualSelect = false;
 
-  /// When in manual mode, which set-IDs should be ticked
+  /// When in manual mode, which set IDs should be ticked.
   Map<int, bool> manualSelections = {};
 
   /// Per-exercise override: preset_exercise_id → increment amount.
@@ -48,7 +53,7 @@ class PresetSession extends ChangeNotifier {
 
   // ─── In-memory Workout Representation ───────────────────────────────────
 
-  /// In-memory list of exercises and their types, and their original defIds
+  /// In-memory list of exercises and their types, plus original definition IDs.
   final List<WorkoutExercise> exercises = [];
   final List<CardType> cardTypes = [];
   final List<int?> _originalDefIds = [];
@@ -70,6 +75,11 @@ class PresetSession extends ChangeNotifier {
   }
 
   /// Loads the preset definition and all child details.
+  ///
+  /// The index of each entry in [_presetExerciseIds], [_presetParentSetIds],
+  /// and [_presetChildSetIds] mirrors the same index in [exercises]. Keeping
+  /// that parallel structure lets edit widgets save/delete rows without needing
+  /// to ask the database to rediscover which row belongs to which card.
   Future<void> _loadPreset() async {
     final def = await _repo.fetchPresetById(presetId);
     presetName = def?.name ?? '';

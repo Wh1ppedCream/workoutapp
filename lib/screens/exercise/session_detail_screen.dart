@@ -20,6 +20,11 @@ import 'session_screen.dart';
 
 /// Displays a saved workout session with summary, exercise detail, and reuse
 /// actions.
+///
+/// This screen reconstructs typed exercise models from persisted session rows
+/// so users can review, edit, start the workout again, or save it as a preset.
+/// Expensive definition/bodypart work is concurrency-limited to keep large
+/// sessions responsive.
 class SessionDetailScreen extends StatefulWidget {
   final WorkoutSession session;
 
@@ -52,6 +57,8 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     _loadExercises();
   }
 
+  /// Loads persisted session rows into UI-ready exercise details and summary
+  /// data in one pass.
   Future<void> _loadExercises() async {
     setState(() {
       _isLoading = true;
@@ -1183,6 +1190,7 @@ class _CompletedSimpleCard extends StatelessWidget {
   }
 }
 
+/// Typed exercise plus metadata needed by the detail screen.
 class _SessionExerciseDetail {
   final WorkoutExercise exercise;
   final CardType cardType;
@@ -1195,6 +1203,7 @@ class _SessionExerciseDetail {
   });
 }
 
+/// Aggregated session metrics used by the summary card and heatmap.
 class _SessionSummary {
   final double totalVolume;
   final int totalSets;

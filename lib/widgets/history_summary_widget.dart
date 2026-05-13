@@ -52,6 +52,11 @@ class InfoCard extends StatelessWidget {
   }
 }
 
+/// Compact workout-history summary used on the train/history surfaces.
+///
+/// Each time-range tab is loaded lazily and cached until [refreshToken]
+/// changes. This keeps the initial screen quick while still letting users jump
+/// between 1W/1M/3M/etc. without repeatedly hitting the database.
 class HistorySummaryWidget extends StatefulWidget {
   final int refreshToken;
 
@@ -61,6 +66,7 @@ class HistorySummaryWidget extends StatefulWidget {
   HistorySummaryWidgetState createState() => HistorySummaryWidgetState();
 }
 
+/// Pre-aggregated data for one selected time range.
 class _HistoryTabData {
   final int workoutCount;
   final int totalDurationSeconds;
@@ -132,10 +138,7 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
   Future<_HistoryTabData> _loadTab(int index) async {
     final repo = AppRepository();
     final now = DateTime.now();
-    final start =
-        index < _durations.length
-            ? now.subtract(Duration(days: _durations[index]))
-            : DateTime.fromMillisecondsSinceEpoch(0);
+    final start = _startForTab(index, now);
     final results = await Future.wait([
       repo.fetchWorkoutReportSessions(start: start, end: now),
       repo.fetchAllBodyPartSetsOverTimeRange(start: start, end: now),
@@ -154,6 +157,12 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
         (sum, session) => sum + session.totalVolume,
       ),
     );
+  }
+
+  DateTime _startForTab(int index, DateTime now) {
+    return index < _durations.length
+        ? now.subtract(Duration(days: _durations[index]))
+        : DateTime.fromMillisecondsSinceEpoch(0);
   }
 
   @override
@@ -201,20 +210,6 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
                   child: Row(
                     children: List.generate(_tabLabels.length, (i) {
                       final isSelected = i == _selectedIndex;
-                      BorderRadius segmentRadius;
-                      if (i == 0) {
-                        segmentRadius = const BorderRadius.only(
-                          topLeft: Radius.circular(8),
-                          bottomLeft: Radius.circular(8),
-                        );
-                      } else if (i == _tabLabels.length - 1) {
-                        segmentRadius = const BorderRadius.only(
-                          topRight: Radius.circular(8),
-                          bottomRight: Radius.circular(8),
-                        );
-                      } else {
-                        segmentRadius = BorderRadius.zero;
-                      }
                       return Expanded(
                         child: GestureDetector(
                           onTap: () {
@@ -229,7 +224,7 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
                                   isSelected
                                       ? theme.colorScheme.primary
                                       : Colors.transparent,
-                              borderRadius: segmentRadius,
+                              borderRadius: _tabSegmentRadius(i),
                             ),
                             alignment: Alignment.center,
                             child: Text(
@@ -266,26 +261,8 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
         child: CircularProgressIndicator(color: colors.historySummaryProgress!),
       );
     }
-    final rawHeatmap = data.heatmap;
-
-    final workoutCount = data.workoutCount;
-    final totalSeconds = data.totalDurationSeconds;
-    final hours = totalSeconds ~/ 3600;
-    final mins = (totalSeconds % 3600) ~/ 60;
-    final timeStr = '${hours}h ${mins}m';
-    final totalVolume = data.totalVolume;
-
-    final maxCount = rawHeatmap.values.fold<double>(
-      0.0,
-      (prev, v) => v > prev ? v : prev,
-    );
-    final freqMap = <String, double>{};
-    rawHeatmap.forEach((bp, count) {
-      final ids = bodyPartNameToSvgIds[bp.name] ?? [];
-      final norm = maxCount == 0.0 ? 0.0 : count / maxCount;
-      for (final id in ids) {
-        freqMap[id] = norm;
-      }
+    final freqMap = bodyPartFrequencyMapFromNames({
+      for (final entry in data.heatmap.entries) entry.key.name: entry.value,
     });
 
     return Row(
@@ -308,10 +285,16 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                InfoCard(value: workoutCount.toString(), label: 'Workouts'),
-                InfoCard(value: timeStr, label: 'Total Time'),
                 InfoCard(
-                  value: '${(totalVolume / 1000).toStringAsFixed(1)}k lbs',
+                  value: data.workoutCount.toString(),
+                  label: 'Workouts',
+                ),
+                InfoCard(
+                  value: _durationLabel(data.totalDurationSeconds),
+                  label: 'Total Time',
+                ),
+                InfoCard(
+                  value: '${(data.totalVolume / 1000).toStringAsFixed(1)}k lbs',
                   label: 'Total Volume',
                 ),
               ],
@@ -320,5 +303,27 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
         ),
       ],
     );
+  }
+
+  BorderRadius _tabSegmentRadius(int index) {
+    if (index == 0) {
+      return const BorderRadius.only(
+        topLeft: Radius.circular(8),
+        bottomLeft: Radius.circular(8),
+      );
+    }
+    if (index == _tabLabels.length - 1) {
+      return const BorderRadius.only(
+        topRight: Radius.circular(8),
+        bottomRight: Radius.circular(8),
+      );
+    }
+    return BorderRadius.zero;
+  }
+
+  String _durationLabel(int totalSeconds) {
+    final hours = totalSeconds ~/ 3600;
+    final mins = (totalSeconds % 3600) ~/ 60;
+    return '${hours}h ${mins}m';
   }
 }

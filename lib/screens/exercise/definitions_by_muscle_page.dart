@@ -9,7 +9,10 @@ import '../../widgets/recommended_sets_editor_dialog.dart';
 import '../../widgets/set_stat_chip.dart';
 import 'definitions_by_bodypart_page.dart';
 
-/// Displays exercises filtered by a specific muscle.
+/// Muscle detail page for the exercise focus library.
+///
+/// Shows linked exercises, associated bodyparts, recent seven-day set units,
+/// and editable recommended set bounds for one muscle.
 class DefinitionsByMusclePage extends StatefulWidget {
   final Muscle muscle;
   final BodyPart? sourceBodyPart;
@@ -35,6 +38,8 @@ class _DefinitionsByMusclePageState extends State<DefinitionsByMusclePage> {
     _dataFuture = _loadData();
   }
 
+  /// Loads all page data together so recommendations, links, and exercise
+  /// rankings are rendered from a consistent snapshot.
   Future<_MusclePageData> _loadData() async {
     final now = DateTime.now();
     final start = now.subtract(const Duration(days: 7));

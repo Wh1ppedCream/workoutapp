@@ -12,6 +12,12 @@ enum WorkoutReportRange { twelveWeeks, sixMonths, oneYear, all }
 
 enum _ReportBucketInterval { week, month }
 
+/// Swipeable workout report card for workouts, time, and volume.
+///
+/// The database returns raw completed sessions for the selected range. This
+/// widget buckets those sessions by week/month, caches the bucket set for the
+/// current range, and lets the user swipe between metric views without
+/// refetching the same data.
 class WorkoutMetricChartCard extends StatefulWidget {
   final int refreshToken;
 
@@ -227,28 +233,14 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
-                  children: [
-                    _RangeChip(
-                      label: '12W',
-                      selected: _range == WorkoutReportRange.twelveWeeks,
-                      onTap: () => _selectRange(WorkoutReportRange.twelveWeeks),
-                    ),
-                    _RangeChip(
-                      label: '6M',
-                      selected: _range == WorkoutReportRange.sixMonths,
-                      onTap: () => _selectRange(WorkoutReportRange.sixMonths),
-                    ),
-                    _RangeChip(
-                      label: '1Y',
-                      selected: _range == WorkoutReportRange.oneYear,
-                      onTap: () => _selectRange(WorkoutReportRange.oneYear),
-                    ),
-                    _RangeChip(
-                      label: 'All',
-                      selected: _range == WorkoutReportRange.all,
-                      onTap: () => _selectRange(WorkoutReportRange.all),
-                    ),
-                  ],
+                  children:
+                      WorkoutReportRange.values.map((range) {
+                        return _RangeChip(
+                          label: _rangeLabel(range),
+                          selected: _range == range,
+                          onTap: () => _selectRange(range),
+                        );
+                      }).toList(),
                 ),
               ],
             ),
@@ -340,20 +332,7 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
       bucket.totalVolume += session.totalVolume;
     }
 
-    final ordered =
-        mutableBuckets.values.toList()
-          ..sort((a, b) => a.start.compareTo(b.start));
-    return ordered
-        .map(
-          (bucket) => WorkoutReportBucket(
-            start: bucket.start,
-            end: bucket.end,
-            workoutCount: bucket.workoutCount,
-            durationSeconds: bucket.durationSeconds,
-            totalVolume: bucket.totalVolume,
-          ),
-        )
-        .toList();
+    return _finalizeBuckets(mutableBuckets);
   }
 
   List<WorkoutReportBucket> _buildMonthlyBuckets(
@@ -390,20 +369,26 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
       bucket.totalVolume += session.totalVolume;
     }
 
+    return _finalizeBuckets(mutableBuckets);
+  }
+
+  List<WorkoutReportBucket> _finalizeBuckets(
+    Map<DateTime, _MutableReportBucket> mutableBuckets,
+  ) {
     final ordered =
         mutableBuckets.values.toList()
           ..sort((a, b) => a.start.compareTo(b.start));
-    return ordered
-        .map(
-          (bucket) => WorkoutReportBucket(
-            start: bucket.start,
-            end: bucket.end,
-            workoutCount: bucket.workoutCount,
-            durationSeconds: bucket.durationSeconds,
-            totalVolume: bucket.totalVolume,
-          ),
-        )
-        .toList();
+    return ordered.map(_toReportBucket).toList();
+  }
+
+  WorkoutReportBucket _toReportBucket(_MutableReportBucket bucket) {
+    return WorkoutReportBucket(
+      start: bucket.start,
+      end: bucket.end,
+      workoutCount: bucket.workoutCount,
+      durationSeconds: bucket.durationSeconds,
+      totalVolume: bucket.totalVolume,
+    );
   }
 
   DateTime _startOfWeek(DateTime date) {
@@ -424,6 +409,7 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
   }
 }
 
+/// Bucket output plus the interval needed by the chart axis formatter.
 class _ReportBucketSet {
   final _ReportBucketInterval interval;
   final List<WorkoutReportBucket> buckets;
@@ -431,6 +417,7 @@ class _ReportBucketSet {
   const _ReportBucketSet({required this.interval, required this.buckets});
 }
 
+/// Mutable accumulator used while folding many sessions into chart buckets.
 class _MutableReportBucket {
   final DateTime start;
   final DateTime end;
@@ -792,6 +779,19 @@ String _metricLabel(WorkoutReportMetric metric) {
       return 'Time';
     case WorkoutReportMetric.volume:
       return 'Volume';
+  }
+}
+
+String _rangeLabel(WorkoutReportRange range) {
+  switch (range) {
+    case WorkoutReportRange.twelveWeeks:
+      return '12W';
+    case WorkoutReportRange.sixMonths:
+      return '6M';
+    case WorkoutReportRange.oneYear:
+      return '1Y';
+    case WorkoutReportRange.all:
+      return 'All';
   }
 }
 

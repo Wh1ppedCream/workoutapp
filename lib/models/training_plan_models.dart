@@ -2,11 +2,18 @@
 
 import 'definition_models.dart'; // for BodyPart, ExerciseDefinition
 
+/// How generated sessions decide which areas should receive more sets.
 enum TrainingPriorityMode { equalBodyPart, bodyPartRanking, muscleRanking }
 
+/// How generated presets should fill in reps and suggested weights.
 enum RepWeightGenerationMode { pyramid, consistent, mixed }
 
-/// Specification for the kind of session we want to auto-generate.
+/// Immutable input for both Generate Custom Preset and Start Optimized Workout.
+///
+/// This object keeps generation behavior explicit at the call site: UI pages
+/// collect duration, focus/avoid bodyparts, ranking mode, rep/weight settings,
+/// and whether recent history should matter, then pass one complete spec into
+/// PresetGenerationService.
 class SessionSpec {
   static const int defaultSessionDurationMinutes = 60;
   static const int defaultMinutesPerSet = 3;
@@ -78,7 +85,7 @@ class SessionSpec {
   /// How far back we look into history for volume (e.g. 7 days).
   final Duration historyWindow;
 
-  /// Reference “now” so we can test with fixed timestamps if needed.
+  /// Reference "now" so we can test with fixed timestamps if needed.
   final DateTime now;
 
   const SessionSpec({
@@ -133,7 +140,7 @@ class PresetGenerationResult {
 class BodyPartTarget {
   final BodyPart bodyPart;
 
-  /// Desired “set-units” / “bodypart-units” per week.
+  /// Desired set-units / bodypart-units per week.
   final double weeklyTargetUnits;
 
   /// How many units have already been done in the history window.
@@ -177,7 +184,7 @@ class CandidateExercisePlan {
   /// Underlying catalog definition.
   final ExerciseDefinition def;
 
-  /// How much each set “hits” each bodypart (units from computeBodyPartPercents).
+  /// How much each set hits each bodypart (units from computeBodyPartPercents).
   final Map<BodyPart, double> unitsPerSet;
 
   /// How much each set hits each muscle.

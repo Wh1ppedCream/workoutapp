@@ -4,6 +4,22 @@ import '../models/models.dart';
 import '../repositories/app_repository.dart';
 import '../utils/async_pool.dart';
 
+/// Builds generated presets and optimized workout plans from the user's
+/// training preferences, exercise definitions, volume boundaries, rankings,
+/// and optional recent workout history.
+///
+/// The service has two public use cases:
+/// - "Generate Custom Preset" persists the selected plan as a saved preset.
+/// - "Start Optimized Workout" reuses the selection logic without creating an
+///   extra preset first.
+///
+/// The generation pipeline is:
+/// 1. Convert rankings, boundaries, preferences, and history into targets.
+/// 2. Build a scored exercise candidate pool from catalog definitions.
+/// 3. Allocate sets inside the session time budget and volume limits.
+/// 4. Stagger exercises so adjacent cards hit different primary bodyparts when
+///    possible.
+/// 5. Optionally generate reps and suggested weights from saved rep-max data.
 class PresetGenerationService {
   static const int _candidateAnalysisConcurrency = 4;
 
@@ -11,11 +27,14 @@ class PresetGenerationService {
 
   PresetGenerationService(this._repo);
 
+  /// Convenience wrapper for callers that only need the newly-created preset ID.
   Future<int> generatePreset(SessionSpec spec) async {
     final result = await generatePresetWithDetails(spec);
     return result.presetId;
   }
 
+  /// Generates and saves a preset, returning extra metadata the UI can surface
+  /// to the user, such as exercises that had no weight history available.
   Future<PresetGenerationResult> generatePresetWithDetails(
     SessionSpec spec,
   ) async {
@@ -44,6 +63,11 @@ class PresetGenerationService {
     return result;
   }
 
+  /// Preflight check for optimized workouts.
+  ///
+  /// The button should warn the user to rest instead of starting a session when
+  /// recent training already has several bodyparts near their target boundary,
+  /// or when the only viable plan would require multiple one-set exercises.
   Future<bool> shouldRestBeforeOptimizedWorkout(SessionSpec spec) async {
     final end = spec.now;
     final start = end.subtract(spec.historyWindow);
@@ -75,6 +99,12 @@ class PresetGenerationService {
     return oneSetExercises >= SessionSpec.oneSetExerciseRestWarningCount;
   }
 
+  /// Chooses the best available plan for either preset generation or optimized
+  /// workout start.
+  ///
+  /// The targeted candidate pool is preferred. If no targeted candidate can be
+  /// selected inside the constraints, the fallback pool keeps the feature usable
+  /// by considering profile-compatible catalog exercises.
   Future<List<CandidateExercisePlan>> _selectGeneratedPlan({
     required SessionSpec spec,
     required List<BodyPartTarget> bodyTargets,
@@ -110,6 +140,8 @@ class PresetGenerationService {
     );
   }
 
+  /// Counts bodyparts whose recent volume is already within one unit of their
+  /// current target boundary. This drives the "take time to rest" warning.
   int _nearBodyPartLimitCount(List<BodyPartTarget> bodyTargets) {
     var count = 0;
     for (final target in bodyTargets) {
@@ -122,6 +154,8 @@ class PresetGenerationService {
     return count;
   }
 
+  /// Returns bodyparts from the most recent session so optimized workouts can
+  /// avoid immediately repeating the bodypart that was worked the most.
   Future<Set<int>> _bodyPartIdsToAvoid(SessionSpec spec) async {
     if (!spec.avoidMostRecentBodyPart || !spec.useRecentTrainingHistory) {
       return const <int>{};
@@ -215,6 +249,11 @@ class PresetGenerationService {
     return total;
   }
 
+  /// Builds bodypart targets from volume bounds, optional recent history, and
+  /// the current priority mode.
+  ///
+  /// Preferred bodyparts increase bias, blacklisted bodyparts receive no bias,
+  /// and muscle-ranking mode only opens bodyparts linked to ranked muscles.
   Future<List<BodyPartTarget>> _loadBodyPartTargets({
     required SessionSpec spec,
     required DateTime start,
@@ -266,6 +305,9 @@ class PresetGenerationService {
     return result;
   }
 
+  /// Builds muscle targets only for muscle-ranking mode.
+  ///
+  /// In other modes bodypart targets are enough, so this returns an empty list.
   Future<List<MuscleTarget>> _loadMuscleTargets({
     required SessionSpec spec,
     required DateTime start,
@@ -300,6 +342,13 @@ class PresetGenerationService {
     return result;
   }
 
+  /// Converts catalog exercise definitions into scored candidates.
+  ///
+  /// A candidate is discarded if it hits blacklisted bodyparts, has no useful
+  /// bodypart/muscle mapping, or cannot help any active target. Otherwise its
+  /// score combines target deficit, ranking/preference bias, and exercise
+  /// rating. Suggested sets start from the target deficit ratio, then later get
+  /// clamped by time and volume limits.
   Future<List<CandidateExercisePlan>> _buildCandidatePool({
     required SessionSpec spec,
     required List<BodyPartTarget> targets,
@@ -425,6 +474,12 @@ class PresetGenerationService {
     );
   }
 
+  /// Allocates exercises and set counts while tracking projected bodypart and
+  /// muscle volume.
+  ///
+  /// This is where preferred bodyparts are guaranteed coverage when viable,
+  /// session minutes are spent, one-set exercises are avoided where possible,
+  /// and weekly/session bodypart limits prevent over-allocation.
   List<CandidateExercisePlan> _selectWithinTimeBudget(
     List<CandidateExercisePlan> rankedCandidates,
     SessionSpec spec,
@@ -852,6 +907,8 @@ class PresetGenerationService {
     }
   }
 
+  /// Reorders selected exercises so different primary bodyparts alternate when
+  /// possible, while preserving the ranked order as the fallback.
   List<CandidateExercisePlan> _staggerExercises(
     List<CandidateExercisePlan> selected,
   ) {
@@ -905,6 +962,8 @@ class PresetGenerationService {
     return spec.setupMinutesPerExercise + sets * spec.minutesPerSet;
   }
 
+  /// Persists the selected plan as a normal preset, then initializes automatic
+  /// preset settings so the saved preset can participate in progression logic.
   Future<PresetGenerationResult> _createPresetInDb(
     SessionSpec spec,
     List<CandidateExercisePlan> selected,
@@ -941,6 +1000,11 @@ class PresetGenerationService {
     );
   }
 
+  /// Builds the weight/reps rows saved into a generated preset.
+  ///
+  /// When generated rep/weight values are off, this intentionally falls back to
+  /// neutral 0 lb x 10 reps rows so users can fill them in. When enabled, the
+  /// peak weight is pulled from saved rep-max history where possible.
   Future<List<ExerciseSet>> _buildGeneratedSets({
     required SessionSpec spec,
     required CandidateExercisePlan candidate,
@@ -991,6 +1055,10 @@ class PresetGenerationService {
         : RepWeightGenerationMode.consistent;
   }
 
+  /// Creates a pyramid around the peak set.
+  ///
+  /// Sets farther from the peak drop weight by 10% per step and add two reps,
+  /// so a four-set plan with a 6-rep peak produces 10/8/6/8 reps.
   List<ExerciseSet> _buildPyramidSets({
     required int totalSets,
     required int peakReps,
@@ -1007,6 +1075,11 @@ class PresetGenerationService {
     });
   }
 
+  /// Finds the target weight for the requested rep count.
+  ///
+  /// Exact rep-max rows win. If there is no exact row but other history exists,
+  /// the best estimated 1RM is converted back to the requested reps with the
+  /// Epley inverse: weight = one-rep max / (1 + reps / 30).
   Future<double> _targetWeightForReps({
     required int defId,
     required int targetReps,

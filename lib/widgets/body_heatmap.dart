@@ -6,7 +6,11 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import '../theme/theme_extensions.dart';
 
-// Mapping DB BodyPart.name -> all SVG <path id="..."> strings.
+/// Maps database BodyPart.name values to the SVG path IDs that represent them.
+///
+/// Keep this list in sync with assets/body_heatmap.svg. Most bodyparts appear
+/// on both the front and rear silhouettes, so a single app bodypart can map to
+/// several path IDs.
 const Map<String, List<String>> bodyPartNameToSvgIds = {
   'Neck': ['Neck_frontal', 'neck_rear'],
   'Shoulders': [
@@ -38,6 +42,37 @@ const Map<String, List<String>> bodyPartNameToSvgIds = {
   ],
 };
 
+/// Prebuilt maps for tiny "one bodypart lit up" heatmaps used in lists.
+final Map<String, Map<String, double>> singleBodyPartFrequencyMaps = {
+  for (final entry in bodyPartNameToSvgIds.entries)
+    entry.key: {for (final svgId in entry.value) svgId: 1.0},
+};
+
+/// Converts bodypart unit totals into normalized SVG path intensities.
+///
+/// The largest bodypart gets intensity 1.0 and every other bodypart is relative
+/// to it, which lets heatmaps compare focus within a preset/session instead of
+/// requiring a universal absolute scale.
+Map<String, double> bodyPartFrequencyMapFromNames(
+  Map<String, double> bodyPartUnitsByName,
+) {
+  final maxUnits = bodyPartUnitsByName.values.fold<double>(
+    0.0,
+    (max, units) => units > max ? units : max,
+  );
+  if (maxUnits == 0.0) return const <String, double>{};
+
+  final frequencyMap = <String, double>{};
+  bodyPartUnitsByName.forEach((bodyPartName, units) {
+    final normalized = units / maxUnits;
+    for (final id in bodyPartNameToSvgIds[bodyPartName] ?? const <String>[]) {
+      frequencyMap[id] = normalized;
+    }
+  });
+  return frequencyMap;
+}
+
+/// Small reusable heatmap for a single named bodypart.
 class SingleBodyPartHeatmap extends StatelessWidget {
   final String bodyPartName;
   final double size;
@@ -63,7 +98,8 @@ class SingleBodyPartHeatmap extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = context.colors;
     final svgIds = bodyPartNameToSvgIds[bodyPartName] ?? const <String>[];
-    final frequencyMap = {for (final svgId in svgIds) svgId: 1.0};
+    final frequencyMap =
+        singleBodyPartFrequencyMaps[bodyPartName] ?? const <String, double>{};
     final contentSize = size - (padding * 2);
 
     return Semantics(
@@ -76,23 +112,29 @@ class SingleBodyPartHeatmap extends StatelessWidget {
           color: backgroundColor ?? theme.colorScheme.surfaceContainerHighest,
           borderRadius: borderRadius,
         ),
-        child: svgIds.isEmpty
-            ? Icon(
-                Icons.accessibility_new,
-                size: contentSize.clamp(18, 28).toDouble(),
-              )
-            : BodyHeatmap(
-                frequencyMap: frequencyMap,
-                lowColor: lowColor ?? colors.historySummaryHeatmapLow!,
-                highColor: highColor ?? colors.historySummaryHeatmapHigh!,
-                width: contentSize,
-                height: contentSize,
-              ),
+        child:
+            svgIds.isEmpty
+                ? Icon(
+                  Icons.accessibility_new,
+                  size: contentSize.clamp(18, 28).toDouble(),
+                )
+                : BodyHeatmap(
+                  frequencyMap: frequencyMap,
+                  lowColor: lowColor ?? colors.historySummaryHeatmapLow!,
+                  highColor: highColor ?? colors.historySummaryHeatmapHigh!,
+                  width: contentSize,
+                  height: contentSize,
+                ),
       ),
     );
   }
 }
 
+/// Renders the shared body heatmap SVG with selected bodypart path fills.
+///
+/// The template SVG is loaded once, and rendered SVG strings are cached by color
+/// and bucketed intensity map. That keeps repeated heatmaps cheap enough to use
+/// in preset bars, history summaries, and detail cards.
 class BodyHeatmap extends StatelessWidget {
   static const int _maxRenderCacheEntries = 80;
   static const int _frequencyBuckets = 20;

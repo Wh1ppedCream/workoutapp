@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/definition_models.dart';
 
+/// Immutable selection state returned by [BodypartFocusChips].
 class BodypartFocusSelection {
   final Set<int> preferredBodypartIds;
   final Set<int> blacklistedBodypartIds;
@@ -12,6 +13,11 @@ class BodypartFocusSelection {
   });
 }
 
+/// Reusable tri-state bodypart picker.
+///
+/// Tapping a chip cycles through neutral -> preferred -> avoided -> neutral.
+/// The widget does not own state; callers pass the current sets in and receive a
+/// full replacement selection through [onChanged].
 class BodypartFocusChips extends StatelessWidget {
   final List<BodyPart> bodyParts;
   final Set<int> preferredBodypartIds;

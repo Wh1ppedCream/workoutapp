@@ -27,6 +27,10 @@ import 'exercise_catalog_page.dart';
 import 'muscle_filter_page.dart';
 import '../profile/settings/gym_exercise_settings_page.dart';
 
+/// Result returned by the optimized-workout settings dialog.
+///
+/// Preferred/blacklisted bodyparts are intentionally transient: they affect the
+/// next optimized session only and are not persisted like duration/set limits.
 class _OptimizedWorkoutSettingsResult {
   final int minutes;
   final int maxSets;
@@ -41,6 +45,11 @@ class _OptimizedWorkoutSettingsResult {
   });
 }
 
+/// Main training hub.
+///
+/// This page owns the Train/History tab switch, preset list refreshes, and the
+/// "Start Optimized Workout" entry point. It delegates actual generation to
+/// [PresetGenerationService] and keeps only lightweight UI preferences locally.
 class TrainPage extends StatefulWidget {
   const TrainPage({super.key});
 
@@ -71,6 +80,8 @@ class _TrainPageState extends State<TrainPage> {
     _loadOptimizedWorkoutSettings();
   }
 
+  /// Loads durable optimized-workout defaults. Bodypart focus choices are not
+  /// loaded here because they apply only to the next generated session.
   Future<void> _loadOptimizedWorkoutSettings() async {
     final prefs = await SharedPreferences.getInstance();
     final savedMinutes = prefs.getInt(_optimizedSessionMinutesKey);
@@ -126,6 +137,10 @@ class _TrainPageState extends State<TrainPage> {
     );
   }
 
+  /// Builds the generation spec used by Start Optimized Workout.
+  ///
+  /// Optimized sessions use recent history and avoid the most recent dominant
+  /// bodypart, but they do not create a saved preset.
   SessionSpec _buildOptimizedSpec(
     int profileId, {
     required int sessionMinutes,

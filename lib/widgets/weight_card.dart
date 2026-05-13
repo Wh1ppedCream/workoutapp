@@ -3,7 +3,13 @@
 import 'package:flutter/material.dart';
 import '../models/models.dart';
 
-/// Displays and edits a WeightExercise, including sets and ChangeSets.
+/// Displays and edits a [WeightExercise], including parent sets and change sets.
+///
+/// This widget is shared by active workout sessions and preset edit screens, so
+/// it owns only presentation/editing state. The backing [WeightExercise] is
+/// mutated immediately as users type, while parent widgets decide how/when to
+/// persist those changes. Completed parent sets control the green row tint and
+/// automatic collapse behavior.
 class WeightCard extends StatefulWidget {
   final WeightExercise exercise;
   final bool readOnlyMode;
@@ -37,12 +43,17 @@ class WeightCard extends StatefulWidget {
 }
 
 class _WeightCardState extends State<WeightCard> {
+  /// Parent set controllers stay in index order with [widget.exercise.sets].
   List<TextEditingController> _weightControllers = [];
   List<TextEditingController> _repsControllers = [];
 
   bool _isChangeSetMode = false;
   bool _isCollapsed = false;
+
+  /// Change sets are grouped by parent set index, matching the model shape.
   final Map<int, List<ExerciseSet>> _cSets = {};
+
+  /// Completed parent set indexes for this card.
   final Set<int> _completedSets = {};
 
   @override
@@ -59,6 +70,9 @@ class _WeightCardState extends State<WeightCard> {
     }
   }
 
+  /// Rebuilds controllers and local mirrors whenever the card receives a new
+  /// exercise instance. Old controllers are disposed after the frame so Flutter
+  /// does not trip over a controller that is still attached during rebuild.
   void _syncFromExercise({required bool resetCollapsed}) {
     final oldWeightControllers = _weightControllers;
     final oldRepsControllers = _repsControllers;

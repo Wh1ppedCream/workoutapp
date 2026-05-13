@@ -8,6 +8,12 @@ import 'body_heatmap.dart';
 import 'exercise_card.dart';
 import 'focused_sets_list.dart';
 
+/// Summary card shown at the top of preset detail screens when not editing.
+///
+/// It estimates workout duration with the same set/setup constants used by
+/// generation, totals current planned volume, and computes focused bodypart
+/// units from exercise definitions. The widget keeps its loaded summary alive
+/// while scrolling so the body heatmap does not repeatedly reload.
 class PresetInfoCard extends StatefulWidget {
   final List<WorkoutExercise> exercises;
   final List<CardType> cardTypes;
@@ -53,6 +59,10 @@ class _PresetInfoCardState extends State<PresetInfoCard>
     }
   }
 
+  /// A cheap snapshot of the preset inputs that affect summary output.
+  ///
+  /// When this changes we reload the async bodypart-focus data; otherwise we
+  /// keep the existing Future so scrolling and parent rebuilds stay smooth.
   String _buildSignature() {
     final parts = <String>[];
     for (var i = 0; i < widget.exercises.length; i++) {
@@ -92,6 +102,8 @@ class _PresetInfoCardState extends State<PresetInfoCard>
     return parts.join('::');
   }
 
+  /// Builds the display summary, limiting definition-analysis lookups so large
+  /// presets do not flood the database with concurrent work.
   Future<_PresetInfoSummary> _loadSummary() async {
     var estimatedMinutes = 0;
     var totalVolume = 0.0;
@@ -148,24 +160,13 @@ class _PresetInfoCardState extends State<PresetInfoCard>
             .toList()
           ..sort((a, b) => b.units.compareTo(a.units));
 
-    final maxUnits = bodyPartHits.fold<double>(
-      0.0,
-      (max, hit) => hit.units > max ? hit.units : max,
-    );
-    final frequencyMap = <String, double>{};
-    for (final hit in bodyPartHits) {
-      final ids = bodyPartNameToSvgIds[hit.bodyPart.name] ?? const <String>[];
-      final normalized = maxUnits == 0.0 ? 0.0 : hit.units / maxUnits;
-      for (final id in ids) {
-        frequencyMap[id] = normalized;
-      }
-    }
-
     return _PresetInfoSummary(
       estimatedMinutes: estimatedMinutes,
       totalVolume: totalVolume,
       bodyPartHits: bodyPartHits,
-      frequencyMap: frequencyMap,
+      frequencyMap: bodyPartFrequencyMapFromNames({
+        for (final hit in bodyPartHits) hit.bodyPart.name: hit.units,
+      }),
     );
   }
 

@@ -10,8 +10,17 @@ import '../../services/preset_generation_service.dart';
 import '../../models/training_plan_models.dart';
 import '../../widgets/bodypart_focus_chips.dart';
 
+/// User-facing allocation choices for generated presets.
+///
+/// The labels in the UI are intentionally friendlier than the enum names; these
+/// map onto [TrainingPriorityMode] before calling the generator.
 enum RequirementOption { equalSplitBodyPart, biasRankBodyPart, biasRankMuscle }
 
+/// Configuration screen for Generate Custom Preset.
+///
+/// This screen collects user intent, validates the numeric inputs, builds a
+/// [SessionSpec], and lets [PresetGenerationService] handle the actual exercise
+/// selection, set allocation, and rep/weight generation.
 class PresetGenerationQaScreen extends StatefulWidget {
   /// We need the current gym profile to filter exercises.
   final int profileId;
@@ -63,6 +72,7 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
     super.dispose();
   }
 
+  /// Converts the UI allocation option into the generator's priority mode.
   TrainingPriorityMode _priorityModeForRequirement() {
     switch (_requirementOption) {
       case RequirementOption.biasRankBodyPart:
@@ -85,6 +95,7 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
     }
   }
 
+  /// Validates the form and persists the generated preset.
   Future<void> _handleContinue() async {
     final minutesStr = _sessionDurationController.text.trim();
     final freqStr = _weeklyFrequencyController.text.trim();

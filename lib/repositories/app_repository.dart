@@ -114,11 +114,10 @@ class AppRepository {
   Future<List<Map<String, dynamic>>> fetchRecentWeightExerciseHistoryRows({
     required int definitionId,
     int limit = 10,
-  }) =>
-      _dbHelper.fetchRecentWeightExerciseHistoryRows(
-        definitionId: definitionId,
-        limit: limit,
-      );
+  }) => _dbHelper.fetchRecentWeightExerciseHistoryRows(
+    definitionId: definitionId,
+    limit: limit,
+  );
 
   /// Deletes all exercises (and related details) in a session.
   Future<void> deleteExercises(int sid) => _dbHelper.deleteExercises(sid);
@@ -1019,7 +1018,7 @@ class AppRepository {
 
   Future<List<FlowMethod>> fetchFlowMethods(int presetId) async {
     final rows = await _dbHelper.fetchFlowMethods(presetId);
-    return rows.map((r) => FlowMethod.fromMap(r)).toList();
+    return _flowMethodsFromRows(rows);
   }
 
   Future<FlowMethod> upsertFlowMethod({
@@ -1034,7 +1033,7 @@ class AppRepository {
       type: type.toShortString(),
       params: params,
     );
-    return FlowMethod(
+    return _flowMethodFromValues(
       id: id,
       presetId: presetId,
       name: name,
@@ -1093,7 +1092,7 @@ class AppRepository {
       scope,
       profileId: profileId,
     );
-    return rows.map((r) => FlowMethod.fromMap(r)).toList();
+    return _flowMethodsFromRows(rows);
   }
 
   /// Upsert one default flow‐method and return its real id.
@@ -1115,6 +1114,26 @@ class AppRepository {
       id: id, // ✅ real row id
       // this model uses `presetId`; for defaults we stash the profileId or -1
       presetId: profileId ?? -1,
+      name: name,
+      type: type,
+      params: params,
+    );
+  }
+
+  List<FlowMethod> _flowMethodsFromRows(List<Map<String, dynamic>> rows) {
+    return rows.map(FlowMethod.fromMap).toList();
+  }
+
+  FlowMethod _flowMethodFromValues({
+    required int id,
+    required int presetId,
+    required String name,
+    required MethodType type,
+    required Map<String, dynamic> params,
+  }) {
+    return FlowMethod(
+      id: id,
+      presetId: presetId,
       name: name,
       type: type,
       params: params,

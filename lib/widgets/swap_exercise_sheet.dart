@@ -9,6 +9,12 @@ import '../theme/theme_extensions.dart';
 import '../utils/async_pool.dart';
 import 'body_heatmap.dart';
 
+/// Bottom sheet that helps replace the current exercise with a similar one.
+///
+/// Similarity is based mostly on bodypart and muscle overlap, with a small
+/// equipment match bonus. The sheet also exposes the exercise catalog so users
+/// can override the recommendations manually when they know exactly what they
+/// want.
 class SwapExerciseSheet extends StatefulWidget {
   final ExerciseDefinition currentDefinition;
 
@@ -34,6 +40,7 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
     _dataFuture = _loadData();
   }
 
+  /// Loads the current exercise summary and the top replacement candidates.
   Future<_SwapExerciseData> _loadData() async {
     final current = await _buildEntry(widget.currentDefinition);
     final definitions = await _loadCandidateDefinitions(current);
@@ -52,6 +59,8 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
     );
   }
 
+  /// Starts with the tightest bodypart+muscle lookup, then progressively widens
+  /// the search so the sheet still has useful options for sparse definitions.
   Future<List<ExerciseDefinition>> _loadCandidateDefinitions(
     _ExerciseSwapEntry current,
   ) async {
@@ -82,6 +91,8 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
     );
   }
 
+  /// Hydrates an exercise definition into everything the sheet needs to render
+  /// and score it: equipment text, bodypart units, muscle units, and heatmap.
   Future<_ExerciseSwapEntry> _buildEntry(
     ExerciseDefinition definition, {
     bool hydrateDefinition = true,
@@ -197,6 +208,8 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
     );
   }
 
+  /// Scores candidates on a 0-1-ish scale. Bodypart overlap matters most,
+  /// muscle overlap refines the match, and equipment is a light tie-breaker.
   double _similarityScore(
     _ExerciseSwapEntry current,
     _ExerciseSwapEntry candidate,

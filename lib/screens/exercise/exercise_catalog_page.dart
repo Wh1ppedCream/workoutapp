@@ -9,7 +9,11 @@ import '../../providers/selected_profile.dart';
 import '../../repositories/app_repository.dart';
 import '../../widgets/exercise_detail_sheet.dart';
 
-/// Catalog of exercise definitions with workspace-profile and advanced filters.
+/// Catalog of exercise definitions with profile-aware equipment filtering.
+///
+/// This page is used both as a normal browser and as a picker by flows such as
+/// Swap Exercise. When [onExercisePicked] is provided, tapping a definition
+/// returns it to the caller instead of only opening details.
 class ExerciseCatalogPage extends StatefulWidget {
   final void Function(ExerciseDefinition)? onExercisePicked;
   const ExerciseCatalogPage({super.key, this.onExercisePicked});
@@ -21,6 +25,9 @@ class ExerciseCatalogPage extends StatefulWidget {
 class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
   final _repo = AppRepository();
   Timer? _searchDebounce;
+
+  /// Incremented before each async filter pass so stale results cannot replace
+  /// newer filter/search choices.
   int _filterGeneration = 0;
 
   // All loaded definitions (fully detailed)
@@ -60,8 +67,9 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
     super.dispose();
   }
 
+  /// Loads catalog definitions plus the filter option lists needed by the page.
   Future<void> _loadInitialData() async {
-    // Guard: capture context-synced values before any awaits
+    // Capture context-synced values before any awaits.
     final sel = context.read<SelectedProfile>();
     final initialProfileId = sel.currentProfile?.id;
     if (!mounted) return;
@@ -72,9 +80,10 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
     final profilesFuture = _repo.dbHelper.fetchAllProfiles();
     final areasFuture = _repo.fetchAllBodyParts();
     final musclesFuture = _repo.fetchAllMuscles();
-    final equipmentFuture = _useProfileFilter && initialProfileId != null
-        ? _equipmentForProfile(initialProfileId)
-        : _allEquipment();
+    final equipmentFuture =
+        _useProfileFilter && initialProfileId != null
+            ? _equipmentForProfile(initialProfileId)
+            : _allEquipment();
 
     final definitions = await definitionsFuture;
     _allDefs = definitions;
@@ -89,7 +98,7 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
 
     // Figure out initial equipment list
     final initialEquipment = await equipmentFuture;
-      // only that profile’s gear
+    // only that profile’s gear
     // Equipment names are loaded through the cached future above.
 
     if (!mounted) return;
@@ -119,11 +128,12 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
     return names;
   }
 
+  /// Applies profile, equipment, bodypart, muscle, and text filters in one pass.
   Future<void> _applyAllFilters({bool showLoading = true}) async {
     final generation = ++_filterGeneration;
     if (showLoading) {
       setState(() {
-      _isLoading = true;
+        _isLoading = true;
       });
     }
     List<ExerciseDefinition> filtered = List.from(_allDefs);
@@ -145,9 +155,10 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
       if (generation != _filterGeneration || !mounted) return;
       nextEquipmentOptions = ['All', ...allEq];
     }
-    final equipmentFilter = nextEquipmentOptions.contains(_filterEquipment)
-        ? _filterEquipment
-        : 'All';
+    final equipmentFilter =
+        nextEquipmentOptions.contains(_filterEquipment)
+            ? _filterEquipment
+            : 'All';
 
     // 2) Single-equipment any-of filter
     if (equipmentFilter != 'All') {

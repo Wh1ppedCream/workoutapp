@@ -8,11 +8,15 @@ import '../widgets/exercise_card.dart';
 import '../repositories/app_repository.dart';
 import '../services/auto_increment_service.dart';
 
-/// Holds the in-memory state of a workout session, including timer and exercises.
+/// Holds the in-memory state of the currently running workout.
+///
+/// The provider owns timer state, editable exercise cards, completion tracking,
+/// and final persistence. It deliberately keeps the active workout in memory
+/// until [finish] writes the completed session to the database.
 class ActiveSession extends ChangeNotifier {
   final _repo = AppRepository();
 
-  // NEW: track which preset (if any) this session was started from
+  /// Preset ID this session was started from, if automatic progression applies.
   int? _autoPresetId;
 
   Timer? _timer;
@@ -33,7 +37,7 @@ class ActiveSession extends ChangeNotifier {
   final List<WorkoutExercise> exercises = [];
   final List<CardType> cardTypes = [];
 
-  /// Starts a new workout timer and state.
+  /// Starts a new workout timer and optionally associates it with a preset.
   void start({int? presetId}) {
     if (_timer != null) return;
     _autoPresetId = presetId;
@@ -46,7 +50,7 @@ class ActiveSession extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Tell Provider to rebuild any listeners
+  /// Tells Provider listeners to rebuild after nested exercise objects mutate.
   void refresh() {
     notifyListeners();
   }
@@ -65,12 +69,17 @@ class ActiveSession extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Finishes the session: writes to DB and clears in-memory state.
+  /// Finishes the session, writes completed work to the database, and clears
+  /// in-memory state.
+  ///
+  /// Only completed weight sets and checked stretch items are persisted. If the
+  /// session came from an automatic preset, progression is applied after the
+  /// session rows are saved.
   Future<int?> finish() async {
     if (_timer == null) return null;
     _timer!.cancel();
 
-    // ── 0) FILTER OUT UNCHECKED ITEMS ─────────────────────────────────
+    // Keep only work the user explicitly completed.
     for (var i = 0; i < exercises.length; i++) {
       final we = exercises[i];
       final type = cardTypes[i];
@@ -116,12 +125,10 @@ class ActiveSession extends ChangeNotifier {
       }
     }
 
-    // 1) Create session row (non-deprecated API)
+    // Create the session row before persisting child exercise rows.
     final sid = await _repo.createSessionAt(DateTime.now(), _elapsedSeconds);
-    // If your codebase doesn't yet expose createSessionAt, temporarily fall back:
-    // final sid = await _repo.createSession(DateTime.now().toIso8601String(), _elapsedSeconds);
 
-    // 2) Persist exercises
+    // Persist exercises and update performance records for completed weight sets.
     for (var i = 0; i < exercises.length; i++) {
       final we = exercises[i];
       final type = cardTypes[i];
@@ -144,7 +151,7 @@ class ActiveSession extends ChangeNotifier {
           childChangeSets: we.changeSets,
         );
 
-        // ── Session-level stats ────────────────────────────────────────
+        // Session-level maxes power exercise detail records and generation.
         double sessionVm = 0;
         for (final set in we.sets) {
           final weight = set.weight;
@@ -192,7 +199,7 @@ class ActiveSession extends ChangeNotifier {
       }
     }
 
-    // ─── APPLY AUTO-INCREMENT IF STARTED FROM A PRESET ────────────────
+    // Apply preset progression only after the completed session is saved.
     if (_autoPresetId != null) {
       await AutoIncrementService(
         _repo,
@@ -200,7 +207,7 @@ class ActiveSession extends ChangeNotifier {
       _autoPresetId = null;
     }
 
-    // 3) Clear state
+    // Clear active state and notify any screens showing active/completed status.
     _timer = null;
     exercises.clear();
     cardTypes.clear();
