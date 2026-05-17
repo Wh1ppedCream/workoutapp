@@ -7,8 +7,8 @@ class MeasurementsTrendsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Measurements and Trends')),
-      body: const Center(child: Text('Measurements and Trends content')),
+      appBar: AppBar(title: const Text('Progress')),
+      body: const Center(child: Text('Progress content')),
     );
   }
 }

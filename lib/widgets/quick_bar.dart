@@ -28,7 +28,8 @@ class QuickBar extends StatelessWidget {
 
     // Use overrides if present, otherwise default to original light-mode colors
     final measurementBg = extras?.quickBarMeasurementBg ?? Colors.teal.shade100;
-    final measurementText = extras?.quickBarMeasurementText ?? Colors.teal.shade800;
+    final measurementText =
+        extras?.quickBarMeasurementText ?? Colors.teal.shade800;
 
     final foodBg = extras?.quickBarFoodBg ?? Colors.orange.shade100;
     final foodText = extras?.quickBarFoodText ?? Colors.orange.shade800;
@@ -55,7 +56,9 @@ class QuickBar extends StatelessWidget {
               fontSize: 12 * scale,
               onTap: () async {
                 final changed = await Navigator.of(context).push<bool>(
-                  MaterialPageRoute(builder: (_) => const NewMeasurementItemPage()),
+                  MaterialPageRoute(
+                    builder: (_) => const NewMeasurementItemPage(),
+                  ),
                 );
                 if (changed == true && context.mounted) {
                   await context.read<NutritionProfile>().reloadDay();
@@ -140,9 +143,6 @@ class QuickBar extends StatelessWidget {
     );
   }
 
-  Widget _divider(Color color, double height) => Container(
-        width: 1 * scale,
-        height: height,
-        color: color,
-      );
+  Widget _divider(Color color, double height) =>
+      Container(width: 1 * scale, height: height, color: color);
 }

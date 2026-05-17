@@ -251,7 +251,11 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                                   .map(
                                     (p) => DropdownMenuItem(
                                       value: p.id!,
-                                      child: Text(p.name),
+                                      child: Text(
+                                        p.name,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
                                     ),
                                   )
                                   .toList(),
@@ -273,7 +277,11 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                                   .map(
                                     (name) => DropdownMenuItem(
                                       value: name,
-                                      child: Text(name),
+                                      child: Text(
+                                        name,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
                                     ),
                                   )
                                   .toList(),
@@ -291,7 +299,11 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                                   .map(
                                     (name) => DropdownMenuItem(
                                       value: name,
-                                      child: Text(name),
+                                      child: Text(
+                                        name,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
                                     ),
                                   )
                                   .toList(),
@@ -309,7 +321,11 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                                   .map(
                                     (name) => DropdownMenuItem(
                                       value: name,
-                                      child: Text(name),
+                                      child: Text(
+                                        name,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
                                     ),
                                   )
                                   .toList(),
@@ -381,7 +397,11 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                         itemBuilder: (_, i) {
                           final def = _displayedDefs[i];
                           return ListTile(
-                            title: Text(def.name),
+                            title: Text(
+                              def.name,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                             trailing: IconButton(
                               icon: const Icon(Icons.info_outline),
                               onPressed:

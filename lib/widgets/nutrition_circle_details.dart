@@ -28,7 +28,7 @@ class NutritionCircleDetails extends StatelessWidget {
     required this.carbTarget,
     required this.fatConsumed,
     required this.fatTarget,
-    this.scale = 1.0,   // default to 1.0 to keep original sizing
+    this.scale = 1.0, // default to 1.0 to keep original sizing
   });
 
   Widget _buildDonut(
@@ -40,10 +40,9 @@ class NutritionCircleDetails extends StatelessWidget {
     Color color,
   ) {
     final pct = target > 0 ? (consumed / target).clamp(0.0, 1.0) : 0.0;
-    final textStyle = Theme.of(context)
-        .textTheme
-        .bodySmall!
-        .copyWith(color: color, fontSize: 12 * scale);
+    final textStyle = Theme.of(
+      context,
+    ).textTheme.bodySmall!.copyWith(color: color, fontSize: 12 * scale);
 
     return Stack(
       alignment: Alignment.center,
@@ -71,10 +70,10 @@ class NutritionCircleDetails extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final kcalColor    = colors.nutritionCalorieCircle!;
+    final kcalColor = colors.nutritionCalorieCircle!;
     final proteinColor = colors.nutritionProteinCircle!;
-    final carbColor    = colors.nutritionCarbCircle!;
-    final fatColor     = colors.nutritionFatCircle!;
+    final carbColor = colors.nutritionCarbCircle!;
+    final fatColor = colors.nutritionFatCircle!;
 
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 16 * scale),
@@ -86,7 +85,7 @@ class NutritionCircleDetails extends StatelessWidget {
             'Calories',
             caloriesConsumed,
             calorieGoal,
-            180,                // base size
+            180, // base size
             kcalColor,
           ),
 
@@ -101,7 +100,7 @@ class NutritionCircleDetails extends StatelessWidget {
                 'Protein',
                 proteinConsumed,
                 proteinTarget,
-                100,           // base size
+                100, // base size
                 proteinColor,
               ),
               _buildDonut(

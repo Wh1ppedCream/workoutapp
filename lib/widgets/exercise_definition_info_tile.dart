@@ -21,6 +21,8 @@ class ExerciseDefinitionInfoTile extends StatelessWidget {
         isThreeLine: true,
         title: Text(
           definition.name,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
           style: const TextStyle(fontWeight: FontWeight.w700),
         ),
         subtitle: subtitle,

@@ -271,15 +271,25 @@ class _PresetInfoCardState extends State<PresetInfoCard>
                         const SizedBox(height: 16),
                         LayoutBuilder(
                           builder: (context, constraints) {
-                            final compact = constraints.maxWidth < 340;
+                            final maxWidth = constraints.maxWidth;
+                            final gap = maxWidth < 330 ? 10.0 : 16.0;
+                            final heatmapWidth =
+                                (maxWidth * 0.46)
+                                    .clamp(124.0, 180.0)
+                                    .toDouble();
+                            final heatmapSize =
+                                heatmapWidth.clamp(118.0, 180.0).toDouble();
                             final heatmap = SizedBox(
-                              height: compact ? 180 : 190,
-                              child: BodyHeatmap(
-                                frequencyMap: summary.frequencyMap,
-                                lowColor: colors.historySummaryHeatmapLow!,
-                                highColor: colors.historySummaryHeatmapHigh!,
-                                width: compact ? 170 : 180,
-                                height: compact ? 170 : 180,
+                              width: heatmapWidth,
+                              height: heatmapSize,
+                              child: Center(
+                                child: BodyHeatmap(
+                                  frequencyMap: summary.frequencyMap,
+                                  lowColor: colors.historySummaryHeatmapLow!,
+                                  highColor: colors.historySummaryHeatmapHigh!,
+                                  width: heatmapSize,
+                                  height: heatmapSize,
+                                ),
                               ),
                             );
                             final focusList = FocusedSetsList(
@@ -287,22 +297,11 @@ class _PresetInfoCardState extends State<PresetInfoCard>
                               emptyMessage: 'No focus data yet.',
                             );
 
-                            if (compact) {
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  heatmap,
-                                  const SizedBox(height: 12),
-                                  focusList,
-                                ],
-                              );
-                            }
-
                             return Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Expanded(child: heatmap),
-                                const SizedBox(width: 16),
+                                heatmap,
+                                SizedBox(width: gap),
                                 Expanded(child: focusList),
                               ],
                             );
@@ -353,38 +352,57 @@ class _PresetMetricTile extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = context.colors;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: colors.infoCardBackground,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: theme.colorScheme.primary),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  value,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: colors.infoCardValueText,
-                  ),
-                ),
-                Text(
-                  label,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: colors.infoCardLabelText,
-                  ),
-                ),
-              ],
-            ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 150;
+        return Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: compact ? 10 : 14,
+            vertical: compact ? 10 : 12,
           ),
-        ],
-      ),
+          decoration: BoxDecoration(
+            color: colors.infoCardBackground,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                icon,
+                size: compact ? 18 : 20,
+                color: theme.colorScheme.primary,
+              ),
+              SizedBox(width: compact ? 8 : 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      value,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: colors.infoCardValueText,
+                      ),
+                    ),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        label,
+                        maxLines: 1,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colors.infoCardLabelText,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

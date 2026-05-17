@@ -52,7 +52,11 @@ class _FullHistoryScreenState extends State<FullHistoryScreen> {
               return Card(
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: ListTile(
-                  title: Text('$dateStr — $durationMin min'),
+                  title: Text(
+                    '$dateStr — $durationMin min',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                   onTap:
                       () => Navigator.of(context)
                           .push(

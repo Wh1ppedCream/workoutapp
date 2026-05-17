@@ -14,11 +14,7 @@ class SpeedDialFab extends StatefulWidget {
   final Future<void> Function()? onFoodLogged;
   final Future<void> Function()? onMeasurementLogged;
 
-  const SpeedDialFab({
-    super.key,
-    this.onFoodLogged,
-    this.onMeasurementLogged,
-  });
+  const SpeedDialFab({super.key, this.onFoodLogged, this.onMeasurementLogged});
 
   @override
   State<SpeedDialFab> createState() => _SpeedDialFabState();

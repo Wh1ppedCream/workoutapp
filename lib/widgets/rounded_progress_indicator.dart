@@ -73,18 +73,20 @@ class _RoundedProgressPainter extends CustomPainter {
     final radius = (min(size.width, size.height) - strokeWidth) / 2;
 
     // Draw full‐circle background track
-    final bgPaint = Paint()
-      ..color = backgroundColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth;
+    final bgPaint =
+        Paint()
+          ..color = backgroundColor
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = strokeWidth;
     canvas.drawCircle(center, radius, bgPaint);
 
     // Draw progress arc with rounded caps
-    final fgPaint = Paint()
-      ..color = progressColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.round;
+    final fgPaint =
+        Paint()
+          ..color = progressColor
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = strokeWidth
+          ..strokeCap = StrokeCap.round;
     final startAngle = -pi / 2; // top
     final sweepAngle = 2 * pi * progress;
     canvas.drawArc(

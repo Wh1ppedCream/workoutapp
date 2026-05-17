@@ -45,7 +45,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           ),
         ],
       ),
-      appBar: AppBar(title: const Text('Workout Log'), centerTitle: true),
+      appBar: AppBar(title: const Text('Logbook'), centerTitle: true),
       body: HistoryContent(onReload: () => setState(() {})),
     );
   }

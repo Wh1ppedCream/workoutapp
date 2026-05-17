@@ -64,13 +64,12 @@ class GenericBar extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              if (leading != null) ...[
-                leading!,
-                SizedBox(width: 10 * scale),
-              ],
+              if (leading != null) ...[leading!, SizedBox(width: 10 * scale)],
               Expanded(
                 child: Text(
                   label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 15,
                     color: accent,

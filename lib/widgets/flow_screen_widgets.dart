@@ -15,7 +15,12 @@ typedef VoidCallback = void Function();
 class FlowChartCanvas extends StatelessWidget {
   final Dashboard dashboard;
   final void Function(BuildContext context, Offset localPosition)? onTap;
-  final void Function(BuildContext context, Offset localPosition, FlowElement element)? onElementPressed;
+  final void Function(
+    BuildContext context,
+    Offset localPosition,
+    FlowElement element,
+  )?
+  onElementPressed;
 
   const FlowChartCanvas({
     super.key,
@@ -57,7 +62,7 @@ class BranchControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs     = context.cs;
+    final cs = context.cs;
     final extras = context.colors;
     final dropdownBg = extras.dialogBackground ?? cs.surface;
     final textColor = cs.onSurface;
@@ -76,12 +81,13 @@ class BranchControls extends StatelessWidget {
             isExpanded: true,
             hint: Text('Branch From', style: TextStyle(color: textColor)),
             value: branchable.contains(selectedParent) ? selectedParent : null,
-            items: branchable.map((name) {
-              return DropdownMenuItem(
-                value: name,
-                child: Text(name, style: TextStyle(color: textColor)),
-              );
-            }).toList(),
+            items:
+                branchable.map((name) {
+                  return DropdownMenuItem(
+                    value: name,
+                    child: Text(name, style: TextStyle(color: textColor)),
+                  );
+                }).toList(),
             onChanged: onParentChanged,
           ),
         ),
@@ -90,7 +96,10 @@ class BranchControls extends StatelessWidget {
             backgroundColor: btnBg,
             foregroundColor: btnText,
           ),
-          onPressed: (selectedParent == null || existingSuccess >= 1) ? null : onAddSuccess,
+          onPressed:
+              (selectedParent == null || existingSuccess >= 1)
+                  ? null
+                  : onAddSuccess,
           child: const Text('+ Success'),
         ),
         ElevatedButton(
@@ -98,7 +107,10 @@ class BranchControls extends StatelessWidget {
             backgroundColor: btnBg,
             foregroundColor: btnText,
           ),
-          onPressed: (selectedParent == null || existingFailure >= 1) ? null : onAddFailure,
+          onPressed:
+              (selectedParent == null || existingFailure >= 1)
+                  ? null
+                  : onAddFailure,
           child: const Text('+ Failure'),
         ),
       ],
@@ -139,7 +151,7 @@ class MethodControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs     = context.cs;
+    final cs = context.cs;
     final extras = context.colors;
     final dropdownBg = extras.dialogBackground ?? cs.surface;
     final textColor = cs.onSurface;
@@ -158,12 +170,13 @@ class MethodControls extends StatelessWidget {
             isExpanded: true,
             hint: Text('Select Node', style: TextStyle(color: textColor)),
             value: methodTargets.contains(selectedNode) ? selectedNode : null,
-            items: methodTargets.map((name) {
-              return DropdownMenuItem(
-                value: name,
-                child: Text(name, style: TextStyle(color: textColor)),
-              );
-            }).toList(),
+            items:
+                methodTargets.map((name) {
+                  return DropdownMenuItem(
+                    value: name,
+                    child: Text(name, style: TextStyle(color: textColor)),
+                  );
+                }).toList(),
             onChanged: onNodeChanged,
           ),
         ),
@@ -173,13 +186,17 @@ class MethodControls extends StatelessWidget {
             dropdownColor: dropdownBg,
             isExpanded: true,
             hint: Text('Select Method', style: TextStyle(color: textColor)),
-            value: availableMethods.contains(selectedMethod) ? selectedMethod : null,
-            items: availableMethods.map((m) {
-              return DropdownMenuItem(
-                value: m,
-                child: Text(m.name, style: TextStyle(color: textColor)),
-              );
-            }).toList(),
+            value:
+                availableMethods.contains(selectedMethod)
+                    ? selectedMethod
+                    : null,
+            items:
+                availableMethods.map((m) {
+                  return DropdownMenuItem(
+                    value: m,
+                    child: Text(m.name, style: TextStyle(color: textColor)),
+                  );
+                }).toList(),
             onChanged: onMethodChanged,
           ),
         ),

@@ -47,7 +47,11 @@ class MainDrawer extends StatelessWidget {
             ...items!.map((item) {
               return ListTile(
                 leading: item.icon == null ? null : Icon(item.icon),
-                title: Text(item.title),
+                title: Text(
+                  item.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
                 onTap: () {
                   final customTap = item.onTap;
                   if (customTap != null) {
@@ -179,7 +183,7 @@ class ProfileTile extends StatelessWidget {
           groupValue: isSelected,
           onChanged: (_) => onSelect(profile),
         ),
-        title: Text(profile.name),
+        title: Text(profile.name, maxLines: 2, overflow: TextOverflow.ellipsis),
         trailing: PopupMenuButton<String>(
           onSelected: (action) {
             if (action == 'edit') {

@@ -34,7 +34,7 @@ class NutritionDash extends StatefulWidget {
     required this.carbTarget,
     required this.fatConsumed,
     required this.fatTarget,
-    this.scale = 1,  // default = original size
+    this.scale = 1, // default = original size
   });
 
   @override
@@ -59,36 +59,36 @@ class _NutritionDashState extends State<NutritionDash>
     final detailWidgets = <Widget>[
       NutritionCircleDetails(
         caloriesConsumed: widget.caloriesConsumed,
-        calorieGoal:      widget.calorieGoal,
-        proteinConsumed:  widget.proteinConsumed,
-        proteinTarget:    widget.proteinTarget,
-        carbConsumed:     widget.carbConsumed,
-        carbTarget:       widget.carbTarget,
-        fatConsumed:      widget.fatConsumed,
-        fatTarget:        widget.fatTarget,
-        scale: s,  // pass scale down
+        calorieGoal: widget.calorieGoal,
+        proteinConsumed: widget.proteinConsumed,
+        proteinTarget: widget.proteinTarget,
+        carbConsumed: widget.carbConsumed,
+        carbTarget: widget.carbTarget,
+        fatConsumed: widget.fatConsumed,
+        fatTarget: widget.fatTarget,
+        scale: s, // pass scale down
       ),
       NutritionBarDetails(
         caloriesConsumed: widget.caloriesConsumed,
-        calorieGoal:      widget.calorieGoal,
-        proteinConsumed:  widget.proteinConsumed,
-        proteinTarget:    widget.proteinTarget,
-        carbConsumed:     widget.carbConsumed,
-        carbTarget:       widget.carbTarget,
-        fatConsumed:      widget.fatConsumed,
-        fatTarget:        widget.fatTarget,
-        scale: s,  // pass scale down
+        calorieGoal: widget.calorieGoal,
+        proteinConsumed: widget.proteinConsumed,
+        proteinTarget: widget.proteinTarget,
+        carbConsumed: widget.carbConsumed,
+        carbTarget: widget.carbTarget,
+        fatConsumed: widget.fatConsumed,
+        fatTarget: widget.fatTarget,
+        scale: s, // pass scale down
       ),
       NutritionTextDetails(
         caloriesConsumed: widget.caloriesConsumed,
-        calorieGoal:      widget.calorieGoal,
-        proteinConsumed:  widget.proteinConsumed,
-        proteinTarget:    widget.proteinTarget,
-        carbConsumed:     widget.carbConsumed,
-        carbTarget:       widget.carbTarget,
-        fatConsumed:      widget.fatConsumed,
-        fatTarget:        widget.fatTarget,
-        scale: s,  // pass scale down
+        calorieGoal: widget.calorieGoal,
+        proteinConsumed: widget.proteinConsumed,
+        proteinTarget: widget.proteinTarget,
+        carbConsumed: widget.carbConsumed,
+        carbTarget: widget.carbTarget,
+        fatConsumed: widget.fatConsumed,
+        fatTarget: widget.fatTarget,
+        scale: s, // pass scale down
       ),
     ];
 
@@ -110,17 +110,15 @@ class _NutritionDashState extends State<NutritionDash>
             final selected = idx == _currentPage;
             return AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              margin: EdgeInsets.symmetric(
-                horizontal: 4 * s,
-                vertical:   1 * s,
-              ),
-              width:  selected ? 12 * s : 8 * s,
+              margin: EdgeInsets.symmetric(horizontal: 4 * s, vertical: 1 * s),
+              width: selected ? 12 * s : 8 * s,
               height: selected ? 12 * s : 8 * s,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: selected
-                  ? colors.nutritionPageIndicatorActive! 
-                  : colors.nutritionPageIndicatorInactive!,
+                color:
+                    selected
+                        ? colors.nutritionPageIndicatorActive!
+                        : colors.nutritionPageIndicatorInactive!,
               ),
             );
           }),

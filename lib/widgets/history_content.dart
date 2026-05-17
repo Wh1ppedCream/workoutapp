@@ -9,7 +9,7 @@ import '../widgets/past_sessions_list.dart';
 import '../widgets/workout_history_calendar.dart';
 import '../widgets/workout_metric_chart_card.dart';
 
-/// Shared history content used by both TrainPage and HistoryScreen.
+/// Shared history content used by both Train2Page and HistoryScreen.
 class HistoryContent extends StatefulWidget {
   /// Callback to reload the past sessions list.
   final VoidCallback onReload;

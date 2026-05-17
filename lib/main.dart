@@ -14,8 +14,10 @@ import 'providers/nav_bar_config.dart';
 import 'providers/nutrition_profile.dart';
 
 import 'screens/dashboard_page.dart';
+import 'screens/catalog_page.dart';
 import 'screens/exercise/history_screen.dart';
 import 'screens/exercise/train_page.dart';
+import 'screens/exercise/train2_page.dart';
 import 'screens/nutrition/nutrition_page.dart';
 import 'screens/profile/settings/profile_page.dart';
 import 'screens/onboarding_flow.dart'; // New import for onboarding
@@ -464,6 +466,10 @@ class _MainScreenState extends State<MainScreen> {
           return const DashboardPage();
         case TabItem.train:
           return const TrainPage();
+        case TabItem.train2:
+          return const Train2Page();
+        case TabItem.catalog:
+          return const CatalogPage();
         case TabItem.history:
           return const HistoryScreen();
         case TabItem.nutrition:
@@ -509,6 +515,7 @@ class _MainScreenState extends State<MainScreen> {
     return Scaffold(
       body: IndexedStack(index: _selectedIndex, children: pages),
       bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
         backgroundColor: Theme.of(context).colorScheme.surface,
         selectedItemColor: Theme.of(context).colorScheme.primary,
         unselectedItemColor: Theme.of(

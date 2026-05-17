@@ -580,15 +580,22 @@ class _ExerciseSwapBox extends StatelessWidget {
             const SizedBox(height: 16),
             LayoutBuilder(
               builder: (context, constraints) {
-                final compact = constraints.maxWidth < 340;
+                final maxWidth = constraints.maxWidth;
+                final gap = maxWidth < 330 ? 8.0 : 14.0;
+                final heatmapWidth =
+                    (maxWidth * 0.42).clamp(106.0, 145.0).toDouble();
+                final heatmapSize = heatmapWidth.clamp(100.0, 145.0).toDouble();
                 final heatmap = SizedBox(
-                  height: compact ? 124 : 150,
-                  child: BodyHeatmap(
-                    frequencyMap: entry.frequencyMap,
-                    lowColor: colors.historySummaryHeatmapLow!,
-                    highColor: colors.historySummaryHeatmapHigh!,
-                    width: compact ? 118 : 145,
-                    height: compact ? 118 : 145,
+                  width: heatmapWidth,
+                  height: heatmapSize,
+                  child: Center(
+                    child: BodyHeatmap(
+                      frequencyMap: entry.frequencyMap,
+                      lowColor: colors.historySummaryHeatmapLow!,
+                      highColor: colors.historySummaryHeatmapHigh!,
+                      width: heatmapSize,
+                      height: heatmapSize,
+                    ),
                   ),
                 );
                 final focusList = _BodyPartNameList(hits: entry.bodyPartHits);
@@ -596,8 +603,8 @@ class _ExerciseSwapBox extends StatelessWidget {
                 return Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(width: compact ? 118 : 145, child: heatmap),
-                    SizedBox(width: compact ? 8 : 14),
+                    heatmap,
+                    SizedBox(width: gap),
                     Expanded(child: focusList),
                   ],
                 );

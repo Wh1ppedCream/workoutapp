@@ -71,7 +71,13 @@ class _FocusedSetRow extends StatelessWidget {
       children: [
         Row(
           children: [
-            Expanded(child: Text(hit.bodyPart.name)),
+            Expanded(
+              child: Text(
+                hit.bodyPart.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
             Text(
               hit.units.floor().toString(),
               style: theme.textTheme.bodySmall?.copyWith(

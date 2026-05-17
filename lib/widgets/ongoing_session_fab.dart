@@ -36,9 +36,9 @@ class _OngoingSessionFabState extends State<OngoingSessionFab> {
           label: const Text('Resume'),
           onPressed: () {
             setState(() => _open = false);
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const SessionScreen()),
-            );
+            Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const SessionScreen()));
           },
         ),
         const SizedBox(width: 8),
@@ -49,26 +49,31 @@ class _OngoingSessionFabState extends State<OngoingSessionFab> {
           onPressed: () async {
             final shouldExit = await showDialog<bool>(
               context: context,
-              builder: (ctx) => AlertDialog(
-                title: const Text('Exit your ongoing workout?'),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(ctx, false),
-                    child: const Text('Cancel',
-                        style: TextStyle(color: Colors.deepPurple)),
+              builder:
+                  (ctx) => AlertDialog(
+                    title: const Text('Exit your ongoing workout?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, false),
+                        child: const Text(
+                          'Cancel',
+                          style: TextStyle(color: Colors.deepPurple),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, true),
+                        child: const Text(
+                          'Exit',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    ],
                   ),
-                  TextButton(
-                    onPressed: () => Navigator.pop(ctx, true),
-                    child:
-                        const Text('Exit', style: TextStyle(color: Colors.red)),
-                  ),
-                ],
-              ),
             );
             if (shouldExit == true) {
               await activeSession.finish();
             }
-            if (!mounted) return; 
+            if (!mounted) return;
             // guard before setState
             setState(() => _open = false);
           },

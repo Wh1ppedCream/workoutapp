@@ -40,7 +40,8 @@ class FlowChartWidgetState extends State<FlowChartWidget> {
 
   List<String> get _targetableNodes =>
       _nodes.keys.where((n) => n != '1st attempt').toList();
-  List<String> get _leafSelectableNodes => _nodes.keys.where((name) {
+  List<String> get _leafSelectableNodes =>
+      _nodes.keys.where((name) {
         final d = _nodeData[name]!;
         return (d.successCount + d.failureCount) <= 1;
       }).toList();
@@ -121,8 +122,7 @@ class FlowChartWidgetState extends State<FlowChartWidget> {
     if (data.listElement == null) return;
     final width = 80.0;
     final height = 20.0 * data.events.length + 20.0;
-    final newPos =
-        parent.position + Offset(parent.size.width + 10, 0);
+    final newPos = parent.position + Offset(parent.size.width + 10, 0);
     final listEl = data.listElement!;
     listEl.changePosition(newPos);
     listEl.changeSize(Size(width, height));
@@ -137,38 +137,39 @@ class FlowChartWidgetState extends State<FlowChartWidget> {
     try {
       final key = await showDialog<String>(
         context: context,
-        builder: (ctx) => AlertDialog(
-          title: const Text('New Event'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: keyCtrl,
-                decoration: const InputDecoration(labelText: 'Event key'),
+        builder:
+            (ctx) => AlertDialog(
+              title: const Text('New Event'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: keyCtrl,
+                    decoration: const InputDecoration(labelText: 'Event key'),
+                  ),
+                  TextField(
+                    controller: labelCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Display label (optional)',
+                    ),
+                  ),
+                ],
               ),
-              TextField(
-                controller: labelCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Display label (optional)',
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(null),
+                  child: const Text('Cancel'),
                 ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(null),
-              child: const Text('Cancel'),
+                ElevatedButton(
+                  onPressed: () {
+                    final k = keyCtrl.text.trim();
+                    if (k.isEmpty) return;
+                    Navigator.of(ctx).pop(k);
+                  },
+                  child: const Text('Add'),
+                ),
+              ],
             ),
-            ElevatedButton(
-              onPressed: () {
-                final k = keyCtrl.text.trim();
-                if (k.isEmpty) return;
-                Navigator.of(ctx).pop(k);
-              },
-              child: const Text('Add'),
-            ),
-          ],
-        ),
       );
       if (key == null || !mounted) return;
       _onAddEvent(key, labelCtrl.text.trim());
@@ -223,27 +224,26 @@ class FlowChartWidgetState extends State<FlowChartWidget> {
   }
 
   ArrowParams _arrow(FlowElement f, FlowElement t) => ArrowParams(
-        color: Colors.green,
-        thickness: 2,
-        style: ArrowStyle.segmented,
-        startArrowPosition: Alignment.bottomCenter,
-        endArrowPosition: Alignment.topCenter,
-      );
+    color: Colors.green,
+    thickness: 2,
+    style: ArrowStyle.segmented,
+    startArrowPosition: Alignment.bottomCenter,
+    endArrowPosition: Alignment.topCenter,
+  );
 
   ArrowParams _loopArrow(FlowElement f, FlowElement t) => ArrowParams(
-        color: Colors.yellow.withValues(alpha: 0.3),
-        thickness: 2,
-        style: ArrowStyle.curve,
-        startArrowPosition: Alignment.centerLeft,
-        endArrowPosition: Alignment.centerRight,
-      );
+    color: Colors.yellow.withValues(alpha: 0.3),
+    thickness: 2,
+    style: ArrowStyle.curve,
+    startArrowPosition: Alignment.centerLeft,
+    endArrowPosition: Alignment.centerRight,
+  );
 
   @override
   Widget build(BuildContext context) {
-    final theme  = Theme.of(context);
-final cs     = theme.colorScheme;
-final extras = theme.extension<AppColors>()!;
-
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final extras = theme.extension<AppColors>()!;
 
     return Column(
       children: [
@@ -262,28 +262,38 @@ final extras = theme.extension<AppColors>()!;
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-    backgroundColor: extras.buttonBg ?? cs.primary,
-    foregroundColor: extras.buttonText ?? cs.onPrimary,
-  ),
-                onPressed: (_selectedNode == null || _nodeData[_selectedNode!]!.successCount >= 1)
-                    ? null
-                    : () {
-                        _addChild(parentName: _selectedNode!, isSuccess: true);
-                        setState(() {});
-                      },
+                  backgroundColor: extras.buttonBg ?? cs.primary,
+                  foregroundColor: extras.buttonText ?? cs.onPrimary,
+                ),
+                onPressed:
+                    (_selectedNode == null ||
+                            _nodeData[_selectedNode!]!.successCount >= 1)
+                        ? null
+                        : () {
+                          _addChild(
+                            parentName: _selectedNode!,
+                            isSuccess: true,
+                          );
+                          setState(() {});
+                        },
                 child: const Text('Add Success Node'),
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-    backgroundColor: extras.buttonBg ?? cs.primary,
-    foregroundColor: extras.buttonText ?? cs.onPrimary,
-  ),
-                onPressed: (_selectedNode == null || _nodeData[_selectedNode!]!.failureCount >= 1)
-                    ? null
-                    : () {
-                        _addChild(parentName: _selectedNode!, isSuccess: false);
-                        setState(() {});
-                      },
+                  backgroundColor: extras.buttonBg ?? cs.primary,
+                  foregroundColor: extras.buttonText ?? cs.onPrimary,
+                ),
+                onPressed:
+                    (_selectedNode == null ||
+                            _nodeData[_selectedNode!]!.failureCount >= 1)
+                        ? null
+                        : () {
+                          _addChild(
+                            parentName: _selectedNode!,
+                            isSuccess: false,
+                          );
+                          setState(() {});
+                        },
                 child: const Text('Add Failure Node'),
               ),
             ],
@@ -298,24 +308,26 @@ final extras = theme.extension<AppColors>()!;
                 nodes: _targetableNodes,
                 selected: _selectedTargetNode,
                 hint: 'Select node',
-                onChanged: (v) => setState(() {
-                  _selectedTargetNode = v;
-                  _selectedEvent = null;
-                }),
+                onChanged:
+                    (v) => setState(() {
+                      _selectedTargetNode = v;
+                      _selectedEvent = null;
+                    }),
               ),
               const SizedBox(width: 8),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-    backgroundColor: extras.buttonBg ?? cs.primary,
-    foregroundColor: extras.buttonText ?? cs.onPrimary,
-  ),
+                  backgroundColor: extras.buttonBg ?? cs.primary,
+                  foregroundColor: extras.buttonText ?? cs.onPrimary,
+                ),
                 onPressed: _showAddEventDialog,
                 child: const Text('+ Event'),
               ),
             ],
           ),
         ),
-        if (_selectedTargetNode != null && _nodeData[_selectedTargetNode!]!.events.isNotEmpty)
+        if (_selectedTargetNode != null &&
+            _nodeData[_selectedTargetNode!]!.events.isNotEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             child: Row(
@@ -329,9 +341,9 @@ final extras = theme.extension<AppColors>()!;
                 const SizedBox(width: 8),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-    backgroundColor: extras.buttonBg ?? cs.primary,
-    foregroundColor: extras.buttonText ?? cs.onPrimary,
-  ),
+                    backgroundColor: extras.buttonBg ?? cs.primary,
+                    foregroundColor: extras.buttonText ?? cs.onPrimary,
+                  ),
                   onPressed: _onRemoveSelectedEvent,
                   child: const Text('Remove Event'),
                 ),
@@ -371,20 +383,22 @@ class NodeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme  = Theme.of(context);
-final cs     = theme.colorScheme;
-final extras = theme.extension<AppColors>()!;
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final extras = theme.extension<AppColors>()!;
 
     return SizedBox(
       width: 150,
       child: DropdownButton<String>(
-        
-  dropdownColor: extras.dialogBackground ?? cs.surface,
-  style: theme.textTheme.bodyMedium!.copyWith(color: cs.onSurface),
+        dropdownColor: extras.dialogBackground ?? cs.surface,
+        style: theme.textTheme.bodyMedium!.copyWith(color: cs.onSurface),
         isExpanded: true,
         hint: Text(hint),
         value: selected,
-        items: nodes.map((n) => DropdownMenuItem(value: n, child: Text(n))).toList(),
+        items:
+            nodes
+                .map((n) => DropdownMenuItem(value: n, child: Text(n)))
+                .toList(),
         onChanged: onChanged,
       ),
     );

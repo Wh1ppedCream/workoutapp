@@ -20,11 +20,7 @@ class WorkoutDashboard extends StatefulWidget {
   final double scale;
   final VoidCallback? onSessionComplete;
 
-  const WorkoutDashboard({
-    super.key,
-    this.scale = 1,
-    this.onSessionComplete,
-  });
+  const WorkoutDashboard({super.key, this.scale = 1, this.onSessionComplete});
 
   @override
   State<WorkoutDashboard> createState() => _WorkoutDashboardState();
@@ -43,9 +39,10 @@ class _WorkoutDashboardState extends State<WorkoutDashboard>
     final colors = context.colors;
     final profiles = sel.profiles.where((p) => p.id != null).toList();
     final selectedProfileId = sel.currentProfile?.id;
-    final dropdownValue = profiles.any((p) => p.id == selectedProfileId)
-        ? selectedProfileId
-        : null;
+    final dropdownValue =
+        profiles.any((p) => p.id == selectedProfileId)
+            ? selectedProfileId
+            : null;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -57,31 +54,35 @@ class _WorkoutDashboardState extends State<WorkoutDashboard>
           child: DropdownButtonFormField<int>(
             value: dropdownValue,
             decoration: InputDecoration(
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 12 * s, vertical: 8 * s),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 12 * s,
+                vertical: 8 * s,
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8 * s),
               ),
             ),
-            items: profiles
-                .map((p) => DropdownMenuItem<int>(
-                      value: p.id!,
-                      child: Text(p.name, style: TextStyle(fontSize: 14 * s)),
-                    ))
-                .toList(),
+            items:
+                profiles
+                    .map(
+                      (p) => DropdownMenuItem<int>(
+                        value: p.id!,
+                        child: Text(p.name, style: TextStyle(fontSize: 14 * s)),
+                      ),
+                    )
+                    .toList(),
             onChanged: (newProfileId) {
               if (newProfileId == null) return;
-              final newProfile =
-                  profiles.firstWhere((p) => p.id == newProfileId);
+              final newProfile = profiles.firstWhere(
+                (p) => p.id == newProfileId,
+              );
               sel.selectProfile(newProfile);
               setState(() {});
             },
           ),
         ),
 
-
-
-// 2️⃣ Gym presets list (now delegated)
+        // 2️⃣ Gym presets list (now delegated)
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 16 * s),
           child: PresetsLoaded(
@@ -90,13 +91,11 @@ class _WorkoutDashboardState extends State<WorkoutDashboard>
           ),
         ),
 
-
         SizedBox(height: 6 * s),
 
         // 3️⃣ Start Workout button
         Padding(
-          padding:
-              EdgeInsets.symmetric(horizontal: 15 * s, vertical: 8 * s),
+          padding: EdgeInsets.symmetric(horizontal: 15 * s, vertical: 8 * s),
           child: ElevatedButton(
             onPressed: () {
               context.read<ActiveSession>().start();
@@ -119,10 +118,7 @@ class _WorkoutDashboardState extends State<WorkoutDashboard>
             ),
             child: Text(
               'Start Workout',
-              style: TextStyle(
-                fontSize: 16 * s,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 16 * s, fontWeight: FontWeight.bold),
             ),
           ),
         ),

@@ -72,11 +72,12 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
       profileId = await dbHelper.createProfile(name);
     }
 
-    final origAssigned = widget.profile?.id != null
-        ? (await dbHelper.fetchEquipmentForProfile(profileId))
-            .map((e) => e['id'] as int)
-            .toSet()
-        : <int>{};
+    final origAssigned =
+        widget.profile?.id != null
+            ? (await dbHelper.fetchEquipmentForProfile(
+              profileId,
+            )).map((e) => e['id'] as int).toSet()
+            : <int>{};
     final toAdd = _selectedEquipmentIds.difference(origAssigned);
     final toRemove = origAssigned.difference(_selectedEquipmentIds);
 
@@ -101,9 +102,7 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
   Widget build(BuildContext context) {
     final isEditing = widget.profile != null;
     return Scaffold(
-      appBar: AppBar(
-        title: Text(isEditing ? 'Edit Profile' : 'New Profile'),
-      ),
+      appBar: AppBar(title: Text(isEditing ? 'Edit Profile' : 'New Profile')),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -114,7 +113,11 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
                 child: TextFormField(
                   controller: _nameController,
                   decoration: const InputDecoration(labelText: 'Profile Name'),
-                  validator: (v) => v == null || v.trim().isEmpty ? 'Name required' : null,
+                  validator:
+                      (v) =>
+                          v == null || v.trim().isEmpty
+                              ? 'Name required'
+                              : null,
                 ),
               ),
               const SizedBox(height: 16),
@@ -127,27 +130,33 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
               ),
               const SizedBox(height: 8),
               Expanded(
-                child: _allEquipment.isEmpty
-                    ? const Center(child: CircularProgressIndicator())
-                    : ListView(
-                        children: _allEquipment.map((e) {
-                          final id = e['id'] as int;
-                          final name = e['name'] as String;
-                          return CheckboxListTile(
-                            value: _selectedEquipmentIds.contains(id),
-                            title: Text(name),
-                            onChanged: (yes) {
-                              setState(() {
-                                if (yes == true) {
-                                  _selectedEquipmentIds.add(id);
-                                } else {
-                                  _selectedEquipmentIds.remove(id);
-                                }
-                              });
-                            },
-                          );
-                        }).toList(),
-                      ),
+                child:
+                    _allEquipment.isEmpty
+                        ? const Center(child: CircularProgressIndicator())
+                        : ListView(
+                          children:
+                              _allEquipment.map((e) {
+                                final id = e['id'] as int;
+                                final name = e['name'] as String;
+                                return CheckboxListTile(
+                                  value: _selectedEquipmentIds.contains(id),
+                                  title: Text(
+                                    name,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  onChanged: (yes) {
+                                    setState(() {
+                                      if (yes == true) {
+                                        _selectedEquipmentIds.add(id);
+                                      } else {
+                                        _selectedEquipmentIds.remove(id);
+                                      }
+                                    });
+                                  },
+                                );
+                              }).toList(),
+                        ),
               ),
               const SizedBox(height: 16),
               SizedBox(

@@ -30,11 +30,25 @@ class MetricItem extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
         const SizedBox(height: 4),
-        Text(value, style: Theme.of(context).textTheme.titleMedium),
+        Text(
+          value,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
         const SizedBox(height: 2),
-        Text(label, style: Theme.of(context).textTheme.bodySmall),
+        Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
       ],
     );
   }
@@ -55,18 +69,14 @@ class CurrentMetricsSectionState extends State<CurrentMetricsSection>
 
   final List<MetricData> _metrics = [
     MetricData(color: Colors.green, label: 'Visual Body Fat', value: '26.0 %'),
-    MetricData(color: Colors.blue,  label: 'Waist', value: '27 in'),
-    MetricData(color: Colors.purple,label: 'Hips',  value: '36 in'),
+    MetricData(color: Colors.blue, label: 'Waist', value: '27 in'),
+    MetricData(color: Colors.purple, label: 'Hips', value: '36 in'),
   ];
 
   void _addMetric() {
     setState(() {
       _metrics.add(
-        MetricData(
-          color: Colors.orange,
-          label: 'New Metric',
-          value: '123 u',
-        ),
+        MetricData(color: Colors.orange, label: 'New Metric', value: '123 u'),
       );
     });
   }
@@ -81,47 +91,70 @@ class CurrentMetricsSectionState extends State<CurrentMetricsSection>
     final colors = context.colors;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text('Current Metrics', style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 4),
-        Text(fmtDate, style: Theme.of(context).textTheme.bodySmall),
-        const SizedBox(height: 12),
-        SingleChildScrollView(
-  scrollDirection: Axis.horizontal,
-  child: 
-        Row(
-          children: [
-            ..._metrics.map((m) => Padding(
-              padding: const EdgeInsets.only(right: 16),
-              child: MetricItem(color: m.color, label: m.label, value: m.value),
-            )),
-            GestureDetector(
-              onTap: _addMetric,
-              child: Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  border: Border.all(color: colors.metricAddBorderColor!),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(Icons.add, size: 24, color: colors.metricAddIconColor!),
-              ),
-            ),
-          ],
-        ),
-        ),
-       
-        const SizedBox(height: 12),
-        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          Text('$_daysAgo days ago', style: Theme.of(context).textTheme.bodySmall),
-          Icon(
-            Icons.chevron_right,
-            size: 16,
-            color: Theme.of(context).iconTheme.color?.withValues(alpha: 0.45),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Current Metrics',
+            style: Theme.of(context).textTheme.titleMedium,
           ),
-        ]),
-        const Divider(height: 32),
-      ]),
+          const SizedBox(height: 4),
+          Text(fmtDate, style: Theme.of(context).textTheme.bodySmall),
+          const SizedBox(height: 12),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                ..._metrics.map(
+                  (m) => Padding(
+                    padding: const EdgeInsets.only(right: 16),
+                    child: MetricItem(
+                      color: m.color,
+                      label: m.label,
+                      value: m.value,
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: _addMetric,
+                  child: Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: colors.metricAddBorderColor!),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.add,
+                      size: 24,
+                      color: colors.metricAddIconColor!,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '$_daysAgo days ago',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              Icon(
+                Icons.chevron_right,
+                size: 16,
+                color: Theme.of(
+                  context,
+                ).iconTheme.color?.withValues(alpha: 0.45),
+              ),
+            ],
+          ),
+          const Divider(height: 32),
+        ],
+      ),
     );
   }
 }

@@ -192,8 +192,13 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
       clipBehavior: Clip.antiAlias,
       child: ExpansionTile(
         leading: Icon(icon),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text(subtitle),
+        title: Text(
+          title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text(subtitle, maxLines: 2, overflow: TextOverflow.ellipsis),
         childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         children: children,
       ),

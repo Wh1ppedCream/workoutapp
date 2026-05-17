@@ -5,10 +5,7 @@ import '../models/models.dart';
 class RecommendedSetsEditButton extends StatelessWidget {
   final VoidCallback onPressed;
 
-  const RecommendedSetsEditButton({
-    super.key,
-    required this.onPressed,
-  });
+  const RecommendedSetsEditButton({super.key, required this.onPressed});
 
   @override
   Widget build(BuildContext context) {
@@ -36,11 +33,12 @@ Future<VolumeBoundaries?> showRecommendedSetsEditorDialog(
 }) {
   return showDialog<VolumeBoundaries>(
     context: context,
-    builder: (_) => _RecommendedSetsEditorDialog(
-      targetName: targetName,
-      targetId: targetId,
-      currentBounds: currentBounds,
-    ),
+    builder:
+        (_) => _RecommendedSetsEditorDialog(
+          targetName: targetName,
+          targetId: targetId,
+          currentBounds: currentBounds,
+        ),
   );
 }
 
@@ -129,10 +127,7 @@ class _RecommendedSetsEditorDialogState
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Cancel'),
         ),
-        FilledButton(
-          onPressed: _save,
-          child: const Text('Save'),
-        ),
+        FilledButton(onPressed: _save, child: const Text('Save')),
       ],
     );
   }
@@ -155,9 +150,8 @@ class _RecommendedSetsEditorDialogState
     }
 
     final current = widget.currentBounds;
-    final maxAdaptive = (current?.maxAdaptive ?? ((min + max) / 2))
-        .clamp(min, max)
-        .toDouble();
+    final maxAdaptive =
+        (current?.maxAdaptive ?? ((min + max) / 2)).clamp(min, max).toDouble();
 
     Navigator.of(context).pop(
       VolumeBoundaries(

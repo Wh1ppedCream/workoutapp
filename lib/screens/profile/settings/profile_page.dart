@@ -20,44 +20,62 @@ class ProfilePage extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.person),
             title: const Text('User Information'),
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const UserInformationSettingsPage()),
-            ),
+            onTap:
+                () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const UserInformationSettingsPage(),
+                  ),
+                ),
           ),
           ListTile(
             leading: const Icon(Icons.palette),
             title: const Text('UI and Appearance Settings'),
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const UIAppearanceSettingsPage()),
-            ),
+            onTap:
+                () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const UIAppearanceSettingsPage(),
+                  ),
+                ),
           ),
           ListTile(
             leading: const Icon(Icons.storage),
             title: const Text('Database Settings'),
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const DatabaseSettingsPage()),
-            ),
+            onTap:
+                () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const DatabaseSettingsPage(),
+                  ),
+                ),
           ),
           ListTile(
             leading: const Icon(Icons.fitness_center),
             title: const Text('Gym, Exercise and Workout Settings'),
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const GymExerciseSettingsPage()),
-            ),
+            onTap:
+                () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const GymExerciseSettingsPage(),
+                  ),
+                ),
           ),
           ListTile(
             leading: const Icon(Icons.restaurant_menu),
             title: const Text('Diet and Nutrition Settings'),
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const DietNutritionSettingsPage()),
-            ),
+            onTap:
+                () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const DietNutritionSettingsPage(),
+                  ),
+                ),
           ),
           ListTile(
             leading: const Icon(Icons.show_chart),
-            title: const Text('Measurements and Trends Settings'),
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const MeasurementsTrendsSettingsPage()),
-            ),
+            title: const Text('Progress Settings'),
+            onTap:
+                () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const MeasurementsTrendsSettingsPage(),
+                  ),
+                ),
           ),
         ],
       ),

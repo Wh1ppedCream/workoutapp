@@ -41,10 +41,18 @@ class _MuscleFilterPageState extends State<MuscleFilterPage> {
 
     for (final def in definitions) {
       for (final bodyPart in def.bodyParts) {
-        bodyPartCounts.update(bodyPart.id, (count) => count + 1, ifAbsent: () => 1);
+        bodyPartCounts.update(
+          bodyPart.id,
+          (count) => count + 1,
+          ifAbsent: () => 1,
+        );
       }
       for (final ranked in def.muscles) {
-        muscleCounts.update(ranked.muscle.id, (count) => count + 1, ifAbsent: () => 1);
+        muscleCounts.update(
+          ranked.muscle.id,
+          (count) => count + 1,
+          ifAbsent: () => 1,
+        );
       }
     }
 
@@ -64,10 +72,7 @@ class _MuscleFilterPageState extends State<MuscleFilterPage> {
         appBar: AppBar(
           title: const Text('Exercise Focus Library'),
           bottom: const TabBar(
-            tabs: [
-              Tab(text: 'Bodyparts'),
-              Tab(text: 'Muscles'),
-            ],
+            tabs: [Tab(text: 'Bodyparts'), Tab(text: 'Muscles')],
           ),
         ),
         body: FutureBuilder<_FilterData>(
@@ -77,17 +82,29 @@ class _MuscleFilterPageState extends State<MuscleFilterPage> {
               return const Center(child: CircularProgressIndicator());
             }
             if (snapshot.hasError) {
-              return Center(child: Text('Unable to load filters: ${snapshot.error}'));
+              return Center(
+                child: Text('Unable to load filters: ${snapshot.error}'),
+              );
             }
 
             final data = snapshot.data!;
             final query = _query.trim().toLowerCase();
-            final bodyParts = data.bodyParts
-                .where((part) => query.isEmpty || part.name.toLowerCase().contains(query))
-                .toList();
-            final muscles = data.muscles
-                .where((muscle) => query.isEmpty || muscle.name.toLowerCase().contains(query))
-                .toList();
+            final bodyParts =
+                data.bodyParts
+                    .where(
+                      (part) =>
+                          query.isEmpty ||
+                          part.name.toLowerCase().contains(query),
+                    )
+                    .toList();
+            final muscles =
+                data.muscles
+                    .where(
+                      (muscle) =>
+                          query.isEmpty ||
+                          muscle.name.toLowerCase().contains(query),
+                    )
+                    .toList();
 
             return Column(
               children: [
@@ -110,17 +127,21 @@ class _MuscleFilterPageState extends State<MuscleFilterPage> {
                         items: bodyParts,
                         titleFor: (part) => part.name,
                         subtitleFor: (part) {
-                          final count = data.bodyPartExerciseCounts[part.id] ?? 0;
+                          final count =
+                              data.bodyPartExerciseCounts[part.id] ?? 0;
                           return _exerciseCountLabel(count);
                         },
-                        leadingFor: (part) => SingleBodyPartHeatmap(
-                          bodyPartName: part.name,
-                          size: 54,
-                        ),
+                        leadingFor:
+                            (part) => SingleBodyPartHeatmap(
+                              bodyPartName: part.name,
+                              size: 54,
+                            ),
                         onTap: (part) {
                           Navigator.of(context).push(
                             MaterialPageRoute(
-                              builder: (_) => DefinitionsByBodyPartPage(bodyPart: part),
+                              builder:
+                                  (_) =>
+                                      DefinitionsByBodyPartPage(bodyPart: part),
                             ),
                           );
                         },
@@ -130,14 +151,17 @@ class _MuscleFilterPageState extends State<MuscleFilterPage> {
                         items: muscles,
                         titleFor: (muscle) => muscle.name,
                         subtitleFor: (muscle) {
-                          final count = data.muscleExerciseCounts[muscle.id] ?? 0;
+                          final count =
+                              data.muscleExerciseCounts[muscle.id] ?? 0;
                           return _exerciseCountLabel(count);
                         },
                         icon: Icons.fitness_center,
                         onTap: (muscle) {
                           Navigator.of(context).push(
                             MaterialPageRoute(
-                              builder: (_) => DefinitionsByMusclePage(muscle: muscle),
+                              builder:
+                                  (_) =>
+                                      DefinitionsByMusclePage(muscle: muscle),
                             ),
                           );
                         },
@@ -191,10 +215,19 @@ class _FocusList<T> extends StatelessWidget {
       itemBuilder: (context, index) {
         final item = items[index];
         return ListTile(
-          leading: leadingFor?.call(item) ??
+          leading:
+              leadingFor?.call(item) ??
               CircleAvatar(child: Icon(icon ?? Icons.chevron_right, size: 20)),
-          title: Text(titleFor(item)),
-          subtitle: Text(subtitleFor(item)),
+          title: Text(
+            titleFor(item),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          subtitle: Text(
+            subtitleFor(item),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
           trailing: const Icon(Icons.chevron_right),
           onTap: () => onTap(item),
         );

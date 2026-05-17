@@ -14,7 +14,7 @@ class DataRecordsSection extends StatelessWidget {
     final today = DateTime.now();
     final colors = context.colors;
 
-// Two‐letter labels for Monday–Sunday
+    // Two‐letter labels for Monday–Sunday
     const dayLabels = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
 
     return Padding(
@@ -22,20 +22,27 @@ class DataRecordsSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Data & Records', style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            'Data & Records',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
           const SizedBox(height: 8),
 
           // ─── New: Day‐of‐week header ───────────────────────
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
-              children: dayLabels.map((lbl) {
-                return Expanded(
-                  child: Center(
-                    child: Text(lbl, style: Theme.of(context).textTheme.bodySmall),
-                  ),
-                );
-              }).toList(),
+              children:
+                  dayLabels.map((lbl) {
+                    return Expanded(
+                      child: Center(
+                        child: Text(
+                          lbl,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ),
+                    );
+                  }).toList(),
             ),
           ),
           const SizedBox(height: 8),
@@ -51,33 +58,40 @@ class DataRecordsSection extends StatelessWidget {
               childAspectRatio: 1,
               children: List.generate(28, (i) {
                 final date = today.subtract(Duration(days: 27 - i));
-                final isToday = date.year == today.year
-                    && date.month == today.month
-                    && date.day == today.day;
+                final isToday =
+                    date.year == today.year &&
+                    date.month == today.month &&
+                    date.day == today.day;
 
                 return GestureDetector(
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => LogEntryPage(date: date)),
-                  ),
+                  onTap:
+                      () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => LogEntryPage(date: date),
+                        ),
+                      ),
                   child: Container(
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: isToday
-                          ? colors.dataRecordsTodayBg!.withValues(alpha: 0.2)
-                          : Colors.transparent,
+                      color:
+                          isToday
+                              ? colors.dataRecordsTodayBg!.withValues(
+                                alpha: 0.2,
+                              )
+                              : Colors.transparent,
                       border: Border.all(
-                        color: isToday
-                          ? colors.dataRecordsTodayBorder!
-                          : colors.dataRecordsDefaultBorder!,
+                        color:
+                            isToday
+                                ? colors.dataRecordsTodayBorder!
+                                : colors.dataRecordsDefaultBorder!,
                       ),
                     ),
-                   child: Text(
+                    child: Text(
                       '${date.day}',
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodySmall!
-                          .copyWith(color: isToday ? colors.dataRecordsTodayText! : null),
+                      style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                        color: isToday ? colors.dataRecordsTodayText! : null,
+                      ),
                     ),
                   ),
                 );
@@ -88,8 +102,23 @@ class DataRecordsSection extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('1/7 this week', style: Theme.of(context).textTheme.bodySmall),
-              Text('1 all time',    style: Theme.of(context).textTheme.bodySmall),
+              Flexible(
+                child: Text(
+                  '1/7 this week',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ),
+              Flexible(
+                child: Text(
+                  '1 all time',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ),
               Icon(
                 Icons.chevron_right,
                 size: 16,

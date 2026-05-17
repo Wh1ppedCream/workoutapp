@@ -332,6 +332,7 @@ class _WeightCardState extends State<WeightCard> {
                         Checkbox(
                           value: _completedSets.contains(index),
                           activeColor: Colors.green,
+                          visualDensity: VisualDensity.compact,
                           onChanged:
                               readOnly
                                   ? null
@@ -356,16 +357,24 @@ class _WeightCardState extends State<WeightCard> {
                                     widget.onValueChanged?.call();
                                   },
                         ),
-                        Expanded(child: Text('Set ${index + 1}')),
-                        const SizedBox(width: 16),
-                        SizedBox(
-                          width: 80,
+                        Flexible(
+                          flex: 2,
+                          child: Text(
+                            'Set ${index + 1}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          flex: 3,
                           child: TextFormField(
                             controller: _weightControllers[index],
                             readOnly: readOnly,
                             keyboardType: TextInputType.number,
                             decoration: const InputDecoration(
                               labelText: 'Weight',
+                              isDense: true,
                             ),
                             onChanged:
                                 readOnly
@@ -373,15 +382,16 @@ class _WeightCardState extends State<WeightCard> {
                                     : (_) => _updateWeightSet(index),
                           ),
                         ),
-                        const SizedBox(width: 16),
-                        SizedBox(
-                          width: 80,
+                        const SizedBox(width: 8),
+                        Expanded(
+                          flex: 3,
                           child: TextFormField(
                             controller: _repsControllers[index],
                             readOnly: readOnly,
                             keyboardType: TextInputType.number,
                             decoration: const InputDecoration(
                               labelText: 'Reps',
+                              isDense: true,
                             ),
                             onChanged:
                                 readOnly
@@ -391,6 +401,11 @@ class _WeightCardState extends State<WeightCard> {
                         ),
                         IconButton(
                           icon: const Icon(Icons.remove_circle_outline),
+                          constraints: const BoxConstraints.tightFor(
+                            width: 40,
+                            height: 40,
+                          ),
+                          padding: EdgeInsets.zero,
                           onPressed:
                               readOnly
                                   ? null

@@ -88,7 +88,13 @@ class _DefinitionsByBodyPartPageState extends State<DefinitionsByBodyPartPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('${widget.bodyPart.name} Exercises')),
+      appBar: AppBar(
+        title: Text(
+          '${widget.bodyPart.name} Exercises',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
       body: FutureBuilder<_BodyPartPageData>(
         future: _dataFuture,
         builder: (context, snapshot) {
@@ -191,48 +197,61 @@ class _BodyPartHeader extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(bodyPart.name, style: theme.textTheme.titleLarge),
+                  Text(
+                    bodyPart.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleLarge,
+                  ),
                   const SizedBox(height: 4),
                   Text(_exerciseCountLabel(data.definitions.length)),
                   const SizedBox(height: 14),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        flex: 5,
-                        child: Center(
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: SingleBodyPartHeatmap(
-                              bodyPartName: bodyPart.name,
-                              size: 178,
-                              padding: 2,
-                              backgroundColor: Colors.transparent,
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final maxWidth = constraints.maxWidth;
+                      final gap = maxWidth < 330 ? 10.0 : 16.0;
+                      final heatmapBox =
+                          (maxWidth * 0.56).clamp(134.0, 178.0).toDouble();
+                      final heatmapSize =
+                          heatmapBox.clamp(128.0, 178.0).toDouble();
+
+                      return Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                            width: heatmapBox,
+                            height: heatmapBox,
+                            child: Center(
+                              child: SingleBodyPartHeatmap(
+                                bodyPartName: bodyPart.name,
+                                size: heatmapSize,
+                                padding: 2,
+                                backgroundColor: Colors.transparent,
+                              ),
                             ),
                           ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        flex: 4,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            SetStatChip(
-                              label: 'Done (7 days)',
-                              value:
-                                  '${data.recentSetUnits.toStringAsFixed(1)} sets',
+                          SizedBox(width: gap),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                SetStatChip(
+                                  label: 'Done (7 days)',
+                                  value:
+                                      '${data.recentSetUnits.toStringAsFixed(1)} sets',
+                                ),
+                                const SizedBox(height: 10),
+                                SetStatChip(
+                                  label: 'Recommended',
+                                  value: _rangeLabel(data.volumeBounds),
+                                  onEdit: onEditRecommended,
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 10),
-                            SetStatChip(
-                              label: 'Recommended',
-                              value: _rangeLabel(data.volumeBounds),
-                              onEdit: onEditRecommended,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                          ),
+                        ],
+                      );
+                    },
                   ),
                 ],
               ),
@@ -328,6 +347,8 @@ class _ExerciseMetadata extends StatelessWidget {
         children: [
           Text(
             equipment,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               color: colors.primary,
               fontWeight: FontWeight.w600,
@@ -336,6 +357,8 @@ class _ExerciseMetadata extends StatelessWidget {
           const SizedBox(height: 3),
           Text(
             muscles,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               color: Colors.green.shade600,
               fontWeight: FontWeight.w500,

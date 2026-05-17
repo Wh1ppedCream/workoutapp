@@ -123,19 +123,44 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
                       children: [
                         Text(
                           'SESSION COMPLETE!',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: Theme.of(context).textTheme.headlineSmall,
                         ),
                         const SizedBox(height: 8),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [Text(dateStr), Text('Duration: $durStr')],
+                          children: [
+                            Expanded(
+                              child: Text(
+                                dateStr,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Flexible(
+                              child: Text(
+                                'Duration: $durStr',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.right,
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 4),
                         Text(
                           'Volume: ${totalVol.toStringAsFixed(1)} lbs  •  Calories: $calories kcal',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 4),
-                        Text('Gym Score: $gymScore'),
+                        Text(
+                          'Gym Score: $gymScore',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ],
                     ),
                   ),
@@ -158,12 +183,18 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
                             leading: const Icon(Icons.fitness_center),
                             title: Text(
                               '${ex.cardioName} • ${ex.elapsedSeconds ~/ 60} min',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           );
                         } else {
                           return ListTile(
                             leading: const Icon(Icons.self_improvement),
-                            title: Text(ex.name),
+                            title: Text(
+                              ex.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           );
                         }
                       },
@@ -192,6 +223,8 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
         padding: const EdgeInsets.only(top: 8, bottom: 4),
         child: Text(
           '■ ${ex.name}',
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
@@ -202,11 +235,25 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
       rows.add(
         Row(
           children: [
-            Text('${i + 1}. ${s.weight.toInt()} lbs × ${s.reps}'),
-            const Spacer(),
-            Text(
-              'ERM=${erm.toStringAsFixed(1)}',
-              style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 12),
+            Expanded(
+              child: Text(
+                '${i + 1}. ${s.weight.toInt()} lbs × ${s.reps}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Flexible(
+              child: Text(
+                'ERM=${erm.toStringAsFixed(1)}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.right,
+                style: const TextStyle(
+                  fontStyle: FontStyle.italic,
+                  fontSize: 12,
+                ),
+              ),
             ),
           ],
         ),

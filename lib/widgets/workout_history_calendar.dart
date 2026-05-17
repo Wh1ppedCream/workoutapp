@@ -199,6 +199,8 @@ class _CalendarHeader extends StatelessWidget {
           child: Text(
             monthText.toUpperCase(),
             textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w900,
               letterSpacing: 0.5,
@@ -430,6 +432,8 @@ class _SelectedDaySummary extends StatelessWidget {
                   children: [
                     Text(
                       DateFormat('EEE, MMM d').format(day),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w900,
                       ),
@@ -439,6 +443,8 @@ class _SelectedDaySummary extends StatelessWidget {
                       sessions.isEmpty
                           ? 'No workouts logged'
                           : '${sessions.length} workout${sessions.length == 1 ? '' : 's'}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: context.cs.onSurfaceVariant,
                       ),
@@ -446,9 +452,19 @@ class _SelectedDaySummary extends StatelessWidget {
                   ],
                 ),
               ),
-              _MiniSummary(label: 'Min', value: totalMinutes.toString()),
+              Flexible(
+                child: _MiniSummary(
+                  label: 'Min',
+                  value: totalMinutes.toString(),
+                ),
+              ),
               const SizedBox(width: 12),
-              _MiniSummary(label: 'Volume', value: _formatCompact(totalVolume)),
+              Flexible(
+                child: _MiniSummary(
+                  label: 'Volume',
+                  value: _formatCompact(totalVolume),
+                ),
+              ),
             ],
           ),
           if (sessions.isNotEmpty) ...[
@@ -482,6 +498,9 @@ class _MiniSummary extends StatelessWidget {
       children: [
         Text(
           value,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.right,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
             color: context.cs.primary,
             fontWeight: FontWeight.w900,
@@ -489,6 +508,9 @@ class _MiniSummary extends StatelessWidget {
         ),
         Text(
           label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.right,
           style: Theme.of(
             context,
           ).textTheme.labelSmall?.copyWith(color: context.cs.onSurfaceVariant),
@@ -512,10 +534,14 @@ class _SessionRow extends StatelessWidget {
       onTap: onTap,
       title: Text(
         DateFormat.jm().format(session.date),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
         style: const TextStyle(fontWeight: FontWeight.w800),
       ),
       subtitle: Text(
         '${session.durationMinutes} min  -  ${_formatCompact(session.totalVolume)} lbs',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
       ),
       trailing: onTap == null ? null : const Icon(Icons.chevron_right),
     );

@@ -27,10 +27,14 @@ class SetStatChip extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(label, style: theme.textTheme.labelSmall),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.labelSmall,
+          ),
           const SizedBox(height: 4),
           Row(
-            mainAxisSize: MainAxisSize.min,
             children: [
               Flexible(
                 child: Text(

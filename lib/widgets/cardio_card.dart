@@ -7,7 +7,7 @@ import '../models/models.dart';
 /// Displays and edits a CardioExercise, including timer controls.
 class CardioCard extends StatefulWidget {
   final CardioExercise exercise;
-  final bool          readOnlyMode;
+  final bool readOnlyMode;
   final VoidCallback? onDeleteExercise;
   final VoidCallback? onValueChanged;
 
@@ -36,7 +36,6 @@ class _CardioCardState extends State<CardioCard> {
   void initState() {
     super.initState();
     _syncFromExercise();
-
   }
 
   @override
@@ -124,6 +123,8 @@ class _CardioCardState extends State<CardioCard> {
                 Expanded(
                   child: Text(
                     widget.exercise.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ),
@@ -135,12 +136,13 @@ class _CardioCardState extends State<CardioCard> {
                       widget.onDeleteExercise?.call();
                     }
                   },
-                  itemBuilder: (_) => const [
-                    PopupMenuItem(
-                      value: 'remove',
-                      child: Text('Remove Cardio'),
-                    ),
-                  ],
+                  itemBuilder:
+                      (_) => const [
+                        PopupMenuItem(
+                          value: 'remove',
+                          child: Text('Remove Cardio'),
+                        ),
+                      ],
                 ),
               ],
             ),
@@ -149,42 +151,45 @@ class _CardioCardState extends State<CardioCard> {
             // ─── Note Editor ───
             _isEditingNote
                 ? TextFormField(
-                    readOnly: readOnly,
-                    initialValue: _note,
-                    decoration: const InputDecoration(
-                      isDense: true,
-                      labelText: 'Note',
-                    ),
-                    onFieldSubmitted:
-                        readOnly ? null : (val) {
-                      setState(() {
-                        _note = val.trim();
-                        _isEditingNote = false;
-                      });
-                      widget.exercise.cardioNote =
-                          _note.isEmpty ? null : _note;
-                      widget.onValueChanged?.call();
-                    },
-                  )
+                  readOnly: readOnly,
+                  initialValue: _note,
+                  decoration: const InputDecoration(
+                    isDense: true,
+                    labelText: 'Note',
+                  ),
+                  onFieldSubmitted:
+                      readOnly
+                          ? null
+                          : (val) {
+                            setState(() {
+                              _note = val.trim();
+                              _isEditingNote = false;
+                            });
+                            widget.exercise.cardioNote =
+                                _note.isEmpty ? null : _note;
+                            widget.onValueChanged?.call();
+                          },
+                )
                 : (readOnly
                     ? Text(
-                        _note.isNotEmpty ? _note : 'Tap to add note',
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodySmall!
-                            .copyWith(fontStyle: FontStyle.italic),
-                      )
+                      _note.isNotEmpty ? _note : 'Tap to add note',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                        fontStyle: FontStyle.italic,
+                      ),
+                    )
                     : GestureDetector(
-                        onTap: () =>
-                            setState(() => _isEditingNote = true),
-                        child: Text(
-                          _note.isNotEmpty ? _note : 'Tap to add note',
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodySmall!
-                              .copyWith(fontStyle: FontStyle.italic),
+                      onTap: () => setState(() => _isEditingNote = true),
+                      child: Text(
+                        _note.isNotEmpty ? _note : 'Tap to add note',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                          fontStyle: FontStyle.italic,
                         ),
-                      )),
+                      ),
+                    )),
             const SizedBox(height: 16),
 
             // ─── Minutes Input & GO Button ───
@@ -197,24 +202,29 @@ class _CardioCardState extends State<CardioCard> {
                     initialValue: '$_cardioMinutes',
                     readOnly: readOnly,
                     keyboardType: TextInputType.number,
-                    decoration:
-                        const InputDecoration(labelText: 'Minutes'),
-                    onChanged: readOnly ? null : (v) {
-                      final mins = int.tryParse(v) ?? 0;
-                      setState(() {
-                        _cardioMinutes = mins;
-                        _secondsLeft = _remainingSeconds();
-                      });
-                      widget.exercise.plannedMinutes = mins;
-                      widget.onValueChanged?.call();
-                    },
+                    decoration: const InputDecoration(labelText: 'Minutes'),
+                    onChanged:
+                        readOnly
+                            ? null
+                            : (v) {
+                              final mins = int.tryParse(v) ?? 0;
+                              setState(() {
+                                _cardioMinutes = mins;
+                                _secondsLeft = _remainingSeconds();
+                              });
+                              widget.exercise.plannedMinutes = mins;
+                              widget.onValueChanged?.call();
+                            },
                   ),
                 ),
                 const SizedBox(width: 8),
                 ElevatedButton(
-                  onPressed: readOnly ? null : () {
-                    _startTimer(reset: true);
-                  },
+                  onPressed:
+                      readOnly
+                          ? null
+                          : () {
+                            _startTimer(reset: true);
+                          },
                   child: const Text('GO'),
                 ),
               ],
@@ -226,11 +236,15 @@ class _CardioCardState extends State<CardioCard> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    '${(_secondsLeft ~/ 60).toString().padLeft(2, '0')}:'
-                    '${(_secondsLeft % 60).toString().padLeft(2, '0')}',
-                    style:
-                        Theme.of(context).textTheme.headlineMedium,
+                  Flexible(
+                    child: Text(
+                      '${(_secondsLeft ~/ 60).toString().padLeft(2, '0')}:'
+                      '${(_secondsLeft % 60).toString().padLeft(2, '0')}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.headlineMedium,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   ElevatedButton(
@@ -240,18 +254,19 @@ class _CardioCardState extends State<CardioCard> {
                               ? Colors.red
                               : Colors.green,
                     ),
-                    onPressed: readOnly ? null : () {
-                      if (_cardioTimer?.isActive ?? false) {
-                        _cardioTimer!.cancel();
-                        setState(() {});
-                      } else if (_secondsLeft > 0) {
-                        _startTimer();
-                      }
-                    },
+                    onPressed:
+                        readOnly
+                            ? null
+                            : () {
+                              if (_cardioTimer?.isActive ?? false) {
+                                _cardioTimer!.cancel();
+                                setState(() {});
+                              } else if (_secondsLeft > 0) {
+                                _startTimer();
+                              }
+                            },
                     child: Text(
-                      (_cardioTimer?.isActive ?? false)
-                          ? 'Stop'
-                          : 'Start',
+                      (_cardioTimer?.isActive ?? false) ? 'Stop' : 'Start',
                     ),
                   ),
                 ],

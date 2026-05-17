@@ -159,14 +159,19 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
               children: [
                 Row(
                   children: [
-                    Text(
-                      'Report',
-                      style: Theme.of(context).textTheme.headlineSmall
-                          ?.copyWith(fontWeight: FontWeight.w800),
+                    Expanded(
+                      child: Text(
+                        'Report',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(fontWeight: FontWeight.w800),
+                      ),
                     ),
-                    const Spacer(),
+                    const SizedBox(width: 8),
                     Text(
                       'Swipe chart',
+                      maxLines: 1,
                       style: Theme.of(context).textTheme.labelMedium?.copyWith(
                         color: cs.onSurfaceVariant,
                       ),
@@ -449,6 +454,8 @@ class _ReportStat extends StatelessWidget {
         children: [
           Text(
             label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: cs.onSurface,
               fontWeight: FontWeight.w600,
@@ -457,6 +464,8 @@ class _ReportStat extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
               color: cs.primary,
               fontWeight: FontWeight.w900,
@@ -505,6 +514,8 @@ class _MetricSelector extends StatelessWidget {
               alignment: Alignment.center,
               child: Text(
                 _metricLabel(metrics[index]),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.labelLarge?.copyWith(
                   color:
                       selected

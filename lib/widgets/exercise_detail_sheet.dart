@@ -112,14 +112,29 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(def.name, style: Theme.of(context).textTheme.headlineSmall),
+          Text(
+            def.name,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
           const SizedBox(height: 12),
-          Text('EQUIPMENT: ${def.equipmentList.map((e) => e.name).join(', ')}'),
+          Text(
+            'EQUIPMENT: ${def.equipmentList.map((e) => e.name).join(', ')}',
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
           const SizedBox(height: 8),
-          Text('FOCUS AREA: ${def.bodyParts.map((b) => b.name).join(', ')}'),
+          Text(
+            'FOCUS AREA: ${def.bodyParts.map((b) => b.name).join(', ')}',
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
           const SizedBox(height: 8),
           Text(
             'FOCUS MUSCLES: ${def.muscles.map((m) => m.muscle.name).join(', ')}',
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 16),
           // --- Notes from the database ---
@@ -198,15 +213,17 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                         }
                         return Text(
                           'Volume Max: ${vm?.toStringAsFixed(1) ?? '--'} lbs',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         );
                       },
                     ),
                     const SizedBox(height: 12),
                     Row(
                       children: const [
-                        Expanded(child: Text('Reps')),
-                        Expanded(child: Text('1RM')),
-                        Expanded(child: Text('Volume')),
+                        Expanded(child: Text('Reps', maxLines: 1)),
+                        Expanded(child: Text('1RM', maxLines: 1)),
+                        Expanded(child: Text('Volume', maxLines: 1)),
                       ],
                     ),
                     const Divider(),
@@ -217,17 +234,27 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                           final r = rows[i];
                           return Row(
                             children: [
-                              Expanded(child: Text(r.repCount.toString())),
+                              Expanded(
+                                child: Text(
+                                  r.repCount.toString(),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
                               Expanded(
                                 child: Text(
                                   r.isErm
                                       ? '${r.oneErm.toStringAsFixed(1)} (ERM)'
                                       : r.oneErm.toStringAsFixed(1),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                               Expanded(
                                 child: Text(
                                   (r.rmValue * r.repCount).toStringAsFixed(1),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ],

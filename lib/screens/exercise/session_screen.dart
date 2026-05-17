@@ -10,7 +10,6 @@ import '../../widgets/session_complete_sheet.dart';
 import '../../widgets/exercise_detail_sheet.dart';
 import '../../repositories/app_repository.dart';
 
-
 class SessionScreen extends StatelessWidget {
   const SessionScreen({super.key});
 
@@ -43,59 +42,79 @@ class SessionScreen extends StatelessWidget {
         ),
       ),
       appBar: AppBar(
-    leading: Builder(
-      builder: (innerCtx) => IconButton(
-        icon: const Icon(Icons.menu),
-        onPressed: () => Scaffold.of(innerCtx).openDrawer(),
-      ),
-    ),
-    title: const Text('Workout Session'),
+        leading: Builder(
+          builder:
+              (innerCtx) => IconButton(
+                icon: const Icon(Icons.menu),
+                onPressed: () => Scaffold.of(innerCtx).openDrawer(),
+              ),
+        ),
+        title: const Text('Workout Session'),
         centerTitle: true,
       ),
 
-      body: session.exercises.isEmpty
-          ? const Center(child: Text('No exercises added.'))
-          : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: session.exercises.length,
-              itemBuilder: (ctx, i) {
-                final ex = session.exercises[i];
-                final type = session.cardTypes[i];
-                return ExerciseCard(
-                  exercise: ex,
-                  cardType: type,
-                   onDetails: type == CardType.weight
-     ? () async {
-         final repo = AppRepository();
-         final defId = await repo.findOrCreateExerciseDefinition(ex.name, ex.equipment);
-         final def   = await repo.fetchDefinitionById(defId);
-         if (def != null && context.mounted) {
-           showModalBottomSheet(
-             context: context,
-             isScrollControlled: true,
-             builder: (_) => ExerciseDetailSheet(definition: def, defId: defId),
-           );
-         }
-       }
-     : null,
-                  initialCompletedParents: type == CardType.weight ? (ex as WeightExercise).completedParents : null,
-                  initialCompletedChildren: type == CardType.weight ? (ex as WeightExercise).completedChildren : null,
-                  onDeleteExercise: () => context.read<ActiveSession>().removeExercise(i),
-                  onSetAdded: () => context.read<ActiveSession>().refresh(),
-                  onSetDeleted: () => context.read<ActiveSession>().refresh(),
-                  onValueChanged: () => context.read<ActiveSession>().refresh(),
-                );
-              },
+      body:
+          session.exercises.isEmpty
+              ? const Center(child: Text('No exercises added.'))
+              : ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: session.exercises.length,
+                itemBuilder: (ctx, i) {
+                  final ex = session.exercises[i];
+                  final type = session.cardTypes[i];
+                  return ExerciseCard(
+                    exercise: ex,
+                    cardType: type,
+                    onDetails:
+                        type == CardType.weight
+                            ? () async {
+                              final repo = AppRepository();
+                              final defId = await repo
+                                  .findOrCreateExerciseDefinition(
+                                    ex.name,
+                                    ex.equipment,
+                                  );
+                              final def = await repo.fetchDefinitionById(defId);
+                              if (def != null && context.mounted) {
+                                showModalBottomSheet(
+                                  context: context,
+                                  isScrollControlled: true,
+                                  builder:
+                                      (_) => ExerciseDetailSheet(
+                                        definition: def,
+                                        defId: defId,
+                                      ),
+                                );
+                              }
+                            }
+                            : null,
+                    initialCompletedParents:
+                        type == CardType.weight
+                            ? (ex as WeightExercise).completedParents
+                            : null,
+                    initialCompletedChildren:
+                        type == CardType.weight
+                            ? (ex as WeightExercise).completedChildren
+                            : null,
+                    onDeleteExercise:
+                        () => context.read<ActiveSession>().removeExercise(i),
+                    onSetAdded: () => context.read<ActiveSession>().refresh(),
+                    onSetDeleted: () => context.read<ActiveSession>().refresh(),
+                    onValueChanged:
+                        () => context.read<ActiveSession>().refresh(),
+                  );
+                },
               ),
 
-           floatingActionButton: AddExerciseFab(
+      floatingActionButton: AddExerciseFab(
         onWeightPicked: (def) async {
           // build a brand-new WeightExercise with one empty set:
           final ex = WeightExercise(
             name: def.name,
-            equipment: def.equipmentList.isNotEmpty
-                ? def.equipmentList.first.name
-                : '',
+            equipment:
+                def.equipmentList.isNotEmpty
+                    ? def.equipmentList.first.name
+                    : '',
             sets: [ExerciseSet()],
           );
           context.read<ActiveSession>().addExercise(ex, CardType.weight);
@@ -109,10 +128,7 @@ class SessionScreen extends StatelessWidget {
           context.read<ActiveSession>().addExercise(ex, CardType.cardio);
         },
         onStretchPicked: () async {
-          final ex = StretchExercise(
-            name: 'Stretch',
-            equipment: '',
-          );
+          final ex = StretchExercise(name: 'Stretch', equipment: '');
           context.read<ActiveSession>().addExercise(ex, CardType.stretch);
         },
       ),
@@ -121,7 +137,7 @@ class SessionScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: ElevatedButton(
             onPressed: () async {
-             final sid = await context.read<ActiveSession>().finish();
+              final sid = await context.read<ActiveSession>().finish();
               if (!context.mounted || sid == null) return;
               // show the completion sheet
               await showModalBottomSheet(
@@ -130,7 +146,7 @@ class SessionScreen extends StatelessWidget {
                 builder: (_) => SessionCompleteSheet(sessionId: sid),
               );
               if (!context.mounted) return;
-              Navigator.of(context).pop();  // back to train page
+              Navigator.of(context).pop(); // back to train page
             },
             child: const Text('Finish Workout'),
           ),
@@ -138,6 +154,4 @@ class SessionScreen extends StatelessWidget {
       ),
     );
   }
-
-
 }

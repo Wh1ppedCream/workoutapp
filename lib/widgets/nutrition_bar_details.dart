@@ -29,28 +29,27 @@ class NutritionBarDetails extends StatelessWidget {
     required this.carbTarget,
     required this.fatConsumed,
     required this.fatTarget,
-    this.scale = 1.0,    // default to 1.0 for existing sizes
+    this.scale = 1.0, // default to 1.0 for existing sizes
   });
 
   @override
   Widget build(BuildContext context) {
     final remainingCalories = calorieGoal - caloriesConsumed;
-    final pctCal = calorieGoal > 0
-        ? (caloriesConsumed / calorieGoal).clamp(0.0, 1.0)
-        : 0.0;
-    final pctProtein = proteinTarget > 0
-        ? (proteinConsumed / proteinTarget).clamp(0.0, 1.0)
-        : 0.0;
-    final pctCarb = carbTarget > 0
-        ? (carbConsumed / carbTarget).clamp(0.0, 1.0)
-        : 0.0;
-    final pctFat = fatTarget > 0
-        ? (fatConsumed / fatTarget).clamp(0.0, 1.0)
-        : 0.0;
-
+    final pctCal =
+        calorieGoal > 0
+            ? (caloriesConsumed / calorieGoal).clamp(0.0, 1.0)
+            : 0.0;
+    final pctProtein =
+        proteinTarget > 0
+            ? (proteinConsumed / proteinTarget).clamp(0.0, 1.0)
+            : 0.0;
+    final pctCarb =
+        carbTarget > 0 ? (carbConsumed / carbTarget).clamp(0.0, 1.0) : 0.0;
+    final pctFat =
+        fatTarget > 0 ? (fatConsumed / fatTarget).clamp(0.0, 1.0) : 0.0;
 
     // pull in AppColors & ColorScheme
-  final colors = context.colors;
+    final colors = context.colors;
 
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 16 * scale),
@@ -122,73 +121,75 @@ class NutritionBarDetails extends StatelessWidget {
     // light version for unfilled track
     final trackColor = color.withValues(alpha: 0.3);
 
-    return LayoutBuilder(builder: (ctx, constraints) {
-      final fullWidth = constraints.maxWidth;
-      final filledWidth = fullWidth * factor;
+    return LayoutBuilder(
+      builder: (ctx, constraints) {
+        final fullWidth = constraints.maxWidth;
+        final filledWidth = fullWidth * factor;
 
-      return Stack(
-        alignment: Alignment.center,
-        children: [
-          // track
-          Container(
-            width: fullWidth,
-            height: height,
-            decoration: BoxDecoration(
-              color: trackColor,
-              borderRadius: BorderRadius.circular(height / 2),
-            ),
-          ),
-
-          // filled portion aligned to left
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Container(
-              width: filledWidth,
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            // track
+            Container(
+              width: fullWidth,
               height: height,
               decoration: BoxDecoration(
-                color: color,
+                color: trackColor,
                 borderRadius: BorderRadius.circular(height / 2),
               ),
             ),
-          ),
 
-          // texts
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 8 * scale),
-            child: Row(
-              children: [
-                // consumed on left
-                Text(
-                  '$consumed',
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyLarge!
-                      .copyWith(color: Colors.white, fontSize: 16 * scale),
+            // filled portion aligned to left
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                width: filledWidth,
+                height: height,
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(height / 2),
                 ),
-                const Spacer(),
-                // target in center
-                Text(
-                  '$target kcal',
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyLarge!
-                      .copyWith(color: Colors.white, fontSize: 16 * scale),
-                ),
-                const Spacer(),
-                // remaining on right
-                Text(
-                  '$remaining',
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyLarge!
-                      .copyWith(color: Colors.white, fontSize: 16 * scale),
-                ),
-              ],
+              ),
             ),
-          ),
-        ],
-      );
-    });
+
+            // texts
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8 * scale),
+              child: Row(
+                children: [
+                  // consumed on left
+                  Text(
+                    '$consumed',
+                    style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                      color: Colors.white,
+                      fontSize: 16 * scale,
+                    ),
+                  ),
+                  const Spacer(),
+                  // target in center
+                  Text(
+                    '$target kcal',
+                    style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                      color: Colors.white,
+                      fontSize: 16 * scale,
+                    ),
+                  ),
+                  const Spacer(),
+                  // remaining on right
+                  Text(
+                    '$remaining',
+                    style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                      color: Colors.white,
+                      fontSize: 16 * scale,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Widget _buildVerticalBar({
@@ -243,10 +244,10 @@ class NutritionBarDetails extends StatelessWidget {
                 top: 4 * scale,
                 child: Text(
                   '$remaining',
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium!
-                      .copyWith(color: Colors.white, fontSize: 12 * scale),
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                    color: Colors.white,
+                    fontSize: 12 * scale,
+                  ),
                 ),
               ),
 
@@ -255,10 +256,10 @@ class NutritionBarDetails extends StatelessWidget {
                 bottom: 4 * scale,
                 child: Text(
                   '$consumed',
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium!
-                      .copyWith(color: Colors.white, fontSize: 12 * scale),
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                    color: Colors.white,
+                    fontSize: 12 * scale,
+                  ),
                 ),
               ),
             ],
@@ -270,10 +271,9 @@ class NutritionBarDetails extends StatelessWidget {
         // label below bar
         Text(
           label,
-          style: Theme.of(context)
-              .textTheme
-              .bodySmall!
-              .copyWith(color: color, fontSize: 12 * scale),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall!.copyWith(color: color, fontSize: 12 * scale),
         ),
       ],
     );

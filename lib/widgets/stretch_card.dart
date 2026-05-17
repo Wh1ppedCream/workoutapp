@@ -7,9 +7,9 @@ import 'stretch_search_dialog.dart';
 /// Displays and edits a StretchExercise, including search and custom entries.
 class StretchCard extends StatefulWidget {
   final StretchExercise exercise;
-  final bool            readOnlyMode;
-  final VoidCallback?   onDeleteExercise;
-  final VoidCallback?   onValueChanged;
+  final bool readOnlyMode;
+  final VoidCallback? onDeleteExercise;
+  final VoidCallback? onValueChanged;
 
   const StretchCard({
     super.key,
@@ -72,9 +72,13 @@ class _StretchCardState extends State<StretchCard> {
                   onSelected: (v) {
                     if (v == 'remove') widget.onDeleteExercise?.call();
                   },
-                  itemBuilder: (_) => const [
-                    PopupMenuItem(value: 'remove', child: Text('Remove Stretch')),
-                  ],
+                  itemBuilder:
+                      (_) => const [
+                        PopupMenuItem(
+                          value: 'remove',
+                          child: Text('Remove Stretch'),
+                        ),
+                      ],
                 ),
               ],
             ),
@@ -86,26 +90,31 @@ class _StretchCardState extends State<StretchCard> {
                 ElevatedButton.icon(
                   icon: const Icon(Icons.search),
                   label: const Text('Search'),
-                  onPressed: readOnly
-                      ? null
-                      : () async {
-                          final chosen = await StretchSearchDialog.show(context);
-                          if (!mounted) return;
-                          if (chosen != null) {
-                            setState(() {
-                              stretchList.add(StretchInstance(
-                                stretchId: chosen.id,
-                              isCustom: false,
-                              customName: chosen.name,
-                              customDesc: chosen.description,
-                              isChecked: true,
-                              orderIndex: stretchList.length,
-                              ));
-                              _completedStretches.add(stretchList.length - 1);
-                            });
-                            widget.onValueChanged?.call();
-                          }
-                        },
+                  onPressed:
+                      readOnly
+                          ? null
+                          : () async {
+                            final chosen = await StretchSearchDialog.show(
+                              context,
+                            );
+                            if (!mounted) return;
+                            if (chosen != null) {
+                              setState(() {
+                                stretchList.add(
+                                  StretchInstance(
+                                    stretchId: chosen.id,
+                                    isCustom: false,
+                                    customName: chosen.name,
+                                    customDesc: chosen.description,
+                                    isChecked: true,
+                                    orderIndex: stretchList.length,
+                                  ),
+                                );
+                                _completedStretches.add(stretchList.length - 1);
+                              });
+                              widget.onValueChanged?.call();
+                            }
+                          },
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -121,23 +130,30 @@ class _StretchCardState extends State<StretchCard> {
                 ),
                 const SizedBox(width: 8),
                 IconButton(
-                  icon: const Icon(Icons.add_circle_outline, color: Colors.blue),
-                  onPressed: readOnly || _stretchCustomController.text.trim().isEmpty
-                      ? null
-                      : () {
-                          setState(() {
-                            stretchList.add(StretchInstance(
-                              stretchId: null,
-                              isCustom: true,
-                              customName: _stretchCustomController.text.trim(),
-                              customDesc: '',
-                              isChecked: false,
-                              orderIndex: stretchList.length,
-                            ));
-                            _stretchCustomController.clear();
-                          });
-                          widget.onValueChanged?.call();
-                        },
+                  icon: const Icon(
+                    Icons.add_circle_outline,
+                    color: Colors.blue,
+                  ),
+                  onPressed:
+                      readOnly || _stretchCustomController.text.trim().isEmpty
+                          ? null
+                          : () {
+                            setState(() {
+                              stretchList.add(
+                                StretchInstance(
+                                  stretchId: null,
+                                  isCustom: true,
+                                  customName:
+                                      _stretchCustomController.text.trim(),
+                                  customDesc: '',
+                                  isChecked: false,
+                                  orderIndex: stretchList.length,
+                                ),
+                              );
+                              _stretchCustomController.clear();
+                            });
+                            widget.onValueChanged?.call();
+                          },
                 ),
               ],
             ),
@@ -152,19 +168,20 @@ class _StretchCardState extends State<StretchCard> {
                   children: [
                     Checkbox(
                       value: stretchList[i].isChecked,
-                      onChanged: readOnly
-                          ? null
-                          : (checked) {
-                              setState(() {
-                                stretchList[i].isChecked = (checked == true);
-                                if (checked == true) {
-                                  _completedStretches.add(i);
-                                } else {
-                                  _completedStretches.remove(i);
-                                }
-                              });
-                              widget.onValueChanged?.call();
-                            },
+                      onChanged:
+                          readOnly
+                              ? null
+                              : (checked) {
+                                setState(() {
+                                  stretchList[i].isChecked = (checked == true);
+                                  if (checked == true) {
+                                    _completedStretches.add(i);
+                                  } else {
+                                    _completedStretches.remove(i);
+                                  }
+                                });
+                                widget.onValueChanged?.call();
+                              },
                     ),
                     const SizedBox(width: 8),
                     Expanded(
@@ -179,7 +196,7 @@ class _StretchCardState extends State<StretchCard> {
                             Padding(
                               padding: const EdgeInsets.only(top: 4),
                               child: Text(
-                                 stretchList[i].customDesc ?? '',
+                                stretchList[i].customDesc ?? '',
                                 style: Theme.of(context).textTheme.bodySmall,
                               ),
                             ),
@@ -188,35 +205,37 @@ class _StretchCardState extends State<StretchCard> {
                     ),
                     IconButton(
                       icon: const Icon(Icons.remove_circle_outline),
-                      onPressed: readOnly
-                          ? null
-                          : () {
-                              setState(() {
-                                stretchList.removeAt(i);
-                                _completedStretches.remove(i);
-                                // Reindex orderIndex by reconstructing each instance
-for (int k = 0; k < stretchList.length; k++) {
-  final oldInst = stretchList[k];
-  stretchList[k] = StretchInstance(
-    stretchId:   oldInst.stretchId,
-    isCustom:    oldInst.isCustom,
-    customName:  oldInst.customName,
-    customDesc:  oldInst.customDesc,
-    isChecked:   oldInst.isChecked,
-    orderIndex:  k,
-  );
-}
-                                // Adjust completed indices
-                                final toAdjust = _completedStretches
-                                    .where((idx) => idx > i)
-                                    .toList();
-                                for (var oldIdx in toAdjust) {
-                                  _completedStretches.remove(oldIdx);
-                                  _completedStretches.add(oldIdx - 1);
-                                }
-                              });
-                              widget.onValueChanged?.call();
-                            },
+                      onPressed:
+                          readOnly
+                              ? null
+                              : () {
+                                setState(() {
+                                  stretchList.removeAt(i);
+                                  _completedStretches.remove(i);
+                                  // Reindex orderIndex by reconstructing each instance
+                                  for (int k = 0; k < stretchList.length; k++) {
+                                    final oldInst = stretchList[k];
+                                    stretchList[k] = StretchInstance(
+                                      stretchId: oldInst.stretchId,
+                                      isCustom: oldInst.isCustom,
+                                      customName: oldInst.customName,
+                                      customDesc: oldInst.customDesc,
+                                      isChecked: oldInst.isChecked,
+                                      orderIndex: k,
+                                    );
+                                  }
+                                  // Adjust completed indices
+                                  final toAdjust =
+                                      _completedStretches
+                                          .where((idx) => idx > i)
+                                          .toList();
+                                  for (var oldIdx in toAdjust) {
+                                    _completedStretches.remove(oldIdx);
+                                    _completedStretches.add(oldIdx - 1);
+                                  }
+                                });
+                                widget.onValueChanged?.call();
+                              },
                     ),
                   ],
                 ),

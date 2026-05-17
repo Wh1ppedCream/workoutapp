@@ -91,7 +91,9 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
       child: Row(
         children: [
           if (leading != null) leading,
-          Expanded(child: Text(label)),
+          Expanded(
+            child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+          ),
           _buildIncrementField(controller),
         ],
       ),
@@ -300,6 +302,8 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
                                         Expanded(
                                           child: Text(
                                             ex.name,
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
                                             style: const TextStyle(
                                               fontWeight: FontWeight.bold,
                                             ),
@@ -386,6 +390,8 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
                                         Expanded(
                                           child: Text(
                                             ex.name,
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
                                             style: const TextStyle(
                                               fontWeight: FontWeight.bold,
                                             ),

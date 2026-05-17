@@ -46,11 +46,8 @@ class PresetBar extends StatelessWidget {
       // use the same color as before, but via the themed accent slot
       color: accent,
       onTap: () => _openDetail(context),
-      scale: scale,  // <-- pass down scale
-      leading: _PresetFocusBadge(
-        frequencyMap: focusFrequencyMap,
-        scale: scale,
-      ),
+      scale: scale, // <-- pass down scale
+      leading: _PresetFocusBadge(frequencyMap: focusFrequencyMap, scale: scale),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -59,14 +56,15 @@ class PresetBar extends StatelessWidget {
             icon: Icon(
               Icons.more_vert,
               color: accent,
-              size: 24 * scale,        // scale the icon
+              size: 24 * scale, // scale the icon
             ),
             onSelected: (action) => _handleMenu(context, action),
-            itemBuilder: (_) => const [
-              PopupMenuItem(value: 'edit',   child: Text('Edit')),
-              PopupMenuItem(value: 'delete', child: Text('Delete')),
-              PopupMenuItem(value: 'rename', child: Text('Rename')),
-            ],
+            itemBuilder:
+                (_) => const [
+                  PopupMenuItem(value: 'edit', child: Text('Edit')),
+                  PopupMenuItem(value: 'delete', child: Text('Delete')),
+                  PopupMenuItem(value: 'rename', child: Text('Rename')),
+                ],
           ),
         ],
       ),
@@ -75,17 +73,18 @@ class PresetBar extends StatelessWidget {
 
   void _openDetail(BuildContext context) {
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (ctx) => MultiProvider(
-        providers: [
-          ChangeNotifierProvider<ActiveSession>.value(
-            value: ctx.read<ActiveSession>(),
-          ),
-          ChangeNotifierProvider(
-            create: (_) => PresetSession(presetId),
-          ),
-        ],
-        child: const PresetDetailScreen(),
-      )),
+      MaterialPageRoute(
+        builder:
+            (ctx) => MultiProvider(
+              providers: [
+                ChangeNotifierProvider<ActiveSession>.value(
+                  value: ctx.read<ActiveSession>(),
+                ),
+                ChangeNotifierProvider(create: (_) => PresetSession(presetId)),
+              ],
+              child: const PresetDetailScreen(),
+            ),
+      ),
     );
   }
 
@@ -94,25 +93,32 @@ class PresetBar extends StatelessWidget {
 
     if (action == 'edit') {
       _openDetail(context);
-
     } else if (action == 'delete') {
       final confirm = await showDialog<bool>(
         context: context,
-        builder: (dCtx) => AlertDialog(
-          title: const Text('Delete Preset'),
-          content: const Text('Are you sure you want to delete this preset?'),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(dCtx, false), child: const Text('Cancel')),
-            TextButton(onPressed: () => Navigator.pop(dCtx, true),  child: const Text('Delete')),
-          ],
-        ),
+        builder:
+            (dCtx) => AlertDialog(
+              title: const Text('Delete Preset'),
+              content: const Text(
+                'Are you sure you want to delete this preset?',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dCtx, false),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(dCtx, true),
+                  child: const Text('Delete'),
+                ),
+              ],
+            ),
       );
       if (!context.mounted) return;
       if (confirm == true) {
         await repo.deletePreset(presetId);
         onRefresh();
       }
-
     } else if (action == 'rename') {
       final ctl = TextEditingController(text: label);
       final newName = await showDialog<String>(
@@ -126,8 +132,14 @@ class PresetBar extends StatelessWidget {
               autofocus: true,
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(dCtx),             child: const Text('Cancel')),
-              ElevatedButton(onPressed: () => Navigator.pop(dCtx, ctl.text.trim()), child: const Text('Rename')),
+              TextButton(
+                onPressed: () => Navigator.pop(dCtx),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(dCtx, ctl.text.trim()),
+                child: const Text('Rename'),
+              ),
             ],
           );
         },
@@ -146,10 +158,7 @@ class _PresetFocusBadge extends StatelessWidget {
   final Map<String, double> frequencyMap;
   final double scale;
 
-  const _PresetFocusBadge({
-    required this.frequencyMap,
-    required this.scale,
-  });
+  const _PresetFocusBadge({required this.frequencyMap, required this.scale});
 
   @override
   Widget build(BuildContext context) {

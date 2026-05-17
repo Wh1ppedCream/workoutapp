@@ -35,6 +35,8 @@ class InfoCard extends StatelessWidget {
         children: [
           Text(
             value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.bold,
@@ -44,6 +46,8 @@ class InfoCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(fontSize: 10, color: colors.infoCardLabelText),
           ),
         ],
@@ -244,7 +248,18 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
                   ),
                 ),
                 const SizedBox(height: 12),
-                SizedBox(height: 250, child: _buildLoadedTab(_selectedIndex)),
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final summaryHeight =
+                        (constraints.maxWidth * 0.62)
+                            .clamp(210.0, 250.0)
+                            .toDouble();
+                    return SizedBox(
+                      height: summaryHeight,
+                      child: _buildLoadedTab(_selectedIndex),
+                    );
+                  },
+                ),
               ],
             ),
           ),
@@ -265,43 +280,55 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
       for (final entry in data.heatmap.entries) entry.key.name: entry.value,
     });
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: 250,
-          height: 250,
-          child: BodyHeatmap(
-            frequencyMap: freqMap,
-            lowColor: colors.historySummaryHeatmapLow!,
-            highColor: colors.historySummaryHeatmapHigh!,
-            width: 200,
-            height: 200,
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                InfoCard(
-                  value: data.workoutCount.toString(),
-                  label: 'Workouts',
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final maxWidth = constraints.maxWidth;
+        final gap = maxWidth < 330 ? 10.0 : 16.0;
+        final heatmapBox = (maxWidth * 0.57).clamp(138.0, 250.0).toDouble();
+        final heatmapSize = heatmapBox.clamp(128.0, 200.0).toDouble();
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: heatmapBox,
+              height: heatmapBox,
+              child: Center(
+                child: BodyHeatmap(
+                  frequencyMap: freqMap,
+                  lowColor: colors.historySummaryHeatmapLow!,
+                  highColor: colors.historySummaryHeatmapHigh!,
+                  width: heatmapSize,
+                  height: heatmapSize,
                 ),
-                InfoCard(
-                  value: _durationLabel(data.totalDurationSeconds),
-                  label: 'Total Time',
-                ),
-                InfoCard(
-                  value: '${(data.totalVolume / 1000).toStringAsFixed(1)}k lbs',
-                  label: 'Total Volume',
-                ),
-              ],
+              ),
             ),
-          ),
-        ),
-      ],
+            SizedBox(width: gap),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    InfoCard(
+                      value: data.workoutCount.toString(),
+                      label: 'Workouts',
+                    ),
+                    InfoCard(
+                      value: _durationLabel(data.totalDurationSeconds),
+                      label: 'Total Time',
+                    ),
+                    InfoCard(
+                      value:
+                          '${(data.totalVolume / 1000).toStringAsFixed(1)}k lbs',
+                      label: 'Total Volume',
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 

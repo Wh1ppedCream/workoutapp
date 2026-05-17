@@ -137,7 +137,11 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
                             itemBuilder: (ctx, i) {
                               final ic = _muscleCounts[i];
                               return ListTile(
-                                title: Text(ic.name),
+                                title: Text(
+                                  ic.name,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                                 trailing: Text(
                                   ic.displayCount,
                                   style: const TextStyle(
@@ -156,7 +160,11 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
                             itemBuilder: (ctx, i) {
                               final ic = _bodyPartCounts[i];
                               return ListTile(
-                                title: Text(ic.name),
+                                title: Text(
+                                  ic.name,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                                 trailing: Text(
                                   ic.displayCount,
                                   style: const TextStyle(

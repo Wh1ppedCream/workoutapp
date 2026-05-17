@@ -879,15 +879,23 @@ class _SessionSummaryCard extends StatelessWidget {
               const SizedBox(height: 16),
               LayoutBuilder(
                 builder: (context, constraints) {
-                  final compact = constraints.maxWidth < 360;
+                  final maxWidth = constraints.maxWidth;
+                  final gap = maxWidth < 330 ? 10.0 : 16.0;
+                  final heatmapWidth =
+                      (maxWidth * 0.46).clamp(124.0, 180.0).toDouble();
+                  final heatmapSize =
+                      heatmapWidth.clamp(118.0, 180.0).toDouble();
                   final heatmap = SizedBox(
-                    height: compact ? 170 : 190,
-                    child: BodyHeatmap(
-                      frequencyMap: summary.frequencyMap,
-                      lowColor: colors.historySummaryHeatmapLow!,
-                      highColor: colors.historySummaryHeatmapHigh!,
-                      width: compact ? 160 : 180,
-                      height: compact ? 160 : 180,
+                    width: heatmapWidth,
+                    height: heatmapSize,
+                    child: Center(
+                      child: BodyHeatmap(
+                        frequencyMap: summary.frequencyMap,
+                        lowColor: colors.historySummaryHeatmapLow!,
+                        highColor: colors.historySummaryHeatmapHigh!,
+                        width: heatmapSize,
+                        height: heatmapSize,
+                      ),
                     ),
                   );
                   final focusList = FocusedSetsList(
@@ -895,22 +903,11 @@ class _SessionSummaryCard extends StatelessWidget {
                     titleWeight: FontWeight.w800,
                   );
 
-                  if (compact) {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        heatmap,
-                        const SizedBox(height: 12),
-                        focusList,
-                      ],
-                    );
-                  }
-
                   return Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(child: heatmap),
-                      const SizedBox(width: 16),
+                      heatmap,
+                      SizedBox(width: gap),
                       Expanded(child: focusList),
                     ],
                   );
@@ -953,6 +950,8 @@ class _SummaryMetricTile extends StatelessWidget {
           ),
           Text(
             label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -1022,6 +1021,8 @@ class _CompletedWeightCard extends StatelessWidget {
                     children: [
                       Text(
                         _exerciseTitle(exercise),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w900,
                         ),
@@ -1030,6 +1031,8 @@ class _CompletedWeightCard extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           exercise.equipment,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: Theme.of(
                             context,
                           ).textTheme.bodyMedium?.copyWith(
@@ -1128,6 +1131,8 @@ class _CompletedSetRow extends StatelessWidget {
           Expanded(
             child: Text(
               '${_formatWeight(row.set.weight)} lbs x ${row.set.reps}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: theme.textTheme.titleMedium,
             ),
           ),
@@ -1148,7 +1153,7 @@ class _CompletedSetRow extends StatelessWidget {
             ),
             const SizedBox(width: 10),
           ],
-          Flexible(
+          Expanded(
             child: Text(
               '1RM = ${_formatWeight(eRm)} lbs',
               maxLines: 1,
@@ -1183,8 +1188,13 @@ class _CompletedSimpleCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 14),
       child: ListTile(
         leading: Icon(icon),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
-        subtitle: Text(subtitle),
+        title: Text(
+          title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontWeight: FontWeight.w800),
+        ),
+        subtitle: Text(subtitle, maxLines: 2, overflow: TextOverflow.ellipsis),
       ),
     );
   }

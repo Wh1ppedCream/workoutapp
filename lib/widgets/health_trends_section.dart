@@ -12,11 +12,7 @@ class TrendData {
   List<FlSpot> spots;
   String value;
 
-  TrendData({
-    required this.title,
-    required this.spots,
-    required this.value,
-  });
+  TrendData({required this.title, required this.spots, required this.value});
 }
 
 /// A horizontal scroll of mini‐trend cards, plus an “+” to add more.
@@ -34,17 +30,25 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
     TrendData(
       title: 'Expenditure',
       spots: const [
-        FlSpot(0, 50), FlSpot(1, 60), FlSpot(2, 55),
-        FlSpot(3, 70), FlSpot(4, 65), FlSpot(5, 80),
+        FlSpot(0, 50),
+        FlSpot(1, 60),
+        FlSpot(2, 55),
+        FlSpot(3, 70),
+        FlSpot(4, 65),
+        FlSpot(5, 80),
         FlSpot(6, 75),
       ],
-      value: '${2000 - 1200} kcal',  // demo remaining
+      value: '${2000 - 1200} kcal', // demo remaining
     ),
     TrendData(
       title: 'Weight',
       spots: const [
-        FlSpot(0, 210), FlSpot(1, 211), FlSpot(2, 211.5),
-        FlSpot(3, 212), FlSpot(4, 211.8), FlSpot(5, 212.2),
+        FlSpot(0, 210),
+        FlSpot(1, 211),
+        FlSpot(2, 211.5),
+        FlSpot(3, 212),
+        FlSpot(4, 211.8),
+        FlSpot(5, 212.2),
         FlSpot(6, 211.9),
       ],
       value: '211.9 lbs',
@@ -58,10 +62,14 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
         TrendData(
           title: 'New',
           spots: const [
-        FlSpot(0, 50), FlSpot(1, 70), FlSpot(2, 30),
-        FlSpot(3, 40), FlSpot(4, 35), FlSpot(5, 90),
-        FlSpot(6, 75),
-      ],  // blank data
+            FlSpot(0, 50),
+            FlSpot(1, 70),
+            FlSpot(2, 30),
+            FlSpot(3, 40),
+            FlSpot(4, 35),
+            FlSpot(5, 90),
+            FlSpot(6, 75),
+          ], // blank data
           value: '420 cm',
         ),
       );
@@ -76,14 +84,16 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
     super.build(context);
     final colors = context.colors;
 
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // section title
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Text('Health Trends', style: Theme.of(context).textTheme.titleLarge),
+          child: Text(
+            'Health Trends',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
         ),
 
         // scrollable row of tiles + add-button
@@ -100,11 +110,12 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
                   title: t.title,
                   spots: t.spots,
                   value: t.value,
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => DefaultTrendPage(title: t.title),
-                    ),
-                  ),
+                  onTap:
+                      () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => DefaultTrendPage(title: t.title),
+                        ),
+                      ),
                 );
               } else {
                 // the "+" button
@@ -118,7 +129,11 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Center(
-                      child: Icon(Icons.add, size: 32, color: colors.healthTrendIcon!),
+                      child: Icon(
+                        Icons.add,
+                        size: 32,
+                        color: colors.healthTrendIcon!,
+                      ),
                     ),
                   ),
                 );
@@ -183,14 +198,30 @@ class _TrendTile extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            Text(title, style: Theme.of(context).textTheme.bodySmall),
+            Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
             const SizedBox(height: 4),
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(value, style: Theme.of(context).textTheme.titleMedium),
+                Flexible(
+                  child: Text(
+                    value,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
                 const SizedBox(width: 4),
-                Icon(Icons.chevron_right, size: 16, color: colors.healthTrendIcon!),
+                Icon(
+                  Icons.chevron_right,
+                  size: 16,
+                  color: colors.healthTrendIcon!,
+                ),
               ],
             ),
           ],

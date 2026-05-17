@@ -31,12 +31,7 @@ class _PastSessionsListState extends State<PastSessionsList>
     with AutomaticKeepAliveClientMixin<PastSessionsList> {
   final _repo = AppRepository();
 
-  static const _options = {
-    'Week': 7,
-    'Month': 30,
-    'Year': 365,
-    'All': null,
-  };
+  static const _options = {'Week': 7, 'Month': 30, 'Year': 365, 'All': null};
 
   String _selected = 'Week';
   late Future<List<WorkoutSession>> _sessionsFuture;
@@ -97,14 +92,15 @@ class _PastSessionsListState extends State<PastSessionsList>
                   const SizedBox(width: 8),
                   DropdownButton<String>(
                     value: _selected,
-                    items: _options.keys
-                        .map(
-                          (label) => DropdownMenuItem(
-                            value: label,
-                            child: Text(label),
-                          ),
-                        )
-                        .toList(),
+                    items:
+                        _options.keys
+                            .map(
+                              (label) => DropdownMenuItem(
+                                value: label,
+                                child: Text(label),
+                              ),
+                            )
+                            .toList(),
                     onChanged: (label) {
                       if (label == null) return;
                       setState(() {
@@ -159,15 +155,16 @@ class _PastSessionsListState extends State<PastSessionsList>
                     return ListView.separated(
                       padding: const EdgeInsets.symmetric(vertical: 2),
                       itemCount: sessions.length,
-                      separatorBuilder: (_, __) => Divider(
-                        height: 1,
-                        color: colors.pastSessionsDivider!,
-                      ),
+                      separatorBuilder:
+                          (_, __) => Divider(
+                            height: 1,
+                            color: colors.pastSessionsDivider!,
+                          ),
                       itemBuilder: (ctx, i) {
                         final ses = sessions[i];
-                        final dateStr = DateFormat('yyyy-MM-dd').format(
-                          ses.date,
-                        );
+                        final dateStr = DateFormat(
+                          'yyyy-MM-dd',
+                        ).format(ses.date);
                         final durationMin = (ses.duration / 60).ceil();
 
                         return Card(
@@ -176,18 +173,24 @@ class _PastSessionsListState extends State<PastSessionsList>
                             vertical: 4,
                           ),
                           child: ListTile(
-                            title: Text('$dateStr - $durationMin min'),
-                            onTap: () => Navigator.of(context)
-                                .push(
-                                  MaterialPageRoute(
-                                    builder: (_) => SessionDetailScreen(ses),
-                                  ),
-                                )
-                                .then((_) {
-                                  if (!mounted) return;
-                                  widget.onReload?.call();
-                                  _reloadSessions();
-                                }),
+                            title: Text(
+                              '$dateStr - $durationMin min',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            onTap:
+                                () => Navigator.of(context)
+                                    .push(
+                                      MaterialPageRoute(
+                                        builder:
+                                            (_) => SessionDetailScreen(ses),
+                                      ),
+                                    )
+                                    .then((_) {
+                                      if (!mounted) return;
+                                      widget.onReload?.call();
+                                      _reloadSessions();
+                                    }),
                           ),
                         );
                       },

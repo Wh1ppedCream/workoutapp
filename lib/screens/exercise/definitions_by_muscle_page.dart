@@ -132,7 +132,13 @@ class _DefinitionsByMusclePageState extends State<DefinitionsByMusclePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('${widget.muscle.name} Exercises')),
+      appBar: AppBar(
+        title: Text(
+          '${widget.muscle.name} Exercises',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
       body: FutureBuilder<_MusclePageData>(
         future: _dataFuture,
         builder: (context, snapshot) {
@@ -226,6 +232,8 @@ class _MuscleHeader extends StatelessWidget {
                           children: [
                             Text(
                               muscle.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: theme.textTheme.titleLarge,
                             ),
                             const SizedBox(height: 4),
@@ -367,6 +375,8 @@ class _ExerciseMetadata extends StatelessWidget {
         children: [
           Text(
             equipment,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               color: colors.primary,
               fontWeight: FontWeight.w600,
@@ -375,6 +385,8 @@ class _ExerciseMetadata extends StatelessWidget {
           const SizedBox(height: 3),
           Text(
             'Rank $muscleRank for this muscle - $bodyParts',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               color: Colors.green.shade600,
               fontWeight: FontWeight.w500,
