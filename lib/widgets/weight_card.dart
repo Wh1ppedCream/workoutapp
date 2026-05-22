@@ -325,141 +325,177 @@ class _WeightCardState extends State<WeightCard> {
                               : null,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    padding: const EdgeInsets.all(8),
-                    margin: const EdgeInsets.symmetric(vertical: 4),
-                    child: Row(
-                      children: [
-                        Checkbox(
-                          value: _completedSets.contains(index),
-                          activeColor: Colors.green,
-                          visualDensity: VisualDensity.compact,
-                          onChanged:
-                              readOnly
-                                  ? null
-                                  : (ok) {
-                                    if (ok == null) return;
-                                    setState(() {
-                                      if (ok) {
-                                        _completedSets.add(index);
-                                        widget.exercise.completedParents.add(
-                                          index,
-                                        );
-                                      } else {
-                                        _completedSets.remove(index);
-                                        widget.exercise.completedParents.remove(
-                                          index,
-                                        );
-                                      }
-                                      if (_allSetsComplete(sets)) {
-                                        _isCollapsed = true;
-                                      }
-                                    });
-                                    widget.onValueChanged?.call();
-                                  },
-                        ),
-                        Flexible(
-                          flex: 2,
-                          child: Text(
-                            'Set ${index + 1}',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          flex: 3,
-                          child: TextFormField(
-                            controller: _weightControllers[index],
-                            readOnly: readOnly,
-                            keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                              labelText: 'Weight',
-                              isDense: true,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    margin: const EdgeInsets.symmetric(vertical: 6),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final compact = constraints.maxWidth < 330;
+                        final checkboxWidth = compact ? 34.0 : 40.0;
+                        final setLabelWidth = compact ? 48.0 : 58.0;
+                        final removeWidth = compact ? 34.0 : 40.0;
+                        final fieldGap = compact ? 10.0 : 14.0;
+
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              width: checkboxWidth,
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Checkbox(
+                                  value: _completedSets.contains(index),
+                                  activeColor: Colors.green,
+                                  visualDensity: VisualDensity.compact,
+                                  onChanged:
+                                      readOnly
+                                          ? null
+                                          : (ok) {
+                                            if (ok == null) return;
+                                            setState(() {
+                                              if (ok) {
+                                                _completedSets.add(index);
+                                                widget
+                                                    .exercise
+                                                    .completedParents
+                                                    .add(index);
+                                              } else {
+                                                _completedSets.remove(index);
+                                                widget
+                                                    .exercise
+                                                    .completedParents
+                                                    .remove(index);
+                                              }
+                                              if (_allSetsComplete(sets)) {
+                                                _isCollapsed = true;
+                                              }
+                                            });
+                                            widget.onValueChanged?.call();
+                                          },
+                                ),
+                              ),
                             ),
-                            onChanged:
-                                readOnly
-                                    ? null
-                                    : (_) => _updateWeightSet(index),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          flex: 3,
-                          child: TextFormField(
-                            controller: _repsControllers[index],
-                            readOnly: readOnly,
-                            keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                              labelText: 'Reps',
-                              isDense: true,
+                            SizedBox(
+                              width: setLabelWidth,
+                              child: Text(
+                                'Set ${index + 1}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
-                            onChanged:
-                                readOnly
-                                    ? null
-                                    : (_) => _updateWeightSet(index),
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.remove_circle_outline),
-                          constraints: const BoxConstraints.tightFor(
-                            width: 40,
-                            height: 40,
-                          ),
-                          padding: EdgeInsets.zero,
-                          onPressed:
-                              readOnly
-                                  ? null
-                                  : () async {
-                                    final confirm = await showDialog<bool>(
-                                      context: context,
-                                      builder:
-                                          (ctx) => AlertDialog(
-                                            title: const Text('Remove Set'),
-                                            content: const Text(
-                                              'Are you sure you want to remove this set?',
-                                            ),
-                                            actions: [
-                                              TextButton(
-                                                onPressed:
-                                                    () => Navigator.pop(
-                                                      ctx,
-                                                      false,
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: TextFormField(
+                                controller: _weightControllers[index],
+                                readOnly: readOnly,
+                                keyboardType: TextInputType.number,
+                                style: Theme.of(context).textTheme.bodyLarge,
+                                decoration: const InputDecoration(
+                                  labelText: 'Weight',
+                                  isDense: true,
+                                  contentPadding: EdgeInsets.only(bottom: 6),
+                                ),
+                                onChanged:
+                                    readOnly
+                                        ? null
+                                        : (_) => _updateWeightSet(index),
+                              ),
+                            ),
+                            SizedBox(width: fieldGap),
+                            Expanded(
+                              child: TextFormField(
+                                controller: _repsControllers[index],
+                                readOnly: readOnly,
+                                keyboardType: TextInputType.number,
+                                style: Theme.of(context).textTheme.bodyLarge,
+                                decoration: const InputDecoration(
+                                  labelText: 'Reps',
+                                  isDense: true,
+                                  contentPadding: EdgeInsets.only(bottom: 6),
+                                ),
+                                onChanged:
+                                    readOnly
+                                        ? null
+                                        : (_) => _updateWeightSet(index),
+                              ),
+                            ),
+                            SizedBox(width: compact ? 6 : 10),
+                            SizedBox(
+                              width: removeWidth,
+                              child: IconButton(
+                                icon: const Icon(Icons.remove_circle_outline),
+                                constraints: BoxConstraints.tightFor(
+                                  width: removeWidth,
+                                  height: 40,
+                                ),
+                                padding: EdgeInsets.zero,
+                                onPressed:
+                                    readOnly
+                                        ? null
+                                        : () async {
+                                          final confirm = await showDialog<bool>(
+                                            context: context,
+                                            builder:
+                                                (ctx) => AlertDialog(
+                                                  title: const Text(
+                                                    'Remove Set',
+                                                  ),
+                                                  content: const Text(
+                                                    'Are you sure you want to remove this set?',
+                                                  ),
+                                                  actions: [
+                                                    TextButton(
+                                                      onPressed:
+                                                          () => Navigator.pop(
+                                                            ctx,
+                                                            false,
+                                                          ),
+                                                      child: const Text(
+                                                        'Cancel',
+                                                      ),
                                                     ),
-                                                child: const Text('Cancel'),
-                                              ),
-                                              TextButton(
-                                                onPressed:
-                                                    () => Navigator.pop(
-                                                      ctx,
-                                                      true,
+                                                    TextButton(
+                                                      onPressed:
+                                                          () => Navigator.pop(
+                                                            ctx,
+                                                            true,
+                                                          ),
+                                                      child: const Text(
+                                                        'Remove',
+                                                      ),
                                                     ),
-                                                child: const Text('Remove'),
-                                              ),
-                                            ],
-                                          ),
-                                    );
-                                    if (!mounted) return;
-                                    if (confirm == true) {
-                                      setState(() {
-                                        sets.removeAt(index);
-                                        _weightControllers
-                                            .removeAt(index)
-                                            .dispose();
-                                        _repsControllers
-                                            .removeAt(index)
-                                            .dispose();
-                                        _removeCompletedSetIndex(index);
-                                        _removeChangeSetsForParentIndex(index);
-                                        _isChangeSetMode =
-                                            _cSets.isNotEmpty &&
-                                            _isChangeSetMode;
-                                      });
-                                      widget.onSetDeleted?.call();
-                                      widget.onValueChanged?.call();
-                                    }
-                                  },
-                        ),
-                      ],
+                                                  ],
+                                                ),
+                                          );
+                                          if (!mounted) return;
+                                          if (confirm == true) {
+                                            setState(() {
+                                              sets.removeAt(index);
+                                              _weightControllers
+                                                  .removeAt(index)
+                                                  .dispose();
+                                              _repsControllers
+                                                  .removeAt(index)
+                                                  .dispose();
+                                              _removeCompletedSetIndex(index);
+                                              _removeChangeSetsForParentIndex(
+                                                index,
+                                              );
+                                              _isChangeSetMode =
+                                                  _cSets.isNotEmpty &&
+                                                  _isChangeSetMode;
+                                            });
+                                            widget.onSetDeleted?.call();
+                                            widget.onValueChanged?.call();
+                                          }
+                                        },
+                              ),
+                            ),
+                          ],
+                        );
+                      },
                     ),
                   ),
                 );

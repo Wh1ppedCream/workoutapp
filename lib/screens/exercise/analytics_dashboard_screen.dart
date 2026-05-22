@@ -118,7 +118,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
         title: const Text('Sets in Last 7 Days'),
         bottom: TabBar(
           controller: _tabController,
-          tabs: const [Tab(text: 'By Muscle'), Tab(text: 'By BodyPart')],
+          tabs: const [Tab(text: 'By BodyPart'), Tab(text: 'By Muscle')],
         ),
       ),
       body:
@@ -129,13 +129,13 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
                   : TabBarView(
                     controller: _tabController,
                     children: [
-                      // --- By Muscle ---
-                      _muscleCounts.isEmpty
-                          ? const Center(child: Text('No muscle sets'))
+                      // --- By BodyPart ---
+                      _bodyPartCounts.isEmpty
+                          ? const Center(child: Text('No bodypart sets'))
                           : ListView.builder(
-                            itemCount: _muscleCounts.length,
+                            itemCount: _bodyPartCounts.length,
                             itemBuilder: (ctx, i) {
-                              final ic = _muscleCounts[i];
+                              final ic = _bodyPartCounts[i];
                               return ListTile(
                                 title: Text(
                                   ic.name,
@@ -152,13 +152,13 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
                             },
                           ),
 
-                      // --- By BodyPart ---
-                      _bodyPartCounts.isEmpty
-                          ? const Center(child: Text('No bodypart sets'))
+                      // --- By Muscle ---
+                      _muscleCounts.isEmpty
+                          ? const Center(child: Text('No muscle sets'))
                           : ListView.builder(
-                            itemCount: _bodyPartCounts.length,
+                            itemCount: _muscleCounts.length,
                             itemBuilder: (ctx, i) {
-                              final ic = _bodyPartCounts[i];
+                              final ic = _muscleCounts[i];
                               return ListTile(
                                 title: Text(
                                   ic.name,

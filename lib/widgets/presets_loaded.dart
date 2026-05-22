@@ -20,11 +20,23 @@ class PresetsLoaded extends StatefulWidget {
   /// Called after a rename/delete to reload the list.
   final VoidCallback onRefresh;
   final int refreshToken;
+  final Set<int>? presetIds;
+  final Set<int>? excludedPresetIds;
+  final String emptyMessage;
+  final ScrollPhysics? physics;
+  final EdgeInsetsGeometry? padding;
+  final bool shrinkWrap;
 
   const PresetsLoaded({
     super.key,
     this.scale = 1.0,
     this.refreshToken = 0,
+    this.presetIds,
+    this.excludedPresetIds,
+    this.emptyMessage = 'No presets found.',
+    this.physics,
+    this.padding,
+    this.shrinkWrap = true,
     required this.onRefresh,
   });
 
@@ -37,12 +49,14 @@ class _PresetListItem {
   final String name;
   final bool isAutomatic;
   final Map<String, double> focusFrequencyMap;
+  final int listIndex;
 
   const _PresetListItem({
     required this.presetId,
     required this.name,
     required this.isAutomatic,
     required this.focusFrequencyMap,
+    required this.listIndex,
   });
 }
 
@@ -76,18 +90,24 @@ class _PresetsLoadedState extends State<PresetsLoaded>
       focusSetCountsByPreset,
     );
 
-    return rows.map((row) {
+    final items = <_PresetListItem>[];
+    for (var index = 0; index < rows.length; index++) {
+      final row = rows[index];
       final presetId = row['id'] as int;
-      return _PresetListItem(
-        presetId: presetId,
-        name: row['name'] as String,
-        isAutomatic: (row['is_automatic'] as int? ?? 0) == 1,
-        focusFrequencyMap: _buildFocusFrequencyMap(
-          focusSetCountsByPreset[presetId] ?? const <int, int>{},
-          unitsByDefinition,
+      items.add(
+        _PresetListItem(
+          presetId: presetId,
+          name: row['name'] as String,
+          isAutomatic: (row['is_automatic'] as int? ?? 0) == 1,
+          focusFrequencyMap: _buildFocusFrequencyMap(
+            focusSetCountsByPreset[presetId] ?? const <int, int>{},
+            unitsByDefinition,
+          ),
+          listIndex: index,
         ),
       );
-    }).toList();
+    }
+    return items;
   }
 
   Map<int, Map<int, int>> _groupFocusSetCounts(
@@ -206,24 +226,36 @@ class _PresetsLoadedState extends State<PresetsLoaded>
           );
         }
 
-        final rows = snap.data ?? const <_PresetListItem>[];
+        final loadedRows = snap.data ?? const <_PresetListItem>[];
         if (snap.connectionState == ConnectionState.done && snap.hasData) {
-          _lastRows = rows;
+          _lastRows = loadedRows;
         }
+        final rows =
+            loadedRows.where((row) {
+              final included =
+                  widget.presetIds == null ||
+                  widget.presetIds!.contains(row.presetId);
+              final excluded =
+                  widget.excludedPresetIds?.contains(row.presetId) ?? false;
+              return included && !excluded;
+            }).toList();
         if (rows.isEmpty) {
           return Padding(
             padding: EdgeInsets.all(16 * widget.scale),
-            child: const Text('No presets found.'),
+            child: Text(widget.emptyMessage),
           );
         }
 
         return ListView.builder(
-          padding: EdgeInsets.symmetric(vertical: 6 * widget.scale),
+          padding:
+              widget.padding ??
+              EdgeInsets.symmetric(vertical: 6 * widget.scale),
+          physics: widget.physics,
           itemCount: rows.length,
-          shrinkWrap: true,
+          shrinkWrap: widget.shrinkWrap,
           itemBuilder: (ctx2, i) {
             final row = rows[i];
-            final color = _palette[i % _palette.length];
+            final color = _palette[row.listIndex % _palette.length];
 
             return Padding(
               padding: EdgeInsets.symmetric(vertical: 6 * widget.scale),
@@ -231,7 +263,7 @@ class _PresetsLoadedState extends State<PresetsLoaded>
                 presetId: row.presetId,
                 label: row.name,
                 color: color,
-                index: i,
+                index: row.listIndex,
                 isAutomatic: row.isAutomatic,
                 focusFrequencyMap: row.focusFrequencyMap,
                 scale: widget.scale,

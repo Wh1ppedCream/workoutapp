@@ -2,18 +2,41 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../data/premade_training_plans.dart';
+import '../../models/models.dart';
 import '../../providers/active_session.dart';
 import '../../providers/preset_session.dart';
 import '../../providers/selected_profile.dart';
 import '../../repositories/app_repository.dart';
+import '../../services/preset_generation_service.dart';
+import '../../theme/theme_extensions.dart';
 import '../../widgets/body_heatmap.dart';
+import '../../widgets/bodypart_focus_chips.dart';
 import '../../widgets/drawers.dart';
+import '../../widgets/focused_sets_list.dart';
 import '../../widgets/presets_loaded.dart';
+import 'analytics_dashboard_screen.dart';
 import 'gym_profile_screen.dart';
+import 'premade_plans_page.dart';
 import 'preset_detail_screen.dart';
 import 'preset_generation_qa.dart';
 import 'session_screen.dart';
+
+class _OptimizedWorkoutSettingsResult {
+  final int minutes;
+  final int maxSets;
+  final Set<int> preferredBodypartIds;
+  final Set<int> blacklistedBodypartIds;
+
+  const _OptimizedWorkoutSettingsResult({
+    required this.minutes,
+    required this.maxSets,
+    required this.preferredBodypartIds,
+    required this.blacklistedBodypartIds,
+  });
+}
 
 class TrainPage extends StatefulWidget {
   const TrainPage({super.key});
@@ -23,13 +46,27 @@ class TrainPage extends StatefulWidget {
 }
 
 class _TrainPageState extends State<TrainPage> {
+  static const _optimizedSessionMinutesKey = 'train.optimized_session_minutes';
+  static const _optimizedMaxSetsKey = 'train.optimized_max_sets_per_exercise';
+
   final _repo = AppRepository();
   final _scaffoldKey = GlobalKey<ScaffoldState>();
-  final Set<String> _overviewBodyParts = <String>{};
 
   int _selectedTab = 0;
+  int _overviewRefreshToken = 0;
   int _presetsRefreshToken = 0;
   int? _lastProfileId;
+  bool _isStartingOptimized = false;
+  int _optimizedSessionMinutes = SessionSpec.defaultSessionDurationMinutes;
+  int _optimizedMaxSetsPerExercise = SessionSpec.defaultMaxSetsPerExercise;
+  Set<int> _optimizedPreferredBodypartIds = <int>{};
+  Set<int> _optimizedBlacklistedBodypartIds = <int>{};
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_loadOptimizedWorkoutSettings());
+  }
 
   @override
   void didChangeDependencies() {
@@ -106,16 +143,307 @@ class _TrainPageState extends State<TrainPage> {
     await Navigator.of(
       context,
     ).push(MaterialPageRoute(builder: (_) => const SessionScreen()));
+    if (!mounted) return;
+    setState(() => _overviewRefreshToken++);
   }
 
-  void _showOptimizePlaceholder() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Optimize Workout will move here next. Train2 still has the current optimized flow.',
-        ),
+  Future<void> _loadOptimizedWorkoutSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedMinutes = prefs.getInt(_optimizedSessionMinutesKey);
+    final savedMaxSets = prefs.getInt(_optimizedMaxSetsKey);
+    if (!mounted) return;
+    setState(() {
+      if (savedMinutes != null && savedMinutes > 0) {
+        _optimizedSessionMinutes = savedMinutes;
+      }
+      if (savedMaxSets != null &&
+          savedMaxSets >= SessionSpec.defaultMinSetsPerExercise &&
+          savedMaxSets <= SessionSpec.maxAllowedSetsPerExercise) {
+        _optimizedMaxSetsPerExercise = savedMaxSets;
+      }
+    });
+  }
+
+  SessionSpec _buildOptimizedSpec(
+    int profileId, {
+    required int sessionMinutes,
+  }) {
+    final now = DateTime.now();
+    final date =
+        '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    final time =
+        '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+    const minSets = SessionSpec.defaultMinSetsPerExercise;
+    return SessionSpec(
+      profileId: profileId,
+      name: 'Optimized workout $date $time',
+      focusBodypartIds: const [],
+      preferredBodypartIds: _optimizedPreferredBodypartIds.toList(),
+      blacklistedBodypartIds: _optimizedBlacklistedBodypartIds.toList(),
+      maxExercises: SessionSpec.maxExercisesForDuration(
+        sessionDurationMinutes: sessionMinutes,
+        minSetsPerExercise: minSets,
       ),
+      minSetsPerExercise: minSets,
+      maxSetsPerExercise: _optimizedMaxSetsPerExercise,
+      sessionDurationMinutes: sessionMinutes,
+      historyWindow: const Duration(days: 7),
+      avoidMostRecentBodyPart: true,
+      now: now,
     );
+  }
+
+  Future<void> _openOptimizedWorkoutSettings() async {
+    List<BodyPart> bodyParts = const <BodyPart>[];
+    try {
+      bodyParts = await _repo.fetchAllBodyParts();
+    } catch (e) {
+      debugPrint('Failed to load bodyparts for optimized settings: $e');
+    }
+    if (!mounted) return;
+
+    var draftMinutes = _optimizedSessionMinutes.toString();
+    var draftMaxSets = _optimizedMaxSetsPerExercise.toString();
+    final draftPreferred = {..._optimizedPreferredBodypartIds};
+    final draftBlacklisted = {..._optimizedBlacklistedBodypartIds};
+
+    final settings = await showDialog<_OptimizedWorkoutSettingsResult>(
+      context: context,
+      builder:
+          (dialogContext) => StatefulBuilder(
+            builder: (dialogContext, setDialogState) {
+              return AlertDialog(
+                title: const Text('Optimized workout settings'),
+                content: SizedBox(
+                  width: double.maxFinite,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Used to budget 3 minutes per set plus 5 minutes to start each exercise.',
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Bodypart picks apply only to the next optimized workout you start.',
+                          style: TextStyle(fontSize: 12),
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          initialValue: draftMinutes,
+                          keyboardType: TextInputType.number,
+                          onChanged: (value) => draftMinutes = value,
+                          decoration: const InputDecoration(
+                            labelText: 'Workout duration',
+                            suffixText: 'min',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          initialValue: draftMaxSets,
+                          keyboardType: TextInputType.number,
+                          onChanged: (value) => draftMaxSets = value,
+                          decoration: const InputDecoration(
+                            labelText: 'Up to sets per exercise',
+                            suffixText: 'sets',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Bodypart focus',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Tap once to prefer a bodypart, tap again to avoid it, and tap a third time to clear it.',
+                          style: TextStyle(fontSize: 12),
+                        ),
+                        const SizedBox(height: 8),
+                        BodypartFocusChips(
+                          bodyParts: bodyParts,
+                          preferredBodypartIds: draftPreferred,
+                          blacklistedBodypartIds: draftBlacklisted,
+                          emptyText: 'Bodyparts could not be loaded.',
+                          onChanged:
+                              (selection) => setDialogState(() {
+                                draftPreferred
+                                  ..clear()
+                                  ..addAll(selection.preferredBodypartIds);
+                                draftBlacklisted
+                                  ..clear()
+                                  ..addAll(selection.blacklistedBodypartIds);
+                              }),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(),
+                    child: const Text('Cancel'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      final minutes = int.tryParse(draftMinutes.trim());
+                      final maxSets = int.tryParse(draftMaxSets.trim());
+                      if (minutes == null ||
+                          minutes <= 0 ||
+                          maxSets == null ||
+                          maxSets < SessionSpec.defaultMinSetsPerExercise ||
+                          maxSets > SessionSpec.maxAllowedSetsPerExercise) {
+                        return;
+                      }
+                      Navigator.of(dialogContext).pop(
+                        _OptimizedWorkoutSettingsResult(
+                          minutes: minutes,
+                          maxSets: maxSets,
+                          preferredBodypartIds: {...draftPreferred},
+                          blacklistedBodypartIds: {...draftBlacklisted},
+                        ),
+                      );
+                    },
+                    child: const Text('Save'),
+                  ),
+                ],
+              );
+            },
+          ),
+    );
+    if (!mounted || settings == null) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_optimizedSessionMinutesKey, settings.minutes);
+    await prefs.setInt(_optimizedMaxSetsKey, settings.maxSets);
+    if (!mounted) return;
+    setState(() {
+      _optimizedSessionMinutes = settings.minutes;
+      _optimizedMaxSetsPerExercise = settings.maxSets;
+      _optimizedPreferredBodypartIds = settings.preferredBodypartIds;
+      _optimizedBlacklistedBodypartIds = settings.blacklistedBodypartIds;
+    });
+  }
+
+  Future<void> _showOptimizedWorkoutRestWarning() {
+    return showDialog<void>(
+      context: context,
+      builder:
+          (dialogContext) => AlertDialog(
+            title: const Text('Take some time to rest'),
+            content: const Text(
+              'Your recent training is already at several bodypart limits, so an optimized workout would push recovery too far.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+    );
+  }
+
+  Future<void> _startOptimizedWorkout(SelectedProfile sel) async {
+    if (_isStartingOptimized) return;
+
+    final profileId = sel.currentProfile?.id;
+    if (profileId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a gym profile first.')),
+      );
+      return;
+    }
+
+    final active = context.read<ActiveSession>();
+    if (active.isActive) {
+      await Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (_) => const SessionScreen()));
+      return;
+    }
+
+    setState(() => _isStartingOptimized = true);
+    int? temporaryPresetId;
+    try {
+      final generator = PresetGenerationService(_repo);
+      final spec = _buildOptimizedSpec(
+        profileId,
+        sessionMinutes: _optimizedSessionMinutes,
+      );
+      final shouldRest = await generator.shouldRestBeforeOptimizedWorkout(spec);
+      if (shouldRest) {
+        if (!mounted) return;
+        await _showOptimizedWorkoutRestWarning();
+        return;
+      }
+
+      final presetId = await generator.generatePreset(spec);
+      temporaryPresetId = presetId;
+      final preset = PresetSession(presetId);
+      await preset.ready;
+
+      if (!mounted) return;
+      if (preset.exercises.isEmpty) {
+        await _repo.deletePreset(presetId);
+        temporaryPresetId = null;
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No eligible exercises were found for this profile.'),
+          ),
+        );
+        return;
+      }
+
+      active.exercises.clear();
+      active.cardTypes.clear();
+      for (var i = 0; i < preset.exercises.length; i++) {
+        active.addExercise(preset.exercises[i], preset.cardTypes[i]);
+      }
+
+      await _repo.deletePreset(presetId);
+      temporaryPresetId = null;
+      active.start();
+
+      if (!mounted) return;
+      setState(() {
+        _overviewRefreshToken++;
+        _presetsRefreshToken++;
+        _optimizedPreferredBodypartIds.clear();
+        _optimizedBlacklistedBodypartIds.clear();
+      });
+      await Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (_) => const SessionScreen()));
+      if (!mounted) return;
+      setState(() => _overviewRefreshToken++);
+    } catch (e) {
+      if (!active.isActive) {
+        active.exercises.clear();
+        active.cardTypes.clear();
+        active.refresh();
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to start optimized workout: $e')),
+      );
+    } finally {
+      if (temporaryPresetId != null) {
+        try {
+          await _repo.deletePreset(temporaryPresetId);
+          if (mounted) {
+            setState(() => _presetsRefreshToken++);
+          }
+        } catch (e) {
+          debugPrint('Failed to delete temporary optimized preset: $e');
+        }
+      }
+      if (mounted) {
+        setState(() => _isStartingOptimized = false);
+      }
+    }
   }
 
   @override
@@ -180,17 +508,15 @@ class _TrainPageState extends State<TrainPage> {
               index: _selectedTab,
               children: [
                 _OverviewTab(
-                  selectedBodyParts: _overviewBodyParts,
-                  onBodyPartsChanged: (next) {
-                    setState(() {
-                      _overviewBodyParts
-                        ..clear()
-                        ..addAll(next);
-                    });
+                  refreshToken: _overviewRefreshToken,
+                  profileId: sel.currentProfile?.id,
+                  presetsRefreshToken: _presetsRefreshToken,
+                  onPresetsRefresh: () {
+                    setState(() => _presetsRefreshToken++);
                   },
-                  profileName: sel.currentProfile?.name,
                 ),
                 _PlansTab(
+                  profileId: sel.currentProfile?.id,
                   refreshToken: _presetsRefreshToken,
                   onRefresh: () => setState(() => _presetsRefreshToken++),
                   onGeneratePreset: () => _openCustomPresetGenerator(sel),
@@ -203,7 +529,9 @@ class _TrainPageState extends State<TrainPage> {
               _selectedTab == 0
                   ? _SplitWorkoutBar(
                     onStartWorkout: _startWorkout,
-                    onOptimizeWorkout: _showOptimizePlaceholder,
+                    onOptimizeWorkout: () => _startOptimizedWorkout(sel),
+                    onOptimizeSettings: _openOptimizedWorkoutSettings,
+                    isStartingOptimized: _isStartingOptimized,
                   )
                   : null,
         );
@@ -294,144 +622,385 @@ class _TabButton extends StatelessWidget {
 
 class _OverviewTab extends StatelessWidget {
   const _OverviewTab({
-    required this.selectedBodyParts,
-    required this.onBodyPartsChanged,
-    required this.profileName,
+    required this.refreshToken,
+    required this.profileId,
+    required this.presetsRefreshToken,
+    required this.onPresetsRefresh,
   });
 
-  final Set<String> selectedBodyParts;
-  final ValueChanged<Set<String>> onBodyPartsChanged;
-  final String? profileName;
+  final int refreshToken;
+  final int? profileId;
+  final int presetsRefreshToken;
+  final VoidCallback onPresetsRefresh;
 
   @override
   Widget build(BuildContext context) {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 112),
       children: [
-        _EditableHeatmapCard(
-          selectedBodyParts: selectedBodyParts,
-          onBodyPartsChanged: onBodyPartsChanged,
-        ),
+        _SevenDayFocusCard(refreshToken: refreshToken),
         const SizedBox(height: 16),
-        _SelectedPresetsCard(profileName: profileName),
+        _ActivePresetsCard(
+          profileId: profileId,
+          refreshToken: presetsRefreshToken,
+          onRefresh: onPresetsRefresh,
+        ),
       ],
     );
   }
 }
 
-class _EditableHeatmapCard extends StatelessWidget {
-  const _EditableHeatmapCard({
-    required this.selectedBodyParts,
-    required this.onBodyPartsChanged,
-  });
+class _SevenDayFocusData {
+  final Map<String, double> heatmapFrequencyMap;
+  final List<FocusedSetHit> topBodyParts;
 
-  final Set<String> selectedBodyParts;
-  final ValueChanged<Set<String>> onBodyPartsChanged;
+  const _SevenDayFocusData({
+    required this.heatmapFrequencyMap,
+    required this.topBodyParts,
+  });
+}
+
+const _emptySevenDayFocusData = _SevenDayFocusData(
+  heatmapFrequencyMap: <String, double>{},
+  topBodyParts: <FocusedSetHit>[],
+);
+
+class _SevenDayFocusCard extends StatefulWidget {
+  final int refreshToken;
+
+  const _SevenDayFocusCard({required this.refreshToken});
+
+  @override
+  State<_SevenDayFocusCard> createState() => _SevenDayFocusCardState();
+}
+
+class _SevenDayFocusCardState extends State<_SevenDayFocusCard> {
+  final _repo = AppRepository();
+  late Future<_SevenDayFocusData> _dataFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(BodyHeatmap.preload());
+    _dataFuture = _loadData();
+  }
+
+  @override
+  void didUpdateWidget(covariant _SevenDayFocusCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.refreshToken != widget.refreshToken) {
+      _dataFuture = _loadData();
+    }
+  }
+
+  Future<_SevenDayFocusData> _loadData() async {
+    final now = DateTime.now();
+    final weekAgo = now.subtract(const Duration(days: 7));
+    final Map<BodyPart, double> bodyPartSets = await _repo
+        .fetchAllBodyPartSetsOverTimeRange(start: weekAgo, end: now);
+    final hits =
+        bodyPartSets.entries
+            .where((entry) => entry.value > 0)
+            .map(
+              (entry) => FocusedSetHit(bodyPart: entry.key, units: entry.value),
+            )
+            .toList()
+          ..sort((a, b) => b.units.compareTo(a.units));
+
+    return _SevenDayFocusData(
+      heatmapFrequencyMap: bodyPartFrequencyMapFromNames({
+        for (final hit in hits) hit.bodyPart.name: hit.units,
+      }),
+      topBodyParts: hits,
+    );
+  }
+
+  void _openAnalyticsDashboard() {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const AnalyticsDashboardScreen()));
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final bodyPartNames = bodyPartNameToSvgIds.keys.toList(growable: false);
-    final frequencyMap = _bodyPartHeatmapMap(selectedBodyParts);
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Workout Focus',
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Tap bodyparts to sketch what you want the next workout to emphasize.',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 16),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final useWideLayout = constraints.maxWidth >= 430;
-                final heatmap = SizedBox(
-                  height: useWideLayout ? 210 : 250,
-                  child: BodyHeatmap(
-                    frequencyMap: frequencyMap,
-                    highColor: Colors.blue,
+    return FutureBuilder<_SevenDayFocusData>(
+      future: _dataFuture,
+      builder: (context, snapshot) {
+        final data = snapshot.data;
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Weekly Overview',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
                   ),
-                );
-                final chips = _BodyPartChips(
-                  bodyPartNames: bodyPartNames,
-                  selectedBodyParts: selectedBodyParts,
-                  onBodyPartsChanged: onBodyPartsChanged,
-                );
-                if (!useWideLayout) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Center(child: heatmap),
-                      const SizedBox(height: 16),
-                      chips,
-                    ],
-                  );
-                }
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(child: heatmap),
-                    const SizedBox(width: 16),
-                    Expanded(flex: 2, child: chips),
-                  ],
-                );
-              },
+                ),
+                const SizedBox(height: 16),
+                if (snapshot.connectionState != ConnectionState.done &&
+                    data == null)
+                  const SizedBox(
+                    height: 176,
+                    child: Center(child: CircularProgressIndicator()),
+                  )
+                else if (snapshot.hasError && data == null)
+                  const SizedBox(
+                    height: 176,
+                    child: Center(child: Text('Unable to load 7-day focus')),
+                  )
+                else
+                  _SevenDayFocusLayout(
+                    data: data ?? _emptySevenDayFocusData,
+                    onFocusedSetsTap: _openAnalyticsDashboard,
+                  ),
+              ],
             ),
-          ],
-        ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _SevenDayFocusLayout extends StatelessWidget {
+  final _SevenDayFocusData data;
+  final VoidCallback onFocusedSetsTap;
+
+  const _SevenDayFocusLayout({
+    required this.data,
+    required this.onFocusedSetsTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final heatmapBox =
+            (constraints.maxWidth * 0.43).clamp(118.0, 170.0).toDouble();
+        final heatmapSize = (heatmapBox - 6).clamp(112.0, 164.0).toDouble();
+        final gap = constraints.maxWidth < 330 ? 10.0 : 14.0;
+
+        return SizedBox(
+          height: 198,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: heatmapBox,
+                height: 198,
+                child: Center(
+                  child: BodyHeatmap(
+                    frequencyMap: data.heatmapFrequencyMap,
+                    lowColor: colors.historySummaryHeatmapLow!,
+                    highColor: colors.historySummaryHeatmapHigh!,
+                    width: heatmapSize,
+                    height: heatmapSize,
+                  ),
+                ),
+              ),
+              SizedBox(width: gap),
+              Expanded(
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(16),
+                    onTap: onFocusedSetsTap,
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(6),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          FocusedSetsList(
+                            hits: data.topBodyParts,
+                            maxVisible: 3,
+                            emptyMessage:
+                                'No completed bodypart set units in the last 7 days.',
+                            titleWeight: FontWeight.w800,
+                          ),
+                          if (data.topBodyParts.length > 3)
+                            const _MoreFocusedSetsHint(),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _MoreFocusedSetsHint extends StatelessWidget {
+  const _MoreFocusedSetsHint();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(top: 2),
+      child: Row(
+        children: [
+          Icon(Icons.more_horiz, size: 18, color: theme.colorScheme.primary),
+          const SizedBox(width: 6),
+          Text(
+            'more',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.primary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _BodyPartChips extends StatelessWidget {
-  const _BodyPartChips({
-    required this.bodyPartNames,
-    required this.selectedBodyParts,
-    required this.onBodyPartsChanged,
-  });
-
-  final List<String> bodyPartNames;
-  final Set<String> selectedBodyParts;
-  final ValueChanged<Set<String>> onBodyPartsChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        for (final bodyPart in bodyPartNames)
-          FilterChip(
-            label: Text(bodyPart),
-            selected: selectedBodyParts.contains(bodyPart),
-            onSelected: (_) {
-              final next = Set<String>.of(selectedBodyParts);
-              if (!next.add(bodyPart)) next.remove(bodyPart);
-              onBodyPartsChanged(next);
-            },
-          ),
-      ],
-    );
-  }
+Future<Set<int>> _loadActivePresetIds(int? profileId) async {
+  if (profileId == null) return const <int>{};
+  final prefs = await SharedPreferences.getInstance();
+  final rawIds = prefs.getStringList(_activePresetIdsKey(profileId));
+  if (rawIds == null) return const <int>{};
+  return rawIds.map((id) => int.tryParse(id)).whereType<int>().toSet();
 }
 
-class _SelectedPresetsCard extends StatelessWidget {
-  const _SelectedPresetsCard({required this.profileName});
+Future<void> _saveActivePresetIds(int profileId, Set<int> ids) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setStringList(
+    _activePresetIdsKey(profileId),
+    ids.map((id) => id.toString()).toList(),
+  );
+}
 
-  final String? profileName;
+String _activePresetIdsKey(int profileId) =>
+    'train.active_presets.profile.$profileId';
+
+class _ActivePresetsCard extends StatefulWidget {
+  final int? profileId;
+  final int refreshToken;
+  final VoidCallback onRefresh;
+
+  const _ActivePresetsCard({
+    required this.profileId,
+    required this.refreshToken,
+    required this.onRefresh,
+  });
+
+  @override
+  State<_ActivePresetsCard> createState() => _ActivePresetsCardState();
+}
+
+class _ActivePresetsCardState extends State<_ActivePresetsCard> {
+  final _repo = AppRepository();
+  Future<Set<int>>? _selectedIdsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedIdsFuture = _loadSelectedIds(widget.profileId);
+  }
+
+  @override
+  void didUpdateWidget(covariant _ActivePresetsCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.profileId != widget.profileId) {
+      _selectedIdsFuture = _loadSelectedIds(widget.profileId);
+    }
+  }
+
+  Future<Set<int>> _loadSelectedIds(int? profileId) async {
+    return _loadActivePresetIds(profileId);
+  }
+
+  Future<void> _openEditor(Set<int> selectedIds) async {
+    final profileId = widget.profileId;
+    if (profileId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a gym profile first.')),
+      );
+      return;
+    }
+
+    final rows = await _repo.fetchPresetSummariesRaw(profileId: profileId);
+    if (!mounted) return;
+    final updatedIds = await showDialog<Set<int>>(
+      context: context,
+      builder: (dialogContext) {
+        final draftIds = Set<int>.of(selectedIds);
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Active Presets'),
+              content: SizedBox(
+                width: double.maxFinite,
+                child:
+                    rows.isEmpty
+                        ? const Text(
+                          'No presets are available for this profile.',
+                        )
+                        : ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: rows.length,
+                          itemBuilder: (context, index) {
+                            final row = rows[index];
+                            final presetId = row['id'] as int;
+                            final name = (row['name'] as String?)?.trim();
+                            final isAutomatic =
+                                (row['is_automatic'] as int? ?? 0) == 1;
+                            return CheckboxListTile(
+                              value: draftIds.contains(presetId),
+                              title: Text(
+                                name?.isNotEmpty == true
+                                    ? name!
+                                    : 'Preset ${index + 1}',
+                              ),
+                              subtitle:
+                                  isAutomatic
+                                      ? const Text('Automatic preset')
+                                      : null,
+                              onChanged: (selected) {
+                                setDialogState(() {
+                                  if (selected == true) {
+                                    draftIds.add(presetId);
+                                  } else {
+                                    draftIds.remove(presetId);
+                                  }
+                                });
+                              },
+                            );
+                          },
+                        ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(dialogContext, draftIds),
+                  child: const Text('Save'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+    if (updatedIds == null || !mounted) return;
+    await _saveActivePresetIds(profileId, updatedIds);
+    if (!mounted) return;
+    setState(() {
+      _selectedIdsFuture = Future.value(updatedIds);
+    });
+    widget.onRefresh();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -439,146 +1008,278 @@ class _SelectedPresetsCard extends StatelessWidget {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Selected Presets',
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              profileName == null
-                  ? 'No gym profile selected.'
-                  : 'Profile: $profileName',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest.withValues(
-                  alpha: 0.45,
+        child: FutureBuilder<Set<int>>(
+          future: _selectedIdsFuture,
+          builder: (context, snapshot) {
+            final selectedIds = snapshot.data ?? const <int>{};
+            final isLoading =
+                snapshot.connectionState != ConnectionState.done &&
+                !snapshot.hasData;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Active Presets',
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Edit active presets',
+                      onPressed:
+                          isLoading ? null : () => _openEditor(selectedIds),
+                      icon: const Icon(Icons.edit_outlined),
+                    ),
+                  ],
                 ),
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: Text(
-                'Preset selection controls will live here, so the Start Workout button can launch a curated session from this overview.',
-                style: theme.textTheme.bodyMedium,
-              ),
-            ),
-          ],
+                const SizedBox(height: 8),
+                if (isLoading)
+                  const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Center(child: CircularProgressIndicator()),
+                  )
+                else if (widget.profileId == null)
+                  Text(
+                    'Select a gym profile to choose active presets.',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  )
+                else if (selectedIds.isEmpty)
+                  Text(
+                    'Tap the pen to choose which presets show here.',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  )
+                else
+                  PresetsLoaded(
+                    scale: 0.92,
+                    refreshToken: widget.refreshToken,
+                    presetIds: selectedIds,
+                    padding: EdgeInsets.zero,
+                    physics: const NeverScrollableScrollPhysics(),
+                    emptyMessage:
+                        'Selected presets are no longer available. Tap the pen to update them.',
+                    onRefresh: widget.onRefresh,
+                  ),
+              ],
+            );
+          },
         ),
       ),
     );
   }
 }
 
-class _PlansTab extends StatelessWidget {
+class _PlansTab extends StatefulWidget {
   const _PlansTab({
+    required this.profileId,
     required this.refreshToken,
     required this.onRefresh,
     required this.onGeneratePreset,
     required this.onCreatePreset,
   });
 
+  final int? profileId;
   final int refreshToken;
   final VoidCallback onRefresh;
   final VoidCallback onGeneratePreset;
   final VoidCallback onCreatePreset;
 
   @override
+  State<_PlansTab> createState() => _PlansTabState();
+}
+
+class _PlansTabState extends State<_PlansTab> {
+  late Future<Set<int>> _activePresetIdsFuture;
+  Set<int>? _lastActivePresetIds;
+
+  @override
+  void initState() {
+    super.initState();
+    _activePresetIdsFuture = _loadActivePresetIds(widget.profileId);
+  }
+
+  @override
+  void didUpdateWidget(covariant _PlansTab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.profileId != widget.profileId ||
+        oldWidget.refreshToken != widget.refreshToken) {
+      if (oldWidget.profileId != widget.profileId) {
+        _lastActivePresetIds = null;
+      }
+      _activePresetIdsFuture = _loadActivePresetIds(widget.profileId);
+    }
+  }
+
+  void _openPremadePlans() {
+    unawaited(
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder:
+              (_) => PremadePlansPage(
+                profileId: widget.profileId,
+                onPlanAdded: widget.onRefresh,
+              ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<Set<int>>(
+      future: _activePresetIdsFuture,
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          _lastActivePresetIds = snapshot.data;
+        }
+        final activeIds = snapshot.data ?? _lastActivePresetIds;
+        if (activeIds == null) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        return ListView(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+          children: [
+            _PresetSectionCard(
+              title: 'Active Presets',
+              child: PresetsLoaded(
+                scale: 0.96,
+                refreshToken: widget.refreshToken,
+                presetIds: activeIds,
+                padding: EdgeInsets.zero,
+                physics: const NeverScrollableScrollPhysics(),
+                emptyMessage:
+                    'No active presets yet. Use the Overview pen to choose which presets stay active.',
+                onRefresh: widget.onRefresh,
+              ),
+            ),
+            const SizedBox(height: 16),
+            _PresetSectionCard(
+              title: 'Archived Presets',
+              child: PresetsLoaded(
+                scale: 0.96,
+                refreshToken: widget.refreshToken,
+                excludedPresetIds: activeIds,
+                padding: EdgeInsets.zero,
+                physics: const NeverScrollableScrollPhysics(),
+                emptyMessage: 'No archived presets.',
+                onRefresh: widget.onRefresh,
+              ),
+            ),
+            const SizedBox(height: 16),
+            _PremadePlansCard(onOpen: _openPremadePlans),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: widget.onGeneratePreset,
+                    icon: const Icon(Icons.auto_awesome),
+                    label: const Text('Generate Custom Presets'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: widget.onCreatePreset,
+                    icon: const Icon(Icons.add),
+                    label: const Text('Manually Add Preset'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _PresetSectionCard extends StatelessWidget {
+  final String title;
+  final Widget child;
+
+  const _PresetSectionCard({required this.title, required this.child});
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-          child: Text(
-            'Presets',
-            style: theme.textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w800,
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
             ),
-          ),
+            const SizedBox(height: 8),
+            child,
+          ],
         ),
-        Expanded(
-          child: PresetsLoaded(
-            scale: 1,
-            refreshToken: refreshToken,
-            onRefresh: onRefresh,
-          ),
-        ),
-        const _PremadePlansCard(),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-          child: Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: onGeneratePreset,
-                  icon: const Icon(Icons.auto_awesome),
-                  label: const Text('Generate Custom Presets'),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: onCreatePreset,
-                  icon: const Icon(Icons.add),
-                  label: const Text('Manually Add Preset'),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
 
 class _PremadePlansCard extends StatelessWidget {
-  const _PremadePlansCard();
+  final VoidCallback onOpen;
+
+  const _PremadePlansCard({required this.onOpen});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              const Icon(Icons.view_list_outlined),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Premade Plans',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Plan library coming next.',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.auto_stories_outlined,
+                  color: theme.colorScheme.primary,
+                  size: 32,
                 ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Text(
+                    'Premade Plans',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '${premadeTrainingPlans.length} curated routines available to copy into your presets.',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.tonalIcon(
+                onPressed: onOpen,
+                icon: const Icon(Icons.arrow_forward),
+                label: const Text('Browse Premade Plans'),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -589,18 +1290,23 @@ class _SplitWorkoutBar extends StatelessWidget {
   const _SplitWorkoutBar({
     required this.onStartWorkout,
     required this.onOptimizeWorkout,
+    required this.onOptimizeSettings,
+    required this.isStartingOptimized,
   });
 
   final VoidCallback onStartWorkout;
   final VoidCallback onOptimizeWorkout;
+  final VoidCallback onOptimizeSettings;
+  final bool isStartingOptimized;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final green = Colors.green.shade700;
     return SafeArea(
       minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       child: Material(
-        color: colorScheme.primaryContainer,
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(24),
         clipBehavior: Clip.antiAlias,
         elevation: 8,
@@ -610,15 +1316,18 @@ class _SplitWorkoutBar extends StatelessWidget {
             children: [
               Expanded(
                 flex: 3,
-                child: InkWell(
-                  onTap: onStartWorkout,
-                  child: Center(
-                    child: Text(
-                      'Start Workout',
-                      style: TextStyle(
-                        color: colorScheme.onPrimaryContainer,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 16,
+                child: Material(
+                  color: green,
+                  child: InkWell(
+                    onTap: onStartWorkout,
+                    child: const Center(
+                      child: Text(
+                        'Start Workout',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 16,
+                        ),
                       ),
                     ),
                   ),
@@ -627,21 +1336,68 @@ class _SplitWorkoutBar extends StatelessWidget {
               Container(
                 width: 1,
                 height: double.infinity,
-                color: colorScheme.onPrimaryContainer.withValues(alpha: 0.16),
+                color: colorScheme.outline.withValues(alpha: 0.18),
               ),
               Expanded(
                 flex: 2,
-                child: InkWell(
-                  onTap: onOptimizeWorkout,
-                  child: Center(
-                    child: Text(
-                      'Optimize',
-                      style: TextStyle(
-                        color: colorScheme.onPrimaryContainer,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 16,
+                child: Material(
+                  color: colorScheme.primaryContainer,
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: InkWell(
+                          onTap:
+                              isStartingOptimized
+                                  ? null
+                                  : onOptimizeWorkout,
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 36),
+                            child: Center(
+                              child:
+                                  isStartingOptimized
+                                      ? SizedBox(
+                                        width: 18,
+                                        height: 18,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color:
+                                              colorScheme.onPrimaryContainer,
+                                        ),
+                                      )
+                                      : Text(
+                                        'Optimize',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color:
+                                              colorScheme.onPrimaryContainer,
+                                          fontWeight: FontWeight.w800,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        bottom: 0,
+                        child: IconButton(
+                          tooltip: 'Optimized workout settings',
+                          onPressed:
+                              isStartingOptimized ? null : onOptimizeSettings,
+                          icon: const Icon(Icons.settings_outlined),
+                          iconSize: 19,
+                          visualDensity: VisualDensity.compact,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(
+                            minWidth: 36,
+                            minHeight: 64,
+                          ),
+                          color: colorScheme.onPrimaryContainer,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -651,16 +1407,4 @@ class _SplitWorkoutBar extends StatelessWidget {
       ),
     );
   }
-}
-
-Map<String, double> _bodyPartHeatmapMap(Set<String> selectedBodyParts) {
-  final map = <String, double>{};
-  for (final bodyPart in selectedBodyParts) {
-    final svgIds = bodyPartNameToSvgIds[bodyPart];
-    if (svgIds == null) continue;
-    for (final svgId in svgIds) {
-      map[svgId] = 1;
-    }
-  }
-  return map;
 }
