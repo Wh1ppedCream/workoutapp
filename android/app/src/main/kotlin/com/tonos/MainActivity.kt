@@ -1,4 +1,4 @@
-package com.example.env_test
+package com.tonos
 
 import io.flutter.embedding.android.FlutterActivity
 
