@@ -1,10 +1,14 @@
 // File: lib/widgets/exercise_detail_sheet.dart
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart'; // for date formatting
 import '../models/models.dart';
 import '../repositories/app_repository.dart';
+import '../theme/theme_extensions.dart';
+import 'body_heatmap.dart';
 
 /// Simple record model for history tab
 class HistoryRecord {
@@ -49,6 +53,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     super.initState();
     _repo = AppRepository();
     _tfSelected = [false, false, true]; // default to "all"
+    unawaited(BodyHeatmap.preload());
     _historyFuture = _loadHistory();
   }
 
@@ -106,6 +111,12 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
 
   Widget _buildDetailsTab(ScrollController scrollCtrl) {
     final def = widget.definition;
+    final theme = Theme.of(context);
+    final colors = context.colors;
+    final heatmapFrequencyMap = bodyPartFrequencyMapFromNames({
+      for (final bodyPart in def.bodyParts) bodyPart.name: 1.0,
+    });
+
     return SingleChildScrollView(
       controller: scrollCtrl,
       padding: const EdgeInsets.all(16),
@@ -113,18 +124,38 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            def.name,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
-          const SizedBox(height: 12),
-          Text(
             'EQUIPMENT: ${def.equipmentList.map((e) => e.name).join(', ')}',
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
+          Center(
+            child: Container(
+              width: 220,
+              constraints: const BoxConstraints(maxWidth: 260),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: theme.colorScheme.outlineVariant),
+              ),
+              child:
+                  heatmapFrequencyMap.isEmpty
+                      ? Icon(
+                        Icons.accessibility_new,
+                        size: 88,
+                        color: theme.colorScheme.primary,
+                      )
+                      : BodyHeatmap(
+                        frequencyMap: heatmapFrequencyMap,
+                        lowColor: colors.historySummaryHeatmapLow!,
+                        highColor: colors.historySummaryHeatmapHigh!,
+                        width: 196,
+                        height: 196,
+                      ),
+            ),
+          ),
+          const SizedBox(height: 12),
           Text(
             'FOCUS AREA: ${def.bodyParts.map((b) => b.name).join(', ')}',
             maxLines: 2,
@@ -451,9 +482,17 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const SizedBox(width: 48),
-                        Text(
-                          'Exercise Detail',
-                          style: Theme.of(context).textTheme.titleLarge,
+                        Expanded(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              widget.definition.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
+                          ),
                         ),
                         IconButton(
                           icon: const Icon(Icons.close),

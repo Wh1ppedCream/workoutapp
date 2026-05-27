@@ -298,6 +298,10 @@ class AppRepository {
     List<int> definitionIds,
   ) => _dbHelper.lookupDefsDetailedByIds(definitionIds);
 
+  Future<List<Map<String, dynamic>>> fetchMostUsedExerciseDefinitionsRaw({
+    int limit = 5,
+  }) => _dbHelper.fetchMostUsedExerciseDefinitionsRaw(limit: limit);
+
   Future<List<Map<String, dynamic>>> fetchAllExercisesRaw() =>
       _dbHelper.fetchAllExercisesRaw();
 

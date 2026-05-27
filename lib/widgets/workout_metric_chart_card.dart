@@ -8,7 +8,7 @@ import '../models/models.dart';
 import '../repositories/app_repository.dart';
 import '../theme/theme_extensions.dart';
 
-enum WorkoutReportRange { twelveWeeks, sixMonths, oneYear, all }
+enum WorkoutReportRange { oneWeek, oneMonth, threeMonths, sixMonths, oneYear, all }
 
 enum _ReportBucketInterval { week, month }
 
@@ -69,8 +69,12 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
   DateTime? get _rangeStart {
     final today = DateUtils.dateOnly(DateTime.now());
     switch (_range) {
-      case WorkoutReportRange.twelveWeeks:
-        return today.subtract(const Duration(days: 12 * 7));
+      case WorkoutReportRange.oneWeek:
+        return today.subtract(const Duration(days: 7));
+      case WorkoutReportRange.oneMonth:
+        return DateTime(today.year, today.month - 1, today.day);
+      case WorkoutReportRange.threeMonths:
+        return DateTime(today.year, today.month - 3, today.day);
       case WorkoutReportRange.sixMonths:
         return DateTime(today.year, today.month - 6, today.day);
       case WorkoutReportRange.oneYear:
@@ -140,6 +144,19 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
 
         final bucketSet = _reportBucketsFor(sessions);
         final buckets = bucketSet.buckets;
+        void selectMetric(int index) {
+          if (_selectedMetricIndex == index) return;
+          if (!_pageController.hasClients) {
+            setState(() => _selectedMetricIndex = index);
+            return;
+          }
+          _pageController.animateToPage(
+            index,
+            duration: const Duration(milliseconds: 240),
+            curve: Curves.easeOutCubic,
+          );
+        }
+
         final totalWorkouts = sessions.length;
         final totalMinutes = sessions.fold<int>(
           0,
@@ -185,6 +202,10 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
                       child: _ReportStat(
                         label: 'Workouts',
                         value: totalWorkouts.toString(),
+                        selected:
+                            _metrics[_selectedMetricIndex] ==
+                            WorkoutReportMetric.workouts,
+                        onTap: () => selectMetric(0),
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -192,6 +213,10 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
                       child: _ReportStat(
                         label: 'Time(min)',
                         value: _formatCompact(totalMinutes.toDouble()),
+                        selected:
+                            _metrics[_selectedMetricIndex] ==
+                            WorkoutReportMetric.minutes,
+                        onTap: () => selectMetric(1),
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -199,23 +224,15 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
                       child: _ReportStat(
                         label: 'Volume(lbs)',
                         value: _formatCompact(totalVolume),
+                        selected:
+                            _metrics[_selectedMetricIndex] ==
+                            WorkoutReportMetric.volume,
+                        onTap: () => selectMetric(2),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 16),
-                _MetricSelector(
-                  metrics: _metrics,
-                  selectedIndex: _selectedMetricIndex,
-                  onSelected: (index) {
-                    _pageController.animateToPage(
-                      index,
-                      duration: const Duration(milliseconds: 240),
-                      curve: Curves.easeOutCubic,
-                    );
-                  },
-                ),
-                const SizedBox(height: 8),
                 SizedBox(
                   height: 240,
                   child: PageView.builder(
@@ -436,98 +453,71 @@ class _MutableReportBucket {
 class _ReportStat extends StatelessWidget {
   final String label;
   final String value;
+  final bool selected;
+  final VoidCallback onTap;
 
-  const _ReportStat({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = context.cs;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        border: Border(
-          left: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.6)),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: cs.onSurface,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: cs.primary,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MetricSelector extends StatelessWidget {
-  final List<WorkoutReportMetric> metrics;
-  final int selectedIndex;
-  final ValueChanged<int> onSelected;
-
-  const _MetricSelector({
-    required this.metrics,
-    required this.selectedIndex,
-    required this.onSelected,
+  const _ReportStat({
+    required this.label,
+    required this.value,
+    required this.selected,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: List.generate(metrics.length, (index) {
-        final selected = selectedIndex == index;
-        return Expanded(
-          child: GestureDetector(
-            onTap: () => onSelected(index),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              margin: EdgeInsets.only(
-                right: index == metrics.length - 1 ? 0 : 8,
-              ),
-              padding: const EdgeInsets.symmetric(vertical: 9),
-              decoration: BoxDecoration(
+    final cs = context.cs;
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: '$label report metric',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color:
+                  selected
+                      ? cs.primary.withValues(alpha: 0.14)
+                      : cs.surfaceContainerHighest.withValues(alpha: 0.55),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
                 color:
                     selected
-                        ? context.cs.primary.withValues(alpha: 0.16)
-                        : context.cs.surfaceContainerHighest.withValues(
-                          alpha: 0.6,
-                        ),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                _metricLabel(metrics[index]),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color:
-                      selected
-                          ? context.cs.primary
-                          : context.cs.onSurfaceVariant,
-                  fontWeight: FontWeight.w800,
-                ),
+                        ? cs.primary.withValues(alpha: 0.75)
+                        : cs.outlineVariant.withValues(alpha: 0.7),
               ),
             ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: selected ? cs.primary : cs.onSurface,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    color: selected ? cs.primary : cs.onSurface,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ),
           ),
-        );
-      }),
+        ),
+      ),
     );
   }
 }
@@ -795,8 +785,12 @@ String _metricLabel(WorkoutReportMetric metric) {
 
 String _rangeLabel(WorkoutReportRange range) {
   switch (range) {
-    case WorkoutReportRange.twelveWeeks:
-      return '12W';
+    case WorkoutReportRange.oneWeek:
+      return '1W';
+    case WorkoutReportRange.oneMonth:
+      return '1M';
+    case WorkoutReportRange.threeMonths:
+      return '3M';
     case WorkoutReportRange.sixMonths:
       return '6M';
     case WorkoutReportRange.oneYear:

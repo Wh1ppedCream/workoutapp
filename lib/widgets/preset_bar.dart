@@ -37,7 +37,10 @@ class PresetBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title = label.trim().isNotEmpty ? label : 'Preset ${index + 1}';
+    final title =
+        label.trim().isNotEmpty
+            ? _planDisplayText(label)
+            : 'Plan ${index + 1}';
     // pull theme defaults if needed (but we'll still use the passed‐in color)
     final accent = color;
 
@@ -98,10 +101,8 @@ class PresetBar extends StatelessWidget {
         context: context,
         builder:
             (dCtx) => AlertDialog(
-              title: const Text('Delete Preset'),
-              content: const Text(
-                'Are you sure you want to delete this preset?',
-              ),
+              title: const Text('Delete Plan'),
+              content: const Text('Are you sure you want to delete this plan?'),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(dCtx, false),
@@ -120,15 +121,15 @@ class PresetBar extends StatelessWidget {
         onRefresh();
       }
     } else if (action == 'rename') {
-      final ctl = TextEditingController(text: label);
+      final ctl = TextEditingController(text: _planDisplayText(label));
       final newName = await showDialog<String>(
         context: context,
         builder: (dCtx) {
           return AlertDialog(
-            title: const Text('Rename Preset'),
+            title: const Text('Rename Plan'),
             content: TextField(
               controller: ctl,
-              decoration: const InputDecoration(labelText: 'Preset Name'),
+              decoration: const InputDecoration(labelText: 'Plan Name'),
               autofocus: true,
             ),
             actions: [
@@ -152,6 +153,14 @@ class PresetBar extends StatelessWidget {
       }
     }
   }
+}
+
+String _planDisplayText(String value) {
+  return value
+      .replaceAll(RegExp(r'\bPresets\b'), 'Plans')
+      .replaceAll(RegExp(r'\bPreset\b'), 'Plan')
+      .replaceAll(RegExp(r'\bpresets\b'), 'plans')
+      .replaceAll(RegExp(r'\bpreset\b'), 'plan');
 }
 
 class _PresetFocusBadge extends StatelessWidget {

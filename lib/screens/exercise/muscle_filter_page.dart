@@ -10,7 +10,9 @@ import 'definitions_by_muscle_page.dart';
 
 /// Browse the exercise library by bodypart or individual muscle.
 class MuscleFilterPage extends StatefulWidget {
-  const MuscleFilterPage({super.key});
+  final int initialTabIndex;
+
+  const MuscleFilterPage({super.key, this.initialTabIndex = 0});
 
   @override
   State<MuscleFilterPage> createState() => _MuscleFilterPageState();
@@ -68,6 +70,7 @@ class _MuscleFilterPageState extends State<MuscleFilterPage> {
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 2,
+      initialIndex: widget.initialTabIndex <= 0 ? 0 : 1,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Exercise Focus Library'),

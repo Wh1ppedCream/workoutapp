@@ -16,6 +16,7 @@ import '../../widgets/body_heatmap.dart';
 import '../../widgets/bodypart_focus_chips.dart';
 import '../../widgets/drawers.dart';
 import '../../widgets/focused_sets_list.dart';
+import '../../widgets/generic_bar.dart';
 import '../../widgets/presets_loaded.dart';
 import 'analytics_dashboard_screen.dart';
 import 'gym_profile_screen.dart';
@@ -83,8 +84,8 @@ class _TrainPageState extends State<TrainPage> {
     if (profileId == null) return;
     final existing = await _repo.fetchAllPresetsRaw(profileId: profileId);
     if (existing.isNotEmpty) return;
-    await _repo.findOrCreatePreset('Preset 1', profileId: profileId);
-    await _repo.findOrCreatePreset('Preset 2', profileId: profileId);
+    await _repo.findOrCreatePreset('Plan 1', profileId: profileId);
+    await _repo.findOrCreatePreset('Plan 2', profileId: profileId);
     if (!mounted) return;
     setState(() => _presetsRefreshToken++);
   }
@@ -131,7 +132,7 @@ class _TrainPageState extends State<TrainPage> {
     final profileId = sel.currentProfile?.id;
     final existing = await _repo.fetchAllPresetsRaw(profileId: profileId);
     final nextNum = existing.length + 1;
-    final name = nextNum == 1 ? 'New Preset' : 'New Preset $nextNum';
+    final name = nextNum == 1 ? 'New Plan' : 'New Plan $nextNum';
     final newId = await _repo.createPreset(name, profileId: profileId);
     if (!mounted) return;
     setState(() => _presetsRefreshToken++);
@@ -882,6 +883,14 @@ Future<void> _saveActivePresetIds(int profileId, Set<int> ids) async {
 String _activePresetIdsKey(int profileId) =>
     'train.active_presets.profile.$profileId';
 
+String _planDisplayText(String value) {
+  return value
+      .replaceAll(RegExp(r'\bPresets\b'), 'Plans')
+      .replaceAll(RegExp(r'\bPreset\b'), 'Plan')
+      .replaceAll(RegExp(r'\bpresets\b'), 'plans')
+      .replaceAll(RegExp(r'\bpreset\b'), 'plan');
+}
+
 class _ActivePresetsCard extends StatefulWidget {
   final int? profileId;
   final int refreshToken;
@@ -937,14 +946,12 @@ class _ActivePresetsCardState extends State<_ActivePresetsCard> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              title: const Text('Active Presets'),
+              title: const Text('Active Plans'),
               content: SizedBox(
                 width: double.maxFinite,
                 child:
                     rows.isEmpty
-                        ? const Text(
-                          'No presets are available for this profile.',
-                        )
+                        ? const Text('No plans are available for this profile.')
                         : ListView.builder(
                           shrinkWrap: true,
                           itemCount: rows.length,
@@ -958,12 +965,12 @@ class _ActivePresetsCardState extends State<_ActivePresetsCard> {
                               value: draftIds.contains(presetId),
                               title: Text(
                                 name?.isNotEmpty == true
-                                    ? name!
-                                    : 'Preset ${index + 1}',
+                                    ? _planDisplayText(name!)
+                                    : 'Plan ${index + 1}',
                               ),
                               subtitle:
                                   isAutomatic
-                                      ? const Text('Automatic preset')
+                                      ? const Text('Automatic plan')
                                       : null,
                               onChanged: (selected) {
                                 setDialogState(() {
@@ -1022,14 +1029,14 @@ class _ActivePresetsCardState extends State<_ActivePresetsCard> {
                   children: [
                     Expanded(
                       child: Text(
-                        'Active Presets',
+                        'Active Plans',
                         style: theme.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w800,
                         ),
                       ),
                     ),
                     IconButton(
-                      tooltip: 'Edit active presets',
+                      tooltip: 'Edit active plans',
                       onPressed:
                           isLoading ? null : () => _openEditor(selectedIds),
                       icon: const Icon(Icons.edit_outlined),
@@ -1044,14 +1051,14 @@ class _ActivePresetsCardState extends State<_ActivePresetsCard> {
                   )
                 else if (widget.profileId == null)
                   Text(
-                    'Select a gym profile to choose active presets.',
+                    'Select a gym profile to choose active plans.',
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
                   )
                 else if (selectedIds.isEmpty)
                   Text(
-                    'Tap the pen to choose which presets show here.',
+                    'Tap the pen to choose which plans show here.',
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -1064,7 +1071,7 @@ class _ActivePresetsCardState extends State<_ActivePresetsCard> {
                     padding: EdgeInsets.zero,
                     physics: const NeverScrollableScrollPhysics(),
                     emptyMessage:
-                        'Selected presets are no longer available. Tap the pen to update them.',
+                        'Selected plans are no longer available. Tap the pen to update them.',
                     onRefresh: widget.onRefresh,
                   ),
               ],
@@ -1147,7 +1154,7 @@ class _PlansTabState extends State<_PlansTab> {
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
           children: [
             _PresetSectionCard(
-              title: 'Active Presets',
+              title: 'Active Plans',
               child: PresetsLoaded(
                 scale: 0.96,
                 refreshToken: widget.refreshToken,
@@ -1155,44 +1162,36 @@ class _PlansTabState extends State<_PlansTab> {
                 padding: EdgeInsets.zero,
                 physics: const NeverScrollableScrollPhysics(),
                 emptyMessage:
-                    'No active presets yet. Use the Overview pen to choose which presets stay active.',
+                    'No active plans yet. Use the Overview pen to choose which plans stay active.',
                 onRefresh: widget.onRefresh,
               ),
             ),
             const SizedBox(height: 16),
             _PresetSectionCard(
-              title: 'Archived Presets',
+              title: 'Archived Plans',
               child: PresetsLoaded(
                 scale: 0.96,
                 refreshToken: widget.refreshToken,
                 excludedPresetIds: activeIds,
                 padding: EdgeInsets.zero,
                 physics: const NeverScrollableScrollPhysics(),
-                emptyMessage: 'No archived presets.',
+                emptyMessage: 'No archived plans.',
                 onRefresh: widget.onRefresh,
               ),
             ),
             const SizedBox(height: 16),
             _PremadePlansCard(onOpen: _openPremadePlans),
             const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: widget.onGeneratePreset,
-                    icon: const Icon(Icons.auto_awesome),
-                    label: const Text('Generate Custom Presets'),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: widget.onCreatePreset,
-                    icon: const Icon(Icons.add),
-                    label: const Text('Manually Add Preset'),
-                  ),
-                ),
-              ],
+            GenericBar(
+              label: 'Generate Custom Plans',
+              color: Colors.purple,
+              onTap: widget.onGeneratePreset,
+            ),
+            const SizedBox(height: 8),
+            GenericBar(
+              label: 'Manually Add Plan',
+              color: Colors.purple,
+              onTap: widget.onCreatePreset,
             ),
           ],
         );
@@ -1265,7 +1264,7 @@ class _PremadePlansCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              '${premadeTrainingPlans.length} curated routines available to copy into your presets.',
+              '${premadeTrainingPlans.length} curated routines available to copy into your plans.',
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -1346,10 +1345,7 @@ class _SplitWorkoutBar extends StatelessWidget {
                     children: [
                       Positioned.fill(
                         child: InkWell(
-                          onTap:
-                              isStartingOptimized
-                                  ? null
-                                  : onOptimizeWorkout,
+                          onTap: isStartingOptimized ? null : onOptimizeWorkout,
                           child: Padding(
                             padding: const EdgeInsets.only(right: 36),
                             child: Center(
@@ -1360,16 +1356,14 @@ class _SplitWorkoutBar extends StatelessWidget {
                                         height: 18,
                                         child: CircularProgressIndicator(
                                           strokeWidth: 2,
-                                          color:
-                                              colorScheme.onPrimaryContainer,
+                                          color: colorScheme.onPrimaryContainer,
                                         ),
                                       )
                                       : Text(
                                         'Optimize',
                                         textAlign: TextAlign.center,
                                         style: TextStyle(
-                                          color:
-                                              colorScheme.onPrimaryContainer,
+                                          color: colorScheme.onPrimaryContainer,
                                           fontWeight: FontWeight.w800,
                                           fontSize: 14,
                                         ),

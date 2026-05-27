@@ -2166,6 +2166,28 @@ class DatabaseHelper {
     return DefinitionDao.getExerciseDefinitionsDetailedByIds(db, definitionIds);
   }
 
+  Future<List<Map<String, dynamic>>> fetchMostUsedExerciseDefinitionsRaw({
+    int limit = 5,
+  }) async {
+    final db = await database;
+    return db.rawQuery(
+      '''
+      SELECT
+        e.exercise_def_id AS definition_id,
+        COUNT(e.id) AS use_count,
+        MAX(sess.date) AS last_done
+      FROM exercises e
+      INNER JOIN sessions sess ON sess.id = e.session_id
+      WHERE e.type = 'weight'
+        AND e.exercise_def_id IS NOT NULL
+      GROUP BY e.exercise_def_id
+      ORDER BY use_count DESC, last_done DESC
+      LIMIT ?
+      ''',
+      [limit],
+    );
+  }
+
   /// Fetch all exercise definitions (shallow, without join lists).
   Future<List<Map<String, dynamic>>> fetchAllExercisesRaw() async {
     final db = await database;

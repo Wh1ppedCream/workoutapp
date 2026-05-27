@@ -7,6 +7,8 @@ import 'package:provider/provider.dart';
 import '../../models/models.dart';
 import '../../providers/selected_profile.dart';
 import '../../repositories/app_repository.dart';
+import '../../theme/theme_extensions.dart';
+import '../../widgets/body_heatmap.dart';
 import '../../widgets/exercise_detail_sheet.dart';
 
 /// Catalog of exercise definitions with profile-aware equipment filtering.
@@ -359,6 +361,14 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
     );
   }
 
+  void _openExerciseDetails(ExerciseDefinition def) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => ExerciseDetailSheet(definition: def, defId: def.id),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -368,24 +378,42 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TextField(
-              decoration: const InputDecoration(
-                labelText: 'Search Exercises',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
-              ),
-              onChanged: _onSearchChanged,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: TextField(
+                    decoration: const InputDecoration(
+                      labelText: 'Search Exercises',
+                      prefixIcon: Icon(Icons.search),
+                      border: OutlineInputBorder(),
+                    ),
+                    onChanged: _onSearchChanged,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: SizedBox(
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: _openFilterDialog,
+                      child: const FittedBox(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.filter_list),
+                            SizedBox(width: 6),
+                            Text('Filters'),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
-            Align(
-              alignment: Alignment.centerRight,
-              child: ElevatedButton.icon(
-                onPressed: _openFilterDialog,
-                icon: const Icon(Icons.filter_list),
-                label: const Text('Filters'),
-              ),
-            ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
             Expanded(
               child:
                   _isLoading
@@ -396,27 +424,8 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                         itemCount: _displayedDefs.length,
                         itemBuilder: (_, i) {
                           final def = _displayedDefs[i];
-                          return ListTile(
-                            title: Text(
-                              def.name,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.info_outline),
-                              onPressed:
-                                  () => showModalBottomSheet(
-                                    context: context,
-                                    isScrollControlled: true,
-                                    builder:
-                                        (_) => ExerciseDetailSheet(
-                                          definition: def,
-                                          defId: def.id,
-                                        ),
-                                  ),
-                            ),
-                            //the following two lines show equipment names under exercise name if they are uncommented.
-                            //subtitle: Text(def.equipmentList.map((e) => e.name).join(', ')),
+                          return _ExerciseCatalogBar(
+                            definition: def,
                             selected:
                                 widget.onExercisePicked != null &&
                                 _selectedDef == def,
@@ -424,6 +433,7 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                                 widget.onExercisePicked == null
                                     ? null
                                     : () => setState(() => _selectedDef = def),
+                            onHeatmapTap: () => _openExerciseDetails(def),
                           );
                         },
                       ),
@@ -442,6 +452,145 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                 },
               )
               : null,
+    );
+  }
+}
+
+class _ExerciseCatalogBar extends StatelessWidget {
+  final ExerciseDefinition definition;
+  final bool selected;
+  final VoidCallback? onTap;
+  final VoidCallback onHeatmapTap;
+
+  const _ExerciseCatalogBar({
+    required this.definition,
+    required this.selected,
+    required this.onTap,
+    required this.onHeatmapTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final equipmentText = definition.equipmentList
+        .map((equipment) => equipment.name)
+        .where((name) => name.trim().isNotEmpty)
+        .join(', ');
+    final bodyPartUnits = {
+      for (final bodyPart in definition.bodyParts) bodyPart.name: 1.0,
+    };
+    final heatmapFrequencyMap = bodyPartFrequencyMapFromNames(bodyPartUnits);
+
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      margin: const EdgeInsets.only(bottom: 10),
+      color:
+          selected
+              ? colorScheme.primaryContainer.withValues(alpha: 0.45)
+              : null,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: selected ? colorScheme.primary : colorScheme.outlineVariant,
+          width: selected ? 1.5 : 1,
+        ),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      definition.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    if (equipmentText.isNotEmpty) ...[
+                      const SizedBox(height: 3),
+                      Text(
+                        equipmentText,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              _ExerciseInfoHeatmapButton(
+                frequencyMap: heatmapFrequencyMap,
+                fallbackBodyParts: definition.bodyParts,
+                onTap: onHeatmapTap,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ExerciseInfoHeatmapButton extends StatelessWidget {
+  final Map<String, double> frequencyMap;
+  final List<BodyPart> fallbackBodyParts;
+  final VoidCallback onTap;
+
+  const _ExerciseInfoHeatmapButton({
+    required this.frequencyMap,
+    required this.fallbackBodyParts,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = context.colors;
+    final hasHeatmap = frequencyMap.isNotEmpty;
+
+    return Semantics(
+      button: true,
+      label: 'Open exercise information',
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onTap,
+        child: Container(
+          width: 64,
+          height: 64,
+          padding: const EdgeInsets.all(5),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: theme.colorScheme.outlineVariant),
+          ),
+          child:
+              hasHeatmap
+                  ? BodyHeatmap(
+                    frequencyMap: frequencyMap,
+                    lowColor: colors.historySummaryHeatmapLow!,
+                    highColor: colors.historySummaryHeatmapHigh!,
+                    width: 54,
+                    height: 54,
+                  )
+                  : Icon(
+                    fallbackBodyParts.isEmpty
+                        ? Icons.info_outline
+                        : Icons.accessibility_new,
+                    color: theme.colorScheme.primary,
+                  ),
+        ),
+      ),
     );
   }
 }

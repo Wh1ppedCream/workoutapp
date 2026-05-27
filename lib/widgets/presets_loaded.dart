@@ -33,7 +33,7 @@ class PresetsLoaded extends StatefulWidget {
     this.refreshToken = 0,
     this.presetIds,
     this.excludedPresetIds,
-    this.emptyMessage = 'No presets found.',
+    this.emptyMessage = 'No plans found.',
     this.physics,
     this.padding,
     this.shrinkWrap = true,
@@ -222,7 +222,7 @@ class _PresetsLoadedState extends State<PresetsLoaded>
         if (snap.hasError && !snap.hasData) {
           return Padding(
             padding: EdgeInsets.all(16 * widget.scale),
-            child: const Text('Error loading presets'),
+            child: const Text('Error loading plans'),
           );
         }
 

@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import '../models/models.dart';
-import '../screens/exercise/exercise_catalog_page.dart';
-import '../screens/exercise/muscle_filter_page.dart';
 import '../screens/exercise/session_detail_screen.dart';
 import '../widgets/history_summary_widget.dart';
 import '../screens/exercise/analytics_dashboard_screen.dart';
 import '../widgets/past_sessions_list.dart';
 import '../widgets/workout_history_calendar.dart';
-import '../widgets/workout_metric_chart_card.dart';
 
 /// Shared history content used by both Train2Page and HistoryScreen.
 class HistoryContent extends StatefulWidget {
@@ -58,36 +55,6 @@ class _HistoryContentState extends State<HistoryContent> {
     return ListView(
       padding: const EdgeInsets.only(bottom: 24),
       children: [
-        // Filter navigation buttons
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              ElevatedButton(
-                onPressed:
-                    () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const ExerciseCatalogPage(),
-                      ),
-                    ),
-                child: const Text('Exercises'),
-              ),
-              ElevatedButton(
-                onPressed:
-                    () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const MuscleFilterPage(),
-                      ),
-                    ),
-                child: const Text('Muscle'),
-              ),
-            ],
-          ),
-        ),
-
-        WorkoutMetricChartCard(refreshToken: effectiveRefreshToken),
-
         WorkoutHistoryCalendar(
           refreshToken: effectiveRefreshToken,
           onSessionTap: openReportSession,
