@@ -6,6 +6,7 @@ class WorkoutReportSession {
   final int durationSeconds;
   final double totalVolume;
   final int exerciseCount;
+  final int setCount;
 
   const WorkoutReportSession({
     required this.id,
@@ -13,6 +14,7 @@ class WorkoutReportSession {
     required this.durationSeconds,
     required this.totalVolume,
     required this.exerciseCount,
+    this.setCount = 0,
   });
 
   int get durationMinutes => (durationSeconds / 60).ceil();

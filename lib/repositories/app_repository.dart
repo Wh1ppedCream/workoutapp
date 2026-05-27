@@ -81,6 +81,7 @@ class AppRepository {
             durationSeconds: (row['duration'] as num).toInt(),
             totalVolume: ((row['total_volume'] as num?) ?? 0).toDouble(),
             exerciseCount: ((row['exercise_count'] as num?) ?? 0).toInt(),
+            setCount: ((row['set_count'] as num?) ?? 0).toInt(),
           ),
         )
         .toList();

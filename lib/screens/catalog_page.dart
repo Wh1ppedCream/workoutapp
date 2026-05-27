@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/models.dart';
+import '../providers/active_session.dart';
 import '../repositories/app_repository.dart';
 import '../theme/theme_extensions.dart';
 import '../widgets/body_heatmap.dart';
@@ -19,12 +20,36 @@ class CatalogPage extends StatefulWidget {
 
 class _CatalogPageState extends State<CatalogPage> {
   late Future<_CatalogOverviewData> _overviewFuture;
+  _CatalogOverviewData? _lastOverview;
+  int? _seenCompletedSessionVersion;
 
   @override
   void initState() {
     super.initState();
     unawaited(BodyHeatmap.preload());
     _overviewFuture = _loadOverview();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final completedSessionVersion =
+        Provider.of<ActiveSession>(context).completedSessionVersion;
+
+    if (_seenCompletedSessionVersion == null) {
+      _seenCompletedSessionVersion = completedSessionVersion;
+      return;
+    }
+    if (_seenCompletedSessionVersion == completedSessionVersion) return;
+
+    _seenCompletedSessionVersion = completedSessionVersion;
+    _overviewFuture = _loadOverview();
+  }
+
+  Future<void> _refreshOverview() async {
+    final next = _loadOverview();
+    setState(() => _overviewFuture = next);
+    await next;
   }
 
   Future<_CatalogOverviewData> _loadOverview() async {
@@ -109,10 +134,13 @@ class _CatalogPageState extends State<CatalogPage> {
         child: FutureBuilder<_CatalogOverviewData>(
           future: _overviewFuture,
           builder: (context, snapshot) {
-            if (snapshot.connectionState != ConnectionState.done) {
+            final data = snapshot.data ?? _lastOverview;
+
+            if (data == null &&
+                snapshot.connectionState != ConnectionState.done) {
               return const Center(child: CircularProgressIndicator());
             }
-            if (snapshot.hasError) {
+            if (data == null && snapshot.hasError) {
               return Center(
                 child: Padding(
                   padding: const EdgeInsets.all(24),
@@ -121,25 +149,34 @@ class _CatalogPageState extends State<CatalogPage> {
               );
             }
 
-            final data = snapshot.data!;
+            if (snapshot.connectionState == ConnectionState.done &&
+                snapshot.hasData) {
+              _lastOverview = snapshot.data;
+            }
+            final overview = data;
+            if (overview == null) {
+              return const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Text('No catalog data available yet.'),
+                ),
+              );
+            }
+
             return RefreshIndicator(
-              onRefresh: () async {
-                final next = _loadOverview();
-                setState(() => _overviewFuture = next);
-                await next;
-              },
+              onRefresh: _refreshOverview,
               child: ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
                 children: [
                   _ExerciseCatalogCard(
-                    exercises: data.exercises,
+                    exercises: overview.exercises,
                     onTap: _openExerciseCatalog,
                   ),
                   const SizedBox(height: 16),
                   _FocusLibraryCard(
-                    muscles: data.muscles,
-                    bodyParts: data.bodyParts,
+                    muscles: overview.muscles,
+                    bodyParts: overview.bodyParts,
                     onMusclesTap: () => _openFocusLibrary(1),
                     onBodyPartsTap: () => _openFocusLibrary(0),
                   ),

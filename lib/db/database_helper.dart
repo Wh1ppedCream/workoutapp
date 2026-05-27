@@ -1693,6 +1693,7 @@ class DatabaseHelper {
         sess.date AS date,
         sess.duration AS duration,
         COUNT(DISTINCT e.id) AS exercise_count,
+        COUNT(st.id) AS set_count,
         COALESCE(SUM(
           CASE
             WHEN e.type = 'weight' THEN st.weight * st.reps
