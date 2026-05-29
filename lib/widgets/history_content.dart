@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/models.dart';
+import '../screens/exercise/full_history_screen.dart';
 import '../screens/exercise/session_detail_screen.dart';
 import '../widgets/history_summary_widget.dart';
-import '../screens/exercise/analytics_dashboard_screen.dart';
 import '../widgets/past_sessions_list.dart';
 import '../widgets/workout_history_calendar.dart';
 
@@ -52,31 +52,23 @@ class _HistoryContentState extends State<HistoryContent> {
           .then((_) => _handleReload());
     }
 
+    void openFullHistory() {
+      Navigator.of(context)
+          .push(MaterialPageRoute(builder: (_) => const FullHistoryScreen()))
+          .then((_) => _handleReload());
+    }
+
     return ListView(
       padding: const EdgeInsets.only(bottom: 24),
       children: [
         WorkoutHistoryCalendar(
           refreshToken: effectiveRefreshToken,
           onSessionTap: openReportSession,
+          onOpenFullHistory: openFullHistory,
         ),
 
         // 7-day summary panel
         HistorySummaryWidget(refreshToken: effectiveRefreshToken),
-
-        // Analytics dashboard button
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: ElevatedButton.icon(
-            icon: const Icon(Icons.analytics),
-            label: const Text('View 7-Day Analytics'),
-            onPressed:
-                () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const AnalyticsDashboardScreen(),
-                  ),
-                ),
-          ),
-        ),
 
         // Past sessions list
         PastSessionsList(
