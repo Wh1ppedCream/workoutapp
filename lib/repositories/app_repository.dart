@@ -120,6 +120,14 @@ class AppRepository {
     limit: limit,
   );
 
+  Future<List<Map<String, dynamic>>> fetchExerciseOneRmTrendRows({
+    required int definitionId,
+    int limit = 60,
+  }) => _dbHelper.fetchExerciseOneRmTrendRows(
+    definitionId: definitionId,
+    limit: limit,
+  );
+
   /// Deletes all exercises (and related details) in a session.
   Future<void> deleteExercises(int sid) => _dbHelper.deleteExercises(sid);
 

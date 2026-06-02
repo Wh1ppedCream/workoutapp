@@ -1798,6 +1798,44 @@ class DatabaseHelper {
     );
   }
 
+  Future<List<Map<String, dynamic>>> fetchExerciseOneRmTrendRows({
+    required int definitionId,
+    int limit = 60,
+  }) async {
+    if (limit <= 0) return const <Map<String, dynamic>>[];
+
+    final db = await database;
+    return db.rawQuery(
+      '''
+      SELECT *
+      FROM (
+        SELECT
+          sess.id AS session_id,
+          sess.date AS session_date,
+          MAX(CASE WHEN st.reps = 1 THEN st.weight ELSE NULL END)
+            AS actual_one_rm,
+          MAX(
+            CASE
+              WHEN st.reps <= 1 THEN st.weight
+              ELSE st.weight * (1 + 0.0333 * st.reps)
+            END
+          ) AS estimated_one_rm
+        FROM sets st
+        INNER JOIN exercises e ON e.id = st.exercise_id
+        INNER JOIN sessions sess ON sess.id = e.session_id
+        WHERE e.type = 'weight'
+          AND e.exercise_def_id = ?
+          AND st.parent_set_id IS NULL
+        GROUP BY sess.id
+        ORDER BY sess.date DESC
+        LIMIT ?
+      )
+      ORDER BY session_date ASC
+      ''',
+      [definitionId, limit],
+    );
+  }
+
   Future<void> deleteExercises(int sessionId) async {
     final db = await database;
     await ExerciseDao.deleteExercisesForSession(db, sessionId);

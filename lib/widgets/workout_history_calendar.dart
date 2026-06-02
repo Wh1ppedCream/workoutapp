@@ -1,11 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../models/models.dart';
 import '../repositories/app_repository.dart';
 import '../theme/theme_extensions.dart';
+import 'body_heatmap.dart';
 
-enum _CalendarRangeMode { week, month, twoMonth, year }
+enum _CalendarRangeMode { month, threeMonth, year, fourYear }
 
 class WorkoutHistoryCalendar extends StatefulWidget {
   final int refreshToken;
@@ -31,13 +34,16 @@ class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
   List<WorkoutReportSession>? _groupedSessionsSource;
   Map<DateTime, List<WorkoutReportSession>> _sessionsByDayCache =
       const <DateTime, List<WorkoutReportSession>>{};
+  final Map<String, Future<Map<BodyPart, double>>> _heatmapFutures = {};
   int _maxSessionsPerDayCache = 0;
   _CalendarRangeMode _mode = _CalendarRangeMode.month;
   late DateTime _visibleMonth;
   late DateTime _selectedDay;
+  late DateTime _visibleThreeMonthEnd;
   late DateTime _selectedWeekStart;
   late DateTime _selectedMonth;
   late int _visibleYear;
+  late int _selectedYear;
 
   @override
   void initState() {
@@ -45,9 +51,12 @@ class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
     final now = DateUtils.dateOnly(DateTime.now());
     _visibleMonth = DateTime(now.year, now.month);
     _selectedDay = now;
-    _selectedWeekStart = _startOfCalendarWeek(now);
+    _visibleThreeMonthEnd = DateTime(now.year, now.month);
+    _selectedWeekStart = _startOfMonthWeek(now);
     _selectedMonth = DateTime(now.year, now.month);
     _visibleYear = now.year;
+    _selectedYear = now.year;
+    unawaited(BodyHeatmap.preload());
     _sessionsFuture = _repo.fetchWorkoutReportSessions();
   }
 
@@ -56,6 +65,7 @@ class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.refreshToken != widget.refreshToken) {
       setState(() {
+        _heatmapFutures.clear();
         _sessionsFuture = _repo.fetchWorkoutReportSessions();
       });
     }
@@ -97,6 +107,7 @@ class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
         _refreshGroupedSessions(sessions);
         final sessionsByDay = _sessionsByDayCache;
         final selectedSessions = _selectedPeriodSessions(sessions);
+        final selectedRange = _selectedPeriodRange();
         final maxSessionsPerDay = _maxSessionsPerDayCache;
 
         return Card(
@@ -114,10 +125,12 @@ class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
                 _CalendarModeBody(
                   mode: _mode,
                   visibleMonth: _visibleMonth,
+                  visibleThreeMonthEnd: _visibleThreeMonthEnd,
                   selectedDay: _selectedDay,
                   selectedWeekStart: _selectedWeekStart,
                   selectedMonth: _selectedMonth,
                   visibleYear: _visibleYear,
+                  selectedYear: _selectedYear,
                   sessionsByDay: sessionsByDay,
                   maxSessionsPerDay: maxSessionsPerDay,
                   onPreviousMonth:
@@ -128,6 +141,22 @@ class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
                       () => _showMonth(
                         DateTime(_visibleMonth.year, _visibleMonth.month + 1),
                       ),
+                  onPreviousThreeMonths:
+                      () => _showThreeMonthBlock(
+                        DateTime(
+                          _visibleThreeMonthEnd.year,
+                          _visibleThreeMonthEnd.month - 3,
+                        ),
+                      ),
+                  onNextThreeMonths:
+                      () => _showThreeMonthBlock(
+                        DateTime(
+                          _visibleThreeMonthEnd.year,
+                          _visibleThreeMonthEnd.month + 3,
+                        ),
+                      ),
+                  onPreviousYear: () => _showYear(_visibleYear - 1),
+                  onNextYear: () => _showYear(_visibleYear + 1),
                   onSelectDay: (day) => setState(() => _selectedDay = day),
                   onSelectWeek:
                       (weekStart) =>
@@ -137,6 +166,16 @@ class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
                         _selectedMonth = month;
                         _visibleYear = month.year;
                       }),
+                  onSelectYear:
+                      (year) => setState(() => _selectedYear = year),
+                ),
+                const SizedBox(height: 14),
+                _SelectedPeriodHeatmapSummary(
+                  sessions: selectedSessions,
+                  heatmapFuture: _heatmapFutureFor(
+                    selectedRange,
+                    hasSessions: selectedSessions.isNotEmpty,
+                  ),
                 ),
                 const SizedBox(height: 14),
                 _SelectedPeriodSummary(
@@ -154,6 +193,47 @@ class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
     );
   }
 
+  _DateRange _selectedPeriodRange() {
+    switch (_mode) {
+      case _CalendarRangeMode.month:
+        return _DateRange(
+          start: _selectedDay,
+          endExclusive: _selectedDay.add(const Duration(days: 1)),
+        );
+      case _CalendarRangeMode.threeMonth:
+        return _DateRange(
+          start: _selectedWeekStart,
+          endExclusive: _monthWeekEndExclusive(_selectedWeekStart),
+        );
+      case _CalendarRangeMode.year:
+        return _DateRange(
+          start: _selectedMonth,
+          endExclusive: DateTime(_selectedMonth.year, _selectedMonth.month + 1),
+        );
+      case _CalendarRangeMode.fourYear:
+        return _DateRange(
+          start: DateTime(_selectedYear),
+          endExclusive: DateTime(_selectedYear + 1),
+        );
+    }
+  }
+
+  Future<Map<BodyPart, double>> _heatmapFutureFor(
+    _DateRange range, {
+    required bool hasSessions,
+  }) {
+    if (!hasSessions) {
+      return Future<Map<BodyPart, double>>.value(const <BodyPart, double>{});
+    }
+    return _heatmapFutures.putIfAbsent(
+      range.cacheKey,
+      () => _repo.fetchAllBodyPartSetsOverTimeRange(
+        start: range.start,
+        end: range.endInclusive,
+      ),
+    );
+  }
+
   void _selectMode(_CalendarRangeMode mode) {
     if (_mode == mode) return;
 
@@ -161,18 +241,19 @@ class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
     setState(() {
       _mode = mode;
       switch (mode) {
-        case _CalendarRangeMode.week:
-          _selectedDay = today;
-          break;
         case _CalendarRangeMode.month:
           _visibleMonth = DateTime(_selectedDay.year, _selectedDay.month);
           break;
-        case _CalendarRangeMode.twoMonth:
+        case _CalendarRangeMode.threeMonth:
+          _visibleThreeMonthEnd = DateTime(today.year, today.month);
           _selectedWeekStart = _startOfMonthWeek(today);
           break;
         case _CalendarRangeMode.year:
           _selectedMonth = DateTime(today.year, today.month);
           _visibleYear = today.year;
+          break;
+        case _CalendarRangeMode.fourYear:
+          _selectedYear = today.year;
           break;
       }
     });
@@ -181,32 +262,15 @@ class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
   List<WorkoutReportSession> _selectedPeriodSessions(
     List<WorkoutReportSession> sessions,
   ) {
-    switch (_mode) {
-      case _CalendarRangeMode.week:
-      case _CalendarRangeMode.month:
-        return _sessionsByDayCache[_selectedDay] ??
-            const <WorkoutReportSession>[];
-      case _CalendarRangeMode.twoMonth:
-        return _sessionsInRange(
-          sessions,
-          _selectedWeekStart,
-          _monthWeekEndExclusive(_selectedWeekStart),
-        );
-      case _CalendarRangeMode.year:
-        return _sessionsInRange(
-          sessions,
-          _selectedMonth,
-          DateTime(_selectedMonth.year, _selectedMonth.month + 1),
-        );
-    }
+    final range = _selectedPeriodRange();
+    return _sessionsInRange(sessions, range.start, range.endExclusive);
   }
 
   String _selectedPeriodTitle() {
     switch (_mode) {
-      case _CalendarRangeMode.week:
       case _CalendarRangeMode.month:
         return DateFormat('EEE, MMM d').format(_selectedDay);
-      case _CalendarRangeMode.twoMonth:
+      case _CalendarRangeMode.threeMonth:
         final end =
             _monthWeekEndExclusive(
               _selectedWeekStart,
@@ -214,6 +278,8 @@ class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
         return _formatDateRange(_selectedWeekStart, end);
       case _CalendarRangeMode.year:
         return DateFormat('MMMM yyyy').format(_selectedMonth);
+      case _CalendarRangeMode.fourYear:
+        return _selectedYear.toString();
     }
   }
 
@@ -249,6 +315,46 @@ class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
     });
   }
 
+  void _showThreeMonthBlock(DateTime endMonth) {
+    final normalizedEnd = DateTime(endMonth.year, endMonth.month);
+    final oldStart = DateTime(
+      _visibleThreeMonthEnd.year,
+      _visibleThreeMonthEnd.month - 2,
+    );
+    final selectedMonth = DateTime(
+      _selectedWeekStart.year,
+      _selectedWeekStart.month,
+    );
+    final selectedMonthOffset =
+        ((selectedMonth.year - oldStart.year) * 12 +
+                selectedMonth.month -
+                oldStart.month)
+            .clamp(0, 2)
+            .toInt();
+    final selectedWeekIndex =
+        ((_selectedWeekStart.day - 1) ~/ 7).clamp(0, 3).toInt();
+    final newSelectedMonth = DateTime(
+      normalizedEnd.year,
+      normalizedEnd.month - 2 + selectedMonthOffset,
+    );
+
+    setState(() {
+      _visibleThreeMonthEnd = normalizedEnd;
+      _selectedWeekStart = DateTime(
+        newSelectedMonth.year,
+        newSelectedMonth.month,
+        1 + selectedWeekIndex * 7,
+      );
+    });
+  }
+
+  void _showYear(int year) {
+    setState(() {
+      _visibleYear = year;
+      _selectedMonth = DateTime(year, _selectedMonth.month);
+    });
+  }
+
   Map<DateTime, List<WorkoutReportSession>> _groupSessionsByDay(
     List<WorkoutReportSession> sessions,
   ) {
@@ -276,9 +382,17 @@ class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
   }
 }
 
-DateTime _startOfCalendarWeek(DateTime day) {
-  final date = DateUtils.dateOnly(day);
-  return date.subtract(Duration(days: date.weekday % DateTime.daysPerWeek));
+class _DateRange {
+  final DateTime start;
+  final DateTime endExclusive;
+
+  const _DateRange({required this.start, required this.endExclusive});
+
+  DateTime get endInclusive =>
+      endExclusive.subtract(const Duration(microseconds: 1));
+
+  String get cacheKey =>
+      '${start.toIso8601String()}|${endExclusive.toIso8601String()}';
 }
 
 DateTime _startOfMonthWeek(DateTime day) {
@@ -307,6 +421,16 @@ String _formatDateRange(DateTime start, DateTime end) {
       start.year == end.year ? DateFormat('MMM d') : DateFormat('MMM d, yyyy');
   final endFormat = DateFormat('MMM d, yyyy');
   return '${startFormat.format(start)} - ${endFormat.format(end)}';
+}
+
+String _formatMonthRangeTitle(DateTime startMonth, DateTime endMonth) {
+  final startFormat =
+      startMonth.year == endMonth.year
+          ? DateFormat.MMM()
+          : DateFormat('MMM yyyy');
+  return '${startFormat.format(startMonth)} - '
+          '${DateFormat('MMM yyyy').format(endMonth)}'
+      .toUpperCase();
 }
 
 int _sessionCountInRange(
@@ -342,10 +466,10 @@ class _CalendarModeTabs extends StatelessWidget {
       ),
       child: Row(
         children: [
-          _buildButton(context, _CalendarRangeMode.week, 'W'),
           _buildButton(context, _CalendarRangeMode.month, 'M'),
-          _buildButton(context, _CalendarRangeMode.twoMonth, '2M'),
-          _buildButton(context, _CalendarRangeMode.year, 'Year'),
+          _buildButton(context, _CalendarRangeMode.threeMonth, '3M'),
+          _buildButton(context, _CalendarRangeMode.year, 'Y'),
+          _buildButton(context, _CalendarRangeMode.fourYear, '4Y'),
         ],
       ),
     );
@@ -388,51 +512,61 @@ class _CalendarModeTabs extends StatelessWidget {
 class _CalendarModeBody extends StatelessWidget {
   final _CalendarRangeMode mode;
   final DateTime visibleMonth;
+  final DateTime visibleThreeMonthEnd;
   final DateTime selectedDay;
   final DateTime selectedWeekStart;
   final DateTime selectedMonth;
   final int visibleYear;
+  final int selectedYear;
   final Map<DateTime, List<WorkoutReportSession>> sessionsByDay;
   final int maxSessionsPerDay;
   final VoidCallback onPreviousMonth;
   final VoidCallback onNextMonth;
+  final VoidCallback onPreviousThreeMonths;
+  final VoidCallback onNextThreeMonths;
+  final VoidCallback onPreviousYear;
+  final VoidCallback onNextYear;
   final ValueChanged<DateTime> onSelectDay;
   final ValueChanged<DateTime> onSelectWeek;
   final ValueChanged<DateTime> onSelectMonth;
+  final ValueChanged<int> onSelectYear;
 
   const _CalendarModeBody({
     required this.mode,
     required this.visibleMonth,
+    required this.visibleThreeMonthEnd,
     required this.selectedDay,
     required this.selectedWeekStart,
     required this.selectedMonth,
     required this.visibleYear,
+    required this.selectedYear,
     required this.sessionsByDay,
     required this.maxSessionsPerDay,
     required this.onPreviousMonth,
     required this.onNextMonth,
+    required this.onPreviousThreeMonths,
+    required this.onNextThreeMonths,
+    required this.onPreviousYear,
+    required this.onNextYear,
     required this.onSelectDay,
     required this.onSelectWeek,
     required this.onSelectMonth,
+    required this.onSelectYear,
   });
 
   @override
   Widget build(BuildContext context) {
     switch (mode) {
-      case _CalendarRangeMode.week:
-        return _WeekCalendarStrip(
-          selectedDay: selectedDay,
-          sessionsByDay: sessionsByDay,
-          maxSessionsPerDay: maxSessionsPerDay,
-          onSelectDay: onSelectDay,
-        );
       case _CalendarRangeMode.month:
         return Column(
           children: [
             _CalendarHeader(
-              visibleMonth: visibleMonth,
+              title:
+                  DateFormat('MMMM yyyy').format(visibleMonth).toUpperCase(),
               onPrevious: onPreviousMonth,
               onNext: onNextMonth,
+              previousTooltip: 'Previous month',
+              nextTooltip: 'Next month',
             ),
             const SizedBox(height: 14),
             const _WeekdayRow(),
@@ -446,10 +580,13 @@ class _CalendarModeBody extends StatelessWidget {
             ),
           ],
         );
-      case _CalendarRangeMode.twoMonth:
-        return _TwoMonthWeekSelector(
+      case _CalendarRangeMode.threeMonth:
+        return _ThreeMonthWeekSelector(
+          visibleEndMonth: visibleThreeMonthEnd,
           selectedWeekStart: selectedWeekStart,
           sessionsByDay: sessionsByDay,
+          onPrevious: onPreviousThreeMonths,
+          onNext: onNextThreeMonths,
           onSelectWeek: onSelectWeek,
         );
       case _CalendarRangeMode.year:
@@ -457,76 +594,43 @@ class _CalendarModeBody extends StatelessWidget {
           visibleYear: visibleYear,
           selectedMonth: selectedMonth,
           sessionsByDay: sessionsByDay,
+          onPrevious: onPreviousYear,
+          onNext: onNextYear,
           onSelectMonth: onSelectMonth,
+        );
+      case _CalendarRangeMode.fourYear:
+        return _FourYearSelector(
+          selectedYear: selectedYear,
+          sessionsByDay: sessionsByDay,
+          onSelectYear: onSelectYear,
         );
     }
   }
 }
 
-class _WeekCalendarStrip extends StatelessWidget {
-  final DateTime selectedDay;
-  final Map<DateTime, List<WorkoutReportSession>> sessionsByDay;
-  final int maxSessionsPerDay;
-  final ValueChanged<DateTime> onSelectDay;
-
-  const _WeekCalendarStrip({
-    required this.selectedDay,
-    required this.sessionsByDay,
-    required this.maxSessionsPerDay,
-    required this.onSelectDay,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final today = DateUtils.dateOnly(DateTime.now());
-    final days = List.generate(
-      7,
-      (index) => today.subtract(Duration(days: 6 - index)),
-    );
-
-    return Row(
-      children:
-          days
-              .map(
-                (day) => Expanded(
-                  child: Center(
-                    child: SizedBox.square(
-                      dimension: 44,
-                      child: _CalendarDayButton(
-                        day: day,
-                        isCurrentMonth: true,
-                        isSelected: DateUtils.isSameDay(day, selectedDay),
-                        sessionCount: sessionsByDay[day]?.length ?? 0,
-                        maxSessionsPerDay: maxSessionsPerDay,
-                        onTap: () => onSelectDay(day),
-                      ),
-                    ),
-                  ),
-                ),
-              )
-              .toList(),
-    );
-  }
-}
-
-class _TwoMonthWeekSelector extends StatelessWidget {
+class _ThreeMonthWeekSelector extends StatelessWidget {
+  final DateTime visibleEndMonth;
   final DateTime selectedWeekStart;
   final Map<DateTime, List<WorkoutReportSession>> sessionsByDay;
+  final VoidCallback onPrevious;
+  final VoidCallback onNext;
   final ValueChanged<DateTime> onSelectWeek;
 
-  const _TwoMonthWeekSelector({
+  const _ThreeMonthWeekSelector({
+    required this.visibleEndMonth,
     required this.selectedWeekStart,
     required this.sessionsByDay,
+    required this.onPrevious,
+    required this.onNext,
     required this.onSelectWeek,
   });
 
   @override
   Widget build(BuildContext context) {
-    final today = DateUtils.dateOnly(DateTime.now());
-    final currentMonth = DateTime(today.year, today.month);
     final months = [
-      DateTime(currentMonth.year, currentMonth.month - 1),
-      currentMonth,
+      DateTime(visibleEndMonth.year, visibleEndMonth.month - 2),
+      DateTime(visibleEndMonth.year, visibleEndMonth.month - 1),
+      visibleEndMonth,
     ];
     final maxWeekSessions = months.fold<int>(0, (currentMax, month) {
       final monthMax = List.generate(4, (index) {
@@ -540,21 +644,42 @@ class _TwoMonthWeekSelector extends StatelessWidget {
       return monthMax > currentMax ? monthMax : currentMax;
     });
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Column(
       children: [
-        for (var index = 0; index < months.length; index++) ...[
-          if (index > 0) const SizedBox(width: 12),
-          Expanded(
-            child: _MonthWeekPanel(
-              month: months[index],
-              selectedWeekStart: selectedWeekStart,
-              sessionsByDay: sessionsByDay,
-              maxWeekSessions: maxWeekSessions,
-              onSelectWeek: onSelectWeek,
-            ),
-          ),
-        ],
+        _CalendarHeader(
+          title: _formatMonthRangeTitle(months.first, visibleEndMonth),
+          onPrevious: onPrevious,
+          onNext: onNext,
+          previousTooltip: 'Previous 3 months',
+          nextTooltip: 'Next 3 months',
+        ),
+        const SizedBox(height: 12),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (var index = 0; index < months.length; index++) ...[
+              if (index > 0) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Container(
+                    width: 1,
+                    height: 132,
+                    color: context.cs.outlineVariant.withValues(alpha: 0.22),
+                  ),
+                ),
+              ],
+              Expanded(
+                child: _MonthWeekPanel(
+                  month: months[index],
+                  selectedWeekStart: selectedWeekStart,
+                  sessionsByDay: sessionsByDay,
+                  maxWeekSessions: maxWeekSessions,
+                  onSelectWeek: onSelectWeek,
+                ),
+              ),
+            ],
+          ],
+        ),
       ],
     );
   }
@@ -583,19 +708,19 @@ class _MonthWeekPanel extends StatelessWidget {
           DateFormat.MMMM().format(month),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.w900,
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 8),
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: 4,
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
-            mainAxisSpacing: 8,
-            crossAxisSpacing: 8,
+            mainAxisSpacing: 6,
+            crossAxisSpacing: 6,
           ),
           itemBuilder: (context, index) {
             final weekStart = DateTime(month.year, month.month, 1 + index * 7);
@@ -611,6 +736,7 @@ class _MonthWeekPanel extends StatelessWidget {
               isSelected: DateUtils.isSameDay(weekStart, selectedWeekStart),
               sessionCount: sessionCount,
               maxSessionCount: maxWeekSessions,
+              compact: true,
               onTap: () => onSelectWeek(weekStart),
             );
           },
@@ -624,12 +750,16 @@ class _YearMonthSelector extends StatelessWidget {
   final int visibleYear;
   final DateTime selectedMonth;
   final Map<DateTime, List<WorkoutReportSession>> sessionsByDay;
+  final VoidCallback onPrevious;
+  final VoidCallback onNext;
   final ValueChanged<DateTime> onSelectMonth;
 
   const _YearMonthSelector({
     required this.visibleYear,
     required this.selectedMonth,
     required this.sessionsByDay,
+    required this.onPrevious,
+    required this.onNext,
     required this.onSelectMonth,
   });
 
@@ -650,12 +780,12 @@ class _YearMonthSelector extends StatelessWidget {
 
     return Column(
       children: [
-        Text(
-          visibleYear.toString(),
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w900,
-            letterSpacing: 0.5,
-          ),
+        _CalendarHeader(
+          title: visibleYear.toString(),
+          onPrevious: onPrevious,
+          onNext: onNext,
+          previousTooltip: 'Previous year',
+          nextTooltip: 'Next year',
         ),
         const SizedBox(height: 12),
         GridView.builder(
@@ -691,12 +821,67 @@ class _YearMonthSelector extends StatelessWidget {
   }
 }
 
+class _FourYearSelector extends StatelessWidget {
+  final int selectedYear;
+  final Map<DateTime, List<WorkoutReportSession>> sessionsByDay;
+  final ValueChanged<int> onSelectYear;
+
+  const _FourYearSelector({
+    required this.selectedYear,
+    required this.sessionsByDay,
+    required this.onSelectYear,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final currentYear = DateTime.now().year;
+    final years = List.generate(4, (index) => currentYear - 3 + index);
+    final maxYearSessions = years.fold<int>(0, (max, year) {
+      final count = _sessionCountInRange(
+        sessionsByDay,
+        DateTime(year),
+        DateTime(year + 1),
+      );
+      return count > max ? count : max;
+    });
+
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: years.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 4,
+        mainAxisSpacing: 8,
+        crossAxisSpacing: 8,
+      ),
+      itemBuilder: (context, index) {
+        final year = years[index];
+        final sessionCount = _sessionCountInRange(
+          sessionsByDay,
+          DateTime(year),
+          DateTime(year + 1),
+        );
+        return _PeriodCircleButton(
+          label: year.toString(),
+          semanticLabel: year.toString(),
+          isSelected: year == selectedYear,
+          sessionCount: sessionCount,
+          maxSessionCount: maxYearSessions,
+          compact: true,
+          onTap: () => onSelectYear(year),
+        );
+      },
+    );
+  }
+}
+
 class _PeriodCircleButton extends StatelessWidget {
   final String label;
   final String semanticLabel;
   final bool isSelected;
   final int sessionCount;
   final int maxSessionCount;
+  final bool compact;
   final VoidCallback onTap;
 
   const _PeriodCircleButton({
@@ -705,6 +890,7 @@ class _PeriodCircleButton extends StatelessWidget {
     required this.isSelected,
     required this.sessionCount,
     required this.maxSessionCount,
+    this.compact = false,
     required this.onTap,
   });
 
@@ -730,46 +916,39 @@ class _PeriodCircleButton extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(999),
         onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(color: backgroundColor, shape: BoxShape.circle),
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Text(
+        child: Stack(
+          fit: StackFit.expand,
+          clipBehavior: Clip.none,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: backgroundColor,
+                shape: BoxShape.circle,
+              ),
+              child: Text(
                 label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: foregroundColor,
-                  fontWeight: FontWeight.w900,
-                ),
+                style:
+                    (compact
+                            ? Theme.of(context).textTheme.labelLarge
+                            : Theme.of(context).textTheme.titleSmall)
+                        ?.copyWith(
+                          color: foregroundColor,
+                          fontWeight: FontWeight.w900,
+                        ),
               ),
-              if (sessionCount > 1)
-                Positioned(
-                  right: 7,
-                  bottom: 6,
-                  child: Container(
-                    width: 16,
-                    height: 16,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: isSelected ? cs.onPrimary : cs.primary,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Text(
-                      sessionCount.toString(),
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: isSelected ? cs.primary : cs.onPrimary,
-                        fontSize: 9,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
+            ),
+            if (sessionCount > 1)
+              _WorkoutCountBadge(
+                count: sessionCount,
+                compact: compact,
+                foregroundColor: isSelected ? cs.primary : cs.onPrimary,
+                backgroundColor: isSelected ? cs.onPrimary : cs.primary,
+              ),
+          ],
         ),
       ),
     );
@@ -777,29 +956,32 @@ class _PeriodCircleButton extends StatelessWidget {
 }
 
 class _CalendarHeader extends StatelessWidget {
-  final DateTime visibleMonth;
+  final String title;
   final VoidCallback onPrevious;
   final VoidCallback onNext;
+  final String previousTooltip;
+  final String nextTooltip;
 
   const _CalendarHeader({
-    required this.visibleMonth,
+    required this.title,
     required this.onPrevious,
     required this.onNext,
+    required this.previousTooltip,
+    required this.nextTooltip,
   });
 
   @override
   Widget build(BuildContext context) {
-    final monthText = DateFormat('MMMM yyyy').format(visibleMonth);
     return Row(
       children: [
         IconButton(
           onPressed: onPrevious,
           icon: const Icon(Icons.chevron_left),
-          tooltip: 'Previous month',
+          tooltip: previousTooltip,
         ),
         Expanded(
           child: Text(
-            monthText.toUpperCase(),
+            title,
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -812,7 +994,7 @@ class _CalendarHeader extends StatelessWidget {
         IconButton(
           onPressed: onNext,
           icon: const Icon(Icons.chevron_right),
-          tooltip: 'Next month',
+          tooltip: nextTooltip,
         ),
       ],
     );
@@ -943,52 +1125,248 @@ class _CalendarDayButton extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(999),
         onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: backgroundColor,
-            shape: BoxShape.circle,
-            border:
-                DateUtils.isSameDay(day, DateTime.now()) && !isSelected
-                    ? Border.all(color: cs.primary, width: 1.4)
-                    : null,
-          ),
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Text(
+        child: Stack(
+          fit: StackFit.expand,
+          clipBehavior: Clip.none,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: backgroundColor,
+                shape: BoxShape.circle,
+                border:
+                    DateUtils.isSameDay(day, DateTime.now()) && !isSelected
+                        ? Border.all(color: cs.primary, width: 1.4)
+                        : null,
+              ),
+              child: Text(
                 day.day.toString(),
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   color: foregroundColor,
                   fontWeight: FontWeight.w900,
                 ),
               ),
-              if (sessionCount > 1)
-                Positioned(
-                  right: 7,
-                  bottom: 6,
-                  child: Container(
-                    width: 16,
-                    height: 16,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: isSelected ? cs.onPrimary : cs.primary,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Text(
-                      sessionCount.toString(),
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: isSelected ? cs.primary : cs.onPrimary,
-                        fontSize: 9,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                  ),
-                ),
-            ],
+            ),
+            if (sessionCount > 1)
+              _WorkoutCountBadge(
+                count: sessionCount,
+                foregroundColor: isSelected ? cs.primary : cs.onPrimary,
+                backgroundColor: isSelected ? cs.onPrimary : cs.primary,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _WorkoutCountBadge extends StatelessWidget {
+  final int count;
+  final bool compact;
+  final Color foregroundColor;
+  final Color backgroundColor;
+
+  const _WorkoutCountBadge({
+    required this.count,
+    this.compact = false,
+    required this.foregroundColor,
+    required this.backgroundColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final size = compact ? 15.0 : 17.0;
+    return Positioned(
+      top: compact ? -1 : -2,
+      right: compact ? -1 : -2,
+      child: Container(
+        width: size,
+        height: size,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(color: backgroundColor, shape: BoxShape.circle),
+        child: Text(
+          count.toString(),
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            color: foregroundColor,
+            fontSize: compact ? 8 : 9,
+            height: 1,
+            fontWeight: FontWeight.w900,
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _SelectedPeriodHeatmapSummary extends StatelessWidget {
+  final List<WorkoutReportSession> sessions;
+  final Future<Map<BodyPart, double>> heatmapFuture;
+
+  const _SelectedPeriodHeatmapSummary({
+    required this.sessions,
+    required this.heatmapFuture,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final workoutCount = sessions.length;
+    final totalDurationSeconds = sessions.fold<int>(
+      0,
+      (sum, session) => sum + session.durationSeconds,
+    );
+    final totalVolume = sessions.fold<double>(
+      0,
+      (sum, session) => sum + session.totalVolume,
+    );
+
+    return FutureBuilder<Map<BodyPart, double>>(
+      future: heatmapFuture,
+      builder: (context, snapshot) {
+        final heatmap = snapshot.data ?? const <BodyPart, double>{};
+        final frequencyMap = bodyPartFrequencyMapFromNames({
+          for (final entry in heatmap.entries) entry.key.name: entry.value,
+        });
+
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final colors = context.colors;
+            final maxWidth = constraints.maxWidth;
+            final gap = maxWidth < 330 ? 10.0 : 16.0;
+            final heatmapBox =
+                (maxWidth * 0.57).clamp(138.0, 250.0).toDouble();
+            final heatmapSize = heatmapBox.clamp(128.0, 200.0).toDouble();
+            final summaryHeight = heatmapBox.clamp(210.0, 250.0).toDouble();
+            final compactMetrics = summaryHeight < 230 || maxWidth < 360;
+            final metricGap = compactMetrics ? 8.0 : 12.0;
+
+            return SizedBox(
+              height: summaryHeight,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    width: heatmapBox,
+                    height: heatmapBox,
+                    child: Center(
+                      child:
+                          snapshot.connectionState == ConnectionState.waiting
+                              ? SizedBox(
+                                width: 28,
+                                height: 28,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  color: colors.historySummaryHeatmapHigh!,
+                                ),
+                              )
+                              : BodyHeatmap(
+                                frequencyMap: frequencyMap,
+                                lowColor: colors.historySummaryHeatmapLow!,
+                                highColor: colors.historySummaryHeatmapHigh!,
+                                width: heatmapSize,
+                                height: heatmapSize,
+                              ),
+                    ),
+                  ),
+                  SizedBox(width: gap),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(
+                          child: _CalendarMetricCard(
+                            value: workoutCount.toString(),
+                            label: 'Workouts',
+                            compact: compactMetrics,
+                          ),
+                        ),
+                        SizedBox(height: metricGap),
+                        Expanded(
+                          child: _CalendarMetricCard(
+                            value: _durationLabel(totalDurationSeconds),
+                            label: 'Total Time',
+                            compact: compactMetrics,
+                          ),
+                        ),
+                        SizedBox(height: metricGap),
+                        Expanded(
+                          child: _CalendarMetricCard(
+                            value: _formatMetricVolume(totalVolume),
+                            label: 'Total Volume',
+                            compact: compactMetrics,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class _CalendarMetricCard extends StatelessWidget {
+  final String value;
+  final String label;
+  final bool compact;
+
+  const _CalendarMetricCard({
+    required this.value,
+    required this.label,
+    this.compact = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Container(
+      padding: EdgeInsets.symmetric(
+        vertical: compact ? 8 : 12,
+        horizontal: compact ? 12 : 16,
+      ),
+      decoration: BoxDecoration(
+        color: colors.infoCardBackground,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: colors.infoCardShadow!,
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              value,
+              maxLines: 1,
+              style: TextStyle(
+                fontSize: compact ? 13 : 14,
+                fontWeight: FontWeight.bold,
+                color: colors.infoCardValueText,
+              ),
+            ),
+          ),
+          SizedBox(height: compact ? 2 : 4),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: compact ? 9 : 10,
+              color: colors.infoCardLabelText,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1056,15 +1434,21 @@ class _SelectedPeriodSummary extends StatelessWidget {
           ),
           if (sessions.isNotEmpty) ...[
             const SizedBox(height: 10),
-            ...sessions.map(
-              (session) => _SessionRow(
-                session: session,
+            for (var index = 0; index < sessions.length; index++) ...[
+              if (index > 0)
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: context.cs.outlineVariant.withValues(alpha: 0.22),
+                ),
+              _SessionRow(
+                session: sessions[index],
                 onTap:
                     onSessionTap == null
                         ? null
-                        : () => onSessionTap?.call(session),
+                        : () => onSessionTap?.call(sessions[index]),
               ),
-            ),
+            ],
           ],
         ],
       ),
@@ -1091,13 +1475,28 @@ class _SessionRow extends StatelessWidget {
         style: const TextStyle(fontWeight: FontWeight.w800),
       ),
       subtitle: Text(
-        '${session.durationMinutes} min  -  ${_formatCompact(session.totalVolume)} lbs',
+        '${session.durationMinutes} min  -  '
+        '${_pluralize(session.exerciseCount, 'exercise')}  -  '
+        '${_pluralize(session.setCount, 'set')}  -  '
+        '${_formatCompact(session.totalVolume)} lbs',
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
       trailing: onTap == null ? null : const Icon(Icons.chevron_right),
     );
   }
+}
+
+String _pluralize(int count, String noun) => '$count $noun${count == 1 ? '' : 's'}';
+
+String _durationLabel(int totalSeconds) {
+  final hours = totalSeconds ~/ 3600;
+  final mins = (totalSeconds % 3600) ~/ 60;
+  return '${hours}h ${mins}m';
+}
+
+String _formatMetricVolume(double value) {
+  return '${(value / 1000).toStringAsFixed(1)}k lbs';
 }
 
 String _formatCompact(double value) {

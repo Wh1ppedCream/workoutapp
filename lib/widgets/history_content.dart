@@ -2,13 +2,11 @@ import 'package:flutter/material.dart';
 import '../models/models.dart';
 import '../screens/exercise/full_history_screen.dart';
 import '../screens/exercise/session_detail_screen.dart';
-import '../widgets/history_summary_widget.dart';
-import '../widgets/past_sessions_list.dart';
 import '../widgets/workout_history_calendar.dart';
 
 /// Shared history content used by both Train2Page and HistoryScreen.
 class HistoryContent extends StatefulWidget {
-  /// Callback to reload the past sessions list.
+  /// Callback to reload history data after viewing or editing a session.
   final VoidCallback onReload;
   final int refreshToken;
 
@@ -65,15 +63,6 @@ class _HistoryContentState extends State<HistoryContent> {
           refreshToken: effectiveRefreshToken,
           onSessionTap: openReportSession,
           onOpenFullHistory: openFullHistory,
-        ),
-
-        // 7-day summary panel
-        HistorySummaryWidget(refreshToken: effectiveRefreshToken),
-
-        // Past sessions list
-        PastSessionsList(
-          onReload: _handleReload,
-          refreshToken: effectiveRefreshToken,
         ),
       ],
     );
