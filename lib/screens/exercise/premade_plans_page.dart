@@ -19,8 +19,17 @@ class PremadePlansPage extends StatefulWidget {
 }
 
 class _PremadePlansPageState extends State<PremadePlansPage> {
+  static const _homemadeSourceName = 'Homemade';
+  static const _homemadePlanGroups = [
+    'Full Body',
+    'Push Pull Legs',
+    'Upper Lower',
+    'Body Part (Bro) Split',
+  ];
+
   final _repo = AppRepository();
   final _addingPlanIds = <String>{};
+  var _selectedDurationMinutes = 60;
 
   Future<void> _addPlan(PremadeTrainingPlan plan) async {
     final profileId = widget.profileId;
@@ -62,7 +71,7 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
       if (!mounted) return;
       widget.onPlanAdded();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${plan.name} added to your presets.')),
+        SnackBar(content: Text('${plan.name} added to your plans.')),
       );
     } catch (error) {
       if (!mounted) return;
@@ -78,8 +87,13 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
 
   Map<String, List<PremadeTrainingPlan>> _plansBySource() {
     final grouped = <String, List<PremadeTrainingPlan>>{};
-    for (final plan in premadeTrainingPlans) {
-      grouped.putIfAbsent(plan.sourceName, () => <PremadeTrainingPlan>[]).add(plan);
+    final filteredPlans = premadeTrainingPlans.where(
+      (plan) => plan.durationMinutes == _selectedDurationMinutes,
+    );
+    for (final plan in filteredPlans) {
+      grouped
+          .putIfAbsent(plan.sourceName, () => <PremadeTrainingPlan>[])
+          .add(plan);
     }
     return grouped;
   }
@@ -87,22 +101,41 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
   @override
   Widget build(BuildContext context) {
     final groupedPlans = _plansBySource();
+    final homemadePlans =
+        groupedPlans.remove(_homemadeSourceName) ??
+        const <PremadeTrainingPlan>[];
     return Scaffold(
       appBar: AppBar(title: const Text('Premade Plans')),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
         children: [
-          Text(
-            'Copy coach, influencer, and app-curated routines into your own presets. Once added, you can edit them like any other preset.',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+          _PremadeDurationHeader(
+            durationMinutes: _selectedDurationMinutes,
+            onChanged: (durationMinutes) {
+              setState(() => _selectedDurationMinutes = durationMinutes);
+            },
+            child: Text(
+              'Copy coach, influencer, and app-curated routines into your own plans. Once added, you can edit them like any other plan.',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
+          ),
+          const SizedBox(height: 16),
+          _PremadeSourceSection(
+            sourceName: _homemadeSourceName,
+            plans: homemadePlans,
+            planGroupNames: _homemadePlanGroups,
+            initiallyExpanded: true,
+            addingPlanIds: _addingPlanIds,
+            onAddPlan: _addPlan,
           ),
           const SizedBox(height: 16),
           for (final entry in groupedPlans.entries) ...[
             _PremadeSourceSection(
               sourceName: entry.key,
               plans: entry.value,
+              initiallyExpanded: false,
               addingPlanIds: _addingPlanIds,
               onAddPlan: _addPlan,
             ),
@@ -114,14 +147,181 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
   }
 }
 
+class _PremadeDurationHeader extends StatelessWidget {
+  final int durationMinutes;
+  final ValueChanged<int> onChanged;
+  final Widget child;
+
+  const _PremadeDurationHeader({
+    required this.durationMinutes,
+    required this.onChanged,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final switcher = _PremadeDurationSwitch(
+      durationMinutes: durationMinutes,
+      onChanged: onChanged,
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 360) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              child,
+              const SizedBox(height: 12),
+              Align(alignment: Alignment.centerRight, child: switcher),
+            ],
+          );
+        }
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: child),
+            const SizedBox(width: 14),
+            switcher,
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _PremadeDurationSwitch extends StatelessWidget {
+  final int durationMinutes;
+  final ValueChanged<int> onChanged;
+
+  const _PremadeDurationSwitch({
+    required this.durationMinutes,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isTwoHour = durationMinutes == 120;
+    final activeStyle = theme.textTheme.labelLarge?.copyWith(
+      color: theme.colorScheme.primary,
+      fontWeight: FontWeight.w800,
+    );
+    final inactiveStyle = theme.textTheme.labelLarge?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+      fontWeight: FontWeight.w700,
+    );
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(
+          alpha: 0.45,
+        ),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('1hr', style: isTwoHour ? inactiveStyle : activeStyle),
+            Switch(
+              value: isTwoHour,
+              onChanged: (value) => onChanged(value ? 120 : 60),
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            Text('2hr', style: isTwoHour ? activeStyle : inactiveStyle),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _PremadeSourceSection extends StatelessWidget {
   final String sourceName;
   final List<PremadeTrainingPlan> plans;
+  final List<String> planGroupNames;
+  final bool initiallyExpanded;
   final Set<String> addingPlanIds;
   final Future<void> Function(PremadeTrainingPlan plan) onAddPlan;
 
   const _PremadeSourceSection({
     required this.sourceName,
+    required this.plans,
+    this.planGroupNames = const <String>[],
+    required this.initiallyExpanded,
+    required this.addingPlanIds,
+    required this.onAddPlan,
+  });
+
+  Map<String, List<PremadeTrainingPlan>> _plansByGroup() {
+    final grouped = <String, List<PremadeTrainingPlan>>{};
+    for (final plan in plans) {
+      grouped
+          .putIfAbsent(plan.planGroupName, () => <PremadeTrainingPlan>[])
+          .add(plan);
+    }
+    return grouped;
+  }
+
+  List<String> _orderedGroupNames(Map<String, List<PremadeTrainingPlan>> grouped) {
+    final ordered = <String>[
+      ...planGroupNames,
+      for (final groupName in grouped.keys)
+        if (!planGroupNames.contains(groupName)) groupName,
+    ];
+    if (ordered.isNotEmpty) return ordered;
+    return grouped.keys.toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final grouped = _plansByGroup();
+    final orderedGroupNames = _orderedGroupNames(grouped);
+    final planCount = plans.length;
+
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: ExpansionTile(
+        initiallyExpanded: initiallyExpanded,
+        tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+        title: Text(
+          sourceName,
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        subtitle: Text(
+          '$planCount ${planCount == 1 ? 'plan' : 'plans'} available',
+          style: theme.textTheme.labelMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        children: [
+          for (final groupName in orderedGroupNames)
+            _PremadePlanGroupTile(
+              groupName: groupName,
+              plans: grouped[groupName] ?? const <PremadeTrainingPlan>[],
+              addingPlanIds: addingPlanIds,
+              onAddPlan: onAddPlan,
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PremadePlanGroupTile extends StatelessWidget {
+  final String groupName;
+  final List<PremadeTrainingPlan> plans;
+  final Set<String> addingPlanIds;
+  final Future<void> Function(PremadeTrainingPlan plan) onAddPlan;
+
+  const _PremadePlanGroupTile({
+    required this.groupName,
     required this.plans,
     required this.addingPlanIds,
     required this.onAddPlan,
@@ -130,32 +330,61 @@ class _PremadeSourceSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          sourceName,
-          style: theme.textTheme.titleLarge?.copyWith(
+    final planCount = plans.length;
+    return Card(
+      margin: const EdgeInsets.only(bottom: 10),
+      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
+      clipBehavior: Clip.antiAlias,
+      child: ExpansionTile(
+        initiallyExpanded: false,
+        tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+        childrenPadding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+        title: Text(
+          groupName,
+          style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w800,
           ),
         ),
-        const SizedBox(height: 8),
-        for (final plan in plans) ...[
-          _PremadePlanCard(
-            plan: plan,
-            isAdding: addingPlanIds.contains(plan.id),
-            onAdd: () {
-              onAddPlan(plan);
-            },
+        subtitle: Text(
+          planCount == 0
+              ? 'No plan templates yet'
+              : '$planCount ${planCount == 1 ? 'plan' : 'plans'}',
+          style: theme.textTheme.labelMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
           ),
-          if (plan != plans.last) const SizedBox(height: 12),
+        ),
+        children: [
+          if (plans.isEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 4, 8, 12),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Templates for this split can be added here later.',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            )
+          else
+            for (final plan in plans) ...[
+              _PremadePlanCard(
+                plan: plan,
+                isAdding: addingPlanIds.contains(plan.id),
+                onAdd: () {
+                  onAddPlan(plan);
+                },
+              ),
+              if (plan != plans.last) const SizedBox(height: 10),
+            ],
         ],
-      ],
+      ),
     );
   }
 }
 
-class _PremadePlanCard extends StatelessWidget {
+class _PremadePlanCard extends StatefulWidget {
   final PremadeTrainingPlan plan;
   final bool isAdding;
   final VoidCallback onAdd;
@@ -167,11 +396,38 @@ class _PremadePlanCard extends StatelessWidget {
   });
 
   @override
+  State<_PremadePlanCard> createState() => _PremadePlanCardState();
+}
+
+class _PremadePlanCardState extends State<_PremadePlanCard> {
+  bool _isExpanded = false;
+
+  void _toggleExpanded() {
+    setState(() => _isExpanded = !_isExpanded);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final plan = widget.plan;
     final totalSets = plan.exercises.fold<int>(
       0,
       (sum, exercise) => sum + exercise.sets,
+    );
+    final details = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 8),
+        Text(
+          plan.description,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 12),
+        for (final exercise in plan.exercises)
+          _PremadeExerciseRow(exercise: exercise),
+      ],
     );
     final titleBlock = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -193,56 +449,79 @@ class _PremadePlanCard extends StatelessWidget {
       ],
     );
     final addButton = FilledButton.tonalIcon(
-      onPressed: isAdding ? null : onAdd,
+      onPressed: widget.isAdding ? null : widget.onAdd,
       icon:
-          isAdding
+          widget.isAdding
               ? const SizedBox(
                 width: 16,
                 height: 16,
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
               : const Icon(Icons.add),
-      label: Text(isAdding ? 'Adding' : 'Add'),
+      label: Text(widget.isAdding ? 'Adding' : 'Add'),
     );
 
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: _toggleExpanded,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            LayoutBuilder(
-              builder: (context, constraints) {
-                if (constraints.maxWidth < 330) {
-                  return Column(
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final titleWithIcon = Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      titleBlock,
-                      const SizedBox(height: 10),
-                      SizedBox(width: double.infinity, child: addButton),
+                      Icon(
+                        _isExpanded
+                            ? Icons.keyboard_arrow_up
+                            : Icons.keyboard_arrow_down,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(child: titleBlock),
                     ],
                   );
-                }
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(child: titleBlock),
-                    const SizedBox(width: 12),
-                    addButton,
-                  ],
-                );
-              },
-            ),
-            const SizedBox(height: 8),
-            Text(
-              plan.description,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+
+                  if (constraints.maxWidth < 330) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        titleWithIcon,
+                        const SizedBox(height: 10),
+                        SizedBox(width: double.infinity, child: addButton),
+                      ],
+                    );
+                  }
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: titleWithIcon),
+                      const SizedBox(width: 12),
+                      addButton,
+                    ],
+                  );
+                },
               ),
             ),
-            const SizedBox(height: 12),
-            for (final exercise in plan.exercises)
-              _PremadeExerciseRow(exercise: exercise),
+            AnimatedCrossFade(
+              firstChild: const SizedBox(width: double.infinity),
+              secondChild: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                child: details,
+              ),
+              crossFadeState:
+                  _isExpanded
+                      ? CrossFadeState.showSecond
+                      : CrossFadeState.showFirst,
+              duration: const Duration(milliseconds: 180),
+              firstCurve: Curves.easeOutCubic,
+              secondCurve: Curves.easeOutCubic,
+              sizeCurve: Curves.easeOutCubic,
+            ),
           ],
         ),
       ),

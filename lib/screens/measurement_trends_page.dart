@@ -31,8 +31,8 @@ class _MeasurementsTrendsPageState extends State<MeasurementsTrendsPage> {
             padding: const EdgeInsets.fromLTRB(0, 10, 0, 24),
             children: [
               WorkoutMetricChartCard(refreshToken: _refreshToken),
-              const HealthTrendsSection(),
               ExerciseProgressSection(refreshToken: _refreshToken),
+              const HealthTrendsSection(),
             ],
           ),
         ),
