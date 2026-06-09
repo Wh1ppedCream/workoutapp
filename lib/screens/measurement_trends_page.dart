@@ -1,6 +1,8 @@
 // lib/screens/measurements_trends_page.dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../providers/active_session.dart';
 import '../widgets/exercise_progress_section.dart';
 import '../widgets/health_trends_section.dart';
 import '../widgets/workout_metric_chart_card.dart';
@@ -14,6 +16,7 @@ class MeasurementsTrendsPage extends StatefulWidget {
 
 class _MeasurementsTrendsPageState extends State<MeasurementsTrendsPage> {
   int _refreshToken = 0;
+  int? _seenCompletedSessionVersion;
 
   Future<void> _refresh() async {
     setState(() => _refreshToken++);
@@ -21,6 +24,16 @@ class _MeasurementsTrendsPageState extends State<MeasurementsTrendsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final completedSessionVersion = context.select<ActiveSession, int>(
+      (session) => session.completedSessionVersion,
+    );
+    if (_seenCompletedSessionVersion == null) {
+      _seenCompletedSessionVersion = completedSessionVersion;
+    } else if (_seenCompletedSessionVersion != completedSessionVersion) {
+      _seenCompletedSessionVersion = completedSessionVersion;
+      _refreshToken++;
+    }
+
     return Scaffold(
       body: SafeArea(
         bottom: false,

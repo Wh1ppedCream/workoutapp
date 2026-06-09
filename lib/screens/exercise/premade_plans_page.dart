@@ -42,8 +42,9 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
 
     setState(() => _addingPlanIds.add(plan.id));
     try {
+      final presetName = await _uniqueAddedPlanName(plan.name, profileId);
       final presetId = await _repo.createPreset(
-        '${plan.sourceName}: ${plan.name}',
+        presetName,
         profileId: profileId,
       );
       for (var i = 0; i < plan.exercises.length; i++) {
@@ -71,7 +72,7 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
       if (!mounted) return;
       widget.onPlanAdded();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${plan.name} added to your plans.')),
+        SnackBar(content: Text('$presetName added to your plans.')),
       );
     } catch (error) {
       if (!mounted) return;
@@ -83,6 +84,20 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
         setState(() => _addingPlanIds.remove(plan.id));
       }
     }
+  }
+
+  Future<String> _uniqueAddedPlanName(String baseName, int profileId) async {
+    final existingRows = await _repo.fetchAllPresetsRaw(profileId: profileId);
+    final existingNames = {
+      for (final row in existingRows) (row['name'] as String).trim(),
+    };
+    if (!existingNames.contains(baseName)) return baseName;
+
+    var copyNumber = 2;
+    while (existingNames.contains('$baseName ($copyNumber)')) {
+      copyNumber++;
+    }
+    return '$baseName ($copyNumber)';
   }
 
   Map<String, List<PremadeTrainingPlan>> _plansBySource() {

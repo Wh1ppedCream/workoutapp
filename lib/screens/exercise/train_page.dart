@@ -57,6 +57,7 @@ class _TrainPageState extends State<TrainPage> {
   int _overviewRefreshToken = 0;
   int _presetsRefreshToken = 0;
   int? _lastProfileId;
+  int? _seenCompletedSessionVersion;
   bool _isStartingOptimized = false;
   int _optimizedSessionMinutes = SessionSpec.defaultSessionDurationMinutes;
   int _optimizedMaxSetsPerExercise = SessionSpec.defaultMaxSetsPerExercise;
@@ -75,19 +76,8 @@ class _TrainPageState extends State<TrainPage> {
     final profileId = context.watch<SelectedProfile>().currentProfile?.id;
     if (_lastProfileId != profileId) {
       _lastProfileId = profileId;
-      unawaited(_ensureDefaults(profileId));
       _presetsRefreshToken++;
     }
-  }
-
-  Future<void> _ensureDefaults(int? profileId) async {
-    if (profileId == null) return;
-    final existing = await _repo.fetchAllPresetsRaw(profileId: profileId);
-    if (existing.isNotEmpty) return;
-    await _repo.findOrCreatePreset('Plan 1', profileId: profileId);
-    await _repo.findOrCreatePreset('Plan 2', profileId: profileId);
-    if (!mounted) return;
-    setState(() => _presetsRefreshToken++);
   }
 
   Future<void> _openPreset(int presetId) async {
@@ -449,6 +439,16 @@ class _TrainPageState extends State<TrainPage> {
 
   @override
   Widget build(BuildContext context) {
+    final completedSessionVersion = context.select<ActiveSession, int>(
+      (session) => session.completedSessionVersion,
+    );
+    if (_seenCompletedSessionVersion == null) {
+      _seenCompletedSessionVersion = completedSessionVersion;
+    } else if (_seenCompletedSessionVersion != completedSessionVersion) {
+      _seenCompletedSessionVersion = completedSessionVersion;
+      _overviewRefreshToken++;
+    }
+
     return Consumer<SelectedProfile>(
       builder: (context, sel, _) {
         return Scaffold(

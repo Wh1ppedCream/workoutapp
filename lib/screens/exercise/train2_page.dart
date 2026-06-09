@@ -63,7 +63,6 @@ class _Train2PageState extends State<Train2Page> {
 
   final _repo = AppRepository();
   final _scaffoldKey = GlobalKey<ScaffoldState>();
-  int? _lastProfileId;
   int _selectedTab = 0; // 0 = Train, 1 = History
   int _presetsRefreshToken = 0;
   int _historyRefreshToken = 0;
@@ -97,27 +96,6 @@ class _Train2PageState extends State<Train2Page> {
         _optimizedMaxSetsPerExercise = savedMaxSets;
       }
     });
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final sel = context.watch<SelectedProfile>();
-    final pid = sel.currentProfile?.id;
-    if (pid != null && pid != _lastProfileId) {
-      _lastProfileId = pid;
-      _ensureDefaults(pid);
-    }
-  }
-
-  Future<void> _ensureDefaults(int? profileId) async {
-    if (profileId == null) return;
-    final existing = await _repo.fetchAllPresetsRaw(profileId: profileId);
-    if (existing.isNotEmpty) return;
-    await _repo.findOrCreatePreset('Preset 1', profileId: profileId);
-    await _repo.findOrCreatePreset('Preset 2', profileId: profileId);
-    if (!mounted) return;
-    setState(() => _presetsRefreshToken++);
   }
 
   Future<void> _openPreset(int presetId, {bool edit = false}) {

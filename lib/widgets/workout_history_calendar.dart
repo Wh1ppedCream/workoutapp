@@ -1073,10 +1073,15 @@ class _CalendarGrid extends StatelessWidget {
 
   List<DateTime> _visibleDays() {
     final firstOfMonth = DateTime(visibleMonth.year, visibleMonth.month);
+    final lastOfMonth = DateTime(visibleMonth.year, visibleMonth.month + 1, 0);
     final startOffset = firstOfMonth.weekday % DateTime.daysPerWeek;
     final firstVisible = firstOfMonth.subtract(Duration(days: startOffset));
+    final endOffset =
+        DateTime.daysPerWeek - 1 - (lastOfMonth.weekday % DateTime.daysPerWeek);
+    final lastVisible = lastOfMonth.add(Duration(days: endOffset));
+    final visibleDayCount = lastVisible.difference(firstVisible).inDays + 1;
     return List.generate(
-      42,
+      visibleDayCount,
       (index) => DateUtils.dateOnly(firstVisible.add(Duration(days: index))),
     );
   }

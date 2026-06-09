@@ -38,6 +38,8 @@ class DatabaseHelper {
   static int get currentSchemaVersion => _kDbVersion;
   static const String _kOpenTriggerResetKey = 'open_trigger_reset_v1';
   static const String _kOpenIndexEnsureKey = 'open_index_ensure_v3';
+  static const String _kEmptyStarterPlanCleanupKey =
+      'empty_starter_plan_cleanup_v1';
   static bool? _fts4Available;
   static final DatabaseHelper _instance = DatabaseHelper._internal();
   factory DatabaseHelper() => _instance;
@@ -140,6 +142,7 @@ class DatabaseHelper {
         await _ensureExerciseMediaTable(db);
         await _resetDbTriggers(db); // <—
         await _maybeCompactLegacyFoodCatalog(db);
+        await _removeEmptyStarterPlans(db);
         final didSeed = await _seedFoodsIfEmpty(db); // now returns bool
         await _ensureIndexes(db); // still safe if already created
         if (!didSeed) {
@@ -1579,6 +1582,73 @@ class DatabaseHelper {
       'legacy-catalog-compact',
       sw.elapsedMilliseconds,
       'removed=$deleted, remaining=$remaining',
+    );
+  }
+
+  Future<void> _removeEmptyStarterPlans(Database db) async {
+    final sw = Stopwatch()..start();
+    final previous = await _getAppMeta(db, _kEmptyStarterPlanCleanupKey);
+    if (previous != null) {
+      _logOnOpenStep(
+        'starter-plan-cleanup',
+        sw.elapsedMilliseconds,
+        'skipped ($previous)',
+      );
+      return;
+    }
+
+    if (!await _tableExists(db, 'preset_definitions')) {
+      await _setAppMeta(
+        db,
+        _kEmptyStarterPlanCleanupKey,
+        'skipped:no-table:${sw.elapsedMilliseconds}',
+      );
+      _logOnOpenStep(
+        'starter-plan-cleanup',
+        sw.elapsedMilliseconds,
+        'skipped (no preset table)',
+      );
+      return;
+    }
+
+    final hasExercisesTable = await _tableExists(db, 'preset_exercises');
+    const legacyNames = <String>[
+      'plan 1',
+      'plan 2',
+      'preset 1',
+      'preset 2',
+      'plan1',
+      'plan2',
+      'preset1',
+      'preset2',
+    ];
+    final placeholders = List.filled(legacyNames.length, '?').join(', ');
+    final emptyPresetGuard =
+        hasExercisesTable
+            ? '''
+              AND NOT EXISTS (
+                SELECT 1
+                FROM preset_exercises pe
+                WHERE pe.preset_id = preset_definitions.id
+              )
+            '''
+            : '';
+
+    final deleted = await db.rawDelete('''
+      DELETE FROM preset_definitions
+      WHERE lower(trim(name)) IN ($placeholders)
+      $emptyPresetGuard
+      ''', legacyNames);
+
+    await _setAppMeta(
+      db,
+      _kEmptyStarterPlanCleanupKey,
+      'done:$deleted:${sw.elapsedMilliseconds}',
+    );
+    _logOnOpenStep(
+      'starter-plan-cleanup',
+      sw.elapsedMilliseconds,
+      deleted == 0 ? 'none found' : 'removed=$deleted',
     );
   }
 
