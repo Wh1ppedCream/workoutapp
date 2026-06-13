@@ -8,45 +8,10 @@ import '../theme/app_colors.dart';
 /// Callback when a weight exercise definition is picked.
 typedef WeightPicker = Future<void> Function(ExerciseDefinition definition);
 
-/// Callback when a cardio exercise name is picked.
-typedef CardioPicker = Future<void> Function(String cardioName);
-
-/// Callback when a stretch exercise is picked.
-typedef StretchPicker = Future<void> Function();
-
 class AddExerciseFab extends StatelessWidget {
   final WeightPicker? onWeightPicked;
-  final CardioPicker? onCardioPicked;
-  final StretchPicker? onStretchPicked;
 
-  const AddExerciseFab({
-    super.key,
-    this.onWeightPicked,
-    this.onCardioPicked,
-    this.onStretchPicked,
-  });
-
-  static const List<String> _bodyweightCardioOptions = [
-    'Aerobics',
-    'Box Jumps',
-    'Jump Squats',
-    'Running',
-    'Swimming',
-    'Walking',
-    'Zumba',
-  ];
-  static const List<String> _equipmentCardioOptions = [
-    'Battle Ropes',
-    'Bicycle',
-    'Elliptical',
-    'Rowing Machine',
-    'Ski Machine',
-    'Skipping Rope',
-    'Stair Climber',
-    'Stationary Bike',
-    'Treadmill',
-    'Vertical Climber',
-  ];
+  const AddExerciseFab({super.key, this.onWeightPicked});
 
   @override
   Widget build(BuildContext context) {
@@ -59,183 +24,23 @@ class AddExerciseFab extends StatelessWidget {
     return FloatingActionButton(
       backgroundColor: fabBg,
       foregroundColor: fabFg,
-      onPressed: () => _showAddCardTypeDialog(context),
+      onPressed: () => _openExerciseCatalog(context),
       child: const Icon(Icons.add),
     );
   }
 
-  void _showAddCardTypeDialog(BuildContext ctx) {
-    final theme = Theme.of(ctx);
-    final extras = theme.extension<AppColors>();
-    final dialogBg =
-        extras?.dialogBackground ?? theme.dialogTheme.backgroundColor;
-
-    showDialog(
-      context: ctx,
-      builder:
-          (_) => AlertDialog(
-            backgroundColor: dialogBg,
-            title: Text(
-              'Add a Card',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.titleLarge,
+  void _openExerciseCatalog(BuildContext ctx) {
+    // TODO(cardio/stretch): restore the Exercise/Cardio/Stretch chooser after
+    // cardio and stretch cards are fixed, updated, and ready for users again.
+    Navigator.of(ctx).push(
+      MaterialPageRoute(
+        builder:
+            (_) => ExerciseCatalogPage(
+              onExercisePicked: (def) async {
+                await onWeightPicked?.call(def);
+              },
             ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ListTile(
-                  title: const Text('Exercise'),
-                  onTap: () {
-                    Navigator.of(ctx).pop();
-                    Navigator.of(ctx).push(
-                      MaterialPageRoute(
-                        builder:
-                            (_) => ExerciseCatalogPage(
-                              onExercisePicked: (def) async {
-                                if (onWeightPicked != null) {
-                                  await onWeightPicked!(def);
-                                }
-                              },
-                            ),
-                      ),
-                    );
-                  },
-                ),
-                ListTile(
-                  title: const Text('Cardio'),
-                  onTap: () {
-                    Navigator.of(ctx).pop();
-                    _showCardioDetailDialog(ctx);
-                  },
-                ),
-                ListTile(
-                  title: const Text('Stretch'),
-                  onTap: () {
-                    Navigator.of(ctx).pop();
-                    if (onStretchPicked != null) {
-                      onStretchPicked!();
-                    }
-                  },
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('Cancel'),
-              ),
-            ],
-          ),
-    );
-  }
-
-  void _showCardioDetailDialog(BuildContext dialogCtx) {
-    String? selectedCategory;
-    String? selectedExercise;
-    final theme = Theme.of(dialogCtx);
-    final extras = theme.extension<AppColors>();
-    final dialogBg =
-        extras?.dialogBackground ?? theme.dialogTheme.backgroundColor;
-
-    showDialog(
-      context: dialogCtx,
-      builder:
-          (innerCtx) => StatefulBuilder(
-            builder: (innerCtx, setState) {
-              final options =
-                  (selectedCategory == 'Bodyweight')
-                      ? _bodyweightCardioOptions
-                      : (selectedCategory == 'Equipment Based')
-                      ? _equipmentCardioOptions
-                      : <String>[];
-
-              return AlertDialog(
-                backgroundColor: dialogBg,
-                title: Text(
-                  'Choose Cardio Type',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.titleLarge,
-                ),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: RadioListTile<String>(
-                            title: const Text('Bodyweight'),
-                            value: 'Bodyweight',
-                            groupValue: selectedCategory,
-                            onChanged:
-                                (v) => setState(() {
-                                  selectedCategory = v;
-                                  selectedExercise = null;
-                                }),
-                          ),
-                        ),
-                        Expanded(
-                          child: RadioListTile<String>(
-                            title: const Text('Equipment Based'),
-                            value: 'Equipment Based',
-                            groupValue: selectedCategory,
-                            onChanged:
-                                (v) => setState(() {
-                                  selectedCategory = v;
-                                  selectedExercise = null;
-                                }),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    if (selectedCategory != null) ...[
-                      DropdownButtonFormField<String>(
-                        isExpanded: true,
-                        decoration: const InputDecoration(
-                          labelText: 'Select Exercise',
-                        ),
-                        value: selectedExercise,
-                        items:
-                            options
-                                .map(
-                                  (ex) => DropdownMenuItem(
-                                    value: ex,
-                                    child: Text(
-                                      ex,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                )
-                                .toList(),
-                        onChanged: (v) => setState(() => selectedExercise = v),
-                      ),
-                    ],
-                  ],
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(innerCtx).pop(),
-                    child: const Text('Cancel'),
-                  ),
-                  ElevatedButton(
-                    onPressed:
-                        (selectedExercise == null)
-                            ? null
-                            : () async {
-                              Navigator.of(innerCtx).pop();
-                              if (onCardioPicked != null) {
-                                await onCardioPicked!(selectedExercise!);
-                              }
-                            },
-                    child: const Text('Save'),
-                  ),
-                ],
-              );
-            },
-          ),
+      ),
     );
   }
 }

@@ -19,6 +19,8 @@ class PresetBar extends StatelessWidget {
   final bool isAutomatic;
   final Map<String, double> focusFrequencyMap;
   final VoidCallback onRefresh;
+  final bool? isActivePlan;
+  final Future<void> Function(bool active)? onSetActivePlan;
 
   /// Uniform scale factor for padding, font sizes, badge sizes, etc.
   final double scale;
@@ -31,6 +33,8 @@ class PresetBar extends StatelessWidget {
     required this.index,
     this.isAutomatic = false,
     this.focusFrequencyMap = const <String, double>{},
+    this.isActivePlan,
+    this.onSetActivePlan,
     required this.onRefresh,
     this.scale = 1.0,
   });
@@ -38,9 +42,7 @@ class PresetBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final title =
-        label.trim().isNotEmpty
-            ? _planDisplayText(label)
-            : 'Plan ${index + 1}';
+        label.trim().isNotEmpty ? _planDisplayText(label) : 'Plan ${index + 1}';
     // pull theme defaults if needed (but we'll still use the passed‐in color)
     final accent = color;
 
@@ -63,10 +65,14 @@ class PresetBar extends StatelessWidget {
             ),
             onSelected: (action) => _handleMenu(context, action),
             itemBuilder:
-                (_) => const [
-                  PopupMenuItem(value: 'edit', child: Text('Edit')),
-                  PopupMenuItem(value: 'delete', child: Text('Delete')),
-                  PopupMenuItem(value: 'rename', child: Text('Rename')),
+                (_) => [
+                  if (isActivePlan != null)
+                    PopupMenuItem(
+                      value: isActivePlan! ? 'archive' : 'activate',
+                      child: Text(isActivePlan! ? 'Archive' : 'Activate'),
+                    ),
+                  const PopupMenuItem(value: 'delete', child: Text('Delete')),
+                  const PopupMenuItem(value: 'rename', child: Text('Rename')),
                 ],
           ),
         ],
@@ -92,11 +98,15 @@ class PresetBar extends StatelessWidget {
   }
 
   Future<void> _handleMenu(BuildContext context, String action) async {
-    final repo = AppRepository();
-
-    if (action == 'edit') {
-      _openDetail(context);
+    if (action == 'activate' || action == 'archive') {
+      final active = action == 'activate';
+      await onSetActivePlan?.call(active);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(active ? 'Plan activated.' : 'Plan archived.')),
+      );
     } else if (action == 'delete') {
+      final repo = AppRepository();
       final confirm = await showDialog<bool>(
         context: context,
         builder:
@@ -121,6 +131,7 @@ class PresetBar extends StatelessWidget {
         onRefresh();
       }
     } else if (action == 'rename') {
+      final repo = AppRepository();
       final ctl = TextEditingController(text: _planDisplayText(label));
       final newName = await showDialog<String>(
         context: context,

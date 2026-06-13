@@ -119,18 +119,8 @@ class SessionScreen extends StatelessWidget {
           );
           context.read<ActiveSession>().addExercise(ex, CardType.weight);
         },
-        onCardioPicked: (cardioName) async {
-          final ex = CardioExercise(
-            name: cardioName,
-            equipment: '',
-            cardioName: cardioName,
-          );
-          context.read<ActiveSession>().addExercise(ex, CardType.cardio);
-        },
-        onStretchPicked: () async {
-          final ex = StretchExercise(name: 'Stretch', equipment: '');
-          context.read<ActiveSession>().addExercise(ex, CardType.stretch);
-        },
+        // TODO(cardio/stretch): add cardio and stretch creation back after
+        // their workout-session cards are fixed and updated.
       ),
       bottomNavigationBar: SafeArea(
         child: Padding(

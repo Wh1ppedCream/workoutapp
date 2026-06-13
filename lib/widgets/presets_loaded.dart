@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 
 import '../providers/selected_profile.dart';
 import '../repositories/app_repository.dart';
+import '../services/active_plan_store.dart';
 import '../utils/async_pool.dart';
 import 'body_heatmap.dart';
 import 'preset_bar.dart';
@@ -26,6 +27,10 @@ class PresetsLoaded extends StatefulWidget {
   final ScrollPhysics? physics;
   final EdgeInsetsGeometry? padding;
   final bool shrinkWrap;
+  final bool? planActiveState;
+  final bool progressiveReveal;
+  final int initialVisibleCount;
+  final int revealBatchSize;
 
   const PresetsLoaded({
     super.key,
@@ -37,8 +42,13 @@ class PresetsLoaded extends StatefulWidget {
     this.physics,
     this.padding,
     this.shrinkWrap = true,
+    this.planActiveState,
+    this.progressiveReveal = false,
+    this.initialVisibleCount = 3,
+    this.revealBatchSize = 5,
     required this.onRefresh,
-  });
+  }) : assert(initialVisibleCount > 0),
+       assert(revealBatchSize > 0);
 
   @override
   State<PresetsLoaded> createState() => _PresetsLoadedState();
@@ -69,6 +79,7 @@ class _PresetsLoadedState extends State<PresetsLoaded>
   int? _loadedRefreshToken;
   Future<List<_PresetListItem>>? _presetsFuture;
   List<_PresetListItem>? _lastRows;
+  late int _visibleCount;
 
   static const _palette = [
     Colors.blue,
@@ -77,6 +88,24 @@ class _PresetsLoadedState extends State<PresetsLoaded>
     Colors.purple,
     Colors.teal,
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _visibleCount = widget.initialVisibleCount;
+  }
+
+  @override
+  void didUpdateWidget(covariant PresetsLoaded oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.progressiveReveal != widget.progressiveReveal ||
+        oldWidget.initialVisibleCount != widget.initialVisibleCount ||
+        oldWidget.refreshToken != widget.refreshToken ||
+        oldWidget.presetIds != widget.presetIds ||
+        oldWidget.excludedPresetIds != widget.excludedPresetIds) {
+      _visibleCount = widget.initialVisibleCount;
+    }
+  }
 
   Future<List<_PresetListItem>> _loadPresets(int profileId) async {
     unawaited(BodyHeatmap.preload());
@@ -189,6 +218,16 @@ class _PresetsLoadedState extends State<PresetsLoaded>
     });
   }
 
+  Future<void> _setPlanActive(int profileId, int presetId, bool active) async {
+    if (active) {
+      await ActivePlanStore.add(profileId, presetId);
+    } else {
+      await ActivePlanStore.remove(profileId, presetId);
+    }
+    if (!mounted) return;
+    _refreshPresets();
+  }
+
   @override
   bool get wantKeepAlive => true;
 
@@ -246,15 +285,38 @@ class _PresetsLoadedState extends State<PresetsLoaded>
           );
         }
 
+        final visibleLimit =
+            widget.progressiveReveal && _visibleCount < rows.length
+                ? _visibleCount
+                : rows.length;
+        final visibleRows = rows.take(visibleLimit).toList(growable: false);
+        final remainingCount = rows.length - visibleRows.length;
+
         return ListView.builder(
           padding:
               widget.padding ??
               EdgeInsets.symmetric(vertical: 6 * widget.scale),
           physics: widget.physics,
-          itemCount: rows.length,
+          itemCount: visibleRows.length + (remainingCount > 0 ? 1 : 0),
           shrinkWrap: widget.shrinkWrap,
           itemBuilder: (ctx2, i) {
-            final row = rows[i];
+            if (i == visibleRows.length) {
+              final revealCount =
+                  remainingCount < widget.revealBatchSize
+                      ? remainingCount
+                      : widget.revealBatchSize;
+              return _ShowMorePlansButton(
+                scale: widget.scale,
+                revealCount: revealCount,
+                remainingCount: remainingCount,
+                onPressed:
+                    () => setState(() {
+                      _visibleCount += widget.revealBatchSize;
+                    }),
+              );
+            }
+
+            final row = visibleRows[i];
             final color = _palette[row.listIndex % _palette.length];
 
             return Padding(
@@ -267,12 +329,61 @@ class _PresetsLoadedState extends State<PresetsLoaded>
                 isAutomatic: row.isAutomatic,
                 focusFrequencyMap: row.focusFrequencyMap,
                 scale: widget.scale,
+                isActivePlan: widget.planActiveState,
+                onSetActivePlan:
+                    widget.planActiveState == null
+                        ? null
+                        : (active) =>
+                            _setPlanActive(profileId, row.presetId, active),
                 onRefresh: _refreshPresets,
               ),
             );
           },
         );
       },
+    );
+  }
+}
+
+class _ShowMorePlansButton extends StatelessWidget {
+  final double scale;
+  final int revealCount;
+  final int remainingCount;
+  final VoidCallback onPressed;
+
+  const _ShowMorePlansButton({
+    required this.scale,
+    required this.revealCount,
+    required this.remainingCount,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final countText = revealCount == remainingCount
+        ? 'Show $revealCount more'
+        : 'Show $revealCount more ($remainingCount left)';
+    return Padding(
+      padding: EdgeInsets.only(top: 8 * scale),
+      child: OutlinedButton.icon(
+        onPressed: onPressed,
+        icon: const Icon(Icons.keyboard_arrow_down),
+        label: Text(countText),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: theme.colorScheme.primary,
+          side: BorderSide(
+            color: theme.colorScheme.primary.withValues(alpha: 0.45),
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16 * scale),
+          ),
+          padding: EdgeInsets.symmetric(
+            horizontal: 14 * scale,
+            vertical: 12 * scale,
+          ),
+        ),
+      ),
     );
   }
 }

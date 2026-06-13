@@ -67,7 +67,9 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
     // Fetch detailed exercises
     final exRows = await _repo.fetchExercises(widget.sessionId);
     final loadedExercises = await _loadDetailedExercises(exRows);
-    final exs = loadedExercises.whereType<WorkoutExercise>().toList();
+    // TODO(cardio/stretch): include cardio and stretch rows here after those
+    // cards are fixed, updated, and added back into the user flow.
+    final exs = loadedExercises.whereType<WeightExercise>().toList();
     return _SessionData(session, exs);
   }
 

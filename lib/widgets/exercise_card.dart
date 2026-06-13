@@ -3,8 +3,6 @@
 import 'package:flutter/material.dart';
 import '../models/models.dart';
 import 'weight_card.dart';
-import 'cardio_card.dart';
-import 'stretch_card.dart';
 
 enum CardType { weight, cardio, stretch }
 
@@ -56,19 +54,10 @@ class ExerciseCard extends StatelessWidget {
           forceCollapsed: forceCollapsed,
         );
       case CardType.cardio:
-        return CardioCard(
-          exercise: exercise as CardioExercise,
-          readOnlyMode: readOnlyMode,
-          onDeleteExercise: onDeleteExercise,
-          onValueChanged: onValueChanged,
-        );
       case CardType.stretch:
-        return StretchCard(
-          exercise: exercise as StretchExercise,
-          readOnlyMode: readOnlyMode,
-          onDeleteExercise: onDeleteExercise,
-          onValueChanged: onValueChanged,
-        );
+        // TODO(cardio/stretch): fix and update these cards, then add them back
+        // into workout sessions and plan editing screens.
+        return const SizedBox.shrink();
     }
   }
 }

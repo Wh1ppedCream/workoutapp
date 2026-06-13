@@ -16,6 +16,7 @@ import '../../widgets/generic_bar.dart';
 import '../../widgets/presets_loaded.dart';
 import '../../widgets/drawers.dart';
 import '../../widgets/bodypart_focus_chips.dart';
+import '../../widgets/exercise_card.dart';
 
 import 'gym_profile_screen.dart';
 import 'preset_detail_screen.dart';
@@ -380,6 +381,9 @@ class _Train2PageState extends State<Train2Page> {
       active.exercises.clear();
       active.cardTypes.clear();
       for (var i = 0; i < preset.exercises.length; i++) {
+        // TODO(cardio/stretch): add cardio and stretch back to legacy plan
+        // starts after those cards are fixed and updated.
+        if (preset.cardTypes[i] != CardType.weight) continue;
         active.addExercise(preset.exercises[i], preset.cardTypes[i]);
       }
 

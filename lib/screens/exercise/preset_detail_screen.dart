@@ -365,28 +365,8 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                       defId: def.id,
                     );
                   },
-                  onCardioPicked: (name) async {
-                    final ce = CardioExercise(
-                      name: name,
-                      equipment: '',
-                      cardioName: name,
-                    );
-                    context.read<PresetSession>().addExercise(
-                      ce,
-                      CardType.cardio,
-                    );
-                  },
-                  onStretchPicked: () async {
-                    final se = StretchExercise(
-                      name: 'Stretch',
-                      equipment: '',
-                      stretchInstances: [],
-                    );
-                    context.read<PresetSession>().addExercise(
-                      se,
-                      CardType.stretch,
-                    );
-                  },
+                  // TODO(cardio/stretch): add cardio and stretch creation back
+                  // after their plan-editing cards are fixed and updated.
                 )
                 : null,
 
@@ -433,6 +413,12 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                         active.exercises.clear();
                         active.cardTypes.clear();
                         for (var i = 0; i < preset.exercises.length; i++) {
+                          // TODO(cardio/stretch): add cardio and stretch back
+                          // to plan-start sessions after those cards are fixed
+                          // and updated.
+                          if (preset.cardTypes[i] != CardType.weight) {
+                            continue;
+                          }
                           active.addExercise(
                             preset.exercises[i],
                             preset.cardTypes[i],

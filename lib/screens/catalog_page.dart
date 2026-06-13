@@ -58,7 +58,7 @@ class _CatalogPageState extends State<CatalogPage> {
     final start = DateTime.fromMillisecondsSinceEpoch(0);
 
     final exerciseRowsFuture = repo.fetchMostUsedExerciseDefinitionsRaw(
-      limit: 5,
+      limit: 4,
     );
     final bodyPartSetsFuture = repo.fetchAllBodyPartSetsOverTimeRange(
       start: start,
@@ -174,7 +174,7 @@ class _CatalogPageState extends State<CatalogPage> {
                     onTap: _openExerciseCatalog,
                   ),
                   const SizedBox(height: 16),
-                  _FocusLibraryCard(
+                  _TargetAnatomyCard(
                     muscles: overview.muscles,
                     bodyParts: overview.bodyParts,
                     onMusclesTap: () => _openFocusLibrary(1),
@@ -242,13 +242,13 @@ class _ExerciseCatalogCard extends StatelessWidget {
   }
 }
 
-class _FocusLibraryCard extends StatelessWidget {
+class _TargetAnatomyCard extends StatelessWidget {
   final List<_FocusUsageSummary> muscles;
   final List<_FocusUsageSummary> bodyParts;
   final VoidCallback onMusclesTap;
   final VoidCallback onBodyPartsTap;
 
-  const _FocusLibraryCard({
+  const _TargetAnatomyCard({
     required this.muscles,
     required this.bodyParts,
     required this.onMusclesTap,
@@ -267,7 +267,7 @@ class _FocusLibraryCard extends StatelessWidget {
           children: [
             _CatalogCardHeader(
               icon: Icons.bubble_chart_outlined,
-              title: 'Exercise Focus Library',
+              title: 'Target Anatomy',
             ),
             const SizedBox(height: 16),
             IntrinsicHeight(
@@ -275,11 +275,11 @@ class _FocusLibraryCard extends StatelessWidget {
                 children: [
                   Expanded(
                     child: _FocusSummaryPane(
-                      title: 'Muscles',
-                      icon: Icons.fitness_center,
-                      items: muscles,
-                      emptyText: 'No muscle history yet.',
-                      onTap: onMusclesTap,
+                      title: 'Bodyparts',
+                      icon: Icons.accessibility_new,
+                      items: bodyParts,
+                      emptyText: 'No bodypart history yet.',
+                      onTap: onBodyPartsTap,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -290,11 +290,11 @@ class _FocusLibraryCard extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: _FocusSummaryPane(
-                      title: 'Bodyparts',
-                      icon: Icons.accessibility_new,
-                      items: bodyParts,
-                      emptyText: 'No bodypart history yet.',
-                      onTap: onBodyPartsTap,
+                      title: 'Muscles',
+                      icon: Icons.fitness_center,
+                      items: muscles,
+                      emptyText: 'No muscle history yet.',
+                      onTap: onMusclesTap,
                     ),
                   ),
                 ],

@@ -241,13 +241,17 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
   ) async {
     var totalVolume = 0.0;
     var totalSets = 0;
+    var exerciseCount = 0;
     final bodyPartById = <int, BodyPart>{};
     final bodyPartUnitsById = <int, double>{};
     final setsPerDefinition = <int, int>{};
 
     for (final detail in details) {
       final exercise = detail.exercise;
+      // TODO(cardio/stretch): include cardio and stretch in session summaries
+      // after those cards are fixed, updated, and added back into the app.
       if (exercise is! WeightExercise) continue;
+      exerciseCount++;
 
       final sets = _allWeightSets(exercise);
       totalSets += sets.length;
@@ -307,7 +311,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     return _SessionSummary(
       totalVolume: totalVolume,
       totalSets: totalSets,
-      exerciseCount: details.length,
+      exerciseCount: exerciseCount,
       bodyPartHits: bodyPartHits,
       frequencyMap: frequencyMap,
     );
@@ -411,6 +415,9 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
       active.cardTypes.clear();
 
       for (final detail in _exerciseDetails) {
+        // TODO(cardio/stretch): repeat cardio and stretch once those cards are
+        // fixed, updated, and added back into active workout sessions.
+        if (detail.cardType != CardType.weight) continue;
         active.addExercise(_cloneExercise(detail.exercise), detail.cardType);
       }
       active.start();
@@ -475,6 +482,9 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
 
       for (var i = 0; i < _exerciseDetails.length; i++) {
         final detail = _exerciseDetails[i];
+        // TODO(cardio/stretch): copy cardio and stretch into saved plans after
+        // those cards are fixed, updated, and added back into plan screens.
+        if (detail.cardType != CardType.weight) continue;
         final exercise = detail.exercise;
         int? defId;
         if (exercise is WeightExercise) {
@@ -974,22 +984,8 @@ class _CompletedExerciseCard extends StatelessWidget {
     if (exercise is WeightExercise) {
       return _CompletedWeightCard(exercise: exercise, onDetails: onDetails);
     }
-    if (exercise is CardioExercise) {
-      return _CompletedSimpleCard(
-        icon: Icons.directions_run,
-        title: exercise.cardioName,
-        subtitle:
-            '${(exercise.elapsedSeconds / 60).ceil()} min'
-            '${exercise.cardioNote == null ? '' : ' - ${exercise.cardioNote}'}',
-      );
-    }
-    if (exercise is StretchExercise) {
-      return _CompletedSimpleCard(
-        icon: Icons.self_improvement,
-        title: exercise.name,
-        subtitle: '${exercise.stretchInstances.length} stretch items',
-      );
-    }
+    // TODO(cardio/stretch): restore completed cardio and stretch detail cards
+    // after those cards are fixed, updated, and ready for the user flow.
     return const SizedBox.shrink();
   }
 }
@@ -1166,35 +1162,6 @@ class _CompletedSetRow extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _CompletedSimpleCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-
-  const _CompletedSimpleCard({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 14),
-      child: ListTile(
-        leading: Icon(icon),
-        title: Text(
-          title,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontWeight: FontWeight.w800),
-        ),
-        subtitle: Text(subtitle, maxLines: 2, overflow: TextOverflow.ellipsis),
       ),
     );
   }

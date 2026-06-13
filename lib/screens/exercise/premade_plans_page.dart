@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../data/premade_training_plans.dart';
 import '../../models/models.dart';
 import '../../repositories/app_repository.dart';
+import '../../services/active_plan_store.dart';
 
 class PremadePlansPage extends StatefulWidget {
   final int? profileId;
@@ -69,10 +70,12 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
         );
       }
 
+      await ActivePlanStore.add(profileId, presetId);
+
       if (!mounted) return;
       widget.onPlanAdded();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$presetName added to your plans.')),
+        SnackBar(content: Text('$presetName added to Active Plans.')),
       );
     } catch (error) {
       if (!mounted) return;
@@ -280,7 +283,9 @@ class _PremadeSourceSection extends StatelessWidget {
     return grouped;
   }
 
-  List<String> _orderedGroupNames(Map<String, List<PremadeTrainingPlan>> grouped) {
+  List<String> _orderedGroupNames(
+    Map<String, List<PremadeTrainingPlan>> grouped,
+  ) {
     final ordered = <String>[
       ...planGroupNames,
       for (final groupName in grouped.keys)

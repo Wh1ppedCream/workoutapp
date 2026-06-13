@@ -82,21 +82,6 @@ class _PresetInfoCardState extends State<PresetInfoCard>
             for (final set in sets) '${set.weight}:${set.reps}',
           ].join('|'),
         );
-      } else if (exercise is CardioExercise) {
-        parts.add(
-          [
-            i,
-            type,
-            exercise.name,
-            exercise.cardioName,
-            exercise.plannedMinutes,
-            exercise.elapsedSeconds,
-          ].join('|'),
-        );
-      } else if (exercise is StretchExercise) {
-        parts.add(
-          [i, type, exercise.name, exercise.stretchInstances.length].join('|'),
-        );
       }
     }
     return parts.join('::');
@@ -113,9 +98,9 @@ class _PresetInfoCardState extends State<PresetInfoCard>
 
     for (var i = 0; i < widget.exercises.length; i++) {
       final exercise = widget.exercises[i];
-      estimatedMinutes += SessionSpec.defaultSetupMinutesPerExercise;
 
       if (exercise is WeightExercise) {
+        estimatedMinutes += SessionSpec.defaultSetupMinutesPerExercise;
         final sets = _allWeightSets(exercise);
         estimatedMinutes += sets.length * SessionSpec.defaultMinutesPerSet;
         for (final set in sets) {
@@ -131,12 +116,9 @@ class _PresetInfoCardState extends State<PresetInfoCard>
             ),
           );
         }
-      } else if (exercise is CardioExercise) {
-        estimatedMinutes += exercise.plannedMinutes;
-      } else if (exercise is StretchExercise) {
-        estimatedMinutes +=
-            exercise.stretchInstances.length * SessionSpec.defaultMinutesPerSet;
       }
+      // TODO(cardio/stretch): include cardio and stretch in plan summaries
+      // after their cards are fixed, updated, and added back into the app.
     }
 
     final focusRows = await _loadBodyPartFocuses(focusLoads);

@@ -10,16 +10,19 @@ import '../../providers/active_session.dart';
 import '../../providers/preset_session.dart';
 import '../../providers/selected_profile.dart';
 import '../../repositories/app_repository.dart';
+import '../../services/active_plan_store.dart';
 import '../../services/preset_generation_service.dart';
 import '../../theme/theme_extensions.dart';
 import '../../widgets/body_heatmap.dart';
 import '../../widgets/bodypart_focus_chips.dart';
 import '../../widgets/drawers.dart';
+import '../../widgets/exercise_card.dart';
 import '../../widgets/focused_sets_list.dart';
 import '../../widgets/generic_bar.dart';
 import '../../widgets/presets_loaded.dart';
 import 'analytics_dashboard_screen.dart';
 import 'gym_profile_screen.dart';
+import 'plan_management_page.dart';
 import 'premade_plans_page.dart';
 import 'preset_detail_screen.dart';
 import 'preset_generation_qa.dart';
@@ -391,6 +394,9 @@ class _TrainPageState extends State<TrainPage> {
       active.exercises.clear();
       active.cardTypes.clear();
       for (var i = 0; i < preset.exercises.length; i++) {
+        // TODO(cardio/stretch): add cardio and stretch back to generated
+        // sessions after those cards are fixed and updated.
+        if (preset.cardTypes[i] != CardType.weight) continue;
         active.addExercise(preset.exercises[i], preset.cardTypes[i]);
       }
 
@@ -865,30 +871,7 @@ class _MoreFocusedSetsHint extends StatelessWidget {
 }
 
 Future<Set<int>> _loadActivePresetIds(int? profileId) async {
-  if (profileId == null) return const <int>{};
-  final prefs = await SharedPreferences.getInstance();
-  final rawIds = prefs.getStringList(_activePresetIdsKey(profileId));
-  if (rawIds == null) return const <int>{};
-  return rawIds.map((id) => int.tryParse(id)).whereType<int>().toSet();
-}
-
-Future<void> _saveActivePresetIds(int profileId, Set<int> ids) async {
-  final prefs = await SharedPreferences.getInstance();
-  await prefs.setStringList(
-    _activePresetIdsKey(profileId),
-    ids.map((id) => id.toString()).toList(),
-  );
-}
-
-String _activePresetIdsKey(int profileId) =>
-    'train.active_presets.profile.$profileId';
-
-String _planDisplayText(String value) {
-  return value
-      .replaceAll(RegExp(r'\bPresets\b'), 'Plans')
-      .replaceAll(RegExp(r'\bPreset\b'), 'Plan')
-      .replaceAll(RegExp(r'\bpresets\b'), 'plans')
-      .replaceAll(RegExp(r'\bpreset\b'), 'plan');
+  return ActivePlanStore.load(profileId);
 }
 
 class _ActivePresetsCard extends StatefulWidget {
@@ -907,7 +890,6 @@ class _ActivePresetsCard extends StatefulWidget {
 }
 
 class _ActivePresetsCardState extends State<_ActivePresetsCard> {
-  final _repo = AppRepository();
   Future<Set<int>>? _selectedIdsFuture;
 
   @override
@@ -919,7 +901,8 @@ class _ActivePresetsCardState extends State<_ActivePresetsCard> {
   @override
   void didUpdateWidget(covariant _ActivePresetsCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.profileId != widget.profileId) {
+    if (oldWidget.profileId != widget.profileId ||
+        oldWidget.refreshToken != widget.refreshToken) {
       _selectedIdsFuture = _loadSelectedIds(widget.profileId);
     }
   }
@@ -928,7 +911,7 @@ class _ActivePresetsCardState extends State<_ActivePresetsCard> {
     return _loadActivePresetIds(profileId);
   }
 
-  Future<void> _openEditor(Set<int> selectedIds) async {
+  Future<void> _openPlanManagement() async {
     final profileId = widget.profileId;
     if (profileId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -937,74 +920,14 @@ class _ActivePresetsCardState extends State<_ActivePresetsCard> {
       return;
     }
 
-    final rows = await _repo.fetchPresetSummariesRaw(profileId: profileId);
-    if (!mounted) return;
-    final updatedIds = await showDialog<Set<int>>(
-      context: context,
-      builder: (dialogContext) {
-        final draftIds = Set<int>.of(selectedIds);
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: const Text('Active Plans'),
-              content: SizedBox(
-                width: double.maxFinite,
-                child:
-                    rows.isEmpty
-                        ? const Text('No plans are available for this profile.')
-                        : ListView.builder(
-                          shrinkWrap: true,
-                          itemCount: rows.length,
-                          itemBuilder: (context, index) {
-                            final row = rows[index];
-                            final presetId = row['id'] as int;
-                            final name = (row['name'] as String?)?.trim();
-                            final isAutomatic =
-                                (row['is_automatic'] as int? ?? 0) == 1;
-                            return CheckboxListTile(
-                              value: draftIds.contains(presetId),
-                              title: Text(
-                                name?.isNotEmpty == true
-                                    ? _planDisplayText(name!)
-                                    : 'Plan ${index + 1}',
-                              ),
-                              subtitle:
-                                  isAutomatic
-                                      ? const Text('Automatic plan')
-                                      : null,
-                              onChanged: (selected) {
-                                setDialogState(() {
-                                  if (selected == true) {
-                                    draftIds.add(presetId);
-                                  } else {
-                                    draftIds.remove(presetId);
-                                  }
-                                });
-                              },
-                            );
-                          },
-                        ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(dialogContext),
-                  child: const Text('Cancel'),
-                ),
-                ElevatedButton(
-                  onPressed: () => Navigator.pop(dialogContext, draftIds),
-                  child: const Text('Save'),
-                ),
-              ],
-            );
-          },
-        );
-      },
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => PlanManagementPage(profileId: profileId),
+      ),
     );
-    if (updatedIds == null || !mounted) return;
-    await _saveActivePresetIds(profileId, updatedIds);
     if (!mounted) return;
     setState(() {
-      _selectedIdsFuture = Future.value(updatedIds);
+      _selectedIdsFuture = _loadSelectedIds(profileId);
     });
     widget.onRefresh();
   }
@@ -1037,8 +960,7 @@ class _ActivePresetsCardState extends State<_ActivePresetsCard> {
                     ),
                     IconButton(
                       tooltip: 'Edit active plans',
-                      onPressed:
-                          isLoading ? null : () => _openEditor(selectedIds),
+                      onPressed: isLoading ? null : _openPlanManagement,
                       icon: const Icon(Icons.edit_outlined),
                     ),
                   ],
@@ -1068,6 +990,7 @@ class _ActivePresetsCardState extends State<_ActivePresetsCard> {
                     scale: 0.92,
                     refreshToken: widget.refreshToken,
                     presetIds: selectedIds,
+                    planActiveState: true,
                     padding: EdgeInsets.zero,
                     physics: const NeverScrollableScrollPhysics(),
                     emptyMessage:
@@ -1138,6 +1061,27 @@ class _PlansTabState extends State<_PlansTab> {
     );
   }
 
+  Future<void> _openPlanManagement() async {
+    final profileId = widget.profileId;
+    if (profileId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a gym profile first.')),
+      );
+      return;
+    }
+
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => PlanManagementPage(profileId: profileId),
+      ),
+    );
+    if (!mounted) return;
+    setState(() {
+      _activePresetIdsFuture = _loadActivePresetIds(profileId);
+    });
+    widget.onRefresh();
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<Set<int>>(
@@ -1155,24 +1099,34 @@ class _PlansTabState extends State<_PlansTab> {
           children: [
             _PresetSectionCard(
               title: 'Active Plans',
+              onEdit: _openPlanManagement,
               child: PresetsLoaded(
                 scale: 0.96,
                 refreshToken: widget.refreshToken,
                 presetIds: activeIds,
+                planActiveState: true,
+                progressiveReveal: true,
+                initialVisibleCount: 3,
+                revealBatchSize: 5,
                 padding: EdgeInsets.zero,
                 physics: const NeverScrollableScrollPhysics(),
                 emptyMessage:
-                    'No active plans yet. Use the Overview pen to choose which plans stay active.',
+                    'No active plans yet. Use the pen on the Overview Active Plans card to choose what stays ready.',
                 onRefresh: widget.onRefresh,
               ),
             ),
             const SizedBox(height: 16),
             _PresetSectionCard(
               title: 'Archived Plans',
+              onEdit: _openPlanManagement,
               child: PresetsLoaded(
                 scale: 0.96,
                 refreshToken: widget.refreshToken,
                 excludedPresetIds: activeIds,
+                planActiveState: false,
+                progressiveReveal: true,
+                initialVisibleCount: 3,
+                revealBatchSize: 5,
                 padding: EdgeInsets.zero,
                 physics: const NeverScrollableScrollPhysics(),
                 emptyMessage: 'No archived plans.',
@@ -1202,9 +1156,14 @@ class _PlansTabState extends State<_PlansTab> {
 
 class _PresetSectionCard extends StatelessWidget {
   final String title;
+  final VoidCallback? onEdit;
   final Widget child;
 
-  const _PresetSectionCard({required this.title, required this.child});
+  const _PresetSectionCard({
+    required this.title,
+    this.onEdit,
+    required this.child,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1215,11 +1174,23 @@ class _PresetSectionCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              title,
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    title,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                if (onEdit != null)
+                  IconButton(
+                    tooltip: 'Manage plans',
+                    onPressed: onEdit,
+                    icon: const Icon(Icons.edit_outlined),
+                  ),
+              ],
             ),
             const SizedBox(height: 8),
             child,
