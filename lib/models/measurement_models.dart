@@ -19,6 +19,7 @@ enum MeasurementType {
   Hip,
   Thigh,
   Calf,
+  Custom,
 }
 
 /// Definition of a measurement kind, linking to [MeasurementType].

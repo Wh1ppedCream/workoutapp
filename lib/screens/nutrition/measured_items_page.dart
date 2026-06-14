@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 
 import '../../models/models.dart';
 import '../../repositories/app_repository.dart';
+import '../../widgets/health_trends_section.dart';
 import 'new_measurement_item_page.dart';
-import 'specific_measurement_page.dart';
 
 class MeasuredItemsPage extends StatefulWidget {
   const MeasuredItemsPage({super.key});
@@ -21,12 +21,17 @@ class _MeasuredItemsPageState extends State<MeasuredItemsPage> {
   @override
   void initState() {
     super.initState();
-    _defsFuture = _repo.fetchUsedClassMeasurementDefinitions();
+    _defsFuture = _loadDefinitions();
+  }
+
+  Future<List<MeasurementDefinition>> _loadDefinitions() async {
+    await _repo.ensureDefaultMeasurementDefinitions();
+    return _repo.fetchClassMeasurementDefinitions();
   }
 
   void _reloadDefinitions() {
     setState(() {
-      _defsFuture = _repo.fetchUsedClassMeasurementDefinitions();
+      _defsFuture = _loadDefinitions();
     });
   }
 
@@ -47,10 +52,10 @@ class _MeasuredItemsPageState extends State<MeasuredItemsPage> {
             children: [
               for (final def in defs)
                 ListTile(
-                  title: Text(def.name),
+                  title: Text(_measurementLabel(def)),
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) => SpecificMeasurementPage(definition: def),
+                      builder: (_) => MeasurementTrendDetailPage(definition: def),
                     ),
                   ),
                 ),
@@ -77,4 +82,12 @@ class _MeasuredItemsPageState extends State<MeasuredItemsPage> {
       ),
     );
   }
+}
+
+String _measurementLabel(MeasurementDefinition definition) {
+  if (definition.type == MeasurementType.BodyWeight) return 'Weight';
+  if (definition.type == MeasurementType.Hip) return 'Hips';
+  if (definition.type == MeasurementType.Shoulder) return 'Shoulders';
+  if (definition.type == MeasurementType.Calf) return 'Calves';
+  return definition.name;
 }

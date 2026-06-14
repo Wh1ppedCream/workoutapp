@@ -422,6 +422,17 @@ class AppRepository {
   Future<List<Map<String, dynamic>>> fetchMeasurementDefinitions() =>
       _dbHelper.fetchMeasurementDefinitions();
 
+  Future<void> ensureDefaultMeasurementDefinitions() =>
+      _dbHelper.ensureDefaultMeasurementDefinitions();
+
+  Future<int> insertMeasurementDefinition({
+    required String name,
+    required MeasurementType type,
+  }) => _dbHelper.insertMeasurementDefinition(name: name, type: type);
+
+  Future<List<MeasurementDefinition>> fetchClassMeasurementDefinitions() =>
+      _dbHelper.fetchClassMeasurementDefinitions();
+
   Future<int?> fetchMeasurementDefinitionId(String name) =>
       _dbHelper.fetchMeasurementDefinitionId(name);
 

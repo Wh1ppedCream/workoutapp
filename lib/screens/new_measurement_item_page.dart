@@ -25,11 +25,19 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
 
   final TextEditingController _valController1 = TextEditingController();
   final TextEditingController _valController2 = TextEditingController();
+  final TextEditingController _customNameController = TextEditingController();
+  final TextEditingController _customUnitController = TextEditingController(
+    text: 'in',
+  );
+  final TextEditingController _customNoteController = TextEditingController();
 
   @override
   void dispose() {
     _valController1.dispose();
     _valController2.dispose();
+    _customNameController.dispose();
+    _customUnitController.dispose();
+    _customNoteController.dispose();
     super.dispose();
   }
 
@@ -39,11 +47,19 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
     _pump = false;
     _valController1.clear();
     _valController2.clear();
+    _customNameController.clear();
+    _customUnitController.text = 'in';
+    _customNoteController.clear();
     _selectedWeightUnit = 'lbs';
   }
 
   bool get _canSave {
-    if (!_usePresets || _selectedType == null) return false;
+    if (!_usePresets) {
+      return _customNameController.text.trim().isNotEmpty &&
+          _customUnitController.text.trim().isNotEmpty &&
+          _valController1.text.trim().isNotEmpty;
+    }
+    if (_selectedType == null) return false;
     switch (_selectedType!) {
       case MeasurementType.BodyWeight:
         return _bodyweightVariation != null &&
@@ -65,6 +81,33 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
   }
 
   Future<void> _saveMeasurement() async {
+    if (!_usePresets) {
+      final name = _customNameController.text.trim();
+      final unit = _customUnitController.text.trim();
+      final value = double.tryParse(_valController1.text.trim());
+      if (name.isEmpty || unit.isEmpty || value == null) {
+        _showError('Enter a custom name, value, and unit');
+        return;
+      }
+
+      final defId = await _repo.insertMeasurementDefinition(
+        name: name,
+        type: MeasurementType.Custom,
+      );
+      await _repo.insertMeasurement(
+        defId,
+        DateTime.now(),
+        value,
+        unit,
+        _customNoteController.text.trim().isEmpty
+            ? null
+            : _customNoteController.text.trim(),
+      );
+
+      if (!mounted) return;
+      Navigator.of(context).pop(true);
+      return;
+    }
 
     final type = _selectedType!;
     final queryName = type.name;
@@ -72,6 +115,7 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
 
 
     // 1) Lookup the definition ID via repo
+    await _repo.ensureDefaultMeasurementDefinitions();
 
     final defId = await _repo.fetchMeasurementDefinitionId(queryName);
 
@@ -130,7 +174,7 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
     );
 
     if (!mounted) return;
-    Navigator.of(context).pop();
+    Navigator.of(context).pop(true);
   }
 
   @override
@@ -179,10 +223,12 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
             DropdownButtonFormField<MeasurementType>(
               decoration: const InputDecoration(labelText: 'Preset Type'),
               value: _selectedType,
-              items: MeasurementType.values.map((mt) {
+              items: MeasurementType.values
+                  .where((mt) => mt != MeasurementType.Custom)
+                  .map((mt) {
                 return DropdownMenuItem<MeasurementType>(
                   value: mt,
-                  child: Text(mt.name),
+                  child: Text(_measurementTypeLabel(mt)),
                 );
               }).toList(),
               onChanged: (mt) => setState(() {
@@ -315,6 +361,48 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
                 onChanged: (_) => setState(() {}),
               ),
             ],
+          ] else ...[
+            TextFormField(
+              controller: _customNameController,
+              decoration: const InputDecoration(
+                labelText: 'Measurement name',
+                hintText: 'Chest size, resting heart rate...',
+              ),
+              textCapitalization: TextCapitalization.words,
+              onChanged: (_) => setState(() {}),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: TextFormField(
+                    controller: _valController1,
+                    decoration: const InputDecoration(labelText: 'Value'),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    onChanged: (_) => setState(() {}),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextFormField(
+                    controller: _customUnitController,
+                    decoration: const InputDecoration(labelText: 'Unit'),
+                    onChanged: (_) => setState(() {}),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _customNoteController,
+              decoration: const InputDecoration(
+                labelText: 'Note',
+                hintText: 'Optional',
+              ),
+            ),
           ],
         ],
       ),
@@ -343,3 +431,20 @@ const Map<String, String> _notesFor = {
   'Thigh': 'Around widest part of thigh',
   'Calf': 'Around widest part of calf',
 };
+
+String _measurementTypeLabel(MeasurementType type) {
+  return switch (type) {
+    MeasurementType.BodyWeight => 'Weight',
+    MeasurementType.Height => 'Height',
+    MeasurementType.Forearm => 'Forearm',
+    MeasurementType.Arm => 'Arm',
+    MeasurementType.Neck => 'Neck',
+    MeasurementType.Shoulder => 'Shoulders',
+    MeasurementType.Chest => 'Chest',
+    MeasurementType.Waist => 'Waist',
+    MeasurementType.Hip => 'Hips',
+    MeasurementType.Thigh => 'Thigh',
+    MeasurementType.Calf => 'Calves',
+    MeasurementType.Custom => 'Custom',
+  };
+}

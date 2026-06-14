@@ -58,6 +58,54 @@ class LookupDao {
     return db.query('measurement_definitions', orderBy: 'name');
   }
 
+  static const _defaultMeasurementTypes = <MeasurementType>[
+    MeasurementType.BodyWeight,
+    MeasurementType.Height,
+    MeasurementType.Forearm,
+    MeasurementType.Arm,
+    MeasurementType.Neck,
+    MeasurementType.Shoulder,
+    MeasurementType.Chest,
+    MeasurementType.Waist,
+    MeasurementType.Hip,
+    MeasurementType.Thigh,
+    MeasurementType.Calf,
+  ];
+
+  /// Ensures the built-in measurement definitions exist for old and new DBs.
+  static Future<void> ensureDefaultMeasurementDefinitions(Database db) async {
+    final batch = db.batch();
+    for (final type in _defaultMeasurementTypes) {
+      batch.insert('measurement_definitions', {
+        'name': type.name,
+        'type': type.name,
+      }, conflictAlgorithm: ConflictAlgorithm.ignore);
+    }
+    await batch.commit(noResult: true);
+  }
+
+  static Future<int> insertMeasurementDefinition(
+    Database db, {
+    required String name,
+    required MeasurementType type,
+  }) async {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) {
+      throw ArgumentError.value(name, 'name', 'Measurement name is required');
+    }
+
+    await db.insert('measurement_definitions', {
+      'name': trimmed,
+      'type': type.name,
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
+
+    final existingId = await getMeasurementDefinitionId(db, trimmed);
+    if (existingId == null) {
+      throw StateError('Unable to create measurement definition "$trimmed"');
+    }
+    return existingId;
+  }
+
   /// Inserts a new measurement record tied to a definition.
   ///
   /// - [db]: Open SQLite database instance.

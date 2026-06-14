@@ -13,6 +13,8 @@ import '../screens/exercise/session_detail_screen.dart';
 import '../theme/theme_extensions.dart';
 
 const _exerciseProgressTileIdsKey = 'exercise_progress_tile_ids_v1';
+const _exerciseProgressHiddenAutoIdsKey =
+    'exercise_progress_hidden_auto_ids_v1';
 
 class ExerciseProgressSection extends StatefulWidget {
   final int refreshToken;
@@ -31,7 +33,10 @@ class _ExerciseProgressSectionState extends State<ExerciseProgressSection>
   late Future<_ExerciseProgressSectionData> _dataFuture;
   _ExerciseProgressSectionData? _lastData;
   List<int> _savedDefinitionIds = const <int>[];
+  List<int> _hiddenAutoDefinitionIds = const <int>[];
   List<int> _visibleDefinitionIds = const <int>[];
+  int? _selectedDefinitionId;
+  bool _isEditingExerciseProgress = false;
 
   @override
   void initState() {
@@ -71,6 +76,14 @@ class _ExerciseProgressSectionState extends State<ExerciseProgressSection>
             .toList() ??
         const <int>[];
     _savedDefinitionIds = savedIds;
+    final hiddenAutoIds =
+        prefs
+            .getStringList(_exerciseProgressHiddenAutoIdsKey)
+            ?.map(int.tryParse)
+            .whereType<int>()
+            .toList() ??
+        const <int>[];
+    _hiddenAutoDefinitionIds = hiddenAutoIds;
 
     final ids = <int>[];
     final mostUsedRows = await mostUsedRowsFuture;
@@ -78,7 +91,10 @@ class _ExerciseProgressSectionState extends State<ExerciseProgressSection>
         mostUsedRows.isEmpty
             ? null
             : (mostUsedRows.first['definition_id'] as num?)?.toInt();
-    if (mostUsedId != null) ids.add(mostUsedId);
+    if (mostUsedId != null &&
+        (!hiddenAutoIds.contains(mostUsedId) || savedIds.contains(mostUsedId))) {
+      ids.add(mostUsedId);
+    }
     for (final id in savedIds) {
       if (!ids.contains(id)) ids.add(id);
     }
@@ -118,15 +134,71 @@ class _ExerciseProgressSectionState extends State<ExerciseProgressSection>
       return;
     }
 
-    final nextIds = [..._savedDefinitionIds, definition.id];
+    final nextIds = [
+      ..._savedDefinitionIds,
+      if (!_savedDefinitionIds.contains(definition.id)) definition.id,
+    ];
+    final nextHiddenAutoIds = [
+      for (final id in _hiddenAutoDefinitionIds)
+        if (id != definition.id) id,
+    ];
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList(
       _exerciseProgressTileIdsKey,
       nextIds.map((id) => id.toString()).toList(),
     );
+    await prefs.setStringList(
+      _exerciseProgressHiddenAutoIdsKey,
+      nextHiddenAutoIds.map((id) => id.toString()).toList(),
+    );
     if (!mounted) return;
     setState(() {
       _savedDefinitionIds = nextIds;
+      _hiddenAutoDefinitionIds = nextHiddenAutoIds;
+      _dataFuture = _loadData();
+    });
+  }
+
+  Future<void> _removeExerciseTile(_ExerciseTrendTile tile) async {
+    final id = tile.definition.id;
+    final nextSavedIds = [
+      for (final savedId in _savedDefinitionIds)
+        if (savedId != id) savedId,
+    ];
+    final nextHiddenAutoIds = [
+      ..._hiddenAutoDefinitionIds,
+      if (!_savedDefinitionIds.contains(id) &&
+          !_hiddenAutoDefinitionIds.contains(id))
+        id,
+    ];
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      _exerciseProgressTileIdsKey,
+      nextSavedIds.map((savedId) => savedId.toString()).toList(),
+    );
+    await prefs.setStringList(
+      _exerciseProgressHiddenAutoIdsKey,
+      nextHiddenAutoIds.map((hiddenId) => hiddenId.toString()).toList(),
+    );
+    if (!mounted) return;
+    setState(() {
+      if (_selectedDefinitionId == id) _selectedDefinitionId = null;
+      _savedDefinitionIds = nextSavedIds;
+      _hiddenAutoDefinitionIds = nextHiddenAutoIds;
+      _visibleDefinitionIds = [
+        for (final visibleId in _visibleDefinitionIds)
+          if (visibleId != id) visibleId,
+      ];
+      final lastData = _lastData;
+      if (lastData != null) {
+        _lastData = _ExerciseProgressSectionData(
+          tiles: [
+            for (final existingTile in lastData.tiles)
+              if (existingTile.definition.id != id) existingTile,
+          ],
+        );
+      }
       _dataFuture = _loadData();
     });
   }
@@ -168,45 +240,193 @@ class _ExerciseProgressSectionState extends State<ExerciseProgressSection>
           _lastData = snapshot.data;
         }
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Text(
-                'Exercise Progress',
-                style: theme.textTheme.titleLarge,
-              ),
-            ),
-            SizedBox(
-              height: 152,
-              child:
-                  data == null &&
-                          snapshot.connectionState != ConnectionState.done
-                      ? Center(
-                        child: CircularProgressIndicator(
-                          color: colors.historySummaryProgress,
-                        ),
-                      )
-                      : ListView(
-                        scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        children: [
-                          for (final tile
-                              in data?.tiles ?? const <_ExerciseTrendTile>[])
-                            _ExerciseProgressTileCard(
-                              tile: tile,
-                              onTap: () => _openDetail(tile),
-                            ),
-                          _AddExerciseProgressTile(onTap: _openExercisePicker),
-                        ],
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final layout = _ExerciseProgressLayout.fromWidth(
+              constraints.maxWidth,
+            );
+
+            if (data == null &&
+                snapshot.connectionState != ConnectionState.done) {
+              return Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: layout.outerPaddingHorizontal,
+                  vertical: layout.outerPaddingVertical,
+                ),
+                child: Card(
+                  child: SizedBox(
+                    height: layout.loadingHeight,
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        color: colors.historySummaryProgress,
                       ),
-            ),
-          ],
+                    ),
+                  ),
+                ),
+              );
+            }
+
+            final tiles = data?.tiles ?? const <_ExerciseTrendTile>[];
+            final selectedTile = _selectedTile(tiles);
+            final selectedId = selectedTile?.definition.id;
+            final carouselTiles = [
+              for (final tile in tiles)
+                if (tile.definition.id != selectedId) tile,
+            ];
+
+            return Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: layout.outerPaddingHorizontal,
+                vertical: layout.outerPaddingVertical,
+              ),
+              child: Card(
+                clipBehavior: Clip.antiAlias,
+                child: Padding(
+                  padding: EdgeInsets.all(layout.cardPadding),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        'Exercise Progress',
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      SizedBox(height: layout.sectionGap),
+                      if (selectedTile == null)
+                        _ExerciseProgressEmptyHero(
+                          layout: layout,
+                          onTap: _openExercisePicker,
+                        )
+                      else
+                        _ExerciseProgressHero(
+                          tile: selectedTile,
+                          layout: layout,
+                          isEditing: _isEditingExerciseProgress,
+                          onRemove:
+                              () => unawaited(
+                                _removeExerciseTile(selectedTile),
+                              ),
+                          onTap: () => _openDetail(selectedTile),
+                        ),
+                      SizedBox(height: layout.sectionGap),
+                      SizedBox(
+                        height: layout.selectorHeight,
+                        child: ListView(
+                          scrollDirection: Axis.horizontal,
+                          children: [
+                            for (final tile in carouselTiles)
+                              _ExerciseProgressSelectorTile(
+                                tile: tile,
+                                layout: layout,
+                                isSelected: false,
+                                isEditing: _isEditingExerciseProgress,
+                                onRemove:
+                                    () => unawaited(
+                                      _removeExerciseTile(tile),
+                                    ),
+                                onTap:
+                                    () => setState(() {
+                                      _isEditingExerciseProgress = false;
+                                      _selectedDefinitionId =
+                                          tile.definition.id;
+                                    }),
+                              ),
+                            if (_isEditingExerciseProgress)
+                              _AddExerciseProgressTile(
+                                layout: layout,
+                                onTap: _openExercisePicker,
+                              )
+                            else
+                              _EditExerciseProgressTile(
+                                layout: layout,
+                                onTap:
+                                    () => setState(() {
+                                      _isEditingExerciseProgress = true;
+                                    }),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
         );
       },
     );
   }
+
+  _ExerciseTrendTile? _selectedTile(List<_ExerciseTrendTile> tiles) {
+    if (tiles.isEmpty) return null;
+    final selectedId = _selectedDefinitionId;
+    if (selectedId != null) {
+      for (final tile in tiles) {
+        if (tile.definition.id == selectedId) return tile;
+      }
+    }
+    return tiles.first;
+  }
+}
+
+class _ExerciseProgressLayout {
+  final double scale;
+
+  const _ExerciseProgressLayout._(this.scale);
+
+  factory _ExerciseProgressLayout.fromWidth(double width) {
+    return _ExerciseProgressLayout._(
+      (width / 416).clamp(0.84, 1.12).toDouble(),
+    );
+  }
+
+  double value(double base) => base * scale;
+
+  double get outerPaddingHorizontal => value(16);
+  double get outerPaddingVertical => value(8);
+  double get cardPadding => value(16);
+  double get sectionGap => value(14);
+  double get loadingHeight => value(248);
+  double get heroPadding => value(10);
+  double get heroRadius => value(18);
+  double get heroHeight => value(226);
+  double get heroStackedStatsHeight => value(184);
+  double get heroChartHeight => value(166);
+  double get heroStackedChartHeight => value(166);
+  double get heroColumnGap => value(12);
+  double get heroRowGap => value(8);
+  double get chartTitleGap => value(6);
+  double get statsGap => value(10);
+  double get statPaddingHorizontal => value(9);
+  double get statPaddingVertical => value(7);
+  double get statRadius => value(14);
+  double get statBoxHeight => value(106);
+  double get statIconSize => value(15);
+  double get statIconGap => value(3);
+  double get statLabelGap => value(3);
+  double get statHelperGap => value(2);
+  double get selectorHeight => value(138);
+  double get selectorWidth => value(154);
+  double get selectorMarginRight => value(10);
+  double get selectorPadding => value(10);
+  double get selectorRadius => value(14);
+  double get selectorGraphGap => value(5);
+  double get selectorDeltaGap => value(3);
+  double get compactIconSize => value(12);
+  double get compactIconGap => value(2);
+  double get removeBadgeSize => value(24);
+  double get removeIconSize => value(15);
+  double get addTileWidth => value(120);
+  double get addTileMarginRight => value(8);
+  double get addTileRadius => value(12);
+  double get addIconSize => value(32);
+  double get emptyPadding => value(18);
+  double get emptyIconSize => value(34);
+  double get emptyTitleGap => value(10);
+  double get emptyBodyGap => value(4);
 }
 
 class _ExerciseProgressSectionData {
@@ -248,63 +468,547 @@ class _ExerciseProgressPoint {
   }
 }
 
-class _ExerciseProgressTileCard extends StatelessWidget {
+class _ExerciseProgressHero extends StatelessWidget {
   final _ExerciseTrendTile tile;
+  final _ExerciseProgressLayout layout;
+  final bool isEditing;
+  final VoidCallback onRemove;
   final VoidCallback onTap;
 
-  const _ExerciseProgressTileCard({required this.tile, required this.onTap});
+  const _ExerciseProgressHero({
+    required this.tile,
+    required this.layout,
+    required this.isEditing,
+    required this.onRemove,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(layout.heroRadius),
+      child: Container(
+        padding: EdgeInsets.all(layout.heroPadding),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerHighest.withValues(
+            alpha: 0.36,
+          ),
+          borderRadius: BorderRadius.circular(layout.heroRadius),
+        ),
+        child: Stack(
+          children: [
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final useStacked = constraints.maxWidth < layout.value(270);
+                final chartColumn = _ExerciseProgressHeroChart(
+                  tile: tile,
+                  layout: layout,
+                  chartHeight:
+                      useStacked
+                          ? layout.heroStackedChartHeight
+                          : layout.heroChartHeight,
+                );
+                final statsColumn = _ExerciseProgressStatsColumn(
+                  tile: tile,
+                  layout: layout,
+                );
+
+                if (useStacked) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      chartColumn,
+                      SizedBox(height: layout.heroColumnGap),
+                      SizedBox(
+                        height: layout.heroStackedStatsHeight,
+                        child: statsColumn,
+                      ),
+                    ],
+                  );
+                }
+
+                return SizedBox(
+                  height: layout.heroHeight,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(flex: 7, child: chartColumn),
+                      SizedBox(width: layout.heroRowGap),
+                      Expanded(flex: 3, child: statsColumn),
+                    ],
+                  ),
+                );
+              },
+            ),
+            if (isEditing)
+              Positioned(
+                top: 0,
+                right: 0,
+                child: _ExerciseProgressRemoveBadge(
+                  layout: layout,
+                  onTap: onRemove,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ExerciseProgressHeroChart extends StatelessWidget {
+  final _ExerciseTrendTile tile;
+  final _ExerciseProgressLayout layout;
+  final double chartHeight;
+
+  const _ExerciseProgressHeroChart({
+    required this.tile,
+    required this.layout,
+    required this.chartHeight,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                tile.definition.name,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+            Icon(
+              Icons.chevron_right,
+              size: layout.value(20),
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ],
+        ),
+        SizedBox(height: layout.chartTitleGap),
+        SizedBox(
+          height: chartHeight,
+          child: _ExerciseProgressChart(
+            points: tile.points,
+            showEmptyLabel: true,
+            showAxes: true,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ExerciseProgressStatsColumn extends StatelessWidget {
+  final _ExerciseTrendTile tile;
+  final _ExerciseProgressLayout layout;
+
+  const _ExerciseProgressStatsColumn({
+    required this.tile,
+    required this.layout,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final latest = tile.latestPoint;
+    final actualOneRm = latest?.actualOneRm;
+    final actualDelta = _deltaFromPrevious(
+      tile.points,
+      valueForPoint: (point) => point.actualOneRm,
+    );
+    final estimatedDelta = _deltaFromPrevious(
+      tile.points,
+      valueForPoint: (point) => point.estimatedOneRm,
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        _ExerciseProgressStatBox(
+          label: '1 Rep Max',
+          value:
+              actualOneRm == null
+                  ? '--'
+                  : _formatLbs(actualOneRm),
+          delta: actualDelta,
+          layout: layout,
+        ),
+        _ExerciseProgressStatBox(
+          label: 'Est. 1 RM',
+          value:
+              latest == null
+                  ? '--'
+                  : _formatLbs(latest.estimatedOneRm),
+          delta: estimatedDelta,
+          layout: layout,
+        ),
+      ],
+    );
+  }
+}
+
+class _ExerciseProgressStatBox extends StatelessWidget {
+  final String label;
+  final String value;
+  final double? delta;
+  final _ExerciseProgressLayout layout;
+
+  const _ExerciseProgressStatBox({
+    required this.label,
+    required this.value,
+    required this.layout,
+    this.delta,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final icon = _deltaIcon(delta);
+    final deltaColor = _deltaColor(context, delta);
+    return SizedBox(
+      height: layout.statBoxHeight,
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: layout.statPaddingHorizontal,
+          vertical: layout.statPaddingVertical,
+        ),
+        decoration: BoxDecoration(
+          color: theme.cardColor.withValues(alpha: 0.72),
+          borderRadius: BorderRadius.circular(layout.statRadius),
+          border: Border.all(
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.45),
+          ),
+        ),
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label,
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              SizedBox(height: layout.statLabelGap),
+              Text(
+                value,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: theme.colorScheme.onSurface,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              SizedBox(height: layout.statHelperGap),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (icon != null) ...[
+                    Icon(icon, size: layout.statIconSize, color: deltaColor),
+                    SizedBox(width: layout.statIconGap),
+                  ],
+                  Text(
+                    _formatDeltaLbs(delta),
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: deltaColor,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ExerciseProgressSelectorTile extends StatelessWidget {
+  final _ExerciseTrendTile tile;
+  final _ExerciseProgressLayout layout;
+  final bool isSelected;
+  final bool isEditing;
+  final VoidCallback onTap;
+  final VoidCallback onRemove;
+
+  const _ExerciseProgressSelectorTile({
+    required this.tile,
+    required this.layout,
+    required this.isSelected,
+    required this.isEditing,
+    required this.onTap,
+    required this.onRemove,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = context.colors;
     final latest = tile.latestPoint;
+    final delta = _deltaFromPrevious(tile.points);
+    final accent = theme.colorScheme.primary;
 
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        width: 156,
-        margin: const EdgeInsets.only(right: 10),
-        padding: const EdgeInsets.all(10),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        width: layout.selectorWidth,
+        margin: EdgeInsets.only(right: layout.selectorMarginRight),
         decoration: BoxDecoration(
-          color: theme.cardColor,
-          border: Border.all(color: colors.healthTrendBorder!),
-          borderRadius: BorderRadius.circular(12),
+          color:
+              isSelected
+                  ? accent.withValues(alpha: 0.14)
+                  : theme.cardColor.withValues(alpha: 0.72),
+          border: Border.all(
+            color: isSelected ? accent : colors.healthTrendBorder!,
+            width: isSelected ? layout.value(1.5) : layout.value(1),
+          ),
+          borderRadius: BorderRadius.circular(layout.selectorRadius),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Stack(
           children: [
-            Text(
-              tile.definition.name,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Expanded(child: _ExerciseProgressChart(points: tile.points)),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    latest == null
-                        ? 'No records yet'
-                        : '${_formatLbs(latest.estimatedOneRm)} est. 1RM',
-                    maxLines: 1,
+            Padding(
+              padding: EdgeInsets.all(layout.selectorPadding),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    tile.definition.name,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.w900,
                     ),
                   ),
+                  SizedBox(height: layout.selectorGraphGap),
+                  Expanded(
+                    child: _ExerciseProgressChart(
+                      points: tile.points,
+                      showEmptyLabel: false,
+                    ),
+                  ),
+                  SizedBox(height: layout.selectorGraphGap),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          latest == null
+                              ? '--'
+                              : _formatLbs(latest.estimatedOneRm),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.labelMedium?.copyWith(
+                            fontSize:
+                                theme.textTheme.labelMedium?.fontSize == null
+                                    ? null
+                                    : theme.textTheme.labelMedium!.fontSize! *
+                                        0.84,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: layout.selectorDeltaGap),
+                      Expanded(
+                        child: _CompactDelta(delta: delta, layout: layout),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            if (isEditing)
+              Positioned(
+                top: layout.value(6),
+                right: layout.value(6),
+                child: _ExerciseProgressRemoveBadge(
+                  layout: layout,
+                  onTap: onRemove,
                 ),
-                Icon(
-                  Icons.chevron_right,
-                  size: 16,
-                  color: colors.healthTrendIcon!,
-                ),
-              ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ExerciseProgressRemoveBadge extends StatelessWidget {
+  final _ExerciseProgressLayout layout;
+  final VoidCallback onTap;
+
+  const _ExerciseProgressRemoveBadge({
+    required this.layout,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        width: layout.removeBadgeSize,
+        height: layout.removeBadgeSize,
+        decoration: BoxDecoration(
+          color: theme.colorScheme.errorContainer.withValues(alpha: 0.94),
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.24),
+              blurRadius: layout.value(8),
+              offset: Offset(0, layout.value(2)),
+            ),
+          ],
+        ),
+        child: Icon(
+          Icons.remove,
+          size: layout.removeIconSize,
+          color: theme.colorScheme.onErrorContainer,
+        ),
+      ),
+    );
+  }
+}
+
+class _CompactDelta extends StatelessWidget {
+  final double? delta;
+  final _ExerciseProgressLayout layout;
+
+  const _CompactDelta({required this.delta, required this.layout});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _deltaColor(context, delta);
+    final icon = _deltaIcon(delta);
+    return Row(
+      children: [
+        if (icon != null) ...[
+          Icon(icon, size: layout.compactIconSize, color: color),
+          SizedBox(width: layout.compactIconGap),
+        ],
+        Expanded(
+          child: Text(
+            _formatDeltaLbs(delta),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              fontSize:
+                  Theme.of(context).textTheme.labelSmall?.fontSize == null
+                      ? null
+                  : Theme.of(context).textTheme.labelSmall!.fontSize! * 0.82,
+              color: color,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+double? _deltaFromPrevious(
+  List<_ExerciseProgressPoint> points, {
+  double? Function(_ExerciseProgressPoint point)? valueForPoint,
+}) {
+  final valid = _validPoints(points, valueForPoint: valueForPoint);
+  if (valid.length < 2) return null;
+  final valueFor = valueForPoint ?? (point) => point.estimatedOneRm;
+  return valueFor(valid.last)! - valueFor(valid[valid.length - 2])!;
+}
+
+List<_ExerciseProgressPoint> _validEstimatedPoints(
+  List<_ExerciseProgressPoint> points,
+) {
+  return _validPoints(points);
+}
+
+List<_ExerciseProgressPoint> _validPoints(
+  List<_ExerciseProgressPoint> points, {
+  double? Function(_ExerciseProgressPoint point)? valueForPoint,
+}) {
+  final valueFor = valueForPoint ?? (point) => point.estimatedOneRm;
+  return [
+    for (final point in points)
+      if ((valueFor(point) ?? 0) > 0) point,
+  ];
+}
+
+String _formatDeltaLbs(double? delta) {
+  if (delta == null) return '--';
+  final rounded = delta.round();
+  if (rounded == 0) return '0 lbs';
+  return '${rounded > 0 ? '+' : ''}$rounded lbs';
+}
+
+Color _deltaColor(BuildContext context, double? delta) {
+  final scheme = Theme.of(context).colorScheme;
+  if (delta == null || delta == 0) return scheme.onSurfaceVariant;
+  return delta > 0 ? Colors.green.shade400 : scheme.error;
+}
+
+IconData? _deltaIcon(double? delta) {
+  if (delta == null || delta == 0) return null;
+  return delta > 0 ? Icons.arrow_upward : Icons.arrow_downward;
+}
+
+class _ExerciseProgressEmptyHero extends StatelessWidget {
+  final _ExerciseProgressLayout layout;
+  final VoidCallback onTap;
+
+  const _ExerciseProgressEmptyHero({
+    required this.layout,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(layout.heroRadius),
+      child: Container(
+        padding: EdgeInsets.all(layout.emptyPadding),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerHighest.withValues(
+            alpha: 0.36,
+          ),
+          borderRadius: BorderRadius.circular(layout.heroRadius),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              Icons.add_chart,
+              size: layout.emptyIconSize,
+              color: theme.colorScheme.primary,
+            ),
+            SizedBox(height: layout.emptyTitleGap),
+            Text(
+              'Track an exercise',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            SizedBox(height: layout.emptyBodyGap),
+            Text(
+              'Choose an exercise to start watching its 1RM trend here.',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),
@@ -314,9 +1018,13 @@ class _ExerciseProgressTileCard extends StatelessWidget {
 }
 
 class _AddExerciseProgressTile extends StatelessWidget {
+  final _ExerciseProgressLayout layout;
   final VoidCallback onTap;
 
-  const _AddExerciseProgressTile({required this.onTap});
+  const _AddExerciseProgressTile({
+    required this.layout,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -324,14 +1032,51 @@ class _AddExerciseProgressTile extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 120,
-        margin: const EdgeInsets.only(right: 8),
+        width: layout.addTileWidth,
+        margin: EdgeInsets.only(right: layout.addTileMarginRight),
         decoration: BoxDecoration(
           border: Border.all(color: colors.healthTrendBorder!),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(layout.addTileRadius),
         ),
         child: Center(
-          child: Icon(Icons.add, size: 32, color: colors.healthTrendIcon!),
+          child: Icon(
+            Icons.add,
+            size: layout.addIconSize,
+            color: colors.healthTrendIcon!,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _EditExerciseProgressTile extends StatelessWidget {
+  final _ExerciseProgressLayout layout;
+  final VoidCallback onTap;
+
+  const _EditExerciseProgressTile({
+    required this.layout,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: layout.addTileWidth,
+        margin: EdgeInsets.only(right: layout.addTileMarginRight),
+        decoration: BoxDecoration(
+          border: Border.all(color: colors.healthTrendBorder!),
+          borderRadius: BorderRadius.circular(layout.addTileRadius),
+        ),
+        child: Center(
+          child: Icon(
+            Icons.edit,
+            size: layout.value(26),
+            color: colors.healthTrendIcon!,
+          ),
         ),
       ),
     );
@@ -970,10 +1715,10 @@ class _ExerciseProgressChartScale {
   late final Rect plotRect =
       showAxes
           ? Rect.fromLTWH(
-            42,
-            42,
-            math.max(1.0, size.width - 52),
-            math.max(1.0, size.height - 78),
+            26,
+            18,
+            math.max(1.0, size.width - 30),
+            math.max(1.0, size.height - 42),
           )
           : Rect.fromLTWH(
             0,
@@ -982,13 +1727,27 @@ class _ExerciseProgressChartScale {
             math.max(1.0, size.height - 12),
           );
 
-  late final double maxY = _niceLbsCeiling(
-    _values.isEmpty ? 1 : _values.reduce(math.max) * 1.08,
+  late final double _rawMinY = _values.isEmpty ? 0 : _values.reduce(math.min);
+  late final double _rawMaxY = _values.isEmpty ? 1 : _values.reduce(math.max);
+  late final double _rangeY = math.max(1.0, _rawMaxY - _rawMinY);
+  late final double _paddingY = math.max(
+    2.0,
+    _rangeY * 0.08,
+  );
+  late final double _paddedMinY = math.max(0, _rawMinY - _paddingY);
+  late final double _paddedMaxY = _rawMaxY + _paddingY;
+  late final double _tickStep = _niceTickStep(
+    math.max(1.0, (_paddedMaxY - _paddedMinY) / 2),
+  );
+  late final double minY = (_paddedMinY / _tickStep).floor() * _tickStep;
+  late final double maxY = math.max(
+    minY + 1,
+    (_paddedMaxY / _tickStep).ceil() * _tickStep,
   );
 
   bool get hasUsableValues => _values.isNotEmpty;
 
-  List<double> get yTicks => [0, maxY / 2, maxY];
+  List<double> get yTicks => [minY, (minY + maxY) / 2, maxY];
 
   List<int> get dateTickIndexes {
     if (points.isEmpty) return const [];
@@ -1005,7 +1764,9 @@ class _ExerciseProgressChartScale {
   }
 
   double yFor(double value) {
-    final normalized = (value / maxY).clamp(0.0, 1.0).toDouble();
+    final normalized = ((value - minY) / (maxY - minY))
+        .clamp(0.0, 1.0)
+        .toDouble();
     return plotRect.bottom - plotRect.height * normalized;
   }
 
@@ -1013,22 +1774,30 @@ class _ExerciseProgressChartScale {
     return Offset(xFor(index), yFor(value));
   }
 
-  static double _niceLbsCeiling(double value) {
-    if (value <= 0) return 100;
-    var step = 1.0;
-    while (value / step > 10) {
-      step *= 10;
-    }
-    final normalized = value / step;
+  static double _niceTickStep(double value) {
+    if (value <= 0) return 1;
+    final scale =
+        math.pow(10, (math.log(value) / math.ln10).floor()).toDouble();
+    final normalized = value / scale;
     final multiplier =
         normalized <= 1
             ? 1.0
+            : normalized <= 1.5
+            ? 1.5
             : normalized <= 2
             ? 2.0
+            : normalized <= 2.5
+            ? 2.5
+            : normalized <= 3
+            ? 3.0
+            : normalized <= 4
+            ? 4.0
             : normalized <= 5
             ? 5.0
+            : normalized <= 7.5
+            ? 7.5
             : 10.0;
-    return multiplier * step;
+    return multiplier * scale;
   }
 }
 

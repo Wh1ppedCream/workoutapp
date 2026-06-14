@@ -45,7 +45,7 @@ class _MeasurementsTrendsPageState extends State<MeasurementsTrendsPage> {
             children: [
               WorkoutMetricChartCard(refreshToken: _refreshToken),
               ExerciseProgressSection(refreshToken: _refreshToken),
-              const HealthTrendsSection(),
+              HealthTrendsSection(refreshToken: _refreshToken),
             ],
           ),
         ),

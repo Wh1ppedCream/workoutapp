@@ -2522,6 +2522,19 @@ class DatabaseHelper {
     return LookupDao.getMeasurementDefinitions(db);
   }
 
+  Future<void> ensureDefaultMeasurementDefinitions() async {
+    final db = await database;
+    await LookupDao.ensureDefaultMeasurementDefinitions(db);
+  }
+
+  Future<int> insertMeasurementDefinition({
+    required String name,
+    required MeasurementType type,
+  }) async {
+    final db = await database;
+    return LookupDao.insertMeasurementDefinition(db, name: name, type: type);
+  }
+
   Future<int?> fetchMeasurementDefinitionId(String name) async {
     final db = await database;
     return LookupDao.getMeasurementDefinitionId(db, name);
@@ -2570,20 +2583,28 @@ class DatabaseHelper {
     return LookupDao.getUsedMeasurementDefinitions(db);
   }
 
+  MeasurementDefinition _measurementDefinitionFromRow(
+    Map<String, dynamic> row,
+  ) {
+    return MeasurementDefinition(
+      id: row['id'] as int,
+      name: row['name'] as String,
+      type: MeasurementType.values.firstWhere(
+        (mt) => mt.name == (row['type'] as String),
+        orElse: () => MeasurementType.Custom,
+      ),
+    );
+  }
+
+  Future<List<MeasurementDefinition>> fetchClassMeasurementDefinitions() async {
+    final raw = await fetchMeasurementDefinitions();
+    return raw.map(_measurementDefinitionFromRow).toList();
+  }
+
   Future<List<MeasurementDefinition>>
   fetchUsedClassMeasurementDefinitions() async {
     final raw = await fetchUsedMeasurementDefinitionsRaw();
-    return raw
-        .map(
-          (r) => MeasurementDefinition(
-            id: r['id'] as int,
-            name: r['name'] as String,
-            type: MeasurementType.values.firstWhere(
-              (mt) => mt.name == (r['type'] as String),
-            ),
-          ),
-        )
-        .toList();
+    return raw.map(_measurementDefinitionFromRow).toList();
   }
 
   Future<Map<String, dynamic>?> fetchMeasurementById(int id) async {
