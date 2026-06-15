@@ -388,20 +388,33 @@ class _TrainPageState extends State<TrainPage> {
             profiles: sel.profiles,
             selected: sel.currentProfile,
             onSelect: (profile) {
+              final navigator = Navigator.of(context);
               unawaited(sel.selectProfile(profile));
-              Navigator.of(context).pop();
+              if (navigator.canPop()) {
+                unawaited(navigator.maybePop());
+              }
               setState(() => _presetsRefreshToken++);
             },
             onEdit: (profile) {
-              Navigator.of(context).pop();
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => GymProfileScreen(profile: profile),
-                ),
-              );
+              final navigator = Navigator.of(context);
+              unawaited(() async {
+                if (navigator.canPop()) {
+                  await navigator.maybePop();
+                }
+                if (!navigator.mounted) return;
+                await navigator.push(
+                  MaterialPageRoute(
+                    builder: (_) => GymProfileScreen(profile: profile),
+                  ),
+                );
+              }());
             },
-            onDeleteAll: () {
-              final profileId = sel.currentProfile?.id;
+            onDelete: (profile) {
+              final navigator = Navigator.of(context);
+              if (navigator.canPop()) {
+                unawaited(navigator.maybePop());
+              }
+              final profileId = profile.id;
               if (profileId == null) return;
               unawaited(sel.deleteProfile(profileId));
               setState(() => _presetsRefreshToken++);

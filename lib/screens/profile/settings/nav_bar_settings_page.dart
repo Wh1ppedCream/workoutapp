@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../../providers/nav_bar_config.dart';
+import '../../../widgets/settings_tiles.dart';
 
 class NavBarSettingsPage extends StatefulWidget {
   const NavBarSettingsPage({super.key});
@@ -16,9 +18,11 @@ class _NavBarSettingsPageState extends State<NavBarSettingsPage> {
   @override
   void initState() {
     super.initState();
-    final cfg = context.read<NavBarConfig>();
-    _activeTabs = cfg.order.where((tab) => cfg.enabledTabs.contains(tab)).toList();
-    _inactiveTabs = cfg.order.where((tab) => !cfg.enabledTabs.contains(tab)).toList();
+    final config = context.read<NavBarConfig>();
+    _activeTabs =
+        config.order.where((tab) => config.enabledTabs.contains(tab)).toList();
+    _inactiveTabs =
+        config.order.where((tab) => !config.enabledTabs.contains(tab)).toList();
   }
 
   void _onReorder(int oldIndex, int newIndex) {
@@ -35,7 +39,6 @@ class _NavBarSettingsPageState extends State<NavBarSettingsPage> {
         _inactiveTabs.remove(tab);
         _activeTabs.add(tab);
       } else {
-        // Prevent disabling the profile tab
         if (tab == TabItem.profile) return;
         _activeTabs.remove(tab);
         _inactiveTabs.add(tab);
@@ -53,99 +56,189 @@ class _NavBarSettingsPageState extends State<NavBarSettingsPage> {
 
     final newOrder = [..._activeTabs, ..._inactiveTabs];
     final newEnabled = _activeTabs.toSet();
-    context.read<NavBarConfig>().update(newOrder: newOrder, newEnabled: newEnabled);
+    context.read<NavBarConfig>().update(
+          newOrder: newOrder,
+          newEnabled: newEnabled,
+        );
     setState(() {
       _activeTabs = newOrder.where((tab) => newEnabled.contains(tab)).toList();
       _inactiveTabs = newOrder.where((tab) => !newEnabled.contains(tab)).toList();
     });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Bottom tabs saved')),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final total = _activeTabs.length + _inactiveTabs.length;
-    final activeFlex = total > 0 ? _activeTabs.length : 1;
-    final inactiveFlex = total > 0 ? _inactiveTabs.length : 1;
-    // Exclude profile from inactive display
-    final inactiveDisplay = _inactiveTabs.where((tab) => tab != TabItem.profile).toList();
+    final inactiveDisplay =
+        _inactiveTabs.where((tab) => tab != TabItem.profile).toList();
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Edit Bottom Tabs')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return SettingsPageScaffold(
+      title: 'Edit Bottom Tabs',
+      subtitle: 'Choose what appears in the bottom bar and reorder active tabs.',
+      icon: Icons.space_dashboard_outlined,
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+          child: FilledButton.icon(
+            onPressed: _save,
+            icon: const Icon(Icons.save_outlined),
+            label: const Text('Save Tabs'),
+          ),
+        ),
+      ),
+      children: [
+        SettingsSection(
+          title: 'Active Tabs',
+          subtitle: 'Drag to reorder. Profile stays available.',
           children: [
-            Text('Active Tabs', style: Theme.of(context).textTheme.titleMedium),
-            Expanded(
-              flex: activeFlex,
-              child: ReorderableListView.builder(
-                onReorder: _onReorder,
-                itemCount: _activeTabs.length,
-                buildDefaultDragHandles: false,
-                itemBuilder: (context, index) {
-                  final tab = _activeTabs[index];
-                  return ListTile(
-                    key: ValueKey(tab),
-                    leading: ReorderableDragStartListener(
-                      index: index,
-                      child: const Icon(Icons.drag_handle),
-                    ),
-                    title: Row(
-                      children: [
-                        Icon(tab.icon),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            tab.title,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                    trailing: tab == TabItem.profile
-                        // profile is always on, switch disabled
-                        ? const Switch(value: true, onChanged: null)
-                        : Switch(
-                            value: true,
-                            onChanged: (value) => _toggleTab(tab, value),
-                          ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text('Inactive Tabs', style: Theme.of(context).textTheme.titleMedium),
-            Expanded(
-              flex: inactiveFlex,
-              child: ListView.builder(
-                itemCount: inactiveDisplay.length,
-                shrinkWrap: true,
-                itemBuilder: (context, index) {
-                  final tab = inactiveDisplay[index];
-                  return ListTile(
-                    key: ValueKey(tab),
-                    leading: Icon(tab.icon),
-                    title: Text(
-                      tab.title,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    trailing: Switch(
-                      value: false,
-                      onChanged: (value) => _toggleTab(tab, value),
-                    ),
-                  );
-                },
-              ),
+            ReorderableListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              onReorder: _onReorder,
+              itemCount: _activeTabs.length,
+              buildDefaultDragHandles: false,
+              proxyDecorator: (child, index, animation) {
+                return Material(
+                  color: Colors.transparent,
+                  child: ScaleTransition(
+                    scale: Tween<double>(begin: 1, end: 1.02).animate(animation),
+                    child: child,
+                  ),
+                );
+              },
+              itemBuilder: (context, index) {
+                final tab = _activeTabs[index];
+                return _NavTabTile(
+                  key: ValueKey('active-${tab.name}'),
+                  tab: tab,
+                  isActive: true,
+                  isLocked: tab == TabItem.profile,
+                  dragIndex: index,
+                  onToggle: (value) => _toggleTab(tab, value),
+                );
+              },
             ),
           ],
         ),
-      ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(8),
-        child: ElevatedButton(
-          onPressed: _save,
-          child: const Text('Save'),
+        SettingsSection(
+          title: 'Inactive Tabs',
+          subtitle: 'Turn these on whenever you want them back.',
+          children: inactiveDisplay.isEmpty
+              ? const [
+                  Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Text('No inactive tabs.'),
+                  ),
+                ]
+              : settingsTilesWithDividers(
+                  context,
+                  [
+                    for (final tab in inactiveDisplay)
+                      _NavTabTile(
+                        key: ValueKey('inactive-${tab.name}'),
+                        tab: tab,
+                        isActive: false,
+                        onToggle: (value) => _toggleTab(tab, value),
+                      ),
+                  ],
+                ),
         ),
+        const SizedBox(height: 72),
+      ],
+    );
+  }
+}
+
+class _NavTabTile extends StatelessWidget {
+  final TabItem tab;
+  final bool isActive;
+  final bool isLocked;
+  final int? dragIndex;
+  final ValueChanged<bool> onToggle;
+
+  const _NavTabTile({
+    super.key,
+    required this.tab,
+    required this.isActive,
+    this.isLocked = false,
+    this.dragIndex,
+    required this.onToggle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      leading: dragIndex == null
+          ? _IconBadge(icon: tab.icon)
+          : ReorderableDragStartListener(
+              index: dragIndex!,
+              child: _IconBadge(icon: tab.icon, trailingIcon: Icons.drag_handle),
+            ),
+      title: Text(
+        tab.title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: theme.textTheme.titleSmall?.copyWith(
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+      subtitle: Text(
+        isLocked
+            ? 'Always shown'
+            : isActive
+                ? 'Visible in bottom navigation'
+                : 'Hidden from bottom navigation',
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: scheme.onSurfaceVariant,
+        ),
+      ),
+      trailing: Switch(
+        value: isActive,
+        onChanged: isLocked ? null : onToggle,
+      ),
+    );
+  }
+}
+
+class _IconBadge extends StatelessWidget {
+  final IconData icon;
+  final IconData? trailingIcon;
+
+  const _IconBadge({required this.icon, this.trailingIcon});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return SizedBox(
+      width: 48,
+      height: 44,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: scheme.primary.withValues(alpha: 0.16),
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Icon(icon, color: scheme.primary, size: 22),
+          ),
+          if (trailingIcon != null)
+            Positioned(
+              right: 0,
+              bottom: 0,
+              child: Icon(trailingIcon, size: 14, color: scheme.onSurfaceVariant),
+            ),
+        ],
       ),
     );
   }

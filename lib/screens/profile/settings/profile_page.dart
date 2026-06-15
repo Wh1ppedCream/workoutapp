@@ -1,84 +1,87 @@
 // file: lib/screens/profile/settings/profile_page.dart
+
 import 'package:flutter/material.dart';
-import 'user_information_settings_page.dart';
-import 'ui_appearance_settings_page.dart';
+
+import '../../../widgets/settings_tiles.dart';
 import 'database_settings_page.dart';
-import 'gym_exercise_settings_page.dart';
 import 'diet_nutrition_settings_page.dart';
+import 'gym_exercise_settings_page.dart';
 import 'measurements_trends_settings_page.dart';
+import 'ui_appearance_settings_page.dart';
+import 'user_information_settings_page.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Profile'), centerTitle: true),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        children: [
-          ListTile(
-            leading: const Icon(Icons.person),
-            title: const Text('User Information'),
-            onTap:
-                () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const UserInformationSettingsPage(),
-                  ),
-                ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.palette),
-            title: const Text('UI and Appearance Settings'),
-            onTap:
-                () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const UIAppearanceSettingsPage(),
-                  ),
-                ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.storage),
-            title: const Text('Database Settings'),
-            onTap:
-                () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const DatabaseSettingsPage(),
-                  ),
-                ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.fitness_center),
-            title: const Text('Gym, Exercise and Workout Settings'),
-            onTap:
-                () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const GymExerciseSettingsPage(),
-                  ),
-                ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.restaurant_menu),
-            title: const Text('Diet and Nutrition Settings'),
-            onTap:
-                () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const DietNutritionSettingsPage(),
-                  ),
-                ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.show_chart),
-            title: const Text('Progress Settings'),
-            onTap:
-                () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const MeasurementsTrendsSettingsPage(),
-                  ),
-                ),
-          ),
-        ],
-      ),
+    return SettingsPageScaffold(
+      title: 'Profile',
+      subtitle:
+          'Personalize Tonos, manage training defaults, and keep your data healthy.',
+      icon: Icons.person,
+      showAppBar: false,
+      children: [
+        SettingsSection(
+          title: 'Account',
+          subtitle: 'Your identity and app-level appearance.',
+          children: settingsTilesWithDividers(context, [
+            SettingsActionTile(
+              icon: Icons.badge_outlined,
+              title: 'User Information',
+              subtitle: 'Name, body details, and activity profile.',
+              onTap: () => _open(context, const UserInformationSettingsPage()),
+            ),
+            SettingsActionTile(
+              icon: Icons.palette_outlined,
+              title: 'UI & Appearance',
+              subtitle: 'Theme, onboarding, and bottom tab setup.',
+              onTap: () => _open(context, const UIAppearanceSettingsPage()),
+            ),
+          ]),
+        ),
+        SettingsSection(
+          title: 'Training',
+          subtitle: 'Exercise defaults and progress-related controls.',
+          children: settingsTilesWithDividers(context, [
+            SettingsActionTile(
+              icon: Icons.fitness_center,
+              title: 'Gym & Workout Settings',
+              subtitle:
+                  'Workout generation, rankings, flows, and equipment logic.',
+              onTap: () => _open(context, const GymExerciseSettingsPage()),
+            ),
+            SettingsActionTile(
+              icon: Icons.monitor_outlined,
+              title: 'Progress Settings',
+              subtitle: 'Measurement and trend tracking setup.',
+              onTap: () => _open(context, const MeasurementsTrendsSettingsPage()),
+            ),
+          ]),
+        ),
+        SettingsSection(
+          title: 'Data & Nutrition',
+          subtitle: 'Data tools and nutrition configuration.',
+          children: settingsTilesWithDividers(context, [
+            SettingsActionTile(
+              icon: Icons.restaurant_menu,
+              title: 'Diet & Nutrition Settings',
+              subtitle: 'Nutrition goals and related preferences.',
+              onTap: () => _open(context, const DietNutritionSettingsPage()),
+            ),
+            SettingsActionTile(
+              icon: Icons.storage_outlined,
+              title: 'Database Settings',
+              subtitle: 'Import, export, health checks, and maintenance tools.',
+              onTap: () => _open(context, const DatabaseSettingsPage()),
+            ),
+          ]),
+        ),
+      ],
     );
+  }
+
+  void _open(BuildContext context, Widget page) {
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => page));
   }
 }

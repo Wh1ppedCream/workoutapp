@@ -1,8 +1,17 @@
 // File: lib/screens/profile/settings/volume_boundaries_screen.dart
 
 import 'package:flutter/material.dart';
-import '../../../repositories/app_repository.dart';
+
 import '../../../models/models.dart';
+import '../../../repositories/app_repository.dart';
+import '../../../widgets/settings_tiles.dart';
+
+const _boundaryLabels = [
+  'Maintenance',
+  'Min Effective',
+  'Max Adaptive',
+  'Max Recoverable',
+];
 
 class VolumeBoundariesScreen extends StatefulWidget {
   const VolumeBoundariesScreen({super.key});
@@ -16,23 +25,21 @@ class _VolumeBoundariesScreenState extends State<VolumeBoundariesScreen>
   final _repo = AppRepository();
   late final TabController _tabCtrl;
 
-  // lookups
-  List<BodyPart> _bps = [];
-  List<Muscle> _ms = [];
+  List<BodyPart> _bodyParts = [];
+  List<Muscle> _muscles = [];
   bool _isLoadingLookups = true;
   String? _lookupError;
 
-  // selected
-  BodyPart? _selBp;
-  Muscle? _selM;
+  BodyPart? _selectedBodyPart;
+  Muscle? _selectedMuscle;
 
-  // text controllers
-  final _bpCtrls = List.generate(4, (_) => TextEditingController());
-  final _mCtrls = List.generate(4, (_) => TextEditingController());
+  final _bodyPartCtrls = List.generate(4, (_) => TextEditingController());
+  final _muscleCtrls = List.generate(4, (_) => TextEditingController());
 
-  // loading states for each detail panel
-  bool _isLoadingBp = false;
-  bool _isLoadingM = false;
+  bool _isLoadingBodyPart = false;
+  bool _isLoadingMuscle = false;
+  bool _isSavingBodyPart = false;
+  bool _isSavingMuscle = false;
 
   @override
   void initState() {
@@ -44,29 +51,33 @@ class _VolumeBoundariesScreenState extends State<VolumeBoundariesScreen>
   @override
   void dispose() {
     _tabCtrl.dispose();
-    for (var c in _bpCtrls) {
-      c.dispose();
+    for (var controller in _bodyPartCtrls) {
+      controller.dispose();
     }
-    for (var c in _mCtrls) {
-      c.dispose();
+    for (var controller in _muscleCtrls) {
+      controller.dispose();
     }
     super.dispose();
   }
 
   Future<void> _loadLookups() async {
     try {
-      final bps = await _repo.fetchAllBodyPartsFull();
-      final ms = await _repo.fetchAllMusclesFull();
+      final bodyParts = await _repo.fetchAllBodyPartsFull();
+      final muscles = await _repo.fetchAllMusclesFull();
       if (!mounted) return;
       setState(() {
-        _bps = bps;
-        _ms = ms;
-        _selBp = bps.isNotEmpty ? bps.first : null;
-        _selM = ms.isNotEmpty ? ms.first : null;
+        _bodyParts = bodyParts;
+        _muscles = muscles;
+        _selectedBodyPart = bodyParts.isNotEmpty ? bodyParts.first : null;
+        _selectedMuscle = muscles.isNotEmpty ? muscles.first : null;
         _lookupError = null;
       });
-      if (_selBp != null) await _loadBpBounds(_selBp!.id);
-      if (_selM != null) await _loadMBounds(_selM!.id);
+      if (_selectedBodyPart != null) {
+        await _loadBodyPartBounds(_selectedBodyPart!.id);
+      }
+      if (_selectedMuscle != null) {
+        await _loadMuscleBounds(_selectedMuscle!.id);
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -74,63 +85,48 @@ class _VolumeBoundariesScreenState extends State<VolumeBoundariesScreen>
       });
     } finally {
       if (mounted) {
-      setState(() {
-        _isLoadingLookups = false;
-      });
+        setState(() => _isLoadingLookups = false);
       }
     }
   }
 
-  Future<void> _loadBpBounds(int id) async {
+  Future<void> _loadBodyPartBounds(int id) async {
     setState(() {
-      _isLoadingBp = true;
-      // clear controllers while loading
-      for (var c in _bpCtrls) {
-        c.clear();
+      _isLoadingBodyPart = true;
+      for (var controller in _bodyPartCtrls) {
+        controller.clear();
       }
     });
     try {
-      final vb = await _repo.fetchBodyPartVolumeBounds(id);
+      final bounds = await _repo.fetchBodyPartVolumeBounds(id);
       if (!mounted) return;
-      if (vb != null) {
-        setState(() {
-          _bpCtrls[0].text = vb.maintenance.toString();
-          _bpCtrls[1].text = vb.minEffective.toString();
-          _bpCtrls[2].text = vb.maxAdaptive.toString();
-          _bpCtrls[3].text = vb.maxRecoverable.toString();
-        });
+      if (bounds != null) {
+        setState(() => _setControllerText(_bodyPartCtrls, bounds));
       }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load bodypart bounds: $e')),
+        SnackBar(content: Text('Failed to load body part bounds: $e')),
       );
     } finally {
       if (mounted) {
-      setState(() {
-        _isLoadingBp = false;
-      });
+        setState(() => _isLoadingBodyPart = false);
       }
     }
   }
 
-  Future<void> _loadMBounds(int id) async {
+  Future<void> _loadMuscleBounds(int id) async {
     setState(() {
-      _isLoadingM = true;
-      for (var c in _mCtrls) {
-        c.clear();
+      _isLoadingMuscle = true;
+      for (var controller in _muscleCtrls) {
+        controller.clear();
       }
     });
     try {
-      final vb = await _repo.fetchMuscleVolumeBounds(id);
+      final bounds = await _repo.fetchMuscleVolumeBounds(id);
       if (!mounted) return;
-      if (vb != null) {
-        setState(() {
-          _mCtrls[0].text = vb.maintenance.toString();
-          _mCtrls[1].text = vb.minEffective.toString();
-          _mCtrls[2].text = vb.maxAdaptive.toString();
-          _mCtrls[3].text = vb.maxRecoverable.toString();
-        });
+      if (bounds != null) {
+        setState(() => _setControllerText(_muscleCtrls, bounds));
       }
     } catch (e) {
       if (!mounted) return;
@@ -139,187 +135,286 @@ class _VolumeBoundariesScreenState extends State<VolumeBoundariesScreen>
       );
     } finally {
       if (mounted) {
-      setState(() {
-        _isLoadingM = false;
-      });
+        setState(() => _isLoadingMuscle = false);
       }
     }
   }
 
-  Future<void> _saveBp() async {
-    if (_selBp == null) return;
-    double? parse(String txt) {
-      try {
-        return double.parse(txt);
-      } catch (_) {
-        return null;
-      }
-    }
+  void _setControllerText(
+    List<TextEditingController> controllers,
+    VolumeBoundaries bounds,
+  ) {
+    controllers[0].text = bounds.maintenance.toString();
+    controllers[1].text = bounds.minEffective.toString();
+    controllers[2].text = bounds.maxAdaptive.toString();
+    controllers[3].text = bounds.maxRecoverable.toString();
+  }
 
-    final vals = _bpCtrls.map((c) => parse(c.text)).toList();
-    if (vals.any((v) => v == null)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter valid numbers')),
-      );
+  List<double>? _parseBounds(List<TextEditingController> controllers) {
+    final values = controllers.map((controller) {
+      return double.tryParse(controller.text.trim());
+    }).toList();
+    return values.any((value) => value == null)
+        ? null
+        : values.cast<double>();
+  }
+
+  Future<void> _saveBodyPart() async {
+    if (_selectedBodyPart == null) return;
+    final values = _parseBounds(_bodyPartCtrls);
+    if (values == null) {
+      _showInvalidNumbers();
       return;
     }
-    final b = VolumeBoundaries(
-      id: _selBp!.id,
-      maintenance: vals[0]!,
-      minEffective: vals[1]!,
-      maxAdaptive: vals[2]!,
-      maxRecoverable: vals[3]!,
-    );
 
+    setState(() => _isSavingBodyPart = true);
     try {
-      await _repo.setBodyPartVolumeBounds(_selBp!.id, b);
+      final bounds = VolumeBoundaries(
+        id: _selectedBodyPart!.id,
+        maintenance: values[0],
+        minEffective: values[1],
+        maxAdaptive: values[2],
+        maxRecoverable: values[3],
+      );
+      await _repo.setBodyPartVolumeBounds(_selectedBodyPart!.id, bounds);
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('BodyPart bounds saved')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Body part boundaries saved')),
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Save failed: $e')),
       );
+    } finally {
+      if (mounted) {
+        setState(() => _isSavingBodyPart = false);
+      }
     }
   }
 
-  Future<void> _saveM() async {
-    if (_selM == null) return;
-    double? parse(String txt) {
-      try {
-        return double.parse(txt);
-      } catch (_) {
-        return null;
-      }
-    }
-
-    final vals = _mCtrls.map((c) => parse(c.text)).toList();
-    if (vals.any((v) => v == null)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter valid numbers')),
-      );
+  Future<void> _saveMuscle() async {
+    if (_selectedMuscle == null) return;
+    final values = _parseBounds(_muscleCtrls);
+    if (values == null) {
+      _showInvalidNumbers();
       return;
     }
-    final b = VolumeBoundaries(
-      id: _selM!.id,
-      maintenance: vals[0]!,
-      minEffective: vals[1]!,
-      maxAdaptive: vals[2]!,
-      maxRecoverable: vals[3]!,
-    );
 
+    setState(() => _isSavingMuscle = true);
     try {
-      await _repo.setMuscleVolumeBounds(_selM!.id, b);
+      final bounds = VolumeBoundaries(
+        id: _selectedMuscle!.id,
+        maintenance: values[0],
+        minEffective: values[1],
+        maxAdaptive: values[2],
+        maxRecoverable: values[3],
+      );
+      await _repo.setMuscleVolumeBounds(_selectedMuscle!.id, bounds);
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Muscle bounds saved')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Muscle boundaries saved')),
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Save failed: $e')),
       );
+    } finally {
+      if (mounted) {
+        setState(() => _isSavingMuscle = false);
+      }
     }
   }
 
-  Widget _boundsForm(
-          List<TextEditingController> ctrls, bool isLoading, VoidCallback onSave) =>
-      isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  for (var i = 0; i < ctrls.length; i++)
-                    TextFormField(
-                      controller: ctrls[i],
-                      decoration: InputDecoration(
-                          labelText: [
-                        'Maintenance',
-                        'Min Effective',
-                        'Max Adaptive',
-                        'Max Recoverable'
-                      ][i]),
-                      keyboardType: TextInputType.number,
-                    ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(onPressed: onSave, child: const Text('Save')),
-                ],
-              ),
-            );
+  void _showInvalidNumbers() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Please enter valid numbers')),
+    );
+  }
 
   @override
-  Widget build(BuildContext ctx) {
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Volume Boundaries'),
+        scrolledUnderElevation: 0,
         bottom: TabBar(
           controller: _tabCtrl,
           tabs: const [
-            Tab(text: 'BodyPart'),
-            Tab(text: 'Muscle'),
+            Tab(text: 'Body Parts'),
+            Tab(text: 'Muscles'),
           ],
         ),
       ),
-      body: _isLoadingLookups
-          ? const Center(child: CircularProgressIndicator())
-          : (_lookupError != null)
-              ? Center(child: Text('Error: $_lookupError'))
-              : TabBarView(
-                  controller: _tabCtrl,
+      body: SafeArea(child: _buildBody()),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_isLoadingLookups) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_lookupError != null) {
+      return Center(child: Text('Error: $_lookupError'));
+    }
+
+    return TabBarView(
+      controller: _tabCtrl,
+      children: [
+        _BoundaryTab<BodyPart>(
+          title: 'Body Part Volume',
+          subtitle:
+              'Set weekly target ranges used by weekly analytics and workout generation.',
+          icon: Icons.accessibility_new,
+          selected: _selectedBodyPart,
+          items: _bodyParts,
+          itemName: (bodyPart) => bodyPart.name,
+          onChanged: (bodyPart) {
+            if (bodyPart == null) return;
+            setState(() => _selectedBodyPart = bodyPart);
+            _loadBodyPartBounds(bodyPart.id);
+          },
+          controllers: _bodyPartCtrls,
+          isLoading: _isLoadingBodyPart,
+          isSaving: _isSavingBodyPart,
+          onSave: _saveBodyPart,
+        ),
+        _BoundaryTab<Muscle>(
+          title: 'Muscle Volume',
+          subtitle:
+              'Fine-tune weekly target ranges for individual muscles.',
+          icon: Icons.fitness_center,
+          selected: _selectedMuscle,
+          items: _muscles,
+          itemName: (muscle) => muscle.name,
+          onChanged: (muscle) {
+            if (muscle == null) return;
+            setState(() => _selectedMuscle = muscle);
+            _loadMuscleBounds(muscle.id);
+          },
+          controllers: _muscleCtrls,
+          isLoading: _isLoadingMuscle,
+          isSaving: _isSavingMuscle,
+          onSave: _saveMuscle,
+        ),
+      ],
+    );
+  }
+}
+
+class _BoundaryTab<T> extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final T? selected;
+  final List<T> items;
+  final String Function(T item) itemName;
+  final ValueChanged<T?> onChanged;
+  final List<TextEditingController> controllers;
+  final bool isLoading;
+  final bool isSaving;
+  final VoidCallback onSave;
+
+  const _BoundaryTab({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.selected,
+    required this.items,
+    required this.itemName,
+    required this.onChanged,
+    required this.controllers,
+    required this.isLoading,
+    required this.isSaving,
+    required this.onSave,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
+      children: [
+        SettingsHeroCard(title: title, subtitle: subtitle, icon: icon),
+        const SizedBox(height: 16),
+        SettingsSection(
+          title: 'Selection',
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(14),
+              child: DropdownButtonFormField<T>(
+                isExpanded: true,
+                value: selected,
+                decoration: InputDecoration(
+                  labelText: title,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                items: items
+                    .map(
+                      (item) => DropdownMenuItem(
+                        value: item,
+                        child: Text(itemName(item)),
+                      ),
+                    )
+                    .toList(),
+                onChanged: isLoading || isSaving ? null : onChanged,
+              ),
+            ),
+          ],
+        ),
+        SettingsSection(
+          title: 'Recommended Range',
+          subtitle: 'Numbers are set units per week.',
+          children: [
+            if (isLoading)
+              const Padding(
+                padding: EdgeInsets.all(28),
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else
+              Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
                   children: [
-                    // BodyPart tab
-                    Column(
-                      children: [
-                        if (_bps.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: DropdownButton<BodyPart>(
-                              isExpanded: true,
-                              value: _selBp,
-                              items: _bps
-                                  .map((b) => DropdownMenuItem(
-                                      value: b, child: Text(b.name)))
-                                  .toList(),
-                              onChanged: (b) {
-                                if (b == null) return;
-                                setState(() => _selBp = b);
-                                _loadBpBounds(b.id);
-                              },
-                            ),
+                    for (var i = 0; i < controllers.length; i++) ...[
+                      TextFormField(
+                        controller: controllers[i],
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        decoration: InputDecoration(
+                          labelText: _boundaryLabels[i],
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
                           ),
-                        Expanded(
-                            child: _boundsForm(
-                                _bpCtrls, _isLoadingBp, _saveBp)),
-                      ],
-                    ),
-                    // Muscle tab
-                    Column(
-                      children: [
-                        if (_ms.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: DropdownButton<Muscle>(
-                              isExpanded: true,
-                              value: _selM,
-                              items: _ms
-                                  .map((m) => DropdownMenuItem(
-                                      value: m, child: Text(m.name)))
-                                  .toList(),
-                              onChanged: (m) {
-                                if (m == null) return;
-                                setState(() => _selM = m);
-                                _loadMBounds(m.id);
-                              },
-                            ),
-                          ),
-                        Expanded(
-                            child:
-                                _boundsForm(_mCtrls, _isLoadingM, _saveM)),
-                      ],
+                        ),
+                      ),
+                      if (i != controllers.length - 1)
+                        const SizedBox(height: 12),
+                    ],
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.icon(
+                        onPressed: isSaving ? null : onSave,
+                        icon: isSaving
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.save),
+                        label: Text(isSaving ? 'Saving...' : 'Save Boundaries'),
+                      ),
                     ),
                   ],
                 ),
+              ),
+          ],
+        ),
+      ],
     );
   }
 }

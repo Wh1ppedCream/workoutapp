@@ -2,33 +2,30 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../repositories/app_repository.dart';
+
 import '../../../models/models.dart';
+import '../../../repositories/app_repository.dart';
+import '../../../widgets/settings_tiles.dart';
 
 class UserInformationSettingsPage extends StatefulWidget {
   const UserInformationSettingsPage({super.key});
 
   @override
-  State<UserInformationSettingsPage> createState() => _UserInformationSettingsPageState();
+  State<UserInformationSettingsPage> createState() =>
+      _UserInformationSettingsPageState();
 }
 
-class _UserInformationSettingsPageState extends State<UserInformationSettingsPage> {
-  // Persisted fields (we track dirty on these)
-  final _nameController   = TextEditingController();
+class _UserInformationSettingsPageState
+    extends State<UserInformationSettingsPage> {
+  final _nameController = TextEditingController();
   final _heightController = TextEditingController();
   final _weightController = TextEditingController();
-  final _dobController    = TextEditingController(); // display-only text for picker
+  final _dobController = TextEditingController();
 
   String? _gender;
   String? _bodyFatEstimate;
   String? _weightTrend;
   String? _activityLevel;
-
-  // Non-persisted placeholders (kept blank if unknown; not saved)
-  final _userIdController = TextEditingController(); // read-only; left blank
-  final _emailController  = TextEditingController();
-  final _phoneController  = TextEditingController();
-
   DateTime? _dob;
   bool _dirty = false;
   bool _loading = true;
@@ -36,12 +33,12 @@ class _UserInformationSettingsPageState extends State<UserInformationSettingsPag
   @override
   void initState() {
     super.initState();
-    // mark dirty when any persisted text field changes (not during initial load)
-    for (final c in [_nameController, _heightController, _weightController]) {
-      c.addListener(() {
-        if (_loading) return;
-        setState(() => _dirty = true);
-      });
+    for (final controller in [
+      _nameController,
+      _heightController,
+      _weightController,
+    ]) {
+      controller.addListener(_markDirty);
     }
     _load();
   }
@@ -52,47 +49,36 @@ class _UserInformationSettingsPageState extends State<UserInformationSettingsPag
     _heightController.dispose();
     _weightController.dispose();
     _dobController.dispose();
-    _userIdController.dispose();
-    _emailController.dispose();
-    _phoneController.dispose();
     super.dispose();
   }
 
   Future<void> _load() async {
     final repo = context.read<AppRepository>();
-    final p = await repo.fetchPersonalInfo();
+    final personalInfo = await repo.fetchPersonalInfo();
     if (!mounted) return;
 
     setState(() {
       _loading = true;
-
-      // Prefill persisted fields
-      _nameController.text   = p?.name ?? '';
-      _gender                = p?.gender;
-      _dob                   = p?.dob;
-      _dobController.text    = _formatDate(p?.dob);
-      _heightController.text = p?.height ?? '';
-      _weightController.text = p?.weight ?? '';
-      _bodyFatEstimate       = p?.bodyFatEstimate;
-      _weightTrend           = p?.weightTrend;
-      _activityLevel         = p?.activityLevel;
-
-      // Non-persisted remain blank unless you hook them up later
-      _userIdController.text = '';
-      _emailController.text  = '';
-      _phoneController.text  = '';
-
-      _dirty   = false;
+      _nameController.text = personalInfo?.name ?? '';
+      _gender = personalInfo?.gender;
+      _dob = personalInfo?.dob;
+      _dobController.text = _formatDate(personalInfo?.dob);
+      _heightController.text = personalInfo?.height ?? '';
+      _weightController.text = personalInfo?.weight ?? '';
+      _bodyFatEstimate = personalInfo?.bodyFatEstimate;
+      _weightTrend = personalInfo?.weightTrend;
+      _activityLevel = personalInfo?.activityLevel;
+      _dirty = false;
       _loading = false;
     });
   }
 
-  String _formatDate(DateTime? d) {
-    if (d == null) return '';
-    final y = d.year.toString().padLeft(4, '0');
-    final m = d.month.toString().padLeft(2, '0');
-    final da = d.day.toString().padLeft(2, '0');
-    return '$y-$m-$da';
+  String _formatDate(DateTime? date) {
+    if (date == null) return '';
+    final year = date.year.toString().padLeft(4, '0');
+    final month = date.month.toString().padLeft(2, '0');
+    final day = date.day.toString().padLeft(2, '0');
+    return '$year-$month-$day';
   }
 
   Future<void> _pickDob() async {
@@ -102,38 +88,45 @@ class _UserInformationSettingsPageState extends State<UserInformationSettingsPag
       firstDate: DateTime(1900, 1, 1),
       lastDate: DateTime.now(),
     );
-    if (picked != null) {
-      setState(() {
-        _dob = picked;
-        _dobController.text = _formatDate(picked);
-        _dirty = true;
-      });
-    }
+    if (picked == null) return;
+
+    setState(() {
+      _dob = picked;
+      _dobController.text = _formatDate(picked);
+      _dirty = true;
+    });
   }
 
   Future<void> _save() async {
     try {
       final repo = context.read<AppRepository>();
       final info = PersonalInfo(
-        name:  _nameController.text.trim().isEmpty  ? null : _nameController.text.trim(),
+        name: _clean(_nameController.text),
         gender: _gender,
-        dob:    _dob,
-        height: _heightController.text.trim().isEmpty ? null : _heightController.text.trim(),
-        weight: _weightController.text.trim().isEmpty ? null : _weightController.text.trim(),
+        dob: _dob,
+        height: _clean(_heightController.text),
+        weight: _clean(_weightController.text),
         bodyFatEstimate: _bodyFatEstimate,
-        weightTrend:     _weightTrend,
-        activityLevel:   _activityLevel,
+        weightTrend: _weightTrend,
+        activityLevel: _activityLevel,
       );
       await repo.savePersonalInfo(info);
       if (!mounted) return;
       setState(() => _dirty = false);
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Changes saved')));
-    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Changes saved')),
+      );
+    } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Couldn’t save: $e')),
+        SnackBar(content: Text("Couldn't save: $error")),
       );
     }
+  }
+
+  String? _clean(String value) {
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? null : trimmed;
   }
 
   void _markDirty() {
@@ -144,161 +137,264 @@ class _UserInformationSettingsPageState extends State<UserInformationSettingsPag
   @override
   Widget build(BuildContext context) {
     final bodyFatOptions = <String>[
-      '0-5%', '5-10%', '10-15%', '15-20%',
-      '20-25%', '25-30%', '30-35%', '35-40%', '40-45%',
+      '0-5%',
+      '5-10%',
+      '10-15%',
+      '15-20%',
+      '20-25%',
+      '25-30%',
+      '30-35%',
+      '35-40%',
+      '40-45%',
     ];
-    final trendOptions = const [
-      'Gaining weight', 'Losing weight', 'Maintaining weight', 'Not sure',
+    const trendOptions = [
+      'Gaining weight',
+      'Losing weight',
+      'Maintaining weight',
+      'Not sure',
     ];
-    final activityOptions = const [
-      'Low (0-5k)', 'Moderate (5-15k)', 'High (15k+)',
+    const activityOptions = [
+      'Low (0-5k)',
+      'Moderate (5-15k)',
+      'High (15k+)',
     ];
-    final genderOptions = const [
-      'Male', 'Female', 'Other', 'Prefer not to say',
+    const genderOptions = [
+      'Male',
+      'Female',
+      'Other',
+      'Prefer not to say',
     ];
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('User Information')),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ListView(
-                children: [
-                  // ---------- Persisted fields ----------
-                  TextFormField(
-                    controller: _nameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Name',
-                      hintText: 'Enter your name',
-                    ),
-                  ),
-                  const SizedBox(height: 16),
+    if (_loading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
 
-                  DropdownButtonFormField<String?>(
-                    value: _gender,
-                    items: genderOptions
-                        .map((g) => DropdownMenuItem<String?>(value: g, child: Text(g)))
-                        .toList(),
-                    onChanged: (v) { _gender = v; _markDirty(); },
-                    decoration: const InputDecoration(labelText: 'Gender'),
-                  ),
-                  const SizedBox(height: 16),
-
-                  GestureDetector(
-                    onTap: _pickDob,
-                    child: AbsorbPointer(
-                      child: TextFormField(
-                        controller: _dobController,
-                        decoration: const InputDecoration(
-                          labelText: 'Date of Birth',
-                          hintText: 'YYYY-MM-DD',
-                          suffixIcon: Icon(Icons.calendar_today),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  TextFormField(
-                    controller: _heightController,
-                    decoration: const InputDecoration(
-                      labelText: 'Height',
-                      hintText: 'e.g. 5\'10" or 178 cm',
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  TextFormField(
-                    controller: _weightController,
-                    decoration: const InputDecoration(
-                      labelText: 'Current Weight',
-                      hintText: 'e.g. 160 lbs or 72 kg',
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 16),
-
-                  DropdownButtonFormField<String?>(
-                    value: _bodyFatEstimate,
-                    items: bodyFatOptions
-                        .map((o) => DropdownMenuItem<String?>(value: o, child: Text(o)))
-                        .toList(),
-                    onChanged: (v) { _bodyFatEstimate = v; _markDirty(); },
-                    decoration: const InputDecoration(labelText: 'Body-fat % (estimate)'),
-                  ),
-                  const SizedBox(height: 16),
-
-                  DropdownButtonFormField<String?>(
-                    value: _weightTrend,
-                    items: trendOptions
-                        .map((o) => DropdownMenuItem<String?>(value: o, child: Text(o)))
-                        .toList(),
-                    onChanged: (v) { _weightTrend = v; _markDirty(); },
-                    decoration: const InputDecoration(labelText: 'Weight trend'),
-                  ),
-                  const SizedBox(height: 16),
-
-                  DropdownButtonFormField<String?>(
-                    value: _activityLevel,
-                    items: activityOptions
-                        .map((o) => DropdownMenuItem<String?>(value: o, child: Text(o)))
-                        .toList(),
-                    onChanged: (v) { _activityLevel = v; _markDirty(); },
-                    decoration: const InputDecoration(labelText: 'Estimated avg steps'),
-                  ),
-                  const SizedBox(height: 32),
-
-                  // ---------- Non-persisted (kept blank) ----------
-                  TextFormField(
-                    controller: _userIdController,
-                    readOnly: true,
-                    decoration: const InputDecoration(labelText: 'User ID'),
-                  ),
-                  const SizedBox(height: 16),
-
-                  TextFormField(
-                    controller: _emailController,
-                    decoration: const InputDecoration(
-                      labelText: 'Email Address',
-                      hintText: 'Enter your email',
-                    ),
-                    keyboardType: TextInputType.emailAddress,
-                  ),
-                  const SizedBox(height: 16),
-
-                  TextFormField(
-                    controller: _phoneController,
-                    decoration: const InputDecoration(
-                      labelText: 'Phone Number',
-                      hintText: 'Enter your phone number',
-                    ),
-                    keyboardType: TextInputType.phone,
-                  ),
-                  const SizedBox(height: 80), // space for bottom bar
-                ],
-              ),
-            ),
-      // Slide-up Save bar (only when there are changes to persisted fields)
-      bottomNavigationBar: AnimatedSlide(
-        offset: _dirty ? Offset.zero : const Offset(0, 1),
-        duration: const Duration(milliseconds: 200),
-        child: AnimatedOpacity(
-          opacity: _dirty ? 1 : 0,
-          duration: const Duration(milliseconds: 200),
-          child: SafeArea(
-            top: false,
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              color: Theme.of(context).colorScheme.surface,
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _dirty ? _save : null,
-                  icon: const Icon(Icons.save),
-                  label: const Text('Save Changes'),
+    return SettingsPageScaffold(
+      title: 'User Information',
+      subtitle: 'Keep basic profile details available for app calculations.',
+      icon: Icons.badge_outlined,
+      bottomNavigationBar: _SaveBar(isVisible: _dirty, onSave: _save),
+      children: [
+        SettingsSection(
+          title: 'Identity',
+          subtitle: 'Basic personal details.',
+          children: [
+            _FieldPadding(
+              child: TextFormField(
+                controller: _nameController,
+                decoration: _inputDecoration(
+                  context,
+                  label: 'Name',
+                  hint: 'Enter your name',
+                  icon: Icons.person_outline,
                 ),
               ),
+            ),
+            _FieldPadding(
+              child: DropdownButtonFormField<String?>(
+                value: _gender,
+                items: genderOptions
+                    .map(
+                      (gender) => DropdownMenuItem<String?>(
+                        value: gender,
+                        child: Text(gender),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (value) {
+                  _gender = value;
+                  _markDirty();
+                },
+                decoration: _inputDecoration(
+                  context,
+                  label: 'Gender',
+                  icon: Icons.wc_outlined,
+                ),
+              ),
+            ),
+            _FieldPadding(
+              child: GestureDetector(
+                onTap: _pickDob,
+                child: AbsorbPointer(
+                  child: TextFormField(
+                    controller: _dobController,
+                    decoration: _inputDecoration(
+                      context,
+                      label: 'Date of Birth',
+                      hint: 'YYYY-MM-DD',
+                      icon: Icons.calendar_today,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        SettingsSection(
+          title: 'Body Metrics',
+          subtitle: 'Optional details used by progress and nutrition estimates.',
+          children: [
+            _FieldPadding(
+              child: TextFormField(
+                controller: _heightController,
+                decoration: _inputDecoration(
+                  context,
+                  label: 'Height',
+                  hint: 'e.g. 5\'10" or 178 cm',
+                  icon: Icons.height,
+                ),
+              ),
+            ),
+            _FieldPadding(
+              child: TextFormField(
+                controller: _weightController,
+                decoration: _inputDecoration(
+                  context,
+                  label: 'Current Weight',
+                  hint: 'e.g. 160 lbs or 72 kg',
+                  icon: Icons.monitor_weight_outlined,
+                ),
+                keyboardType: TextInputType.number,
+              ),
+            ),
+            _FieldPadding(
+              child: DropdownButtonFormField<String?>(
+                value: _bodyFatEstimate,
+                items: bodyFatOptions
+                    .map(
+                      (option) => DropdownMenuItem<String?>(
+                        value: option,
+                        child: Text(option),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (value) {
+                  _bodyFatEstimate = value;
+                  _markDirty();
+                },
+                decoration: _inputDecoration(
+                  context,
+                  label: 'Body-fat % estimate',
+                  icon: Icons.percent,
+                ),
+              ),
+            ),
+          ],
+        ),
+        SettingsSection(
+          title: 'Activity Context',
+          subtitle: 'Used later for recommendations and health estimates.',
+          children: [
+            _FieldPadding(
+              child: DropdownButtonFormField<String?>(
+                value: _weightTrend,
+                items: trendOptions
+                    .map(
+                      (option) => DropdownMenuItem<String?>(
+                        value: option,
+                        child: Text(option),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (value) {
+                  _weightTrend = value;
+                  _markDirty();
+                },
+                decoration: _inputDecoration(
+                  context,
+                  label: 'Weight trend',
+                  icon: Icons.trending_up,
+                ),
+              ),
+            ),
+            _FieldPadding(
+              child: DropdownButtonFormField<String?>(
+                value: _activityLevel,
+                items: activityOptions
+                    .map(
+                      (option) => DropdownMenuItem<String?>(
+                        value: option,
+                        child: Text(option),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (value) {
+                  _activityLevel = value;
+                  _markDirty();
+                },
+                decoration: _inputDecoration(
+                  context,
+                  label: 'Estimated avg steps',
+                  icon: Icons.directions_walk,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 72),
+      ],
+    );
+  }
+
+  InputDecoration _inputDecoration(
+    BuildContext context, {
+    required String label,
+    String? hint,
+    required IconData icon,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+    return InputDecoration(
+      labelText: label,
+      hintText: hint,
+      prefixIcon: Icon(icon),
+      filled: true,
+      fillColor: scheme.surface.withValues(alpha: 0.44),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+    );
+  }
+}
+
+class _FieldPadding extends StatelessWidget {
+  final Widget child;
+
+  const _FieldPadding({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
+      child: child,
+    );
+  }
+}
+
+class _SaveBar extends StatelessWidget {
+  final bool isVisible;
+  final VoidCallback onSave;
+
+  const _SaveBar({required this.isVisible, required this.onSave});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return AnimatedSlide(
+      offset: isVisible ? Offset.zero : const Offset(0, 1),
+      duration: const Duration(milliseconds: 200),
+      child: AnimatedOpacity(
+        opacity: isVisible ? 1 : 0,
+        duration: const Duration(milliseconds: 200),
+        child: SafeArea(
+          top: false,
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+            decoration: BoxDecoration(
+              color: scheme.surface.withValues(alpha: 0.96),
+              border: Border(top: BorderSide(color: scheme.outlineVariant)),
+            ),
+            child: FilledButton.icon(
+              onPressed: isVisible ? onSave : null,
+              icon: const Icon(Icons.save_outlined),
+              label: const Text('Save Changes'),
             ),
           ),
         ),

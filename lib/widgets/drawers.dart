@@ -52,7 +52,7 @@ class MainDrawer extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                onTap: () {
+                onTap: () async {
                   final customTap = item.onTap;
                   if (customTap != null) {
                     unawaited(customTap(context));
@@ -61,10 +61,14 @@ class MainDrawer extends StatelessWidget {
 
                   final builder = item.builder;
                   if (builder == null) return;
-                  Navigator.of(context).pop();
-                  Navigator.of(
-                    context,
-                  ).push(MaterialPageRoute(builder: builder));
+                  final navigator = Navigator.of(context);
+                  if (navigator.canPop()) {
+                    await navigator.maybePop();
+                  }
+                  if (!navigator.mounted) return;
+                  unawaited(
+                    navigator.push(MaterialPageRoute(builder: builder)),
+                  );
                 },
               );
             }),
@@ -80,7 +84,7 @@ class ProfileDrawer extends StatelessWidget {
   final dynamic selected;
   final ValueChanged<dynamic> onSelect;
   final ValueChanged<dynamic> onEdit;
-  final VoidCallback onDeleteAll;
+  final ValueChanged<dynamic> onDelete;
 
   const ProfileDrawer({
     super.key,
@@ -88,12 +92,13 @@ class ProfileDrawer extends StatelessWidget {
     required this.selected,
     required this.onSelect,
     required this.onEdit,
-    required this.onDeleteAll,
+    required this.onDelete,
   });
 
   @override
   Widget build(BuildContext context) {
-    // define a palette for row highlighting
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     const palette = [
       Colors.blue,
       Colors.orange,
@@ -103,47 +108,86 @@ class ProfileDrawer extends StatelessWidget {
     ];
 
     return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          const DrawerHeader(
-            decoration: BoxDecoration(color: Colors.lightGreen),
-            child: Text(
-              'Gym Profiles',
-              style: TextStyle(color: Colors.white, fontSize: 18),
+      backgroundColor: scheme.surface,
+      child: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 18),
+          children: [
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(24),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    scheme.primaryContainer.withValues(alpha: 0.88),
+                    scheme.surfaceContainerHighest.withValues(alpha: 0.72),
+                  ],
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.fitness_center,
+                    color: scheme.onPrimaryContainer,
+                    size: 28,
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    'Gym Profiles',
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      color: scheme.onPrimaryContainer,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    selected == null
+                        ? '${profiles.length} saved spaces'
+                        : '${selected.name} is active',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: scheme.onPrimaryContainer.withValues(alpha: 0.82),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-
-          // one tile per profile
-          ...profiles.asMap().entries.map((entry) {
-            final index = entry.key;
-            final profile = entry.value;
-            final color = palette[index % palette.length];
-            final isSelected = profile.id == selected?.id;
-            return ProfileTile(
-              profile: profile,
-              isSelected: isSelected,
-              color: color,
-              onSelect: onSelect,
-              onEdit: onEdit,
-              onDelete: () => onDeleteAll(),
-            );
-          }),
-
-          const Divider(),
-
-          // add a new profile
-          ListTile(
-            leading: const Icon(Icons.add),
-            title: const Text('New Profile'),
-            onTap: () {
-              Navigator.of(context).pop();
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const GymProfileScreen()),
+            const SizedBox(height: 16),
+            ...profiles.asMap().entries.map((entry) {
+              final index = entry.key;
+              final profile = entry.value;
+              final color = palette[index % palette.length];
+              final isSelected = profile.id == selected?.id;
+              return ProfileTile(
+                profile: profile,
+                isSelected: isSelected,
+                color: color,
+                onSelect: onSelect,
+                onEdit: onEdit,
+                onDelete: () => onDelete(profile),
               );
-            },
-          ),
-        ],
+            }),
+            const SizedBox(height: 12),
+            _NewProfileTile(
+              onTap: () async {
+                final navigator = Navigator.of(context);
+                if (navigator.canPop()) {
+                  await navigator.maybePop();
+                }
+                if (!navigator.mounted) return;
+                unawaited(
+                  navigator.push(
+                    MaterialPageRoute(builder: (_) => const GymProfileScreen()),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -170,35 +214,126 @@ class ProfileTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final tileColor =
+        isSelected
+            ? color.withValues(alpha: 0.22)
+            : scheme.surfaceContainerHighest.withValues(alpha: 0.36);
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      margin: const EdgeInsets.symmetric(vertical: 5),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        border: Border.all(color: color, width: 1),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: ListTile(
-        leading: Radio<bool>(
-          value: true,
-          groupValue: isSelected,
-          onChanged: (_) => onSelect(profile),
+        color: tileColor,
+        border: Border.all(
+          color: isSelected ? color : scheme.outlineVariant.withValues(alpha: 0.5),
+          width: isSelected ? 1.4 : 1,
         ),
-        title: Text(profile.name, maxLines: 2, overflow: TextOverflow.ellipsis),
-        trailing: PopupMenuButton<String>(
-          onSelected: (action) {
-            if (action == 'edit') {
-              Navigator.of(context).pop();
-              onEdit(profile);
-            } else if (action == 'delete') {
-              Navigator.of(context).pop();
-              onDelete();
-            }
-          },
-          itemBuilder:
-              (_) => const [
-                PopupMenuItem(value: 'edit', child: Text('Edit')),
-                PopupMenuItem(value: 'delete', child: Text('Delete')),
-              ],
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: () => onSelect(profile),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 10, 6, 10),
+          child: Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: isSelected ? 0.28 : 0.14),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  isSelected ? Icons.check : Icons.fitness_center,
+                  color: isSelected ? color : scheme.onSurfaceVariant,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      profile.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      isSelected ? 'Active profile' : 'Tap to switch',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              PopupMenuButton<String>(
+                icon: Icon(Icons.more_vert, color: scheme.onSurfaceVariant),
+                onSelected: (action) {
+                  if (action == 'edit') {
+                    onEdit(profile);
+                  } else if (action == 'delete') {
+                    onDelete();
+                  }
+                },
+                itemBuilder:
+                    (_) => const [
+                      PopupMenuItem(value: 'edit', child: Text('Edit')),
+                      PopupMenuItem(value: 'delete', child: Text('Delete')),
+                    ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NewProfileTile extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _NewProfileTile({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(18),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: scheme.outlineVariant.withValues(alpha: 0.55),
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.add, color: scheme.primary),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'New Profile',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

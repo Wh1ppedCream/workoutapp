@@ -1,69 +1,80 @@
 // File: lib/screens/profile/settings/analytics_setting_screen.dart
-// for viewing and changing settings related to exercise analytics.
+// Hub for exercise analytics and training recommendation settings.
 
 import 'package:flutter/material.dart';
+
+import '../../../widgets/settings_tiles.dart';
 import 'bodypart_muscle_mapping_screen.dart';
 import 'bodypart_ranking_screen.dart';
+import 'exercise_analytics_screen.dart';
+import 'exercise_editor_screen.dart';
 import 'muscle_ranking_screen.dart';
 import 'volume_boundaries_screen.dart';
-import 'exercise_analytics_screen.dart';
-
-import 'exercise_editor_screen.dart';
-
 
 class AnalyticsSettingsScreen extends StatelessWidget {
   const AnalyticsSettingsScreen({super.key});
 
+  void _open(BuildContext context, Widget page) {
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => page));
+  }
+
   @override
-  Widget build(BuildContext ctx) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Analytics Settings')),
-      body: ListView(
-        children: [
-          ListTile(
-            title: const Text('BodyPart ↔ Muscle Mapping'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.of(ctx).push(
-              MaterialPageRoute(builder: (_) => const BodyPartMuscleMappingScreen()),
+  Widget build(BuildContext context) {
+    return SettingsPageScaffold(
+      title: 'Workout Settings',
+      subtitle:
+          'Tune how the app understands anatomy, training bias, and volume targets.',
+      icon: Icons.tune,
+      children: [
+        SettingsSection(
+          title: 'Training Bias',
+          subtitle: 'Controls used by generated plans and optimized workouts.',
+          children: settingsTilesWithDividers(context, [
+            SettingsActionTile(
+              icon: Icons.accessibility_new,
+              title: 'Body Part Rankings',
+              subtitle: 'Prioritize which body parts should receive more work.',
+              onTap: () => _open(context, const BodyPartRankingScreen()),
             ),
-          ),
-          ListTile(
-            title: const Text('BodyPart Training Bias Rankings'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.of(ctx).push(
-              MaterialPageRoute(builder: (_) => const BodyPartRankingScreen()),
+            SettingsActionTile(
+              icon: Icons.fitness_center,
+              title: 'Muscle Rankings',
+              subtitle: 'Prioritize specific muscles inside the anatomy model.',
+              onTap: () => _open(context, const MuscleRankingScreen()),
             ),
-          ),
-          ListTile(
-            title: const Text('Muscle Training Bias Rankings'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.of(ctx).push(
-              MaterialPageRoute(builder: (_) => const MuscleRankingScreen()),
+            SettingsActionTile(
+              icon: Icons.track_changes,
+              title: 'Volume Boundaries',
+              subtitle: 'Set recommended weekly ranges for body parts and muscles.',
+              onTap: () => _open(context, const VolumeBoundariesScreen()),
             ),
-          ),
-          ListTile(
-            title: const Text('Exercise to %Sets per Muscle, Bodypart'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.of(ctx).push(
-              MaterialPageRoute(builder: (_) => const ExerciseAnalyticsScreen()),
+          ]),
+        ),
+        SettingsSection(
+          title: 'Exercise Definitions',
+          subtitle: 'Maintain the anatomy and exercise data used by the app.',
+          children: settingsTilesWithDividers(context, [
+            SettingsActionTile(
+              icon: Icons.hub,
+              title: 'Body Part / Muscle Mapping',
+              subtitle: 'Choose which muscles belong to each body part.',
+              onTap: () => _open(context, const BodyPartMuscleMappingScreen()),
             ),
-          ),
-          ListTile(
-            title: const Text('Exercise Editor'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.of(ctx).push(
-              MaterialPageRoute(builder: (_) => const ExerciseEditorScreen()),
+            SettingsActionTile(
+              icon: Icons.analytics,
+              title: 'Exercise Set Allocation',
+              subtitle: 'Review how each exercise contributes to muscles and body parts.',
+              onTap: () => _open(context, const ExerciseAnalyticsScreen()),
             ),
-          ),
-          ListTile(
-            title: const Text('Volume Boundaries per BodyPart, Muscle'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.of(ctx).push(
-              MaterialPageRoute(builder: (_) => const VolumeBoundariesScreen()),
+            SettingsActionTile(
+              icon: Icons.edit_note,
+              title: 'Exercise Editor',
+              subtitle: 'Update exercise names, details, equipment, and mappings.',
+              onTap: () => _open(context, const ExerciseEditorScreen()),
             ),
-          ),
-        ],
-      ),
+          ]),
+        ),
+      ],
     );
   }
 }

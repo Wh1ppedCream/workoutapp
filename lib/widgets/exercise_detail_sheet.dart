@@ -1,6 +1,7 @@
 // File: lib/widgets/exercise_detail_sheet.dart
 
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -318,97 +319,28 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
           return const Center(child: Text('No history for this exercise.'));
         }
 
-        final dateFmt = DateFormat('MM/dd');
-        final barGroups = <BarChartGroupData>[];
-        for (var i = 0; i < history.length; i++) {
-          final rec = history[i];
-          final bestErm = rec.sets
-              .map((s) => s.weight * (1 + 0.0333 * s.reps))
-              .fold<double>(0, (a, b) => b > a ? b : a);
-          final totalVm = rec.sets
-              .map((s) => s.weight * s.reps)
-              .fold<double>(0, (a, b) => a + b);
-
-          barGroups.add(
-            BarChartGroupData(
-              x: i,
-              barsSpace: 4,
-              barRods: [
-                BarChartRodData(
-                  toY: bestErm,
-                  width: 8,
-                  borderRadius: BorderRadius.circular(2),
-                  color: Colors.blueAccent,
-                ),
-                BarChartRodData(
-                  toY: totalVm,
-                  width: 8,
-                  borderRadius: BorderRadius.circular(2),
-                  color: Colors.green,
-                ),
-              ],
-            ),
-          );
-        }
+        final records = _buildRecordTrendPoints(history);
 
         return Column(
           children: [
-            SizedBox(
-              height: 200,
-              child: BarChart(
-                BarChartData(
-                  alignment: BarChartAlignment.spaceEvenly,
-                  maxY:
-                      history
-                          .map(
-                            (rec) => rec.sets
-                                .map((s) => s.weight * (1 + 0.0333 * s.reps))
-                                .fold<double>(0, (a, b) => b > a ? b : a),
-                          )
-                          .fold<double>(0, (a, b) => b > a ? b : a)
-                          .ceilToDouble() *
-                      1.2,
-                  barGroups: barGroups,
-                  groupsSpace: 16,
-                  titlesData: FlTitlesData(
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        interval: 1,
-                        reservedSize: 30,
-                        getTitlesWidget: (value, meta) {
-                          final idx = value.toInt();
-                          if (idx < 0 || idx >= history.length) {
-                            return const SizedBox();
-                          }
-                          return SideTitleWidget(
-                            meta: meta,
-                            child: Text(
-                              dateFmt.format(history[idx].date),
-                              style: const TextStyle(fontSize: 10),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 40,
-                      ),
-                    ),
-                    topTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    rightTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+              child: _ExerciseRecordTrendChart(points: records),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  _RecordLegendDot(
+                    color: Theme.of(context).colorScheme.primary,
+                    label: 'Best weight',
                   ),
-                  gridData: FlGridData(show: true),
-                  borderData: FlBorderData(show: false),
-                ),
-                duration: const Duration(milliseconds: 150),
-                curve: Curves.linear,
+                  const SizedBox(width: 16),
+                  _RecordLegendDot(
+                    color: Colors.green.shade400,
+                    label: 'Estimated 1RM',
+                  ),
+                ],
               ),
             ),
             const Divider(),
@@ -419,7 +351,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                 separatorBuilder: (_, __) => const SizedBox(height: 12),
                 itemBuilder: (ctx, i) {
                   final rec = history[i];
-                  final dateStr = DateFormat('MMM dd, yyyy').format(rec.date);
+                  final dateStr = DateFormat.yMMMd().add_jm().format(rec.date);
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -431,12 +363,10 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                       ...rec.sets.asMap().entries.map((entry) {
                         final j = entry.key;
                         final s = entry.value;
-                        final oneErm = s.weight * (1 + 0.0333 * s.reps);
+                        final oneErm = _estimatedOneRm(s);
                         return Row(
                           children: [
-                            Text(
-                              '${j + 1}. ${s.weight.toInt()} lbs × ${s.reps}',
-                            ),
+                            Text('${j + 1}. ${_formatSet(s)}'),
                             const Spacer(),
                             Text(
                               'ERM=${oneErm.toStringAsFixed(1)}',
@@ -529,4 +459,394 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
           ),
     );
   }
+}
+
+List<_ExerciseRecordPoint> _buildRecordTrendPoints(
+  List<HistoryRecord> history,
+) {
+  final ordered = [...history]..sort((a, b) => a.date.compareTo(b.date));
+  final points = <_ExerciseRecordPoint>[];
+  for (final record in ordered) {
+    if (record.sets.isEmpty) continue;
+    final point = _ExerciseRecordPoint.from(record);
+    if (point.bestWeight <= 0 && point.bestEstimatedOneRm <= 0) continue;
+    points.add(point);
+  }
+  return points;
+}
+
+class _ExerciseRecordPoint {
+  final DateTime date;
+  final double bestWeight;
+  final double bestEstimatedOneRm;
+  final ExerciseSet bestSet;
+
+  const _ExerciseRecordPoint({
+    required this.date,
+    required this.bestWeight,
+    required this.bestEstimatedOneRm,
+    required this.bestSet,
+  });
+
+  factory _ExerciseRecordPoint.from(HistoryRecord record) {
+    var bestSet = record.sets.first;
+    var bestEstimatedOneRm = _estimatedOneRm(bestSet);
+
+    for (final set in record.sets.skip(1)) {
+      final estimatedOneRm = _estimatedOneRm(set);
+      if (estimatedOneRm > bestEstimatedOneRm) {
+        bestSet = set;
+        bestEstimatedOneRm = estimatedOneRm;
+      }
+    }
+
+    final bestWeight = record.sets.fold<double>(
+      0,
+      (best, set) => set.weight > best ? set.weight : best,
+    );
+
+    return _ExerciseRecordPoint(
+      date: record.date,
+      bestWeight: bestWeight,
+      bestEstimatedOneRm: bestEstimatedOneRm,
+      bestSet: bestSet,
+    );
+  }
+}
+
+class _ExerciseRecordTrendChart extends StatelessWidget {
+  final List<_ExerciseRecordPoint> points;
+
+  const _ExerciseRecordTrendChart({required this.points});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    if (points.isEmpty) {
+      return Container(
+        height: 188,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: scheme.surfaceContainerHighest.withValues(alpha: 0.28),
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Text(
+          'No completed set records to chart yet.',
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: scheme.onSurfaceVariant,
+          ),
+        ),
+      );
+    }
+
+    final bounds = _recordChartBounds(points);
+    final labelIndexes = _recordDateLabelIndexes(points.length);
+    final showTimes = _shouldUseTimeLabels(points);
+    final actualColor = scheme.primary;
+    final estimatedColor = Colors.green.shade400;
+    final hasBestWeight = points.any((point) => point.bestWeight > 0);
+    final hasEstimatedOneRm = points.any(
+      (point) => point.bestEstimatedOneRm > 0,
+    );
+
+    return Container(
+      height: 214,
+      padding: const EdgeInsets.fromLTRB(12, 14, 12, 8),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.26),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.6)),
+      ),
+      child: LineChart(
+        LineChartData(
+          minX: 0,
+          maxX: math.max(1, points.length - 1).toDouble(),
+          minY: bounds.minY,
+          maxY: bounds.maxY,
+          lineTouchData: LineTouchData(
+            touchTooltipData: LineTouchTooltipData(
+              tooltipBorderRadius: BorderRadius.circular(10),
+              tooltipPadding: const EdgeInsets.symmetric(
+                horizontal: 8,
+                vertical: 5,
+              ),
+              tooltipMargin: 8,
+              maxContentWidth: 164,
+              fitInsideHorizontally: true,
+              fitInsideVertically: true,
+              getTooltipColor:
+                  (_) => scheme.surfaceContainerHighest.withValues(alpha: 0.96),
+              getTooltipItems: (touchedSpots) {
+                if (touchedSpots.isEmpty) return const <LineTooltipItem?>[];
+                final spot = touchedSpots.first;
+                final index = spot.x.round().clamp(0, points.length - 1).toInt();
+                final point = points[index];
+                final textStyle =
+                    theme.textTheme.labelSmall?.copyWith(
+                      color: scheme.onSurface,
+                      fontSize: 9,
+                      height: 1.08,
+                      fontWeight: FontWeight.w800,
+                    ) ??
+                    TextStyle(
+                      color: scheme.onSurface,
+                      fontSize: 9,
+                      height: 1.08,
+                      fontWeight: FontWeight.w800,
+                    );
+                return [
+                  LineTooltipItem(
+                    '${DateFormat('MMM d, h:mm a').format(point.date)}\n'
+                    'Wt ${_cleanNumber(point.bestWeight)} | '
+                    'Est ${_cleanNumber(point.bestEstimatedOneRm)} | '
+                    'Top ${_formatSet(point.bestSet)}',
+                    textStyle,
+                  ),
+                  for (var i = 1; i < touchedSpots.length; i++) null,
+                ];
+              },
+            ),
+          ),
+          gridData: FlGridData(
+            drawVerticalLine: false,
+            horizontalInterval: bounds.interval,
+            getDrawingHorizontalLine:
+                (_) => FlLine(
+                  color: scheme.outlineVariant.withValues(alpha: 0.42),
+                  strokeWidth: 1,
+                ),
+          ),
+          borderData: FlBorderData(show: false),
+          titlesData: FlTitlesData(
+            topTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            rightTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            leftTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                interval: bounds.interval,
+                reservedSize: 46,
+                getTitlesWidget: (value, meta) {
+                  return SideTitleWidget(
+                    meta: meta,
+                    space: 4,
+                    fitInside: SideTitleFitInsideData.fromTitleMeta(
+                      meta,
+                      distanceFromEdge: 2,
+                    ),
+                    child: Text(
+                      _compactLbs(value),
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                interval: 1,
+                reservedSize: 28,
+                getTitlesWidget: (value, meta) {
+                  final index = value.round();
+                  if ((value - index).abs() > 0.2 ||
+                      !labelIndexes.contains(index) ||
+                      index < 0 ||
+                      index >= points.length) {
+                    return const SizedBox.shrink();
+                  }
+                  return SideTitleWidget(
+                    meta: meta,
+                    child: Text(
+                      _recordAxisLabel(points[index].date, showTimes),
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+          lineBarsData: [
+            LineChartBarData(
+              show: hasBestWeight,
+              spots: [
+                for (var i = 0; i < points.length; i++)
+                  _recordSpot(i, points[i].bestWeight),
+              ],
+              isCurved: true,
+              preventCurveOverShooting: true,
+              color: actualColor,
+              barWidth: 2.6,
+              isStrokeCapRound: true,
+              dotData: FlDotData(show: true),
+              belowBarData: BarAreaData(
+                show: true,
+                color: actualColor.withValues(alpha: 0.08),
+              ),
+            ),
+            LineChartBarData(
+              show: hasEstimatedOneRm,
+              spots: [
+                for (var i = 0; i < points.length; i++)
+                  _recordSpot(i, points[i].bestEstimatedOneRm),
+              ],
+              isCurved: true,
+              preventCurveOverShooting: true,
+              color: estimatedColor,
+              barWidth: 2.4,
+              dashArray: const [6, 4],
+              isStrokeCapRound: true,
+              dotData: FlDotData(show: true),
+            ),
+          ],
+        ),
+        duration: const Duration(milliseconds: 160),
+        curve: Curves.easeOut,
+      ),
+    );
+  }
+}
+
+class _RecordLegendDot extends StatelessWidget {
+  final Color color;
+  final String label;
+
+  const _RecordLegendDot({required this.color, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Flexible(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 9,
+            height: 9,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelSmall,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RecordChartBounds {
+  final double minY;
+  final double maxY;
+  final double interval;
+
+  const _RecordChartBounds({
+    required this.minY,
+    required this.maxY,
+    required this.interval,
+  });
+}
+
+_RecordChartBounds _recordChartBounds(List<_ExerciseRecordPoint> points) {
+  final values = [
+    for (final point in points) point.bestWeight,
+    for (final point in points) point.bestEstimatedOneRm,
+  ].where((value) => value > 0).toList();
+
+  if (values.isEmpty) {
+    return const _RecordChartBounds(minY: 0, maxY: 10, interval: 5);
+  }
+
+  final minValue = values.reduce((a, b) => a < b ? a : b);
+  final maxValue = values.reduce((a, b) => a > b ? a : b);
+  final range = math.max(1.0, maxValue - minValue);
+  final padding = math.max(2.5, range * 0.05);
+  final rawMinY = math.max(0.0, minValue - padding);
+  final rawMaxY = maxValue + padding;
+  final interval = _niceRecordInterval((rawMaxY - rawMinY) / 3);
+  final minY = math.max(0.0, (rawMinY / interval).floor() * interval);
+  final maxY = math.max(
+    minY + interval,
+    (rawMaxY / interval).ceil() * interval,
+  );
+
+  return _RecordChartBounds(
+    minY: minY,
+    maxY: maxY,
+    interval: interval,
+  );
+}
+
+FlSpot _recordSpot(int index, double value) {
+  if (value <= 0) return FlSpot.nullSpot;
+  return FlSpot(index.toDouble(), value);
+}
+
+double _niceRecordInterval(double target) {
+  if (target <= 0) return 1;
+  final exponent = (math.log(target) / math.ln10).floor();
+  final magnitude = math.pow(10, exponent).toDouble();
+  for (final multiplier in const [1, 2, 2.5, 5, 10]) {
+    final interval = magnitude * multiplier;
+    if (interval >= target) return interval.toDouble();
+  }
+  return magnitude * 10;
+}
+
+Set<int> _recordDateLabelIndexes(int length) {
+  if (length <= 4) {
+    return {for (var i = 0; i < length; i++) i};
+  }
+  return {0, length ~/ 2, length - 1};
+}
+
+bool _shouldUseTimeLabels(List<_ExerciseRecordPoint> points) {
+  final days = {
+    for (final point in points) DateUtils.dateOnly(point.date).toIso8601String(),
+  };
+  return days.length == 1;
+}
+
+String _recordAxisLabel(DateTime date, bool showTime) {
+  return showTime ? DateFormat('h:mm a').format(date) : DateFormat.MMMd().format(date);
+}
+
+double _estimatedOneRm(ExerciseSet set) {
+  if (set.reps <= 1) return set.weight;
+  return set.weight * (1 + 0.0333 * set.reps);
+}
+
+String _formatSet(ExerciseSet set) {
+  return '${_formatLbs(set.weight)} x ${set.reps}';
+}
+
+String _formatLbs(double value) {
+  return '${_cleanNumber(value)} lbs';
+}
+
+String _compactLbs(double value) {
+  if (value.abs() >= 1000) {
+    return '${(value / 1000).toStringAsFixed(value.abs() >= 10000 ? 0 : 1)}k';
+  }
+  return _cleanNumber(value);
+}
+
+String _cleanNumber(double value) {
+  if (value == value.roundToDouble()) return value.toStringAsFixed(0);
+  return value.toStringAsFixed(1);
 }
