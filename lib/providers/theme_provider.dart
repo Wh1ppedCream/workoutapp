@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ThemeProvider extends ChangeNotifier {
-  ThemeMode _mode = ThemeMode.system;
+  static const _defaultMode = ThemeMode.dark;
+
+  ThemeMode _mode = _defaultMode;
   ThemeMode get mode => _mode;
 
   ThemeProvider() {
@@ -13,10 +15,10 @@ class ThemeProvider extends ChangeNotifier {
 
   Future<void> _loadMode() async {
     final prefs = await SharedPreferences.getInstance();
-    final stored = prefs.getString('theme_mode') ?? 'system';
+    final stored = prefs.getString('theme_mode') ?? _defaultMode.name;
     _mode = ThemeMode.values.firstWhere(
       (m) => m.toString().split('.').last == stored,
-      orElse: () => ThemeMode.system,
+      orElse: () => _defaultMode,
     );
     notifyListeners();
   }

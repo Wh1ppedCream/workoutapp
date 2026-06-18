@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 
 import '../../../widgets/settings_tiles.dart';
 import 'database_settings_page.dart';
-import 'diet_nutrition_settings_page.dart';
 import 'gym_exercise_settings_page.dart';
 import 'measurements_trends_settings_page.dart';
 import 'ui_appearance_settings_page.dart';
@@ -60,15 +59,9 @@ class ProfilePage extends StatelessWidget {
           ]),
         ),
         SettingsSection(
-          title: 'Data & Nutrition',
-          subtitle: 'Data tools and nutrition configuration.',
+          title: 'Data',
+          subtitle: 'Database tools, exports, imports, and maintenance.',
           children: settingsTilesWithDividers(context, [
-            SettingsActionTile(
-              icon: Icons.restaurant_menu,
-              title: 'Diet & Nutrition Settings',
-              subtitle: 'Nutrition goals and related preferences.',
-              onTap: () => _open(context, const DietNutritionSettingsPage()),
-            ),
             SettingsActionTile(
               icon: Icons.storage_outlined,
               title: 'Database Settings',
@@ -77,11 +70,47 @@ class ProfilePage extends StatelessWidget {
             ),
           ]),
         ),
+        SettingsSection(
+          title: 'Nutrition',
+          subtitle: 'Nutrition settings are paused while this area is rebuilt.',
+          children: settingsTilesWithDividers(context, [
+            _disabledNutritionTile(context),
+          ]),
+        ),
       ],
     );
   }
 
   void _open(BuildContext context, Widget page) {
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => page));
+  }
+
+  Widget _disabledNutritionTile(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Opacity(
+      opacity: 0.48,
+      child: SettingsActionTile(
+        icon: Icons.restaurant_menu,
+        iconColor: scheme.onSurfaceVariant,
+        title: 'Diet & Nutrition Settings',
+        subtitle: 'Nutrition goals and preferences will return later.',
+        trailing: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(
+            color: scheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: scheme.outlineVariant),
+          ),
+          child: Text(
+            'Later',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: scheme.onSurfaceVariant,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
