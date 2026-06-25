@@ -5,6 +5,7 @@ import 'package:env_test/providers/active_session.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/models.dart';
+import '../../providers/selected_profile.dart';
 import '../../repositories/app_repository.dart';
 import '../../providers/preset_session.dart';
 import '../../widgets/exercise_card.dart';
@@ -107,7 +108,11 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
     final replacement = await showModalBottomSheet<ExerciseDefinition>(
       context: context,
       isScrollControlled: true,
-      builder: (_) => SwapExerciseSheet(currentDefinition: definition),
+      builder:
+          (_) => SwapExerciseSheet(
+            currentDefinition: definition,
+            profileId: context.read<SelectedProfile>().currentProfile?.id,
+          ),
     );
     if (replacement == null || !mounted) return;
 

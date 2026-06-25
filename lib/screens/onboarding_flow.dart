@@ -5,7 +5,13 @@ import 'package:provider/provider.dart';
 
 import '../models/models.dart';
 import '../providers/onboarding_provider.dart';
+import '../providers/selected_profile.dart';
 import '../repositories/app_repository.dart';
+import '../widgets/body_heatmap.dart';
+import '../widgets/preset_bar.dart';
+import 'exercise/gym_profile_screen.dart';
+import 'exercise/premade_plans_page.dart';
+import 'exercise/preset_generation_qa.dart';
 
 /// Initial setup flow for basic user details plus optional workout and
 /// nutrition personalization.
@@ -22,22 +28,31 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   final _heightController = TextEditingController();
   final _weightController = TextEditingController();
   final _calorieFloorController = TextEditingController();
+  final _gymProfileNameController = TextEditingController();
 
   int _currentPage = 0;
+  bool _gymEquipmentLoaded = false;
+  bool _isGymEquipmentLoading = true;
+  bool _gymEquipmentLoadFailed = false;
+  bool _isFinishing = false;
   String? _gender;
   DateTime? _dob;
   bool _weighedHeavy = false;
   String? _weightTrend;
   String? _bodyFatEstimate;
-  String _exerciseFrequency = '1-3 sessions';
-  String? _activityLevel;
-  String _liftingExperience = 'No experience';
-  String _cardioExperience = 'No experience';
   String _preferredDiet = 'Balanced';
   String _trainingType = 'Lifting and cardio';
   String _proteinPreference = 'Moderate';
   bool _useNutritionData = false;
   bool _useExerciseData = false;
+  _GymSpaceTemplate? _selectedGymSpace;
+  _WorkoutPlanSetupOption? _workoutPlanSetupOption;
+  List<Equipment> _availableGymEquipment = const [];
+  Set<String> _selectedGymEquipmentNames = {};
+  int? _onboardingProfileId;
+  int _onboardingPlansAdded = 0;
+  int _planOverviewRefreshToken = 0;
+  final List<int> _onboardingPlanIds = [];
 
   double _goalWeightValue = 140;
   final DateTime _projectedEndDate = DateTime.now().add(
@@ -50,6 +65,19 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
 
   bool get _nutritionOnboardingEnabled => false;
 
+  bool get _showWorkoutPlanOverview =>
+      _useExerciseData &&
+      _workoutPlanSetupOption != _WorkoutPlanSetupOption.skip &&
+      _onboardingPlanIds.isNotEmpty;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_gymEquipmentLoaded) return;
+    _gymEquipmentLoaded = true;
+    _loadGymEquipment();
+  }
+
   @override
   void dispose() {
     _controller.dispose();
@@ -57,6 +85,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     _heightController.dispose();
     _weightController.dispose();
     _calorieFloorController.dispose();
+    _gymProfileNameController.dispose();
     super.dispose();
   }
 
@@ -72,8 +101,12 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         _OnboardingPage('Goal', _buildNutritionGoalPage),
       ],
       if (_useExerciseData) ...[
-        _OnboardingPage('Activity', _buildExerciseActivityPage),
-        _OnboardingPage('Training', _buildExerciseDataPage),
+        _OnboardingPage('Gym Profile', _buildGymSpacePage),
+        if (_selectedGymSpace != null && !_selectedGymSpace!.skipSetup)
+          _OnboardingPage('Equipment', _buildGymEquipmentPage),
+        _OnboardingPage('Workout Plan', _buildWorkoutPlanPage),
+        if (_showWorkoutPlanOverview)
+          _OnboardingPage('Plan Overview', _buildWorkoutPlanOverviewPage),
       ],
       _OnboardingPage('Summary', _buildSummaryPage),
     ];
@@ -86,37 +119,271 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         _weightController.text.trim().isNotEmpty ||
         (_bodyFatEstimate?.isNotEmpty ?? false) ||
         (_weightTrend?.isNotEmpty ?? false) ||
-        (_activityLevel?.isNotEmpty ?? false) ||
         _gender != null;
   }
 
+  Future<void> _loadGymEquipment() async {
+    if (mounted && !_isGymEquipmentLoading) {
+      setState(() {
+        _isGymEquipmentLoading = true;
+        _gymEquipmentLoadFailed = false;
+      });
+    }
+    try {
+      final equipment = await context.read<AppRepository>().fetchAllEquipment();
+      if (!mounted) return;
+      setState(() {
+        _availableGymEquipment = equipment;
+        _isGymEquipmentLoading = false;
+        _gymEquipmentLoadFailed = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _availableGymEquipment = const [];
+        _isGymEquipmentLoading = false;
+        _gymEquipmentLoadFailed = true;
+      });
+    }
+  }
+
   Future<void> _finishOnboarding() async {
+    if (_isFinishing) return;
+    setState(() => _isFinishing = true);
+
     final repo = context.read<AppRepository>();
     final onboardingConfig = context.read<OnboardingConfig>();
+    final messenger = ScaffoldMessenger.of(context);
 
-    final info = PersonalInfo(
-      name: _clean(_nameController.text),
-      gender: _gender,
-      dob: _dob,
-      height: _clean(_heightController.text),
-      weight: _clean(_weightController.text),
-      bodyFatEstimate: _bodyFatEstimate,
-      weightTrend: _weightTrend,
-      activityLevel: _activityLevel,
-    );
+    try {
+      final info = PersonalInfo(
+        name: _clean(_nameController.text),
+        gender: _gender,
+        dob: _dob,
+        height: _clean(_heightController.text),
+        weight: _clean(_weightController.text),
+        bodyFatEstimate: _bodyFatEstimate,
+        weightTrend: _weightTrend,
+        activityLevel: null,
+      );
 
-    if (_hasAnyInput()) {
-      await repo.savePersonalInfo(info);
+      if (_hasAnyInput()) {
+        await repo.savePersonalInfo(info);
+      }
+
+      await _createOrUpdateSelectedGymProfile(repo);
+      await onboardingConfig.markCompleted();
+      if (!mounted) return;
+      Navigator.pushReplacementNamed(context, '/main');
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _isFinishing = false);
+      messenger.showSnackBar(
+        SnackBar(content: Text('Could not finish setup: $error')),
+      );
+    }
+  }
+
+  Future<int?> _createOrUpdateSelectedGymProfile(AppRepository repo) async {
+    final template = _selectedGymSpace;
+    if (!_useExerciseData || template == null || template.skipSetup) {
+      return null;
     }
 
-    await onboardingConfig.markCompleted();
+    final selectedEquipment = _availableGymEquipment
+        .where((item) => _selectedGymEquipmentNames.contains(item.name))
+        .toList();
+    if (selectedEquipment.isEmpty) {
+      throw StateError('Select at least one equipment option.');
+    }
+
+    final existingProfiles = await repo.fetchAllProfiles();
+    final requestedName = _gymProfileNameController.text.trim().isEmpty
+        ? template.defaultProfileName
+        : _gymProfileNameController.text.trim();
+
+    final profileId = _onboardingProfileId;
+    if (profileId != null &&
+        existingProfiles.any((profile) => profile.id == profileId)) {
+      final currentProfile =
+          existingProfiles.firstWhere((profile) => profile.id == profileId);
+      final profileName = _uniqueProfileName(
+        requestedName,
+        existingProfiles,
+        ignoredProfileId: profileId,
+      );
+      await repo.updateProfile(
+        GymProfile(
+          id: profileId,
+          name: profileName,
+          createdAt: currentProfile.createdAt,
+        ),
+      );
+      await _syncProfileEquipment(repo, profileId, selectedEquipment);
+      await _selectProfile(profileId);
+      return profileId;
+    }
+
+    final profileName = _uniqueProfileName(requestedName, existingProfiles);
+
+    int? createdProfileId;
+    try {
+      createdProfileId = await repo.createProfile(profileName);
+      await _syncProfileEquipment(repo, createdProfileId, selectedEquipment);
+    } catch (_) {
+      if (createdProfileId != null) {
+        await repo.deleteProfile(createdProfileId);
+      }
+      rethrow;
+    }
+
+    if (!mounted) return createdProfileId;
+    _onboardingProfileId = createdProfileId;
+    await _selectProfile(createdProfileId);
+    return createdProfileId;
+  }
+
+  Future<void> _syncProfileEquipment(
+    AppRepository repo,
+    int profileId,
+    List<Equipment> selectedEquipment,
+  ) async {
+    final assigned = await repo.fetchEquipmentForProfile(profileId);
+    final assignedIds = assigned.map((row) => row['id'] as int).toSet();
+    final selectedIds = selectedEquipment.map((equipment) => equipment.id).toSet();
+    final toAdd = selectedIds.difference(assignedIds);
+    final toRemove = assignedIds.difference(selectedIds);
+
+    for (final equipmentId in toAdd) {
+      await repo.addEquipmentToProfile(profileId, equipmentId);
+    }
+    for (final equipmentId in toRemove) {
+      await repo.removeEquipmentFromProfile(profileId, equipmentId);
+    }
+  }
+
+  Future<void> _selectProfile(int profileId) async {
     if (!mounted) return;
-    Navigator.pushReplacementNamed(context, '/main');
+    final selectedProfile = context.read<SelectedProfile>();
+    await selectedProfile.loadProfiles();
+    final createdProfile = selectedProfile.profiles.firstWhere(
+      (profile) => profile.id == profileId,
+    );
+    await selectedProfile.selectProfile(createdProfile);
+  }
+
+  String _uniqueProfileName(
+    String requestedName,
+    List<GymProfile> existingProfiles,
+    {int? ignoredProfileId}
+  ) {
+    final existingNames = existingProfiles
+        .where((profile) => profile.id != ignoredProfileId)
+        .map((profile) => profile.name.toLowerCase())
+        .toSet();
+    if (!existingNames.contains(requestedName.toLowerCase())) {
+      return requestedName;
+    }
+
+    var suffix = 2;
+    while (existingNames.contains(
+      '$requestedName ($suffix)'.toLowerCase(),
+    )) {
+      suffix++;
+    }
+    return '$requestedName ($suffix)';
   }
 
   String? _clean(String value) {
     final trimmed = value.trim();
     return trimmed.isEmpty ? null : trimmed;
+  }
+
+  void _selectGymSpace(_GymSpaceTemplate template) {
+    final availableNames = _availableGymEquipment
+        .map((equipment) => equipment.name)
+        .toSet();
+    final equipmentNames = template.includeAllEquipment
+        ? availableNames
+        : template.equipmentNames.intersection(availableNames);
+
+    setState(() {
+      _selectedGymSpace = template;
+      _gymProfileNameController.text = template.defaultProfileName;
+      _selectedGymEquipmentNames = Set<String>.from(equipmentNames);
+    });
+  }
+
+  void _goToGymEquipmentPage() {
+    final equipmentPageIndex = _pages.indexWhere(
+      (page) => page.label == 'Equipment',
+    );
+    if (equipmentPageIndex == -1 || equipmentPageIndex == _currentPage) {
+      return;
+    }
+
+    _controller.animateToPage(
+      equipmentPageIndex,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  void _resetGymEquipment() {
+    final template = _selectedGymSpace;
+    if (template == null || template.skipSetup) return;
+    _selectGymSpace(template);
+  }
+
+  Future<int?> _ensureWorkoutPlanProfileId() async {
+    final repo = context.read<AppRepository>();
+    if (_selectedGymSpace != null && !_selectedGymSpace!.skipSetup) {
+      return _createOrUpdateSelectedGymProfile(repo);
+    }
+
+    final selectedProfile = context.read<SelectedProfile>();
+    await selectedProfile.loadProfiles();
+    final currentId = selectedProfile.currentProfile?.id;
+    if (currentId != null) {
+      _onboardingProfileId = currentId;
+      return currentId;
+    }
+
+    final profiles = selectedProfile.profiles;
+    if (profiles.isNotEmpty) {
+      final generalProfile = profiles.cast<GymProfile?>().firstWhere(
+        (profile) => profile?.name.toLowerCase() == 'general',
+        orElse: () => profiles.first,
+      );
+      if (generalProfile?.id != null) {
+        await selectedProfile.selectProfile(generalProfile!);
+        _onboardingProfileId = generalProfile.id;
+        return generalProfile.id;
+      }
+    }
+
+    final profileId = await repo.createProfile('General');
+    await selectedProfile.loadProfiles();
+    await selectedProfile.selectProfile(
+      selectedProfile.profiles.firstWhere((profile) => profile.id == profileId),
+    );
+    _onboardingProfileId = profileId;
+    return profileId;
+  }
+
+  bool _canAdvance(_OnboardingPage page) {
+    if (page.label == 'Gym Profile') {
+      return _selectedGymSpace != null;
+    }
+    if (page.label == 'Equipment') {
+      return _gymProfileNameController.text.trim().isNotEmpty &&
+          _selectedGymEquipmentNames.isNotEmpty;
+    }
+    if (page.label == 'Workout Plan') {
+      return _workoutPlanSetupOption != null &&
+          _workoutPlanSetupOption != _WorkoutPlanSetupOption.manual;
+    }
+    return true;
   }
 
   Future<void> _pickDob() async {
@@ -130,9 +397,26 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     setState(() => _dob = picked);
   }
 
-  void _nextAction() {
+  Future<void> _nextAction() async {
     final pages = _pages;
     final lastPageIndex = pages.length - 1;
+    final currentIndex =
+        _currentPage >= pages.length ? lastPageIndex : _currentPage;
+    final currentPage = pages[currentIndex];
+
+    if (currentPage.label == 'Gym Profile' &&
+        _selectedGymSpace?.id == 'custom') {
+      await _openGymProfileEditor();
+      if (!mounted) return;
+      _goToGymEquipmentPage();
+      return;
+    }
+
+    if (currentPage.label == 'Workout Plan') {
+      await _handleWorkoutPlanNext();
+      return;
+    }
+
     if (_currentPage < lastPageIndex) {
       _controller.nextPage(
         duration: const Duration(milliseconds: 300),
@@ -143,8 +427,131 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     _finishOnboarding();
   }
 
-  void _skipOrFinish() {
+  Future<void> _handleWorkoutPlanNext() async {
+    switch (_workoutPlanSetupOption) {
+      case _WorkoutPlanSetupOption.skip:
+        _goToNextPage();
+        return;
+      case _WorkoutPlanSetupOption.premade:
+        await _openOnboardingPremadePlans();
+        return;
+      case _WorkoutPlanSetupOption.generate:
+        await _openOnboardingPlanGenerator();
+        return;
+      case _WorkoutPlanSetupOption.manual:
+      case null:
+        return;
+    }
+  }
+
+  void _goToNextPage() {
     final pages = _pages;
+    final lastPageIndex = pages.length - 1;
+    if (_currentPage >= lastPageIndex) {
+      _finishOnboarding();
+      return;
+    }
+    _controller.nextPage(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  Future<void> _openOnboardingPremadePlans() async {
+    final profileId = await _ensureWorkoutPlanProfileId();
+    if (!mounted || profileId == null) return;
+
+    final addedPlanIds = await Navigator.of(context).push<List<int>>(
+      MaterialPageRoute(
+        builder: (_) => PremadePlansPage(
+          profileId: profileId,
+          onboardingMode: true,
+          onPlanAdded: () {},
+        ),
+      ),
+    );
+    if (!mounted) return;
+    if (addedPlanIds != null && addedPlanIds.isNotEmpty) {
+      setState(() {
+        _onboardingPlansAdded += addedPlanIds.length;
+        _onboardingPlanIds.addAll(addedPlanIds);
+        _planOverviewRefreshToken++;
+      });
+      _goToNextPage();
+    }
+  }
+
+  Future<void> _openOnboardingPlanGenerator() async {
+    final profileId = await _ensureWorkoutPlanProfileId();
+    if (!mounted || profileId == null) return;
+
+    final generatedPlanIds = await Navigator.of(context).push<List<int>>(
+      MaterialPageRoute(
+        builder:
+            (_) => PresetGenerationQaScreen(
+              profileId: profileId,
+              onboardingMode: true,
+            ),
+      ),
+    );
+    if (!mounted || generatedPlanIds == null || generatedPlanIds.isEmpty) {
+      return;
+    }
+    setState(() {
+      _onboardingPlansAdded += generatedPlanIds.length;
+      _onboardingPlanIds.addAll(generatedPlanIds);
+      _planOverviewRefreshToken++;
+    });
+    _goToNextPage();
+  }
+
+  String _workoutPlanSummary() {
+    if (_onboardingPlansAdded > 0) {
+      return '$_onboardingPlansAdded added';
+    }
+    switch (_workoutPlanSetupOption) {
+      case _WorkoutPlanSetupOption.premade:
+        return 'Premade selected';
+      case _WorkoutPlanSetupOption.generate:
+        return 'Generate selected';
+      case _WorkoutPlanSetupOption.skip:
+        return 'Skipped';
+      case _WorkoutPlanSetupOption.manual:
+        return 'Manual later';
+      case null:
+        return 'Not selected';
+    }
+  }
+
+  void _previousAction() {
+    if (_currentPage <= 0) return;
+    _controller.previousPage(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  void _skipOrFinish() {
+    var pages = _pages;
+    final currentIndex = _currentPage >= pages.length
+        ? pages.length - 1
+        : _currentPage;
+    final currentPage = pages[currentIndex];
+    final selectedCustomWithoutEquipment =
+        currentPage.label == 'Gym Profile' &&
+        _selectedGymSpace?.id == 'custom' &&
+        _selectedGymEquipmentNames.isEmpty;
+    final incompleteGymSetup =
+        (currentPage.label == 'Gym Profile' && _selectedGymSpace == null) ||
+        selectedCustomWithoutEquipment ||
+        (currentPage.label == 'Equipment' &&
+            (_gymProfileNameController.text.trim().isEmpty ||
+                _selectedGymEquipmentNames.isEmpty));
+    if (incompleteGymSetup) {
+      _selectGymSpace(_skipGymSpaceTemplate);
+      pages = _pages;
+    }
+
     final lastPageIndex = pages.length - 1;
     if (_currentPage == lastPageIndex) {
       _finishOnboarding();
@@ -163,6 +570,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     final lastPageIndex = pages.length - 1;
     final scheme = Theme.of(context).colorScheme;
     final safePage = _currentPage > lastPageIndex ? lastPageIndex : _currentPage;
+    final canAdvance = _canAdvance(pages[safePage]);
 
     return Scaffold(
       backgroundColor: scheme.surface,
@@ -172,9 +580,10 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
             Padding(
               padding: const EdgeInsets.fromLTRB(18, 12, 18, 8),
               child: _OnboardingHeader(
-                currentPage: _currentPage,
+                currentPage: safePage,
                 pageCount: pages.length,
                 title: pages[safePage].label,
+                onBack: safePage == 0 ? null : _previousAction,
                 onSkip: _skipOrFinish,
                 skipLabel: safePage == lastPageIndex ? 'Finish' : 'Skip',
               ),
@@ -202,9 +611,17 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton(
-                      onPressed: _nextAction,
+                      onPressed: canAdvance && !_isFinishing
+                          ? () {
+                              _nextAction();
+                            }
+                          : null,
                       child: Text(
-                        safePage == lastPageIndex ? 'Finish Setup' : 'Next',
+                        _isFinishing
+                            ? 'Finishing...'
+                            : safePage == lastPageIndex
+                                ? 'Finish Setup'
+                                : 'Next',
                       ),
                     ),
                   ),
@@ -547,57 +964,271 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     );
   }
 
-  Widget _buildExerciseActivityPage() {
+  Widget _buildGymSpacePage() {
     return _OnboardingCard(
-      icon: Icons.directions_run,
-      title: 'Training activity',
-      subtitle: 'This helps calibrate workout and recovery assumptions.',
+      icon: Icons.location_on_outlined,
+      title: 'Where do you work out?',
+      subtitle:
+          'Choose a starting space. Its equipment will shape exercise suggestions and generated workouts.',
       children: [
-        _ChoiceGroup<String>(
-          title: 'Exercise frequency',
-          options: const ['0', '1-3 sessions', '4-6 sessions', '7+ sessions'],
-          value: _exerciseFrequency,
-          onChanged: (value) => setState(() => _exerciseFrequency = value!),
+        if (_isGymEquipmentLoading)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 28),
+            child: Center(child: CircularProgressIndicator()),
+          )
+        else if (_gymEquipmentLoadFailed)
+          ...[
+            _GymEquipmentLoadError(onRetry: _loadGymEquipment),
+            const SizedBox(height: 12),
+            _GymSpaceTile(
+              template: _skipGymSpaceTemplate,
+              selected: _selectedGymSpace?.skipSetup ?? false,
+              onTap: () => _selectGymSpace(_skipGymSpaceTemplate),
+            ),
+          ]
+        else
+          ..._gymSpaceTemplates.map((template) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _GymSpaceTile(
+                template: template,
+                selected: _selectedGymSpace?.id == template.id,
+                onTap: () => _selectGymSpace(template),
+              ),
+            );
+          }),
+      ],
+    );
+  }
+
+  Widget _buildGymEquipmentPage() {
+    final template = _selectedGymSpace;
+    if (template == null || template.skipSetup) {
+      return const SizedBox.shrink();
+    }
+
+    final selectedEquipment = _availableGymEquipment
+        .where((item) => _selectedGymEquipmentNames.contains(item.name))
+        .toList()
+      ..sort((a, b) => a.name.compareTo(b.name));
+
+    return _OnboardingCard(
+      icon: Icons.fitness_center,
+      title: 'Review your workout space',
+      subtitle:
+          'Rename the profile or adjust its equipment before Tonos creates it.',
+      children: [
+        TextField(
+          controller: _gymProfileNameController,
+          textInputAction: TextInputAction.done,
+          onChanged: (_) => setState(() {}),
+          decoration: InputDecoration(
+            labelText: 'Profile name',
+            prefixIcon: const Icon(Icons.edit_outlined),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(18),
+            ),
+          ),
         ),
         const SizedBox(height: 16),
-        _ChoiceGroup<String>(
-          title: 'Activity level',
-          options: const ['Low (0-5k)', 'Moderate (5-15k)', 'High (15k+)'],
-          value: _activityLevel,
-          onChanged: (value) => setState(() => _activityLevel = value),
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Theme.of(context)
+                .colorScheme
+                .surface
+                .withValues(alpha: 0.46),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.outlineVariant,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Included equipment',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    '${selectedEquipment.length}',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Only exercises supported by this equipment will be suggested when the profile is active.',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 14),
+              if (selectedEquipment.isEmpty)
+                Text(
+                  'No equipment selected yet.',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                )
+              else
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: selectedEquipment.map((equipment) {
+                    return Chip(
+                      avatar: Icon(
+                        _onboardingEquipmentIcon(equipment.name),
+                        size: 17,
+                      ),
+                      label: Text(equipment.name),
+                      visualDensity: VisualDensity.compact,
+                    );
+                  }).toList(),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: _resetGymEquipment,
+                icon: const Icon(Icons.restart_alt),
+                label: const Text('Reset'),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: FilledButton.tonalIcon(
+                onPressed: _openGymProfileEditor,
+                icon: const Icon(Icons.tune),
+                label: const Text('Edit profile'),
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
 
-  Widget _buildExerciseDataPage() {
-    return _OnboardingCard(
-      icon: Icons.fitness_center,
-      title: 'Exercise experience',
-      subtitle: 'Tell Tonos how familiar you are with training.',
-      children: [
-        _ChoiceGroup<String>(
-          title: 'Weightlifting experience',
-          options: const [
-            'No experience',
-            'Beginner (<1yr)',
-            'Intermediate (1-4yr)',
-            'Advanced (4yr+)',
-          ],
-          value: _liftingExperience,
-          onChanged: (value) => setState(() => _liftingExperience = value!),
+  Future<void> _openGymProfileEditor() async {
+    final draft = await Navigator.of(context).push<GymProfileDraft>(
+      MaterialPageRoute(
+        builder: (_) => GymProfileScreen(
+          initialName: _gymProfileNameController.text.trim(),
+          initialEquipmentNames: _selectedGymEquipmentNames,
+          returnDraftOnly: true,
+          title: 'Edit Workout Space',
         ),
-        const SizedBox(height: 16),
-        _ChoiceGroup<String>(
-          title: 'Cardio experience',
-          options: const [
-            'No experience',
-            'Beginner (<1yr)',
-            'Intermediate (1-4yr)',
-            'Advanced (4yr+)',
-          ],
-          value: _cardioExperience,
-          onChanged: (value) => setState(() => _cardioExperience = value!),
+      ),
+    );
+    if (draft == null || !mounted) return;
+    setState(() {
+      _gymProfileNameController.text = draft.name;
+      _selectedGymEquipmentNames = Set<String>.from(draft.equipmentNames);
+    });
+  }
+
+  Widget _buildWorkoutPlanPage() {
+    return _OnboardingCard(
+      icon: Icons.assignment_outlined,
+      title: 'Set up your workout plan',
+      subtitle:
+          'Choose how Tonos should prepare your first plans. You can always add, archive, or edit plans later.',
+      children: [
+        _WorkoutPlanSetupTile(
+          title: 'Manually create your own plans',
+          subtitle:
+              'Build plans exercise by exercise. This onboarding shortcut will be added later.',
+          icon: Icons.edit_note,
+          selected: _workoutPlanSetupOption == _WorkoutPlanSetupOption.manual,
+          disabled: true,
+          trailingLabel: 'Later',
+          onTap: null,
+        ),
+        const SizedBox(height: 12),
+        _WorkoutPlanSetupTile(
+          title: 'Use premade exercise plans',
+          subtitle:
+              'Browse built-in full body, upper/lower, push-pull-legs, and body-part split plans.',
+          icon: Icons.library_books_outlined,
+          selected: _workoutPlanSetupOption == _WorkoutPlanSetupOption.premade,
+          onTap: () {
+            setState(() {
+              _workoutPlanSetupOption = _WorkoutPlanSetupOption.premade;
+            });
+          },
+        ),
+        const SizedBox(height: 12),
+        _WorkoutPlanSetupTile(
+          title: 'Generate exercise plans',
+          subtitle:
+              'Answer a few setup questions and let Tonos generate a custom plan for your profile.',
+          icon: Icons.auto_awesome,
+          selected: _workoutPlanSetupOption == _WorkoutPlanSetupOption.generate,
+          onTap: () {
+            setState(() {
+              _workoutPlanSetupOption = _WorkoutPlanSetupOption.generate;
+            });
+          },
+        ),
+        const SizedBox(height: 12),
+        _WorkoutPlanSetupTile(
+          title: 'Skip this step',
+          subtitle: 'Start without adding plans. You can set them up from Train later.',
+          icon: Icons.fast_forward,
+          selected: _workoutPlanSetupOption == _WorkoutPlanSetupOption.skip,
+          onTap: () {
+            setState(() {
+              _workoutPlanSetupOption = _WorkoutPlanSetupOption.skip;
+            });
+          },
+        ),
+        if (_onboardingPlansAdded > 0) ...[
+          const SizedBox(height: 14),
+          _OnboardingInfoCallout(
+            icon: Icons.check_circle_outline,
+            text:
+                '$_onboardingPlansAdded ${_onboardingPlansAdded == 1 ? 'plan has' : 'plans have'} been added to Active Plans.',
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildWorkoutPlanOverviewPage() {
+    final planCount = _onboardingPlanIds.length;
+    return _OnboardingCard(
+      icon: Icons.fact_check_outlined,
+      title: 'Review your plans',
+      subtitle:
+          'These plans were added to your active plans. Open any plan to inspect or adjust it before continuing.',
+      children: [
+        _OnboardingPlanOverviewList(
+          profileId: _onboardingProfileId,
+          planIds: Set<int>.from(_onboardingPlanIds),
+          refreshToken: _planOverviewRefreshToken,
+          onChanged: () {
+            if (!mounted) return;
+            setState(() => _planOverviewRefreshToken++);
+          },
+        ),
+        const SizedBox(height: 14),
+        _OnboardingInfoCallout(
+          icon: Icons.check_circle_outline,
+          text:
+              '$planCount ${planCount == 1 ? 'plan is' : 'plans are'} ready in Active Plans.',
         ),
       ],
     );
@@ -629,10 +1260,21 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
           _SummaryRow(label: 'Protein', value: _proteinPreference),
         ],
         if (_useExerciseData) ...[
-          _SummaryRow(label: 'Exercise freq.', value: _exerciseFrequency),
-          _SummaryRow(label: 'Activity', value: _activityLevel ?? ''),
-          _SummaryRow(label: 'Lifting exp.', value: _liftingExperience),
-          _SummaryRow(label: 'Cardio exp.', value: _cardioExperience),
+          _SummaryRow(
+            label: 'Gym profile',
+            value: _selectedGymSpace?.skipSetup ?? true
+                ? 'General'
+                : _gymProfileNameController.text.trim(),
+          ),
+          if (!(_selectedGymSpace?.skipSetup ?? true))
+            _SummaryRow(
+              label: 'Equipment',
+              value: '${_selectedGymEquipmentNames.length} selected',
+            ),
+          _SummaryRow(
+            label: 'Workout plans',
+            value: _workoutPlanSummary(),
+          ),
         ],
       ],
     );
@@ -666,6 +1308,7 @@ class _OnboardingHeader extends StatelessWidget {
   final int currentPage;
   final int pageCount;
   final String title;
+  final VoidCallback? onBack;
   final VoidCallback onSkip;
   final String skipLabel;
 
@@ -673,6 +1316,7 @@ class _OnboardingHeader extends StatelessWidget {
     required this.currentPage,
     required this.pageCount,
     required this.title,
+    required this.onBack,
     required this.onSkip,
     required this.skipLabel,
   });
@@ -686,20 +1330,50 @@ class _OnboardingHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w900,
+        SizedBox(
+          height: 48,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Align(
+                alignment: Alignment.centerLeft,
+                child: SizedBox(
+                  width: 72,
+                  child: onBack == null
+                      ? null
+                      : IconButton(
+                          onPressed: onBack,
+                          tooltip: 'Previous step',
+                          alignment: Alignment.centerLeft,
+                          padding: EdgeInsets.zero,
+                          icon: const Icon(Icons.chevron_left, size: 26),
+                        ),
                 ),
               ),
-            ),
-            TextButton(onPressed: onSkip, child: Text(skipLabel)),
-          ],
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 76),
+                child: Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+              Align(
+                alignment: Alignment.centerRight,
+                child: SizedBox(
+                  width: 72,
+                  child: TextButton(
+                    onPressed: onSkip,
+                    child: Text(skipLabel),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 8),
         ClipRRect(
@@ -1334,6 +2008,652 @@ class _PageDots extends StatelessWidget {
       }),
     );
   }
+}
+
+enum _WorkoutPlanSetupOption { manual, premade, generate, skip }
+
+class _OnboardingPlanItem {
+  final int presetId;
+  final String name;
+  final bool isAutomatic;
+  final int listIndex;
+  final Map<String, double> focusFrequencyMap;
+
+  const _OnboardingPlanItem({
+    required this.presetId,
+    required this.name,
+    required this.isAutomatic,
+    required this.listIndex,
+    required this.focusFrequencyMap,
+  });
+}
+
+class _OnboardingPlanOverviewList extends StatefulWidget {
+  final int? profileId;
+  final Set<int> planIds;
+  final int refreshToken;
+  final VoidCallback onChanged;
+
+  const _OnboardingPlanOverviewList({
+    required this.profileId,
+    required this.planIds,
+    required this.refreshToken,
+    required this.onChanged,
+  });
+
+  @override
+  State<_OnboardingPlanOverviewList> createState() =>
+      _OnboardingPlanOverviewListState();
+}
+
+class _OnboardingPlanOverviewListState
+    extends State<_OnboardingPlanOverviewList> {
+  final _repo = AppRepository();
+  Future<List<_OnboardingPlanItem>>? _plansFuture;
+  int? _loadedProfileId;
+  int? _loadedRefreshToken;
+  Set<int> _loadedPlanIds = const <int>{};
+
+  static const _palette = [
+    Colors.blue,
+    Colors.orange,
+    Colors.green,
+    Colors.purple,
+    Colors.teal,
+  ];
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _ensureFuture();
+  }
+
+  @override
+  void didUpdateWidget(covariant _OnboardingPlanOverviewList oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _ensureFuture();
+  }
+
+  void _ensureFuture() {
+    final profileId = widget.profileId;
+    final planIds = Set<int>.from(widget.planIds);
+    final shouldReload =
+        _plansFuture == null ||
+        _loadedProfileId != profileId ||
+        _loadedRefreshToken != widget.refreshToken ||
+        !_setEquals(_loadedPlanIds, planIds);
+    if (!shouldReload) return;
+
+    _loadedProfileId = profileId;
+    _loadedRefreshToken = widget.refreshToken;
+    _loadedPlanIds = planIds;
+    _plansFuture = profileId == null
+        ? Future.value(const <_OnboardingPlanItem>[])
+        : _loadPlans(profileId, planIds);
+  }
+
+  Future<List<_OnboardingPlanItem>> _loadPlans(
+    int profileId,
+    Set<int> planIds,
+  ) async {
+    if (planIds.isEmpty) return const <_OnboardingPlanItem>[];
+    final rows = await _repo.fetchPresetSummariesRaw(profileId: profileId);
+    final order = {
+      for (var index = 0; index < planIds.length; index++)
+        planIds.elementAt(index): index,
+    };
+    final filteredRows =
+        rows.where((row) => planIds.contains(row['id'] as int)).toList()
+          ..sort(
+            (a, b) => (order[a['id'] as int] ?? 0).compareTo(
+              order[b['id'] as int] ?? 0,
+            ),
+          );
+    final presetIds = filteredRows.map((row) => row['id'] as int).toList();
+    final focusRows = await _repo.fetchPresetFocusSetCountsRaw(
+      presetIds: presetIds,
+    );
+    final focusSetCountsByPreset = _groupFocusSetCounts(focusRows);
+    final unitsByDefinition = await _loadBodyPartUnitsByDefinition(
+      focusSetCountsByPreset,
+    );
+
+    return [
+      for (var index = 0; index < filteredRows.length; index++)
+        _OnboardingPlanItem(
+          presetId: filteredRows[index]['id'] as int,
+          name: filteredRows[index]['name'] as String,
+          isAutomatic: (filteredRows[index]['is_automatic'] as int? ?? 0) == 1,
+          listIndex: index,
+          focusFrequencyMap: _buildFocusFrequencyMap(
+            focusSetCountsByPreset[filteredRows[index]['id'] as int] ??
+                const <int, int>{},
+            unitsByDefinition,
+          ),
+        ),
+    ];
+  }
+
+  Map<int, Map<int, int>> _groupFocusSetCounts(
+    List<Map<String, dynamic>> rows,
+  ) {
+    final grouped = <int, Map<int, int>>{};
+    for (final row in rows) {
+      final presetId = row['preset_id'] as int;
+      final defId = row['def_id'] as int;
+      final setCount = ((row['set_count'] as num?) ?? 0).toInt();
+      if (setCount <= 0) continue;
+      grouped.putIfAbsent(presetId, () => <int, int>{})[defId] = setCount;
+    }
+    return grouped;
+  }
+
+  Future<Map<int, Map<String, double>>> _loadBodyPartUnitsByDefinition(
+    Map<int, Map<int, int>> focusSetCountsByPreset,
+  ) async {
+    final defIds = <int>{
+      for (final counts in focusSetCountsByPreset.values) ...counts.keys,
+    };
+    if (defIds.isEmpty) return const <int, Map<String, double>>{};
+
+    final result = <int, Map<String, double>>{};
+    for (final defId in defIds) {
+      final units = await _repo.computeBodyPartPercents(defId);
+      result[defId] = {
+        for (final entry in units.entries)
+          if (entry.value > 0.0) entry.key.name: entry.value,
+      };
+    }
+    return result;
+  }
+
+  Map<String, double> _buildFocusFrequencyMap(
+    Map<int, int> setCountsByDefinition,
+    Map<int, Map<String, double>> unitsByDefinition,
+  ) {
+    final bodyPartTotals = <String, double>{};
+    setCountsByDefinition.forEach((defId, setCount) {
+      final units = unitsByDefinition[defId];
+      if (units == null || setCount <= 0) return;
+      units.forEach((bodyPartName, unitsPerSet) {
+        bodyPartTotals[bodyPartName] =
+            (bodyPartTotals[bodyPartName] ?? 0.0) + unitsPerSet * setCount;
+      });
+    });
+    if (bodyPartTotals.isEmpty) return const <String, double>{};
+
+    final maxUnits = bodyPartTotals.values.fold<double>(
+      0.0,
+      (max, value) => value > max ? value : max,
+    );
+    if (maxUnits <= 0.0) return const <String, double>{};
+
+    final frequencyMap = <String, double>{};
+    bodyPartTotals.forEach((bodyPartName, units) {
+      final svgIds = bodyPartNameToSvgIds[bodyPartName] ?? const <String>[];
+      final normalized = units / maxUnits;
+      for (final svgId in svgIds) {
+        frequencyMap[svgId] = normalized;
+      }
+    });
+    return frequencyMap;
+  }
+
+  bool _setEquals(Set<int> left, Set<int> right) {
+    if (left.length != right.length) return false;
+    for (final value in left) {
+      if (!right.contains(value)) return false;
+    }
+    return true;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return FutureBuilder<List<_OnboardingPlanItem>>(
+      future: _plansFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return Text(
+            'Could not load plan overview yet.',
+            style: TextStyle(color: scheme.error),
+          );
+        }
+
+        final plans = snapshot.data ?? const <_OnboardingPlanItem>[];
+        if (plans.isEmpty) {
+          return Text(
+            'No added plans were found. Go back to add plans, or skip this step.',
+            style: TextStyle(color: scheme.onSurfaceVariant),
+          );
+        }
+
+        return Column(
+          children: [
+            for (final plan in plans)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: PresetBar(
+                  presetId: plan.presetId,
+                  label: plan.name,
+                  color: _palette[plan.listIndex % _palette.length],
+                  index: plan.listIndex,
+                  isAutomatic: plan.isAutomatic,
+                  focusFrequencyMap: plan.focusFrequencyMap,
+                  onRefresh: () {
+                    _ensureFuture();
+                    widget.onChanged();
+                  },
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _GymSpaceTemplate {
+  final String id;
+  final String title;
+  final String subtitle;
+  final String defaultProfileName;
+  final IconData icon;
+  final Set<String> equipmentNames;
+  final bool includeAllEquipment;
+  final bool skipSetup;
+  final bool highlighted;
+
+  const _GymSpaceTemplate({
+    required this.id,
+    required this.title,
+    required this.subtitle,
+    required this.defaultProfileName,
+    required this.icon,
+    this.equipmentNames = const {},
+    this.includeAllEquipment = false,
+    this.skipSetup = false,
+    this.highlighted = false,
+  });
+}
+
+const _gymSpaceTemplates = <_GymSpaceTemplate>[
+  _GymSpaceTemplate(
+    id: 'custom',
+    title: 'Customized Space',
+    subtitle: 'Design your own profile by choosing every available item.',
+    defaultProfileName: 'Custom Space',
+    icon: Icons.tune,
+    highlighted: true,
+  ),
+  _GymSpaceTemplate(
+    id: 'skip',
+    title: 'Skip this step',
+    subtitle: 'Keep the General profile and choose your equipment later.',
+    defaultProfileName: 'General',
+    icon: Icons.fast_forward,
+    skipSetup: true,
+  ),
+  _GymSpaceTemplate(
+    id: 'commercial',
+    title: 'Commercial Gym',
+    subtitle:
+        'Start with every available equipment option, then remove anything your gym does not have.',
+    defaultProfileName: 'Commercial Gym',
+    icon: Icons.apartment,
+    includeAllEquipment: true,
+  ),
+  _GymSpaceTemplate(
+    id: 'home_gym',
+    title: 'Home Gym',
+    subtitle:
+        'A practical home setup with free weights, bands, a bench, and bodyweight equipment.',
+    defaultProfileName: 'Home Gym',
+    icon: Icons.home_work_outlined,
+    equipmentNames: {
+      'None',
+      'Bodyweight',
+      'Dumbbell',
+      'Kettlebell',
+      'Adjustable Bench',
+      'Resistance Band',
+      'Ab Roller',
+      'Weight Plates',
+    },
+  ),
+  _GymSpaceTemplate(
+    id: 'calisthenics',
+    title: 'Calisthenics',
+    subtitle:
+        'Bodyweight-focused equipment including bars, rings, bands, and basic accessories.',
+    defaultProfileName: 'Calisthenics',
+    icon: Icons.accessibility_new,
+    equipmentNames: {
+      'None',
+      'Bodyweight',
+      'Adjustable Bench',
+      'Dip Bars',
+      'Ab Roller',
+      'Resistance Band',
+      'Weight Plates',
+      'Pull-Up Bar',
+      'Gymnastics Rings',
+    },
+  ),
+  _GymSpaceTemplate(
+    id: 'powerlifting',
+    title: 'Powerlifting',
+    subtitle: 'A barbell-based space with plates, a power rack, and a bench.',
+    defaultProfileName: 'Powerlifting',
+    icon: Icons.fitness_center,
+    equipmentNames: {
+      'Barbell',
+      'Weight Plates',
+      'Power Rack',
+      'Adjustable Bench',
+    },
+  ),
+  _GymSpaceTemplate(
+    id: 'free_weights',
+    title: 'Free Weights',
+    subtitle:
+        'Dumbbells, kettlebells, plates, a bench, and bodyweight movements.',
+    defaultProfileName: 'Free Weights',
+    icon: Icons.sports_gymnastics,
+    equipmentNames: {
+      'Dumbbell',
+      'Weight Plates',
+      'Adjustable Bench',
+      'Bodyweight',
+      'Kettlebell',
+    },
+  ),
+];
+
+final _skipGymSpaceTemplate = _gymSpaceTemplates.firstWhere(
+  (template) => template.skipSetup,
+);
+
+class _GymSpaceTile extends StatelessWidget {
+  final _GymSpaceTemplate template;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _GymSpaceTile({
+    required this.template,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final accent = template.highlighted ? scheme.tertiary : scheme.primary;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(22),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: selected
+              ? accent.withValues(alpha: 0.16)
+              : scheme.surface.withValues(alpha: 0.46),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(
+            color: selected ? accent : scheme.outlineVariant,
+            width: selected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              width: 46,
+              height: 46,
+              decoration: BoxDecoration(
+                color: accent.withValues(alpha: 0.16),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(template.icon, color: accent),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    template.title,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      color: template.highlighted ? accent : null,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    template.subtitle,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(
+              selected
+                  ? Icons.radio_button_checked
+                  : Icons.radio_button_unchecked,
+              color: selected ? accent : scheme.onSurfaceVariant,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _GymEquipmentLoadError extends StatelessWidget {
+  final VoidCallback onRetry;
+
+  const _GymEquipmentLoadError({required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: scheme.errorContainer.withValues(alpha: 0.32),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.cloud_off, color: scheme.error),
+          const SizedBox(height: 8),
+          Text(
+            'Equipment could not be loaded.',
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            onPressed: onRetry,
+            icon: const Icon(Icons.refresh),
+            label: const Text('Try again'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _WorkoutPlanSetupTile extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final bool selected;
+  final bool disabled;
+  final String? trailingLabel;
+  final VoidCallback? onTap;
+
+  const _WorkoutPlanSetupTile({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.selected,
+    this.disabled = false,
+    this.trailingLabel,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final accent = disabled ? scheme.onSurfaceVariant : scheme.primary;
+    final opacity = disabled ? 0.48 : 1.0;
+
+    return Opacity(
+      opacity: opacity,
+      child: InkWell(
+        onTap: disabled ? null : onTap,
+        borderRadius: BorderRadius.circular(22),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: selected
+                ? scheme.primary.withValues(alpha: 0.16)
+                : scheme.surface.withValues(alpha: 0.46),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(
+              color: selected ? scheme.primary : scheme.outlineVariant,
+              width: selected ? 2 : 1,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(icon, color: accent),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      subtitle,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              if (trailingLabel != null)
+                Text(
+                  trailingLabel!,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w800,
+                  ),
+                )
+              else
+                Icon(
+                  selected
+                      ? Icons.radio_button_checked
+                      : Icons.radio_button_unchecked,
+                  color: selected ? scheme.primary : scheme.onSurfaceVariant,
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _OnboardingInfoCallout extends StatelessWidget {
+  final IconData icon;
+  final String text;
+
+  const _OnboardingInfoCallout({
+    required this.icon,
+    required this.text,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: scheme.primary.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: scheme.primary.withValues(alpha: 0.28)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: scheme.primary),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: scheme.onSurfaceVariant,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+IconData _onboardingEquipmentIcon(String name) {
+  final lower = name.toLowerCase();
+  if (lower.contains('bench')) return Icons.event_seat;
+  if (lower.contains('machine') || lower.contains('smith')) {
+    return Icons.precision_manufacturing;
+  }
+  if (lower.contains('cable') || lower.contains('attachment')) {
+    return Icons.cable;
+  }
+  if (lower.contains('bodyweight') || lower == 'none') {
+    return Icons.accessibility_new;
+  }
+  if (lower.contains('ring')) return Icons.radio_button_unchecked;
+  if (lower.contains('band')) return Icons.linear_scale;
+  if (lower.contains('rack') || lower.contains('pull-up')) {
+    return Icons.view_week;
+  }
+  return Icons.fitness_center;
 }
 
 class _FieldGap {

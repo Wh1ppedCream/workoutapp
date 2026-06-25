@@ -7,11 +7,33 @@ import '../../db/database_helper.dart';
 import '../../models/gym_models.dart';
 import '../../providers/selected_profile.dart';
 
+/// Profile edits returned to onboarding before the real profile is created.
+class GymProfileDraft {
+  final String name;
+  final Set<String> equipmentNames;
+
+  const GymProfileDraft({
+    required this.name,
+    required this.equipmentNames,
+  });
+}
+
 /// Creates or edits a workout space and the equipment available in that space.
 class GymProfileScreen extends StatefulWidget {
   final GymProfile? profile;
+  final String? initialName;
+  final Set<String> initialEquipmentNames;
+  final bool returnDraftOnly;
+  final String? title;
 
-  const GymProfileScreen({super.key, this.profile});
+  const GymProfileScreen({
+    super.key,
+    this.profile,
+    this.initialName,
+    this.initialEquipmentNames = const <String>{},
+    this.returnDraftOnly = false,
+    this.title,
+  });
 
   @override
   State<GymProfileScreen> createState() => _GymProfileScreenState();
@@ -30,7 +52,7 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
   bool _isSaving = false;
   String _searchQuery = '';
 
-  bool get _isEditing => widget.profile != null;
+  bool get _isEditing => widget.profile != null || widget.returnDraftOnly;
   bool get _hasUnsavedChanges {
     if (_isSaving) return false;
     final nameChanged = _nameController.text.trim() != _originalName.trim();
@@ -42,8 +64,8 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
   @override
   void initState() {
     super.initState();
-    _originalName = widget.profile?.name ?? '';
-    _nameController = TextEditingController(text: widget.profile?.name ?? '');
+    _originalName = widget.profile?.name ?? widget.initialName ?? '';
+    _nameController = TextEditingController(text: _originalName);
     _searchController = TextEditingController();
     _searchController.addListener(_handleSearchChanged);
     _loadEquipment();
@@ -83,7 +105,12 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
         }).toList();
 
     if (!mounted) return;
-    final assignedIds = assigned.map((e) => e['id'] as int).toSet();
+    final assignedIds = assigned.isNotEmpty
+        ? assigned.map((e) => e['id'] as int).toSet()
+        : equipment
+            .where((item) => widget.initialEquipmentNames.contains(item.name))
+            .map((item) => item.id)
+            .toSet();
     setState(() {
       _allEquipment = equipment;
       _selectedEquipmentIds = assignedIds;
@@ -133,6 +160,18 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
       } else {
         _expandedCategoryKeys.add(categoryKey);
       }
+    });
+  }
+
+  void _resetEquipmentSelection() {
+    setState(() {
+      _selectedEquipmentIds = Set<int>.from(_originalEquipmentIds);
+    });
+  }
+
+  void _selectAllEquipment() {
+    setState(() {
+      _selectedEquipmentIds = _allEquipment.map((item) => item.id).toSet();
     });
   }
 
@@ -196,10 +235,37 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
     setState(() => _isSaving = true);
 
     final name = _nameController.text.trim();
-    final dbHelper = DatabaseHelper();
-    final selectedProv = context.read<SelectedProfile>();
     final navigator = Navigator.of(context);
     final messenger = ScaffoldMessenger.of(context);
+
+    if (widget.returnDraftOnly) {
+      if (_selectedEquipmentIds.isEmpty) {
+        setState(() => _isSaving = false);
+        messenger.showSnackBar(
+          const SnackBar(content: Text('Select at least one equipment item.')),
+        );
+        return false;
+      }
+
+      final selectedNames = _allEquipment
+          .where((item) => _selectedEquipmentIds.contains(item.id))
+          .map((item) => item.name)
+          .toSet();
+
+      if (!mounted) return true;
+      setState(() {
+        _originalName = name;
+        _originalEquipmentIds = Set<int>.from(_selectedEquipmentIds);
+        _isSaving = false;
+      });
+      navigator.pop(
+        GymProfileDraft(name: name, equipmentNames: selectedNames),
+      );
+      return true;
+    }
+
+    final dbHelper = DatabaseHelper();
+    final selectedProv = context.read<SelectedProfile>();
 
     try {
       int profileId;
@@ -270,7 +336,9 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
       child: Scaffold(
         appBar: AppBar(
           leading: BackButton(onPressed: _attemptClose),
-          title: Text(_isEditing ? 'Edit Gym Profile' : 'New Gym Profile'),
+          title: Text(
+            widget.title ?? (_isEditing ? 'Edit Gym Profile' : 'New Gym Profile'),
+          ),
           scrolledUnderElevation: 0,
         ),
         body: SafeArea(
@@ -289,11 +357,9 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
                     const SizedBox(height: 14),
                     _EquipmentSearchField(controller: _searchController),
                     const SizedBox(height: 16),
-                    Text(
-                      'Equipment',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w900,
-                      ),
+                    _EquipmentSectionHeader(
+                      onReset: _isLoading ? null : _resetEquipmentSelection,
+                      onSelectAll: _isLoading ? null : _selectAllEquipment,
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -462,6 +528,53 @@ class _EquipmentSearchField extends StatelessWidget {
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
+    );
+  }
+}
+
+class _EquipmentSectionHeader extends StatelessWidget {
+  final VoidCallback? onReset;
+  final VoidCallback? onSelectAll;
+
+  const _EquipmentSectionHeader({
+    required this.onReset,
+    required this.onSelectAll,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            'Equipment',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ),
+        TextButton(
+          onPressed: onReset,
+          style: TextButton.styleFrom(
+            visualDensity: VisualDensity.compact,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+          ),
+          child: const Text('Reset'),
+        ),
+        const SizedBox(width: 4),
+        FilledButton.tonal(
+          onPressed: onSelectAll,
+          style: FilledButton.styleFrom(
+            visualDensity: VisualDensity.compact,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+          ),
+          child: const Text('Select All'),
+        ),
+      ],
     );
   }
 }
@@ -818,6 +931,7 @@ _EquipmentCategory _categoryForEquipment(String name) {
       lower.contains('rack') ||
       lower.contains('dip') ||
       lower.contains('pull-up') ||
+      lower.contains('ring') ||
       lower.contains('developer')) {
     return const _EquipmentCategory(
       key: 'benches_racks',
@@ -874,7 +988,10 @@ IconData _equipmentIconFor(String name) {
     return Icons.accessibility_new;
   }
   if (lower.contains('band')) return Icons.linear_scale;
-  if (lower.contains('rack')) return Icons.view_week;
+  if (lower.contains('ring')) return Icons.radio_button_unchecked;
+  if (lower.contains('rack') || lower.contains('pull-up')) {
+    return Icons.view_week;
+  }
   return Icons.fitness_center;
 }
 
@@ -886,7 +1003,10 @@ String _equipmentSubtitleFor(String name) {
   if (lower.contains('attachment') || lower.contains('cable')) {
     return 'Cable station accessory';
   }
-  if (lower.contains('bench') || lower.contains('rack')) {
+  if (lower.contains('bench') ||
+      lower.contains('rack') ||
+      lower.contains('pull-up') ||
+      lower.contains('ring')) {
     return 'Bench, rack, or station setup';
   }
   if (lower.contains('barbell') ||

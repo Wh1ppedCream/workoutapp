@@ -6,6 +6,7 @@ import '../profile/settings/muscle_ranking_screen.dart';
 
 import '../../models/definition_models.dart';
 import '../../repositories/app_repository.dart';
+import '../../services/active_plan_store.dart';
 import '../../services/preset_generation_service.dart';
 import '../../models/training_plan_models.dart';
 import '../../widgets/bodypart_focus_chips.dart';
@@ -24,8 +25,13 @@ enum RequirementOption { equalSplitBodyPart, biasRankBodyPart, biasRankMuscle }
 class PresetGenerationQaScreen extends StatefulWidget {
   /// We need the current gym profile to filter exercises.
   final int profileId;
+  final bool onboardingMode;
 
-  const PresetGenerationQaScreen({super.key, required this.profileId});
+  const PresetGenerationQaScreen({
+    super.key,
+    required this.profileId,
+    this.onboardingMode = false,
+  });
 
   @override
   State<PresetGenerationQaScreen> createState() =>
@@ -50,6 +56,8 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
 
   bool _useRecentTrainingHistory = false;
   bool _isGenerating = false;
+  bool _isDiscardingOnboardingPlans = false;
+  final _onboardingGeneratedPlanIds = <int>[];
 
   @override
   void initState() {
@@ -168,7 +176,18 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
         );
       }
       if (!mounted) return;
-      Navigator.of(context).pop(result.presetId);
+      if (widget.onboardingMode) {
+        await ActivePlanStore.add(widget.profileId, result.presetId);
+        if (!mounted) return;
+        setState(() => _onboardingGeneratedPlanIds.add(result.presetId));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Generated plan added. Review it when ready.'),
+          ),
+        );
+      } else {
+        Navigator.of(context).pop(result.presetId);
+      }
     } catch (e, st) {
       debugPrint('Error generating preset: $e\n$st');
       if (!mounted) return;
@@ -180,6 +199,32 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
         setState(() => _isGenerating = false);
       }
     }
+  }
+
+  Future<void> _discardOnboardingPlans() async {
+    if (_isDiscardingOnboardingPlans) return;
+    setState(() => _isDiscardingOnboardingPlans = true);
+    try {
+      for (final presetId in List<int>.from(_onboardingGeneratedPlanIds)) {
+        await ActivePlanStore.remove(widget.profileId, presetId);
+        await _repo.deletePreset(presetId);
+      }
+      if (!mounted) return;
+      Navigator.of(context).pop<List<int>>(const <int>[]);
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not discard generated plans: $error')),
+      );
+      setState(() => _isDiscardingOnboardingPlans = false);
+    }
+  }
+
+  void _finishOnboardingPlanGeneration() {
+    if (_onboardingGeneratedPlanIds.isEmpty) return;
+    Navigator.of(context).pop<List<int>>(
+      List<int>.unmodifiable(_onboardingGeneratedPlanIds),
+    );
   }
 
   Widget _buildSettingsSection({
@@ -256,10 +301,13 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    final content = Scaffold(
       appBar: AppBar(title: const Text('Generate Custom Presets')),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _isGenerating ? null : _handleContinue,
+        onPressed:
+            _isGenerating || _isDiscardingOnboardingPlans
+                ? null
+                : _handleContinue,
         icon:
             _isGenerating
                 ? const SizedBox(
@@ -270,8 +318,23 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
                 : const Icon(Icons.auto_awesome),
         label: Text(_isGenerating ? 'Generating...' : 'Generate preset'),
       ),
+      bottomNavigationBar: widget.onboardingMode
+          ? _OnboardingPlanActionBar(
+              addedCount: _onboardingGeneratedPlanIds.length,
+              isBusy: _isDiscardingOnboardingPlans,
+              onCancel: _discardOnboardingPlans,
+              onSave: _onboardingGeneratedPlanIds.isEmpty
+                  ? null
+                  : _finishOnboardingPlanGeneration,
+            )
+          : null,
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.fromLTRB(
+          16,
+          16,
+          16,
+          widget.onboardingMode ? 136 : 16,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -493,6 +556,103 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
           ],
         ),
       ),
+    );
+
+    if (!widget.onboardingMode) return content;
+    return PopScope<List<int>>(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        _discardOnboardingPlans();
+      },
+      child: content,
+    );
+  }
+}
+
+class _OnboardingPlanActionBar extends StatelessWidget {
+  final int addedCount;
+  final bool isBusy;
+  final VoidCallback onCancel;
+  final VoidCallback? onSave;
+
+  const _OnboardingPlanActionBar({
+    required this.addedCount,
+    required this.isBusy,
+    required this.onCancel,
+    required this.onSave,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return SafeArea(
+      top: false,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+        decoration: BoxDecoration(
+          color: scheme.surface.withValues(alpha: 0.96),
+          border: Border(
+            top: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.6)),
+          ),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: isBusy ? null : onCancel,
+                child: Text(isBusy ? 'Discarding...' : 'Cancel'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              flex: 2,
+              child: FilledButton.icon(
+                onPressed: isBusy ? null : onSave,
+                icon: _PlanCountBadge(count: addedCount),
+                label: const Text('Review Plans'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PlanCountBadge extends StatelessWidget {
+  final int count;
+
+  const _PlanCountBadge({required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        const Icon(Icons.save_outlined),
+        if (count > 0)
+          Positioned(
+            right: -8,
+            top: -8,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+              decoration: BoxDecoration(
+                color: scheme.error,
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                count > 99 ? '99+' : '$count',
+                style: TextStyle(
+                  color: scheme.onError,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

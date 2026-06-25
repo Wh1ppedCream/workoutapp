@@ -9,7 +9,7 @@ void main() {
     test('accepts versioned export envelopes', () {
       final jsonStr = jsonEncode(
         buildDatabaseExportEnvelope(
-          schemaVersion: 48,
+          schemaVersion: 49,
           tables: {
             'sessions': [
               {'id': 1, 'date': '2026-04-26T12:00:00.000', 'duration': 45},
@@ -19,11 +19,11 @@ void main() {
         ),
       );
 
-      final preview = inspectDatabaseImport(jsonStr, currentSchemaVersion: 48);
+      final preview = inspectDatabaseImport(jsonStr, currentSchemaVersion: 49);
 
       expect(preview.canImport, isTrue);
       expect(preview.isLegacyFormat, isFalse);
-      expect(preview.schemaVersion, 48);
+      expect(preview.schemaVersion, 49);
       expect(preview.rowCounts['sessions'], 1);
       expect(decodeDatabaseExportTables(jsonStr), contains('sessions'));
     });
@@ -35,7 +35,7 @@ void main() {
         ],
       });
 
-      final preview = inspectDatabaseImport(jsonStr, currentSchemaVersion: 48);
+      final preview = inspectDatabaseImport(jsonStr, currentSchemaVersion: 49);
 
       expect(preview.canImport, isTrue);
       expect(preview.isLegacyFormat, isTrue);
@@ -48,12 +48,12 @@ void main() {
     test('blocks exports from newer schemas before destructive import', () {
       final jsonStr = jsonEncode(
         buildDatabaseExportEnvelope(
-          schemaVersion: 49,
+          schemaVersion: 50,
           tables: {'sessions': const []},
         ),
       );
 
-      final preview = inspectDatabaseImport(jsonStr, currentSchemaVersion: 48);
+      final preview = inspectDatabaseImport(jsonStr, currentSchemaVersion: 49);
 
       expect(preview.canImport, isFalse);
       expect(preview.schemaVersionTooNew, isTrue);
@@ -63,14 +63,14 @@ void main() {
     test('rejects malformed table rows before destructive import', () {
       final jsonStr = jsonEncode(
         buildDatabaseExportEnvelope(
-          schemaVersion: 48,
+          schemaVersion: 49,
           tables: {
             'sessions': ['not a row map'],
           },
         ),
       );
 
-      final preview = inspectDatabaseImport(jsonStr, currentSchemaVersion: 48);
+      final preview = inspectDatabaseImport(jsonStr, currentSchemaVersion: 49);
 
       expect(preview.canImport, isFalse);
       expect(preview.invalidTables, contains('sessions'));

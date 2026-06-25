@@ -34,7 +34,7 @@ import 'package:flutter/foundation.dart' show debugPrint;
 
 /// Singleton helper for managing the SQLite database.
 class DatabaseHelper {
-  static const int _kDbVersion = 48;
+  static const int _kDbVersion = 49;
   static int get currentSchemaVersion => _kDbVersion;
   static const String _kOpenTriggerResetKey = 'open_trigger_reset_v1';
   static const String _kOpenIndexEnsureKey = 'open_index_ensure_v3';
@@ -140,6 +140,7 @@ class DatabaseHelper {
         debugPrint('[db] onOpen (begin)');
         await _ensureAppMetaTable(db);
         await _ensureExerciseMediaTable(db);
+        await Schema.migrateV49(db);
         await _resetDbTriggers(db); // <—
         await _maybeCompactLegacyFoodCatalog(db);
         await _removeEmptyStarterPlans(db);
@@ -2952,6 +2953,7 @@ class DatabaseHelper {
       await _backfillEnergyKcalFromMacros(db);
       await _rebuildFoodFtsIfExists(db);
       await _ensureAppMetaTable(db);
+      await Schema.migrateV49(db);
       await _ensureIndexes(
         db,
       ); // ← ensure you have all new indexes on imported DBs

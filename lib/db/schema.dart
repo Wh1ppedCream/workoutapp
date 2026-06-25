@@ -150,6 +150,7 @@ await migrateV45(db);
 await migrateV46(db);
 await migrateV47(db);
 await migrateV48(db);
+await migrateV49(db);
   }
 
   /// Handler for onUpgrade callback.
@@ -201,6 +202,7 @@ if (oldVersion < 45) await migrateV45(db);
 if (oldVersion < 46) await migrateV46(db);
 if (oldVersion < 47) await migrateV47(db);
 if (oldVersion < 48) await migrateV48(db);
+if (oldVersion < 49) await migrateV49(db);
 
   }
 
@@ -2930,6 +2932,30 @@ static Future<void> migrateV48(Database db) async {
     await txn.execute('CREATE INDEX IF NOT EXISTS idx_exmusclepct_ex ON exercise_muscle_percent(exercise_def_id);');
     await txn.execute('CREATE INDEX IF NOT EXISTS idx_muscle_bodypart_m ON muscle_bodypart(muscle_id);');
     await txn.execute('CREATE INDEX IF NOT EXISTS idx_muscle_bodypart_b ON muscle_bodypart(bodypart_id);');
+  });
+}
+
+/// v49 - Adds bodyweight training equipment used by onboarding gym profiles.
+static Future<void> migrateV49(Database db) async {
+  await db.transaction((txn) async {
+    final batch = txn.batch();
+    for (final name in const ['Pull-Up Bar', 'Gymnastics Rings']) {
+      batch.insert(
+        'equipment',
+        {'name': name},
+        conflictAlgorithm: ConflictAlgorithm.ignore,
+      );
+    }
+    await batch.commit(noResult: true);
+
+    await txn.rawInsert('''
+      INSERT OR IGNORE INTO profile_equipment(profile_id, equipment_id)
+      SELECT gp.id, e.id
+      FROM gym_profiles gp
+      CROSS JOIN equipment e
+      WHERE LOWER(gp.name) = 'general'
+        AND e.name IN ('Pull-Up Bar', 'Gymnastics Rings')
+    ''');
   });
 }
 

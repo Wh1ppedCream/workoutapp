@@ -17,8 +17,13 @@ import 'body_heatmap.dart';
 /// want.
 class SwapExerciseSheet extends StatefulWidget {
   final ExerciseDefinition currentDefinition;
+  final int? profileId;
 
-  const SwapExerciseSheet({super.key, required this.currentDefinition});
+  const SwapExerciseSheet({
+    super.key,
+    required this.currentDefinition,
+    this.profileId,
+  });
 
   @override
   State<SwapExerciseSheet> createState() => _SwapExerciseSheetState();
@@ -32,6 +37,7 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
   int _selectedIndex = 0;
   _ExerciseSwapEntry? _manualReplacement;
   bool _isLoadingManualReplacement = false;
+  bool _filterForProfileEquipment = true;
 
   @override
   void initState() {
@@ -44,6 +50,7 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
   Future<_SwapExerciseData> _loadData() async {
     final current = await _buildEntry(widget.currentDefinition);
     final definitions = await _loadCandidateDefinitions(current);
+    final profileEquipmentNames = await _loadProfileEquipmentNames();
     final candidates = await _buildCandidateEntries(
       definitions
           .where((definition) => definition.id != widget.currentDefinition.id)
@@ -56,7 +63,19 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
     return _SwapExerciseData(
       current: current,
       candidates: candidates.take(40).toList(),
+      profileEquipmentNames: profileEquipmentNames,
     );
+  }
+
+  Future<Set<String>> _loadProfileEquipmentNames() async {
+    final profileId = widget.profileId;
+    if (profileId == null) return const <String>{};
+    final rows = await _repo.fetchEquipmentForProfile(profileId);
+    return {
+      for (final row in rows)
+        if ((row['name'] as String?)?.trim().isNotEmpty ?? false)
+          (row['name'] as String).trim().toLowerCase(),
+    };
   }
 
   /// Starts with the tightest bodypart+muscle lookup, then progressively widens
@@ -364,12 +383,16 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
     ScrollController scrollController,
     _SwapExerciseData data,
   ) {
-    final candidates = data.candidates;
+    final canFilterForProfile =
+        data.profileEquipmentNames.isNotEmpty && data.candidates.isNotEmpty;
+    final candidates = _filteredCandidates(data);
     final hasCandidates = candidates.isNotEmpty;
+    final selectedIndex =
+        hasCandidates ? _selectedIndex.clamp(0, candidates.length - 1) : 0;
     final manualReplacementActive = _manualReplacement != null;
     final selected =
         _manualReplacement ??
-        (hasCandidates ? candidates[_selectedIndex] : null);
+        (hasCandidates ? candidates[selectedIndex] : null);
     final canCycleRecommendations =
         candidates.length > 1 || (manualReplacementActive && hasCandidates);
 
@@ -380,6 +403,18 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
             controller: scrollController,
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
             children: [
+              _ProfileEquipmentFilterRow(
+                value: _filterForProfileEquipment && canFilterForProfile,
+                enabled: canFilterForProfile,
+                onChanged: (value) {
+                  setState(() {
+                    _filterForProfileEquipment = value;
+                    _manualReplacement = null;
+                    _selectedIndex = 0;
+                  });
+                },
+              ),
+              const SizedBox(height: 12),
               _ExerciseSwapBox(label: 'Current', entry: data.current),
               const SizedBox(height: 12),
               OutlinedButton.icon(
@@ -477,6 +512,35 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
         .join(', ');
     return equipment.isEmpty ? 'No equipment listed' : equipment;
   }
+
+  List<_ExerciseSwapEntry> _filteredCandidates(_SwapExerciseData data) {
+    if (!_filterForProfileEquipment || data.profileEquipmentNames.isEmpty) {
+      return data.candidates;
+    }
+    final filtered =
+        data.candidates
+            .where(
+              (candidate) => _fitsProfileEquipment(
+                candidate.definition,
+                data.profileEquipmentNames,
+              ),
+            )
+            .toList();
+    return filtered.isEmpty ? data.candidates : filtered;
+  }
+
+  bool _fitsProfileEquipment(
+    ExerciseDefinition definition,
+    Set<String> profileEquipmentNames,
+  ) {
+    final equipmentNames =
+        definition.equipmentList
+            .map((equipment) => equipment.name.trim().toLowerCase())
+            .where((name) => name.isNotEmpty)
+            .toSet();
+    if (equipmentNames.isEmpty) return true;
+    return equipmentNames.every(profileEquipmentNames.contains);
+  }
 }
 
 class _SwapSheetHeader extends StatelessWidget {
@@ -514,6 +578,48 @@ class _SwapSheetHeader extends StatelessWidget {
             icon: const Icon(Icons.close),
             onPressed: () => Navigator.pop(context),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProfileEquipmentFilterRow extends StatelessWidget {
+  final bool value;
+  final bool enabled;
+  final ValueChanged<bool> onChanged;
+
+  const _ProfileEquipmentFilterRow({
+    required this.value,
+    required this.enabled,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.38),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.55),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              'Filter for profile equipment',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: enabled ? null : scheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+          Switch(value: value, onChanged: enabled ? onChanged : null),
         ],
       ),
     );
@@ -758,8 +864,13 @@ class _NoReplacementBox extends StatelessWidget {
 class _SwapExerciseData {
   final _ExerciseSwapEntry current;
   final List<_ExerciseSwapEntry> candidates;
+  final Set<String> profileEquipmentNames;
 
-  const _SwapExerciseData({required this.current, required this.candidates});
+  const _SwapExerciseData({
+    required this.current,
+    required this.candidates,
+    this.profileEquipmentNames = const <String>{},
+  });
 }
 
 class _ExerciseSwapEntry {
