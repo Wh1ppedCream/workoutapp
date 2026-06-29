@@ -432,12 +432,25 @@ class MyApp extends StatelessWidget {
           themeMode: themeProv.mode,
 
           home:
-              (onboardingConf.alwaysShow || !onboardingConf.completed)
+              !onboardingConf.initialized
+                  ? const _StartupGate()
+                  : onboardingConf.showOnboarding
                   ? const OnboardingFlow()
                   : const MainScreen(),
           routes: {'/main': (_) => const MainScreen()},
         );
       },
+    );
+  }
+}
+
+class _StartupGate extends StatelessWidget {
+  const _StartupGate();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(child: CircularProgressIndicator()),
     );
   }
 }

@@ -29,6 +29,8 @@ class SessionSpec {
   static const int restWarningBodyPartLimitCount = 4;
   static const int oneSetExerciseRestWarningCount = 2;
   static const int defaultTargetRepCount = 6;
+  static const int maxGeneratedPlansPerBundle = 7;
+  static const double recoverySignificantBodyPartUnits = 4.0;
 
   /// Which gym profile this is for (equipment filters, etc.).
   final int profileId;
@@ -110,6 +112,57 @@ class SessionSpec {
     required this.now,
   });
 
+  SessionSpec copyWith({
+    int? profileId,
+    String? name,
+    List<int>? focusBodypartIds,
+    List<int>? preferredBodypartIds,
+    List<int>? blacklistedBodypartIds,
+    TrainingPriorityMode? priorityMode,
+    bool? useGeneratedRepWeights,
+    RepWeightGenerationMode? repWeightMode,
+    int? targetRepCount,
+    bool? avoidMostRecentBodyPart,
+    bool? useRecentTrainingHistory,
+    int? maxExercises,
+    int? minSetsPerExercise,
+    int? maxSetsPerExercise,
+    int? sessionDurationMinutes,
+    int? minutesPerSet,
+    int? setupMinutesPerExercise,
+    Duration? historyWindow,
+    DateTime? now,
+  }) {
+    return SessionSpec(
+      profileId: profileId ?? this.profileId,
+      name: name ?? this.name,
+      focusBodypartIds: focusBodypartIds ?? this.focusBodypartIds,
+      preferredBodypartIds:
+          preferredBodypartIds ?? this.preferredBodypartIds,
+      blacklistedBodypartIds:
+          blacklistedBodypartIds ?? this.blacklistedBodypartIds,
+      priorityMode: priorityMode ?? this.priorityMode,
+      useGeneratedRepWeights:
+          useGeneratedRepWeights ?? this.useGeneratedRepWeights,
+      repWeightMode: repWeightMode ?? this.repWeightMode,
+      targetRepCount: targetRepCount ?? this.targetRepCount,
+      avoidMostRecentBodyPart:
+          avoidMostRecentBodyPart ?? this.avoidMostRecentBodyPart,
+      useRecentTrainingHistory:
+          useRecentTrainingHistory ?? this.useRecentTrainingHistory,
+      maxExercises: maxExercises ?? this.maxExercises,
+      minSetsPerExercise: minSetsPerExercise ?? this.minSetsPerExercise,
+      maxSetsPerExercise: maxSetsPerExercise ?? this.maxSetsPerExercise,
+      sessionDurationMinutes:
+          sessionDurationMinutes ?? this.sessionDurationMinutes,
+      minutesPerSet: minutesPerSet ?? this.minutesPerSet,
+      setupMinutesPerExercise:
+          setupMinutesPerExercise ?? this.setupMinutesPerExercise,
+      historyWindow: historyWindow ?? this.historyWindow,
+      now: now ?? this.now,
+    );
+  }
+
   static int maxExercisesForDuration({
     required int sessionDurationMinutes,
     required int minSetsPerExercise,
@@ -136,6 +189,19 @@ class PresetGenerationResult {
   });
 }
 
+class PresetBundleGenerationResult {
+  final List<PresetGenerationResult> plans;
+  final int requestedCount;
+
+  const PresetBundleGenerationResult({
+    required this.plans,
+    required this.requestedCount,
+  });
+
+  int get generatedCount => plans.length;
+  bool get isPartial => generatedCount < requestedCount;
+}
+
 /// Target & progress for a single bodypart over a week.
 class BodyPartTarget {
   final BodyPart bodyPart;
@@ -159,6 +225,15 @@ class BodyPartTarget {
     required this.doneThisWeek,
     this.biasWeight = 1.0,
   });
+
+  BodyPartTarget copyWith({double? doneThisWeek}) {
+    return BodyPartTarget(
+      bodyPart: bodyPart,
+      weeklyTargetUnits: weeklyTargetUnits,
+      doneThisWeek: doneThisWeek ?? this.doneThisWeek,
+      biasWeight: biasWeight,
+    );
+  }
 }
 
 /// Target & progress for a single muscle over a week.
@@ -177,6 +252,15 @@ class MuscleTarget {
     required this.doneThisWeek,
     this.biasWeight = 1.0,
   });
+
+  MuscleTarget copyWith({double? doneThisWeek}) {
+    return MuscleTarget(
+      muscleId: muscleId,
+      weeklyTargetUnits: weeklyTargetUnits,
+      doneThisWeek: doneThisWeek ?? this.doneThisWeek,
+      biasWeight: biasWeight,
+    );
+  }
 }
 
 /// A scored candidate exercise for inclusion in an auto-generated session.
@@ -204,12 +288,12 @@ class CandidateExercisePlan {
     required this.suggestedSets,
   });
 
-  CandidateExercisePlan copyWith({int? suggestedSets}) {
+  CandidateExercisePlan copyWith({double? score, int? suggestedSets}) {
     return CandidateExercisePlan(
       def: def,
       unitsPerSet: unitsPerSet,
       muscleUnitsPerSet: muscleUnitsPerSet,
-      score: score,
+      score: score ?? this.score,
       suggestedSets: suggestedSets ?? this.suggestedSets,
     );
   }

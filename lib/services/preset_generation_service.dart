@@ -1,5 +1,7 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
+
 import '../models/models.dart';
 import '../repositories/app_repository.dart';
 import '../utils/async_pool.dart';
@@ -22,6 +24,7 @@ import '../utils/async_pool.dart';
 /// 5. Optionally generate reps and suggested weights from saved rep-max data.
 class PresetGenerationService {
   static const int _candidateAnalysisConcurrency = 4;
+  static const double _previousPlanBodyPartPenaltyMultiplier = 0.25;
 
   final AppRepository _repo;
 
@@ -61,6 +64,80 @@ class PresetGenerationService {
     final result = await _createPresetInDb(spec, selected);
     await _initAutoSettings(result.presetId);
     return result;
+  }
+
+  Future<PresetBundleGenerationResult> generatePresetBundle(
+    SessionSpec spec, {
+    required int planCount,
+  }) async {
+    final requestedCount =
+        planCount.clamp(1, SessionSpec.maxGeneratedPlansPerBundle).toInt();
+    if (requestedCount == 1) {
+      final result = await generatePresetWithDetails(spec);
+      return PresetBundleGenerationResult(
+        plans: [result],
+        requestedCount: requestedCount,
+      );
+    }
+
+    final end = spec.now;
+    final start = end.subtract(spec.historyWindow);
+    final baseBodyTargets = await _loadBodyPartTargets(
+      spec: spec,
+      start: start,
+      end: end,
+    );
+    final baseMuscleTargets = await _loadMuscleTargets(
+      spec: spec,
+      start: start,
+      end: end,
+    );
+    final state = _PresetBundleGenerationState.fromTargets(
+      strategy: _PresetBundleStrategy.balancedWeeklyCoverage,
+      bodyTargets: baseBodyTargets,
+      muscleTargets: baseMuscleTargets,
+    );
+
+    final results = <PresetGenerationResult>[];
+    for (var index = 0; index < requestedCount; index++) {
+      final selection = await _selectGeneratedPlanForBundle(
+        spec: spec,
+        baseBodyTargets: baseBodyTargets,
+        baseMuscleTargets: baseMuscleTargets,
+        state: state,
+      );
+      if (selection.selected.isEmpty) {
+        debugPrint(
+          '[preset-bundle] stopped at ${index + 1}/$requestedCount: no viable plan',
+        );
+        break;
+      }
+
+      final result = await _createPresetInDb(spec, selection.selected);
+      await _initAutoSettings(result.presetId);
+      results.add(result);
+      _applyPlanToBundleState(state, selection.selected);
+      state.previousPlanExerciseIds = {
+        for (final plan in selection.selected) plan.def.id,
+      };
+      state.previousPlanHeavyBodyPartIds =
+          _heavyBodyPartIdsForPlan(selection.selected);
+
+      debugPrint(
+        '[preset-bundle] plan ${index + 1}/$requestedCount '
+        'stage=${selection.fallbackStage.label} '
+        'top=${_topBodyPartDebugLabel(selection.selected)}',
+      );
+    }
+
+    debugPrint(
+      '[preset-bundle] strategy=${state.strategy.label} '
+      'requested=$requestedCount generated=${results.length}',
+    );
+    return PresetBundleGenerationResult(
+      plans: results,
+      requestedCount: requestedCount,
+    );
   }
 
   /// Preflight check for optimized workouts.
@@ -110,18 +187,69 @@ class PresetGenerationService {
     required List<BodyPartTarget> bodyTargets,
     required List<MuscleTarget> muscleTargets,
   }) async {
+    return _selectGeneratedPlanWithOptions(
+      spec: spec,
+      bodyTargets: bodyTargets,
+      muscleTargets: muscleTargets,
+      options: const _GenerationSelectionOptions(),
+    );
+  }
+
+  Future<_GeneratedPlanSelection> _selectGeneratedPlanForBundle({
+    required SessionSpec spec,
+    required List<BodyPartTarget> baseBodyTargets,
+    required List<MuscleTarget> baseMuscleTargets,
+    required _PresetBundleGenerationState state,
+  }) async {
+    for (final stage in _BundleFallbackStage.values) {
+      final stageSpec = _specForBundleStage(spec, stage);
+      final selected = await _selectGeneratedPlanWithOptions(
+        spec: stageSpec,
+        bodyTargets: _bodyTargetsWithProjectedVolume(
+          baseBodyTargets,
+          state.projectedBodyUnits,
+        ),
+        muscleTargets: _muscleTargetsWithProjectedVolume(
+          baseMuscleTargets,
+          state.projectedMuscleUnits,
+        ),
+        options: _optionsForBundleStage(stage, state),
+      );
+      if (selected.isNotEmpty) {
+        return _GeneratedPlanSelection(
+          selected: selected,
+          fallbackStage: stage,
+        );
+      }
+    }
+
+    return const _GeneratedPlanSelection(
+      selected: <CandidateExercisePlan>[],
+      fallbackStage: _BundleFallbackStage.allowOneSetExercises,
+    );
+  }
+
+  Future<List<CandidateExercisePlan>> _selectGeneratedPlanWithOptions({
+    required SessionSpec spec,
+    required List<BodyPartTarget> bodyTargets,
+    required List<MuscleTarget> muscleTargets,
+    required _GenerationSelectionOptions options,
+  }) async {
     final avoidedBodyPartIds = await _bodyPartIdsToAvoid(spec);
 
     if (bodyTargets.isNotEmpty) {
-      final candidates = await _buildCandidatePool(
-        spec: spec,
-        targets: bodyTargets,
-        muscleTargets: muscleTargets,
-        avoidedBodyPartIds: avoidedBodyPartIds,
+      final candidates = _prepareCandidatesForSelection(
+        await _buildCandidatePool(
+          spec: spec,
+          targets: bodyTargets,
+          muscleTargets: muscleTargets,
+          avoidedBodyPartIds: avoidedBodyPartIds,
+        ),
+        options,
       );
 
       if (candidates.isNotEmpty) {
-        candidates.sort((a, b) => b.score.compareTo(a.score));
+        _sortCandidates(candidates);
         final selected = _staggerExercises(
           _selectWithinTimeBudget(candidates, spec, bodyTargets, muscleTargets),
         );
@@ -131,10 +259,14 @@ class PresetGenerationService {
       }
     }
 
-    final fallback = await _buildFallbackCandidatePool(
-      spec: spec,
-      avoidedBodyPartIds: avoidedBodyPartIds,
+    final fallback = _prepareCandidatesForSelection(
+      await _buildFallbackCandidatePool(
+        spec: spec,
+        avoidedBodyPartIds: avoidedBodyPartIds,
+      ),
+      options,
     );
+    _sortCandidates(fallback);
     return _staggerExercises(
       _selectWithinTimeBudget(fallback, spec, bodyTargets, muscleTargets),
     );
@@ -472,6 +604,182 @@ class PresetGenerationService {
       candidates,
       _autoAvoidedBodyPartIdsForSpec(spec, avoidedBodyPartIds),
     );
+  }
+
+  SessionSpec _specForBundleStage(
+    SessionSpec spec,
+    _BundleFallbackStage stage,
+  ) {
+    if (stage == _BundleFallbackStage.allowOneSetExercises) {
+      return spec;
+    }
+
+    final minSets =
+        math
+            .min(
+              math.max(
+                spec.minSetsPerExercise,
+                SessionSpec.preferredMinSetsPerExercise,
+              ),
+              spec.maxSetsPerExercise,
+            )
+            .toInt();
+    if (minSets == spec.minSetsPerExercise) return spec;
+    return spec.copyWith(minSetsPerExercise: minSets);
+  }
+
+  _GenerationSelectionOptions _optionsForBundleStage(
+    _BundleFallbackStage stage,
+    _PresetBundleGenerationState state,
+  ) {
+    switch (stage) {
+      case _BundleFallbackStage.normal:
+        return _GenerationSelectionOptions(
+          blockedExerciseIds: state.previousPlanExerciseIds,
+          penalizedBodyPartIds: state.previousPlanHeavyBodyPartIds,
+        );
+      case _BundleFallbackStage.allowPreviousBodyParts:
+        return _GenerationSelectionOptions(
+          blockedExerciseIds: state.previousPlanExerciseIds,
+        );
+      case _BundleFallbackStage.allowPreviousExercises:
+      case _BundleFallbackStage.allowOneSetExercises:
+        return const _GenerationSelectionOptions();
+    }
+  }
+
+  List<BodyPartTarget> _bodyTargetsWithProjectedVolume(
+    List<BodyPartTarget> targets,
+    Map<int, double> projectedBodyUnits,
+  ) {
+    return [
+      for (final target in targets)
+        target.copyWith(
+          doneThisWeek: projectedBodyUnits[target.bodyPart.id],
+        ),
+    ];
+  }
+
+  List<MuscleTarget> _muscleTargetsWithProjectedVolume(
+    List<MuscleTarget> targets,
+    Map<int, double> projectedMuscleUnits,
+  ) {
+    return [
+      for (final target in targets)
+        target.copyWith(doneThisWeek: projectedMuscleUnits[target.muscleId]),
+    ];
+  }
+
+  List<CandidateExercisePlan> _prepareCandidatesForSelection(
+    List<CandidateExercisePlan> candidates,
+    _GenerationSelectionOptions options,
+  ) {
+    final filtered = [
+      for (final candidate in candidates)
+        if (!options.blockedExerciseIds.contains(candidate.def.id)) candidate,
+    ];
+    if (options.penalizedBodyPartIds.isEmpty) return filtered;
+
+    return [
+      for (final candidate in filtered)
+        candidate.copyWith(
+          score: _hitsAnyBodyPart(
+            candidate.unitsPerSet,
+            options.penalizedBodyPartIds,
+          )
+              ? candidate.score * _previousPlanBodyPartPenaltyMultiplier
+              : candidate.score,
+        ),
+    ];
+  }
+
+  void _sortCandidates(List<CandidateExercisePlan> candidates) {
+    candidates.sort((a, b) {
+      final byScore = _compareDescendingDouble(a.score, b.score);
+      if (byScore != 0) return byScore;
+      final byRating = b.def.rating.compareTo(a.def.rating);
+      if (byRating != 0) return byRating;
+      final byName = a.def.name.toLowerCase().compareTo(
+        b.def.name.toLowerCase(),
+      );
+      if (byName != 0) return byName;
+      return a.def.id.compareTo(b.def.id);
+    });
+  }
+
+  int _compareDescendingDouble(double a, double b) {
+    if ((a - b).abs() <= 0.000001) return 0;
+    return b.compareTo(a);
+  }
+
+  void _applyPlanToBundleState(
+    _PresetBundleGenerationState state,
+    List<CandidateExercisePlan> selected,
+  ) {
+    for (final plan in selected) {
+      for (final entry in plan.unitsPerSet.entries) {
+        if (entry.value <= 0.0) continue;
+        state.projectedBodyUnits[entry.key.id] =
+            (state.projectedBodyUnits[entry.key.id] ?? 0.0) +
+            entry.value * plan.suggestedSets;
+      }
+      for (final entry in plan.muscleUnitsPerSet.entries) {
+        if (entry.value <= 0.0) continue;
+        state.projectedMuscleUnits[entry.key] =
+            (state.projectedMuscleUnits[entry.key] ?? 0.0) +
+            entry.value * plan.suggestedSets;
+      }
+    }
+  }
+
+  Set<int> _heavyBodyPartIdsForPlan(List<CandidateExercisePlan> selected) {
+    final totals = <int, double>{};
+    for (final plan in selected) {
+      for (final entry in plan.unitsPerSet.entries) {
+        if (entry.value <= 0.0) continue;
+        totals[entry.key.id] =
+            (totals[entry.key.id] ?? 0.0) +
+            entry.value * plan.suggestedSets;
+      }
+    }
+
+    return {
+      for (final entry in totals.entries)
+        if (entry.value >= SessionSpec.recoverySignificantBodyPartUnits)
+          entry.key,
+    };
+  }
+
+  String _topBodyPartDebugLabel(List<CandidateExercisePlan> selected) {
+    final bodyPartNamesById = <int, String>{};
+    final totals = <int, double>{};
+    for (final plan in selected) {
+      for (final entry in plan.unitsPerSet.entries) {
+        if (entry.value <= 0.0) continue;
+        bodyPartNamesById[entry.key.id] = entry.key.name;
+        totals[entry.key.id] =
+            (totals[entry.key.id] ?? 0.0) +
+            entry.value * plan.suggestedSets;
+      }
+    }
+    final ranked =
+        totals.entries.toList()
+          ..sort((a, b) {
+            final byUnits = b.value.compareTo(a.value);
+            if (byUnits != 0) return byUnits;
+            return (bodyPartNamesById[a.key] ?? '').compareTo(
+              bodyPartNamesById[b.key] ?? '',
+            );
+          });
+    if (ranked.isEmpty) return 'none';
+    return ranked
+        .take(3)
+        .map(
+          (entry) =>
+              '${bodyPartNamesById[entry.key] ?? entry.key}:'
+              '${entry.value.toStringAsFixed(1)}',
+        )
+        .join(', ');
   }
 
   /// Allocates exercises and set counts while tracking projected bodypart and
@@ -952,10 +1260,16 @@ class PresetGenerationService {
 
   int? _primaryBodyPartId(CandidateExercisePlan candidate) {
     if (candidate.unitsPerSet.isEmpty) return null;
-    return candidate.unitsPerSet.entries
-        .reduce((a, b) => a.value >= b.value ? a : b)
-        .key
-        .id;
+    final ranked =
+        candidate.unitsPerSet.entries.where((entry) => entry.value > 0).toList()
+          ..sort((a, b) {
+            final byUnits = b.value.compareTo(a.value);
+            if (byUnits != 0) return byUnits;
+            final byName = a.key.name.compareTo(b.key.name);
+            if (byName != 0) return byName;
+            return a.key.id.compareTo(b.key.id);
+          });
+    return ranked.isEmpty ? null : ranked.first.key.id;
   }
 
   int _estimatedMinutesForExercise(int sets, SessionSpec spec) {
@@ -1162,7 +1476,7 @@ class PresetGenerationService {
       );
     });
 
-    candidates.sort((a, b) => b.score.compareTo(a.score));
+    _sortCandidates(candidates);
     return _avoidBodyPartsWhenPossible(
       candidates,
       _autoAvoidedBodyPartIdsForSpec(spec, avoidedBodyPartIds),
@@ -1394,4 +1708,88 @@ class _PreferredCoveragePick {
   final int sets;
 
   const _PreferredCoveragePick({required this.index, required this.sets});
+}
+
+enum _BundleFallbackStage {
+  normal,
+  allowPreviousBodyParts,
+  allowPreviousExercises,
+  allowOneSetExercises,
+}
+
+enum _PresetBundleStrategy { balancedWeeklyCoverage }
+
+extension _PresetBundleStrategyLabel on _PresetBundleStrategy {
+  String get label {
+    switch (this) {
+      case _PresetBundleStrategy.balancedWeeklyCoverage:
+        return 'balanced-weekly-coverage';
+    }
+  }
+}
+
+extension _BundleFallbackStageLabel on _BundleFallbackStage {
+  String get label {
+    switch (this) {
+      case _BundleFallbackStage.normal:
+        return 'normal';
+      case _BundleFallbackStage.allowPreviousBodyParts:
+        return 'allow-previous-bodyparts';
+      case _BundleFallbackStage.allowPreviousExercises:
+        return 'allow-previous-exercises';
+      case _BundleFallbackStage.allowOneSetExercises:
+        return 'allow-one-set-exercises';
+    }
+  }
+}
+
+class _GeneratedPlanSelection {
+  final List<CandidateExercisePlan> selected;
+  final _BundleFallbackStage fallbackStage;
+
+  const _GeneratedPlanSelection({
+    required this.selected,
+    required this.fallbackStage,
+  });
+}
+
+class _GenerationSelectionOptions {
+  final Set<int> blockedExerciseIds;
+  final Set<int> penalizedBodyPartIds;
+
+  const _GenerationSelectionOptions({
+    this.blockedExerciseIds = const <int>{},
+    this.penalizedBodyPartIds = const <int>{},
+  });
+}
+
+class _PresetBundleGenerationState {
+  final _PresetBundleStrategy strategy;
+  final Map<int, double> projectedBodyUnits;
+  final Map<int, double> projectedMuscleUnits;
+  Set<int> previousPlanExerciseIds = const <int>{};
+  Set<int> previousPlanHeavyBodyPartIds = const <int>{};
+
+  _PresetBundleGenerationState({
+    required this.strategy,
+    required this.projectedBodyUnits,
+    required this.projectedMuscleUnits,
+  });
+
+  factory _PresetBundleGenerationState.fromTargets({
+    required _PresetBundleStrategy strategy,
+    required List<BodyPartTarget> bodyTargets,
+    required List<MuscleTarget> muscleTargets,
+  }) {
+    return _PresetBundleGenerationState(
+      strategy: strategy,
+      projectedBodyUnits: {
+        for (final target in bodyTargets)
+          target.bodyPart.id: target.doneThisWeek,
+      },
+      projectedMuscleUnits: {
+        for (final target in muscleTargets) target.muscleId: target.doneThisWeek,
+      },
+    );
+  }
 }

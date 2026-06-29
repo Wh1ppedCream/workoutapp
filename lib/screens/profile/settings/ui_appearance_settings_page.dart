@@ -36,10 +36,11 @@ class UIAppearanceSettingsPage extends StatelessWidget {
             ),
             SettingsSwitchTile(
               icon: Icons.auto_awesome_outlined,
-              title: 'Show Onboarding',
-              subtitle: 'Replay onboarding every time the app launches.',
-              value: onboarding.alwaysShow,
-              onChanged: context.read<OnboardingConfig>().setAlwaysShow,
+              title: 'Replay Onboarding',
+              subtitle:
+                  'Turn this on to open setup again. It turns off after completion.',
+              value: onboarding.showOnboarding,
+              onChanged: context.read<OnboardingConfig>().setShowOnboarding,
             ),
           ]),
         ),

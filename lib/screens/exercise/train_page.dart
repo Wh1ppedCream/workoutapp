@@ -101,13 +101,22 @@ class _TrainPageState extends State<TrainPage> {
       return;
     }
 
-    final generatedPresetId = await Navigator.of(context).push<int>(
+    final generatedPresetIds = await Navigator.of(context).push<List<int>>(
       MaterialPageRoute(
         builder: (_) => PresetGenerationQaScreen(profileId: profileId),
       ),
     );
-    if (generatedPresetId == null || !mounted) return;
-    await _openPreset(generatedPresetId);
+    if (generatedPresetIds == null || generatedPresetIds.isEmpty || !mounted) {
+      return;
+    }
+    setState(() => _presetsRefreshToken++);
+    if (generatedPresetIds.length == 1) {
+      await _openPreset(generatedPresetIds.first);
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Generated ${generatedPresetIds.length} plans.')),
+    );
   }
 
   Future<void> _createManualPreset(SelectedProfile sel) async {

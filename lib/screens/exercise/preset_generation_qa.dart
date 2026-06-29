@@ -63,7 +63,7 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
   void initState() {
     super.initState();
     _sessionDurationController.text = '60';
-    _weeklyFrequencyController.text = '3';
+    _weeklyFrequencyController.text = '1';
     _maxSetsController.text = SessionSpec.defaultMaxSetsPerExercise.toString();
     _targetRepCountController.text =
         SessionSpec.defaultTargetRepCount.toString();
@@ -119,6 +119,7 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
         sessionMinutes <= 0 ||
         weeklyFrequency == null ||
         weeklyFrequency <= 0 ||
+        weeklyFrequency > SessionSpec.maxGeneratedPlansPerBundle ||
         maxSets == null ||
         maxSets < SessionSpec.defaultMinSetsPerExercise ||
         maxSets > SessionSpec.maxAllowedSetsPerExercise ||
@@ -127,7 +128,7 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Please enter valid duration, frequency, set limit, and rep values.',
+            'Please enter valid duration, plan count, set limit, and rep values.',
           ),
         ),
       );
@@ -167,26 +168,65 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
         now: now,
       );
 
-      final result = await generator.generatePresetWithDetails(spec);
+      final bundleResult = await generator.generatePresetBundle(
+        spec,
+        planCount: weeklyFrequency,
+      );
+      final generatedPlanIds =
+          bundleResult.plans.map((result) => result.presetId).toList();
 
       if (!mounted) return;
-      if (result.exercisesMissingWeightHistory.isNotEmpty) {
-        await _showMissingWeightHistoryDialog(
-          result.exercisesMissingWeightHistory,
+      if (generatedPlanIds.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'No viable plans could be generated with the current settings.',
+            ),
+          ),
         );
+        return;
+      }
+
+      final missingWeightHistorySet = <String>{};
+      for (final result in bundleResult.plans) {
+        missingWeightHistorySet.addAll(result.exercisesMissingWeightHistory);
+      }
+      final missingWeightHistoryNames = missingWeightHistorySet.toList()
+        ..sort();
+      if (missingWeightHistoryNames.isNotEmpty) {
+        await _showMissingWeightHistoryDialog(missingWeightHistoryNames);
       }
       if (!mounted) return;
       if (widget.onboardingMode) {
-        await ActivePlanStore.add(widget.profileId, result.presetId);
+        for (final presetId in generatedPlanIds) {
+          await ActivePlanStore.add(widget.profileId, presetId);
+        }
         if (!mounted) return;
-        setState(() => _onboardingGeneratedPlanIds.add(result.presetId));
+        setState(() => _onboardingGeneratedPlanIds.addAll(generatedPlanIds));
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Generated plan added. Review it when ready.'),
+          SnackBar(
+            content: Text(
+              _generatedPlansMessage(
+                generated: bundleResult.generatedCount,
+                requested: bundleResult.requestedCount,
+              ),
+            ),
           ),
         );
       } else {
-        Navigator.of(context).pop(result.presetId);
+        if (bundleResult.isPartial) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                _generatedPlansMessage(
+                  generated: bundleResult.generatedCount,
+                  requested: bundleResult.requestedCount,
+                ),
+              ),
+            ),
+          );
+        }
+        Navigator.of(context).pop<List<int>>(generatedPlanIds);
       }
     } catch (e, st) {
       debugPrint('Error generating preset: $e\n$st');
@@ -227,25 +267,270 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
     );
   }
 
+  String _fieldValue(TextEditingController controller, String fallback) {
+    final value = controller.text.trim();
+    return value.isEmpty ? fallback : value;
+  }
+
+  Widget _buildIntroCard() {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(26),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            scheme.primaryContainer.withValues(alpha: 0.46),
+            scheme.surfaceContainerHighest.withValues(alpha: 0.58),
+          ],
+        ),
+        border: Border.all(color: scheme.primary.withValues(alpha: 0.18)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: scheme.primary.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Icon(Icons.auto_awesome, color: scheme.primary),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Build your plan week',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Create one plan or a balanced bundle using your profile, focus, and limits.',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _buildSummaryPills(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSummaryPills() {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        _buildSummaryPill(
+          icon: Icons.calendar_month_outlined,
+          text: '${_fieldValue(_weeklyFrequencyController, '1')} plan(s)',
+        ),
+        _buildSummaryPill(
+          icon: Icons.timer_outlined,
+          text: '${_fieldValue(_sessionDurationController, '60')} min',
+        ),
+        _buildSummaryPill(
+          icon: Icons.format_list_numbered_outlined,
+          text:
+              '${_fieldValue(_maxSetsController, SessionSpec.defaultMaxSetsPerExercise.toString())} sets max',
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSummaryPill({
+    required IconData icon,
+    required String text,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+      decoration: BoxDecoration(
+        color: scheme.surface.withValues(alpha: 0.66),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 17, color: scheme.primary),
+          const SizedBox(width: 8),
+          Text(
+            text,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildSettingsSection({
     required IconData icon,
     required String title,
     required String subtitle,
     required List<Widget> children,
   }) {
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: ExpansionTile(
-        leading: Icon(icon),
-        title: Text(
-          title,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontWeight: FontWeight.bold),
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.36),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.45)),
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+          childrenPadding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          leading: Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: scheme.primary.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(icon, color: scheme.primary),
+          ),
+          title: Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontWeight: FontWeight.w900),
+          ),
+          subtitle: Text(
+            subtitle,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: scheme.onSurfaceVariant),
+          ),
+          children: children,
         ),
-        subtitle: Text(subtitle, maxLines: 2, overflow: TextOverflow.ellipsis),
-        childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        children: children,
+      ),
+    );
+  }
+
+  Widget _buildNumberField({
+    required TextEditingController controller,
+    required String label,
+    required String hintText,
+    required String helperText,
+    String? suffixText,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+    final border = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(18),
+      borderSide: BorderSide(
+        color: scheme.outlineVariant.withValues(alpha: 0.78),
+      ),
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            color: scheme.onSurfaceVariant,
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 6),
+        TextFormField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          onChanged: (_) => setState(() {}),
+          style: const TextStyle(fontWeight: FontWeight.w800),
+          decoration: InputDecoration(
+            hintText: hintText,
+            suffixText: suffixText,
+            filled: true,
+            isDense: true,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 14,
+            ),
+            fillColor: scheme.surface.withValues(alpha: 0.54),
+            border: border,
+            enabledBorder: border,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          helperText,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildChoiceTile<T>({
+    required String title,
+    required String subtitle,
+    required T value,
+    required T? groupValue,
+    required ValueChanged<T?> onChanged,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+    final selected = value == groupValue;
+    final shape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(18),
+      side: BorderSide(
+        color: selected
+            ? scheme.primary.withValues(alpha: 0.72)
+            : scheme.outlineVariant.withValues(alpha: 0.58),
+      ),
+    );
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: selected
+            ? scheme.primaryContainer.withValues(alpha: 0.24)
+            : scheme.surface.withValues(alpha: 0.38),
+        shape: shape,
+        clipBehavior: Clip.antiAlias,
+        child: RadioListTile<T>(
+          value: value,
+          groupValue: groupValue,
+          selected: selected,
+          onChanged: onChanged,
+          dense: true,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          shape: shape,
+          tileColor: Colors.transparent,
+          selectedTileColor: Colors.transparent,
+          title: Text(
+            title,
+            style: const TextStyle(fontWeight: FontWeight.w800),
+          ),
+          subtitle: Text(
+            subtitle,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
+          ),
+        ),
       ),
     );
   }
@@ -253,12 +538,12 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
   String _requirementSummary() {
     switch (_requirementOption) {
       case RequirementOption.biasRankBodyPart:
-        return 'Bodypart ranking';
+        return 'Bodypart rankings';
       case RequirementOption.biasRankMuscle:
-        return 'Muscle ranking';
+        return 'Muscle rankings';
       case RequirementOption.equalSplitBodyPart:
       case null:
-        return 'All bodyparts equally';
+        return 'Even coverage';
     }
   }
 
@@ -271,6 +556,25 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
       case RepWeightGenerationMode.mixed:
         return 'Mixed';
     }
+  }
+
+  String _generateButtonLabel() {
+    if (_isGenerating) return 'Generating...';
+    final count = int.tryParse(_weeklyFrequencyController.text.trim()) ?? 1;
+    return count <= 1 ? 'Generate plan' : 'Generate $count plans';
+  }
+
+  String _generatedPlansMessage({
+    required int generated,
+    required int requested,
+  }) {
+    final planWord = requested == 1 ? 'plan' : 'plans';
+    if (generated < requested) {
+      return 'Generated $generated of $requested $planWord. Your current settings limited the rest.';
+    }
+    return generated == 1
+        ? 'Generated plan added. Review it when ready.'
+        : 'Generated $generated plans. Review them when ready.';
   }
 
   Future<void> _showMissingWeightHistoryDialog(List<String> exerciseNames) {
@@ -302,7 +606,7 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
   @override
   Widget build(BuildContext context) {
     final content = Scaffold(
-      appBar: AppBar(title: const Text('Generate Custom Presets')),
+      appBar: AppBar(title: const Text('Generate Plans')),
       floatingActionButton: FloatingActionButton.extended(
         onPressed:
             _isGenerating || _isDiscardingOnboardingPlans
@@ -316,7 +620,7 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
                 : const Icon(Icons.auto_awesome),
-        label: Text(_isGenerating ? 'Generating...' : 'Generate preset'),
+        label: Text(_generateButtonLabel()),
       ),
       bottomNavigationBar: widget.onboardingMode
           ? _OnboardingPlanActionBar(
@@ -338,63 +642,43 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
-              'Use the defaults, or open a section to tune how the preset is generated.',
-            ),
-            const SizedBox(height: 12),
+            _buildIntroCard(),
+            const SizedBox(height: 14),
             _buildSettingsSection(
               icon: Icons.timer_outlined,
               title: 'Workout setup',
               subtitle:
-                  '${_sessionDurationController.text.trim()} min session, '
-                  '${_maxSetsController.text.trim()} sets max per exercise',
+                  '${_fieldValue(_weeklyFrequencyController, '1')} plan(s), '
+                  '${_fieldValue(_sessionDurationController, '60')} min, '
+                  '${_fieldValue(_maxSetsController, SessionSpec.defaultMaxSetsPerExercise.toString())} max sets',
               children: [
-                const Text(
-                  'How many minutes do you spend in the gym per session?',
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'Estimated as 3 minutes per set plus 5 minutes to start each exercise.',
-                  style: TextStyle(fontSize: 12),
-                ),
-                const SizedBox(height: 8),
-                TextFormField(
+                _buildNumberField(
                   controller: _sessionDurationController,
-                  keyboardType: TextInputType.number,
-                  onChanged: (_) => setState(() {}),
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    hintText: 'e.g. 60',
-                  ),
+                  label: 'Session length',
+                  hintText: '60',
+                  helperText: 'Estimated as 3 min/set + 5 min/exercise.',
+                  suffixText: 'min',
                 ),
-                const SizedBox(height: 16),
-                const Text('How many times per week do you work out?'),
-                const SizedBox(height: 8),
-                TextFormField(
+                const SizedBox(height: 14),
+                _buildNumberField(
                   controller: _weeklyFrequencyController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    hintText: 'e.g. 5',
-                  ),
+                  label: 'Plans to create',
+                  hintText: '1',
+                  helperText:
+                      'Usually matches training days/week. Max ${SessionSpec.maxGeneratedPlansPerBundle}.',
+                  suffixText: 'plans',
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  'Up to how many sets per exercise? (${SessionSpec.defaultMinSetsPerExercise}-${SessionSpec.maxAllowedSetsPerExercise})',
-                ),
-                const SizedBox(height: 8),
-                TextFormField(
+                const SizedBox(height: 14),
+                _buildNumberField(
                   controller: _maxSetsController,
-                  keyboardType: TextInputType.number,
-                  onChanged: (_) => setState(() {}),
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    hintText: 'e.g. 5',
-                  ),
+                  label: 'Max sets per exercise',
+                  hintText: SessionSpec.defaultMaxSetsPerExercise.toString(),
+                  helperText:
+                      '${SessionSpec.defaultMinSetsPerExercise}-${SessionSpec.maxAllowedSetsPerExercise} sets allowed.',
+                  suffixText: 'sets',
                 ),
               ],
             ),
-            const SizedBox(height: 8),
             _buildSettingsSection(
               icon: Icons.track_changes_outlined,
               title: 'Training focus',
@@ -405,9 +689,9 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
               children: [
                 CheckboxListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('Generate based on 7-day workout history'),
+                  title: const Text('Use recent training'),
                   subtitle: const Text(
-                    'Uses recent completed sets to bias toward under-trained bodyparts and muscles.',
+                    'Bias toward under-trained areas from the last 7 days.',
                   ),
                   value: _useRecentTrainingHistory,
                   onChanged:
@@ -422,7 +706,7 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
                 ),
                 const SizedBox(height: 4),
                 const Text(
-                  'Tap once to prefer a bodypart, tap again to avoid it, and tap a third time to clear it.',
+                  'Tap once to prefer, twice to avoid, third to clear.',
                   style: TextStyle(fontSize: 12),
                 ),
                 const SizedBox(height: 8),
@@ -440,19 +724,16 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
             _buildSettingsSection(
               icon: Icons.fitness_center_outlined,
-              title: 'Rep and weight generation',
+              title: 'Reps & weights',
               subtitle:
                   '${_repWeightModeLabel(_repWeightMode)}, '
-                  '${_targetRepCountController.text.trim()} target reps',
+                  '${_fieldValue(_targetRepCountController, SessionSpec.defaultTargetRepCount.toString())} target reps',
               children: [
-                RadioListTile<RepWeightGenerationMode>(
-                  title: const Text('Mixed'),
-                  subtitle: const Text(
-                    'Pyramid for 3+ sets, consistent for 1-2 sets.',
-                  ),
+                _buildChoiceTile<RepWeightGenerationMode>(
+                  title: 'Mixed',
+                  subtitle: 'Pyramid for 3+ sets; steady for shorter work.',
                   value: RepWeightGenerationMode.mixed,
                   groupValue: _repWeightMode,
                   onChanged:
@@ -462,11 +743,9 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
                                 value ?? RepWeightGenerationMode.mixed,
                       ),
                 ),
-                RadioListTile<RepWeightGenerationMode>(
-                  title: const Text('Pyramid'),
-                  subtitle: const Text(
-                    'Peak set uses your PR or Epley estimate; surrounding sets drop 10% weight and add 2 reps per step.',
-                  ),
+                _buildChoiceTile<RepWeightGenerationMode>(
+                  title: 'Pyramid',
+                  subtitle: 'Peak set uses PR/Epley; nearby sets get lighter.',
                   value: RepWeightGenerationMode.pyramid,
                   groupValue: _repWeightMode,
                   onChanged:
@@ -476,11 +755,9 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
                                 value ?? RepWeightGenerationMode.pyramid,
                       ),
                 ),
-                RadioListTile<RepWeightGenerationMode>(
-                  title: const Text('Consistent'),
-                  subtitle: const Text(
-                    'Every set uses the same reps and suggested weight.',
-                  ),
+                _buildChoiceTile<RepWeightGenerationMode>(
+                  title: 'Consistent',
+                  subtitle: 'Same reps and suggested weight each set.',
                   value: RepWeightGenerationMode.consistent,
                   groupValue: _repWeightMode,
                   onChanged:
@@ -491,33 +768,30 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
                       ),
                 ),
                 const SizedBox(height: 8),
-                const Text('Peak / target reps'),
-                const SizedBox(height: 8),
-                TextFormField(
+                _buildNumberField(
                   controller: _targetRepCountController,
-                  keyboardType: TextInputType.number,
-                  onChanged: (_) => setState(() {}),
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    hintText: 'e.g. 6',
-                  ),
+                  label: 'Target reps',
+                  hintText: SessionSpec.defaultTargetRepCount.toString(),
+                  helperText: 'Peak reps for pyramid; steady reps otherwise.',
+                  suffixText: 'reps',
                 ),
               ],
             ),
-            const SizedBox(height: 8),
             _buildSettingsSection(
               icon: Icons.tune_outlined,
               title: 'Set allocation',
               subtitle: _requirementSummary(),
               children: [
-                RadioListTile<RequirementOption>(
-                  title: const Text('Train all bodyparts equally'),
+                _buildChoiceTile<RequirementOption>(
+                  title: 'Even bodypart coverage',
+                  subtitle: 'Spread work broadly across available bodyparts.',
                   value: RequirementOption.equalSplitBodyPart,
                   groupValue: _requirementOption,
                   onChanged: (v) => setState(() => _requirementOption = v),
                 ),
-                RadioListTile<RequirementOption>(
-                  title: const Text('Train based on bodypart ranking'),
+                _buildChoiceTile<RequirementOption>(
+                  title: 'Use bodypart rankings',
+                  subtitle: 'Give higher-ranked bodyparts more planned work.',
                   value: RequirementOption.biasRankBodyPart,
                   groupValue: _requirementOption,
                   onChanged: (v) => setState(() => _requirementOption = v),
@@ -533,8 +807,9 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
                     },
                     child: const Text('Rank Body Parts'),
                   ),
-                RadioListTile<RequirementOption>(
-                  title: const Text('Train based on muscle ranking'),
+                _buildChoiceTile<RequirementOption>(
+                  title: 'Use muscle rankings',
+                  subtitle: 'Allocate work from your ranked muscle priorities.',
                   value: RequirementOption.biasRankMuscle,
                   groupValue: _requirementOption,
                   onChanged: (v) => setState(() => _requirementOption = v),

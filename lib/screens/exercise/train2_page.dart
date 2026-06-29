@@ -293,18 +293,24 @@ class _Train2PageState extends State<Train2Page> {
       return;
     }
 
-    final presetId = await Navigator.of(context).push<int>(
+    final presetIds = await Navigator.of(context).push<List<int>>(
       MaterialPageRoute(
         builder: (_) => PresetGenerationQaScreen(profileId: profileId),
       ),
     );
-    if (!mounted || presetId == null) return;
+    if (!mounted || presetIds == null || presetIds.isEmpty) return;
 
     setState(() => _presetsRefreshToken++);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Preset generated. Opening it now.')),
-    );
-    await _openPreset(presetId);
+    if (presetIds.length == 1) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Plan generated. Opening it now.')),
+      );
+      await _openPreset(presetIds.first);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Generated ${presetIds.length} plans.')),
+      );
+    }
     if (!mounted) return;
     setState(() => _presetsRefreshToken++);
   }
@@ -600,7 +606,7 @@ class _Train2PageState extends State<Train2Page> {
 
         const SizedBox(height: 8),
         GenericBar(
-          label: 'Generate Custom Presets',
+          label: 'Generate Custom Plans',
           color: Colors.purple,
           onTap: () => _openCustomPresetGenerator(sel),
         ),

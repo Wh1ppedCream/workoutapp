@@ -386,6 +386,54 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     return true;
   }
 
+  bool get _hasSelectedOnboardingFocus =>
+      (_nutritionOnboardingEnabled && _useNutritionData) || _useExerciseData;
+
+  Future<bool> _confirmSkipOnboarding() async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Skip setup?'),
+          content: const Text(
+            'You can skip to the app homepage now and finish setup later. '
+            'You can also reopen onboarding from the settings page.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+    return result ?? false;
+  }
+
+  void _prepareSkippedSetupForFinish() {
+    if (!_useExerciseData) return;
+    final gymSpace = _selectedGymSpace;
+    final hasIncompleteGymSetup =
+        gymSpace == null ||
+        (!gymSpace.skipSetup &&
+            (_gymProfileNameController.text.trim().isEmpty ||
+                _selectedGymEquipmentNames.isEmpty));
+    if (hasIncompleteGymSetup) {
+      _selectGymSpace(_skipGymSpaceTemplate);
+    }
+  }
+
+  Future<void> _skipToHomeAfterConfirmation() async {
+    _prepareSkippedSetupForFinish();
+    if (!mounted) return;
+    await _finishOnboarding();
+  }
+
   Future<void> _pickDob() async {
     final picked = await showDatePicker(
       context: context,
@@ -403,6 +451,13 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     final currentIndex =
         _currentPage >= pages.length ? lastPageIndex : _currentPage;
     final currentPage = pages[currentIndex];
+
+    if (currentPage.label == 'Focus' && !_hasSelectedOnboardingFocus) {
+      final shouldSkip = await _confirmSkipOnboarding();
+      if (!mounted || !shouldSkip) return;
+      await _skipToHomeAfterConfirmation();
+      return;
+    }
 
     if (currentPage.label == 'Gym Profile' &&
         _selectedGymSpace?.id == 'custom') {
@@ -531,37 +586,16 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     );
   }
 
-  void _skipOrFinish() {
-    var pages = _pages;
-    final currentIndex = _currentPage >= pages.length
-        ? pages.length - 1
-        : _currentPage;
-    final currentPage = pages[currentIndex];
-    final selectedCustomWithoutEquipment =
-        currentPage.label == 'Gym Profile' &&
-        _selectedGymSpace?.id == 'custom' &&
-        _selectedGymEquipmentNames.isEmpty;
-    final incompleteGymSetup =
-        (currentPage.label == 'Gym Profile' && _selectedGymSpace == null) ||
-        selectedCustomWithoutEquipment ||
-        (currentPage.label == 'Equipment' &&
-            (_gymProfileNameController.text.trim().isEmpty ||
-                _selectedGymEquipmentNames.isEmpty));
-    if (incompleteGymSetup) {
-      _selectGymSpace(_skipGymSpaceTemplate);
-      pages = _pages;
-    }
-
+  Future<void> _skipOrFinish() async {
+    final pages = _pages;
     final lastPageIndex = pages.length - 1;
     if (_currentPage == lastPageIndex) {
-      _finishOnboarding();
+      await _finishOnboarding();
       return;
     }
-    _controller.animateToPage(
-      lastPageIndex,
-      duration: const Duration(milliseconds: 400),
-      curve: Curves.easeOutCubic,
-    );
+    final shouldSkip = await _confirmSkipOnboarding();
+    if (!mounted || !shouldSkip) return;
+    await _skipToHomeAfterConfirmation();
   }
 
   @override
@@ -584,7 +618,9 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                 pageCount: pages.length,
                 title: pages[safePage].label,
                 onBack: safePage == 0 ? null : _previousAction,
-                onSkip: _skipOrFinish,
+                onSkip: () {
+                  _skipOrFinish();
+                },
                 skipLabel: safePage == lastPageIndex ? 'Finish' : 'Skip',
               ),
             ),
