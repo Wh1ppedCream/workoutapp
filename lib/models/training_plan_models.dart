@@ -8,6 +8,9 @@ enum TrainingPriorityMode { equalBodyPart, bodyPartRanking, muscleRanking }
 /// How generated presets should fill in reps and suggested weights.
 enum RepWeightGenerationMode { pyramid, consistent, mixed }
 
+/// How aggressive generated weight recommendations should be.
+enum StarterWeightIntensity { easy, medium, hard }
+
 /// Immutable input for both Generate Custom Preset and Start Optimized Workout.
 ///
 /// This object keeps generation behavior explicit at the call site: UI pages
@@ -59,6 +62,9 @@ class SessionSpec {
   /// Peak reps for pyramid mode, or target reps for consistent mode.
   final int targetRepCount;
 
+  /// Generated weight level for history and starter estimates.
+  final StarterWeightIntensity starterWeightIntensity;
+
   /// Whether optimized generation should avoid the most-worked bodypart from
   /// the most recent session when other viable options exist.
   final bool avoidMostRecentBodyPart;
@@ -100,6 +106,7 @@ class SessionSpec {
     this.useGeneratedRepWeights = false,
     this.repWeightMode = RepWeightGenerationMode.mixed,
     this.targetRepCount = defaultTargetRepCount,
+    this.starterWeightIntensity = StarterWeightIntensity.medium,
     this.avoidMostRecentBodyPart = false,
     this.useRecentTrainingHistory = true,
     this.maxExercises = 8,
@@ -122,6 +129,7 @@ class SessionSpec {
     bool? useGeneratedRepWeights,
     RepWeightGenerationMode? repWeightMode,
     int? targetRepCount,
+    StarterWeightIntensity? starterWeightIntensity,
     bool? avoidMostRecentBodyPart,
     bool? useRecentTrainingHistory,
     int? maxExercises,
@@ -137,8 +145,7 @@ class SessionSpec {
       profileId: profileId ?? this.profileId,
       name: name ?? this.name,
       focusBodypartIds: focusBodypartIds ?? this.focusBodypartIds,
-      preferredBodypartIds:
-          preferredBodypartIds ?? this.preferredBodypartIds,
+      preferredBodypartIds: preferredBodypartIds ?? this.preferredBodypartIds,
       blacklistedBodypartIds:
           blacklistedBodypartIds ?? this.blacklistedBodypartIds,
       priorityMode: priorityMode ?? this.priorityMode,
@@ -146,6 +153,8 @@ class SessionSpec {
           useGeneratedRepWeights ?? this.useGeneratedRepWeights,
       repWeightMode: repWeightMode ?? this.repWeightMode,
       targetRepCount: targetRepCount ?? this.targetRepCount,
+      starterWeightIntensity:
+          starterWeightIntensity ?? this.starterWeightIntensity,
       avoidMostRecentBodyPart:
           avoidMostRecentBodyPart ?? this.avoidMostRecentBodyPart,
       useRecentTrainingHistory:
@@ -182,10 +191,14 @@ class SessionSpec {
 class PresetGenerationResult {
   final int presetId;
   final List<String> exercisesMissingWeightHistory;
+  final List<String> exercisesWithStarterWeightEstimates;
+  final List<String> exercisesWithUnavailableStarterWeights;
 
   const PresetGenerationResult({
     required this.presetId,
     this.exercisesMissingWeightHistory = const [],
+    this.exercisesWithStarterWeightEstimates = const [],
+    this.exercisesWithUnavailableStarterWeights = const [],
   });
 }
 

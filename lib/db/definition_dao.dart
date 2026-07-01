@@ -160,12 +160,21 @@ class DefinitionDao {
     List<BodyPart> bodyParts = const <BodyPart>[],
     List<RankedMuscle> muscles = const <RankedMuscle>[],
   }) {
+    final primaryEquipmentId = row['equipment_id'] as int?;
+    final primaryEquipmentName = row['equipment_name'] as String?;
+    final resolvedEquipmentList =
+        equipmentList.isNotEmpty ||
+                primaryEquipmentId == null ||
+                primaryEquipmentName == null
+            ? equipmentList
+            : <Equipment>[Equipment(primaryEquipmentId, primaryEquipmentName)];
+
     return ExerciseDefinition(
       id: row['id'] as int,
       name: row['name'] as String,
-      equipmentId: row['equipment_id'] as int?,
+      equipmentId: primaryEquipmentId,
       rating: (row['rating'] as num?)?.toInt() ?? 0,
-      equipmentList: equipmentList,
+      equipmentList: resolvedEquipmentList,
       bodyParts: bodyParts,
       muscles: muscles,
       useManualBodyparts: (row['use_manual_bodyparts'] as int? ?? 0) == 1,
@@ -173,6 +182,32 @@ class DefinitionDao {
       setupNotes: (row['setup_notes'] as String?) ?? '',
       executionNotes: (row['execution_notes'] as String?) ?? '',
       tipsNotes: (row['tips_notes'] as String?) ?? '',
+      starterLoadProfile: _starterLoadProfileFromRow(row),
+    );
+  }
+
+  static StarterLoadProfile? _starterLoadProfileFromRow(
+    Map<String, Object?> row,
+  ) {
+    final type = starterLoadTypeFromString(row['starter_load_type'] as String?);
+    if (type == StarterLoadType.unknown) return null;
+
+    return StarterLoadProfile(
+      type: type,
+      easyValue: (row['starter_easy_value'] as num?)?.toDouble(),
+      mediumValue: (row['starter_medium_value'] as num?)?.toDouble(),
+      hardValue: (row['starter_hard_value'] as num?)?.toDouble(),
+      minimumWeight: (row['starter_minimum_weight'] as num?)?.toDouble() ?? 0.0,
+      maximumWeight: (row['starter_maximum_weight'] as num?)?.toDouble(),
+      roundingIncrement:
+          (row['starter_rounding_increment'] as num?)?.toDouble() ?? 5.0,
+      unitMode: starterLoadUnitModeFromString(
+        row['starter_unit_mode'] as String?,
+      ),
+      confidence: starterWeightConfidenceFromString(
+        row['starter_confidence'] as String?,
+      ),
+      note: (row['starter_note'] as String?) ?? '',
     );
   }
 
@@ -386,8 +421,26 @@ class DefinitionDao {
     final sql =
         StringBuffer()
           ..write('''
-        SELECT DISTINCT ed.id, ed.name, ed.equipment_id, ed.rating, ed.use_manual_bodyparts, ed.multiply_by_rating
+        SELECT DISTINCT
+          ed.id,
+          ed.name,
+          ed.equipment_id,
+          primary_equipment.name AS equipment_name,
+          ed.rating,
+          ed.use_manual_bodyparts,
+          ed.multiply_by_rating,
+          ed.starter_load_type,
+          ed.starter_easy_value,
+          ed.starter_medium_value,
+          ed.starter_hard_value,
+          ed.starter_minimum_weight,
+          ed.starter_maximum_weight,
+          ed.starter_rounding_increment,
+          ed.starter_unit_mode,
+          ed.starter_confidence,
+          ed.starter_note
           FROM exercise_definitions ed
+          LEFT JOIN equipment primary_equipment ON primary_equipment.id = ed.equipment_id
       ''')
           ..write(
             bodypartIds != null && bodypartIds.isNotEmpty
@@ -524,6 +577,24 @@ class DefinitionDao {
         'setup_notes': def.setupNotes,
         'execution_notes': def.executionNotes,
         'tips_notes': def.tipsNotes,
+        'starter_load_type':
+            def.starterLoadProfile == null
+                ? null
+                : starterLoadTypeToString(def.starterLoadProfile!.type),
+        'starter_easy_value': def.starterLoadProfile?.easyValue,
+        'starter_medium_value': def.starterLoadProfile?.mediumValue,
+        'starter_hard_value': def.starterLoadProfile?.hardValue,
+        'starter_minimum_weight': def.starterLoadProfile?.minimumWeight ?? 0.0,
+        'starter_maximum_weight': def.starterLoadProfile?.maximumWeight,
+        'starter_rounding_increment':
+            def.starterLoadProfile?.roundingIncrement ?? 5.0,
+        'starter_unit_mode': starterLoadUnitModeToString(
+          def.starterLoadProfile?.unitMode ?? StarterLoadUnitMode.total,
+        ),
+        'starter_confidence': starterWeightConfidenceToString(
+          def.starterLoadProfile?.confidence ?? StarterWeightConfidence.medium,
+        ),
+        'starter_note': def.starterLoadProfile?.note ?? '',
       },
       where: 'id = ?',
       whereArgs: [def.id],

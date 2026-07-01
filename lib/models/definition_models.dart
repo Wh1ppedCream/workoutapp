@@ -3,8 +3,106 @@
 // EXERCISE DEFINITIONS
 // ─────────────────────────────────────────────────────────────────────────────
 
+enum StarterLoadType {
+  bodyweightMultiplier,
+  fixedTotal,
+  fixedPerSide,
+  fixedPerHand,
+  bodyweightOnly,
+  assisted,
+  unknown,
+}
+
+enum StarterLoadUnitMode { total, perHand, perSide }
+
+enum StarterWeightConfidence { high, medium, low }
+
+StarterLoadType starterLoadTypeFromString(String? value) {
+  switch ((value ?? '').trim()) {
+    case 'bodyweightMultiplier':
+      return StarterLoadType.bodyweightMultiplier;
+    case 'fixedTotal':
+      return StarterLoadType.fixedTotal;
+    case 'fixedPerSide':
+      return StarterLoadType.fixedPerSide;
+    case 'fixedPerHand':
+      return StarterLoadType.fixedPerHand;
+    case 'bodyweightOnly':
+      return StarterLoadType.bodyweightOnly;
+    case 'assisted':
+      return StarterLoadType.assisted;
+    default:
+      return StarterLoadType.unknown;
+  }
+}
+
+StarterLoadUnitMode starterLoadUnitModeFromString(String? value) {
+  switch ((value ?? '').trim()) {
+    case 'perHand':
+      return StarterLoadUnitMode.perHand;
+    case 'perSide':
+      return StarterLoadUnitMode.perSide;
+    case 'total':
+    default:
+      return StarterLoadUnitMode.total;
+  }
+}
+
+StarterWeightConfidence starterWeightConfidenceFromString(String? value) {
+  switch ((value ?? '').trim()) {
+    case 'high':
+      return StarterWeightConfidence.high;
+    case 'low':
+      return StarterWeightConfidence.low;
+    case 'medium':
+    default:
+      return StarterWeightConfidence.medium;
+  }
+}
+
+String starterLoadTypeToString(StarterLoadType value) {
+  return value.name;
+}
+
+String starterLoadUnitModeToString(StarterLoadUnitMode value) {
+  return value.name;
+}
+
+String starterWeightConfidenceToString(StarterWeightConfidence value) {
+  return value.name;
+}
+
+/// Optional metadata used only when a generated exercise has no logged history.
+class StarterLoadProfile {
+  final StarterLoadType type;
+  final double? easyValue;
+  final double? mediumValue;
+  final double? hardValue;
+  final double minimumWeight;
+  final double? maximumWeight;
+  final double roundingIncrement;
+  final StarterLoadUnitMode unitMode;
+  final StarterWeightConfidence confidence;
+  final String note;
+
+  const StarterLoadProfile({
+    required this.type,
+    this.easyValue,
+    this.mediumValue,
+    this.hardValue,
+    this.minimumWeight = 0,
+    this.maximumWeight,
+    this.roundingIncrement = 5,
+    this.unitMode = StarterLoadUnitMode.total,
+    this.confidence = StarterWeightConfidence.medium,
+    this.note = '',
+  });
+
+  bool get isConfigured => type != StarterLoadType.unknown;
+}
+
 /// Master record for an exercise definition, including equipment, body parts,
-/// rating, and ranking of targeted muscles.
+/// rating, ranking of targeted muscles, and optional starter-load metadata.
 class ExerciseDefinition {
   final int id;
   final String name;
@@ -17,7 +115,8 @@ class ExerciseDefinition {
   final String setupNotes;
   final String executionNotes;
   final String tipsNotes;
-  final bool   multiplyByRating;
+  final bool multiplyByRating;
+  final StarterLoadProfile? starterLoadProfile;
 
   /// Creates an [ExerciseDefinition].
   ExerciseDefinition({
@@ -29,10 +128,11 @@ class ExerciseDefinition {
     this.bodyParts = const [],
     this.muscles = const [],
     required this.useManualBodyparts,
-    this.setupNotes     = '',
+    this.setupNotes = '',
     this.executionNotes = '',
-    this.tipsNotes      = '',
+    this.tipsNotes = '',
     required this.multiplyByRating,
+    this.starterLoadProfile,
   });
 }
 
@@ -136,10 +236,7 @@ class Muscle {
   final String name;
 
   /// Creates a [Muscle] entry.
-  Muscle({
-    required this.id,
-    required this.name,
-  });
+  Muscle({required this.id, required this.name});
 }
 
 /// Associates a [Muscle] with a specified [rank] (1 through 7).
@@ -148,8 +245,5 @@ class RankedMuscle {
   final int rank;
 
   /// Creates a [RankedMuscle] entry.
-  RankedMuscle({
-    required this.muscle,
-    required this.rank,
-  });
+  RankedMuscle({required this.muscle, required this.rank});
 }

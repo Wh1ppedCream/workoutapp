@@ -13,6 +13,7 @@ import '../../repositories/app_repository.dart';
 import '../../services/active_plan_store.dart';
 import '../../services/preset_generation_service.dart';
 import '../../theme/theme_extensions.dart';
+import '../../utils/workout_exercise_clone.dart';
 import '../../widgets/body_heatmap.dart';
 import '../../widgets/drawers.dart';
 import '../../widgets/exercise_card.dart';
@@ -37,9 +38,12 @@ class TrainPage extends StatefulWidget {
 
 class _TrainPageState extends State<TrainPage> {
   static const _optimizedSessionMinutesKey = 'train.optimized_session_minutes';
-  static const _optimizedMinSetsKey =
-      'train.optimized_min_sets_per_exercise';
+  static const _optimizedMinSetsKey = 'train.optimized_min_sets_per_exercise';
   static const _optimizedMaxSetsKey = 'train.optimized_max_sets_per_exercise';
+  static const _optimizedRepWeightModeKey = 'train.optimized_rep_weight_mode';
+  static const _optimizedTargetRepsKey = 'train.optimized_target_reps';
+  static const _optimizedStarterIntensityKey =
+      'train.optimized_starter_intensity';
 
   final _repo = AppRepository();
   final _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -53,6 +57,11 @@ class _TrainPageState extends State<TrainPage> {
   int _optimizedSessionMinutes = SessionSpec.defaultSessionDurationMinutes;
   int _optimizedMinSetsPerExercise = SessionSpec.preferredMinSetsPerExercise;
   int _optimizedMaxSetsPerExercise = SessionSpec.defaultMaxSetsPerExercise;
+  RepWeightGenerationMode _optimizedRepWeightMode =
+      RepWeightGenerationMode.mixed;
+  int _optimizedTargetRepCount = SessionSpec.defaultTargetRepCount;
+  StarterWeightIntensity _optimizedStarterWeightIntensity =
+      StarterWeightIntensity.medium;
   Set<int> _optimizedPreferredBodypartIds = <int>{};
   Set<int> _optimizedBlacklistedBodypartIds = <int>{};
 
@@ -144,6 +153,11 @@ class _TrainPageState extends State<TrainPage> {
     final savedMinutes = prefs.getInt(_optimizedSessionMinutesKey);
     final savedMinSets = prefs.getInt(_optimizedMinSetsKey);
     final savedMaxSets = prefs.getInt(_optimizedMaxSetsKey);
+    final savedRepWeightMode = prefs.getString(_optimizedRepWeightModeKey);
+    final savedTargetReps = prefs.getInt(_optimizedTargetRepsKey);
+    final savedStarterIntensity = prefs.getString(
+      _optimizedStarterIntensityKey,
+    );
     if (!mounted) return;
     setState(() {
       if (savedMinutes != null && savedMinutes > 0) {
@@ -162,7 +176,32 @@ class _TrainPageState extends State<TrainPage> {
       if (_optimizedMinSetsPerExercise > _optimizedMaxSetsPerExercise) {
         _optimizedMinSetsPerExercise = _optimizedMaxSetsPerExercise;
       }
+      _optimizedRepWeightMode =
+          _repWeightModeFromName(savedRepWeightMode) ??
+          RepWeightGenerationMode.mixed;
+      if (savedTargetReps != null && savedTargetReps > 0) {
+        _optimizedTargetRepCount = savedTargetReps;
+      }
+      _optimizedStarterWeightIntensity =
+          _starterIntensityFromName(savedStarterIntensity) ??
+          StarterWeightIntensity.medium;
     });
+  }
+
+  RepWeightGenerationMode? _repWeightModeFromName(String? name) {
+    if (name == null) return null;
+    for (final mode in RepWeightGenerationMode.values) {
+      if (mode.name == name) return mode;
+    }
+    return null;
+  }
+
+  StarterWeightIntensity? _starterIntensityFromName(String? name) {
+    if (name == null) return null;
+    for (final intensity in StarterWeightIntensity.values) {
+      if (intensity.name == name) return intensity;
+    }
+    return null;
   }
 
   SessionSpec _buildOptimizedSpec(
@@ -170,6 +209,9 @@ class _TrainPageState extends State<TrainPage> {
     required int sessionMinutes,
     int? minSetsPerExercise,
     int? maxSetsPerExercise,
+    RepWeightGenerationMode? repWeightMode,
+    int? targetRepCount,
+    StarterWeightIntensity? starterWeightIntensity,
     Set<int>? preferredBodypartIds,
     Set<int>? blacklistedBodypartIds,
   }) {
@@ -194,6 +236,11 @@ class _TrainPageState extends State<TrainPage> {
       minSetsPerExercise: minSets,
       maxSetsPerExercise: maxSetsPerExercise ?? _optimizedMaxSetsPerExercise,
       sessionDurationMinutes: sessionMinutes,
+      useGeneratedRepWeights: true,
+      repWeightMode: repWeightMode ?? _optimizedRepWeightMode,
+      targetRepCount: targetRepCount ?? _optimizedTargetRepCount,
+      starterWeightIntensity:
+          starterWeightIntensity ?? _optimizedStarterWeightIntensity,
       historyWindow: const Duration(days: 7),
       avoidMostRecentBodyPart: true,
       now: now,
@@ -218,6 +265,9 @@ class _TrainPageState extends State<TrainPage> {
               initialMinutes: _optimizedSessionMinutes,
               initialMinSets: _optimizedMinSetsPerExercise,
               initialMaxSets: _optimizedMaxSetsPerExercise,
+              initialRepWeightMode: _optimizedRepWeightMode,
+              initialTargetRepCount: _optimizedTargetRepCount,
+              initialStarterWeightIntensity: _optimizedStarterWeightIntensity,
               initialPreferredBodypartIds: _optimizedPreferredBodypartIds,
               initialBlacklistedBodypartIds: _optimizedBlacklistedBodypartIds,
               bodyParts: bodyParts,
@@ -237,11 +287,23 @@ class _TrainPageState extends State<TrainPage> {
     await prefs.setInt(_optimizedSessionMinutesKey, settings.minutes);
     await prefs.setInt(_optimizedMinSetsKey, settings.minSets);
     await prefs.setInt(_optimizedMaxSetsKey, settings.maxSets);
+    await prefs.setString(
+      _optimizedRepWeightModeKey,
+      settings.repWeightMode.name,
+    );
+    await prefs.setInt(_optimizedTargetRepsKey, settings.targetRepCount);
+    await prefs.setString(
+      _optimizedStarterIntensityKey,
+      settings.starterWeightIntensity.name,
+    );
     if (!mounted) return;
     setState(() {
       _optimizedSessionMinutes = settings.minutes;
       _optimizedMinSetsPerExercise = settings.minSets;
       _optimizedMaxSetsPerExercise = settings.maxSets;
+      _optimizedRepWeightMode = settings.repWeightMode;
+      _optimizedTargetRepCount = settings.targetRepCount;
+      _optimizedStarterWeightIntensity = settings.starterWeightIntensity;
       _optimizedPreferredBodypartIds = settings.preferredBodypartIds;
       _optimizedBlacklistedBodypartIds = settings.blacklistedBodypartIds;
     });
@@ -297,6 +359,9 @@ class _TrainPageState extends State<TrainPage> {
         sessionMinutes: settingsOverride?.minutes ?? _optimizedSessionMinutes,
         minSetsPerExercise: settingsOverride?.minSets,
         maxSetsPerExercise: settingsOverride?.maxSets,
+        repWeightMode: settingsOverride?.repWeightMode,
+        targetRepCount: settingsOverride?.targetRepCount,
+        starterWeightIntensity: settingsOverride?.starterWeightIntensity,
         preferredBodypartIds: settingsOverride?.preferredBodypartIds,
         blacklistedBodypartIds: settingsOverride?.blacklistedBodypartIds,
       );
@@ -307,7 +372,8 @@ class _TrainPageState extends State<TrainPage> {
         return;
       }
 
-      final presetId = await generator.generatePreset(spec);
+      final generationResult = await generator.generatePresetWithDetails(spec);
+      final presetId = generationResult.presetId;
       temporaryPresetId = presetId;
       final preset = PresetSession(presetId);
       await preset.ready;
@@ -331,7 +397,10 @@ class _TrainPageState extends State<TrainPage> {
         // TODO(cardio/stretch): add cardio and stretch back to generated
         // sessions after those cards are fixed and updated.
         if (preset.cardTypes[i] != CardType.weight) continue;
-        active.addExercise(preset.exercises[i], preset.cardTypes[i]);
+        active.addExercise(
+          cloneWorkoutExercise(preset.exercises[i]),
+          preset.cardTypes[i],
+        );
       }
 
       await _repo.deletePreset(presetId);
@@ -345,6 +414,7 @@ class _TrainPageState extends State<TrainPage> {
         _optimizedPreferredBodypartIds.clear();
         _optimizedBlacklistedBodypartIds.clear();
       });
+      _showOptimizedWeightEstimateNotice(generationResult);
       await Navigator.of(
         context,
       ).push(MaterialPageRoute(builder: (_) => const SessionScreen()));
@@ -375,6 +445,22 @@ class _TrainPageState extends State<TrainPage> {
         setState(() => _isStartingOptimized = false);
       }
     }
+  }
+
+  void _showOptimizedWeightEstimateNotice(PresetGenerationResult result) {
+    if (!mounted) return;
+    final estimatedCount = result.exercisesWithStarterWeightEstimates.length;
+    final unavailableCount =
+        result.exercisesWithUnavailableStarterWeights.length;
+    if (estimatedCount == 0 && unavailableCount == 0) return;
+
+    final message =
+        unavailableCount > 0
+            ? 'Optimized workout started. $unavailableCount exercise(s) still need manual weights.'
+            : 'Optimized workout started with starter weights for $estimatedCount new exercise(s).';
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override

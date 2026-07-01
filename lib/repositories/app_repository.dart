@@ -451,6 +451,9 @@ class AppRepository {
   Future<List<Measurement>> fetchClassMeasurementsForDefinition(int defId) =>
       _dbHelper.fetchClassMeasurementsForDefinition(defId);
 
+  Future<double?> fetchLatestBodyWeightLbs() =>
+      _dbHelper.fetchLatestBodyWeightLbs();
+
   Future<List<Map<String, dynamic>>> fetchUsedMeasurementDefinitions() =>
       _dbHelper.fetchUsedMeasurementDefinitionsRaw();
 

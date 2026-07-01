@@ -108,7 +108,18 @@
     ],
     "setupNotes": "Set your feet firmly, brace your core, and keep knees tracking in line with your toes. Load the bar evenly, secure plates if needed, and set safeties or rack height before the working set.",
     "executionNotes": "Descend under control, keep pressure through the whole foot, then drive up without letting knees cave inward.",
-    "tipsNotes": "Use the deepest range you can control while keeping heels down and torso stable."
+    "tipsNotes": "Use the deepest range you can control while keeping heels down and torso stable.",
+    "starterLoadProfile": {
+      "type": "bodyweightMultiplier",
+      "easy": 0.30,
+      "medium": 0.45,
+      "hard": 0.60,
+      "minimumWeight": 45,
+      "roundingIncrement": 5,
+      "unitMode": "total",
+      "confidence": "medium",
+      "note": "Conservative squat starter estimate."
+    }
   },
   {
     "name": "Bench Press - Barbell",
@@ -126,7 +137,18 @@
     ],
     "setupNotes": "Plant your feet, pin your shoulder blades down and back, and line the handles or bar over your mid chest. Load the bar evenly, secure plates if needed, and set safeties or rack height before the working set.",
     "executionNotes": "Lower with elbows controlled, pause near the chest or end range, then press up until the arms are strong without shrugging.",
-    "tipsNotes": "Keep wrists stacked over elbows and avoid bouncing out of the bottom position."
+    "tipsNotes": "Keep wrists stacked over elbows and avoid bouncing out of the bottom position.",
+    "starterLoadProfile": {
+      "type": "bodyweightMultiplier",
+      "easy": 0.25,
+      "medium": 0.35,
+      "hard": 0.45,
+      "minimumWeight": 45,
+      "roundingIncrement": 5,
+      "unitMode": "total",
+      "confidence": "medium",
+      "note": "Conservative barbell pressing starter estimate."
+    }
   },
   {
     "name": "Bench Press - Barbell (Close Grip)",

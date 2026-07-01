@@ -6,13 +6,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../models/definition_models.dart';
-import '../../models/training_plan_models.dart';
+import '../../models/models.dart';
 import '../../providers/active_session.dart';
 import '../../providers/preset_session.dart';
 import '../../providers/selected_profile.dart';
 import '../../repositories/app_repository.dart';
 import '../../services/preset_generation_service.dart';
+import '../../utils/workout_exercise_clone.dart';
 
 import '../../widgets/generic_bar.dart';
 import '../../widgets/presets_loaded.dart';
@@ -145,6 +145,10 @@ class _Train2PageState extends State<Train2Page> {
       minSetsPerExercise: minSets,
       maxSetsPerExercise: _optimizedMaxSetsPerExercise,
       sessionDurationMinutes: sessionMinutes,
+      useGeneratedRepWeights: true,
+      repWeightMode: RepWeightGenerationMode.mixed,
+      targetRepCount: SessionSpec.defaultTargetRepCount,
+      starterWeightIntensity: StarterWeightIntensity.medium,
       historyWindow: const Duration(days: 7),
       avoidMostRecentBodyPart: true,
       now: now,
@@ -368,7 +372,8 @@ class _Train2PageState extends State<Train2Page> {
         return;
       }
 
-      final presetId = await generator.generatePreset(spec);
+      final generationResult = await generator.generatePresetWithDetails(spec);
+      final presetId = generationResult.presetId;
       temporaryPresetId = presetId;
       final preset = PresetSession(presetId);
       await preset.ready;
@@ -392,7 +397,10 @@ class _Train2PageState extends State<Train2Page> {
         // TODO(cardio/stretch): add cardio and stretch back to legacy plan
         // starts after those cards are fixed and updated.
         if (preset.cardTypes[i] != CardType.weight) continue;
-        active.addExercise(preset.exercises[i], preset.cardTypes[i]);
+        active.addExercise(
+          cloneWorkoutExercise(preset.exercises[i]),
+          preset.cardTypes[i],
+        );
       }
 
       // Optimized workouts are one-off sessions, not saved presets.
@@ -406,6 +414,7 @@ class _Train2PageState extends State<Train2Page> {
         _optimizedPreferredBodypartIds.clear();
         _optimizedBlacklistedBodypartIds.clear();
       });
+      _showOptimizedWeightEstimateNotice(generationResult);
       await Navigator.of(
         context,
       ).push(MaterialPageRoute(builder: (_) => const SessionScreen()));
@@ -436,6 +445,22 @@ class _Train2PageState extends State<Train2Page> {
         setState(() => _isStartingOptimized = false);
       }
     }
+  }
+
+  void _showOptimizedWeightEstimateNotice(PresetGenerationResult result) {
+    if (!mounted) return;
+    final estimatedCount = result.exercisesWithStarterWeightEstimates.length;
+    final unavailableCount =
+        result.exercisesWithUnavailableStarterWeights.length;
+    if (estimatedCount == 0 && unavailableCount == 0) return;
+
+    final message =
+        unavailableCount > 0
+            ? 'Optimized workout started. $unavailableCount exercise(s) still need manual weights.'
+            : 'Optimized workout started with starter weights for $estimatedCount new exercise(s).';
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override

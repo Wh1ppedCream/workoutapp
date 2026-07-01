@@ -125,36 +125,41 @@ class Schema {
     await migrateV21(db);
     await migrateV22(db);
     await migrateV23(db);
-await migrateV24(db);
-await migrateV25(db);
-await migrateV26(db);
-await migrateV27(db);
-await migrateV28(db);
-await migrateV29(db);
-await migrateV30(db);
-await migrateV31(db);
-await migrateV32(db);
-await migrateV33(db);
-await migrateV34(db);
-await migrateV35(db);
-await migrateV36(db);
-await migrateV37(db);
-await migrateV38(db);
-await migrateV39(db);
-await migrateV40(db);
-await migrateV41(db);
-await migrateV42(db);
-await migrateV43(db);
-await migrateV44(db);
-await migrateV45(db);
-await migrateV46(db);
-await migrateV47(db);
-await migrateV48(db);
-await migrateV49(db);
+    await migrateV24(db);
+    await migrateV25(db);
+    await migrateV26(db);
+    await migrateV27(db);
+    await migrateV28(db);
+    await migrateV29(db);
+    await migrateV30(db);
+    await migrateV31(db);
+    await migrateV32(db);
+    await migrateV33(db);
+    await migrateV34(db);
+    await migrateV35(db);
+    await migrateV36(db);
+    await migrateV37(db);
+    await migrateV38(db);
+    await migrateV39(db);
+    await migrateV40(db);
+    await migrateV41(db);
+    await migrateV42(db);
+    await migrateV43(db);
+    await migrateV44(db);
+    await migrateV45(db);
+    await migrateV46(db);
+    await migrateV47(db);
+    await migrateV48(db);
+    await migrateV49(db);
+    await migrateV50(db);
   }
 
   /// Handler for onUpgrade callback.
-  static Future<void> onUpgrade(Database db, int oldVersion, int newVersion) async {
+  static Future<void> onUpgrade(
+    Database db,
+    int oldVersion,
+    int newVersion,
+  ) async {
     await db.execute('PRAGMA foreign_keys = ON;');
     if (oldVersion < 3) await migrateV3(db);
     if (oldVersion < 4) await migrateV4(db);
@@ -177,49 +182,48 @@ await migrateV49(db);
     if (oldVersion < 21) await migrateV21(db);
     if (oldVersion < 22) await migrateV22(db);
     if (oldVersion < 23) await migrateV23(db);
-if (oldVersion < 24) await migrateV24(db);
-if (oldVersion < 25) await migrateV25(db);
-if (oldVersion < 26) await migrateV26(db);
-if (oldVersion < 27) await migrateV27(db);
-if (oldVersion < 28) await migrateV28(db);
-if (oldVersion < 29) await migrateV29(db);
-if (oldVersion < 30) await migrateV30(db);
-if (oldVersion < 31) await migrateV31(db);
-if (oldVersion < 32) await migrateV32(db);
-if (oldVersion < 33) await migrateV33(db);
-if (oldVersion < 34) await migrateV34(db);
-if (oldVersion < 35) await migrateV35(db);
-if (oldVersion < 36) await migrateV36(db);
-if (oldVersion < 37) await migrateV37(db);
-if (oldVersion < 38) await migrateV38(db);
-if (oldVersion < 39) await migrateV39(db);
-if (oldVersion < 40) await migrateV40(db);
-if (oldVersion < 41) await migrateV41(db);
-if (oldVersion < 42) await migrateV42(db);
-if (oldVersion < 43) await migrateV43(db);
-if (oldVersion < 44) await migrateV44(db);
-if (oldVersion < 45) await migrateV45(db);
-if (oldVersion < 46) await migrateV46(db);
-if (oldVersion < 47) await migrateV47(db);
-if (oldVersion < 48) await migrateV48(db);
-if (oldVersion < 49) await migrateV49(db);
-
+    if (oldVersion < 24) await migrateV24(db);
+    if (oldVersion < 25) await migrateV25(db);
+    if (oldVersion < 26) await migrateV26(db);
+    if (oldVersion < 27) await migrateV27(db);
+    if (oldVersion < 28) await migrateV28(db);
+    if (oldVersion < 29) await migrateV29(db);
+    if (oldVersion < 30) await migrateV30(db);
+    if (oldVersion < 31) await migrateV31(db);
+    if (oldVersion < 32) await migrateV32(db);
+    if (oldVersion < 33) await migrateV33(db);
+    if (oldVersion < 34) await migrateV34(db);
+    if (oldVersion < 35) await migrateV35(db);
+    if (oldVersion < 36) await migrateV36(db);
+    if (oldVersion < 37) await migrateV37(db);
+    if (oldVersion < 38) await migrateV38(db);
+    if (oldVersion < 39) await migrateV39(db);
+    if (oldVersion < 40) await migrateV40(db);
+    if (oldVersion < 41) await migrateV41(db);
+    if (oldVersion < 42) await migrateV42(db);
+    if (oldVersion < 43) await migrateV43(db);
+    if (oldVersion < 44) await migrateV44(db);
+    if (oldVersion < 45) await migrateV45(db);
+    if (oldVersion < 46) await migrateV46(db);
+    if (oldVersion < 47) await migrateV47(db);
+    if (oldVersion < 48) await migrateV48(db);
+    if (oldVersion < 49) await migrateV49(db);
+    if (oldVersion < 50) await migrateV50(db);
   }
 
   /// Migration to version 3: adds rating, equipment/muscle tables.
   static Future<void> migrateV3(Database db) async {
-
     // 1) Check if 'rating' already exists
-      final cols = await db.rawQuery("PRAGMA table_info('exercise_definitions')");
-      final hasRating = cols.any((c) => c['name'] == 'rating');
+    final cols = await db.rawQuery("PRAGMA table_info('exercise_definitions')");
+    final hasRating = cols.any((c) => c['name'] == 'rating');
     await db.transaction((txn) async {
       if (!hasRating) {
-      await txn.execute(
-        "ALTER TABLE exercise_definitions ADD COLUMN rating INTEGER NOT NULL DEFAULT 0;"
-      );
-    }
+        await txn.execute(
+          "ALTER TABLE exercise_definitions ADD COLUMN rating INTEGER NOT NULL DEFAULT 0;",
+        );
+      }
       // **new**: unique index on name+equipment
-    await txn.execute('''
+      await txn.execute('''
       CREATE UNIQUE INDEX IF NOT EXISTS idx_ex_def_name_equipment
         ON exercise_definitions(name, equipment_id);
     ''');
@@ -277,15 +281,15 @@ if (oldVersion < 49) await migrateV49(db);
   /// Migration to version 5: adds exercise type, cardio & stretch tables.
   static Future<void> migrateV5(Database db) async {
     // 1) Check if 'type' already exists
-  final cols = await db.rawQuery("PRAGMA table_info('exercises')");
-  final hasType = cols.any((c) => c['name'] == 'type');
+    final cols = await db.rawQuery("PRAGMA table_info('exercises')");
+    final hasType = cols.any((c) => c['name'] == 'type');
 
     await db.transaction((txn) async {
       if (!hasType) {
-      await txn.execute(
-        "ALTER TABLE exercises ADD COLUMN type TEXT NOT NULL DEFAULT 'weight';"
-      );
-    }
+        await txn.execute(
+          "ALTER TABLE exercises ADD COLUMN type TEXT NOT NULL DEFAULT 'weight';",
+        );
+      }
 
       // cardio details
       await txn.execute('''
@@ -325,12 +329,12 @@ if (oldVersion < 49) await migrateV49(db);
         );
       ''');
 
-       // parent_set_id on sets
-    final setCols = await txn.rawQuery("PRAGMA table_info('sets')");
-    final hasParent = setCols.any((c) => c['name'] == 'parent_set_id');
-    if (!hasParent) {
-      await txn.execute("ALTER TABLE sets ADD COLUMN parent_set_id INTEGER;");
-    }
+      // parent_set_id on sets
+      final setCols = await txn.rawQuery("PRAGMA table_info('sets')");
+      final hasParent = setCols.any((c) => c['name'] == 'parent_set_id');
+      if (!hasParent) {
+        await txn.execute("ALTER TABLE sets ADD COLUMN parent_set_id INTEGER;");
+      }
     });
   }
 
@@ -395,8 +399,8 @@ if (oldVersion < 49) await migrateV49(db);
 
   /// Migration to version 7: adds gym profiles and profile_id on presets.
   static Future<void> migrateV7(Database db) async {
-  await db.transaction((txn) async {
-    await txn.execute('''
+    await db.transaction((txn) async {
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS gym_profiles (
         id          INTEGER PRIMARY KEY AUTOINCREMENT,
         name        TEXT    NOT NULL,
@@ -404,7 +408,7 @@ if (oldVersion < 49) await migrateV49(db);
       );
     ''');
 
-    await txn.execute('''
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS profile_equipment (
         profile_id    INTEGER NOT NULL,
         equipment_id  INTEGER NOT NULL,
@@ -414,27 +418,29 @@ if (oldVersion < 49) await migrateV49(db);
       );
     ''');
 
-    final tableExists = (await txn.rawQuery(
-      "SELECT 1 FROM sqlite_master WHERE type='table' AND name='preset_definitions' LIMIT 1;"
-    )).isNotEmpty;
+      final tableExists =
+          (await txn.rawQuery(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='preset_definitions' LIMIT 1;",
+          )).isNotEmpty;
 
-    if (tableExists) {
-      final cols = await txn.rawQuery("PRAGMA table_info('preset_definitions');");
-      final hasProfileId = cols.any((c) => c['name'] == 'profile_id');
-      if (!hasProfileId) {
-        await txn.execute(
-          "ALTER TABLE preset_definitions ADD COLUMN profile_id INTEGER REFERENCES gym_profiles(id) ON DELETE SET NULL;"
+      if (tableExists) {
+        final cols = await txn.rawQuery(
+          "PRAGMA table_info('preset_definitions');",
         );
+        final hasProfileId = cols.any((c) => c['name'] == 'profile_id');
+        if (!hasProfileId) {
+          await txn.execute(
+            "ALTER TABLE preset_definitions ADD COLUMN profile_id INTEGER REFERENCES gym_profiles(id) ON DELETE SET NULL;",
+          );
+        }
       }
-    }
 
-    await txn.execute('''
+      await txn.execute('''
       CREATE UNIQUE INDEX IF NOT EXISTS ux_preset_name_profile
       ON preset_definitions(name, profile_id);
     ''');
-  });
-}
-
+    });
+  }
 
   /// Migration to version 8: adds rep-max & volume-max tables.
   static Future<void> migrateV8(Database db) async {
@@ -542,7 +548,7 @@ if (oldVersion < 49) await migrateV49(db);
     ''');
   }
 
-   /// Migration to version 11: adds automatic‐preset tables.
+  /// Migration to version 11: adds automatic‐preset tables.
   static Future<void> migrateV11(Database db) async {
     await db.transaction((txn) async {
       // 1) Global settings for each preset
@@ -583,17 +589,17 @@ if (oldVersion < 49) await migrateV49(db);
     });
   }
 
-/// Migration to version 12: flow‐chart persistence
-static Future<void> migrateV12(Database db) async {
-  await db.transaction((txn) async {
-    // 1) Add JSON column to hold the graph
-    await txn.execute('''
+  /// Migration to version 12: flow‐chart persistence
+  static Future<void> migrateV12(Database db) async {
+    await db.transaction((txn) async {
+      // 1) Add JSON column to hold the graph
+      await txn.execute('''
       ALTER TABLE preset_auto_settings
         ADD COLUMN flow_definition TEXT NOT NULL DEFAULT '{}';
     ''');
 
-    // 2) Create table for reusable methods
-    await txn.execute('''
+      // 2) Create table for reusable methods
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS preset_flow_methods (
         id               INTEGER PRIMARY KEY AUTOINCREMENT,
         preset_id        INTEGER NOT NULL,
@@ -605,38 +611,39 @@ static Future<void> migrateV12(Database db) async {
         UNIQUE(preset_id, name)
       );
     ''');
-  });
-}
+    });
+  }
 
-
-/// Migration to version 13: add last_node to per-exercise auto table.
-static Future<void> migrateV13(Database db) async {
-  await db.transaction((txn) async {
-    // Add last_node TEXT if not already present
-    final cols = await txn.rawQuery("PRAGMA table_info('preset_exercise_auto')");
-    final hasLastNode = cols.any((c) => c['name'] == 'last_node');
-    if (!hasLastNode) {
-      await txn.execute(
-        "ALTER TABLE preset_exercise_auto ADD COLUMN last_node TEXT;"
+  /// Migration to version 13: add last_node to per-exercise auto table.
+  static Future<void> migrateV13(Database db) async {
+    await db.transaction((txn) async {
+      // Add last_node TEXT if not already present
+      final cols = await txn.rawQuery(
+        "PRAGMA table_info('preset_exercise_auto')",
       );
-    }
-  });
-}
+      final hasLastNode = cols.any((c) => c['name'] == 'last_node');
+      if (!hasLastNode) {
+        await txn.execute(
+          "ALTER TABLE preset_exercise_auto ADD COLUMN last_node TEXT;",
+        );
+      }
+    });
+  }
 
-static Future<void> migrateV14(Database db) async {
-  await db.execute('''
+  static Future<void> migrateV14(Database db) async {
+    await db.execute('''
     ALTER TABLE preset_auto_settings
       ADD COLUMN use_manual_select INTEGER NOT NULL DEFAULT 0;
   ''');
-  await db.execute('''
+    await db.execute('''
     ALTER TABLE preset_auto_settings
       ADD COLUMN manual_selection_json TEXT;
   ''');
-}
+  }
 
-/// Migration to version 15: per‐exercise body-part % overrides
-static Future<void> migrateV15(Database db) async {
-  await db.execute('''
+  /// Migration to version 15: per‐exercise body-part % overrides
+  static Future<void> migrateV15(Database db) async {
+    await db.execute('''
     CREATE TABLE IF NOT EXISTS exercise_bodypart_percent (
       exercise_def_id INTEGER NOT NULL,
       bodypart_id     INTEGER NOT NULL,
@@ -646,42 +653,40 @@ static Future<void> migrateV15(Database db) async {
       FOREIGN KEY(bodypart_id)     REFERENCES bodypart(id)           ON DELETE CASCADE
     );
   ''');
-  await db.execute('''
+    await db.execute('''
     ALTER TABLE exercise_definitions
   ADD COLUMN use_manual_bodyparts INTEGER NOT NULL DEFAULT 0;
   ''');
-  await db.execute('''
+    await db.execute('''
     ALTER TABLE exercise_definitions
   ADD COLUMN use_manual_muscles INTEGER NOT NULL DEFAULT 1;
   ''');
-}
+  }
 
-
-static Future<void> migrateV16(Database db) async {
-  await db.execute("""
+  static Future<void> migrateV16(Database db) async {
+    await db.execute("""
     ALTER TABLE exercise_definitions
       ADD COLUMN setup_notes     TEXT NOT NULL DEFAULT '';
   """);
-  await db.execute("""
+    await db.execute("""
     ALTER TABLE exercise_definitions
       ADD COLUMN execution_notes TEXT NOT NULL DEFAULT '';
   """);
-  await db.execute("""
+    await db.execute("""
     ALTER TABLE exercise_definitions
       ADD COLUMN tips_notes      TEXT NOT NULL DEFAULT '';
   """);
-  await db.execute("""
+    await db.execute("""
     ALTER TABLE exercise_definitions
       ADD COLUMN multiply_by_rating INTEGER NOT NULL DEFAULT 0;
   """);
-}
+  }
 
-
-/// Migration to version 17: editable flow‐chart defaults (app & per‐profile)
-static Future<void> migrateV17(Database db) async {
-  await db.transaction((txn) async {
-    // 1) Table holding the JSON blob for each scope (app‐wide or per‐profile)
-    await txn.execute('''
+  /// Migration to version 17: editable flow‐chart defaults (app & per‐profile)
+  static Future<void> migrateV17(Database db) async {
+    await db.transaction((txn) async {
+      // 1) Table holding the JSON blob for each scope (app‐wide or per‐profile)
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS flow_defaults (
         scope       TEXT    NOT NULL,                               
         profile_id  INTEGER REFERENCES gym_profiles(id) ON DELETE CASCADE,  
@@ -690,8 +695,8 @@ static Future<void> migrateV17(Database db) async {
       );
     ''');
 
-    // 2) Table holding all the user‐defined methods attached to those defaults
-    await txn.execute('''
+      // 2) Table holding all the user‐defined methods attached to those defaults
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS flow_default_methods (
         scope       TEXT    NOT NULL,                               
         profile_id  INTEGER REFERENCES gym_profiles(id) ON DELETE CASCADE,
@@ -704,13 +709,13 @@ static Future<void> migrateV17(Database db) async {
           ON DELETE CASCADE
       );
     ''');
-  });
-}
+    });
+  }
 
-/// Migration to version 18: personal_info table
-static Future<void> migrateV18(Database db) async {
-  await db.transaction((txn) async {
-    await txn.execute('''
+  /// Migration to version 18: personal_info table
+  static Future<void> migrateV18(Database db) async {
+    await db.transaction((txn) async {
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS personal_info (
         id                 INTEGER PRIMARY KEY AUTOINCREMENT,
         name               TEXT,
@@ -723,14 +728,14 @@ static Future<void> migrateV18(Database db) async {
         activity_level     TEXT
       );
     ''');
-  });
-}
+    });
+  }
 
-/// v19 – Nutrition core: nutrients, foods, portions, per-100g nutrients, FTS
-static Future<void> migrateV19(Database db) async {
-  await db.transaction((txn) async {
-    // 1) Nutrient master
-    await txn.execute('''
+  /// v19 – Nutrition core: nutrients, foods, portions, per-100g nutrients, FTS
+  static Future<void> migrateV19(Database db) async {
+    await db.transaction((txn) async {
+      // 1) Nutrient master
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS nutrients (
         id    INTEGER PRIMARY KEY,
         code  TEXT UNIQUE,
@@ -739,8 +744,8 @@ static Future<void> migrateV19(Database db) async {
       );
     ''');
 
-    // 2) Foods catalog
-    await txn.execute('''
+      // 2) Foods catalog
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS foods (
         id                INTEGER PRIMARY KEY AUTOINCREMENT,
         name              TEXT    NOT NULL,
@@ -755,11 +760,15 @@ static Future<void> migrateV19(Database db) async {
   updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
       );
     ''');
-    await txn.execute("CREATE INDEX IF NOT EXISTS idx_foods_name ON foods(name);");
-    await txn.execute("CREATE INDEX IF NOT EXISTS idx_foods_barcode ON foods(barcode);");
+      await txn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_foods_name ON foods(name);",
+      );
+      await txn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_foods_barcode ON foods(barcode);",
+      );
 
-    // 3) Portion options per food
-    await txn.execute('''
+      // 3) Portion options per food
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS food_portions (
         id            INTEGER PRIMARY KEY AUTOINCREMENT,
         food_id       INTEGER NOT NULL,
@@ -770,10 +779,12 @@ static Future<void> migrateV19(Database db) async {
         FOREIGN KEY(food_id) REFERENCES foods(id) ON DELETE CASCADE
       );
     ''');
-    await txn.execute("CREATE INDEX IF NOT EXISTS idx_food_portions_food ON food_portions(food_id);");
+      await txn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_food_portions_food ON food_portions(food_id);",
+      );
 
-    // 4) Per-100g nutrient amounts for each food
-    await txn.execute('''
+      // 4) Per-100g nutrient amounts for each food
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS food_nutrients (
         id           INTEGER PRIMARY KEY AUTOINCREMENT,
         food_id      INTEGER NOT NULL,
@@ -784,16 +795,20 @@ static Future<void> migrateV19(Database db) async {
         FOREIGN KEY(nutrient_id) REFERENCES nutrients(id) ON DELETE RESTRICT
       );
     ''');
-    await txn.execute("CREATE INDEX IF NOT EXISTS idx_food_nutrients_food ON food_nutrients(food_id);");
-    await txn.execute("CREATE INDEX IF NOT EXISTS idx_food_nutrients_nutr ON food_nutrients(nutrient_id);");
+      await txn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_food_nutrients_food ON food_nutrients(food_id);",
+      );
+      await txn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_food_nutrients_nutr ON food_nutrients(nutrient_id);",
+      );
 
-// Try to create FTS4 only if supported.
-try {
-  final hasFts4 = await _fts4Available(txn);
-  if (hasFts4) {
-    // First try with unicode61 + prefix
-    try {
-      await txn.execute("""
+      // Try to create FTS4 only if supported.
+      try {
+        final hasFts4 = await _fts4Available(txn);
+        if (hasFts4) {
+          // First try with unicode61 + prefix
+          try {
+            await txn.execute("""
         CREATE VIRTUAL TABLE IF NOT EXISTS food_search_fts
         USING fts4(
           name, brand,
@@ -802,9 +817,9 @@ try {
           prefix=2 3
         );
       """);
-    } catch (_) {
-      // Fallback: some devices don't ship unicode61
-      await txn.execute("""
+          } catch (_) {
+            // Fallback: some devices don't ship unicode61
+            await txn.execute("""
         CREATE VIRTUAL TABLE IF NOT EXISTS food_search_fts
         USING fts4(
           name, brand,
@@ -812,21 +827,21 @@ try {
           prefix=2 3
         );
       """);
-    }
+          }
 
-    await txn.execute("""
+          await txn.execute("""
       CREATE TRIGGER IF NOT EXISTS foods_ai AFTER INSERT ON foods BEGIN
         INSERT INTO food_search_fts(rowid, name, brand)
         VALUES (NEW.id, COALESCE(NEW.name,''), COALESCE(NEW.brand,''));
       END;
     """);
-    await txn.execute("""
+          await txn.execute("""
       CREATE TRIGGER IF NOT EXISTS foods_ad AFTER DELETE ON foods BEGIN
         INSERT INTO food_search_fts(food_search_fts, rowid, name, brand)
         VALUES('delete', OLD.id, COALESCE(OLD.name,''), COALESCE(OLD.brand,''));
       END;
     """);
-    await txn.execute("""
+          await txn.execute("""
       CREATE TRIGGER IF NOT EXISTS foods_au AFTER UPDATE ON foods BEGIN
         INSERT INTO food_search_fts(food_search_fts, rowid, name, brand)
         VALUES('delete', OLD.id, COALESCE(OLD.name,''), COALESCE(OLD.brand,''));
@@ -834,22 +849,18 @@ try {
         VALUES (NEW.id, COALESCE(NEW.name,''), COALESCE(NEW.brand,''));
       END;
     """);
+        }
+      } catch (_) {
+        // Silently skip; DAO can fall back to LIKE search.
+      }
+    });
   }
-} catch (_) {
-  // Silently skip; DAO can fall back to LIKE search.
-}
 
-
-
-
-});
-}
-
-/// v20 – Recipes & diary
-static Future<void> migrateV20(Database db) async {
-  await db.transaction((txn) async {
-    // 1) Recipes
-    await txn.execute('''
+  /// v20 – Recipes & diary
+  static Future<void> migrateV20(Database db) async {
+    await db.transaction((txn) async {
+      // 1) Recipes
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS recipes (
         id          INTEGER PRIMARY KEY AUTOINCREMENT,
         name        TEXT    NOT NULL,
@@ -861,8 +872,8 @@ static Future<void> migrateV20(Database db) async {
       );
     ''');
 
-    // 2) Recipe ingredients
-    await txn.execute('''
+      // 2) Recipe ingredients
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS recipe_ingredients (
         id          INTEGER PRIMARY KEY AUTOINCREMENT,
         recipe_id   INTEGER NOT NULL,
@@ -875,10 +886,12 @@ static Future<void> migrateV20(Database db) async {
         FOREIGN KEY(portion_id) REFERENCES food_portions(id) ON DELETE SET NULL
       );
     ''');
-    await txn.execute("CREATE INDEX IF NOT EXISTS idx_recipe_ing_recipe ON recipe_ingredients(recipe_id);");
+      await txn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_recipe_ing_recipe ON recipe_ingredients(recipe_id);",
+      );
 
-    // 3) Food diary (per profile)
-    await txn.execute('''
+      // 3) Food diary (per profile)
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS diary_entries (
         id          INTEGER PRIMARY KEY AUTOINCREMENT,
         profile_id  INTEGER NOT NULL,
@@ -896,16 +909,16 @@ static Future<void> migrateV20(Database db) async {
         FOREIGN KEY(portion_id) REFERENCES food_portions(id) ON DELETE SET NULL
       );
     ''');
-    await txn.execute('''
+      await txn.execute('''
       CREATE INDEX IF NOT EXISTS idx_diary_profile_date ON diary_entries(profile_id, date);
     ''');
-  });
-}
+    });
+  }
 
-/// v21 – Goals, day totals cache, usage stats
-static Future<void> migrateV21(Database db) async {
-  await db.transaction((txn) async {
-    await txn.execute('''
+  /// v21 – Goals, day totals cache, usage stats
+  static Future<void> migrateV21(Database db) async {
+    await db.transaction((txn) async {
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS nutrition_goals (
         id          INTEGER PRIMARY KEY AUTOINCREMENT,
         profile_id  INTEGER NOT NULL,
@@ -923,7 +936,7 @@ static Future<void> migrateV21(Database db) async {
       );
     ''');
 
-    await txn.execute('''
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS day_totals_cache (
         profile_id  INTEGER NOT NULL,
         date        TEXT    NOT NULL,
@@ -940,7 +953,7 @@ static Future<void> migrateV21(Database db) async {
       );
     ''');
 
-    await txn.execute('''
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS food_usage_stats (
         profile_id INTEGER NOT NULL,
         food_id    INTEGER NOT NULL,
@@ -951,13 +964,13 @@ static Future<void> migrateV21(Database db) async {
         FOREIGN KEY(food_id)    REFERENCES foods(id)        ON DELETE RESTRICT
       );
     ''');
-  });
-}
+    });
+  }
 
-static Future<void> migrateV22(Database db) async {
-  await db.transaction((txn) async {
-    // 1) Flexible nutrient values (supports per_100g, per_100ml, per_portion, absolute)
-    await txn.execute("""
+  static Future<void> migrateV22(Database db) async {
+    await db.transaction((txn) async {
+      // 1) Flexible nutrient values (supports per_100g, per_100ml, per_portion, absolute)
+      await txn.execute("""
       CREATE TABLE IF NOT EXISTS food_nutrient_values (
         id            INTEGER PRIMARY KEY AUTOINCREMENT,
         food_id       INTEGER NOT NULL,
@@ -972,27 +985,27 @@ static Future<void> migrateV22(Database db) async {
       );
     """);
 
-    // Uniqueness with NULL-safe portion handling
-    await txn.execute("""
+      // Uniqueness with NULL-safe portion handling
+      await txn.execute("""
       CREATE UNIQUE INDEX IF NOT EXISTS ux_fnv_unique
       ON food_nutrient_values(food_id, nutrient_id, basis, COALESCE(portion_id, -1));
     """);
 
-    // Helpful indexes for common reads
-    await txn.execute("""
+      // Helpful indexes for common reads
+      await txn.execute("""
       CREATE INDEX IF NOT EXISTS idx_fnv_food_nutrient_basis
       ON food_nutrient_values(food_id, nutrient_id, basis);
     """);
 
-    // One-time backfill from legacy per-100g table (safe to run multiple times)
-    await txn.execute("""
+      // One-time backfill from legacy per-100g table (safe to run multiple times)
+      await txn.execute("""
       INSERT OR IGNORE INTO food_nutrient_values (food_id, nutrient_id, amount, basis)
       SELECT food_id, nutrient_id, amount_per_100g, 'per_100g'
       FROM food_nutrients;
     """);
 
-    // 2) Optional: grouping for UI organization / ordering
-    await txn.execute("""
+      // 2) Optional: grouping for UI organization / ordering
+      await txn.execute("""
       CREATE TABLE IF NOT EXISTS nutrient_groups (
         id        INTEGER PRIMARY KEY AUTOINCREMENT,
         name      TEXT NOT NULL,
@@ -1002,7 +1015,7 @@ static Future<void> migrateV22(Database db) async {
       );
     """);
 
-    await txn.execute("""
+      await txn.execute("""
       CREATE TABLE IF NOT EXISTS nutrient_group_members (
         group_id    INTEGER NOT NULL,
         nutrient_id INTEGER NOT NULL,
@@ -1013,15 +1026,15 @@ static Future<void> migrateV22(Database db) async {
       );
     """);
 
-    await txn.execute("""
+      await txn.execute("""
       CREATE INDEX IF NOT EXISTS idx_ngm_group ON nutrient_group_members(group_id);
     """);
-    await txn.execute("""
+      await txn.execute("""
       CREATE INDEX IF NOT EXISTS idx_ngm_nutrient ON nutrient_group_members(nutrient_id);
     """);
 
-    // 3) Optional: aliases to resolve multiple labels to the same nutrient
-    await txn.execute("""
+      // 3) Optional: aliases to resolve multiple labels to the same nutrient
+      await txn.execute("""
       CREATE TABLE IF NOT EXISTS nutrient_aliases (
         nutrient_id INTEGER NOT NULL,
         alias       TEXT    NOT NULL,
@@ -1030,38 +1043,40 @@ static Future<void> migrateV22(Database db) async {
       );
     """);
 
-    await txn.execute("""
+      await txn.execute("""
       CREATE INDEX IF NOT EXISTS idx_aliases_alias ON nutrient_aliases(alias);
     """);
-  });
-}
+    });
+  }
 
-static Future<void> migrateV23(Database db) async {
-  await db.transaction((txn) async {
-    Future<void> addCol(String table, String colDef) async {
-      final cols = await txn.rawQuery("PRAGMA table_info('$table');");
-      final name = colDef.split(' ').first;
-      final exists = cols.any((c) => c['name'] == name);
-      if (!exists) await txn.execute("ALTER TABLE $table ADD COLUMN $colDef;");
-    }
+  static Future<void> migrateV23(Database db) async {
+    await db.transaction((txn) async {
+      Future<void> addCol(String table, String colDef) async {
+        final cols = await txn.rawQuery("PRAGMA table_info('$table');");
+        final name = colDef.split(' ').first;
+        final exists = cols.any((c) => c['name'] == name);
+        if (!exists) {
+          await txn.execute("ALTER TABLE $table ADD COLUMN $colDef;");
+        }
+      }
 
-    await addCol('food_portions', 'list_kind TEXT');
-    await addCol('food_portions', 'sort_order INTEGER NOT NULL DEFAULT 0');
-    await addCol('food_portions', 'amount REAL');
-    await addCol('food_portions', 'unit TEXT');
-    await addCol('food_portions', 'label TEXT');
+      await addCol('food_portions', 'list_kind TEXT');
+      await addCol('food_portions', 'sort_order INTEGER NOT NULL DEFAULT 0');
+      await addCol('food_portions', 'amount REAL');
+      await addCol('food_portions', 'unit TEXT');
+      await addCol('food_portions', 'label TEXT');
 
-    await txn.execute("""
+      await txn.execute("""
       CREATE INDEX IF NOT EXISTS idx_food_portions_food_sort
       ON food_portions(food_id, list_kind, sort_order, id);
     """);
-  });
-}
+    });
+  }
 
-static Future<void> migrateV24(Database db) async {
-  await db.transaction((txn) async {
-    // 1) Normalized lookups
-    await txn.execute('''
+  static Future<void> migrateV24(Database db) async {
+    await db.transaction((txn) async {
+      // 1) Normalized lookups
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS brands (
         id           INTEGER PRIMARY KEY AUTOINCREMENT,
         name         TEXT NOT NULL UNIQUE,
@@ -1069,7 +1084,7 @@ static Future<void> migrateV24(Database db) async {
       );
     ''');
 
-    await txn.execute('''
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS categories (
         id        INTEGER PRIMARY KEY AUTOINCREMENT,
         name      TEXT NOT NULL,
@@ -1079,17 +1094,18 @@ static Future<void> migrateV24(Database db) async {
       );
     ''');
 
-    // If a legacy categories table existed without parent_id, add it now.
-final catCols = await txn.rawQuery("PRAGMA table_info('categories');");
-final hasParentId = catCols.any(
-  (c) => (c['name'] as String?)?.toLowerCase() == 'parent_id',
-);
-if (!hasParentId) {
-  await txn.execute("ALTER TABLE categories ADD COLUMN parent_id INTEGER;");
-}
+      // If a legacy categories table existed without parent_id, add it now.
+      final catCols = await txn.rawQuery("PRAGMA table_info('categories');");
+      final hasParentId = catCols.any(
+        (c) => (c['name'] as String?)?.toLowerCase() == 'parent_id',
+      );
+      if (!hasParentId) {
+        await txn.execute(
+          "ALTER TABLE categories ADD COLUMN parent_id INTEGER;",
+        );
+      }
 
-
-    await txn.execute('''
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS food_barcodes (
         id      INTEGER PRIMARY KEY AUTOINCREMENT,
         food_id INTEGER NOT NULL,
@@ -1097,42 +1113,62 @@ if (!hasParentId) {
         FOREIGN KEY(food_id) REFERENCES foods(id) ON DELETE CASCADE
       );
     ''');
-    await txn.execute("CREATE INDEX IF NOT EXISTS idx_food_barcodes_food ON food_barcodes(food_id);");
-    await txn.execute("CREATE INDEX IF NOT EXISTS idx_food_barcodes_upc  ON food_barcodes(upc);");
+      await txn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_food_barcodes_food ON food_barcodes(food_id);",
+      );
+      await txn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_food_barcodes_upc  ON food_barcodes(upc);",
+      );
 
-    // 2) Extend foods with new columns (guarded adds)
-    Future<void> addCol(String table, String colDef) async {
-      final cols = await txn.rawQuery("PRAGMA table_info('$table');");
-      final name = colDef.split(' ').first;
-      final exists = cols.any((c) => c['name'] == name);
-      if (!exists) await txn.execute("ALTER TABLE $table ADD COLUMN $colDef;");
-    }
+      // 2) Extend foods with new columns (guarded adds)
+      Future<void> addCol(String table, String colDef) async {
+        final cols = await txn.rawQuery("PRAGMA table_info('$table');");
+        final name = colDef.split(' ').first;
+        final exists = cols.any((c) => c['name'] == name);
+        if (!exists) {
+          await txn.execute("ALTER TABLE $table ADD COLUMN $colDef;");
+        }
+      }
 
-    await addCol('foods', 'brand_id INTEGER REFERENCES brands(id) ON DELETE SET NULL');
-    await addCol('foods', 'category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL');
-    await addCol('foods', 'fdc_id INTEGER');
-    await addCol('foods', 'verified INTEGER NOT NULL DEFAULT 0');
-    await addCol('foods', 'quality_score REAL');
-    await addCol('foods', 'version INTEGER NOT NULL DEFAULT 1');
-    await addCol('foods', 'preparation TEXT');
-    await addCol('foods', 'edible_portion_pct REAL');
-    await addCol('foods', 'yield_pct REAL');
+      await addCol(
+        'foods',
+        'brand_id INTEGER REFERENCES brands(id) ON DELETE SET NULL',
+      );
+      await addCol(
+        'foods',
+        'category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL',
+      );
+      await addCol('foods', 'fdc_id INTEGER');
+      await addCol('foods', 'verified INTEGER NOT NULL DEFAULT 0');
+      await addCol('foods', 'quality_score REAL');
+      await addCol('foods', 'version INTEGER NOT NULL DEFAULT 1');
+      await addCol('foods', 'preparation TEXT');
+      await addCol('foods', 'edible_portion_pct REAL');
+      await addCol('foods', 'yield_pct REAL');
 
-    // 3) Helpful indexes (and partial uniqueness for fdc_id when present)
-    await txn.execute("CREATE INDEX  IF NOT EXISTS idx_foods_brand_id     ON foods(brand_id);");
-    await txn.execute("CREATE INDEX  IF NOT EXISTS idx_foods_category_id  ON foods(category_id);");
-    await txn.execute("CREATE INDEX  IF NOT EXISTS idx_foods_verified     ON foods(verified);");
-    // Partial unique index: only enforce uniqueness when fdc_id is not null
-    await txn.execute("CREATE UNIQUE INDEX IF NOT EXISTS ux_foods_fdc_id  ON foods(fdc_id) WHERE fdc_id IS NOT NULL;");
+      // 3) Helpful indexes (and partial uniqueness for fdc_id when present)
+      await txn.execute(
+        "CREATE INDEX  IF NOT EXISTS idx_foods_brand_id     ON foods(brand_id);",
+      );
+      await txn.execute(
+        "CREATE INDEX  IF NOT EXISTS idx_foods_category_id  ON foods(category_id);",
+      );
+      await txn.execute(
+        "CREATE INDEX  IF NOT EXISTS idx_foods_verified     ON foods(verified);",
+      );
+      // Partial unique index: only enforce uniqueness when fdc_id is not null
+      await txn.execute(
+        "CREATE UNIQUE INDEX IF NOT EXISTS ux_foods_fdc_id  ON foods(fdc_id) WHERE fdc_id IS NOT NULL;",
+      );
 
-    // 4) Backfill: move legacy brand names & barcodes into normalized tables (idempotent)
-    await txn.execute('''
+      // 4) Backfill: move legacy brand names & barcodes into normalized tables (idempotent)
+      await txn.execute('''
       INSERT OR IGNORE INTO brands(name)
       SELECT DISTINCT TRIM(brand) FROM foods
       WHERE brand IS NOT NULL AND TRIM(brand) <> '';
     ''');
 
-    await txn.execute('''
+      await txn.execute('''
       UPDATE foods
       SET brand_id = (
         SELECT id FROM brands b WHERE b.name = TRIM(foods.brand)
@@ -1140,61 +1176,63 @@ if (!hasParentId) {
       WHERE brand_id IS NULL AND brand IS NOT NULL AND TRIM(brand) <> '';
     ''');
 
-    // Backfill barcodes only if the legacy foods.barcode column exists.
-final foodsCols = await txn.rawQuery("PRAGMA table_info('foods');");
-final hasBarcodeCol = foodsCols.any(
-  (c) => (c['name'] as String?)?.toLowerCase() == 'barcode',
-);
-if (hasBarcodeCol) {
-  await txn.execute('''
+      // Backfill barcodes only if the legacy foods.barcode column exists.
+      final foodsCols = await txn.rawQuery("PRAGMA table_info('foods');");
+      final hasBarcodeCol = foodsCols.any(
+        (c) => (c['name'] as String?)?.toLowerCase() == 'barcode',
+      );
+      if (hasBarcodeCol) {
+        await txn.execute('''
     INSERT OR IGNORE INTO food_barcodes(food_id, upc)
     SELECT id,
            REPLACE(REPLACE(TRIM(barcode), ' ', ''), '-', '')
     FROM foods
     WHERE barcode IS NOT NULL AND TRIM(barcode) <> '';
   ''');
-}
+      }
 
-    // 5) (Optional) sanity constraints via CHECKs on new numeric fields
-    // Note: SQLite won't add CHECK via ALTER on existing column; keep logical checks in app layer.
-  });
-}
+      // 5) (Optional) sanity constraints via CHECKs on new numeric fields
+      // Note: SQLite won't add CHECK via ALTER on existing column; keep logical checks in app layer.
+    });
+  }
 
-static Future<void> migrateV25(Database db) async {
-  await db.transaction((txn) async {
-    Future<void> addCol(String table, String colDef) async {
-      final cols = await txn.rawQuery("PRAGMA table_info('$table');");
-      final name = colDef.split(' ').first;
-      final exists = cols.any((c) => c['name'] == name);
-      if (!exists) await txn.execute("ALTER TABLE $table ADD COLUMN $colDef;");
-    }
+  static Future<void> migrateV25(Database db) async {
+    await db.transaction((txn) async {
+      Future<void> addCol(String table, String colDef) async {
+        final cols = await txn.rawQuery("PRAGMA table_info('$table');");
+        final name = colDef.split(' ').first;
+        final exists = cols.any((c) => c['name'] == name);
+        if (!exists) {
+          await txn.execute("ALTER TABLE $table ADD COLUMN $colDef;");
+        }
+      }
 
-    await addCol('diary_entries', 'logged_grams REAL');
+      await addCol('diary_entries', 'logged_grams REAL');
 
-    await addCol('diary_entries', 'kcal_snapshot REAL');
-    await addCol('diary_entries', 'protein_g_snapshot REAL');
-    await addCol('diary_entries', 'carb_g_snapshot REAL');
-    await addCol('diary_entries', 'fat_g_snapshot REAL');
-    await addCol('diary_entries', 'nutrient_snapshot_json TEXT');
+      await addCol('diary_entries', 'kcal_snapshot REAL');
+      await addCol('diary_entries', 'protein_g_snapshot REAL');
+      await addCol('diary_entries', 'carb_g_snapshot REAL');
+      await addCol('diary_entries', 'fat_g_snapshot REAL');
+      await addCol('diary_entries', 'nutrient_snapshot_json TEXT');
 
-    // (Optional) extra index to speed daily readbacks with meal filters
-    await txn.execute('''
+      // (Optional) extra index to speed daily readbacks with meal filters
+      await txn.execute('''
       CREATE INDEX IF NOT EXISTS idx_diary_profile_date_meal
       ON diary_entries(profile_id, date, meal_type);
     ''');
-  });
-}
+    });
+  }
 
-static Future<void> migrateV26(Database db) async {
-  await db.transaction((txn) async {
-    // Helper to (re)create a trigger safely
-    Future<void> createTrigger(String name, String sql) async {
-      await txn.execute("DROP TRIGGER IF EXISTS $name;");
-      await txn.execute(sql);
-    }
+  static Future<void> migrateV26(Database db) async {
+    await db.transaction((txn) async {
+      // Helper to (re)create a trigger safely
+      Future<void> createTrigger(String name, String sql) async {
+        await txn.execute("DROP TRIGGER IF EXISTS $name;");
+        await txn.execute(sql);
+      }
 
-    // 1) Foods: bump updated_at on UPDATE to foods
-    await createTrigger('trg_foods_set_updated_at', '''
+      // 1) Foods: bump updated_at on UPDATE to foods
+      await createTrigger('trg_foods_set_updated_at', '''
       CREATE TRIGGER IF NOT EXISTS trg_foods_set_updated_at
       AFTER UPDATE ON foods
       WHEN NEW.updated_at <= OLD.updated_at
@@ -1203,22 +1241,22 @@ static Future<void> migrateV26(Database db) async {
       END;
     ''');
 
-    // 2) Foods: bump updated_at when portions/nutrients/fnv change
-    await createTrigger('trg_touch_food_on_portion_ins', '''
+      // 2) Foods: bump updated_at when portions/nutrients/fnv change
+      await createTrigger('trg_touch_food_on_portion_ins', '''
       CREATE TRIGGER IF NOT EXISTS trg_touch_food_on_portion_ins
       AFTER INSERT ON food_portions
       BEGIN
         UPDATE foods SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = NEW.food_id;
       END;
     ''');
-    await createTrigger('trg_touch_food_on_portion_upd', '''
+      await createTrigger('trg_touch_food_on_portion_upd', '''
       CREATE TRIGGER IF NOT EXISTS trg_touch_food_on_portion_upd
       AFTER UPDATE ON food_portions
       BEGIN
         UPDATE foods SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = NEW.food_id;
       END;
     ''');
-    await createTrigger('trg_touch_food_on_portion_del', '''
+      await createTrigger('trg_touch_food_on_portion_del', '''
       CREATE TRIGGER IF NOT EXISTS trg_touch_food_on_portion_del
       AFTER DELETE ON food_portions
       BEGIN
@@ -1226,21 +1264,21 @@ static Future<void> migrateV26(Database db) async {
       END;
     ''');
 
-    await createTrigger('trg_touch_food_on_nutr_ins', '''
+      await createTrigger('trg_touch_food_on_nutr_ins', '''
       CREATE TRIGGER IF NOT EXISTS trg_touch_food_on_nutr_ins
       AFTER INSERT ON food_nutrients
       BEGIN
         UPDATE foods SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = NEW.food_id;
       END;
     ''');
-    await createTrigger('trg_touch_food_on_nutr_upd', '''
+      await createTrigger('trg_touch_food_on_nutr_upd', '''
       CREATE TRIGGER IF NOT EXISTS trg_touch_food_on_nutr_upd
       AFTER UPDATE ON food_nutrients
       BEGIN
         UPDATE foods SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = NEW.food_id;
       END;
     ''');
-    await createTrigger('trg_touch_food_on_nutr_del', '''
+      await createTrigger('trg_touch_food_on_nutr_del', '''
       CREATE TRIGGER IF NOT EXISTS trg_touch_food_on_nutr_del
       AFTER DELETE ON food_nutrients
       BEGIN
@@ -1248,21 +1286,21 @@ static Future<void> migrateV26(Database db) async {
       END;
     ''');
 
-    await createTrigger('trg_touch_food_on_fnv_ins', '''
+      await createTrigger('trg_touch_food_on_fnv_ins', '''
       CREATE TRIGGER IF NOT EXISTS trg_touch_food_on_fnv_ins
       AFTER INSERT ON food_nutrient_values
       BEGIN
         UPDATE foods SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = NEW.food_id;
       END;
     ''');
-    await createTrigger('trg_touch_food_on_fnv_upd', '''
+      await createTrigger('trg_touch_food_on_fnv_upd', '''
       CREATE TRIGGER IF NOT EXISTS trg_touch_food_on_fnv_upd
       AFTER UPDATE ON food_nutrient_values
       BEGIN
         UPDATE foods SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = NEW.food_id;
       END;
     ''');
-    await createTrigger('trg_touch_food_on_fnv_del', '''
+      await createTrigger('trg_touch_food_on_fnv_del', '''
       CREATE TRIGGER IF NOT EXISTS trg_touch_food_on_fnv_del
       AFTER DELETE ON food_nutrient_values
       BEGIN
@@ -1270,8 +1308,8 @@ static Future<void> migrateV26(Database db) async {
       END;
     ''');
 
-    // 3) Recipes: bump updated_at on direct update and ingredient changes
-    await createTrigger('trg_recipes_set_updated_at', '''
+      // 3) Recipes: bump updated_at on direct update and ingredient changes
+      await createTrigger('trg_recipes_set_updated_at', '''
       CREATE TRIGGER IF NOT EXISTS trg_recipes_set_updated_at
       AFTER UPDATE ON recipes
       WHEN NEW.updated_at <= OLD.updated_at
@@ -1280,62 +1318,62 @@ static Future<void> migrateV26(Database db) async {
       END;
     ''');
 
-    await createTrigger('trg_touch_recipe_on_ing_ins', '''
+      await createTrigger('trg_touch_recipe_on_ing_ins', '''
       CREATE TRIGGER IF NOT EXISTS trg_touch_recipe_on_ing_ins
       AFTER INSERT ON recipe_ingredients
       BEGIN
         UPDATE recipes SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = NEW.recipe_id;
       END;
     ''');
-    await createTrigger('trg_touch_recipe_on_ing_upd', '''
+      await createTrigger('trg_touch_recipe_on_ing_upd', '''
       CREATE TRIGGER IF NOT EXISTS trg_touch_recipe_on_ing_upd
       AFTER UPDATE ON recipe_ingredients
       BEGIN
         UPDATE recipes SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = NEW.recipe_id;
       END;
     ''');
-    await createTrigger('trg_touch_recipe_on_ing_del', '''
+      await createTrigger('trg_touch_recipe_on_ing_del', '''
       CREATE TRIGGER IF NOT EXISTS trg_touch_recipe_on_ing_del
       AFTER DELETE ON recipe_ingredients
       BEGIN
         UPDATE recipes SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = OLD.recipe_id;
       END;
     ''');
-  });
-}
+    });
+  }
 
-static Future<void> migrateV27(Database db) async {
-  await db.transaction((txn) async {
-    // 1) normalized sources lookup
-    await txn.execute('''
+  static Future<void> migrateV27(Database db) async {
+    await db.transaction((txn) async {
+      // 1) normalized sources lookup
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS sources (
         id    INTEGER PRIMARY KEY AUTOINCREMENT,
         name  TEXT NOT NULL UNIQUE
       );
     ''');
 
-    // 2) add foods.source_id if missing
-    final cols = await txn.rawQuery("PRAGMA table_info('foods');");
-    final hasSourceId = cols.any((c) => c['name'] == 'source_id');
-    if (!hasSourceId) {
-      await txn.execute(
-        "ALTER TABLE foods ADD COLUMN source_id INTEGER REFERENCES sources(id) ON DELETE SET NULL;"
-      );
-      await txn.execute(
-        "CREATE INDEX IF NOT EXISTS idx_foods_source_id ON foods(source_id);"
-      );
-    }
+      // 2) add foods.source_id if missing
+      final cols = await txn.rawQuery("PRAGMA table_info('foods');");
+      final hasSourceId = cols.any((c) => c['name'] == 'source_id');
+      if (!hasSourceId) {
+        await txn.execute(
+          "ALTER TABLE foods ADD COLUMN source_id INTEGER REFERENCES sources(id) ON DELETE SET NULL;",
+        );
+        await txn.execute(
+          "CREATE INDEX IF NOT EXISTS idx_foods_source_id ON foods(source_id);",
+        );
+      }
 
-    // 3) backfill distinct data_source values into sources
-    await txn.execute('''
+      // 3) backfill distinct data_source values into sources
+      await txn.execute('''
       INSERT OR IGNORE INTO sources(name)
       SELECT DISTINCT TRIM(COALESCE(data_source,'')) AS name
       FROM foods
       WHERE TRIM(COALESCE(data_source,'')) <> '';
     ''');
 
-    // 4) link foods.source_id from data_source where possible
-    await txn.execute('''
+      // 4) link foods.source_id from data_source where possible
+      await txn.execute('''
       UPDATE foods
 SET source_id = (
   SELECT s.id    
@@ -1345,9 +1383,8 @@ SET source_id = (
 WHERE source_id IS NULL
   AND TRIM(COALESCE(data_source,'')) <> '';
     ''');
-  });
-}
-
+    });
+  }
 
   /// v28 — Diary timestamps & soft delete
   static Future<void> migrateV28(Database db) async {
@@ -1356,7 +1393,9 @@ WHERE source_id IS NULL
         final cols = await txn.rawQuery("PRAGMA table_info('$table');");
         final name = colDef.split(' ').first;
         final exists = cols.any((c) => c['name'] == name);
-        if (!exists) await txn.execute("ALTER TABLE $table ADD COLUMN $colDef;");
+        if (!exists) {
+          await txn.execute("ALTER TABLE $table ADD COLUMN $colDef;");
+        }
       }
 
       // Columns (nullable for legacy; app/trigger will set values)
@@ -1421,12 +1460,11 @@ WHERE source_id IS NULL
       ''');
 
       // Backfill: initialize logged_at from existing local day (use local NOON to avoid DST issues)
-await txn.execute('''
+      await txn.execute('''
   UPDATE diary_entries
   SET logged_at = CAST(strftime('%s', date || ' 12:00:00') AS INTEGER) * 1000
   WHERE logged_at IS NULL;
 ''');
-
     });
   }
 
@@ -1443,9 +1481,15 @@ await txn.execute('''
         );
       ''');
 
-      await txn.execute('CREATE INDEX IF NOT EXISTS idx_det_entry ON diary_entry_tags(entry_id);');
-      await txn.execute('CREATE INDEX IF NOT EXISTS idx_det_tag   ON diary_entry_tags(tag);');
-      await txn.execute('CREATE UNIQUE INDEX IF NOT EXISTS ux_det_entry_tag ON diary_entry_tags(entry_id, tag);');
+      await txn.execute(
+        'CREATE INDEX IF NOT EXISTS idx_det_entry ON diary_entry_tags(entry_id);',
+      );
+      await txn.execute(
+        'CREATE INDEX IF NOT EXISTS idx_det_tag   ON diary_entry_tags(tag);',
+      );
+      await txn.execute(
+        'CREATE UNIQUE INDEX IF NOT EXISTS ux_det_entry_tag ON diary_entry_tags(entry_id, tag);',
+      );
 
       // Optional: default created_at
       await txn.execute('DROP TRIGGER IF EXISTS trg_det_set_created_at_ai;');
@@ -1476,7 +1520,9 @@ await txn.execute('''
         );
       ''');
 
-      await txn.execute('CREATE INDEX IF NOT EXISTS idx_rnut_recipe ON recipe_nutrients(recipe_id);');
+      await txn.execute(
+        'CREATE INDEX IF NOT EXISTS idx_rnut_recipe ON recipe_nutrients(recipe_id);',
+      );
     });
   }
 
@@ -1495,7 +1541,9 @@ await txn.execute('''
         );
       ''');
 
-      await txn.execute('CREATE INDEX IF NOT EXISTS idx_fav_profile ON favorite_foods(profile_id);');
+      await txn.execute(
+        'CREATE INDEX IF NOT EXISTS idx_fav_profile ON favorite_foods(profile_id);',
+      );
 
       // Optional: default created_at
       await txn.execute('DROP TRIGGER IF EXISTS trg_fav_set_created_at_ai;');
@@ -1527,33 +1575,37 @@ await txn.execute('''
         );
       ''');
 
-      await txn.execute('CREATE INDEX IF NOT EXISTS idx_dea_entry ON diary_entry_audit(entry_id);');
+      await txn.execute(
+        'CREATE INDEX IF NOT EXISTS idx_dea_entry ON diary_entry_audit(entry_id);',
+      );
     });
   }
 
-// v33 — Legacy grams_override shim (transition to logged_grams)
-static Future<void> migrateV33(Database db) async {
-  await db.transaction((txn) async {
-    // Add column if missing
-    final cols = await txn.rawQuery("PRAGMA table_info('diary_entries');");
-    final hasCol = cols.any((c) => c['name'] == 'grams_override');
-    if (!hasCol) {
-      await txn.execute("ALTER TABLE diary_entries ADD COLUMN grams_override REAL;");
-      // Backfill from best available source
-      await txn.execute("""
+  // v33 — Legacy grams_override shim (transition to logged_grams)
+  static Future<void> migrateV33(Database db) async {
+    await db.transaction((txn) async {
+      // Add column if missing
+      final cols = await txn.rawQuery("PRAGMA table_info('diary_entries');");
+      final hasCol = cols.any((c) => c['name'] == 'grams_override');
+      if (!hasCol) {
+        await txn.execute(
+          "ALTER TABLE diary_entries ADD COLUMN grams_override REAL;",
+        );
+        // Backfill from best available source
+        await txn.execute("""
         UPDATE diary_entries
         SET grams_override = COALESCE(grams_override, logged_grams, grams)
         WHERE grams_override IS NULL;
       """);
-    }
-  });
-}
+      }
+    });
+  }
 
-/// v34
-static Future<void> migrateV34(Database db) async {
-  await db.transaction((txn) async {
-    // 🔹 Normalize duplicate defaults: keep the smallest-id default per food
-    await txn.execute("""
+  /// v34
+  static Future<void> migrateV34(Database db) async {
+    await db.transaction((txn) async {
+      // 🔹 Normalize duplicate defaults: keep the smallest-id default per food
+      await txn.execute("""
       UPDATE food_portions
       SET is_default = 0
       WHERE is_default = 1
@@ -1565,16 +1617,16 @@ static Future<void> migrateV34(Database db) async {
         );
     """);
 
-    // 2) One default portion per food
-    await txn.execute("""
+      // 2) One default portion per food
+      await txn.execute("""
       CREATE UNIQUE INDEX IF NOT EXISTS ux_food_portions_default
       ON food_portions(food_id)
       WHERE is_default = 1;
     """);
 
-    // 3) XOR constraint for diary entries
-    await txn.execute('DROP TRIGGER IF EXISTS trg_diary_entries_xor_ai;');
-    await txn.execute("""
+      // 3) XOR constraint for diary entries
+      await txn.execute('DROP TRIGGER IF EXISTS trg_diary_entries_xor_ai;');
+      await txn.execute("""
       CREATE TRIGGER IF NOT EXISTS trg_diary_entries_xor_ai
       BEFORE INSERT ON diary_entries
       WHEN (NEW.food_id IS NULL AND NEW.recipe_id IS NULL)
@@ -1583,8 +1635,8 @@ static Future<void> migrateV34(Database db) async {
         SELECT RAISE(ABORT, 'Exactly one of food_id or recipe_id must be set');
       END;
     """);
-    await txn.execute('DROP TRIGGER IF EXISTS trg_diary_entries_xor_au;');
-    await txn.execute("""
+      await txn.execute('DROP TRIGGER IF EXISTS trg_diary_entries_xor_au;');
+      await txn.execute("""
       CREATE TRIGGER IF NOT EXISTS trg_diary_entries_xor_au
       BEFORE UPDATE ON diary_entries
       WHEN (NEW.food_id IS NULL AND NEW.recipe_id IS NULL)
@@ -1594,53 +1646,56 @@ static Future<void> migrateV34(Database db) async {
       END;
     """);
 
-    // 4) Recents performance
-    await txn.execute("""
+      // 4) Recents performance
+      await txn.execute("""
       CREATE INDEX IF NOT EXISTS idx_diary_profile_food_logged_at
       ON diary_entries(profile_id, food_id, logged_at);
     """);
-    await txn.execute("""
+      await txn.execute("""
       CREATE INDEX IF NOT EXISTS idx_diary_profile_recipe_logged_at
       ON diary_entries(profile_id, recipe_id, logged_at);
     """);
 
-    // 5) Optional: barcode edits bump foods.updated_at
-    await txn.execute('DROP TRIGGER IF EXISTS trg_touch_food_on_barcode_ins;');
-    await txn.execute("""
+      // 5) Optional: barcode edits bump foods.updated_at
+      await txn.execute(
+        'DROP TRIGGER IF EXISTS trg_touch_food_on_barcode_ins;',
+      );
+      await txn.execute("""
       CREATE TRIGGER IF NOT EXISTS trg_touch_food_on_barcode_ins
       AFTER INSERT ON food_barcodes
       BEGIN
         UPDATE foods SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = NEW.food_id;
       END;
     """);
-    await txn.execute('DROP TRIGGER IF EXISTS trg_touch_food_on_barcode_del;');
-    await txn.execute("""
+      await txn.execute(
+        'DROP TRIGGER IF EXISTS trg_touch_food_on_barcode_del;',
+      );
+      await txn.execute("""
       CREATE TRIGGER IF NOT EXISTS trg_touch_food_on_barcode_del
       AFTER DELETE ON food_barcodes
       BEGIN
         UPDATE foods SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = OLD.food_id;
       END;
     """);
-  });
-}
+    });
+  }
 
+  /// v35 — Data guards & helpful indexes:
+  /// - Enforce DiaryEntry.quantity > 0
+  /// - Constrain DiaryEntry.meal_type to 0..3
+  /// - Enforce per-portion nutrient rows have portion_id
+  /// - Limit diary_entry_tags.tag length (<= 40)
+  /// - Composite index for tag timelines (tag, created_at)
+  static Future<void> migrateV35(Database db) async {
+    await db.transaction((txn) async {
+      // Small helper to (re)create triggers safely.
+      Future<void> createTrigger(String name, String sql) async {
+        await txn.execute('DROP TRIGGER IF EXISTS $name;');
+        await txn.execute(sql);
+      }
 
-/// v35 — Data guards & helpful indexes:
-/// - Enforce DiaryEntry.quantity > 0
-/// - Constrain DiaryEntry.meal_type to 0..3
-/// - Enforce per-portion nutrient rows have portion_id
-/// - Limit diary_entry_tags.tag length (<= 40)
-/// - Composite index for tag timelines (tag, created_at)
-static Future<void> migrateV35(Database db) async {
-  await db.transaction((txn) async {
-    // Small helper to (re)create triggers safely.
-    Future<void> createTrigger(String name, String sql) async {
-      await txn.execute('DROP TRIGGER IF EXISTS $name;');
-      await txn.execute(sql);
-    }
-
-    // 1) DiaryEntry.quantity > 0
-    await createTrigger('trg_diary_quantity_check_bi', '''
+      // 1) DiaryEntry.quantity > 0
+      await createTrigger('trg_diary_quantity_check_bi', '''
       CREATE TRIGGER IF NOT EXISTS trg_diary_quantity_check_bi
       BEFORE INSERT ON diary_entries
       WHEN NEW.quantity IS NULL OR NEW.quantity <= 0
@@ -1649,7 +1704,7 @@ static Future<void> migrateV35(Database db) async {
       END;
     ''');
 
-    await createTrigger('trg_diary_quantity_check_bu', '''
+      await createTrigger('trg_diary_quantity_check_bu', '''
       CREATE TRIGGER IF NOT EXISTS trg_diary_quantity_check_bu
       BEFORE UPDATE ON diary_entries
       WHEN NEW.quantity IS NULL OR NEW.quantity <= 0
@@ -1658,8 +1713,8 @@ static Future<void> migrateV35(Database db) async {
       END;
     ''');
 
-    // 2) DiaryEntry.meal_type in 0..3
-    await createTrigger('trg_diary_mealtype_check_bi', '''
+      // 2) DiaryEntry.meal_type in 0..3
+      await createTrigger('trg_diary_mealtype_check_bi', '''
       CREATE TRIGGER IF NOT EXISTS trg_diary_mealtype_check_bi
       BEFORE INSERT ON diary_entries
       WHEN NEW.meal_type IS NULL OR NEW.meal_type < 0 OR NEW.meal_type > 3
@@ -1668,7 +1723,7 @@ static Future<void> migrateV35(Database db) async {
       END;
     ''');
 
-    await createTrigger('trg_diary_mealtype_check_bu', '''
+      await createTrigger('trg_diary_mealtype_check_bu', '''
       CREATE TRIGGER IF NOT EXISTS trg_diary_mealtype_check_bu
       BEFORE UPDATE ON diary_entries
       WHEN NEW.meal_type IS NULL OR NEW.meal_type < 0 OR NEW.meal_type > 3
@@ -1677,8 +1732,8 @@ static Future<void> migrateV35(Database db) async {
       END;
     ''');
 
-    // 3) food_nutrient_values: per_portion rows require portion_id
-    await createTrigger('trg_fnv_portion_required_bi', '''
+      // 3) food_nutrient_values: per_portion rows require portion_id
+      await createTrigger('trg_fnv_portion_required_bi', '''
       CREATE TRIGGER IF NOT EXISTS trg_fnv_portion_required_bi
       BEFORE INSERT ON food_nutrient_values
       WHEN NEW.basis = 'per_portion' AND NEW.portion_id IS NULL
@@ -1687,7 +1742,7 @@ static Future<void> migrateV35(Database db) async {
       END;
     ''');
 
-    await createTrigger('trg_fnv_portion_required_bu', '''
+      await createTrigger('trg_fnv_portion_required_bu', '''
       CREATE TRIGGER IF NOT EXISTS trg_fnv_portion_required_bu
       BEFORE UPDATE ON food_nutrient_values
       WHEN NEW.basis = 'per_portion' AND NEW.portion_id IS NULL
@@ -1696,8 +1751,8 @@ static Future<void> migrateV35(Database db) async {
       END;
     ''');
 
-    // 4) diary_entry_tags: limit tag length (<= 40)
-    await createTrigger('trg_det_tag_len_bi', '''
+      // 4) diary_entry_tags: limit tag length (<= 40)
+      await createTrigger('trg_det_tag_len_bi', '''
       CREATE TRIGGER IF NOT EXISTS trg_det_tag_len_bi
       BEFORE INSERT ON diary_entry_tags
       WHEN NEW.tag IS NULL OR length(trim(NEW.tag)) > 40
@@ -1706,7 +1761,7 @@ static Future<void> migrateV35(Database db) async {
       END;
     ''');
 
-    await createTrigger('trg_det_tag_len_bu', '''
+      await createTrigger('trg_det_tag_len_bu', '''
       CREATE TRIGGER IF NOT EXISTS trg_det_tag_len_bu
       BEFORE UPDATE ON diary_entry_tags
       WHEN NEW.tag IS NULL OR length(trim(NEW.tag)) > 40
@@ -1715,26 +1770,26 @@ static Future<void> migrateV35(Database db) async {
       END;
     ''');
 
-    // 5) Helpful composite index for tag timelines (filter + sort)
-    await txn.execute('''
+      // 5) Helpful composite index for tag timelines (filter + sort)
+      await txn.execute('''
       CREATE INDEX IF NOT EXISTS idx_det_tag_created_at
       ON diary_entry_tags(tag, created_at);
     ''');
-  });
-}
+    });
+  }
 
-/// v36 — QoL:
-/// - Touch recipes.updated_at when recipe_nutrients change
-/// - Partial index for live recents (profile_id, logged_at) where not deleted
-static Future<void> migrateV36(Database db) async {
-  await db.transaction((txn) async {
-    // Touch recipes on recipe_nutrients changes
-    Future<void> trig(String name, String body) async {
-      await txn.execute('DROP TRIGGER IF EXISTS $name;');
-      await txn.execute(body);
-    }
+  /// v36 — QoL:
+  /// - Touch recipes.updated_at when recipe_nutrients change
+  /// - Partial index for live recents (profile_id, logged_at) where not deleted
+  static Future<void> migrateV36(Database db) async {
+    await db.transaction((txn) async {
+      // Touch recipes on recipe_nutrients changes
+      Future<void> trig(String name, String body) async {
+        await txn.execute('DROP TRIGGER IF EXISTS $name;');
+        await txn.execute(body);
+      }
 
-    await trig('trg_touch_recipe_on_rnut_ins', """
+      await trig('trg_touch_recipe_on_rnut_ins', """
       CREATE TRIGGER IF NOT EXISTS trg_touch_recipe_on_rnut_ins
       AFTER INSERT ON recipe_nutrients
       BEGIN
@@ -1744,7 +1799,7 @@ static Future<void> migrateV36(Database db) async {
       END;
     """);
 
-    await trig('trg_touch_recipe_on_rnut_upd', """
+      await trig('trg_touch_recipe_on_rnut_upd', """
       CREATE TRIGGER IF NOT EXISTS trg_touch_recipe_on_rnut_upd
       AFTER UPDATE ON recipe_nutrients
       BEGIN
@@ -1754,7 +1809,7 @@ static Future<void> migrateV36(Database db) async {
       END;
     """);
 
-    await trig('trg_touch_recipe_on_rnut_del', """
+      await trig('trg_touch_recipe_on_rnut_del', """
       CREATE TRIGGER IF NOT EXISTS trg_touch_recipe_on_rnut_del
       AFTER DELETE ON recipe_nutrients
       BEGIN
@@ -1764,30 +1819,29 @@ static Future<void> migrateV36(Database db) async {
       END;
     """);
 
-    // Live timeline/recents: profile + time, ignoring deleted
-    await txn.execute("""
+      // Live timeline/recents: profile + time, ignoring deleted
+      await txn.execute("""
       CREATE INDEX IF NOT EXISTS idx_diary_profile_logged_at_live
       ON diary_entries(profile_id, logged_at)
       WHERE is_deleted = 0;
     """);
-  });
-}
+    });
+  }
 
+  static Future<void> migrateV37(Database db) async {
+    await db.transaction((txn) async {
+      Future<void> dropCreateTrig(String name, String sql) async {
+        await txn.execute("DROP TRIGGER IF EXISTS $name;");
+        await txn.execute(sql);
+      }
 
-static Future<void> migrateV37(Database db) async {
-  await db.transaction((txn) async {
-    Future<void> dropCreateTrig(String name, String sql) async {
-      await txn.execute("DROP TRIGGER IF EXISTS $name;");
-      await txn.execute(sql);
-    }
+      // ──────────────────────────────────────────────────────────────────
+      // 1) Keep foods.brand (TEXT) in sync with normalized brands
+      //    so FTS remains correct even when only brand_id changes.
+      // ──────────────────────────────────────────────────────────────────
 
-    // ──────────────────────────────────────────────────────────────────
-    // 1) Keep foods.brand (TEXT) in sync with normalized brands
-    //    so FTS remains correct even when only brand_id changes.
-    // ──────────────────────────────────────────────────────────────────
-
-    // After INSERT: if brand_id present, mirror brand text
-    await dropCreateTrig('trg_foods_sync_brand_ai', """
+      // After INSERT: if brand_id present, mirror brand text
+      await dropCreateTrig('trg_foods_sync_brand_ai', """
       CREATE TRIGGER IF NOT EXISTS trg_foods_sync_brand_ai
       AFTER INSERT ON foods
       WHEN NEW.brand_id IS NOT NULL
@@ -1799,8 +1853,8 @@ static Future<void> migrateV37(Database db) async {
       END;
     """);
 
-    // After UPDATE of brand_id: mirror brand text when it actually changes
-    await dropCreateTrig('trg_foods_sync_brand_au', """
+      // After UPDATE of brand_id: mirror brand text when it actually changes
+      await dropCreateTrig('trg_foods_sync_brand_au', """
       CREATE TRIGGER IF NOT EXISTS trg_foods_sync_brand_au
       AFTER UPDATE OF brand_id ON foods
       WHEN COALESCE(NEW.brand,'') <> COALESCE((SELECT name FROM brands WHERE id = NEW.brand_id),'')
@@ -1811,8 +1865,8 @@ static Future<void> migrateV37(Database db) async {
       END;
     """);
 
-    // When a brand name changes, push into all referencing foods
-    await dropCreateTrig('trg_brands_cascade_name_au', """
+      // When a brand name changes, push into all referencing foods
+      await dropCreateTrig('trg_brands_cascade_name_au', """
       CREATE TRIGGER IF NOT EXISTS trg_brands_cascade_name_au
       AFTER UPDATE OF name ON brands
       BEGIN
@@ -1823,8 +1877,8 @@ static Future<void> migrateV37(Database db) async {
       END;
     """);
 
-    // One-time backfill: ensure foods.brand matches brands.name where brand_id is set
-    await txn.execute("""
+      // One-time backfill: ensure foods.brand matches brands.name where brand_id is set
+      await txn.execute("""
       UPDATE foods
       SET brand = (SELECT name FROM brands WHERE id = foods.brand_id)
       WHERE brand_id IS NOT NULL
@@ -1832,24 +1886,25 @@ static Future<void> migrateV37(Database db) async {
         AND COALESCE(brand,'') <> COALESCE((SELECT name FROM brands WHERE id = foods.brand_id),'');
     """);
 
-    // Rebuild FTS only if it exists (works for FTS4 or FTS5)
-try {
-  final rows = await txn.rawQuery(
-    "SELECT 1 FROM sqlite_master WHERE type='table' AND name='food_search_fts' LIMIT 1;"
-  );
-  if (rows.isNotEmpty) {
-    await txn.execute("INSERT INTO food_search_fts(food_search_fts) VALUES('rebuild');");
-  }
-} catch (_) { /* ignore */ }
+      // Rebuild FTS only if it exists (works for FTS4 or FTS5)
+      try {
+        final rows = await txn.rawQuery(
+          "SELECT 1 FROM sqlite_master WHERE type='table' AND name='food_search_fts' LIMIT 1;",
+        );
+        if (rows.isNotEmpty) {
+          await txn.execute(
+            "INSERT INTO food_search_fts(food_search_fts) VALUES('rebuild');",
+          );
+        }
+      } catch (_) {
+        /* ignore */
+      }
 
-
-
-
-    // ──────────────────────────────────────────────────────────────────
-    // 2) Portion validity: require at least one converter
-    //    (gram_weight OR ml_volume) on insert/update.
-    // ──────────────────────────────────────────────────────────────────
-    await dropCreateTrig('trg_portion_converter_req_bi', """
+      // ──────────────────────────────────────────────────────────────────
+      // 2) Portion validity: require at least one converter
+      //    (gram_weight OR ml_volume) on insert/update.
+      // ──────────────────────────────────────────────────────────────────
+      await dropCreateTrig('trg_portion_converter_req_bi', """
       CREATE TRIGGER IF NOT EXISTS trg_portion_converter_req_bi
       BEFORE INSERT ON food_portions
       WHEN (NEW.gram_weight IS NULL OR NEW.gram_weight < 0)
@@ -1859,7 +1914,7 @@ try {
       END;
     """);
 
-    await dropCreateTrig('trg_portion_converter_req_bu', """
+      await dropCreateTrig('trg_portion_converter_req_bu', """
       CREATE TRIGGER IF NOT EXISTS trg_portion_converter_req_bu
       BEFORE UPDATE ON food_portions
       WHEN (NEW.gram_weight IS NULL OR NEW.gram_weight < 0)
@@ -1869,10 +1924,10 @@ try {
       END;
     """);
 
-    // ──────────────────────────────────────────────────────────────────
-    // 3) Nutrient value sanity: non-negative
-    // ──────────────────────────────────────────────────────────────────
-    await dropCreateTrig('trg_food_nutrients_nonneg_bi', """
+      // ──────────────────────────────────────────────────────────────────
+      // 3) Nutrient value sanity: non-negative
+      // ──────────────────────────────────────────────────────────────────
+      await dropCreateTrig('trg_food_nutrients_nonneg_bi', """
       CREATE TRIGGER IF NOT EXISTS trg_food_nutrients_nonneg_bi
       BEFORE INSERT ON food_nutrients
       WHEN NEW.amount_per_100g < 0
@@ -1880,7 +1935,7 @@ try {
         SELECT RAISE(ABORT, 'food_nutrients.amount_per_100g must be >= 0');
       END;
     """);
-    await dropCreateTrig('trg_food_nutrients_nonneg_bu', """
+      await dropCreateTrig('trg_food_nutrients_nonneg_bu', """
       CREATE TRIGGER IF NOT EXISTS trg_food_nutrients_nonneg_bu
       BEFORE UPDATE ON food_nutrients
       WHEN NEW.amount_per_100g < 0
@@ -1889,7 +1944,7 @@ try {
       END;
     """);
 
-    await dropCreateTrig('trg_fnv_nonneg_bi', """
+      await dropCreateTrig('trg_fnv_nonneg_bi', """
       CREATE TRIGGER IF NOT EXISTS trg_fnv_nonneg_bi
       BEFORE INSERT ON food_nutrient_values
       WHEN NEW.amount < 0
@@ -1897,7 +1952,7 @@ try {
         SELECT RAISE(ABORT, 'food_nutrient_values.amount must be >= 0');
       END;
     """);
-    await dropCreateTrig('trg_fnv_nonneg_bu', """
+      await dropCreateTrig('trg_fnv_nonneg_bu', """
       CREATE TRIGGER IF NOT EXISTS trg_fnv_nonneg_bu
       BEFORE UPDATE ON food_nutrient_values
       WHEN NEW.amount < 0
@@ -1906,41 +1961,41 @@ try {
       END;
     """);
 
-    // ──────────────────────────────────────────────────────────────────
-    // 4) Nutrient aliases: enforce global uniqueness (case-insensitive)
-    //    Cleanup dupes first, then create a unique index on lower(alias).
-    // ──────────────────────────────────────────────────────────────────
-    await txn.execute("""
+      // ──────────────────────────────────────────────────────────────────
+      // 4) Nutrient aliases: enforce global uniqueness (case-insensitive)
+      //    Cleanup dupes first, then create a unique index on lower(alias).
+      // ──────────────────────────────────────────────────────────────────
+      await txn.execute("""
       DELETE FROM nutrient_aliases
       WHERE rowid NOT IN (
         SELECT MIN(rowid) FROM nutrient_aliases GROUP BY lower(alias)
       );
     """);
-    await txn.execute("""
+      await txn.execute("""
       CREATE UNIQUE INDEX IF NOT EXISTS ux_nutrient_alias_nocase
       ON nutrient_aliases(lower(alias));
     """);
 
-    // ──────────────────────────────────────────────────────────────────
-    // 5) Helpful NOCASE name index (LIKE/ORDER BY)
-    // ──────────────────────────────────────────────────────────────────
-    await txn.execute("""
+      // ──────────────────────────────────────────────────────────────────
+      // 5) Helpful NOCASE name index (LIKE/ORDER BY)
+      // ──────────────────────────────────────────────────────────────────
+      await txn.execute("""
       CREATE INDEX IF NOT EXISTS idx_foods_name_nocase
       ON foods(name COLLATE NOCASE);
     """);
-  });
-}
+    });
+  }
 
-// v38 — Data hygiene, case-insensitive uniqueness, guards
-static Future<void> migrateV38(Database db) async {
-  await db.transaction((txn) async {
-    Future<void> trig(String name, String body) async {
-      await txn.execute('DROP TRIGGER IF EXISTS $name;');
-      await txn.execute(body);
-    }
+  // v38 — Data hygiene, case-insensitive uniqueness, guards
+  static Future<void> migrateV38(Database db) async {
+    await db.transaction((txn) async {
+      Future<void> trig(String name, String body) async {
+        await txn.execute('DROP TRIGGER IF EXISTS $name;');
+        await txn.execute(body);
+      }
 
-    // A) De-dupe brands by lower(name); keep smallest id, retarget foods.brand_id, then enforce unique(lower(name))
-    await txn.execute("""
+      // A) De-dupe brands by lower(name); keep smallest id, retarget foods.brand_id, then enforce unique(lower(name))
+      await txn.execute("""
       WITH d AS (
         SELECT MIN(id) AS keep_id, lower(trim(name)) AS k
         FROM brands
@@ -1955,7 +2010,7 @@ static Future<void> migrateV38(Database db) async {
       )
       WHERE brand_id IS NOT NULL;
     """);
-    await txn.execute("""
+      await txn.execute("""
       DELETE FROM brands
       WHERE id NOT IN (
         SELECT keep_id FROM (
@@ -1963,22 +2018,24 @@ static Future<void> migrateV38(Database db) async {
         )
       );
     """);
-    await txn.execute("""
+      await txn.execute("""
       CREATE UNIQUE INDEX IF NOT EXISTS ux_brands_name_nocase
       ON brands(lower(name));
     """);
 
-    // B) De-dupe categories by (lower(name), parent_id)
-//    Guard for legacy DBs that had `categories` without `parent_id`.
-final catCols = await txn.rawQuery("PRAGMA table_info('categories');");
-final hasParentId = catCols.any(
-  (c) => (c['name'] as String?)?.toLowerCase() == 'parent_id',
-);
-if (!hasParentId) {
-  await txn.execute("ALTER TABLE categories ADD COLUMN parent_id INTEGER;");
-}
+      // B) De-dupe categories by (lower(name), parent_id)
+      //    Guard for legacy DBs that had `categories` without `parent_id`.
+      final catCols = await txn.rawQuery("PRAGMA table_info('categories');");
+      final hasParentId = catCols.any(
+        (c) => (c['name'] as String?)?.toLowerCase() == 'parent_id',
+      );
+      if (!hasParentId) {
+        await txn.execute(
+          "ALTER TABLE categories ADD COLUMN parent_id INTEGER;",
+        );
+      }
 
-await txn.execute("""
+      await txn.execute("""
   WITH d AS (
     SELECT MIN(id) AS keep_id, lower(trim(name)) AS k, parent_id
     FROM categories
@@ -1995,7 +2052,7 @@ await txn.execute("""
   WHERE category_id IS NOT NULL;
 """);
 
-await txn.execute("""
+      await txn.execute("""
   DELETE FROM categories
   WHERE id NOT IN (
     SELECT keep_id FROM (
@@ -2006,14 +2063,13 @@ await txn.execute("""
   );
 """);
 
-await txn.execute("""
+      await txn.execute("""
   CREATE UNIQUE INDEX IF NOT EXISTS ux_categories_name_parent_nocase
   ON categories(lower(name), parent_id);
 """);
 
-
-    // C) Portion converter > 0 (tighten v37 from >= 0 to > 0)
-    await trig('trg_portion_converter_req_bi', """
+      // C) Portion converter > 0 (tighten v37 from >= 0 to > 0)
+      await trig('trg_portion_converter_req_bi', """
       CREATE TRIGGER IF NOT EXISTS trg_portion_converter_req_bi
       BEFORE INSERT ON food_portions
       WHEN (NEW.gram_weight IS NULL OR NEW.gram_weight <= 0)
@@ -2022,7 +2078,7 @@ await txn.execute("""
         SELECT RAISE(ABORT, 'food_portions requires gram_weight > 0 or ml_volume > 0');
       END;
     """);
-    await trig('trg_portion_converter_req_bu', """
+      await trig('trg_portion_converter_req_bu', """
       CREATE TRIGGER IF NOT EXISTS trg_portion_converter_req_bu
       BEFORE UPDATE ON food_portions
       WHEN (NEW.gram_weight IS NULL OR NEW.gram_weight <= 0)
@@ -2032,8 +2088,8 @@ await txn.execute("""
       END;
     """);
 
-    // D) Recipe ingredients: require grams OR (portion_id & quantity)
-    await trig('trg_recipe_ing_require_mass_or_portion_bi', """
+      // D) Recipe ingredients: require grams OR (portion_id & quantity)
+      await trig('trg_recipe_ing_require_mass_or_portion_bi', """
       CREATE TRIGGER IF NOT EXISTS trg_recipe_ing_require_mass_or_portion_bi
       BEFORE INSERT ON recipe_ingredients
       WHEN (NEW.grams IS NULL OR NEW.grams < 0)
@@ -2042,7 +2098,7 @@ await txn.execute("""
         SELECT RAISE(ABORT, 'recipe_ingredients requires grams >= 0 OR (portion_id AND quantity > 0)');
       END;
     """);
-    await trig('trg_recipe_ing_require_mass_or_portion_bu', """
+      await trig('trg_recipe_ing_require_mass_or_portion_bu', """
       CREATE TRIGGER IF NOT EXISTS trg_recipe_ing_require_mass_or_portion_bu
       BEFORE UPDATE ON recipe_ingredients
       WHEN (NEW.grams IS NULL OR NEW.grams < 0)
@@ -2052,8 +2108,8 @@ await txn.execute("""
       END;
     """);
 
-    // E) Diary grams non-negative
-    await trig('trg_diary_nonneg_grams_bi', """
+      // E) Diary grams non-negative
+      await trig('trg_diary_nonneg_grams_bi', """
       CREATE TRIGGER IF NOT EXISTS trg_diary_nonneg_grams_bi
       BEFORE INSERT ON diary_entries
       WHEN (NEW.grams IS NOT NULL AND NEW.grams < 0)
@@ -2062,7 +2118,7 @@ await txn.execute("""
         SELECT RAISE(ABORT, 'DiaryEntry grams must be >= 0');
       END;
     """);
-    await trig('trg_diary_nonneg_grams_bu', """
+      await trig('trg_diary_nonneg_grams_bu', """
       CREATE TRIGGER IF NOT EXISTS trg_diary_nonneg_grams_bu
       BEFORE UPDATE ON diary_entries
       WHEN (NEW.grams IS NOT NULL AND NEW.grams < 0)
@@ -2072,8 +2128,8 @@ await txn.execute("""
       END;
     """);
 
-    // F) Barcode length sanity (8..18) — use IGNORE to avoid log spam on bad data
-await trig('trg_barcodes_len_bi', """
+      // F) Barcode length sanity (8..18) — use IGNORE to avoid log spam on bad data
+      await trig('trg_barcodes_len_bi', """
   CREATE TRIGGER IF NOT EXISTS trg_barcodes_len_bi
   BEFORE INSERT ON food_barcodes
   WHEN length(trim(CAST(NEW.upc AS TEXT))) < 8 OR length(trim(CAST(NEW.upc AS TEXT))) > 18
@@ -2081,7 +2137,7 @@ await trig('trg_barcodes_len_bi', """
     SELECT RAISE(IGNORE);
   END;
 """);
-await trig('trg_barcodes_len_bu', """
+      await trig('trg_barcodes_len_bu', """
   CREATE TRIGGER IF NOT EXISTS trg_barcodes_len_bu
   BEFORE UPDATE ON food_barcodes
   WHEN length(trim(CAST(NEW.upc AS TEXT))) < 8 OR length(trim(CAST(NEW.upc AS TEXT))) > 18
@@ -2090,9 +2146,8 @@ await trig('trg_barcodes_len_bu', """
   END;
 """);
 
-
-    // G) Foods numeric guardrails
-    await trig('trg_foods_quality_score_guard_bu', """
+      // G) Foods numeric guardrails
+      await trig('trg_foods_quality_score_guard_bu', """
       CREATE TRIGGER IF NOT EXISTS trg_foods_quality_score_guard_bu
       BEFORE UPDATE OF quality_score ON foods
       WHEN NEW.quality_score IS NOT NULL AND (NEW.quality_score < 0 OR NEW.quality_score > 1)
@@ -2100,7 +2155,7 @@ await trig('trg_barcodes_len_bu', """
         SELECT RAISE(ABORT, 'foods.quality_score must be between 0 and 1');
       END;
     """);
-    await trig('trg_foods_pct_guards_bu', """
+      await trig('trg_foods_pct_guards_bu', """
       CREATE TRIGGER IF NOT EXISTS trg_foods_pct_guards_bu
       BEFORE UPDATE OF edible_portion_pct, yield_pct ON foods
       WHEN (NEW.edible_portion_pct IS NOT NULL AND (NEW.edible_portion_pct < 0 OR NEW.edible_portion_pct > 100))
@@ -2109,7 +2164,7 @@ await trig('trg_barcodes_len_bu', """
         SELECT RAISE(ABORT, 'foods edible_portion_pct/yield_pct must be 0..100');
       END;
     """);
-    await trig('trg_foods_density_guard_bu', """
+      await trig('trg_foods_density_guard_bu', """
       CREATE TRIGGER IF NOT EXISTS trg_foods_density_guard_bu
       BEFORE UPDATE OF density_g_per_ml ON foods
       WHEN NEW.density_g_per_ml IS NOT NULL AND NEW.density_g_per_ml <= 0
@@ -2117,61 +2172,61 @@ await trig('trg_barcodes_len_bu', """
         SELECT RAISE(ABORT, 'foods.density_g_per_ml must be > 0');
       END;
     """);
-  });
-}
+    });
+  }
 
-// v39 — Drop redundant indexes and tighten name search
-static Future<void> migrateV39(Database db) async {
-  await db.transaction((txn) async {
-    // Drop redundant explicit index on a UNIQUE column
-    await txn.execute('DROP INDEX IF EXISTS idx_food_barcodes_upc;');
+  // v39 — Drop redundant indexes and tighten name search
+  static Future<void> migrateV39(Database db) async {
+    await db.transaction((txn) async {
+      // Drop redundant explicit index on a UNIQUE column
+      await txn.execute('DROP INDEX IF EXISTS idx_food_barcodes_upc;');
 
-    // Keep NOCASE name index; drop the older plain one to save space
-    await txn.execute('DROP INDEX IF EXISTS idx_foods_name;');
+      // Keep NOCASE name index; drop the older plain one to save space
+      await txn.execute('DROP INDEX IF EXISTS idx_foods_name;');
 
-    // nutrient_aliases: old non-unique alias index redundant with ux_nutrient_alias_nocase
-    await txn.execute('DROP INDEX IF EXISTS idx_aliases_alias;');
-  });
-}
+      // nutrient_aliases: old non-unique alias index redundant with ux_nutrient_alias_nocase
+      await txn.execute('DROP INDEX IF EXISTS idx_aliases_alias;');
+    });
+  }
 
-// Add near the bottom of schema.dart, after migrateV39
+  // Add near the bottom of schema.dart, after migrateV39
 
-/// v40 — Consolidated:
-/// - Fix diary logged_at backfill to **local** noon for prior backfilled rows
-/// - Recreate FTS with unicode tokenizer + prefix search; rebuild & resync triggers
-/// - Helpful indexes (foods category/brand/name; fnv food/basis)
-/// - (Optional) Guard: sets.parent_set_id must reference an existing set
-static Future<void> migrateV40(Database db) async {
-  await db.transaction((txn) async {
-    Future<void> dropCreateTrig(String name, String sql) async {
-      await txn.execute("DROP TRIGGER IF EXISTS $name;");
-      await txn.execute(sql);
-    }
+  /// v40 — Consolidated:
+  /// - Fix diary logged_at backfill to **local** noon for prior backfilled rows
+  /// - Recreate FTS with unicode tokenizer + prefix search; rebuild & resync triggers
+  /// - Helpful indexes (foods category/brand/name; fnv food/basis)
+  /// - (Optional) Guard: sets.parent_set_id must reference an existing set
+  static Future<void> migrateV40(Database db) async {
+    await db.transaction((txn) async {
+      Future<void> dropCreateTrig(String name, String sql) async {
+        await txn.execute("DROP TRIGGER IF EXISTS $name;");
+        await txn.execute(sql);
+      }
 
-    // ──────────────────────────────────────────────────────────────────
-    // A) Diary backfill: convert prior “noon” backfill to *local* noon
-    //    Only adjust rows that look like the earlier backfill at exactly 12:00.
-    // ──────────────────────────────────────────────────────────────────
-    await txn.execute("""
+      // ──────────────────────────────────────────────────────────────────
+      // A) Diary backfill: convert prior “noon” backfill to *local* noon
+      //    Only adjust rows that look like the earlier backfill at exactly 12:00.
+      // ──────────────────────────────────────────────────────────────────
+      await txn.execute("""
       UPDATE diary_entries
       SET logged_at = CAST(strftime('%s', date || ' 12:00:00', 'localtime') AS INTEGER) * 1000
       WHERE logged_at IS NOT NULL
         AND strftime('%H:%M', logged_at/1000, 'unixepoch') = '12:00';
     """);
 
-    // ──────────────────────────────────────────────────────────────────
-// B) Recreate FTS (FTS4) with unicode tokenizer + short prefixes; rebuild
-{
-  await txn.execute("DROP TRIGGER IF EXISTS foods_ai;");
-  await txn.execute("DROP TRIGGER IF EXISTS foods_ad;");
-  await txn.execute("DROP TRIGGER IF EXISTS foods_au;");
-  await txn.execute("DROP TABLE IF EXISTS food_search_fts;");
+      // ──────────────────────────────────────────────────────────────────
+      // B) Recreate FTS (FTS4) with unicode tokenizer + short prefixes; rebuild
+      {
+        await txn.execute("DROP TRIGGER IF EXISTS foods_ai;");
+        await txn.execute("DROP TRIGGER IF EXISTS foods_ad;");
+        await txn.execute("DROP TRIGGER IF EXISTS foods_au;");
+        await txn.execute("DROP TABLE IF EXISTS food_search_fts;");
 
-  if (await _fts4Available(txn)) {
-    // Try unicode61 first…
-    bool created = false;
-    try {
-      await txn.execute("""
+        if (await _fts4Available(txn)) {
+          // Try unicode61 first…
+          bool created = false;
+          try {
+            await txn.execute("""
         CREATE VIRTUAL TABLE food_search_fts
         USING fts4(
           name, brand,
@@ -2180,10 +2235,10 @@ static Future<void> migrateV40(Database db) async {
           prefix=2 3
         );
       """);
-      created = true;
-    } catch (_) {
-      // …fallback without tokenizer if it's missing on this device.
-      await txn.execute("""
+            created = true;
+          } catch (_) {
+            // …fallback without tokenizer if it's missing on this device.
+            await txn.execute("""
         CREATE VIRTUAL TABLE food_search_fts
         USING fts4(
           name, brand,
@@ -2191,25 +2246,25 @@ static Future<void> migrateV40(Database db) async {
           prefix=2 3
         );
       """);
-      created = true;
-    }
+            created = true;
+          }
 
-    if (created) {
-      await txn.execute("""
+          if (created) {
+            await txn.execute("""
         CREATE TRIGGER IF NOT EXISTS foods_ai
         AFTER INSERT ON foods BEGIN
           INSERT INTO food_search_fts(rowid, name, brand)
           VALUES (NEW.id, COALESCE(NEW.name,''), COALESCE(NEW.brand,''));
         END;
       """);
-      await txn.execute("""
+            await txn.execute("""
         CREATE TRIGGER IF NOT EXISTS foods_ad
         AFTER DELETE ON foods BEGIN
           INSERT INTO food_search_fts(food_search_fts, rowid, name, brand)
           VALUES('delete', OLD.id, COALESCE(OLD.name,''), COALESCE(OLD.brand,''));
         END;
       """);
-      await txn.execute("""
+            await txn.execute("""
         CREATE TRIGGER IF NOT EXISTS foods_au
         AFTER UPDATE ON foods BEGIN
           INSERT INTO food_search_fts(food_search_fts, rowid, name, brand)
@@ -2219,37 +2274,44 @@ static Future<void> migrateV40(Database db) async {
         END;
       """);
 
-      // Rebuild/optimize are supported on FTS3/4.
-      try { await txn.execute("INSERT INTO food_search_fts(food_search_fts) VALUES('rebuild');"); } catch (_) {}
-      try { await txn.execute("INSERT INTO food_search_fts(food_search_fts) VALUES('optimize');"); } catch (_) {}
-    }
-  }
-}
+            // Rebuild/optimize are supported on FTS3/4.
+            try {
+              await txn.execute(
+                "INSERT INTO food_search_fts(food_search_fts) VALUES('rebuild');",
+              );
+            } catch (_) {}
+            try {
+              await txn.execute(
+                "INSERT INTO food_search_fts(food_search_fts) VALUES('optimize');",
+              );
+            } catch (_) {}
+          }
+        }
+      }
 
-
-
-    // ──────────────────────────────────────────────────────────────────
-    // C) Practical indexes
-    // ──────────────────────────────────────────────────────────────────
-    await txn.execute("""
+      // ──────────────────────────────────────────────────────────────────
+      // C) Practical indexes
+      // ──────────────────────────────────────────────────────────────────
+      await txn.execute("""
       CREATE INDEX IF NOT EXISTS idx_foods_category_brand_name
       ON foods(category_id, brand_id, name COLLATE NOCASE);
     """);
-    await txn.execute("""
+      await txn.execute("""
       CREATE INDEX IF NOT EXISTS idx_fnv_food_basis
       ON food_nutrient_values(food_id, basis);
     """);
 
-    // ──────────────────────────────────────────────────────────────────
-// D) (Optional) parent_set_id guard (no FK table rebuild needed)
-//    Only create these triggers if the DB actually has a `sets` table.
-// ──────────────────────────────────────────────────────────────────
-final hasSetsTable = (await txn.rawQuery(
-  "SELECT 1 FROM sqlite_master WHERE type='table' AND name='sets' LIMIT 1;"
-)).isNotEmpty;
+      // ──────────────────────────────────────────────────────────────────
+      // D) (Optional) parent_set_id guard (no FK table rebuild needed)
+      //    Only create these triggers if the DB actually has a `sets` table.
+      // ──────────────────────────────────────────────────────────────────
+      final hasSetsTable =
+          (await txn.rawQuery(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='sets' LIMIT 1;",
+          )).isNotEmpty;
 
-if (hasSetsTable) {
-  await dropCreateTrig('trg_sets_parent_exists_bi', """
+      if (hasSetsTable) {
+        await dropCreateTrig('trg_sets_parent_exists_bi', """
     CREATE TRIGGER IF NOT EXISTS trg_sets_parent_exists_bi
     BEFORE INSERT ON sets
     WHEN NEW.parent_set_id IS NOT NULL
@@ -2259,7 +2321,7 @@ if (hasSetsTable) {
     END;
   """);
 
-  await dropCreateTrig('trg_sets_parent_exists_bu', """
+        await dropCreateTrig('trg_sets_parent_exists_bu', """
     CREATE TRIGGER IF NOT EXISTS trg_sets_parent_exists_bu
     BEFORE UPDATE OF parent_set_id ON sets
     WHEN NEW.parent_set_id IS NOT NULL
@@ -2268,25 +2330,24 @@ if (hasSetsTable) {
       SELECT RAISE(ABORT, 'parent_set_id must reference an existing set');
     END;
   """);
-}
+      }
+    });
+  }
 
-  });
-}
+  /// v41 — Final polish:
+  /// - INSERT guards for foods (quality_score, pct fields, density > 0)
+  /// - Diary grams: include grams_override in non-negative checks
+  /// - Index: foods(is_deleted)
+  /// - Optional: ANALYZE after big dedupe runs (safe to call anytime)
+  static Future<void> migrateV41(Database db) async {
+    await db.transaction((txn) async {
+      Future<void> trig(String name, String body) async {
+        await txn.execute('DROP TRIGGER IF EXISTS $name;');
+        await txn.execute(body);
+      }
 
-/// v41 — Final polish:
-/// - INSERT guards for foods (quality_score, pct fields, density > 0)
-/// - Diary grams: include grams_override in non-negative checks
-/// - Index: foods(is_deleted)
-/// - Optional: ANALYZE after big dedupe runs (safe to call anytime)
-static Future<void> migrateV41(Database db) async {
-  await db.transaction((txn) async {
-    Future<void> trig(String name, String body) async {
-      await txn.execute('DROP TRIGGER IF EXISTS $name;');
-      await txn.execute(body);
-    }
-
-    // 1) Foods numeric guards on INSERT (mirror v38 UPDATE guards)
-    await trig('trg_foods_quality_score_guard_bi', """
+      // 1) Foods numeric guards on INSERT (mirror v38 UPDATE guards)
+      await trig('trg_foods_quality_score_guard_bi', """
       CREATE TRIGGER IF NOT EXISTS trg_foods_quality_score_guard_bi
       BEFORE INSERT ON foods
       WHEN NEW.quality_score IS NOT NULL AND (NEW.quality_score < 0 OR NEW.quality_score > 1)
@@ -2294,7 +2355,7 @@ static Future<void> migrateV41(Database db) async {
         SELECT RAISE(ABORT, 'foods.quality_score must be between 0 and 1');
       END;
     """);
-    await trig('trg_foods_pct_guards_bi', """
+      await trig('trg_foods_pct_guards_bi', """
       CREATE TRIGGER IF NOT EXISTS trg_foods_pct_guards_bi
       BEFORE INSERT ON foods
       WHEN (NEW.edible_portion_pct IS NOT NULL AND (NEW.edible_portion_pct < 0 OR NEW.edible_portion_pct > 100))
@@ -2303,7 +2364,7 @@ static Future<void> migrateV41(Database db) async {
         SELECT RAISE(ABORT, 'foods edible_portion_pct/yield_pct must be 0..100');
       END;
     """);
-    await trig('trg_foods_density_guard_bi', """
+      await trig('trg_foods_density_guard_bi', """
       CREATE TRIGGER IF NOT EXISTS trg_foods_density_guard_bi
       BEFORE INSERT ON foods
       WHEN NEW.density_g_per_ml IS NOT NULL AND NEW.density_g_per_ml <= 0
@@ -2312,8 +2373,8 @@ static Future<void> migrateV41(Database db) async {
       END;
     """);
 
-    // 2) Diary grams: include grams_override in non-negative checks
-    await trig('trg_diary_nonneg_grams_bi', """
+      // 2) Diary grams: include grams_override in non-negative checks
+      await trig('trg_diary_nonneg_grams_bi', """
       CREATE TRIGGER IF NOT EXISTS trg_diary_nonneg_grams_bi
       BEFORE INSERT ON diary_entries
       WHEN (NEW.grams IS NOT NULL AND NEW.grams < 0)
@@ -2323,7 +2384,7 @@ static Future<void> migrateV41(Database db) async {
         SELECT RAISE(ABORT, 'DiaryEntry grams must be >= 0');
       END;
     """);
-    await trig('trg_diary_nonneg_grams_bu', """
+      await trig('trg_diary_nonneg_grams_bu', """
       CREATE TRIGGER IF NOT EXISTS trg_diary_nonneg_grams_bu
       BEFORE UPDATE ON diary_entries
       WHEN (NEW.grams IS NOT NULL AND NEW.grams < 0)
@@ -2334,36 +2395,35 @@ static Future<void> migrateV41(Database db) async {
       END;
     """);
 
-    // 3) Helpful index for live food reads (hide deleted)
-    await txn.execute("""
+      // 3) Helpful index for live food reads (hide deleted)
+      await txn.execute("""
       CREATE INDEX IF NOT EXISTS idx_foods_is_deleted
       ON foods(is_deleted);
     """);
 
-    // 4) (Optional) stats update
-    await txn.execute("ANALYZE;");
-  });
-}
+      // 4) (Optional) stats update
+      await txn.execute("ANALYZE;");
+    });
+  }
 
-
-/// v42 — Rebuild `food_barcodes` so `upc` is TEXT (preserve leading zeros),
-///       and recreate length triggers to operate on TEXT explicitly.
-static Future<void> migrateV42(Database db) async {
-  await db.transaction((txn) async {
-    // Detect current column type
-    String? upcType;
-    final info = await txn.rawQuery("PRAGMA table_info('food_barcodes');");
-    for (final r in info) {
-      if ((r['name'] as String?) == 'upc') {
-        upcType = (r['type'] as String?)?.toUpperCase();
-        break;
+  /// v42 — Rebuild `food_barcodes` so `upc` is TEXT (preserve leading zeros),
+  ///       and recreate length triggers to operate on TEXT explicitly.
+  static Future<void> migrateV42(Database db) async {
+    await db.transaction((txn) async {
+      // Detect current column type
+      String? upcType;
+      final info = await txn.rawQuery("PRAGMA table_info('food_barcodes');");
+      for (final r in info) {
+        if ((r['name'] as String?) == 'upc') {
+          upcType = (r['type'] as String?)?.toUpperCase();
+          break;
+        }
       }
-    }
 
-    final needsRebuild = upcType == null || upcType != 'TEXT';
-    if (needsRebuild) {
-      // Build new table with TEXT upc + global uniqueness on upc
-      await txn.execute('''
+      final needsRebuild = upcType == null || upcType != 'TEXT';
+      if (needsRebuild) {
+        // Build new table with TEXT upc + global uniqueness on upc
+        await txn.execute('''
         CREATE TABLE IF NOT EXISTS food_barcodes_new (
           id      INTEGER PRIMARY KEY AUTOINCREMENT,
           food_id INTEGER NOT NULL,
@@ -2373,10 +2433,12 @@ static Future<void> migrateV42(Database db) async {
         );
       ''');
 
-      await txn.execute('CREATE INDEX IF NOT EXISTS idx_food_barcodes_food_new ON food_barcodes_new(food_id);');
+        await txn.execute(
+          'CREATE INDEX IF NOT EXISTS idx_food_barcodes_food_new ON food_barcodes_new(food_id);',
+        );
 
-      // Copy valid rows, forcing TEXT and filtering bad lengths
-      await txn.execute('''
+        // Copy valid rows, forcing TEXT and filtering bad lengths
+        await txn.execute('''
         INSERT OR IGNORE INTO food_barcodes_new (id, food_id, upc)
         SELECT id, food_id, trim(CAST(upc AS TEXT))
         FROM food_barcodes
@@ -2384,17 +2446,21 @@ static Future<void> migrateV42(Database db) async {
           AND length(trim(CAST(upc AS TEXT))) BETWEEN 8 AND 18;
       ''');
 
-      await txn.execute('DROP TABLE IF EXISTS food_barcodes;');
-      await txn.execute('ALTER TABLE food_barcodes_new RENAME TO food_barcodes;');
-      await txn.execute('CREATE INDEX IF NOT EXISTS idx_food_barcodes_food ON food_barcodes(food_id);');
-      // no separate index on upc needed; UNIQUE(upc) creates an implicit index
-    }
+        await txn.execute('DROP TABLE IF EXISTS food_barcodes;');
+        await txn.execute(
+          'ALTER TABLE food_barcodes_new RENAME TO food_barcodes;',
+        );
+        await txn.execute(
+          'CREATE INDEX IF NOT EXISTS idx_food_barcodes_food ON food_barcodes(food_id);',
+        );
+        // no separate index on upc needed; UNIQUE(upc) creates an implicit index
+      }
 
-    // Make the barcode length triggers operate on TEXT explicitly and IGNORE bad rows
-await txn.execute('DROP TRIGGER IF EXISTS trg_barcodes_len_bi;');
-await txn.execute('DROP TRIGGER IF EXISTS trg_barcodes_len_bu;');
+      // Make the barcode length triggers operate on TEXT explicitly and IGNORE bad rows
+      await txn.execute('DROP TRIGGER IF EXISTS trg_barcodes_len_bi;');
+      await txn.execute('DROP TRIGGER IF EXISTS trg_barcodes_len_bu;');
 
-await txn.execute("""
+      await txn.execute("""
   CREATE TRIGGER IF NOT EXISTS trg_barcodes_len_bi
   BEFORE INSERT ON food_barcodes
   WHEN length(trim(CAST(NEW.upc AS TEXT))) < 8 OR length(trim(CAST(NEW.upc AS TEXT))) > 18
@@ -2402,7 +2468,7 @@ await txn.execute("""
     SELECT RAISE(IGNORE);
   END;
 """);
-await txn.execute("""
+      await txn.execute("""
   CREATE TRIGGER IF NOT EXISTS trg_barcodes_len_bu
   BEFORE UPDATE ON food_barcodes
   WHEN length(trim(CAST(NEW.upc AS TEXT))) < 8 OR length(trim(CAST(NEW.upc AS TEXT))) > 18
@@ -2410,24 +2476,23 @@ await txn.execute("""
     SELECT RAISE(IGNORE);
   END;
 """);
+    });
+  }
 
-  });
-}
+  // v43 — Nuke legacy barcode triggers (some old builds ABORTed) and recreate safe ones
+  static Future<void> migrateV43(Database db) async {
+    await db.transaction((txn) async {
+      // Drop every trigger currently attached to food_barcodes
+      final trigs = await txn.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type='trigger' AND tbl_name='food_barcodes';",
+      );
+      for (final t in trigs) {
+        final name = t['name'] as String;
+        await txn.execute("DROP TRIGGER IF EXISTS $name;");
+      }
 
-// v43 — Nuke legacy barcode triggers (some old builds ABORTed) and recreate safe ones
-static Future<void> migrateV43(Database db) async {
-  await db.transaction((txn) async {
-    // Drop every trigger currently attached to food_barcodes
-    final trigs = await txn.rawQuery(
-      "SELECT name FROM sqlite_master WHERE type='trigger' AND tbl_name='food_barcodes';"
-    );
-    for (final t in trigs) {
-      final name = t['name'] as String;
-      await txn.execute("DROP TRIGGER IF EXISTS $name;");
-    }
-
-    // Guard: ignore invalid length (8..18) — never ABORT
-    await txn.execute("""
+      // Guard: ignore invalid length (8..18) — never ABORT
+      await txn.execute("""
       CREATE TRIGGER IF NOT EXISTS trg_barcodes_len_bi
       BEFORE INSERT ON food_barcodes
       WHEN length(trim(CAST(NEW.upc AS TEXT))) < 8 OR length(trim(CAST(NEW.upc AS TEXT))) > 18
@@ -2435,7 +2500,7 @@ static Future<void> migrateV43(Database db) async {
         SELECT RAISE(IGNORE);
       END;
     """);
-    await txn.execute("""
+      await txn.execute("""
       CREATE TRIGGER IF NOT EXISTS trg_barcodes_len_bu
       BEFORE UPDATE ON food_barcodes
       WHEN length(trim(CAST(NEW.upc AS TEXT))) < 8 OR length(trim(CAST(NEW.upc AS TEXT))) > 18
@@ -2444,34 +2509,33 @@ static Future<void> migrateV43(Database db) async {
       END;
     """);
 
-    // Keep foods.updated_at in sync when barcodes change
-    await txn.execute("""
+      // Keep foods.updated_at in sync when barcodes change
+      await txn.execute("""
       CREATE TRIGGER IF NOT EXISTS trg_touch_food_on_barcode_ins
       AFTER INSERT ON food_barcodes
       BEGIN
         UPDATE foods SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = NEW.food_id;
       END;
     """);
-    await txn.execute("""
+      await txn.execute("""
       CREATE TRIGGER IF NOT EXISTS trg_touch_food_on_barcode_del
       AFTER DELETE ON food_barcodes
       BEGIN
         UPDATE foods SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = OLD.food_id;
       END;
     """);
-  });
-}
+    });
+  }
 
+  static Future<void> migrateV44(Database db) async {
+    await db.transaction((txn) async {
+      // 1) Remove redundant unique index (table already has UNIQUE constraint)
+      await txn.execute('DROP INDEX IF EXISTS idx_ex_def_name_equipment;');
 
-static Future<void> migrateV44(Database db) async {
-  await db.transaction((txn) async {
-    // 1) Remove redundant unique index (table already has UNIQUE constraint)
-    await txn.execute('DROP INDEX IF EXISTS idx_ex_def_name_equipment;');
-
-    // 2) Tighten diary tag constraint: 1..40 visible chars
-    await txn.execute('DROP TRIGGER IF EXISTS trg_det_tag_len_bi;');
-    await txn.execute('DROP TRIGGER IF EXISTS trg_det_tag_len_bu;');
-    await txn.execute("""
+      // 2) Tighten diary tag constraint: 1..40 visible chars
+      await txn.execute('DROP TRIGGER IF EXISTS trg_det_tag_len_bi;');
+      await txn.execute('DROP TRIGGER IF EXISTS trg_det_tag_len_bu;');
+      await txn.execute("""
       CREATE TRIGGER IF NOT EXISTS trg_det_tag_len_bi
       BEFORE INSERT ON diary_entry_tags
       WHEN NEW.tag IS NULL OR length(trim(NEW.tag)) = 0 OR length(trim(NEW.tag)) > 40
@@ -2479,7 +2543,7 @@ static Future<void> migrateV44(Database db) async {
         SELECT RAISE(ABORT, 'diary_entry_tags.tag must be 1..40 chars');
       END;
     """);
-    await txn.execute("""
+      await txn.execute("""
       CREATE TRIGGER IF NOT EXISTS trg_det_tag_len_bu
       BEFORE UPDATE ON diary_entry_tags
       WHEN NEW.tag IS NULL OR length(trim(NEW.tag)) = 0 OR length(trim(NEW.tag)) > 40
@@ -2488,46 +2552,53 @@ static Future<void> migrateV44(Database db) async {
       END;
     """);
 
-    // 3) Optional: if you're deprecating foods.barcode, drop its index
-    await txn.execute('DROP INDEX IF EXISTS idx_foods_barcode;');
+      // 3) Optional: if you're deprecating foods.barcode, drop its index
+      await txn.execute('DROP INDEX IF EXISTS idx_foods_barcode;');
 
-    // 4) Optional: helper index for parent_set lookups
-    final hasSets = (await txn.rawQuery(
-  "SELECT 1 FROM sqlite_master WHERE type='table' AND name='sets' LIMIT 1;"
-)).isNotEmpty;
-if (hasSets) {
-  await txn.execute('CREATE INDEX IF NOT EXISTS idx_sets_parent ON sets(parent_set_id);');
-}
-  });
-}
+      // 4) Optional: helper index for parent_set lookups
+      final hasSets =
+          (await txn.rawQuery(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='sets' LIMIT 1;",
+          )).isNotEmpty;
+      if (hasSets) {
+        await txn.execute(
+          'CREATE INDEX IF NOT EXISTS idx_sets_parent ON sets(parent_set_id);',
+        );
+      }
+    });
+  }
 
-
-/// v45 — Purge legacy ABORT triggers on barcodes/portions; ensure only safe triggers exist.
-/// Also add safe single-default triggers for portions (no ABORTs).
-static Future<void> migrateV45(Database db) async {
-  await db.transaction((txn) async {
-    // Drop any triggers on these tables that still call RAISE(ABORT|FAIL|ROLLBACK)
-    Future<void> purgeAborty(String table) async {
-      final rows = await txn.rawQuery("""
+  /// v45 — Purge legacy ABORT triggers on barcodes/portions; ensure only safe triggers exist.
+  /// Also add safe single-default triggers for portions (no ABORTs).
+  static Future<void> migrateV45(Database db) async {
+    await db.transaction((txn) async {
+      // Drop any triggers on these tables that still call RAISE(ABORT|FAIL|ROLLBACK)
+      Future<void> purgeAborty(String table) async {
+        final rows = await txn.rawQuery(
+          """
         SELECT name, sql FROM sqlite_master
         WHERE type='trigger' AND tbl_name=?
-      """, [table]);
-      for (final r in rows) {
-        final name = (r['name'] ?? '') as String;
-        final sql  = ((r['sql'] ?? '') as String).toUpperCase();
-        if (sql.contains('RAISE(ABORT') || sql.contains('RAISE(FAIL') || sql.contains('RAISE(ROLLBACK')) {
-          await txn.execute('DROP TRIGGER IF EXISTS "$name";');
+      """,
+          [table],
+        );
+        for (final r in rows) {
+          final name = (r['name'] ?? '') as String;
+          final sql = ((r['sql'] ?? '') as String).toUpperCase();
+          if (sql.contains('RAISE(ABORT') ||
+              sql.contains('RAISE(FAIL') ||
+              sql.contains('RAISE(ROLLBACK')) {
+            await txn.execute('DROP TRIGGER IF EXISTS "$name";');
+          }
         }
       }
-    }
 
-    await purgeAborty('food_barcodes');
-    await purgeAborty('food_portions');
+      await purgeAborty('food_barcodes');
+      await purgeAborty('food_portions');
 
-    // Recreate ONLY safe barcode length guards (IGNORE bad lengths).
-    await txn.execute('DROP TRIGGER IF EXISTS trg_barcodes_len_bi;');
-    await txn.execute('DROP TRIGGER IF EXISTS trg_barcodes_len_bu;');
-    await txn.execute("""
+      // Recreate ONLY safe barcode length guards (IGNORE bad lengths).
+      await txn.execute('DROP TRIGGER IF EXISTS trg_barcodes_len_bi;');
+      await txn.execute('DROP TRIGGER IF EXISTS trg_barcodes_len_bu;');
+      await txn.execute("""
       CREATE TRIGGER IF NOT EXISTS trg_barcodes_len_bi
       BEFORE INSERT ON food_barcodes
       WHEN length(trim(CAST(NEW.upc AS TEXT))) < 8 OR length(trim(CAST(NEW.upc AS TEXT))) > 18
@@ -2535,7 +2606,7 @@ static Future<void> migrateV45(Database db) async {
         SELECT RAISE(IGNORE);
       END;
     """);
-    await txn.execute("""
+      await txn.execute("""
       CREATE TRIGGER IF NOT EXISTS trg_barcodes_len_bu
       BEFORE UPDATE ON food_barcodes
       WHEN length(trim(CAST(NEW.upc AS TEXT))) < 8 OR length(trim(CAST(NEW.upc AS TEXT))) > 18
@@ -2544,17 +2615,21 @@ static Future<void> migrateV45(Database db) async {
       END;
     """);
 
-    // Keep your "touch foods.updated_at" triggers (recreate to be safe)
-    await txn.execute('DROP TRIGGER IF EXISTS trg_touch_food_on_barcode_ins;');
-    await txn.execute("""
+      // Keep your "touch foods.updated_at" triggers (recreate to be safe)
+      await txn.execute(
+        'DROP TRIGGER IF EXISTS trg_touch_food_on_barcode_ins;',
+      );
+      await txn.execute("""
       CREATE TRIGGER IF NOT EXISTS trg_touch_food_on_barcode_ins
       AFTER INSERT ON food_barcodes
       BEGIN
         UPDATE foods SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = NEW.food_id;
       END;
     """);
-    await txn.execute('DROP TRIGGER IF EXISTS trg_touch_food_on_barcode_del;');
-    await txn.execute("""
+      await txn.execute(
+        'DROP TRIGGER IF EXISTS trg_touch_food_on_barcode_del;',
+      );
+      await txn.execute("""
       CREATE TRIGGER IF NOT EXISTS trg_touch_food_on_barcode_del
       AFTER DELETE ON food_barcodes
       BEGIN
@@ -2562,9 +2637,11 @@ static Future<void> migrateV45(Database db) async {
       END;
     """);
 
-    // SAFE single-default triggers for portions (no ABORT; cooperate with your partial UNIQUE)
-    await txn.execute('DROP TRIGGER IF EXISTS food_portions_single_default_ai;');
-    await txn.execute("""
+      // SAFE single-default triggers for portions (no ABORT; cooperate with your partial UNIQUE)
+      await txn.execute(
+        'DROP TRIGGER IF EXISTS food_portions_single_default_ai;',
+      );
+      await txn.execute("""
       CREATE TRIGGER IF NOT EXISTS food_portions_single_default_ai
       AFTER INSERT ON food_portions
       WHEN NEW.is_default = 1
@@ -2574,8 +2651,10 @@ static Future<void> migrateV45(Database db) async {
         WHERE food_id = NEW.food_id AND id != NEW.id AND is_default = 1;
       END;
     """);
-    await txn.execute('DROP TRIGGER IF EXISTS food_portions_single_default_au;');
-    await txn.execute("""
+      await txn.execute(
+        'DROP TRIGGER IF EXISTS food_portions_single_default_au;',
+      );
+      await txn.execute("""
       CREATE TRIGGER IF NOT EXISTS food_portions_single_default_au
       AFTER UPDATE OF is_default ON food_portions
       WHEN NEW.is_default = 1
@@ -2585,15 +2664,14 @@ static Future<void> migrateV45(Database db) async {
         WHERE food_id = NEW.food_id AND id != NEW.id AND is_default = 1;
       END;
     """);
-  });
-}
+    });
+  }
 
-
-// v46 — Catch-up for devices that missed v6/v7 (presets + gym_profiles)
-static Future<void> migrateV46(Database db) async {
-  await db.transaction((txn) async {
-    // ── Ensure v7: profiles & equipment join ──────────────────────────
-    await txn.execute('''
+  // v46 — Catch-up for devices that missed v6/v7 (presets + gym_profiles)
+  static Future<void> migrateV46(Database db) async {
+    await db.transaction((txn) async {
+      // ── Ensure v7: profiles & equipment join ──────────────────────────
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS gym_profiles (
         id          INTEGER PRIMARY KEY AUTOINCREMENT,
         name        TEXT    NOT NULL,
@@ -2601,7 +2679,7 @@ static Future<void> migrateV46(Database db) async {
       );
     ''');
 
-    await txn.execute('''
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS profile_equipment (
         profile_id    INTEGER NOT NULL,
         equipment_id  INTEGER NOT NULL,
@@ -2611,8 +2689,8 @@ static Future<void> migrateV46(Database db) async {
       );
     ''');
 
-    // ── Ensure v6: all preset tables exist (create with profile_id already present) ──
-    await txn.execute('''
+      // ── Ensure v6: all preset tables exist (create with profile_id already present) ──
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS preset_definitions (
         id          INTEGER PRIMARY KEY AUTOINCREMENT,
         name        TEXT    NOT NULL,
@@ -2621,16 +2699,18 @@ static Future<void> migrateV46(Database db) async {
       );
     ''');
 
-    // If the table existed from old builds without profile_id, add it.
-    final cols = await txn.rawQuery("PRAGMA table_info('preset_definitions');");
-    final hasProfileId = cols.any((c) => c['name'] == 'profile_id');
-    if (!hasProfileId) {
-      await txn.execute(
-        "ALTER TABLE preset_definitions ADD COLUMN profile_id INTEGER REFERENCES gym_profiles(id) ON DELETE SET NULL;"
+      // If the table existed from old builds without profile_id, add it.
+      final cols = await txn.rawQuery(
+        "PRAGMA table_info('preset_definitions');",
       );
-    }
+      final hasProfileId = cols.any((c) => c['name'] == 'profile_id');
+      if (!hasProfileId) {
+        await txn.execute(
+          "ALTER TABLE preset_definitions ADD COLUMN profile_id INTEGER REFERENCES gym_profiles(id) ON DELETE SET NULL;",
+        );
+      }
 
-    await txn.execute('''
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS preset_exercises (
         id                INTEGER PRIMARY KEY AUTOINCREMENT,
         preset_id         INTEGER NOT NULL,
@@ -2642,7 +2722,7 @@ static Future<void> migrateV46(Database db) async {
       );
     ''');
 
-    await txn.execute('''
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS preset_sets (
         id                   INTEGER PRIMARY KEY AUTOINCREMENT,
         preset_exercise_id   INTEGER NOT NULL,
@@ -2654,7 +2734,7 @@ static Future<void> migrateV46(Database db) async {
       );
     ''');
 
-    await txn.execute('''
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS preset_cardio_details (
         id                  INTEGER PRIMARY KEY AUTOINCREMENT,
         preset_exercise_id  INTEGER NOT NULL UNIQUE,
@@ -2666,7 +2746,7 @@ static Future<void> migrateV46(Database db) async {
       );
     ''');
 
-    await txn.execute('''
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS preset_stretch_items (
         id                   INTEGER PRIMARY KEY AUTOINCREMENT,
         preset_exercise_id   INTEGER NOT NULL,
@@ -2680,42 +2760,42 @@ static Future<void> migrateV46(Database db) async {
       );
     ''');
 
-    // Uniqueness per (name, profile_id)
-    await txn.execute('''
+      // Uniqueness per (name, profile_id)
+      await txn.execute('''
       CREATE UNIQUE INDEX IF NOT EXISTS ux_preset_name_profile
       ON preset_definitions(name, profile_id);
     ''');
-  });
-}
+    });
+  }
 
-/// v47 — Repair sweep for out-of-sync DBs
-/// Creates critical tables if they were skipped on some devices:
-/// - Base training tables from v1 (sessions/exercises/sets/...).
-/// - Flow tables from v17 (flow_defaults / flow_default_methods).
-/// - Auto-preset tables from v11 (so createProfile never explodes).
-static Future<void> migrateV47(Database db) async {
-  await db.transaction((txn) async {
-    // ── v1 core (CREATE IF NOT EXISTS; safe on all DBs) ───────────────
-    await txn.execute('''
+  /// v47 — Repair sweep for out-of-sync DBs
+  /// Creates critical tables if they were skipped on some devices:
+  /// - Base training tables from v1 (sessions/exercises/sets/...).
+  /// - Flow tables from v17 (flow_defaults / flow_default_methods).
+  /// - Auto-preset tables from v11 (so createProfile never explodes).
+  static Future<void> migrateV47(Database db) async {
+    await db.transaction((txn) async {
+      // ── v1 core (CREATE IF NOT EXISTS; safe on all DBs) ───────────────
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS sessions (
         id       INTEGER PRIMARY KEY AUTOINCREMENT,
         date     TEXT    NOT NULL,
         duration INTEGER NOT NULL
       );
     ''');
-    await txn.execute('''
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS equipment (
         id   INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT    NOT NULL UNIQUE
       );
     ''');
-    await txn.execute('''
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS bodypart (
         id   INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT    NOT NULL UNIQUE
       );
     ''');
-    await txn.execute('''
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS exercise_definitions (
         id           INTEGER PRIMARY KEY AUTOINCREMENT,
         name         TEXT NOT NULL,
@@ -2725,7 +2805,7 @@ static Future<void> migrateV47(Database db) async {
         UNIQUE(name, equipment_id)
       );
     ''');
-    await txn.execute('''
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS exercise_bodypart (
         exercise_id INTEGER NOT NULL,
         bodypart_id INTEGER NOT NULL,
@@ -2734,7 +2814,7 @@ static Future<void> migrateV47(Database db) async {
         FOREIGN KEY(bodypart_id)  REFERENCES bodypart(id)            ON DELETE CASCADE
       );
     ''');
-    await txn.execute('''
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS exercises (
         id              INTEGER PRIMARY KEY AUTOINCREMENT,
         session_id      INTEGER NOT NULL,
@@ -2745,7 +2825,7 @@ static Future<void> migrateV47(Database db) async {
         FOREIGN KEY(exercise_def_id) REFERENCES exercise_definitions(id)
       );
     ''');
-    await txn.execute('''
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS sets (
         id            INTEGER PRIMARY KEY AUTOINCREMENT,
         exercise_id   INTEGER NOT NULL,
@@ -2756,14 +2836,14 @@ static Future<void> migrateV47(Database db) async {
         FOREIGN KEY(exercise_id) REFERENCES exercises(id) ON DELETE CASCADE
       );
     ''');
-    await txn.execute('''
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS measurement_definitions (
         id   INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT    NOT NULL UNIQUE,
         type TEXT    NOT NULL
       );
     ''');
-    await txn.execute('''
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS measurements (
         id        INTEGER PRIMARY KEY AUTOINCREMENT,
         def_id    INTEGER NOT NULL,
@@ -2775,8 +2855,8 @@ static Future<void> migrateV47(Database db) async {
       );
     ''');
 
-    // ── v11: auto-preset tables (used by createProfile on first run) ──
-    await txn.execute('''
+      // ── v11: auto-preset tables (used by createProfile on first run) ──
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS preset_auto_settings (
         preset_id        INTEGER PRIMARY KEY,
         is_automatic     INTEGER NOT NULL DEFAULT 0,
@@ -2792,7 +2872,7 @@ static Future<void> migrateV47(Database db) async {
         FOREIGN KEY(preset_id) REFERENCES preset_definitions(id) ON DELETE CASCADE
       );
     ''');
-    await txn.execute('''
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS preset_exercise_auto (
         preset_exercise_id INTEGER PRIMARY KEY,
         increment_amount   REAL,
@@ -2801,7 +2881,7 @@ static Future<void> migrateV47(Database db) async {
         FOREIGN KEY(preset_exercise_id) REFERENCES preset_exercises(id) ON DELETE CASCADE
       );
     ''');
-    await txn.execute('''
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS preset_set_auto (
         preset_set_id    INTEGER PRIMARY KEY,
         increment_amount REAL,
@@ -2809,8 +2889,8 @@ static Future<void> migrateV47(Database db) async {
       );
     ''');
 
-    // ── v17: flow tables (the ones your crash complained about) ───────
-    await txn.execute('''
+      // ── v17: flow tables (the ones your crash complained about) ───────
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS flow_defaults (
         scope       TEXT    NOT NULL,
         profile_id  INTEGER REFERENCES gym_profiles(id) ON DELETE CASCADE,
@@ -2818,7 +2898,7 @@ static Future<void> migrateV47(Database db) async {
         PRIMARY KEY(scope, profile_id)
       );
     ''');
-    await txn.execute('''
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS flow_default_methods (
         scope       TEXT    NOT NULL,
         profile_id  INTEGER REFERENCES gym_profiles(id) ON DELETE CASCADE,
@@ -2830,21 +2910,21 @@ static Future<void> migrateV47(Database db) async {
           REFERENCES flow_defaults(scope, profile_id) ON DELETE CASCADE
       );
     ''');
-  });
-}
+    });
+  }
 
-/// v48 — Repair: ensure muscle + analytics lookups exist on out-of-sync DBs
-static Future<void> migrateV48(Database db) async {
-  await db.transaction((txn) async {
-    // -- Core muscle lookups (from v3 & v9 family) --------------------
-    await txn.execute('''
+  /// v48 — Repair: ensure muscle + analytics lookups exist on out-of-sync DBs
+  static Future<void> migrateV48(Database db) async {
+    await db.transaction((txn) async {
+      // -- Core muscle lookups (from v3 & v9 family) --------------------
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS muscles (
         id   INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL UNIQUE
       );
     ''');
 
-    await txn.execute('''
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS exercise_muscle (
         exercise_id INTEGER NOT NULL,
         muscle_id   INTEGER NOT NULL,
@@ -2856,7 +2936,7 @@ static Future<void> migrateV48(Database db) async {
       );
     ''');
 
-    await txn.execute('''
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS muscle_bodypart (
         muscle_id    INTEGER NOT NULL,
         bodypart_id  INTEGER NOT NULL,
@@ -2866,7 +2946,7 @@ static Future<void> migrateV48(Database db) async {
       );
     ''');
 
-    await txn.execute('''
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS bodypart_ranking (
         bodypart_id INTEGER PRIMARY KEY,
         rank        INTEGER NOT NULL,
@@ -2874,7 +2954,7 @@ static Future<void> migrateV48(Database db) async {
       );
     ''');
 
-    await txn.execute('''
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS muscle_ranking (
         muscle_id INTEGER PRIMARY KEY,
         rank      INTEGER NOT NULL,
@@ -2882,7 +2962,7 @@ static Future<void> migrateV48(Database db) async {
       );
     ''');
 
-    await txn.execute('''
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS exercise_muscle_percent (
         exercise_def_id INTEGER NOT NULL,
         muscle_id       INTEGER NOT NULL,
@@ -2893,7 +2973,7 @@ static Future<void> migrateV48(Database db) async {
       );
     ''');
 
-    await txn.execute('''
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS muscle_volume_boundaries (
         muscle_id              INTEGER PRIMARY KEY,
         maintenance_volume     REAL NOT NULL,
@@ -2904,7 +2984,7 @@ static Future<void> migrateV48(Database db) async {
       );
     ''');
 
-    await txn.execute('''
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS bodypart_volume_boundaries (
         bodypart_id            INTEGER PRIMARY KEY,
         maintenance_volume     REAL NOT NULL,
@@ -2915,7 +2995,7 @@ static Future<void> migrateV48(Database db) async {
       );
     ''');
 
-    await txn.execute('''
+      await txn.execute('''
       CREATE TABLE IF NOT EXISTS bodypart_muscle_rankings (
         bodypart_id INTEGER NOT NULL,
         muscle_id   INTEGER NOT NULL,
@@ -2926,29 +3006,37 @@ static Future<void> migrateV48(Database db) async {
       );
     ''');
 
-    // Helpful indexes for common reads (idempotent)
-    await txn.execute('CREATE INDEX IF NOT EXISTS idx_exmuscle_ex ON exercise_muscle(exercise_id);');
-    await txn.execute('CREATE INDEX IF NOT EXISTS idx_exmuscle_muscle ON exercise_muscle(muscle_id);');
-    await txn.execute('CREATE INDEX IF NOT EXISTS idx_exmusclepct_ex ON exercise_muscle_percent(exercise_def_id);');
-    await txn.execute('CREATE INDEX IF NOT EXISTS idx_muscle_bodypart_m ON muscle_bodypart(muscle_id);');
-    await txn.execute('CREATE INDEX IF NOT EXISTS idx_muscle_bodypart_b ON muscle_bodypart(bodypart_id);');
-  });
-}
-
-/// v49 - Adds bodyweight training equipment used by onboarding gym profiles.
-static Future<void> migrateV49(Database db) async {
-  await db.transaction((txn) async {
-    final batch = txn.batch();
-    for (final name in const ['Pull-Up Bar', 'Gymnastics Rings']) {
-      batch.insert(
-        'equipment',
-        {'name': name},
-        conflictAlgorithm: ConflictAlgorithm.ignore,
+      // Helpful indexes for common reads (idempotent)
+      await txn.execute(
+        'CREATE INDEX IF NOT EXISTS idx_exmuscle_ex ON exercise_muscle(exercise_id);',
       );
-    }
-    await batch.commit(noResult: true);
+      await txn.execute(
+        'CREATE INDEX IF NOT EXISTS idx_exmuscle_muscle ON exercise_muscle(muscle_id);',
+      );
+      await txn.execute(
+        'CREATE INDEX IF NOT EXISTS idx_exmusclepct_ex ON exercise_muscle_percent(exercise_def_id);',
+      );
+      await txn.execute(
+        'CREATE INDEX IF NOT EXISTS idx_muscle_bodypart_m ON muscle_bodypart(muscle_id);',
+      );
+      await txn.execute(
+        'CREATE INDEX IF NOT EXISTS idx_muscle_bodypart_b ON muscle_bodypart(bodypart_id);',
+      );
+    });
+  }
 
-    await txn.rawInsert('''
+  /// v49 - Adds bodyweight training equipment used by onboarding gym profiles.
+  static Future<void> migrateV49(Database db) async {
+    await db.transaction((txn) async {
+      final batch = txn.batch();
+      for (final name in const ['Pull-Up Bar', 'Gymnastics Rings']) {
+        batch.insert('equipment', {
+          'name': name,
+        }, conflictAlgorithm: ConflictAlgorithm.ignore);
+      }
+      await batch.commit(noResult: true);
+
+      await txn.rawInsert('''
       INSERT OR IGNORE INTO profile_equipment(profile_id, equipment_id)
       SELECT gp.id, e.id
       FROM gym_profiles gp
@@ -2956,31 +3044,77 @@ static Future<void> migrateV49(Database db) async {
       WHERE LOWER(gp.name) = 'general'
         AND e.name IN ('Pull-Up Bar', 'Gymnastics Rings')
     ''');
-  });
-}
-
-
-
-static Future<bool> _fts4Available(DatabaseExecutor db) async {
-  // 1) Prefer compile_options (avoids "no such module" log spam)
-  try {
-    final opts = await db.rawQuery('PRAGMA compile_options;');
-    if (opts.isNotEmpty) {
-      final up = opts.map((r) => r.values.first.toString().toUpperCase()).join('|');
-      if (up.contains('ENABLE_FTS4') || up.contains('ENABLE_FTS3')) return true;
-    }
-  } catch (_) { /* ignore and probe directly */ }
-
-  // 2) Definitive probe
-  try {
-    await db.execute("CREATE VIRTUAL TABLE temp.__fts4_probe__ USING fts4(x)");
-    await db.execute("DROP TABLE IF EXISTS temp.__fts4_probe__");
-    return true;
-  } catch (_) {
-    return false;
+    });
   }
-}
 
+  /// v50 - Optional starter-weight metadata for no-history generated exercises.
+  static Future<void> migrateV50(Database db) async {
+    Future<void> addExerciseDefinitionColumn(
+      String columnName,
+      String definition,
+    ) async {
+      final columns = await db.rawQuery(
+        'PRAGMA table_info(exercise_definitions);',
+      );
+      final exists = columns.any((row) => row['name'] == columnName);
+      if (exists) return;
+      await db.execute(
+        'ALTER TABLE exercise_definitions ADD COLUMN $columnName $definition',
+      );
+    }
 
+    await addExerciseDefinitionColumn('starter_load_type', 'TEXT');
+    await addExerciseDefinitionColumn('starter_easy_value', 'REAL');
+    await addExerciseDefinitionColumn('starter_medium_value', 'REAL');
+    await addExerciseDefinitionColumn('starter_hard_value', 'REAL');
+    await addExerciseDefinitionColumn(
+      'starter_minimum_weight',
+      'REAL NOT NULL DEFAULT 0',
+    );
+    await addExerciseDefinitionColumn('starter_maximum_weight', 'REAL');
+    await addExerciseDefinitionColumn(
+      'starter_rounding_increment',
+      'REAL NOT NULL DEFAULT 5',
+    );
+    await addExerciseDefinitionColumn(
+      'starter_unit_mode',
+      "TEXT NOT NULL DEFAULT 'total'",
+    );
+    await addExerciseDefinitionColumn(
+      'starter_confidence',
+      "TEXT NOT NULL DEFAULT 'medium'",
+    );
+    await addExerciseDefinitionColumn(
+      'starter_note',
+      "TEXT NOT NULL DEFAULT ''",
+    );
+  }
 
+  static Future<bool> _fts4Available(DatabaseExecutor db) async {
+    // 1) Prefer compile_options (avoids "no such module" log spam)
+    try {
+      final opts = await db.rawQuery('PRAGMA compile_options;');
+      if (opts.isNotEmpty) {
+        final up = opts
+            .map((r) => r.values.first.toString().toUpperCase())
+            .join('|');
+        if (up.contains('ENABLE_FTS4') || up.contains('ENABLE_FTS3')) {
+          return true;
+        }
+      }
+    } catch (_) {
+      /* ignore and probe directly */
+    }
+
+    // 2) Definitive probe
+    try {
+      await db.execute(
+        "CREATE VIRTUAL TABLE temp.__fts4_probe__ USING fts4(x)",
+      );
+      await db.execute("DROP TABLE IF EXISTS temp.__fts4_probe__");
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
 }

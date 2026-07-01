@@ -34,7 +34,7 @@ import 'package:flutter/foundation.dart' show debugPrint;
 
 /// Singleton helper for managing the SQLite database.
 class DatabaseHelper {
-  static const int _kDbVersion = 49;
+  static const int _kDbVersion = 50;
   static int get currentSchemaVersion => _kDbVersion;
   static const String _kOpenTriggerResetKey = 'open_trigger_reset_v1';
   static const String _kOpenIndexEnsureKey = 'open_index_ensure_v3';
@@ -141,6 +141,7 @@ class DatabaseHelper {
         await _ensureAppMetaTable(db);
         await _ensureExerciseMediaTable(db);
         await Schema.migrateV49(db);
+        await Schema.migrateV50(db);
         await _resetDbTriggers(db); // <—
         await _maybeCompactLegacyFoodCatalog(db);
         await _removeEmptyStarterPlans(db);
@@ -714,6 +715,36 @@ class DatabaseHelper {
       'exercise_definitions',
       'multiply_by_rating',
       'INTEGER NOT NULL DEFAULT 0',
+    );
+    await addCol('exercise_definitions', 'starter_load_type', 'TEXT');
+    await addCol('exercise_definitions', 'starter_easy_value', 'REAL');
+    await addCol('exercise_definitions', 'starter_medium_value', 'REAL');
+    await addCol('exercise_definitions', 'starter_hard_value', 'REAL');
+    await addCol(
+      'exercise_definitions',
+      'starter_minimum_weight',
+      'REAL NOT NULL DEFAULT 0',
+    );
+    await addCol('exercise_definitions', 'starter_maximum_weight', 'REAL');
+    await addCol(
+      'exercise_definitions',
+      'starter_rounding_increment',
+      'REAL NOT NULL DEFAULT 5',
+    );
+    await addCol(
+      'exercise_definitions',
+      'starter_unit_mode',
+      "TEXT NOT NULL DEFAULT 'total'",
+    );
+    await addCol(
+      'exercise_definitions',
+      'starter_confidence',
+      "TEXT NOT NULL DEFAULT 'medium'",
+    );
+    await addCol(
+      'exercise_definitions',
+      'starter_note',
+      "TEXT NOT NULL DEFAULT ''",
     );
 
     await addCol(
@@ -2575,6 +2606,34 @@ class DatabaseHelper {
           ),
         )
         .toList();
+  }
+
+  Future<double?> fetchLatestBodyWeightLbs() async {
+    final db = await database;
+    final rows = await db.rawQuery(
+      '''
+      SELECT m.value, m.unit
+        FROM measurements m
+        JOIN measurement_definitions md ON md.id = m.def_id
+       WHERE md.type = ?
+       ORDER BY m.timestamp DESC
+       LIMIT 1
+    ''',
+      [MeasurementType.BodyWeight.name],
+    );
+
+    if (rows.isEmpty) return null;
+    final value = (rows.first['value'] as num?)?.toDouble();
+    if (value == null || value <= 0) return null;
+
+    final unit = ((rows.first['unit'] as String?) ?? 'lbs').toLowerCase();
+    if (unit == 'kg' || unit == 'kgs' || unit == 'kilogram') {
+      return value * 2.2046226218;
+    }
+    if (unit == 'lb' || unit == 'lbs' || unit == 'pound') {
+      return value;
+    }
+    return null;
   }
 
   /// Returns only the definitions that have at least one measurement recorded.

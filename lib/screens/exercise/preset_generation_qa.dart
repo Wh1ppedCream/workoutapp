@@ -50,6 +50,8 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
 
   RequirementOption? _requirementOption;
   RepWeightGenerationMode _repWeightMode = RepWeightGenerationMode.mixed;
+  StarterWeightIntensity _starterWeightIntensity =
+      StarterWeightIntensity.medium;
   List<BodyPart> _bodyParts = const <BodyPart>[];
   Set<int> _preferredBodypartIds = <int>{};
   Set<int> _blacklistedBodypartIds = <int>{};
@@ -159,6 +161,7 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
         useGeneratedRepWeights: true,
         repWeightMode: _repWeightMode,
         targetRepCount: targetRepCount,
+        starterWeightIntensity: _starterWeightIntensity,
         maxExercises: maxExercises,
         minSetsPerExercise: minSets,
         maxSetsPerExercise: maxSets,
@@ -187,14 +190,22 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
         return;
       }
 
-      final missingWeightHistorySet = <String>{};
+      final starterEstimateSet = <String>{};
+      final unavailableStarterSet = <String>{};
       for (final result in bundleResult.plans) {
-        missingWeightHistorySet.addAll(result.exercisesMissingWeightHistory);
+        starterEstimateSet.addAll(result.exercisesWithStarterWeightEstimates);
+        unavailableStarterSet.addAll(
+          result.exercisesWithUnavailableStarterWeights,
+        );
       }
-      final missingWeightHistoryNames = missingWeightHistorySet.toList()
-        ..sort();
-      if (missingWeightHistoryNames.isNotEmpty) {
-        await _showMissingWeightHistoryDialog(missingWeightHistoryNames);
+      final starterEstimateNames = starterEstimateSet.toList()..sort();
+      final unavailableStarterNames = unavailableStarterSet.toList()..sort();
+      if (starterEstimateNames.isNotEmpty ||
+          unavailableStarterNames.isNotEmpty) {
+        await _showStarterWeightDialog(
+          starterEstimateNames: starterEstimateNames,
+          unavailableStarterNames: unavailableStarterNames,
+        );
       }
       if (!mounted) return;
       if (widget.onboardingMode) {
@@ -262,9 +273,9 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
 
   void _finishOnboardingPlanGeneration() {
     if (_onboardingGeneratedPlanIds.isEmpty) return;
-    Navigator.of(context).pop<List<int>>(
-      List<int>.unmodifiable(_onboardingGeneratedPlanIds),
-    );
+    Navigator.of(
+      context,
+    ).pop<List<int>>(List<int>.unmodifiable(_onboardingGeneratedPlanIds));
   }
 
   String _fieldValue(TextEditingController controller, String fallback) {
@@ -354,10 +365,7 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
     );
   }
 
-  Widget _buildSummaryPill({
-    required IconData icon,
-    required String text,
-  }) {
+  Widget _buildSummaryPill({required IconData icon, required String text}) {
     final scheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
@@ -394,7 +402,9 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest.withValues(alpha: 0.36),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.45)),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.45),
+        ),
       ),
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
@@ -496,17 +506,19 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
     final shape = RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(18),
       side: BorderSide(
-        color: selected
-            ? scheme.primary.withValues(alpha: 0.72)
-            : scheme.outlineVariant.withValues(alpha: 0.58),
+        color:
+            selected
+                ? scheme.primary.withValues(alpha: 0.72)
+                : scheme.outlineVariant.withValues(alpha: 0.58),
       ),
     );
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Material(
-        color: selected
-            ? scheme.primaryContainer.withValues(alpha: 0.24)
-            : scheme.surface.withValues(alpha: 0.38),
+        color:
+            selected
+                ? scheme.primaryContainer.withValues(alpha: 0.24)
+                : scheme.surface.withValues(alpha: 0.38),
         shape: shape,
         clipBehavior: Clip.antiAlias,
         child: RadioListTile<T>(
@@ -515,8 +527,10 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
           selected: selected,
           onChanged: onChanged,
           dense: true,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 4,
+          ),
           shape: shape,
           tileColor: Colors.transparent,
           selectedTileColor: Colors.transparent,
@@ -558,6 +572,17 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
     }
   }
 
+  String _starterWeightIntensityLabel(StarterWeightIntensity intensity) {
+    switch (intensity) {
+      case StarterWeightIntensity.easy:
+        return 'Easy';
+      case StarterWeightIntensity.medium:
+        return 'Medium';
+      case StarterWeightIntensity.hard:
+        return 'Hard';
+    }
+  }
+
   String _generateButtonLabel() {
     if (_isGenerating) return 'Generating...';
     final count = int.tryParse(_weeklyFrequencyController.text.trim()) ?? 1;
@@ -577,22 +602,39 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
         : 'Generated $generated plans. Review them when ready.';
   }
 
-  Future<void> _showMissingWeightHistoryDialog(List<String> exerciseNames) {
-    final visibleNames = exerciseNames.take(6).toList();
-    final extraCount = exerciseNames.length - visibleNames.length;
-    final namesText = [
-      ...visibleNames.map((name) => '- $name'),
-      if (extraCount > 0) '- $extraCount more',
+  Future<void> _showStarterWeightDialog({
+    required List<String> starterEstimateNames,
+    required List<String> unavailableStarterNames,
+  }) {
+    String namesText(List<String> names) {
+      final visibleNames = names.take(6).toList();
+      final extraCount = names.length - visibleNames.length;
+      return [
+        ...visibleNames.map((name) => '- $name'),
+        if (extraCount > 0) '- $extraCount more',
+      ].join('\n');
+    }
+
+    final body = [
+      if (starterEstimateNames.isNotEmpty) ...[
+        'Starter weights were estimated for new exercises. Adjust as needed after your first set.',
+        '',
+        namesText(starterEstimateNames),
+      ],
+      if (unavailableStarterNames.isNotEmpty) ...[
+        if (starterEstimateNames.isNotEmpty) '',
+        'Some exercises still need manual weights because no safe starter estimate is available yet.',
+        '',
+        namesText(unavailableStarterNames),
+      ],
     ].join('\n');
 
     return showDialog<void>(
       context: context,
       builder:
           (context) => AlertDialog(
-            title: const Text('Some weights were left at 0 lbs'),
-            content: Text(
-              'You have not logged these exercises before, so we could not generate correct weights for them yet.\n\n$namesText',
-            ),
+            title: const Text('Starter weights added'),
+            content: Text(body),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
@@ -622,16 +664,18 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
                 : const Icon(Icons.auto_awesome),
         label: Text(_generateButtonLabel()),
       ),
-      bottomNavigationBar: widget.onboardingMode
-          ? _OnboardingPlanActionBar(
-              addedCount: _onboardingGeneratedPlanIds.length,
-              isBusy: _isDiscardingOnboardingPlans,
-              onCancel: _discardOnboardingPlans,
-              onSave: _onboardingGeneratedPlanIds.isEmpty
-                  ? null
-                  : _finishOnboardingPlanGeneration,
-            )
-          : null,
+      bottomNavigationBar:
+          widget.onboardingMode
+              ? _OnboardingPlanActionBar(
+                addedCount: _onboardingGeneratedPlanIds.length,
+                isBusy: _isDiscardingOnboardingPlans,
+                onCancel: _discardOnboardingPlans,
+                onSave:
+                    _onboardingGeneratedPlanIds.isEmpty
+                        ? null
+                        : _finishOnboardingPlanGeneration,
+              )
+              : null,
       body: SingleChildScrollView(
         padding: EdgeInsets.fromLTRB(
           16,
@@ -729,7 +773,8 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
               title: 'Reps & weights',
               subtitle:
                   '${_repWeightModeLabel(_repWeightMode)}, '
-                  '${_fieldValue(_targetRepCountController, SessionSpec.defaultTargetRepCount.toString())} target reps',
+                  '${_fieldValue(_targetRepCountController, SessionSpec.defaultTargetRepCount.toString())} reps, '
+                  '${_starterWeightIntensityLabel(_starterWeightIntensity)} intensity',
               children: [
                 _buildChoiceTile<RepWeightGenerationMode>(
                   title: 'Mixed',
@@ -745,7 +790,7 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
                 ),
                 _buildChoiceTile<RepWeightGenerationMode>(
                   title: 'Pyramid',
-                  subtitle: 'Peak set uses PR/Epley; nearby sets get lighter.',
+                  subtitle: 'Peak set uses the generated working weight.',
                   value: RepWeightGenerationMode.pyramid,
                   groupValue: _repWeightMode,
                   onChanged:
@@ -774,6 +819,50 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
                   hintText: SessionSpec.defaultTargetRepCount.toString(),
                   helperText: 'Peak reps for pyramid; steady reps otherwise.',
                   suffixText: 'reps',
+                ),
+                const SizedBox(height: 14),
+                const Text(
+                  'Weight intensity',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 6),
+                _buildChoiceTile<StarterWeightIntensity>(
+                  title: 'Easy',
+                  subtitle:
+                      'Most conservative history or starter recommendation.',
+                  value: StarterWeightIntensity.easy,
+                  groupValue: _starterWeightIntensity,
+                  onChanged:
+                      (value) => setState(
+                        () =>
+                            _starterWeightIntensity =
+                                value ?? StarterWeightIntensity.easy,
+                      ),
+                ),
+                _buildChoiceTile<StarterWeightIntensity>(
+                  title: 'Medium',
+                  subtitle: 'Balanced working-weight recommendation.',
+                  value: StarterWeightIntensity.medium,
+                  groupValue: _starterWeightIntensity,
+                  onChanged:
+                      (value) => setState(
+                        () =>
+                            _starterWeightIntensity =
+                                value ?? StarterWeightIntensity.medium,
+                      ),
+                ),
+                _buildChoiceTile<StarterWeightIntensity>(
+                  title: 'Hard',
+                  subtitle:
+                      'Heaviest recommendation, still rounded and effort-aware.',
+                  value: StarterWeightIntensity.hard,
+                  groupValue: _starterWeightIntensity,
+                  onChanged:
+                      (value) => setState(
+                        () =>
+                            _starterWeightIntensity =
+                                value ?? StarterWeightIntensity.hard,
+                      ),
                 ),
               ],
             ),
@@ -868,7 +957,9 @@ class _OnboardingPlanActionBar extends StatelessWidget {
         decoration: BoxDecoration(
           color: scheme.surface.withValues(alpha: 0.96),
           border: Border(
-            top: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.6)),
+            top: BorderSide(
+              color: scheme.outlineVariant.withValues(alpha: 0.6),
+            ),
           ),
         ),
         child: Row(

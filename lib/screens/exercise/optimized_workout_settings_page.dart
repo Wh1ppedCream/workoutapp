@@ -10,6 +10,9 @@ class OptimizedWorkoutSettingsResult {
   final int minutes;
   final int minSets;
   final int maxSets;
+  final RepWeightGenerationMode repWeightMode;
+  final int targetRepCount;
+  final StarterWeightIntensity starterWeightIntensity;
   final Set<int> preferredBodypartIds;
   final Set<int> blacklistedBodypartIds;
 
@@ -18,6 +21,9 @@ class OptimizedWorkoutSettingsResult {
     required this.minutes,
     required this.minSets,
     required this.maxSets,
+    required this.repWeightMode,
+    required this.targetRepCount,
+    required this.starterWeightIntensity,
     required this.preferredBodypartIds,
     required this.blacklistedBodypartIds,
   });
@@ -27,6 +33,9 @@ class OptimizedWorkoutSettingsPage extends StatefulWidget {
   final int initialMinutes;
   final int initialMinSets;
   final int initialMaxSets;
+  final RepWeightGenerationMode initialRepWeightMode;
+  final int initialTargetRepCount;
+  final StarterWeightIntensity initialStarterWeightIntensity;
   final Set<int> initialPreferredBodypartIds;
   final Set<int> initialBlacklistedBodypartIds;
   final List<BodyPart> bodyParts;
@@ -36,6 +45,9 @@ class OptimizedWorkoutSettingsPage extends StatefulWidget {
     required this.initialMinutes,
     required this.initialMinSets,
     required this.initialMaxSets,
+    required this.initialRepWeightMode,
+    required this.initialTargetRepCount,
+    required this.initialStarterWeightIntensity,
     required this.initialPreferredBodypartIds,
     required this.initialBlacklistedBodypartIds,
     required this.bodyParts,
@@ -51,6 +63,9 @@ class _OptimizedWorkoutSettingsPageState
   late final TextEditingController _minutesController;
   late final TextEditingController _minSetsController;
   late final TextEditingController _maxSetsController;
+  late final TextEditingController _targetRepsController;
+  late RepWeightGenerationMode _repWeightMode;
+  late StarterWeightIntensity _starterWeightIntensity;
   late Set<int> _preferredBodypartIds;
   late Set<int> _blacklistedBodypartIds;
 
@@ -66,6 +81,11 @@ class _OptimizedWorkoutSettingsPageState
     _maxSetsController = TextEditingController(
       text: widget.initialMaxSets.toString(),
     );
+    _targetRepsController = TextEditingController(
+      text: widget.initialTargetRepCount.toString(),
+    );
+    _repWeightMode = widget.initialRepWeightMode;
+    _starterWeightIntensity = widget.initialStarterWeightIntensity;
     _preferredBodypartIds = {...widget.initialPreferredBodypartIds};
     _blacklistedBodypartIds = {...widget.initialBlacklistedBodypartIds};
   }
@@ -75,6 +95,7 @@ class _OptimizedWorkoutSettingsPageState
     _minutesController.dispose();
     _minSetsController.dispose();
     _maxSetsController.dispose();
+    _targetRepsController.dispose();
     super.dispose();
   }
 
@@ -84,7 +105,11 @@ class _OptimizedWorkoutSettingsPageState
           SessionSpec.defaultSessionDurationMinutes.toString();
       _minSetsController.text =
           SessionSpec.preferredMinSetsPerExercise.toString();
-      _maxSetsController.text = SessionSpec.defaultMaxSetsPerExercise.toString();
+      _maxSetsController.text =
+          SessionSpec.defaultMaxSetsPerExercise.toString();
+      _targetRepsController.text = SessionSpec.defaultTargetRepCount.toString();
+      _repWeightMode = RepWeightGenerationMode.mixed;
+      _starterWeightIntensity = StarterWeightIntensity.medium;
       _preferredBodypartIds = <int>{};
       _blacklistedBodypartIds = <int>{};
     });
@@ -94,6 +119,7 @@ class _OptimizedWorkoutSettingsPageState
     final minutes = int.tryParse(_minutesController.text.trim());
     final minSets = int.tryParse(_minSetsController.text.trim());
     final maxSets = int.tryParse(_maxSetsController.text.trim());
+    final targetReps = int.tryParse(_targetRepsController.text.trim());
     if (minutes == null ||
         minutes <= 0 ||
         minSets == null ||
@@ -102,11 +128,13 @@ class _OptimizedWorkoutSettingsPageState
         maxSets == null ||
         maxSets < SessionSpec.defaultMinSetsPerExercise ||
         maxSets > SessionSpec.maxAllowedSetsPerExercise ||
-        minSets > maxSets) {
+        minSets > maxSets ||
+        targetReps == null ||
+        targetReps <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Enter a valid duration and set range between 1-${SessionSpec.maxAllowedSetsPerExercise}.',
+            'Enter a valid duration, rep target, and set range between 1-${SessionSpec.maxAllowedSetsPerExercise}.',
           ),
         ),
       );
@@ -119,6 +147,9 @@ class _OptimizedWorkoutSettingsPageState
         minutes: minutes,
         minSets: minSets,
         maxSets: maxSets,
+        repWeightMode: _repWeightMode,
+        targetRepCount: targetReps,
+        starterWeightIntensity: _starterWeightIntensity,
         preferredBodypartIds: {..._preferredBodypartIds},
         blacklistedBodypartIds: {..._blacklistedBodypartIds},
       ),
@@ -186,6 +217,85 @@ class _OptimizedWorkoutSettingsPageState
                             suffixText: 'sets',
                             border: OutlineInputBorder(),
                           ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Reps & weights',
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Uses history-based strength estimates when available, with Easy and Medium backing off more than Hard. New exercises use conservative starter estimates.',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        _SettingsChoice<RepWeightGenerationMode>(
+                          title: 'Rep pattern',
+                          value: _repWeightMode,
+                          options: const [
+                            _SettingsChoiceOption(
+                              value: RepWeightGenerationMode.mixed,
+                              label: 'Mixed',
+                            ),
+                            _SettingsChoiceOption(
+                              value: RepWeightGenerationMode.pyramid,
+                              label: 'Pyramid',
+                            ),
+                            _SettingsChoiceOption(
+                              value: RepWeightGenerationMode.consistent,
+                              label: 'Consistent',
+                            ),
+                          ],
+                          onChanged:
+                              (value) => setState(() => _repWeightMode = value),
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: _targetRepsController,
+                          keyboardType: TextInputType.number,
+                          textInputAction: TextInputAction.next,
+                          decoration: const InputDecoration(
+                            labelText: 'Target reps',
+                            suffixText: 'reps',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        _SettingsChoice<StarterWeightIntensity>(
+                          title: 'Weight intensity',
+                          value: _starterWeightIntensity,
+                          options: const [
+                            _SettingsChoiceOption(
+                              value: StarterWeightIntensity.easy,
+                              label: 'Easy',
+                            ),
+                            _SettingsChoiceOption(
+                              value: StarterWeightIntensity.medium,
+                              label: 'Medium',
+                            ),
+                            _SettingsChoiceOption(
+                              value: StarterWeightIntensity.hard,
+                              label: 'Hard',
+                            ),
+                          ],
+                          onChanged:
+                              (value) => setState(
+                                () => _starterWeightIntensity = value,
+                              ),
                         ),
                       ],
                     ),
@@ -277,6 +387,57 @@ class _OptimizedWorkoutSettingsPageState
           ],
         ),
       ),
+    );
+  }
+}
+
+class _SettingsChoiceOption<T> {
+  final T value;
+  final String label;
+
+  const _SettingsChoiceOption({required this.value, required this.label});
+}
+
+class _SettingsChoice<T> extends StatelessWidget {
+  final String title;
+  final T value;
+  final List<_SettingsChoiceOption<T>> options;
+  final ValueChanged<T> onChanged;
+
+  const _SettingsChoice({
+    required this.title,
+    required this.value,
+    required this.options,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: theme.textTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children:
+              options.map((option) {
+                final selected = option.value == value;
+                return ChoiceChip(
+                  label: Text(option.label),
+                  selected: selected,
+                  onSelected: (_) => onChanged(option.value),
+                );
+              }).toList(),
+        ),
+      ],
     );
   }
 }
