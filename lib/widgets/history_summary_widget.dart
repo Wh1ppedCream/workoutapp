@@ -1,10 +1,13 @@
 // File: lib/widgets/history_summary_widget.dart
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../models/models.dart';
+import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
 import '../theme/theme_extensions.dart';
+import '../utils/weight_unit_formatter.dart';
 import 'body_heatmap.dart';
 
 class InfoCard extends StatelessWidget {
@@ -177,6 +180,7 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
     super.build(context);
     final theme = Theme.of(context);
     final colors = context.colors;
+    final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     return FutureBuilder<void>(
       future: _loadFuture,
       builder: (ctx, snap) {
@@ -256,7 +260,7 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
                             .toDouble();
                     return SizedBox(
                       height: summaryHeight,
-                      child: _buildLoadedTab(_selectedIndex),
+                      child: _buildLoadedTab(_selectedIndex, weightUnit),
                     );
                   },
                 ),
@@ -268,7 +272,7 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
     );
   }
 
-  Widget _buildLoadedTab(int index) {
+  Widget _buildLoadedTab(int index, WeightUnit weightUnit) {
     final colors = context.colors;
     final data = _tabData[index];
     if (data == null) {
@@ -318,8 +322,10 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
                       label: 'Total Time',
                     ),
                     InfoCard(
-                      value:
-                          '${(data.totalVolume / 1000).toStringAsFixed(1)}k lbs',
+                      value: WeightUnitFormatter.formatVolume(
+                        data.totalVolume,
+                        weightUnit,
+                      ),
                       label: 'Total Volume',
                     ),
                   ],

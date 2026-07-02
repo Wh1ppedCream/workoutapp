@@ -4,13 +4,16 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/models.dart';
+import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
 import '../screens/exercise/exercise_catalog_page.dart';
 import '../screens/exercise/session_detail_screen.dart';
 import '../theme/theme_extensions.dart';
+import '../utils/weight_unit_formatter.dart';
 
 const _exerciseProgressTileIdsKey = 'exercise_progress_tile_ids_v1';
 const _exerciseProgressHiddenAutoIdsKey =
@@ -92,7 +95,8 @@ class _ExerciseProgressSectionState extends State<ExerciseProgressSection>
             ? null
             : (mostUsedRows.first['definition_id'] as num?)?.toInt();
     if (mostUsedId != null &&
-        (!hiddenAutoIds.contains(mostUsedId) || savedIds.contains(mostUsedId))) {
+        (!hiddenAutoIds.contains(mostUsedId) ||
+            savedIds.contains(mostUsedId))) {
       ids.add(mostUsedId);
     }
     for (final id in savedIds) {
@@ -305,9 +309,8 @@ class _ExerciseProgressSectionState extends State<ExerciseProgressSection>
                           layout: layout,
                           isEditing: _isEditingExerciseProgress,
                           onRemove:
-                              () => unawaited(
-                                _removeExerciseTile(selectedTile),
-                              ),
+                              () =>
+                                  unawaited(_removeExerciseTile(selectedTile)),
                           onTap: () => _openDetail(selectedTile),
                         ),
                       SizedBox(height: layout.sectionGap),
@@ -323,9 +326,7 @@ class _ExerciseProgressSectionState extends State<ExerciseProgressSection>
                                 isSelected: false,
                                 isEditing: _isEditingExerciseProgress,
                                 onRemove:
-                                    () => unawaited(
-                                      _removeExerciseTile(tile),
-                                    ),
+                                    () => unawaited(_removeExerciseTile(tile)),
                                 onTap:
                                     () => setState(() {
                                       _isEditingExerciseProgress = false;
@@ -572,6 +573,7 @@ class _ExerciseProgressHeroChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisAlignment: MainAxisAlignment.start,
@@ -602,6 +604,7 @@ class _ExerciseProgressHeroChart extends StatelessWidget {
             points: tile.points,
             showEmptyLabel: true,
             showAxes: true,
+            weightUnit: weightUnit,
           ),
         ),
       ],
@@ -620,6 +623,7 @@ class _ExerciseProgressStatsColumn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     final latest = tile.latestPoint;
     final actualOneRm = latest?.actualOneRm;
     final actualDelta = _deltaFromPrevious(
@@ -639,7 +643,7 @@ class _ExerciseProgressStatsColumn extends StatelessWidget {
           value:
               actualOneRm == null
                   ? '--'
-                  : _formatLbs(actualOneRm),
+                  : _formatWeight(actualOneRm, weightUnit),
           delta: actualDelta,
           layout: layout,
         ),
@@ -648,7 +652,7 @@ class _ExerciseProgressStatsColumn extends StatelessWidget {
           value:
               latest == null
                   ? '--'
-                  : _formatLbs(latest.estimatedOneRm),
+                  : _formatWeight(latest.estimatedOneRm, weightUnit),
           delta: estimatedDelta,
           layout: layout,
         ),
@@ -673,6 +677,7 @@ class _ExerciseProgressStatBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     final icon = _deltaIcon(delta);
     final deltaColor = _deltaColor(context, delta);
     return SizedBox(
@@ -720,7 +725,7 @@ class _ExerciseProgressStatBox extends StatelessWidget {
                     SizedBox(width: layout.statIconGap),
                   ],
                   Text(
-                    _formatDeltaLbs(delta),
+                    _formatDeltaWeight(delta, weightUnit),
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: deltaColor,
                       fontWeight: FontWeight.w800,
@@ -757,6 +762,7 @@ class _ExerciseProgressSelectorTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = context.colors;
+    final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     final latest = tile.latestPoint;
     final delta = _deltaFromPrevious(tile.points);
     final accent = theme.colorScheme.primary;
@@ -798,6 +804,7 @@ class _ExerciseProgressSelectorTile extends StatelessWidget {
                     child: _ExerciseProgressChart(
                       points: tile.points,
                       showEmptyLabel: false,
+                      weightUnit: weightUnit,
                     ),
                   ),
                   SizedBox(height: layout.selectorGraphGap),
@@ -807,7 +814,10 @@ class _ExerciseProgressSelectorTile extends StatelessWidget {
                         child: Text(
                           latest == null
                               ? '--'
-                              : _formatLbs(latest.estimatedOneRm),
+                              : _formatWeight(
+                                latest.estimatedOneRm,
+                                weightUnit,
+                              ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.labelMedium?.copyWith(
@@ -822,7 +832,11 @@ class _ExerciseProgressSelectorTile extends StatelessWidget {
                       ),
                       SizedBox(width: layout.selectorDeltaGap),
                       Expanded(
-                        child: _CompactDelta(delta: delta, layout: layout),
+                        child: _CompactDelta(
+                          delta: delta,
+                          layout: layout,
+                          weightUnit: weightUnit,
+                        ),
                       ),
                     ],
                   ),
@@ -887,8 +901,13 @@ class _ExerciseProgressRemoveBadge extends StatelessWidget {
 class _CompactDelta extends StatelessWidget {
   final double? delta;
   final _ExerciseProgressLayout layout;
+  final WeightUnit weightUnit;
 
-  const _CompactDelta({required this.delta, required this.layout});
+  const _CompactDelta({
+    required this.delta,
+    required this.layout,
+    required this.weightUnit,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -902,14 +921,15 @@ class _CompactDelta extends StatelessWidget {
         ],
         Expanded(
           child: Text(
-            _formatDeltaLbs(delta),
+            _formatDeltaWeight(delta, weightUnit),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
               fontSize:
                   Theme.of(context).textTheme.labelSmall?.fontSize == null
                       ? null
-                  : Theme.of(context).textTheme.labelSmall!.fontSize! * 0.82,
+                      : Theme.of(context).textTheme.labelSmall!.fontSize! *
+                          0.82,
               color: color,
               fontWeight: FontWeight.w800,
             ),
@@ -947,11 +967,12 @@ List<_ExerciseProgressPoint> _validPoints(
   ];
 }
 
-String _formatDeltaLbs(double? delta) {
+String _formatDeltaWeight(double? delta, WeightUnit unit) {
   if (delta == null) return '--';
-  final rounded = delta.round();
-  if (rounded == 0) return '0 lbs';
-  return '${rounded > 0 ? '+' : ''}$rounded lbs';
+  final value = WeightUnitFormatter.fromPounds(delta, unit);
+  final rounded = value.round();
+  if (rounded == 0) return '0 ${unit.shortLabel}';
+  return '${rounded > 0 ? '+' : ''}$rounded ${unit.shortLabel}';
 }
 
 Color _deltaColor(BuildContext context, double? delta) {
@@ -969,10 +990,7 @@ class _ExerciseProgressEmptyHero extends StatelessWidget {
   final _ExerciseProgressLayout layout;
   final VoidCallback onTap;
 
-  const _ExerciseProgressEmptyHero({
-    required this.layout,
-    required this.onTap,
-  });
+  const _ExerciseProgressEmptyHero({required this.layout, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -1021,10 +1039,7 @@ class _AddExerciseProgressTile extends StatelessWidget {
   final _ExerciseProgressLayout layout;
   final VoidCallback onTap;
 
-  const _AddExerciseProgressTile({
-    required this.layout,
-    required this.onTap,
-  });
+  const _AddExerciseProgressTile({required this.layout, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -1054,10 +1069,7 @@ class _EditExerciseProgressTile extends StatelessWidget {
   final _ExerciseProgressLayout layout;
   final VoidCallback onTap;
 
-  const _EditExerciseProgressTile({
-    required this.layout,
-    required this.onTap,
-  });
+  const _EditExerciseProgressTile({required this.layout, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -1119,6 +1131,7 @@ class _ExerciseProgressDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     return Scaffold(
       appBar: AppBar(title: Text(tile.definition.name), centerTitle: true),
       body: ListView(
@@ -1144,6 +1157,7 @@ class _ExerciseProgressDetailPage extends StatelessWidget {
                       showEmptyLabel: true,
                       showAxes: true,
                       interactive: true,
+                      weightUnit: weightUnit,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -1241,6 +1255,7 @@ class _ExerciseProgressRecordingRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       clipBehavior: Clip.antiAlias,
@@ -1263,13 +1278,13 @@ class _ExerciseProgressRecordingRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    'Est. ${_formatLbs(point.estimatedOneRm)}',
+                    'Est. ${_formatWeight(point.estimatedOneRm, weightUnit)}',
                     style: theme.textTheme.bodyMedium,
                   ),
                   Text(
                     point.actualOneRm == null
                         ? 'No actual 1RM'
-                        : 'Actual ${_formatLbs(point.actualOneRm!)}',
+                        : 'Actual ${_formatWeight(point.actualOneRm!, weightUnit)}',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -1295,12 +1310,14 @@ class _ExerciseProgressChart extends StatefulWidget {
   final bool showEmptyLabel;
   final bool showAxes;
   final bool interactive;
+  final WeightUnit weightUnit;
 
   const _ExerciseProgressChart({
     required this.points,
     this.showEmptyLabel = false,
     this.showAxes = false,
     this.interactive = false,
+    this.weightUnit = WeightUnit.pounds,
   });
 
   @override
@@ -1363,6 +1380,7 @@ class _ExerciseProgressChartState extends State<_ExerciseProgressChart> {
             tooltipTextColor: cs.onSurface,
             showAxes: widget.showAxes,
             selectedIndex: _selectedIndex,
+            weightUnit: widget.weightUnit,
           ),
         );
 
@@ -1415,6 +1433,7 @@ class _ExerciseProgressChartPainter extends CustomPainter {
   final Color tooltipTextColor;
   final bool showAxes;
   final int? selectedIndex;
+  final WeightUnit weightUnit;
 
   const _ExerciseProgressChartPainter({
     required this.points,
@@ -1426,6 +1445,7 @@ class _ExerciseProgressChartPainter extends CustomPainter {
     required this.tooltipTextColor,
     required this.showAxes,
     required this.selectedIndex,
+    required this.weightUnit,
   });
 
   @override
@@ -1451,7 +1471,7 @@ class _ExerciseProgressChartPainter extends CustomPainter {
       if (showAxes) {
         _drawText(
           canvas,
-          _formatAxisLbs(tick),
+          _formatAxisWeight(tick, weightUnit),
           Offset(0, y - 7),
           TextStyle(
             color: axisLabelColor,
@@ -1584,11 +1604,11 @@ class _ExerciseProgressChartPainter extends CustomPainter {
     );
     final lines = [
       (DateFormat.yMMMd().add_jm().format(point.date), titleStyle),
-      ('Est. ${_formatLbs(point.estimatedOneRm)}', bodyStyle),
+      ('Est. ${_formatWeight(point.estimatedOneRm, weightUnit)}', bodyStyle),
       (
         point.actualOneRm == null
             ? 'No actual 1RM'
-            : 'Actual ${_formatLbs(point.actualOneRm!)}',
+            : 'Actual ${_formatWeight(point.actualOneRm!, weightUnit)}',
         bodyStyle,
       ),
     ];
@@ -1690,7 +1710,8 @@ class _ExerciseProgressChartPainter extends CustomPainter {
         oldDelegate.tooltipBackgroundColor != tooltipBackgroundColor ||
         oldDelegate.tooltipTextColor != tooltipTextColor ||
         oldDelegate.showAxes != showAxes ||
-        oldDelegate.selectedIndex != selectedIndex;
+        oldDelegate.selectedIndex != selectedIndex ||
+        oldDelegate.weightUnit != weightUnit;
   }
 }
 
@@ -1730,10 +1751,7 @@ class _ExerciseProgressChartScale {
   late final double _rawMinY = _values.isEmpty ? 0 : _values.reduce(math.min);
   late final double _rawMaxY = _values.isEmpty ? 1 : _values.reduce(math.max);
   late final double _rangeY = math.max(1.0, _rawMaxY - _rawMinY);
-  late final double _paddingY = math.max(
-    2.0,
-    _rangeY * 0.08,
-  );
+  late final double _paddingY = math.max(2.0, _rangeY * 0.08);
   late final double _paddedMinY = math.max(0, _rawMinY - _paddingY);
   late final double _paddedMaxY = _rawMaxY + _paddingY;
   late final double _tickStep = _niceTickStep(
@@ -1764,9 +1782,8 @@ class _ExerciseProgressChartScale {
   }
 
   double yFor(double value) {
-    final normalized = ((value - minY) / (maxY - minY))
-        .clamp(0.0, 1.0)
-        .toDouble();
+    final normalized =
+        ((value - minY) / (maxY - minY)).clamp(0.0, 1.0).toDouble();
     return plotRect.bottom - plotRect.height * normalized;
   }
 
@@ -1834,13 +1851,13 @@ class _LegendLinePainter extends CustomPainter {
   }
 }
 
-String _formatLbs(double value) {
-  final rounded = value.round();
-  return '$rounded lbs';
+String _formatWeight(double value, WeightUnit unit) {
+  return WeightUnitFormatter.formatWeight(value, unit);
 }
 
-String _formatAxisLbs(double value) {
-  final rounded = value.round();
+String _formatAxisWeight(double value, WeightUnit unit) {
+  final displayValue = WeightUnitFormatter.fromPounds(value, unit);
+  final rounded = displayValue.round();
   if (rounded >= 1000) {
     final compact = rounded / 1000;
     return '${compact.toStringAsFixed(compact >= 10 ? 0 : 1)}k';

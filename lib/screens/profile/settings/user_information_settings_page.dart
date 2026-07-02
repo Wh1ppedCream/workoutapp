@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../models/models.dart';
+import '../../../providers/unit_preference_provider.dart';
 import '../../../repositories/app_repository.dart';
+import '../../../utils/weight_unit_formatter.dart';
 import '../../../widgets/settings_tiles.dart';
 
 class UserInformationSettingsPage extends StatefulWidget {
@@ -54,6 +56,7 @@ class _UserInformationSettingsPageState
 
   Future<void> _load() async {
     final repo = context.read<AppRepository>();
+    final weightUnit = context.read<UnitPreferenceProvider>().weightUnit;
     final personalInfo = await repo.fetchPersonalInfo();
     if (!mounted) return;
 
@@ -64,7 +67,10 @@ class _UserInformationSettingsPageState
       _dob = personalInfo?.dob;
       _dobController.text = _formatDate(personalInfo?.dob);
       _heightController.text = personalInfo?.height ?? '';
-      _weightController.text = personalInfo?.weight ?? '';
+      _weightController.text = _formatStoredWeightForDisplay(
+        personalInfo?.weight,
+        weightUnit,
+      );
       _bodyFatEstimate = personalInfo?.bodyFatEstimate;
       _weightTrend = personalInfo?.weightTrend;
       _activityLevel = personalInfo?.activityLevel;
@@ -100,12 +106,13 @@ class _UserInformationSettingsPageState
   Future<void> _save() async {
     try {
       final repo = context.read<AppRepository>();
+      final weightUnit = context.read<UnitPreferenceProvider>().weightUnit;
       final info = PersonalInfo(
         name: _clean(_nameController.text),
         gender: _gender,
         dob: _dob,
         height: _clean(_heightController.text),
-        weight: _clean(_weightController.text),
+        weight: _cleanWeightForStorage(_weightController.text, weightUnit),
         bodyFatEstimate: _bodyFatEstimate,
         weightTrend: _weightTrend,
         activityLevel: _activityLevel,
@@ -113,20 +120,37 @@ class _UserInformationSettingsPageState
       await repo.savePersonalInfo(info);
       if (!mounted) return;
       setState(() => _dirty = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Changes saved')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Changes saved')));
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Couldn't save: $error")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Couldn't save: $error")));
     }
   }
 
   String? _clean(String value) {
     final trimmed = value.trim();
     return trimmed.isEmpty ? null : trimmed;
+  }
+
+  String _formatStoredWeightForDisplay(String? storedWeight, WeightUnit unit) {
+    final cleaned = _clean(storedWeight ?? '');
+    if (cleaned == null) return '';
+    final pounds = double.tryParse(cleaned);
+    if (pounds == null) return cleaned;
+    return WeightUnitFormatter.formatInputWeight(pounds, unit);
+  }
+
+  String? _cleanWeightForStorage(String value, WeightUnit unit) {
+    final cleaned = _clean(value);
+    if (cleaned == null) return null;
+    final displayWeight = double.tryParse(cleaned);
+    if (displayWeight == null) return cleaned;
+    final pounds = WeightUnitFormatter.toPounds(displayWeight, unit);
+    return WeightUnitFormatter.formatInputWeight(pounds, WeightUnit.pounds);
   }
 
   void _markDirty() {
@@ -136,6 +160,7 @@ class _UserInformationSettingsPageState
 
   @override
   Widget build(BuildContext context) {
+    final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     final bodyFatOptions = <String>[
       '0-5%',
       '5-10%',
@@ -153,17 +178,8 @@ class _UserInformationSettingsPageState
       'Maintaining weight',
       'Not sure',
     ];
-    const activityOptions = [
-      'Low (0-5k)',
-      'Moderate (5-15k)',
-      'High (15k+)',
-    ];
-    const genderOptions = [
-      'Male',
-      'Female',
-      'Other',
-      'Prefer not to say',
-    ];
+    const activityOptions = ['Low (0-5k)', 'Moderate (5-15k)', 'High (15k+)'];
+    const genderOptions = ['Male', 'Female', 'Other', 'Prefer not to say'];
 
     if (_loading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -193,14 +209,15 @@ class _UserInformationSettingsPageState
             _FieldPadding(
               child: DropdownButtonFormField<String?>(
                 value: _gender,
-                items: genderOptions
-                    .map(
-                      (gender) => DropdownMenuItem<String?>(
-                        value: gender,
-                        child: Text(gender),
-                      ),
-                    )
-                    .toList(),
+                items:
+                    genderOptions
+                        .map(
+                          (gender) => DropdownMenuItem<String?>(
+                            value: gender,
+                            child: Text(gender),
+                          ),
+                        )
+                        .toList(),
                 onChanged: (value) {
                   _gender = value;
                   _markDirty();
@@ -232,7 +249,8 @@ class _UserInformationSettingsPageState
         ),
         SettingsSection(
           title: 'Body Metrics',
-          subtitle: 'Optional details used by progress and nutrition estimates.',
+          subtitle:
+              'Optional details used by progress and nutrition estimates.',
           children: [
             _FieldPadding(
               child: TextFormField(
@@ -251,8 +269,10 @@ class _UserInformationSettingsPageState
                 decoration: _inputDecoration(
                   context,
                   label: 'Current Weight',
-                  hint: 'e.g. 160 lbs or 72 kg',
+                  hint:
+                      weightUnit == WeightUnit.pounds ? 'e.g. 160' : 'e.g. 72',
                   icon: Icons.monitor_weight_outlined,
+                  suffixText: weightUnit.shortLabel,
                 ),
                 keyboardType: TextInputType.number,
               ),
@@ -260,14 +280,15 @@ class _UserInformationSettingsPageState
             _FieldPadding(
               child: DropdownButtonFormField<String?>(
                 value: _bodyFatEstimate,
-                items: bodyFatOptions
-                    .map(
-                      (option) => DropdownMenuItem<String?>(
-                        value: option,
-                        child: Text(option),
-                      ),
-                    )
-                    .toList(),
+                items:
+                    bodyFatOptions
+                        .map(
+                          (option) => DropdownMenuItem<String?>(
+                            value: option,
+                            child: Text(option),
+                          ),
+                        )
+                        .toList(),
                 onChanged: (value) {
                   _bodyFatEstimate = value;
                   _markDirty();
@@ -288,14 +309,15 @@ class _UserInformationSettingsPageState
             _FieldPadding(
               child: DropdownButtonFormField<String?>(
                 value: _weightTrend,
-                items: trendOptions
-                    .map(
-                      (option) => DropdownMenuItem<String?>(
-                        value: option,
-                        child: Text(option),
-                      ),
-                    )
-                    .toList(),
+                items:
+                    trendOptions
+                        .map(
+                          (option) => DropdownMenuItem<String?>(
+                            value: option,
+                            child: Text(option),
+                          ),
+                        )
+                        .toList(),
                 onChanged: (value) {
                   _weightTrend = value;
                   _markDirty();
@@ -310,14 +332,15 @@ class _UserInformationSettingsPageState
             _FieldPadding(
               child: DropdownButtonFormField<String?>(
                 value: _activityLevel,
-                items: activityOptions
-                    .map(
-                      (option) => DropdownMenuItem<String?>(
-                        value: option,
-                        child: Text(option),
-                      ),
-                    )
-                    .toList(),
+                items:
+                    activityOptions
+                        .map(
+                          (option) => DropdownMenuItem<String?>(
+                            value: option,
+                            child: Text(option),
+                          ),
+                        )
+                        .toList(),
                 onChanged: (value) {
                   _activityLevel = value;
                   _markDirty();
@@ -341,12 +364,14 @@ class _UserInformationSettingsPageState
     required String label,
     String? hint,
     required IconData icon,
+    String? suffixText,
   }) {
     final scheme = Theme.of(context).colorScheme;
     return InputDecoration(
       labelText: label,
       hintText: hint,
       prefixIcon: Icon(icon),
+      suffixText: suffixText,
       filled: true,
       fillColor: scheme.surface.withValues(alpha: 0.44),
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),

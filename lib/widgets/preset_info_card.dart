@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../models/models.dart';
+import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
 import '../theme/theme_extensions.dart';
 import '../utils/async_pool.dart';
+import '../utils/weight_unit_formatter.dart';
 import 'body_heatmap.dart';
 import 'exercise_card.dart';
 import 'focused_sets_list.dart';
@@ -212,6 +215,7 @@ class _PresetInfoCardState extends State<PresetInfoCard>
     super.build(context);
     final theme = Theme.of(context);
     final colors = context.colors;
+    final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
 
     return FutureBuilder<_PresetInfoSummary>(
       future: _summaryFuture,
@@ -244,7 +248,10 @@ class _PresetInfoCardState extends State<PresetInfoCard>
                             Expanded(
                               child: _PresetMetricTile(
                                 icon: Icons.fitness_center,
-                                value: _formatVolume(summary.totalVolume),
+                                value: WeightUnitFormatter.formatVolume(
+                                  summary.totalVolume,
+                                  weightUnit,
+                                ),
                                 label: 'Total volume',
                               ),
                             ),
@@ -310,11 +317,6 @@ class _PresetInfoCardState extends State<PresetInfoCard>
     final mins = minutes % 60;
     if (mins == 0) return '${hours}h';
     return '${hours}h ${mins}m';
-  }
-
-  static String _formatVolume(double volume) {
-    if (volume >= 1000) return '${(volume / 1000).toStringAsFixed(1)}k lbs';
-    return '${volume.round()} lbs';
   }
 }
 

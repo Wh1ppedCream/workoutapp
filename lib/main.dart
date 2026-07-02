@@ -12,6 +12,7 @@ import 'providers/theme_provider.dart';
 import 'providers/onboarding_provider.dart';
 import 'providers/nav_bar_config.dart';
 import 'providers/nutrition_profile.dart';
+import 'providers/unit_preference_provider.dart';
 
 import 'screens/dashboard_page.dart';
 import 'screens/catalog_page.dart';
@@ -50,6 +51,7 @@ Future<void> main() async {
           ChangeNotifierProvider(create: (_) => SelectedProfile()),
           ChangeNotifierProvider(create: (_) => DashboardConfig()),
           ChangeNotifierProvider(create: (_) => ThemeProvider()),
+          ChangeNotifierProvider(create: (_) => UnitPreferenceProvider()),
           ChangeNotifierProvider(create: (_) => NavBarConfig()),
         ],
         child: const MyApp(),
@@ -449,9 +451,7 @@ class _StartupGate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: CircularProgressIndicator()),
-    );
+    return const Scaffold(body: Center(child: CircularProgressIndicator()));
   }
 }
 

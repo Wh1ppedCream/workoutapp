@@ -3,12 +3,22 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 import '../models/models.dart';
+import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
 import '../theme/theme_extensions.dart';
+import '../utils/weight_unit_formatter.dart';
 
-enum WorkoutReportRange { oneWeek, oneMonth, threeMonths, sixMonths, oneYear, all }
+enum WorkoutReportRange {
+  oneWeek,
+  oneMonth,
+  threeMonths,
+  sixMonths,
+  oneYear,
+  all,
+}
 
 enum _ReportBucketInterval { day, week, month }
 
@@ -197,10 +207,12 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
           0,
           (sum, session) => sum + session.totalVolume,
         );
+        final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
         final insights = _ReportInsightSummary.fromSessions(
           sessions: sessions,
           buckets: buckets,
           interval: bucketSet.interval,
+          weightUnit: weightUnit,
         );
 
         return Card(
@@ -215,9 +227,9 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w900,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
                 ),
                 const SizedBox(height: 12),
                 Row(
@@ -257,11 +269,15 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
                     Expanded(
                       child: _ReportStat(
                         label: 'Volume',
-                        value: _formatCompact(totalVolume),
-                        unit: 'lbs',
+                        value: WeightUnitFormatter.formatCompactVolumeValue(
+                          totalVolume,
+                          weightUnit,
+                        ),
+                        unit: weightUnit.shortLabel,
                         trend: _metricTrend(
                           buckets,
                           WorkoutReportMetric.volume,
+                          weightUnit,
                         ),
                         selected:
                             _metrics[_selectedMetricIndex] ==
@@ -287,6 +303,7 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
                         metric: metric,
                         interval: bucketSet.interval,
                         range: _range,
+                        weightUnit: weightUnit,
                       );
                     },
                   ),
@@ -568,6 +585,7 @@ class _ReportInsightSummary {
     required List<WorkoutReportSession> sessions,
     required List<WorkoutReportBucket> buckets,
     required _ReportBucketInterval interval,
+    required WeightUnit weightUnit,
   }) {
     final workoutCount = sessions.length;
     final activeBucketCount = buckets.isEmpty ? 1 : buckets.length;
@@ -575,7 +593,7 @@ class _ReportInsightSummary {
     final bucketLabel = _bucketNoun(interval);
     final longestStreak = _longestWorkoutDayStreak(sessions);
     final activeDay = _mostActiveWeekday(sessions);
-    final bestVolume = _bestVolumeDay(sessions);
+    final bestVolume = _bestVolumeDay(sessions, weightUnit);
 
     return _ReportInsightSummary(
       insights: [
@@ -764,12 +782,14 @@ class _MetricChartPage extends StatelessWidget {
   final WorkoutReportMetric metric;
   final _ReportBucketInterval interval;
   final WorkoutReportRange range;
+  final WeightUnit weightUnit;
 
   const _MetricChartPage({
     required this.buckets,
     required this.metric,
     required this.interval,
     required this.range,
+    required this.weightUnit,
   });
 
   @override
@@ -804,6 +824,7 @@ class _MetricChartPage extends StatelessWidget {
                       metric: metric,
                       interval: interval,
                       showValueLabels: buckets.length <= 6,
+                      weightUnit: weightUnit,
                     )
                     : _EmptyMetricChartMessage(metric: metric),
           ),
@@ -818,12 +839,14 @@ class _InteractiveWorkoutLineChart extends StatefulWidget {
   final WorkoutReportMetric metric;
   final _ReportBucketInterval interval;
   final bool showValueLabels;
+  final WeightUnit weightUnit;
 
   const _InteractiveWorkoutLineChart({
     required this.buckets,
     required this.metric,
     required this.interval,
     required this.showValueLabels,
+    required this.weightUnit,
   });
 
   @override
@@ -865,6 +888,7 @@ class _InteractiveWorkoutLineChartState
             tooltipTextColor: context.cs.onSurface,
             showValueLabels: widget.showValueLabels,
             selectedIndex: _selectedIndex,
+            weightUnit: widget.weightUnit,
           ),
         );
 
@@ -974,23 +998,22 @@ class _RangeSelector extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       decoration: BoxDecoration(
                         color:
-                            selected
-                                ? context.cs.primary
-                                : Colors.transparent,
+                            selected ? context.cs.primary : Colors.transparent,
                         borderRadius: BorderRadius.circular(11),
                       ),
                       child: Text(
                         _rangeLabel(range),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.labelMedium
-                            ?.copyWith(
-                              color:
-                                  selected
-                                      ? context.cs.onPrimary
-                                      : context.cs.onSurfaceVariant,
-                              fontWeight: FontWeight.w900,
-                            ),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.labelMedium?.copyWith(
+                          color:
+                              selected
+                                  ? context.cs.onPrimary
+                                  : context.cs.onSurfaceVariant,
+                          fontWeight: FontWeight.w900,
+                        ),
                       ),
                     ),
                   ),
@@ -1065,9 +1088,7 @@ class _AdditionalDetailsDropdown extends StatelessWidget {
             child: _ReportInsightGrid(insights: insights),
           ),
           crossFadeState:
-              expanded
-                  ? CrossFadeState.showSecond
-                  : CrossFadeState.showFirst,
+              expanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
           duration: const Duration(milliseconds: 180),
           firstCurve: Curves.easeOutCubic,
           secondCurve: Curves.easeOutCubic,
@@ -1143,8 +1164,9 @@ class _ReportInsightTile extends StatelessWidget {
                         insight.value,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.titleSmall
-                            ?.copyWith(fontWeight: FontWeight.w900),
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w900,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 4),
@@ -1153,8 +1175,9 @@ class _ReportInsightTile extends StatelessWidget {
                         insight.detail,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.labelSmall
-                            ?.copyWith(color: cs.onSurfaceVariant),
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
                       ),
                     ),
                   ],
@@ -1227,6 +1250,7 @@ class _WorkoutLineChartPainter extends CustomPainter {
   final Color tooltipTextColor;
   final bool showValueLabels;
   final int? selectedIndex;
+  final WeightUnit weightUnit;
 
   const _WorkoutLineChartPainter({
     required this.buckets,
@@ -1239,6 +1263,7 @@ class _WorkoutLineChartPainter extends CustomPainter {
     required this.tooltipTextColor,
     this.showValueLabels = false,
     this.selectedIndex,
+    required this.weightUnit,
   });
 
   @override
@@ -1273,7 +1298,7 @@ class _WorkoutLineChartPainter extends CustomPainter {
       );
       _drawText(
         canvas,
-        _formatAxis(value, metric),
+        _formatAxis(value, metric, weightUnit),
         Offset(0, y - 8),
         labelStyle,
         maxWidth: _WorkoutLineChartGeometry.left - 8,
@@ -1311,10 +1336,7 @@ class _WorkoutLineChartPainter extends CustomPainter {
         ..shader = ui.Gradient.linear(
           Offset(0, plotRect.top),
           Offset(0, plotRect.bottom),
-          [
-            accent.withValues(alpha: 0.24),
-            accent.withValues(alpha: 0.02),
-          ],
+          [accent.withValues(alpha: 0.24), accent.withValues(alpha: 0.02)],
         ),
     );
     canvas.drawPath(
@@ -1341,7 +1363,7 @@ class _WorkoutLineChartPainter extends CustomPainter {
       if (showValueLabels && value > 0) {
         _drawText(
           canvas,
-          _formatAxis(value, metric),
+          _formatAxis(value, metric, weightUnit),
           Offset(point.dx - 18, math.max(0, point.dy - 20)),
           labelStyle.copyWith(
             color: labelColor.withValues(alpha: 0.95),
@@ -1366,13 +1388,7 @@ class _WorkoutLineChartPainter extends CustomPainter {
     }
 
     if (selectedIndex != null) {
-      _drawSelectedBucket(
-        canvas,
-        size,
-        geometry,
-        selectedIndex!,
-        labelStyle,
-      );
+      _drawSelectedBucket(canvas, size, geometry, selectedIndex!, labelStyle);
     }
   }
 
@@ -1416,7 +1432,7 @@ class _WorkoutLineChartPainter extends CustomPainter {
     );
     final tooltipLines = [
       (_bucketTooltipLabel(bucket, interval), titleStyle),
-      (_metricTooltipValue(value, metric), bodyStyle),
+      (_metricTooltipValue(value, metric, weightUnit), bodyStyle),
     ];
     final painters =
         tooltipLines
@@ -1466,7 +1482,8 @@ class _WorkoutLineChartPainter extends CustomPainter {
         oldDelegate.tooltipBackground != tooltipBackground ||
         oldDelegate.tooltipTextColor != tooltipTextColor ||
         oldDelegate.showValueLabels != showValueLabels ||
-        oldDelegate.selectedIndex != selectedIndex;
+        oldDelegate.selectedIndex != selectedIndex ||
+        oldDelegate.weightUnit != weightUnit;
   }
 
   static double _niceMax(WorkoutReportMetric metric, double value) {
@@ -1552,10 +1569,7 @@ String _rangeLabel(WorkoutReportRange range) {
   }
 }
 
-String _chartTitle(
-  WorkoutReportMetric metric,
-  WorkoutReportRange range,
-) {
+String _chartTitle(WorkoutReportMetric metric, WorkoutReportRange range) {
   final period = _rangeTitlePhrase(range);
   switch (metric) {
     case WorkoutReportMetric.workouts:
@@ -1584,7 +1598,11 @@ String _bucketTooltipLabel(
   }
 }
 
-String _metricTooltipValue(double value, WorkoutReportMetric metric) {
+String _metricTooltipValue(
+  double value,
+  WorkoutReportMetric metric, [
+  WeightUnit weightUnit = WeightUnit.pounds,
+]) {
   switch (metric) {
     case WorkoutReportMetric.workouts:
       final count = value.round();
@@ -1599,7 +1617,7 @@ String _metricTooltipValue(double value, WorkoutReportMetric metric) {
       }
       return '${hours}h ${remainingMinutes}m';
     case WorkoutReportMetric.volume:
-      return '${_formatCompact(value)} lbs';
+      return WeightUnitFormatter.formatVolume(value, weightUnit);
   }
 }
 
@@ -1622,35 +1640,44 @@ String _rangeTitlePhrase(WorkoutReportRange range) {
 
 _MetricTrend _metricTrend(
   List<WorkoutReportBucket> buckets,
-  WorkoutReportMetric metric,
-) {
-  if (buckets.isEmpty) return _flatMetricTrend(metric);
+  WorkoutReportMetric metric, [
+  WeightUnit weightUnit = WeightUnit.pounds,
+]) {
+  if (buckets.isEmpty) return _flatMetricTrend(metric, weightUnit);
 
   final current = buckets.last.valueFor(metric);
   final previous =
       buckets.length > 1 ? buckets[buckets.length - 2].valueFor(metric) : 0.0;
-  if (current <= 0 && previous <= 0) return _flatMetricTrend(metric);
+  if (current <= 0 && previous <= 0) {
+    return _flatMetricTrend(metric, weightUnit);
+  }
 
   final diff = current - previous;
-  if (diff.abs() < 0.001) return _flatMetricTrend(metric);
+  if (diff.abs() < 0.001) return _flatMetricTrend(metric, weightUnit);
 
   final isUp = diff > 0;
   final arrow = isUp ? '↑' : '↓';
   return _MetricTrend(
-    label: '$arrow ${_formatTrendAmount(diff.abs(), metric)}',
-    direction:
-        isUp ? _MetricTrendDirection.up : _MetricTrendDirection.down,
+    label: '$arrow ${_formatTrendAmount(diff.abs(), metric, weightUnit)}',
+    direction: isUp ? _MetricTrendDirection.up : _MetricTrendDirection.down,
   );
 }
 
-_MetricTrend _flatMetricTrend(WorkoutReportMetric metric) {
+_MetricTrend _flatMetricTrend(
+  WorkoutReportMetric metric, [
+  WeightUnit weightUnit = WeightUnit.pounds,
+]) {
   return _MetricTrend(
-    label: _formatTrendAmount(0, metric),
+    label: _formatTrendAmount(0, metric, weightUnit),
     direction: _MetricTrendDirection.flat,
   );
 }
 
-String _formatTrendAmount(double value, WorkoutReportMetric metric) {
+String _formatTrendAmount(
+  double value,
+  WorkoutReportMetric metric, [
+  WeightUnit weightUnit = WeightUnit.pounds,
+]) {
   switch (metric) {
     case WorkoutReportMetric.workouts:
       final rounded = value.round();
@@ -1658,7 +1685,7 @@ String _formatTrendAmount(double value, WorkoutReportMetric metric) {
     case WorkoutReportMetric.minutes:
       return '${value.round()} mins';
     case WorkoutReportMetric.volume:
-      return '${_formatCompact(value)} lbs';
+      return '${WeightUnitFormatter.formatCompactVolumeValue(value, weightUnit)} ${weightUnit.shortLabel}';
   }
 }
 
@@ -1711,7 +1738,10 @@ String _emptyMetricSubtitle(WorkoutReportMetric metric) {
 int _longestWorkoutDayStreak(List<WorkoutReportSession> sessions) {
   if (sessions.isEmpty) return 0;
   final days =
-      sessions.map((session) => DateUtils.dateOnly(session.date)).toSet().toList()
+      sessions
+          .map((session) => DateUtils.dateOnly(session.date))
+          .toSet()
+          .toList()
         ..sort();
 
   var longest = 1;
@@ -1732,7 +1762,11 @@ String _mostActiveWeekday(List<WorkoutReportSession> sessions) {
   if (sessions.isEmpty) return 'None';
   final counts = <int, int>{};
   for (final session in sessions) {
-    counts.update(session.date.weekday, (count) => count + 1, ifAbsent: () => 1);
+    counts.update(
+      session.date.weekday,
+      (count) => count + 1,
+      ifAbsent: () => 1,
+    );
   }
   final bestWeekday = counts.entries.reduce(
     (best, entry) => entry.value > best.value ? entry : best,
@@ -1743,7 +1777,10 @@ String _mostActiveWeekday(List<WorkoutReportSession> sessions) {
   );
 }
 
-_BestVolumeDay _bestVolumeDay(List<WorkoutReportSession> sessions) {
+_BestVolumeDay _bestVolumeDay(
+  List<WorkoutReportSession> sessions,
+  WeightUnit weightUnit,
+) {
   if (sessions.isEmpty) {
     return const _BestVolumeDay(value: 'None', detail: 'no sessions');
   }
@@ -1762,17 +1799,27 @@ _BestVolumeDay _bestVolumeDay(List<WorkoutReportSession> sessions) {
     (best, entry) => entry.value > best.value ? entry : best,
   );
   if (best.value <= 0) {
-    return const _BestVolumeDay(value: '0', detail: 'lbs logged');
+    return _BestVolumeDay(
+      value: '0',
+      detail: '${weightUnit.shortLabel} logged',
+    );
   }
   return _BestVolumeDay(
-    value: _formatCompact(best.value),
-    detail: 'lbs on ${DateFormat.MMMd().format(best.key)}',
+    value: WeightUnitFormatter.formatCompactVolumeValue(best.value, weightUnit),
+    detail: '${weightUnit.shortLabel} on ${DateFormat.MMMd().format(best.key)}',
   );
 }
 
-String _formatAxis(double value, WorkoutReportMetric metric) {
+String _formatAxis(
+  double value,
+  WorkoutReportMetric metric, [
+  WeightUnit weightUnit = WeightUnit.pounds,
+]) {
   if (metric == WorkoutReportMetric.workouts) {
     return value.round().toString();
+  }
+  if (metric == WorkoutReportMetric.volume) {
+    return WeightUnitFormatter.formatCompactVolumeValue(value, weightUnit);
   }
   return _formatCompact(value);
 }

@@ -9,9 +9,11 @@ import 'package:provider/provider.dart';
 import '../../models/models.dart';
 import '../../providers/active_session.dart';
 import '../../providers/selected_profile.dart';
+import '../../providers/unit_preference_provider.dart';
 import '../../repositories/app_repository.dart';
 import '../../theme/theme_extensions.dart';
 import '../../utils/async_pool.dart';
+import '../../utils/weight_unit_formatter.dart';
 import '../../widgets/body_heatmap.dart';
 import '../../widgets/exercise_card.dart';
 import '../../widgets/exercise_detail_sheet.dart';
@@ -832,6 +834,7 @@ class _SessionSummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = context.colors;
+    final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     final durationText = _formatDuration(Duration(seconds: session.duration));
 
     return Card(
@@ -866,7 +869,10 @@ class _SessionSummaryCard extends StatelessWidget {
                 Expanded(
                   child: _SummaryMetricTile(
                     label: 'Volume',
-                    value: _formatVolume(summary.totalVolume),
+                    value: WeightUnitFormatter.formatVolume(
+                      summary.totalVolume,
+                      weightUnit,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -1106,6 +1112,7 @@ class _CompletedSetRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final eRm = _epley(row.set);
+    final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     return Padding(
       padding: EdgeInsets.only(left: row.isChild ? 22 : 0, top: 7, bottom: 7),
       child: Row(
@@ -1126,7 +1133,7 @@ class _CompletedSetRow extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              '${_formatWeight(row.set.weight)} lbs x ${row.set.reps}',
+              '${WeightUnitFormatter.formatWeight(row.set.weight, weightUnit)} x ${row.set.reps}',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: theme.textTheme.titleMedium,
@@ -1151,7 +1158,7 @@ class _CompletedSetRow extends StatelessWidget {
           ],
           Expanded(
             child: Text(
-              '1RM = ${_formatWeight(eRm)} lbs',
+              '1RM = ${WeightUnitFormatter.formatWeight(eRm, weightUnit)}',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.right,
@@ -1300,15 +1307,4 @@ String _formatDuration(Duration duration) {
     return '${minutes}m ${seconds.toString().padLeft(2, '0')}s';
   }
   return '${seconds}s';
-}
-
-String _formatVolume(double volume) {
-  if (volume >= 1000000) return '${(volume / 1000000).toStringAsFixed(1)}M lbs';
-  if (volume >= 1000) return '${(volume / 1000).toStringAsFixed(1)}k lbs';
-  return '${volume.round()} lbs';
-}
-
-String _formatWeight(double weight) {
-  if (weight == weight.roundToDouble()) return weight.round().toString();
-  return weight.toStringAsFixed(1);
 }

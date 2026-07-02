@@ -2,8 +2,10 @@ import 'dart:math' as math;
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../models/models.dart';
+import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
 import '../theme/theme_extensions.dart';
 
@@ -63,9 +65,9 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
         a.definition,
       ).compareTo(_definitionOrder(b.definition));
       if (orderCompare != 0) return orderCompare;
-      return _measurementTitle(a.definition).compareTo(
-        _measurementTitle(b.definition),
-      );
+      return _measurementTitle(
+        a.definition,
+      ).compareTo(_measurementTitle(b.definition));
     });
     return trends;
   }
@@ -73,7 +75,8 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
   Future<void> _openTrend(_MeasurementTrend trend) async {
     final changed = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
-        builder: (_) => MeasurementTrendDetailPage(definition: trend.definition),
+        builder:
+            (_) => MeasurementTrendDetailPage(definition: trend.definition),
       ),
     );
     if (changed == true && mounted) {
@@ -82,13 +85,16 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
   }
 
   Future<void> _logEntry(_MeasurementTrend trend) async {
+    final weightUnit = context.read<UnitPreferenceProvider>().weightUnit;
     final input = await showDialog<_MeasurementEntryInput>(
       context: context,
       builder:
           (_) => _MeasurementEntryDialog(
             title: 'Log ${_measurementTitle(trend.definition)}',
             definition: trend.definition,
-            defaultUnit: trend.latest?.unit ?? _defaultUnitFor(trend.definition),
+            defaultUnit:
+                trend.latest?.unit ??
+                _defaultUnitFor(trend.definition, weightUnit),
           ),
     );
     if (input == null) return;
@@ -246,6 +252,7 @@ class _MeasurementTrendDetailPageState
   }
 
   Future<void> _addEntry(List<Measurement> entries) async {
+    final weightUnit = context.read<UnitPreferenceProvider>().weightUnit;
     final input = await showDialog<_MeasurementEntryInput>(
       context: context,
       builder:
@@ -255,7 +262,7 @@ class _MeasurementTrendDetailPageState
             defaultUnit:
                 entries.isNotEmpty
                     ? entries.last.unit
-                    : _defaultUnitFor(widget.definition),
+                    : _defaultUnitFor(widget.definition, weightUnit),
           ),
     );
     if (input == null) return;
@@ -373,10 +380,7 @@ class _MeasurementTrendDetailPageState
                   height: 250,
                 ),
                 const SizedBox(height: 20),
-                Text(
-                  'Entries',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
+                Text('Entries', style: Theme.of(context).textTheme.titleLarge),
                 const SizedBox(height: 8),
                 if (entries.isEmpty)
                   _HealthTrendMessageCard(
@@ -472,7 +476,8 @@ class _TrendTile extends StatelessWidget {
                     child: Icon(
                       Icons.add_circle_outline,
                       size: 18,
-                      color: colors.healthTrendIcon ?? theme.colorScheme.primary,
+                      color:
+                          colors.healthTrendIcon ?? theme.colorScheme.primary,
                     ),
                   ),
                 ],
@@ -559,10 +564,7 @@ class _MeasurementSparkline extends StatelessWidget {
   final List<Measurement> entries;
   final Color lineColor;
 
-  const _MeasurementSparkline({
-    required this.entries,
-    required this.lineColor,
-  });
+  const _MeasurementSparkline({required this.entries, required this.lineColor});
 
   @override
   Widget build(BuildContext context) {
@@ -617,10 +619,13 @@ class _MeasurementSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     final latest = entries.isEmpty ? null : entries.last;
     final previous = entries.length < 2 ? null : entries[entries.length - 2];
     final delta =
-        latest == null || previous == null ? null : latest.value - previous.value;
+        latest == null || previous == null
+            ? null
+            : latest.value - previous.value;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -634,7 +639,10 @@ class _MeasurementSummaryCard extends StatelessWidget {
             child: _SummaryStat(
               label: 'Latest',
               value: latest == null ? 'No entry' : _formatMeasurement(latest),
-              detail: latest == null ? 'Not tracked yet' : _formatDate(latest.timestamp),
+              detail:
+                  latest == null
+                      ? 'Not tracked yet'
+                      : _formatDate(latest.timestamp),
             ),
           ),
           const SizedBox(width: 10),
@@ -651,7 +659,7 @@ class _MeasurementSummaryCard extends StatelessWidget {
             child: _SummaryStat(
               label: 'Records',
               value: '${entries.length}',
-              detail: _defaultUnitFor(definition),
+              detail: _defaultUnitFor(definition, weightUnit),
             ),
           ),
         ],
@@ -779,7 +787,10 @@ class _MeasurementChartCard extends StatelessWidget {
                         interval: math.max(1.0, (spots.length - 1) / 2),
                         getTitlesWidget: (value, _) {
                           final index =
-                              value.round().clamp(0, entries.length - 1).toInt();
+                              value
+                                  .round()
+                                  .clamp(0, entries.length - 1)
+                                  .toInt();
                           if ((value - index).abs() > 0.2) {
                             return const SizedBox.shrink();
                           }
@@ -797,10 +808,10 @@ class _MeasurementChartCard extends StatelessWidget {
                       getTooltipItems:
                           (touchedSpots) =>
                               touchedSpots.map((spot) {
-                                final index = spot.spotIndex.clamp(
-                                  0,
-                                  entries.length - 1,
-                                ).toInt();
+                                final index =
+                                    spot.spotIndex
+                                        .clamp(0, entries.length - 1)
+                                        .toInt();
                                 final entry = entries[index];
                                 return LineTooltipItem(
                                   '${_formatDateTime(entry.timestamp)}\n${_formatMeasurement(entry)}',
@@ -818,7 +829,8 @@ class _MeasurementChartCard extends StatelessWidget {
                     LineChartBarData(
                       spots: spots,
                       isCurved: true,
-                      color: colors.healthTrendLine ?? theme.colorScheme.primary,
+                      color:
+                          colors.healthTrendLine ?? theme.colorScheme.primary,
                       barWidth: 3,
                       dotData: FlDotData(show: true),
                       belowBarData: BarAreaData(
@@ -942,7 +954,8 @@ class _MeasurementEntryDialog extends StatefulWidget {
   });
 
   @override
-  State<_MeasurementEntryDialog> createState() => _MeasurementEntryDialogState();
+  State<_MeasurementEntryDialog> createState() =>
+      _MeasurementEntryDialogState();
 }
 
 class _MeasurementEntryDialogState extends State<_MeasurementEntryDialog> {
@@ -1101,7 +1114,9 @@ class _MeasurementDefinitionDialogState
     final initialValue =
         initialText.isEmpty ? null : double.tryParse(initialText);
 
-    if (name.isEmpty || unit.isEmpty || (initialText.isNotEmpty && initialValue == null)) {
+    if (name.isEmpty ||
+        unit.isEmpty ||
+        (initialText.isNotEmpty && initialValue == null)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Enter a name, unit, and valid value.')),
       );
@@ -1123,6 +1138,7 @@ class _MeasurementDefinitionDialogState
 
   @override
   Widget build(BuildContext context) {
+    final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     return AlertDialog(
       title: const Text('Create Metric'),
       content: SingleChildScrollView(
@@ -1141,9 +1157,9 @@ class _MeasurementDefinitionDialogState
             const SizedBox(height: 10),
             TextField(
               controller: _unitController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Unit',
-                hintText: 'in, lbs, %, bpm...',
+                hintText: 'in, ${weightUnit.shortLabel}, %, bpm...',
               ),
             ),
             const SizedBox(height: 10),
@@ -1297,9 +1313,12 @@ String _measurementTitle(MeasurementDefinition definition) {
   };
 }
 
-String _defaultUnitFor(MeasurementDefinition definition) {
+String _defaultUnitFor(
+  MeasurementDefinition definition, [
+  WeightUnit weightUnit = WeightUnit.pounds,
+]) {
   return switch (definition.type) {
-    MeasurementType.BodyWeight => 'lbs',
+    MeasurementType.BodyWeight => weightUnit.shortLabel,
     MeasurementType.Height => 'in',
     MeasurementType.Custom => '',
     _ => 'in',

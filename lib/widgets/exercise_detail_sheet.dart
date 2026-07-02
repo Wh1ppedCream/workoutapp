@@ -6,9 +6,13 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart'; // for date formatting
+import 'package:provider/provider.dart';
+
 import '../models/models.dart';
+import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
 import '../theme/theme_extensions.dart';
+import '../utils/weight_unit_formatter.dart';
 import 'body_heatmap.dart';
 
 /// Simple record model for history tab
@@ -204,6 +208,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
   Widget _buildMetricsTab(ScrollController scrollCtrl) {
     final idx = _tfSelected.indexWhere((sel) => sel);
     final timeframe = _timeframes[idx];
+    final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
 
     return Column(
       children: [
@@ -244,7 +249,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                           return const Text('Volume Max: --');
                         }
                         return Text(
-                          'Volume Max: ${vm?.toStringAsFixed(1) ?? '--'} lbs',
+                          'Volume Max: ${vm == null ? '--' : WeightUnitFormatter.formatVolume(vm, weightUnit)}',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         );
@@ -276,15 +281,21 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                               Expanded(
                                 child: Text(
                                   r.isErm
-                                      ? '${r.oneErm.toStringAsFixed(1)} (ERM)'
-                                      : r.oneErm.toStringAsFixed(1),
+                                      ? '${WeightUnitFormatter.formatWeight(r.oneErm, weightUnit)} (ERM)'
+                                      : WeightUnitFormatter.formatWeight(
+                                        r.oneErm,
+                                        weightUnit,
+                                      ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                               Expanded(
                                 child: Text(
-                                  (r.rmValue * r.repCount).toStringAsFixed(1),
+                                  WeightUnitFormatter.formatVolume(
+                                    r.rmValue * r.repCount,
+                                    weightUnit,
+                                  ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -305,6 +316,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
   }
 
   Widget _buildRecordsTab(ScrollController scrollCtrl) {
+    final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     return FutureBuilder<List<HistoryRecord>>(
       future: _historyFuture,
       builder: (ctx, snap) {
@@ -325,7 +337,10 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
-              child: _ExerciseRecordTrendChart(points: records),
+              child: _ExerciseRecordTrendChart(
+                points: records,
+                weightUnit: weightUnit,
+              ),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -366,10 +381,10 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                         final oneErm = _estimatedOneRm(s);
                         return Row(
                           children: [
-                            Text('${j + 1}. ${_formatSet(s)}'),
+                            Text('${j + 1}. ${_formatSet(s, weightUnit)}'),
                             const Spacer(),
                             Text(
-                              'ERM=${oneErm.toStringAsFixed(1)}',
+                              'ERM=${WeightUnitFormatter.formatWeight(oneErm, weightUnit)}',
                               style: const TextStyle(
                                 fontStyle: FontStyle.italic,
                               ),
@@ -516,8 +531,12 @@ class _ExerciseRecordPoint {
 
 class _ExerciseRecordTrendChart extends StatelessWidget {
   final List<_ExerciseRecordPoint> points;
+  final WeightUnit weightUnit;
 
-  const _ExerciseRecordTrendChart({required this.points});
+  const _ExerciseRecordTrendChart({
+    required this.points,
+    required this.weightUnit,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -581,7 +600,8 @@ class _ExerciseRecordTrendChart extends StatelessWidget {
               getTooltipItems: (touchedSpots) {
                 if (touchedSpots.isEmpty) return const <LineTooltipItem?>[];
                 final spot = touchedSpots.first;
-                final index = spot.x.round().clamp(0, points.length - 1).toInt();
+                final index =
+                    spot.x.round().clamp(0, points.length - 1).toInt();
                 final point = points[index];
                 final textStyle =
                     theme.textTheme.labelSmall?.copyWith(
@@ -599,9 +619,9 @@ class _ExerciseRecordTrendChart extends StatelessWidget {
                 return [
                   LineTooltipItem(
                     '${DateFormat('MMM d, h:mm a').format(point.date)}\n'
-                    'Wt ${_cleanNumber(point.bestWeight)} | '
-                    'Est ${_cleanNumber(point.bestEstimatedOneRm)} | '
-                    'Top ${_formatSet(point.bestSet)}',
+                    'Wt ${WeightUnitFormatter.formatWeight(point.bestWeight, weightUnit)} | '
+                    'Est ${WeightUnitFormatter.formatWeight(point.bestEstimatedOneRm, weightUnit)} | '
+                    'Top ${_formatSet(point.bestSet, weightUnit)}',
                     textStyle,
                   ),
                   for (var i = 1; i < touchedSpots.length; i++) null,
@@ -640,7 +660,7 @@ class _ExerciseRecordTrendChart extends StatelessWidget {
                       distanceFromEdge: 2,
                     ),
                     child: Text(
-                      _compactLbs(value),
+                      _compactWeight(value, weightUnit),
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: scheme.onSurfaceVariant,
                         fontWeight: FontWeight.w700,
@@ -763,10 +783,11 @@ class _RecordChartBounds {
 }
 
 _RecordChartBounds _recordChartBounds(List<_ExerciseRecordPoint> points) {
-  final values = [
-    for (final point in points) point.bestWeight,
-    for (final point in points) point.bestEstimatedOneRm,
-  ].where((value) => value > 0).toList();
+  final values =
+      [
+        for (final point in points) point.bestWeight,
+        for (final point in points) point.bestEstimatedOneRm,
+      ].where((value) => value > 0).toList();
 
   if (values.isEmpty) {
     return const _RecordChartBounds(minY: 0, maxY: 10, interval: 5);
@@ -785,11 +806,7 @@ _RecordChartBounds _recordChartBounds(List<_ExerciseRecordPoint> points) {
     (rawMaxY / interval).ceil() * interval,
   );
 
-  return _RecordChartBounds(
-    minY: minY,
-    maxY: maxY,
-    interval: interval,
-  );
+  return _RecordChartBounds(minY: minY, maxY: maxY, interval: interval);
 }
 
 FlSpot _recordSpot(int index, double value) {
@@ -817,13 +834,16 @@ Set<int> _recordDateLabelIndexes(int length) {
 
 bool _shouldUseTimeLabels(List<_ExerciseRecordPoint> points) {
   final days = {
-    for (final point in points) DateUtils.dateOnly(point.date).toIso8601String(),
+    for (final point in points)
+      DateUtils.dateOnly(point.date).toIso8601String(),
   };
   return days.length == 1;
 }
 
 String _recordAxisLabel(DateTime date, bool showTime) {
-  return showTime ? DateFormat('h:mm a').format(date) : DateFormat.MMMd().format(date);
+  return showTime
+      ? DateFormat('h:mm a').format(date)
+      : DateFormat.MMMd().format(date);
 }
 
 double _estimatedOneRm(ExerciseSet set) {
@@ -831,19 +851,16 @@ double _estimatedOneRm(ExerciseSet set) {
   return set.weight * (1 + 0.0333 * set.reps);
 }
 
-String _formatSet(ExerciseSet set) {
-  return '${_formatLbs(set.weight)} x ${set.reps}';
+String _formatSet(ExerciseSet set, WeightUnit weightUnit) {
+  return '${WeightUnitFormatter.formatWeight(set.weight, weightUnit)} x ${set.reps}';
 }
 
-String _formatLbs(double value) {
-  return '${_cleanNumber(value)} lbs';
-}
-
-String _compactLbs(double value) {
-  if (value.abs() >= 1000) {
-    return '${(value / 1000).toStringAsFixed(value.abs() >= 10000 ? 0 : 1)}k';
+String _compactWeight(double value, WeightUnit weightUnit) {
+  final displayValue = WeightUnitFormatter.fromPounds(value, weightUnit);
+  if (displayValue.abs() >= 1000) {
+    return '${(displayValue / 1000).toStringAsFixed(displayValue.abs() >= 10000 ? 0 : 1)}k';
   }
-  return _cleanNumber(value);
+  return _cleanNumber(displayValue);
 }
 
 String _cleanNumber(double value) {

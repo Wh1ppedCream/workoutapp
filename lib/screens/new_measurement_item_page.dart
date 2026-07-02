@@ -1,6 +1,9 @@
 // File: lib/screens/new_measurement_item_page.dart
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
 import '../models/models.dart';
 
@@ -9,8 +12,7 @@ class NewMeasurementItemPage extends StatefulWidget {
   const NewMeasurementItemPage({super.key});
 
   @override
-  State<NewMeasurementItemPage> createState() =>
-      _NewMeasurementItemPageState();
+  State<NewMeasurementItemPage> createState() => _NewMeasurementItemPageState();
 }
 
 class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
@@ -22,6 +24,7 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
   bool _heightIsFeet = true;
   bool _pump = false;
   String _selectedWeightUnit = 'lbs';
+  bool _selectedWeightUnitInitialized = false;
 
   final TextEditingController _valController1 = TextEditingController();
   final TextEditingController _valController2 = TextEditingController();
@@ -41,6 +44,19 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
     super.dispose();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final unitPrefs = context.watch<UnitPreferenceProvider>();
+    if (_selectedWeightUnitInitialized || !unitPrefs.loaded) return;
+    _selectedWeightUnit = unitPrefs.weightUnit.shortLabel;
+    _selectedWeightUnitInitialized = true;
+  }
+
+  String _preferredWeightUnit() {
+    return context.read<UnitPreferenceProvider>().weightUnit.shortLabel;
+  }
+
   void _resetSubControls() {
     _bodyweightVariation = null;
     _heightIsFeet = true;
@@ -50,7 +66,7 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
     _customNameController.clear();
     _customUnitController.text = 'in';
     _customNoteController.clear();
-    _selectedWeightUnit = 'lbs';
+    _selectedWeightUnit = _preferredWeightUnit();
   }
 
   bool get _canSave {
@@ -62,12 +78,10 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
     if (_selectedType == null) return false;
     switch (_selectedType!) {
       case MeasurementType.BodyWeight:
-        return _bodyweightVariation != null &&
-            _valController1.text.isNotEmpty;
+        return _bodyweightVariation != null && _valController1.text.isNotEmpty;
       case MeasurementType.Height:
         return _heightIsFeet
-            ? _valController1.text.isNotEmpty &&
-                _valController2.text.isNotEmpty
+            ? _valController1.text.isNotEmpty && _valController2.text.isNotEmpty
             : _valController1.text.isNotEmpty;
       default:
         // Any other enum value is a body part
@@ -76,8 +90,9 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _saveMeasurement() async {
@@ -112,8 +127,6 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
     final type = _selectedType!;
     final queryName = type.name;
 
-
-
     // 1) Lookup the definition ID via repo
     await _repo.ensureDefaultMeasurementDefinitions();
 
@@ -124,7 +137,7 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
       return;
     }
 
-// 2) Parse the numeric value and decide unit
+    // 2) Parse the numeric value and decide unit
     double value;
     String unit;
     try {
@@ -165,13 +178,7 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
 
     // 4) Insert via repo
 
-    await _repo.insertMeasurement(
-      defId,
-      DateTime.now(),
-      value,
-      unit,
-      note,
-    );
+    await _repo.insertMeasurement(defId, DateTime.now(), value, unit, note);
 
     if (!mounted) return;
     Navigator.of(context).pop(true);
@@ -189,13 +196,13 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
             children: [
               Expanded(
                 child: ElevatedButton(
-                  onPressed: () => setState(() {
-                    _usePresets = true;
-                    _resetSubControls();
-                  }),
+                  onPressed:
+                      () => setState(() {
+                        _usePresets = true;
+                        _resetSubControls();
+                      }),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        _usePresets ? Colors.deepPurple : null,
+                    backgroundColor: _usePresets ? Colors.deepPurple : null,
                   ),
                   child: const Text('Presets'),
                 ),
@@ -203,13 +210,13 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
               const SizedBox(width: 8),
               Expanded(
                 child: ElevatedButton(
-                  onPressed: () => setState(() {
-                    _usePresets = false;
-                    _resetSubControls();
-                  }),
+                  onPressed:
+                      () => setState(() {
+                        _usePresets = false;
+                        _resetSubControls();
+                      }),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        !_usePresets ? Colors.deepPurple : null,
+                    backgroundColor: !_usePresets ? Colors.deepPurple : null,
                   ),
                   child: const Text('Custom'),
                 ),
@@ -223,18 +230,21 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
             DropdownButtonFormField<MeasurementType>(
               decoration: const InputDecoration(labelText: 'Preset Type'),
               value: _selectedType,
-              items: MeasurementType.values
-                  .where((mt) => mt != MeasurementType.Custom)
-                  .map((mt) {
-                return DropdownMenuItem<MeasurementType>(
-                  value: mt,
-                  child: Text(_measurementTypeLabel(mt)),
-                );
-              }).toList(),
-              onChanged: (mt) => setState(() {
-                _selectedType = mt;
-                _resetSubControls();
-              }),
+              items:
+                  MeasurementType.values
+                      .where((mt) => mt != MeasurementType.Custom)
+                      .map((mt) {
+                        return DropdownMenuItem<MeasurementType>(
+                          value: mt,
+                          child: Text(_measurementTypeLabel(mt)),
+                        );
+                      })
+                      .toList(),
+              onChanged:
+                  (mt) => setState(() {
+                    _selectedType = mt;
+                    _resetSubControls();
+                  }),
             ),
             const SizedBox(height: 16),
 
@@ -263,8 +273,7 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
                   Expanded(
                     child: TextFormField(
                       controller: _valController1,
-                      decoration:
-                          const InputDecoration(labelText: 'Weight'),
+                      decoration: const InputDecoration(labelText: 'Weight'),
                       keyboardType: TextInputType.number,
                       onChanged: (_) => setState(() {}),
                     ),
@@ -272,9 +281,10 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
                   const SizedBox(width: 8),
                   DropdownButton<String>(
                     value: _selectedWeightUnit,
-                    onChanged: (u) => setState(() {
-                      if (u != null) _selectedWeightUnit = u;
-                    }),
+                    onChanged:
+                        (u) => setState(() {
+                          if (u != null) _selectedWeightUnit = u;
+                        }),
                     items: const [
                       DropdownMenuItem(value: 'lbs', child: Text('lbs')),
                       DropdownMenuItem(value: 'kg', child: Text('kg')),
@@ -290,9 +300,7 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
               const SizedBox(height: 8),
               ToggleButtons(
                 isSelected: [_heightIsFeet, !_heightIsFeet],
-                onPressed: (i) => setState(
-                  () => _heightIsFeet = (i == 0),
-                ),
+                onPressed: (i) => setState(() => _heightIsFeet = (i == 0)),
                 children: const [Text('ft/in'), Text('cm')],
               ),
               const SizedBox(height: 16),
@@ -302,8 +310,7 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
                     Expanded(
                       child: TextFormField(
                         controller: _valController1,
-                        decoration:
-                            const InputDecoration(labelText: 'Feet'),
+                        decoration: const InputDecoration(labelText: 'Feet'),
                         keyboardType: TextInputType.number,
                         onChanged: (_) => setState(() {}),
                       ),
@@ -312,8 +319,7 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
                     Expanded(
                       child: TextFormField(
                         controller: _valController2,
-                        decoration:
-                            const InputDecoration(labelText: 'Inches'),
+                        decoration: const InputDecoration(labelText: 'Inches'),
                         keyboardType: TextInputType.number,
                         onChanged: (_) => setState(() {}),
                       ),
@@ -323,8 +329,7 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
               else
                 TextFormField(
                   controller: _valController1,
-                  decoration:
-                      const InputDecoration(labelText: 'Centimeters'),
+                  decoration: const InputDecoration(labelText: 'Centimeters'),
                   keyboardType: TextInputType.number,
                   onChanged: (_) => setState(() {}),
                 ),
@@ -342,13 +347,8 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
               const SizedBox(height: 8),
               ToggleButtons(
                 isSelected: [!_pump, _pump],
-                onPressed: (i) => setState(
-                  () => _pump = (i == 1),
-                ),
-                children: const [
-                  Text('Without pump'),
-                  Text('With pump'),
-                ],
+                onPressed: (i) => setState(() => _pump = (i == 1)),
+                children: const [Text('Without pump'), Text('With pump')],
               ),
               const SizedBox(height: 16),
               TextFormField(

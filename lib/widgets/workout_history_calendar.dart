@@ -2,10 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 import '../models/models.dart';
+import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
 import '../theme/theme_extensions.dart';
+import '../utils/weight_unit_formatter.dart';
 import 'body_heatmap.dart';
 
 enum _CalendarRangeMode { month, threeMonth, year, fourYear }
@@ -1215,6 +1218,7 @@ class _SelectedPeriodHeatmapSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     final workoutCount = sessions.length;
     final totalDurationSeconds = sessions.fold<int>(
       0,
@@ -1296,7 +1300,10 @@ class _SelectedPeriodHeatmapSummary extends StatelessWidget {
                         SizedBox(height: metricGap),
                         Expanded(
                           child: _CalendarMetricCard(
-                            value: _formatMetricVolume(totalVolume),
+                            value: WeightUnitFormatter.formatVolume(
+                              totalVolume,
+                              weightUnit,
+                            ),
                             label: 'Total Volume',
                             compact: compactMetrics,
                           ),
@@ -1469,6 +1476,7 @@ class _SessionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     return ListTile(
       dense: true,
       contentPadding: EdgeInsets.zero,
@@ -1483,7 +1491,7 @@ class _SessionRow extends StatelessWidget {
         '${session.durationMinutes} min  -  '
         '${_pluralize(session.exerciseCount, 'exercise')}  -  '
         '${_pluralize(session.setCount, 'set')}  -  '
-        '${_formatCompact(session.totalVolume)} lbs',
+        '${WeightUnitFormatter.formatVolume(session.totalVolume, weightUnit)}',
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
@@ -1498,20 +1506,4 @@ String _durationLabel(int totalSeconds) {
   final hours = totalSeconds ~/ 3600;
   final mins = (totalSeconds % 3600) ~/ 60;
   return '${hours}h ${mins}m';
-}
-
-String _formatMetricVolume(double value) {
-  return '${(value / 1000).toStringAsFixed(1)}k lbs';
-}
-
-String _formatCompact(double value) {
-  final abs = value.abs();
-  if (abs >= 1000000) {
-    return '${(value / 1000000).toStringAsFixed(1)}M';
-  }
-  if (abs >= 1000) {
-    final digits = abs >= 10000 ? 0 : 1;
-    return '${(value / 1000).toStringAsFixed(digits)}k';
-  }
-  return value.round().toString();
 }

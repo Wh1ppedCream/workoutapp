@@ -1,10 +1,14 @@
 // File: lib/widgets/automatic_settings_sheet.dart
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 import '../providers/preset_session.dart';
+import '../providers/unit_preference_provider.dart';
 import '../models/models.dart';
 import 'dart:convert';
 import '../theme/app_colors.dart';
+import '../utils/weight_unit_formatter.dart';
 
 /// Scope used when deciding how many successful sets count toward progression.
 enum SuccessCountMode { session, exercise, set }
@@ -33,6 +37,7 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
 
   /// One controller per set override (parents + children)
   final Map<int, TextEditingController> _setControllers = {};
+  late WeightUnit _weightUnit;
 
   /// Whether we are in auto rotation mode or manual set-selection mode.
   bool _manualSelect = false;
@@ -110,27 +115,31 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
   void initState() {
     super.initState();
     final preset = widget.preset;
+    _weightUnit = context.read<UnitPreferenceProvider>().weightUnit;
 
     // Seed the global/manual flag
     _manualSelect = preset.manualSelect;
 
     // Global increment & skip-first
     _globalController = TextEditingController(
-      text: preset.globalIncrement.toString(),
+      text: WeightUnitFormatter.formatInputWeight(
+        preset.globalIncrement,
+        _weightUnit,
+      ),
     );
     _skipFirst = preset.skipFirstSet;
 
     // Per-exercise controllers
     for (var exId in preset.presetExerciseIds) {
       _exControllers[exId] = TextEditingController(
-        text: preset.exerciseIncrementOverrides[exId]?.toString() ?? '',
+        text: _formatOptionalIncrement(preset.exerciseIncrementOverrides[exId]),
       );
     }
 
     // Per-set controllers and manual selections.
     for (final setId in _allSetIds(preset)) {
       _setControllers[setId] = TextEditingController(
-        text: preset.setIncrementOverrides[setId]?.toString() ?? '',
+        text: _formatOptionalIncrement(preset.setIncrementOverrides[setId]),
       );
       _setSelections[setId] = preset.manualSelections[setId] ?? false;
     }
@@ -153,7 +162,7 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
     try {
       // 1) Global settings + manual flags
       final globalParsed =
-          double.tryParse(_globalController.text) ?? preset.globalIncrement;
+          _parseIncrement(_globalController.text) ?? preset.globalIncrement;
       final manualJson = json.encode(
         _setSelections.map((key, value) => MapEntry(key.toString(), value)),
       );
@@ -171,13 +180,13 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
 
       // 2) Per-exercise overrides
       for (var exId in preset.presetExerciseIds) {
-        final parsed = double.tryParse(_exControllers[exId]!.text);
+        final parsed = _parseIncrement(_exControllers[exId]!.text);
         await preset.saveExerciseOverride(exId, parsed);
       }
 
       // 3) Per-set overrides
       for (var setId in _setControllers.keys) {
-        final parsed = double.tryParse(_setControllers[setId]!.text);
+        final parsed = _parseIncrement(_setControllers[setId]!.text);
         await preset.saveSetOverride(setId, parsed);
       }
 
@@ -193,6 +202,17 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
     } finally {
       if (mounted && !closedSheet) setState(() => _isSaving = false);
     }
+  }
+
+  String _formatOptionalIncrement(double? pounds) {
+    if (pounds == null) return '';
+    return WeightUnitFormatter.formatInputWeight(pounds, _weightUnit);
+  }
+
+  double? _parseIncrement(String text) {
+    final value = double.tryParse(text);
+    if (value == null) return null;
+    return WeightUnitFormatter.toPounds(value, _weightUnit);
   }
 
   @override
@@ -238,10 +258,10 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
                                   const TextInputType.numberWithOptions(
                                     decimal: true,
                                   ),
-                              decoration: const InputDecoration(
+                              decoration: InputDecoration(
                                 labelText: 'Global Increment Amount',
-                                suffixText: 'lbs',
-                                border: OutlineInputBorder(),
+                                suffixText: _weightUnit.shortLabel,
+                                border: const OutlineInputBorder(),
                               ),
                             ),
                             const SizedBox(height: 12),

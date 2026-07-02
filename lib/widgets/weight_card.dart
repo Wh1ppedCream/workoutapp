@@ -1,7 +1,11 @@
 // File: lib/widgets/weight_card.dart
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 import '../models/models.dart';
+import '../providers/unit_preference_provider.dart';
+import '../utils/weight_unit_formatter.dart';
 
 /// Displays and edits a [WeightExercise], including parent sets and change sets.
 ///
@@ -55,6 +59,7 @@ class _WeightCardState extends State<WeightCard> {
 
   /// Completed parent set indexes for this card.
   final Set<int> _completedSets = {};
+  WeightUnit _weightUnit = WeightUnit.pounds;
 
   @override
   void initState() {
@@ -70,6 +75,15 @@ class _WeightCardState extends State<WeightCard> {
     }
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final nextUnit = context.watch<UnitPreferenceProvider>().weightUnit;
+    if (nextUnit == _weightUnit) return;
+    _weightUnit = nextUnit;
+    _syncFromExercise(resetCollapsed: false);
+  }
+
   /// Rebuilds controllers and local mirrors whenever the card receives a new
   /// exercise instance. Old controllers are disposed after the frame so Flutter
   /// does not trip over a controller that is still attached during rebuild.
@@ -79,7 +93,14 @@ class _WeightCardState extends State<WeightCard> {
     final sets = widget.exercise.sets;
     _weightControllers =
         sets
-            .map((s) => TextEditingController(text: s.weight.toString()))
+            .map(
+              (s) => TextEditingController(
+                text: WeightUnitFormatter.formatInputWeight(
+                  s.weight,
+                  _weightUnit,
+                ),
+              ),
+            )
             .toList();
     _repsControllers =
         sets
@@ -134,7 +155,9 @@ class _WeightCardState extends State<WeightCard> {
   }
 
   void _updateWeightSet(int index) {
-    final w = double.tryParse(_weightControllers[index].text) ?? 0;
+    final displayedWeight =
+        double.tryParse(_weightControllers[index].text) ?? 0;
+    final w = WeightUnitFormatter.toPounds(displayedWeight, _weightUnit);
     final r = int.tryParse(_repsControllers[index].text) ?? 0;
     widget.exercise.sets[index] = ExerciseSet(weight: w, reps: r);
     widget.onValueChanged?.call();
@@ -357,15 +380,11 @@ class _WeightCardState extends State<WeightCard> {
                                             setState(() {
                                               if (ok) {
                                                 _completedSets.add(index);
-                                                widget
-                                                    .exercise
-                                                    .completedParents
+                                                widget.exercise.completedParents
                                                     .add(index);
                                               } else {
                                                 _completedSets.remove(index);
-                                                widget
-                                                    .exercise
-                                                    .completedParents
+                                                widget.exercise.completedParents
                                                     .remove(index);
                                               }
                                               if (_allSetsComplete(sets)) {
@@ -392,10 +411,13 @@ class _WeightCardState extends State<WeightCard> {
                                 readOnly: readOnly,
                                 keyboardType: TextInputType.number,
                                 style: Theme.of(context).textTheme.bodyLarge,
-                                decoration: const InputDecoration(
-                                  labelText: 'Weight',
+                                decoration: InputDecoration(
+                                  labelText:
+                                      'Weight (${_weightUnit.shortLabel})',
                                   isDense: true,
-                                  contentPadding: EdgeInsets.only(bottom: 6),
+                                  contentPadding: const EdgeInsets.only(
+                                    bottom: 6,
+                                  ),
                                 ),
                                 onChanged:
                                     readOnly
@@ -435,7 +457,9 @@ class _WeightCardState extends State<WeightCard> {
                                     readOnly
                                         ? null
                                         : () async {
-                                          final confirm = await showDialog<bool>(
+                                          final confirm = await showDialog<
+                                            bool
+                                          >(
                                             context: context,
                                             builder:
                                                 (ctx) => AlertDialog(
@@ -525,17 +549,27 @@ class _WeightCardState extends State<WeightCard> {
                                 child: TextFormField(
                                   readOnly: readOnly,
                                   keyboardType: TextInputType.number,
-                                  initialValue: cset.weight.toString(),
-                                  decoration: const InputDecoration(
-                                    labelText: 'Wt',
+                                  initialValue:
+                                      WeightUnitFormatter.formatInputWeight(
+                                        cset.weight,
+                                        _weightUnit,
+                                      ),
+                                  decoration: InputDecoration(
+                                    labelText: 'Wt (${_weightUnit.shortLabel})',
                                   ),
                                   onChanged:
                                       readOnly
                                           ? null
                                           : (v) {
-                                            cset.weight =
-                                                double.tryParse(v) ??
-                                                cset.weight;
+                                            final displayValue =
+                                                double.tryParse(v);
+                                            if (displayValue != null) {
+                                              cset.weight =
+                                                  WeightUnitFormatter.toPounds(
+                                                    displayValue,
+                                                    _weightUnit,
+                                                  );
+                                            }
                                             widget.exercise.changeSets[index] =
                                                 List.from(_cSets[index]!);
                                             widget.onValueChanged?.call();
@@ -685,7 +719,10 @@ class _WeightCardState extends State<WeightCard> {
                               );
                               _weightControllers.add(
                                 TextEditingController(
-                                  text: last.weight.toString(),
+                                  text: WeightUnitFormatter.formatInputWeight(
+                                    last.weight,
+                                    _weightUnit,
+                                  ),
                                 ),
                               );
                               _repsControllers.add(

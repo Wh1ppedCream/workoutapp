@@ -2,9 +2,13 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+
 import '../models/models.dart';
+import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
 import '../utils/async_pool.dart';
+import '../utils/weight_unit_formatter.dart';
 
 /// A container for session metadata and its exercises.
 class _SessionData {
@@ -86,6 +90,7 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
   Widget _buildContent(BuildContext context, _SessionData data) {
     final session = data.session;
     final exercises = data.exercises;
+    final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
 
     // Compute total volume:
     double totalVol = 0;
@@ -102,6 +107,8 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
     final mins = dur.inMinutes.remainder(60).toString().padLeft(2, '0');
     final secs = dur.inSeconds.remainder(60).toString().padLeft(2, '0');
     final durStr = '$hours:$mins:$secs';
+
+    final volumeText = WeightUnitFormatter.formatVolume(totalVol, weightUnit);
 
     // Static placeholders:
     const calories = 100;
@@ -153,7 +160,7 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Volume: ${totalVol.toStringAsFixed(1)} lbs  •  Calories: $calories kcal',
+                          'Volume: $volumeText - Calories: $calories kcal',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -179,7 +186,7 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
                       itemBuilder: (ctx, i) {
                         final ex = exercises[i];
                         if (ex is WeightExercise) {
-                          return _buildWeightSection(ex);
+                          return _buildWeightSection(ex, weightUnit);
                         } else if (ex is CardioExercise) {
                           return ListTile(
                             leading: const Icon(Icons.fitness_center),
@@ -219,7 +226,7 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
     );
   }
 
-  Widget _buildWeightSection(WeightExercise ex) {
+  Widget _buildWeightSection(WeightExercise ex, WeightUnit weightUnit) {
     final rows = <Widget>[
       Padding(
         padding: const EdgeInsets.only(top: 8, bottom: 4),
@@ -234,12 +241,16 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
     for (var i = 0; i < ex.sets.length; i++) {
       final s = ex.sets[i];
       final erm = s.weight * (1 + 0.0333 * s.reps);
+      final setText =
+          '${i + 1}. ${WeightUnitFormatter.formatWeight(s.weight, weightUnit)} x ${s.reps}';
+      final ermText =
+          'ERM=${WeightUnitFormatter.formatWeight(erm, weightUnit)}';
       rows.add(
         Row(
           children: [
             Expanded(
               child: Text(
-                '${i + 1}. ${s.weight.toInt()} lbs × ${s.reps}',
+                setText,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -247,7 +258,7 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
             const SizedBox(width: 12),
             Flexible(
               child: Text(
-                'ERM=${erm.toStringAsFixed(1)}',
+                ermText,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.right,

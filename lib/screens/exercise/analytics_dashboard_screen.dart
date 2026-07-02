@@ -2,10 +2,13 @@
 // Weekly muscle/bodypart set-unit overview.
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../models/models.dart';
+import '../../providers/unit_preference_provider.dart';
 import '../../repositories/app_repository.dart';
 import '../../theme/theme_extensions.dart';
+import '../../utils/weight_unit_formatter.dart';
 import '../../widgets/body_heatmap.dart';
 import 'definitions_by_bodypart_page.dart';
 import 'definitions_by_muscle_page.dart';
@@ -211,6 +214,7 @@ class _WeeklyOverviewHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
       child: Card(
@@ -256,7 +260,10 @@ class _WeeklyOverviewHeader extends StatelessWidget {
                         const SizedBox(height: 8),
                         _SummaryStatBox(
                           label: 'Volume',
-                          value: '${_compactNumber(data.totalVolume)} lbs',
+                          value: WeightUnitFormatter.formatVolume(
+                            data.totalVolume,
+                            weightUnit,
+                          ),
                         ),
                       ],
                     ),
@@ -506,14 +513,6 @@ String _durationLabel(int seconds) {
   if (hours > 0 && minutes > 0) return '${hours}h ${minutes}m';
   if (hours > 0) return '${hours}h';
   return '${duration.inMinutes}m';
-}
-
-String _compactNumber(num value) {
-  final abs = value.abs();
-  if (abs >= 1000000) return '${(value / 1000000).toStringAsFixed(1)}M';
-  if (abs >= 1000) return '${(value / 1000).toStringAsFixed(1)}K';
-  if (value is double && value % 1 != 0) return value.toStringAsFixed(1);
-  return value.toStringAsFixed(0);
 }
 
 const _emptyWeeklyData = _WeeklySetOverviewData(

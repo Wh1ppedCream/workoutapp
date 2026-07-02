@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../models/models.dart';
 import '../providers/onboarding_provider.dart';
 import '../providers/selected_profile.dart';
+import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
 import '../widgets/body_heatmap.dart';
 import '../widgets/preset_bar.dart';
@@ -45,6 +46,8 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   String _proteinPreference = 'Moderate';
   bool _useNutritionData = false;
   bool _useExerciseData = false;
+  bool _unitPreferenceLoaded = false;
+  WeightUnit _selectedWeightUnit = WeightUnit.pounds;
   _GymSpaceTemplate? _selectedGymSpace;
   _WorkoutPlanSetupOption? _workoutPlanSetupOption;
   List<Equipment> _availableGymEquipment = const [];
@@ -73,9 +76,14 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_gymEquipmentLoaded) return;
-    _gymEquipmentLoaded = true;
-    _loadGymEquipment();
+    if (!_unitPreferenceLoaded) {
+      _unitPreferenceLoaded = true;
+      _selectedWeightUnit = context.read<UnitPreferenceProvider>().weightUnit;
+    }
+    if (!_gymEquipmentLoaded) {
+      _gymEquipmentLoaded = true;
+      _loadGymEquipment();
+    }
   }
 
   @override
@@ -153,6 +161,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
 
     final repo = context.read<AppRepository>();
     final onboardingConfig = context.read<OnboardingConfig>();
+    final unitPrefs = context.read<UnitPreferenceProvider>();
     final messenger = ScaffoldMessenger.of(context);
 
     try {
@@ -171,6 +180,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         await repo.savePersonalInfo(info);
       }
 
+      await unitPrefs.setWeightUnit(_selectedWeightUnit);
       await _createOrUpdateSelectedGymProfile(repo);
       await onboardingConfig.markCompleted();
       if (!mounted) return;
@@ -190,23 +200,26 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       return null;
     }
 
-    final selectedEquipment = _availableGymEquipment
-        .where((item) => _selectedGymEquipmentNames.contains(item.name))
-        .toList();
+    final selectedEquipment =
+        _availableGymEquipment
+            .where((item) => _selectedGymEquipmentNames.contains(item.name))
+            .toList();
     if (selectedEquipment.isEmpty) {
       throw StateError('Select at least one equipment option.');
     }
 
     final existingProfiles = await repo.fetchAllProfiles();
-    final requestedName = _gymProfileNameController.text.trim().isEmpty
-        ? template.defaultProfileName
-        : _gymProfileNameController.text.trim();
+    final requestedName =
+        _gymProfileNameController.text.trim().isEmpty
+            ? template.defaultProfileName
+            : _gymProfileNameController.text.trim();
 
     final profileId = _onboardingProfileId;
     if (profileId != null &&
         existingProfiles.any((profile) => profile.id == profileId)) {
-      final currentProfile =
-          existingProfiles.firstWhere((profile) => profile.id == profileId);
+      final currentProfile = existingProfiles.firstWhere(
+        (profile) => profile.id == profileId,
+      );
       final profileName = _uniqueProfileName(
         requestedName,
         existingProfiles,
@@ -250,7 +263,8 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   ) async {
     final assigned = await repo.fetchEquipmentForProfile(profileId);
     final assignedIds = assigned.map((row) => row['id'] as int).toSet();
-    final selectedIds = selectedEquipment.map((equipment) => equipment.id).toSet();
+    final selectedIds =
+        selectedEquipment.map((equipment) => equipment.id).toSet();
     final toAdd = selectedIds.difference(assignedIds);
     final toRemove = assignedIds.difference(selectedIds);
 
@@ -274,21 +288,20 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
 
   String _uniqueProfileName(
     String requestedName,
-    List<GymProfile> existingProfiles,
-    {int? ignoredProfileId}
-  ) {
-    final existingNames = existingProfiles
-        .where((profile) => profile.id != ignoredProfileId)
-        .map((profile) => profile.name.toLowerCase())
-        .toSet();
+    List<GymProfile> existingProfiles, {
+    int? ignoredProfileId,
+  }) {
+    final existingNames =
+        existingProfiles
+            .where((profile) => profile.id != ignoredProfileId)
+            .map((profile) => profile.name.toLowerCase())
+            .toSet();
     if (!existingNames.contains(requestedName.toLowerCase())) {
       return requestedName;
     }
 
     var suffix = 2;
-    while (existingNames.contains(
-      '$requestedName ($suffix)'.toLowerCase(),
-    )) {
+    while (existingNames.contains('$requestedName ($suffix)'.toLowerCase())) {
       suffix++;
     }
     return '$requestedName ($suffix)';
@@ -300,12 +313,12 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   }
 
   void _selectGymSpace(_GymSpaceTemplate template) {
-    final availableNames = _availableGymEquipment
-        .map((equipment) => equipment.name)
-        .toSet();
-    final equipmentNames = template.includeAllEquipment
-        ? availableNames
-        : template.equipmentNames.intersection(availableNames);
+    final availableNames =
+        _availableGymEquipment.map((equipment) => equipment.name).toSet();
+    final equipmentNames =
+        template.includeAllEquipment
+            ? availableNames
+            : template.equipmentNames.intersection(availableNames);
 
     setState(() {
       _selectedGymSpace = template;
@@ -518,11 +531,12 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
 
     final addedPlanIds = await Navigator.of(context).push<List<int>>(
       MaterialPageRoute(
-        builder: (_) => PremadePlansPage(
-          profileId: profileId,
-          onboardingMode: true,
-          onPlanAdded: () {},
-        ),
+        builder:
+            (_) => PremadePlansPage(
+              profileId: profileId,
+              onboardingMode: true,
+              onPlanAdded: () {},
+            ),
       ),
     );
     if (!mounted) return;
@@ -603,7 +617,8 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     final pages = _pages;
     final lastPageIndex = pages.length - 1;
     final scheme = Theme.of(context).colorScheme;
-    final safePage = _currentPage > lastPageIndex ? lastPageIndex : _currentPage;
+    final safePage =
+        _currentPage > lastPageIndex ? lastPageIndex : _currentPage;
     final canAdvance = _canAdvance(pages[safePage]);
 
     return Scaffold(
@@ -647,17 +662,18 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton(
-                      onPressed: canAdvance && !_isFinishing
-                          ? () {
-                              _nextAction();
-                            }
-                          : null,
+                      onPressed:
+                          canAdvance && !_isFinishing
+                              ? () {
+                                _nextAction();
+                              }
+                              : null,
                       child: Text(
                         _isFinishing
                             ? 'Finishing...'
                             : safePage == lastPageIndex
-                                ? 'Finish Setup'
-                                : 'Next',
+                            ? 'Finish Setup'
+                            : 'Next',
                       ),
                     ),
                   ),
@@ -680,7 +696,8 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         _FeatureRow(
           icon: Icons.fitness_center,
           title: 'Train with context',
-          body: 'Use your preferences and history to shape workout suggestions.',
+          body:
+              'Use your preferences and history to shape workout suggestions.',
         ),
         _FeatureRow(
           icon: Icons.restaurant_menu,
@@ -700,7 +717,8 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     return _OnboardingCard(
       icon: Icons.badge_outlined,
       title: 'Tell us the basics',
-      subtitle: 'These details are optional, but they help future calculations.',
+      subtitle:
+          'These details are optional, but they help future calculations.',
       children: [
         _TextInput(
           controller: _nameController,
@@ -715,10 +733,12 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
             label: 'Gender',
             icon: Icons.wc_outlined,
           ),
-          items: const ['Male', 'Female', 'Other', 'Prefer not to say']
-              .map((gender) {
-            return DropdownMenuItem(value: gender, child: Text(gender));
-          }).toList(),
+          items:
+              const ['Male', 'Female', 'Other', 'Prefer not to say'].map((
+                gender,
+              ) {
+                return DropdownMenuItem(value: gender, child: Text(gender));
+              }).toList(),
           onChanged: (value) => setState(() => _gender = value),
         ),
         _FieldGap.small,
@@ -736,12 +756,25 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
           icon: Icons.height,
         ),
         _FieldGap.small,
+        _ChoiceGroup<WeightUnit>(
+          title: 'Workout weight units',
+          options: WeightUnit.values,
+          value: _selectedWeightUnit,
+          labelBuilder: (unit) => unit.shortLabel,
+          onChanged: (unit) {
+            if (unit == null) return;
+            setState(() => _selectedWeightUnit = unit);
+          },
+        ),
+        _FieldGap.small,
         _TextInput(
           controller: _weightController,
           label: 'Current weight',
-          hint: 'e.g. 160 lbs or 72 kg',
+          hint:
+              _selectedWeightUnit == WeightUnit.pounds ? 'e.g. 160' : 'e.g. 72',
           icon: Icons.monitor_weight_outlined,
           keyboardType: TextInputType.number,
+          suffixText: _selectedWeightUnit.shortLabel,
         ),
       ],
     );
@@ -804,53 +837,56 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
 
   Widget _buildBodyFatPage() {
     final isFemale = _gender == 'Female';
-    final options = isFemale
-        ? const [
-            '5-10%',
-            '10-15%',
-            '15-20%',
-            '20-25%',
-            '25-30%',
-            '30-35%',
-            '35-40%',
-            '40-45%',
-          ]
-        : const [
-            '0-5%',
-            '5-10%',
-            '10-15%',
-            '15-20%',
-            '20-25%',
-            '25-30%',
-            '30-35%',
-            '35-40%',
-          ];
-    final paths = isFemale
-        ? const [
-            'assets/bodyfat_woman/5-10_woman.png',
-            'assets/bodyfat_woman/10-15_woman.png',
-            'assets/bodyfat_woman/15-20_woman.png',
-            'assets/bodyfat_woman/20-25_woman.png',
-            'assets/bodyfat_woman/25-30_woman.png',
-            'assets/bodyfat_woman/30-35_woman.png',
-            'assets/bodyfat_woman/35-40_woman.png',
-            'assets/bodyfat_woman/40-45_woman.png',
-          ]
-        : const [
-            'assets/bodyfat/0-5_bf.png',
-            'assets/bodyfat/5-10_bf.png',
-            'assets/bodyfat/10-15_bf.png',
-            'assets/bodyfat/15-20_bf.png',
-            'assets/bodyfat/20-25_bf.png',
-            'assets/bodyfat/25-30_bf.png',
-            'assets/bodyfat/30-35_bf.png',
-            'assets/bodyfat/35-40_bf.png',
-          ];
+    final options =
+        isFemale
+            ? const [
+              '5-10%',
+              '10-15%',
+              '15-20%',
+              '20-25%',
+              '25-30%',
+              '30-35%',
+              '35-40%',
+              '40-45%',
+            ]
+            : const [
+              '0-5%',
+              '5-10%',
+              '10-15%',
+              '15-20%',
+              '20-25%',
+              '25-30%',
+              '30-35%',
+              '35-40%',
+            ];
+    final paths =
+        isFemale
+            ? const [
+              'assets/bodyfat_woman/5-10_woman.png',
+              'assets/bodyfat_woman/10-15_woman.png',
+              'assets/bodyfat_woman/15-20_woman.png',
+              'assets/bodyfat_woman/20-25_woman.png',
+              'assets/bodyfat_woman/25-30_woman.png',
+              'assets/bodyfat_woman/30-35_woman.png',
+              'assets/bodyfat_woman/35-40_woman.png',
+              'assets/bodyfat_woman/40-45_woman.png',
+            ]
+            : const [
+              'assets/bodyfat/0-5_bf.png',
+              'assets/bodyfat/5-10_bf.png',
+              'assets/bodyfat/10-15_bf.png',
+              'assets/bodyfat/15-20_bf.png',
+              'assets/bodyfat/20-25_bf.png',
+              'assets/bodyfat/25-30_bf.png',
+              'assets/bodyfat/30-35_bf.png',
+              'assets/bodyfat/35-40_bf.png',
+            ];
 
     return _OnboardingCard(
       icon: Icons.image_search,
       title: 'Body-fat estimate',
-      subtitle: 'Choose the closest visual estimate. Precision is not required.',
+      subtitle:
+          'Choose the closest visual estimate. Precision is not required.',
       children: [
         GridView.builder(
           shrinkWrap: true,
@@ -889,9 +925,10 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
             label: 'Preferred diet',
             icon: Icons.restaurant_menu,
           ),
-          items: const ['Balanced', 'Low fat', 'Low carb', 'Keto'].map((diet) {
-            return DropdownMenuItem(value: diet, child: Text(diet));
-          }).toList(),
+          items:
+              const ['Balanced', 'Low fat', 'Low carb', 'Keto'].map((diet) {
+                return DropdownMenuItem(value: diet, child: Text(diet));
+              }).toList(),
           onChanged: (value) => setState(() => _preferredDiet = value!),
         ),
         _FieldGap.small,
@@ -968,12 +1005,13 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
             max: 1.0,
             divisions: 9,
             label: '${_weeklyRatePct.toStringAsFixed(1)}% BW/wk',
-            onChanged: (value) => setState(() {
-              _weeklyRatePct = value;
-              _weeklyRateLbs = _goalWeightValue * value / 100;
-              _monthlyRatePct = value * 4;
-              _monthlyRateLbs = _weeklyRateLbs * 4;
-            }),
+            onChanged:
+                (value) => setState(() {
+                  _weeklyRatePct = value;
+                  _weeklyRateLbs = _goalWeightValue * value / 100;
+                  _monthlyRatePct = value * 4;
+                  _monthlyRateLbs = _weeklyRateLbs * 4;
+                }),
           ),
         ),
         const SizedBox(height: 12),
@@ -1012,17 +1050,15 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
             padding: EdgeInsets.symmetric(vertical: 28),
             child: Center(child: CircularProgressIndicator()),
           )
-        else if (_gymEquipmentLoadFailed)
-          ...[
-            _GymEquipmentLoadError(onRetry: _loadGymEquipment),
-            const SizedBox(height: 12),
-            _GymSpaceTile(
-              template: _skipGymSpaceTemplate,
-              selected: _selectedGymSpace?.skipSetup ?? false,
-              onTap: () => _selectGymSpace(_skipGymSpaceTemplate),
-            ),
-          ]
-        else
+        else if (_gymEquipmentLoadFailed) ...[
+          _GymEquipmentLoadError(onRetry: _loadGymEquipment),
+          const SizedBox(height: 12),
+          _GymSpaceTile(
+            template: _skipGymSpaceTemplate,
+            selected: _selectedGymSpace?.skipSetup ?? false,
+            onTap: () => _selectGymSpace(_skipGymSpaceTemplate),
+          ),
+        ] else
           ..._gymSpaceTemplates.map((template) {
             return Padding(
               padding: const EdgeInsets.only(bottom: 12),
@@ -1043,10 +1079,11 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       return const SizedBox.shrink();
     }
 
-    final selectedEquipment = _availableGymEquipment
-        .where((item) => _selectedGymEquipmentNames.contains(item.name))
-        .toList()
-      ..sort((a, b) => a.name.compareTo(b.name));
+    final selectedEquipment =
+        _availableGymEquipment
+            .where((item) => _selectedGymEquipmentNames.contains(item.name))
+            .toList()
+          ..sort((a, b) => a.name.compareTo(b.name));
 
     return _OnboardingCard(
       icon: Icons.fitness_center,
@@ -1061,19 +1098,16 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
           decoration: InputDecoration(
             labelText: 'Profile name',
             prefixIcon: const Icon(Icons.edit_outlined),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(18),
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(18)),
           ),
         ),
         const SizedBox(height: 16),
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: Theme.of(context)
-                .colorScheme
-                .surface
-                .withValues(alpha: 0.46),
+            color: Theme.of(
+              context,
+            ).colorScheme.surface.withValues(alpha: 0.46),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: Theme.of(context).colorScheme.outlineVariant,
@@ -1120,16 +1154,17 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
-                  children: selectedEquipment.map((equipment) {
-                    return Chip(
-                      avatar: Icon(
-                        _onboardingEquipmentIcon(equipment.name),
-                        size: 17,
-                      ),
-                      label: Text(equipment.name),
-                      visualDensity: VisualDensity.compact,
-                    );
-                  }).toList(),
+                  children:
+                      selectedEquipment.map((equipment) {
+                        return Chip(
+                          avatar: Icon(
+                            _onboardingEquipmentIcon(equipment.name),
+                            size: 17,
+                          ),
+                          label: Text(equipment.name),
+                          visualDensity: VisualDensity.compact,
+                        );
+                      }).toList(),
                 ),
             ],
           ),
@@ -1161,12 +1196,13 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   Future<void> _openGymProfileEditor() async {
     final draft = await Navigator.of(context).push<GymProfileDraft>(
       MaterialPageRoute(
-        builder: (_) => GymProfileScreen(
-          initialName: _gymProfileNameController.text.trim(),
-          initialEquipmentNames: _selectedGymEquipmentNames,
-          returnDraftOnly: true,
-          title: 'Edit Workout Space',
-        ),
+        builder:
+            (_) => GymProfileScreen(
+              initialName: _gymProfileNameController.text.trim(),
+              initialEquipmentNames: _selectedGymEquipmentNames,
+              returnDraftOnly: true,
+              title: 'Edit Workout Space',
+            ),
       ),
     );
     if (draft == null || !mounted) return;
@@ -1222,7 +1258,8 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         const SizedBox(height: 12),
         _WorkoutPlanSetupTile(
           title: 'Skip this step',
-          subtitle: 'Start without adding plans. You can set them up from Train later.',
+          subtitle:
+              'Start without adding plans. You can set them up from Train later.',
           icon: Icons.fast_forward,
           selected: _workoutPlanSetupOption == _WorkoutPlanSetupOption.skip,
           onTap: () {
@@ -1285,9 +1322,13 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       children: [
         _SummaryRow(label: 'Name', value: _nameController.text.trim()),
         _SummaryRow(label: 'Gender', value: _gender ?? ''),
-        _SummaryRow(label: 'DOB', value: _dob == null ? '' : _formatDate(_dob!)),
+        _SummaryRow(
+          label: 'DOB',
+          value: _dob == null ? '' : _formatDate(_dob!),
+        ),
         _SummaryRow(label: 'Height', value: _heightController.text.trim()),
         _SummaryRow(label: 'Weight', value: _weightController.text.trim()),
+        _SummaryRow(label: 'Workout units', value: _selectedWeightUnit.label),
         _SummaryRow(label: 'Included', value: included.join(', ')),
         if (usesNutrition) ...[
           _SummaryRow(label: 'Weight trend', value: _weightTrend ?? ''),
@@ -1298,19 +1339,17 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         if (_useExerciseData) ...[
           _SummaryRow(
             label: 'Gym profile',
-            value: _selectedGymSpace?.skipSetup ?? true
-                ? 'General'
-                : _gymProfileNameController.text.trim(),
+            value:
+                _selectedGymSpace?.skipSetup ?? true
+                    ? 'General'
+                    : _gymProfileNameController.text.trim(),
           ),
           if (!(_selectedGymSpace?.skipSetup ?? true))
             _SummaryRow(
               label: 'Equipment',
               value: '${_selectedGymEquipmentNames.length} selected',
             ),
-          _SummaryRow(
-            label: 'Workout plans',
-            value: _workoutPlanSummary(),
-          ),
+          _SummaryRow(label: 'Workout plans', value: _workoutPlanSummary()),
         ],
       ],
     );
@@ -1375,15 +1414,16 @@ class _OnboardingHeader extends StatelessWidget {
                 alignment: Alignment.centerLeft,
                 child: SizedBox(
                   width: 72,
-                  child: onBack == null
-                      ? null
-                      : IconButton(
-                          onPressed: onBack,
-                          tooltip: 'Previous step',
-                          alignment: Alignment.centerLeft,
-                          padding: EdgeInsets.zero,
-                          icon: const Icon(Icons.chevron_left, size: 26),
-                        ),
+                  child:
+                      onBack == null
+                          ? null
+                          : IconButton(
+                            onPressed: onBack,
+                            tooltip: 'Previous step',
+                            alignment: Alignment.centerLeft,
+                            padding: EdgeInsets.zero,
+                            icon: const Icon(Icons.chevron_left, size: 26),
+                          ),
                 ),
               ),
               Padding(
@@ -1402,10 +1442,7 @@ class _OnboardingHeader extends StatelessWidget {
                 alignment: Alignment.centerRight,
                 child: SizedBox(
                   width: 72,
-                  child: TextButton(
-                    onPressed: onSkip,
-                    child: Text(skipLabel),
-                  ),
+                  child: TextButton(onPressed: onSkip, child: Text(skipLabel)),
                 ),
               ),
             ],
@@ -1456,7 +1493,9 @@ class _OnboardingCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: scheme.surfaceContainerHighest.withValues(alpha: 0.34),
           borderRadius: BorderRadius.circular(30),
-          border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.55)),
+          border: Border.all(
+            color: scheme.outlineVariant.withValues(alpha: 0.55),
+          ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1499,6 +1538,7 @@ class _TextInput extends StatelessWidget {
   final String? hint;
   final IconData icon;
   final TextInputType? keyboardType;
+  final String? suffixText;
 
   const _TextInput({
     required this.controller,
@@ -1506,6 +1546,7 @@ class _TextInput extends StatelessWidget {
     required this.icon,
     this.hint,
     this.keyboardType,
+    this.suffixText,
   });
 
   @override
@@ -1517,6 +1558,7 @@ class _TextInput extends StatelessWidget {
         labelText: label,
         hintText: hint,
         prefixIcon: Icon(icon),
+        suffixText: suffixText,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(18)),
       ),
     );
@@ -1578,11 +1620,13 @@ class _IntentTile extends StatelessWidget {
     final scheme = theme.colorScheme;
     final selected = enabled && value;
     final iconColor = enabled ? scheme.primary : scheme.onSurfaceVariant;
-    final foregroundColor = enabled ? scheme.onSurface : scheme.onSurfaceVariant;
+    final foregroundColor =
+        enabled ? scheme.onSurface : scheme.onSurfaceVariant;
     final borderColor = selected ? scheme.primary : scheme.outlineVariant;
-    final backgroundColor = selected
-        ? scheme.primary.withValues(alpha: 0.16)
-        : scheme.surface.withValues(alpha: enabled ? 0.5 : 0.28);
+    final backgroundColor =
+        selected
+            ? scheme.primary.withValues(alpha: 0.16)
+            : scheme.surface.withValues(alpha: enabled ? 0.5 : 0.28);
 
     return InkWell(
       borderRadius: BorderRadius.circular(22),
@@ -1627,7 +1671,10 @@ class _IntentTile extends StatelessWidget {
             ),
             if (!enabled && statusLabel != null)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
                 decoration: BoxDecoration(
                   color: scheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(999),
@@ -1644,9 +1691,7 @@ class _IntentTile extends StatelessWidget {
             else
               Checkbox(
                 value: value,
-                onChanged: enabled
-                    ? (next) => onChanged(next ?? false)
-                    : null,
+                onChanged: enabled ? (next) => onChanged(next ?? false) : null,
               ),
           ],
         ),
@@ -1681,9 +1726,9 @@ class _SwitchCard extends StatelessWidget {
           Expanded(
             child: Text(
               title,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
             ),
           ),
           Switch(value: value, onChanged: onChanged),
@@ -1698,12 +1743,14 @@ class _ChoiceGroup<T> extends StatelessWidget {
   final List<T> options;
   final T? value;
   final ValueChanged<T?> onChanged;
+  final String Function(T option)? labelBuilder;
 
   const _ChoiceGroup({
     required this.title,
     required this.options,
     required this.value,
     required this.onChanged,
+    this.labelBuilder,
   });
 
   @override
@@ -1723,14 +1770,15 @@ class _ChoiceGroup<T> extends StatelessWidget {
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: options.map((option) {
-            final selected = option == value;
-            return ChoiceChip(
-              label: Text('$option'),
-              selected: selected,
-              onSelected: (_) => onChanged(option),
-            );
-          }).toList(),
+          children:
+              options.map((option) {
+                final selected = option == value;
+                return ChoiceChip(
+                  label: Text(labelBuilder?.call(option) ?? '$option'),
+                  selected: selected,
+                  onSelected: (_) => onChanged(option),
+                );
+              }).toList(),
         ),
       ],
     );
@@ -1830,15 +1878,15 @@ class _MetricPreviewCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             value,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w900,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
           ),
           Text(
             label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
           ),
         ],
       ),
@@ -1866,7 +1914,9 @@ class _SliderPanel extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surface.withValues(alpha: 0.52),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.65)),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.65),
+        ),
       ),
       child: Column(
         children: [
@@ -1910,23 +1960,25 @@ class _MiniStat extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surface.withValues(alpha: 0.52),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.65)),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.65),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             value,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w900,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: 2),
           Text(
             label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
           ),
         ],
       ),
@@ -2123,9 +2175,10 @@ class _OnboardingPlanOverviewListState
     _loadedProfileId = profileId;
     _loadedRefreshToken = widget.refreshToken;
     _loadedPlanIds = planIds;
-    _plansFuture = profileId == null
-        ? Future.value(const <_OnboardingPlanItem>[])
-        : _loadPlans(profileId, planIds);
+    _plansFuture =
+        profileId == null
+            ? Future.value(const <_OnboardingPlanItem>[])
+            : _loadPlans(profileId, planIds);
   }
 
   Future<List<_OnboardingPlanItem>> _loadPlans(
@@ -2139,12 +2192,11 @@ class _OnboardingPlanOverviewListState
         planIds.elementAt(index): index,
     };
     final filteredRows =
-        rows.where((row) => planIds.contains(row['id'] as int)).toList()
-          ..sort(
-            (a, b) => (order[a['id'] as int] ?? 0).compareTo(
-              order[b['id'] as int] ?? 0,
-            ),
-          );
+        rows.where((row) => planIds.contains(row['id'] as int)).toList()..sort(
+          (a, b) => (order[a['id'] as int] ?? 0).compareTo(
+            order[b['id'] as int] ?? 0,
+          ),
+        );
     final presetIds = filteredRows.map((row) => row['id'] as int).toList();
     final focusRows = await _repo.fetchPresetFocusSetCountsRaw(
       presetIds: presetIds,
@@ -2437,9 +2489,10 @@ class _GymSpaceTile extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: selected
-              ? accent.withValues(alpha: 0.16)
-              : scheme.surface.withValues(alpha: 0.46),
+          color:
+              selected
+                  ? accent.withValues(alpha: 0.16)
+                  : scheme.surface.withValues(alpha: 0.46),
           borderRadius: BorderRadius.circular(22),
           border: Border.all(
             color: selected ? accent : scheme.outlineVariant,
@@ -2567,9 +2620,10 @@ class _WorkoutPlanSetupTile extends StatelessWidget {
           duration: const Duration(milliseconds: 180),
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: selected
-                ? scheme.primary.withValues(alpha: 0.16)
-                : scheme.surface.withValues(alpha: 0.46),
+            color:
+                selected
+                    ? scheme.primary.withValues(alpha: 0.16)
+                    : scheme.surface.withValues(alpha: 0.46),
             borderRadius: BorderRadius.circular(22),
             border: Border.all(
               color: selected ? scheme.primary : scheme.outlineVariant,
@@ -2636,10 +2690,7 @@ class _OnboardingInfoCallout extends StatelessWidget {
   final IconData icon;
   final String text;
 
-  const _OnboardingInfoCallout({
-    required this.icon,
-    required this.text,
-  });
+  const _OnboardingInfoCallout({required this.icon, required this.text});
 
   @override
   Widget build(BuildContext context) {
