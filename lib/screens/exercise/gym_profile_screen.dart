@@ -1,21 +1,23 @@
 // File: lib/screens/exercise/gym_profile_screen.dart
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../db/database_helper.dart';
 import '../../models/gym_models.dart';
 import '../../providers/selected_profile.dart';
+import '../../services/tutorial_state_store.dart';
+import '../../utils/tutorial_launcher.dart';
+import '../../widgets/guided_tutorial_overlay.dart';
 
 /// Profile edits returned to onboarding before the real profile is created.
 class GymProfileDraft {
   final String name;
   final Set<String> equipmentNames;
 
-  const GymProfileDraft({
-    required this.name,
-    required this.equipmentNames,
-  });
+  const GymProfileDraft({required this.name, required this.equipmentNames});
 }
 
 /// Creates or edits a workout space and the equipment available in that space.
@@ -41,6 +43,10 @@ class GymProfileScreen extends StatefulWidget {
 
 class _GymProfileScreenState extends State<GymProfileScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _profileTutorialKey = GlobalKey(debugLabel: 'gym_profile_profile');
+  final _searchTutorialKey = GlobalKey(debugLabel: 'gym_profile_search');
+  final _equipmentTutorialKey = GlobalKey(debugLabel: 'gym_profile_equipment');
+  final _saveTutorialKey = GlobalKey(debugLabel: 'gym_profile_save');
   late final TextEditingController _nameController;
   late final TextEditingController _searchController;
   List<_EquipmentOption> _allEquipment = [];
@@ -50,6 +56,7 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
   late String _originalName;
   bool _isLoading = true;
   bool _isSaving = false;
+  bool _tutorialQueued = false;
   String _searchQuery = '';
 
   bool get _isEditing => widget.profile != null || widget.returnDraftOnly;
@@ -57,7 +64,8 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
     if (_isSaving) return false;
     final nameChanged = _nameController.text.trim() != _originalName.trim();
     final equipmentChanged =
-        !_isLoading && !_sameIntSet(_selectedEquipmentIds, _originalEquipmentIds);
+        !_isLoading &&
+        !_sameIntSet(_selectedEquipmentIds, _originalEquipmentIds);
     return nameChanged || equipmentChanged;
   }
 
@@ -93,7 +101,9 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
     );
     final assigned = <Map<String, dynamic>>[];
     if (widget.profile?.id != null) {
-      assigned.addAll(await dbHelper.fetchEquipmentForProfile(widget.profile!.id!));
+      assigned.addAll(
+        await dbHelper.fetchEquipmentForProfile(widget.profile!.id!),
+      );
     }
 
     final equipment =
@@ -105,19 +115,27 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
         }).toList();
 
     if (!mounted) return;
-    final assignedIds = assigned.isNotEmpty
-        ? assigned.map((e) => e['id'] as int).toSet()
-        : equipment
-            .where((item) => widget.initialEquipmentNames.contains(item.name))
-            .map((item) => item.id)
-            .toSet();
+    final assignedIds =
+        assigned.isNotEmpty
+            ? assigned.map((e) => e['id'] as int).toSet()
+            : equipment
+                .where(
+                  (item) => widget.initialEquipmentNames.contains(item.name),
+                )
+                .map((item) => item.id)
+                .toSet();
     setState(() {
       _allEquipment = equipment;
       _selectedEquipmentIds = assignedIds;
       _originalEquipmentIds = Set<int>.from(assignedIds);
       _expandedCategoryKeys =
-          _buildEquipmentGroups(equipment).map((group) => group.category.key).toSet();
+          _buildEquipmentGroups(
+            equipment,
+          ).map((group) => group.category.key).toSet();
       _isLoading = false;
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _queueTutorial();
     });
   }
 
@@ -175,6 +193,53 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
     });
   }
 
+  void _queueTutorial() {
+    if (!mounted || _tutorialQueued) return;
+    _tutorialQueued = true;
+    unawaited(_showTutorial());
+  }
+
+  Future<void> _showTutorial() async {
+    try {
+      await showGuidedTutorialOnce(
+        context,
+        tutorialId: TutorialIds.gymProfileEditor,
+        steps: [
+          GuidedTutorialStep(
+            targetKey: _profileTutorialKey,
+            icon: Icons.home_work_outlined,
+            title: 'Workout space',
+            body:
+                'Name this profile for where you train, like Home Gym, Commercial Gym, or Travel Setup.',
+          ),
+          GuidedTutorialStep(
+            targetKey: _searchTutorialKey,
+            icon: Icons.search,
+            title: 'Find equipment',
+            body:
+                'Use search when the equipment list gets long and you want to jump to one item quickly.',
+          ),
+          GuidedTutorialStep(
+            targetKey: _equipmentTutorialKey,
+            icon: Icons.inventory_2_outlined,
+            title: 'Available equipment',
+            body:
+                'Select what this workout space has. Generated plans and swaps can use this to avoid unavailable exercises.',
+          ),
+          GuidedTutorialStep(
+            targetKey: _saveTutorialKey,
+            icon: Icons.save_outlined,
+            title: 'Save profile',
+            body:
+                'Save stores the profile and equipment. Cancel asks before discarding unsaved changes.',
+          ),
+        ],
+      );
+    } finally {
+      _tutorialQueued = false;
+    }
+  }
+
   void _leavePage() {
     final navigator = Navigator.of(context);
     if (navigator.canPop()) {
@@ -190,35 +255,41 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
 
     final action = await showDialog<_UnsavedGymProfileAction>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Save changes?'),
-        content: const Text(
-          'You have unsaved gym profile changes. Save them before leaving?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(
-              _UnsavedGymProfileAction.keepEditing,
+      builder:
+          (dialogContext) => AlertDialog(
+            title: const Text('Save changes?'),
+            content: const Text(
+              'You have unsaved gym profile changes. Save them before leaving?',
             ),
-            child: const Text('Keep Editing'),
+            actions: [
+              TextButton(
+                onPressed:
+                    () => Navigator.of(
+                      dialogContext,
+                    ).pop(_UnsavedGymProfileAction.keepEditing),
+                child: const Text('Keep Editing'),
+              ),
+              TextButton(
+                onPressed:
+                    () => Navigator.of(
+                      dialogContext,
+                    ).pop(_UnsavedGymProfileAction.discard),
+                child: const Text('Discard'),
+              ),
+              FilledButton(
+                onPressed:
+                    () => Navigator.of(
+                      dialogContext,
+                    ).pop(_UnsavedGymProfileAction.save),
+                child: const Text('Save'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(
-              _UnsavedGymProfileAction.discard,
-            ),
-            child: const Text('Discard'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(
-              _UnsavedGymProfileAction.save,
-            ),
-            child: const Text('Save'),
-          ),
-        ],
-      ),
     );
 
-    if (!mounted || action == null || action == _UnsavedGymProfileAction.keepEditing) {
+    if (!mounted ||
+        action == null ||
+        action == _UnsavedGymProfileAction.keepEditing) {
       return;
     }
 
@@ -247,10 +318,11 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
         return false;
       }
 
-      final selectedNames = _allEquipment
-          .where((item) => _selectedEquipmentIds.contains(item.id))
-          .map((item) => item.name)
-          .toSet();
+      final selectedNames =
+          _allEquipment
+              .where((item) => _selectedEquipmentIds.contains(item.id))
+              .map((item) => item.name)
+              .toSet();
 
       if (!mounted) return true;
       setState(() {
@@ -258,9 +330,7 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
         _originalEquipmentIds = Set<int>.from(_selectedEquipmentIds);
         _isSaving = false;
       });
-      navigator.pop(
-        GymProfileDraft(name: name, equipmentNames: selectedNames),
-      );
+      navigator.pop(GymProfileDraft(name: name, equipmentNames: selectedNames));
       return true;
     }
 
@@ -316,7 +386,7 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
       if (!mounted) return false;
       setState(() => _isSaving = false);
       messenger.showSnackBar(
-          SnackBar(content: Text('Could not save profile: $error')),
+        SnackBar(content: Text('Could not save profile: $error')),
       );
       return false;
     }
@@ -337,7 +407,8 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
         appBar: AppBar(
           leading: BackButton(onPressed: _attemptClose),
           title: Text(
-            widget.title ?? (_isEditing ? 'Edit Gym Profile' : 'New Gym Profile'),
+            widget.title ??
+                (_isEditing ? 'Edit Gym Profile' : 'New Gym Profile'),
           ),
           scrolledUnderElevation: 0,
         ),
@@ -348,18 +419,29 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
                 child: ListView(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
                   children: [
-                    _ProfileSetupCard(
-                      formKey: _formKey,
-                      controller: _nameController,
-                      selectedCount: _selectedEquipmentIds.length,
-                      totalCount: _allEquipment.length,
+                    KeyedSubtree(
+                      key: _profileTutorialKey,
+                      child: _ProfileSetupCard(
+                        formKey: _formKey,
+                        controller: _nameController,
+                        selectedCount: _selectedEquipmentIds.length,
+                        totalCount: _allEquipment.length,
+                      ),
                     ),
                     const SizedBox(height: 14),
-                    _EquipmentSearchField(controller: _searchController),
+                    KeyedSubtree(
+                      key: _searchTutorialKey,
+                      child: _EquipmentSearchField(
+                        controller: _searchController,
+                      ),
+                    ),
                     const SizedBox(height: 16),
-                    _EquipmentSectionHeader(
-                      onReset: _isLoading ? null : _resetEquipmentSelection,
-                      onSelectAll: _isLoading ? null : _selectAllEquipment,
+                    KeyedSubtree(
+                      key: _equipmentTutorialKey,
+                      child: _EquipmentSectionHeader(
+                        onReset: _isLoading ? null : _resetEquipmentSelection,
+                        onSelectAll: _isLoading ? null : _selectAllEquipment,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -375,7 +457,9 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
                         child: Center(child: CircularProgressIndicator()),
                       )
                     else if (groups.isEmpty)
-                      _EmptyEquipmentSearch(query: _searchController.text.trim())
+                      _EmptyEquipmentSearch(
+                        query: _searchController.text.trim(),
+                      )
                     else
                       ...groups.map((group) {
                         return Padding(
@@ -386,8 +470,8 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
                             isExpanded: _expandedCategoryKeys.contains(
                               group.category.key,
                             ),
-                            onToggleExpanded: () =>
-                                _toggleExpanded(group.category.key),
+                            onToggleExpanded:
+                                () => _toggleExpanded(group.category.key),
                             onToggleCategory: () => _toggleCategory(group),
                             onToggleEquipment: _toggleEquipment,
                           ),
@@ -396,11 +480,14 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
                   ],
                 ),
               ),
-              _SaveProfileBar(
-                isLoading: _isLoading,
-                isSaving: _isSaving,
-                onCancel: _attemptClose,
-                onSave: _save,
+              KeyedSubtree(
+                key: _saveTutorialKey,
+                child: _SaveProfileBar(
+                  isLoading: _isLoading,
+                  isSaving: _isSaving,
+                  onCancel: _attemptClose,
+                  onSave: _save,
+                ),
               ),
             ],
           ),
@@ -433,7 +520,9 @@ class _ProfileSetupCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest.withValues(alpha: 0.42),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.55)),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.55),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -526,7 +615,10 @@ class _EquipmentSearchField extends StatelessWidget {
           borderRadius: BorderRadius.circular(999),
           borderSide: BorderSide.none,
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
       ),
     );
   }
@@ -601,14 +693,19 @@ class _EquipmentCategorySection extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final selectedCount =
-        group.items.where((item) => selectedEquipmentIds.contains(item.id)).length;
-    final allSelected = selectedCount == group.items.length && group.items.isNotEmpty;
+        group.items
+            .where((item) => selectedEquipmentIds.contains(item.id))
+            .length;
+    final allSelected =
+        selectedCount == group.items.length && group.items.isNotEmpty;
 
     return Container(
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest.withValues(alpha: 0.28),
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.55)),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.55),
+        ),
       ),
       child: Column(
         children: [
@@ -621,7 +718,11 @@ class _EquipmentCategorySection extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Icon(group.category.icon, color: scheme.primary, size: 22),
+                      Icon(
+                        group.category.icon,
+                        color: scheme.primary,
+                        size: 22,
+                      ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
@@ -979,11 +1080,15 @@ _EquipmentCategory _categoryForEquipment(String name) {
 
 IconData _equipmentIconFor(String name) {
   final lower = name.toLowerCase();
-  if (lower.contains('bench') || lower.contains('seat')) return Icons.event_seat;
+  if (lower.contains('bench') || lower.contains('seat')) {
+    return Icons.event_seat;
+  }
   if (lower.contains('machine') || lower.contains('smith')) {
     return Icons.precision_manufacturing;
   }
-  if (lower.contains('cable') || lower.contains('attachment')) return Icons.cable;
+  if (lower.contains('cable') || lower.contains('attachment')) {
+    return Icons.cable;
+  }
   if (lower.contains('bodyweight') || lower == 'none') {
     return Icons.accessibility_new;
   }

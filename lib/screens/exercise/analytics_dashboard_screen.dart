@@ -1,15 +1,20 @@
 // File: lib/screens/exercise/analytics_dashboard_screen.dart
 // Weekly muscle/bodypart set-unit overview.
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/models.dart';
 import '../../providers/unit_preference_provider.dart';
 import '../../repositories/app_repository.dart';
+import '../../services/tutorial_state_store.dart';
 import '../../theme/theme_extensions.dart';
+import '../../utils/tutorial_launcher.dart';
 import '../../utils/weight_unit_formatter.dart';
 import '../../widgets/body_heatmap.dart';
+import '../../widgets/guided_tutorial_overlay.dart';
 import 'definitions_by_bodypart_page.dart';
 import 'definitions_by_muscle_page.dart';
 
@@ -26,10 +31,14 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
   final _repo = AppRepository();
+  final _headerTutorialKey = GlobalKey(debugLabel: 'weekly_sets_header');
+  final _tabsTutorialKey = GlobalKey(debugLabel: 'weekly_sets_tabs');
+  final _listTutorialKey = GlobalKey(debugLabel: 'weekly_sets_list');
 
   bool _isLoading = true;
   String? _error;
   _WeeklySetOverviewData? _data;
+  bool _tutorialQueued = false;
 
   @override
   void initState() {
@@ -134,12 +143,55 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
         _data = nextData;
         _isLoading = false;
       });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _queueTutorial();
+      });
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _error = e.toString();
         _isLoading = false;
       });
+    }
+  }
+
+  void _queueTutorial() {
+    if (!mounted || _tutorialQueued) return;
+    _tutorialQueued = true;
+    unawaited(_showTutorial());
+  }
+
+  Future<void> _showTutorial() async {
+    try {
+      await showGuidedTutorialOnce(
+        context,
+        tutorialId: TutorialIds.weeklySetsOverview,
+        steps: [
+          GuidedTutorialStep(
+            targetKey: _headerTutorialKey,
+            icon: Icons.accessibility_new,
+            title: 'Weekly overview',
+            body:
+                'This summarizes the last seven days with a heatmap plus total sets, time, and volume.',
+          ),
+          GuidedTutorialStep(
+            targetKey: _tabsTutorialKey,
+            icon: Icons.swap_horiz,
+            title: 'Bodyparts or muscles',
+            body:
+                'Switch between bodypart set units and individual muscle set units.',
+          ),
+          GuidedTutorialStep(
+            targetKey: _listTutorialKey,
+            icon: Icons.check_circle_outline,
+            title: 'Set status',
+            body:
+                'Each row is tinted based on whether your recent work is under, inside, or above its recommended range. Tap a row for linked exercises.',
+          ),
+        ],
+      );
+    } finally {
+      _tutorialQueued = false;
     }
   }
 
@@ -180,24 +232,38 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
               ? Center(child: Text('Error: $_error'))
               : Column(
                 children: [
-                  _WeeklyOverviewHeader(data: data ?? _emptyWeeklyData),
-                  TabBar(
-                    controller: _tabController,
-                    tabs: const [Tab(text: 'Bodyparts'), Tab(text: 'Muscles')],
+                  KeyedSubtree(
+                    key: _headerTutorialKey,
+                    child: _WeeklyOverviewHeader(
+                      data: data ?? _emptyWeeklyData,
+                    ),
+                  ),
+                  KeyedSubtree(
+                    key: _tabsTutorialKey,
+                    child: TabBar(
+                      controller: _tabController,
+                      tabs: const [
+                        Tab(text: 'Bodyparts'),
+                        Tab(text: 'Muscles'),
+                      ],
+                    ),
                   ),
                   Expanded(
-                    child: TabBarView(
-                      controller: _tabController,
-                      children: [
-                        _BodyPartSetList(
-                          items: data?.bodyParts ?? const [],
-                          onTap: _openBodyPart,
-                        ),
-                        _MuscleSetList(
-                          items: data?.muscles ?? const [],
-                          onTap: _openMuscle,
-                        ),
-                      ],
+                    child: KeyedSubtree(
+                      key: _listTutorialKey,
+                      child: TabBarView(
+                        controller: _tabController,
+                        children: [
+                          _BodyPartSetList(
+                            items: data?.bodyParts ?? const [],
+                            onTap: _openBodyPart,
+                          ),
+                          _MuscleSetList(
+                            items: data?.muscles ?? const [],
+                            onTap: _openMuscle,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],

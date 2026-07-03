@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -6,7 +7,10 @@ import '../../data/premade_training_plans.dart';
 import '../../models/models.dart';
 import '../../repositories/app_repository.dart';
 import '../../services/active_plan_store.dart';
+import '../../services/tutorial_state_store.dart';
 import '../../utils/async_pool.dart';
+import '../../utils/tutorial_launcher.dart';
+import '../../widgets/guided_tutorial_overlay.dart';
 
 class PremadePlansPage extends StatefulWidget {
   final int? profileId;
@@ -37,6 +41,11 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
   ];
 
   final _repo = AppRepository();
+  final _durationTutorialKey = GlobalKey(debugLabel: 'premade_duration');
+  final _equipmentFilterTutorialKey = GlobalKey(
+    debugLabel: 'premade_equipment_filter',
+  );
+  final _planListTutorialKey = GlobalKey(debugLabel: 'premade_plan_list');
   final _addingPlanIds = <String>{};
   final _onboardingCreatedPlanIds = <int>[];
   Future<_PremadePlanAdaptationData>? _adaptationFuture;
@@ -46,6 +55,55 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
   bool _isDiscardingOnboardingPlans = false;
   bool _filterForProfileEquipment = true;
   var _selectedDurationMinutes = 60;
+  bool _tutorialQueued = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _queueTutorial();
+    });
+  }
+
+  void _queueTutorial() {
+    if (!mounted || _tutorialQueued) return;
+    _tutorialQueued = true;
+    unawaited(_showTutorial());
+  }
+
+  Future<void> _showTutorial() async {
+    try {
+      await showGuidedTutorialOnce(
+        context,
+        tutorialId: TutorialIds.premadePlans,
+        steps: [
+          GuidedTutorialStep(
+            targetKey: _durationTutorialKey,
+            icon: Icons.schedule,
+            title: 'Plan length',
+            body:
+                'Switch between 1-hour and 2-hour versions. Longer versions include more exercises and total sets.',
+          ),
+          GuidedTutorialStep(
+            targetKey: _equipmentFilterTutorialKey,
+            icon: Icons.tune,
+            title: 'Profile equipment',
+            body:
+                'When this is on, Tonos swaps unavailable exercises for similar options your current gym profile can perform.',
+          ),
+          GuidedTutorialStep(
+            targetKey: _planListTutorialKey,
+            icon: Icons.library_books_outlined,
+            title: 'Plan library',
+            body:
+                'Open a split, preview a plan, then add it to your Active Plans so it appears on Train.',
+          ),
+        ],
+      );
+    } finally {
+      _tutorialQueued = false;
+    }
+  }
 
   Future<void> _addPlan(
     PremadeTrainingPlan plan,
@@ -233,20 +291,22 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
     if (definitionIds.isEmpty) return const <_PremadeExerciseMatchEntry>[];
 
     final definitions = await _repo.lookupDefsDetailedByIds(definitionIds);
-    final entries =
-        await mapWithConcurrency<ExerciseDefinition, _PremadeExerciseMatchEntry?>(
-          definitions,
-          maxConcurrency: _replacementBuildConcurrency,
-          mapper: (definition, _) async {
-            if (!_definitionFitsProfile(
-              definition,
-              normalizedProfileEquipmentNames,
-            )) {
-              return null;
-            }
-            return _buildMatchEntry(definition);
-          },
-        );
+    final entries = await mapWithConcurrency<
+      ExerciseDefinition,
+      _PremadeExerciseMatchEntry?
+    >(
+      definitions,
+      maxConcurrency: _replacementBuildConcurrency,
+      mapper: (definition, _) async {
+        if (!_definitionFitsProfile(
+          definition,
+          normalizedProfileEquipmentNames,
+        )) {
+          return null;
+        }
+        return _buildMatchEntry(definition);
+      },
+    );
 
     return [
       for (final entry in entries)
@@ -399,7 +459,8 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
     final equipmentNames = _definitionEquipmentNames(definition);
     if (equipmentNames.isEmpty) return true;
     return equipmentNames.every(
-      (equipment) => _profileContainsEquipment(profileEquipmentNames, equipment),
+      (equipment) =>
+          _profileContainsEquipment(profileEquipmentNames, equipment),
     );
   }
 
@@ -456,9 +517,9 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
 
   void _finishOnboardingPlanSelection() {
     if (_onboardingCreatedPlanIds.isEmpty) return;
-    Navigator.of(context).pop<List<int>>(
-      List<int>.unmodifiable(_onboardingCreatedPlanIds),
-    );
+    Navigator.of(
+      context,
+    ).pop<List<int>>(List<int>.unmodifiable(_onboardingCreatedPlanIds));
   }
 
   Future<String> _uniqueAddedPlanName(String baseName, int profileId) async {
@@ -497,16 +558,18 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
     final adaptationFuture = _ensureAdaptationData();
     final content = Scaffold(
       appBar: AppBar(title: const Text('Premade Plans')),
-      bottomNavigationBar: widget.onboardingMode
-          ? _OnboardingPlanActionBar(
-              addedCount: _onboardingCreatedPlanIds.length,
-              isBusy: _isDiscardingOnboardingPlans,
-              onCancel: _discardOnboardingPlans,
-              onSave: _onboardingCreatedPlanIds.isEmpty
-                  ? null
-                  : _finishOnboardingPlanSelection,
-            )
-          : null,
+      bottomNavigationBar:
+          widget.onboardingMode
+              ? _OnboardingPlanActionBar(
+                addedCount: _onboardingCreatedPlanIds.length,
+                isBusy: _isDiscardingOnboardingPlans,
+                onCancel: _discardOnboardingPlans,
+                onSave:
+                    _onboardingCreatedPlanIds.isEmpty
+                        ? null
+                        : _finishOnboardingPlanSelection,
+              )
+              : null,
       body: FutureBuilder<_PremadePlanAdaptationData>(
         future: adaptationFuture,
         builder: (context, snapshot) {
@@ -531,46 +594,55 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
               widget.onboardingMode ? 112 : 24,
             ),
             children: [
-              _PremadeDurationHeader(
-                durationMinutes: _selectedDurationMinutes,
-                onChanged: (durationMinutes) {
-                  setState(() {
-                    _selectedDurationMinutes = durationMinutes;
-                    _adaptationFuture = null;
-                  });
-                },
-                child: Text(
-                  'Copy coach, influencer, and app-curated routines into your own plans. Once added, you can edit them like any other plan.',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+              KeyedSubtree(
+                key: _durationTutorialKey,
+                child: _PremadeDurationHeader(
+                  durationMinutes: _selectedDurationMinutes,
+                  onChanged: (durationMinutes) {
+                    setState(() {
+                      _selectedDurationMinutes = durationMinutes;
+                      _adaptationFuture = null;
+                    });
+                  },
+                  child: Text(
+                    'Copy coach, influencer, and app-curated routines into your own plans. Once added, you can edit them like any other plan.',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
               ),
               const SizedBox(height: 12),
-              _PremadeProfileEquipmentFilterCard(
-                value: _filterForProfileEquipment,
-                enabled: widget.profileId != null,
-                isLoading: isPreparingFilter,
-                hasProfileEquipment:
-                    adaptationData.profileEquipmentNames.isNotEmpty,
-                replacementCount: adaptationData.totalReplacementCount,
-                onChanged: (value) {
-                  setState(() {
-                    _filterForProfileEquipment = value;
-                    _adaptationFuture = null;
-                  });
-                },
+              KeyedSubtree(
+                key: _equipmentFilterTutorialKey,
+                child: _PremadeProfileEquipmentFilterCard(
+                  value: _filterForProfileEquipment,
+                  enabled: widget.profileId != null,
+                  isLoading: isPreparingFilter,
+                  hasProfileEquipment:
+                      adaptationData.profileEquipmentNames.isNotEmpty,
+                  replacementCount: adaptationData.totalReplacementCount,
+                  onChanged: (value) {
+                    setState(() {
+                      _filterForProfileEquipment = value;
+                      _adaptationFuture = null;
+                    });
+                  },
+                ),
               ),
               const SizedBox(height: 16),
-              _PremadeSourceSection(
-                sourceName: _homemadeSourceName,
-                plans: homemadePlans,
-                planGroupNames: _homemadePlanGroups,
-                initiallyExpanded: true,
-                addingPlanIds: _addingPlanIds,
-                adaptationData: adaptationData,
-                isPreparingFilter: isPreparingFilter,
-                onAddPlan: _addPlan,
+              KeyedSubtree(
+                key: _planListTutorialKey,
+                child: _PremadeSourceSection(
+                  sourceName: _homemadeSourceName,
+                  plans: homemadePlans,
+                  planGroupNames: _homemadePlanGroups,
+                  initiallyExpanded: true,
+                  addingPlanIds: _addingPlanIds,
+                  adaptationData: adaptationData,
+                  isPreparingFilter: isPreparingFilter,
+                  onAddPlan: _addPlan,
+                ),
               ),
               const SizedBox(height: 16),
               for (final entry in groupedPlans.entries) ...[
@@ -626,7 +698,9 @@ class _OnboardingPlanActionBar extends StatelessWidget {
         decoration: BoxDecoration(
           color: scheme.surface.withValues(alpha: 0.96),
           border: Border(
-            top: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.6)),
+            top: BorderSide(
+              color: scheme.outlineVariant.withValues(alpha: 0.6),
+            ),
           ),
         ),
         child: Row(
@@ -1173,8 +1247,7 @@ class _PremadePlanCardState extends State<_PremadePlanCard> {
       ],
     );
     final addButton = FilledButton.tonalIcon(
-      onPressed:
-          widget.isAdding || widget.isPreparing ? null : widget.onAdd,
+      onPressed: widget.isAdding || widget.isPreparing ? null : widget.onAdd,
       icon:
           widget.isAdding || widget.isPreparing
               ? const SizedBox(
@@ -1264,10 +1337,7 @@ class _PremadeExerciseRow extends StatelessWidget {
   final PremadeTrainingExercise exercise;
   final bool wasSwapped;
 
-  const _PremadeExerciseRow({
-    required this.exercise,
-    required this.wasSwapped,
-  });
+  const _PremadeExerciseRow({required this.exercise, required this.wasSwapped});
 
   @override
   Widget build(BuildContext context) {

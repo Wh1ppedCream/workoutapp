@@ -1,16 +1,105 @@
 // file: lib/screens/profile/settings/profile_page.dart
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
+import '../../../services/tutorial_state_store.dart';
+import '../../../widgets/guided_tutorial_overlay.dart';
 import '../../../widgets/settings_tiles.dart';
 import 'database_settings_page.dart';
 import 'gym_exercise_settings_page.dart';
 import 'measurements_trends_settings_page.dart';
+import 'tutorials_settings_page.dart';
 import 'ui_appearance_settings_page.dart';
 import 'user_information_settings_page.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  final _accountSettingsTutorialKey = GlobalKey(
+    debugLabel: 'profile_account_settings_tutorial',
+  );
+  final _trainingSettingsTutorialKey = GlobalKey(
+    debugLabel: 'profile_training_settings_tutorial',
+  );
+  final _dataSettingsTutorialKey = GlobalKey(
+    debugLabel: 'profile_data_settings_tutorial',
+  );
+  final _tutorialStore = const TutorialStateStore();
+
+  bool _profileTutorialQueued = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _queueProfileTutorial();
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (TickerMode.of(context)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _queueProfileTutorial();
+      });
+    }
+  }
+
+  void _queueProfileTutorial() {
+    if (!mounted || _profileTutorialQueued || !TickerMode.of(context)) return;
+    _profileTutorialQueued = true;
+    unawaited(_showProfileTutorialIfNeeded());
+  }
+
+  Future<void> _showProfileTutorialIfNeeded() async {
+    try {
+      await Future<void>.delayed(const Duration(milliseconds: 550));
+      if (!mounted || !TickerMode.of(context)) return;
+
+      final completed = await _tutorialStore.isCompleted(
+        TutorialIds.profileHome,
+      );
+      if (completed || !mounted) return;
+
+      await GuidedTutorialOverlay.show(
+        context,
+        steps: [
+          GuidedTutorialStep(
+            targetKey: _accountSettingsTutorialKey,
+            icon: Icons.person_outline,
+            title: 'Account settings',
+            body:
+                'Update your personal info, display preferences, weight units, onboarding, bottom tabs, and guided tutorials from here.',
+          ),
+          GuidedTutorialStep(
+            targetKey: _trainingSettingsTutorialKey,
+            icon: Icons.fitness_center,
+            title: 'Training settings',
+            body:
+                'Control gym profiles, generation rules, bodypart rankings, progress settings, and other training defaults.',
+          ),
+          GuidedTutorialStep(
+            targetKey: _dataSettingsTutorialKey,
+            icon: Icons.storage_outlined,
+            title: 'Data tools',
+            body:
+                'Database settings are where you export, import, check, and maintain your local workout data.',
+          ),
+        ],
+      );
+      await _tutorialStore.markCompleted(TutorialIds.profileHome);
+    } finally {
+      _profileTutorialQueued = false;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,54 +110,73 @@ class ProfilePage extends StatelessWidget {
       icon: Icons.person,
       showAppBar: false,
       children: [
-        SettingsSection(
-          title: 'Account',
-          subtitle: 'Your identity and app-level appearance.',
-          children: settingsTilesWithDividers(context, [
-            SettingsActionTile(
-              icon: Icons.badge_outlined,
-              title: 'User Information',
-              subtitle: 'Name, body details, and activity profile.',
-              onTap: () => _open(context, const UserInformationSettingsPage()),
-            ),
-            SettingsActionTile(
-              icon: Icons.palette_outlined,
-              title: 'UI & Appearance',
-              subtitle: 'Theme, onboarding, and bottom tab setup.',
-              onTap: () => _open(context, const UIAppearanceSettingsPage()),
-            ),
-          ]),
+        KeyedSubtree(
+          key: _accountSettingsTutorialKey,
+          child: SettingsSection(
+            title: 'Account',
+            subtitle: 'Your identity and app-level appearance.',
+            children: settingsTilesWithDividers(context, [
+              SettingsActionTile(
+                icon: Icons.badge_outlined,
+                title: 'User Information',
+                subtitle: 'Name, body details, and activity profile.',
+                onTap:
+                    () => _open(context, const UserInformationSettingsPage()),
+              ),
+              SettingsActionTile(
+                icon: Icons.palette_outlined,
+                title: 'UI & Appearance',
+                subtitle: 'Theme, onboarding, and bottom tab setup.',
+                onTap: () => _open(context, const UIAppearanceSettingsPage()),
+              ),
+              SettingsActionTile(
+                icon: Icons.school_outlined,
+                title: 'Guided Tutorials',
+                subtitle: 'Replay walkthroughs and reset guided help.',
+                onTap: () => _open(context, const TutorialsSettingsPage()),
+              ),
+            ]),
+          ),
         ),
-        SettingsSection(
-          title: 'Training',
-          subtitle: 'Exercise defaults and progress-related controls.',
-          children: settingsTilesWithDividers(context, [
-            SettingsActionTile(
-              icon: Icons.fitness_center,
-              title: 'Gym & Workout Settings',
-              subtitle:
-                  'Workout generation, rankings, flows, and equipment logic.',
-              onTap: () => _open(context, const GymExerciseSettingsPage()),
-            ),
-            SettingsActionTile(
-              icon: Icons.monitor_outlined,
-              title: 'Progress Settings',
-              subtitle: 'Measurement and trend tracking setup.',
-              onTap: () => _open(context, const MeasurementsTrendsSettingsPage()),
-            ),
-          ]),
+        KeyedSubtree(
+          key: _trainingSettingsTutorialKey,
+          child: SettingsSection(
+            title: 'Training',
+            subtitle: 'Exercise defaults and progress-related controls.',
+            children: settingsTilesWithDividers(context, [
+              SettingsActionTile(
+                icon: Icons.fitness_center,
+                title: 'Gym & Workout Settings',
+                subtitle:
+                    'Workout generation, rankings, flows, and equipment logic.',
+                onTap: () => _open(context, const GymExerciseSettingsPage()),
+              ),
+              SettingsActionTile(
+                icon: Icons.monitor_outlined,
+                title: 'Progress Settings',
+                subtitle: 'Measurement and trend tracking setup.',
+                onTap:
+                    () =>
+                        _open(context, const MeasurementsTrendsSettingsPage()),
+              ),
+            ]),
+          ),
         ),
-        SettingsSection(
-          title: 'Data',
-          subtitle: 'Database tools, exports, imports, and maintenance.',
-          children: settingsTilesWithDividers(context, [
-            SettingsActionTile(
-              icon: Icons.storage_outlined,
-              title: 'Database Settings',
-              subtitle: 'Import, export, health checks, and maintenance tools.',
-              onTap: () => _open(context, const DatabaseSettingsPage()),
-            ),
-          ]),
+        KeyedSubtree(
+          key: _dataSettingsTutorialKey,
+          child: SettingsSection(
+            title: 'Data',
+            subtitle: 'Database tools, exports, imports, and maintenance.',
+            children: settingsTilesWithDividers(context, [
+              SettingsActionTile(
+                icon: Icons.storage_outlined,
+                title: 'Database Settings',
+                subtitle:
+                    'Import, export, health checks, and maintenance tools.',
+                onTap: () => _open(context, const DatabaseSettingsPage()),
+              ),
+            ]),
+          ),
         ),
         SettingsSection(
           title: 'Nutrition',

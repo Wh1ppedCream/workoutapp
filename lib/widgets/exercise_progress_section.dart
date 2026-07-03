@@ -12,8 +12,11 @@ import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
 import '../screens/exercise/exercise_catalog_page.dart';
 import '../screens/exercise/session_detail_screen.dart';
+import '../services/tutorial_state_store.dart';
 import '../theme/theme_extensions.dart';
+import '../utils/tutorial_launcher.dart';
 import '../utils/weight_unit_formatter.dart';
+import 'guided_tutorial_overlay.dart';
 
 const _exerciseProgressTileIdsKey = 'exercise_progress_tile_ids_v1';
 const _exerciseProgressHiddenAutoIdsKey =
@@ -950,12 +953,6 @@ double? _deltaFromPrevious(
   return valueFor(valid.last)! - valueFor(valid[valid.length - 2])!;
 }
 
-List<_ExerciseProgressPoint> _validEstimatedPoints(
-  List<_ExerciseProgressPoint> points,
-) {
-  return _validPoints(points);
-}
-
 List<_ExerciseProgressPoint> _validPoints(
   List<_ExerciseProgressPoint> points, {
   double? Function(_ExerciseProgressPoint point)? valueForPoint,
@@ -1095,10 +1092,66 @@ class _EditExerciseProgressTile extends StatelessWidget {
   }
 }
 
-class _ExerciseProgressDetailPage extends StatelessWidget {
+class _ExerciseProgressDetailPage extends StatefulWidget {
   final _ExerciseTrendTile tile;
 
   const _ExerciseProgressDetailPage({required this.tile});
+
+  @override
+  State<_ExerciseProgressDetailPage> createState() =>
+      _ExerciseProgressDetailPageState();
+}
+
+class _ExerciseProgressDetailPageState
+    extends State<_ExerciseProgressDetailPage> {
+  final _chartTutorialKey = GlobalKey(
+    debugLabel: 'exercise_progress_detail_chart',
+  );
+  final _recordsTutorialKey = GlobalKey(
+    debugLabel: 'exercise_progress_detail_records',
+  );
+  bool _tutorialQueued = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _queueTutorial();
+    });
+  }
+
+  void _queueTutorial() {
+    if (!mounted || _tutorialQueued) return;
+    _tutorialQueued = true;
+    unawaited(_showTutorial());
+  }
+
+  Future<void> _showTutorial() async {
+    try {
+      await showGuidedTutorialOnce(
+        context,
+        tutorialId: TutorialIds.exerciseProgressDetail,
+        steps: [
+          GuidedTutorialStep(
+            targetKey: _chartTutorialKey,
+            icon: Icons.show_chart,
+            title: '1RM trend',
+            body:
+                'This chart compares actual recorded 1RM and estimated 1RM over time. Tap points for exact values.',
+          ),
+          GuidedTutorialStep(
+            targetKey: _recordsTutorialKey,
+            icon: Icons.history,
+            title: 'Recordings',
+            body:
+                'Each recording opens the workout where that lift happened, so you can review the full context.',
+          ),
+        ],
+      );
+    } finally {
+      _tutorialQueued = false;
+    }
+  }
 
   Future<void> _openSession(BuildContext context, int sessionId) async {
     final messenger = ScaffoldMessenger.of(context);
@@ -1133,36 +1186,42 @@ class _ExerciseProgressDetailPage extends StatelessWidget {
     final theme = Theme.of(context);
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     return Scaffold(
-      appBar: AppBar(title: Text(tile.definition.name), centerTitle: true),
+      appBar: AppBar(
+        title: Text(widget.tile.definition.name),
+        centerTitle: true,
+      ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
         children: [
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    '1RM Progress',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w900,
+          KeyedSubtree(
+            key: _chartTutorialKey,
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      '1RM Progress',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    height: 220,
-                    child: _ExerciseProgressChart(
-                      points: tile.points,
-                      showEmptyLabel: true,
-                      showAxes: true,
-                      interactive: true,
-                      weightUnit: weightUnit,
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      height: 220,
+                      child: _ExerciseProgressChart(
+                        points: widget.tile.points,
+                        showEmptyLabel: true,
+                        showAxes: true,
+                        interactive: true,
+                        weightUnit: weightUnit,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  const _ExerciseProgressLegend(),
-                ],
+                    const SizedBox(height: 12),
+                    const _ExerciseProgressLegend(),
+                  ],
+                ),
               ),
             ),
           ),
@@ -1174,7 +1233,7 @@ class _ExerciseProgressDetailPage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          if (tile.points.isEmpty)
+          if (widget.tile.points.isEmpty)
             Text(
               'Complete this exercise to start building progress history.',
               style: theme.textTheme.bodyMedium?.copyWith(
@@ -1182,13 +1241,20 @@ class _ExerciseProgressDetailPage extends StatelessWidget {
               ),
             )
           else
-            for (final point in tile.points.reversed)
-              _ExerciseProgressRecordingRow(
-                point: point,
-                onTap: () {
-                  _openSession(context, point.sessionId);
-                },
+            KeyedSubtree(
+              key: _recordsTutorialKey,
+              child: Column(
+                children: [
+                  for (final point in widget.tile.points.reversed)
+                    _ExerciseProgressRecordingRow(
+                      point: point,
+                      onTap: () {
+                        _openSession(context, point.sessionId);
+                      },
+                    ),
+                ],
               ),
+            ),
         ],
       ),
     );

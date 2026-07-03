@@ -1,5 +1,7 @@
 // File: lib/screens/exercise/preset_generation_qa.dart
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import '../profile/settings/bodypart_ranking_screen.dart';
 import '../profile/settings/muscle_ranking_screen.dart';
@@ -8,8 +10,11 @@ import '../../models/definition_models.dart';
 import '../../repositories/app_repository.dart';
 import '../../services/active_plan_store.dart';
 import '../../services/preset_generation_service.dart';
+import '../../services/tutorial_state_store.dart';
 import '../../models/training_plan_models.dart';
 import '../../widgets/bodypart_focus_chips.dart';
+import '../../widgets/guided_tutorial_overlay.dart';
+import '../../utils/tutorial_launcher.dart';
 
 /// User-facing allocation choices for generated presets.
 ///
@@ -40,6 +45,18 @@ class PresetGenerationQaScreen extends StatefulWidget {
 
 class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
   final AppRepository _repo = AppRepository();
+  final _introTutorialKey = GlobalKey(debugLabel: 'generate_plans_intro');
+  final _workoutSetupTutorialKey = GlobalKey(
+    debugLabel: 'generate_plans_workout_setup',
+  );
+  final _focusTutorialKey = GlobalKey(debugLabel: 'generate_plans_focus');
+  final _repWeightTutorialKey = GlobalKey(
+    debugLabel: 'generate_plans_rep_weight',
+  );
+  final _allocationTutorialKey = GlobalKey(
+    debugLabel: 'generate_plans_allocation',
+  );
+  final _generateTutorialKey = GlobalKey(debugLabel: 'generate_plans_button');
   final TextEditingController _sessionDurationController =
       TextEditingController();
   final TextEditingController _weeklyFrequencyController =
@@ -59,6 +76,7 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
   bool _useRecentTrainingHistory = false;
   bool _isGenerating = false;
   bool _isDiscardingOnboardingPlans = false;
+  bool _tutorialQueued = false;
   final _onboardingGeneratedPlanIds = <int>[];
 
   @override
@@ -71,6 +89,9 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
         SessionSpec.defaultTargetRepCount.toString();
     _requirementOption = RequirementOption.equalSplitBodyPart;
     _loadBodyParts();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _queueTutorial();
+    });
   }
 
   @override
@@ -102,6 +123,67 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
       setState(() => _bodyParts = bodyParts);
     } catch (e) {
       debugPrint('Failed to load bodyparts for preset generation: $e');
+    }
+  }
+
+  void _queueTutorial() {
+    if (!mounted || _tutorialQueued) return;
+    _tutorialQueued = true;
+    unawaited(_showTutorial());
+  }
+
+  Future<void> _showTutorial() async {
+    try {
+      await showGuidedTutorialOnce(
+        context,
+        tutorialId: TutorialIds.generatePlans,
+        steps: [
+          GuidedTutorialStep(
+            targetKey: _introTutorialKey,
+            icon: Icons.auto_awesome,
+            title: 'Build plans',
+            body:
+                'This page can create one plan or a balanced weekly bundle using your gym profile and training preferences.',
+          ),
+          GuidedTutorialStep(
+            targetKey: _workoutSetupTutorialKey,
+            icon: Icons.timer_outlined,
+            title: 'Workout setup',
+            body:
+                'Set session length, how many plans to create, and the maximum sets allowed for each exercise.',
+          ),
+          GuidedTutorialStep(
+            targetKey: _focusTutorialKey,
+            icon: Icons.track_changes_outlined,
+            title: 'Training focus',
+            body:
+                'Prefer or avoid bodyparts here. The 7-day history toggle only biases generation when you want recent training considered.',
+          ),
+          GuidedTutorialStep(
+            targetKey: _repWeightTutorialKey,
+            icon: Icons.fitness_center_outlined,
+            title: 'Reps and weights',
+            body:
+                'Choose pyramid, mixed, or consistent set patterns plus the target reps and starter weight intensity.',
+          ),
+          GuidedTutorialStep(
+            targetKey: _allocationTutorialKey,
+            icon: Icons.tune_outlined,
+            title: 'Set allocation',
+            body:
+                'Pick whether sets are spread evenly or biased toward your bodypart or muscle rankings.',
+          ),
+          GuidedTutorialStep(
+            targetKey: _generateTutorialKey,
+            icon: Icons.play_arrow,
+            title: 'Generate',
+            body:
+                'When everything looks right, generate the plan or plan bundle. New plans can be reviewed and edited afterward.',
+          ),
+        ],
+      );
+    } finally {
+      _tutorialQueued = false;
     }
   }
 
@@ -649,20 +731,23 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
   Widget build(BuildContext context) {
     final content = Scaffold(
       appBar: AppBar(title: const Text('Generate Plans')),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed:
-            _isGenerating || _isDiscardingOnboardingPlans
-                ? null
-                : _handleContinue,
-        icon:
-            _isGenerating
-                ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-                : const Icon(Icons.auto_awesome),
-        label: Text(_generateButtonLabel()),
+      floatingActionButton: KeyedSubtree(
+        key: _generateTutorialKey,
+        child: FloatingActionButton.extended(
+          onPressed:
+              _isGenerating || _isDiscardingOnboardingPlans
+                  ? null
+                  : _handleContinue,
+          icon:
+              _isGenerating
+                  ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                  : const Icon(Icons.auto_awesome),
+          label: Text(_generateButtonLabel()),
+        ),
       ),
       bottomNavigationBar:
           widget.onboardingMode
@@ -686,235 +771,249 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _buildIntroCard(),
+            KeyedSubtree(key: _introTutorialKey, child: _buildIntroCard()),
             const SizedBox(height: 14),
-            _buildSettingsSection(
-              icon: Icons.timer_outlined,
-              title: 'Workout setup',
-              subtitle:
-                  '${_fieldValue(_weeklyFrequencyController, '1')} plan(s), '
-                  '${_fieldValue(_sessionDurationController, '60')} min, '
-                  '${_fieldValue(_maxSetsController, SessionSpec.defaultMaxSetsPerExercise.toString())} max sets',
-              children: [
-                _buildNumberField(
-                  controller: _sessionDurationController,
-                  label: 'Session length',
-                  hintText: '60',
-                  helperText: 'Estimated as 3 min/set + 5 min/exercise.',
-                  suffixText: 'min',
-                ),
-                const SizedBox(height: 14),
-                _buildNumberField(
-                  controller: _weeklyFrequencyController,
-                  label: 'Plans to create',
-                  hintText: '1',
-                  helperText:
-                      'Usually matches training days/week. Max ${SessionSpec.maxGeneratedPlansPerBundle}.',
-                  suffixText: 'plans',
-                ),
-                const SizedBox(height: 14),
-                _buildNumberField(
-                  controller: _maxSetsController,
-                  label: 'Max sets per exercise',
-                  hintText: SessionSpec.defaultMaxSetsPerExercise.toString(),
-                  helperText:
-                      '${SessionSpec.defaultMinSetsPerExercise}-${SessionSpec.maxAllowedSetsPerExercise} sets allowed.',
-                  suffixText: 'sets',
-                ),
-              ],
-            ),
-            _buildSettingsSection(
-              icon: Icons.track_changes_outlined,
-              title: 'Training focus',
-              subtitle:
-                  '${_preferredBodypartIds.length} preferred, '
-                  '${_blacklistedBodypartIds.length} avoided, '
-                  '${_useRecentTrainingHistory ? 'using' : 'not using'} 7-day history',
-              children: [
-                CheckboxListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Use recent training'),
-                  subtitle: const Text(
-                    'Bias toward under-trained areas from the last 7 days.',
+            KeyedSubtree(
+              key: _workoutSetupTutorialKey,
+              child: _buildSettingsSection(
+                icon: Icons.timer_outlined,
+                title: 'Workout setup',
+                subtitle:
+                    '${_fieldValue(_weeklyFrequencyController, '1')} plan(s), '
+                    '${_fieldValue(_sessionDurationController, '60')} min, '
+                    '${_fieldValue(_maxSetsController, SessionSpec.defaultMaxSetsPerExercise.toString())} max sets',
+                children: [
+                  _buildNumberField(
+                    controller: _sessionDurationController,
+                    label: 'Session length',
+                    hintText: '60',
+                    helperText: 'Estimated as 3 min/set + 5 min/exercise.',
+                    suffixText: 'min',
                   ),
-                  value: _useRecentTrainingHistory,
-                  onChanged:
-                      (value) => setState(
-                        () => _useRecentTrainingHistory = value ?? false,
-                      ),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Bodypart focus',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'Tap once to prefer, twice to avoid, third to clear.',
-                  style: TextStyle(fontSize: 12),
-                ),
-                const SizedBox(height: 8),
-                BodypartFocusChips(
-                  bodyParts: _bodyParts,
-                  preferredBodypartIds: _preferredBodypartIds,
-                  blacklistedBodypartIds: _blacklistedBodypartIds,
-                  emptyText: 'Bodyparts could not be loaded.',
-                  onChanged:
-                      (selection) => setState(() {
-                        _preferredBodypartIds = selection.preferredBodypartIds;
-                        _blacklistedBodypartIds =
-                            selection.blacklistedBodypartIds;
-                      }),
-                ),
-              ],
+                  const SizedBox(height: 14),
+                  _buildNumberField(
+                    controller: _weeklyFrequencyController,
+                    label: 'Plans to create',
+                    hintText: '1',
+                    helperText:
+                        'Usually matches training days/week. Max ${SessionSpec.maxGeneratedPlansPerBundle}.',
+                    suffixText: 'plans',
+                  ),
+                  const SizedBox(height: 14),
+                  _buildNumberField(
+                    controller: _maxSetsController,
+                    label: 'Max sets per exercise',
+                    hintText: SessionSpec.defaultMaxSetsPerExercise.toString(),
+                    helperText:
+                        '${SessionSpec.defaultMinSetsPerExercise}-${SessionSpec.maxAllowedSetsPerExercise} sets allowed.',
+                    suffixText: 'sets',
+                  ),
+                ],
+              ),
             ),
-            _buildSettingsSection(
-              icon: Icons.fitness_center_outlined,
-              title: 'Reps & weights',
-              subtitle:
-                  '${_repWeightModeLabel(_repWeightMode)}, '
-                  '${_fieldValue(_targetRepCountController, SessionSpec.defaultTargetRepCount.toString())} reps, '
-                  '${_starterWeightIntensityLabel(_starterWeightIntensity)} intensity',
-              children: [
-                _buildChoiceTile<RepWeightGenerationMode>(
-                  title: 'Mixed',
-                  subtitle: 'Pyramid for 3+ sets; steady for shorter work.',
-                  value: RepWeightGenerationMode.mixed,
-                  groupValue: _repWeightMode,
-                  onChanged:
-                      (value) => setState(
-                        () =>
-                            _repWeightMode =
-                                value ?? RepWeightGenerationMode.mixed,
-                      ),
-                ),
-                _buildChoiceTile<RepWeightGenerationMode>(
-                  title: 'Pyramid',
-                  subtitle: 'Peak set uses the generated working weight.',
-                  value: RepWeightGenerationMode.pyramid,
-                  groupValue: _repWeightMode,
-                  onChanged:
-                      (value) => setState(
-                        () =>
-                            _repWeightMode =
-                                value ?? RepWeightGenerationMode.pyramid,
-                      ),
-                ),
-                _buildChoiceTile<RepWeightGenerationMode>(
-                  title: 'Consistent',
-                  subtitle: 'Same reps and suggested weight each set.',
-                  value: RepWeightGenerationMode.consistent,
-                  groupValue: _repWeightMode,
-                  onChanged:
-                      (value) => setState(
-                        () =>
-                            _repWeightMode =
-                                value ?? RepWeightGenerationMode.consistent,
-                      ),
-                ),
-                const SizedBox(height: 8),
-                _buildNumberField(
-                  controller: _targetRepCountController,
-                  label: 'Target reps',
-                  hintText: SessionSpec.defaultTargetRepCount.toString(),
-                  helperText: 'Peak reps for pyramid; steady reps otherwise.',
-                  suffixText: 'reps',
-                ),
-                const SizedBox(height: 14),
-                const Text(
-                  'Weight intensity',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 6),
-                _buildChoiceTile<StarterWeightIntensity>(
-                  title: 'Easy',
-                  subtitle:
-                      'Most conservative history or starter recommendation.',
-                  value: StarterWeightIntensity.easy,
-                  groupValue: _starterWeightIntensity,
-                  onChanged:
-                      (value) => setState(
-                        () =>
-                            _starterWeightIntensity =
-                                value ?? StarterWeightIntensity.easy,
-                      ),
-                ),
-                _buildChoiceTile<StarterWeightIntensity>(
-                  title: 'Medium',
-                  subtitle: 'Balanced working-weight recommendation.',
-                  value: StarterWeightIntensity.medium,
-                  groupValue: _starterWeightIntensity,
-                  onChanged:
-                      (value) => setState(
-                        () =>
-                            _starterWeightIntensity =
-                                value ?? StarterWeightIntensity.medium,
-                      ),
-                ),
-                _buildChoiceTile<StarterWeightIntensity>(
-                  title: 'Hard',
-                  subtitle:
-                      'Heaviest recommendation, still rounded and effort-aware.',
-                  value: StarterWeightIntensity.hard,
-                  groupValue: _starterWeightIntensity,
-                  onChanged:
-                      (value) => setState(
-                        () =>
-                            _starterWeightIntensity =
-                                value ?? StarterWeightIntensity.hard,
-                      ),
-                ),
-              ],
-            ),
-            _buildSettingsSection(
-              icon: Icons.tune_outlined,
-              title: 'Set allocation',
-              subtitle: _requirementSummary(),
-              children: [
-                _buildChoiceTile<RequirementOption>(
-                  title: 'Even bodypart coverage',
-                  subtitle: 'Spread work broadly across available bodyparts.',
-                  value: RequirementOption.equalSplitBodyPart,
-                  groupValue: _requirementOption,
-                  onChanged: (v) => setState(() => _requirementOption = v),
-                ),
-                _buildChoiceTile<RequirementOption>(
-                  title: 'Use bodypart rankings',
-                  subtitle: 'Give higher-ranked bodyparts more planned work.',
-                  value: RequirementOption.biasRankBodyPart,
-                  groupValue: _requirementOption,
-                  onChanged: (v) => setState(() => _requirementOption = v),
-                ),
-                if (_requirementOption == RequirementOption.biasRankBodyPart)
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const BodyPartRankingScreen(),
+            KeyedSubtree(
+              key: _focusTutorialKey,
+              child: _buildSettingsSection(
+                icon: Icons.track_changes_outlined,
+                title: 'Training focus',
+                subtitle:
+                    '${_preferredBodypartIds.length} preferred, '
+                    '${_blacklistedBodypartIds.length} avoided, '
+                    '${_useRecentTrainingHistory ? 'using' : 'not using'} 7-day history',
+                children: [
+                  CheckboxListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Use recent training'),
+                    subtitle: const Text(
+                      'Bias toward under-trained areas from the last 7 days.',
+                    ),
+                    value: _useRecentTrainingHistory,
+                    onChanged:
+                        (value) => setState(
+                          () => _useRecentTrainingHistory = value ?? false,
                         ),
-                      );
-                    },
-                    child: const Text('Rank Body Parts'),
                   ),
-                _buildChoiceTile<RequirementOption>(
-                  title: 'Use muscle rankings',
-                  subtitle: 'Allocate work from your ranked muscle priorities.',
-                  value: RequirementOption.biasRankMuscle,
-                  groupValue: _requirementOption,
-                  onChanged: (v) => setState(() => _requirementOption = v),
-                ),
-                if (_requirementOption == RequirementOption.biasRankMuscle)
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const MuscleRankingScreen(),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Bodypart focus',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Tap once to prefer, twice to avoid, third to clear.',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                  const SizedBox(height: 8),
+                  BodypartFocusChips(
+                    bodyParts: _bodyParts,
+                    preferredBodypartIds: _preferredBodypartIds,
+                    blacklistedBodypartIds: _blacklistedBodypartIds,
+                    emptyText: 'Bodyparts could not be loaded.',
+                    onChanged:
+                        (selection) => setState(() {
+                          _preferredBodypartIds =
+                              selection.preferredBodypartIds;
+                          _blacklistedBodypartIds =
+                              selection.blacklistedBodypartIds;
+                        }),
+                  ),
+                ],
+              ),
+            ),
+            KeyedSubtree(
+              key: _repWeightTutorialKey,
+              child: _buildSettingsSection(
+                icon: Icons.fitness_center_outlined,
+                title: 'Reps & weights',
+                subtitle:
+                    '${_repWeightModeLabel(_repWeightMode)}, '
+                    '${_fieldValue(_targetRepCountController, SessionSpec.defaultTargetRepCount.toString())} reps, '
+                    '${_starterWeightIntensityLabel(_starterWeightIntensity)} intensity',
+                children: [
+                  _buildChoiceTile<RepWeightGenerationMode>(
+                    title: 'Mixed',
+                    subtitle: 'Pyramid for 3+ sets; steady for shorter work.',
+                    value: RepWeightGenerationMode.mixed,
+                    groupValue: _repWeightMode,
+                    onChanged:
+                        (value) => setState(
+                          () =>
+                              _repWeightMode =
+                                  value ?? RepWeightGenerationMode.mixed,
                         ),
-                      );
-                    },
-                    child: const Text('Rank Muscles'),
                   ),
-              ],
+                  _buildChoiceTile<RepWeightGenerationMode>(
+                    title: 'Pyramid',
+                    subtitle: 'Peak set uses the generated working weight.',
+                    value: RepWeightGenerationMode.pyramid,
+                    groupValue: _repWeightMode,
+                    onChanged:
+                        (value) => setState(
+                          () =>
+                              _repWeightMode =
+                                  value ?? RepWeightGenerationMode.pyramid,
+                        ),
+                  ),
+                  _buildChoiceTile<RepWeightGenerationMode>(
+                    title: 'Consistent',
+                    subtitle: 'Same reps and suggested weight each set.',
+                    value: RepWeightGenerationMode.consistent,
+                    groupValue: _repWeightMode,
+                    onChanged:
+                        (value) => setState(
+                          () =>
+                              _repWeightMode =
+                                  value ?? RepWeightGenerationMode.consistent,
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildNumberField(
+                    controller: _targetRepCountController,
+                    label: 'Target reps',
+                    hintText: SessionSpec.defaultTargetRepCount.toString(),
+                    helperText: 'Peak reps for pyramid; steady reps otherwise.',
+                    suffixText: 'reps',
+                  ),
+                  const SizedBox(height: 14),
+                  const Text(
+                    'Weight intensity',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 6),
+                  _buildChoiceTile<StarterWeightIntensity>(
+                    title: 'Easy',
+                    subtitle:
+                        'Most conservative history or starter recommendation.',
+                    value: StarterWeightIntensity.easy,
+                    groupValue: _starterWeightIntensity,
+                    onChanged:
+                        (value) => setState(
+                          () =>
+                              _starterWeightIntensity =
+                                  value ?? StarterWeightIntensity.easy,
+                        ),
+                  ),
+                  _buildChoiceTile<StarterWeightIntensity>(
+                    title: 'Medium',
+                    subtitle: 'Balanced working-weight recommendation.',
+                    value: StarterWeightIntensity.medium,
+                    groupValue: _starterWeightIntensity,
+                    onChanged:
+                        (value) => setState(
+                          () =>
+                              _starterWeightIntensity =
+                                  value ?? StarterWeightIntensity.medium,
+                        ),
+                  ),
+                  _buildChoiceTile<StarterWeightIntensity>(
+                    title: 'Hard',
+                    subtitle:
+                        'Heaviest recommendation, still rounded and effort-aware.',
+                    value: StarterWeightIntensity.hard,
+                    groupValue: _starterWeightIntensity,
+                    onChanged:
+                        (value) => setState(
+                          () =>
+                              _starterWeightIntensity =
+                                  value ?? StarterWeightIntensity.hard,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+            KeyedSubtree(
+              key: _allocationTutorialKey,
+              child: _buildSettingsSection(
+                icon: Icons.tune_outlined,
+                title: 'Set allocation',
+                subtitle: _requirementSummary(),
+                children: [
+                  _buildChoiceTile<RequirementOption>(
+                    title: 'Even bodypart coverage',
+                    subtitle: 'Spread work broadly across available bodyparts.',
+                    value: RequirementOption.equalSplitBodyPart,
+                    groupValue: _requirementOption,
+                    onChanged: (v) => setState(() => _requirementOption = v),
+                  ),
+                  _buildChoiceTile<RequirementOption>(
+                    title: 'Use bodypart rankings',
+                    subtitle: 'Give higher-ranked bodyparts more planned work.',
+                    value: RequirementOption.biasRankBodyPart,
+                    groupValue: _requirementOption,
+                    onChanged: (v) => setState(() => _requirementOption = v),
+                  ),
+                  if (_requirementOption == RequirementOption.biasRankBodyPart)
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const BodyPartRankingScreen(),
+                          ),
+                        );
+                      },
+                      child: const Text('Rank Body Parts'),
+                    ),
+                  _buildChoiceTile<RequirementOption>(
+                    title: 'Use muscle rankings',
+                    subtitle:
+                        'Allocate work from your ranked muscle priorities.',
+                    value: RequirementOption.biasRankMuscle,
+                    groupValue: _requirementOption,
+                    onChanged: (v) => setState(() => _requirementOption = v),
+                  ),
+                  if (_requirementOption == RequirementOption.biasRankMuscle)
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const MuscleRankingScreen(),
+                          ),
+                        );
+                      },
+                      child: const Text('Rank Muscles'),
+                    ),
+                ],
+              ),
             ),
             const SizedBox(height: 88),
           ],

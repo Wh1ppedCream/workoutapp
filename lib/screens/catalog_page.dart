@@ -6,8 +6,10 @@ import 'package:provider/provider.dart';
 import '../models/models.dart';
 import '../providers/active_session.dart';
 import '../repositories/app_repository.dart';
+import '../services/tutorial_state_store.dart';
 import '../theme/theme_extensions.dart';
 import '../widgets/body_heatmap.dart';
+import '../widgets/guided_tutorial_overlay.dart';
 import 'exercise/exercise_catalog_page.dart';
 import 'exercise/muscle_filter_page.dart';
 
@@ -19,9 +21,18 @@ class CatalogPage extends StatefulWidget {
 }
 
 class _CatalogPageState extends State<CatalogPage> {
+  final _exerciseCatalogTutorialKey = GlobalKey(
+    debugLabel: 'catalog_exercise_catalog_tutorial',
+  );
+  final _targetAnatomyTutorialKey = GlobalKey(
+    debugLabel: 'catalog_target_anatomy_tutorial',
+  );
+  final _tutorialStore = const TutorialStateStore();
+
   late Future<_CatalogOverviewData> _overviewFuture;
   _CatalogOverviewData? _lastOverview;
   int? _seenCompletedSessionVersion;
+  bool _catalogTutorialQueued = false;
 
   @override
   void initState() {
@@ -33,17 +44,21 @@ class _CatalogPageState extends State<CatalogPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    final isActiveTab = TickerMode.of(context);
     final completedSessionVersion =
         Provider.of<ActiveSession>(context).completedSessionVersion;
 
     if (_seenCompletedSessionVersion == null) {
       _seenCompletedSessionVersion = completedSessionVersion;
-      return;
+    } else if (_seenCompletedSessionVersion != completedSessionVersion) {
+      _seenCompletedSessionVersion = completedSessionVersion;
+      _overviewFuture = _loadOverview();
     }
-    if (_seenCompletedSessionVersion == completedSessionVersion) return;
-
-    _seenCompletedSessionVersion = completedSessionVersion;
-    _overviewFuture = _loadOverview();
+    if (isActiveTab) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _queueCatalogTutorial();
+      });
+    }
   }
 
   Future<void> _refreshOverview() async {
@@ -126,6 +141,51 @@ class _CatalogPageState extends State<CatalogPage> {
     );
   }
 
+  void _queueCatalogTutorial() {
+    if (!mounted || _catalogTutorialQueued || !TickerMode.of(context)) return;
+    if (_exerciseCatalogTutorialKey.currentContext == null ||
+        _targetAnatomyTutorialKey.currentContext == null) {
+      return;
+    }
+    _catalogTutorialQueued = true;
+    unawaited(_showCatalogTutorialIfNeeded());
+  }
+
+  Future<void> _showCatalogTutorialIfNeeded() async {
+    try {
+      await Future<void>.delayed(const Duration(milliseconds: 550));
+      if (!mounted || !TickerMode.of(context)) return;
+
+      final completed = await _tutorialStore.isCompleted(
+        TutorialIds.catalogHome,
+      );
+      if (completed || !mounted) return;
+
+      await GuidedTutorialOverlay.show(
+        context,
+        steps: [
+          GuidedTutorialStep(
+            targetKey: _exerciseCatalogTutorialKey,
+            icon: Icons.menu_book_outlined,
+            title: 'Exercise catalog',
+            body:
+                'Your most used exercises show here first. Tap the card to open the full catalog, search movements, and review exercise details.',
+          ),
+          GuidedTutorialStep(
+            targetKey: _targetAnatomyTutorialKey,
+            icon: Icons.bubble_chart_outlined,
+            title: 'Target Anatomy',
+            body:
+                'This summarizes your most trained bodyparts and muscles. Tap either side to open the anatomy library for focused exercise lists.',
+          ),
+        ],
+      );
+      await _tutorialStore.markCompleted(TutorialIds.catalogHome);
+    } finally {
+      _catalogTutorialQueued = false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -162,6 +222,9 @@ class _CatalogPageState extends State<CatalogPage> {
                 ),
               );
             }
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _queueCatalogTutorial();
+            });
 
             return RefreshIndicator(
               onRefresh: _refreshOverview,
@@ -169,16 +232,22 @@ class _CatalogPageState extends State<CatalogPage> {
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
                 children: [
-                  _ExerciseCatalogCard(
-                    exercises: overview.exercises,
-                    onTap: _openExerciseCatalog,
+                  KeyedSubtree(
+                    key: _exerciseCatalogTutorialKey,
+                    child: _ExerciseCatalogCard(
+                      exercises: overview.exercises,
+                      onTap: _openExerciseCatalog,
+                    ),
                   ),
                   const SizedBox(height: 16),
-                  _TargetAnatomyCard(
-                    muscles: overview.muscles,
-                    bodyParts: overview.bodyParts,
-                    onMusclesTap: () => _openFocusLibrary(1),
-                    onBodyPartsTap: () => _openFocusLibrary(0),
+                  KeyedSubtree(
+                    key: _targetAnatomyTutorialKey,
+                    child: _TargetAnatomyCard(
+                      muscles: overview.muscles,
+                      bodyParts: overview.bodyParts,
+                      onMusclesTap: () => _openFocusLibrary(1),
+                      onBodyPartsTap: () => _openFocusLibrary(0),
+                    ),
                   ),
                 ],
               ),

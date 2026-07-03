@@ -11,9 +11,12 @@ import 'package:provider/provider.dart';
 import '../models/models.dart';
 import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
+import '../services/tutorial_state_store.dart';
 import '../theme/theme_extensions.dart';
+import '../utils/tutorial_launcher.dart';
 import '../utils/weight_unit_formatter.dart';
 import 'body_heatmap.dart';
+import 'guided_tutorial_overlay.dart';
 
 /// Simple record model for history tab
 class HistoryRecord {
@@ -48,6 +51,10 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
   late Future<List<HistoryRecord>> _historyFuture;
   final Map<String, Future<List<RepMaxRow>>> _repMaxFutures = {};
   final Map<String, Future<double?>> _volumeMaxFutures = {};
+  final _headerTutorialKey = GlobalKey(debugLabel: 'exercise_detail_header');
+  final _tabsTutorialKey = GlobalKey(debugLabel: 'exercise_detail_tabs');
+  final _contentTutorialKey = GlobalKey(debugLabel: 'exercise_detail_content');
+  bool _tutorialQueued = false;
 
   // Timeframe toggles
   final List<String> _timeframes = ['week', 'month', 'all'];
@@ -60,6 +67,9 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     _tfSelected = [false, false, true]; // default to "all"
     unawaited(BodyHeatmap.preload());
     _historyFuture = _loadHistory();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _queueTutorial();
+    });
   }
 
   @override
@@ -69,6 +79,50 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
       _repMaxFutures.clear();
       _volumeMaxFutures.clear();
       _historyFuture = _loadHistory();
+      _tutorialQueued = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _queueTutorial();
+      });
+    }
+  }
+
+  void _queueTutorial() {
+    if (!mounted || _tutorialQueued) return;
+    _tutorialQueued = true;
+    unawaited(_showTutorial());
+  }
+
+  Future<void> _showTutorial() async {
+    try {
+      await showGuidedTutorialOnce(
+        context,
+        tutorialId: TutorialIds.exerciseDetail,
+        steps: [
+          GuidedTutorialStep(
+            targetKey: _headerTutorialKey,
+            icon: Icons.info_outline,
+            title: 'Exercise details',
+            body:
+                'The sheet title is the exercise you opened. Close it from here when you are done.',
+          ),
+          GuidedTutorialStep(
+            targetKey: _tabsTutorialKey,
+            icon: Icons.tab,
+            title: 'Details, metrics, records',
+            body:
+                'Use these tabs to switch between instructions, best lifts, and recent workout records.',
+          ),
+          GuidedTutorialStep(
+            targetKey: _contentTutorialKey,
+            icon: Icons.accessibility_new,
+            title: 'Exercise context',
+            body:
+                'The details tab shows equipment, trained bodyparts, muscles, and form notes for the exercise.',
+          ),
+        ],
+      );
+    } finally {
+      _tutorialQueued = false;
     }
   }
 
@@ -421,51 +475,64 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
               child: Column(
                 children: [
                   // Header with Close Icon
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8, left: 16, right: 16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const SizedBox(width: 48),
-                        Expanded(
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Text(
-                              widget.definition.name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.center,
-                              style: Theme.of(context).textTheme.titleLarge,
+                  KeyedSubtree(
+                    key: _headerTutorialKey,
+                    child: Padding(
+                      padding: const EdgeInsets.only(
+                        top: 8,
+                        left: 16,
+                        right: 16,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const SizedBox(width: 48),
+                          Expanded(
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                widget.definition.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context).textTheme.titleLarge,
+                              ),
                             ),
                           ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () => Navigator.of(context).pop(),
-                        ),
-                      ],
+                          IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () => Navigator.of(context).pop(),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
 
                   // Tab Bar
-                  const TabBar(
-                    tabs: [
-                      Tab(text: 'Details'),
-                      Tab(text: 'Metrics'),
-                      Tab(text: 'Records'),
-                    ],
+                  KeyedSubtree(
+                    key: _tabsTutorialKey,
+                    child: const TabBar(
+                      tabs: [
+                        Tab(text: 'Details'),
+                        Tab(text: 'Metrics'),
+                        Tab(text: 'Records'),
+                      ],
+                    ),
                   ),
                   const Divider(height: 1),
 
                   // Tab Views
                   Expanded(
-                    child: TabBarView(
-                      physics: const NeverScrollableScrollPhysics(),
-                      children: [
-                        _buildDetailsTab(scrollCtrl),
-                        _buildMetricsTab(scrollCtrl),
-                        _buildRecordsTab(scrollCtrl),
-                      ],
+                    child: KeyedSubtree(
+                      key: _contentTutorialKey,
+                      child: TabBarView(
+                        physics: const NeverScrollableScrollPhysics(),
+                        children: [
+                          _buildDetailsTab(scrollCtrl),
+                          _buildMetricsTab(scrollCtrl),
+                          _buildRecordsTab(scrollCtrl),
+                        ],
+                      ),
                     ),
                   ),
                 ],

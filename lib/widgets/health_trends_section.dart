@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:fl_chart/fl_chart.dart';
@@ -7,7 +8,10 @@ import 'package:provider/provider.dart';
 import '../models/models.dart';
 import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
+import '../services/tutorial_state_store.dart';
 import '../theme/theme_extensions.dart';
+import '../utils/tutorial_launcher.dart';
+import 'guided_tutorial_overlay.dart';
 
 class HealthTrendsSection extends StatefulWidget {
   final int refreshToken;
@@ -227,8 +231,17 @@ class MeasurementTrendDetailPage extends StatefulWidget {
 class _MeasurementTrendDetailPageState
     extends State<MeasurementTrendDetailPage> {
   final _repo = AppRepository();
+  final _addTutorialKey = GlobalKey(debugLabel: 'measurement_trend_add');
+  final _summaryTutorialKey = GlobalKey(
+    debugLabel: 'measurement_trend_summary',
+  );
+  final _chartTutorialKey = GlobalKey(debugLabel: 'measurement_trend_chart');
+  final _entriesTutorialKey = GlobalKey(
+    debugLabel: 'measurement_trend_entries',
+  );
   late Future<List<Measurement>> _entriesFuture;
   bool _changed = false;
+  bool _tutorialQueued = false;
 
   @override
   void initState() {
@@ -249,6 +262,56 @@ class _MeasurementTrendDetailPageState
       _entriesFuture = _loadEntries();
       _changed = true;
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _queueTutorial();
+    });
+  }
+
+  void _queueTutorial() {
+    if (!mounted || _tutorialQueued) return;
+    _tutorialQueued = true;
+    unawaited(_showTutorial());
+  }
+
+  Future<void> _showTutorial() async {
+    try {
+      await showGuidedTutorialOnce(
+        context,
+        tutorialId: TutorialIds.measurementTrendDetail,
+        steps: [
+          GuidedTutorialStep(
+            targetKey: _summaryTutorialKey,
+            icon: Icons.speed,
+            title: 'Measurement summary',
+            body:
+                'See the latest value, change from the previous entry, and how many records exist.',
+          ),
+          GuidedTutorialStep(
+            targetKey: _chartTutorialKey,
+            icon: Icons.show_chart,
+            title: 'Trend chart',
+            body:
+                'The chart shows how this measurement changes over time as you log more entries.',
+          ),
+          GuidedTutorialStep(
+            targetKey: _entriesTutorialKey,
+            icon: Icons.list_alt,
+            title: 'Entries',
+            body:
+                'Tap an entry to edit it, or remove entries that were logged by mistake.',
+          ),
+          GuidedTutorialStep(
+            targetKey: _addTutorialKey,
+            icon: Icons.add,
+            title: 'Log new entry',
+            body:
+                'Use this button whenever you want to add a new measurement record.',
+          ),
+        ],
+      );
+    } finally {
+      _tutorialQueued = false;
+    }
   }
 
   Future<void> _addEntry(List<Measurement> entries) async {
@@ -366,37 +429,57 @@ class _MeasurementTrendDetailPageState
             }
 
             final entries = snapshot.data ?? const <Measurement>[];
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _queueTutorial();
+            });
             return ListView(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
               children: [
-                _MeasurementSummaryCard(
-                  definition: widget.definition,
-                  entries: entries,
+                KeyedSubtree(
+                  key: _summaryTutorialKey,
+                  child: _MeasurementSummaryCard(
+                    definition: widget.definition,
+                    entries: entries,
+                  ),
                 ),
                 const SizedBox(height: 12),
-                _MeasurementChartCard(
-                  definition: widget.definition,
-                  entries: entries,
-                  height: 250,
+                KeyedSubtree(
+                  key: _chartTutorialKey,
+                  child: _MeasurementChartCard(
+                    definition: widget.definition,
+                    entries: entries,
+                    height: 250,
+                  ),
                 ),
                 const SizedBox(height: 20),
-                Text('Entries', style: Theme.of(context).textTheme.titleLarge),
-                const SizedBox(height: 8),
-                if (entries.isEmpty)
-                  _HealthTrendMessageCard(
-                    icon: Icons.add_chart,
-                    title: 'No entries yet',
-                    message: 'Log your first $title measurement.',
-                    actionLabel: 'Log entry',
-                    onAction: () => _addEntry(entries),
-                  )
-                else
-                  for (final entry in entries.reversed)
-                    _MeasurementEntryTile(
-                      entry: entry,
-                      onTap: () => _editEntry(entry),
-                      onDelete: () => _deleteEntry(entry),
-                    ),
+                KeyedSubtree(
+                  key: _entriesTutorialKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        'Entries',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 8),
+                      if (entries.isEmpty)
+                        _HealthTrendMessageCard(
+                          icon: Icons.add_chart,
+                          title: 'No entries yet',
+                          message: 'Log your first $title measurement.',
+                          actionLabel: 'Log entry',
+                          onAction: () => _addEntry(entries),
+                        )
+                      else
+                        for (final entry in entries.reversed)
+                          _MeasurementEntryTile(
+                            entry: entry,
+                            onTap: () => _editEntry(entry),
+                            onDelete: () => _deleteEntry(entry),
+                          ),
+                    ],
+                  ),
+                ),
               ],
             );
           },
@@ -404,14 +487,17 @@ class _MeasurementTrendDetailPageState
         bottomNavigationBar: SafeArea(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-            child: FilledButton.icon(
-              onPressed: () async {
-                final entries = await _entriesFuture;
-                if (!context.mounted) return;
-                await _addEntry(entries);
-              },
-              icon: const Icon(Icons.add),
-              label: const Text('Log Entry'),
+            child: KeyedSubtree(
+              key: _addTutorialKey,
+              child: FilledButton.icon(
+                onPressed: () async {
+                  final entries = await _entriesFuture;
+                  if (!context.mounted) return;
+                  await _addEntry(entries);
+                },
+                icon: const Icon(Icons.add),
+                label: const Text('Log Entry'),
+              ),
             ),
           ),
         ),

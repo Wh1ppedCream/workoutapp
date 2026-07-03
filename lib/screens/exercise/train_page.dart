@@ -19,7 +19,9 @@ import '../../widgets/drawers.dart';
 import '../../widgets/exercise_card.dart';
 import '../../widgets/focused_sets_list.dart';
 import '../../widgets/generic_bar.dart';
+import '../../widgets/guided_tutorial_overlay.dart';
 import '../../widgets/presets_loaded.dart';
+import '../../services/tutorial_state_store.dart';
 import 'analytics_dashboard_screen.dart';
 import 'gym_profile_screen.dart';
 import 'optimized_workout_settings_page.dart';
@@ -47,6 +49,20 @@ class _TrainPageState extends State<TrainPage> {
 
   final _repo = AppRepository();
   final _scaffoldKey = GlobalKey<ScaffoldState>();
+  final _trainTabsTutorialKey = GlobalKey(debugLabel: 'train_tabs_tutorial');
+  final _gymProfileTutorialKey = GlobalKey(
+    debugLabel: 'train_gym_profile_tutorial',
+  );
+  final _weeklyOverviewTutorialKey = GlobalKey(
+    debugLabel: 'train_weekly_overview_tutorial',
+  );
+  final _activePlansTutorialKey = GlobalKey(
+    debugLabel: 'train_active_plans_tutorial',
+  );
+  final _workoutBarTutorialKey = GlobalKey(
+    debugLabel: 'train_workout_bar_tutorial',
+  );
+  final _tutorialStore = const TutorialStateStore();
 
   int _selectedTab = 0;
   int _overviewRefreshToken = 0;
@@ -64,11 +80,15 @@ class _TrainPageState extends State<TrainPage> {
       StarterWeightIntensity.medium;
   Set<int> _optimizedPreferredBodypartIds = <int>{};
   Set<int> _optimizedBlacklistedBodypartIds = <int>{};
+  bool _trainTutorialQueued = false;
 
   @override
   void initState() {
     super.initState();
     unawaited(_loadOptimizedWorkoutSettings());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _queueTrainTutorial();
+    });
   }
 
   @override
@@ -78,6 +98,71 @@ class _TrainPageState extends State<TrainPage> {
     if (_lastProfileId != profileId) {
       _lastProfileId = profileId;
       _presetsRefreshToken++;
+    }
+    if (TickerMode.of(context)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _queueTrainTutorial();
+      });
+    }
+  }
+
+  void _queueTrainTutorial() {
+    if (!mounted || _trainTutorialQueued || !TickerMode.of(context)) return;
+    _trainTutorialQueued = true;
+    unawaited(_showTrainTutorialIfNeeded());
+  }
+
+  Future<void> _showTrainTutorialIfNeeded() async {
+    try {
+      await Future<void>.delayed(const Duration(milliseconds: 650));
+      if (!mounted || !TickerMode.of(context)) return;
+
+      final completed = await _tutorialStore.isCompleted(TutorialIds.trainHome);
+      if (completed || !mounted || _selectedTab != 0) return;
+
+      await GuidedTutorialOverlay.show(
+        context,
+        steps: [
+          GuidedTutorialStep(
+            targetKey: _trainTabsTutorialKey,
+            icon: Icons.view_week_outlined,
+            title: 'Train has two spaces',
+            body:
+                'Overview keeps your ready-to-use workout controls up front. Plans is where you browse, generate, and manage your saved plans.',
+          ),
+          GuidedTutorialStep(
+            targetKey: _weeklyOverviewTutorialKey,
+            icon: Icons.accessibility_new,
+            title: 'Weekly overview',
+            body:
+                'This shows what bodyparts you have trained recently. Tap the focused sets list to open the full weekly sets breakdown.',
+          ),
+          GuidedTutorialStep(
+            targetKey: _activePlansTutorialKey,
+            icon: Icons.assignment_outlined,
+            title: 'Active plans',
+            body:
+                'Active plans are the routines you want close at hand. Use the pen to choose which plans stay ready on the Overview tab.',
+          ),
+          GuidedTutorialStep(
+            targetKey: _workoutBarTutorialKey,
+            icon: Icons.play_circle_outline,
+            title: 'Start or optimize',
+            body:
+                'Start Workout begins a blank session. Optimize builds a session from your history, profile equipment, focus, and recovery rules.',
+          ),
+          GuidedTutorialStep(
+            targetKey: _gymProfileTutorialKey,
+            icon: Icons.storefront_outlined,
+            title: 'Gym profiles',
+            body:
+                'Switch profiles when you train somewhere different so generated workouts and exercise swaps only use available equipment.',
+          ),
+        ],
+      );
+      await _tutorialStore.markCompleted(TutorialIds.trainHome);
+    } finally {
+      _trainTutorialQueued = false;
     }
   }
 
@@ -518,12 +603,21 @@ class _TrainPageState extends State<TrainPage> {
           appBar: AppBar(
             automaticallyImplyLeading: false,
             title: _TrainTabs(
+              key: _trainTabsTutorialKey,
               selectedIndex: _selectedTab,
-              onChanged: (index) => setState(() => _selectedTab = index),
+              onChanged: (index) {
+                setState(() => _selectedTab = index);
+                if (index == 0) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    _queueTrainTutorial();
+                  });
+                }
+              },
             ),
             centerTitle: true,
             actions: [
               Padding(
+                key: _gymProfileTutorialKey,
                 padding: const EdgeInsets.only(right: 8),
                 child: IconButton(
                   tooltip: 'Gym profiles',
@@ -551,6 +645,8 @@ class _TrainPageState extends State<TrainPage> {
                   refreshToken: _overviewRefreshToken,
                   profileId: sel.currentProfile?.id,
                   presetsRefreshToken: _presetsRefreshToken,
+                  weeklyOverviewKey: _weeklyOverviewTutorialKey,
+                  activePlansKey: _activePlansTutorialKey,
                   onPresetsRefresh: () {
                     setState(() => _presetsRefreshToken++);
                   },
@@ -567,11 +663,14 @@ class _TrainPageState extends State<TrainPage> {
           ),
           bottomNavigationBar:
               _selectedTab == 0
-                  ? _SplitWorkoutBar(
-                    onStartWorkout: _startWorkout,
-                    onOptimizeWorkout: () => _startOptimizedWorkout(sel),
-                    onOptimizeSettings: _openOptimizedWorkoutSettings,
-                    isStartingOptimized: _isStartingOptimized,
+                  ? KeyedSubtree(
+                    key: _workoutBarTutorialKey,
+                    child: _SplitWorkoutBar(
+                      onStartWorkout: _startWorkout,
+                      onOptimizeWorkout: () => _startOptimizedWorkout(sel),
+                      onOptimizeSettings: _openOptimizedWorkoutSettings,
+                      isStartingOptimized: _isStartingOptimized,
+                    ),
                   )
                   : null,
         );
@@ -587,7 +686,11 @@ class _TrainPageState extends State<TrainPage> {
 }
 
 class _TrainTabs extends StatelessWidget {
-  const _TrainTabs({required this.selectedIndex, required this.onChanged});
+  const _TrainTabs({
+    super.key,
+    required this.selectedIndex,
+    required this.onChanged,
+  });
 
   final int selectedIndex;
   final ValueChanged<int> onChanged;
@@ -665,12 +768,16 @@ class _OverviewTab extends StatelessWidget {
     required this.refreshToken,
     required this.profileId,
     required this.presetsRefreshToken,
+    this.weeklyOverviewKey,
+    this.activePlansKey,
     required this.onPresetsRefresh,
   });
 
   final int refreshToken;
   final int? profileId;
   final int presetsRefreshToken;
+  final Key? weeklyOverviewKey;
+  final Key? activePlansKey;
   final VoidCallback onPresetsRefresh;
 
   @override
@@ -678,12 +785,18 @@ class _OverviewTab extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 112),
       children: [
-        _SevenDayFocusCard(refreshToken: refreshToken),
+        KeyedSubtree(
+          key: weeklyOverviewKey,
+          child: _SevenDayFocusCard(refreshToken: refreshToken),
+        ),
         const SizedBox(height: 16),
-        _ActivePresetsCard(
-          profileId: profileId,
-          refreshToken: presetsRefreshToken,
-          onRefresh: onPresetsRefresh,
+        KeyedSubtree(
+          key: activePlansKey,
+          child: _ActivePresetsCard(
+            profileId: profileId,
+            refreshToken: presetsRefreshToken,
+            onRefresh: onPresetsRefresh,
+          ),
         ),
       ],
     );

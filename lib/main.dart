@@ -512,18 +512,21 @@ class _MainScreenState extends State<MainScreen> {
 
     // 2) Grab the *current* list of tabs & pages
     final tabs = navConfig.items;
-    final pages =
-        tabs
-            .map(
-              (tab) =>
-                  KeyedSubtree(key: ValueKey(tab), child: _pageForTab(tab)),
-            )
-            .toList();
 
     // 3) If the current index is now too big, clamp it
-    if (_selectedIndex >= pages.length) {
-      _selectedIndex = pages.length - 1;
+    if (_selectedIndex >= tabs.length) {
+      _selectedIndex = tabs.length - 1;
     }
+    final pages = [
+      for (var i = 0; i < tabs.length; i++)
+        TickerMode(
+          enabled: i == _selectedIndex,
+          child: KeyedSubtree(
+            key: ValueKey(tabs[i]),
+            child: _pageForTab(tabs[i]),
+          ),
+        ),
+    ];
 
     return Scaffold(
       body: IndexedStack(index: _selectedIndex, children: pages),

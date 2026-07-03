@@ -1,10 +1,15 @@
 // File: lib/screens/exercise/muscle_filter_page.dart
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../models/models.dart';
 import '../../repositories/app_repository.dart';
+import '../../services/tutorial_state_store.dart';
+import '../../utils/tutorial_launcher.dart';
 import '../../widgets/body_heatmap.dart';
+import '../../widgets/guided_tutorial_overlay.dart';
 import 'definitions_by_bodypart_page.dart';
 import 'definitions_by_muscle_page.dart';
 
@@ -20,8 +25,11 @@ class MuscleFilterPage extends StatefulWidget {
 
 class _MuscleFilterPageState extends State<MuscleFilterPage> {
   final _repo = AppRepository();
+  final _searchTutorialKey = GlobalKey(debugLabel: 'target_anatomy_search');
+  final _listTutorialKey = GlobalKey(debugLabel: 'target_anatomy_list');
   late Future<_FilterData> _dataFuture;
   String _query = '';
+  bool _tutorialQueued = false;
 
   @override
   void initState() {
@@ -64,6 +72,39 @@ class _MuscleFilterPageState extends State<MuscleFilterPage> {
       bodyPartExerciseCounts: bodyPartCounts,
       muscleExerciseCounts: muscleCounts,
     );
+  }
+
+  void _queueTutorial() {
+    if (!mounted || _tutorialQueued) return;
+    _tutorialQueued = true;
+    unawaited(_showTutorial());
+  }
+
+  Future<void> _showTutorial() async {
+    try {
+      await showGuidedTutorialOnce(
+        context,
+        tutorialId: TutorialIds.targetAnatomy,
+        steps: [
+          GuidedTutorialStep(
+            targetKey: _searchTutorialKey,
+            icon: Icons.search,
+            title: 'Search anatomy',
+            body:
+                'Search for a bodypart or a specific muscle when you want targeted exercise options.',
+          ),
+          GuidedTutorialStep(
+            targetKey: _listTutorialKey,
+            icon: Icons.accessibility_new,
+            title: 'Bodyparts and muscles',
+            body:
+                'Switch tabs, then tap any row to see linked exercises, recent set totals, and recommended set boundaries.',
+          ),
+        ],
+      );
+    } finally {
+      _tutorialQueued = false;
+    }
   }
 
   @override
@@ -109,67 +150,78 @@ class _MuscleFilterPageState extends State<MuscleFilterPage> {
                     )
                     .toList();
 
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _queueTutorial();
+            });
+
             return Column(
               children: [
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                  child: TextField(
-                    decoration: const InputDecoration(
-                      labelText: 'Search bodyparts or muscles',
-                      prefixIcon: Icon(Icons.search),
-                      border: OutlineInputBorder(),
+                  child: KeyedSubtree(
+                    key: _searchTutorialKey,
+                    child: TextField(
+                      decoration: const InputDecoration(
+                        labelText: 'Search bodyparts or muscles',
+                        prefixIcon: Icon(Icons.search),
+                        border: OutlineInputBorder(),
+                      ),
+                      onChanged: (value) => setState(() => _query = value),
                     ),
-                    onChanged: (value) => setState(() => _query = value),
                   ),
                 ),
                 Expanded(
-                  child: TabBarView(
-                    children: [
-                      _FocusList<BodyPart>(
-                        emptyText: 'No bodyparts match your search.',
-                        items: bodyParts,
-                        titleFor: (part) => part.name,
-                        subtitleFor: (part) {
-                          final count =
-                              data.bodyPartExerciseCounts[part.id] ?? 0;
-                          return _exerciseCountLabel(count);
-                        },
-                        leadingFor:
-                            (part) => SingleBodyPartHeatmap(
-                              bodyPartName: part.name,
-                              size: 54,
-                            ),
-                        onTap: (part) {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder:
-                                  (_) =>
-                                      DefinitionsByBodyPartPage(bodyPart: part),
-                            ),
-                          );
-                        },
-                      ),
-                      _FocusList<Muscle>(
-                        emptyText: 'No muscles match your search.',
-                        items: muscles,
-                        titleFor: (muscle) => muscle.name,
-                        subtitleFor: (muscle) {
-                          final count =
-                              data.muscleExerciseCounts[muscle.id] ?? 0;
-                          return _exerciseCountLabel(count);
-                        },
-                        icon: Icons.fitness_center,
-                        onTap: (muscle) {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder:
-                                  (_) =>
-                                      DefinitionsByMusclePage(muscle: muscle),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
+                  child: KeyedSubtree(
+                    key: _listTutorialKey,
+                    child: TabBarView(
+                      children: [
+                        _FocusList<BodyPart>(
+                          emptyText: 'No bodyparts match your search.',
+                          items: bodyParts,
+                          titleFor: (part) => part.name,
+                          subtitleFor: (part) {
+                            final count =
+                                data.bodyPartExerciseCounts[part.id] ?? 0;
+                            return _exerciseCountLabel(count);
+                          },
+                          leadingFor:
+                              (part) => SingleBodyPartHeatmap(
+                                bodyPartName: part.name,
+                                size: 54,
+                              ),
+                          onTap: (part) {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder:
+                                    (_) => DefinitionsByBodyPartPage(
+                                      bodyPart: part,
+                                    ),
+                              ),
+                            );
+                          },
+                        ),
+                        _FocusList<Muscle>(
+                          emptyText: 'No muscles match your search.',
+                          items: muscles,
+                          titleFor: (muscle) => muscle.name,
+                          subtitleFor: (muscle) {
+                            final count =
+                                data.muscleExerciseCounts[muscle.id] ?? 0;
+                            return _exerciseCountLabel(count);
+                          },
+                          icon: Icons.fitness_center,
+                          onTap: (muscle) {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder:
+                                    (_) =>
+                                        DefinitionsByMusclePage(muscle: muscle),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],

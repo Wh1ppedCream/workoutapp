@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -8,6 +9,9 @@ import 'package:provider/provider.dart';
 
 import '../../../db/database_maintenance.dart';
 import '../../../repositories/app_repository.dart';
+import '../../../services/tutorial_state_store.dart';
+import '../../../utils/tutorial_launcher.dart';
+import '../../../widgets/guided_tutorial_overlay.dart';
 
 class DatabaseSettingsPage extends StatefulWidget {
   const DatabaseSettingsPage({super.key});
@@ -19,8 +23,14 @@ class DatabaseSettingsPage extends StatefulWidget {
 class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
   late final AppRepository _repo;
   late Future<DatabaseHealthSnapshot> _healthFuture;
+  final _fileActionsTutorialKey = GlobalKey(
+    debugLabel: 'database_file_actions',
+  );
+  final _healthTutorialKey = GlobalKey(debugLabel: 'database_health');
+  final _maintenanceTutorialKey = GlobalKey(debugLabel: 'database_maintenance');
   bool _maintenanceRunning = false;
   bool _repoBound = false;
+  bool _tutorialQueued = false;
 
   @override
   void didChangeDependencies() {
@@ -29,12 +39,55 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
     _repo = context.read<AppRepository>();
     _healthFuture = _repo.getDatabaseHealthSnapshot();
     _repoBound = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _queueTutorial();
+    });
   }
 
   void _refreshHealth() {
     setState(() {
       _healthFuture = _repo.getDatabaseHealthSnapshot();
     });
+  }
+
+  void _queueTutorial() {
+    if (!mounted || _tutorialQueued) return;
+    _tutorialQueued = true;
+    unawaited(_showTutorial());
+  }
+
+  Future<void> _showTutorial() async {
+    try {
+      await showGuidedTutorialOnce(
+        context,
+        tutorialId: TutorialIds.databaseSettings,
+        steps: [
+          GuidedTutorialStep(
+            targetKey: _fileActionsTutorialKey,
+            icon: Icons.import_export,
+            title: 'Database files',
+            body:
+                'Export a backup or import a saved database file. Imports require a backup first.',
+          ),
+          GuidedTutorialStep(
+            targetKey: _healthTutorialKey,
+            icon: Icons.health_and_safety_outlined,
+            title: 'Database health',
+            body:
+                'This card shows schema version, database size, table counts, and search-index health.',
+          ),
+          GuidedTutorialStep(
+            targetKey: _maintenanceTutorialKey,
+            icon: Icons.build_outlined,
+            title: 'Maintenance tools',
+            body:
+                'Use these actions for integrity checks, optimization, WAL checkpointing, or vacuuming when needed.',
+          ),
+        ],
+      );
+    } finally {
+      _tutorialQueued = false;
+    }
   }
 
   String _twoDigits(int value) => value.toString().padLeft(2, '0');
@@ -349,15 +402,22 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
       appBar: AppBar(title: const Text('Database Settings')),
       body: ListView(
         children: [
-          ListTile(
-            leading: const Icon(Icons.upload_file),
-            title: const Text('Export Entire Database to File'),
-            onTap: _exportDatabase,
-          ),
-          ListTile(
-            leading: const Icon(Icons.download),
-            title: const Text('Import Database from File'),
-            onTap: _importDatabase,
+          KeyedSubtree(
+            key: _fileActionsTutorialKey,
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.upload_file),
+                  title: const Text('Export Entire Database to File'),
+                  onTap: _exportDatabase,
+                ),
+                ListTile(
+                  leading: const Icon(Icons.download),
+                  title: const Text('Import Database from File'),
+                  onTap: _importDatabase,
+                ),
+              ],
+            ),
           ),
 
           const Divider(),
@@ -368,74 +428,80 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
               style: Theme.of(context).textTheme.titleMedium,
             ),
           ),
-          FutureBuilder<DatabaseHealthSnapshot>(
-            future: _healthFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState != ConnectionState.done) {
-                return const ListTile(
-                  leading: SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                  title: Text('Checking database health...'),
-                );
-              }
+          KeyedSubtree(
+            key: _healthTutorialKey,
+            child: FutureBuilder<DatabaseHealthSnapshot>(
+              future: _healthFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState != ConnectionState.done) {
+                  return const ListTile(
+                    leading: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                    title: Text('Checking database health...'),
+                  );
+                }
 
-              if (snapshot.hasError) {
-                return ListTile(
-                  leading: const Icon(Icons.error_outline),
-                  title: const Text('Database health check failed'),
-                  subtitle: Text('${snapshot.error}'),
-                  trailing: IconButton(
-                    tooltip: 'Retry',
-                    icon: const Icon(Icons.refresh),
-                    onPressed: _refreshHealth,
-                  ),
-                );
-              }
+                if (snapshot.hasError) {
+                  return ListTile(
+                    leading: const Icon(Icons.error_outline),
+                    title: const Text('Database health check failed'),
+                    subtitle: Text('${snapshot.error}'),
+                    trailing: IconButton(
+                      tooltip: 'Retry',
+                      icon: const Icon(Icons.refresh),
+                      onPressed: _refreshHealth,
+                    ),
+                  );
+                }
 
-              final health = snapshot.data!;
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _healthRow(
-                          'Schema',
-                          'v${health.schemaVersion} / target v${health.targetSchemaVersion}',
-                          healthy: health.isSchemaCurrent,
-                        ),
-                        _healthRow('Size', _formatBytes(health.totalBytes)),
-                        _healthRow('Journal', health.journalMode),
-                        _healthRow(
-                          'Tables',
-                          '${health.tableCount} tables, ${health.indexCount} indexes, ${health.triggerCount} triggers',
-                        ),
-                        _healthRow(
-                          'Food search',
-                          '${health.foodCount} foods, ${health.foodFtsCount} FTS rows',
-                          healthy: health.isFoodSearchAligned,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          health.path,
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ],
+                final health = snapshot.data!;
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _healthRow(
+                            'Schema',
+                            'v${health.schemaVersion} / target v${health.targetSchemaVersion}',
+                            healthy: health.isSchemaCurrent,
+                          ),
+                          _healthRow('Size', _formatBytes(health.totalBytes)),
+                          _healthRow('Journal', health.journalMode),
+                          _healthRow(
+                            'Tables',
+                            '${health.tableCount} tables, ${health.indexCount} indexes, ${health.triggerCount} triggers',
+                          ),
+                          _healthRow(
+                            'Food search',
+                            '${health.foodCount} foods, ${health.foodFtsCount} FTS rows',
+                            healthy: health.isFoodSearchAligned,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            health.path,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
-          ListTile(
-            leading: const Icon(Icons.refresh),
-            title: const Text('Refresh Database Health'),
-            onTap: _maintenanceRunning ? null : _refreshHealth,
+          KeyedSubtree(
+            key: _maintenanceTutorialKey,
+            child: ListTile(
+              leading: const Icon(Icons.refresh),
+              title: const Text('Refresh Database Health'),
+              onTap: _maintenanceRunning ? null : _refreshHealth,
+            ),
           ),
           ListTile(
             leading: const Icon(Icons.fact_check),

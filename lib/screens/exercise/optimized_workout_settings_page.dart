@@ -1,7 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../models/models.dart';
+import '../../services/tutorial_state_store.dart';
 import '../../widgets/bodypart_focus_chips.dart';
+import '../../widgets/guided_tutorial_overlay.dart';
+import '../../utils/tutorial_launcher.dart';
 
 enum OptimizedWorkoutSettingsAction { save, startNow }
 
@@ -60,6 +65,11 @@ class OptimizedWorkoutSettingsPage extends StatefulWidget {
 
 class _OptimizedWorkoutSettingsPageState
     extends State<OptimizedWorkoutSettingsPage> {
+  final _budgetTutorialKey = GlobalKey(debugLabel: 'optimized_budget');
+  final _repWeightTutorialKey = GlobalKey(debugLabel: 'optimized_rep_weight');
+  final _focusTutorialKey = GlobalKey(debugLabel: 'optimized_focus');
+  final _resetTutorialKey = GlobalKey(debugLabel: 'optimized_reset');
+  final _actionsTutorialKey = GlobalKey(debugLabel: 'optimized_actions');
   late final TextEditingController _minutesController;
   late final TextEditingController _minSetsController;
   late final TextEditingController _maxSetsController;
@@ -68,6 +78,7 @@ class _OptimizedWorkoutSettingsPageState
   late StarterWeightIntensity _starterWeightIntensity;
   late Set<int> _preferredBodypartIds;
   late Set<int> _blacklistedBodypartIds;
+  bool _tutorialQueued = false;
 
   @override
   void initState() {
@@ -88,6 +99,9 @@ class _OptimizedWorkoutSettingsPageState
     _starterWeightIntensity = widget.initialStarterWeightIntensity;
     _preferredBodypartIds = {...widget.initialPreferredBodypartIds};
     _blacklistedBodypartIds = {...widget.initialBlacklistedBodypartIds};
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _queueTutorial();
+    });
   }
 
   @override
@@ -113,6 +127,60 @@ class _OptimizedWorkoutSettingsPageState
       _preferredBodypartIds = <int>{};
       _blacklistedBodypartIds = <int>{};
     });
+  }
+
+  void _queueTutorial() {
+    if (!mounted || _tutorialQueued) return;
+    _tutorialQueued = true;
+    unawaited(_showTutorial());
+  }
+
+  Future<void> _showTutorial() async {
+    try {
+      await showGuidedTutorialOnce(
+        context,
+        tutorialId: TutorialIds.optimizedWorkoutSettings,
+        steps: [
+          GuidedTutorialStep(
+            targetKey: _budgetTutorialKey,
+            icon: Icons.timer_outlined,
+            title: 'Session budget',
+            body:
+                'Set how long the optimized workout should be and how many sets each exercise can receive.',
+          ),
+          GuidedTutorialStep(
+            targetKey: _repWeightTutorialKey,
+            icon: Icons.fitness_center_outlined,
+            title: 'Reps and weight',
+            body:
+                'These choices control the set pattern, target reps, and how conservative generated weights should be.',
+          ),
+          GuidedTutorialStep(
+            targetKey: _focusTutorialKey,
+            icon: Icons.track_changes_outlined,
+            title: 'Bodypart focus',
+            body:
+                'Prefer or avoid bodyparts for the next optimized workout without changing your saved rankings.',
+          ),
+          GuidedTutorialStep(
+            targetKey: _resetTutorialKey,
+            icon: Icons.refresh,
+            title: 'Reset',
+            body:
+                'Reset brings this page back to Tonos defaults if the current setup feels off.',
+          ),
+          GuidedTutorialStep(
+            targetKey: _actionsTutorialKey,
+            icon: Icons.play_circle_outline,
+            title: 'Save or start',
+            body:
+                'Start Now uses the current on-screen values once. Save keeps the settings for future optimized workouts.',
+          ),
+        ],
+      );
+    } finally {
+      _tutorialQueued = false;
+    }
   }
 
   void _submit(OptimizedWorkoutSettingsAction action) {
@@ -166,176 +234,186 @@ class _OptimizedWorkoutSettingsPageState
             ListView(
               padding: const EdgeInsets.fromLTRB(16, 72, 16, 120),
               children: [
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Session budget',
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w800,
+                KeyedSubtree(
+                  key: _budgetTutorialKey,
+                  child: Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Session budget',
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Used to budget 3 minutes per set plus 5 minutes to start each exercise.',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
+                          const SizedBox(height: 8),
+                          Text(
+                            'Used to budget 3 minutes per set plus 5 minutes to start each exercise.',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _minutesController,
-                          keyboardType: TextInputType.number,
-                          textInputAction: TextInputAction.next,
-                          decoration: const InputDecoration(
-                            labelText: 'Workout duration',
-                            suffixText: 'min',
-                            border: OutlineInputBorder(),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _minutesController,
+                            keyboardType: TextInputType.number,
+                            textInputAction: TextInputAction.next,
+                            decoration: const InputDecoration(
+                              labelText: 'Workout duration',
+                              suffixText: 'min',
+                              border: OutlineInputBorder(),
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: _minSetsController,
-                          keyboardType: TextInputType.number,
-                          textInputAction: TextInputAction.next,
-                          decoration: const InputDecoration(
-                            labelText: 'Minimum sets per exercise',
-                            suffixText: 'sets',
-                            border: OutlineInputBorder(),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _minSetsController,
+                            keyboardType: TextInputType.number,
+                            textInputAction: TextInputAction.next,
+                            decoration: const InputDecoration(
+                              labelText: 'Minimum sets per exercise',
+                              suffixText: 'sets',
+                              border: OutlineInputBorder(),
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: _maxSetsController,
-                          keyboardType: TextInputType.number,
-                          textInputAction: TextInputAction.done,
-                          decoration: const InputDecoration(
-                            labelText: 'Up to sets per exercise',
-                            suffixText: 'sets',
-                            border: OutlineInputBorder(),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _maxSetsController,
+                            keyboardType: TextInputType.number,
+                            textInputAction: TextInputAction.done,
+                            decoration: const InputDecoration(
+                              labelText: 'Up to sets per exercise',
+                              suffixText: 'sets',
+                              border: OutlineInputBorder(),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(height: 16),
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Reps & weights',
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w800,
+                KeyedSubtree(
+                  key: _repWeightTutorialKey,
+                  child: Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Reps & weights',
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Uses history-based strength estimates when available, with Easy and Medium backing off more than Hard. New exercises use conservative starter estimates.',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
+                          const SizedBox(height: 8),
+                          Text(
+                            'Uses history-based strength estimates when available, with Easy and Medium backing off more than Hard. New exercises use conservative starter estimates.',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 14),
-                        _SettingsChoice<RepWeightGenerationMode>(
-                          title: 'Rep pattern',
-                          value: _repWeightMode,
-                          options: const [
-                            _SettingsChoiceOption(
-                              value: RepWeightGenerationMode.mixed,
-                              label: 'Mixed',
-                            ),
-                            _SettingsChoiceOption(
-                              value: RepWeightGenerationMode.pyramid,
-                              label: 'Pyramid',
-                            ),
-                            _SettingsChoiceOption(
-                              value: RepWeightGenerationMode.consistent,
-                              label: 'Consistent',
-                            ),
-                          ],
-                          onChanged:
-                              (value) => setState(() => _repWeightMode = value),
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: _targetRepsController,
-                          keyboardType: TextInputType.number,
-                          textInputAction: TextInputAction.next,
-                          decoration: const InputDecoration(
-                            labelText: 'Target reps',
-                            suffixText: 'reps',
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        _SettingsChoice<StarterWeightIntensity>(
-                          title: 'Weight intensity',
-                          value: _starterWeightIntensity,
-                          options: const [
-                            _SettingsChoiceOption(
-                              value: StarterWeightIntensity.easy,
-                              label: 'Easy',
-                            ),
-                            _SettingsChoiceOption(
-                              value: StarterWeightIntensity.medium,
-                              label: 'Medium',
-                            ),
-                            _SettingsChoiceOption(
-                              value: StarterWeightIntensity.hard,
-                              label: 'Hard',
-                            ),
-                          ],
-                          onChanged:
-                              (value) => setState(
-                                () => _starterWeightIntensity = value,
+                          const SizedBox(height: 14),
+                          _SettingsChoice<RepWeightGenerationMode>(
+                            title: 'Rep pattern',
+                            value: _repWeightMode,
+                            options: const [
+                              _SettingsChoiceOption(
+                                value: RepWeightGenerationMode.mixed,
+                                label: 'Mixed',
                               ),
-                        ),
-                      ],
+                              _SettingsChoiceOption(
+                                value: RepWeightGenerationMode.pyramid,
+                                label: 'Pyramid',
+                              ),
+                              _SettingsChoiceOption(
+                                value: RepWeightGenerationMode.consistent,
+                                label: 'Consistent',
+                              ),
+                            ],
+                            onChanged:
+                                (value) =>
+                                    setState(() => _repWeightMode = value),
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _targetRepsController,
+                            keyboardType: TextInputType.number,
+                            textInputAction: TextInputAction.next,
+                            decoration: const InputDecoration(
+                              labelText: 'Target reps',
+                              suffixText: 'reps',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          _SettingsChoice<StarterWeightIntensity>(
+                            title: 'Weight intensity',
+                            value: _starterWeightIntensity,
+                            options: const [
+                              _SettingsChoiceOption(
+                                value: StarterWeightIntensity.easy,
+                                label: 'Easy',
+                              ),
+                              _SettingsChoiceOption(
+                                value: StarterWeightIntensity.medium,
+                                label: 'Medium',
+                              ),
+                              _SettingsChoiceOption(
+                                value: StarterWeightIntensity.hard,
+                                label: 'Hard',
+                              ),
+                            ],
+                            onChanged:
+                                (value) => setState(
+                                  () => _starterWeightIntensity = value,
+                                ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(height: 16),
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Bodypart focus',
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w800,
+                KeyedSubtree(
+                  key: _focusTutorialKey,
+                  child: Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Bodypart focus',
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'These picks apply only to the next optimized workout you start. Tap once to prefer, tap twice to avoid, and tap again to clear.',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
+                          const SizedBox(height: 8),
+                          Text(
+                            'These picks apply only to the next optimized workout you start. Tap once to prefer, tap twice to avoid, and tap again to clear.',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 14),
-                        BodypartFocusChips(
-                          bodyParts: widget.bodyParts,
-                          preferredBodypartIds: _preferredBodypartIds,
-                          blacklistedBodypartIds: _blacklistedBodypartIds,
-                          emptyText: 'Bodyparts could not be loaded.',
-                          onChanged:
-                              (selection) => setState(() {
-                                _preferredBodypartIds =
-                                    selection.preferredBodypartIds;
-                                _blacklistedBodypartIds =
-                                    selection.blacklistedBodypartIds;
-                              }),
-                        ),
-                      ],
+                          const SizedBox(height: 14),
+                          BodypartFocusChips(
+                            bodyParts: widget.bodyParts,
+                            preferredBodypartIds: _preferredBodypartIds,
+                            blacklistedBodypartIds: _blacklistedBodypartIds,
+                            emptyText: 'Bodyparts could not be loaded.',
+                            onChanged:
+                                (selection) => setState(() {
+                                  _preferredBodypartIds =
+                                      selection.preferredBodypartIds;
+                                  _blacklistedBodypartIds =
+                                      selection.blacklistedBodypartIds;
+                                }),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -353,10 +431,13 @@ class _OptimizedWorkoutSettingsPageState
             Positioned(
               top: 8,
               right: 16,
-              child: _FloatingHeaderButton(
-                icon: Icons.refresh,
-                label: 'Reset',
-                onPressed: _resetToDefaults,
+              child: KeyedSubtree(
+                key: _resetTutorialKey,
+                child: _FloatingHeaderButton(
+                  icon: Icons.refresh,
+                  label: 'Reset',
+                  onPressed: _resetToDefaults,
+                ),
               ),
             ),
           ],
@@ -364,27 +445,30 @@ class _OptimizedWorkoutSettingsPageState
       ),
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-        child: Row(
-          children: [
-            Expanded(
-              child: FilledButton(
-                onPressed:
-                    () => _submit(OptimizedWorkoutSettingsAction.startNow),
-                style: FilledButton.styleFrom(
-                  backgroundColor: Colors.green.shade700,
-                  foregroundColor: Colors.white,
+        child: KeyedSubtree(
+          key: _actionsTutorialKey,
+          child: Row(
+            children: [
+              Expanded(
+                child: FilledButton(
+                  onPressed:
+                      () => _submit(OptimizedWorkoutSettingsAction.startNow),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.green.shade700,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Start Now'),
                 ),
-                child: const Text('Start Now'),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: FilledButton(
-                onPressed: () => _submit(OptimizedWorkoutSettingsAction.save),
-                child: const Text('Save'),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton(
+                  onPressed: () => _submit(OptimizedWorkoutSettingsAction.save),
+                  child: const Text('Save'),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

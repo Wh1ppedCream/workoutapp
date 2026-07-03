@@ -1,10 +1,15 @@
 // File: lib/screens/exercise/definitions_by_muscle_page.dart
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../models/models.dart';
 import '../../repositories/app_repository.dart';
+import '../../services/tutorial_state_store.dart';
+import '../../utils/tutorial_launcher.dart';
 import '../../widgets/exercise_definition_info_tile.dart';
+import '../../widgets/guided_tutorial_overlay.dart';
 import '../../widgets/recommended_sets_editor_dialog.dart';
 import '../../widgets/set_stat_chip.dart';
 import 'definitions_by_bodypart_page.dart';
@@ -30,7 +35,12 @@ class DefinitionsByMusclePage extends StatefulWidget {
 
 class _DefinitionsByMusclePageState extends State<DefinitionsByMusclePage> {
   final _repo = AppRepository();
+  final _headerTutorialKey = GlobalKey(debugLabel: 'muscle_detail_header');
+  final _exerciseListTutorialKey = GlobalKey(
+    debugLabel: 'muscle_detail_exercise_list',
+  );
   late Future<_MusclePageData> _dataFuture;
+  bool _tutorialQueued = false;
 
   @override
   void initState() {
@@ -129,6 +139,39 @@ class _DefinitionsByMusclePageState extends State<DefinitionsByMusclePage> {
     }
   }
 
+  void _queueTutorial() {
+    if (!mounted || _tutorialQueued) return;
+    _tutorialQueued = true;
+    unawaited(_showTutorial());
+  }
+
+  Future<void> _showTutorial() async {
+    try {
+      await showGuidedTutorialOnce(
+        context,
+        tutorialId: TutorialIds.muscleDetail,
+        steps: [
+          GuidedTutorialStep(
+            targetKey: _headerTutorialKey,
+            icon: Icons.fitness_center,
+            title: 'Muscle detail',
+            body:
+                'The header shows recent sets, recommended set boundaries, and related bodyparts.',
+          ),
+          GuidedTutorialStep(
+            targetKey: _exerciseListTutorialKey,
+            icon: Icons.list_alt,
+            title: 'Linked exercises',
+            body:
+                'Exercises are ranked by how directly they train this muscle. Tap one for full details.',
+          ),
+        ],
+      );
+    } finally {
+      _tutorialQueued = false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -152,32 +195,41 @@ class _DefinitionsByMusclePageState extends State<DefinitionsByMusclePage> {
           }
 
           final data = snapshot.data!;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _queueTutorial();
+          });
           return ListView.builder(
             padding: const EdgeInsets.only(bottom: 16),
             itemCount: data.definitions.length + 1,
             itemBuilder: (context, index) {
               if (index == 0) {
-                return _MuscleHeader(
-                  muscle: widget.muscle,
-                  sourceBodyPart: widget.sourceBodyPart,
-                  data: data,
-                  onEditRecommended: () => _editRecommendedSets(data),
-                  onBodyPartTap: (bodyPart) {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder:
-                            (_) =>
-                                DefinitionsByBodyPartPage(bodyPart: bodyPart),
-                      ),
-                    );
-                  },
+                return KeyedSubtree(
+                  key: _headerTutorialKey,
+                  child: _MuscleHeader(
+                    muscle: widget.muscle,
+                    sourceBodyPart: widget.sourceBodyPart,
+                    data: data,
+                    onEditRecommended: () => _editRecommendedSets(data),
+                    onBodyPartTap: (bodyPart) {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder:
+                              (_) =>
+                                  DefinitionsByBodyPartPage(bodyPart: bodyPart),
+                        ),
+                      );
+                    },
+                  ),
                 );
               }
 
               final definition = data.definitions[index - 1];
-              return _ExerciseDefinitionTile(
-                definition: definition,
-                muscleId: widget.muscle.id,
+              return KeyedSubtree(
+                key: index == 1 ? _exerciseListTutorialKey : null,
+                child: _ExerciseDefinitionTile(
+                  definition: definition,
+                  muscleId: widget.muscle.id,
+                ),
               );
             },
           );

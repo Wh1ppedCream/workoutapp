@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 
 import '../../repositories/app_repository.dart';
 import '../../services/active_plan_store.dart';
+import '../../services/tutorial_state_store.dart';
+import '../../utils/tutorial_launcher.dart';
+import '../../widgets/guided_tutorial_overlay.dart';
 
 class PlanManagementPage extends StatefulWidget {
   final int profileId;
@@ -16,12 +19,17 @@ class PlanManagementPage extends StatefulWidget {
 
 class _PlanManagementPageState extends State<PlanManagementPage> {
   final _repo = AppRepository();
+  final _activePlansTutorialKey = GlobalKey(debugLabel: 'manage_active_plans');
+  final _archivedPlansTutorialKey = GlobalKey(
+    debugLabel: 'manage_archived_plans',
+  );
   final _savingPlanIds = <int>{};
 
   var _isLoading = true;
   String? _error;
   List<_ManagedPlan> _plans = const <_ManagedPlan>[];
   Set<int> _activePlanIds = const <int>{};
+  bool _tutorialQueued = false;
 
   @override
   void initState() {
@@ -64,12 +72,48 @@ class _PlanManagementPageState extends State<PlanManagementPage> {
         _activePlanIds = validActiveIds;
         _isLoading = false;
       });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _queueTutorial();
+      });
     } catch (error) {
       if (!mounted) return;
       setState(() {
         _error = error.toString();
         _isLoading = false;
       });
+    }
+  }
+
+  void _queueTutorial() {
+    if (!mounted || _tutorialQueued) return;
+    _tutorialQueued = true;
+    unawaited(_showTutorial());
+  }
+
+  Future<void> _showTutorial() async {
+    try {
+      await showGuidedTutorialOnce(
+        context,
+        tutorialId: TutorialIds.planManagement,
+        steps: [
+          GuidedTutorialStep(
+            targetKey: _activePlansTutorialKey,
+            icon: Icons.push_pin_outlined,
+            title: 'Active plans',
+            body:
+                'These plans stay visible on the Train overview. Use Archive when you want to hide one without deleting it.',
+          ),
+          GuidedTutorialStep(
+            targetKey: _archivedPlansTutorialKey,
+            icon: Icons.inventory_2_outlined,
+            title: 'Archived plans',
+            body:
+                'Archived plans are still saved. Activate any plan here when you want it back on the overview.',
+          ),
+        ],
+      );
+    } finally {
+      _tutorialQueued = false;
     }
   }
 
@@ -137,29 +181,35 @@ class _PlanManagementPageState extends State<PlanManagementPage> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    _PlanManagementSection(
-                      title: 'Active Plans',
-                      subtitle: 'Shown on the Train overview.',
-                      emptyMessage:
-                          'No active plans yet. Activate a plan below to pin it to the overview.',
-                      plans: activePlans,
-                      activePlanIds: _activePlanIds,
-                      savingPlanIds: _savingPlanIds,
-                      actionLabel: 'Archive',
-                      actionIcon: Icons.archive_outlined,
-                      onAction: (plan) => _setPlanActive(plan, false),
+                    KeyedSubtree(
+                      key: _activePlansTutorialKey,
+                      child: _PlanManagementSection(
+                        title: 'Active Plans',
+                        subtitle: 'Shown on the Train overview.',
+                        emptyMessage:
+                            'No active plans yet. Activate a plan below to pin it to the overview.',
+                        plans: activePlans,
+                        activePlanIds: _activePlanIds,
+                        savingPlanIds: _savingPlanIds,
+                        actionLabel: 'Archive',
+                        actionIcon: Icons.archive_outlined,
+                        onAction: (plan) => _setPlanActive(plan, false),
+                      ),
                     ),
                     const SizedBox(height: 16),
-                    _PlanManagementSection(
-                      title: 'Archived Plans',
-                      subtitle: 'Saved plans that stay out of the overview.',
-                      emptyMessage: 'No archived plans.',
-                      plans: archivedPlans,
-                      activePlanIds: _activePlanIds,
-                      savingPlanIds: _savingPlanIds,
-                      actionLabel: 'Activate',
-                      actionIcon: Icons.check_circle_outline,
-                      onAction: (plan) => _setPlanActive(plan, true),
+                    KeyedSubtree(
+                      key: _archivedPlansTutorialKey,
+                      child: _PlanManagementSection(
+                        title: 'Archived Plans',
+                        subtitle: 'Saved plans that stay out of the overview.',
+                        emptyMessage: 'No archived plans.',
+                        plans: archivedPlans,
+                        activePlanIds: _activePlanIds,
+                        savingPlanIds: _savingPlanIds,
+                        actionLabel: 'Activate',
+                        actionIcon: Icons.check_circle_outline,
+                        onAction: (plan) => _setPlanActive(plan, true),
+                      ),
                     ),
                   ],
                 ),

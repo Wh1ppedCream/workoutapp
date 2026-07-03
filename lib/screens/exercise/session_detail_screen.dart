@@ -11,13 +11,16 @@ import '../../providers/active_session.dart';
 import '../../providers/selected_profile.dart';
 import '../../providers/unit_preference_provider.dart';
 import '../../repositories/app_repository.dart';
+import '../../services/tutorial_state_store.dart';
 import '../../theme/theme_extensions.dart';
 import '../../utils/async_pool.dart';
+import '../../utils/tutorial_launcher.dart';
 import '../../utils/weight_unit_formatter.dart';
 import '../../widgets/body_heatmap.dart';
 import '../../widgets/exercise_card.dart';
 import '../../widgets/exercise_detail_sheet.dart';
 import '../../widgets/focused_sets_list.dart';
+import '../../widgets/guided_tutorial_overlay.dart';
 import 'session_screen.dart';
 
 /// Displays a saved workout session with summary, exercise detail, and reuse
@@ -42,6 +45,10 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
 
   final _repo = AppRepository();
   final _dateFmt = DateFormat('MMM d, yyyy - h:mm a');
+  final _editTutorialKey = GlobalKey(debugLabel: 'workout_detail_edit');
+  final _summaryTutorialKey = GlobalKey(debugLabel: 'workout_detail_summary');
+  final _exerciseTutorialKey = GlobalKey(debugLabel: 'workout_detail_exercise');
+  final _actionsTutorialKey = GlobalKey(debugLabel: 'workout_detail_actions');
 
   List<_SessionExerciseDetail> _exerciseDetails = [];
   _SessionSummary? _summary;
@@ -51,6 +58,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
   bool _isEditing = false;
   bool _isStartingWorkout = false;
   bool _isSavingPreset = false;
+  bool _tutorialQueued = false;
 
   @override
   void initState() {
@@ -78,6 +86,9 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
         _summary = summary;
         _hasChanges = false;
         _isLoading = false;
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _queueTutorial();
       });
     } catch (error) {
       if (!mounted) return;
@@ -185,6 +196,53 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
       cardType: CardType.weight,
       definitionId: defId,
     );
+  }
+
+  void _queueTutorial() {
+    if (!mounted || _tutorialQueued) return;
+    _tutorialQueued = true;
+    unawaited(_showTutorial());
+  }
+
+  Future<void> _showTutorial() async {
+    try {
+      await showGuidedTutorialOnce(
+        context,
+        tutorialId: TutorialIds.workoutDetail,
+        steps: [
+          GuidedTutorialStep(
+            targetKey: _summaryTutorialKey,
+            icon: Icons.insights,
+            title: 'Workout summary',
+            body:
+                'Review total sets, volume, duration, exercise count, and the bodyparts this workout hit.',
+          ),
+          GuidedTutorialStep(
+            targetKey: _exerciseTutorialKey,
+            icon: Icons.fitness_center,
+            title: 'Exercise records',
+            body:
+                'Each exercise shows the completed sets from that session. Tap details to inspect the exercise.',
+          ),
+          GuidedTutorialStep(
+            targetKey: _editTutorialKey,
+            icon: Icons.edit,
+            title: 'Edit session',
+            body:
+                'Use edit mode if you need to correct sets, reps, or exercises after the workout.',
+          ),
+          GuidedTutorialStep(
+            targetKey: _actionsTutorialKey,
+            icon: Icons.replay,
+            title: 'Reuse this workout',
+            body:
+                'Do the workout again or save the completed session as a reusable plan.',
+          ),
+        ],
+      );
+    } finally {
+      _tutorialQueued = false;
+    }
   }
 
   Future<_SessionExerciseDetail?> _loadCardioExercise(int instanceId) async {
@@ -665,9 +723,12 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
           actions: [
             IconButton(
               tooltip: _isEditing ? 'Stop editing' : 'Edit session',
-              icon: Icon(
-                _isEditing ? Icons.check : Icons.edit,
-                color: _isEditing ? Colors.green : null,
+              icon: KeyedSubtree(
+                key: _editTutorialKey,
+                child: Icon(
+                  _isEditing ? Icons.check : Icons.edit,
+                  color: _isEditing ? Colors.green : null,
+                ),
               ),
               onPressed: () => setState(() => _isEditing = !_isEditing),
             ),
@@ -698,24 +759,31 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        _SessionSummaryCard(
-          session: widget.session,
-          summary: _summary!,
-          dateText: _dateFmt.format(widget.session.date),
+        KeyedSubtree(
+          key: _summaryTutorialKey,
+          child: _SessionSummaryCard(
+            session: widget.session,
+            summary: _summary!,
+            dateText: _dateFmt.format(widget.session.date),
+          ),
         ),
         const SizedBox(height: 12),
         if (_isEditing)
           ..._buildEditableExerciseCards()
         else
-          ..._exerciseDetails.map(
-            (detail) => _CompletedExerciseCard(
-              detail: detail,
-              onDetails:
-                  detail.cardType == CardType.weight
-                      ? () => _showExerciseInfo(detail)
-                      : null,
-            ),
-          ),
+          ...List.generate(_exerciseDetails.length, (index) {
+            final detail = _exerciseDetails[index];
+            return KeyedSubtree(
+              key: index == 0 ? _exerciseTutorialKey : null,
+              child: _CompletedExerciseCard(
+                detail: detail,
+                onDetails:
+                    detail.cardType == CardType.weight
+                        ? () => _showExerciseInfo(detail)
+                        : null,
+              ),
+            );
+          }),
         const SizedBox(height: 88),
       ],
     );
@@ -724,32 +792,35 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
   List<Widget> _buildEditableExerciseCards() {
     return List.generate(_exerciseDetails.length, (index) {
       final detail = _exerciseDetails[index];
-      return ExerciseCard(
-        key: ValueKey('session-detail-$index-${detail.exercise.name}'),
-        exercise: detail.exercise,
-        cardType: detail.cardType,
-        readOnlyMode: false,
-        initialCompletedParents:
-            detail.exercise is WeightExercise
-                ? (detail.exercise as WeightExercise).completedParents
-                : null,
-        initialCompletedChildren:
-            detail.exercise is WeightExercise
-                ? (detail.exercise as WeightExercise).completedChildren
-                : null,
-        onDetails:
-            detail.cardType == CardType.weight
-                ? () => _showExerciseInfo(detail)
-                : null,
-        onDeleteExercise: () {
-          setState(() {
-            _exerciseDetails.removeAt(index);
-            _hasChanges = true;
-          });
-        },
-        onSetAdded: () => setState(() => _hasChanges = true),
-        onSetDeleted: () => setState(() => _hasChanges = true),
-        onValueChanged: () => setState(() => _hasChanges = true),
+      return KeyedSubtree(
+        key: index == 0 ? _exerciseTutorialKey : null,
+        child: ExerciseCard(
+          key: ValueKey('session-detail-$index-${detail.exercise.name}'),
+          exercise: detail.exercise,
+          cardType: detail.cardType,
+          readOnlyMode: false,
+          initialCompletedParents:
+              detail.exercise is WeightExercise
+                  ? (detail.exercise as WeightExercise).completedParents
+                  : null,
+          initialCompletedChildren:
+              detail.exercise is WeightExercise
+                  ? (detail.exercise as WeightExercise).completedChildren
+                  : null,
+          onDetails:
+              detail.cardType == CardType.weight
+                  ? () => _showExerciseInfo(detail)
+                  : null,
+          onDeleteExercise: () {
+            setState(() {
+              _exerciseDetails.removeAt(index);
+              _hasChanges = true;
+            });
+          },
+          onSetAdded: () => setState(() => _hasChanges = true),
+          onSetDeleted: () => setState(() => _hasChanges = true),
+          onValueChanged: () => setState(() => _hasChanges = true),
+        ),
       );
     });
   }
@@ -763,9 +834,12 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
       return SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: FilledButton(
-            onPressed: _saveChanges,
-            child: const Text('Save Changes'),
+          child: KeyedSubtree(
+            key: _actionsTutorialKey,
+            child: FilledButton(
+              onPressed: _saveChanges,
+              child: const Text('Save Changes'),
+            ),
           ),
         ),
       );
@@ -778,41 +852,44 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: _isStartingWorkout ? null : _startWorkoutAgain,
-                icon:
-                    _isStartingWorkout
-                        ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                        : const Icon(Icons.replay),
-                label: const Text('Do Workout Again'),
+        child: KeyedSubtree(
+          key: _actionsTutorialKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: _isStartingWorkout ? null : _startWorkoutAgain,
+                  icon:
+                      _isStartingWorkout
+                          ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                          : const Icon(Icons.replay),
+                  label: const Text('Do Workout Again'),
+                ),
               ),
-            ),
-            const SizedBox(height: 10),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: _isSavingPreset ? null : _saveAsPreset,
-                icon:
-                    _isSavingPreset
-                        ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                        : const Icon(Icons.bookmark_add_outlined),
-                label: const Text('Save as Preset'),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: _isSavingPreset ? null : _saveAsPreset,
+                  icon:
+                      _isSavingPreset
+                          ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                          : const Icon(Icons.bookmark_add_outlined),
+                  label: const Text('Save as Preset'),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -7,9 +7,12 @@ import 'package:provider/provider.dart';
 import '../../models/models.dart';
 import '../../providers/selected_profile.dart';
 import '../../repositories/app_repository.dart';
+import '../../services/tutorial_state_store.dart';
 import '../../theme/theme_extensions.dart';
+import '../../utils/tutorial_launcher.dart';
 import '../../widgets/body_heatmap.dart';
 import '../../widgets/exercise_detail_sheet.dart';
+import '../../widgets/guided_tutorial_overlay.dart';
 
 /// Catalog of exercise definitions with profile-aware equipment filtering.
 ///
@@ -26,6 +29,9 @@ class ExerciseCatalogPage extends StatefulWidget {
 
 class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
   final _repo = AppRepository();
+  final _searchTutorialKey = GlobalKey(debugLabel: 'exercise_catalog_search');
+  final _filterTutorialKey = GlobalKey(debugLabel: 'exercise_catalog_filter');
+  final _listTutorialKey = GlobalKey(debugLabel: 'exercise_catalog_list');
   Timer? _searchDebounce;
 
   /// Incremented before each async filter pass so stale results cannot replace
@@ -56,6 +62,7 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
   final Map<int, List<String>> _equipmentNamesByProfileId = {};
 
   ExerciseDefinition? _selectedDef;
+  bool _tutorialQueued = false;
 
   @override
   void initState() {
@@ -111,6 +118,49 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
       _displayedDefs = List.from(_allDefs); // show all until they hit “Save”
       _isLoading = false;
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _queueTutorial();
+    });
+  }
+
+  void _queueTutorial() {
+    if (!mounted || _tutorialQueued) return;
+    _tutorialQueued = true;
+    unawaited(_showTutorial());
+  }
+
+  Future<void> _showTutorial() async {
+    try {
+      await showGuidedTutorialOnce(
+        context,
+        tutorialId: TutorialIds.exerciseCatalog,
+        steps: [
+          GuidedTutorialStep(
+            targetKey: _searchTutorialKey,
+            icon: Icons.search,
+            title: 'Search exercises',
+            body:
+                'Search by exercise name when you already know what movement you want.',
+          ),
+          GuidedTutorialStep(
+            targetKey: _filterTutorialKey,
+            icon: Icons.filter_list,
+            title: 'Filters',
+            body:
+                'Filter by gym profile, equipment, bodypart, or muscle to narrow the catalog quickly.',
+          ),
+          GuidedTutorialStep(
+            targetKey: _listTutorialKey,
+            icon: Icons.accessibility_new,
+            title: 'Exercise rows',
+            body:
+                'Each row shows equipment and a heatmap. Tap the heatmap for details or select the row when choosing an exercise.',
+          ),
+        ],
+      );
+    } finally {
+      _tutorialQueued = false;
+    }
   }
 
   Future<List<String>> _allEquipment() async {
@@ -383,29 +433,35 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
               children: [
                 Expanded(
                   flex: 3,
-                  child: TextField(
-                    decoration: const InputDecoration(
-                      labelText: 'Search Exercises',
-                      prefixIcon: Icon(Icons.search),
-                      border: OutlineInputBorder(),
+                  child: KeyedSubtree(
+                    key: _searchTutorialKey,
+                    child: TextField(
+                      decoration: const InputDecoration(
+                        labelText: 'Search Exercises',
+                        prefixIcon: Icon(Icons.search),
+                        border: OutlineInputBorder(),
+                      ),
+                      onChanged: _onSearchChanged,
                     ),
-                    onChanged: _onSearchChanged,
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: SizedBox(
                     height: 56,
-                    child: ElevatedButton(
-                      onPressed: _openFilterDialog,
-                      child: const FittedBox(
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.filter_list),
-                            SizedBox(width: 6),
-                            Text('Filters'),
-                          ],
+                    child: KeyedSubtree(
+                      key: _filterTutorialKey,
+                      child: ElevatedButton(
+                        onPressed: _openFilterDialog,
+                        child: const FittedBox(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.filter_list),
+                              SizedBox(width: 6),
+                              Text('Filters'),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -415,28 +471,34 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
             ),
             const SizedBox(height: 14),
             Expanded(
-              child:
-                  _isLoading
-                      ? const Center(child: CircularProgressIndicator())
-                      : _displayedDefs.isEmpty
-                      ? const Center(child: Text('No exercises match filters.'))
-                      : ListView.builder(
-                        itemCount: _displayedDefs.length,
-                        itemBuilder: (_, i) {
-                          final def = _displayedDefs[i];
-                          return _ExerciseCatalogBar(
-                            definition: def,
-                            selected:
-                                widget.onExercisePicked != null &&
-                                _selectedDef == def,
-                            onTap:
-                                widget.onExercisePicked == null
-                                    ? null
-                                    : () => setState(() => _selectedDef = def),
-                            onHeatmapTap: () => _openExerciseDetails(def),
-                          );
-                        },
-                      ),
+              child: KeyedSubtree(
+                key: _listTutorialKey,
+                child:
+                    _isLoading
+                        ? const Center(child: CircularProgressIndicator())
+                        : _displayedDefs.isEmpty
+                        ? const Center(
+                          child: Text('No exercises match filters.'),
+                        )
+                        : ListView.builder(
+                          itemCount: _displayedDefs.length,
+                          itemBuilder: (_, i) {
+                            final def = _displayedDefs[i];
+                            return _ExerciseCatalogBar(
+                              definition: def,
+                              selected:
+                                  widget.onExercisePicked != null &&
+                                  _selectedDef == def,
+                              onTap:
+                                  widget.onExercisePicked == null
+                                      ? null
+                                      : () =>
+                                          setState(() => _selectedDef = def),
+                              onHeatmapTap: () => _openExerciseDetails(def),
+                            );
+                          },
+                        ),
+              ),
             ),
           ],
         ),

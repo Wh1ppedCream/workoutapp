@@ -1,6 +1,8 @@
 // File: lib/screens/exercise/preset_detail_screen.dart
 // for viewing and editing a Preset using the PresetSession notifier.
 
+import 'dart:async';
+
 import 'package:env_test/providers/active_session.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -14,6 +16,9 @@ import '../../widgets/automatic_settings_sheet.dart';
 import '../../widgets/exercise_detail_sheet.dart';
 import '../../widgets/preset_info_card.dart';
 import '../../widgets/swap_exercise_sheet.dart';
+import '../../widgets/guided_tutorial_overlay.dart';
+import '../../services/tutorial_state_store.dart';
+import '../../utils/tutorial_launcher.dart';
 import 'session_screen.dart';
 import 'auto_preset_flow_screen.dart';
 
@@ -26,8 +31,13 @@ class PresetDetailScreen extends StatefulWidget {
 }
 
 class _PresetDetailScreenState extends State<PresetDetailScreen> {
+  final _editTutorialKey = GlobalKey(debugLabel: 'plan_detail_edit');
+  final _summaryTutorialKey = GlobalKey(debugLabel: 'plan_detail_summary');
+  final _exerciseTutorialKey = GlobalKey(debugLabel: 'plan_detail_exercise');
+  final _actionTutorialKey = GlobalKey(debugLabel: 'plan_detail_action');
   bool _isEditing = false;
   bool _collapseWeightCardsForReorder = false;
+  bool _tutorialQueued = false;
   late TextEditingController _nameController;
 
   @override
@@ -35,6 +45,9 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
     super.initState();
     final preset = context.read<PresetSession>();
     _nameController = TextEditingController(text: preset.presetName);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _queueTutorial();
+    });
   }
 
   @override
@@ -89,6 +102,53 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
 
   Key _exerciseCardKey(WorkoutExercise exercise) {
     return ValueKey('preset-exercise-${identityHashCode(exercise)}');
+  }
+
+  void _queueTutorial() {
+    if (!mounted || _tutorialQueued) return;
+    _tutorialQueued = true;
+    unawaited(_showTutorial());
+  }
+
+  Future<void> _showTutorial() async {
+    try {
+      await showGuidedTutorialOnce(
+        context,
+        tutorialId: TutorialIds.planDetail,
+        steps: [
+          GuidedTutorialStep(
+            targetKey: _editTutorialKey,
+            icon: Icons.edit,
+            title: 'Edit plan',
+            body:
+                'Use this to rename the plan, reorder exercises, add exercises, swap movements, and change sets.',
+          ),
+          GuidedTutorialStep(
+            targetKey: _summaryTutorialKey,
+            icon: Icons.accessibility_new,
+            title: 'Plan summary',
+            body:
+                'This shows estimated time, volume, and the main bodyparts this plan targets before you start it.',
+          ),
+          GuidedTutorialStep(
+            targetKey: _exerciseTutorialKey,
+            icon: Icons.fitness_center,
+            title: 'Exercise cards',
+            body:
+                'Open exercise cards to review the planned sets. In edit mode, use the menu to swap or remove exercises.',
+          ),
+          GuidedTutorialStep(
+            targetKey: _actionTutorialKey,
+            icon: Icons.play_circle_outline,
+            title: 'Start or save',
+            body:
+                'Start Session begins this plan as a workout. In edit mode, this changes to Save Preset so your changes are stored.',
+          ),
+        ],
+      );
+    } finally {
+      _tutorialQueued = false;
+    }
   }
 
   Future<void> _showSwapExercisePicker(PresetSession preset, int index) async {
@@ -156,12 +216,15 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                   : Text(preset.presetName),
           centerTitle: true,
           actions: [
-            IconButton(
-              icon: Icon(
-                Icons.edit,
-                color: _isEditing ? Colors.green : Colors.grey,
+            KeyedSubtree(
+              key: _editTutorialKey,
+              child: IconButton(
+                icon: Icon(
+                  Icons.edit,
+                  color: _isEditing ? Colors.green : Colors.grey,
+                ),
+                onPressed: () => setState(() => _isEditing = !_isEditing),
               ),
-              onPressed: () => setState(() => _isEditing = !_isEditing),
             ),
             // Overflow menu replacing delete icon
             PopupMenuButton<String>(
@@ -274,39 +337,45 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                   },
                   children: [
                     for (var i = 0; i < preset.exercises.length; i++)
-                      ExerciseCard(
+                      KeyedSubtree(
                         key: _exerciseCardKey(preset.exercises[i]),
-                        exercise: preset.exercises[i],
-                        cardType: preset.cardTypes[i],
-                        readOnlyMode: false,
-                        forceCollapsed: _collapseWeightCardsForReorder,
-                        initialCompletedParents:
-                            preset.exercises[i] is WeightExercise
-                                ? (preset.exercises[i] as WeightExercise)
-                                    .completedParents
-                                : null,
-                        initialCompletedChildren:
-                            preset.exercises[i] is WeightExercise
-                                ? (preset.exercises[i] as WeightExercise)
-                                    .completedChildren
-                                : null,
-                        onDetails:
-                            preset.cardTypes[i] == CardType.weight
-                                ? () => _showExerciseDetails(preset, i)
-                                : null,
-                        onSwapExercise:
-                            preset.cardTypes[i] == CardType.weight
-                                ? () => _showSwapExercisePicker(preset, i)
-                                : null,
-                        onDeleteExercise:
-                            () =>
-                                context.read<PresetSession>().removeExercise(i),
-                        onSetAdded:
-                            () => context.read<PresetSession>().refresh(),
-                        onSetDeleted:
-                            () => context.read<PresetSession>().refresh(),
-                        onValueChanged:
-                            () => context.read<PresetSession>().refresh(),
+                        child: KeyedSubtree(
+                          key: i == 0 ? _exerciseTutorialKey : null,
+                          child: ExerciseCard(
+                            exercise: preset.exercises[i],
+                            cardType: preset.cardTypes[i],
+                            readOnlyMode: false,
+                            forceCollapsed: _collapseWeightCardsForReorder,
+                            initialCompletedParents:
+                                preset.exercises[i] is WeightExercise
+                                    ? (preset.exercises[i] as WeightExercise)
+                                        .completedParents
+                                    : null,
+                            initialCompletedChildren:
+                                preset.exercises[i] is WeightExercise
+                                    ? (preset.exercises[i] as WeightExercise)
+                                        .completedChildren
+                                    : null,
+                            onDetails:
+                                preset.cardTypes[i] == CardType.weight
+                                    ? () => _showExerciseDetails(preset, i)
+                                    : null,
+                            onSwapExercise:
+                                preset.cardTypes[i] == CardType.weight
+                                    ? () => _showSwapExercisePicker(preset, i)
+                                    : null,
+                            onDeleteExercise:
+                                () => context
+                                    .read<PresetSession>()
+                                    .removeExercise(i),
+                            onSetAdded:
+                                () => context.read<PresetSession>().refresh(),
+                            onSetDeleted:
+                                () => context.read<PresetSession>().refresh(),
+                            onValueChanged:
+                                () => context.read<PresetSession>().refresh(),
+                          ),
+                        ),
                       ),
                   ],
                 )
@@ -315,38 +384,44 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                   itemCount: preset.exercises.length + 1,
                   itemBuilder: (ctx, i) {
                     if (i == 0) {
-                      return PresetInfoCard(
-                        exercises: preset.exercises,
-                        cardTypes: preset.cardTypes,
-                        definitionIds: List<int?>.generate(
-                          preset.exercises.length,
-                          preset.definitionIdForExercise,
+                      return KeyedSubtree(
+                        key: _summaryTutorialKey,
+                        child: PresetInfoCard(
+                          exercises: preset.exercises,
+                          cardTypes: preset.cardTypes,
+                          definitionIds: List<int?>.generate(
+                            preset.exercises.length,
+                            preset.definitionIdForExercise,
+                          ),
                         ),
                       );
                     }
 
                     final exerciseIndex = i - 1;
-                    return ExerciseCard(
-                      exercise: preset.exercises[exerciseIndex],
-                      cardType: preset.cardTypes[exerciseIndex],
-                      readOnlyMode: true,
-                      initialCompletedParents:
-                          preset.exercises[exerciseIndex] is WeightExercise
-                              ? (preset.exercises[exerciseIndex]
-                                      as WeightExercise)
-                                  .completedParents
-                              : null,
-                      initialCompletedChildren:
-                          preset.exercises[exerciseIndex] is WeightExercise
-                              ? (preset.exercises[exerciseIndex]
-                                      as WeightExercise)
-                                  .completedChildren
-                              : null,
-                      onDetails:
-                          preset.cardTypes[exerciseIndex] == CardType.weight
-                              ? () =>
-                                  _showExerciseDetails(preset, exerciseIndex)
-                              : null,
+                    return KeyedSubtree(
+                      key: exerciseIndex == 0 ? _exerciseTutorialKey : null,
+                      child: ExerciseCard(
+                        exercise: preset.exercises[exerciseIndex],
+                        cardType: preset.cardTypes[exerciseIndex],
+                        readOnlyMode: true,
+                        initialCompletedParents:
+                            preset.exercises[exerciseIndex] is WeightExercise
+                                ? (preset.exercises[exerciseIndex]
+                                        as WeightExercise)
+                                    .completedParents
+                                : null,
+                        initialCompletedChildren:
+                            preset.exercises[exerciseIndex] is WeightExercise
+                                ? (preset.exercises[exerciseIndex]
+                                        as WeightExercise)
+                                    .completedChildren
+                                : null,
+                        onDetails:
+                            preset.cardTypes[exerciseIndex] == CardType.weight
+                                ? () =>
+                                    _showExerciseDetails(preset, exerciseIndex)
+                                : null,
+                      ),
                     );
                   },
                 ),
@@ -379,8 +454,8 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
           child: Padding(
             padding: const EdgeInsets.all(16),
             child:
-                // old save button logic
-                /*_isEditing
+            // old save button logic
+            /*_isEditing
                 ? ElevatedButton(
                     onPressed: () async {
                       await context.read<PresetSession>().saveChanges();
@@ -389,58 +464,63 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                     child: const Text('Save Preset'),
                   )
                   */
-                _isEditing
-                    ? ElevatedButton(
-                      onPressed: () async {
-                        final sess = context.read<PresetSession>();
-                        final newName = _nameController.text.trim();
+            KeyedSubtree(
+              key: _actionTutorialKey,
+              child:
+                  _isEditing
+                      ? ElevatedButton(
+                        onPressed: () async {
+                          final sess = context.read<PresetSession>();
+                          final newName = _nameController.text.trim();
 
-                        // 1) If the name changed, push it to the DB and local state
-                        if (newName.isNotEmpty && newName != sess.presetName) {
-                          await sess.updateName(newName);
-                        }
-
-                        // 2) Then save any exercise changes
-                        await sess.saveChanges();
-
-                        setState(() => _isEditing = false);
-                      },
-                      child: const Text('Save Preset'),
-                    )
-                    : ElevatedButton(
-                      onPressed: () {
-                        // 1) Capture Navigator and notifiers up-front
-                        final nav = Navigator.of(context);
-                        final preset = context.read<PresetSession>();
-                        final active = context.read<ActiveSession>();
-
-                        // 2) Seed the live session
-                        active.exercises.clear();
-                        active.cardTypes.clear();
-                        for (var i = 0; i < preset.exercises.length; i++) {
-                          // TODO(cardio/stretch): add cardio and stretch back
-                          // to plan-start sessions after those cards are fixed
-                          // and updated.
-                          if (preset.cardTypes[i] != CardType.weight) {
-                            continue;
+                          // 1) If the name changed, push it to the DB and local state
+                          if (newName.isNotEmpty &&
+                              newName != sess.presetName) {
+                            await sess.updateName(newName);
                           }
-                          active.addExercise(
-                            preset.exercises[i],
-                            preset.cardTypes[i],
-                          );
-                        }
-                        // 3) Start the timer
-                        active.start(presetId: preset.presetId);
 
-                        // 4) Navigate
-                        nav.pushReplacement(
-                          MaterialPageRoute(
-                            builder: (_) => const SessionScreen(),
-                          ),
-                        );
-                      },
-                      child: const Text('Start Session'),
-                    ),
+                          // 2) Then save any exercise changes
+                          await sess.saveChanges();
+
+                          setState(() => _isEditing = false);
+                        },
+                        child: const Text('Save Preset'),
+                      )
+                      : ElevatedButton(
+                        onPressed: () {
+                          // 1) Capture Navigator and notifiers up-front
+                          final nav = Navigator.of(context);
+                          final preset = context.read<PresetSession>();
+                          final active = context.read<ActiveSession>();
+
+                          // 2) Seed the live session
+                          active.exercises.clear();
+                          active.cardTypes.clear();
+                          for (var i = 0; i < preset.exercises.length; i++) {
+                            // TODO(cardio/stretch): add cardio and stretch back
+                            // to plan-start sessions after those cards are fixed
+                            // and updated.
+                            if (preset.cardTypes[i] != CardType.weight) {
+                              continue;
+                            }
+                            active.addExercise(
+                              preset.exercises[i],
+                              preset.cardTypes[i],
+                            );
+                          }
+                          // 3) Start the timer
+                          active.start(presetId: preset.presetId);
+
+                          // 4) Navigate
+                          nav.pushReplacement(
+                            MaterialPageRoute(
+                              builder: (_) => const SessionScreen(),
+                            ),
+                          );
+                        },
+                        child: const Text('Start Session'),
+                      ),
+            ),
           ),
         ),
       ),
