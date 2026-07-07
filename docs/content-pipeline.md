@@ -81,7 +81,8 @@ to `manifests/exercise_media_manifest.json`.
           "localFile": "media/exercises/bench_press_barbell/thumb.png",
           "title": "Bench Press - Barbell thumbnail",
           "sortOrder": 0,
-          "version": 1
+          "version": 1,
+          "licenseId": "tonos_original"
         }
       ]
     }
@@ -102,3 +103,41 @@ dart run tools/content_pipeline.dart validate-exercise-media `
 ```
 
 Use `--strict` when preparing release content so warnings fail the command.
+
+For release batches, also add metadata gates once local media files or licensed
+assets are being tracked:
+
+```powershell
+dart run tools/content_pipeline.dart validate-exercise-media `
+  --source tools/content_pipeline/exercise_media_source.example.json `
+  --check-remote `
+  --require-hashes `
+  --require-licenses `
+  --strict
+```
+
+## Compare Manifest Versions
+
+Before replacing the live manifest, compare the current version with the newly
+generated version:
+
+```powershell
+dart run tools/content_pipeline.dart diff-exercise-media `
+  --old https://pub-7eb72a1a315f4da3b30100ff6e694651.r2.dev/manifests/exercise_media_manifest.json `
+  --new build/content/exercise_media_manifest.json `
+  --report build/content/exercise_media_diff.json
+```
+
+This reports added, removed, changed, and unchanged assets. Use the JSON report
+as a quick audit artifact before uploading to production.
+
+## Source Schema
+
+The source JSON contract is documented in:
+
+```text
+tools/content_pipeline/exercise_media_source.schema.json
+```
+
+Editors that support JSON Schema can use this to catch missing fields before the
+pipeline runs.

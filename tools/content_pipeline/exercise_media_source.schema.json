@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tonos.app/schemas/exercise_media_source.schema.json",
+  "title": "Tonos Exercise Media Source",
+  "type": "object",
+  "required": ["namespace", "version", "baseUrl", "exercises"],
+  "additionalProperties": false,
+  "properties": {
+    "namespace": {
+      "type": "string",
+      "const": "exercise_media"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "baseUrl": {
+      "type": "string",
+      "format": "uri"
+    },
+    "exercises": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["exerciseId", "exerciseName", "assets"],
+        "additionalProperties": false,
+        "properties": {
+          "exerciseId": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "exerciseName": {
+            "type": "string",
+            "minLength": 1
+          },
+          "slug": {
+            "type": "string",
+            "minLength": 1
+          },
+          "assets": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["assetId", "type", "title", "sortOrder", "version"],
+              "additionalProperties": false,
+              "properties": {
+                "assetId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "type": {
+                  "type": "string",
+                  "enum": ["image", "thumbnail", "still", "animation", "video"]
+                },
+                "url": {
+                  "type": "string",
+                  "format": "uri"
+                },
+                "path": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "remotePath": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "thumbnailUrl": {
+                  "type": "string",
+                  "format": "uri"
+                },
+                "thumbnailPath": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "localFile": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "title": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "sortOrder": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "version": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "bytes": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "width": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "height": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[a-fA-F0-9]{64}$"
+                },
+                "licenseId": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "anyOf": [
+                { "required": ["url"] },
+                { "required": ["path"] },
+                { "required": ["remotePath"] }
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}

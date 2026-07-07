@@ -15,6 +15,9 @@ Future<void> main(List<String> args) async {
       case 'validate-exercise-media':
         await _validateExerciseMediaManifest(options);
         break;
+      case 'diff-exercise-media':
+        await _diffExerciseMediaManifests(options);
+        break;
       case 'help':
       case '--help':
       case '-h':
@@ -42,6 +45,8 @@ Future<void> _buildExerciseMediaManifest(_CliOptions options) async {
   final namespace = source.stringValue('namespace') ?? 'exercise_media';
   final checkRemote = options.flag('check-remote');
   final strict = options.flag('strict');
+  final requireHashes = options.flag('require-hashes');
+  final requireLicenses = options.flag('require-licenses');
 
   final result =
       await _ExerciseMediaManifestBuilder(
@@ -51,6 +56,8 @@ Future<void> _buildExerciseMediaManifest(_CliOptions options) async {
         namespace: namespace,
         version: version,
         checkRemote: checkRemote,
+        requireHashes: requireHashes,
+        requireLicenses: requireLicenses,
       ).build();
 
   _printMessages(result.messages);
@@ -96,6 +103,8 @@ Future<void> _validateExerciseMediaManifest(_CliOptions options) async {
   final baseUrl = options.value('base-url') ?? source.stringValue('baseUrl');
   final checkRemote = options.flag('check-remote');
   final strict = options.flag('strict');
+  final requireHashes = options.flag('require-hashes');
+  final requireLicenses = options.flag('require-licenses');
 
   final result =
       await _ExerciseMediaManifestBuilder(
@@ -105,6 +114,8 @@ Future<void> _validateExerciseMediaManifest(_CliOptions options) async {
         namespace: source.stringValue('namespace') ?? 'exercise_media',
         version: options.intValue('version') ?? source.intValue('version') ?? 1,
         checkRemote: checkRemote,
+        requireHashes: requireHashes,
+        requireLicenses: requireLicenses,
       ).build();
 
   _printMessages(result.messages);
@@ -114,6 +125,49 @@ Future<void> _validateExerciseMediaManifest(_CliOptions options) async {
   stdout.writeln(
     'Validated ${result.assetCount} assets for ${result.exerciseCount} exercises.',
   );
+}
+
+Future<void> _diffExerciseMediaManifests(_CliOptions options) async {
+  final oldManifest = await _loadJsonMapFromPathOrUrl(
+    options.requiredValue('old'),
+  );
+  final newManifest = await _loadJsonMapFromPathOrUrl(
+    options.requiredValue('new'),
+  );
+
+  final report =
+      _ManifestDiff(
+        oldManifest: oldManifest,
+        newManifest: newManifest,
+      ).buildReport();
+
+  stdout.writeln(
+    'Exercise media manifest diff: '
+    '+${report['addedCount']} '
+    '-${report['removedCount']} '
+    '~${report['changedCount']} '
+    '=${report['unchangedCount']}',
+  );
+
+  final changed = report['changed'] as List;
+  if (changed.isNotEmpty) {
+    stdout.writeln('Changed assets:');
+    for (final asset in changed.take(12)) {
+      stdout.writeln('  - ${(asset as Map)['assetId']}');
+    }
+    if (changed.length > 12) {
+      stdout.writeln('  ... ${changed.length - 12} more');
+    }
+  }
+
+  final reportPath = options.value('report');
+  if (reportPath != null) {
+    final file = File(reportPath);
+    await file.parent.create(recursive: true);
+    const encoder = JsonEncoder.withIndent('  ');
+    await file.writeAsString('${encoder.convert(report)}\n');
+    stdout.writeln('Wrote diff report to $reportPath.');
+  }
 }
 
 Future<Map<String, dynamic>> _loadJsonMap(String path) async {
@@ -126,6 +180,32 @@ Future<Map<String, dynamic>> _loadJsonMap(String path) async {
     _fail('Expected a JSON object in $path.');
   }
   return Map<String, dynamic>.from(decoded);
+}
+
+Future<Map<String, dynamic>> _loadJsonMapFromPathOrUrl(String value) async {
+  final uri = Uri.tryParse(value);
+  if (uri != null &&
+      (uri.scheme == 'https' || uri.scheme == 'http') &&
+      uri.host.isNotEmpty) {
+    final client = HttpClient();
+    try {
+      final request = await client.getUrl(uri);
+      final response = await request.close();
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        _fail('Failed to load $value: HTTP ${response.statusCode}.');
+      }
+      final raw = await response.transform(utf8.decoder).join();
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) {
+        _fail('Expected a JSON object from $value.');
+      }
+      return Map<String, dynamic>.from(decoded);
+    } finally {
+      client.close(force: true);
+    }
+  }
+
+  return _loadJsonMap(value);
 }
 
 void _printMessages(List<_PipelineMessage> messages) {
@@ -200,6 +280,7 @@ Tonos content pipeline
 Commands:
   build-exercise-media      Build an app-ready exercise media manifest.
   validate-exercise-media   Validate a source file without writing output.
+  diff-exercise-media       Compare two generated exercise media manifests.
 
 Common options:
   --source <path>           Source JSON describing exercise media.
@@ -208,12 +289,19 @@ Common options:
   --version <number>        Manifest version. Overrides source version.
   --check-remote            HEAD-check generated URLs.
   --strict                  Treat warnings as failures.
+  --require-hashes          Require each asset to include or generate sha256.
+  --require-licenses        Require each asset to include licenseId.
 
 Build-only options:
   --output <path>           Generated manifest path.
   --upload-script <path>    Optional PowerShell upload script path.
   --bucket <name>           R2 bucket name for upload script generation.
   --manifest-object <key>   Manifest object key. Defaults to manifests/exercise_media_manifest.json.
+
+Diff-only options:
+  --old <path-or-url>       Previous app-ready manifest.
+  --new <path-or-url>       New app-ready manifest.
+  --report <path>           Optional JSON diff report path.
 
 Example:
   dart run tools/content_pipeline.dart build-exercise-media --source tools/content_pipeline/exercise_media_source.example.json --output build/content/exercise_media_manifest.json --check-remote
@@ -286,6 +374,8 @@ class _ExerciseMediaManifestBuilder {
     required this.namespace,
     required this.version,
     required this.checkRemote,
+    required this.requireHashes,
+    required this.requireLicenses,
   });
 
   final Map<String, dynamic> source;
@@ -294,16 +384,27 @@ class _ExerciseMediaManifestBuilder {
   final String namespace;
   final int version;
   final bool checkRemote;
+  final bool requireHashes;
+  final bool requireLicenses;
 
   final List<_PipelineMessage> _messages = [];
   final Set<int> _seenExerciseIds = {};
   final Set<String> _seenAssetIds = {};
+  final Set<String> _seenUrls = {};
 
   Future<_BuildResult> build() async {
     final outputExercises = <Map<String, dynamic>>[];
     var assetCount = 0;
+    final sourceExercises = source.listValue('exercises');
 
-    for (final rawExercise in source.listValue('exercises')) {
+    if (version < 1) {
+      _error('Manifest version must be 1 or greater.');
+    }
+    if (sourceExercises.isEmpty) {
+      _warning('Source has no exercise media entries.');
+    }
+
+    for (final rawExercise in sourceExercises) {
       if (rawExercise is! Map) {
         _error('Skipping exercise entry because it is not an object.');
         continue;
@@ -412,7 +513,7 @@ class _ExerciseMediaManifestBuilder {
     required int assetIndex,
   }) async {
     final slug = _slugify(exercise.name);
-    final mediaType = asset.stringValue('type') ?? 'image';
+    final mediaType = (asset.stringValue('type') ?? 'image').toLowerCase();
     final assetVersion = asset.intValue('version') ?? 1;
     final assetId =
         asset.stringValue('assetId') ??
@@ -422,23 +523,38 @@ class _ExerciseMediaManifestBuilder {
       _error('Duplicate assetId "$assetId".');
       return null;
     }
+    if (assetVersion < 1) {
+      _error('Asset "$assetId" version must be 1 or greater.');
+      return null;
+    }
+    if (!_knownMediaTypes.contains(mediaType)) {
+      _warning(
+        'Asset "$assetId" uses unknown media type "$mediaType". '
+        'The app may still accept it, but display support may be limited.',
+      );
+    }
 
     final url = _assetUrl(asset, key: 'url');
     if (url == null) {
       _error('Asset "$assetId" needs url, path, or remotePath.');
       return null;
     }
-    final thumbnailUrl = _assetUrl(asset, key: 'thumbnailUrl') ?? url;
+    final thumbnailUrl = _assetUrl(asset, key: 'thumbnailUrl');
+    if (!_seenUrls.add(url)) {
+      _warning('Remote URL is reused by more than one asset: $url');
+    }
 
     final output = <String, dynamic>{
       'assetId': assetId,
       'type': mediaType,
       'url': url,
-      'thumbnailUrl': thumbnailUrl,
       'title': asset.stringValue('title') ?? exercise.name,
       'sortOrder': asset.intValue('sortOrder') ?? assetIndex,
       'version': assetVersion,
     };
+    if (thumbnailUrl != null) {
+      output['thumbnailUrl'] = thumbnailUrl;
+    }
 
     final localFile = asset.stringValue('localFile');
     if (localFile != null) {
@@ -451,18 +567,49 @@ class _ExerciseMediaManifestBuilder {
     _copyOptionalString(asset, output, 'sha256');
     _copyOptionalString(asset, output, 'licenseId');
 
+    _validateMetadata(output, assetId);
+
     if (checkRemote) {
       await _checkRemoteUrl(
         url,
         assetId,
         expectedBytes: output['bytes'] as int?,
       );
-      if (thumbnailUrl != url) {
+      if (thumbnailUrl != null && thumbnailUrl != url) {
         await _checkRemoteUrl(thumbnailUrl, '$assetId thumbnail');
       }
     }
 
     return output;
+  }
+
+  void _validateMetadata(Map<String, dynamic> output, String assetId) {
+    final bytes = output['bytes'] as int?;
+    if (bytes != null && bytes <= 0) {
+      _error('Asset "$assetId" bytes must be greater than 0.');
+    }
+
+    final width = output['width'] as int?;
+    final height = output['height'] as int?;
+    if (width != null && width <= 0) {
+      _warning('Asset "$assetId" width should be greater than 0.');
+    }
+    if (height != null && height <= 0) {
+      _warning('Asset "$assetId" height should be greater than 0.');
+    }
+
+    final hash = output['sha256'] as String?;
+    if (requireHashes && (hash == null || hash.isEmpty)) {
+      _error('Asset "$assetId" is missing sha256.');
+    }
+    if (hash != null && !_sha256Pattern.hasMatch(hash)) {
+      _error('Asset "$assetId" has an invalid sha256 value.');
+    }
+
+    final licenseId = output['licenseId'] as String?;
+    if (requireLicenses && (licenseId == null || licenseId.isEmpty)) {
+      _error('Asset "$assetId" is missing licenseId.');
+    }
   }
 
   Future<void> _addLocalFileMetadata(
@@ -568,6 +715,95 @@ class _ExerciseMediaManifestBuilder {
   void _warning(String text) => _messages.add(_PipelineMessage.warning(text));
 }
 
+class _ManifestDiff {
+  final Map<String, dynamic> oldManifest;
+  final Map<String, dynamic> newManifest;
+
+  const _ManifestDiff({required this.oldManifest, required this.newManifest});
+
+  Map<String, dynamic> buildReport() {
+    final oldAssets = _indexAssets(oldManifest);
+    final newAssets = _indexAssets(newManifest);
+    final oldKeys = oldAssets.keys.toSet();
+    final newKeys = newAssets.keys.toSet();
+    final added = (newKeys.difference(oldKeys).toList()..sort());
+    final removed = (oldKeys.difference(newKeys).toList()..sort());
+    final shared = (oldKeys.intersection(newKeys).toList()..sort());
+    final changed = <Map<String, dynamic>>[];
+    var unchanged = 0;
+
+    for (final key in shared) {
+      final oldFingerprint = _assetFingerprint(oldAssets[key]!);
+      final newFingerprint = _assetFingerprint(newAssets[key]!);
+      if (jsonEncode(oldFingerprint) == jsonEncode(newFingerprint)) {
+        unchanged += 1;
+      } else {
+        changed.add({
+          'assetId': key,
+          'old': oldFingerprint,
+          'new': newFingerprint,
+        });
+      }
+    }
+
+    return {
+      'oldVersion': oldManifest['version'],
+      'newVersion': newManifest['version'],
+      'oldGeneratedAt': oldManifest['generatedAt'],
+      'newGeneratedAt': newManifest['generatedAt'],
+      'addedCount': added.length,
+      'removedCount': removed.length,
+      'changedCount': changed.length,
+      'unchangedCount': unchanged,
+      'added': added,
+      'removed': removed,
+      'changed': changed,
+    };
+  }
+
+  Map<String, Map<String, dynamic>> _indexAssets(
+    Map<String, dynamic> manifest,
+  ) {
+    final assets = <String, Map<String, dynamic>>{};
+    for (final rawExercise in manifest.listValue('exercises')) {
+      if (rawExercise is! Map) continue;
+      final exercise = Map<String, dynamic>.from(rawExercise);
+      final exerciseId = exercise.intValue('exerciseId');
+      for (final rawAsset in exercise.listValue('assets')) {
+        if (rawAsset is! Map) continue;
+        final asset = Map<String, dynamic>.from(rawAsset);
+        final assetId =
+            asset.stringValue('assetId') ??
+            '${exerciseId ?? 'unknown'}:${asset.stringValue('url') ?? ''}';
+        assets[assetId] = {
+          ...asset,
+          'exerciseId': exerciseId,
+          'exerciseSlug': exercise.stringValue('slug'),
+        };
+      }
+    }
+    return assets;
+  }
+
+  Map<String, dynamic> _assetFingerprint(Map<String, dynamic> asset) {
+    return {
+      'exerciseId': asset['exerciseId'],
+      'exerciseSlug': asset['exerciseSlug'],
+      'type': asset['type'],
+      'url': asset['url'],
+      'thumbnailUrl': asset['thumbnailUrl'],
+      'title': asset['title'],
+      'sortOrder': asset['sortOrder'],
+      'version': asset['version'],
+      'bytes': asset['bytes'],
+      'width': asset['width'],
+      'height': asset['height'],
+      'sha256': asset['sha256'],
+      'licenseId': asset['licenseId'],
+    };
+  }
+}
+
 class _ExerciseIndex {
   final Map<int, _ResolvedExercise> _byId;
   final Map<String, _ResolvedExercise> _byName;
@@ -645,6 +881,16 @@ class _PipelineMessage {
 }
 
 enum _Severity { error, warning }
+
+const Set<String> _knownMediaTypes = {
+  'image',
+  'thumbnail',
+  'still',
+  'animation',
+  'video',
+};
+
+final RegExp _sha256Pattern = RegExp(r'^[a-fA-F0-9]{64}$');
 
 extension _JsonMapTools on Map<String, dynamic> {
   String? stringValue(String key) {

@@ -10,11 +10,12 @@
       "assets": [
         {
           "assetId": "barbell_squat_thumb_v1",
-          "type": "image",
+          "type": "thumbnail",
           "path": "exercises/barbell_squat/v1/thumb.png",
           "title": "Barbell Squat thumbnail",
           "sortOrder": 0,
-          "version": 1
+          "version": 1,
+          "licenseId": "tonos_test"
         }
       ]
     },
@@ -25,11 +26,12 @@
       "assets": [
         {
           "assetId": "bench_press_barbell_thumb_v1",
-          "type": "image",
+          "type": "thumbnail",
           "path": "exercises/bench_press_barbell/v1/thumb.png",
           "title": "Bench Press - Barbell thumbnail",
           "sortOrder": 0,
-          "version": 1
+          "version": 1,
+          "licenseId": "tonos_test"
         }
       ]
     },
@@ -40,11 +42,12 @@
       "assets": [
         {
           "assetId": "bicep_curl_dumbbell_thumb_v1",
-          "type": "image",
+          "type": "thumbnail",
           "path": "exercises/bicep_curl_dumbbell/v1/thumb.png",
           "title": "Bicep Curl - Dumbbell thumbnail",
           "sortOrder": 0,
-          "version": 1
+          "version": 1,
+          "licenseId": "tonos_test"
         }
       ]
     },
@@ -55,11 +58,12 @@
       "assets": [
         {
           "assetId": "deadlift_barbell_thumb_v1",
-          "type": "image",
+          "type": "thumbnail",
           "path": "exercises/deadlift_barbell/v1/thumb.png",
           "title": "Deadlift - Barbell thumbnail",
           "sortOrder": 0,
-          "version": 1
+          "version": 1,
+          "licenseId": "tonos_test"
         }
       ]
     },
@@ -70,11 +74,12 @@
       "assets": [
         {
           "assetId": "lat_pulldown_lat_pulldown_machine_thumb_v1",
-          "type": "image",
+          "type": "thumbnail",
           "path": "exercises/lat_pulldown_lat_pulldown_machine/v1/thumb.png",
-          "title": "Lat Pulldown - Lat Pulldown Machine thumbnail",
+          "title": "Lat Pulldown thumbnail",
           "sortOrder": 0,
-          "version": 1
+          "version": 1,
+          "licenseId": "tonos_test"
         }
       ]
     }
