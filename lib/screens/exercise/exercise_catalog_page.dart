@@ -8,10 +8,9 @@ import '../../models/models.dart';
 import '../../providers/selected_profile.dart';
 import '../../repositories/app_repository.dart';
 import '../../services/tutorial_state_store.dart';
-import '../../theme/theme_extensions.dart';
 import '../../utils/tutorial_launcher.dart';
-import '../../widgets/body_heatmap.dart';
 import '../../widgets/exercise_detail_sheet.dart';
+import '../../widgets/exercise_media_thumbnail.dart';
 import '../../widgets/guided_tutorial_overlay.dart';
 
 /// Catalog of exercise definitions with profile-aware equipment filtering.
@@ -539,11 +538,6 @@ class _ExerciseCatalogBar extends StatelessWidget {
         .map((equipment) => equipment.name)
         .where((name) => name.trim().isNotEmpty)
         .join(', ');
-    final bodyPartUnits = {
-      for (final bodyPart in definition.bodyParts) bodyPart.name: 1.0,
-    };
-    final heatmapFrequencyMap = bodyPartFrequencyMapFromNames(bodyPartUnits);
-
     return Card(
       clipBehavior: Clip.antiAlias,
       margin: const EdgeInsets.only(bottom: 10),
@@ -591,9 +585,8 @@ class _ExerciseCatalogBar extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              _ExerciseInfoHeatmapButton(
-                frequencyMap: heatmapFrequencyMap,
-                fallbackBodyParts: definition.bodyParts,
+              _ExerciseInfoMediaButton(
+                definition: definition,
                 onTap: onHeatmapTap,
               ),
             ],
@@ -604,54 +597,26 @@ class _ExerciseCatalogBar extends StatelessWidget {
   }
 }
 
-class _ExerciseInfoHeatmapButton extends StatelessWidget {
-  final Map<String, double> frequencyMap;
-  final List<BodyPart> fallbackBodyParts;
+class _ExerciseInfoMediaButton extends StatelessWidget {
+  final ExerciseDefinition definition;
   final VoidCallback onTap;
 
-  const _ExerciseInfoHeatmapButton({
-    required this.frequencyMap,
-    required this.fallbackBodyParts,
+  const _ExerciseInfoMediaButton({
+    required this.definition,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = context.colors;
-    final hasHeatmap = frequencyMap.isNotEmpty;
-
     return Semantics(
       button: true,
       label: 'Open exercise information',
-      child: InkWell(
+      child: ExerciseMediaThumbnail(
+        definition: definition,
+        size: 64,
         borderRadius: BorderRadius.circular(14),
+        padding: const EdgeInsets.all(5),
         onTap: onTap,
-        child: Container(
-          width: 64,
-          height: 64,
-          padding: const EdgeInsets.all(5),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: theme.colorScheme.outlineVariant),
-          ),
-          child:
-              hasHeatmap
-                  ? BodyHeatmap(
-                    frequencyMap: frequencyMap,
-                    lowColor: colors.historySummaryHeatmapLow!,
-                    highColor: colors.historySummaryHeatmapHigh!,
-                    width: 54,
-                    height: 54,
-                  )
-                  : Icon(
-                    fallbackBodyParts.isEmpty
-                        ? Icons.info_outline
-                        : Icons.accessibility_new,
-                    color: theme.colorScheme.primary,
-                  ),
-        ),
       ),
     );
   }

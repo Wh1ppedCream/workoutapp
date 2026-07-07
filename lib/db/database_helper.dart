@@ -27,6 +27,7 @@ import 'preset_set_auto_dao.dart';
 import 'preset_flow_methods_dao.dart';
 import 'personal_info_dao.dart';
 import 'nutrition_dao.dart';
+import 'content_dao.dart';
 import 'database_maintenance.dart';
 import 'db_query_utils.dart';
 
@@ -110,6 +111,7 @@ class DatabaseHelper {
         await _ensureFormulaSettings(db); // ← add
         await _ensureExerciseBodypartPercent(db); // ← add
         await _ensureExerciseMediaTable(db);
+        await ContentDao.ensureTables(db);
         await _ensureNutritionGoalsColumns(db);
         await ensureSchemaRepairs(db);
         await _ensureFavoriteFoodsShape(db);
@@ -140,6 +142,7 @@ class DatabaseHelper {
         debugPrint('[db] onOpen (begin)');
         await _ensureAppMetaTable(db);
         await _ensureExerciseMediaTable(db);
+        await ContentDao.ensureTables(db);
         await Schema.migrateV49(db);
         await Schema.migrateV50(db);
         await _resetDbTriggers(db); // <—
@@ -180,6 +183,7 @@ class DatabaseHelper {
       ..start();
     await _ensureAppMetaTable(db);
     await _ensureExerciseMediaTable(db);
+    await ContentDao.ensureTables(db);
     _logDbInitStep('onCreate', 'ensure-meta-media', stepSw.elapsedMilliseconds);
 
     // 2) Triggers that are safe to have before foods seeding
@@ -2447,6 +2451,7 @@ class DatabaseHelper {
         final item = items[i];
         await txn.insert('exercise_media', {
           'exercise_def_id': defId,
+          'asset_id': item.assetId,
           'media_type': item.mediaType,
           'remote_url': item.remoteUrl,
           'thumbnail_url': item.thumbnailUrl,
@@ -2454,6 +2459,14 @@ class DatabaseHelper {
           'local_thumbnail_path': item.localThumbnailPath,
           'title': item.title,
           'sort_order': i,
+          'version': item.version,
+          'bytes': item.bytes,
+          'width': item.width,
+          'height': item.height,
+          'sha256': item.sha256,
+          'license_id': item.licenseId,
+          'last_accessed_at': item.lastAccessedAt?.toIso8601String(),
+          'downloaded_at': item.downloadedAt?.toIso8601String(),
           'created_at': DateTime.now().toUtc().toIso8601String(),
           'updated_at': DateTime.now().toUtc().toIso8601String(),
         });

@@ -139,6 +139,7 @@ class ExerciseDefinition {
 class ExerciseMediaItem {
   final int? id;
   final int exerciseDefId;
+  final String? assetId;
   final String mediaType;
   final String remoteUrl;
   final String? thumbnailUrl;
@@ -146,10 +147,19 @@ class ExerciseMediaItem {
   final String? localThumbnailPath;
   final String? title;
   final int sortOrder;
+  final int version;
+  final int? bytes;
+  final int? width;
+  final int? height;
+  final String? sha256;
+  final String? licenseId;
+  final DateTime? lastAccessedAt;
+  final DateTime? downloadedAt;
 
   ExerciseMediaItem({
     this.id,
     required this.exerciseDefId,
+    this.assetId,
     required this.mediaType,
     required this.remoteUrl,
     this.thumbnailUrl,
@@ -157,12 +167,21 @@ class ExerciseMediaItem {
     this.localThumbnailPath,
     this.title,
     this.sortOrder = 0,
+    this.version = 1,
+    this.bytes,
+    this.width,
+    this.height,
+    this.sha256,
+    this.licenseId,
+    this.lastAccessedAt,
+    this.downloadedAt,
   });
 
   factory ExerciseMediaItem.fromMap(Map<String, dynamic> m) {
     return ExerciseMediaItem(
       id: m['id'] as int?,
       exerciseDefId: m['exercise_def_id'] as int,
+      assetId: m['asset_id'] as String?,
       mediaType: (m['media_type'] as String?) ?? 'link',
       remoteUrl: (m['remote_url'] as String?) ?? '',
       thumbnailUrl: m['thumbnail_url'] as String?,
@@ -170,6 +189,14 @@ class ExerciseMediaItem {
       localThumbnailPath: m['local_thumbnail_path'] as String?,
       title: m['title'] as String?,
       sortOrder: (m['sort_order'] as num?)?.toInt() ?? 0,
+      version: (m['version'] as num?)?.toInt() ?? 1,
+      bytes: (m['bytes'] as num?)?.toInt(),
+      width: (m['width'] as num?)?.toInt(),
+      height: (m['height'] as num?)?.toInt(),
+      sha256: m['sha256'] as String?,
+      licenseId: m['license_id'] as String?,
+      lastAccessedAt: _dateTimeFromString(m['last_accessed_at'] as String?),
+      downloadedAt: _dateTimeFromString(m['downloaded_at'] as String?),
     );
   }
 
@@ -177,6 +204,7 @@ class ExerciseMediaItem {
     return {
       'id': id,
       'exercise_def_id': exerciseDefId,
+      'asset_id': assetId,
       'media_type': mediaType,
       'remote_url': remoteUrl,
       'thumbnail_url': thumbnailUrl,
@@ -184,12 +212,21 @@ class ExerciseMediaItem {
       'local_thumbnail_path': localThumbnailPath,
       'title': title,
       'sort_order': sortOrder,
+      'version': version,
+      'bytes': bytes,
+      'width': width,
+      'height': height,
+      'sha256': sha256,
+      'license_id': licenseId,
+      'last_accessed_at': lastAccessedAt?.toIso8601String(),
+      'downloaded_at': downloadedAt?.toIso8601String(),
     };
   }
 
   ExerciseMediaItem copyWith({
     int? id,
     int? exerciseDefId,
+    String? assetId,
     String? mediaType,
     String? remoteUrl,
     String? thumbnailUrl,
@@ -197,10 +234,19 @@ class ExerciseMediaItem {
     String? localThumbnailPath,
     String? title,
     int? sortOrder,
+    int? version,
+    int? bytes,
+    int? width,
+    int? height,
+    String? sha256,
+    String? licenseId,
+    DateTime? lastAccessedAt,
+    DateTime? downloadedAt,
   }) {
     return ExerciseMediaItem(
       id: id ?? this.id,
       exerciseDefId: exerciseDefId ?? this.exerciseDefId,
+      assetId: assetId ?? this.assetId,
       mediaType: mediaType ?? this.mediaType,
       remoteUrl: remoteUrl ?? this.remoteUrl,
       thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
@@ -208,7 +254,20 @@ class ExerciseMediaItem {
       localThumbnailPath: localThumbnailPath ?? this.localThumbnailPath,
       title: title ?? this.title,
       sortOrder: sortOrder ?? this.sortOrder,
+      version: version ?? this.version,
+      bytes: bytes ?? this.bytes,
+      width: width ?? this.width,
+      height: height ?? this.height,
+      sha256: sha256 ?? this.sha256,
+      licenseId: licenseId ?? this.licenseId,
+      lastAccessedAt: lastAccessedAt ?? this.lastAccessedAt,
+      downloadedAt: downloadedAt ?? this.downloadedAt,
     );
+  }
+
+  static DateTime? _dateTimeFromString(String? value) {
+    if (value == null || value.isEmpty) return null;
+    return DateTime.tryParse(value);
   }
 }
 

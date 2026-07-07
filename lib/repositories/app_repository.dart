@@ -1,8 +1,11 @@
 // File: lib/repositories/app_repository.dart
 
+import 'dart:io';
+
 import '../db/database_helper.dart';
 import '../db/database_maintenance.dart';
 import '../models/models.dart';
+import 'content_repository.dart';
 import 'food_catalog_repository.dart';
 
 /// Central repository providing a unified interface for all
@@ -23,6 +26,7 @@ class AppRepository {
       <int, Future<Map<BodyPart, double>>>{};
 
   final DatabaseHelper _dbHelper;
+  late final ContentRepository content = ContentRepository(db: _dbHelper);
   late final FoodCatalogRepository foodCatalog = FoodCatalogRepository(
     source: LocalFoodCatalogSource(_dbHelper),
   );
@@ -413,6 +417,32 @@ class AppRepository {
 
   Future<List<ExerciseMediaItem>> fetchExerciseMedia(int defId) =>
       _dbHelper.getExerciseMedia(defId);
+
+  Future<ExerciseMediaItem?> fetchPrimaryExerciseMedia(int defId) =>
+      content.fetchPrimaryExerciseMedia(defId);
+
+  Future<ContentManifest> syncBundledExerciseMediaManifest() =>
+      content.syncBundledExerciseMediaManifest();
+
+  Future<ContentManifest> syncRemoteExerciseMediaManifest(Uri manifestUri) =>
+      content.syncRemoteExerciseMediaManifest(manifestUri);
+
+  Future<File?> cachedExerciseMediaFile(
+    ExerciseMediaItem item, {
+    required bool thumbnail,
+  }) => content.cachedFileFor(item, thumbnail: thumbnail);
+
+  Future<File> cacheExerciseMedia(
+    ExerciseMediaItem item, {
+    required bool thumbnail,
+  }) => content.cacheMedia(item, thumbnail: thumbnail);
+
+  Future<ContentCacheUsage> getContentCacheUsage() => content.getCacheUsage();
+
+  Future<ContentManifestStatus?> getContentManifestStatus(String namespace) =>
+      content.getManifestStatus(namespace);
+
+  Future<void> clearContentCache() => content.clearCache();
 
   Future<void> replaceExerciseMedia(int defId, List<ExerciseMediaItem> items) =>
       _dbHelper.replaceExerciseMedia(defId, items);

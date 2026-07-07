@@ -6,8 +6,10 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../db/database_maintenance.dart';
+import '../../../models/models.dart';
 import '../../../repositories/app_repository.dart';
 import '../../../services/tutorial_state_store.dart';
 import '../../../utils/tutorial_launcher.dart';
@@ -21,14 +23,21 @@ class DatabaseSettingsPage extends StatefulWidget {
 }
 
 class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
+  static const String _exerciseMediaManifestUrlKey =
+      'content.exercise_media.remote_manifest_url';
+
   late final AppRepository _repo;
   late Future<DatabaseHealthSnapshot> _healthFuture;
+  late Future<ContentCacheUsage> _contentCacheFuture;
+  late Future<ContentManifestStatus?> _exerciseMediaManifestStatusFuture;
+  late Future<String> _manifestUrlFuture;
   final _fileActionsTutorialKey = GlobalKey(
     debugLabel: 'database_file_actions',
   );
   final _healthTutorialKey = GlobalKey(debugLabel: 'database_health');
   final _maintenanceTutorialKey = GlobalKey(debugLabel: 'database_maintenance');
   bool _maintenanceRunning = false;
+  bool _contentActionRunning = false;
   bool _repoBound = false;
   bool _tutorialQueued = false;
 
@@ -38,6 +47,11 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
     if (_repoBound) return;
     _repo = context.read<AppRepository>();
     _healthFuture = _repo.getDatabaseHealthSnapshot();
+    _contentCacheFuture = _repo.getContentCacheUsage();
+    _exerciseMediaManifestStatusFuture = _repo.getContentManifestStatus(
+      'exercise_media',
+    );
+    _manifestUrlFuture = _loadManifestUrl();
     _repoBound = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _queueTutorial();
@@ -47,6 +61,16 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
   void _refreshHealth() {
     setState(() {
       _healthFuture = _repo.getDatabaseHealthSnapshot();
+    });
+  }
+
+  void _refreshContentStatus() {
+    setState(() {
+      _contentCacheFuture = _repo.getContentCacheUsage();
+      _exerciseMediaManifestStatusFuture = _repo.getContentManifestStatus(
+        'exercise_media',
+      );
+      _manifestUrlFuture = _loadManifestUrl();
     });
   }
 
@@ -371,6 +395,275 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
     return '${size.toStringAsFixed(decimals)} ${units[unit]}';
   }
 
+  String _formatDateTime(DateTime? value) {
+    if (value == null) return 'Never';
+    final local = value.toLocal();
+    return '${local.year}-${_twoDigits(local.month)}-${_twoDigits(local.day)} '
+        '${_twoDigits(local.hour)}:${_twoDigits(local.minute)}';
+  }
+
+  Future<String> _loadManifestUrl() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_exerciseMediaManifestUrlKey) ?? '';
+  }
+
+  Future<void> _saveManifestUrl(String value) async {
+    final prefs = await SharedPreferences.getInstance();
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      await prefs.remove(_exerciseMediaManifestUrlKey);
+    } else {
+      await prefs.setString(_exerciseMediaManifestUrlKey, trimmed);
+    }
+    if (!mounted) return;
+    _refreshContentStatus();
+  }
+
+  Future<void> _editManifestUrl() async {
+    final currentUrl = await _loadManifestUrl();
+    if (!mounted) return;
+
+    final result = await showDialog<String>(
+      context: context,
+      builder: (_) => _ManifestUrlDialog(initialUrl: currentUrl),
+    );
+
+    if (result == null) return;
+    if (!mounted) return;
+    await _saveManifestUrl(result);
+  }
+
+  Future<void> _syncRemoteExerciseMediaManifest() async {
+    if (_contentActionRunning) return;
+    final manifestUrl = (await _loadManifestUrl()).trim();
+    final uri = Uri.tryParse(manifestUrl);
+
+    final validRemoteUri =
+        uri != null &&
+        (uri.scheme == 'https' || uri.scheme == 'http') &&
+        uri.host.isNotEmpty;
+    if (manifestUrl.isEmpty || !validRemoteUri) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Add a valid exercise media manifest URL first.'),
+        ),
+      );
+      return;
+    }
+
+    if (!mounted) return;
+    setState(() => _contentActionRunning = true);
+    try {
+      final manifest = await _repo.syncRemoteExerciseMediaManifest(uri);
+      if (!mounted) return;
+      _refreshContentStatus();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Synced ${manifest.exerciseMedia.length} exercise media entries '
+            '(v${manifest.version}).',
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Content sync failed: $e')));
+    } finally {
+      if (mounted) {
+        setState(() => _contentActionRunning = false);
+      }
+    }
+  }
+
+  Future<void> _syncBundledExerciseMediaManifest() async {
+    if (_contentActionRunning) return;
+    setState(() => _contentActionRunning = true);
+    try {
+      final manifest = await _repo.syncBundledExerciseMediaManifest();
+      if (!mounted) return;
+      _refreshContentStatus();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Loaded bundled exercise media manifest '
+            '(v${manifest.version}).',
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Bundled content sync failed: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _contentActionRunning = false);
+      }
+    }
+  }
+
+  Future<void> _clearContentCache() async {
+    if (_contentActionRunning) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Clear Downloaded Media?'),
+            content: const Text(
+              'This removes cached exercise thumbnails and media files. '
+              'The app can download them again when needed.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(false),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(ctx).pop(true),
+                child: const Text('Clear Cache'),
+              ),
+            ],
+          ),
+    );
+    if (confirmed != true) return;
+
+    if (!mounted) return;
+    setState(() => _contentActionRunning = true);
+    try {
+      await _repo.clearContentCache();
+      if (!mounted) return;
+      _refreshContentStatus();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Downloaded media cache cleared.')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Clear cache failed: $e')));
+    } finally {
+      if (mounted) {
+        setState(() => _contentActionRunning = false);
+      }
+    }
+  }
+
+  Widget _buildCloudContentSection() {
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Divider(),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+          child: Text('Cloud Content', style: theme.textTheme.titleMedium),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Card(
+            child: Column(
+              children: [
+                FutureBuilder<String>(
+                  future: _manifestUrlFuture,
+                  builder: (context, snapshot) {
+                    final url = snapshot.data ?? '';
+                    return ListTile(
+                      leading: const Icon(Icons.cloud_outlined),
+                      title: const Text('Exercise Media Manifest'),
+                      subtitle: Text(
+                        url.isEmpty ? 'No remote manifest URL set.' : url,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      trailing: IconButton(
+                        tooltip: 'Edit URL',
+                        icon: const Icon(Icons.edit),
+                        onPressed:
+                            _contentActionRunning ? null : _editManifestUrl,
+                      ),
+                    );
+                  },
+                ),
+                const Divider(height: 1),
+                FutureBuilder<ContentManifestStatus?>(
+                  future: _exerciseMediaManifestStatusFuture,
+                  builder: (context, snapshot) {
+                    final status = snapshot.data;
+                    return ListTile(
+                      leading: const Icon(Icons.description_outlined),
+                      title: Text(
+                        status == null
+                            ? 'No exercise media manifest synced'
+                            : 'Manifest v${status.version}',
+                      ),
+                      subtitle: Text(
+                        'Last checked: ${_formatDateTime(status?.lastCheckedAt)}',
+                      ),
+                    );
+                  },
+                ),
+                FutureBuilder<ContentCacheUsage>(
+                  future: _contentCacheFuture,
+                  builder: (context, snapshot) {
+                    final usage =
+                        snapshot.data ??
+                        const ContentCacheUsage(fileCount: 0, totalBytes: 0);
+                    return ListTile(
+                      leading: const Icon(Icons.folder_copy_outlined),
+                      title: const Text('Downloaded Media Cache'),
+                      subtitle: Text(
+                        '${usage.fileCount} files, ${_formatBytes(usage.totalBytes)}',
+                      ),
+                    );
+                  },
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading:
+                      _contentActionRunning
+                          ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                          : const Icon(Icons.sync),
+                  title: const Text('Sync Remote Exercise Media'),
+                  subtitle: const Text(
+                    'Fetches the manifest from your configured CDN URL.',
+                  ),
+                  onTap:
+                      _contentActionRunning
+                          ? null
+                          : _syncRemoteExerciseMediaManifest,
+                ),
+                ListTile(
+                  leading: const Icon(Icons.inventory_2_outlined),
+                  title: const Text('Load Bundled Manifest'),
+                  subtitle: const Text(
+                    'Loads the safe local manifest included with the app.',
+                  ),
+                  onTap:
+                      _contentActionRunning
+                          ? null
+                          : _syncBundledExerciseMediaManifest,
+                ),
+                ListTile(
+                  leading: const Icon(Icons.cleaning_services_outlined),
+                  title: const Text('Clear Downloaded Media Cache'),
+                  onTap: _contentActionRunning ? null : _clearContentCache,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   /// Generic asset exporter file helper.
   Future<void> _exportAsset(
     Future<String> Function() exporter,
@@ -543,6 +836,8 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
                     : () => _runMaintenance(_repo.vacuumDatabase),
           ),
 
+          _buildCloudContentSection(),
+
           const Divider(),
 
           // Asset‐style exports
@@ -622,6 +917,64 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ManifestUrlDialog extends StatefulWidget {
+  final String initialUrl;
+
+  const _ManifestUrlDialog({required this.initialUrl});
+
+  @override
+  State<_ManifestUrlDialog> createState() => _ManifestUrlDialogState();
+}
+
+class _ManifestUrlDialogState extends State<_ManifestUrlDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialUrl);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Exercise Media Manifest'),
+      content: TextField(
+        controller: _controller,
+        autofocus: false,
+        keyboardType: TextInputType.url,
+        decoration: const InputDecoration(
+          labelText: 'Manifest URL',
+          hintText:
+              'https://cdn.tonos.app/manifests/exercise_media_manifest.json',
+        ),
+        minLines: 1,
+        maxLines: 3,
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(''),
+          child: const Text('Clear'),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.of(context).pop(_controller.text.trim()),
+          child: const Text('Save'),
+        ),
+      ],
     );
   }
 }

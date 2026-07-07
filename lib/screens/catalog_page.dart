@@ -7,8 +7,8 @@ import '../models/models.dart';
 import '../providers/active_session.dart';
 import '../repositories/app_repository.dart';
 import '../services/tutorial_state_store.dart';
-import '../theme/theme_extensions.dart';
 import '../widgets/body_heatmap.dart';
+import '../widgets/exercise_media_thumbnail.dart';
 import '../widgets/guided_tutorial_overlay.dart';
 import 'exercise/exercise_catalog_page.dart';
 import 'exercise/muscle_filter_page.dart';
@@ -413,14 +413,10 @@ class _ExerciseUsageBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colors = context.colors;
     final equipmentNames = summary.definition.equipmentList
         .map((equipment) => equipment.name)
         .where((name) => name.trim().isNotEmpty)
         .join(', ');
-    final heatmapFrequencyMap = bodyPartFrequencyMapFromNames({
-      for (final bodyPart in summary.definition.bodyParts) bodyPart.name: 1.0,
-    });
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -463,29 +459,11 @@ class _ExerciseUsageBar extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          Container(
-            width: 52,
-            height: 52,
+          ExerciseMediaThumbnail(
+            definition: summary.definition,
+            size: 52,
+            borderRadius: BorderRadius.circular(13),
             padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(13),
-              border: Border.all(color: theme.colorScheme.outlineVariant),
-            ),
-            child:
-                heatmapFrequencyMap.isEmpty
-                    ? Icon(
-                      Icons.accessibility_new,
-                      color: theme.colorScheme.primary,
-                      size: 24,
-                    )
-                    : BodyHeatmap(
-                      frequencyMap: heatmapFrequencyMap,
-                      lowColor: colors.historySummaryHeatmapLow!,
-                      highColor: colors.historySummaryHeatmapHigh!,
-                      width: 44,
-                      height: 44,
-                    ),
           ),
         ],
       ),

@@ -1,6 +1,7 @@
 // File: lib/widgets/exercise_detail_sheet.dart
 
 import 'dart:async';
+import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -31,6 +32,163 @@ class HistoryRecord {
   });
 }
 
+class _ExerciseMediaPreviewCard extends StatelessWidget {
+  final ExerciseMediaItem media;
+  final Future<File?> previewFileFuture;
+
+  const _ExerciseMediaPreviewCard({
+    required this.media,
+    required this.previewFileFuture,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final title =
+        media.title?.isNotEmpty == true
+            ? media.title!
+            : media.mediaType == 'animation'
+            ? 'Exercise demo'
+            : 'Exercise image';
+
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AspectRatio(
+            aspectRatio: 16 / 9,
+            child: FutureBuilder<File?>(
+              future: previewFileFuture,
+              builder: (context, snapshot) {
+                final file = snapshot.data;
+                if (file != null) {
+                  return Image.file(file, fit: BoxFit.cover);
+                }
+                if (snapshot.connectionState != ConnectionState.done) {
+                  return _MediaPlaceholder(
+                    icon: Icons.cloud_download_outlined,
+                    label: 'Loading preview',
+                    color: theme.colorScheme.primary,
+                  );
+                }
+                return _RemoteMediaFallback(media: media);
+              },
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+            child: Row(
+              children: [
+                Icon(
+                  media.mediaType == 'animation'
+                      ? Icons.play_circle_outline
+                      : Icons.image_outlined,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                if (media.version > 1)
+                  Text('v${media.version}', style: theme.textTheme.labelSmall),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RemoteMediaFallback extends StatelessWidget {
+  final ExerciseMediaItem media;
+
+  const _RemoteMediaFallback({required this.media});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final url = media.thumbnailUrl ?? media.remoteUrl;
+    final lowerUrl = url.toLowerCase();
+    final isImage =
+        lowerUrl.endsWith('.png') ||
+        lowerUrl.endsWith('.jpg') ||
+        lowerUrl.endsWith('.jpeg') ||
+        lowerUrl.endsWith('.webp');
+
+    if (isImage) {
+      return Image.network(
+        url,
+        fit: BoxFit.cover,
+        errorBuilder:
+            (_, __, ___) => _MediaPlaceholder(
+              icon: Icons.broken_image_outlined,
+              label: 'Preview unavailable',
+            ),
+      );
+    }
+
+    return _MediaPlaceholder(
+      icon:
+          media.mediaType == 'animation'
+              ? Icons.play_circle_outline
+              : Icons.cloud_outlined,
+      label:
+          media.mediaType == 'animation'
+              ? 'Animation available'
+              : 'Media available',
+      color: theme.colorScheme.primary,
+    );
+  }
+}
+
+class _MediaPlaceholder extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color? color;
+
+  const _MediaPlaceholder({
+    required this.icon,
+    required this.label,
+    this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final resolvedColor = color ?? theme.colorScheme.onSurfaceVariant;
+    return ColoredBox(
+      color: theme.colorScheme.surface,
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: resolvedColor, size: 36),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: theme.textTheme.labelLarge?.copyWith(color: resolvedColor),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// Exercise Detail Bottom Sheet with tabs: Details, Metrics, Records
 class ExerciseDetailSheet extends StatefulWidget {
   final ExerciseDefinition definition;
@@ -49,8 +207,10 @@ class ExerciseDetailSheet extends StatefulWidget {
 class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
   late final AppRepository _repo;
   late Future<List<HistoryRecord>> _historyFuture;
+  late Future<ExerciseMediaItem?> _primaryMediaFuture;
   final Map<String, Future<List<RepMaxRow>>> _repMaxFutures = {};
   final Map<String, Future<double?>> _volumeMaxFutures = {};
+  final Map<String, Future<File?>> _mediaPreviewFutures = {};
   final _headerTutorialKey = GlobalKey(debugLabel: 'exercise_detail_header');
   final _tabsTutorialKey = GlobalKey(debugLabel: 'exercise_detail_tabs');
   final _contentTutorialKey = GlobalKey(debugLabel: 'exercise_detail_content');
@@ -67,6 +227,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     _tfSelected = [false, false, true]; // default to "all"
     unawaited(BodyHeatmap.preload());
     _historyFuture = _loadHistory();
+    _primaryMediaFuture = _loadPrimaryMedia();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _queueTutorial();
     });
@@ -78,7 +239,9 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     if (oldWidget.defId != widget.defId) {
       _repMaxFutures.clear();
       _volumeMaxFutures.clear();
+      _mediaPreviewFutures.clear();
       _historyFuture = _loadHistory();
+      _primaryMediaFuture = _loadPrimaryMedia();
       _tutorialQueued = false;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _queueTutorial();
@@ -168,6 +331,40 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     return records;
   }
 
+  Future<ExerciseMediaItem?> _loadPrimaryMedia() async {
+    try {
+      await _repo.syncBundledExerciseMediaManifest();
+    } catch (_) {
+      // Media is optional. If the bundled manifest cannot be read, the detail
+      // sheet should still work from local exercise metadata.
+    }
+    return _repo.fetchPrimaryExerciseMedia(widget.defId);
+  }
+
+  Future<File?> _previewFileFuture(ExerciseMediaItem item) {
+    final key = '${item.id ?? item.assetId ?? item.remoteUrl}:thumb';
+    return _mediaPreviewFutures.putIfAbsent(key, () async {
+      final cached = await _repo.cachedExerciseMediaFile(item, thumbnail: true);
+      if (cached != null) return cached;
+
+      if (!_looksLikeImage(item.thumbnailUrl ?? item.remoteUrl)) return null;
+
+      try {
+        return await _repo.cacheExerciseMedia(item, thumbnail: true);
+      } catch (_) {
+        return null;
+      }
+    });
+  }
+
+  bool _looksLikeImage(String url) {
+    final lower = url.toLowerCase();
+    return lower.endsWith('.png') ||
+        lower.endsWith('.jpg') ||
+        lower.endsWith('.jpeg') ||
+        lower.endsWith('.webp');
+  }
+
   Widget _buildDetailsTab(ScrollController scrollCtrl) {
     final def = widget.definition;
     final theme = Theme.of(context);
@@ -188,6 +385,20 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 12),
+          FutureBuilder<ExerciseMediaItem?>(
+            future: _primaryMediaFuture,
+            builder: (context, snapshot) {
+              final media = snapshot.data;
+              if (media == null) return const SizedBox.shrink();
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _ExerciseMediaPreviewCard(
+                  media: media,
+                  previewFileFuture: _previewFileFuture(media),
+                ),
+              );
+            },
+          ),
           Center(
             child: Container(
               width: 220,
