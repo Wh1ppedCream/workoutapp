@@ -1,0 +1,19 @@
+{
+  "defaultEnvironment": "development",
+  "environments": [
+    {
+      "id": "development",
+      "label": "Development",
+      "description": "Cloudflare R2 development bucket used for testing exercise media before release.",
+      "exerciseMediaManifestUrl": "https://pub-7eb72a1a315f4da3b30100ff6e694651.r2.dev/manifests/exercise_media_manifest.json",
+      "isProduction": false
+    },
+    {
+      "id": "production",
+      "label": "Production",
+      "description": "Production CDN slot. Fill this URL after the production bucket or custom domain is ready.",
+      "exerciseMediaManifestUrl": "",
+      "isProduction": true
+    }
+  ]
+}

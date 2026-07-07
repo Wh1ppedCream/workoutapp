@@ -8,12 +8,23 @@ import '../models/models.dart';
 class ContentManifestService {
   static const String defaultBundledManifestAsset =
       'assets/content/exercise_media_manifest.json';
+  static const String defaultBundledEnvironmentsAsset =
+      'assets/content/content_environments.json';
 
   const ContentManifestService({
     this.bundledManifestAsset = defaultBundledManifestAsset,
+    this.bundledEnvironmentsAsset = defaultBundledEnvironmentsAsset,
   });
 
   final String bundledManifestAsset;
+  final String bundledEnvironmentsAsset;
+
+  Future<ContentEnvironmentConfig> loadBundledContentEnvironments() async {
+    final raw = await rootBundle.loadString(bundledEnvironmentsAsset);
+    return ContentEnvironmentConfig.fromJson(
+      Map<String, dynamic>.from(jsonDecode(raw) as Map),
+    );
+  }
 
   Future<ContentManifest> loadBundledExerciseMediaManifest() async {
     final raw = await rootBundle.loadString(bundledManifestAsset);

@@ -3,6 +3,9 @@
 Tonos keeps large shared media out of the app bundle. The app syncs a small JSON
 manifest, downloads only the media it needs, and caches files locally.
 
+Production environment setup and promotion rules live in
+`docs/content-production-setup.md`.
+
 ## Current Flow
 
 1. Put media in Cloudflare R2 using stable object keys.

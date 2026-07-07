@@ -424,6 +424,9 @@ class AppRepository {
   Future<ContentManifest> syncBundledExerciseMediaManifest() =>
       content.syncBundledExerciseMediaManifest();
 
+  Future<ContentEnvironmentConfig> loadContentEnvironments() =>
+      content.loadContentEnvironments();
+
   Future<ContentManifest> syncRemoteExerciseMediaManifest(Uri manifestUri) =>
       content.syncRemoteExerciseMediaManifest(manifestUri);
 

@@ -91,6 +91,7 @@ flutter:
     - assets/muscle_ranking.json
     - assets/bodypart_muscle_rankings.json
     - assets/volume_boundaries.json
+    - assets/content/content_environments.json
     - assets/content/exercise_media_manifest.json
     - assets/body_heatmap.svg
     - assets/bodyfat/

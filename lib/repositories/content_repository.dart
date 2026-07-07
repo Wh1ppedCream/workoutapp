@@ -23,6 +23,12 @@ class ContentRepository {
   final ContentManifestService _manifestService;
   final MediaCacheService _cacheService;
   static Future<ContentManifest>? _bundledExerciseManifestSync;
+  static Future<ContentEnvironmentConfig>? _bundledContentEnvironments;
+
+  Future<ContentEnvironmentConfig> loadContentEnvironments() {
+    return _bundledContentEnvironments ??=
+        _manifestService.loadBundledContentEnvironments();
+  }
 
   Future<ContentManifest> syncBundledExerciseMediaManifest() async {
     final inFlight = _bundledExerciseManifestSync;

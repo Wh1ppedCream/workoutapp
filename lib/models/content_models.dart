@@ -1,5 +1,88 @@
 import 'definition_models.dart';
 
+class ContentEnvironmentConfig {
+  final String defaultEnvironmentId;
+  final List<ContentEnvironment> environments;
+
+  const ContentEnvironmentConfig({
+    required this.defaultEnvironmentId,
+    required this.environments,
+  });
+
+  ContentEnvironment get defaultEnvironment {
+    return environments.firstWhere(
+      (environment) => environment.id == defaultEnvironmentId,
+      orElse:
+          () =>
+              environments.isNotEmpty
+                  ? environments.first
+                  : ContentEnvironment.empty,
+    );
+  }
+
+  ContentEnvironment? environmentById(String id) {
+    for (final environment in environments) {
+      if (environment.id == id) return environment;
+    }
+    return null;
+  }
+
+  factory ContentEnvironmentConfig.fromJson(Map<String, dynamic> json) {
+    final environments =
+        (json['environments'] as List? ?? const [])
+            .whereType<Map>()
+            .map(
+              (entry) =>
+                  ContentEnvironment.fromJson(Map<String, dynamic>.from(entry)),
+            )
+            .where((environment) => environment.id.isNotEmpty)
+            .toList();
+
+    return ContentEnvironmentConfig(
+      defaultEnvironmentId:
+          (json['defaultEnvironment'] as String?) ??
+          (environments.isEmpty ? '' : environments.first.id),
+      environments: environments,
+    );
+  }
+}
+
+class ContentEnvironment {
+  static const empty = ContentEnvironment(
+    id: '',
+    label: 'No environment',
+    exerciseMediaManifestUrl: '',
+  );
+
+  final String id;
+  final String label;
+  final String exerciseMediaManifestUrl;
+  final String description;
+  final bool isProduction;
+
+  const ContentEnvironment({
+    required this.id,
+    required this.label,
+    required this.exerciseMediaManifestUrl,
+    this.description = '',
+    this.isProduction = false,
+  });
+
+  bool get hasExerciseMediaManifestUrl =>
+      exerciseMediaManifestUrl.trim().isNotEmpty;
+
+  factory ContentEnvironment.fromJson(Map<String, dynamic> json) {
+    return ContentEnvironment(
+      id: (json['id'] as String?)?.trim() ?? '',
+      label: (json['label'] as String?)?.trim() ?? '',
+      exerciseMediaManifestUrl:
+          (json['exerciseMediaManifestUrl'] as String?)?.trim() ?? '',
+      description: (json['description'] as String?)?.trim() ?? '',
+      isProduction: json['isProduction'] == true,
+    );
+  }
+}
+
 /// Top-level manifest describing the shared cloud content version the app can
 /// sync into its local cache.
 class ContentManifest {

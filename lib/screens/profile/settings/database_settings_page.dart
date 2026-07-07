@@ -25,12 +25,15 @@ class DatabaseSettingsPage extends StatefulWidget {
 class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
   static const String _exerciseMediaManifestUrlKey =
       'content.exercise_media.remote_manifest_url';
+  static const String _exerciseMediaEnvironmentKey =
+      'content.exercise_media.environment';
 
   late final AppRepository _repo;
   late Future<DatabaseHealthSnapshot> _healthFuture;
   late Future<ContentCacheUsage> _contentCacheFuture;
   late Future<ContentManifestStatus?> _exerciseMediaManifestStatusFuture;
   late Future<String> _manifestUrlFuture;
+  late Future<ContentEnvironment> _selectedContentEnvironmentFuture;
   final _fileActionsTutorialKey = GlobalKey(
     debugLabel: 'database_file_actions',
   );
@@ -51,6 +54,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
     _exerciseMediaManifestStatusFuture = _repo.getContentManifestStatus(
       'exercise_media',
     );
+    _selectedContentEnvironmentFuture = _loadSelectedContentEnvironment();
     _manifestUrlFuture = _loadManifestUrl();
     _repoBound = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -70,6 +74,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
       _exerciseMediaManifestStatusFuture = _repo.getContentManifestStatus(
         'exercise_media',
       );
+      _selectedContentEnvironmentFuture = _loadSelectedContentEnvironment();
       _manifestUrlFuture = _loadManifestUrl();
     });
   }
@@ -402,9 +407,53 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
         '${_twoDigits(local.hour)}:${_twoDigits(local.minute)}';
   }
 
-  Future<String> _loadManifestUrl() async {
+  Future<String> _loadCustomManifestUrl() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_exerciseMediaManifestUrlKey) ?? '';
+  }
+
+  Future<ContentEnvironment> _loadSelectedContentEnvironment() async {
+    final config = await _repo.loadContentEnvironments();
+    final prefs = await SharedPreferences.getInstance();
+    final selectedId = prefs.getString(_exerciseMediaEnvironmentKey);
+    if (selectedId != null) {
+      final selected = config.environmentById(selectedId);
+      if (selected != null) return selected;
+    }
+    return config.defaultEnvironment;
+  }
+
+  Future<String> _loadManifestUrl() async {
+    final customUrl = (await _loadCustomManifestUrl()).trim();
+    if (customUrl.isNotEmpty) return customUrl;
+    final environment = await _loadSelectedContentEnvironment();
+    return environment.exerciseMediaManifestUrl;
+  }
+
+  Future<void> _saveSelectedContentEnvironment(String environmentId) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_exerciseMediaEnvironmentKey, environmentId);
+    await prefs.remove(_exerciseMediaManifestUrlKey);
+    if (!mounted) return;
+    _refreshContentStatus();
+  }
+
+  Future<void> _editContentEnvironment() async {
+    final config = await _repo.loadContentEnvironments();
+    final selected = await _loadSelectedContentEnvironment();
+    if (!mounted) return;
+
+    final result = await showDialog<String>(
+      context: context,
+      builder:
+          (_) => _ContentEnvironmentDialog(
+            config: config,
+            selectedEnvironmentId: selected.id,
+          ),
+    );
+
+    if (result == null || result == selected.id) return;
+    await _saveSelectedContentEnvironment(result);
   }
 
   Future<void> _saveManifestUrl(String value) async {
@@ -420,7 +469,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
   }
 
   Future<void> _editManifestUrl() async {
-    final currentUrl = await _loadManifestUrl();
+    final currentUrl = await _loadCustomManifestUrl();
     if (!mounted) return;
 
     final result = await showDialog<String>(
@@ -573,17 +622,45 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
                     final url = snapshot.data ?? '';
                     return ListTile(
                       leading: const Icon(Icons.cloud_outlined),
-                      title: const Text('Exercise Media Manifest'),
+                      title: const Text('Exercise Media Manifest URL'),
                       subtitle: Text(
-                        url.isEmpty ? 'No remote manifest URL set.' : url,
+                        url.isEmpty
+                            ? 'No remote manifest URL set for this environment.'
+                            : url,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                       trailing: IconButton(
-                        tooltip: 'Edit URL',
+                        tooltip: 'Override URL',
                         icon: const Icon(Icons.edit),
                         onPressed:
                             _contentActionRunning ? null : _editManifestUrl,
+                      ),
+                    );
+                  },
+                ),
+                FutureBuilder<ContentEnvironment>(
+                  future: _selectedContentEnvironmentFuture,
+                  builder: (context, snapshot) {
+                    final environment = snapshot.data;
+                    return ListTile(
+                      leading: const Icon(Icons.public_outlined),
+                      title: const Text('Content Environment'),
+                      subtitle: Text(
+                        environment == null
+                            ? 'Loading...'
+                            : '${environment.label}${environment.isProduction ? ' (production)' : ''}'
+                                '${environment.description.isEmpty ? '' : '\n${environment.description}'}',
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      trailing: IconButton(
+                        tooltip: 'Change environment',
+                        icon: const Icon(Icons.swap_horiz),
+                        onPressed:
+                            _contentActionRunning
+                                ? null
+                                : _editContentEnvironment,
                       ),
                     );
                   },
@@ -973,6 +1050,74 @@ class _ManifestUrlDialogState extends State<_ManifestUrlDialog> {
         ElevatedButton(
           onPressed: () => Navigator.of(context).pop(_controller.text.trim()),
           child: const Text('Save'),
+        ),
+      ],
+    );
+  }
+}
+
+class _ContentEnvironmentDialog extends StatefulWidget {
+  final ContentEnvironmentConfig config;
+  final String selectedEnvironmentId;
+
+  const _ContentEnvironmentDialog({
+    required this.config,
+    required this.selectedEnvironmentId,
+  });
+
+  @override
+  State<_ContentEnvironmentDialog> createState() =>
+      _ContentEnvironmentDialogState();
+}
+
+class _ContentEnvironmentDialogState extends State<_ContentEnvironmentDialog> {
+  late String _selectedEnvironmentId;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedEnvironmentId = widget.selectedEnvironmentId;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Content Environment'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children:
+              widget.config.environments.map((environment) {
+                return RadioListTile<String>(
+                  value: environment.id,
+                  groupValue: _selectedEnvironmentId,
+                  onChanged: (value) {
+                    if (value == null) return;
+                    setState(() => _selectedEnvironmentId = value);
+                  },
+                  title: Text(
+                    '${environment.label}${environment.isProduction ? ' (production)' : ''}',
+                  ),
+                  subtitle: Text(
+                    [
+                      if (environment.description.isNotEmpty)
+                        environment.description,
+                      if (environment.exerciseMediaManifestUrl.isEmpty)
+                        'No manifest URL configured yet.',
+                    ].join('\n'),
+                  ),
+                );
+              }).toList(),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.of(context).pop(_selectedEnvironmentId),
+          child: const Text('Use Environment'),
         ),
       ],
     );
