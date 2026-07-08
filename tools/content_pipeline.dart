@@ -748,6 +748,7 @@ Common options:
   --require-hashes          Require each asset to include or generate sha256.
   --require-licenses        Require each asset to include licenseId.
   --require-dimensions      Require each asset to include width and height.
+  --quality-preset <name>   Apply Tonos media gates: exercise-thumbnail or exercise-animation.
   --min-width <number>      Warn if asset width is below this pixel count.
   --min-height <number>     Warn if asset height is below this pixel count.
   --max-bytes <number>      Warn if asset size exceeds this byte count.
@@ -775,6 +776,7 @@ Release-check options:
   --require-hashes          Require each asset to include or generate sha256.
   --require-licenses        Require each asset to include licenseId.
   --require-dimensions      Require width and height metadata.
+  --quality-preset <name>   Apply Tonos media gates: exercise-thumbnail or exercise-animation.
   --min-width <number>      Optional minimum width in pixels.
   --min-height <number>     Optional minimum height in pixels.
   --max-bytes <number>      Optional maximum asset size in bytes.
@@ -873,12 +875,14 @@ class _CliOptions {
 }
 
 class _MediaQualityOptions {
+  final String? qualityPreset;
   final bool requireDimensions;
   final int? minWidth;
   final int? minHeight;
   final int? maxBytes;
 
   const _MediaQualityOptions({
+    this.qualityPreset,
     this.requireDimensions = false,
     this.minWidth,
     this.minHeight,
@@ -886,9 +890,10 @@ class _MediaQualityOptions {
   });
 
   factory _MediaQualityOptions.fromCli(_CliOptions options) {
-    final minWidth = options.intValue('min-width');
-    final minHeight = options.intValue('min-height');
-    final maxBytes = options.intValue('max-bytes');
+    final preset = _MediaQualityPreset.fromCli(options.value('quality-preset'));
+    final minWidth = options.intValue('min-width') ?? preset?.minWidth;
+    final minHeight = options.intValue('min-height') ?? preset?.minHeight;
+    final maxBytes = options.intValue('max-bytes') ?? preset?.maxBytes;
 
     if (minWidth != null && minWidth < 1) {
       _fail('--min-width must be 1 or greater.');
@@ -901,7 +906,10 @@ class _MediaQualityOptions {
     }
 
     return _MediaQualityOptions(
-      requireDimensions: options.flag('require-dimensions'),
+      qualityPreset: preset?.name,
+      requireDimensions:
+          options.flag('require-dimensions') ||
+          preset?.requireDimensions == true,
       minWidth: minWidth,
       minHeight: minHeight,
       maxBytes: maxBytes,
@@ -912,11 +920,56 @@ class _MediaQualityOptions {
 
   Map<String, dynamic> toJson() {
     return {
+      if (qualityPreset != null) 'qualityPreset': qualityPreset,
       'requireDimensions': requireDimensions,
       if (minWidth != null) 'minWidth': minWidth,
       if (minHeight != null) 'minHeight': minHeight,
       if (maxBytes != null) 'maxBytes': maxBytes,
     };
+  }
+}
+
+class _MediaQualityPreset {
+  final String name;
+  final bool requireDimensions;
+  final int minWidth;
+  final int minHeight;
+  final int maxBytes;
+
+  const _MediaQualityPreset({
+    required this.name,
+    required this.requireDimensions,
+    required this.minWidth,
+    required this.minHeight,
+    required this.maxBytes,
+  });
+
+  static _MediaQualityPreset? fromCli(String? rawValue) {
+    final value = rawValue?.trim().toLowerCase();
+    if (value == null || value.isEmpty) return null;
+    switch (value) {
+      case 'exercise-thumbnail':
+        return const _MediaQualityPreset(
+          name: 'exercise-thumbnail',
+          requireDimensions: true,
+          minWidth: 512,
+          minHeight: 512,
+          maxBytes: 300000,
+        );
+      case 'exercise-animation':
+        return const _MediaQualityPreset(
+          name: 'exercise-animation',
+          requireDimensions: true,
+          minWidth: 720,
+          minHeight: 720,
+          maxBytes: 4000000,
+        );
+      default:
+        _fail(
+          'Unknown --quality-preset "$rawValue". Use exercise-thumbnail or '
+          'exercise-animation.',
+        );
+    }
   }
 }
 

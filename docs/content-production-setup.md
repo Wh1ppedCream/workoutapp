@@ -72,10 +72,7 @@ dart run tools/content_pipeline.dart release-check-exercise-media `
   --coverage-output build/content/exercise_media_release_coverage.json `
   --release-report build/content/exercise_media_release_report.json `
   --require-licenses `
-  --require-dimensions `
-  --min-width 256 `
-  --min-height 256 `
-  --max-bytes 250000
+  --quality-preset exercise-thumbnail
 ```
 
 5. Upload media files first, then upload the manifest last.

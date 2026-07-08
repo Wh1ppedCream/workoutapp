@@ -79,10 +79,12 @@ Outside-code dependencies:
 - [x] Auto-read dimensions from local PNG, JPEG, GIF, and WebP files.
 - [x] Document asset standards.
 
-Product/content decisions still needed:
+Product/content decisions:
 
-- [ ] Final thumbnail dimensions and aspect ratio.
-- [ ] Final animation/video format, dimensions, duration, and size limits.
+- [x] Final thumbnail dimensions and aspect ratio: `512 x 512`, square `1:1`,
+  WebP preferred, PNG allowed, max `300 KB`.
+- [x] Final animation/video format, dimensions, duration, and size limits:
+  MP4 H.264, no audio, `720 x 720`, square `1:1`, `5-8 seconds`, max `4 MB`.
 
 ## Phase 9 - Production Hosting
 
