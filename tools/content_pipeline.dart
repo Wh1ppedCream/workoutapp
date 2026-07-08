@@ -15,8 +15,20 @@ Future<void> main(List<String> args) async {
       case 'validate-exercise-media':
         await _validateExerciseMediaManifest(options);
         break;
+      case 'release-check-exercise-media':
+        await _releaseCheckExerciseMedia(options);
+        break;
       case 'diff-exercise-media':
         await _diffExerciseMediaManifests(options);
+        break;
+      case 'coverage-exercise-media':
+        await _reportExerciseMediaCoverage(options);
+        break;
+      case 'scaffold-exercise-media':
+        await _scaffoldExerciseMediaSource(options);
+        break;
+      case 'merge-exercise-media-source':
+        await _mergeExerciseMediaSource(options);
         break;
       case 'help':
       case '--help':
@@ -127,6 +139,74 @@ Future<void> _validateExerciseMediaManifest(_CliOptions options) async {
   );
 }
 
+Future<void> _releaseCheckExerciseMedia(_CliOptions options) async {
+  final sourcePath = options.requiredValue('source');
+  final exerciseDefsPath =
+      options.value('exercise-defs') ?? 'assets/exercises.json';
+  final source = await _loadJsonMap(sourcePath);
+  final exerciseIndex = await _ExerciseIndex.load(exerciseDefsPath);
+  final baseUrl = options.value('base-url') ?? source.stringValue('baseUrl');
+  final version =
+      options.intValue('version') ?? source.intValue('version') ?? 1;
+  final minCoverage = options.doubleValue('min-coverage');
+
+  if (minCoverage != null && (minCoverage < 0 || minCoverage > 100)) {
+    _fail('--min-coverage must be between 0 and 100.');
+  }
+
+  final result =
+      await _ExerciseMediaManifestBuilder(
+        source: source,
+        exerciseIndex: exerciseIndex,
+        baseUrl: baseUrl,
+        namespace: source.stringValue('namespace') ?? 'exercise_media',
+        version: version,
+        checkRemote: true,
+        requireHashes: options.flag('require-hashes'),
+        requireLicenses: options.flag('require-licenses'),
+      ).build();
+
+  _printMessages(result.messages);
+  if (result.hasErrors || result.hasWarnings) {
+    _fail(
+      'Release check failed. Fix all errors/warnings before publishing this '
+      'manifest.',
+    );
+  }
+
+  final coverage =
+      _ExerciseMediaCoverage(
+        exerciseIndex: exerciseIndex,
+        manifest: result.manifest,
+      ).buildReport();
+  final coveragePercent = coverage['coveragePercent'] as double;
+  if (minCoverage != null && coveragePercent < minCoverage) {
+    _fail(
+      'Release check failed. Coverage is $coveragePercent%, below '
+      '--min-coverage $minCoverage%.',
+    );
+  }
+
+  final outputPath = options.value('output');
+  if (outputPath != null) {
+    await _writeJsonFile(outputPath, result.manifest);
+    stdout.writeln('Wrote release-ready manifest to $outputPath.');
+  }
+
+  final coverageOutputPath = options.value('coverage-output');
+  if (coverageOutputPath != null) {
+    await _writeJsonFile(coverageOutputPath, coverage);
+    stdout.writeln('Wrote release coverage report to $coverageOutputPath.');
+  }
+
+  stdout.writeln(
+    'Release check passed for ${result.assetCount} assets across '
+    '${result.exerciseCount} exercises '
+    '(${coverage['coveredExerciseCount']}/${coverage['totalExerciseCount']} '
+    'covered, $coveragePercent%).',
+  );
+}
+
 Future<void> _diffExerciseMediaManifests(_CliOptions options) async {
   final oldManifest = await _loadJsonMapFromPathOrUrl(
     options.requiredValue('old'),
@@ -170,6 +250,179 @@ Future<void> _diffExerciseMediaManifests(_CliOptions options) async {
   }
 }
 
+Future<void> _reportExerciseMediaCoverage(_CliOptions options) async {
+  final exerciseDefsPath =
+      options.value('exercise-defs') ?? 'assets/exercises.json';
+  final exerciseIndex = await _ExerciseIndex.load(exerciseDefsPath);
+  final input = (await _loadCoverageInput(options))!;
+  final mediaType = options.value('media-type')?.trim().toLowerCase();
+  final report =
+      _ExerciseMediaCoverage(
+        exerciseIndex: exerciseIndex,
+        manifest: input,
+        mediaType: mediaType,
+      ).buildReport();
+
+  stdout.writeln(
+    'Exercise media coverage: '
+    '${report['coveredExerciseCount']}/${report['totalExerciseCount']} '
+    'covered (${report['coveragePercent']}%).',
+  );
+  stdout.writeln('Missing exercises: ${report['missingExerciseCount']}');
+
+  final outputPath = options.value('output');
+  if (outputPath != null) {
+    await _writeJsonFile(outputPath, report);
+    stdout.writeln('Wrote coverage report to $outputPath.');
+  }
+
+  final missingOutputPath = options.value('missing-output');
+  if (missingOutputPath != null) {
+    await _writeJsonFile(missingOutputPath, report['missingExercises']);
+    stdout.writeln('Wrote missing exercise list to $missingOutputPath.');
+  }
+}
+
+Future<void> _scaffoldExerciseMediaSource(_CliOptions options) async {
+  final exerciseDefsPath =
+      options.value('exercise-defs') ?? 'assets/exercises.json';
+  final exerciseIndex = await _ExerciseIndex.load(exerciseDefsPath);
+  final existing = await _loadCoverageInput(options, allowEmpty: true);
+  final coveredIds =
+      existing == null
+          ? <int>{}
+          : _ExerciseMediaCoverage(
+            exerciseIndex: exerciseIndex,
+            manifest: existing,
+          ).coveredExerciseIds();
+  final outputPath = options.requiredValue('output');
+  final version = options.intValue('version') ?? 1;
+  final assetVersion = options.intValue('asset-version') ?? 1;
+  final limit = options.intValue('limit');
+  final mediaType = (options.value('media-type') ?? 'thumbnail').trim();
+  final fileName = (options.value('file-name') ?? 'thumb.png').trim();
+  final licenseId = options.value('license-id');
+  final baseUrl = options.value('base-url') ?? 'https://content.example.com';
+
+  if (version < 1) {
+    _fail('--version must be 1 or greater.');
+  }
+  if (assetVersion < 1) {
+    _fail('--asset-version must be 1 or greater.');
+  }
+  if (limit != null && limit < 1) {
+    _fail('--limit must be 1 or greater.');
+  }
+  if (mediaType.isEmpty) {
+    _fail('--media-type cannot be empty.');
+  }
+  if (fileName.isEmpty) {
+    _fail('--file-name cannot be empty.');
+  }
+
+  final missing =
+      exerciseIndex.all
+          .where((exercise) => !coveredIds.contains(exercise.id))
+          .take(limit ?? exerciseIndex.all.length)
+          .toList();
+
+  final source = {
+    'namespace': 'exercise_media',
+    'version': version,
+    'baseUrl': baseUrl,
+    'exercises':
+        missing.map((exercise) {
+          final slug = _slugify(exercise.name);
+          final asset = <String, dynamic>{
+            'assetId': '${slug}_${mediaType}_v$assetVersion',
+            'type': mediaType,
+            'path': 'exercises/$slug/v$assetVersion/$fileName',
+            'title': '${exercise.name} ${_mediaTypeTitle(mediaType)}',
+            'sortOrder': 0,
+            'version': assetVersion,
+          };
+          if (licenseId != null && licenseId.trim().isNotEmpty) {
+            asset['licenseId'] = licenseId.trim();
+          }
+
+          return {
+            'exerciseId': exercise.id,
+            'exerciseName': exercise.name,
+            'slug': slug,
+            'assets': [asset],
+          };
+        }).toList(),
+  };
+
+  await _writeJsonFile(outputPath, source);
+  stdout.writeln(
+    'Scaffolded ${missing.length} missing exercise media entries to $outputPath.',
+  );
+}
+
+Future<void> _mergeExerciseMediaSource(_CliOptions options) async {
+  final base = await _loadJsonMap(options.requiredValue('base'));
+  final batch = await _loadJsonMap(options.requiredValue('batch'));
+  final outputPath = options.requiredValue('output');
+  final replaceAssets = options.flag('replace-assets');
+  final bumpVersion = options.flag('bump-version');
+  final namespace =
+      base.stringValue('namespace') ??
+      batch.stringValue('namespace') ??
+      'exercise_media';
+  final baseUrl =
+      options.value('base-url') ??
+      base.stringValue('baseUrl') ??
+      batch.stringValue('baseUrl');
+  final version =
+      options.intValue('version') ??
+      (bumpVersion
+          ? (base.intValue('version') ?? 1) + 1
+          : _maxInt(base.intValue('version'), batch.intValue('version')) ?? 1);
+
+  if (namespace != 'exercise_media') {
+    _fail('Merged exercise media source namespace must be exercise_media.');
+  }
+  if (baseUrl == null || baseUrl.trim().isEmpty) {
+    _fail('Merged exercise media source needs baseUrl or --base-url.');
+  }
+  if (version < 1) {
+    _fail('Merged exercise media source version must be 1 or greater.');
+  }
+
+  final merged = <int, Map<String, dynamic>>{};
+  _mergeSourceExercises(
+    target: merged,
+    source: base,
+    label: 'base',
+    replaceAssets: replaceAssets,
+  );
+  _mergeSourceExercises(
+    target: merged,
+    source: batch,
+    label: 'batch',
+    replaceAssets: replaceAssets,
+  );
+
+  final outputExercises = (merged.keys.toList()..sort())
+      .map((id) => merged[id]!)
+      .toList(growable: false);
+  await _writeJsonFile(outputPath, {
+    'namespace': namespace,
+    'version': version,
+    'baseUrl': baseUrl,
+    'exercises': outputExercises,
+  });
+
+  stdout.writeln(
+    'Merged ${batch.listValue('exercises').length} batch exercise entries into '
+    '${base.listValue('exercises').length} base entries.',
+  );
+  stdout.writeln(
+    'Wrote ${outputExercises.length} exercise media entries to $outputPath.',
+  );
+}
+
 Future<Map<String, dynamic>> _loadJsonMap(String path) async {
   final file = File(path);
   if (!await file.exists()) {
@@ -206,6 +459,150 @@ Future<Map<String, dynamic>> _loadJsonMapFromPathOrUrl(String value) async {
   }
 
   return _loadJsonMap(value);
+}
+
+Future<Map<String, dynamic>?> _loadCoverageInput(
+  _CliOptions options, {
+  bool allowEmpty = false,
+}) async {
+  final manifest = options.value('manifest');
+  final source = options.value('source');
+
+  if (manifest != null && source != null) {
+    _fail('Use either --manifest or --source, not both.');
+  }
+  if (manifest != null) return _loadJsonMapFromPathOrUrl(manifest);
+  if (source != null) return _loadJsonMap(source);
+  if (allowEmpty) return null;
+
+  _fail('Missing --manifest or --source.');
+}
+
+Future<void> _writeJsonFile(String path, Object data) async {
+  final file = File(path);
+  await file.parent.create(recursive: true);
+  const encoder = JsonEncoder.withIndent('  ');
+  await file.writeAsString('${encoder.convert(data)}\n');
+}
+
+void _mergeSourceExercises({
+  required Map<int, Map<String, dynamic>> target,
+  required Map<String, dynamic> source,
+  required String label,
+  required bool replaceAssets,
+}) {
+  for (final rawExercise in source.listValue('exercises')) {
+    if (rawExercise is! Map) {
+      _fail('Skipping $label exercise entry because it is not an object.');
+    }
+
+    final incoming = Map<String, dynamic>.from(rawExercise);
+    final id = incoming.intValue('exerciseId');
+    if (id == null) {
+      _fail('$label exercise entry is missing exerciseId.');
+    }
+
+    final existing = target[id];
+    if (existing == null) {
+      target[id] = _copySourceExercise(incoming, '$label exerciseId $id');
+      continue;
+    }
+
+    final incomingName = incoming.stringValue('exerciseName');
+    final existingName = existing.stringValue('exerciseName');
+    if (incomingName != null &&
+        existingName != null &&
+        incomingName != existingName) {
+      _fail(
+        'Cannot merge $label exerciseId $id because names differ: '
+        '"$existingName" vs "$incomingName".',
+      );
+    }
+    if (existingName == null && incomingName != null) {
+      existing['exerciseName'] = incomingName;
+    }
+
+    final incomingSlug = incoming.stringValue('slug');
+    if (existing.stringValue('slug') == null && incomingSlug != null) {
+      existing['slug'] = incomingSlug;
+    }
+
+    final existingAssets =
+        (existing['assets'] as List).cast<Map<String, dynamic>>();
+    final existingAssetIds = <String, int>{};
+    for (var i = 0; i < existingAssets.length; i++) {
+      final assetId = existingAssets[i].stringValue('assetId');
+      if (assetId == null) {
+        _fail('Existing exerciseId $id has an asset without assetId.');
+      }
+      existingAssetIds[assetId] = i;
+    }
+
+    final incomingAssets = _copySourceAssets(incoming, '$label exerciseId $id');
+    for (final asset in incomingAssets) {
+      final assetId = asset.stringValue('assetId');
+      if (assetId == null) {
+        _fail('$label exerciseId $id has an asset without assetId.');
+      }
+      final existingIndex = existingAssetIds[assetId];
+      if (existingIndex == null) {
+        existingAssetIds[assetId] = existingAssets.length;
+        existingAssets.add(asset);
+      } else if (replaceAssets) {
+        existingAssets[existingIndex] = asset;
+      } else {
+        _fail(
+          'Duplicate assetId "$assetId" while merging $label exerciseId $id. '
+          'Use --replace-assets to replace existing assets.',
+        );
+      }
+    }
+  }
+}
+
+Map<String, dynamic> _copySourceExercise(
+  Map<String, dynamic> exercise,
+  String label,
+) {
+  final output = <String, dynamic>{
+    'exerciseId': exercise.intValue('exerciseId'),
+    if (exercise.stringValue('exerciseName') != null)
+      'exerciseName': exercise.stringValue('exerciseName'),
+    if (exercise.stringValue('slug') != null)
+      'slug': exercise.stringValue('slug'),
+    'assets': _copySourceAssets(exercise, label),
+  };
+  return output;
+}
+
+List<Map<String, dynamic>> _copySourceAssets(
+  Map<String, dynamic> exercise,
+  String label,
+) {
+  final assets = <Map<String, dynamic>>[];
+  for (final rawAsset in exercise.listValue('assets')) {
+    if (rawAsset is! Map) {
+      _fail('$label has an asset entry that is not an object.');
+    }
+    final asset = Map<String, dynamic>.from(rawAsset);
+    if (asset.stringValue('assetId') == null) {
+      _fail('$label has an asset without assetId.');
+    }
+    assets.add(asset);
+  }
+  if (assets.isEmpty) {
+    _fail('$label has no assets.');
+  }
+  assets.sort((a, b) {
+    final order = (a.intValue('sortOrder') ?? 0).compareTo(
+      b.intValue('sortOrder') ?? 0,
+    );
+    if (order != 0) return order;
+    return (a.stringValue('assetId') ?? '').compareTo(
+      b.stringValue('assetId') ?? '',
+    );
+  });
+  return assets;
 }
 
 void _printMessages(List<_PipelineMessage> messages) {
@@ -280,7 +677,13 @@ Tonos content pipeline
 Commands:
   build-exercise-media      Build an app-ready exercise media manifest.
   validate-exercise-media   Validate a source file without writing output.
+  release-check-exercise-media
+                            Remote-check and gate a manifest before publishing.
   diff-exercise-media       Compare two generated exercise media manifests.
+  coverage-exercise-media   Report exercise media coverage.
+  scaffold-exercise-media   Scaffold source JSON entries for missing exercises.
+  merge-exercise-media-source
+                            Merge a validated batch source into a base source.
 
 Common options:
   --source <path>           Source JSON describing exercise media.
@@ -302,6 +705,36 @@ Diff-only options:
   --old <path-or-url>       Previous app-ready manifest.
   --new <path-or-url>       New app-ready manifest.
   --report <path>           Optional JSON diff report path.
+
+Release-check options:
+  --source <path>           Source JSON to build and remote-check.
+  --output <path>           Optional release-ready manifest path.
+  --coverage-output <path>  Optional coverage report path.
+  --min-coverage <number>   Optional minimum coverage percent, 0-100.
+  --require-hashes          Require each asset to include or generate sha256.
+  --require-licenses        Require each asset to include licenseId.
+
+Coverage options:
+  --manifest <path-or-url>  App-ready manifest to inspect.
+  --source <path>           Source JSON to inspect.
+  --output <path>           Optional coverage report path.
+  --missing-output <path>   Optional missing exercise list path.
+  --media-type <type>       Optional coverage filter, such as thumbnail or video.
+
+Scaffold options:
+  --output <path>           New source JSON path.
+  --limit <number>          Optional number of missing exercises to scaffold.
+  --base-url <url>          Base URL placeholder for generated paths.
+  --asset-version <number>  Asset version for generated paths. Defaults to 1.
+  --file-name <name>        File name for generated paths. Defaults to thumb.png.
+  --license-id <id>         Optional licenseId to apply to scaffolded assets.
+
+Merge options:
+  --base <path>             Existing source JSON.
+  --batch <path>            Batch source JSON to merge.
+  --output <path>           Merged source JSON path.
+  --bump-version            Increase the base source version by 1.
+  --replace-assets          Replace duplicate assetIds instead of failing.
 
 Example:
   dart run tools/content_pipeline.dart build-exercise-media --source tools/content_pipeline/exercise_media_source.example.json --output build/content/exercise_media_manifest.json --check-remote
@@ -360,6 +793,14 @@ class _CliOptions {
     if (raw == null) return null;
     final parsed = int.tryParse(raw);
     if (parsed == null) _fail('Expected --$key to be an integer.');
+    return parsed;
+  }
+
+  double? doubleValue(String key) {
+    final raw = value(key);
+    if (raw == null) return null;
+    final parsed = double.tryParse(raw);
+    if (parsed == null) _fail('Expected --$key to be a number.');
     return parsed;
   }
 
@@ -804,6 +1245,97 @@ class _ManifestDiff {
   }
 }
 
+class _ExerciseMediaCoverage {
+  final _ExerciseIndex exerciseIndex;
+  final Map<String, dynamic> manifest;
+  final String? mediaType;
+
+  const _ExerciseMediaCoverage({
+    required this.exerciseIndex,
+    required this.manifest,
+    this.mediaType,
+  });
+
+  Map<String, dynamic> buildReport() {
+    final knownIds = exerciseIndex.all.map((exercise) => exercise.id).toSet();
+    final coveredIds = coveredExerciseIds().intersection(knownIds);
+    final total = exerciseIndex.all.length;
+    final missing =
+        exerciseIndex.all
+            .where((exercise) => !coveredIds.contains(exercise.id))
+            .map(_exerciseReportRow)
+            .toList();
+    final covered =
+        exerciseIndex.all
+            .where((exercise) => coveredIds.contains(exercise.id))
+            .map(_exerciseReportRow)
+            .toList();
+    final mediaTypeCounts = _mediaTypeCounts();
+    final percent = total == 0 ? 0.0 : coveredIds.length * 100 / total;
+
+    return {
+      'totalExerciseCount': total,
+      'coveredExerciseCount': coveredIds.length,
+      'missingExerciseCount': missing.length,
+      'coveragePercent': double.parse(percent.toStringAsFixed(1)),
+      'mediaType': mediaType,
+      'mediaTypeCounts': mediaTypeCounts,
+      'coveredExercises': covered,
+      'missingExercises': missing,
+    };
+  }
+
+  Set<int> coveredExerciseIds() {
+    final ids = <int>{};
+    for (final rawExercise in manifest.listValue('exercises')) {
+      if (rawExercise is! Map) continue;
+      final exercise = Map<String, dynamic>.from(rawExercise);
+      final exerciseId = exercise.intValue('exerciseId');
+      if (exerciseId == null) continue;
+
+      final assets =
+          exercise
+              .listValue('assets')
+              .whereType<Map>()
+              .map((asset) => Map<String, dynamic>.from(asset))
+              .where(_assetMatches)
+              .toList();
+      if (assets.isNotEmpty) {
+        ids.add(exerciseId);
+      }
+    }
+    return ids;
+  }
+
+  bool _assetMatches(Map<String, dynamic> asset) {
+    if (mediaType == null || mediaType!.isEmpty) return true;
+    return asset.stringValue('type')?.toLowerCase() == mediaType;
+  }
+
+  Map<String, int> _mediaTypeCounts() {
+    final counts = <String, int>{};
+    for (final rawExercise in manifest.listValue('exercises')) {
+      if (rawExercise is! Map) continue;
+      final exercise = Map<String, dynamic>.from(rawExercise);
+      for (final rawAsset in exercise.listValue('assets')) {
+        if (rawAsset is! Map) continue;
+        final asset = Map<String, dynamic>.from(rawAsset);
+        final type = asset.stringValue('type')?.toLowerCase() ?? 'unknown';
+        counts[type] = (counts[type] ?? 0) + 1;
+      }
+    }
+    return counts;
+  }
+
+  Map<String, dynamic> _exerciseReportRow(_ResolvedExercise exercise) {
+    return {
+      'exerciseId': exercise.id,
+      'exerciseName': exercise.name,
+      'slug': _slugify(exercise.name),
+    };
+  }
+}
+
 class _ExerciseIndex {
   final Map<int, _ResolvedExercise> _byId;
   final Map<String, _ResolvedExercise> _byName;
@@ -832,6 +1364,9 @@ class _ExerciseIndex {
 
     return _ExerciseIndex(byId, byName);
   }
+
+  List<_ResolvedExercise> get all =>
+      (_byId.keys.toList()..sort()).map((id) => _byId[id]!).toList();
 
   _ResolvedExercise? byId(int id) => _byId[id];
 
@@ -943,6 +1478,25 @@ String _slugify(String value) {
   }
 
   return buffer.toString().replaceAll(RegExp(r'^_+|_+$'), '');
+}
+
+String _mediaTypeTitle(String mediaType) {
+  switch (mediaType.toLowerCase()) {
+    case 'thumbnail':
+      return 'thumbnail';
+    case 'video':
+      return 'video';
+    case 'animation':
+      return 'animation';
+    default:
+      return 'media';
+  }
+}
+
+int? _maxInt(int? a, int? b) {
+  if (a == null) return b;
+  if (b == null) return a;
+  return a > b ? a : b;
 }
 
 String _normalizeName(String value) => value.trim().toLowerCase();

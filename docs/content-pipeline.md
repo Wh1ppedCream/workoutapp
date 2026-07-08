@@ -119,6 +119,34 @@ dart run tools/content_pipeline.dart validate-exercise-media `
   --strict
 ```
 
+## Release Check Before Publishing
+
+Before uploading a manifest that users will sync, run the release check. This
+command always checks every referenced media URL remotely and fails on any
+warning or error, so missing R2 objects cannot be promoted accidentally:
+
+```powershell
+dart run tools/content_pipeline.dart release-check-exercise-media `
+  --source tools/content_pipeline/exercise_media_source.example.json `
+  --output build/content/exercise_media_manifest.release.json `
+  --coverage-output build/content/exercise_media_release_coverage.json
+```
+
+Optional stricter gates can be layered in as the media library matures:
+
+```powershell
+dart run tools/content_pipeline.dart release-check-exercise-media `
+  --source tools/content_pipeline/exercise_media_source.example.json `
+  --output build/content/exercise_media_manifest.release.json `
+  --coverage-output build/content/exercise_media_release_coverage.json `
+  --require-licenses `
+  --min-coverage 25
+```
+
+Use `--min-coverage` only when intentionally enforcing a rollout target. Partial
+coverage is allowed by default so exercises without cloud media can keep using
+the app's body heatmap fallback.
+
 ## Compare Manifest Versions
 
 Before replacing the live manifest, compare the current version with the newly
@@ -133,6 +161,95 @@ dart run tools/content_pipeline.dart diff-exercise-media `
 
 This reports added, removed, changed, and unchanged assets. Use the JSON report
 as a quick audit artifact before uploading to production.
+
+## Track Exercise Media Coverage
+
+As the exercise library grows, use the coverage command to see how many bundled
+exercises have media attached:
+
+```powershell
+dart run tools/content_pipeline.dart coverage-exercise-media `
+  --source tools/content_pipeline/exercise_media_source.example.json `
+  --output build/content/exercise_media_coverage.json `
+  --missing-output build/content/exercise_media_missing.json
+```
+
+Use `--manifest <path-or-url>` instead of `--source` when checking an app-ready
+manifest that is already uploaded:
+
+```powershell
+dart run tools/content_pipeline.dart coverage-exercise-media `
+  --manifest https://pub-7eb72a1a315f4da3b30100ff6e694651.r2.dev/manifests/exercise_media_manifest.json `
+  --media-type thumbnail
+```
+
+The report includes total exercises, covered exercises, missing exercises,
+coverage percent, media-type counts, and JSON lists for covered/missing rows.
+
+## Scaffold The Next Media Batch
+
+To prepare placeholder source entries for the next batch of missing exercise
+media, run:
+
+```powershell
+dart run tools/content_pipeline.dart scaffold-exercise-media `
+  --source tools/content_pipeline/exercise_media_source.example.json `
+  --output build/content/exercise_media_missing_source.json `
+  --limit 10 `
+  --base-url https://pub-7eb72a1a315f4da3b30100ff6e694651.r2.dev `
+  --license-id tonos_original
+```
+
+This writes source JSON entries for missing exercises only. The generated paths
+follow this pattern:
+
+```text
+exercises/<exercise_slug>/v1/thumb.png
+```
+
+After replacing placeholders with real uploaded files, validate without remote
+checks first:
+
+```powershell
+dart run tools/content_pipeline.dart validate-exercise-media `
+  --source build/content/exercise_media_missing_source.json `
+  --strict
+```
+
+Only add `--check-remote` after the referenced objects have been uploaded.
+
+The first Phase 7 batch checklist lives in
+`docs/exercise-media-batch-001.md`.
+
+## Merge A Completed Batch
+
+After the scaffolded media files have been created, uploaded, and validated with
+remote checks, merge the completed batch into the canonical source file:
+
+```powershell
+dart run tools/content_pipeline.dart merge-exercise-media-source `
+  --base tools/content_pipeline/exercise_media_source.example.json `
+  --batch build/content/exercise_media_missing_source.json `
+  --output build/content/exercise_media_source.merged.json `
+  --bump-version
+```
+
+Then build and diff the merged manifest before replacing the live manifest:
+
+```powershell
+dart run tools/content_pipeline.dart release-check-exercise-media `
+  --source build/content/exercise_media_source.merged.json `
+  --output build/content/exercise_media_manifest.json `
+  --coverage-output build/content/exercise_media_release_coverage.json
+
+dart run tools/content_pipeline.dart diff-exercise-media `
+  --old https://pub-7eb72a1a315f4da3b30100ff6e694651.r2.dev/manifests/exercise_media_manifest.json `
+  --new build/content/exercise_media_manifest.json `
+  --report build/content/exercise_media_diff.json
+```
+
+If the diff looks right, replace the canonical source file with the merged
+source, upload the manifest, and sync Cloud Content in the app.
 
 ## Source Schema
 
