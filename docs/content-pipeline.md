@@ -132,7 +132,8 @@ warning or error, so missing R2 objects cannot be promoted accidentally:
 dart run tools/content_pipeline.dart release-check-exercise-media `
   --source tools/content_pipeline/exercise_media_source.example.json `
   --output build/content/exercise_media_manifest.release.json `
-  --coverage-output build/content/exercise_media_release_coverage.json
+  --coverage-output build/content/exercise_media_release_coverage.json `
+  --release-report build/content/exercise_media_release_report.json
 ```
 
 Optional stricter gates can be layered in as the media library matures:
@@ -142,6 +143,7 @@ dart run tools/content_pipeline.dart release-check-exercise-media `
   --source tools/content_pipeline/exercise_media_source.example.json `
   --output build/content/exercise_media_manifest.release.json `
   --coverage-output build/content/exercise_media_release_coverage.json `
+  --release-report build/content/exercise_media_release_report.json `
   --require-licenses `
   --require-dimensions `
   --min-width 256 `
@@ -247,7 +249,10 @@ Then build and diff the merged manifest before replacing the live manifest:
 dart run tools/content_pipeline.dart release-check-exercise-media `
   --source build/content/exercise_media_source.merged.json `
   --output build/content/exercise_media_manifest.json `
-  --coverage-output build/content/exercise_media_release_coverage.json
+  --coverage-output build/content/exercise_media_release_coverage.json `
+  --release-report build/content/exercise_media_release_report.json `
+  --upload-script build/content/upload_exercise_media_release.ps1 `
+  --bucket tonos-public-content-dev
 
 dart run tools/content_pipeline.dart diff-exercise-media `
   --old https://pub-7eb72a1a315f4da3b30100ff6e694651.r2.dev/manifests/exercise_media_manifest.json `

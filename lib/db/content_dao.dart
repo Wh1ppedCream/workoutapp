@@ -97,6 +97,8 @@ class ContentDao {
     ContentManifest manifest,
   ) async {
     final now = DateTime.now().toUtc().toIso8601String();
+    final activeAssetIds = <String>{};
+    final activeRemoteUrls = <String>{};
 
     await db.transaction((txn) async {
       await txn.insert('content_manifest', {
@@ -112,6 +114,12 @@ class ContentDao {
             exerciseDefId: entry.exerciseId,
             sortOrder: i,
           );
+          if (asset.assetId?.isNotEmpty == true) {
+            activeAssetIds.add(asset.assetId!);
+          } else {
+            activeRemoteUrls.add(asset.remoteUrl);
+          }
+
           final existingId = await _existingMediaId(txn, asset);
           final row = {...asset.toMap(), 'id': existingId, 'updated_at': now};
           row.removeWhere((_, value) => value == null);
@@ -127,6 +135,12 @@ class ContentDao {
           );
         }
       }
+
+      await _deleteStaleExerciseMediaRows(
+        txn,
+        activeAssetIds: activeAssetIds,
+        activeRemoteUrls: activeRemoteUrls,
+      );
     });
   }
 
@@ -211,6 +225,43 @@ class ContentDao {
     );
     if (rows.isEmpty) return null;
     return rows.first['id'] as int;
+  }
+
+  static Future<void> _deleteStaleExerciseMediaRows(
+    DatabaseExecutor db, {
+    required Set<String> activeAssetIds,
+    required Set<String> activeRemoteUrls,
+  }) async {
+    final rows = await db.query(
+      'exercise_media',
+      columns: ['id', 'asset_id', 'remote_url'],
+    );
+    final staleIds = <int>[];
+    for (final row in rows) {
+      final id = row['id'] as int?;
+      if (id == null) continue;
+
+      final assetId = row['asset_id'] as String?;
+      final remoteUrl = row['remote_url'] as String?;
+      final isActive =
+          assetId != null && assetId.isNotEmpty
+              ? activeAssetIds.contains(assetId)
+              : remoteUrl != null && activeRemoteUrls.contains(remoteUrl);
+      if (!isActive) {
+        staleIds.add(id);
+      }
+    }
+
+    const chunkSize = 900;
+    for (var i = 0; i < staleIds.length; i += chunkSize) {
+      final chunk = staleIds.skip(i).take(chunkSize).toList();
+      final placeholders = List.filled(chunk.length, '?').join(',');
+      await db.delete(
+        'exercise_media',
+        where: 'id IN ($placeholders)',
+        whereArgs: chunk,
+      );
+    }
   }
 
   static Future<void> _addColumnIfMissing(

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -60,6 +61,7 @@ class _ExerciseMediaThumbnailState extends State<ExerciseMediaThumbnail> {
 
     final cached = await _repo.cachedExerciseMediaFile(item, thumbnail: true);
     if (cached != null) {
+      unawaited(_repo.markExerciseMediaAccessed(item));
       return _ThumbnailData(item: item, file: cached);
     }
 
@@ -71,7 +73,7 @@ class _ExerciseMediaThumbnailState extends State<ExerciseMediaThumbnail> {
       final downloaded = await _repo.cacheExerciseMedia(item, thumbnail: true);
       return _ThumbnailData(item: item, file: downloaded);
     } catch (_) {
-      return _ThumbnailData(item: item);
+      return null;
     }
   }
 
@@ -104,19 +106,6 @@ class _ExerciseMediaThumbnailState extends State<ExerciseMediaThumbnail> {
             return ClipRRect(
               borderRadius: widget.borderRadius,
               child: Image.file(data!.file!, fit: BoxFit.cover),
-            );
-          }
-
-          final media = data?.item;
-          final remoteUrl = media?.thumbnailUrl ?? media?.remoteUrl;
-          if (remoteUrl != null && _looksLikeImage(remoteUrl)) {
-            return ClipRRect(
-              borderRadius: widget.borderRadius,
-              child: Image.network(
-                remoteUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => _buildHeatmapFallback(context),
-              ),
             );
           }
 

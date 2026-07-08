@@ -205,6 +205,44 @@ Future<void> _releaseCheckExerciseMedia(_CliOptions options) async {
     stdout.writeln('Wrote release coverage report to $coverageOutputPath.');
   }
 
+  final releaseReportPath = options.value('release-report');
+  if (releaseReportPath != null) {
+    await _writeJsonFile(releaseReportPath, {
+      'generatedAt': DateTime.now().toUtc().toIso8601String(),
+      'source': sourcePath,
+      'namespace': result.manifest['namespace'],
+      'version': result.manifest['version'],
+      'exerciseCount': result.exerciseCount,
+      'assetCount': result.assetCount,
+      'coverage': coverage,
+      'qualityGates': {
+        'requireHashes': options.flag('require-hashes'),
+        'requireLicenses': options.flag('require-licenses'),
+        'minCoverage': minCoverage,
+        ...qualityOptions.toJson(),
+      },
+    });
+    stdout.writeln('Wrote release report to $releaseReportPath.');
+  }
+
+  final uploadScriptPath = options.value('upload-script');
+  if (uploadScriptPath != null) {
+    if (outputPath == null) {
+      _fail('--upload-script requires --output so the manifest file exists.');
+    }
+    final bucket = options.requiredValue('bucket');
+    final manifestObject =
+        options.value('manifest-object') ??
+        'manifests/exercise_media_manifest.json';
+    await _writeUploadScript(
+      source: source,
+      outputPath: outputPath,
+      uploadScriptPath: uploadScriptPath,
+      bucket: bucket,
+      manifestObject: manifestObject,
+    );
+  }
+
   stdout.writeln(
     'Release check passed for ${result.assetCount} assets across '
     '${result.exerciseCount} exercises '
@@ -728,6 +766,10 @@ Release-check options:
   --source <path>           Source JSON to build and remote-check.
   --output <path>           Optional release-ready manifest path.
   --coverage-output <path>  Optional coverage report path.
+  --release-report <path>   Optional release summary report path.
+  --upload-script <path>    Optional PowerShell upload script path.
+  --bucket <name>           R2 bucket name for upload script generation.
+  --manifest-object <key>   Manifest object key. Defaults to manifests/exercise_media_manifest.json.
   --min-coverage <number>   Optional minimum coverage percent, 0-100.
   --require-hashes          Require each asset to include or generate sha256.
   --require-licenses        Require each asset to include licenseId.
@@ -866,6 +908,15 @@ class _MediaQualityOptions {
   }
 
   bool get hasSizeRules => minWidth != null || minHeight != null;
+
+  Map<String, dynamic> toJson() {
+    return {
+      'requireDimensions': requireDimensions,
+      if (minWidth != null) 'minWidth': minWidth,
+      if (minHeight != null) 'minHeight': minHeight,
+      if (maxBytes != null) 'maxBytes': maxBytes,
+    };
+  }
 }
 
 class _ExerciseMediaManifestBuilder {

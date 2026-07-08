@@ -78,6 +78,10 @@ class MediaCacheService {
     var totalBytes = 0;
     await for (final entity in dir.list(recursive: true, followLinks: false)) {
       if (entity is File) {
+        if (entity.path.endsWith('.download')) {
+          await entity.delete();
+          continue;
+        }
         fileCount++;
         totalBytes += await entity.length();
       }

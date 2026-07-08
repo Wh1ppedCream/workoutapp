@@ -48,7 +48,10 @@ https://content.tonos.app/manifests/exercise_media_manifest.json
 dart run tools/content_pipeline.dart release-check-exercise-media `
   --source tools/content_pipeline/exercise_media_source.example.json `
   --output build/content/exercise_media_manifest.json `
-  --coverage-output build/content/exercise_media_release_coverage.json
+  --coverage-output build/content/exercise_media_release_coverage.json `
+  --release-report build/content/exercise_media_release_report.json `
+  --upload-script build/content/upload_exercise_media_release.ps1 `
+  --bucket tonos-public-content-dev
 ```
 
 3. Compare generated content against the currently published manifest:
@@ -67,6 +70,7 @@ dart run tools/content_pipeline.dart release-check-exercise-media `
   --source tools/content_pipeline/exercise_media_source.example.json `
   --output build/content/exercise_media_manifest.json `
   --coverage-output build/content/exercise_media_release_coverage.json `
+  --release-report build/content/exercise_media_release_report.json `
   --require-licenses `
   --require-dimensions `
   --min-width 256 `

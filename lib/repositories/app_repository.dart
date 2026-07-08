@@ -440,6 +440,9 @@ class AppRepository {
     required bool thumbnail,
   }) => content.cacheMedia(item, thumbnail: thumbnail);
 
+  Future<void> markExerciseMediaAccessed(ExerciseMediaItem item) =>
+      content.markMediaAccessed(item);
+
   Future<ContentCacheUsage> getContentCacheUsage() => content.getCacheUsage();
 
   Future<ContentManifestStatus?> getContentManifestStatus(String namespace) =>
