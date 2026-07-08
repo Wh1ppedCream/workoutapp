@@ -1,0 +1,56 @@
+{
+  "namespace": "food_content",
+  "version": 1,
+  "baseUrl": "https://pub-7eb72a1a315f4da3b30100ff6e694651.r2.dev",
+  "dataset": {
+    "id": "tonos_demo_foods",
+    "name": "Tonos Demo Foods",
+    "source": "tonos_curated",
+    "licenseId": "tonos_demo"
+  },
+  "foods": [
+    {
+      "foodId": "tonos_demo:banana_raw",
+      "source": "tonos_curated",
+      "licenseId": "tonos_demo",
+      "name": "Banana",
+      "brand": null,
+      "barcodes": [],
+      "aliases": ["raw banana"],
+      "serving": {
+        "label": "1 medium",
+        "grams": 118,
+        "unit": "medium"
+      },
+      "nutrientsPerServing": {
+        "calories": 105,
+        "proteinG": 1.3,
+        "carbsG": 27,
+        "fatG": 0.4,
+        "fiberG": 3.1,
+        "sugarG": 14.4,
+        "sodiumMg": 1
+      },
+      "nutrientsPer100g": {
+        "calories": 89,
+        "proteinG": 1.1,
+        "carbsG": 22.8,
+        "fatG": 0.3,
+        "fiberG": 2.6,
+        "sugarG": 12.2,
+        "sodiumMg": 1
+      },
+      "assets": [
+        {
+          "assetId": "banana_raw_thumb_v1",
+          "type": "thumbnail",
+          "title": "Banana thumbnail",
+          "remotePath": "foods/banana_raw/banana_raw_thumb_v1.png",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_demo"
+        }
+      ]
+    }
+  ]
+}

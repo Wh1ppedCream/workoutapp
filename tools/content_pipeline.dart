@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 
@@ -1245,6 +1246,11 @@ class _ExerciseMediaManifestBuilder {
     final bytes = await file.readAsBytes();
     output['bytes'] = bytes.length;
     output['sha256'] = sha256.convert(bytes).toString();
+    final dimensions = _readImageDimensions(bytes);
+    if (dimensions != null) {
+      output['width'] = dimensions.width;
+      output['height'] = dimensions.height;
+    }
   }
 
   String? _assetUrl(Map<String, dynamic> asset, {required String key}) {
@@ -1607,6 +1613,13 @@ const Set<String> _knownMediaTypes = {
 
 final RegExp _sha256Pattern = RegExp(r'^[a-fA-F0-9]{64}$');
 
+class _ImageDimensions {
+  final int width;
+  final int height;
+
+  const _ImageDimensions(this.width, this.height);
+}
+
 extension _JsonMapTools on Map<String, dynamic> {
   String? stringValue(String key) {
     final value = this[key];
@@ -1629,6 +1642,157 @@ extension _JsonMapTools on Map<String, dynamic> {
     return const [];
   }
 }
+
+_ImageDimensions? _readImageDimensions(Uint8List bytes) {
+  return _readPngDimensions(bytes) ??
+      _readJpegDimensions(bytes) ??
+      _readGifDimensions(bytes) ??
+      _readWebpDimensions(bytes);
+}
+
+_ImageDimensions? _readPngDimensions(Uint8List bytes) {
+  const signature = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+  if (bytes.length < 24) return null;
+  for (var i = 0; i < signature.length; i++) {
+    if (bytes[i] != signature[i]) return null;
+  }
+
+  final data = ByteData.sublistView(bytes);
+  return _positiveDimensions(
+    data.getUint32(16, Endian.big),
+    data.getUint32(20, Endian.big),
+  );
+}
+
+_ImageDimensions? _readJpegDimensions(Uint8List bytes) {
+  if (bytes.length < 4 || bytes[0] != 0xff || bytes[1] != 0xd8) {
+    return null;
+  }
+
+  var offset = 2;
+  while (offset + 3 < bytes.length) {
+    if (bytes[offset] != 0xff) {
+      offset += 1;
+      continue;
+    }
+    while (offset < bytes.length && bytes[offset] == 0xff) {
+      offset += 1;
+    }
+    if (offset >= bytes.length) return null;
+
+    final marker = bytes[offset];
+    offset += 1;
+    if (marker == 0xd9 || marker == 0xda) return null;
+    if (marker == 0x01 || (marker >= 0xd0 && marker <= 0xd7)) continue;
+    if (offset + 1 >= bytes.length) return null;
+
+    final segmentLength = _uint16Big(bytes, offset);
+    if (segmentLength < 2 || offset + segmentLength > bytes.length) {
+      return null;
+    }
+
+    if (_jpegStartOfFrameMarkers.contains(marker) && segmentLength >= 7) {
+      final height = _uint16Big(bytes, offset + 3);
+      final width = _uint16Big(bytes, offset + 5);
+      return _positiveDimensions(width, height);
+    }
+
+    offset += segmentLength;
+  }
+  return null;
+}
+
+_ImageDimensions? _readGifDimensions(Uint8List bytes) {
+  if (bytes.length < 10) return null;
+  final header = ascii.decode(bytes.sublist(0, 6), allowInvalid: true);
+  if (header != 'GIF87a' && header != 'GIF89a') return null;
+
+  final data = ByteData.sublistView(bytes);
+  return _positiveDimensions(
+    data.getUint16(6, Endian.little),
+    data.getUint16(8, Endian.little),
+  );
+}
+
+_ImageDimensions? _readWebpDimensions(Uint8List bytes) {
+  if (bytes.length < 30 ||
+      ascii.decode(bytes.sublist(0, 4), allowInvalid: true) != 'RIFF' ||
+      ascii.decode(bytes.sublist(8, 12), allowInvalid: true) != 'WEBP') {
+    return null;
+  }
+
+  var offset = 12;
+  while (offset + 8 <= bytes.length) {
+    final chunkType = ascii.decode(
+      bytes.sublist(offset, offset + 4),
+      allowInvalid: true,
+    );
+    final chunkSize = _uint32Little(bytes, offset + 4);
+    final chunkDataOffset = offset + 8;
+    if (chunkDataOffset + chunkSize > bytes.length) return null;
+
+    if (chunkType == 'VP8X' && chunkSize >= 10) {
+      return _positiveDimensions(
+        _uint24Little(bytes, chunkDataOffset + 4) + 1,
+        _uint24Little(bytes, chunkDataOffset + 7) + 1,
+      );
+    }
+    if (chunkType == 'VP8 ' && chunkSize >= 10) {
+      return _positiveDimensions(
+        _uint16Little(bytes, chunkDataOffset + 6) & 0x3fff,
+        _uint16Little(bytes, chunkDataOffset + 8) & 0x3fff,
+      );
+    }
+    if (chunkType == 'VP8L' && chunkSize >= 5) {
+      final b1 = bytes[chunkDataOffset + 1];
+      final b2 = bytes[chunkDataOffset + 2];
+      final b3 = bytes[chunkDataOffset + 3];
+      final b4 = bytes[chunkDataOffset + 4];
+      final width = 1 + (((b2 & 0x3f) << 8) | b1);
+      final height = 1 + ((b4 << 6) | (b3 >> 2) | ((b2 & 0xc0) << 6));
+      return _positiveDimensions(width, height);
+    }
+
+    offset = chunkDataOffset + chunkSize + (chunkSize.isOdd ? 1 : 0);
+  }
+  return null;
+}
+
+_ImageDimensions? _positiveDimensions(int width, int height) {
+  if (width <= 0 || height <= 0) return null;
+  return _ImageDimensions(width, height);
+}
+
+int _uint16Big(Uint8List bytes, int offset) =>
+    (bytes[offset] << 8) | bytes[offset + 1];
+
+int _uint16Little(Uint8List bytes, int offset) =>
+    bytes[offset] | (bytes[offset + 1] << 8);
+
+int _uint24Little(Uint8List bytes, int offset) =>
+    bytes[offset] | (bytes[offset + 1] << 8) | (bytes[offset + 2] << 16);
+
+int _uint32Little(Uint8List bytes, int offset) =>
+    bytes[offset] |
+    (bytes[offset + 1] << 8) |
+    (bytes[offset + 2] << 16) |
+    (bytes[offset + 3] << 24);
+
+const Set<int> _jpegStartOfFrameMarkers = {
+  0xc0,
+  0xc1,
+  0xc2,
+  0xc3,
+  0xc5,
+  0xc6,
+  0xc7,
+  0xc9,
+  0xca,
+  0xcb,
+  0xcd,
+  0xce,
+  0xcf,
+};
 
 String _joinUrl(String baseUrl, String path) {
   final cleanBase =

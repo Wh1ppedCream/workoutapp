@@ -73,8 +73,14 @@ class _ExerciseMediaThumbnailState extends State<ExerciseMediaThumbnail> {
       final downloaded = await _repo.cacheExerciseMedia(item, thumbnail: true);
       return _ThumbnailData(item: item, file: downloaded);
     } catch (_) {
-      return null;
+      return _ThumbnailData(item: item, failed: true);
     }
+  }
+
+  void _retryThumbnail() {
+    setState(() {
+      _thumbnailFuture = _loadThumbnail();
+    });
   }
 
   bool _looksLikeImage(String url) {
@@ -109,7 +115,15 @@ class _ExerciseMediaThumbnailState extends State<ExerciseMediaThumbnail> {
             );
           }
 
-          return _buildHeatmapFallback(context);
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              _buildHeatmapFallback(context),
+              if (snapshot.connectionState == ConnectionState.waiting)
+                _buildLoadingOverlay(context),
+              if (data?.failed == true) _buildRetryOverlay(context),
+            ],
+          );
         },
       ),
     );
@@ -146,11 +160,51 @@ class _ExerciseMediaThumbnailState extends State<ExerciseMediaThumbnail> {
       height: heatmapSize,
     );
   }
+
+  Widget _buildLoadingOverlay(BuildContext context) {
+    final theme = Theme.of(context);
+    return Align(
+      alignment: Alignment.bottomRight,
+      child: SizedBox.square(
+        dimension: widget.size * 0.24,
+        child: CircularProgressIndicator(
+          strokeWidth: 1.6,
+          color: theme.colorScheme.primary.withValues(alpha: 0.75),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRetryOverlay(BuildContext context) {
+    final theme = Theme.of(context);
+    return Align(
+      alignment: Alignment.bottomRight,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: _retryThumbnail,
+        child: Container(
+          width: widget.size * 0.32,
+          height: widget.size * 0.32,
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface.withValues(alpha: 0.86),
+            shape: BoxShape.circle,
+            border: Border.all(color: theme.colorScheme.outlineVariant),
+          ),
+          child: Icon(
+            Icons.refresh,
+            size: widget.size * 0.2,
+            color: theme.colorScheme.primary,
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _ThumbnailData {
   final ExerciseMediaItem item;
   final File? file;
+  final bool failed;
 
-  const _ThumbnailData({required this.item, this.file});
+  const _ThumbnailData({required this.item, this.file, this.failed = false});
 }

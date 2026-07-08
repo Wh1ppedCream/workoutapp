@@ -136,6 +136,9 @@ dart run tools/content_pipeline.dart release-check-exercise-media `
   --release-report build/content/exercise_media_release_report.json
 ```
 
+See [content-release-playbook.md](content-release-playbook.md) for the full
+publish, verification, rollback, and changelog process.
+
 Optional stricter gates can be layered in as the media library matures:
 
 ```powershell

@@ -1,0 +1,234 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tonos.app/schemas/food_content_source.schema.json",
+  "title": "Tonos Food Content Source",
+  "type": "object",
+  "required": ["namespace", "version", "baseUrl", "dataset", "foods"],
+  "additionalProperties": false,
+  "properties": {
+    "namespace": {
+      "type": "string",
+      "const": "food_content"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "baseUrl": {
+      "type": "string",
+      "format": "uri"
+    },
+    "dataset": {
+      "type": "object",
+      "required": ["id", "name", "source", "licenseId"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "licenseId": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "foods": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "foodId",
+          "source",
+          "licenseId",
+          "name",
+          "serving",
+          "nutrientsPerServing"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "foodId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1
+          },
+          "licenseId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "brand": {
+            "type": ["string", "null"]
+          },
+          "barcodes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "aliases": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "serving": {
+            "type": "object",
+            "required": ["label", "grams", "unit"],
+            "additionalProperties": false,
+            "properties": {
+              "label": {
+                "type": "string",
+                "minLength": 1
+              },
+              "grams": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "unit": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "nutrientsPerServing": {
+            "$ref": "#/$defs/nutrients"
+          },
+          "nutrientsPer100g": {
+            "$ref": "#/$defs/nutrients"
+          },
+          "assets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/mediaAsset"
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "nutrients": {
+      "type": "object",
+      "required": ["calories", "proteinG", "carbsG", "fatG"],
+      "additionalProperties": false,
+      "properties": {
+        "calories": {
+          "type": "number",
+          "minimum": 0
+        },
+        "proteinG": {
+          "type": "number",
+          "minimum": 0
+        },
+        "carbsG": {
+          "type": "number",
+          "minimum": 0
+        },
+        "fatG": {
+          "type": "number",
+          "minimum": 0
+        },
+        "fiberG": {
+          "type": "number",
+          "minimum": 0
+        },
+        "sugarG": {
+          "type": "number",
+          "minimum": 0
+        },
+        "sodiumMg": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "mediaAsset": {
+      "type": "object",
+      "required": ["assetId", "type", "title", "sortOrder", "version"],
+      "additionalProperties": false,
+      "properties": {
+        "assetId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "type": "string",
+          "enum": ["image", "thumbnail"]
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "remotePath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "thumbnailUrl": {
+          "type": "string",
+          "format": "uri"
+        },
+        "thumbnailPath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "localFile": {
+          "type": "string",
+          "minLength": 1
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sortOrder": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{64}$"
+        },
+        "licenseId": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "anyOf": [
+        { "required": ["url"] },
+        { "required": ["remotePath"] }
+      ]
+    }
+  }
+}
