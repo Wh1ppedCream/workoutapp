@@ -6,6 +6,9 @@ manifest, downloads only the media it needs, and caches files locally.
 Production environment setup and promotion rules live in
 `docs/content-production-setup.md`.
 
+Media size, format, and metadata targets live in
+`docs/media-asset-standards.md`.
+
 ## Current Flow
 
 1. Put media in Cloudflare R2 using stable object keys.
@@ -140,6 +143,10 @@ dart run tools/content_pipeline.dart release-check-exercise-media `
   --output build/content/exercise_media_manifest.release.json `
   --coverage-output build/content/exercise_media_release_coverage.json `
   --require-licenses `
+  --require-dimensions `
+  --min-width 256 `
+  --min-height 256 `
+  --max-bytes 250000 `
   --min-coverage 25
 ```
 

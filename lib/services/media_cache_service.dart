@@ -7,6 +7,8 @@ import '../models/models.dart';
 
 class MediaCacheService {
   static const String _cacheFolder = 'tonos_content_cache';
+  static const Duration _connectionTimeout = Duration(seconds: 15);
+  static const Duration _downloadTimeout = Duration(seconds: 45);
 
   const MediaCacheService();
 
@@ -18,7 +20,9 @@ class MediaCacheService {
     if (path == null || path.isEmpty) return null;
 
     final file = File(path);
-    return file.existsSync() ? file : null;
+    if (!file.existsSync()) return null;
+    if (await file.length() == 0) return null;
+    return file;
   }
 
   Future<File> downloadMedia(
@@ -34,8 +38,11 @@ class MediaCacheService {
 
     final targetFile = await _targetFileFor(item, uri, thumbnail: thumbnail);
     await targetFile.parent.create(recursive: true);
+    final tempFile = File(
+      '${targetFile.path}.${DateTime.now().microsecondsSinceEpoch}.download',
+    );
 
-    final client = HttpClient();
+    final client = HttpClient()..connectionTimeout = _connectionTimeout;
     try {
       final request = await client.getUrl(uri);
       final response = await request.close();
@@ -45,8 +52,17 @@ class MediaCacheService {
           uri: uri,
         );
       }
-      await response.pipe(targetFile.openWrite());
+      await response.pipe(tempFile.openWrite()).timeout(_downloadTimeout);
+      if (targetFile.existsSync()) {
+        await targetFile.delete();
+      }
+      await tempFile.rename(targetFile.path);
       return targetFile;
+    } catch (_) {
+      if (tempFile.existsSync()) {
+        await tempFile.delete();
+      }
+      rethrow;
     } finally {
       client.close(force: true);
     }

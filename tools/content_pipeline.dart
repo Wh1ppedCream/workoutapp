@@ -59,6 +59,7 @@ Future<void> _buildExerciseMediaManifest(_CliOptions options) async {
   final strict = options.flag('strict');
   final requireHashes = options.flag('require-hashes');
   final requireLicenses = options.flag('require-licenses');
+  final qualityOptions = _MediaQualityOptions.fromCli(options);
 
   final result =
       await _ExerciseMediaManifestBuilder(
@@ -70,6 +71,7 @@ Future<void> _buildExerciseMediaManifest(_CliOptions options) async {
         checkRemote: checkRemote,
         requireHashes: requireHashes,
         requireLicenses: requireLicenses,
+        qualityOptions: qualityOptions,
       ).build();
 
   _printMessages(result.messages);
@@ -117,6 +119,7 @@ Future<void> _validateExerciseMediaManifest(_CliOptions options) async {
   final strict = options.flag('strict');
   final requireHashes = options.flag('require-hashes');
   final requireLicenses = options.flag('require-licenses');
+  final qualityOptions = _MediaQualityOptions.fromCli(options);
 
   final result =
       await _ExerciseMediaManifestBuilder(
@@ -128,6 +131,7 @@ Future<void> _validateExerciseMediaManifest(_CliOptions options) async {
         checkRemote: checkRemote,
         requireHashes: requireHashes,
         requireLicenses: requireLicenses,
+        qualityOptions: qualityOptions,
       ).build();
 
   _printMessages(result.messages);
@@ -149,6 +153,7 @@ Future<void> _releaseCheckExerciseMedia(_CliOptions options) async {
   final version =
       options.intValue('version') ?? source.intValue('version') ?? 1;
   final minCoverage = options.doubleValue('min-coverage');
+  final qualityOptions = _MediaQualityOptions.fromCli(options);
 
   if (minCoverage != null && (minCoverage < 0 || minCoverage > 100)) {
     _fail('--min-coverage must be between 0 and 100.');
@@ -164,6 +169,7 @@ Future<void> _releaseCheckExerciseMedia(_CliOptions options) async {
         checkRemote: true,
         requireHashes: options.flag('require-hashes'),
         requireLicenses: options.flag('require-licenses'),
+        qualityOptions: qualityOptions,
       ).build();
 
   _printMessages(result.messages);
@@ -670,6 +676,14 @@ String _contentTypeFor(String path) {
   return 'application/octet-stream';
 }
 
+bool _looksLikeImagePath(String path) {
+  final lower = path.toLowerCase();
+  return lower.endsWith('.png') ||
+      lower.endsWith('.jpg') ||
+      lower.endsWith('.jpeg') ||
+      lower.endsWith('.webp');
+}
+
 void _printHelp() {
   stdout.writeln('''
 Tonos content pipeline
@@ -694,6 +708,10 @@ Common options:
   --strict                  Treat warnings as failures.
   --require-hashes          Require each asset to include or generate sha256.
   --require-licenses        Require each asset to include licenseId.
+  --require-dimensions      Require each asset to include width and height.
+  --min-width <number>      Warn if asset width is below this pixel count.
+  --min-height <number>     Warn if asset height is below this pixel count.
+  --max-bytes <number>      Warn if asset size exceeds this byte count.
 
 Build-only options:
   --output <path>           Generated manifest path.
@@ -713,6 +731,10 @@ Release-check options:
   --min-coverage <number>   Optional minimum coverage percent, 0-100.
   --require-hashes          Require each asset to include or generate sha256.
   --require-licenses        Require each asset to include licenseId.
+  --require-dimensions      Require width and height metadata.
+  --min-width <number>      Optional minimum width in pixels.
+  --min-height <number>     Optional minimum height in pixels.
+  --max-bytes <number>      Optional maximum asset size in bytes.
 
 Coverage options:
   --manifest <path-or-url>  App-ready manifest to inspect.
@@ -807,6 +829,45 @@ class _CliOptions {
   bool flag(String key) => _flags.contains(key);
 }
 
+class _MediaQualityOptions {
+  final bool requireDimensions;
+  final int? minWidth;
+  final int? minHeight;
+  final int? maxBytes;
+
+  const _MediaQualityOptions({
+    this.requireDimensions = false,
+    this.minWidth,
+    this.minHeight,
+    this.maxBytes,
+  });
+
+  factory _MediaQualityOptions.fromCli(_CliOptions options) {
+    final minWidth = options.intValue('min-width');
+    final minHeight = options.intValue('min-height');
+    final maxBytes = options.intValue('max-bytes');
+
+    if (minWidth != null && minWidth < 1) {
+      _fail('--min-width must be 1 or greater.');
+    }
+    if (minHeight != null && minHeight < 1) {
+      _fail('--min-height must be 1 or greater.');
+    }
+    if (maxBytes != null && maxBytes < 1) {
+      _fail('--max-bytes must be 1 or greater.');
+    }
+
+    return _MediaQualityOptions(
+      requireDimensions: options.flag('require-dimensions'),
+      minWidth: minWidth,
+      minHeight: minHeight,
+      maxBytes: maxBytes,
+    );
+  }
+
+  bool get hasSizeRules => minWidth != null || minHeight != null;
+}
+
 class _ExerciseMediaManifestBuilder {
   _ExerciseMediaManifestBuilder({
     required this.source,
@@ -817,6 +878,7 @@ class _ExerciseMediaManifestBuilder {
     required this.checkRemote,
     required this.requireHashes,
     required this.requireLicenses,
+    required this.qualityOptions,
   });
 
   final Map<String, dynamic> source;
@@ -827,6 +889,7 @@ class _ExerciseMediaManifestBuilder {
   final bool checkRemote;
   final bool requireHashes;
   final bool requireLicenses;
+  final _MediaQualityOptions qualityOptions;
 
   final List<_PipelineMessage> _messages = [];
   final Set<int> _seenExerciseIds = {};
@@ -1008,18 +1071,21 @@ class _ExerciseMediaManifestBuilder {
     _copyOptionalString(asset, output, 'sha256');
     _copyOptionalString(asset, output, 'licenseId');
 
-    _validateMetadata(output, assetId);
-
     if (checkRemote) {
-      await _checkRemoteUrl(
+      final remoteBytes = await _checkRemoteUrl(
         url,
         assetId,
         expectedBytes: output['bytes'] as int?,
       );
+      if (remoteBytes != null) {
+        output.putIfAbsent('bytes', () => remoteBytes);
+      }
       if (thumbnailUrl != null && thumbnailUrl != url) {
         await _checkRemoteUrl(thumbnailUrl, '$assetId thumbnail');
       }
     }
+
+    _validateMetadata(output, assetId);
 
     return output;
   }
@@ -1029,14 +1095,52 @@ class _ExerciseMediaManifestBuilder {
     if (bytes != null && bytes <= 0) {
       _error('Asset "$assetId" bytes must be greater than 0.');
     }
+    if (qualityOptions.maxBytes != null) {
+      if (bytes == null) {
+        _warning(
+          'Asset "$assetId" cannot be checked against --max-bytes because '
+          'bytes metadata is missing.',
+        );
+      } else if (bytes > qualityOptions.maxBytes!) {
+        _warning(
+          'Asset "$assetId" is $bytes bytes, above --max-bytes '
+          '${qualityOptions.maxBytes}.',
+        );
+      }
+    }
 
     final width = output['width'] as int?;
     final height = output['height'] as int?;
+    if (qualityOptions.requireDimensions && (width == null || height == null)) {
+      _error('Asset "$assetId" is missing width or height.');
+    }
+    if (qualityOptions.hasSizeRules && (width == null || height == null)) {
+      _warning(
+        'Asset "$assetId" cannot be checked against size rules because width '
+        'or height metadata is missing.',
+      );
+    }
     if (width != null && width <= 0) {
       _warning('Asset "$assetId" width should be greater than 0.');
     }
     if (height != null && height <= 0) {
       _warning('Asset "$assetId" height should be greater than 0.');
+    }
+    if (width != null &&
+        qualityOptions.minWidth != null &&
+        width < qualityOptions.minWidth!) {
+      _warning(
+        'Asset "$assetId" width is $width, below --min-width '
+        '${qualityOptions.minWidth}.',
+      );
+    }
+    if (height != null &&
+        qualityOptions.minHeight != null &&
+        height < qualityOptions.minHeight!) {
+      _warning(
+        'Asset "$assetId" height is $height, below --min-height '
+        '${qualityOptions.minHeight}.',
+      );
     }
 
     final hash = output['sha256'] as String?;
@@ -1050,6 +1154,29 @@ class _ExerciseMediaManifestBuilder {
     final licenseId = output['licenseId'] as String?;
     if (requireLicenses && (licenseId == null || licenseId.isEmpty)) {
       _error('Asset "$assetId" is missing licenseId.');
+    }
+
+    _validateUrlMatchesMediaType(output, assetId);
+  }
+
+  void _validateUrlMatchesMediaType(
+    Map<String, dynamic> output,
+    String assetId,
+  ) {
+    final type = (output['type'] as String?)?.toLowerCase() ?? '';
+    final url = output['url'] as String? ?? '';
+    if (url.isEmpty) return;
+
+    final imageTypes = {'image', 'thumbnail', 'still'};
+    if (imageTypes.contains(type) && !_looksLikeImagePath(url)) {
+      _warning(
+        'Asset "$assetId" is type "$type" but its URL does not look like a '
+        'supported image file.',
+      );
+    } else if (type == 'video' && !url.toLowerCase().endsWith('.mp4')) {
+      _warning(
+        'Asset "$assetId" is type "video" but its URL does not end with .mp4.',
+      );
     }
   }
 
@@ -1090,7 +1217,7 @@ class _ExerciseMediaManifestBuilder {
     return null;
   }
 
-  Future<void> _checkRemoteUrl(
+  Future<int?> _checkRemoteUrl(
     String url,
     String label, {
     int? expectedBytes,
@@ -1098,7 +1225,7 @@ class _ExerciseMediaManifestBuilder {
     final uri = Uri.tryParse(url);
     if (uri == null || !uri.hasScheme || uri.host.isEmpty) {
       _error('Invalid URL for "$label": $url');
-      return;
+      return null;
     }
 
     final client = HttpClient();
@@ -1116,8 +1243,10 @@ class _ExerciseMediaManifestBuilder {
           'Remote byte count for "$label" is $length, expected $expectedBytes.',
         );
       }
+      return length > 0 ? length : null;
     } catch (e) {
       _error('URL check failed for "$label": $e');
+      return null;
     } finally {
       client.close(force: true);
     }

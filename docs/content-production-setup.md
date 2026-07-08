@@ -42,13 +42,13 @@ https://content.tonos.app/manifests/exercise_media_manifest.json
 ## Promotion Flow
 
 1. Add or update media files in the source batch.
-2. Build a dev manifest:
+2. Build and remote-check a dev manifest through the release gate:
 
 ```powershell
-dart run tools/content_pipeline.dart build-exercise-media `
+dart run tools/content_pipeline.dart release-check-exercise-media `
   --source tools/content_pipeline/exercise_media_source.example.json `
   --output build/content/exercise_media_manifest.json `
-  --check-remote
+  --coverage-output build/content/exercise_media_release_coverage.json
 ```
 
 3. Compare generated content against the currently published manifest:
@@ -60,15 +60,18 @@ dart run tools/content_pipeline.dart diff-exercise-media `
   --report build/content/exercise_media_diff.json
 ```
 
-4. Run release-grade validation before promoting to production:
+4. Add stricter release gates before promoting mature production batches:
 
 ```powershell
-dart run tools/content_pipeline.dart validate-exercise-media `
+dart run tools/content_pipeline.dart release-check-exercise-media `
   --source tools/content_pipeline/exercise_media_source.example.json `
-  --check-remote `
-  --require-hashes `
+  --output build/content/exercise_media_manifest.json `
+  --coverage-output build/content/exercise_media_release_coverage.json `
   --require-licenses `
-  --strict
+  --require-dimensions `
+  --min-width 256 `
+  --min-height 256 `
+  --max-bytes 250000
 ```
 
 5. Upload media files first, then upload the manifest last.

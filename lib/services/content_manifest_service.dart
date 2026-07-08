@@ -10,6 +10,7 @@ class ContentManifestService {
       'assets/content/exercise_media_manifest.json';
   static const String defaultBundledEnvironmentsAsset =
       'assets/content/content_environments.json';
+  static const Duration _networkTimeout = Duration(seconds: 15);
 
   const ContentManifestService({
     this.bundledManifestAsset = defaultBundledManifestAsset,
@@ -34,7 +35,7 @@ class ContentManifestService {
   }
 
   Future<ContentManifest> fetchExerciseMediaManifest(Uri manifestUri) async {
-    final client = HttpClient();
+    final client = HttpClient()..connectionTimeout = _networkTimeout;
     try {
       final request = await client.getUrl(manifestUri);
       final response = await request.close();
@@ -44,7 +45,10 @@ class ContentManifestService {
           uri: manifestUri,
         );
       }
-      final raw = await response.transform(utf8.decoder).join();
+      final raw = await response
+          .transform(utf8.decoder)
+          .join()
+          .timeout(_networkTimeout);
       return ContentManifest.fromJson(
         Map<String, dynamic>.from(jsonDecode(raw) as Map),
       );
