@@ -6,16 +6,22 @@ future nutrition content releases.
 ## Pre-Release
 
 1. Confirm new media files are uploaded to the target R2 bucket.
-2. Run the release check against the source file:
+2. Run the release check against the source file. For production releases, add
+   `--base-url <production public URL>` so the manifest points at the
+   production content host:
 
    ```powershell
    dart run tools/content_pipeline.dart release-check-exercise-media `
      --source tools/content_pipeline/exercise_media_source.example.json `
+     --base-url https://YOUR_PRODUCTION_CONTENT_HOST `
      --output build/content/exercise_media_manifest.release.json `
      --coverage-output build/content/exercise_media_release_coverage.json `
      --release-report build/content/exercise_media_release_report.json `
      --upload-script build/content/upload_exercise_media_release.ps1 `
-     --bucket tonos-public-content-dev
+     --bucket tonos-public-content-prod `
+     --require-licenses `
+     --require-hashes `
+     --quality-preset exercise-thumbnail
    ```
 
 3. Review the generated release report and coverage report.

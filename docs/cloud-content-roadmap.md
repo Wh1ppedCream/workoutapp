@@ -43,13 +43,15 @@ Outside-code dependencies:
 
 - [x] Support content environment configuration.
 - [x] Keep development content isolated from production readiness.
+- [x] Create production R2 bucket: `tonos-public-content-prod`.
 
 Outside-code dependencies:
 
-- [ ] Create final production bucket or CDN domain.
-- [ ] Update production manifest URL once the final URL exists.
-- [ ] Switch the app default to production only after production content is
-  ready.
+- [x] Configure production public access with temporary R2 public URL.
+- [x] Update production manifest URL once the temporary public URL exists.
+- [ ] Switch the app default to production after a custom production domain is
+  connected, or after deciding the temporary R2 URL should be used for app
+  builds before a custom domain exists.
 
 ## Phase 6 - Coverage Workflow
 
@@ -66,12 +68,12 @@ Outside-code dependencies:
 
 Outside-code dependencies:
 
-- [ ] Create/collect Batch 001 thumbnail or animation files.
-- [ ] Upload Batch 001 media files to R2.
-- [ ] Validate Batch 001 with remote checks after upload.
-- [ ] Merge Batch 001 into the canonical source file after media exists.
-- [ ] Upload the expanded manifest.
-- [ ] Sync in-app and spot-check new media plus missing-media fallbacks.
+- [x] Create/collect Batch 001 thumbnail files.
+- [x] Upload Batch 001 media files to development R2.
+- [x] Validate Batch 001 with remote checks after upload.
+- [x] Merge Batch 001 into the canonical source file after media exists.
+- [x] Upload the expanded development manifest.
+- [x] Sync in-app and spot-check new media plus missing-media fallbacks.
 
 ## Phase 8 - Media Quality
 
@@ -90,13 +92,16 @@ Product/content decisions:
 
 Outside-code dependencies:
 
-- [ ] Create production R2 bucket or custom CDN setup.
-- [ ] Configure production CORS.
-- [ ] Upload production media assets.
-- [ ] Upload production manifest.
-- [ ] Update `assets/content/content_environments.json` with the production
+- [x] Create production R2 bucket: `tonos-public-content-prod`.
+- [x] Configure production public access with temporary R2 public URL.
+- [x] Configure production CORS.
+- [x] Upload production media assets.
+- [x] Upload production manifest.
+- [x] Update `assets/content/content_environments.json` with the production
   URL.
-- [ ] Switch the app default environment to production.
+- [ ] Switch the app default environment to production after a custom production
+  domain is connected, or after deciding the temporary R2 URL should be used for
+  app builds before a custom domain exists.
 
 ## Phase 10 - App UX And Resilience
 

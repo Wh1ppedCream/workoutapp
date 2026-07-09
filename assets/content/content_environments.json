@@ -11,8 +11,8 @@
     {
       "id": "production",
       "label": "Production",
-      "description": "Production CDN slot. Fill this URL after the production bucket or custom domain is ready.",
-      "exerciseMediaManifestUrl": "",
+      "description": "Production R2/CDN slot. Fill this URL after public access or a custom domain is ready.",
+      "exerciseMediaManifestUrl": "https://pub-3e431bbfeef5400c9ccbea926ea9904f.r2.dev/manifests/exercise_media_manifest.json",
       "isProduction": true
     }
   ]
