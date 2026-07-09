@@ -411,6 +411,7 @@ Future<void> _mergeExerciseMediaSource(_CliOptions options) async {
   final outputPath = options.requiredValue('output');
   final replaceAssets = options.flag('replace-assets');
   final bumpVersion = options.flag('bump-version');
+  final stripLocalFiles = options.flag('strip-local-files');
   final namespace =
       base.stringValue('namespace') ??
       batch.stringValue('namespace') ??
@@ -441,12 +442,14 @@ Future<void> _mergeExerciseMediaSource(_CliOptions options) async {
     source: base,
     label: 'base',
     replaceAssets: replaceAssets,
+    stripLocalFiles: stripLocalFiles,
   );
   _mergeSourceExercises(
     target: merged,
     source: batch,
     label: 'batch',
     replaceAssets: replaceAssets,
+    stripLocalFiles: stripLocalFiles,
   );
 
   final outputExercises = (merged.keys.toList()..sort())
@@ -535,6 +538,7 @@ void _mergeSourceExercises({
   required Map<String, dynamic> source,
   required String label,
   required bool replaceAssets,
+  required bool stripLocalFiles,
 }) {
   for (final rawExercise in source.listValue('exercises')) {
     if (rawExercise is! Map) {
@@ -549,7 +553,11 @@ void _mergeSourceExercises({
 
     final existing = target[id];
     if (existing == null) {
-      target[id] = _copySourceExercise(incoming, '$label exerciseId $id');
+      target[id] = _copySourceExercise(
+        incoming,
+        '$label exerciseId $id',
+        stripLocalFiles: stripLocalFiles,
+      );
       continue;
     }
 
@@ -583,7 +591,11 @@ void _mergeSourceExercises({
       existingAssetIds[assetId] = i;
     }
 
-    final incomingAssets = _copySourceAssets(incoming, '$label exerciseId $id');
+    final incomingAssets = _copySourceAssets(
+      incoming,
+      '$label exerciseId $id',
+      stripLocalFiles: stripLocalFiles,
+    );
     for (final asset in incomingAssets) {
       final assetId = asset.stringValue('assetId');
       if (assetId == null) {
@@ -607,23 +619,29 @@ void _mergeSourceExercises({
 
 Map<String, dynamic> _copySourceExercise(
   Map<String, dynamic> exercise,
-  String label,
-) {
+  String label, {
+  required bool stripLocalFiles,
+}) {
   final output = <String, dynamic>{
     'exerciseId': exercise.intValue('exerciseId'),
     if (exercise.stringValue('exerciseName') != null)
       'exerciseName': exercise.stringValue('exerciseName'),
     if (exercise.stringValue('slug') != null)
       'slug': exercise.stringValue('slug'),
-    'assets': _copySourceAssets(exercise, label),
+    'assets': _copySourceAssets(
+      exercise,
+      label,
+      stripLocalFiles: stripLocalFiles,
+    ),
   };
   return output;
 }
 
 List<Map<String, dynamic>> _copySourceAssets(
   Map<String, dynamic> exercise,
-  String label,
-) {
+  String label, {
+  required bool stripLocalFiles,
+}) {
   final assets = <Map<String, dynamic>>[];
   for (final rawAsset in exercise.listValue('assets')) {
     if (rawAsset is! Map) {
@@ -632,6 +650,9 @@ List<Map<String, dynamic>> _copySourceAssets(
     final asset = Map<String, dynamic>.from(rawAsset);
     if (asset.stringValue('assetId') == null) {
       _fail('$label has an asset without assetId.');
+    }
+    if (stripLocalFiles) {
+      asset.remove('localFile');
     }
     assets.add(asset);
   }
@@ -683,7 +704,8 @@ Future<void> _writeUploadScript({
       lines.add(
         'wrangler r2 object put ${_psQuote('$bucket/$remotePath')} '
         '--file ${_psQuote(localFile)} '
-        '--content-type ${_psQuote(_contentTypeFor(remotePath))}',
+        '--content-type ${_psQuote(_contentTypeFor(remotePath))} '
+        '--remote',
       );
     }
   }
@@ -692,7 +714,8 @@ Future<void> _writeUploadScript({
     ..add(
       'wrangler r2 object put ${_psQuote('$bucket/$manifestObject')} '
       '--file ${_psQuote(outputPath)} '
-      '--content-type ${_psQuote('application/json')}',
+      '--content-type ${_psQuote('application/json')} '
+      '--remote',
     )
     ..add('');
 
@@ -802,6 +825,7 @@ Merge options:
   --output <path>           Merged source JSON path.
   --bump-version            Increase the base source version by 1.
   --replace-assets          Replace duplicate assetIds instead of failing.
+  --strip-local-files       Remove localFile paths from merged output.
 
 Example:
   dart run tools/content_pipeline.dart build-exercise-media --source tools/content_pipeline/exercise_media_source.example.json --output build/content/exercise_media_manifest.json --check-remote
@@ -1185,6 +1209,17 @@ class _ExerciseMediaManifestBuilder {
       if (remoteBytes != null) {
         output.putIfAbsent('bytes', () => remoteBytes);
       }
+      if (_needsRemoteAssetMetadata(output)) {
+        final metadata = await _fetchRemoteAssetMetadata(url, assetId);
+        if (metadata != null) {
+          output.putIfAbsent('bytes', () => metadata.bytes);
+          output.putIfAbsent('sha256', () => metadata.sha256);
+          if (metadata.width != null && metadata.height != null) {
+            output.putIfAbsent('width', () => metadata.width);
+            output.putIfAbsent('height', () => metadata.height);
+          }
+        }
+      }
       if (thumbnailUrl != null && thumbnailUrl != url) {
         await _checkRemoteUrl(thumbnailUrl, '$assetId thumbnail');
       }
@@ -1262,6 +1297,17 @@ class _ExerciseMediaManifestBuilder {
     }
 
     _validateUrlMatchesMediaType(output, assetId);
+  }
+
+  bool _needsRemoteAssetMetadata(Map<String, dynamic> output) {
+    final needsBytes =
+        output['bytes'] == null && qualityOptions.maxBytes != null;
+    final needsHash =
+        requireHashes && (output['sha256'] as String?)?.isNotEmpty != true;
+    final needsDimensions =
+        (output['width'] == null || output['height'] == null) &&
+        (qualityOptions.requireDimensions || qualityOptions.hasSizeRules);
+    return needsBytes || needsHash || needsDimensions;
   }
 
   void _validateUrlMatchesMediaType(
@@ -1370,6 +1416,57 @@ class _ExerciseMediaManifestBuilder {
 
     final get = await client.getUrl(uri);
     return get.close();
+  }
+
+  Future<_RemoteAssetMetadata?> _fetchRemoteAssetMetadata(
+    String url,
+    String assetId,
+  ) async {
+    final uri = Uri.tryParse(url);
+    if (uri == null || !uri.hasScheme || uri.host.isEmpty) {
+      _error('Invalid URL for "$assetId": $url');
+      return null;
+    }
+
+    final client = HttpClient();
+    try {
+      final request = await client.getUrl(uri);
+      final response = await request.close();
+      if (response.statusCode < 200 || response.statusCode >= 400) {
+        _error(
+          'Metadata download failed for "$assetId": '
+          'HTTP ${response.statusCode} $url',
+        );
+        await response.drain<void>();
+        return null;
+      }
+
+      final builder = BytesBuilder(copy: false);
+      await for (final chunk in response) {
+        builder.add(chunk);
+        if (builder.length > _remoteMetadataMaxBytes) {
+          _warning(
+            'Skipping remote metadata for "$assetId" because it is larger '
+            'than $_remoteMetadataMaxBytes bytes.',
+          );
+          return null;
+        }
+      }
+
+      final bytes = builder.takeBytes();
+      final dimensions = _readImageDimensions(bytes);
+      return _RemoteAssetMetadata(
+        bytes: bytes.length,
+        sha256: sha256.convert(bytes).toString(),
+        width: dimensions?.width,
+        height: dimensions?.height,
+      );
+    } catch (e) {
+      _error('Metadata download failed for "$assetId": $e');
+      return null;
+    } finally {
+      client.close(force: true);
+    }
   }
 
   void _copyOptionalInt(
@@ -1672,6 +1769,22 @@ class _ImageDimensions {
 
   const _ImageDimensions(this.width, this.height);
 }
+
+class _RemoteAssetMetadata {
+  final int bytes;
+  final String sha256;
+  final int? width;
+  final int? height;
+
+  const _RemoteAssetMetadata({
+    required this.bytes,
+    required this.sha256,
+    this.width,
+    this.height,
+  });
+}
+
+const int _remoteMetadataMaxBytes = 5 * 1024 * 1024;
 
 extension _JsonMapTools on Map<String, dynamic> {
   String? stringValue(String key) {

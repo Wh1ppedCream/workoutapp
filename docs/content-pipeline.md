@@ -65,7 +65,8 @@ powershell -ExecutionPolicy Bypass -File build/content/upload_exercise_media.ps1
 ```
 
 The generated script uploads local media files first, then uploads the manifest
-to `manifests/exercise_media_manifest.json`.
+to `manifests/exercise_media_manifest.json`. It passes `--remote` to Wrangler
+so files are written to Cloudflare R2 instead of Wrangler's local dev store.
 
 ## Source File Shape
 
@@ -96,8 +97,9 @@ to `manifests/exercise_media_manifest.json`.
 }
 ```
 
-If `localFile` exists, the tool fills `bytes` and `sha256`. If only remote URLs
-exist, the manifest is still valid; add `--check-remote` to verify the URLs.
+If `localFile` exists, the tool fills `bytes`, `sha256`, `width`, and `height`
+from the local file. If only remote URLs exist, add `--check-remote` to verify
+the URLs and fill missing release-check metadata for small remote image assets.
 
 ## Validation Only
 

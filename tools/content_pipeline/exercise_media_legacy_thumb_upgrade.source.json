@@ -1,0 +1,92 @@
+{
+  "namespace": "exercise_media",
+  "version": 1,
+  "baseUrl": "https://pub-7eb72a1a315f4da3b30100ff6e694651.r2.dev",
+  "exercises": [
+    {
+      "exerciseId": 6,
+      "exerciseName": "Barbell Squat",
+      "slug": "barbell_squat",
+      "assets": [
+        {
+          "assetId": "barbell_squat_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/barbell_squat/v2/thumb.webp",
+          "localFile": "build/content/exercise_media_legacy_thumb_upgrade/exercises/barbell_squat/v2/thumb.webp",
+          "title": "Barbell Squat thumbnail",
+          "sortOrder": 0,
+          "version": 2,
+          "licenseId": "tonos_test"
+        }
+      ]
+    },
+    {
+      "exerciseId": 7,
+      "exerciseName": "Bench Press - Barbell",
+      "slug": "bench_press_barbell",
+      "assets": [
+        {
+          "assetId": "bench_press_barbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/bench_press_barbell/v2/thumb.webp",
+          "localFile": "build/content/exercise_media_legacy_thumb_upgrade/exercises/bench_press_barbell/v2/thumb.webp",
+          "title": "Bench Press - Barbell thumbnail",
+          "sortOrder": 0,
+          "version": 2,
+          "licenseId": "tonos_test"
+        }
+      ]
+    },
+    {
+      "exerciseId": 15,
+      "exerciseName": "Bicep Curl - Dumbbell",
+      "slug": "bicep_curl_dumbbell",
+      "assets": [
+        {
+          "assetId": "bicep_curl_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/bicep_curl_dumbbell/v2/thumb.webp",
+          "localFile": "build/content/exercise_media_legacy_thumb_upgrade/exercises/bicep_curl_dumbbell/v2/thumb.webp",
+          "title": "Bicep Curl - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 2,
+          "licenseId": "tonos_test"
+        }
+      ]
+    },
+    {
+      "exerciseId": 50,
+      "exerciseName": "Deadlift - Barbell",
+      "slug": "deadlift_barbell",
+      "assets": [
+        {
+          "assetId": "deadlift_barbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/deadlift_barbell/v2/thumb.webp",
+          "localFile": "build/content/exercise_media_legacy_thumb_upgrade/exercises/deadlift_barbell/v2/thumb.webp",
+          "title": "Deadlift - Barbell thumbnail",
+          "sortOrder": 0,
+          "version": 2,
+          "licenseId": "tonos_test"
+        }
+      ]
+    },
+    {
+      "exerciseId": 130,
+      "exerciseName": "Lat Pulldown - Lat Pulldown Machine",
+      "slug": "lat_pulldown_lat_pulldown_machine",
+      "assets": [
+        {
+          "assetId": "lat_pulldown_lat_pulldown_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/lat_pulldown_lat_pulldown_machine/v2/thumb.webp",
+          "localFile": "build/content/exercise_media_legacy_thumb_upgrade/exercises/lat_pulldown_lat_pulldown_machine/v2/thumb.webp",
+          "title": "Lat Pulldown thumbnail",
+          "sortOrder": 0,
+          "version": 2,
+          "licenseId": "tonos_test"
+        }
+      ]
+    }
+  ]
+}

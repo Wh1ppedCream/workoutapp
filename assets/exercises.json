@@ -22,7 +22,7 @@
   },
   {
     "name": "Arm Circles",
-    "rating": 30,
+    "rating": 10,
     "equipment": ["Bodyweight"],
     "bodyparts": ["Shoulders"],
     "muscles": [
@@ -76,7 +76,7 @@
   },
   {
     "name": "Ball Slam",
-    "rating": 40,
+    "rating": 20,
     "equipment": ["Medicine Ball"],
     "bodyparts": ["Core", "Shoulders"],
     "muscles": [
