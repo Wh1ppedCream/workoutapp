@@ -12,7 +12,6 @@ import '../../../theme/theme_extensions.dart';
 /// same enum you use in auto_preset_flow_screen.dart
 enum AddSetMode { explicit, copy }
 
-
 /// Screen to view and edit any preset’s automatic flow, scoped by profile.
 class PresetFlowSettingsScreen extends StatefulWidget {
   const PresetFlowSettingsScreen({super.key});
@@ -61,14 +60,12 @@ class _PresetFlowSettingsScreenState extends State<PresetFlowSettingsScreen> {
     super.didChangeDependencies();
     final colors = context.colors;
     final bg = colors.flowChartBackground!;
-    final grid = context.cs.brightness == Brightness.dark
-        ? Colors.white.withValues(alpha: 0.15)
-        : colors.flowChartGrid!;
+    final grid =
+        context.cs.brightness == Brightness.dark
+            ? Colors.white.withValues(alpha: 0.15)
+            : colors.flowChartGrid!;
     _dashboard.setGridBackgroundParams(
-      GridBackgroundParams(
-        backgroundColor: bg,
-        gridColor: grid,
-      ),
+      GridBackgroundParams(backgroundColor: bg, gridColor: grid),
     );
   }
 
@@ -84,24 +81,23 @@ class _PresetFlowSettingsScreenState extends State<PresetFlowSettingsScreen> {
   }
 
   Future<void> _loadFlowAndMethods() async {
-  if (_selectedPresetId == null) return;
-  final def     = await _repo.fetchFlowDefinition(_selectedPresetId!);
-  final methods = await _repo.fetchFlowMethods(_selectedPresetId!);
-  setState(() {
-    _flowDef            = def;
-    _methods            = methods;
-    _edges              = def.edges.toList();        // clone so you can mutate
-    _nodes.clear();
-    _nodeData.clear();
-    _placement.clear();
-    _selectedBranchParent = null;
-    _selectedMethodNode   = null;
-    _selectedMethod       = null;
-  });
-  _buildDashboard();
-  _initializeCounters();
-}
-
+    if (_selectedPresetId == null) return;
+    final def = await _repo.fetchFlowDefinition(_selectedPresetId!);
+    final methods = await _repo.fetchFlowMethods(_selectedPresetId!);
+    setState(() {
+      _flowDef = def;
+      _methods = methods;
+      _edges = def.edges.toList(); // clone so you can mutate
+      _nodes.clear();
+      _nodeData.clear();
+      _placement.clear();
+      _selectedBranchParent = null;
+      _selectedMethodNode = null;
+      _selectedMethod = null;
+    });
+    _buildDashboard();
+    _initializeCounters();
+  }
 
   void _initializeCounters() {
     final succRe = RegExp(r'^success(\d+)$');
@@ -116,17 +112,21 @@ class _PresetFlowSettingsScreenState extends State<PresetFlowSettingsScreen> {
       if (mf != null) failNums.add(int.tryParse(mf.group(1)!) ?? 0);
     }
 
-    _successCounter = succNums.isEmpty ? 0 : succNums.reduce((a, b) => a > b ? a : b);
-    _failureCounter = failNums.isEmpty ? 0 : failNums.reduce((a, b) => a > b ? a : b);
+    _successCounter =
+        succNums.isEmpty ? 0 : succNums.reduce((a, b) => a > b ? a : b);
+    _failureCounter =
+        failNums.isEmpty ? 0 : failNums.reduce((a, b) => a > b ? a : b);
   }
 
   void _buildDashboard() {
     final extras = context.colors;
     _dashboard = Dashboard(defaultArrowStyle: ArrowStyle.curve);
-    _dashboard.setGridBackgroundParams(GridBackgroundParams(
-      backgroundColor: extras.flowChartBackground!,
-      gridColor: extras.flowChartGrid!,
-    ));
+    _dashboard.setGridBackgroundParams(
+      GridBackgroundParams(
+        backgroundColor: extras.flowChartBackground!,
+        gridColor: extras.flowChartGrid!,
+      ),
+    );
 
     if (_flowDef == null || _flowDef!.nodes.isEmpty) {
       _nodes.clear();
@@ -153,8 +153,9 @@ class _PresetFlowSettingsScreenState extends State<PresetFlowSettingsScreen> {
       }
 
       // create nodes
-      final sorted = depths.keys.toList()
-        ..sort((a, b) => depths[a]!.compareTo(depths[b]!));
+      final sorted =
+          depths.keys.toList()
+            ..sort((a, b) => depths[a]!.compareTo(depths[b]!));
       for (var name in sorted) {
         final depth = depths[name]!;
         final idx = (_placement[depth] ?? 0);
@@ -242,10 +243,11 @@ class _PresetFlowSettingsScreenState extends State<PresetFlowSettingsScreen> {
   }
 
   void _refreshNodeText(String nodeName) {
-    final methods = _edges
-        .where((e) => e.from == nodeName && e.outcome == 'method')
-        .map((e) => e.to)
-        .toList();
+    final methods =
+        _edges
+            .where((e) => e.from == nodeName && e.outcome == 'method')
+            .map((e) => e.to)
+            .toList();
     final el = _nodes[nodeName]!;
     el.setText([nodeName, ...methods].join('\n'));
     final newHeight = 30.0 + methods.length * 16.0;
@@ -321,9 +323,10 @@ class _PresetFlowSettingsScreenState extends State<PresetFlowSettingsScreen> {
     _nodes[name] = el;
     _nodeData[name] = _NodeData(depth: depth);
 
-    final branchColor = outcome == 'success'
-        ? extras.flowArrowSuccess!
-        : extras.flowArrowFailure!;
+    final branchColor =
+        outcome == 'success'
+            ? extras.flowArrowSuccess!
+            : extras.flowArrowFailure!;
     final branchStyle =
         outcome == 'success' ? ArrowStyle.segmented : ArrowStyle.curve;
     _dashboard.addNextById(
@@ -362,51 +365,60 @@ class _PresetFlowSettingsScreenState extends State<PresetFlowSettingsScreen> {
     final def = FlowDefinition(nodes: _nodes.keys.toList(), edges: _edges);
     await _repo.upsertFlowDefinition(_selectedPresetId!, def);
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Flow saved')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Flow saved')));
   }
 
-// ─── Manage Methods ───────────────────────────────────────
+  // ─── Manage Methods ───────────────────────────────────────
 
   Future<void> _showManageMethodsDialog() async {
     await showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Manage Methods'),
-        content: SizedBox(
-          width: 300,
-          child: ListView(
-            shrinkWrap: true,
-            children: [
-              for (var m in _methods)
-                ListTile(
-                  title: Text(m.name),
-                  subtitle: Text(m.type.toShortString()),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete),
-                    onPressed: () async {
-                      await _repo.deleteFlowMethod(m.id);
-                      if (!ctx.mounted) return;
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Manage Rules'),
+            content: SizedBox(
+              width: 300,
+              child: ListView(
+                shrinkWrap: true,
+                children: [
+                  for (var m in _methods)
+                    ListTile(
+                      title: Text(m.name),
+                      subtitle: Text(m.type.toShortString()),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete),
+                        onPressed: () async {
+                          await _repo.deleteFlowMethodAndReferences(m);
+                          if (!ctx.mounted) return;
+                          Navigator.of(ctx).pop();
+                          _methods = await _repo.fetchFlowMethods(
+                            _selectedPresetId!,
+                          );
+                          if (!mounted) return;
+                          _edges.removeWhere(
+                            (e) => e.outcome == 'method' && e.to == m.name,
+                          );
+                          for (final node in _nodes.keys) {
+                            _refreshNodeText(node);
+                          }
+                          setState(() {});
+                        },
+                      ),
+                    ),
+                  ListTile(
+                    leading: const Icon(Icons.add),
+                    title: const Text('Add New Rule...'),
+                    onTap: () {
                       Navigator.of(ctx).pop();
-                      _methods = await _repo.fetchFlowMethods(_selectedPresetId!);
-                      if (!mounted) return;
-                      setState(() {});
+                      _showAddMethodDialog();
                     },
                   ),
-                ),
-              ListTile(
-                leading: const Icon(Icons.add),
-                title: const Text('Add New Method…'),
-                onTap: () {
-                  Navigator.of(ctx).pop();
-                  _showAddMethodDialog();
-                },
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
     );
     // refresh after manage
     _methods = await _repo.fetchFlowMethods(_selectedPresetId!);
@@ -414,7 +426,7 @@ class _PresetFlowSettingsScreenState extends State<PresetFlowSettingsScreen> {
     setState(() {});
   }
 
-Future<void> _showAddMethodDialog() async {
+  Future<void> _showAddMethodDialog() async {
     final nameCtl = TextEditingController();
     MethodType type = MethodType.weight;
     String sign = '+';
@@ -435,101 +447,135 @@ Future<void> _showAddMethodDialog() async {
 
     final saved = await showDialog<bool>(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setSt) => AlertDialog(
-          title: const Text('New Method'),
-          content: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                TextField(controller: nameCtl, decoration: const InputDecoration(labelText: 'Name')),
-                const SizedBox(height: 12),
-                DropdownButton<MethodType>(
-                  value: type,
-                  isExpanded: true,
-                  onChanged: (v) => setSt(() => type = v!),
-                  items: MethodType.values
-                      .map((t) => DropdownMenuItem(value: t, child: Text(t.toShortString())))
-                      .toList(),
+      builder:
+          (ctx) => StatefulBuilder(
+            builder:
+                (ctx, setSt) => AlertDialog(
+                  title: const Text('New Rule'),
+                  content: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        TextField(
+                          controller: nameCtl,
+                          decoration: const InputDecoration(labelText: 'Name'),
+                        ),
+                        const SizedBox(height: 12),
+                        DropdownButton<MethodType>(
+                          value: type,
+                          isExpanded: true,
+                          onChanged: (v) => setSt(() => type = v!),
+                          items:
+                              MethodType.values
+                                  .map(
+                                    (t) => DropdownMenuItem(
+                                      value: t,
+                                      child: Text(t.toShortString()),
+                                    ),
+                                  )
+                                  .toList(),
+                        ),
+                        const SizedBox(height: 12),
+                        if (type == MethodType.weight) ...[
+                          DropdownButton<String>(
+                            value: sign,
+                            onChanged: (v) => setSt(() => sign = v!),
+                            items: const [
+                              DropdownMenuItem(value: '+', child: Text('+')),
+                              DropdownMenuItem(value: '-', child: Text('-')),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: factorCtl,
+                            keyboardType: TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            decoration: const InputDecoration(
+                              labelText: 'Factor',
+                            ),
+                          ),
+                        ] else if (type == MethodType.rep) ...[
+                          DropdownButton<String>(
+                            value: sign,
+                            onChanged: (v) => setSt(() => sign = v!),
+                            items: const [
+                              DropdownMenuItem(value: '+', child: Text('+')),
+                              DropdownMenuItem(value: '-', child: Text('-')),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: amountCtl,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: 'Amount',
+                            ),
+                          ),
+                        ] else if (type == MethodType.addSet) ...[
+                          Row(
+                            children: [
+                              Radio<AddSetMode>(
+                                value: AddSetMode.explicit,
+                                groupValue: addMode,
+                                onChanged: (v) => setSt(() => addMode = v!),
+                              ),
+                              const Text('Explicit'),
+                              Radio<AddSetMode>(
+                                value: AddSetMode.copy,
+                                groupValue: addMode,
+                                onChanged: (v) => setSt(() => addMode = v!),
+                              ),
+                              const Text('Copy from set'),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          if (addMode == AddSetMode.explicit)
+                            TextField(
+                              controller: weightCtl,
+                              keyboardType: TextInputType.numberWithOptions(
+                                decimal: true,
+                              ),
+                              decoration: const InputDecoration(
+                                labelText: 'Weight',
+                              ),
+                            ),
+                          if (addMode == AddSetMode.explicit)
+                            const SizedBox(height: 8),
+                          if (addMode == AddSetMode.explicit)
+                            TextField(
+                              controller: repsCtl,
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(
+                                labelText: 'Reps',
+                              ),
+                            ),
+                          if (addMode == AddSetMode.copy)
+                            TextField(
+                              controller: copyIndexCtl,
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(
+                                labelText: 'Set index (-1 = last)',
+                              ),
+                            ),
+                        ] else if (type == MethodType.delSet) ...[
+                          const Text('This rule will delete the last set.'),
+                        ],
+                      ],
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx, false),
+                      child: const Text('Cancel'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () => Navigator.pop(ctx, true),
+                      child: const Text('Save'),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 12),
-                if (type == MethodType.weight) ...[
-                  DropdownButton<String>(
-                    value: sign,
-                    onChanged: (v) => setSt(() => sign = v!),
-                    items: const [
-                      DropdownMenuItem(value: '+', child: Text('+')),
-                      DropdownMenuItem(value: '-', child: Text('-')),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: factorCtl,
-                    keyboardType: TextInputType.numberWithOptions(decimal: true),
-                    decoration: const InputDecoration(labelText: 'Factor'),
-                  ),
-                ] else if (type == MethodType.rep) ...[
-                  DropdownButton<String>(
-                    value: sign,
-                    onChanged: (v) => setSt(() => sign = v!),
-                    items: const [
-                      DropdownMenuItem(value: '+', child: Text('+')),
-                      DropdownMenuItem(value: '-', child: Text('-')),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: amountCtl,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: 'Amount'),
-                  ),
-                ] else if (type == MethodType.addSet) ...[
-                  Row(
-                    children: [
-                      Radio<AddSetMode>(
-                          value: AddSetMode.explicit,
-                          groupValue: addMode,
-                          onChanged: (v) => setSt(() => addMode = v!)),
-                      const Text('Explicit'),
-                      Radio<AddSetMode>(
-                          value: AddSetMode.copy,
-                          groupValue: addMode,
-                          onChanged: (v) => setSt(() => addMode = v!)),
-                      const Text('Copy from set'),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  if (addMode == AddSetMode.explicit)
-                    TextField(
-                      controller: weightCtl,
-                      keyboardType: TextInputType.numberWithOptions(decimal: true),
-                      decoration: const InputDecoration(labelText: 'Weight'),
-                    ),
-                  if (addMode == AddSetMode.explicit) const SizedBox(height: 8),
-                  if (addMode == AddSetMode.explicit)
-                    TextField(
-                      controller: repsCtl,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(labelText: 'Reps'),
-                    ),
-                  if (addMode == AddSetMode.copy)
-                    TextField(
-                      controller: copyIndexCtl,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(labelText: 'Set index (-1 = last)'),
-                    ),
-                ] else if (type == MethodType.delSet) ...[
-                  const Text('This method will delete the last set.'),
-                ],
-              ],
-            ),
           ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-            ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Save')),
-          ],
-        ),
-      ),
     );
     if (saved != true) {
       disposeControllers();
@@ -539,18 +585,22 @@ Future<void> _showAddMethodDialog() async {
     late Map<String, dynamic> params;
     switch (type) {
       case MethodType.weight:
-        params = {'sign': sign, 'factor': double.tryParse(factorCtl.text) ?? 1.0};
+        params = {
+          'sign': sign,
+          'factor': double.tryParse(factorCtl.text) ?? 1.0,
+        };
         break;
       case MethodType.rep:
         params = {'sign': sign, 'amount': int.tryParse(amountCtl.text) ?? 0};
         break;
       case MethodType.addSet:
-        params = addMode == AddSetMode.explicit
-            ? {
-                'weight': double.tryParse(weightCtl.text) ?? 0.0,
-                'reps': int.tryParse(repsCtl.text) ?? 0
-              }
-            : {'copyFromSetIndex': int.tryParse(copyIndexCtl.text) ?? -1};
+        params =
+            addMode == AddSetMode.explicit
+                ? {
+                  'weight': double.tryParse(weightCtl.text) ?? 0.0,
+                  'reps': int.tryParse(repsCtl.text) ?? 0,
+                }
+                : {'copyFromSetIndex': int.tryParse(copyIndexCtl.text) ?? -1};
         break;
       case MethodType.delSet:
         params = {};
@@ -559,7 +609,7 @@ Future<void> _showAddMethodDialog() async {
     final methodName = nameCtl.text.trim();
     disposeControllers();
 
-      await _repo.upsertFlowMethod(
+    await _repo.upsertFlowMethod(
       presetId: _selectedPresetId!,
       name: methodName,
       type: type,
@@ -571,10 +621,16 @@ Future<void> _showAddMethodDialog() async {
   }
 
   void _onAddSuccess() => _createBranchNode(
-      _selectedBranchParent!, 'success${++_successCounter}', 'success');
+    _selectedBranchParent!,
+    'success${++_successCounter}',
+    'success',
+  );
 
   void _onAddFailure() => _createBranchNode(
-      _selectedBranchParent!, 'fail${++_failureCounter}', 'failure');
+    _selectedBranchParent!,
+    'fail${++_failureCounter}',
+    'failure',
+  );
 
   void _onAddMethod() {
     final target = _selectedMethodNode;
@@ -588,8 +644,9 @@ Future<void> _showAddMethodDialog() async {
   void _onRemoveMethod() {
     final target = _selectedMethodNode;
     if (target == null) return;
-    final methodEdges =
-        _edges.where((e) => e.from == target && e.outcome == 'method');
+    final methodEdges = _edges.where(
+      (e) => e.from == target && e.outcome == 'method',
+    );
     if (methodEdges.isEmpty) return;
     _edges.remove(methodEdges.last);
     _refreshNodeText(target);
@@ -599,14 +656,18 @@ Future<void> _showAddMethodDialog() async {
   void _onRemoveNode() {
     final name = _selectedMethodNode;
     if (name == null || name == '1st attempt') return;
-    final branchKids = _edges.where((e) =>
-        e.from == name && (e.outcome == 'success' || e.outcome == 'failure'));
+    final branchKids = _edges.where(
+      (e) =>
+          e.from == name && (e.outcome == 'success' || e.outcome == 'failure'),
+    );
     if (branchKids.isNotEmpty) return;
-    final hasMethods =
-        _edges.any((e) => e.from == name && e.outcome == 'method');
+    final hasMethods = _edges.any(
+      (e) => e.from == name && e.outcome == 'method',
+    );
     if (hasMethods) return;
-    _edges.removeWhere((e) =>
-        e.to == name && (e.outcome == 'success' || e.outcome == 'failure'));
+    _edges.removeWhere(
+      (e) => e.to == name && (e.outcome == 'success' || e.outcome == 'failure'),
+    );
     final el = _nodes.remove(name)!;
     _dashboard.removeElement(el);
     _nodeData.remove(name);
@@ -615,29 +676,32 @@ Future<void> _showAddMethodDialog() async {
     setState(() {});
   }
 
+  /// scope: 'app' or 'profile'
+  Future<void> _loadDefaultFlow({required String scope, int? profileId}) async {
+    // your new repo methods:
+    final def = await _repo.fetchDefaultFlowDefinition(
+      scope,
+      profileId: profileId,
+    );
+    final methods = await _repo.fetchDefaultFlowMethods(
+      scope,
+      profileId: profileId,
+    );
 
-/// scope: 'app' or 'profile'
-Future<void> _loadDefaultFlow({ required String scope, int? profileId }) async {
-  // your new repo methods:
-  final def     = await _repo.fetchDefaultFlowDefinition(scope, profileId: profileId);
-  final methods = await _repo.fetchDefaultFlowMethods(scope, profileId: profileId);
-
-  setState(() {
-    _flowDef  = def;
-    _methods  = methods;
-    _edges    = def.edges.toList();
-    _nodes.clear();
-    _nodeData.clear();
-    _placement.clear();
-    _selectedBranchParent = null;
-    _selectedMethodNode   = null;
-    _selectedMethod       = null;
-  });
-  _buildDashboard();
-  _initializeCounters();
-}
-
-
+    setState(() {
+      _flowDef = def;
+      _methods = methods;
+      _edges = def.edges.toList();
+      _nodes.clear();
+      _nodeData.clear();
+      _placement.clear();
+      _selectedBranchParent = null;
+      _selectedMethodNode = null;
+      _selectedMethod = null;
+    });
+    _buildDashboard();
+    _initializeCounters();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -646,10 +710,10 @@ Future<void> _loadDefaultFlow({ required String scope, int? profileId }) async {
         title: const Text('Preset Flow Settings'),
         actions: [
           IconButton(
-              icon: const Icon(Icons.build), // wrench icon
-              tooltip: 'Manage Methods',
-              onPressed: _showManageMethodsDialog,
-            ),
+            icon: const Icon(Icons.build), // wrench icon
+            tooltip: 'Manage Rules',
+            onPressed: _showManageMethodsDialog,
+          ),
           IconButton(icon: const Icon(Icons.save), onPressed: _saveFlow),
         ],
       ),
@@ -662,10 +726,12 @@ Future<void> _loadDefaultFlow({ required String scope, int? profileId }) async {
               isExpanded: true,
               hint: const Text('Select Profile'),
               value: _selectedProfile,
-              items: _profiles
-                  .map((p) =>
-                      DropdownMenuItem(value: p, child: Text(p.name)))
-                  .toList(),
+              items:
+                  _profiles
+                      .map(
+                        (p) => DropdownMenuItem(value: p, child: Text(p.name)),
+                      )
+                      .toList(),
               onChanged: (p) {
                 setState(() {
                   _selectedProfile = p;
@@ -676,7 +742,7 @@ Future<void> _loadDefaultFlow({ required String scope, int? profileId }) async {
                 });
                 _loadPresets();
                 // load the profile‐scoped default flow
-     _loadDefaultFlow(scope: 'profile', profileId: p?.id);
+                _loadDefaultFlow(scope: 'profile', profileId: p?.id);
               },
             ),
           ),
@@ -689,21 +755,27 @@ Future<void> _loadDefaultFlow({ required String scope, int? profileId }) async {
                 isExpanded: true,
                 hint: const Text('Select Preset'),
                 value: _selectedPresetId,
-                items: _presetsRaw
-                    .map((r) => DropdownMenuItem(
-                          value: r['id'] as int,
-                          child: Text(r['name'] as String),
-                        ))
-                    .toList(),
+                items:
+                    _presetsRaw
+                        .map(
+                          (r) => DropdownMenuItem(
+                            value: r['id'] as int,
+                            child: Text(r['name'] as String),
+                          ),
+                        )
+                        .toList(),
                 onChanged: (pid) {
                   setState(() => _selectedPresetId = pid);
                   if (pid == null) {
-       // no specific preset chosen → show that profile’s default
-       _loadDefaultFlow(scope: 'profile', profileId: _selectedProfile!.id);
-     } else {
-       // a real preset → show that preset’s own flow
-       _loadFlowAndMethods();
-     }
+                    // no specific preset chosen → show that profile’s default
+                    _loadDefaultFlow(
+                      scope: 'profile',
+                      profileId: _selectedProfile!.id,
+                    );
+                  } else {
+                    // a real preset → show that preset’s own flow
+                    _loadFlowAndMethods();
+                  }
                 },
               ),
             ),
@@ -720,63 +792,86 @@ Future<void> _loadDefaultFlow({ required String scope, int? profileId }) async {
                       runSpacing: 8,
                       children: [
                         BranchControls(
-                          branchable: _nodes.keys
-                              .where((n) =>
-                                  (_edges.where((e) =>
-                                              (e.from == n &&
-                                               (e.outcome == 'success' ||
-                                                e.outcome == 'failure')))
-                                          .length) <
-                                  2)
-                              .toList(),
+                          branchable:
+                              _nodes.keys
+                                  .where(
+                                    (n) =>
+                                        (_edges
+                                            .where(
+                                              (e) =>
+                                                  (e.from == n &&
+                                                      (e.outcome == 'success' ||
+                                                          e.outcome ==
+                                                              'failure')),
+                                            )
+                                            .length) <
+                                        2,
+                                  )
+                                  .toList(),
                           selectedParent: _selectedBranchParent,
-                          onParentChanged: (v) =>
-                              setState(() => _selectedBranchParent = v),
+                          onParentChanged:
+                              (v) => setState(() => _selectedBranchParent = v),
                           onAddSuccess: _onAddSuccess,
                           onAddFailure: _onAddFailure,
-                          existingSuccess: _edges
-                              .where((e) =>
-                                  e.from == _selectedBranchParent &&
-                                  e.outcome == 'success')
-                              .length,
-                          existingFailure: _edges
-                              .where((e) =>
-                                  e.from == _selectedBranchParent &&
-                                  e.outcome == 'failure')
-                              .length,
+                          existingSuccess:
+                              _edges
+                                  .where(
+                                    (e) =>
+                                        e.from == _selectedBranchParent &&
+                                        e.outcome == 'success',
+                                  )
+                                  .length,
+                          existingFailure:
+                              _edges
+                                  .where(
+                                    (e) =>
+                                        e.from == _selectedBranchParent &&
+                                        e.outcome == 'failure',
+                                  )
+                                  .length,
                         ),
                         MethodControls(
                           methodTargets: _nodes.keys.toList(),
                           selectedNode: _selectedMethodNode,
-                          onNodeChanged: (v) =>
-                              setState(() {
+                          onNodeChanged:
+                              (v) => setState(() {
                                 _selectedMethodNode = v;
                                 _selectedMethod = null;
                               }),
                           availableMethods: _methods,
                           selectedMethod: _selectedMethod,
-                          onMethodChanged: (m) =>
-                              setState(() => _selectedMethod = m),
-                          canAdd: _selectedMethodNode != null &&
+                          onMethodChanged:
+                              (m) => setState(() => _selectedMethod = m),
+                          canAdd:
+                              _selectedMethodNode != null &&
                               _selectedMethod != null &&
-                              !_edges.any((e) =>
-                                  e.from == _selectedMethodNode &&
-                                  e.outcome == 'method' &&
-                                  e.to == _selectedMethod!.name),
+                              !_edges.any(
+                                (e) =>
+                                    e.from == _selectedMethodNode &&
+                                    e.outcome == 'method' &&
+                                    e.to == _selectedMethod!.name,
+                              ),
                           onAddMethod: _onAddMethod,
-                          hasMethods: _edges.any((e) =>
-                              e.from == _selectedMethodNode &&
-                              e.outcome == 'method'),
+                          hasMethods: _edges.any(
+                            (e) =>
+                                e.from == _selectedMethodNode &&
+                                e.outcome == 'method',
+                          ),
                           onRemoveMethod: _onRemoveMethod,
-                          canDeleteNode: _selectedMethodNode != null &&
+                          canDeleteNode:
+                              _selectedMethodNode != null &&
                               _selectedMethodNode != '1st attempt' &&
-                              !_edges.any((e) =>
-                                  e.from == _selectedMethodNode! &&
-                                  (e.outcome == 'success' ||
-                                   e.outcome == 'failure')) &&
-                              !_edges.any((e) =>
-                                  e.from == _selectedMethodNode! &&
-                                  e.outcome == 'method'),
+                              !_edges.any(
+                                (e) =>
+                                    e.from == _selectedMethodNode! &&
+                                    (e.outcome == 'success' ||
+                                        e.outcome == 'failure'),
+                              ) &&
+                              !_edges.any(
+                                (e) =>
+                                    e.from == _selectedMethodNode! &&
+                                    e.outcome == 'method',
+                              ),
                           onRemoveNode: _onRemoveNode,
                         ),
                       ],
@@ -797,8 +892,6 @@ Future<void> _loadDefaultFlow({ required String scope, int? profileId }) async {
     );
   }
 }
-
-
 
 /// Internal data for positioning
 class _NodeData {

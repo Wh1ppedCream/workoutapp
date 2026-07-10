@@ -218,6 +218,10 @@ Suggested production cache behavior:
 The app already stores downloaded media locally and can clear its cache from
 Database Settings.
 
+Database Settings also includes a Wi-Fi-only media download preference. When it
+is enabled, the app still syncs manifests and shows already-cached media, but it
+waits for Wi-Fi or ethernet before downloading new remote thumbnails or videos.
+
 ## App Release Checklist
 
 Before a Play Console release with production cloud content:

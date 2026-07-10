@@ -3923,6 +3923,14 @@ class DatabaseHelper {
     final profile = GymProfile(id: null, name: name, createdAt: DateTime.now());
     final newId = await GymProfileDao.insertProfile(db, profile);
     // copy app‐wide methods into the new profile default:
+    final appFlowJson = await fetchDefaultFlow('app');
+    if (!_isEmptyFlowJson(appFlowJson)) {
+      await upsertDefaultFlow(
+        'profile',
+        profileId: newId,
+        flowJson: appFlowJson,
+      );
+    }
     final appMethods = await fetchDefaultFlowMethods('app');
     for (var m in appMethods) {
       await upsertDefaultFlowMethod(
@@ -4035,31 +4043,54 @@ class DatabaseHelper {
       profileId: profileId,
     );
     // copy profile‐default methods into this preset (if profileId != null)
-    if (profileId != null) {
-      final profMethods = await fetchDefaultFlowMethods(
-        'profile',
-        profileId: profileId,
-      );
-      for (var m in profMethods) {
-        await upsertDefaultFlowMethod(
-          'preset',
-          profileId: profileId,
-          name: m['name'] as String,
-          type: m['type'] as String,
-          params: jsonDecode(m['params'] as String),
-        );
-      }
-    }
+    await _copyDefaultProgressRulesToPreset(newId, profileId: profileId);
     return newId;
   }
 
   Future<int> findOrCreatePreset(String name, {int? profileId}) async {
     final db = await database;
-    return PresetDefinitionDao.findOrCreatePresetDefinition(
-      db,
-      name,
-      profileId: profileId,
+    final whereClause =
+        profileId != null
+            ? 'name = ? AND profile_id = ?'
+            : 'name = ? AND profile_id IS NULL';
+    final whereArgs = profileId != null ? [name, profileId] : [name];
+    final existing = await db.query(
+      'preset_definitions',
+      columns: ['id'],
+      where: whereClause,
+      whereArgs: whereArgs,
+      limit: 1,
     );
+    if (existing.isNotEmpty) {
+      return existing.first['id'] as int;
+    }
+    return createPreset(name, profileId: profileId);
+  }
+
+  Future<void> _copyDefaultProgressRulesToPreset(
+    int presetId, {
+    int? profileId,
+  }) async {
+    final scope = profileId == null ? 'app' : 'profile';
+    final flowJson = await fetchDefaultFlow(scope, profileId: profileId);
+    final methods = await fetchDefaultFlowMethods(scope, profileId: profileId);
+
+    if (!_isEmptyFlowJson(flowJson)) {
+      await upsertFlowDefinition(presetId, flowJson);
+    }
+    for (final method in methods) {
+      await upsertFlowMethod(
+        presetId: presetId,
+        name: method['name'] as String,
+        type: method['type'] as String,
+        params: jsonDecode(method['params'] as String) as Map<String, dynamic>,
+      );
+    }
+  }
+
+  bool _isEmptyFlowJson(String flowJson) {
+    final trimmed = flowJson.trim();
+    return trimmed.isEmpty || trimmed == '{}';
   }
 
   Future<List<Map<String, dynamic>>> fetchAllPresetsRaw({
@@ -4552,12 +4583,12 @@ class DatabaseHelper {
             ? 'scope = ? AND profile_id = ?'
             : 'scope = ? AND profile_id IS NULL';
     final args = profileId != null ? [scope, profileId] : [scope];
-    return db.query(
-      'flow_default_methods',
-      where: whereClause,
-      whereArgs: args,
-      orderBy: 'name',
-    );
+    return db.rawQuery('''
+      SELECT rowid AS id, scope, profile_id, name, type, params
+      FROM flow_default_methods
+      WHERE $whereClause
+      ORDER BY name
+      ''', args);
   }
 
   /// Upsert one method into the default‐methods table (conflict on PK(scope,profile_id,name)).
@@ -4570,13 +4601,51 @@ class DatabaseHelper {
   }) async {
     final db = await database;
     final paramsJson = jsonEncode(params); // <-- encode here
-    return db.insert('flow_default_methods', {
+    final defaultWhereClause =
+        profileId != null
+            ? 'scope = ? AND profile_id = ?'
+            : 'scope = ? AND profile_id IS NULL';
+    final defaultArgs = profileId != null ? [scope, profileId] : [scope];
+    final defaultRows = await db.query(
+      'flow_defaults',
+      columns: ['scope'],
+      where: defaultWhereClause,
+      whereArgs: defaultArgs,
+      limit: 1,
+    );
+    if (defaultRows.isEmpty) {
+      await db.insert('flow_defaults', {
+        'scope': scope,
+        'profile_id': profileId,
+        'flow_json': '{}',
+      });
+    }
+    final values = {
       'scope': scope,
       'profile_id': profileId,
       'name': name,
       'type': type,
       'params': paramsJson, // <-- store JSON string
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
+    };
+    final whereClause =
+        profileId != null
+            ? 'scope = ? AND profile_id = ? AND name = ?'
+            : 'scope = ? AND profile_id IS NULL AND name = ?';
+    final args = profileId != null ? [scope, profileId, name] : [scope, name];
+    final updated = await db.update(
+      'flow_default_methods',
+      values,
+      where: whereClause,
+      whereArgs: args,
+    );
+    if (updated == 0) {
+      await db.insert('flow_default_methods', values);
+    }
+    final rows = await db.rawQuery(
+      'SELECT rowid AS id FROM flow_default_methods WHERE $whereClause LIMIT 1',
+      args,
+    );
+    return rows.isEmpty ? 0 : rows.first['id'] as int;
   }
 
   /// Delete one default method by name.

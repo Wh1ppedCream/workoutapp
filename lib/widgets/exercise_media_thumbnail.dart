@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../models/models.dart';
 import '../repositories/app_repository.dart';
+import '../services/media_download_preferences.dart';
 import '../theme/theme_extensions.dart';
 import 'body_heatmap.dart';
 
@@ -51,7 +52,7 @@ class _ExerciseMediaThumbnailState extends State<ExerciseMediaThumbnail> {
 
   Future<_ThumbnailData?> _loadThumbnail() async {
     try {
-      await _repo.syncBundledExerciseMediaManifest();
+      await _repo.ensureExerciseMediaManifestReady();
     } catch (_) {
       // Exercise media is optional and should never block catalog rendering.
     }
@@ -72,6 +73,8 @@ class _ExerciseMediaThumbnailState extends State<ExerciseMediaThumbnail> {
     try {
       final downloaded = await _repo.cacheExerciseMedia(item, thumbnail: true);
       return _ThumbnailData(item: item, file: downloaded);
+    } on MediaDownloadBlockedException {
+      return _ThumbnailData(item: item, wifiOnlyBlocked: true);
     } catch (_) {
       return _ThumbnailData(item: item, failed: true);
     }
@@ -121,6 +124,7 @@ class _ExerciseMediaThumbnailState extends State<ExerciseMediaThumbnail> {
               _buildHeatmapFallback(context),
               if (snapshot.connectionState == ConnectionState.waiting)
                 _buildLoadingOverlay(context),
+              if (data?.wifiOnlyBlocked == true) _buildWifiOnlyOverlay(context),
               if (data?.failed == true) _buildRetryOverlay(context),
             ],
           );
@@ -199,12 +203,39 @@ class _ExerciseMediaThumbnailState extends State<ExerciseMediaThumbnail> {
       ),
     );
   }
+
+  Widget _buildWifiOnlyOverlay(BuildContext context) {
+    final theme = Theme.of(context);
+    return Align(
+      alignment: Alignment.bottomRight,
+      child: Container(
+        width: widget.size * 0.3,
+        height: widget.size * 0.3,
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface.withValues(alpha: 0.82),
+          shape: BoxShape.circle,
+          border: Border.all(color: theme.colorScheme.outlineVariant),
+        ),
+        child: Icon(
+          Icons.wifi,
+          size: widget.size * 0.18,
+          color: theme.colorScheme.primary,
+        ),
+      ),
+    );
+  }
 }
 
 class _ThumbnailData {
   final ExerciseMediaItem item;
   final File? file;
   final bool failed;
+  final bool wifiOnlyBlocked;
 
-  const _ThumbnailData({required this.item, this.file, this.failed = false});
+  const _ThumbnailData({
+    required this.item,
+    this.file,
+    this.failed = false,
+    this.wifiOnlyBlocked = false,
+  });
 }

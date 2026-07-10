@@ -16,6 +16,8 @@ future nutrition content.
 - [x] Show exercise media thumbnails where available.
 - [x] Fall back to body heatmaps when media is missing.
 - [x] Add manual sync/status tools in database settings.
+- [x] Sync the configured exercise media manifest during app startup so first
+  installs can show cloud thumbnails without visiting settings.
 
 ## Phase 3 - Development Bucket
 
@@ -111,10 +113,8 @@ Outside-code dependencies:
 - [x] Show subtle loading state while thumbnails resolve.
 - [x] Show retry affordance when a known media asset fails to cache.
 - [x] Keep heatmap fallback behavior for missing media.
-
-Potential future option:
-
-- [ ] Add a Wi-Fi-only media download preference if users need it.
+- [x] Add a Wi-Fi-only media download preference for new remote media
+  downloads.
 
 ## Phase 11 - Nutrition Cloud Foundation
 

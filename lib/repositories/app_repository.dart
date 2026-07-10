@@ -1,5 +1,6 @@
 // File: lib/repositories/app_repository.dart
 
+import 'dart:convert';
 import 'dart:io';
 
 import '../db/database_helper.dart';
@@ -424,6 +425,9 @@ class AppRepository {
   Future<ContentManifest> syncBundledExerciseMediaManifest() =>
       content.syncBundledExerciseMediaManifest();
 
+  Future<void> ensureExerciseMediaManifestReady() =>
+      content.ensureExerciseMediaManifestReady();
+
   Future<ContentEnvironmentConfig> loadContentEnvironments() =>
       content.loadContentEnvironments();
 
@@ -449,6 +453,12 @@ class AppRepository {
       content.getManifestStatus(namespace);
 
   Future<void> clearContentCache() => content.clearCache();
+
+  Future<bool> isWifiOnlyMediaDownloadEnabled() =>
+      content.isWifiOnlyMediaDownloadEnabled();
+
+  Future<void> setWifiOnlyMediaDownloadEnabled(bool value) =>
+      content.setWifiOnlyMediaDownloadEnabled(value);
 
   Future<void> replaceExerciseMedia(int defId, List<ExerciseMediaItem> items) =>
       _dbHelper.replaceExerciseMedia(defId, items);
@@ -1155,7 +1165,7 @@ class AppRepository {
       scope,
       profileId: profileId,
     );
-    return _flowMethodsFromRows(rows);
+    return _defaultFlowMethodsFromRows(rows, profileId: profileId);
   }
 
   /// Upsert one default flow‐method and return its real id.
@@ -1187,6 +1197,31 @@ class AppRepository {
     return rows.map(FlowMethod.fromMap).toList();
   }
 
+  List<FlowMethod> _defaultFlowMethodsFromRows(
+    List<Map<String, dynamic>> rows, {
+    int? profileId,
+  }) {
+    return rows.map((row) {
+      return FlowMethod(
+        id: (row['id'] as int?) ?? row.hashCode,
+        presetId: profileId ?? -1,
+        name: row['name'] as String,
+        type: MethodTypeX.fromString(row['type'] as String),
+        params: _decodeFlowMethodParams(row['params']),
+      );
+    }).toList();
+  }
+
+  Map<String, dynamic> _decodeFlowMethodParams(Object? rawParams) {
+    if (rawParams is Map<String, dynamic>) {
+      return rawParams;
+    }
+    if (rawParams is String && rawParams.trim().isNotEmpty) {
+      return jsonDecode(rawParams) as Map<String, dynamic>;
+    }
+    return <String, dynamic>{};
+  }
+
   FlowMethod _flowMethodFromValues({
     required int id,
     required int presetId,
@@ -1212,6 +1247,103 @@ class AppRepository {
     profileId: profileId,
     name: name,
   );
+
+  Future<void> renameFlowMethodReferences({
+    required int presetId,
+    required String oldName,
+    required String newName,
+  }) async {
+    final def = await fetchFlowDefinition(presetId);
+    final updated = _replaceMethodReferences(def, oldName, newName);
+    if (!identical(updated, def)) {
+      await upsertFlowDefinition(presetId, updated);
+    }
+  }
+
+  Future<void> deleteFlowMethodAndReferences(FlowMethod method) async {
+    final def = await fetchFlowDefinition(method.presetId);
+    final updated = _removeMethodReferences(def, method.name);
+    if (!identical(updated, def)) {
+      await upsertFlowDefinition(method.presetId, updated);
+    }
+    await deleteFlowMethod(method.id);
+  }
+
+  Future<void> renameDefaultFlowMethodReferences({
+    required String scope,
+    int? profileId,
+    required String oldName,
+    required String newName,
+  }) async {
+    final def = await fetchDefaultFlowDefinition(scope, profileId: profileId);
+    final updated = _replaceMethodReferences(def, oldName, newName);
+    if (!identical(updated, def)) {
+      await upsertDefaultFlow(
+        scope,
+        profileId: profileId,
+        flowJson: updated.toJson(),
+      );
+    }
+  }
+
+  Future<void> deleteDefaultFlowMethodAndReferences({
+    required String scope,
+    int? profileId,
+    required String name,
+  }) async {
+    final def = await fetchDefaultFlowDefinition(scope, profileId: profileId);
+    final updated = _removeMethodReferences(def, name);
+    if (!identical(updated, def)) {
+      await upsertDefaultFlow(
+        scope,
+        profileId: profileId,
+        flowJson: updated.toJson(),
+      );
+    }
+    await deleteDefaultFlowMethod(
+      scope: scope,
+      profileId: profileId,
+      name: name,
+    );
+  }
+
+  FlowDefinition _replaceMethodReferences(
+    FlowDefinition definition,
+    String oldName,
+    String newName,
+  ) {
+    var changed = false;
+    final edges =
+        definition.edges.map((edge) {
+          if (edge.outcome == 'method' && edge.to == oldName) {
+            changed = true;
+            return FlowEdge(
+              from: edge.from,
+              outcome: edge.outcome,
+              to: newName,
+            );
+          }
+          return edge;
+        }).toList();
+    return changed
+        ? FlowDefinition(nodes: definition.nodes, edges: edges)
+        : definition;
+  }
+
+  FlowDefinition _removeMethodReferences(
+    FlowDefinition definition,
+    String methodName,
+  ) {
+    final edges =
+        definition.edges
+            .where(
+              (edge) => !(edge.outcome == 'method' && edge.to == methodName),
+            )
+            .toList();
+    return edges.length == definition.edges.length
+        ? definition
+        : FlowDefinition(nodes: definition.nodes, edges: edges);
+  }
 
   Future<FlowDefinition> fetchDefaultFlowDefinition(
     String scope, {
@@ -1495,6 +1627,7 @@ class AppRepository {
   /// Optionally runs a quick integrity check.
   Future<bool> warmUp({bool verify = false}) async {
     final db = await _dbHelper.database;
+    await ensureExerciseMediaManifestReady();
     if (!verify) return true;
     try {
       await db.rawQuery('PRAGMA quick_check');

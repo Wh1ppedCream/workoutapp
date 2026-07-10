@@ -3,8 +3,10 @@ import 'dart:io';
 import '../db/content_dao.dart';
 import '../db/database_helper.dart';
 import '../models/models.dart';
+import '../services/content_environment_preferences.dart';
 import '../services/content_manifest_service.dart';
 import '../services/media_cache_service.dart';
+import '../services/media_download_preferences.dart';
 
 /// Repository boundary for public cloud-hosted Tonos content.
 ///
@@ -15,15 +17,23 @@ class ContentRepository {
     DatabaseHelper? db,
     ContentManifestService? manifestService,
     MediaCacheService? cacheService,
+    MediaDownloadPolicy? downloadPolicy,
+    ContentEnvironmentPreferences? environmentPreferences,
   }) : _db = db ?? DatabaseHelper(),
        _manifestService = manifestService ?? const ContentManifestService(),
-       _cacheService = cacheService ?? const MediaCacheService();
+       _cacheService = cacheService ?? const MediaCacheService(),
+       _downloadPolicy = downloadPolicy ?? MediaDownloadPolicy(),
+       _environmentPreferences =
+           environmentPreferences ?? const ContentEnvironmentPreferences();
 
   final DatabaseHelper _db;
   final ContentManifestService _manifestService;
   final MediaCacheService _cacheService;
+  final MediaDownloadPolicy _downloadPolicy;
+  final ContentEnvironmentPreferences _environmentPreferences;
   static Future<ContentManifest>? _bundledExerciseManifestSync;
   static Future<ContentEnvironmentConfig>? _bundledContentEnvironments;
+  static Future<void>? _exerciseMediaBootstrapSync;
 
   Future<ContentEnvironmentConfig> loadContentEnvironments() {
     return _bundledContentEnvironments ??=
@@ -69,6 +79,46 @@ class ContentRepository {
     return manifest;
   }
 
+  Future<void> ensureExerciseMediaManifestReady() async {
+    final inFlight = _exerciseMediaBootstrapSync;
+    if (inFlight != null) return inFlight;
+
+    final sync = _bootstrapExerciseMediaManifest();
+    _exerciseMediaBootstrapSync = sync;
+    return sync;
+  }
+
+  Future<void> _bootstrapExerciseMediaManifest() async {
+    if (await _trySyncConfiguredRemoteExerciseMediaManifest()) return;
+
+    try {
+      await syncBundledExerciseMediaManifest();
+    } catch (_) {
+      // Exercise media is optional; the UI can still fall back to heatmaps.
+    }
+  }
+
+  Future<bool> _trySyncConfiguredRemoteExerciseMediaManifest() async {
+    try {
+      final config = await loadContentEnvironments();
+      final manifestUrl =
+          (await _environmentPreferences.loadExerciseMediaManifestUrl(
+            config,
+          )).trim();
+      final uri = Uri.tryParse(manifestUrl);
+      final validRemoteUri =
+          uri != null &&
+          (uri.scheme == 'https' || uri.scheme == 'http') &&
+          uri.host.isNotEmpty;
+      if (!validRemoteUri) return false;
+
+      await syncRemoteExerciseMediaManifest(uri);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<List<ExerciseMediaItem>> fetchExerciseMedia(int exerciseDefId) {
     return _db.getExerciseMedia(exerciseDefId);
   }
@@ -94,6 +144,10 @@ class ContentRepository {
     ExerciseMediaItem item, {
     required bool thumbnail,
   }) async {
+    if (!await _downloadPolicy.canDownloadRemoteMedia()) {
+      throw const MediaDownloadBlockedException();
+    }
+
     final file = await _cacheService.downloadMedia(item, thumbnail: thumbnail);
     final db = await _db.database;
     await ContentDao.updateCachedMediaPath(
@@ -118,6 +172,14 @@ class ContentRepository {
   }
 
   Future<void> clearCache() => _cacheService.clearCache();
+
+  Future<bool> isWifiOnlyMediaDownloadEnabled() {
+    return _downloadPolicy.isWifiOnlyEnabled();
+  }
+
+  Future<void> setWifiOnlyMediaDownloadEnabled(bool value) {
+    return _downloadPolicy.setWifiOnlyEnabled(value);
+  }
 
   bool _isDisplayableImage(ExerciseMediaItem item) {
     final type = item.mediaType.toLowerCase();

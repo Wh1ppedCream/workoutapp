@@ -15,7 +15,8 @@ class GymExerciseSettingsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return SettingsPageScaffold(
       title: 'Gym & Workout Settings',
-      subtitle: 'Tune workout generation, analytics, and workout-flow behavior.',
+      subtitle:
+          'Tune workout generation, analytics, and workout-flow behavior.',
       icon: Icons.fitness_center,
       children: [
         SettingsSection(
@@ -25,13 +26,15 @@ class GymExerciseSettingsPage extends StatelessWidget {
             SettingsActionTile(
               icon: Icons.bar_chart,
               title: 'Workout Settings',
-              subtitle: 'Volume limits, analytics defaults, and training controls.',
+              subtitle:
+                  'Volume limits, analytics defaults, and training controls.',
               onTap: () => _open(context, const AnalyticsSettingsScreen()),
             ),
             SettingsActionTile(
               icon: Icons.account_tree_outlined,
               title: 'Plan Flow Settings',
-              subtitle: 'Configure the logic used when plan flow automation runs.',
+              subtitle:
+                  'Configure the logic used when plan flow automation runs.',
               onTap: () => _open(context, const PresetFlowSettingsScreen()),
             ),
           ]),
@@ -48,8 +51,8 @@ class GymExerciseSettingsPage extends StatelessWidget {
             ),
             SettingsActionTile(
               icon: Icons.route_outlined,
-              title: 'Flow Methods',
-              subtitle: 'Manage flow method rules and related profile setup.',
+              title: 'Workout Progress Rules',
+              subtitle: 'Manage weight, rep, and set progression rules.',
               onTap: () => _open(context, const FlowMethodsPage()),
             ),
           ]),

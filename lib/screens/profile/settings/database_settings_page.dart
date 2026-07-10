@@ -6,14 +6,15 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../db/database_maintenance.dart';
 import '../../../models/models.dart';
 import '../../../repositories/app_repository.dart';
+import '../../../services/content_environment_preferences.dart';
 import '../../../services/tutorial_state_store.dart';
 import '../../../utils/tutorial_launcher.dart';
 import '../../../widgets/guided_tutorial_overlay.dart';
+import '../../../widgets/settings_tiles.dart';
 
 class DatabaseSettingsPage extends StatefulWidget {
   const DatabaseSettingsPage({super.key});
@@ -23,17 +24,14 @@ class DatabaseSettingsPage extends StatefulWidget {
 }
 
 class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
-  static const String _exerciseMediaManifestUrlKey =
-      'content.exercise_media.remote_manifest_url';
-  static const String _exerciseMediaEnvironmentKey =
-      'content.exercise_media.environment';
-
   late final AppRepository _repo;
+  final _contentEnvironmentPreferences = const ContentEnvironmentPreferences();
   late Future<DatabaseHealthSnapshot> _healthFuture;
   late Future<ContentCacheUsage> _contentCacheFuture;
   late Future<ContentManifestStatus?> _exerciseMediaManifestStatusFuture;
   late Future<String> _manifestUrlFuture;
   late Future<ContentEnvironment> _selectedContentEnvironmentFuture;
+  late Future<bool> _wifiOnlyMediaDownloadsFuture;
   final _fileActionsTutorialKey = GlobalKey(
     debugLabel: 'database_file_actions',
   );
@@ -56,6 +54,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
     );
     _selectedContentEnvironmentFuture = _loadSelectedContentEnvironment();
     _manifestUrlFuture = _loadManifestUrl();
+    _wifiOnlyMediaDownloadsFuture = _repo.isWifiOnlyMediaDownloadEnabled();
     _repoBound = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _queueTutorial();
@@ -76,6 +75,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
       );
       _selectedContentEnvironmentFuture = _loadSelectedContentEnvironment();
       _manifestUrlFuture = _loadManifestUrl();
+      _wifiOnlyMediaDownloadsFuture = _repo.isWifiOnlyMediaDownloadEnabled();
     });
   }
 
@@ -360,34 +360,6 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
     }
   }
 
-  Widget _healthRow(String label, String value, {bool? healthy}) {
-    final icon =
-        healthy == null
-            ? Icons.info_outline
-            : healthy
-            ? Icons.check_circle_outline
-            : Icons.warning_amber_outlined;
-    final color =
-        healthy == null
-            ? null
-            : healthy
-            ? Colors.green
-            : Colors.orange;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 18, color: color),
-          const SizedBox(width: 8),
-          SizedBox(width: 92, child: Text(label)),
-          Expanded(child: Text(value)),
-        ],
-      ),
-    );
-  }
-
   String _formatBytes(int bytes) {
     const units = ['B', 'KB', 'MB', 'GB'];
     var size = bytes.toDouble();
@@ -408,32 +380,21 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
   }
 
   Future<String> _loadCustomManifestUrl() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_exerciseMediaManifestUrlKey) ?? '';
+    return _contentEnvironmentPreferences.loadCustomExerciseMediaManifestUrl();
   }
 
   Future<ContentEnvironment> _loadSelectedContentEnvironment() async {
     final config = await _repo.loadContentEnvironments();
-    final prefs = await SharedPreferences.getInstance();
-    final selectedId = prefs.getString(_exerciseMediaEnvironmentKey);
-    if (selectedId != null) {
-      final selected = config.environmentById(selectedId);
-      if (selected != null) return selected;
-    }
-    return config.defaultEnvironment;
+    return _contentEnvironmentPreferences.loadSelectedEnvironment(config);
   }
 
   Future<String> _loadManifestUrl() async {
-    final customUrl = (await _loadCustomManifestUrl()).trim();
-    if (customUrl.isNotEmpty) return customUrl;
-    final environment = await _loadSelectedContentEnvironment();
-    return environment.exerciseMediaManifestUrl;
+    final config = await _repo.loadContentEnvironments();
+    return _contentEnvironmentPreferences.loadExerciseMediaManifestUrl(config);
   }
 
   Future<void> _saveSelectedContentEnvironment(String environmentId) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_exerciseMediaEnvironmentKey, environmentId);
-    await prefs.remove(_exerciseMediaManifestUrlKey);
+    await _contentEnvironmentPreferences.saveSelectedEnvironment(environmentId);
     if (!mounted) return;
     _refreshContentStatus();
   }
@@ -457,13 +418,9 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
   }
 
   Future<void> _saveManifestUrl(String value) async {
-    final prefs = await SharedPreferences.getInstance();
-    final trimmed = value.trim();
-    if (trimmed.isEmpty) {
-      await prefs.remove(_exerciseMediaManifestUrlKey);
-    } else {
-      await prefs.setString(_exerciseMediaManifestUrlKey, trimmed);
-    }
+    await _contentEnvironmentPreferences.saveCustomExerciseMediaManifestUrl(
+      value,
+    );
     if (!mounted) return;
     _refreshContentStatus();
   }
@@ -480,6 +437,23 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
     if (result == null) return;
     if (!mounted) return;
     await _saveManifestUrl(result);
+  }
+
+  Future<void> _setWifiOnlyMediaDownloads(bool value) async {
+    await _repo.setWifiOnlyMediaDownloadEnabled(value);
+    if (!mounted) return;
+    setState(() {
+      _wifiOnlyMediaDownloadsFuture = Future.value(value);
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          value
+              ? 'New media downloads will wait for Wi-Fi.'
+              : 'New media downloads can use any connection.',
+        ),
+      ),
+    );
   }
 
   Future<void> _syncRemoteExerciseMediaManifest() async {
@@ -603,141 +577,132 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
   Widget _buildCloudContentSection() {
     final theme = Theme.of(context);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Divider(),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-          child: Text('Cloud Content', style: theme.textTheme.titleMedium),
+    return SettingsSection(
+      title: 'Cloud Content',
+      subtitle: 'Manage exercise thumbnails, manifests, and cache storage.',
+      children: settingsTilesWithDividers(context, [
+        FutureBuilder<ContentEnvironment>(
+          future: _selectedContentEnvironmentFuture,
+          builder: (context, snapshot) {
+            final environment = snapshot.data;
+            return SettingsActionTile(
+              icon: Icons.public_outlined,
+              title: 'Content Environment',
+              subtitle:
+                  environment == null
+                      ? 'Loading environment...'
+                      : '${environment.label}${environment.isProduction ? ' (production)' : ''}'
+                          '${environment.description.isEmpty ? '' : '\n${environment.description}'}',
+              trailing: IconButton(
+                tooltip: 'Change environment',
+                icon: const Icon(Icons.swap_horiz),
+                color: theme.colorScheme.primary,
+                onPressed:
+                    _contentActionRunning ? null : _editContentEnvironment,
+              ),
+              onTap: _contentActionRunning ? null : _editContentEnvironment,
+            );
+          },
         ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Card(
-            child: Column(
-              children: [
-                FutureBuilder<String>(
-                  future: _manifestUrlFuture,
-                  builder: (context, snapshot) {
-                    final url = snapshot.data ?? '';
-                    return ListTile(
-                      leading: const Icon(Icons.cloud_outlined),
-                      title: const Text('Exercise Media Manifest URL'),
-                      subtitle: Text(
-                        url.isEmpty
-                            ? 'No remote manifest URL set for this environment.'
-                            : url,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      trailing: IconButton(
-                        tooltip: 'Override URL',
-                        icon: const Icon(Icons.edit),
-                        onPressed:
-                            _contentActionRunning ? null : _editManifestUrl,
-                      ),
-                    );
-                  },
-                ),
-                FutureBuilder<ContentEnvironment>(
-                  future: _selectedContentEnvironmentFuture,
-                  builder: (context, snapshot) {
-                    final environment = snapshot.data;
-                    return ListTile(
-                      leading: const Icon(Icons.public_outlined),
-                      title: const Text('Content Environment'),
-                      subtitle: Text(
-                        environment == null
-                            ? 'Loading...'
-                            : '${environment.label}${environment.isProduction ? ' (production)' : ''}'
-                                '${environment.description.isEmpty ? '' : '\n${environment.description}'}',
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      trailing: IconButton(
-                        tooltip: 'Change environment',
-                        icon: const Icon(Icons.swap_horiz),
-                        onPressed:
-                            _contentActionRunning
-                                ? null
-                                : _editContentEnvironment,
-                      ),
-                    );
-                  },
-                ),
-                const Divider(height: 1),
-                FutureBuilder<ContentManifestStatus?>(
-                  future: _exerciseMediaManifestStatusFuture,
-                  builder: (context, snapshot) {
-                    final status = snapshot.data;
-                    return ListTile(
-                      leading: const Icon(Icons.description_outlined),
-                      title: Text(
-                        status == null
-                            ? 'No exercise media manifest synced'
-                            : 'Manifest v${status.version}',
-                      ),
-                      subtitle: Text(
-                        'Last checked: ${_formatDateTime(status?.lastCheckedAt)}',
-                      ),
-                    );
-                  },
-                ),
-                FutureBuilder<ContentCacheUsage>(
-                  future: _contentCacheFuture,
-                  builder: (context, snapshot) {
-                    final usage =
-                        snapshot.data ??
-                        const ContentCacheUsage(fileCount: 0, totalBytes: 0);
-                    return ListTile(
-                      leading: const Icon(Icons.folder_copy_outlined),
-                      title: const Text('Downloaded Media Cache'),
-                      subtitle: Text(
-                        '${usage.fileCount} files, ${_formatBytes(usage.totalBytes)}',
-                      ),
-                    );
-                  },
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading:
-                      _contentActionRunning
-                          ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                          : const Icon(Icons.sync),
-                  title: const Text('Sync Remote Exercise Media'),
-                  subtitle: const Text(
-                    'Fetches the manifest from your configured CDN URL.',
-                  ),
-                  onTap:
-                      _contentActionRunning
-                          ? null
-                          : _syncRemoteExerciseMediaManifest,
-                ),
-                ListTile(
-                  leading: const Icon(Icons.inventory_2_outlined),
-                  title: const Text('Load Bundled Manifest'),
-                  subtitle: const Text(
-                    'Loads the safe local manifest included with the app.',
-                  ),
-                  onTap:
-                      _contentActionRunning
-                          ? null
-                          : _syncBundledExerciseMediaManifest,
-                ),
-                ListTile(
-                  leading: const Icon(Icons.cleaning_services_outlined),
-                  title: const Text('Clear Downloaded Media Cache'),
-                  onTap: _contentActionRunning ? null : _clearContentCache,
-                ),
-              ],
-            ),
-          ),
+        FutureBuilder<String>(
+          future: _manifestUrlFuture,
+          builder: (context, snapshot) {
+            final url = snapshot.data ?? '';
+            return SettingsActionTile(
+              icon: Icons.cloud_outlined,
+              title: 'Manifest URL',
+              subtitle:
+                  url.isEmpty
+                      ? 'No remote manifest URL set for this environment.'
+                      : url,
+              trailing: IconButton(
+                tooltip: 'Override URL',
+                icon: const Icon(Icons.edit),
+                color: theme.colorScheme.primary,
+                onPressed: _contentActionRunning ? null : _editManifestUrl,
+              ),
+              onTap: _contentActionRunning ? null : _editManifestUrl,
+            );
+          },
         ),
-      ],
+        FutureBuilder<ContentManifestStatus?>(
+          future: _exerciseMediaManifestStatusFuture,
+          builder: (context, snapshot) {
+            final status = snapshot.data;
+            return SettingsActionTile(
+              icon: Icons.description_outlined,
+              title:
+                  status == null
+                      ? 'No Manifest Synced'
+                      : 'Manifest v${status.version}',
+              subtitle:
+                  'Last checked: ${_formatDateTime(status?.lastCheckedAt)}',
+              trailing: const SizedBox.shrink(),
+            );
+          },
+        ),
+        FutureBuilder<ContentCacheUsage>(
+          future: _contentCacheFuture,
+          builder: (context, snapshot) {
+            final usage =
+                snapshot.data ??
+                const ContentCacheUsage(fileCount: 0, totalBytes: 0);
+            return SettingsActionTile(
+              icon: Icons.folder_copy_outlined,
+              title: 'Downloaded Media Cache',
+              subtitle:
+                  '${usage.fileCount} files, ${_formatBytes(usage.totalBytes)}',
+              trailing: const SizedBox.shrink(),
+            );
+          },
+        ),
+        FutureBuilder<bool>(
+          future: _wifiOnlyMediaDownloadsFuture,
+          builder: (context, snapshot) {
+            final wifiOnly = snapshot.data ?? false;
+            return SettingsSwitchTile(
+              icon: Icons.wifi,
+              title: 'Wi-Fi Only Downloads',
+              subtitle:
+                  'New thumbnails and videos download only on Wi-Fi. Cached media still works offline.',
+              value: wifiOnly,
+              onChanged:
+                  _contentActionRunning
+                      ? null
+                      : (value) {
+                        unawaited(_setWifiOnlyMediaDownloads(value));
+                      },
+            );
+          },
+        ),
+        SettingsActionTile(
+          icon: Icons.sync,
+          title: 'Sync Remote Exercise Media',
+          trailing:
+              _contentActionRunning
+                  ? const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                  : null,
+          onTap:
+              _contentActionRunning ? null : _syncRemoteExerciseMediaManifest,
+        ),
+        SettingsActionTile(
+          icon: Icons.inventory_2_outlined,
+          title: 'Load Bundled Manifest',
+          onTap:
+              _contentActionRunning ? null : _syncBundledExerciseMediaManifest,
+        ),
+        SettingsActionTile(
+          icon: Icons.cleaning_services_outlined,
+          title: 'Clear Downloaded Media Cache',
+          subtitle: 'Removes cached remote media files from this device.',
+          iconColor: theme.colorScheme.error,
+          onTap: _contentActionRunning ? null : _clearContentCache,
+        ),
+      ]),
     );
   }
 
@@ -768,229 +733,357 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Database Settings')),
-      body: ListView(
-        children: [
+    return SettingsPageScaffold(
+      title: 'Database Settings',
+      subtitle: 'Backups, cloud media, health checks, and developer exports.',
+      icon: Icons.storage_outlined,
+      children: [
           KeyedSubtree(
             key: _fileActionsTutorialKey,
-            child: Column(
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.upload_file),
-                  title: const Text('Export Entire Database to File'),
+            child: SettingsSection(
+              title: 'Backup & Restore',
+              subtitle: 'Move your local Tonos data in or out safely.',
+              children: settingsTilesWithDividers(context, [
+                SettingsActionTile(
+                  icon: Icons.upload_file,
+                  title: 'Export Database Backup',
                   onTap: _exportDatabase,
                 ),
-                ListTile(
-                  leading: const Icon(Icons.download),
-                  title: const Text('Import Database from File'),
+                SettingsActionTile(
+                  icon: Icons.download,
+                  title: 'Import Database Backup',
+                  subtitle: 'Replace local data from a saved export file.',
+                  iconColor: Theme.of(context).colorScheme.error,
                   onTap: _importDatabase,
                 ),
-              ],
+              ]),
             ),
           ),
 
-          const Divider(),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-            child: Text(
-              'Health & Maintenance',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-          ),
-          KeyedSubtree(
-            key: _healthTutorialKey,
-            child: FutureBuilder<DatabaseHealthSnapshot>(
-              future: _healthFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState != ConnectionState.done) {
-                  return const ListTile(
-                    leading: SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                    title: Text('Checking database health...'),
-                  );
-                }
-
-                if (snapshot.hasError) {
-                  return ListTile(
-                    leading: const Icon(Icons.error_outline),
-                    title: const Text('Database health check failed'),
-                    subtitle: Text('${snapshot.error}'),
-                    trailing: IconButton(
-                      tooltip: 'Retry',
-                      icon: const Icon(Icons.refresh),
-                      onPressed: _refreshHealth,
-                    ),
-                  );
-                }
-
-                final health = snapshot.data!;
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _healthRow(
-                            'Schema',
-                            'v${health.schemaVersion} / target v${health.targetSchemaVersion}',
-                            healthy: health.isSchemaCurrent,
-                          ),
-                          _healthRow('Size', _formatBytes(health.totalBytes)),
-                          _healthRow('Journal', health.journalMode),
-                          _healthRow(
-                            'Tables',
-                            '${health.tableCount} tables, ${health.indexCount} indexes, ${health.triggerCount} triggers',
-                          ),
-                          _healthRow(
-                            'Food search',
-                            '${health.foodCount} foods, ${health.foodFtsCount} FTS rows',
-                            healthy: health.isFoodSearchAligned,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            health.path,
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
+          KeyedSubtree(key: _healthTutorialKey, child: _buildHealthSection()),
           KeyedSubtree(
             key: _maintenanceTutorialKey,
-            child: ListTile(
-              leading: const Icon(Icons.refresh),
-              title: const Text('Refresh Database Health'),
-              onTap: _maintenanceRunning ? null : _refreshHealth,
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.fact_check),
-            title: const Text('Run Integrity Check'),
-            onTap:
-                _maintenanceRunning
-                    ? null
-                    : () => _runMaintenance(_repo.runDatabaseIntegrityCheck),
-          ),
-          ListTile(
-            leading: const Icon(Icons.auto_fix_high),
-            title: const Text('Optimize Database'),
-            subtitle: const Text('Runs SQLite PRAGMA optimize.'),
-            onTap:
-                _maintenanceRunning
-                    ? null
-                    : () => _runMaintenance(_repo.optimizeDatabase),
-          ),
-          ListTile(
-            leading: const Icon(Icons.save_alt),
-            title: const Text('Checkpoint WAL'),
-            subtitle: const Text(
-              'Flushes the write-ahead log into the database file.',
-            ),
-            onTap:
-                _maintenanceRunning
-                    ? null
-                    : () => _runMaintenance(_repo.checkpointWal),
-          ),
-          ListTile(
-            leading: const Icon(Icons.compress),
-            title: const Text('Vacuum Database'),
-            subtitle: const Text(
-              'Reclaims free space after large deletes/imports.',
-            ),
-            onTap:
-                _maintenanceRunning
-                    ? null
-                    : () => _runMaintenance(_repo.vacuumDatabase),
+            child: _buildMaintenanceSection(),
           ),
 
           _buildCloudContentSection(),
 
-          const Divider(),
+          _buildDeveloperExportSection(),
 
-          // Asset‐style exports
-          ListTile(
-            leading: const Icon(Icons.upload_file),
-            title: const Text('Export equipment.json'),
-            onTap:
-                () => _exportAsset(_repo.exportEquipmentJson, 'equipment.json'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.upload_file),
-            title: const Text('Export bodyparts.json'),
-            onTap:
-                () => _exportAsset(_repo.exportBodypartsJson, 'bodyparts.json'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.upload_file),
-            title: const Text('Export muscles.json'),
-            onTap: () => _exportAsset(_repo.exportMusclesJson, 'muscles.json'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.upload_file),
-            title: const Text('Export exercises.json'),
-            onTap:
-                () => _exportAsset(_repo.exportExercisesJson, 'exercises.json'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.upload_file),
-            title: const Text('Export stretches.json'),
-            onTap:
-                () => _exportAsset(_repo.exportStretchesJson, 'stretches.json'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.upload_file),
-            title: const Text('Export muscle_bodypart.json'),
-            onTap:
-                () => _exportAsset(
-                  _repo.exportMuscleBodypartJson,
-                  'muscle_bodypart.json',
+        ],
+    );
+  }
+
+  Widget _buildHealthSection() {
+    return SettingsSection(
+      title: 'Health',
+      subtitle: 'A quick read on database size, schema, and search index state.',
+      children: [
+        FutureBuilder<DatabaseHealthSnapshot>(
+          future: _healthFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState != ConnectionState.done) {
+              return const SettingsActionTile(
+                icon: Icons.health_and_safety_outlined,
+                title: 'Checking database health...',
+                subtitle: 'Reading schema, size, tables, and indexes.',
+                trailing: SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(strokeWidth: 2),
                 ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.upload_file),
-            title: const Text('Export bodypart_ranking.json'),
-            onTap:
-                () => _exportAsset(
-                  _repo.exportBodypartRankingJson,
-                  'bodypart_ranking.json',
+              );
+            }
+
+            if (snapshot.hasError) {
+              return SettingsActionTile(
+                icon: Icons.error_outline,
+                iconColor: Theme.of(context).colorScheme.error,
+                title: 'Database health check failed',
+                subtitle: '${snapshot.error}',
+                trailing: IconButton(
+                  tooltip: 'Retry',
+                  icon: const Icon(Icons.refresh),
+                  onPressed: _refreshHealth,
                 ),
+                onTap: _refreshHealth,
+              );
+            }
+
+            return _DatabaseHealthCard(
+              health: snapshot.data!,
+              formatBytes: _formatBytes,
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMaintenanceSection() {
+    return SettingsSection(
+      title: 'Maintenance',
+      subtitle: 'Safe tools for checks, optimization, and storage cleanup.',
+      children: settingsTilesWithDividers(context, [
+        SettingsActionTile(
+          icon: Icons.refresh,
+          title: 'Refresh Health',
+          trailing:
+              _maintenanceRunning
+                  ? const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                  : null,
+          onTap: _maintenanceRunning ? null : _refreshHealth,
+        ),
+        SettingsActionTile(
+          icon: Icons.fact_check,
+          title: 'Run Integrity Check',
+          subtitle: 'Ask SQLite to verify the local database file.',
+          onTap:
+              _maintenanceRunning
+                  ? null
+                  : () => _runMaintenance(_repo.runDatabaseIntegrityCheck),
+        ),
+        SettingsActionTile(
+          icon: Icons.auto_fix_high,
+          title: 'Optimize Database',
+          onTap:
+              _maintenanceRunning
+                  ? null
+                  : () => _runMaintenance(_repo.optimizeDatabase),
+        ),
+        SettingsActionTile(
+          icon: Icons.save_alt,
+          title: 'Checkpoint WAL',
+          subtitle: 'Flushes the write-ahead log into the database file.',
+          onTap:
+              _maintenanceRunning
+                  ? null
+                  : () => _runMaintenance(_repo.checkpointWal),
+        ),
+        SettingsActionTile(
+          icon: Icons.compress,
+          title: 'Vacuum Database',
+          subtitle: 'Reclaims free space after large deletes/imports.',
+          onTap:
+              _maintenanceRunning
+                  ? null
+                  : () => _runMaintenance(_repo.vacuumDatabase),
+        ),
+      ]),
+    );
+  }
+
+  Widget _buildDeveloperExportSection() {
+    return SettingsSection(
+      title: 'Definition Exports',
+      subtitle: 'Export app definition files for inspection or tooling.',
+      children: settingsTilesWithDividers(context, [
+        SettingsActionTile(
+          icon: Icons.data_object,
+          title: 'Export equipment.json',
+          onTap: () => _exportAsset(_repo.exportEquipmentJson, 'equipment.json'),
+        ),
+        SettingsActionTile(
+          icon: Icons.data_object,
+          title: 'Export bodyparts.json',
+          onTap:
+              () => _exportAsset(_repo.exportBodypartsJson, 'bodyparts.json'),
+        ),
+        SettingsActionTile(
+          icon: Icons.data_object,
+          title: 'Export muscles.json',
+          onTap: () => _exportAsset(_repo.exportMusclesJson, 'muscles.json'),
+        ),
+        SettingsActionTile(
+          icon: Icons.data_object,
+          title: 'Export exercises.json',
+          onTap:
+              () => _exportAsset(_repo.exportExercisesJson, 'exercises.json'),
+        ),
+        SettingsActionTile(
+          icon: Icons.data_object,
+          title: 'Export stretches.json',
+          onTap:
+              () => _exportAsset(_repo.exportStretchesJson, 'stretches.json'),
+        ),
+        SettingsActionTile(
+          icon: Icons.data_object,
+          title: 'Export muscle_bodypart.json',
+          onTap:
+              () => _exportAsset(
+                _repo.exportMuscleBodypartJson,
+                'muscle_bodypart.json',
+              ),
+        ),
+        SettingsActionTile(
+          icon: Icons.data_object,
+          title: 'Export bodypart_ranking.json',
+          onTap:
+              () => _exportAsset(
+                _repo.exportBodypartRankingJson,
+                'bodypart_ranking.json',
+              ),
+        ),
+        SettingsActionTile(
+          icon: Icons.data_object,
+          title: 'Export muscle_ranking.json',
+          onTap:
+              () => _exportAsset(
+                _repo.exportMuscleRankingJson,
+                'muscle_ranking.json',
+              ),
+        ),
+        SettingsActionTile(
+          icon: Icons.data_object,
+          title: 'Export bodypart_muscle_rankings.json',
+          onTap:
+              () => _exportAsset(
+                _repo.exportBodypartMuscleRankingsJson,
+                'bodypart_muscle_rankings.json',
+              ),
+        ),
+        SettingsActionTile(
+          icon: Icons.data_object,
+          title: 'Export volume_boundaries.json',
+          onTap:
+              () => _exportAsset(
+                _repo.exportVolumeBoundariesJson,
+                'volume_boundaries.json',
+              ),
+        ),
+      ]),
+    );
+  }
+}
+
+class _DatabaseHealthCard extends StatelessWidget {
+  final DatabaseHealthSnapshot health;
+  final String Function(int bytes) formatBytes;
+
+  const _DatabaseHealthCard({
+    required this.health,
+    required this.formatBytes,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _HealthInfoRow(
+            label: 'Schema',
+            value:
+                'v${health.schemaVersion} / target v${health.targetSchemaVersion}',
+            healthy: health.isSchemaCurrent,
           ),
-          ListTile(
-            leading: const Icon(Icons.upload_file),
-            title: const Text('Export muscle_ranking.json'),
-            onTap:
-                () => _exportAsset(
-                  _repo.exportMuscleRankingJson,
-                  'muscle_ranking.json',
-                ),
+          _HealthDivider(color: scheme.outlineVariant),
+          _HealthInfoRow(label: 'Size', value: formatBytes(health.totalBytes)),
+          _HealthDivider(color: scheme.outlineVariant),
+          _HealthInfoRow(label: 'Journal', value: health.journalMode),
+          _HealthDivider(color: scheme.outlineVariant),
+          _HealthInfoRow(
+            label: 'Tables',
+            value:
+                '${health.tableCount} tables, ${health.indexCount} indexes, ${health.triggerCount} triggers',
           ),
-          ListTile(
-            leading: const Icon(Icons.upload_file),
-            title: const Text('Export bodypart_muscle_rankings.json'),
-            onTap:
-                () => _exportAsset(
-                  _repo.exportBodypartMuscleRankingsJson,
-                  'bodypart_muscle_rankings.json',
-                ),
+          _HealthDivider(color: scheme.outlineVariant),
+          _HealthInfoRow(
+            label: 'Food search',
+            value: '${health.foodCount} foods, ${health.foodFtsCount} FTS rows',
+            healthy: health.isFoodSearchAligned,
           ),
-          ListTile(
-            leading: const Icon(Icons.upload_file),
-            title: const Text('Export volume_boundaries.json'),
-            onTap:
-                () => _exportAsset(
-                  _repo.exportVolumeBoundariesJson,
-                  'volume_boundaries.json',
-                ),
+          _HealthDivider(color: scheme.outlineVariant),
+          _HealthInfoRow(
+            label: 'Path',
+            value: health.path,
+            maxLines: 2,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HealthDivider extends StatelessWidget {
+  final Color color;
+
+  const _HealthDivider({required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Divider(height: 1, color: color.withValues(alpha: 0.42));
+  }
+}
+
+class _HealthInfoRow extends StatelessWidget {
+  final String label;
+  final String value;
+  final bool? healthy;
+  final int maxLines;
+
+  const _HealthInfoRow({
+    required this.label,
+    required this.value,
+    this.healthy,
+    this.maxLines = 1,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final statusColor =
+        healthy == null
+            ? scheme.primary
+            : healthy!
+            ? Colors.green
+            : Colors.orange;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            healthy == null
+                ? Icons.info_outline
+                : healthy!
+                ? Icons.check_circle_outline
+                : Icons.warning_amber_outlined,
+            size: 18,
+            color: statusColor,
+          ),
+          const SizedBox(width: 10),
+          SizedBox(
+            width: 96,
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: scheme.onSurfaceVariant,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              value,
+              maxLines: maxLines,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ),
         ],
       ),
