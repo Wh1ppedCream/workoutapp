@@ -12,6 +12,7 @@ class TutorialsSettingsPage extends StatelessWidget {
       title: 'Guided Tutorials',
       subtitle: 'Replay walkthroughs or reset them while learning the app.',
       icon: Icons.school_outlined,
+      heroAccentColor: SettingsAccent.appearance,
       children: [
         const SettingsInfoCard(
           icon: Icons.lightbulb_outline,
@@ -23,6 +24,7 @@ class TutorialsSettingsPage extends StatelessWidget {
         SettingsSection(
           title: 'Main Tabs',
           subtitle: 'Replay walkthroughs for each main area.',
+          accentColor: SettingsAccent.appearance,
           children: settingsTilesWithDividers(context, [
             _tutorialResetTile(
               context,
@@ -69,6 +71,7 @@ class TutorialsSettingsPage extends StatelessWidget {
         SettingsSection(
           title: 'Workout',
           subtitle: 'Help for logging your first session.',
+          accentColor: SettingsAccent.training,
           children: settingsTilesWithDividers(context, [
             _tutorialResetTile(
               context,
@@ -83,6 +86,7 @@ class TutorialsSettingsPage extends StatelessWidget {
         SettingsSection(
           title: 'Plans & Workouts',
           subtitle: 'Replay plan creation, editing, and workout detail help.',
+          accentColor: SettingsAccent.training,
           children: settingsTilesWithDividers(context, [
             _tutorialResetTile(
               context,
@@ -138,6 +142,7 @@ class TutorialsSettingsPage extends StatelessWidget {
         SettingsSection(
           title: 'Catalog & Anatomy',
           subtitle: 'Replay exercise and target anatomy help.',
+          accentColor: SettingsAccent.advanced,
           children: settingsTilesWithDividers(context, [
             _tutorialResetTile(
               context,
@@ -192,6 +197,7 @@ class TutorialsSettingsPage extends StatelessWidget {
         SettingsSection(
           title: 'Progress & Settings',
           subtitle: 'Replay progress detail and settings page help.',
+          accentColor: SettingsAccent.progress,
           children: settingsTilesWithDividers(context, [
             _tutorialResetTile(
               context,
@@ -238,6 +244,7 @@ class TutorialsSettingsPage extends StatelessWidget {
         SettingsSection(
           title: 'All Tutorials',
           subtitle: 'Useful while testing new guided help.',
+          accentColor: SettingsAccent.data,
           children: settingsTilesWithDividers(context, [
             SettingsActionTile(
               icon: Icons.restart_alt,

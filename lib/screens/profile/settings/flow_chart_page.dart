@@ -28,18 +28,17 @@ class _FlowChartPageState extends State<FlowChartPage> {
   String? _selectedNode;
 
   String? _selectedTargetNode;
-   /// Currently selected event name for removal
+
+  /// Currently selected event name for removal
   String? _selectedEvent;
 
-/// All nodes except the root “1st attempt”
-List<String> get _targetableNodes => 
-  _nodes.keys.where((name) => name != '1st attempt').toList();
-
+  /// All nodes except the root “1st attempt”
+  List<String> get _targetableNodes =>
+      _nodes.keys.where((name) => name != '1st attempt').toList();
 
   // Counters to number success/fail nodes separately
   int _successCounter = 0; // total "success" nodes created
   int _failureCounter = 0; // total "fail" nodes created
-
 
   /// Horizontal spacing applied when positioning child nodes relative to parent.
   static const double _hSpacing = 60;
@@ -55,9 +54,7 @@ List<String> get _targetableNodes =>
     super.initState();
 
     // Initialize the dashboard with curved arrows by default.
-    _dashboard = Dashboard(
-      defaultArrowStyle: ArrowStyle.curve,
-    );
+    _dashboard = Dashboard(defaultArrowStyle: ArrowStyle.curve);
 
     // Build the initial tree structure (root + two initial leaves).
     _initializeTree();
@@ -69,12 +66,13 @@ List<String> get _targetableNodes =>
     // 1) Create the root FlowElement
     final root = FlowElement(
       position: const Offset(60, 50), // x=60, y=50 near top
-      size: const Size(60, 30),        // width=60, height=30
-      text: '1st attempt',           // visible label
-      textSize: 7,                    // font size 12
-      handlerSize: 5,                 // touchable handler radius
-      kind: ElementKind.rectangle,     // rectangular shape
-      handlers: [                      // handlers where connections attach
+      size: const Size(60, 30), // width=60, height=30
+      text: '1st attempt', // visible label
+      textSize: 7, // font size 12
+      handlerSize: 5, // touchable handler radius
+      kind: ElementKind.rectangle, // rectangular shape
+      handlers: [
+        // handlers where connections attach
         Handler.bottomCenter,
         Handler.leftCenter,
         Handler.rightCenter,
@@ -98,20 +96,17 @@ List<String> get _targetableNodes =>
 
   /// Adds a child node to [parentName], marking it as success or failure.
   /// If [init] is true, the new node also loops back to the root.
-  void _addChild({
-    required String parentName,
-    required bool isSuccess,
-  }) {
+  void _addChild({required String parentName, required bool isSuccess}) {
     // Lookup parent element and its data
     final parent = _nodes[parentName]!;
     final data = _nodeData[parentName]!;
-  final root   = _nodes['1st attempt']!;
-     // 1) compute this new node’s depth:
-  final childDepth = data.depth + 1;
-  
-  // 2) figure out its index in that row:
-  final idxInRow = (_placement[childDepth] ?? 0);
-  _placement[childDepth] = idxInRow + 1;
+    final root = _nodes['1st attempt']!;
+    // 1) compute this new node’s depth:
+    final childDepth = data.depth + 1;
+
+    // 2) figure out its index in that row:
+    final idxInRow = (_placement[childDepth] ?? 0);
+    _placement[childDepth] = idxInRow + 1;
 
     // Generate an index based on node type
     final idx = isSuccess ? ++_successCounter : ++_failureCounter;
@@ -127,19 +122,20 @@ List<String> get _targetableNodes =>
     }
 
     // 4) compute its position:
-  final x = 100 + idxInRow * _hSpacing;    // 100px left margin + column-spacing
-  final y =  50 + childDepth * _vSpacing;  //  50px top margin + row-spacing
-  final newPos = Offset(x, y);
-  
+    final x = 100 + idxInRow * _hSpacing; // 100px left margin + column-spacing
+    final y = 50 + childDepth * _vSpacing; //  50px top margin + row-spacing
+    final newPos = Offset(x, y);
+
     // Create the FlowElement for the new node
     final newNode = FlowElement(
       position: newPos,
-      size: const Size(50, 25),       // smaller than root
+      size: const Size(50, 25), // smaller than root
       text: name,
-      textSize: 7,                     // small font for many nodes
+      textSize: 7, // small font for many nodes
       handlerSize: 5,
       kind: ElementKind.rectangle,
-      handlers: [                      // allow bi-directional connectors
+      handlers: [
+        // allow bi-directional connectors
         Handler.bottomCenter,
         Handler.topCenter,
         Handler.leftCenter,
@@ -150,79 +146,78 @@ List<String> get _targetableNodes =>
     // Add the new node to dashboard and tracking
     _dashboard.addElement(newNode);
     _nodes[name] = newNode;
-     _nodeData[name]  = NodeData(depth: childDepth);
+    _nodeData[name] = NodeData(depth: childDepth);
 
     // Draw arrow from parent → newNode
     // 1) connect parent → newNode
-_dashboard.addNextById(parent, newNode.id, _arrow(parent, newNode),);
+    _dashboard.addNextById(parent, newNode.id, _arrow(parent, newNode));
 
-// 2) every leaf (newly‐created node) should loop back to the root
- // 2) Update parent's loop-back arrow:
-  final childCount = data.successCount + data.failureCount;
-  if (childCount == 1) {
-    // Just went 0→1: add the loop back
-    _dashboard.addNextById(parent, root.id, _loopArrow(parent, root));
-  } else if (childCount == 2) {
-    // Just went 1→2: remove its existing loop
-    _dashboard.removeElementConnection(parent, Handler.leftCenter);
+    // 2) every leaf (newly‐created node) should loop back to the root
+    // 2) Update parent's loop-back arrow:
+    final childCount = data.successCount + data.failureCount;
+    if (childCount == 1) {
+      // Just went 0→1: add the loop back
+      _dashboard.addNextById(parent, root.id, _loopArrow(parent, root));
+    } else if (childCount == 2) {
+      // Just went 1→2: remove its existing loop
+      _dashboard.removeElementConnection(parent, Handler.leftCenter);
+    }
+
+    // 3) Since newNode has 0 children, add its loop-back
+    _dashboard.addNextById(newNode, root.id, _loopArrow(newNode, root));
   }
 
-  // 3) Since newNode has 0 children, add its loop-back
-  _dashboard.addNextById(newNode, root.id, _loopArrow(newNode, root));
-}
-
-/// After you create or update the event list, call this to resize & reposition:
-void _layoutListBox(String nodeName) {
-  final data   = _nodeData[nodeName]!;
-  final parent = _nodes[nodeName]!;
+  /// After you create or update the event list, call this to resize & reposition:
+  void _layoutListBox(String nodeName) {
+    final data = _nodeData[nodeName]!;
+    final parent = _nodes[nodeName]!;
     if (data.listElement == null) return;
 
+    // Desired size:
+    //  - width = 50
+    //  - height = 20px per event + 20px header
+    final width = 50.0;
+    final height = 15.0 * data.events.length + 15;
 
-  // Desired size: 
-  //  - width = 50
-  //  - height = 20px per event + 20px header
-  final width  = 50.0;
-  final height = 15.0 * data.events.length + 15;
+    // Place it just to the right of the parent
+    final newPos = parent.position + Offset(-5, parent.size.height - 5);
 
-  // Place it just to the right of the parent
-  final newPos = parent.position + Offset(-5, parent.size.height - 5);
+    final listEl = data.listElement!;
+    listEl.changePosition(newPos);
+    listEl.changeSize(Size(width, height));
+    // Build the text with header + newline‐separated events
+    listEl.setText(data.events.join('\n'));
+    listEl.setElevation(10);
+    _bringElementToFront(data.listElement!);
+  }
 
-  final listEl = data.listElement!;
-  listEl.changePosition(newPos);
-  listEl.changeSize(Size(width, height));
-  // Build the text with header + newline‐separated events
-  listEl.setText(data.events.join('\n'));
-  listEl.setElevation(10);
-  _bringElementToFront(data.listElement!);
-}
+  void _onAddEvent(String newKey, String display) {
+    if (_selectedTargetNode == null) return;
+    final nodeName = _selectedTargetNode!;
+    final data = _nodeData[nodeName]!;
 
-void _onAddEvent(String newKey, String display) {
-  if (_selectedTargetNode == null) return;
-  final nodeName = _selectedTargetNode!;
-  final data     = _nodeData[nodeName]!;
+    // Limit to 3
+    if (data.events.length >= 3) return;
 
-  // Limit to 3
-  if (data.events.length >= 3) return;
-
-  // Use display if provided, otherwise use the key itself
+    // Use display if provided, otherwise use the key itself
     final toShow = display.isNotEmpty ? display : newKey;
     data.events.add(toShow);
 
-  // 2) Create the list‐box element on first event
-  if (data.listElement == null) {
-    final listEl = FlowElement(
-      position: Offset.zero,     // will be repositioned below
-      size: const Size(50, 40),  // placeholder
-      text: 'List\n$toShow',
-      textSize: 7,
-      kind: ElementKind.rectangle,
-      handlers: [],              // no handlers on these
-    );
-    _dashboard.addElement(listEl);
-    data.listElement = listEl;
-    listEl.setElevation(10);
+    // 2) Create the list‐box element on first event
+    if (data.listElement == null) {
+      final listEl = FlowElement(
+        position: Offset.zero, // will be repositioned below
+        size: const Size(50, 40), // placeholder
+        text: 'List\n$toShow',
+        textSize: 7,
+        kind: ElementKind.rectangle,
+        handlers: [], // no handlers on these
+      );
+      _dashboard.addElement(listEl);
+      data.listElement = listEl;
+      listEl.setElevation(10);
 
-/*
+      /*
     // Optionally, connect it back to the node with a thin line
     _dashboard.addNextById(
       _nodes[nodeName]!, 
@@ -236,17 +231,16 @@ void _onAddEvent(String newKey, String display) {
       ),
     );
     */
+    }
+
+    // 3) Re‐layout the list‐box
+    _layoutListBox(nodeName);
+
+    setState(() {});
+    _bringElementToFront(data.listElement!);
   }
 
-  // 3) Re‐layout the list‐box
-  _layoutListBox(nodeName);
-
-  setState(() {});
-   _bringElementToFront(data.listElement!);
-}
-
-
-/// Remove a specific event
+  /// Remove a specific event
   void _onRemoveSelectedEvent() {
     if (_selectedTargetNode == null || _selectedEvent == null) return;
     final nodeName = _selectedTargetNode!;
@@ -264,75 +258,80 @@ void _onAddEvent(String newKey, String display) {
     setState(() {});
   }
 
-/// Pops up a dialog to let the user type both a key and an optional label.
-/// If the label field is empty, we use the key as the display text.
-Future<void> _showAddEventDialog() async {
-  if (_selectedTargetNode == null) return;
+  /// Pops up a dialog to let the user type both a key and an optional label.
+  /// If the label field is empty, we use the key as the display text.
+  Future<void> _showAddEventDialog() async {
+    if (_selectedTargetNode == null) return;
 
-  final keyController   = TextEditingController();
-  final labelController = TextEditingController();
+    final keyController = TextEditingController();
+    final labelController = TextEditingController();
 
-  String? key;
-  String label = '';
-  try {
-    key = await showDialog<String?>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('New Event'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: keyController,
-              decoration: const InputDecoration(
-                labelText: 'Event key',
-                hintText: 'e.g. event1',
+    String? key;
+    String label = '';
+    try {
+      key = await showDialog<String?>(
+        context: context,
+        builder:
+            (ctx) => AlertDialog(
+              title: const Text('New Event'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: keyController,
+                    decoration: const InputDecoration(
+                      labelText: 'Event key',
+                      hintText: 'e.g. event1',
+                    ),
+                  ),
+                  TextField(
+                    controller: labelController,
+                    decoration: const InputDecoration(
+                      labelText: 'Display label (optional)',
+                      hintText: 'What shows in the list',
+                    ),
+                  ),
+                ],
               ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(null),
+                  child: Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    final k = keyController.text.trim();
+                    if (k.isEmpty) return;
+                    Navigator.of(ctx).pop(k);
+                  },
+                  child: Text('Add'),
+                ),
+              ],
             ),
-            TextField(
-              controller: labelController,
-              decoration: const InputDecoration(
-                labelText: 'Display label (optional)',
-                hintText: 'What shows in the list',
-              ),
-            ),
-          ],
-        ),
-        actions: [
-        TextButton(onPressed: () => Navigator.of(ctx).pop(null), child: Text('Cancel')),
-        ElevatedButton(
-          onPressed: () {
-            final k = keyController.text.trim();
-            if (k.isEmpty) return;
-            Navigator.of(ctx).pop(k);
-          },
-          child: Text('Add'),
-        ),
-      ],
-      ),
-    );
-    label = labelController.text.trim();
-  } finally {
-    keyController.dispose();
-    labelController.dispose();
+      );
+      label = labelController.text.trim();
+    } finally {
+      keyController.dispose();
+      labelController.dispose();
+    }
+
+    if (key == null) return;
+    if (!mounted) return;
+    _onAddEvent(key, label);
   }
 
-  if (key == null) return;
-if (!mounted) return;
-_onAddEvent(key, label);
+  /// Pulls the given element to the *end* of the draw order,
+  /// causing it to paint over everything else (including arrows).
+  void _bringElementToFront(FlowElement el) {
+    final list =
+        _dashboard.elements; // dashboard.elements is the List<FlowElement>
+    list.remove(el);
+    list.add(el);
   }
-
-/// Pulls the given element to the *end* of the draw order,
-/// causing it to paint over everything else (including arrows).
-void _bringElementToFront(FlowElement el) {
-  final list = _dashboard.elements;     // dashboard.elements is the List<FlowElement>
-  list.remove(el);
-  list.add(el);
-}
-
 
   /// Returns true if a node has at most one child; used to filter dropdown items.
-  List<String> get _selectableNodes => _nodes.keys.where((name) {
+  List<String> get _selectableNodes =>
+      _nodes.keys.where((name) {
         final d = _nodeData[name]!;
         return (d.successCount + d.failureCount) <= 1;
       }).toList();
@@ -340,9 +339,9 @@ void _bringElementToFront(FlowElement el) {
   /// Defines the arrow style for parent → child connections.
   ArrowParams _arrow(FlowElement from, FlowElement to) {
     return ArrowParams(
-      color: Colors.blue,               // blue for forward branches
+      color: Colors.blue, // blue for forward branches
       thickness: 2,
-      style: ArrowStyle.segmented,      // segmented line style
+      style: ArrowStyle.segmented, // segmented line style
       startArrowPosition: Alignment.bottomCenter,
       endArrowPosition: Alignment.topCenter,
     );
@@ -351,9 +350,9 @@ void _bringElementToFront(FlowElement el) {
   /// Defines the loop-back arrow style for initial leaf → root.
   ArrowParams _loopArrow(FlowElement from, FlowElement to) {
     return ArrowParams(
-      color: Colors.black26,            // light grey for loops
+      color: Colors.black26, // light grey for loops
       thickness: 2,
-      style: ArrowStyle.curve,          // curved line style
+      style: ArrowStyle.curve, // curved line style
       startArrowPosition: Alignment.centerLeft,
       endArrowPosition: Alignment.centerLeft,
     );
@@ -375,8 +374,6 @@ void _bringElementToFront(FlowElement el) {
     }
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -386,58 +383,62 @@ void _bringElementToFront(FlowElement el) {
         children: [
           // Dropdown selector + Add buttons
           Padding(
-  padding: const EdgeInsets.all(8),
-  child: Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      // Node selection dropdown on its own line
-      SizedBox(
-        width: 150,
-        child: DropdownButton<String>(
-          isExpanded: true,
-          hint: const Text('Select node'),
-          value: (_selectedNode != null &&
-                  _selectableNodes.contains(_selectedNode))
-              ? _selectedNode
-              : null,
-          items: _selectableNodes.map((name) {
-            return DropdownMenuItem(
-              value: name,
-              child: Text(name),
-            );
-          }).toList(),
-          onChanged: (v) => setState(() {
-            _selectedNode = v;
-          }),
-        ),
-      ),
-      const SizedBox(height: 8), // Small vertical spacing
-      // Buttons in one row under the dropdown
-      Row(
-        children: [
-          ElevatedButton(
-            onPressed: (_selectedNode == null ||
-                    _nodeData[_selectedNode!]!.successCount >= 1)
-                ? null
-                : _onAddSuccess,
-            child: const Text('+ Success Node'),
+            padding: const EdgeInsets.all(8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Node selection dropdown on its own line
+                SizedBox(
+                  width: 150,
+                  child: DropdownButton<String>(
+                    isExpanded: true,
+                    hint: const Text('Select node'),
+                    value:
+                        (_selectedNode != null &&
+                                _selectableNodes.contains(_selectedNode))
+                            ? _selectedNode
+                            : null,
+                    items:
+                        _selectableNodes.map((name) {
+                          return DropdownMenuItem(
+                            value: name,
+                            child: Text(name),
+                          );
+                        }).toList(),
+                    onChanged:
+                        (v) => setState(() {
+                          _selectedNode = v;
+                        }),
+                  ),
+                ),
+                const SizedBox(height: 8), // Small vertical spacing
+                // Buttons in one row under the dropdown
+                Row(
+                  children: [
+                    ElevatedButton(
+                      onPressed:
+                          (_selectedNode == null ||
+                                  _nodeData[_selectedNode!]!.successCount >= 1)
+                              ? null
+                              : _onAddSuccess,
+                      child: const Text('+ Success Node'),
+                    ),
+                    const SizedBox(width: 16), // Spacing between buttons
+                    ElevatedButton(
+                      onPressed:
+                          (_selectedNode == null ||
+                                  _nodeData[_selectedNode!]!.failureCount >= 1)
+                              ? null
+                              : _onAddFailure,
+                      child: const Text('+ Failure Node'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
-          const SizedBox(width: 16), // Spacing between buttons
-          ElevatedButton(
-            onPressed: (_selectedNode == null ||
-                    _nodeData[_selectedNode!]!.failureCount >= 1)
-                ? null
-                : _onAddFailure,
-            child: const Text('+ Failure Node'),
-          ),
-        ],
-      ),
-    ],
-  ),
-),
 
-
-         // Selector for target node + Add Event button
+          // Selector for target node + Add Event button
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             child: Row(
@@ -447,29 +448,36 @@ void _bringElementToFront(FlowElement el) {
                   child: DropdownButton<String>(
                     isExpanded: true,
                     hint: const Text('Select node'),
-                    value: (_selectedTargetNode != null && _targetableNodes.contains(_selectedTargetNode))
-                        ? _selectedTargetNode
-                        : null,
-                    items: _targetableNodes.map((name) {
-                      return DropdownMenuItem(value: name, child: Text(name));
-                    }).toList(),
-                    onChanged: (v) => setState(() {
-                      _selectedTargetNode = v;
-                      _selectedEvent = null;
-                    }),
+                    value:
+                        (_selectedTargetNode != null &&
+                                _targetableNodes.contains(_selectedTargetNode))
+                            ? _selectedTargetNode
+                            : null,
+                    items:
+                        _targetableNodes.map((name) {
+                          return DropdownMenuItem(
+                            value: name,
+                            child: Text(name),
+                          );
+                        }).toList(),
+                    onChanged:
+                        (v) => setState(() {
+                          _selectedTargetNode = v;
+                          _selectedEvent = null;
+                        }),
                   ),
                 ),
                 const SizedBox(width: 8),
                 ElevatedButton(
-  onPressed: _showAddEventDialog,
-  child: const Text('+ Event'),
-),
-
+                  onPressed: _showAddEventDialog,
+                  child: const Text('+ Event'),
+                ),
               ],
             ),
           ),
           // Dropdown for selecting which event to remove + Remove button
-          if (_selectedTargetNode != null && _nodeData[_selectedTargetNode!]!.events.isNotEmpty)
+          if (_selectedTargetNode != null &&
+              _nodeData[_selectedTargetNode!]!.events.isNotEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               child: Row(
@@ -479,15 +487,20 @@ void _bringElementToFront(FlowElement el) {
                     child: DropdownButton<String>(
                       isExpanded: true,
                       hint: const Text('Select Event'),
-                      value: (_selectedEvent != null && _nodeData[_selectedTargetNode!]!.events.contains(_selectedEvent))
-                          ? _selectedEvent
-                          : null,
-                      items: _nodeData[_selectedTargetNode!]!.events.map((e) {
-                        return DropdownMenuItem(value: e, child: Text(e));
-                      }).toList(),
-                      onChanged: (v) => setState(() {
-                        _selectedEvent = v;
-                      }),
+                      value:
+                          (_selectedEvent != null &&
+                                  _nodeData[_selectedTargetNode!]!.events
+                                      .contains(_selectedEvent))
+                              ? _selectedEvent
+                              : null,
+                      items:
+                          _nodeData[_selectedTargetNode!]!.events.map((e) {
+                            return DropdownMenuItem(value: e, child: Text(e));
+                          }).toList(),
+                      onChanged:
+                          (v) => setState(() {
+                            _selectedEvent = v;
+                          }),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -504,7 +517,7 @@ void _bringElementToFront(FlowElement el) {
               color: Colors.white,
               child: FlowChart(
                 dashboard: _dashboard,
-                onDashboardTapped: (_, __) {},     // no-op handlers
+                onDashboardTapped: (_, __) {}, // no-op handlers
                 onElementPressed: (_, __, ___) {},
               ),
             ),
@@ -520,12 +533,13 @@ void _bringElementToFront(FlowElement el) {
 class NodeData {
   int successCount = 0;
   int failureCount = 0;
-/// New: at what depth (row) this node lives
+
+  /// New: at what depth (row) this node lives
   int depth;
 
-   /// Holds the event names in order, e.g. ['event1','event2',...]
+  /// Holds the event names in order, e.g. ['event1','event2',...]
   final List<String> events = [];
-  
+
   /// Once created, this points at the FlowElement for the list‐box
   FlowElement? listElement;
 

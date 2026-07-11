@@ -108,16 +108,19 @@ class _ProfilePageState extends State<ProfilePage> {
       subtitle:
           'Personalize Tonos, manage training defaults, and keep your data healthy.',
       icon: Icons.person,
-      showAppBar: false,
+      heroAccentColor: SettingsAccent.account,
+      showBackButton: false,
       children: [
         KeyedSubtree(
           key: _accountSettingsTutorialKey,
           child: SettingsSection(
             title: 'Account',
             subtitle: 'Your identity and app-level appearance.',
+            accentColor: SettingsAccent.account,
             children: settingsTilesWithDividers(context, [
               SettingsActionTile(
                 icon: Icons.badge_outlined,
+                iconColor: SettingsAccent.account,
                 title: 'User Information',
                 subtitle: 'Name, body details, and activity profile.',
                 onTap:
@@ -125,12 +128,14 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
               SettingsActionTile(
                 icon: Icons.palette_outlined,
+                iconColor: SettingsAccent.appearance,
                 title: 'UI & Appearance',
                 subtitle: 'Theme, onboarding, and bottom tab setup.',
                 onTap: () => _open(context, const UIAppearanceSettingsPage()),
               ),
               SettingsActionTile(
                 icon: Icons.school_outlined,
+                iconColor: SettingsAccent.appearance,
                 title: 'Guided Tutorials',
                 subtitle: 'Replay walkthroughs and reset guided help.',
                 onTap: () => _open(context, const TutorialsSettingsPage()),
@@ -143,9 +148,11 @@ class _ProfilePageState extends State<ProfilePage> {
           child: SettingsSection(
             title: 'Training',
             subtitle: 'Exercise defaults and progress-related controls.',
+            accentColor: SettingsAccent.training,
             children: settingsTilesWithDividers(context, [
               SettingsActionTile(
                 icon: Icons.fitness_center,
+                iconColor: SettingsAccent.training,
                 title: 'Gym & Workout Settings',
                 subtitle:
                     'Workout generation, rankings, flows, and equipment logic.',
@@ -153,6 +160,7 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
               SettingsActionTile(
                 icon: Icons.monitor_outlined,
+                iconColor: SettingsAccent.progress,
                 title: 'Progress Settings',
                 subtitle: 'Measurement and trend tracking setup.',
                 onTap:
@@ -167,9 +175,11 @@ class _ProfilePageState extends State<ProfilePage> {
           child: SettingsSection(
             title: 'Data',
             subtitle: 'Database tools, exports, imports, and maintenance.',
+            accentColor: SettingsAccent.data,
             children: settingsTilesWithDividers(context, [
               SettingsActionTile(
                 icon: Icons.storage_outlined,
+                iconColor: SettingsAccent.data,
                 title: 'Database Settings',
                 subtitle:
                     'Import, export, health checks, and maintenance tools.',
@@ -181,6 +191,7 @@ class _ProfilePageState extends State<ProfilePage> {
         SettingsSection(
           title: 'Nutrition',
           subtitle: 'Nutrition settings are paused while this area is rebuilt.',
+          accentColor: SettingsAccent.muted,
           children: settingsTilesWithDividers(context, [
             _disabledNutritionTile(context),
           ]),

@@ -37,12 +37,14 @@ class DietNutritionSettingsPage extends StatelessWidget {
               onTap: () async {
                 final changed = await Navigator.push<bool>(
                   context,
-                  MaterialPageRoute(builder: (_) => const GoalManualEntryPage()),
+                  MaterialPageRoute(
+                    builder: (_) => const GoalManualEntryPage(),
+                  ),
                 );
                 if (changed == true && context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Goals saved')),
-                  );
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(const SnackBar(content: Text('Goals saved')));
                 }
               },
             ),

@@ -57,16 +57,17 @@ class _NavBarSettingsPageState extends State<NavBarSettingsPage> {
     final newOrder = [..._activeTabs, ..._inactiveTabs];
     final newEnabled = _activeTabs.toSet();
     context.read<NavBarConfig>().update(
-          newOrder: newOrder,
-          newEnabled: newEnabled,
-        );
+      newOrder: newOrder,
+      newEnabled: newEnabled,
+    );
     setState(() {
       _activeTabs = newOrder.where((tab) => newEnabled.contains(tab)).toList();
-      _inactiveTabs = newOrder.where((tab) => !newEnabled.contains(tab)).toList();
+      _inactiveTabs =
+          newOrder.where((tab) => !newEnabled.contains(tab)).toList();
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Bottom tabs saved')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Bottom tabs saved')));
   }
 
   @override
@@ -76,8 +77,10 @@ class _NavBarSettingsPageState extends State<NavBarSettingsPage> {
 
     return SettingsPageScaffold(
       title: 'Edit Bottom Tabs',
-      subtitle: 'Choose what appears in the bottom bar and reorder active tabs.',
+      subtitle:
+          'Choose what appears in the bottom bar and reorder active tabs.',
       icon: Icons.space_dashboard_outlined,
+      heroAccentColor: SettingsAccent.data,
       bottomNavigationBar: SafeArea(
         top: false,
         child: Padding(
@@ -93,6 +96,7 @@ class _NavBarSettingsPageState extends State<NavBarSettingsPage> {
         SettingsSection(
           title: 'Active Tabs',
           subtitle: 'Drag to reorder. Profile stays available.',
+          accentColor: SettingsAccent.data,
           children: [
             ReorderableListView.builder(
               shrinkWrap: true,
@@ -104,7 +108,10 @@ class _NavBarSettingsPageState extends State<NavBarSettingsPage> {
                 return Material(
                   color: Colors.transparent,
                   child: ScaleTransition(
-                    scale: Tween<double>(begin: 1, end: 1.02).animate(animation),
+                    scale: Tween<double>(
+                      begin: 1,
+                      end: 1.02,
+                    ).animate(animation),
                     child: child,
                   ),
                 );
@@ -126,16 +133,16 @@ class _NavBarSettingsPageState extends State<NavBarSettingsPage> {
         SettingsSection(
           title: 'Inactive Tabs',
           subtitle: 'Turn these on whenever you want them back.',
-          children: inactiveDisplay.isEmpty
-              ? const [
-                  Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Text('No inactive tabs.'),
-                  ),
-                ]
-              : settingsTilesWithDividers(
-                  context,
-                  [
+          accentColor: SettingsAccent.muted,
+          children:
+              inactiveDisplay.isEmpty
+                  ? const [
+                    Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Text('No inactive tabs.'),
+                    ),
+                  ]
+                  : settingsTilesWithDividers(context, [
                     for (final tab in inactiveDisplay)
                       _NavTabTile(
                         key: ValueKey('inactive-${tab.name}'),
@@ -143,8 +150,7 @@ class _NavBarSettingsPageState extends State<NavBarSettingsPage> {
                         isActive: false,
                         onToggle: (value) => _toggleTab(tab, value),
                       ),
-                  ],
-                ),
+                  ]),
         ),
         const SizedBox(height: 72),
       ],
@@ -175,12 +181,16 @@ class _NavTabTile extends StatelessWidget {
 
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-      leading: dragIndex == null
-          ? _IconBadge(icon: tab.icon)
-          : ReorderableDragStartListener(
-              index: dragIndex!,
-              child: _IconBadge(icon: tab.icon, trailingIcon: Icons.drag_handle),
-            ),
+      leading:
+          dragIndex == null
+              ? _IconBadge(icon: tab.icon)
+              : ReorderableDragStartListener(
+                index: dragIndex!,
+                child: _IconBadge(
+                  icon: tab.icon,
+                  trailingIcon: Icons.drag_handle,
+                ),
+              ),
       title: Text(
         tab.title,
         maxLines: 1,
@@ -193,16 +203,13 @@ class _NavTabTile extends StatelessWidget {
         isLocked
             ? 'Always shown'
             : isActive
-                ? 'Visible in bottom navigation'
-                : 'Hidden from bottom navigation',
+            ? 'Visible in bottom navigation'
+            : 'Hidden from bottom navigation',
         style: theme.textTheme.bodySmall?.copyWith(
           color: scheme.onSurfaceVariant,
         ),
       ),
-      trailing: Switch(
-        value: isActive,
-        onChanged: isLocked ? null : onToggle,
-      ),
+      trailing: Switch(value: isActive, onChanged: isLocked ? null : onToggle),
     );
   }
 }
@@ -236,7 +243,11 @@ class _IconBadge extends StatelessWidget {
             Positioned(
               right: 0,
               bottom: 0,
-              child: Icon(trailingIcon, size: 14, color: scheme.onSurfaceVariant),
+              child: Icon(
+                trailingIcon,
+                size: 14,
+                color: scheme.onSurfaceVariant,
+              ),
             ),
         ],
       ),

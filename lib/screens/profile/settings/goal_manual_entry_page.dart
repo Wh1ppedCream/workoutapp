@@ -32,11 +32,7 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
     final profile = context.read<NutritionProfile>();
     final goal = profile.activeGoal;
 
-    _startDate = DateTime(
-      profile.day.year,
-      profile.day.month,
-      profile.day.day,
-    );
+    _startDate = DateTime(profile.day.year, profile.day.month, profile.day.day);
 
     void set(TextEditingController controller, num? value) {
       if (value == null) return;
@@ -131,13 +127,14 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
             Expanded(
               child: FilledButton.icon(
                 onPressed: !canSave || _saving ? null : _saveGoals,
-                icon: _saving
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.save),
+                icon:
+                    _saving
+                        ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                        : const Icon(Icons.save),
                 label: Text(_saving ? 'Saving...' : 'Save Goals'),
               ),
             ),
@@ -178,7 +175,10 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
                         Row(
                           children: [
                             Expanded(
-                              child: _numField(_proteinCtrl, label: 'Protein (g)'),
+                              child: _numField(
+                                _proteinCtrl,
+                                label: 'Protein (g)',
+                              ),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
@@ -189,7 +189,9 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
                         const SizedBox(height: 12),
                         Row(
                           children: [
-                            Expanded(child: _numField(_fatCtrl, label: 'Fat (g)')),
+                            Expanded(
+                              child: _numField(_fatCtrl, label: 'Fat (g)'),
+                            ),
                             const SizedBox(width: 12),
                             Expanded(
                               child: _numField(_fiberCtrl, label: 'Fiber (g)'),
@@ -215,7 +217,10 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
                             ),
                             const SizedBox(width: 12),
                             Expanded(
-                              child: _numField(_satFatCtrl, label: 'Sat. Fat (g)'),
+                              child: _numField(
+                                _satFatCtrl,
+                                label: 'Sat. Fat (g)',
+                              ),
                             ),
                           ],
                         ),
@@ -244,9 +249,16 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
   }) {
     return TextFormField(
       controller: controller,
-      keyboardType: integerOnly
-          ? const TextInputType.numberWithOptions(signed: false, decimal: false)
-          : const TextInputType.numberWithOptions(signed: false, decimal: true),
+      keyboardType:
+          integerOnly
+              ? const TextInputType.numberWithOptions(
+                signed: false,
+                decimal: false,
+              )
+              : const TextInputType.numberWithOptions(
+                signed: false,
+                decimal: true,
+              ),
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),

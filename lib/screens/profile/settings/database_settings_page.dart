@@ -580,6 +580,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
     return SettingsSection(
       title: 'Cloud Content',
       subtitle: 'Manage exercise thumbnails, manifests, and cache storage.',
+      accentColor: SettingsAccent.data,
       children: settingsTilesWithDividers(context, [
         FutureBuilder<ContentEnvironment>(
           future: _selectedContentEnvironmentFuture,
@@ -737,47 +738,50 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
       title: 'Database Settings',
       subtitle: 'Backups, cloud media, health checks, and developer exports.',
       icon: Icons.storage_outlined,
+      heroAccentColor: SettingsAccent.data,
       children: [
-          KeyedSubtree(
-            key: _fileActionsTutorialKey,
-            child: SettingsSection(
-              title: 'Backup & Restore',
-              subtitle: 'Move your local Tonos data in or out safely.',
-              children: settingsTilesWithDividers(context, [
-                SettingsActionTile(
-                  icon: Icons.upload_file,
-                  title: 'Export Database Backup',
-                  onTap: _exportDatabase,
-                ),
-                SettingsActionTile(
-                  icon: Icons.download,
-                  title: 'Import Database Backup',
-                  subtitle: 'Replace local data from a saved export file.',
-                  iconColor: Theme.of(context).colorScheme.error,
-                  onTap: _importDatabase,
-                ),
-              ]),
-            ),
+        KeyedSubtree(
+          key: _fileActionsTutorialKey,
+          child: SettingsSection(
+            title: 'Backup & Restore',
+            subtitle: 'Move your local Tonos data in or out safely.',
+            accentColor: SettingsAccent.data,
+            children: settingsTilesWithDividers(context, [
+              SettingsActionTile(
+                icon: Icons.upload_file,
+                title: 'Export Database Backup',
+                onTap: _exportDatabase,
+              ),
+              SettingsActionTile(
+                icon: Icons.download,
+                title: 'Import Database Backup',
+                subtitle: 'Replace local data from a saved export file.',
+                iconColor: Theme.of(context).colorScheme.error,
+                onTap: _importDatabase,
+              ),
+            ]),
           ),
+        ),
 
-          KeyedSubtree(key: _healthTutorialKey, child: _buildHealthSection()),
-          KeyedSubtree(
-            key: _maintenanceTutorialKey,
-            child: _buildMaintenanceSection(),
-          ),
+        KeyedSubtree(key: _healthTutorialKey, child: _buildHealthSection()),
+        KeyedSubtree(
+          key: _maintenanceTutorialKey,
+          child: _buildMaintenanceSection(),
+        ),
 
-          _buildCloudContentSection(),
+        _buildCloudContentSection(),
 
-          _buildDeveloperExportSection(),
-
-        ],
+        _buildDeveloperExportSection(),
+      ],
     );
   }
 
   Widget _buildHealthSection() {
     return SettingsSection(
       title: 'Health',
-      subtitle: 'A quick read on database size, schema, and search index state.',
+      subtitle:
+          'A quick read on database size, schema, and search index state.',
+      accentColor: SettingsAccent.progress,
       children: [
         FutureBuilder<DatabaseHealthSnapshot>(
           future: _healthFuture,
@@ -824,6 +828,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
     return SettingsSection(
       title: 'Maintenance',
       subtitle: 'Safe tools for checks, optimization, and storage cleanup.',
+      accentColor: SettingsAccent.advanced,
       children: settingsTilesWithDividers(context, [
         SettingsActionTile(
           icon: Icons.refresh,
@@ -881,11 +886,13 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
     return SettingsSection(
       title: 'Definition Exports',
       subtitle: 'Export app definition files for inspection or tooling.',
+      accentColor: SettingsAccent.data,
       children: settingsTilesWithDividers(context, [
         SettingsActionTile(
           icon: Icons.data_object,
           title: 'Export equipment.json',
-          onTap: () => _exportAsset(_repo.exportEquipmentJson, 'equipment.json'),
+          onTap:
+              () => _exportAsset(_repo.exportEquipmentJson, 'equipment.json'),
         ),
         SettingsActionTile(
           icon: Icons.data_object,
@@ -964,10 +971,7 @@ class _DatabaseHealthCard extends StatelessWidget {
   final DatabaseHealthSnapshot health;
   final String Function(int bytes) formatBytes;
 
-  const _DatabaseHealthCard({
-    required this.health,
-    required this.formatBytes,
-  });
+  const _DatabaseHealthCard({required this.health, required this.formatBytes});
 
   @override
   Widget build(BuildContext context) {
@@ -1001,11 +1005,7 @@ class _DatabaseHealthCard extends StatelessWidget {
             healthy: health.isFoodSearchAligned,
           ),
           _HealthDivider(color: scheme.outlineVariant),
-          _HealthInfoRow(
-            label: 'Path',
-            value: health.path,
-            maxLines: 2,
-          ),
+          _HealthInfoRow(label: 'Path', value: health.path, maxLines: 2),
         ],
       ),
     );

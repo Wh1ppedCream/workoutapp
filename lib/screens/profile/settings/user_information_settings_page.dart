@@ -189,11 +189,13 @@ class _UserInformationSettingsPageState
       title: 'User Information',
       subtitle: 'Keep basic profile details available for app calculations.',
       icon: Icons.badge_outlined,
+      heroAccentColor: SettingsAccent.account,
       bottomNavigationBar: _SaveBar(isVisible: _dirty, onSave: _save),
       children: [
         SettingsSection(
           title: 'Identity',
           subtitle: 'Basic personal details.',
+          accentColor: SettingsAccent.account,
           children: [
             _FieldPadding(
               child: TextFormField(
@@ -251,6 +253,7 @@ class _UserInformationSettingsPageState
           title: 'Body Metrics',
           subtitle:
               'Optional details used by progress and nutrition estimates.',
+          accentColor: SettingsAccent.progress,
           children: [
             _FieldPadding(
               child: TextFormField(
@@ -305,6 +308,7 @@ class _UserInformationSettingsPageState
         SettingsSection(
           title: 'Activity Context',
           subtitle: 'Used later for recommendations and health estimates.',
+          accentColor: SettingsAccent.training,
           children: [
             _FieldPadding(
               child: DropdownButtonFormField<String?>(

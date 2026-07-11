@@ -126,10 +126,7 @@ class NavBarConfig extends ChangeNotifier {
 
     final savedOrder = prefs.getStringList(_keyOrder);
     if (savedOrder != null) {
-      _order =
-          savedOrder
-              .map((s) => TabItem.values.firstWhere((e) => e.toString() == s))
-              .toList();
+      _order = savedOrder.map(_tabFromStorage).whereType<TabItem>().toList();
 
       for (final tab in _defaultOrder) {
         if (!_order.contains(tab)) {
@@ -140,15 +137,19 @@ class NavBarConfig extends ChangeNotifier {
 
     final savedEnabled = prefs.getStringList(_keyEnabled);
     if (savedEnabled != null) {
-      _enabled =
-          savedEnabled
-              .map((s) => TabItem.values.firstWhere((e) => e.toString() == s))
-              .toSet();
+      _enabled = savedEnabled.map(_tabFromStorage).whereType<TabItem>().toSet();
       _enabled.add(TabItem.profile);
     }
 
     _loaded = true;
     notifyListeners();
+  }
+
+  TabItem? _tabFromStorage(String value) {
+    for (final tab in TabItem.values) {
+      if (tab.toString() == value) return tab;
+    }
+    return null;
   }
 
   Future<void> update({

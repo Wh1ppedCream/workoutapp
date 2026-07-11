@@ -18,13 +18,16 @@ class GymExerciseSettingsPage extends StatelessWidget {
       subtitle:
           'Tune workout generation, analytics, and workout-flow behavior.',
       icon: Icons.fitness_center,
+      heroAccentColor: SettingsAccent.training,
       children: [
         SettingsSection(
           title: 'Workout Logic',
           subtitle: 'Settings that affect planning and generated workouts.',
+          accentColor: SettingsAccent.training,
           children: settingsTilesWithDividers(context, [
             SettingsActionTile(
               icon: Icons.bar_chart,
+              iconColor: SettingsAccent.training,
               title: 'Workout Settings',
               subtitle:
                   'Volume limits, analytics defaults, and training controls.',
@@ -32,6 +35,7 @@ class GymExerciseSettingsPage extends StatelessWidget {
             ),
             SettingsActionTile(
               icon: Icons.account_tree_outlined,
+              iconColor: SettingsAccent.training,
               title: 'Plan Flow Settings',
               subtitle:
                   'Configure the logic used when plan flow automation runs.',
@@ -42,15 +46,18 @@ class GymExerciseSettingsPage extends StatelessWidget {
         SettingsSection(
           title: 'Flow Tools',
           subtitle: 'Advanced setup tools for workout flow experiments.',
+          accentColor: SettingsAccent.advanced,
           children: settingsTilesWithDividers(context, [
             SettingsActionTile(
               icon: Icons.schema_outlined,
+              iconColor: SettingsAccent.advanced,
               title: 'Flow Chart',
               subtitle: 'Preview and inspect flow chart behavior.',
               onTap: () => _open(context, const FlowChartPage()),
             ),
             SettingsActionTile(
               icon: Icons.route_outlined,
+              iconColor: SettingsAccent.advanced,
               title: 'Workout Progress Rules',
               subtitle: 'Manage weight, rep, and set progression rules.',
               onTap: () => _open(context, const FlowMethodsPage()),

@@ -81,15 +81,15 @@ class _BodyPartRankingScreenState extends State<BodyPartRankingScreen> {
         _isSaving = false;
         _dirty = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Body part rankings saved')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Body part rankings saved')));
     } catch (e) {
       if (!mounted) return;
       setState(() => _isSaving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to save: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to save: $e')));
     }
   }
 
@@ -102,25 +102,25 @@ class _BodyPartRankingScreenState extends State<BodyPartRankingScreen> {
         title: const Text('Body Part Rankings'),
         scrolledUnderElevation: 0,
       ),
-      bottomNavigationBar: _dirty
-          ? SafeArea(
-              minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              child: FilledButton.icon(
-                onPressed: _isSaving ? null : _saveAll,
-                icon: _isSaving
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.save),
-                label: Text(_isSaving ? 'Saving...' : 'Save Rankings'),
-              ),
-            )
-          : null,
-      body: SafeArea(
-        child: _buildBody(scheme),
-      ),
+      bottomNavigationBar:
+          _dirty
+              ? SafeArea(
+                minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                child: FilledButton.icon(
+                  onPressed: _isSaving ? null : _saveAll,
+                  icon:
+                      _isSaving
+                          ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                          : const Icon(Icons.save),
+                  label: Text(_isSaving ? 'Saving...' : 'Save Rankings'),
+                ),
+              )
+              : null,
+      body: SafeArea(child: _buildBody(scheme)),
     );
   }
 
@@ -203,7 +203,9 @@ class _RankingTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest.withValues(alpha: 0.34),
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.55)),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.55),
+        ),
       ),
       child: Row(
         children: [

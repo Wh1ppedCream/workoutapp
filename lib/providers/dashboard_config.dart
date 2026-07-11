@@ -14,7 +14,7 @@ class DashboardConfig extends ChangeNotifier {
     'dataRecords',
     'healthTrends',
     'workoutDashboard',
-    'historySummary', 
+    'historySummary',
     'sessionList',
     'CurrentMetricsSection',
   ];
@@ -24,17 +24,17 @@ class DashboardConfig extends ChangeNotifier {
   Set<String> _hiddenWidgets;
 
   DashboardConfig()
-      : _widgetOrder = List.from([
+    : _widgetOrder = List.from([
         'quickBar',
         'nutritionDash',
         'dataRecords',
         'healthTrends',
         'workoutDashboard',
-          'historySummary', 
-          'sessionList',
-          'CurrentMetricsSection',
-        ]),
-        _hiddenWidgets = {} {
+        'historySummary',
+        'sessionList',
+        'CurrentMetricsSection',
+      ]),
+      _hiddenWidgets = {} {
     _load();
   }
 
@@ -42,31 +42,31 @@ class DashboardConfig extends ChangeNotifier {
   bool isVisible(String id) => !_hiddenWidgets.contains(id);
 
   Future<void> _load() async {
-  final prefs = await SharedPreferences.getInstance();
-  final jsonStr = prefs.getString(_prefsKey);
-  if (jsonStr != null) {
-    final data = json.decode(jsonStr) as Map<String, dynamic>;
-    _widgetOrder   = List<String>.from(data['order']);
-    _hiddenWidgets = Set<String>.from(data['hidden']);
-    
-    // ─── Ensure all newly-added defaults appear ─────────────────
-    for (var id in defaultOrder) {
-      if (!_widgetOrder.contains(id)) {
-        _widgetOrder.add(id);
+    final prefs = await SharedPreferences.getInstance();
+    final jsonStr = prefs.getString(_prefsKey);
+    if (jsonStr != null) {
+      try {
+        final data = json.decode(jsonStr) as Map<String, dynamic>;
+        _widgetOrder = List<String>.from(data['order']);
+        _hiddenWidgets = Set<String>.from(data['hidden']);
+
+        // ─── Ensure all newly-added defaults appear ─────────────────
+        for (var id in defaultOrder) {
+          if (!_widgetOrder.contains(id)) {
+            _widgetOrder.add(id);
+          }
+        }
+      } catch (_) {
+        // Keep defaults when an older or corrupted value exists.
       }
     }
-  } 
-  // else: keep the initial defaults you set in the constructor
-  notifyListeners();
-}
-
+    // else: keep the initial defaults you set in the constructor
+    notifyListeners();
+  }
 
   Future<void> _save() async {
     final prefs = await SharedPreferences.getInstance();
-    final data = {
-      'order': _widgetOrder,
-      'hidden': _hiddenWidgets.toList(),
-    };
+    final data = {'order': _widgetOrder, 'hidden': _hiddenWidgets.toList()};
     await prefs.setString(_prefsKey, json.encode(data));
   }
 
@@ -81,27 +81,28 @@ class DashboardConfig extends ChangeNotifier {
   }
 
   void reorder(int oldVisibleIndex, int newVisibleIndex) {
-  // 1. Build the visible‐only list
-  final visible = _widgetOrder.where((id) => !_hiddenWidgets.contains(id)).toList();
+    // 1. Build the visible‐only list
+    final visible =
+        _widgetOrder.where((id) => !_hiddenWidgets.contains(id)).toList();
 
-  // 2. Which widget are we actually moving?
-  final movingId = visible[oldVisibleIndex];
+    // 2. Which widget are we actually moving?
+    final movingId = visible[oldVisibleIndex];
 
-  // 3. Pull it out of the full order
-  _widgetOrder.remove(movingId);
+    // 3. Pull it out of the full order
+    _widgetOrder.remove(movingId);
 
-  // 4. Compute its new spot in the *full* list:
-  //    If they're dragging to the end of the visible list, just append.
-  if (newVisibleIndex >= visible.length - 1) {
-    _widgetOrder.add(movingId);
-  } else {
-    // Otherwise insert it before the pivot visible ID at newVisibleIndex
-    final pivotId = visible[newVisibleIndex];
-    final pivotFullIndex = _widgetOrder.indexOf(pivotId);
-    _widgetOrder.insert(pivotFullIndex, movingId);
+    // 4. Compute its new spot in the *full* list:
+    //    If they're dragging to the end of the visible list, just append.
+    if (newVisibleIndex >= visible.length - 1) {
+      _widgetOrder.add(movingId);
+    } else {
+      // Otherwise insert it before the pivot visible ID at newVisibleIndex
+      final pivotId = visible[newVisibleIndex];
+      final pivotFullIndex = _widgetOrder.indexOf(pivotId);
+      _widgetOrder.insert(pivotFullIndex, movingId);
+    }
+
+    _save();
+    notifyListeners();
   }
-
-  _save();
-  notifyListeners();
-}
 }

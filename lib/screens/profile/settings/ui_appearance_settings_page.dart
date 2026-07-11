@@ -81,15 +81,18 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
       title: 'UI & Appearance',
       subtitle: 'Control the way Tonos looks and how the bottom tabs behave.',
       icon: Icons.palette_outlined,
+      heroAccentColor: SettingsAccent.appearance,
       children: [
         KeyedSubtree(
           key: _displayTutorialKey,
           child: SettingsSection(
             title: 'Display',
             subtitle: 'Quick visual preferences.',
+            accentColor: SettingsAccent.appearance,
             children: settingsTilesWithDividers(context, [
               SettingsSwitchTile(
                 icon: Icons.dark_mode_outlined,
+                iconColor: SettingsAccent.appearance,
                 title: 'Dark Mode',
                 subtitle: 'Use the darker app theme.',
                 value: themeMode == ThemeMode.dark,
@@ -100,6 +103,7 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
               ),
               SettingsSwitchTile(
                 icon: Icons.auto_awesome_outlined,
+                iconColor: SettingsAccent.appearance,
                 title: 'Replay Onboarding',
                 subtitle:
                     'Turn this on to open setup again. It turns off after completion.',
@@ -108,6 +112,7 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
               ),
               SettingsActionTile(
                 icon: Icons.monitor_weight_outlined,
+                iconColor: SettingsAccent.progress,
                 title: 'Weight Units',
                 subtitle:
                     'Show workout weights and volume in ${weightUnit.shortLabel}.',
@@ -128,9 +133,11 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
           child: SettingsSection(
             title: 'Navigation',
             subtitle: 'Choose which bottom tabs show up and in what order.',
+            accentColor: SettingsAccent.data,
             children: [
               SettingsActionTile(
                 icon: Icons.space_dashboard_outlined,
+                iconColor: SettingsAccent.data,
                 title: 'Edit Bottom Tabs',
                 subtitle: 'Reorder active tabs or hide unused ones.',
                 onTap:

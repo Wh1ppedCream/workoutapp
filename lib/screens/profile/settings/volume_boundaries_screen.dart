@@ -151,12 +151,11 @@ class _VolumeBoundariesScreenState extends State<VolumeBoundariesScreen>
   }
 
   List<double>? _parseBounds(List<TextEditingController> controllers) {
-    final values = controllers.map((controller) {
-      return double.tryParse(controller.text.trim());
-    }).toList();
-    return values.any((value) => value == null)
-        ? null
-        : values.cast<double>();
+    final values =
+        controllers.map((controller) {
+          return double.tryParse(controller.text.trim());
+        }).toList();
+    return values.any((value) => value == null) ? null : values.cast<double>();
   }
 
   Future<void> _saveBodyPart() async {
@@ -183,9 +182,9 @@ class _VolumeBoundariesScreenState extends State<VolumeBoundariesScreen>
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Save failed: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Save failed: $e')));
     } finally {
       if (mounted) {
         setState(() => _isSavingBodyPart = false);
@@ -212,14 +211,14 @@ class _VolumeBoundariesScreenState extends State<VolumeBoundariesScreen>
       );
       await _repo.setMuscleVolumeBounds(_selectedMuscle!.id, bounds);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Muscle boundaries saved')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Muscle boundaries saved')));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Save failed: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Save failed: $e')));
     } finally {
       if (mounted) {
         setState(() => _isSavingMuscle = false);
@@ -228,9 +227,9 @@ class _VolumeBoundariesScreenState extends State<VolumeBoundariesScreen>
   }
 
   void _showInvalidNumbers() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Please enter valid numbers')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Please enter valid numbers')));
   }
 
   @override
@@ -241,10 +240,7 @@ class _VolumeBoundariesScreenState extends State<VolumeBoundariesScreen>
         scrolledUnderElevation: 0,
         bottom: TabBar(
           controller: _tabCtrl,
-          tabs: const [
-            Tab(text: 'Body Parts'),
-            Tab(text: 'Muscles'),
-          ],
+          tabs: const [Tab(text: 'Body Parts'), Tab(text: 'Muscles')],
         ),
       ),
       body: SafeArea(child: _buildBody()),
@@ -282,8 +278,7 @@ class _VolumeBoundariesScreenState extends State<VolumeBoundariesScreen>
         ),
         _BoundaryTab<Muscle>(
           title: 'Muscle Volume',
-          subtitle:
-              'Fine-tune weekly target ranges for individual muscles.',
+          subtitle: 'Fine-tune weekly target ranges for individual muscles.',
           icon: Icons.fitness_center,
           selected: _selectedMuscle,
           items: _muscles,
@@ -339,6 +334,7 @@ class _BoundaryTab<T> extends StatelessWidget {
         const SizedBox(height: 16),
         SettingsSection(
           title: 'Selection',
+          accentColor: SettingsAccent.training,
           children: [
             Padding(
               padding: const EdgeInsets.all(14),
@@ -351,14 +347,15 @@ class _BoundaryTab<T> extends StatelessWidget {
                     borderRadius: BorderRadius.circular(16),
                   ),
                 ),
-                items: items
-                    .map(
-                      (item) => DropdownMenuItem(
-                        value: item,
-                        child: Text(itemName(item)),
-                      ),
-                    )
-                    .toList(),
+                items:
+                    items
+                        .map(
+                          (item) => DropdownMenuItem(
+                            value: item,
+                            child: Text(itemName(item)),
+                          ),
+                        )
+                        .toList(),
                 onChanged: isLoading || isSaving ? null : onChanged,
               ),
             ),
@@ -367,6 +364,7 @@ class _BoundaryTab<T> extends StatelessWidget {
         SettingsSection(
           title: 'Recommended Range',
           subtitle: 'Numbers are set units per week.',
+          accentColor: SettingsAccent.progress,
           children: [
             if (isLoading)
               const Padding(
@@ -399,13 +397,16 @@ class _BoundaryTab<T> extends StatelessWidget {
                       width: double.infinity,
                       child: FilledButton.icon(
                         onPressed: isSaving ? null : onSave,
-                        icon: isSaving
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : const Icon(Icons.save),
+                        icon:
+                            isSaving
+                                ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                                : const Icon(Icons.save),
                         label: Text(isSaving ? 'Saving...' : 'Save Boundaries'),
                       ),
                     ),

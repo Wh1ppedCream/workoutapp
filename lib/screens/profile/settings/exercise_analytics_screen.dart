@@ -8,7 +8,8 @@ class ExerciseAnalyticsScreen extends StatefulWidget {
   const ExerciseAnalyticsScreen({super.key});
 
   @override
-  State<ExerciseAnalyticsScreen> createState() => _ExerciseAnalyticsScreenState();
+  State<ExerciseAnalyticsScreen> createState() =>
+      _ExerciseAnalyticsScreenState();
 }
 
 class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
@@ -36,8 +37,8 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
   //TODO: right now this just shows the formula step/min/max, i want this to eventually fully allow users to change the entire formula
 
   final _stepCtrl = TextEditingController();
-  final _minCtrl  = TextEditingController();
-  final _maxCtrl  = TextEditingController();
+  final _minCtrl = TextEditingController();
+  final _maxCtrl = TextEditingController();
   bool _isLoadingDefaults = false;
   String? _defaultsError;
 
@@ -68,10 +69,7 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
         _defsError = null;
       });
       if (_sel != null) {
-        await Future.wait([
-          _loadMuscleEntries(_sel!),
-          _loadBodyEntries(_sel!),
-        ]);
+        await Future.wait([_loadMuscleEntries(_sel!), _loadBodyEntries(_sel!)]);
       }
     } catch (e) {
       if (!mounted) return;
@@ -80,10 +78,10 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
       });
     } finally {
       if (mounted) {
-      setState(() {
-        _isLoadingDefs = false;
-      });
-    }
+        setState(() {
+          _isLoadingDefs = false;
+        });
+      }
     }
   }
 
@@ -94,10 +92,7 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
       _overrideIds = {};
       _bodyEntries = {};
     });
-    await Future.wait([
-      _loadMuscleEntries(def),
-      _loadBodyEntries(def),
-    ]);
+    await Future.wait([_loadMuscleEntries(def), _loadBodyEntries(def)]);
   }
 
   Future<void> _loadMuscleEntries(ExerciseDefinition def) async {
@@ -117,8 +112,8 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
       // swallow: muscle tab will just show empty
     } finally {
       if (mounted) {
-      setState(() => _isLoadingMuscles = false);
-    }
+        setState(() => _isLoadingMuscles = false);
+      }
     }
   }
 
@@ -134,7 +129,7 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
       // swallow
     } finally {
       if (mounted) {
-      setState(() => _isLoadingBody = false);
+        setState(() => _isLoadingBody = false);
       }
     }
   }
@@ -143,13 +138,13 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
     setState(() => _isLoadingDefaults = true);
     try {
       final step = await _repo.getFormulaStep();
-      final mn   = await _repo.getFormulaMin();
-      final mx   = await _repo.getFormulaMax();
+      final mn = await _repo.getFormulaMin();
+      final mx = await _repo.getFormulaMax();
       if (!mounted) return;
       setState(() {
         _stepCtrl.text = step.toString();
-        _minCtrl.text  = mn.toString();
-        _maxCtrl.text  = mx.toString();
+        _minCtrl.text = mn.toString();
+        _maxCtrl.text = mx.toString();
         _defaultsError = null;
       });
     } catch (e) {
@@ -159,7 +154,7 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
       });
     } finally {
       if (mounted) {
-      setState(() => _isLoadingDefaults = false);
+        setState(() => _isLoadingDefaults = false);
       }
     }
   }
@@ -174,8 +169,8 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
     }
 
     final step = parse(_stepCtrl.text);
-    final mn   = parse(_minCtrl.text);
-    final mx   = parse(_maxCtrl.text);
+    final mn = parse(_minCtrl.text);
+    final mx = parse(_maxCtrl.text);
     if (step == null || mn == null || mx == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enter valid numbers')),
@@ -188,16 +183,16 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
       await _repo.setFormulaMin(mn);
       await _repo.setFormulaMax(mx);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Defaults saved')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Defaults saved')));
       // reload so UI reflects clamp if needed
       await _loadDefaults();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to save defaults: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to save defaults: $e')));
     }
   }
 
@@ -220,9 +215,9 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_sel == null
-            ? 'Exercise Analytics'
-            : 'Analytics: ${_sel!.name}'),
+        title: Text(
+          _sel == null ? 'Exercise Analytics' : 'Analytics: ${_sel!.name}',
+        ),
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
@@ -232,152 +227,169 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
           ],
         ),
       ),
-      body: _isLoadingDefs
-          ? const Center(child: CircularProgressIndicator())
-          : (_defsError != null
-              ? Center(child: Text('Error: $_defsError'))
-              : Column(
-                  children: [
-                    // Definition dropdown
-                    Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: DropdownButton<ExerciseDefinition>(
-                        isExpanded: true,
-                        value: _sel,
-                        items: _defs
-                            .map((d) => DropdownMenuItem(
-                                  value: d,
-                                  child: Text(d.name),
-                                ))
-                            .toList(),
-                        onChanged: (d) {
-                          if (d == null) return;
-                          _onSelectDef(d);
-                        },
+      body:
+          _isLoadingDefs
+              ? const Center(child: CircularProgressIndicator())
+              : (_defsError != null
+                  ? Center(child: Text('Error: $_defsError'))
+                  : Column(
+                    children: [
+                      // Definition dropdown
+                      Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: DropdownButton<ExerciseDefinition>(
+                          isExpanded: true,
+                          value: _sel,
+                          items:
+                              _defs
+                                  .map(
+                                    (d) => DropdownMenuItem(
+                                      value: d,
+                                      child: Text(d.name),
+                                    ),
+                                  )
+                                  .toList(),
+                          onChanged: (d) {
+                            if (d == null) return;
+                            _onSelectDef(d);
+                          },
+                        ),
                       ),
-                    ),
-                    const Divider(height: 1),
-                    // Tab views
-                    Expanded(
-                      child: TabBarView(
-                        controller: _tabController,
-                        children: [
-                          // --- % Muscles ---
-                          _isLoadingMuscles
-                              ? const Center(child: CircularProgressIndicator())
-                              : _muscleEntries.isEmpty
-                                  ? const Center(child: Text('No muscles'))
-                                  : ListView.builder(
-                                      itemCount: _muscleEntries.length,
-                                      itemBuilder: (_, i) {
-                                        final e = _muscleEntries[i];
-                                        final muscleName = _sel!
-                                            .muscles
-                                            .firstWhere((rm) =>
-                                                rm.muscle.id == e.muscleId)
+                      const Divider(height: 1),
+                      // Tab views
+                      Expanded(
+                        child: TabBarView(
+                          controller: _tabController,
+                          children: [
+                            // --- % Muscles ---
+                            _isLoadingMuscles
+                                ? const Center(
+                                  child: CircularProgressIndicator(),
+                                )
+                                : _muscleEntries.isEmpty
+                                ? const Center(child: Text('No muscles'))
+                                : ListView.builder(
+                                  itemCount: _muscleEntries.length,
+                                  itemBuilder: (_, i) {
+                                    final e = _muscleEntries[i];
+                                    final muscleName =
+                                        _sel!.muscles
+                                            .firstWhere(
+                                              (rm) =>
+                                                  rm.muscle.id == e.muscleId,
+                                            )
                                             .muscle
                                             .name;
-                                        final isOverride =
-                                            _overrideIds.contains(e.muscleId);
-                                        return ListTile(
-                                          title: Text(muscleName),
-                                          trailing: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              SizedBox(
-                                                width: 70,
-                                                child: TextFormField(
-                                                  initialValue: e
-                                                      .percent
-                                                      .toStringAsFixed(1),
-                                                  keyboardType: TextInputType
-                                                      .numberWithOptions(
-                                                          decimal: true),
-                                                  decoration: const InputDecoration(
-                                                      labelText: '%'),
-                                                  onFieldSubmitted: (v) =>
-                                                      _updateMuscle(
-                                                          e.muscleId, v),
+                                    final isOverride = _overrideIds.contains(
+                                      e.muscleId,
+                                    );
+                                    return ListTile(
+                                      title: Text(muscleName),
+                                      trailing: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          SizedBox(
+                                            width: 70,
+                                            child: TextFormField(
+                                              initialValue: e.percent
+                                                  .toStringAsFixed(1),
+                                              keyboardType:
+                                                  TextInputType.numberWithOptions(
+                                                    decimal: true,
+                                                  ),
+                                              decoration: const InputDecoration(
+                                                labelText: '%',
+                                              ),
+                                              onFieldSubmitted:
+                                                  (v) => _updateMuscle(
+                                                    e.muscleId,
+                                                    v,
+                                                  ),
+                                            ),
+                                          ),
+                                          if (isOverride)
+                                            IconButton(
+                                              icon: const Icon(Icons.refresh),
+                                              tooltip: 'Reset to default',
+                                              onPressed:
+                                                  () =>
+                                                      _resetMuscle(e.muscleId),
+                                            ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                ),
+
+                            // --- % BodyParts ---
+                            _isLoadingBody
+                                ? const Center(
+                                  child: CircularProgressIndicator(),
+                                )
+                                : _bodyEntries.isEmpty
+                                ? const Center(child: Text('No bodyparts'))
+                                : ListView(
+                                  children:
+                                      _bodyEntries.entries
+                                          .map(
+                                            (kv) => ListTile(
+                                              title: Text(kv.key.name),
+                                              trailing: Text(
+                                                kv.value.toStringAsFixed(2),
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
                                                 ),
                                               ),
-                                              if (isOverride)
-                                                IconButton(
-                                                  icon: const Icon(
-                                                      Icons.refresh),
-                                                  tooltip: 'Reset to default',
-                                                  onPressed: () =>
-                                                      _resetMuscle(
-                                                          e.muscleId),
-                                                ),
-                                            ],
-                                          ),
-                                        );
-                                      },
-                                    ),
-
-                          // --- % BodyParts ---
-                          _isLoadingBody
-                              ? const Center(child: CircularProgressIndicator())
-                              : _bodyEntries.isEmpty
-                                  ? const Center(child: Text('No bodyparts'))
-                                  : ListView(
-                                      children: _bodyEntries.entries
-                                          .map((kv) => ListTile(
-                                                title:
-                                                    Text(kv.key.name),
-                                                trailing: Text(
-                                                    kv.value
-                                                        .toStringAsFixed(2),
-                                                    style: const TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.bold)),
-                                              ))
+                                            ),
+                                          )
                                           .toList(),
-                                    ),
+                                ),
 
-                          // --- Defaults ---
-                          _isLoadingDefaults
-                              ? const Center(child: CircularProgressIndicator())
-                              : (_defaultsError != null
-                                  ? Center(
-                                      child:
-                                          Text('Error: $_defaultsError'))
-                                  : Padding(
+                            // --- Defaults ---
+                            _isLoadingDefaults
+                                ? const Center(
+                                  child: CircularProgressIndicator(),
+                                )
+                                : (_defaultsError != null
+                                    ? Center(
+                                      child: Text('Error: $_defaultsError'),
+                                    )
+                                    : Padding(
                                       padding: const EdgeInsets.all(16),
                                       child: Column(
                                         children: [
                                           TextFormField(
                                             controller: _stepCtrl,
-                                            decoration:
-                                                const InputDecoration(
+                                            decoration: const InputDecoration(
                                               labelText:
                                                   'Step (decrement per rank)',
                                             ),
-                                            keyboardType: const TextInputType
-                                                    .numberWithOptions(
-                                                decimal: true),
+                                            keyboardType:
+                                                const TextInputType.numberWithOptions(
+                                                  decimal: true,
+                                                ),
                                           ),
                                           const SizedBox(height: 12),
                                           TextFormField(
                                             controller: _minCtrl,
-                                            decoration:
-                                                const InputDecoration(
+                                            decoration: const InputDecoration(
                                               labelText: 'Min clamp',
                                             ),
-                                            keyboardType: const TextInputType
-                                                    .numberWithOptions(
-                                                decimal: true),
+                                            keyboardType:
+                                                const TextInputType.numberWithOptions(
+                                                  decimal: true,
+                                                ),
                                           ),
                                           const SizedBox(height: 12),
                                           TextFormField(
                                             controller: _maxCtrl,
-                                            decoration:
-                                                const InputDecoration(
+                                            decoration: const InputDecoration(
                                               labelText: 'Max clamp',
                                             ),
-                                            keyboardType: const TextInputType
-                                                    .numberWithOptions(
-                                                decimal: true),
+                                            keyboardType:
+                                                const TextInputType.numberWithOptions(
+                                                  decimal: true,
+                                                ),
                                           ),
                                           const Spacer(),
                                           ElevatedButton(
@@ -387,11 +399,11 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
                                         ],
                                       ),
                                     )),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
-                )),
+                    ],
+                  )),
     );
   }
 }

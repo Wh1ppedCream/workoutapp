@@ -1,5 +1,17 @@
 import 'package:flutter/material.dart';
 
+/// Shared semantic accents for grouped settings content.
+abstract final class SettingsAccent {
+  static const Color account = Color(0xFFB39DDB);
+  static const Color appearance = Color(0xFFCE93D8);
+  static const Color training = Color(0xFF4DB6AC);
+  static const Color progress = Color(0xFF81C784);
+  static const Color data = Color(0xFF64B5F6);
+  static const Color advanced = Color(0xFFFFB74D);
+  static const Color safety = Color(0xFFEF9A9A);
+  static const Color muted = Color(0xFF9E9E9E);
+}
+
 /// Shared building blocks for the app's settings and profile pages.
 class SettingsPageScaffold extends StatelessWidget {
   final String title;
@@ -7,7 +19,11 @@ class SettingsPageScaffold extends StatelessWidget {
   final IconData icon;
   final List<Widget> children;
   final Widget? bottomNavigationBar;
-  final bool showAppBar;
+  final Color? heroAccentColor;
+
+  /// Shows the compact in-page back affordance above the hero card.
+  /// The profile tab disables this because it is a root bottom-tab screen.
+  final bool showBackButton;
 
   const SettingsPageScaffold({
     super.key,
@@ -16,7 +32,8 @@ class SettingsPageScaffold extends StatelessWidget {
     required this.icon,
     required this.children,
     this.bottomNavigationBar,
-    this.showAppBar = true,
+    this.heroAccentColor,
+    this.showBackButton = true,
   });
 
   @override
@@ -24,18 +41,28 @@ class SettingsPageScaffold extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: showAppBar
-          ? AppBar(
-              title: Text(title),
-              scrolledUnderElevation: 0,
-            )
-          : null,
       bottomNavigationBar: bottomNavigationBar,
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
           children: [
-            SettingsHeroCard(title: title, subtitle: subtitle, icon: icon),
+            if (showBackButton) ...[
+              Align(
+                alignment: Alignment.centerLeft,
+                child: IconButton(
+                  tooltip: 'Back',
+                  onPressed: () => Navigator.maybePop(context),
+                  icon: const Icon(Icons.arrow_back),
+                ),
+              ),
+              const SizedBox(height: 4),
+            ],
+            SettingsHeroCard(
+              title: title,
+              subtitle: subtitle,
+              icon: icon,
+              accentColor: heroAccentColor,
+            ),
             const SizedBox(height: 16),
             ...children,
           ],
@@ -50,18 +77,21 @@ class SettingsHeroCard extends StatelessWidget {
   final String title;
   final String? subtitle;
   final IconData icon;
+  final Color? accentColor;
 
   const SettingsHeroCard({
     super.key,
     required this.title,
     this.subtitle,
     required this.icon,
+    this.accentColor,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final accent = accentColor ?? scheme.primary;
 
     return Container(
       padding: const EdgeInsets.all(18),
@@ -71,11 +101,11 @@ class SettingsHeroCard extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            scheme.primaryContainer.withValues(alpha: 0.72),
+            accent.withValues(alpha: 0.26),
             scheme.surfaceContainerHighest.withValues(alpha: 0.54),
           ],
         ),
-        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.5)),
+        border: Border.all(color: accent.withValues(alpha: 0.42)),
       ),
       child: Row(
         children: [
@@ -83,24 +113,38 @@ class SettingsHeroCard extends StatelessWidget {
             width: 54,
             height: 54,
             decoration: BoxDecoration(
-              color: scheme.primary.withValues(alpha: 0.18),
+              color: accent.withValues(alpha: 0.18),
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: scheme.primary, size: 28),
+            child: Icon(icon, color: accent, size: 28),
           ),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    color: scheme.onSurface,
-                  ),
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final fontSize =
+                        constraints.maxWidth >= 290
+                            ? 28.0
+                            : constraints.maxWidth >= 220
+                            ? 25.0
+                            : 22.0;
+                    return FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        title,
+                        maxLines: 1,
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontSize: fontSize,
+                          fontWeight: FontWeight.w900,
+                          color: scheme.onSurface,
+                        ),
+                      ),
+                    );
+                  },
                 ),
                 if (subtitle != null) ...[
                   const SizedBox(height: 4),
@@ -126,18 +170,21 @@ class SettingsSection extends StatelessWidget {
   final String title;
   final String? subtitle;
   final List<Widget> children;
+  final Color? accentColor;
 
   const SettingsSection({
     super.key,
     required this.title,
     this.subtitle,
     required this.children,
+    this.accentColor,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final accent = accentColor;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
@@ -146,24 +193,43 @@ class SettingsSection extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
-            child: Column(
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                if (subtitle != null) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle!,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
+                if (accent != null) ...[
+                  Container(
+                    width: 4,
+                    height: subtitle == null ? 22 : 38,
+                    margin: const EdgeInsets.only(top: 1, right: 9),
+                    decoration: BoxDecoration(
+                      color: accent,
+                      borderRadius: BorderRadius.circular(99),
                     ),
                   ),
                 ],
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w900,
+                          color: accent ?? scheme.onSurface,
+                        ),
+                      ),
+                      if (subtitle != null) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitle!,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
@@ -172,10 +238,20 @@ class SettingsSection extends StatelessWidget {
               color: scheme.surfaceContainerHighest.withValues(alpha: 0.34),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: scheme.outlineVariant.withValues(alpha: 0.55),
+                color: (accent ?? scheme.outlineVariant).withValues(
+                  alpha: accent == null ? 0.55 : 0.46,
+                ),
               ),
             ),
-            child: Column(children: children),
+            child:
+                accent == null
+                    ? Column(children: children)
+                    : Theme(
+                      data: theme.copyWith(
+                        colorScheme: scheme.copyWith(primary: accent),
+                      ),
+                      child: Column(children: children),
+                    ),
           ),
         ],
       ),
@@ -226,16 +302,17 @@ class SettingsActionTile extends StatelessWidget {
           fontWeight: FontWeight.w900,
         ),
       ),
-      subtitle: subtitle == null
-          ? null
-          : Text(
-              subtitle!,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: scheme.onSurfaceVariant,
+      subtitle:
+          subtitle == null
+              ? null
+              : Text(
+                subtitle!,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
               ),
-            ),
       trailing:
           trailing ?? Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
       onTap: onTap,
@@ -249,6 +326,7 @@ class SettingsSwitchTile extends StatelessWidget {
   final String? subtitle;
   final bool value;
   final ValueChanged<bool>? onChanged;
+  final Color? iconColor;
 
   const SettingsSwitchTile({
     super.key,
@@ -257,12 +335,14 @@ class SettingsSwitchTile extends StatelessWidget {
     this.subtitle,
     required this.value,
     required this.onChanged,
+    this.iconColor,
   });
 
   @override
   Widget build(BuildContext context) {
     return SettingsActionTile(
       icon: icon,
+      iconColor: iconColor,
       title: title,
       subtitle: subtitle,
       trailing: Switch(value: value, onChanged: onChanged),
@@ -296,7 +376,9 @@ class SettingsInfoCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest.withValues(alpha: 0.34),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.55)),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.55),
+        ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -337,10 +419,13 @@ class SettingsInfoCard extends StatelessWidget {
   }
 }
 
-List<Widget> settingsTilesWithDividers(BuildContext context, List<Widget> tiles) {
-  final dividerColor = Theme.of(context).colorScheme.outlineVariant.withValues(
-    alpha: 0.55,
-  );
+List<Widget> settingsTilesWithDividers(
+  BuildContext context,
+  List<Widget> tiles,
+) {
+  final dividerColor = Theme.of(
+    context,
+  ).colorScheme.outlineVariant.withValues(alpha: 0.55);
   return [
     for (var i = 0; i < tiles.length; i++) ...[
       tiles[i],

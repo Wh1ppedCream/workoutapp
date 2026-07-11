@@ -84,15 +84,15 @@ class _BodyPartMuscleMappingScreenState
         _isSaving = false;
         _originalLinked = null;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Mappings saved')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Mappings saved')));
     } catch (e) {
       if (!mounted) return;
       setState(() => _isSaving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Save failed: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Save failed: $e')));
     }
   }
 
@@ -118,43 +118,48 @@ class _BodyPartMuscleMappingScreenState
         title: const Text('Anatomy Mapping'),
         scrolledUnderElevation: 0,
       ),
-      bottomNavigationBar: _editing
-          ? SafeArea(
-              minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: _isSaving ? null : _cancelEditing,
-                      child: const Text('Cancel'),
+      bottomNavigationBar:
+          _editing
+              ? SafeArea(
+                minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: _isSaving ? null : _cancelEditing,
+                        child: const Text('Cancel'),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: FilledButton.icon(
-                      onPressed: _isSaving ? null : _saveMappings,
-                      icon: _isSaving
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.save),
-                      label: Text(_isSaving ? 'Saving...' : 'Save'),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton.icon(
+                        onPressed: _isSaving ? null : _saveMappings,
+                        icon:
+                            _isSaving
+                                ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                                : const Icon(Icons.save),
+                        label: Text(_isSaving ? 'Saving...' : 'Save'),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            )
-          : null,
+                  ],
+                ),
+              )
+              : null,
       body: SafeArea(child: _buildBody()),
-      floatingActionButton: (!_editing && !_isLoading && _error == null)
-          ? FloatingActionButton.extended(
-              onPressed: _startEditing,
-              icon: const Icon(Icons.edit),
-              label: const Text('Edit'),
-            )
-          : null,
+      floatingActionButton:
+          (!_editing && !_isLoading && _error == null)
+              ? FloatingActionButton.extended(
+                onPressed: _startEditing,
+                icon: const Icon(Icons.edit),
+                label: const Text('Edit'),
+              )
+              : null,
     );
   }
 
@@ -181,6 +186,7 @@ class _BodyPartMuscleMappingScreenState
         const SizedBox(height: 16),
         SettingsSection(
           title: 'Selected Body Part',
+          accentColor: SettingsAccent.training,
           children: [
             Padding(
               padding: const EdgeInsets.all(14),
@@ -193,32 +199,37 @@ class _BodyPartMuscleMappingScreenState
                     borderRadius: BorderRadius.circular(16),
                   ),
                 ),
-                items: _bodyParts
-                    .map(
-                      (bodyPart) => DropdownMenuItem(
-                        value: bodyPart,
-                        child: Text(bodyPart.name),
-                      ),
-                    )
-                    .toList(),
-                onChanged: !_editing
-                    ? (bodyPart) {
-                        setState(() => _selectedBodyPart = bodyPart);
-                        if (bodyPart != null) _loadMappings(bodyPart.id);
-                      }
-                    : null,
+                items:
+                    _bodyParts
+                        .map(
+                          (bodyPart) => DropdownMenuItem(
+                            value: bodyPart,
+                            child: Text(bodyPart.name),
+                          ),
+                        )
+                        .toList(),
+                onChanged:
+                    !_editing
+                        ? (bodyPart) {
+                          setState(() => _selectedBodyPart = bodyPart);
+                          if (bodyPart != null) _loadMappings(bodyPart.id);
+                        }
+                        : null,
               ),
             ),
           ],
         ),
         SettingsSection(
           title: _editing ? 'Choose Linked Muscles' : 'Linked Muscles',
-          subtitle: _editing
-              ? 'Select every muscle that belongs to this body part.'
-              : '${linkedMuscles.length} muscles currently linked.',
-          children: _editing
-              ? _editableMuscleTiles()
-              : _readOnlyMuscleTiles(linkedMuscles),
+          accentColor: SettingsAccent.advanced,
+          subtitle:
+              _editing
+                  ? 'Select every muscle that belongs to this body part.'
+                  : '${linkedMuscles.length} muscles currently linked.',
+          children:
+              _editing
+                  ? _editableMuscleTiles()
+                  : _readOnlyMuscleTiles(linkedMuscles),
         ),
       ],
     );

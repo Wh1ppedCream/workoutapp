@@ -349,42 +349,80 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
     required VoidCallback onEdit,
     required VoidCallback onDelete,
   }) {
-    final cs = context.cs;
-    final color =
-        {
-          MethodType.weight: cs.primary.withValues(alpha: .2),
-          MethodType.rep: cs.secondary.withValues(alpha: .2),
-          MethodType.addSet: cs.tertiary.withValues(alpha: .2),
-          MethodType.delSet: cs.error.withValues(alpha: .2),
-        }[m.type]!;
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final color = _methodTypeColor(m.type, cs);
 
     return ListTile(
-      leading: const Icon(Icons.drag_handle),
-      title: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            margin: const EdgeInsets.only(right: 8),
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Text(
-              _methodTypeLabel(m.type),
-              style: TextStyle(fontSize: 12, color: cs.onSurface),
-            ),
-          ),
-          Expanded(child: Text(m.name)),
-        ],
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 3),
+      leading: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: .16),
+          borderRadius: BorderRadius.circular(13),
+        ),
+        child: Icon(_methodTypeIcon(m.type), color: color, size: 21),
       ),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          IconButton(icon: const Icon(Icons.edit), onPressed: onEdit),
-          IconButton(icon: const Icon(Icons.delete), onPressed: onDelete),
-        ],
+      title: Text(
+        m.name,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: theme.textTheme.titleSmall?.copyWith(
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+      subtitle: Text(
+        _methodTypeLabel(m.type),
+        style: theme.textTheme.bodySmall?.copyWith(color: color),
+      ),
+      trailing: PopupMenuButton<_RuleAction>(
+        tooltip: 'Rule options',
+        onSelected: (action) {
+          if (action == _RuleAction.edit) {
+            onEdit();
+          } else {
+            onDelete();
+          }
+        },
+        itemBuilder:
+            (context) => const [
+              PopupMenuItem(
+                value: _RuleAction.edit,
+                child: ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(Icons.edit_outlined),
+                  title: Text('Edit'),
+                ),
+              ),
+              PopupMenuItem(
+                value: _RuleAction.delete,
+                child: ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(Icons.delete_outline),
+                  title: Text('Delete'),
+                ),
+              ),
+            ],
       ),
     );
+  }
+
+  List<Widget> _ruleTiles(
+    List<FlowMethod> methods, {
+    required ValueChanged<FlowMethod> onEdit,
+    required ValueChanged<FlowMethod> onDelete,
+  }) {
+    return [
+      for (var index = 0; index < methods.length; index++) ...[
+        if (index > 0) const Divider(height: 1, indent: 68),
+        _methodTile(
+          methods[index],
+          onEdit: () => onEdit(methods[index]),
+          onDelete: () => onDelete(methods[index]),
+        ),
+      ],
+    ];
   }
 
   @override
@@ -405,99 +443,539 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
           body:
               'App defaults are copied into new gym profiles. Profile defaults are copied into new plans, so later edits do not unexpectedly rewrite existing plans.',
         ),
-        SettingsSection(
-          title: 'App Defaults',
-          subtitle: 'Starting rules for newly created gym profiles.',
+        const SizedBox(height: 14),
+        const _RuleScopeLegend(),
+        const SizedBox(height: 18),
+        _RuleScopeCard(
+          color: context.cs.primary,
+          icon: Icons.apps_outlined,
+          title: 'App-wide defaults',
+          subtitle: 'The starting rules for new gym profiles.',
+          count: _appMethods.length,
+          initiallyExpanded: true,
           children: [
-            for (var m in _appMethods)
-              _methodTile(
-                m,
-                onEdit: () => _showAddEditDefault(scope: 'app', existing: m),
-                onDelete: () async {
+            if (_appMethods.isEmpty)
+              const _EmptyRuleState(
+                message: 'No app-wide rules have been created yet.',
+              )
+            else
+              ..._ruleTiles(
+                _appMethods,
+                onEdit:
+                    (method) =>
+                        _showAddEditDefault(scope: 'app', existing: method),
+                onDelete: (method) async {
                   await _repo.deleteDefaultFlowMethodAndReferences(
                     scope: 'app',
-                    name: m.name,
+                    name: method.name,
                   );
                   await _loadAll();
                 },
               ),
-            ListTile(
-              leading: const Icon(Icons.add),
-              title: const Text('Add rule'),
-              onTap: () => _showAddEditDefault(scope: 'app'),
+            _AddRuleButton(
+              color: context.cs.primary,
+              label: 'Add app rule',
+              onPressed: () => _showAddEditDefault(scope: 'app'),
             ),
           ],
         ),
-        for (var p in _profiles)
-          SettingsSection(
-            title: p.name,
-            subtitle: 'Profile defaults and plan-specific rules.',
-            children: [
-              ExpansionTile(
-                key: ValueKey('profile-${p.id}-defaults'),
-                title: const Text('Profile Defaults'),
-                children: [
-                  for (var m in _profileMethods[p.id] ?? [])
-                    _methodTile(
-                      m,
-                      onEdit:
-                          () => _showAddEditDefault(
-                            scope: 'profile',
-                            profileId: p.id,
-                            existing: m,
-                          ),
-                      onDelete: () async {
-                        await _repo.deleteDefaultFlowMethodAndReferences(
-                          scope: 'profile',
-                          profileId: p.id,
-                          name: m.name,
-                        );
-                        await _loadAll();
-                      },
-                    ),
-                  ListTile(
-                    leading: const Icon(Icons.add),
-                    title: const Text('Add rule'),
-                    onTap:
-                        () => _showAddEditDefault(
-                          scope: 'profile',
-                          profileId: p.id,
-                        ),
-                  ),
-                ],
-              ),
-              for (var pr in _presetsByProfile[p.id] ?? [])
-                ExpansionTile(
-                  key: ValueKey('preset-${pr['id']}'),
-                  title: Text(pr['name'] as String),
-                  subtitle: const Text('Plan rules'),
+        const SizedBox(height: 22),
+        const _SectionHeading(
+          title: 'Gym profiles',
+          subtitle: 'Each profile keeps its defaults and plan rules together.',
+        ),
+        const SizedBox(height: 10),
+        if (_profiles.isEmpty)
+          const _EmptyProfilesCard()
+        else
+          for (
+            var profileIndex = 0;
+            profileIndex < _profiles.length;
+            profileIndex++
+          ) ...[
+            Builder(
+              builder: (context) {
+                final profile = _profiles[profileIndex];
+                final profileMethods = _profileMethods[profile.id] ?? const [];
+                final presets = _presetsByProfile[profile.id] ?? const [];
+                final planRuleCount = presets.fold<int>(
+                  0,
+                  (total, preset) =>
+                      total +
+                      (_presetMethods[preset['id'] as int]?.length ?? 0),
+                );
+                final profileColor = _profileScopeColor(context);
+                final planColor = _planScopeColor(context);
+
+                return _RuleScopeCard(
+                  color: profileColor,
+                  icon: Icons.fitness_center,
+                  title: profile.name,
+                  subtitle:
+                      '${profileMethods.length} profile rules  •  $planRuleCount plan rules',
+                  count: profileMethods.length + planRuleCount,
+                  initiallyExpanded: profileIndex == 0,
                   children: [
-                    for (var m in _presetMethods[pr['id'] as int] ?? [])
-                      _methodTile(
-                        m,
-                        onEdit:
-                            () => _showAddEditPresetMethod(
-                              presetId: pr['id'] as int,
-                              existing: m,
-                            ),
-                        onDelete: () async {
-                          await _repo.deleteFlowMethodAndReferences(m);
-                          await _loadAll();
-                        },
-                      ),
-                    ListTile(
-                      leading: const Icon(Icons.add),
-                      title: const Text('Add rule'),
-                      onTap:
-                          () => _showAddEditPresetMethod(
-                            presetId: pr['id'] as int,
+                    _RuleScopeCard(
+                      color: profileColor,
+                      icon: Icons.tune,
+                      title: 'Profile defaults',
+                      subtitle: 'Starting rules for new plans in this profile.',
+                      count: profileMethods.length,
+                      initiallyExpanded: true,
+                      compact: true,
+                      children: [
+                        if (profileMethods.isEmpty)
+                          const _EmptyRuleState(
+                            message: 'This profile has no default rules.',
+                          )
+                        else
+                          ..._ruleTiles(
+                            profileMethods,
+                            onEdit:
+                                (method) => _showAddEditDefault(
+                                  scope: 'profile',
+                                  profileId: profile.id,
+                                  existing: method,
+                                ),
+                            onDelete: (method) async {
+                              await _repo.deleteDefaultFlowMethodAndReferences(
+                                scope: 'profile',
+                                profileId: profile.id,
+                                name: method.name,
+                              );
+                              await _loadAll();
+                            },
                           ),
+                        _AddRuleButton(
+                          color: profileColor,
+                          label: 'Add profile rule',
+                          onPressed:
+                              () => _showAddEditDefault(
+                                scope: 'profile',
+                                profileId: profile.id,
+                              ),
+                        ),
+                      ],
                     ),
+                    const SizedBox(height: 14),
+                    _NestedHeading(
+                      color: planColor,
+                      icon: Icons.event_note_outlined,
+                      title: 'Plans',
+                      count: presets.length,
+                    ),
+                    const SizedBox(height: 8),
+                    if (presets.isEmpty)
+                      const _EmptyRuleState(
+                        message: 'No plans belong to this gym profile yet.',
+                      )
+                    else
+                      for (
+                        var presetIndex = 0;
+                        presetIndex < presets.length;
+                        presetIndex++
+                      ) ...[
+                        Builder(
+                          builder: (context) {
+                            final preset = presets[presetIndex];
+                            final presetId = preset['id'] as int;
+                            final methods =
+                                _presetMethods[presetId] ?? const [];
+                            return _RuleScopeCard(
+                              color: planColor,
+                              icon: Icons.event_note_outlined,
+                              title: preset['name'] as String,
+                              subtitle: 'Rules used only by this plan.',
+                              count: methods.length,
+                              compact: true,
+                              children: [
+                                if (methods.isEmpty)
+                                  const _EmptyRuleState(
+                                    message:
+                                        'This plan has no specific progression rules.',
+                                  )
+                                else
+                                  ..._ruleTiles(
+                                    methods,
+                                    onEdit:
+                                        (method) => _showAddEditPresetMethod(
+                                          presetId: presetId,
+                                          existing: method,
+                                        ),
+                                    onDelete: (method) async {
+                                      await _repo.deleteFlowMethodAndReferences(
+                                        method,
+                                      );
+                                      await _loadAll();
+                                    },
+                                  ),
+                                _AddRuleButton(
+                                  color: planColor,
+                                  label: 'Add plan rule',
+                                  onPressed:
+                                      () => _showAddEditPresetMethod(
+                                        presetId: presetId,
+                                      ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                        if (presetIndex < presets.length - 1)
+                          const SizedBox(height: 8),
+                      ],
                   ],
+                );
+              },
+            ),
+            if (profileIndex < _profiles.length - 1) const SizedBox(height: 12),
+          ],
+      ],
+    );
+  }
+}
+
+enum _RuleAction { edit, delete }
+
+Color _methodTypeColor(MethodType type, ColorScheme scheme) {
+  return switch (type) {
+    MethodType.weight => scheme.primary,
+    MethodType.rep => scheme.secondary,
+    MethodType.addSet => const Color(0xFF26A69A),
+    MethodType.delSet => scheme.error,
+  };
+}
+
+IconData _methodTypeIcon(MethodType type) {
+  return switch (type) {
+    MethodType.weight => Icons.fitness_center,
+    MethodType.rep => Icons.repeat,
+    MethodType.addSet => Icons.playlist_add,
+    MethodType.delSet => Icons.playlist_remove,
+  };
+}
+
+Color _profileScopeColor(BuildContext context) {
+  return Theme.of(context).brightness == Brightness.dark
+      ? const Color(0xFF4DB6AC)
+      : const Color(0xFF00796B);
+}
+
+Color _planScopeColor(BuildContext context) {
+  return Theme.of(context).brightness == Brightness.dark
+      ? const Color(0xFFFFB74D)
+      : const Color(0xFFEF6C00);
+}
+
+class _RuleScopeLegend extends StatelessWidget {
+  const _RuleScopeLegend();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        _LegendChip(color: scheme.primary, label: 'App defaults'),
+        _LegendChip(color: _profileScopeColor(context), label: 'Profiles'),
+        _LegendChip(color: _planScopeColor(context), label: 'Plans'),
+      ],
+    );
+  }
+}
+
+class _LegendChip extends StatelessWidget {
+  final Color color;
+  final String label;
+
+  const _LegendChip({required this.color, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: .12),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: .36)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 7,
+            height: 7,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 7),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RuleScopeCard extends StatelessWidget {
+  final Color color;
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final int count;
+  final bool initiallyExpanded;
+  final bool compact;
+  final List<Widget> children;
+
+  const _RuleScopeCard({
+    required this.color,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.count,
+    this.initiallyExpanded = false,
+    this.compact = false,
+    required this.children,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final padding = compact ? 12.0 : 14.0;
+
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withValues(
+          alpha: compact ? .20 : .28,
+        ),
+        borderRadius: BorderRadius.circular(compact ? 18 : 22),
+        border: Border.all(color: color.withValues(alpha: compact ? .36 : .52)),
+      ),
+      child: ExpansionTile(
+        initiallyExpanded: initiallyExpanded,
+        tilePadding: EdgeInsets.symmetric(horizontal: padding, vertical: 3),
+        childrenPadding: EdgeInsets.zero,
+        collapsedBackgroundColor: color.withValues(alpha: compact ? .05 : .08),
+        backgroundColor: color.withValues(alpha: .04),
+        leading: Container(
+          width: compact ? 38 : 42,
+          height: compact ? 38 : 42,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: .17),
+            borderRadius: BorderRadius.circular(compact ? 12 : 14),
+          ),
+          child: Icon(icon, color: color, size: compact ? 20 : 22),
+        ),
+        title: Text(
+          title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: (compact
+                  ? theme.textTheme.titleSmall
+                  : theme.textTheme.titleMedium)
+              ?.copyWith(fontWeight: FontWeight.w900),
+        ),
+        subtitle: Text(
+          subtitle,
+          maxLines: compact ? 1 : 2,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: scheme.onSurfaceVariant,
+          ),
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _CountBadge(count: count, color: color),
+            const SizedBox(width: 4),
+            Icon(Icons.expand_more, color: scheme.onSurfaceVariant),
+          ],
+        ),
+        children: children,
+      ),
+    );
+  }
+}
+
+class _CountBadge extends StatelessWidget {
+  final int count;
+  final Color color;
+
+  const _CountBadge({required this.count, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minWidth: 28),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: .16),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        '$count',
+        textAlign: TextAlign.center,
+        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+          color: color,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionHeading extends StatelessWidget {
+  final String title;
+  final String subtitle;
+
+  const _SectionHeading({required this.title, required this.subtitle});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = _profileScopeColor(context);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(Icons.fitness_center_outlined, color: color, size: 22),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w900,
                 ),
+              ),
+              const SizedBox(height: 2),
+              Text(subtitle, style: theme.textTheme.bodySmall),
             ],
           ),
+        ),
       ],
+    );
+  }
+}
+
+class _NestedHeading extends StatelessWidget {
+  final Color color;
+  final IconData icon;
+  final String title;
+  final int count;
+
+  const _NestedHeading({
+    required this.color,
+    required this.icon,
+    required this.title,
+    required this.count,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, color: color, size: 20),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            title,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ),
+        _CountBadge(count: count, color: color),
+      ],
+    );
+  }
+}
+
+class _EmptyRuleState extends StatelessWidget {
+  final String message;
+
+  const _EmptyRuleState({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 8),
+      child: Row(
+        children: [
+          Icon(Icons.info_outline, size: 18, color: scheme.onSurfaceVariant),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              message,
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AddRuleButton extends StatelessWidget {
+  final Color color;
+  final String label;
+  final VoidCallback onPressed;
+
+  const _AddRuleButton({
+    required this.color,
+    required this.label,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(12),
+      child: SizedBox(
+        width: double.infinity,
+        child: OutlinedButton.icon(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: color,
+            side: BorderSide(color: color.withValues(alpha: .55)),
+          ),
+          onPressed: onPressed,
+          icon: const Icon(Icons.add, size: 19),
+          label: Text(label),
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyProfilesCard extends StatelessWidget {
+  const _EmptyProfilesCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withValues(alpha: .28),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: scheme.outlineVariant),
+      ),
+      child: const _EmptyRuleState(
+        message: 'Create a gym profile to add profile and plan rules.',
+      ),
     );
   }
 }
