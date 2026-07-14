@@ -120,33 +120,36 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
     setState(() => _addingPlanIds.add(plan.id));
     try {
       final presetName = await _uniqueAddedPlanName(plan.name, profileId);
-      final presetId = await _repo.createPreset(
-        presetName,
-        profileId: profileId,
-      );
-      for (var i = 0; i < exercises.length; i++) {
-        final exercise = exercises[i];
+      final writes = <WorkoutExerciseWrite>[];
+      for (final exercise in exercises) {
         final defId = await _repo.findOrCreateExerciseDefinition(
           exercise.name,
           exercise.equipment,
         );
-        final presetExerciseId = await _repo.addExerciseToPreset(
-          presetId,
-          defId,
-          'weight',
-          i,
-        );
-        await _repo.savePresetWeightSets(
-          presetExerciseId,
-          List<ExerciseSet>.generate(
-            exercise.sets,
-            (_) => ExerciseSet(weight: exercise.weight, reps: exercise.reps),
+        writes.add(
+          WorkoutExerciseWrite(
+            exercise: WeightExercise(
+              name: exercise.name,
+              equipment: exercise.equipment,
+              sets: List<ExerciseSet>.generate(
+                exercise.sets,
+                (_) => ExerciseSet(
+                  weight: exercise.weight,
+                  reps: exercise.reps,
+                ),
+              ),
+            ),
+            type: 'weight',
+            definitionId: defId,
           ),
-          const <int, List<ExerciseSet>>{},
         );
       }
-
-      await ActivePlanStore.add(profileId, presetId);
+      final presetId = await _repo.createPresetAtomic(
+        name: presetName,
+        profileId: profileId,
+        exercises: writes,
+        activate: true,
+      );
 
       if (!mounted) return;
       widget.onPlanAdded();

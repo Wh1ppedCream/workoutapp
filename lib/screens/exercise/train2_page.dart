@@ -350,6 +350,8 @@ class _Train2PageState extends State<Train2Page> {
     }
 
     final active = context.read<ActiveSession>();
+    await active.ready;
+    if (!mounted) return;
     if (active.isActive) {
       await Navigator.of(
         context,
@@ -391,22 +393,38 @@ class _Train2PageState extends State<Train2Page> {
         return;
       }
 
-      active.exercises.clear();
-      active.cardTypes.clear();
+      final workoutExercises = <WorkoutExercise>[];
+      final workoutCardTypes = <CardType>[];
       for (var i = 0; i < preset.exercises.length; i++) {
         // TODO(cardio/stretch): add cardio and stretch back to legacy plan
         // starts after those cards are fixed and updated.
         if (preset.cardTypes[i] != CardType.weight) continue;
-        active.addExercise(
-          cloneWorkoutExercise(preset.exercises[i]),
-          preset.cardTypes[i],
-        );
+        workoutExercises.add(cloneWorkoutExercise(preset.exercises[i]));
+        workoutCardTypes.add(preset.cardTypes[i]);
       }
 
+      final started = await active.startWithExercises(
+        workoutExercises: workoutExercises,
+        workoutCardTypes: workoutCardTypes,
+      );
       // Optimized workouts are one-off sessions, not saved presets.
       await _repo.deletePreset(presetId);
       temporaryPresetId = null;
-      active.start();
+
+      if (!started) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Another workout is already active, so it was kept unchanged.',
+            ),
+          ),
+        );
+        await Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => const SessionScreen()));
+        return;
+      }
 
       if (!mounted) return;
       setState(() {
@@ -421,11 +439,6 @@ class _Train2PageState extends State<Train2Page> {
       if (!mounted) return;
       setState(() => _historyRefreshToken++);
     } catch (e) {
-      if (!active.isActive) {
-        active.exercises.clear();
-        active.cardTypes.clear();
-        active.refresh();
-      }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to start optimized workout: $e')),
@@ -499,9 +512,10 @@ class _Train2PageState extends State<Train2Page> {
           endDrawer: ProfileDrawer(
             profiles: sel.profiles,
             selected: sel.currentProfile,
-            onSelect: (profile) {
+            onSelect: (profile) async {
               final navigator = Navigator.of(context);
-              sel.selectProfile(profile);
+              await sel.selectProfile(profile);
+              if (!mounted) return;
               if (navigator.canPop()) {
                 unawaited(navigator.maybePop());
               }
@@ -524,14 +538,15 @@ class _Train2PageState extends State<Train2Page> {
                 );
               }());
             },
-            onDelete: (profile) {
+            onDelete: (profile) async {
               final navigator = Navigator.of(context);
               if (navigator.canPop()) {
                 unawaited(navigator.maybePop());
               }
               final profileId = profile.id;
               if (profileId == null) return;
-              sel.deleteProfile(profileId);
+              await sel.deleteProfile(profileId);
+              if (!mounted) return;
               setState(() {
                 _presetsRefreshToken++;
                 _historyRefreshToken++;
@@ -689,16 +704,15 @@ class _Train2PageState extends State<Train2Page> {
         Padding(
           padding: const EdgeInsets.all(16),
           child: ElevatedButton(
-            onPressed: () {
-              context.read<ActiveSession>().start();
-              Navigator.of(context)
-                  .push(
-                    MaterialPageRoute(builder: (_) => const SessionScreen()),
-                  )
-                  .then((_) {
-                    if (!mounted) return;
-                    setState(() => _historyRefreshToken++);
-                  });
+            onPressed: () async {
+              final navigator = Navigator.of(context);
+              await context.read<ActiveSession>().start();
+              if (!mounted) return;
+              await navigator.push(
+                MaterialPageRoute(builder: (_) => const SessionScreen()),
+              );
+              if (!mounted) return;
+              setState(() => _historyRefreshToken++);
             },
             child: const Text('New Session'),
           ),

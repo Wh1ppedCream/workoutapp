@@ -152,6 +152,8 @@ class Schema {
     await migrateV48(db);
     await migrateV49(db);
     await migrateV50(db);
+    await migrateV51(db);
+    await migrateV52(db);
   }
 
   /// Handler for onUpgrade callback.
@@ -209,6 +211,8 @@ class Schema {
     if (oldVersion < 48) await migrateV48(db);
     if (oldVersion < 49) await migrateV49(db);
     if (oldVersion < 50) await migrateV50(db);
+    if (oldVersion < 51) await migrateV51(db);
+    if (oldVersion < 52) await migrateV52(db);
   }
 
   /// Migration to version 3: adds rating, equipment/muscle tables.
@@ -3088,6 +3092,69 @@ WHERE source_id IS NULL
       'starter_note',
       "TEXT NOT NULL DEFAULT ''",
     );
+  }
+
+  /// v51 - Stable preset-to-session progression links and success scope.
+  static Future<void> migrateV51(Database db) async {
+    Future<void> addColumn(
+      String table,
+      String column,
+      String definition,
+    ) async {
+      final columns = await db.rawQuery('PRAGMA table_info($table);');
+      if (columns.any((row) => row['name'] == column)) return;
+      await db.execute('ALTER TABLE $table ADD COLUMN $column $definition');
+    }
+
+    await addColumn('exercises', 'source_preset_exercise_id', 'INTEGER');
+    await addColumn('sets', 'source_preset_set_id', 'INTEGER');
+    await addColumn(
+      'preset_auto_settings',
+      'success_count_mode',
+      "TEXT NOT NULL DEFAULT 'set'",
+    );
+
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_exercises_source_preset
+      ON exercises(source_preset_exercise_id)
+    ''');
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_sets_source_preset
+      ON sets(source_preset_set_id)
+    ''');
+  }
+
+  /// v52 - Resumable active workouts and database-backed active plans.
+  static Future<void> migrateV52(Database db) async {
+    await db.transaction((txn) async {
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS active_workout_draft (
+          id INTEGER PRIMARY KEY CHECK (id = 1),
+          started_at TEXT NOT NULL,
+          auto_preset_id INTEGER,
+          payload_json TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          FOREIGN KEY(auto_preset_id)
+            REFERENCES preset_definitions(id) ON DELETE SET NULL
+        )
+      ''');
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS active_plans (
+          profile_id INTEGER NOT NULL,
+          preset_id INTEGER NOT NULL,
+          activated_at TEXT NOT NULL,
+          PRIMARY KEY(profile_id, preset_id),
+          FOREIGN KEY(profile_id)
+            REFERENCES gym_profiles(id) ON DELETE CASCADE,
+          FOREIGN KEY(preset_id)
+            REFERENCES preset_definitions(id) ON DELETE CASCADE
+        )
+      ''');
+      await txn.execute('''
+        CREATE INDEX IF NOT EXISTS idx_active_plans_profile
+        ON active_plans(profile_id, activated_at)
+      ''');
+    });
   }
 
   static Future<bool> _fts4Available(DatabaseExecutor db) async {

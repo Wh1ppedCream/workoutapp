@@ -58,6 +58,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
   bool _isEditing = false;
   bool _isStartingWorkout = false;
   bool _isSavingPreset = false;
+  bool _isSavingChanges = false;
   bool _tutorialQueued = false;
 
   @override
@@ -412,51 +413,68 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     );
     if (confirm != true) return;
 
-    await _repo.deleteSession(widget.session.id);
-    if (!mounted) return;
-    Navigator.of(context).pop();
+    try {
+      await _repo.deleteSession(widget.session.id);
+      if (!mounted) return;
+      context.read<ActiveSession>().markHistoryChanged();
+      Navigator.of(context).pop(true);
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not delete session: $error')),
+      );
+    }
   }
 
   Future<void> _saveChanges() async {
-    await _repo.deleteExercises(widget.session.id);
-
-    for (var i = 0; i < _exerciseDetails.length; i++) {
-      final detail = _exerciseDetails[i];
-      final exercise = detail.exercise;
-
-      int? defId;
-      if (exercise is WeightExercise) {
-        defId =
-            detail.definitionId ??
-            await _repo.findOrCreateExerciseDefinition(
-              exercise.name,
-              exercise.equipment,
-            );
-      }
-
-      final exerciseId = await _repo.addExerciseRow(
+    if (_isSavingChanges) return;
+    setState(() => _isSavingChanges = true);
+    try {
+      final writes = <WorkoutExerciseWrite>[
+        for (final detail in _exerciseDetails)
+          WorkoutExerciseWrite(
+            exercise: detail.exercise,
+            type: _typeName(detail.cardType),
+            definitionId: detail.definitionId,
+            sourcePresetExerciseId:
+                detail.exercise is WeightExercise
+                    ? (detail.exercise as WeightExercise).sourcePresetExerciseId
+                    : null,
+          ),
+      ];
+      await _repo.replaceSessionExercisesAtomic(
         sessionId: widget.session.id,
-        exerciseDefId: defId,
-        type: _typeName(detail.cardType),
-        orderIndex: i,
+        exercises: writes,
       );
 
-      await _saveExerciseDetails(exerciseId, exercise, forPreset: false);
+      final summary = await _buildSummary(_exerciseDetails);
+      if (!mounted) return;
+      context.read<ActiveSession>().markHistoryChanged();
+      setState(() {
+        _summary = summary;
+        _hasChanges = false;
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Changes saved.')));
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Could not save changes. The previous session is unchanged. $error',
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isSavingChanges = false);
     }
-
-    final summary = await _buildSummary(_exerciseDetails);
-    if (!mounted) return;
-    setState(() {
-      _summary = summary;
-      _hasChanges = false;
-    });
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Changes saved.')));
   }
 
   Future<void> _startWorkoutAgain() async {
     final active = context.read<ActiveSession>();
+    await active.ready;
+    if (!mounted) return;
     if (active.isActive) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -471,17 +489,28 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     setState(() => _isStartingWorkout = true);
     var started = false;
     try {
-      active.exercises.clear();
-      active.cardTypes.clear();
-
+      final workoutExercises = <WorkoutExercise>[];
+      final workoutCardTypes = <CardType>[];
       for (final detail in _exerciseDetails) {
         // TODO(cardio/stretch): repeat cardio and stretch once those cards are
         // fixed, updated, and added back into active workout sessions.
         if (detail.cardType != CardType.weight) continue;
-        active.addExercise(_cloneExercise(detail.exercise), detail.cardType);
+        workoutExercises.add(_cloneExercise(detail.exercise));
+        workoutCardTypes.add(detail.cardType);
       }
-      active.start();
-      started = true;
+      started = await active.startWithExercises(
+        workoutExercises: workoutExercises,
+        workoutCardTypes: workoutCardTypes,
+      );
+      if (!started && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Your ongoing workout was kept. Finish or cancel it before repeating this workout.',
+            ),
+          ),
+        );
+      }
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -529,113 +558,38 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     if (!mounted) return;
 
     setState(() => _isSavingPreset = true);
-    int? createdPresetId;
-    var presetFinished = false;
     try {
       final profileId = context.read<SelectedProfile>().currentProfile?.id;
       final presetName = await _uniquePresetName(name.trim(), profileId);
-      final presetId = await _repo.createPreset(
-        presetName,
-        profileId: profileId,
-      );
-      createdPresetId = presetId;
-
-      for (var i = 0; i < _exerciseDetails.length; i++) {
-        final detail = _exerciseDetails[i];
+      final writes = <WorkoutExerciseWrite>[];
+      for (final detail in _exerciseDetails) {
         // TODO(cardio/stretch): copy cardio and stretch into saved plans after
         // those cards are fixed, updated, and added back into plan screens.
         if (detail.cardType != CardType.weight) continue;
-        final exercise = detail.exercise;
-        int? defId;
-        if (exercise is WeightExercise) {
-          defId =
-              detail.definitionId ??
-              await _repo.findOrCreateExerciseDefinition(
-                exercise.name,
-                exercise.equipment,
-              );
-        }
-
-        final presetExerciseId = await _repo.addExerciseToPreset(
-          presetId,
-          defId,
-          _typeName(detail.cardType),
-          i,
+        writes.add(
+          WorkoutExerciseWrite(
+            exercise: detail.exercise,
+            type: _typeName(detail.cardType),
+            definitionId: detail.definitionId,
+          ),
         );
-        await _saveExerciseDetails(presetExerciseId, exercise, forPreset: true);
       }
-
-      presetFinished = true;
+      await _repo.createPresetAtomic(
+        name: presetName,
+        profileId: profileId,
+        exercises: writes,
+      );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Saved "$presetName" as a preset.')),
       );
     } catch (error) {
-      if (createdPresetId != null && !presetFinished) {
-        try {
-          await _repo.deletePreset(createdPresetId);
-        } catch (_) {
-          // Best-effort cleanup so a failed copy does not leave a partial preset.
-        }
-      }
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Failed to save preset: $error')));
     } finally {
       if (mounted) setState(() => _isSavingPreset = false);
-    }
-  }
-
-  Future<void> _saveExerciseDetails(
-    int rowId,
-    WorkoutExercise exercise, {
-    required bool forPreset,
-  }) async {
-    if (exercise is WeightExercise) {
-      if (forPreset) {
-        await _repo.savePresetWeightSets(
-          rowId,
-          _cloneSets(exercise.sets),
-          _cloneChangeSets(exercise.changeSets),
-        );
-      } else {
-        await _repo.addWeightSets(
-          exerciseId: rowId,
-          parentSets: _cloneSets(exercise.sets),
-          childChangeSets: _cloneChangeSets(exercise.changeSets),
-        );
-      }
-    } else if (exercise is CardioExercise) {
-      final plannedMinutes =
-          exercise.plannedMinutes > 0
-              ? exercise.plannedMinutes
-              : (exercise.elapsedSeconds / 60).ceil();
-      if (forPreset) {
-        await _repo.savePresetCardio(
-          rowId,
-          exercise.cardioName,
-          exercise.cardioNote,
-          plannedMinutes,
-          0,
-        );
-      } else {
-        await _repo.saveCardioDetails(
-          exerciseId: rowId,
-          cardioName: exercise.cardioName,
-          note: exercise.cardioNote,
-          plannedMinutes: exercise.plannedMinutes,
-          elapsedSeconds: exercise.elapsedSeconds,
-        );
-      }
-    } else if (exercise is StretchExercise) {
-      final items =
-          exercise.stretchInstances.map((inst) => inst.toMap()).toList();
-      if (forPreset) {
-        await _repo.savePresetStretch(rowId, items);
-      } else {
-        await _repo.saveStretchInstance(exerciseId: rowId, items: items);
-      }
     }
   }
 
@@ -837,8 +791,14 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
           child: KeyedSubtree(
             key: _actionsTutorialKey,
             child: FilledButton(
-              onPressed: _saveChanges,
-              child: const Text('Save Changes'),
+              onPressed: _isSavingChanges ? null : _saveChanges,
+              child:
+                  _isSavingChanges
+                      ? const SizedBox.square(
+                        dimension: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                      : const Text('Save Changes'),
             ),
           ),
         ),

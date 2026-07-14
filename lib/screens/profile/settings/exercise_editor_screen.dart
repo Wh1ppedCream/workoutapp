@@ -18,11 +18,13 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
   final _repo = AppRepository();
   late final TabController _tabController;
   bool _isEditing = false;
+  bool _isSaving = false;
 
   // Definitions
   List<ExerciseDefinition> _defs = [];
   ExerciseDefinition? _selectedDef;
   bool _isNewExercise = false;
+  int _definitionLoadRequest = 0;
 
   // Tab data
   List<Map<String, Object>> _muscleEntries =
@@ -37,7 +39,6 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
   // new:
   List<Map<String, Object>> _equipmentEntries =
       []; // { 'id': int, 'name': String }
-  late List<int> _originalEquipmentIds;
 
   List<Map<String, Object>> _bodyAutoEntries = []; // muscle‐calculated values
   List<Map<String, Object>> _bodyManualEntries = []; // manual overrides
@@ -51,12 +52,6 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
   late final TextEditingController _setupController;
   late final TextEditingController _executionController;
   late final TextEditingController _tipsController;
-
-  /// the IDs we loaded initially, so we can diff on Save
-  late List<int> _originalMuscleIds;
-
-  // IDs of bodyparts the user loaded initially, so we can diff on Save
-  late List<int> _originalBodypartIds;
 
   @override
   void initState() {
@@ -80,6 +75,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
   /// Load all definitions and select the first one
   Future<void> _loadExerciseList() async {
     final defs = await _repo.lookupDefsDetailed();
+    if (!mounted) return;
     setState(() {
       _defs = defs;
       _selectedDef = null;
@@ -101,36 +97,45 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
 
   /// Populate muscles, bodyparts, equipment for the selected definition
   Future<void> _loadDefinitionDetails(ExerciseDefinition def) async {
+    final request = ++_definitionLoadRequest;
     final defId = def.id;
-    // Pick a range for calculating sets: for “all time”, start at epoch
 
-    // 1) Muscle‐hit percents (for the manual‐override list)
-    final musclePercents = await _repo.computeMusclePercents(defId);
-    // 1a) Persisted “Use Manual Muscles” flag
-    final useManualMuscles = await _repo.getUseManualMuscles(defId);
+    // Start independent reads together so changing exercises does not wait on
+    // a long serial chain of database queries.
+    final results = await Future.wait<Object>([
+      _repo.computeMusclePercents(defId),
+      _repo.getUseManualMuscles(defId),
+      _repo.fetchAllMusclesFull(),
+      _repo.computeMuscleCalculatedBodyparts(defId),
+      _repo.fetchBodyPartPercentsManual(defId),
+      _repo.getUseManualBodyparts(defId),
+      _repo.fetchExerciseMedia(defId),
+      _repo.getMultiplyByRating(defId),
+      Future.wait(
+        def.bodyParts.map(
+          (bodyPart) => _repo.fetchMusclesForBodyPart(bodyPart.id),
+        ),
+      ),
+    ]);
 
-    // 2) Build Bodypart‐Calculated Muscles
-    final allMuscles = await _repo.fetchAllMusclesFull(); // List<Muscle>
+    final musclePercents = results[0] as List<ExerciseMusclePercent>;
+    final useManualMuscles = results[1] as bool;
+    final allMuscles = results[2] as List<Muscle>;
+    final autoBpMap = results[3] as Map<BodyPart, double>;
+    final manualList = results[4] as List<ExerciseBodyPartPercent>;
+    final useManualBody = results[5] as bool;
+    final mediaItems = results[6] as List<ExerciseMediaItem>;
+    final multiplyByRating = results[7] as bool;
+    final bodyPartLinks = results[8] as List<List<MuscleBodyPart>>;
+
     final muscleById = {for (var m in allMuscles) m.id: m};
     final seenMuscles = <int>{};
     final autoMuscles = <Map<String, Object>>[];
-
-    // 3) Muscle‐calculated body‐part counts (for the Bodyparts tab)
-    final autoBpMap = await _repo.computeMuscleCalculatedBodyparts(defId);
-
-    // 4) Manual overrides for body‐parts
-    final manualList = await _repo.fetchBodyPartPercentsManual(defId);
     final manualMap = {for (var e in manualList) e.bodyPartId: e.percent};
-    final useManualBody = await _repo.getUseManualBodyparts(def.id);
-    final mediaItems = await _repo.fetchExerciseMedia(defId);
 
-    // 1b) Persisted “Multiply by Rating” flag
-    final multiplyByRating = await _repo.getMultiplyByRating(defId);
-
-    for (var bp in def.bodyParts) {
-      final links = await _repo.fetchMusclesForBodyPart(
-        bp.id,
-      ); // List<MuscleBodyPart>
+    for (var index = 0; index < def.bodyParts.length; index++) {
+      final bp = def.bodyParts[index];
+      final links = bodyPartLinks[index];
       for (var link in links) {
         final mid = link.muscleId;
         if (!seenMuscles.contains(mid) && muscleById.containsKey(mid)) {
@@ -144,6 +149,12 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
           });
         }
       }
+    }
+
+    if (!mounted ||
+        request != _definitionLoadRequest ||
+        _selectedDef?.id != defId) {
+      return;
     }
 
     // Now update all UI state in one batch:
@@ -172,17 +183,11 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
               'percent': override.percent,
             };
           }).toList();
-      //(old version)_originalMuscleIds = def.muscles.map((rm) => rm.muscle.id).toList();
-      _originalMuscleIds = _muscleEntries.map((e) => e['id'] as int).toList();
-
       // --- Muscle-Calculated Bodyparts ---
       _bodyAutoEntries =
           autoBpMap.entries.map((e) {
             return {'id': e.key.id, 'name': e.key.name, 'count': e.value};
           }).toList();
-
-      // Keep original bodypart ids for diffing manual changes
-      _originalBodypartIds = def.bodyParts.map((bp) => bp.id).toList();
 
       // --- Manual-Assigned Bodyparts ---
       _bodyManualEntries =
@@ -198,8 +203,6 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
       // Equipment (unchanged)
       _equipmentEntries =
           def.equipmentList.map((e) => {'id': e.id, 'name': e.name}).toList();
-      _originalEquipmentIds = def.equipmentList.map((e) => e.id).toList();
-
       _rating = def.rating;
       _mediaItems = mediaItems;
     });
@@ -210,77 +213,69 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
   }
 
   Future<void> _toggleEdit() async {
+    if (_isSaving) return;
     if (_isEditing && _selectedDef != null) {
       final def = _selectedDef!;
       final defId = def.id;
+      setState(() => _isSaving = true);
+      try {
+        await _repo.saveExerciseDefinitionAtomic(
+          ExerciseDefinitionWrite(
+            definition: ExerciseDefinition(
+              id: def.id,
+              name: def.name,
+              equipmentId: def.equipmentId,
+              rating: _rating,
+              equipmentList: def.equipmentList,
+              bodyParts: def.bodyParts,
+              muscles: def.muscles,
+              useManualBodyparts: _useManualBody,
+              multiplyByRating: _multiplyByRating,
+              setupNotes: _setupController.text,
+              executionNotes: _executionController.text,
+              tipsNotes: _tipsController.text,
+              starterLoadProfile: def.starterLoadProfile,
+            ),
+            useManualMuscles: _useManualMuscles,
+            muscleIds:
+                _muscleEntries.map((entry) => entry['id'] as int).toList(),
+            musclePercents: {
+              for (final entry in _muscleEntries)
+                entry['id'] as int: entry['percent'] as double,
+            },
+            equipmentIds:
+                _equipmentEntries
+                    .map((entry) => entry['id'] as int)
+                    .toSet(),
+            bodyPartPercents: {
+              for (final entry in _bodyManualEntries)
+                entry['id'] as int: entry['count'] as double,
+            },
+            mediaItems: _mediaItems,
+          ),
+        );
 
-      // 1) persist the “Use Manual Muscles” flag & all your join-table changes
-      await _repo.setMultiplyByRating(defId, _multiplyByRating);
-      await _repo.setUseManualMuscles(defId, _useManualMuscles);
-      await _saveMuscleChanges();
-      await _saveEquipmentChanges();
-      await _saveBodypartChanges();
-
-      // 2) now persist the three notes fields by constructing
-      //    a fresh ExerciseDefinition and calling updateExerciseDefinition
-      await _repo.updateExerciseDefinition(
-        ExerciseDefinition(
-          id: def.id,
-          name: def.name,
-          equipmentId: def.equipmentId,
-          rating: _rating, // ← use the new rating
-          equipmentList: def.equipmentList,
-          bodyParts: def.bodyParts,
-          muscles: def.muscles,
-          useManualBodyparts: _useManualBody,
-          // ← new fields:
-          multiplyByRating: _multiplyByRating,
-          setupNotes: _setupController.text,
-          executionNotes: _executionController.text,
-          tipsNotes: _tipsController.text,
-        ),
-      );
-      await _repo.replaceExerciseMedia(defId, _mediaItems);
-
-      // 3) refresh your in-memory copy and the UI
-      _selectedDef = await _repo.fetchDefinitionById(defId);
-      await _loadDefinitionDetails(_selectedDef!);
+        final refreshedDefinition = await _repo.fetchDefinitionById(defId);
+        if (!mounted || refreshedDefinition == null) return;
+        _selectedDef = refreshedDefinition;
+        await _loadDefinitionDetails(refreshedDefinition);
+        if (!mounted) return;
+      } catch (error) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Could not save exercise. The previous definition is unchanged. $error',
+            ),
+          ),
+        );
+        return;
+      } finally {
+        if (mounted) setState(() => _isSaving = false);
+      }
     }
 
     setState(() => _isEditing = !_isEditing);
-  }
-
-  /// Persist adds/removals of bodyparts when saving.
-  Future<void> _saveBodypartChanges() async {
-    final defId = _selectedDef!.id;
-
-    final currIds = _bodyManualEntries.map((e) => e['id'] as int).toSet();
-    final origIds = _originalBodypartIds.toSet();
-
-    // 1) removals
-    for (var removed in origIds.difference(currIds)) {
-      await _repo.deleteExerciseBodypartMapping(defId, removed);
-      await _repo.removeExerciseBodyPartPercent(defId, removed);
-    }
-
-    // 2) additions
-    for (var added in currIds.difference(origIds)) {
-      await _repo.addExerciseBodypartMapping(defId, added);
-      final count =
-          _bodyManualEntries.firstWhere((e) => e['id'] == added)['count']
-              as double;
-      await _repo.setExerciseBodyPartPercent(defId, added, count);
-    }
-
-    // 3) percent overrides
-    for (var entry in _bodyManualEntries) {
-      final bpId = entry['id'] as int;
-      final count = entry['count'] as double;
-      await _repo.setExerciseBodyPartPercent(defId, bpId, count);
-    }
-
-    // reset baseline
-    _originalBodypartIds = currIds.toList();
   }
 
   /// Let the user pick one or more new BodyParts to stage.
@@ -344,70 +339,6 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
         }
       });
     }
-  }
-
-  /// Persist adds/removals on equipment when saving.
-  Future<void> _saveEquipmentChanges() async {
-    final defId = _selectedDef!.id;
-
-    final currIds = _equipmentEntries.map((e) => e['id'] as int).toSet();
-    final origIds = _originalEquipmentIds.toSet();
-
-    // 1) removals
-    for (var removed in origIds.difference(currIds)) {
-      await _repo.deleteExerciseEquipmentMapping(defId, removed);
-    }
-
-    // 2) additions
-    for (var added in currIds.difference(origIds)) {
-      await _repo.addExerciseEquipmentMapping(defId, added);
-    }
-
-    // reset baseline
-    _originalEquipmentIds = currIds.toList();
-  }
-
-  /// Compare the original vs. current _muscleEntries and persist adds/removes/percentage‐overrides.
-  Future<void> _saveMuscleChanges() async {
-    final def = _selectedDef!;
-    final defId = def.id;
-
-    // current IDs & a quick lookup for percent
-    final currIds = _muscleEntries.map((e) => e['id'] as int).toSet();
-    final currPct = {
-      for (var e in _muscleEntries) e['id'] as int: e['percent'] as double,
-    };
-
-    final origIds = _originalMuscleIds.toSet();
-
-    // 1) removals
-    for (var removed in origIds.difference(currIds)) {
-      await _repo.deleteExerciseMuscleMapping(defId, removed);
-      // also wipe out any overrides
-      await _repo.removeExerciseMusclePercent(defId, removed);
-    }
-
-    // 2) additions
-    for (var added in currIds.difference(origIds)) {
-      // new rank = position in the list + 1
-      final rank = _muscleEntries.indexWhere((e) => e['id'] == added) + 1;
-      await _repo.addExerciseMuscleMapping(defId, added, rank);
-      // if user typed a percent override
-      final p = currPct[added]!;
-      //if (p != 0.0) {
-      // await _repo.setExerciseMuscleHitPercent(defId, added, p);
-      //}
-      await _repo.setExerciseMuscleHitPercent(defId, added, p);
-    }
-
-    // 3) updates for existing
-    for (var kept in currIds.intersection(origIds)) {
-      final p = currPct[kept]!;
-      await _repo.setExerciseMuscleHitPercent(defId, kept, p);
-    }
-
-    // refresh our baseline for any further edits
-    _originalMuscleIds = currIds.toList();
   }
 
   /// Show a dialog of all muscles *not* yet on this exercise,
@@ -663,6 +594,9 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
           IconButton(
             icon: Icon(_isEditing ? Icons.check : Icons.edit),
             onPressed:
+                _isSaving
+                    ? null
+                    :
                 (_selectedDef != null || _isNewExercise)
                     ? () => _toggleEdit()
                     : null,

@@ -95,6 +95,39 @@ class AppRepository {
   /// Deletes a session by its ID, cascading to related exercises & sets.
   Future<void> deleteSession(int id) => _dbHelper.deleteSession(id);
 
+  Future<int> completeWorkoutAtomic({
+    required DateTime completedAt,
+    required int durationSeconds,
+    required List<WorkoutExerciseWrite> exercises,
+  }) => _dbHelper.completeWorkoutAtomic(
+    completedAt: completedAt,
+    durationSeconds: durationSeconds,
+    exercises: exercises,
+  );
+
+  Future<void> replaceSessionExercisesAtomic({
+    required int sessionId,
+    required List<WorkoutExerciseWrite> exercises,
+  }) => _dbHelper.replaceSessionExercisesAtomic(
+    sessionId: sessionId,
+    exercises: exercises,
+  );
+
+  Future<void> saveActiveWorkoutDraft({
+    required DateTime startedAt,
+    required int? autoPresetId,
+    required String payloadJson,
+  }) => _dbHelper.saveActiveWorkoutDraft(
+    startedAt: startedAt,
+    autoPresetId: autoPresetId,
+    payloadJson: payloadJson,
+  );
+
+  Future<Map<String, dynamic>?> loadActiveWorkoutDraft() =>
+      _dbHelper.loadActiveWorkoutDraft();
+
+  Future<void> clearActiveWorkoutDraft() => _dbHelper.clearActiveWorkoutDraft();
+
   /// Fetches a single session by ID (or null).
   Future<WorkoutSession?> fetchSessionById(int id) =>
       _dbHelper.fetchSessionById(id);
@@ -142,11 +175,13 @@ class AppRepository {
     required String type,
     required int orderIndex,
     required int sessionId,
+    int? sourcePresetExerciseId,
   }) => _dbHelper.addExerciseRow(
     exerciseDefId: exerciseDefId,
     type: type,
     orderIndex: orderIndex,
     sessionId: sessionId,
+    sourcePresetExerciseId: sourcePresetExerciseId,
   );
 
   /// Fetches a fully-detailed [WorkoutExercise] by its ID.
@@ -403,6 +438,13 @@ class AppRepository {
   Future<void> updateExerciseDefinition(ExerciseDefinition def) async {
     await _dbHelper.updateExerciseDefinition(def);
     clearExerciseAnalysisCacheFor(def.id);
+  }
+
+  Future<void> saveExerciseDefinitionAtomic(
+    ExerciseDefinitionWrite write,
+  ) async {
+    await _dbHelper.saveExerciseDefinitionAtomic(write);
+    clearExerciseAnalysisCacheFor(write.definition.id);
   }
 
   Future<void> deleteExerciseDefinition(int defId) async {
@@ -898,6 +940,33 @@ class AppRepository {
   // ─── GYM PROFILES ────────────────────────────────────────
 
   Future<int> createProfile(String name) => _dbHelper.createProfile(name);
+
+  Future<int> saveGymProfileAtomic({
+    required GymProfile? existingProfile,
+    required String name,
+    required Set<int> equipmentIds,
+  }) => _dbHelper.saveGymProfileAtomic(
+    existingProfile: existingProfile,
+    name: name,
+    equipmentIds: equipmentIds,
+  );
+
+  Future<Set<int>> loadActivePlans(int profileId) =>
+      _dbHelper.loadActivePlans(profileId);
+
+  Future<void> replaceActivePlans(int profileId, Set<int> presetIds) =>
+      _dbHelper.replaceActivePlans(profileId, presetIds);
+
+  Future<void> addActivePlan(int profileId, int presetId) =>
+      _dbHelper.addActivePlan(profileId, presetId);
+
+  Future<void> removeActivePlan(int profileId, int presetId) =>
+      _dbHelper.removeActivePlan(profileId, presetId);
+
+  Future<String?> getAppState(String key) => _dbHelper.getAppState(key);
+
+  Future<void> setAppState(String key, String? value) =>
+      _dbHelper.setAppState(key, value);
   Future<List<GymProfile>> fetchAllProfiles() => _dbHelper.fetchAllProfiles();
   Future<int> updateProfile(GymProfile profile) =>
       _dbHelper.updateProfile(profile);
@@ -914,6 +983,40 @@ class AppRepository {
 
   Future<int> createPreset(String name, {int? profileId}) =>
       _dbHelper.createPreset(name, profileId: profileId);
+
+  Future<int> createPresetAtomic({
+    required String name,
+    required int? profileId,
+    required List<WorkoutExerciseWrite> exercises,
+    PresetAutoSettingsWrite? autoSettings,
+    bool activate = false,
+  }) => _dbHelper.createPresetAtomic(
+    name: name,
+    profileId: profileId,
+    exercises: exercises,
+    autoSettings: autoSettings,
+    activate: activate,
+  );
+
+  Future<void> replacePresetAtomic({
+    required int presetId,
+    required String? name,
+    required List<WorkoutExerciseWrite> exercises,
+    PresetAutoSettingsWrite? autoSettings,
+  }) => _dbHelper.replacePresetAtomic(
+    presetId: presetId,
+    name: name,
+    exercises: exercises,
+    autoSettings: autoSettings,
+  );
+
+  Future<void> savePresetAutoConfigurationAtomic({
+    required int presetId,
+    required PresetAutoConfigurationWrite configuration,
+  }) => _dbHelper.savePresetAutoConfigurationAtomic(
+    presetId: presetId,
+    configuration: configuration,
+  );
 
   Future<int> findOrCreatePreset(String name, {int? profileId}) =>
       _dbHelper.findOrCreatePreset(name, profileId: profileId);
@@ -1005,6 +1108,7 @@ class AppRepository {
     required bool adjustAllSets,
     required bool useManualSelect,
     String? manualSelectionJson,
+    String? successCountMode,
   }) => _dbHelper.upsertPresetAutoSettings(
     presetId: presetId,
     isAutomatic: isAutomatic,
@@ -1016,6 +1120,7 @@ class AppRepository {
     adjustAllSets: adjustAllSets,
     useManualSelect: useManualSelect,
     manualSelectionJson: manualSelectionJson,
+    successCountMode: successCountMode,
   );
 
   Future<void> deletePresetAutoSettings(int presetId) =>
@@ -1079,6 +1184,10 @@ class AppRepository {
 
   Future<int> deletePresetSet(int presetSetId) =>
       _dbHelper.deletePresetSet(presetSetId);
+
+  Future<void> applyPresetProgressionBatch(
+    PresetProgressionBatch progression,
+  ) => _dbHelper.applyPresetProgressionBatch(progression);
 
   /// Flow‐chart JSON for a preset.
   Future<FlowDefinition> fetchFlowDefinition(int presetId) async {
@@ -1192,6 +1301,32 @@ class AppRepository {
       params: params,
     );
   }
+
+  /// Copies a new app-wide rule into existing profile defaults. Existing
+  /// profile rules with the same name stay untouched.
+  Future<int> copyAppDefaultRuleToExistingProfiles({
+    required String name,
+    required MethodType type,
+    required Map<String, dynamic> params,
+  }) => _dbHelper.copyAppDefaultRuleToExistingProfiles(
+    name: name,
+    type: type.toShortString(),
+    params: params,
+  );
+
+  /// Copies a new profile-default rule into that profile's existing plans.
+  /// Existing plan rules with the same name stay untouched.
+  Future<int> copyProfileDefaultRuleToExistingPlans({
+    required int profileId,
+    required String name,
+    required MethodType type,
+    required Map<String, dynamic> params,
+  }) => _dbHelper.copyProfileDefaultRuleToExistingPlans(
+    profileId: profileId,
+    name: name,
+    type: type.toShortString(),
+    params: params,
+  );
 
   List<FlowMethod> _flowMethodsFromRows(List<Map<String, dynamic>> rows) {
     return rows.map(FlowMethod.fromMap).toList();

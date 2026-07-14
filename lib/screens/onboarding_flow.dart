@@ -225,30 +225,22 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         existingProfiles,
         ignoredProfileId: profileId,
       );
-      await repo.updateProfile(
-        GymProfile(
-          id: profileId,
-          name: profileName,
-          createdAt: currentProfile.createdAt,
-        ),
+      await repo.saveGymProfileAtomic(
+        existingProfile: currentProfile,
+        name: profileName,
+        equipmentIds: selectedEquipment.map((item) => item.id).toSet(),
       );
-      await _syncProfileEquipment(repo, profileId, selectedEquipment);
       await _selectProfile(profileId);
       return profileId;
     }
 
     final profileName = _uniqueProfileName(requestedName, existingProfiles);
 
-    int? createdProfileId;
-    try {
-      createdProfileId = await repo.createProfile(profileName);
-      await _syncProfileEquipment(repo, createdProfileId, selectedEquipment);
-    } catch (_) {
-      if (createdProfileId != null) {
-        await repo.deleteProfile(createdProfileId);
-      }
-      rethrow;
-    }
+    final createdProfileId = await repo.saveGymProfileAtomic(
+      existingProfile: null,
+      name: profileName,
+      equipmentIds: selectedEquipment.map((item) => item.id).toSet(),
+    );
 
     if (!mounted) return createdProfileId;
     _onboardingProfileId = createdProfileId;
@@ -256,34 +248,10 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     return createdProfileId;
   }
 
-  Future<void> _syncProfileEquipment(
-    AppRepository repo,
-    int profileId,
-    List<Equipment> selectedEquipment,
-  ) async {
-    final assigned = await repo.fetchEquipmentForProfile(profileId);
-    final assignedIds = assigned.map((row) => row['id'] as int).toSet();
-    final selectedIds =
-        selectedEquipment.map((equipment) => equipment.id).toSet();
-    final toAdd = selectedIds.difference(assignedIds);
-    final toRemove = assignedIds.difference(selectedIds);
-
-    for (final equipmentId in toAdd) {
-      await repo.addEquipmentToProfile(profileId, equipmentId);
-    }
-    for (final equipmentId in toRemove) {
-      await repo.removeEquipmentFromProfile(profileId, equipmentId);
-    }
-  }
-
   Future<void> _selectProfile(int profileId) async {
     if (!mounted) return;
     final selectedProfile = context.read<SelectedProfile>();
-    await selectedProfile.loadProfiles();
-    final createdProfile = selectedProfile.profiles.firstWhere(
-      (profile) => profile.id == profileId,
-    );
-    await selectedProfile.selectProfile(createdProfile);
+    await selectedProfile.loadProfiles(preferredProfileId: profileId);
   }
 
   String _uniqueProfileName(

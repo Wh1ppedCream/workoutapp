@@ -21,6 +21,7 @@ class _AutoSettings {
 
   final bool useManualSelect;
   final Map<int, bool> manualSelections;
+  final ProgressionSuccessScope successScope;
 
   _AutoSettings({
     required this.globalIncrement,
@@ -32,7 +33,52 @@ class _AutoSettings {
 
     required this.useManualSelect,
     required this.manualSelections,
+    required this.successScope,
   });
+}
+
+class _ExerciseContext {
+  final int presetExerciseId;
+  final int? sessionExerciseId;
+  final List<Map<String, dynamic>> allPresetSets;
+  final List<Map<String, dynamic>> parentPresetSets;
+  final List<Map<String, dynamic>> sessionSets;
+  final Map<String, dynamic>? exerciseAuto;
+  final int targetIndex;
+
+  const _ExerciseContext({
+    required this.presetExerciseId,
+    required this.sessionExerciseId,
+    required this.allPresetSets,
+    required this.parentPresetSets,
+    required this.sessionSets,
+    required this.exerciseAuto,
+    required this.targetIndex,
+  });
+}
+
+class _WorkingSet {
+  final int? id;
+  final int? parentSetId;
+  double weight;
+  int reps;
+  int orderIndex;
+
+  _WorkingSet({
+    required this.id,
+    required this.parentSetId,
+    required this.weight,
+    required this.reps,
+    required this.orderIndex,
+  });
+
+  factory _WorkingSet.fromRow(Map<String, dynamic> row) => _WorkingSet(
+    id: row['id'] as int,
+    parentSetId: row['parent_set_id'] as int?,
+    weight: (row['weight'] as num).toDouble(),
+    reps: (row['reps'] as num).toInt(),
+    orderIndex: (row['order_index'] as num).toInt(),
+  );
 }
 
 /// Applies automatic preset progression after a preset-based workout finishes.
@@ -51,47 +97,114 @@ class AutoIncrementService {
     final settings = await _loadAutoSettings(presetId);
     if (settings == null) return;
 
-    final flowDefFuture = _repo.fetchFlowDefinition(presetId);
-    final methodsFuture = _repo.fetchFlowMethods(presetId);
-    final presetExercisesFuture = _repo.fetchPresetExercises(presetId);
-    final sessionExercisesFuture = _repo.fetchExercises(sessionId);
-
-    final flowDef = await flowDefFuture;
-    final methods = await methodsFuture;
+    final results = await Future.wait<Object>([
+      _repo.fetchFlowDefinition(presetId),
+      _repo.fetchFlowMethods(presetId),
+      _repo.fetchPresetExercises(presetId),
+      _repo.fetchExercises(sessionId),
+    ]);
+    final flowDef = results[0] as FlowDefinition;
+    final methods = results[1] as List<FlowMethod>;
     final executor = FlowExecutor(flowDef: flowDef, methods: methods);
+    final presetExercises = results[2] as List<Map<String, dynamic>>;
+    final sessionExercises = results[3] as List<Map<String, dynamic>>;
 
-    final presetExercises = await presetExercisesFuture;
-    final sessionExercises = await sessionExercisesFuture;
-
-    for (
-      var i = 0;
-      i < presetExercises.length && i < sessionExercises.length;
-      i++
-    ) {
-      final pe = presetExercises[i];
-      final se = sessionExercises[i];
-      if (pe['type'] != 'weight') continue;
-
-      final peId = pe['id'] as int;
-      final seExId = se['id'] as int;
-
-      // Compare the completed exercise against the preset target before
-      // deciding which flow branch to traverse.
-      final isSuccess = await _determineSuccessForTarget(
-        peId,
-        seExId,
-        settings,
-      );
-
-      final exAuto = await _repo.fetchPresetExerciseAuto(peId);
-      final lastNodeKey = exAuto?['last_node'] as String?;
-
-      final result = executor.traverse(
-        lastNodeKey: lastNodeKey,
-        outcome: isSuccess,
-      );
-      await _applyMethods(peId, result.methods, settings, result.nodeKey);
+    final sessionBySource = <int, Map<String, dynamic>>{};
+    for (final row in sessionExercises) {
+      final sourceId = row['source_preset_exercise_id'] as int?;
+      if (sourceId != null) sessionBySource[sourceId] = row;
     }
+    final hasStableLinks = sessionBySource.isNotEmpty;
+    final contexts = <_ExerciseContext>[];
+
+    for (final presetExercise in presetExercises) {
+      if (presetExercise['type'] != 'weight') continue;
+      final presetExerciseId = presetExercise['id'] as int;
+      Map<String, dynamic>? sessionExercise = sessionBySource[presetExerciseId];
+      if (sessionExercise == null && !hasStableLinks) {
+        final orderIndex = presetExercise['order_index'] as int;
+        for (final candidate in sessionExercises) {
+          if (candidate['type'] == 'weight' &&
+              candidate['order_index'] == orderIndex) {
+            sessionExercise = candidate;
+            break;
+          }
+        }
+      }
+
+      final allPresetSets = await _repo.fetchPresetSets(presetExerciseId);
+      final parentPresetSets =
+          allPresetSets.where((row) => row['parent_set_id'] == null).toList();
+      if (parentPresetSets.isEmpty) continue;
+      final exerciseAuto = await _repo.fetchPresetExerciseAuto(
+        presetExerciseId,
+      );
+      final targetIndex = _normalizedTargetIndex(
+        exerciseAuto?['last_set_index'] as int? ?? 1,
+        parentPresetSets.length,
+        settings.skipFirst,
+      );
+      final sessionExerciseId = sessionExercise?['id'] as int?;
+      contexts.add(
+        _ExerciseContext(
+          presetExerciseId: presetExerciseId,
+          sessionExerciseId: sessionExerciseId,
+          allPresetSets: allPresetSets,
+          parentPresetSets: parentPresetSets,
+          sessionSets:
+              sessionExerciseId == null
+                  ? <Map<String, dynamic>>[]
+                  : await _repo.fetchSets(sessionExerciseId),
+          exerciseAuto: exerciseAuto,
+          targetIndex: targetIndex,
+        ),
+      );
+    }
+    if (contexts.isEmpty) return;
+
+    final exerciseSuccesses = <int, bool>{
+      for (final context in contexts)
+        context.presetExerciseId: _exerciseSucceeded(context, settings),
+    };
+    final sessionSucceeded =
+        exerciseSuccesses.isNotEmpty &&
+        exerciseSuccesses.values.every((succeeded) => succeeded);
+    final updates = <PresetSetProgressionUpdate>[];
+    final inserts = <PresetSetProgressionInsert>[];
+    final deletedSetIds = <int>{};
+    final exerciseStates = <PresetExerciseProgressionState>[];
+
+    for (final context in contexts) {
+      final succeeded = switch (settings.successScope) {
+        ProgressionSuccessScope.session => sessionSucceeded,
+        ProgressionSuccessScope.exercise =>
+          exerciseSuccesses[context.presetExerciseId] ?? false,
+        ProgressionSuccessScope.set => _targetSetSucceeded(context, settings),
+      };
+      final result = executor.traverse(
+        lastNodeKey: context.exerciseAuto?['last_node'] as String?,
+        outcome: succeeded,
+      );
+      await _buildExerciseMutation(
+        context: context,
+        methods: result.methods,
+        settings: settings,
+        newLastNode: result.nodeKey,
+        updates: updates,
+        inserts: inserts,
+        deletedSetIds: deletedSetIds,
+        exerciseStates: exerciseStates,
+      );
+    }
+
+    await _repo.applyPresetProgressionBatch(
+      PresetProgressionBatch(
+        updates: updates,
+        inserts: inserts,
+        deletedSetIds: deletedSetIds.toList(),
+        exerciseStates: exerciseStates,
+      ),
+    );
   }
 
   Future<_AutoSettings?> _loadAutoSettings(int presetId) async {
@@ -113,118 +226,223 @@ class AutoIncrementService {
       adjustAllSets: intToBool(auto['adjust_all_sets'] as int),
       useManualSelect: useManual,
       manualSelections: manualSelections,
+      successScope: ProgressionSuccessScopeX.fromStorage(
+        auto['success_count_mode'],
+      ),
     );
   }
 
-  /// Returns true when the selected completed set satisfies the preset target
-  /// under the enabled weight, rep, and volume checks.
-  Future<bool> _determineSuccessForTarget(
-    int presetExerciseId,
-    int sessionExerciseId,
-    _AutoSettings settings,
-  ) async {
-    final parents = await _fetchParentSets(presetExerciseId);
-    if (parents.isEmpty) return false;
-    final lastIdx = await _computeLastIndex(
-      presetExerciseId,
-      parents.length,
-      settings.skipFirst,
+  bool _targetSetSucceeded(_ExerciseContext context, _AutoSettings settings) {
+    final index = context.targetIndex - 1;
+    return _setSucceeded(
+      context.parentPresetSets[index],
+      index,
+      context.sessionSets,
+      settings,
     );
+  }
 
-    final sessionSets = await _repo.fetchSets(sessionExerciseId);
-    final perfParents =
-        sessionSets.where((r) => r['parent_set_id'] == null).toList();
-    if (perfParents.length < lastIdx) return false;
-
-    final perf = perfParents[lastIdx - 1];
-    final w = (perf['weight'] as num).toDouble();
-    final r = perf['reps'] as int;
-    final vol = w * r;
-
-    final tgt = parents[lastIdx - 1];
-    final tW = (tgt['weight'] as num).toDouble();
-    final tR = (tgt['reps'] as num).toInt();
-    final tVol = tW * tR;
-
-    if (settings.weightCheck && w < tW) return false;
-    if (settings.repCheck && r < tR) return false;
-    if (settings.volumeCheck && vol < tVol) return false;
-
+  bool _exerciseSucceeded(_ExerciseContext context, _AutoSettings settings) {
+    if (context.sessionExerciseId == null) return false;
+    final firstIndex =
+        settings.skipFirst && context.parentPresetSets.length >= 2 ? 1 : 0;
+    for (var i = firstIndex; i < context.parentPresetSets.length; i++) {
+      if (!_setSucceeded(
+        context.parentPresetSets[i],
+        i,
+        context.sessionSets,
+        settings,
+      )) {
+        return false;
+      }
+    }
     return true;
   }
 
-  /// Applies each flow method to the selected future preset sets.
-  Future<void> _applyMethods(
-    int presetExerciseId,
-    List<FlowMethod> methods,
+  bool _setSucceeded(
+    Map<String, dynamic> target,
+    int fallbackIndex,
+    List<Map<String, dynamic>> sessionSets,
     _AutoSettings settings,
-    String? newLastNode,
-  ) async {
-    final parents = await _fetchParentSets(presetExerciseId);
-    if (parents.isEmpty) return;
+  ) {
+    final performedParents =
+        sessionSets.where((row) => row['parent_set_id'] == null).toList();
+    final targetId = target['id'] as int;
+    Map<String, dynamic>? performed;
+    var hasStableLinks = false;
+    for (final row in performedParents) {
+      final sourceId = row['source_preset_set_id'] as int?;
+      if (sourceId != null) {
+        hasStableLinks = true;
+        if (sourceId == targetId) performed = row;
+      }
+    }
+    if (performed == null &&
+        !hasStableLinks &&
+        fallbackIndex < performedParents.length) {
+      performed = performedParents[fallbackIndex];
+    }
+    if (performed == null) return false;
 
-    final lastIdx = await _computeLastIndex(
-      presetExerciseId,
+    final completedWeight = (performed['weight'] as num).toDouble();
+    final completedReps = (performed['reps'] as num).toInt();
+    final targetWeight = (target['weight'] as num).toDouble();
+    final targetReps = (target['reps'] as num).toInt();
+    if (settings.weightCheck && completedWeight < targetWeight) return false;
+    if (settings.repCheck && completedReps < targetReps) return false;
+    if (settings.volumeCheck &&
+        completedWeight * completedReps < targetWeight * targetReps) {
+      return false;
+    }
+    return true;
+  }
+
+  Future<void> _buildExerciseMutation({
+    required _ExerciseContext context,
+    required List<FlowMethod> methods,
+    required _AutoSettings settings,
+    required String? newLastNode,
+    required List<PresetSetProgressionUpdate> updates,
+    required List<PresetSetProgressionInsert> inserts,
+    required Set<int> deletedSetIds,
+    required List<PresetExerciseProgressionState> exerciseStates,
+  }) async {
+    final allSets = context.allPresetSets.map(_WorkingSet.fromRow).toList();
+    final parents = allSets.where((set) => set.parentSetId == null).toList();
+    final targetIndex = _normalizedTargetIndex(
+      context.targetIndex,
       parents.length,
       settings.skipFirst,
     );
+    final targets = _selectTargets(settings, allSets, parents, targetIndex);
 
-    final allSets = await _repo.fetchPresetSets(presetExerciseId);
-    final targets = _selectTargetRows(settings, allSets, parents, lastIdx);
-
-    for (final m in methods) {
-      switch (m.type) {
+    for (final method in methods) {
+      switch (method.type) {
         case MethodType.weight:
-          final sign = m.params['sign'] as String;
-          final factor = m.params['factor'] as double;
-
-          for (var row in targets) {
-            final setId = row['id'] as int;
-            final ia = await _resolveIncrementAmount(
-              presetExerciseId,
+          final sign = method.params['sign'] == '-' ? '-' : '+';
+          final factor = max(
+            0.0,
+            (method.params['factor'] as num? ?? 1).toDouble(),
+          );
+          for (final target in targets) {
+            final setId = target.id;
+            if (setId == null) continue;
+            final increment = await _resolveIncrementAmount(
+              context.presetExerciseId,
               setId,
               settings,
             );
-            final oldW = (row['weight'] as num).toDouble();
-            final newW =
-                (sign == '+')
-                    ? oldW + factor * ia
-                    : max(0.0, oldW - factor * ia);
-            await _repo.updatePresetSetWeight(setId, newW);
+            final delta = factor * increment;
+            target.weight =
+                sign == '+'
+                    ? target.weight + delta
+                    : max(0.0, target.weight - delta);
           }
           break;
-
         case MethodType.rep:
-          final sign = m.params['sign'] as String;
-          final amt = m.params['amount'] as int;
-          for (var row in targets) {
-            final id = row['id'] as int;
-            final oldR = row['reps'] as int;
-            final newR = (sign == '+') ? oldR + amt : max(0, oldR - amt);
-            await _repo.updatePresetSetReps(id, newR);
+          final sign = method.params['sign'] == '-' ? '-' : '+';
+          final amount = (method.params['amount'] as num? ?? 0).toInt().abs();
+          for (final target in targets) {
+            target.reps =
+                sign == '+'
+                    ? target.reps + amount
+                    : max(0, target.reps - amount);
           }
           break;
-
         case MethodType.addSet:
-          parents.addAll(await _fetchParentSets(presetExerciseId));
+          final copyIndex = method.params['copyFromSetIndex'] as num?;
+          if (copyIndex != null) {
+            var index = copyIndex.toInt();
+            if (index < 0 || index >= parents.length) {
+              index = parents.length - 1;
+            }
+            final source = parents[index];
+            parents.add(
+              _WorkingSet(
+                id: null,
+                parentSetId: null,
+                weight: source.weight,
+                reps: source.reps,
+                orderIndex: parents.length,
+              ),
+            );
+          } else {
+            parents.add(
+              _WorkingSet(
+                id: null,
+                parentSetId: null,
+                weight: max(
+                  0.0,
+                  (method.params['weight'] as num? ?? 0).toDouble(),
+                ),
+                reps: max(0, (method.params['reps'] as num? ?? 0).toInt()),
+                orderIndex: parents.length,
+              ),
+            );
+          }
           break;
-
         case MethodType.delSet:
-          final last = parents.removeLast();
-          await _repo.deletePresetSet(last['id'] as int);
+          if (parents.length <= 1) break;
+          final removed = parents.removeLast();
+          if (removed.id != null) {
+            deletedSetIds.add(removed.id!);
+            for (final child in allSets) {
+              if (child.parentSetId == removed.id && child.id != null) {
+                deletedSetIds.add(child.id!);
+              }
+            }
+          }
           break;
       }
     }
 
-    if (!settings.adjustAllSets && !settings.useManualSelect) {
-      await _rotatePointer(
-        presetExerciseId,
-        lastIdx,
-        settings.skipFirst,
-        newLastNode,
-        parents.length,
-      );
+    for (var i = 0; i < parents.length; i++) {
+      parents[i].orderIndex = i;
     }
+    final survivingSets = <_WorkingSet>[
+      ...allSets.where(
+        (set) => set.parentSetId != null && !deletedSetIds.contains(set.id),
+      ),
+      ...parents,
+    ];
+    for (final set in survivingSets) {
+      if (set.id == null) {
+        inserts.add(
+          PresetSetProgressionInsert(
+            presetExerciseId: context.presetExerciseId,
+            weight: set.weight,
+            reps: set.reps,
+            orderIndex: set.orderIndex,
+          ),
+        );
+      } else if (!deletedSetIds.contains(set.id)) {
+        updates.add(
+          PresetSetProgressionUpdate(
+            setId: set.id!,
+            weight: set.weight,
+            reps: set.reps,
+            orderIndex: set.orderIndex,
+          ),
+        );
+      }
+    }
+
+    var nextIndex = targetIndex;
+    if (!settings.adjustAllSets && !settings.useManualSelect) nextIndex++;
+    nextIndex = _normalizedTargetIndex(
+      nextIndex,
+      parents.length,
+      settings.skipFirst,
+    );
+    exerciseStates.add(
+      PresetExerciseProgressionState(
+        presetExerciseId: context.presetExerciseId,
+        incrementAmount:
+            (context.exerciseAuto?['increment_amount'] as num?)?.toDouble(),
+        lastSetIndex: nextIndex,
+        lastNode: newLastNode,
+      ),
+    );
   }
 
   /// Decodes the manual set-selection map stored in preset auto settings.
@@ -246,29 +464,6 @@ class AutoIncrementService {
     }
   }
 
-  /// Returns only top-level preset sets, excluding child change sets.
-  Future<List<Map<String, dynamic>>> _fetchParentSets(
-    int presetExerciseId,
-  ) async {
-    final allSets = await _repo.fetchPresetSets(presetExerciseId);
-    return allSets.where((r) => r['parent_set_id'] == null).toList();
-  }
-
-  /// Chooses the next parent-set index to evaluate for rotating auto mode.
-  Future<int> _computeLastIndex(
-    int presetExerciseId,
-    int parentCount,
-    bool skipFirst,
-  ) async {
-    final exAuto = await _repo.fetchPresetExerciseAuto(presetExerciseId);
-    int idx = exAuto?['last_set_index'] as int? ?? 1;
-    if (skipFirst && idx == 1) idx = 2;
-    if (idx > parentCount) {
-      idx = (skipFirst && parentCount >= 2) ? 2 : 1;
-    }
-    return idx;
-  }
-
   /// Resolves the increment amount with set override, exercise override, then
   /// global preset fallback priority.
   Future<double> _resolveIncrementAmount(
@@ -287,40 +482,28 @@ class AutoIncrementService {
     return settings.globalIncrement;
   }
 
-  /// Selects the preset set rows that should receive flow method updates.
-  List<Map<String, dynamic>> _selectTargetRows(
+  List<_WorkingSet> _selectTargets(
     _AutoSettings settings,
-    List<Map<String, dynamic>> allSets,
-    List<Map<String, dynamic>> parents,
-    int lastIdx,
+    List<_WorkingSet> allSets,
+    List<_WorkingSet> parents,
+    int targetIndex,
   ) {
     if (settings.useManualSelect) {
       return allSets
-          .where((r) => settings.manualSelections[r['id'] as int] == true)
+          .where(
+            (set) =>
+                set.id != null && settings.manualSelections[set.id] == true,
+          )
           .toList();
     }
     if (settings.adjustAllSets) return parents;
-    return [parents[lastIdx - 1]];
+    return <_WorkingSet>[parents[targetIndex - 1]];
   }
 
-  /// Advances the rotating set pointer and persists the latest flow node.
-  Future<void> _rotatePointer(
-    int presetExerciseId,
-    int lastIdx,
-    bool skipFirst,
-    String? newLastNode,
-    int parentCount,
-  ) async {
-    int nextIdx = lastIdx + 1;
-    if (nextIdx > parentCount) {
-      nextIdx = (skipFirst && parentCount >= 2) ? 2 : 1;
-    }
-    final exAuto2 = await _repo.fetchPresetExerciseAuto(presetExerciseId);
-    await _repo.upsertPresetExerciseAuto(
-      presetExerciseId: presetExerciseId,
-      incrementAmount: exAuto2?['increment_amount'] as double?,
-      lastSetIndex: nextIdx,
-      lastNode: newLastNode,
-    );
+  int _normalizedTargetIndex(int index, int parentCount, bool skipFirst) {
+    if (parentCount <= 0) return 1;
+    final firstAllowed = skipFirst && parentCount >= 2 ? 2 : 1;
+    if (index < firstAllowed || index > parentCount) return firstAllowed;
+    return index;
   }
 }

@@ -68,6 +68,8 @@ const List<String> kDatabaseExportTableNames = [
   'preset_auto_settings',
   'preset_exercise_auto',
   'preset_set_auto',
+  'active_plans',
+  'active_workout_draft',
 ];
 
 class DatabaseHealthSnapshot {

@@ -38,5 +38,14 @@ void main() {
       expect(sql, contains('trg_portion_single_default_ins'));
       expect(sql, contains('trg_portion_single_default_upd'));
     });
+
+    test('latest migration includes durable workout state', () {
+      final schema = File('lib/db/schema.dart').readAsStringSync();
+
+      expect(schema, contains('CREATE TABLE IF NOT EXISTS active_workout_draft'));
+      expect(schema, contains('CREATE TABLE IF NOT EXISTS active_plans'));
+      expect(schema, contains('CHECK (id = 1)'));
+      expect(schema, contains('PRIMARY KEY(profile_id, preset_id)'));
+    });
   });
 }

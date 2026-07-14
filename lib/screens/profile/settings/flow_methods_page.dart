@@ -25,6 +25,7 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
   final _repo = AppRepository();
 
   bool _isLoading = true;
+  int _loadRequest = 0;
   List<FlowMethod> _appMethods = [];
   List<GymProfile> _profiles = [];
 
@@ -39,38 +40,52 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
   }
 
   Future<void> _loadAll() async {
+    if (!mounted) return;
+    final request = ++_loadRequest;
     setState(() => _isLoading = true);
 
-    // 1) App-wide defaults
-    final appMethods = await _repo.fetchDefaultFlowMethods('app');
+    final initialResults = await Future.wait<Object>([
+      _repo.fetchDefaultFlowMethods('app'),
+      _repo.fetchAllProfiles(),
+    ]);
+    final appMethods = initialResults[0] as List<FlowMethod>;
+    final profiles = initialResults[1] as List<GymProfile>;
 
-    // 2) Load each profile, its default methods, its presets and preset methods
-    final profiles = await _repo.fetchAllProfiles();
+    final loadedProfiles = await Future.wait(
+      profiles.where((profile) => profile.id != null).map((profile) async {
+        final profileId = profile.id!;
+        final profileResults = await Future.wait<Object>([
+          _repo.fetchDefaultFlowMethods('profile', profileId: profileId),
+          _repo.fetchAllPresetsRaw(profileId: profileId),
+        ]);
+        final methods = profileResults[0] as List<FlowMethod>;
+        final presets = profileResults[1] as List<Map<String, dynamic>>;
+        final loadedPresets = await Future.wait(
+          presets.map((preset) async {
+            final presetId = preset['id'] as int;
+            return MapEntry(presetId, await _repo.fetchFlowMethods(presetId));
+          }),
+        );
+        return _LoadedProfileMethods(
+          profileId: profileId,
+          methods: methods,
+          presets: presets,
+          presetMethods: Map.fromEntries(loadedPresets),
+        );
+      }),
+    );
+
     final profileMethods = <int, List<FlowMethod>>{};
     final presetsByProfile = <int, List<Map<String, dynamic>>>{};
     final presetMethods = <int, List<FlowMethod>>{};
 
-    for (var p in profiles) {
-      // profile-default methods
-      if (p.id != null) {
-        profileMethods[p.id!] = await _repo.fetchDefaultFlowMethods(
-          'profile',
-          profileId: p.id!,
-        );
-      }
-
-      // raw presets for this profile
-      final rawPresets = await _repo.fetchAllPresetsRaw(profileId: p.id);
-      presetsByProfile[p.id!] = rawPresets;
-
-      // methods on each preset
-      for (var pr in rawPresets) {
-        final presetId = pr['id'] as int;
-        presetMethods[presetId] = await _repo.fetchFlowMethods(presetId);
-      }
+    for (final loaded in loadedProfiles) {
+      profileMethods[loaded.profileId] = loaded.methods;
+      presetsByProfile[loaded.profileId] = loaded.presets;
+      presetMethods.addAll(loaded.presetMethods);
     }
 
-    if (!mounted) return;
+    if (!mounted || request != _loadRequest) return;
     setState(() {
       _appMethods = appMethods;
       _profiles = profiles;
@@ -119,14 +134,6 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
             ? (existing.params['copyFromSetIndex']?.toString() ?? '-1')
             : '-1';
     final copyIndexCtl = TextEditingController(text: copyIndex);
-    void disposeControllers() {
-      nameCtl.dispose();
-      factorCtl.dispose();
-      amountCtl.dispose();
-      weightCtl.dispose();
-      repsCtl.dispose();
-      copyIndexCtl.dispose();
-    }
 
     final saved = await showDialog<bool>(
       context: context,
@@ -261,43 +268,58 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
                 ),
           ),
     );
+
+    final methodName = nameCtl.text.trim();
+    final factor = double.tryParse(factorCtl.text) ?? 1.0;
+    final amount = int.tryParse(amountCtl.text) ?? 0;
+    final weight = double.tryParse(weightCtl.text) ?? 0.0;
+    final reps = int.tryParse(repsCtl.text) ?? 0;
+    final copyIndexValue = int.tryParse(copyIndexCtl.text) ?? -1;
+    for (final controller in [
+      nameCtl,
+      factorCtl,
+      amountCtl,
+      weightCtl,
+      repsCtl,
+      copyIndexCtl,
+    ]) {
+      controller.dispose();
+    }
+
     if (saved != true) {
-      disposeControllers();
       return;
     }
+    if (!mounted) return;
 
     // build params
     final params = <String, dynamic>{};
     switch (type) {
       case MethodType.weight:
         params['sign'] = sign;
-        params['factor'] = double.tryParse(factorCtl.text) ?? 1.0;
+        params['factor'] = factor;
         break;
       case MethodType.rep:
         params['sign'] = sign;
-        params['amount'] = int.tryParse(amountCtl.text) ?? 0;
+        params['amount'] = amount;
         break;
       case MethodType.addSet:
         if (addMode == AddSetMode.explicit) {
-          params['weight'] = double.tryParse(weightCtl.text) ?? 0.0;
-          params['reps'] = int.tryParse(repsCtl.text) ?? 0;
+          params['weight'] = weight;
+          params['reps'] = reps;
         } else {
-          params['copyFromSetIndex'] = int.tryParse(copyIndexCtl.text) ?? -1;
+          params['copyFromSetIndex'] = copyIndexValue;
         }
         break;
       case MethodType.delSet:
         break;
     }
-    final methodName = nameCtl.text.trim();
     if (methodName.isEmpty) {
-      disposeControllers();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Rule name cannot be empty')),
       );
       return;
     }
-    disposeControllers();
 
     await _repo.upsertDefaultFlowMethod(
       scope: scope,
@@ -319,8 +341,96 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
         name: existing.name,
       );
     }
+    if (!isEdit && mounted) {
+      await _offerRulePropagation(
+        scope: scope,
+        profileId: profileId,
+        name: methodName,
+        type: type,
+        params: params,
+      );
+    }
     if (!mounted) return;
     await _loadAll();
+  }
+
+  Future<void> _offerRulePropagation({
+    required String scope,
+    required int? profileId,
+    required String name,
+    required MethodType type,
+    required Map<String, dynamic> params,
+  }) async {
+    final isAppDefault = scope == 'app';
+    final destinationCount =
+        isAppDefault
+            ? _profiles.where((profile) => profile.id != null).length
+            : profileId == null
+            ? 0
+            : (_presetsByProfile[profileId] ?? const []).length;
+    if (destinationCount == 0 || (!isAppDefault && profileId == null)) return;
+
+    final destinationLabel = isAppDefault ? 'profiles' : 'plans';
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder:
+          (dialogContext) => AlertDialog(
+            title: Text('Add to existing $destinationLabel?'),
+            content: Text(
+              'Make "$name" available in $destinationCount existing '
+              '$destinationLabel? Existing rules with the same name and all '
+              'saved progression flows will stay unchanged.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, false),
+                child: const Text('Not now'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(dialogContext, true),
+                child: Text('Add to $destinationLabel'),
+              ),
+            ],
+          ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    try {
+      final copied =
+          isAppDefault
+              ? await _repo.copyAppDefaultRuleToExistingProfiles(
+                name: name,
+                type: type,
+                params: params,
+              )
+              : await _repo.copyProfileDefaultRuleToExistingPlans(
+                profileId: profileId!,
+                name: name,
+                type: type,
+                params: params,
+              );
+      if (!mounted) return;
+      final plural =
+          copied == 1
+              ? destinationLabel.substring(0, destinationLabel.length - 1)
+              : destinationLabel;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            copied == 0
+                ? 'No existing $destinationLabel needed this rule.'
+                : 'Added "$name" to $copied $plural.',
+          ),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not add the rule to existing items.'),
+        ),
+      );
+    }
   }
 
   Future<void> _showAddEditPresetMethod({
@@ -469,6 +579,7 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
                     scope: 'app',
                     name: method.name,
                   );
+                  if (!mounted) return;
                   await _loadAll();
                 },
               ),
@@ -544,6 +655,7 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
                                 profileId: profile.id,
                                 name: method.name,
                               );
+                              if (!mounted) return;
                               await _loadAll();
                             },
                           ),
@@ -607,6 +719,7 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
                                       await _repo.deleteFlowMethodAndReferences(
                                         method,
                                       );
+                                      if (!mounted) return;
                                       await _loadAll();
                                     },
                                   ),
@@ -634,6 +747,20 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
       ],
     );
   }
+}
+
+class _LoadedProfileMethods {
+  final int profileId;
+  final List<FlowMethod> methods;
+  final List<Map<String, dynamic>> presets;
+  final Map<int, List<FlowMethod>> presetMethods;
+
+  const _LoadedProfileMethods({
+    required this.profileId,
+    required this.methods,
+    required this.presets,
+    required this.presetMethods,
+  });
 }
 
 enum _RuleAction { edit, delete }

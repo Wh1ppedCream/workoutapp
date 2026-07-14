@@ -132,7 +132,11 @@ class _PlanManagementPageState extends State<PlanManagementPage> {
     });
 
     try {
-      await ActivePlanStore.save(widget.profileId, nextIds);
+      if (active) {
+        await ActivePlanStore.add(widget.profileId, plan.id);
+      } else {
+        await ActivePlanStore.remove(widget.profileId, plan.id);
+      }
     } catch (error) {
       if (!mounted) return;
       setState(() => _activePlanIds = previousIds);

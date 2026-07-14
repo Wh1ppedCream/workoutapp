@@ -338,39 +338,12 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
     final selectedProv = context.read<SelectedProfile>();
 
     try {
-      int profileId;
-      if (widget.profile?.id != null) {
-        final updated = GymProfile(
-          id: widget.profile!.id,
-          name: name,
-          createdAt: widget.profile!.createdAt,
-        );
-        await dbHelper.updateProfile(updated);
-        profileId = updated.id!;
-      } else {
-        profileId = await dbHelper.createProfile(name);
-      }
-
-      final originalAssigned =
-          widget.profile?.id != null
-              ? (await dbHelper.fetchEquipmentForProfile(
-                profileId,
-              )).map((e) => e['id'] as int).toSet()
-              : <int>{};
-      final toAdd = _selectedEquipmentIds.difference(originalAssigned);
-      final toRemove = originalAssigned.difference(_selectedEquipmentIds);
-
-      for (final equipmentId in toAdd) {
-        await dbHelper.addEquipmentToProfile(profileId, equipmentId);
-      }
-      for (final equipmentId in toRemove) {
-        await dbHelper.removeEquipmentFromProfile(profileId, equipmentId);
-      }
-
-      await selectedProv.loadProfiles();
-      await selectedProv.selectProfile(
-        selectedProv.profiles.firstWhere((profile) => profile.id == profileId),
+      final profileId = await dbHelper.saveGymProfileAtomic(
+        existingProfile: widget.profile,
+        name: name,
+        equipmentIds: _selectedEquipmentIds,
       );
+      await selectedProv.loadProfiles(preferredProfileId: profileId);
 
       if (!mounted) return true;
       setState(() {

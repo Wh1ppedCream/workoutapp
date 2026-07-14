@@ -71,12 +71,13 @@ class _WorkoutDashboardState extends State<WorkoutDashboard>
                       ),
                     )
                     .toList(),
-            onChanged: (newProfileId) {
+            onChanged: (newProfileId) async {
               if (newProfileId == null) return;
               final newProfile = profiles.firstWhere(
                 (p) => p.id == newProfileId,
               );
-              sel.selectProfile(newProfile);
+              await sel.selectProfile(newProfile);
+              if (!mounted) return;
               setState(() {});
             },
           ),
@@ -97,8 +98,9 @@ class _WorkoutDashboardState extends State<WorkoutDashboard>
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 15 * s, vertical: 8 * s),
           child: ElevatedButton(
-            onPressed: () {
-              context.read<ActiveSession>().start();
+            onPressed: () async {
+              await context.read<ActiveSession>().start();
+              if (!context.mounted) return;
               Navigator.of(context)
                   .push(
                     MaterialPageRoute(builder: (_) => const SessionScreen()),

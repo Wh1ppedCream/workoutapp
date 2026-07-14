@@ -225,7 +225,8 @@ class _TrainPageState extends State<TrainPage> {
   }
 
   Future<void> _startWorkout() async {
-    context.read<ActiveSession>().start();
+    await context.read<ActiveSession>().start();
+    if (!mounted) return;
     await Navigator.of(
       context,
     ).push(MaterialPageRoute(builder: (_) => const SessionScreen()));
@@ -428,6 +429,8 @@ class _TrainPageState extends State<TrainPage> {
     }
 
     final active = context.read<ActiveSession>();
+    await active.ready;
+    if (!mounted) return;
     if (active.isActive) {
       await Navigator.of(
         context,
@@ -476,21 +479,37 @@ class _TrainPageState extends State<TrainPage> {
         return;
       }
 
-      active.exercises.clear();
-      active.cardTypes.clear();
+      final workoutExercises = <WorkoutExercise>[];
+      final workoutCardTypes = <CardType>[];
       for (var i = 0; i < preset.exercises.length; i++) {
         // TODO(cardio/stretch): add cardio and stretch back to generated
         // sessions after those cards are fixed and updated.
         if (preset.cardTypes[i] != CardType.weight) continue;
-        active.addExercise(
-          cloneWorkoutExercise(preset.exercises[i]),
-          preset.cardTypes[i],
-        );
+        workoutExercises.add(cloneWorkoutExercise(preset.exercises[i]));
+        workoutCardTypes.add(preset.cardTypes[i]);
       }
 
+      final started = await active.startWithExercises(
+        workoutExercises: workoutExercises,
+        workoutCardTypes: workoutCardTypes,
+      );
       await _repo.deletePreset(presetId);
       temporaryPresetId = null;
-      active.start();
+
+      if (!started) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Another workout is already active, so it was kept unchanged.',
+            ),
+          ),
+        );
+        await Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => const SessionScreen()));
+        return;
+      }
 
       if (!mounted) return;
       setState(() {
@@ -506,11 +525,6 @@ class _TrainPageState extends State<TrainPage> {
       if (!mounted) return;
       setState(() => _overviewRefreshToken++);
     } catch (e) {
-      if (!active.isActive) {
-        active.exercises.clear();
-        active.cardTypes.clear();
-        active.refresh();
-      }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to start optimized workout: $e')),
@@ -567,9 +581,10 @@ class _TrainPageState extends State<TrainPage> {
           endDrawer: ProfileDrawer(
             profiles: sel.profiles,
             selected: sel.currentProfile,
-            onSelect: (profile) {
+            onSelect: (profile) async {
               final navigator = Navigator.of(context);
-              unawaited(sel.selectProfile(profile));
+              await sel.selectProfile(profile);
+              if (!mounted) return;
               if (navigator.canPop()) {
                 unawaited(navigator.maybePop());
               }
@@ -589,14 +604,15 @@ class _TrainPageState extends State<TrainPage> {
                 );
               }());
             },
-            onDelete: (profile) {
+            onDelete: (profile) async {
               final navigator = Navigator.of(context);
               if (navigator.canPop()) {
                 unawaited(navigator.maybePop());
               }
               final profileId = profile.id;
               if (profileId == null) return;
-              unawaited(sel.deleteProfile(profileId));
+              await sel.deleteProfile(profileId);
+              if (!mounted) return;
               setState(() => _presetsRefreshToken++);
             },
           ),

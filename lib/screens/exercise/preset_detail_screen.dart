@@ -19,6 +19,7 @@ import '../../widgets/swap_exercise_sheet.dart';
 import '../../widgets/guided_tutorial_overlay.dart';
 import '../../services/tutorial_state_store.dart';
 import '../../utils/tutorial_launcher.dart';
+import '../../utils/workout_exercise_clone.dart';
 import 'session_screen.dart';
 import 'auto_preset_flow_screen.dart';
 
@@ -211,7 +212,7 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
-                    onSubmitted: (v) => preset.updateName(v),
+                    onSubmitted: (_) {},
                   )
                   : Text(preset.presetName),
           centerTitle: true,
@@ -473,29 +474,34 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                           final sess = context.read<PresetSession>();
                           final newName = _nameController.text.trim();
 
-                          // 1) If the name changed, push it to the DB and local state
-                          if (newName.isNotEmpty &&
-                              newName != sess.presetName) {
-                            await sess.updateName(newName);
+                          try {
+                            await sess.saveChanges(
+                              newName:
+                                  newName.isNotEmpty
+                                      ? newName
+                                      : sess.presetName,
+                            );
+                            if (mounted) setState(() => _isEditing = false);
+                          } catch (error) {
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Could not save plan. The previous version is unchanged. $error',
+                                ),
+                              ),
+                            );
                           }
-
-                          // 2) Then save any exercise changes
-                          await sess.saveChanges();
-
-                          setState(() => _isEditing = false);
                         },
                         child: const Text('Save Preset'),
                       )
                       : ElevatedButton(
-                        onPressed: () {
-                          // 1) Capture Navigator and notifiers up-front
+                        onPressed: () async {
                           final nav = Navigator.of(context);
                           final preset = context.read<PresetSession>();
                           final active = context.read<ActiveSession>();
-
-                          // 2) Seed the live session
-                          active.exercises.clear();
-                          active.cardTypes.clear();
+                          final workoutExercises = <WorkoutExercise>[];
+                          final workoutCardTypes = <CardType>[];
                           for (var i = 0; i < preset.exercises.length; i++) {
                             // TODO(cardio/stretch): add cardio and stretch back
                             // to plan-start sessions after those cards are fixed
@@ -503,15 +509,30 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                             if (preset.cardTypes[i] != CardType.weight) {
                               continue;
                             }
-                            active.addExercise(
-                              preset.exercises[i],
-                              preset.cardTypes[i],
+                            workoutExercises.add(
+                              cloneWorkoutExercise(
+                                preset.exercises[i],
+                                preservePresetSource: true,
+                              ),
+                            );
+                            workoutCardTypes.add(preset.cardTypes[i]);
+                          }
+                          final started = await active.startWithExercises(
+                            workoutExercises: workoutExercises,
+                            workoutCardTypes: workoutCardTypes,
+                            presetId: preset.presetId,
+                          );
+                          if (!context.mounted) return;
+                          if (!started) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Your ongoing workout was kept. Finish or cancel it before starting this plan.',
+                                ),
+                              ),
                             );
                           }
-                          // 3) Start the timer
-                          active.start(presetId: preset.presetId);
 
-                          // 4) Navigate
                           nav.pushReplacement(
                             MaterialPageRoute(
                               builder: (_) => const SessionScreen(),

@@ -14,6 +14,7 @@ class SetDao {
     required int reps,
     required int orderIndex,
     int? parentSetId,
+    int? sourcePresetSetId,
   }) {
     return {
       'exercise_id': exerciseId,
@@ -21,6 +22,7 @@ class SetDao {
       'reps': reps,
       'order_index': orderIndex,
       'parent_set_id': parentSetId,
+      'source_preset_set_id': sourcePresetSetId,
     };
   }
 
@@ -80,6 +82,7 @@ class SetDao {
             weight: parent.weight,
             reps: parent.reps,
             orderIndex: i,
+            sourcePresetSetId: parent.sourcePresetSetId,
           ),
         );
         final children = childChangeSets[i];
@@ -94,6 +97,7 @@ class SetDao {
               reps: child.reps,
               orderIndex: ci,
               parentSetId: parentId,
+              sourcePresetSetId: child.sourcePresetSetId,
             ),
           );
         }

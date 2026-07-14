@@ -1,3 +1,6 @@
+export 'durable_active_session.dart';
+
+/* Legacy implementation retained temporarily for migration review.
 // File: lib/providers/active_session.dart
 
 import 'dart:async';
@@ -143,6 +146,7 @@ class ActiveSession extends ChangeNotifier {
           exerciseDefId: defId,
           type: 'weight',
           orderIndex: i,
+          sourcePresetExerciseId: we.sourcePresetExerciseId,
         );
 
         await _repo.addWeightSets(
@@ -199,12 +203,19 @@ class ActiveSession extends ChangeNotifier {
       }
     }
 
-    // Apply preset progression only after the completed session is saved.
-    if (_autoPresetId != null) {
-      await AutoIncrementService(
-        _repo,
-      ).apply(sessionId: sid, presetId: _autoPresetId!);
-      _autoPresetId = null;
+    // A progression failure must never leave a successfully saved workout
+    // stuck as the active session. The progression batch itself is atomic.
+    final autoPresetId = _autoPresetId;
+    _autoPresetId = null;
+    if (autoPresetId != null) {
+      try {
+        await AutoIncrementService(
+          _repo,
+        ).apply(sessionId: sid, presetId: autoPresetId);
+      } catch (error, stackTrace) {
+        debugPrint('Automatic plan progression failed: $error');
+        debugPrintStack(stackTrace: stackTrace);
+      }
     }
 
     // Clear active state and notify any screens showing active/completed status.
@@ -225,3 +236,4 @@ class ActiveSession extends ChangeNotifier {
     super.dispose();
   }
 }
+*/

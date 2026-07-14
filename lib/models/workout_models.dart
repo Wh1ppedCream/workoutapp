@@ -66,25 +66,24 @@ class StretchInstance {
 
   /// Deserialize from a Map (e.g. from SQLite or JSON blob).
   factory StretchInstance.fromMap(Map<String, dynamic> m) => StretchInstance(
-        stretchId:  m['stretch_id'] as int?,
-        isCustom:   (m['is_custom'] as int) == 1,
-        customName: m['custom_name'] as String?,
-        customDesc: m['custom_desc'] as String?,
-        isChecked:  (m['is_checked'] as int) == 1,
-        orderIndex: m['order_index'] as int,
-      );
+    stretchId: m['stretch_id'] as int?,
+    isCustom: (m['is_custom'] as int) == 1,
+    customName: m['custom_name'] as String?,
+    customDesc: m['custom_desc'] as String?,
+    isChecked: (m['is_checked'] as int) == 1,
+    orderIndex: m['order_index'] as int,
+  );
 
   /// Serialize to a Map (e.g. for SQLite or JSON blob).
   Map<String, dynamic> toMap() => {
-        'stretch_id':  stretchId,
-        'is_custom':   isCustom ? 1 : 0,
-        'custom_name': customName,
-        'custom_desc': customDesc,
-        'is_checked':  isChecked ? 1 : 0,
-        'order_index': orderIndex,
-      };
+    'stretch_id': stretchId,
+    'is_custom': isCustom ? 1 : 0,
+    'custom_name': customName,
+    'custom_desc': customDesc,
+    'is_checked': isChecked ? 1 : 0,
+    'order_index': orderIndex,
+  };
 }
-
 
 // ─────────────────────────────────────────────────────────────────────────────
 // WORKOUT EXERCISES
@@ -116,6 +115,8 @@ abstract class WorkoutExercise {
 /// - [changeSets]: Map from parent index to list of child sets (supersets).
 /// - [completedParents]/[completedChildren]: Tracks which sets were marked complete.
 class WeightExercise extends WorkoutExercise {
+  /// Preset exercise row this in-memory exercise came from, when applicable.
+  final int? sourcePresetExerciseId;
   final List<ExerciseSet> sets;
   final Map<int, List<ExerciseSet>> changeSets;
   final Set<int> completedParents;
@@ -127,14 +128,15 @@ class WeightExercise extends WorkoutExercise {
   WeightExercise({
     required super.name,
     required super.equipment,
+    this.sourcePresetExerciseId,
     required this.sets,
     Map<int, List<ExerciseSet>>? changeSets,
     Set<int>? completedParents,
     Map<int, Set<int>>? completedChildren,
     super.stretchInstances,
-  })  : changeSets = changeSets ?? <int, List<ExerciseSet>>{},
-        completedParents = completedParents ?? <int>{},
-        completedChildren = completedChildren ?? <int, Set<int>>{};
+  }) : changeSets = changeSets ?? <int, List<ExerciseSet>>{},
+       completedParents = completedParents ?? <int>{},
+       completedChildren = completedChildren ?? <int, Set<int>>{};
 }
 
 /// A cardio exercise with planned duration, elapsed time, and optional notes.
@@ -161,9 +163,9 @@ class CardioExercise extends WorkoutExercise {
     int? plannedMinutes,
     int? elapsedSeconds,
     super.stretchInstances,
-  })  : cardioName     = cardioName ?? 'Walking',
-        plannedMinutes = plannedMinutes ?? 0,
-        elapsedSeconds = elapsedSeconds ?? 0;
+  }) : cardioName = cardioName ?? 'Walking',
+       plannedMinutes = plannedMinutes ?? 0,
+       elapsedSeconds = elapsedSeconds ?? 0;
 }
 
 /// A stretch exercise containing multiple [StretchInstance] items.
@@ -178,7 +180,7 @@ class StretchExercise extends WorkoutExercise {
     required super.equipment,
     super.stretchInstances,
     Set<int>? completedStretchIndices,
-  })  : completedStretchIndices = completedStretchIndices ?? <int>{};
+  }) : completedStretchIndices = completedStretchIndices ?? <int>{};
 }
 
 /// A single weight-rep entry.
@@ -186,16 +188,15 @@ class StretchExercise extends WorkoutExercise {
 /// - [weight]: Weight amount.
 /// - [reps]: Number of repetitions.
 class ExerciseSet {
+  /// Preset set row this in-memory set came from, when applicable.
+  final int? sourcePresetSetId;
   double weight;
   int reps;
 
   /// Creates an [ExerciseSet].
   ///
   /// Defaults to 0 weight and 10 reps if not provided.
-  ExerciseSet({
-    this.weight = 0,
-    this.reps   = 10,
-  });
+  ExerciseSet({this.sourcePresetSetId, this.weight = 0, this.reps = 10});
 }
 
 /// Represents a recorded workout session with metadata.

@@ -94,9 +94,10 @@ class QuickBar extends StatelessWidget {
               borderRadius: BorderRadius.horizontal(right: radii.topLeft),
               label: '+ Workout',
               fontSize: 14 * scale,
-              onTap: () {
+              onTap: () async {
                 final session = context.read<ActiveSession>();
-                session.start();
+                await session.start();
+                if (!context.mounted) return;
                 Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const SessionScreen()),
                 );

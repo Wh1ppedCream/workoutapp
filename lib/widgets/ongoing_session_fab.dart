@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/active_session.dart';
 import '../screens/exercise/session_screen.dart'; // adjust path if needed
+import '../services/workout_exit_preferences.dart';
 
 /// A FAB that toggles between a single dumbbell icon and
 /// a green “Resume” + red “Exit” pair when tapped.
@@ -15,6 +16,7 @@ class OngoingSessionFab extends StatefulWidget {
 }
 
 class _OngoingSessionFabState extends State<OngoingSessionFab> {
+  static const _exitPreferences = WorkoutExitPreferences();
   bool _open = false;
 
   @override
@@ -46,39 +48,217 @@ class _OngoingSessionFabState extends State<OngoingSessionFab> {
           backgroundColor: Colors.red,
           icon: const Icon(Icons.exit_to_app),
           label: const Text('Exit'),
-          onPressed: () async {
-            final shouldExit = await showDialog<bool>(
-              context: context,
-              builder:
-                  (ctx) => AlertDialog(
-                    title: const Text('Exit your ongoing workout?'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(ctx, false),
-                        child: const Text(
-                          'Cancel',
-                          style: TextStyle(color: Colors.deepPurple),
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () => Navigator.pop(ctx, true),
-                        child: const Text(
-                          'Exit',
-                          style: TextStyle(color: Colors.red),
-                        ),
-                      ),
-                    ],
-                  ),
-            );
-            if (shouldExit == true) {
-              await activeSession.finish();
-            }
-            if (!mounted) return;
-            // guard before setState
-            setState(() => _open = false);
-          },
+          onPressed:
+              activeSession.isFinishing
+                  ? null
+                  : () => _handleExit(activeSession),
         ),
       ],
     );
   }
+
+  Future<void> _handleExit(ActiveSession activeSession) async {
+    var behavior = await _exitPreferences.load();
+    if (!mounted) return;
+
+    if (behavior == WorkoutExitBehavior.askEveryTime) {
+      if (activeSession.completedSetCount > 1) {
+        final decision = await _showCompletedWorkDialog();
+        if (decision == null || !mounted) return;
+        behavior = decision.behavior;
+        if (decision.remember) await _exitPreferences.save(behavior);
+      } else {
+        final shouldDiscard = await _showDiscardConfirmation();
+        if (shouldDiscard != true || !mounted) return;
+        behavior = WorkoutExitBehavior.discard;
+      }
+    }
+
+    try {
+      if (behavior == WorkoutExitBehavior.saveCompleted &&
+          !activeSession.hasCompletedWork) {
+        behavior = WorkoutExitBehavior.discard;
+      }
+      if (behavior == WorkoutExitBehavior.saveCompleted) {
+        await activeSession.finish();
+      } else {
+        await activeSession.discard();
+      }
+      if (!mounted) return;
+      setState(() => _open = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            behavior == WorkoutExitBehavior.saveCompleted
+                ? 'Completed work saved to Logbook.'
+                : 'Workout cancelled.',
+          ),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not end workout: $error')));
+    }
+  }
+
+  Future<bool?> _showDiscardConfirmation() {
+    return showDialog<bool>(
+      context: context,
+      builder:
+          (dialogContext) => AlertDialog(
+            title: const Text('Cancel workout?'),
+            content: const Text(
+              'This removes the ongoing workout without adding it to your history.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, false),
+                child: const Text('Keep Workout'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, true),
+                child: const Text('Cancel Workout'),
+              ),
+            ],
+          ),
+    );
+  }
+
+  Future<_WorkoutExitDecision?> _showCompletedWorkDialog() {
+    var remember = false;
+    return showDialog<_WorkoutExitDecision>(
+      context: context,
+      builder:
+          (dialogContext) => StatefulBuilder(
+            builder: (context, setDialogState) {
+              final colors = Theme.of(context).colorScheme;
+              final textTheme = Theme.of(context).textTheme;
+              return Dialog(
+                insetPadding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 24,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 380),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              width: 38,
+                              height: 38,
+                              decoration: BoxDecoration(
+                                color: colors.primaryContainer,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Icon(
+                                Icons.flag_outlined,
+                                color: colors.onPrimaryContainer,
+                                size: 21,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'End workout?',
+                                style: textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 18),
+                        OutlinedButton.icon(
+                          onPressed:
+                              () => Navigator.pop(
+                                dialogContext,
+                                _WorkoutExitDecision(
+                                  behavior: WorkoutExitBehavior.discard,
+                                  remember: remember,
+                                ),
+                              ),
+                          icon: const Icon(Icons.delete_outline, size: 18),
+                          label: const Text('Cancel and Delete'),
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size.fromHeight(48),
+                            foregroundColor: colors.error,
+                            side: BorderSide(
+                              color: colors.error.withValues(alpha: 0.7),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        FilledButton.icon(
+                          onPressed:
+                              () => Navigator.pop(
+                                dialogContext,
+                                _WorkoutExitDecision(
+                                  behavior: WorkoutExitBehavior.saveCompleted,
+                                  remember: remember,
+                                ),
+                              ),
+                          icon: const Icon(Icons.save_outlined, size: 18),
+                          label: const Text('End and Save Workout'),
+                          style: FilledButton.styleFrom(
+                            minimumSize: const Size.fromHeight(48),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Material(
+                          color: colors.surfaceContainerHighest.withValues(
+                            alpha: 0.45,
+                          ),
+                          borderRadius: BorderRadius.circular(14),
+                          child: CheckboxListTile(
+                            value: remember,
+                            dense: true,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            controlAffinity: ListTileControlAffinity.leading,
+                            title: Text(
+                              'Remember choice',
+                              style: textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            subtitle: Text(
+                              'Change this later in Gym & Workout Settings.',
+                              style: textTheme.bodySmall?.copyWith(
+                                color: colors.onSurfaceVariant,
+                              ),
+                            ),
+                            onChanged:
+                                (value) => setDialogState(
+                                  () => remember = value ?? false,
+                                ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+    );
+  }
+}
+
+class _WorkoutExitDecision {
+  final WorkoutExitBehavior behavior;
+  final bool remember;
+
+  const _WorkoutExitDecision({required this.behavior, required this.remember});
 }

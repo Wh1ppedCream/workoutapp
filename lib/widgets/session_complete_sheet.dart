@@ -110,7 +110,9 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
 
     final volumeText = WeightUnitFormatter.formatVolume(totalVol, weightUnit);
 
-    // Static placeholders:
+    // TODO(session-metrics): Calories and Gym Score are placeholders. Replace
+    // them with measured/derived values, or remove them, when the metric model
+    // and user-facing definitions are designed in a separate pass.
     const calories = 100;
     const gymScore = '5/10';
 

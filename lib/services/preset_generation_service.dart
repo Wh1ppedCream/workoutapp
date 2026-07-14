@@ -128,13 +128,11 @@ class PresetGenerationService {
       muscleTargets: muscleTargets,
     );
 
-    final result = await _createPresetInDb(
+    return _createPresetInDb(
       spec,
       selected,
       bodyTargets: bodyTargets,
     );
-    await _initAutoSettings(result.presetId);
-    return result;
   }
 
   Future<PresetBundleGenerationResult> generatePresetBundle(
@@ -189,7 +187,6 @@ class PresetGenerationService {
         selection.selected,
         bodyTargets: baseBodyTargets,
       );
-      await _initAutoSettings(result.presetId);
       results.add(result);
       _applyPlanToBundleState(state, selection.selected);
       state.previousPlanExerciseIds = {
@@ -1355,21 +1352,18 @@ class PresetGenerationService {
     List<CandidateExercisePlan> selected, {
     List<BodyPartTarget> bodyTargets = const <BodyPartTarget>[],
   }) async {
+    if (selected.isEmpty) {
+      throw StateError(
+        'No exercises matched the selected profile and generation settings.',
+      );
+    }
     final name = await _pickUniquePresetName(spec, selected);
-    final presetId = await _repo.createPreset(name, profileId: spec.profileId);
     final missingWeightHistoryNames = <String>{};
     final starterWeightEstimateNames = <String>{};
     final unavailableStarterWeightNames = <String>{};
+    final writes = <WorkoutExerciseWrite>[];
 
-    var orderIndex = 0;
     for (final candidate in selected) {
-      final presetExerciseId = await _repo.addExerciseToPreset(
-        presetId,
-        candidate.def.id,
-        'weight',
-        orderIndex++,
-      );
-
       final parents = await _buildGeneratedSets(
         spec: spec,
         candidate: candidate,
@@ -1379,12 +1373,38 @@ class PresetGenerationService {
         unavailableStarterWeightNames: unavailableStarterWeightNames,
       );
 
-      await _repo.savePresetWeightSets(
-        presetExerciseId,
-        parents,
-        <int, List<ExerciseSet>>{},
+      writes.add(
+        WorkoutExerciseWrite(
+          exercise: WeightExercise(
+            name: candidate.def.name,
+            equipment:
+                candidate.def.equipmentList.isEmpty
+                    ? ''
+                    : candidate.def.equipmentList.first.name,
+            sets: parents,
+          ),
+          type: 'weight',
+          definitionId: candidate.def.id,
+        ),
       );
     }
+
+    final presetId = await _repo.createPresetAtomic(
+      name: name,
+      profileId: spec.profileId,
+      exercises: writes,
+      autoSettings: PresetAutoSettingsWrite(
+        isAutomatic: true,
+        globalIncrement: 5.0,
+        skipFirstSet: true,
+        weightCheck: true,
+        repCheck: true,
+        volumeCheck: false,
+        adjustAllSets: false,
+        useManualSelect: false,
+        successCountMode: ProgressionSuccessScope.set.name,
+      ),
+    );
 
     return PresetGenerationResult(
       presetId: presetId,
@@ -1976,21 +1996,6 @@ class PresetGenerationService {
 
   Future<double?> _latestBodyWeightLbs() {
     return _bodyWeightLbsFuture ??= _repo.fetchLatestBodyWeightLbs();
-  }
-
-  Future<void> _initAutoSettings(int presetId) async {
-    await _repo.upsertPresetAutoSettings(
-      presetId: presetId,
-      isAutomatic: true,
-      globalIncrement: 5.0,
-      skipFirstSet: true,
-      weightCheck: true,
-      repCheck: true,
-      volumeCheck: false,
-      adjustAllSets: false,
-      useManualSelect: false,
-      manualSelectionJson: '{}',
-    );
   }
 
   Future<List<CandidateExercisePlan>> _buildFallbackCandidatePool({

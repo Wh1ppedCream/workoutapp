@@ -23,7 +23,8 @@ void main() {
         adjust_all_sets INTEGER NOT NULL DEFAULT 0,
         flow_definition TEXT NOT NULL DEFAULT '{}',
         use_manual_select INTEGER NOT NULL DEFAULT 0,
-        manual_selection_json TEXT
+        manual_selection_json TEXT,
+        success_count_mode TEXT NOT NULL DEFAULT 'set'
       )
     ''');
     await db.execute('''
@@ -72,11 +73,13 @@ void main() {
         volumeCheck: true,
         adjustAllSets: true,
         useManualSelect: false,
+        successCountMode: 'exercise',
       );
 
       final settings = await PresetAutoSettingsDao.getAutoSettings(db, 7);
       expect(settings?['global_increment'], 10.0);
       expect(settings?['flow_definition'], '{"nodes":["first"],"edges":[]}');
+      expect(settings?['success_count_mode'], 'exercise');
     },
   );
 

@@ -42,11 +42,14 @@ class PresetAutoSettingsDao {
     required bool adjustAllSets,
     required bool useManualSelect,
     String? manualSelectionJson,
+    String? successCountMode,
   }) async {
     final existing = await getAutoSettings(db, presetId);
     final existingFlowDef = existing?['flow_definition'] as String? ?? '{}';
     final existingManualJson =
         existing?['manual_selection_json'] as String? ?? '{}';
+    final existingSuccessCountMode =
+        existing?['success_count_mode'] as String? ?? 'set';
 
     final values = {
       'preset_id': presetId,
@@ -59,6 +62,7 @@ class PresetAutoSettingsDao {
       'adjust_all_sets': sqliteBool(adjustAllSets),
       'use_manual_select': sqliteBool(useManualSelect),
       'manual_selection_json': manualSelectionJson ?? existingManualJson,
+      'success_count_mode': successCountMode ?? existingSuccessCountMode,
       'flow_definition': existingFlowDef,
     };
 

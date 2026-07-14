@@ -4,6 +4,7 @@ import 'package:env_test/providers/nav_bar_config.dart';
 import 'package:env_test/providers/onboarding_provider.dart';
 import 'package:env_test/providers/theme_provider.dart';
 import 'package:env_test/providers/unit_preference_provider.dart';
+import 'package:env_test/repositories/app_repository.dart';
 import 'package:env_test/services/active_plan_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -91,6 +92,9 @@ void main() {
 
     test('active plans are stored independently per profile', () async {
       SharedPreferences.setMockInitialValues({});
+      final repository = _FakeActivePlanRepository();
+      ActivePlanStore.useRepositoryForTesting(repository);
+      addTearDown(() => ActivePlanStore.useRepositoryForTesting(null));
 
       await ActivePlanStore.save(1, {3, 5});
       await ActivePlanStore.add(1, 8);
@@ -101,4 +105,27 @@ void main() {
       expect(await ActivePlanStore.load(null), isEmpty);
     });
   });
+}
+
+class _FakeActivePlanRepository extends AppRepository {
+  final Map<int, Set<int>> _plansByProfile = <int, Set<int>>{};
+
+  @override
+  Future<Set<int>> loadActivePlans(int profileId) async =>
+      Set<int>.from(_plansByProfile[profileId] ?? const <int>{});
+
+  @override
+  Future<void> replaceActivePlans(int profileId, Set<int> presetIds) async {
+    _plansByProfile[profileId] = Set<int>.from(presetIds);
+  }
+
+  @override
+  Future<void> addActivePlan(int profileId, int presetId) async {
+    _plansByProfile.putIfAbsent(profileId, () => <int>{}).add(presetId);
+  }
+
+  @override
+  Future<void> removeActivePlan(int profileId, int presetId) async {
+    _plansByProfile[profileId]?.remove(presetId);
+  }
 }

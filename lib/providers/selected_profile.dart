@@ -6,6 +6,7 @@ import '../repositories/app_repository.dart';
 
 /// Manages the list of gym profiles and the currently selected profile.
 class SelectedProfile extends ChangeNotifier {
+  static const String _selectedProfileStateKey = 'selected_gym_profile_id';
   final AppRepository _repo;
 
   List<GymProfile> profiles = [];
@@ -21,19 +22,32 @@ class SelectedProfile extends ChangeNotifier {
     await loadProfiles();
   }
 
-  /// Loads all profiles, seeds a default if none exist, and selects the first.
-  Future<void> loadProfiles() async {
+  /// Loads profiles while preserving the current or persisted selection.
+  Future<void> loadProfiles({int? preferredProfileId}) async {
+    final previousProfileId = preferredProfileId ?? currentProfile?.id;
     profiles = await _repo.fetchAllProfiles();
     if (profiles.isEmpty) {
-      final defaultId = await _repo.createProfile('General');
       final allEquip = await _repo.fetchAllEquipment();
-      for (final eq in allEquip) {
-        await _repo.addEquipmentToProfile(defaultId, eq.id);
-      }
+      final defaultId = await _repo.saveGymProfileAtomic(
+        existingProfile: null,
+        name: 'General',
+        equipmentIds: allEquip.map((item) => item.id).toSet(),
+      );
       profiles = await _repo.fetchAllProfiles();
+      preferredProfileId = defaultId;
     }
-    currentProfile = profiles.first;
+
+    final storedProfileId = int.tryParse(
+      await _repo.getAppState(_selectedProfileStateKey) ?? '',
+    );
+    final targetProfileId =
+        preferredProfileId ?? previousProfileId ?? storedProfileId;
+    currentProfile = profiles.firstWhere(
+      (profile) => profile.id == targetProfileId,
+      orElse: () => profiles.first,
+    );
     await _loadEquipment();
+    await _persistSelection();
     notifyListeners();
   }
 
@@ -41,32 +55,26 @@ class SelectedProfile extends ChangeNotifier {
   Future<void> selectProfile(GymProfile profile) async {
     currentProfile = profile;
     await _loadEquipment();
+    await _persistSelection();
     notifyListeners();
   }
 
   /// Creates a new profile and selects it.
   Future<void> createProfile(String name) async {
     final id = await _repo.createProfile(name);
-    await loadProfiles();
-    currentProfile = profiles.firstWhere((p) => p.id == id);
-    await _loadEquipment();
-    notifyListeners();
+    await loadProfiles(preferredProfileId: id);
   }
 
   /// Updates an existing profile.
   Future<void> updateProfile(GymProfile profile) async {
     await _repo.updateProfile(profile);
-    await loadProfiles();
-    currentProfile = profiles.firstWhere((p) => p.id == profile.id);
-    await _loadEquipment();
-    notifyListeners();
+    await loadProfiles(preferredProfileId: profile.id);
   }
 
   /// Deletes a profile and reverts selection if needed.
   Future<void> deleteProfile(int profileId) async {
     await _repo.deleteProfile(profileId);
     await loadProfiles();
-    notifyListeners();
   }
 
   /// Toggles equipment assignment for the current profile.
@@ -89,5 +97,12 @@ class SelectedProfile extends ChangeNotifier {
     } else {
       equipment = await _repo.fetchEquipmentForProfile(currentProfile!.id!);
     }
+  }
+
+  Future<void> _persistSelection() async {
+    await _repo.setAppState(
+      _selectedProfileStateKey,
+      currentProfile?.id?.toString(),
+    );
   }
 }

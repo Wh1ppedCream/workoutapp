@@ -24,18 +24,25 @@ import 'preset_detail_dao.dart';
 import 'preset_auto_settings_dao.dart';
 import 'preset_exercise_auto_dao.dart';
 import 'preset_set_auto_dao.dart';
+import 'preset_progression_dao.dart';
 import 'preset_flow_methods_dao.dart';
 import 'personal_info_dao.dart';
 import 'nutrition_dao.dart';
 import 'content_dao.dart';
 import 'database_maintenance.dart';
 import 'db_query_utils.dart';
+import 'active_plan_dao.dart';
+import 'active_workout_dao.dart';
+import 'preset_transaction_dao.dart';
+import 'profile_transaction_dao.dart';
+import 'progression_rule_propagation_dao.dart';
+import 'workout_transaction_dao.dart';
 
 import 'package:flutter/foundation.dart' show debugPrint;
 
 /// Singleton helper for managing the SQLite database.
 class DatabaseHelper {
-  static const int _kDbVersion = 50;
+  static const int _kDbVersion = 52;
   static int get currentSchemaVersion => _kDbVersion;
   static const String _kOpenTriggerResetKey = 'open_trigger_reset_v1';
   static const String _kOpenIndexEnsureKey = 'open_index_ensure_v3';
@@ -145,6 +152,8 @@ class DatabaseHelper {
         await ContentDao.ensureTables(db);
         await Schema.migrateV49(db);
         await Schema.migrateV50(db);
+        await Schema.migrateV51(db);
+        await Schema.migrateV52(db);
         await _resetDbTriggers(db); // <—
         await _maybeCompactLegacyFoodCatalog(db);
         await _removeEmptyStarterPlans(db);
@@ -1817,7 +1826,57 @@ class DatabaseHelper {
 
   Future<void> deleteSession(int sid) async {
     final db = await database;
-    return SessionDao.deleteSession(db, sid);
+    return WorkoutTransactionDao.deleteSession(db, sid);
+  }
+
+  Future<int> completeWorkoutAtomic({
+    required DateTime completedAt,
+    required int durationSeconds,
+    required List<WorkoutExerciseWrite> exercises,
+  }) async {
+    final db = await database;
+    return WorkoutTransactionDao.completeWorkout(
+      db,
+      completedAt: completedAt,
+      durationSeconds: durationSeconds,
+      exercises: exercises,
+    );
+  }
+
+  Future<void> replaceSessionExercisesAtomic({
+    required int sessionId,
+    required List<WorkoutExerciseWrite> exercises,
+  }) async {
+    final db = await database;
+    await WorkoutTransactionDao.replaceSessionExercises(
+      db,
+      sessionId: sessionId,
+      exercises: exercises,
+    );
+  }
+
+  Future<void> saveActiveWorkoutDraft({
+    required DateTime startedAt,
+    required int? autoPresetId,
+    required String payloadJson,
+  }) async {
+    final db = await database;
+    await ActiveWorkoutDao.save(
+      db,
+      startedAt: startedAt,
+      autoPresetId: autoPresetId,
+      payloadJson: payloadJson,
+    );
+  }
+
+  Future<Map<String, dynamic>?> loadActiveWorkoutDraft() async {
+    final db = await database;
+    return ActiveWorkoutDao.load(db);
+  }
+
+  Future<void> clearActiveWorkoutDraft() async {
+    final db = await database;
+    await ActiveWorkoutDao.clear(db);
   }
 
   Future<WorkoutSession?> fetchSessionById(int sessionId) async {
@@ -1944,7 +2003,18 @@ class DatabaseHelper {
 
   Future<void> deleteExercises(int sessionId) async {
     final db = await database;
-    await ExerciseDao.deleteExercisesForSession(db, sessionId);
+    await WorkoutTransactionDao.replaceSessionExercises(
+      db,
+      sessionId: sessionId,
+      exercises: const <WorkoutExerciseWrite>[],
+    );
+  }
+
+  Future<void> saveExerciseDefinitionAtomic(
+    ExerciseDefinitionWrite write,
+  ) async {
+    final db = await database;
+    await ProfileTransactionDao.saveExerciseDefinition(db, write);
   }
 
   Future<int> addExerciseRow({
@@ -1952,6 +2022,7 @@ class DatabaseHelper {
     required String type,
     required int orderIndex,
     required int sessionId,
+    int? sourcePresetExerciseId,
   }) async {
     final db = await database;
     return ExerciseDao.insertExerciseRow(
@@ -1960,6 +2031,7 @@ class DatabaseHelper {
       type: type,
       orderIndex: orderIndex,
       sessionId: sessionId,
+      sourcePresetExerciseId: sourcePresetExerciseId,
     );
   }
 
@@ -2002,6 +2074,7 @@ class DatabaseHelper {
         final p = parentRows[i];
         sets.add(
           ExerciseSet(
+            sourcePresetSetId: p['source_preset_set_id'] as int?,
             weight: (p['weight'] as num).toDouble(),
             reps: p['reps'] as int,
           ),
@@ -2016,6 +2089,7 @@ class DatabaseHelper {
               children
                   .map(
                     (c) => ExerciseSet(
+                      sourcePresetSetId: c['source_preset_set_id'] as int?,
                       weight: (c['weight'] as num).toDouble(),
                       reps: c['reps'] as int,
                     ),
@@ -2030,6 +2104,7 @@ class DatabaseHelper {
       return WeightExercise(
         name: defInfo['name']!,
         equipment: defInfo['equipmentName'] ?? '',
+        sourcePresetExerciseId: exRow['source_preset_exercise_id'] as int?,
         sets: sets,
         changeSets: changeSets,
         completedParents: completedParents,
@@ -3920,28 +3995,64 @@ class DatabaseHelper {
   /// Creates a new gym profile and returns its ID.
   Future<int> createProfile(String name) async {
     final db = await database;
-    final profile = GymProfile(id: null, name: name, createdAt: DateTime.now());
-    final newId = await GymProfileDao.insertProfile(db, profile);
+    final newId = await ProfileTransactionDao.saveGymProfile(
+      db,
+      existingProfile: null,
+      name: name,
+      equipmentIds: const <int>{},
+    );
     // copy app‐wide methods into the new profile default:
-    final appFlowJson = await fetchDefaultFlow('app');
-    if (!_isEmptyFlowJson(appFlowJson)) {
-      await upsertDefaultFlow(
-        'profile',
-        profileId: newId,
-        flowJson: appFlowJson,
-      );
-    }
-    final appMethods = await fetchDefaultFlowMethods('app');
-    for (var m in appMethods) {
-      await upsertDefaultFlowMethod(
-        'profile',
-        profileId: newId,
-        name: m['name'] as String,
-        type: m['type'] as String,
-        params: jsonDecode(m['params'] as String),
-      );
-    }
     return newId;
+  }
+
+  Future<int> saveGymProfileAtomic({
+    required GymProfile? existingProfile,
+    required String name,
+    required Set<int> equipmentIds,
+  }) async {
+    final db = await database;
+    return ProfileTransactionDao.saveGymProfile(
+      db,
+      existingProfile: existingProfile,
+      name: name,
+      equipmentIds: equipmentIds,
+    );
+  }
+
+  Future<Set<int>> loadActivePlans(int profileId) async {
+    final db = await database;
+    return ActivePlanDao.load(db, profileId);
+  }
+
+  Future<void> replaceActivePlans(int profileId, Set<int> presetIds) async {
+    final db = await database;
+    await ActivePlanDao.replace(db, profileId, presetIds);
+  }
+
+  Future<void> addActivePlan(int profileId, int presetId) async {
+    final db = await database;
+    await ActivePlanDao.add(db, profileId, presetId);
+  }
+
+  Future<void> removeActivePlan(int profileId, int presetId) async {
+    final db = await database;
+    await ActivePlanDao.remove(db, profileId, presetId);
+  }
+
+  Future<String?> getAppState(String key) async {
+    final db = await database;
+    await _ensureAppMetaTable(db);
+    return _getAppMeta(db, key);
+  }
+
+  Future<void> setAppState(String key, String? value) async {
+    final db = await database;
+    await _ensureAppMetaTable(db);
+    if (value == null) {
+      await db.delete('app_meta', where: 'key = ?', whereArgs: [key]);
+      return;
+    }
+    await _setAppMeta(db, key, value);
   }
 
   /// Retrieves all gym profiles.
@@ -4037,14 +4148,59 @@ class DatabaseHelper {
 
   Future<int> createPreset(String name, {int? profileId}) async {
     final db = await database;
-    final newId = await PresetDefinitionDao.insertPreset(
+    return PresetTransactionDao.createPreset(
       db,
-      name,
+      name: name,
       profileId: profileId,
+      exercises: const <WorkoutExerciseWrite>[],
     );
     // copy profile‐default methods into this preset (if profileId != null)
-    await _copyDefaultProgressRulesToPreset(newId, profileId: profileId);
-    return newId;
+  }
+
+  Future<int> createPresetAtomic({
+    required String name,
+    required int? profileId,
+    required List<WorkoutExerciseWrite> exercises,
+    PresetAutoSettingsWrite? autoSettings,
+    bool activate = false,
+  }) async {
+    final db = await database;
+    return PresetTransactionDao.createPreset(
+      db,
+      name: name,
+      profileId: profileId,
+      exercises: exercises,
+      autoSettings: autoSettings,
+      activate: activate,
+    );
+  }
+
+  Future<void> replacePresetAtomic({
+    required int presetId,
+    required String? name,
+    required List<WorkoutExerciseWrite> exercises,
+    PresetAutoSettingsWrite? autoSettings,
+  }) async {
+    final db = await database;
+    await PresetTransactionDao.replacePreset(
+      db,
+      presetId: presetId,
+      name: name,
+      exercises: exercises,
+      autoSettings: autoSettings,
+    );
+  }
+
+  Future<void> savePresetAutoConfigurationAtomic({
+    required int presetId,
+    required PresetAutoConfigurationWrite configuration,
+  }) async {
+    final db = await database;
+    await PresetTransactionDao.saveAutoConfiguration(
+      db,
+      presetId: presetId,
+      configuration: configuration,
+    );
   }
 
   Future<int> findOrCreatePreset(String name, {int? profileId}) async {
@@ -4065,32 +4221,6 @@ class DatabaseHelper {
       return existing.first['id'] as int;
     }
     return createPreset(name, profileId: profileId);
-  }
-
-  Future<void> _copyDefaultProgressRulesToPreset(
-    int presetId, {
-    int? profileId,
-  }) async {
-    final scope = profileId == null ? 'app' : 'profile';
-    final flowJson = await fetchDefaultFlow(scope, profileId: profileId);
-    final methods = await fetchDefaultFlowMethods(scope, profileId: profileId);
-
-    if (!_isEmptyFlowJson(flowJson)) {
-      await upsertFlowDefinition(presetId, flowJson);
-    }
-    for (final method in methods) {
-      await upsertFlowMethod(
-        presetId: presetId,
-        name: method['name'] as String,
-        type: method['type'] as String,
-        params: jsonDecode(method['params'] as String) as Map<String, dynamic>,
-      );
-    }
-  }
-
-  bool _isEmptyFlowJson(String flowJson) {
-    final trimmed = flowJson.trim();
-    return trimmed.isEmpty || trimmed == '{}';
   }
 
   Future<List<Map<String, dynamic>>> fetchAllPresetsRaw({
@@ -4282,6 +4412,7 @@ class DatabaseHelper {
     required bool adjustAllSets,
     required bool useManualSelect, // ← NEW
     String? manualSelectionJson, // ← NEW
+    String? successCountMode,
   }) async {
     final db = await database;
     await PresetAutoSettingsDao.upsertAutoSettings(
@@ -4296,6 +4427,7 @@ class DatabaseHelper {
       adjustAllSets: adjustAllSets,
       useManualSelect: useManualSelect, // ← PASS THROUGH
       manualSelectionJson: manualSelectionJson, // ← PASS THROUGH
+      successCountMode: successCountMode,
     );
   }
 
@@ -4451,6 +4583,14 @@ class DatabaseHelper {
     return PresetDetailDao.deletePresetSet(db: db, presetSetId: presetSetId);
   }
 
+  /// Applies one workout's preset progression as a single transaction.
+  Future<void> applyPresetProgressionBatch(
+    PresetProgressionBatch progression,
+  ) async {
+    final db = await database;
+    await PresetProgressionDao.apply(db, progression);
+  }
+
   Future<bool> getUseManualBodyparts(int defId) async {
     final db = await database;
     final r = await db.query(
@@ -4515,20 +4655,30 @@ class DatabaseHelper {
 
   // ─── FLOW‐CHART DEFAULTS (v17 tables) ───────────────────────────────────
 
+  ({String whereClause, List<Object?> arguments}) _flowScopeFilter(
+    String scope,
+    int? profileId,
+  ) {
+    return profileId == null
+        ? (
+          whereClause: 'scope = ? AND profile_id IS NULL',
+          arguments: <Object?>[scope],
+        )
+        : (
+          whereClause: 'scope = ? AND profile_id = ?',
+          arguments: <Object?>[scope, profileId],
+        );
+  }
+
   /// Fetch the saved default flow JSON for either the whole app or a specific profile.
   Future<String> fetchDefaultFlow(String scope, {int? profileId}) async {
     final db = await database;
-    // profile_id IS NULL when scope=='app'
-    final whereClause =
-        profileId != null
-            ? 'scope = ? AND profile_id = ?'
-            : 'scope = ? AND profile_id IS NULL';
-    final args = profileId != null ? [scope, profileId] : [scope];
+    final filter = _flowScopeFilter(scope, profileId);
     final rows = await db.query(
       'flow_defaults',
       columns: ['flow_json'],
-      where: whereClause,
-      whereArgs: args,
+      where: filter.whereClause,
+      whereArgs: filter.arguments,
       limit: 1,
     );
     if (rows.isEmpty) return '{}';
@@ -4547,14 +4697,12 @@ class DatabaseHelper {
       'profile_id': profileId,
       'flow_json': flowJson,
     };
+    final filter = _flowScopeFilter(scope, profileId);
     final updated = await db.update(
       'flow_defaults',
       values,
-      where:
-          profileId != null
-              ? 'scope = ? AND profile_id = ?'
-              : 'scope = ? AND profile_id IS NULL',
-      whereArgs: profileId != null ? [scope, profileId] : [scope],
+      where: filter.whereClause,
+      whereArgs: filter.arguments,
     );
     if (updated == 0) {
       await db.insert('flow_defaults', values);
@@ -4564,12 +4712,12 @@ class DatabaseHelper {
   /// Delete a default flow entry.
   Future<int> deleteDefaultFlow(String scope, {int? profileId}) async {
     final db = await database;
-    final whereClause =
-        profileId != null
-            ? 'scope = ? AND profile_id = ?'
-            : 'scope = ? AND profile_id IS NULL';
-    final args = profileId != null ? [scope, profileId] : [scope];
-    return db.delete('flow_defaults', where: whereClause, whereArgs: args);
+    final filter = _flowScopeFilter(scope, profileId);
+    return db.delete(
+      'flow_defaults',
+      where: filter.whereClause,
+      whereArgs: filter.arguments,
+    );
   }
 
   /// Fetch all the methods attached to an app/profile default.
@@ -4578,17 +4726,13 @@ class DatabaseHelper {
     int? profileId,
   }) async {
     final db = await database;
-    final whereClause =
-        profileId != null
-            ? 'scope = ? AND profile_id = ?'
-            : 'scope = ? AND profile_id IS NULL';
-    final args = profileId != null ? [scope, profileId] : [scope];
+    final filter = _flowScopeFilter(scope, profileId);
     return db.rawQuery('''
       SELECT rowid AS id, scope, profile_id, name, type, params
       FROM flow_default_methods
-      WHERE $whereClause
+      WHERE ${filter.whereClause}
       ORDER BY name
-      ''', args);
+      ''', filter.arguments);
   }
 
   /// Upsert one method into the default‐methods table (conflict on PK(scope,profile_id,name)).
@@ -4601,16 +4745,12 @@ class DatabaseHelper {
   }) async {
     final db = await database;
     final paramsJson = jsonEncode(params); // <-- encode here
-    final defaultWhereClause =
-        profileId != null
-            ? 'scope = ? AND profile_id = ?'
-            : 'scope = ? AND profile_id IS NULL';
-    final defaultArgs = profileId != null ? [scope, profileId] : [scope];
+    final scopeFilter = _flowScopeFilter(scope, profileId);
     final defaultRows = await db.query(
       'flow_defaults',
       columns: ['scope'],
-      where: defaultWhereClause,
-      whereArgs: defaultArgs,
+      where: scopeFilter.whereClause,
+      whereArgs: scopeFilter.arguments,
       limit: 1,
     );
     if (defaultRows.isEmpty) {
@@ -4627,11 +4767,8 @@ class DatabaseHelper {
       'type': type,
       'params': paramsJson, // <-- store JSON string
     };
-    final whereClause =
-        profileId != null
-            ? 'scope = ? AND profile_id = ? AND name = ?'
-            : 'scope = ? AND profile_id IS NULL AND name = ?';
-    final args = profileId != null ? [scope, profileId, name] : [scope, name];
+    final whereClause = '${scopeFilter.whereClause} AND name = ?';
+    final args = [...scopeFilter.arguments, name];
     final updated = await db.update(
       'flow_default_methods',
       values,
@@ -4648,6 +4785,40 @@ class DatabaseHelper {
     return rows.isEmpty ? 0 : rows.first['id'] as int;
   }
 
+  /// Adds a new app default rule to existing profiles without changing
+  /// profile-specific rules or saved flow graphs.
+  Future<int> copyAppDefaultRuleToExistingProfiles({
+    required String name,
+    required String type,
+    required Map<String, dynamic> params,
+  }) async {
+    final db = await database;
+    return ProgressionRulePropagationDao.copyAppRuleToExistingProfiles(
+      db,
+      name: name,
+      type: type,
+      paramsJson: jsonEncode(params),
+    );
+  }
+
+  /// Adds a new profile default rule to that profile's existing plans without
+  /// replacing plan-specific rules or saved flow graphs.
+  Future<int> copyProfileDefaultRuleToExistingPlans({
+    required int profileId,
+    required String name,
+    required String type,
+    required Map<String, dynamic> params,
+  }) async {
+    final db = await database;
+    return ProgressionRulePropagationDao.copyProfileRuleToExistingPlans(
+      db,
+      profileId: profileId,
+      name: name,
+      type: type,
+      paramsJson: jsonEncode(params),
+    );
+  }
+
   /// Delete one default method by name.
   Future<int> deleteDefaultFlowMethod(
     String scope, {
@@ -4655,11 +4826,9 @@ class DatabaseHelper {
     required String name,
   }) async {
     final db = await database;
-    final whereClause =
-        profileId != null
-            ? 'scope = ? AND profile_id = ? AND name = ?'
-            : 'scope = ? AND profile_id IS NULL AND name = ?';
-    final args = profileId != null ? [scope, profileId, name] : [scope, name];
+    final scopeFilter = _flowScopeFilter(scope, profileId);
+    final whereClause = '${scopeFilter.whereClause} AND name = ?';
+    final args = [...scopeFilter.arguments, name];
     return db.delete(
       'flow_default_methods',
       where: whereClause,

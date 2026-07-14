@@ -10,6 +10,7 @@ export 'personal_info.dart';
 export 'nutrition_models.dart';
 export 'unit_preference.dart';
 export 'content_models.dart';
+export 'persistence_models.dart';
 
 //new:
 export 'training_plan_models.dart';

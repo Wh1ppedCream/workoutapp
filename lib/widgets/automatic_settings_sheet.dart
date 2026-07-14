@@ -6,12 +6,8 @@ import 'package:provider/provider.dart';
 import '../providers/preset_session.dart';
 import '../providers/unit_preference_provider.dart';
 import '../models/models.dart';
-import 'dart:convert';
 import '../theme/app_colors.dart';
 import '../utils/weight_unit_formatter.dart';
-
-/// Scope used when deciding how many successful sets count toward progression.
-enum SuccessCountMode { session, exercise, set }
 
 /// Bottom sheet for editing automatic preset progression settings.
 ///
@@ -45,7 +41,7 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
   /// Per-set checkbox state when in manual mode.
   final Map<int, bool> _setSelections = {};
 
-  SuccessCountMode _successCountMode = SuccessCountMode.session;
+  late ProgressionSuccessScope _successCountMode;
   bool _isSaving = false;
 
   /// Iterates every parent and child preset_set row ID in the loaded preset.
@@ -119,6 +115,7 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
 
     // Seed the global/manual flag
     _manualSelect = preset.manualSelect;
+    _successCountMode = preset.successScope;
 
     // Global increment & skip-first
     _globalController = TextEditingController(
@@ -160,14 +157,18 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
     var closedSheet = false;
 
     try {
-      // 1) Global settings + manual flags
       final globalParsed =
           _parseIncrement(_globalController.text) ?? preset.globalIncrement;
-      final manualJson = json.encode(
-        _setSelections.map((key, value) => MapEntry(key.toString(), value)),
-      );
+      final exerciseIncrements = <int, double?>{
+        for (final exerciseId in preset.presetExerciseIds)
+          exerciseId: _parseIncrement(_exControllers[exerciseId]!.text),
+      };
+      final setIncrements = <int, double?>{
+        for (final entry in _setControllers.entries)
+          entry.key: _parseIncrement(entry.value.text),
+      };
 
-      await preset.saveAutoSettings(
+      await preset.saveAutoConfiguration(
         newGlobalIncrement: globalParsed,
         newSkipFirstSet: _skipFirst,
         newWeightCheck: preset.weightCheck,
@@ -175,20 +176,11 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
         newVolumeCheck: preset.volumeCheck,
         newAdjustAllSets: preset.adjustAllSets,
         newUseManualSelect: _manualSelect,
-        newManualSelectionJson: manualJson,
+        newManualSelections: Map<int, bool>.from(_setSelections),
+        newSuccessScope: _successCountMode,
+        newExerciseIncrements: exerciseIncrements,
+        newSetIncrements: setIncrements,
       );
-
-      // 2) Per-exercise overrides
-      for (var exId in preset.presetExerciseIds) {
-        final parsed = _parseIncrement(_exControllers[exId]!.text);
-        await preset.saveExerciseOverride(exId, parsed);
-      }
-
-      // 3) Per-set overrides
-      for (var setId in _setControllers.keys) {
-        final parsed = _parseIncrement(_setControllers[setId]!.text);
-        await preset.saveSetOverride(setId, parsed);
-      }
 
       if (mounted) {
         closedSheet = true;
@@ -549,25 +541,25 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
                               'Success/Fails counted and increments/decrements made based off:',
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
-                            RadioListTile<SuccessCountMode>(
+                            RadioListTile<ProgressionSuccessScope>(
                               title: const Text('Workout Session'),
-                              value: SuccessCountMode.session,
+                              value: ProgressionSuccessScope.session,
                               groupValue: _successCountMode,
                               activeColor: cs.primary,
                               onChanged:
                                   (m) => setState(() => _successCountMode = m!),
                             ),
-                            RadioListTile<SuccessCountMode>(
+                            RadioListTile<ProgressionSuccessScope>(
                               title: const Text('per Exercise'),
-                              value: SuccessCountMode.exercise,
+                              value: ProgressionSuccessScope.exercise,
                               groupValue: _successCountMode,
                               activeColor: cs.primary,
                               onChanged:
                                   (m) => setState(() => _successCountMode = m!),
                             ),
-                            RadioListTile<SuccessCountMode>(
+                            RadioListTile<ProgressionSuccessScope>(
                               title: const Text('per Set'),
-                              value: SuccessCountMode.set,
+                              value: ProgressionSuccessScope.set,
                               groupValue: _successCountMode,
                               activeColor: cs.primary,
                               onChanged:

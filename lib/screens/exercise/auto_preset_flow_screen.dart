@@ -13,10 +13,166 @@ import '../../theme/theme_extensions.dart';
 
 enum AddSetMode { explicit, copy }
 
+/// The persisted location for a progression flow and its reusable actions.
+enum FlowProgressionScope { plan, appDefault, profileDefault }
+
+/// Lets the same progression editor work with a plan, app defaults, or a
+/// gym-profile default without duplicating the graph editing experience.
+class FlowProgressionTarget {
+  final FlowProgressionScope scope;
+  final int? presetId;
+  final int? profileId;
+  final String? profileName;
+
+  const FlowProgressionTarget._({
+    required this.scope,
+    this.presetId,
+    this.profileId,
+    this.profileName,
+  });
+
+  FlowProgressionTarget.plan({required int presetId})
+    : this._(scope: FlowProgressionScope.plan, presetId: presetId);
+
+  const FlowProgressionTarget.appDefaults()
+    : this._(scope: FlowProgressionScope.appDefault);
+
+  FlowProgressionTarget.profileDefaults({
+    required int profileId,
+    required String profileName,
+  }) : this._(
+         scope: FlowProgressionScope.profileDefault,
+         profileId: profileId,
+         profileName: profileName,
+       );
+
+  String get title => switch (scope) {
+    FlowProgressionScope.plan => 'Plan Progression',
+    FlowProgressionScope.appDefault => 'App Default Progression',
+    FlowProgressionScope.profileDefault => 'Gym Default Progression',
+  };
+
+  String get subtitle => switch (scope) {
+    FlowProgressionScope.plan =>
+      'Set how this plan progresses after each workout.',
+    FlowProgressionScope.appDefault =>
+      'Set the starting progression flow for new gym profiles.',
+    FlowProgressionScope.profileDefault =>
+      'Set the starting progression flow for new plans in ${profileName ?? 'this gym profile'}.',
+  };
+
+  Future<FlowDefinition> fetchDefinition(AppRepository repository) {
+    return switch (scope) {
+      FlowProgressionScope.plan => repository.fetchFlowDefinition(presetId!),
+      FlowProgressionScope.appDefault => repository.fetchDefaultFlowDefinition(
+        'app',
+      ),
+      FlowProgressionScope.profileDefault => repository
+          .fetchDefaultFlowDefinition('profile', profileId: profileId),
+    };
+  }
+
+  Future<List<FlowMethod>> fetchMethods(AppRepository repository) {
+    return switch (scope) {
+      FlowProgressionScope.plan => repository.fetchFlowMethods(presetId!),
+      FlowProgressionScope.appDefault => repository.fetchDefaultFlowMethods(
+        'app',
+      ),
+      FlowProgressionScope.profileDefault => repository.fetchDefaultFlowMethods(
+        'profile',
+        profileId: profileId,
+      ),
+    };
+  }
+
+  Future<void> saveDefinition(
+    AppRepository repository,
+    FlowDefinition definition,
+  ) {
+    return switch (scope) {
+      FlowProgressionScope.plan => repository.upsertFlowDefinition(
+        presetId!,
+        definition,
+      ),
+      FlowProgressionScope.appDefault => repository.upsertDefaultFlow(
+        'app',
+        flowJson: definition.toJson(),
+      ),
+      FlowProgressionScope.profileDefault => repository.upsertDefaultFlow(
+        'profile',
+        profileId: profileId,
+        flowJson: definition.toJson(),
+      ),
+    };
+  }
+
+  Future<FlowMethod> addMethod(
+    AppRepository repository, {
+    required String name,
+    required MethodType type,
+    required Map<String, dynamic> params,
+  }) {
+    return switch (scope) {
+      FlowProgressionScope.plan => repository.upsertFlowMethod(
+        presetId: presetId!,
+        name: name,
+        type: type,
+        params: params,
+      ),
+      FlowProgressionScope.appDefault => repository.upsertDefaultFlowMethod(
+        scope: 'app',
+        name: name,
+        type: type,
+        params: params,
+      ),
+      FlowProgressionScope.profileDefault => repository.upsertDefaultFlowMethod(
+        scope: 'profile',
+        profileId: profileId,
+        name: name,
+        type: type,
+        params: params,
+      ),
+    };
+  }
+
+  Future<void> deleteMethod(AppRepository repository, FlowMethod method) {
+    return switch (scope) {
+      FlowProgressionScope.plan => repository.deleteFlowMethodAndReferences(
+        method,
+      ),
+      FlowProgressionScope.appDefault => repository
+          .deleteDefaultFlowMethodAndReferences(
+            scope: 'app',
+            name: method.name,
+          ),
+      FlowProgressionScope.profileDefault => repository
+          .deleteDefaultFlowMethodAndReferences(
+            scope: 'profile',
+            profileId: profileId,
+            name: method.name,
+          ),
+    };
+  }
+}
+
 /// Screen to edit the automatic‐preset flowchart for a given preset.
 class AutoPresetFlowScreen extends StatefulWidget {
-  final int presetId;
-  const AutoPresetFlowScreen({super.key, required this.presetId});
+  final FlowProgressionTarget target;
+
+  AutoPresetFlowScreen({super.key, required int presetId})
+    : target = FlowProgressionTarget.plan(presetId: presetId);
+
+  const AutoPresetFlowScreen.appDefaults({super.key})
+    : target = const FlowProgressionTarget.appDefaults();
+
+  AutoPresetFlowScreen.profileDefaults({
+    super.key,
+    required int profileId,
+    required String profileName,
+  }) : target = FlowProgressionTarget.profileDefaults(
+         profileId: profileId,
+         profileName: profileName,
+       );
 
   @override
   State<AutoPresetFlowScreen> createState() => _AutoPresetFlowScreenState();
@@ -70,15 +226,20 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
   }
 
   Future<void> _loadAll() async {
-    final definitionFuture = _repo.fetchFlowDefinition(widget.presetId);
-    final methodsFuture = _repo.fetchFlowMethods(widget.presetId);
+    final definitionFuture = widget.target.fetchDefinition(_repo);
+    final methodsFuture = widget.target.fetchMethods(_repo);
     final def = await definitionFuture;
     final methods = await methodsFuture;
     if (!mounted) return;
     setState(() {
       _flowDef = def;
       _methods = methods;
-      _edges = def.edges;
+      _edges = def.edges.toList();
+      _selectedMethod = null;
+      _selectedBranchParent = null;
+      _selectedMethodNode = null;
+      _successCounter = 0;
+      _failureCounter = 0;
     });
     _buildDashboard();
     _initializeCounters();
@@ -119,18 +280,32 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
     _nodeData.clear();
     _placement.clear();
 
-    if (_flowDef == null || _flowDef!.nodes.isEmpty) {
+    final savedNodes = _flowDef?.nodes.toSet() ?? const <String>{};
+    if (!savedNodes.contains('1st attempt')) {
+      // Recover safely from an empty or malformed legacy definition.
+      _edges = [];
       _initializeDefaultTree();
     } else {
+      _edges =
+          _edges.where((edge) {
+            if (edge.outcome == 'method') {
+              return savedNodes.contains(edge.from);
+            }
+            return (edge.outcome == 'success' || edge.outcome == 'failure') &&
+                savedNodes.contains(edge.from) &&
+                savedNodes.contains(edge.to);
+          }).toList();
+
       // BFS to compute depths
       final depths = {'1st attempt': 0};
       final queue = ['1st attempt'];
+      var queueIndex = 0;
       final adj = <String, List<String>>{};
-      for (var e in _flowDef!.edges.where((e) => e.outcome != 'method')) {
+      for (final e in _edges.where((e) => e.outcome != 'method')) {
         adj.putIfAbsent(e.from, () => []).add(e.to);
       }
-      while (queue.isNotEmpty) {
-        final cur = queue.removeAt(0);
+      while (queueIndex < queue.length) {
+        final cur = queue[queueIndex++];
         final d = depths[cur]!;
         for (var nb in adj[cur] ?? []) {
           if (!depths.containsKey(nb)) {
@@ -139,6 +314,13 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
           }
         }
       }
+
+      final reachableNodes = depths.keys.toSet();
+      _edges =
+          _edges.where((edge) {
+            if (!reachableNodes.contains(edge.from)) return false;
+            return edge.outcome == 'method' || reachableNodes.contains(edge.to);
+          }).toList();
 
       // create nodes
       final sorted =
@@ -173,8 +355,9 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
 
       // branch edges
       for (var e in _edges.where((e) => e.outcome != 'method')) {
-        final fromEl = _nodes[e.from]!;
-        final toEl = _nodes[e.to]!;
+        final fromEl = _nodes[e.from];
+        final toEl = _nodes[e.to];
+        if (fromEl == null || toEl == null) continue;
         final isSucc = e.outcome == 'success';
 
         // grab your colors once per loop
@@ -202,7 +385,7 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
       _refreshNodeText(node);
     }
 
-    if (_flowDef != null && _flowDef!.nodes.isNotEmpty) {
+    if (_nodes.containsKey('1st attempt')) {
       _applyLoopbacks();
     }
   }
@@ -254,7 +437,8 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
 
   void _applyLoopbacks() {
     final extras = context.colors;
-    final rootEl = _nodes['1st attempt']!;
+    final rootEl = _nodes['1st attempt'];
+    if (rootEl == null) return;
     final hasSucc = <String, bool>{};
     final hasFail = <String, bool>{};
     for (var e in _edges) {
@@ -390,8 +574,8 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
                         icon: const Icon(Icons.delete),
                         onPressed: () async {
                           final navigator = Navigator.of(ctx);
-                          await _repo.deleteFlowMethod(m.id);
-                          if (!mounted) return;
+                          await widget.target.deleteMethod(_repo, m);
+                          if (!ctx.mounted || !mounted) return;
                           navigator.pop();
                         },
                       ),
@@ -409,9 +593,8 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
             ),
           ),
     );
-    _methods = await _repo.fetchFlowMethods(widget.presetId);
     if (!mounted) return;
-    setState(() {});
+    await _loadAll();
   }
 
   Future<void> _showAddMethodDialog() async {
@@ -425,192 +608,199 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
     final repsCtl = TextEditingController(text: '0');
     final copyIndexCtl = TextEditingController(text: '-1');
 
-    try {
-      final saved = await showDialog<bool>(
-        context: context,
-        builder:
-            (ctx) => StatefulBuilder(
-              builder:
-                  (ctx, setState) => AlertDialog(
-                    title: const Text('New Method'),
-                    content: SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
+    final saved = await showDialog<bool>(
+      context: context,
+      builder:
+          (ctx) => StatefulBuilder(
+            builder:
+                (ctx, setState) => AlertDialog(
+                  title: const Text('New Method'),
+                  content: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        TextField(
+                          controller: nameCtl,
+                          decoration: const InputDecoration(labelText: 'Name'),
+                        ),
+                        const SizedBox(height: 12),
+                        DropdownButton<MethodType>(
+                          value: type,
+                          isExpanded: true,
+                          onChanged: (v) => setState(() => type = v!),
+                          items:
+                              MethodType.values
+                                  .map(
+                                    (t) => DropdownMenuItem(
+                                      value: t,
+                                      child: Text(t.toShortString()),
+                                    ),
+                                  )
+                                  .toList(),
+                        ),
+                        const SizedBox(height: 12),
+                        if (type == MethodType.weight) ...[
+                          DropdownButton<String>(
+                            value: sign,
+                            onChanged: (v) => setState(() => sign = v!),
+                            items: const [
+                              DropdownMenuItem(value: '+', child: Text('+')),
+                              DropdownMenuItem(value: '-', child: Text('-')),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
                           TextField(
-                            controller: nameCtl,
+                            controller: factorCtl,
+                            keyboardType: TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
                             decoration: const InputDecoration(
-                              labelText: 'Name',
+                              labelText: 'Factor',
                             ),
                           ),
-                          const SizedBox(height: 12),
-                          DropdownButton<MethodType>(
-                            value: type,
-                            isExpanded: true,
-                            onChanged: (v) => setState(() => type = v!),
-                            items:
-                                MethodType.values
-                                    .map(
-                                      (t) => DropdownMenuItem(
-                                        value: t,
-                                        child: Text(t.toShortString()),
-                                      ),
-                                    )
-                                    .toList(),
+                        ] else if (type == MethodType.rep) ...[
+                          DropdownButton<String>(
+                            value: sign,
+                            onChanged: (v) => setState(() => sign = v!),
+                            items: const [
+                              DropdownMenuItem(value: '+', child: Text('+')),
+                              DropdownMenuItem(value: '-', child: Text('-')),
+                            ],
                           ),
-                          const SizedBox(height: 12),
-                          if (type == MethodType.weight) ...[
-                            DropdownButton<String>(
-                              value: sign,
-                              onChanged: (v) => setState(() => sign = v!),
-                              items: const [
-                                DropdownMenuItem(value: '+', child: Text('+')),
-                                DropdownMenuItem(value: '-', child: Text('-')),
-                              ],
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: amountCtl,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: 'Amount',
                             ),
-                            const SizedBox(height: 8),
+                          ),
+                        ] else if (type == MethodType.addSet) ...[
+                          Row(
+                            children: [
+                              Radio<AddSetMode>(
+                                value: AddSetMode.explicit,
+                                groupValue: addMode,
+                                onChanged: (v) => setState(() => addMode = v!),
+                              ),
+                              const Text('Explicit'),
+                              Radio<AddSetMode>(
+                                value: AddSetMode.copy,
+                                groupValue: addMode,
+                                onChanged: (v) => setState(() => addMode = v!),
+                              ),
+                              const Text('Copy from set'),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          if (addMode == AddSetMode.explicit)
                             TextField(
-                              controller: factorCtl,
+                              controller: weightCtl,
                               keyboardType: TextInputType.numberWithOptions(
                                 decimal: true,
                               ),
                               decoration: const InputDecoration(
-                                labelText: 'Factor',
+                                labelText: 'Weight',
                               ),
                             ),
-                          ] else if (type == MethodType.rep) ...[
-                            DropdownButton<String>(
-                              value: sign,
-                              onChanged: (v) => setState(() => sign = v!),
-                              items: const [
-                                DropdownMenuItem(value: '+', child: Text('+')),
-                                DropdownMenuItem(value: '-', child: Text('-')),
-                              ],
-                            ),
+                          if (addMode == AddSetMode.explicit)
                             const SizedBox(height: 8),
+                          if (addMode == AddSetMode.explicit)
                             TextField(
-                              controller: amountCtl,
+                              controller: repsCtl,
                               keyboardType: TextInputType.number,
                               decoration: const InputDecoration(
-                                labelText: 'Amount',
+                                labelText: 'Reps',
                               ),
                             ),
-                          ] else if (type == MethodType.addSet) ...[
-                            Row(
-                              children: [
-                                Radio<AddSetMode>(
-                                  value: AddSetMode.explicit,
-                                  groupValue: addMode,
-                                  onChanged:
-                                      (v) => setState(() => addMode = v!),
-                                ),
-                                const Text('Explicit'),
-                                Radio<AddSetMode>(
-                                  value: AddSetMode.copy,
-                                  groupValue: addMode,
-                                  onChanged:
-                                      (v) => setState(() => addMode = v!),
-                                ),
-                                const Text('Copy from set'),
-                              ],
+                          if (addMode == AddSetMode.copy)
+                            TextField(
+                              controller: copyIndexCtl,
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(
+                                labelText: 'Set index (-1 = last)',
+                              ),
                             ),
-                            const SizedBox(height: 8),
-                            if (addMode == AddSetMode.explicit)
-                              TextField(
-                                controller: weightCtl,
-                                keyboardType: TextInputType.numberWithOptions(
-                                  decimal: true,
-                                ),
-                                decoration: const InputDecoration(
-                                  labelText: 'Weight',
-                                ),
-                              ),
-                            if (addMode == AddSetMode.explicit)
-                              const SizedBox(height: 8),
-                            if (addMode == AddSetMode.explicit)
-                              TextField(
-                                controller: repsCtl,
-                                keyboardType: TextInputType.number,
-                                decoration: const InputDecoration(
-                                  labelText: 'Reps',
-                                ),
-                              ),
-                            if (addMode == AddSetMode.copy)
-                              TextField(
-                                controller: copyIndexCtl,
-                                keyboardType: TextInputType.number,
-                                decoration: const InputDecoration(
-                                  labelText: 'Set index (-1 = last)',
-                                ),
-                              ),
-                          ] else if (type == MethodType.delSet) ...[
-                            const Text('This method will delete the last set.'),
-                          ],
+                        ] else if (type == MethodType.delSet) ...[
+                          const Text('This method will delete the last set.'),
                         ],
-                      ),
+                      ],
                     ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(ctx, false),
-                        child: const Text('Cancel'),
-                      ),
-                      ElevatedButton(
-                        onPressed: () => Navigator.pop(ctx, true),
-                        child: const Text('Save'),
-                      ),
-                    ],
                   ),
-            ),
-      );
-      if (saved != true) return;
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx, false),
+                      child: const Text('Cancel'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () => Navigator.pop(ctx, true),
+                      child: const Text('Save'),
+                    ),
+                  ],
+                ),
+          ),
+    );
 
-      Map<String, dynamic> params;
-      switch (type) {
-        case MethodType.weight:
-          params = {
-            'sign': sign,
-            'factor': double.tryParse(factorCtl.text) ?? 1.0,
-          };
-          break;
-        case MethodType.rep:
-          params = {'sign': sign, 'amount': int.tryParse(amountCtl.text) ?? 0};
-          break;
-        case MethodType.addSet:
-          params =
-              addMode == AddSetMode.explicit
-                  ? {
-                    'weight': double.tryParse(weightCtl.text) ?? 0.0,
-                    'reps': int.tryParse(repsCtl.text) ?? 0,
-                  }
-                  : {'copyFromSetIndex': int.tryParse(copyIndexCtl.text) ?? -1};
-          break;
-        case MethodType.delSet:
-          params = {};
-          break;
-      }
-
-      await _repo.upsertFlowMethod(
-        presetId: widget.presetId,
-        name: nameCtl.text.trim(),
-        type: type,
-        params: params,
-      );
-      _methods = await _repo.fetchFlowMethods(widget.presetId);
-      if (!mounted) return;
-      setState(() {});
-    } finally {
-      nameCtl.dispose();
-      factorCtl.dispose();
-      amountCtl.dispose();
-      weightCtl.dispose();
-      repsCtl.dispose();
-      copyIndexCtl.dispose();
+    final methodName = nameCtl.text.trim();
+    final factor = double.tryParse(factorCtl.text) ?? 1.0;
+    final amount = int.tryParse(amountCtl.text) ?? 0;
+    final weight = double.tryParse(weightCtl.text) ?? 0.0;
+    final reps = int.tryParse(repsCtl.text) ?? 0;
+    final copyIndex = int.tryParse(copyIndexCtl.text) ?? -1;
+    for (final controller in [
+      nameCtl,
+      factorCtl,
+      amountCtl,
+      weightCtl,
+      repsCtl,
+      copyIndexCtl,
+    ]) {
+      controller.dispose();
     }
+
+    if (saved != true || !mounted) return;
+
+    Map<String, dynamic> params;
+    switch (type) {
+      case MethodType.weight:
+        params = {'sign': sign, 'factor': factor};
+        break;
+      case MethodType.rep:
+        params = {'sign': sign, 'amount': amount};
+        break;
+      case MethodType.addSet:
+        params =
+            addMode == AddSetMode.explicit
+                ? {'weight': weight, 'reps': reps}
+                : {'copyFromSetIndex': copyIndex};
+        break;
+      case MethodType.delSet:
+        params = {};
+        break;
+    }
+
+    if (methodName.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Method name cannot be empty')),
+      );
+      return;
+    }
+
+    await widget.target.addMethod(
+      _repo,
+      name: methodName,
+      type: type,
+      params: params,
+    );
+    final methods = await widget.target.fetchMethods(_repo);
+    if (!mounted) return;
+    _methods = methods;
+    setState(() {});
   }
 
   Future<void> _saveFlow() async {
     final def = FlowDefinition(nodes: _nodes.keys.toList(), edges: _edges);
-    await _repo.upsertFlowDefinition(widget.presetId, def);
+    await widget.target.saveDefinition(_repo, def);
     if (!mounted) return;
     Navigator.pop(context);
   }
@@ -733,75 +923,66 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
             attachedMethods.isNotEmpty);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Edit Auto-Preset Flow'),
-        backgroundColor: cs.surface,
-        iconTheme: IconThemeData(color: cs.onSurface),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.build),
-            color: cs.primary,
-            tooltip: 'Manage Methods',
-            onPressed: _showManageMethodsDialog,
-          ),
-          IconButton(
-            icon: const Icon(Icons.save),
-            color: cs.primary,
-            tooltip: 'Save Flow',
-            onPressed: _saveFlow,
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8),
-            child: Wrap(
-              spacing: 12,
-              runSpacing: 8,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                BranchControls(
-                  branchable: branchable,
-                  selectedParent: _selectedBranchParent,
-                  onParentChanged:
-                      (v) => setState(() => _selectedBranchParent = v),
-                  onAddSuccess: _onAddSuccess,
-                  onAddFailure: _onAddFailure,
-                  existingSuccess: existingSuccess,
-                  existingFailure: existingFailure,
-                ),
-                MethodControls(
-                  methodTargets: methodTargets,
-                  selectedNode: _selectedMethodNode,
-                  onNodeChanged: (v) {
-                    setState(() {
-                      _selectedMethodNode = v;
-                      _selectedMethod = null;
-                    });
-                  },
-                  availableMethods: availableMethods,
-                  selectedMethod: _selectedMethod,
-                  onMethodChanged: (m) => setState(() => _selectedMethod = m),
-                  canAdd: canAdd,
-                  onAddMethod: _onAddMethod,
-                  hasMethods: attachedMethods.isNotEmpty,
-                  onRemoveMethod: _onRemoveMethod,
-                  canDeleteNode: canDeleteNode,
-                  onRemoveNode: _onRemoveNode,
-                ),
-              ],
+      backgroundColor: cs.surface,
+      body: SafeArea(
+        child: Column(
+          children: [
+            _AutoFlowHeader(
+              title: widget.target.title,
+              subtitle: widget.target.subtitle,
+              onBack: () => Navigator.maybePop(context),
+              onManageMethods: _showManageMethodsDialog,
+              onSave: _saveFlow,
             ),
-          ),
-
-          Expanded(
-            child: FlowChartCanvas(
-              dashboard: _dashboard,
-              onTap: (_, __) {},
-              onElementPressed: (_, __, ___) {},
+            Expanded(
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+                    child: _FlowControlDeck(
+                      branchable: branchable,
+                      selectedBranchParent: _selectedBranchParent,
+                      onBranchParentChanged:
+                          (value) =>
+                              setState(() => _selectedBranchParent = value),
+                      onAddSuccess: _onAddSuccess,
+                      onAddFailure: _onAddFailure,
+                      existingSuccess: existingSuccess,
+                      existingFailure: existingFailure,
+                      methodTargets: methodTargets,
+                      selectedMethodNode: _selectedMethodNode,
+                      onMethodNodeChanged: (value) {
+                        setState(() {
+                          _selectedMethodNode = value;
+                          _selectedMethod = null;
+                        });
+                      },
+                      availableMethods: availableMethods,
+                      selectedMethod: _selectedMethod,
+                      onMethodChanged:
+                          (method) => setState(() => _selectedMethod = method),
+                      canAddMethod: canAdd,
+                      onAddMethod: _onAddMethod,
+                      hasAttachedMethods: attachedMethods.isNotEmpty,
+                      onRemoveMethod: _onRemoveMethod,
+                      canDeleteNode: canDeleteNode,
+                      onRemoveNode: _onRemoveNode,
+                    ),
+                  ),
+                  Expanded(
+                    child: ClipRect(
+                      child: FlowChartCanvas(
+                        dashboard: _dashboard,
+                        onTap: (_, __) {},
+                        onElementPressed: (_, __, ___) {},
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -811,4 +992,359 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
 class _NodeData {
   final int depth;
   _NodeData({required this.depth});
+}
+
+class _AutoFlowHeader extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final VoidCallback onBack;
+  final VoidCallback onManageMethods;
+  final VoidCallback onSave;
+
+  const _AutoFlowHeader({
+    required this.title,
+    required this.subtitle,
+    required this.onBack,
+    required this.onManageMethods,
+    required this.onSave,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(10, 8, 16, 6),
+      child: Row(
+        children: [
+          IconButton(
+            tooltip: 'Back',
+            onPressed: onBack,
+            icon: const Icon(Icons.arrow_back),
+          ),
+          const SizedBox(width: 4),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  height: 27,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      title,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          IconButton.filledTonal(
+            tooltip: 'Manage progression actions',
+            onPressed: onManageMethods,
+            icon: const Icon(Icons.tune_outlined),
+          ),
+          const SizedBox(width: 8),
+          FilledButton.icon(
+            onPressed: onSave,
+            icon: const Icon(Icons.save_outlined, size: 18),
+            label: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FlowControlDeck extends StatelessWidget {
+  final List<String> branchable;
+  final String? selectedBranchParent;
+  final ValueChanged<String?> onBranchParentChanged;
+  final VoidCallback onAddSuccess;
+  final VoidCallback onAddFailure;
+  final int existingSuccess;
+  final int existingFailure;
+  final List<String> methodTargets;
+  final String? selectedMethodNode;
+  final ValueChanged<String?> onMethodNodeChanged;
+  final List<FlowMethod> availableMethods;
+  final FlowMethod? selectedMethod;
+  final ValueChanged<FlowMethod?> onMethodChanged;
+  final bool canAddMethod;
+  final VoidCallback onAddMethod;
+  final bool hasAttachedMethods;
+  final VoidCallback onRemoveMethod;
+  final bool canDeleteNode;
+  final VoidCallback onRemoveNode;
+
+  const _FlowControlDeck({
+    required this.branchable,
+    required this.selectedBranchParent,
+    required this.onBranchParentChanged,
+    required this.onAddSuccess,
+    required this.onAddFailure,
+    required this.existingSuccess,
+    required this.existingFailure,
+    required this.methodTargets,
+    required this.selectedMethodNode,
+    required this.onMethodNodeChanged,
+    required this.availableMethods,
+    required this.selectedMethod,
+    required this.onMethodChanged,
+    required this.canAddMethod,
+    required this.onAddMethod,
+    required this.hasAttachedMethods,
+    required this.onRemoveMethod,
+    required this.canDeleteNode,
+    required this.onRemoveNode,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final success = context.colors.flowArrowSuccess ?? const Color(0xFF66BB6A);
+    final failure = context.colors.flowArrowFailure ?? scheme.error;
+
+    return Column(
+      children: [
+        _FlowControlCard(
+          color: success,
+          icon: Icons.account_tree_outlined,
+          title: 'Add a branch',
+          subtitle: 'Choose where the next success or miss should lead.',
+          child: Column(
+            children: [
+              DropdownButtonFormField<String>(
+                value:
+                    branchable.contains(selectedBranchParent)
+                        ? selectedBranchParent
+                        : null,
+                isExpanded: true,
+                decoration: const InputDecoration(
+                  labelText: 'Branch from',
+                  prefixIcon: Icon(Icons.account_tree_outlined),
+                ),
+                items:
+                    branchable
+                        .map(
+                          (name) =>
+                              DropdownMenuItem(value: name, child: Text(name)),
+                        )
+                        .toList(),
+                onChanged: onBranchParentChanged,
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: FilledButton.icon(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: success,
+                        foregroundColor: Colors.white,
+                      ),
+                      onPressed:
+                          selectedBranchParent == null || existingSuccess >= 1
+                              ? null
+                              : onAddSuccess,
+                      icon: const Icon(Icons.trending_up, size: 18),
+                      label: const Text('Success'),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: FilledButton.icon(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: failure,
+                        foregroundColor: Colors.white,
+                      ),
+                      onPressed:
+                          selectedBranchParent == null || existingFailure >= 1
+                              ? null
+                              : onAddFailure,
+                      icon: const Icon(Icons.trending_down, size: 18),
+                      label: const Text('Miss'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+        _FlowControlCard(
+          color: scheme.primary,
+          icon: Icons.tune_outlined,
+          title: 'Attach a progression action',
+          subtitle: 'Apply one adjustment of each type to a flow node.',
+          child: Column(
+            children: [
+              DropdownButtonFormField<String>(
+                value:
+                    methodTargets.contains(selectedMethodNode)
+                        ? selectedMethodNode
+                        : null,
+                isExpanded: true,
+                decoration: const InputDecoration(
+                  labelText: 'Apply action to',
+                  prefixIcon: Icon(Icons.location_on_outlined),
+                ),
+                items:
+                    methodTargets
+                        .map(
+                          (name) =>
+                              DropdownMenuItem(value: name, child: Text(name)),
+                        )
+                        .toList(),
+                onChanged: onMethodNodeChanged,
+              ),
+              const SizedBox(height: 10),
+              DropdownButtonFormField<FlowMethod>(
+                value:
+                    availableMethods.contains(selectedMethod)
+                        ? selectedMethod
+                        : null,
+                isExpanded: true,
+                decoration: const InputDecoration(
+                  labelText: 'Progression action',
+                  prefixIcon: Icon(Icons.bolt_outlined),
+                ),
+                items:
+                    availableMethods
+                        .map(
+                          (method) => DropdownMenuItem(
+                            value: method,
+                            child: Text(
+                              method.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        )
+                        .toList(),
+                onChanged: onMethodChanged,
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: FilledButton(
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size(0, 40),
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                      ),
+                      onPressed: canAddMethod ? onAddMethod : null,
+                      child: const Text('+ Action'),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(0, 40),
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                      ),
+                      onPressed: hasAttachedMethods ? onRemoveMethod : null,
+                      child: const Text('- Action'),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(0, 40),
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        foregroundColor: scheme.error,
+                        side: BorderSide(
+                          color: scheme.error.withValues(alpha: .6),
+                        ),
+                      ),
+                      onPressed: canDeleteNode ? onRemoveNode : null,
+                      child: const Text('- Node'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _FlowControlCard extends StatelessWidget {
+  final Color color;
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Widget child;
+
+  const _FlowControlCard({
+    required this.color,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    return Container(
+      width: double.infinity,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withValues(alpha: .34),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: .46)),
+      ),
+      child: ExpansionTile(
+        key: PageStorageKey(title),
+        tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+        childrenPadding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+        collapsedBackgroundColor: color.withValues(alpha: .05),
+        backgroundColor: color.withValues(alpha: .04),
+        leading: Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: .16),
+            borderRadius: BorderRadius.circular(13),
+          ),
+          child: Icon(icon, color: color, size: 20),
+        ),
+        title: Text(
+          title,
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        subtitle: Text(
+          subtitle,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: scheme.onSurfaceVariant,
+          ),
+        ),
+        children: [child],
+      ),
+    );
+  }
 }

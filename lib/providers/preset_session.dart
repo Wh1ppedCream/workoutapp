@@ -35,6 +35,7 @@ class PresetSession extends ChangeNotifier {
   bool repCheck = true;
   bool volumeCheck = false;
   bool adjustAllSets = false;
+  ProgressionSuccessScope successScope = ProgressionSuccessScope.set;
 
   /// Whether the user picked manual-select mode.
   bool manualSelect = false;
@@ -126,6 +127,7 @@ class PresetSession extends ChangeNotifier {
           final r = parentRows[i];
           parents.add(
             ExerciseSet(
+              sourcePresetSetId: r['id'] as int,
               weight: (r['weight'] as num).toDouble(),
               reps: r['reps'] as int,
             ),
@@ -141,6 +143,7 @@ class PresetSession extends ChangeNotifier {
           changeSets[pIndex] ??= [];
           changeSets[pIndex]!.add(
             ExerciseSet(
+              sourcePresetSetId: r['id'] as int,
               weight: (r['weight'] as num).toDouble(),
               reps: r['reps'] as int,
             ),
@@ -157,6 +160,7 @@ class PresetSession extends ChangeNotifier {
           WeightExercise(
             name: name,
             equipment: equipment,
+            sourcePresetExerciseId: exRowId,
             sets: parents,
             changeSets: changeSets,
           ),
@@ -275,6 +279,9 @@ class PresetSession extends ChangeNotifier {
     volumeCheck = (autoRow?['volume_check'] as int? ?? 0) == 1;
     adjustAllSets =
         (autoRow?['adjust_all_sets'] as int? ?? 0) == 0 ? false : true;
+    successScope = ProgressionSuccessScopeX.fromStorage(
+      autoRow?['success_count_mode'],
+    );
 
     // 7) Load our new Manual‐Select settings
     manualSelect = (autoRow?['use_manual_select'] as int? ?? 0) == 1;
@@ -296,6 +303,9 @@ class PresetSession extends ChangeNotifier {
     exercises.add(ex);
     cardTypes.add(type);
     _originalDefIds.add(defId);
+    _presetExerciseIds.add(-1);
+    _presetParentSetIds.add(<int>[]);
+    _presetChildSetIds.add(<int, List<int>>{});
     _hasChanges = true;
     notifyListeners();
   }
@@ -307,9 +317,34 @@ class PresetSession extends ChangeNotifier {
 
   /// Mirrors ActiveSession.removeExercise.
   void removeExercise(int index) {
+    final exerciseId =
+        index < _presetExerciseIds.length ? _presetExerciseIds[index] : -1;
+    final parentIds =
+        index < _presetParentSetIds.length
+            ? _presetParentSetIds[index]
+            : const <int>[];
+    final childIds =
+        index < _presetChildSetIds.length
+            ? _presetChildSetIds[index].values.expand((ids) => ids)
+            : const <int>[];
+
     exercises.removeAt(index);
     cardTypes.removeAt(index);
     _originalDefIds.removeAt(index);
+    if (index < _presetExerciseIds.length) _presetExerciseIds.removeAt(index);
+    if (index < _presetParentSetIds.length) {
+      _presetParentSetIds.removeAt(index);
+    }
+    if (index < _presetChildSetIds.length) _presetChildSetIds.removeAt(index);
+
+    if (exerciseId > 0) {
+      exerciseIncrementOverrides.remove(exerciseId);
+      lastSetIndexByExercise.remove(exerciseId);
+    }
+    for (final setId in [...parentIds, ...childIds]) {
+      setIncrementOverrides.remove(setId);
+      manualSelections.remove(setId);
+    }
     _hasChanges = true;
     notifyListeners();
   }
@@ -331,6 +366,7 @@ class PresetSession extends ChangeNotifier {
     exercises[index] = WeightExercise(
       name: replacement.name,
       equipment: equipment,
+      sourcePresetExerciseId: current.sourcePresetExerciseId,
       sets: current.sets,
       changeSets: current.changeSets,
       completedParents: current.completedParents,
@@ -409,113 +445,64 @@ class PresetSession extends ChangeNotifier {
 
   /// Persists all in-memory exercises back to the preset tables,
   /// but preserves any existing per-exercise and per-set overrides.
-  Future<void> saveChanges() async {
-    // 0) Snapshot existing overrides by exercise-order index
-    final oldExRows = await _repo.fetchPresetExercises(presetId);
-    final exOverrideByOrder = <int, Map<String, dynamic>>{};
-    final setOverrideByOrder = <int, Map<int, double>>{};
-
-    for (var row in oldExRows) {
-      final oldExId = row['id'] as int;
-      final order = row['order_index'] as int;
-
-      // a) per-ex override
-      final exAuto = await _repo.fetchPresetExerciseAuto(oldExId);
-      if (exAuto != null) {
-        exOverrideByOrder[order] = {
-          'increment_amount': exAuto['increment_amount'],
-          'last_set_index': exAuto['last_set_index'],
-          'last_node': exAuto['last_node'],
-        };
+  Future<void> saveChanges({String? newName}) async {
+    final writes = <WorkoutExerciseWrite>[];
+    for (var index = 0; index < exercises.length; index++) {
+      final exercise = exercises[index];
+      final previousExerciseId =
+          index < _presetExerciseIds.length && _presetExerciseIds[index] > 0
+              ? _presetExerciseIds[index]
+              : null;
+      int? definitionId =
+          index < _originalDefIds.length ? _originalDefIds[index] : null;
+      if (exercise is WeightExercise && definitionId == null) {
+        definitionId = await _repo.findExerciseDefinitionId(
+          exercise.name,
+          exercise.equipment,
+        );
       }
-
-      // b) per-set overrides (only parents)
-      final sets = await _repo.fetchPresetSets(oldExId);
-      final parents = sets.where((r) => r['parent_set_id'] == null).toList();
-      for (var i = 0; i < parents.length; i++) {
-        final setId = parents[i]['id'] as int;
-        final setAuto = await _repo.fetchPresetSetAuto(setId);
-        if (setAuto != null && setAuto['increment_amount'] != null) {
-          setOverrideByOrder.putIfAbsent(order, () => {})[i] =
-              (setAuto['increment_amount'] as num).toDouble();
-        }
-      }
-    }
-
-    // 1) Delete all exercises & their sets
-    await _repo.deletePresetExercises(presetId);
-
-    // 2) Re-insert in the same order and re-apply overrides
-    for (var i = 0; i < exercises.length; i++) {
-      final we = exercises[i];
-
-      // 2a) find or re-use definition ID
-      int? defId;
-      if (we is WeightExercise) {
-        defId =
-            _originalDefIds[i] ??
-            await _repo.findExerciseDefinitionId(we.name, we.equipment);
-      }
-
-      // 2b) insert the exercise
-      final newExId = await _repo.addExerciseToPreset(
-        presetId,
-        defId,
-        we is WeightExercise
-            ? 'weight'
-            : we is CardioExercise
-            ? 'cardio'
-            : 'stretch',
-        i,
+      writes.add(
+        WorkoutExerciseWrite(
+          exercise: exercise,
+          type:
+              exercise is WeightExercise
+                  ? 'weight'
+                  : exercise is CardioExercise
+                  ? 'cardio'
+                  : 'stretch',
+          definitionId: definitionId,
+          previousPresetExerciseId:
+              exercise is WeightExercise
+                  ? exercise.sourcePresetExerciseId ?? previousExerciseId
+                  : previousExerciseId,
+        ),
       );
-
-      // 2c) re-apply per-exercise override if it existed
-      final exSnap = exOverrideByOrder[i];
-      if (exSnap != null) {
-        await _repo.upsertPresetExerciseAuto(
-          presetExerciseId: newExId,
-          incrementAmount: exSnap['increment_amount'] as double?,
-          lastSetIndex: exSnap['last_set_index'] as int,
-          lastNode: exSnap['last_node'] as String?,
-        );
-      }
-
-      // 2d) re-insert the details (sets / cardio / stretch)
-      if (we is WeightExercise) {
-        await _repo.savePresetWeightSets(newExId, we.sets, we.changeSets);
-
-        // 2e) re-apply per-set overrides
-        final newSets = await _repo.fetchPresetSets(newExId);
-        final newParents =
-            newSets.where((r) => r['parent_set_id'] == null).toList();
-        final setSnaps = setOverrideByOrder[i] ?? {};
-        for (var pIdx = 0; pIdx < newParents.length; pIdx++) {
-          final amt = setSnaps[pIdx];
-          if (amt != null) {
-            final setId = newParents[pIdx]['id'] as int;
-            await _repo.upsertPresetSetAuto(
-              presetSetId: setId,
-              incrementAmount: amt,
-            );
-          }
-        }
-      } else if (we is CardioExercise) {
-        await _repo.savePresetCardio(
-          newExId,
-          we.cardioName,
-          we.cardioNote,
-          we.plannedMinutes,
-          we.elapsedSeconds,
-        );
-      } else if (we is StretchExercise) {
-        await _repo.savePresetStretch(
-          newExId,
-          we.stretchInstances.map((inst) => inst.toMap()).toList(),
-        );
-      }
     }
 
-    // 3) Clear dirty flag & reload everything
+    await _repo.replacePresetAtomic(
+      presetId: presetId,
+      name: newName,
+      exercises: writes,
+      autoSettings:
+          isAutomatic
+              ? PresetAutoSettingsWrite(
+                isAutomatic: true,
+                globalIncrement: globalIncrement,
+                skipFirstSet: skipFirstSet,
+                weightCheck: weightCheck,
+                repCheck: repCheck,
+                volumeCheck: volumeCheck,
+                adjustAllSets: adjustAllSets,
+                useManualSelect: manualSelect,
+                manualSelections: manualSelections,
+                successCountMode: successScope.name,
+              )
+              : null,
+    );
+
+    if (newName != null && newName.trim().isNotEmpty) {
+      presetName = newName.trim();
+    }
     _hasChanges = false;
     await _loadPreset();
   }
@@ -543,6 +530,8 @@ class PresetSession extends ChangeNotifier {
                 ? 'cardio'
                 : 'stretch',
         orderIndex: i,
+        sourcePresetExerciseId:
+            we is WeightExercise ? we.sourcePresetExerciseId : null,
       );
 
       // And insert its details just like ActiveSession.finish()
@@ -588,6 +577,7 @@ class PresetSession extends ChangeNotifier {
       manualSelectionJson: json.encode(
         manualSelections.map((key, value) => MapEntry(key.toString(), value)),
       ),
+      successCountMode: successScope.name,
     );
     isAutomatic = true;
     notifyListeners();
@@ -597,6 +587,60 @@ class PresetSession extends ChangeNotifier {
   Future<void> disableAutomatic() async {
     await _repo.deletePresetAutoSettings(presetId);
     isAutomatic = false;
+    notifyListeners();
+  }
+
+  /// Commits every automatic setting and override together, then publishes the
+  /// new in-memory state only after the database transaction succeeds.
+  Future<void> saveAutoConfiguration({
+    required double newGlobalIncrement,
+    required bool newSkipFirstSet,
+    required bool newWeightCheck,
+    required bool newRepCheck,
+    required bool newVolumeCheck,
+    required bool newAdjustAllSets,
+    required bool newUseManualSelect,
+    required Map<int, bool> newManualSelections,
+    required ProgressionSuccessScope newSuccessScope,
+    required Map<int, double?> newExerciseIncrements,
+    required Map<int, double?> newSetIncrements,
+  }) async {
+    await _repo.savePresetAutoConfigurationAtomic(
+      presetId: presetId,
+      configuration: PresetAutoConfigurationWrite(
+        settings: PresetAutoSettingsWrite(
+          isAutomatic: isAutomatic,
+          globalIncrement: newGlobalIncrement,
+          skipFirstSet: newSkipFirstSet,
+          weightCheck: newWeightCheck,
+          repCheck: newRepCheck,
+          volumeCheck: newVolumeCheck,
+          adjustAllSets: newAdjustAllSets,
+          useManualSelect: newUseManualSelect,
+          manualSelections: newManualSelections,
+          successCountMode: newSuccessScope.name,
+        ),
+        exerciseIncrements: newExerciseIncrements,
+        exerciseLastSetIndices: lastSetIndexByExercise,
+        setIncrements: newSetIncrements,
+      ),
+    );
+
+    globalIncrement = newGlobalIncrement;
+    skipFirstSet = newSkipFirstSet;
+    weightCheck = newWeightCheck;
+    repCheck = newRepCheck;
+    volumeCheck = newVolumeCheck;
+    adjustAllSets = newAdjustAllSets;
+    manualSelect = newUseManualSelect;
+    manualSelections = Map<int, bool>.from(newManualSelections);
+    successScope = newSuccessScope;
+    exerciseIncrementOverrides
+      ..clear()
+      ..addAll(newExerciseIncrements);
+    setIncrementOverrides
+      ..clear()
+      ..addAll(newSetIncrements);
     notifyListeners();
   }
 
@@ -611,6 +655,7 @@ class PresetSession extends ChangeNotifier {
 
     required bool newUseManualSelect,
     required String newManualSelectionJson,
+    required ProgressionSuccessScope newSuccessScope,
   }) async {
     // 1) write the NEW settings into the DB
     await _repo.upsertPresetAutoSettings(
@@ -624,6 +669,7 @@ class PresetSession extends ChangeNotifier {
       adjustAllSets: newAdjustAllSets,
       useManualSelect: newUseManualSelect,
       manualSelectionJson: newManualSelectionJson,
+      successCountMode: newSuccessScope.name,
     );
     // 2) then update in-memory to match
     globalIncrement = newGlobalIncrement;
@@ -633,6 +679,7 @@ class PresetSession extends ChangeNotifier {
     volumeCheck = newVolumeCheck;
     adjustAllSets = newAdjustAllSets;
     manualSelect = newUseManualSelect;
+    successScope = newSuccessScope;
 
     // decode the JSON back into our Map<int,bool>
     final decoded = json.decode(newManualSelectionJson);
@@ -652,10 +699,16 @@ class PresetSession extends ChangeNotifier {
     int presetExerciseId,
     double? incrementAmount,
   ) async {
+    if (presetExerciseId <= 0) return;
+    final existing = await _repo.fetchPresetExerciseAuto(presetExerciseId);
     await _repo.upsertPresetExerciseAuto(
       presetExerciseId: presetExerciseId,
       incrementAmount: incrementAmount,
-      lastSetIndex: lastSetIndexByExercise[presetExerciseId]!,
+      lastSetIndex:
+          lastSetIndexByExercise[presetExerciseId] ??
+          (existing?['last_set_index'] as int?) ??
+          1,
+      lastNode: existing?['last_node'] as String?,
     );
     exerciseIncrementOverrides[presetExerciseId] = incrementAmount;
     notifyListeners();

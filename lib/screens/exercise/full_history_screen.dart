@@ -24,6 +24,12 @@ class _FullHistoryScreenState extends State<FullHistoryScreen> {
     _sessionsFuture = _repo.fetchWorkoutSessions();
   }
 
+  void _reload() {
+    setState(() {
+      _sessionsFuture = _repo.fetchWorkoutSessions();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -57,16 +63,14 @@ class _FullHistoryScreenState extends State<FullHistoryScreen> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  onTap:
-                      () => Navigator.of(context)
-                          .push(
-                            MaterialPageRoute(
-                              builder: (_) => SessionDetailScreen(s),
-                            ),
-                          )
-                          .then((_) {
-                            // nothing extra here
-                          }),
+                  onTap: () async {
+                    await Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => SessionDetailScreen(s),
+                      ),
+                    );
+                    if (mounted) _reload();
+                  },
                 ),
               );
             },

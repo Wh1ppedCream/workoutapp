@@ -14,11 +14,13 @@ class ExerciseDao {
     int? exerciseDefId,
     String? type,
     required int orderIndex,
+    int? sourcePresetExerciseId,
   }) {
     final values = <String, Object?>{
       'session_id': sessionId,
       'exercise_def_id': exerciseDefId,
       'order_index': orderIndex,
+      'source_preset_exercise_id': sourcePresetExerciseId,
     };
     if (type != null) {
       values['type'] = type;
@@ -113,6 +115,7 @@ class ExerciseDao {
     required String type,
     required int orderIndex,
     required int sessionId,
+    int? sourcePresetExerciseId,
   }) {
     return db.insert(
       'exercises',
@@ -121,6 +124,7 @@ class ExerciseDao {
         exerciseDefId: exerciseDefId,
         type: type,
         orderIndex: orderIndex,
+        sourcePresetExerciseId: sourcePresetExerciseId,
       ),
     );
   }

@@ -213,19 +213,49 @@ class _SessionScreenState extends State<SessionScreen> {
           child: KeyedSubtree(
             key: _finishWorkoutTutorialKey,
             child: ElevatedButton(
-              onPressed: () async {
-                final sid = await context.read<ActiveSession>().finish();
-                if (!context.mounted || sid == null) return;
-                // show the completion sheet
-                await showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  builder: (_) => SessionCompleteSheet(sessionId: sid),
-                );
-                if (!context.mounted) return;
-                Navigator.of(context).pop(); // back to train page
-              },
-              child: const Text('Finish Workout'),
+              onPressed:
+                  session.isFinishing
+                      ? null
+                      : () async {
+                        try {
+                          final sid = await session.finish();
+                          if (!context.mounted) return;
+                          if (sid == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Complete at least one set before finishing the workout.',
+                                ),
+                              ),
+                            );
+                            return;
+                          }
+                          await showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            builder:
+                                (_) => SessionCompleteSheet(sessionId: sid),
+                          );
+                          if (!context.mounted) return;
+                          Navigator.of(context).pop();
+                        } catch (error) {
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Could not save workout. Your ongoing workout is still available. $error',
+                              ),
+                            ),
+                          );
+                        }
+                      },
+              child:
+                  session.isFinishing
+                      ? const SizedBox.square(
+                        dimension: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                      : const Text('Finish Workout'),
             ),
           ),
         ),
