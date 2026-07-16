@@ -233,6 +233,7 @@ class _SessionScreenState extends State<SessionScreen> {
                           await showModalBottomSheet(
                             context: context,
                             isScrollControlled: true,
+                            enableDrag: false,
                             builder:
                                 (_) => SessionCompleteSheet(sessionId: sid),
                           );

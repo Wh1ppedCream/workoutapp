@@ -150,6 +150,11 @@ class AppRepository {
   Future<List<Map<String, dynamic>>> fetchExercises(int sid) =>
       _dbHelper.fetchExercisesRaw(sid);
 
+  /// Calculates record badges for the completed parent sets in a session.
+  Future<Map<int, WorkoutExerciseRecordBadges>> fetchSessionRecordBadges(
+    int sessionId,
+  ) => _dbHelper.fetchSessionRecordBadges(sessionId);
+
   Future<List<Map<String, dynamic>>> fetchRecentWeightExerciseHistoryRows({
     required int definitionId,
     int limit = 10,

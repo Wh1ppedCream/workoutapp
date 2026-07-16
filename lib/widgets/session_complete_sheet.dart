@@ -1,7 +1,6 @@
 // File: lib/widgets/session_complete_sheet.dart
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../models/models.dart';
@@ -13,8 +12,22 @@ import '../utils/weight_unit_formatter.dart';
 /// A container for session metadata and its exercises.
 class _SessionData {
   final WorkoutSession session;
-  final List<WorkoutExercise> exercises;
-  _SessionData(this.session, this.exercises);
+  final List<_CompletedWeightExercise> exercises;
+
+  const _SessionData(this.session, this.exercises);
+}
+
+/// A completed exercise together with the database row that produced it.
+class _CompletedWeightExercise {
+  final int rowId;
+  final WeightExercise exercise;
+  final WorkoutExerciseRecordBadges badges;
+
+  const _CompletedWeightExercise({
+    required this.rowId,
+    required this.exercise,
+    required this.badges,
+  });
 }
 
 /// A bottom sheet showing session summary & details.
@@ -68,159 +81,234 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
     if (session == null) {
       throw Exception('Session not found');
     }
+    final badgesFuture = _repo.fetchSessionRecordBadges(widget.sessionId);
     // Fetch detailed exercises
     final exRows = await _repo.fetchExercises(widget.sessionId);
     final loadedExercises = await _loadDetailedExercises(exRows);
+    final badgesByExerciseId = await badgesFuture;
     // TODO(cardio/stretch): include cardio and stretch rows here after those
     // cards are fixed, updated, and added back into the user flow.
-    final exs = loadedExercises.whereType<WeightExercise>().toList();
+    final exs =
+        loadedExercises
+            .whereType<_CompletedWeightExercise>()
+            .map(
+              (completed) => _CompletedWeightExercise(
+                rowId: completed.rowId,
+                exercise: completed.exercise,
+                badges:
+                    badgesByExerciseId[completed.rowId] ??
+                    const WorkoutExerciseRecordBadges(isFirstRecord: false),
+              ),
+            )
+            .toList();
     return _SessionData(session, exs);
   }
 
-  Future<List<WorkoutExercise?>> _loadDetailedExercises(
+  Future<List<_CompletedWeightExercise?>> _loadDetailedExercises(
     List<Map<String, dynamic>> exerciseRows,
   ) {
-    return mapWithConcurrency<Map<String, dynamic>, WorkoutExercise?>(
+    return mapWithConcurrency<Map<String, dynamic>, _CompletedWeightExercise?>(
       exerciseRows,
       maxConcurrency: _exerciseHydrationConcurrency,
-      mapper: (row, _) => _repo.fetchDetailedExercise(row['id'] as int),
+      mapper: (row, _) async {
+        final exerciseId = row['id'] as int;
+        final exercise = await _repo.fetchDetailedExercise(exerciseId);
+        if (exercise is! WeightExercise) return null;
+        return _CompletedWeightExercise(
+          rowId: exerciseId,
+          exercise: exercise,
+          badges: const WorkoutExerciseRecordBadges(isFirstRecord: false),
+        );
+      },
     );
   }
 
   Widget _buildContent(BuildContext context, _SessionData data) {
     final session = data.session;
     final exercises = data.exercises;
+    final theme = Theme.of(context);
+    const completionColor = Color(0xFF7CFF8B);
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
 
     // Compute total volume:
     double totalVol = 0;
-    for (var ex in exercises.whereType<WeightExercise>()) {
-      for (var set in ex.sets) {
+    for (final completed in exercises) {
+      for (var set in completed.exercise.sets) {
         totalVol += set.weight * set.reps;
       }
     }
 
-    // Format date & duration
-    final dateStr = DateFormat('MMM dd • HH:mm').format(session.date);
-    final dur = Duration(seconds: session.duration);
-    final hours = dur.inHours.toString().padLeft(2, '0');
-    final mins = dur.inMinutes.remainder(60).toString().padLeft(2, '0');
-    final secs = dur.inSeconds.remainder(60).toString().padLeft(2, '0');
-    final durStr = '$hours:$mins:$secs';
+    final totalSets = exercises.fold<int>(
+      0,
+      (total, completed) => total + completed.exercise.sets.length,
+    );
+    final hasSetRecordBadges = exercises.any(
+      (completed) => completed.badges.setBadges.values.any(
+        (setBadges) => setBadges.isNotEmpty,
+      ),
+    );
+    final durationText = _formatDuration(Duration(seconds: session.duration));
 
     final volumeText = WeightUnitFormatter.formatVolume(totalVol, weightUnit);
 
-    // TODO(session-metrics): Calories and Gym Score are placeholders. Replace
-    // them with measured/derived values, or remove them, when the metric model
-    // and user-facing definitions are designed in a separate pass.
-    const calories = 100;
-    const gymScore = '5/10';
-
     return DraggableScrollableSheet(
       expand: false,
-      initialChildSize: 0.5,
+      initialChildSize: 0.70,
+      minChildSize: 0.60,
       maxChildSize: 0.95,
+      snap: true,
+      shouldCloseOnMinExtent: false,
       builder:
           (ctx, scrollCtrl) => Stack(
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // HEADER
-                  Padding(
-                    padding: const EdgeInsets.all(16),
+              CustomScrollView(
+                controller: scrollCtrl,
+                slivers: [
+                  SliverToBoxAdapter(
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Text(
-                          'SESSION COMPLETE!',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.headlineSmall,
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Text(
-                                dateStr,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8, bottom: 4),
+                          child: Center(
+                            child: Container(
+                              width: 36,
+                              height: 4,
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.onSurfaceVariant
+                                    .withValues(alpha: 0.5),
+                                borderRadius: BorderRadius.circular(99),
                               ),
                             ),
-                            const SizedBox(width: 12),
-                            Flexible(
-                              child: Text(
-                                'Duration: $durStr',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                textAlign: TextAlign.right,
+                          ),
+                        ),
+                        // HEADER
+                        Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Center(
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Text(
+                                        '🎉',
+                                        style: TextStyle(fontSize: 25),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'WORKOUT COMPLETE',
+                                        textAlign: TextAlign.center,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: theme.textTheme.headlineSmall
+                                            ?.copyWith(
+                                              color: completionColor,
+                                              fontWeight: FontWeight.w800,
+                                            ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      const Text(
+                                        '🎉',
+                                        style: TextStyle(fontSize: 25),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: 16),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _buildSummaryMetric(
+                                      context,
+                                      icon: Icons.fitness_center_outlined,
+                                      label: 'Exercises',
+                                      value: '${exercises.length}',
+                                      compact: true,
+                                      accentColor: const Color(0xFF64B5F6),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: _buildSummaryMetric(
+                                      context,
+                                      icon: Icons.format_list_numbered,
+                                      label: 'Sets',
+                                      value: '$totalSets',
+                                      compact: true,
+                                      accentColor: const Color(0xFF81C784),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: _buildSummaryMetric(
+                                      context,
+                                      icon: Icons.timer_outlined,
+                                      label: 'Duration',
+                                      value: durationText,
+                                      compact: true,
+                                      accentColor: const Color(0xFFFFD54F),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: _buildSummaryMetric(
+                                      context,
+                                      icon: Icons.monitor_weight_outlined,
+                                      label: 'Volume',
+                                      value: volumeText,
+                                      compact: true,
+                                      accentColor: const Color(0xFFF48FB1),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Volume: $volumeText - Calories: $calories kcal',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Gym Score: $gymScore',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                        const Divider(),
                       ],
                     ),
                   ),
-                  const Divider(),
-                  // BODY
-                  Expanded(
-                    child: ListView.builder(
-                      controller: scrollCtrl,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      itemCount: exercises.length,
-                      itemBuilder: (ctx, i) {
-                        final ex = exercises[i];
-                        if (ex is WeightExercise) {
-                          return _buildWeightSection(ex, weightUnit);
-                        } else if (ex is CardioExercise) {
-                          return ListTile(
-                            leading: const Icon(Icons.fitness_center),
-                            title: Text(
-                              '${ex.cardioName} • ${ex.elapsedSeconds ~/ 60} min',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          );
-                        } else {
-                          return ListTile(
-                            leading: const Icon(Icons.self_improvement),
-                            title: Text(
-                              ex.name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          );
-                        }
-                      },
+                  if (hasSetRecordBadges)
+                    SliverToBoxAdapter(child: _buildBadgeLegend()),
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 88),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate((ctx, index) {
+                        final completed = exercises[index];
+                        return _buildWeightSection(
+                          completed.exercise,
+                          weightUnit,
+                          badges: completed.badges,
+                        );
+                      }, childCount: exercises.length),
                     ),
                   ),
                 ],
               ),
               // DONE BUTTON
               Positioned(
-                bottom: 16,
+                left: 16,
                 right: 16,
-                child: FloatingActionButton(
-                  backgroundColor: Colors.green,
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Icon(Icons.check),
+                bottom: 0,
+                child: SafeArea(
+                  top: false,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: FilledButton.icon(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.check_rounded),
+                      label: const Text('Done'),
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size.fromHeight(48),
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -228,52 +316,316 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
     );
   }
 
-  Widget _buildWeightSection(WeightExercise ex, WeightUnit weightUnit) {
+  Widget _buildBadgeLegend() {
+    final theme = Theme.of(context);
+    final textStyle = theme.textTheme.labelMedium?.copyWith(
+      fontWeight: FontWeight.w700,
+    );
+
+    return Padding(
+      // Match the exercise-card gutters so the legend reads as part of the list.
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          _buildBadgeLegendItem(
+            color: const Color(0xFF81C784),
+            label: 'Monthly',
+            style: textStyle?.copyWith(color: const Color(0xFF81C784)),
+          ),
+          const SizedBox(width: 18),
+          _buildBadgeLegendItem(
+            color: const Color(0xFFFFC857),
+            label: 'All Time',
+            style: textStyle?.copyWith(color: const Color(0xFFFFC857)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBadgeLegendItem({
+    required Color color,
+    required String label,
+    required TextStyle? style,
+  }) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 6),
+        Text(label, style: style),
+      ],
+    );
+  }
+
+  Widget _buildSummaryMetric(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required String value,
+    required bool compact,
+    required Color accentColor,
+  }) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    return Container(
+      constraints: BoxConstraints(minHeight: compact ? 70 : 76),
+      padding: EdgeInsets.all(compact ? 7 : 10),
+      decoration: BoxDecoration(
+        color: accentColor.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: accentColor.withValues(alpha: 0.30)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: compact ? 14 : 16, color: accentColor),
+          SizedBox(height: compact ? 4 : 6),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: (compact
+                    ? theme.textTheme.labelLarge
+                    : theme.textTheme.titleSmall)
+                ?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 1),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.labelSmall?.copyWith(
+              fontSize: compact ? 9 : null,
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWeightSection(
+    WeightExercise ex,
+    WeightUnit weightUnit, {
+    required WorkoutExerciseRecordBadges badges,
+  }) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final accentColor = _exerciseAccentColor(ex.name, colorScheme);
     final rows = <Widget>[
       Padding(
-        padding: const EdgeInsets.only(top: 8, bottom: 4),
-        child: Text(
-          '■ ${ex.name}',
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontWeight: FontWeight.bold),
+        padding: const EdgeInsets.only(bottom: 3),
+        child: Row(
+          children: [
+            Icon(Icons.square, size: 11, color: accentColor),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                ex.name,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  color: accentColor,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            if (badges.isFirstRecord) ...[
+              const SizedBox(width: 8),
+              _buildFirstRecordBadge(),
+            ],
+          ],
         ),
       ),
     ];
     for (var i = 0; i < ex.sets.length; i++) {
       final s = ex.sets[i];
+      final setBadges = badges.forSet(i);
       final erm = s.weight * (1 + 0.0333 * s.reps);
       final setText =
-          '${i + 1}. ${WeightUnitFormatter.formatWeight(s.weight, weightUnit)} x ${s.reps}';
+          '${WeightUnitFormatter.formatWeight(s.weight, weightUnit)} x ${s.reps}';
       final ermText =
           'ERM=${WeightUnitFormatter.formatWeight(erm, weightUnit)}';
       rows.add(
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                setText,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Flexible(
-              child: Text(
-                ermText,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.right,
-                style: const TextStyle(
-                  fontStyle: FontStyle.italic,
-                  fontSize: 12,
+        Padding(
+          padding: EdgeInsets.only(top: i == 0 ? 6 : 7),
+          child: Row(
+            children: [
+              Container(
+                width: 22,
+                height: 22,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(alpha: 0.20),
+                  shape: BoxShape.circle,
+                ),
+                child: Text(
+                  '${i + 1}',
+                  maxLines: 1,
+                  overflow: TextOverflow.fade,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: accentColor,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
-            ),
-          ],
+              const SizedBox(width: 8),
+              if (setBadges.isEmpty)
+                Expanded(
+                  child: Text(
+                    setText,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                )
+              else ...[
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    setText,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Expanded(
+                  flex: 3,
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          for (
+                            var badgeIndex = 0;
+                            badgeIndex < setBadges.length;
+                            badgeIndex++
+                          ) ...[
+                            if (badgeIndex > 0) const SizedBox(width: 4),
+                            _buildSetRecordBadge(setBadges[badgeIndex]),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(width: 8),
+              SizedBox(
+                width: 74,
+                child: Text(
+                  ermText,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.right,
+                  style: const TextStyle(
+                    fontStyle: FontStyle.italic,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: rows);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.fromLTRB(12, 5, 12, 7),
+      decoration: BoxDecoration(
+        color: accentColor.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: accentColor.withValues(alpha: 0.52)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: rows,
+      ),
+    );
+  }
+
+  Color _exerciseAccentColor(String exerciseName, ColorScheme colorScheme) {
+    final palette = [
+      colorScheme.primary,
+      colorScheme.tertiary,
+      colorScheme.secondary,
+      colorScheme.error,
+    ];
+    final hash = exerciseName.codeUnits.fold<int>(
+      0,
+      (value, codeUnit) => value + codeUnit,
+    );
+    return palette[hash % palette.length];
+  }
+
+  Widget _buildFirstRecordBadge() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(7),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.72)),
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'First Record',
+            maxLines: 1,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 9,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSetRecordBadge(WorkoutRecordBadge badge) {
+    final color =
+        badge.tier == WorkoutRecordBadgeTier.allTime
+            ? const Color(0xFFFFC857)
+            : const Color(0xFF81C784);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(7),
+        border: Border.all(color: color.withValues(alpha: 0.62)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            badge.label,
+            style: TextStyle(
+              color: color,
+              fontSize: 9,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatDuration(Duration duration) {
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes.remainder(60);
+    if (hours == 0) return '${minutes}m';
+    if (minutes == 0) return '${hours}h';
+    return '${hours}h ${minutes}m';
   }
 }

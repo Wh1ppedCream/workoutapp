@@ -37,6 +37,7 @@ import 'preset_transaction_dao.dart';
 import 'profile_transaction_dao.dart';
 import 'progression_rule_propagation_dao.dart';
 import 'workout_transaction_dao.dart';
+import 'session_record_badges_dao.dart';
 
 import 'package:flutter/foundation.dart' show debugPrint;
 
@@ -1937,6 +1938,13 @@ class DatabaseHelper {
   Future<List<Map<String, dynamic>>> fetchExercisesRaw(int sessionId) async {
     final db = await database;
     return ExerciseDao.getExercisesForSession(db, sessionId);
+  }
+
+  /// Calculates record badges for the parent sets saved in one workout.
+  Future<Map<int, WorkoutExerciseRecordBadges>>
+  fetchSessionRecordBadges(int sessionId) async {
+    final db = await database;
+    return SessionRecordBadgesDao.forSession(db, sessionId);
   }
 
   Future<List<Map<String, dynamic>>> fetchRecentWeightExerciseHistoryRows({
