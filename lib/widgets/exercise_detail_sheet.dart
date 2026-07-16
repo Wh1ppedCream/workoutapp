@@ -12,6 +12,7 @@ import 'package:provider/provider.dart';
 import '../models/models.dart';
 import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
+import '../screens/exercise/session_detail_screen.dart';
 import '../services/tutorial_state_store.dart';
 import '../theme/theme_extensions.dart';
 import '../utils/tutorial_launcher.dart';
@@ -23,23 +24,31 @@ import 'guided_tutorial_overlay.dart';
 class HistoryRecord {
   final DateTime date;
   final int sessionId;
+  final int exerciseId;
+  final String sessionDateValue;
   final List<ExerciseSet> sets;
 
   HistoryRecord({
     required this.date,
     required this.sessionId,
+    required this.exerciseId,
+    required this.sessionDateValue,
     required this.sets,
   });
+}
+
+class _ExerciseHistoryPage {
+  final List<HistoryRecord> records;
+  final bool hasMore;
+
+  const _ExerciseHistoryPage({required this.records, required this.hasMore});
 }
 
 class _LoadedExerciseMedia {
   final ExerciseMediaItem media;
   final File previewFile;
 
-  const _LoadedExerciseMedia({
-    required this.media,
-    required this.previewFile,
-  });
+  const _LoadedExerciseMedia({required this.media, required this.previewFile});
 }
 
 class _ExerciseMediaPreviewCard extends StatelessWidget {
@@ -123,16 +132,30 @@ class ExerciseDetailSheet extends StatefulWidget {
 }
 
 class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
+  static const _historyPageSize = 10;
+  static const _sheetMinSize = 0.25;
+  static const _sheetInitialSize = 0.7;
+  static const _sheetMaxSize = 0.95;
+
   late final AppRepository _repo;
-  late Future<List<HistoryRecord>> _historyFuture;
+  final DraggableScrollableController _sheetController =
+      DraggableScrollableController();
+  late Future<_ExerciseHistoryPage> _historyFuture;
   late Future<_LoadedExerciseMedia?> _primaryMediaFuture;
   final Map<String, Future<List<RepMaxRow>>> _repMaxFutures = {};
   final Map<String, Future<double?>> _volumeMaxFutures = {};
   final Map<String, Future<File?>> _mediaPreviewFutures = {};
+  final List<HistoryRecord> _olderHistory = [];
   final _headerTutorialKey = GlobalKey(debugLabel: 'exercise_detail_header');
   final _tabsTutorialKey = GlobalKey(debugLabel: 'exercise_detail_tabs');
   final _contentTutorialKey = GlobalKey(debugLabel: 'exercise_detail_content');
   bool _tutorialQueued = false;
+  bool _equipmentExpanded = false;
+  bool _targetAnatomyExpanded = false;
+  bool _formGuideExpanded = true;
+  bool _isLoadingMoreHistory = false;
+  bool _hasMoreHistory = true;
+  int _historyRequestGeneration = 0;
 
   // Timeframe toggles
   final List<String> _timeframes = ['week', 'month', 'all'];
@@ -144,11 +167,17 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     _repo = AppRepository();
     _tfSelected = [false, false, true]; // default to "all"
     unawaited(BodyHeatmap.preload());
-    _historyFuture = _loadHistory();
+    _historyFuture = _loadHistoryPage();
     _primaryMediaFuture = _loadPrimaryMedia();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _queueTutorial();
     });
+  }
+
+  @override
+  void dispose() {
+    _sheetController.dispose();
+    super.dispose();
   }
 
   @override
@@ -158,9 +187,16 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
       _repMaxFutures.clear();
       _volumeMaxFutures.clear();
       _mediaPreviewFutures.clear();
-      _historyFuture = _loadHistory();
+      _historyRequestGeneration++;
+      _olderHistory.clear();
+      _isLoadingMoreHistory = false;
+      _hasMoreHistory = true;
+      _historyFuture = _loadHistoryPage();
       _primaryMediaFuture = _loadPrimaryMedia();
       _tutorialQueued = false;
+      _equipmentExpanded = false;
+      _targetAnatomyExpanded = false;
+      _formGuideExpanded = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _queueTutorial();
       });
@@ -221,32 +257,100 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     );
   }
 
-  /// Load up to 10 recent weight-exercise records for this definition
-  Future<List<HistoryRecord>> _loadHistory() async {
+  /// Loads one cursor-based page of weight exercise history for this definition.
+  Future<_ExerciseHistoryPage> _loadHistoryPage({HistoryRecord? before}) async {
     final historyRows = await _repo.fetchRecentWeightExerciseHistoryRows(
       definitionId: widget.defId,
-      limit: 10,
+      beforeSessionDate: before?.sessionDateValue,
+      beforeExerciseId: before?.exerciseId,
+      // Fetch one additional row to know whether the next page exists.
+      limit: _historyPageSize + 1,
     );
+    final hasMore = historyRows.length > _historyPageSize;
+    final pageRows = historyRows.take(_historyPageSize).toList();
     final exercises = await Future.wait(
-      historyRows.map(
+      pageRows.map(
         (row) => _repo.fetchDetailedExercise(row['exercise_id'] as int),
       ),
     );
 
     final records = <HistoryRecord>[];
-    for (var i = 0; i < historyRows.length; i++) {
+    for (var i = 0; i < pageRows.length; i++) {
       final exercise = exercises[i];
       if (exercise is! WeightExercise) continue;
-      final row = historyRows[i];
+      final row = pageRows[i];
+      final sessionDateValue = row['session_date'] as String;
       records.add(
         HistoryRecord(
-          date: DateTime.parse(row['session_date'] as String),
+          date: DateTime.parse(sessionDateValue),
           sessionId: row['session_id'] as int,
+          exerciseId: row['exercise_id'] as int,
+          sessionDateValue: sessionDateValue,
           sets: exercise.sets,
         ),
       );
     }
-    return records;
+    return _ExerciseHistoryPage(records: records, hasMore: hasMore);
+  }
+
+  Future<void> _loadMoreHistory(List<HistoryRecord> loadedHistory) async {
+    if (_isLoadingMoreHistory || !_hasMoreHistory || loadedHistory.isEmpty) {
+      return;
+    }
+
+    setState(() => _isLoadingMoreHistory = true);
+    final requestGeneration = _historyRequestGeneration;
+    try {
+      final nextPage = await _loadHistoryPage(before: loadedHistory.last);
+      if (!mounted || requestGeneration != _historyRequestGeneration) return;
+
+      setState(() {
+        _olderHistory.addAll(nextPage.records);
+        _hasMoreHistory = nextPage.hasMore && nextPage.records.isNotEmpty;
+      });
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingMoreHistory = false);
+      }
+    }
+  }
+
+  Future<void> _openHistorySession(BuildContext context, int sessionId) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+    WorkoutSession? session;
+
+    try {
+      session = await _repo.fetchSessionById(sessionId);
+    } catch (_) {
+      if (!mounted) return;
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Workout session could not be opened.')),
+      );
+      return;
+    }
+
+    if (!mounted) return;
+    final resolvedSession = session;
+    if (resolvedSession == null) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Workout session could not be found.')),
+      );
+      return;
+    }
+
+    await navigator.push(
+      MaterialPageRoute(builder: (_) => SessionDetailScreen(resolvedSession)),
+    );
+    if (!mounted) return;
+
+    setState(() {
+      _historyRequestGeneration++;
+      _olderHistory.clear();
+      _isLoadingMoreHistory = false;
+      _hasMoreHistory = true;
+      _historyFuture = _loadHistoryPage();
+    });
   }
 
   Future<_LoadedExerciseMedia?> _loadPrimaryMedia() async {
@@ -309,6 +413,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
               if (loadedMedia == null) {
                 return Center(
                   child: _buildHeatmapButton(
+                    definition: def,
                     frequencyMap: heatmapFrequencyMap,
                     lowColor: colors.historySummaryHeatmapLow!,
                     highColor: colors.historySummaryHeatmapHigh!,
@@ -325,6 +430,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                     heatmapFrequencyMap.isEmpty
                         ? null
                         : _buildHeatmapButton(
+                          definition: def,
                           frequencyMap: heatmapFrequencyMap,
                           lowColor: colors.historySummaryHeatmapLow!,
                           highColor: colors.historySummaryHeatmapHigh!,
@@ -333,62 +439,330 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                           borderRadius: BorderRadius.circular(12),
                           elevated: true,
                         ),
-                onImageTap: () => _showImageViewer(loadedMedia.previewFile),
+                onImageTap:
+                    () => _showImageViewer(
+                      loadedMedia.previewFile,
+                      definition: def,
+                    ),
               );
             },
           ),
+          const SizedBox(height: 14),
+          _buildFormGuideCard(def),
           const SizedBox(height: 12),
-          Text(
-            'EQUIPMENT: ${def.equipmentList.map((e) => e.name).join(', ')}',
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
+          _buildEquipmentCard(def),
           const SizedBox(height: 12),
-          Text(
-            'FOCUS AREA: ${def.bodyParts.map((b) => b.name).join(', ')}',
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'FOCUS MUSCLES: ${def.muscles.map((m) => m.muscle.name).join(', ')}',
-            maxLines: 3,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 16),
-          // --- Notes from the database ---
-          const Text('SET-UP:', style: TextStyle(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 4),
-          Text(
-            def.setupNotes.isNotEmpty == true
-                ? def.setupNotes
-                : 'No setup instructions provided.',
-          ),
-          const SizedBox(height: 12),
-          const Text(
-            'EXECUTION:',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            def.executionNotes.isNotEmpty == true
-                ? def.executionNotes
-                : 'No execution notes provided.',
-          ),
-          const SizedBox(height: 12),
-          const Text('TIPS:', style: TextStyle(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 4),
-          Text(
-            def.tipsNotes.isNotEmpty == true
-                ? def.tipsNotes
-                : 'No additional tips.',
-          ),
+          _buildTargetAnatomyCard(def),
         ],
       ),
     );
   }
 
+  Widget _buildEquipmentCard(ExerciseDefinition definition) {
+    final theme = Theme.of(context);
+    final equipment =
+        definition.equipmentList.map((item) => item.name).toList();
+
+    return _buildDetailCard(
+      icon: Icons.fitness_center_outlined,
+      title: 'Equipment',
+      accent: theme.colorScheme.primary,
+      isExpanded: _equipmentExpanded,
+      onExpandedChanged:
+          (expanded) => setState(() => _equipmentExpanded = expanded),
+      child:
+          equipment.isEmpty
+              ? Text(
+                'No equipment listed for this exercise.',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              )
+              : Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children:
+                    equipment
+                        .map(
+                          (item) => _buildDetailTag(
+                            item,
+                            color: theme.colorScheme.primary,
+                          ),
+                        )
+                        .toList(),
+              ),
+    );
+  }
+
+  Widget _buildTargetAnatomyCard(
+    ExerciseDefinition definition, {
+    bool expandable = true,
+  }) {
+    final theme = Theme.of(context);
+    final bodyParts = definition.bodyParts.map((item) => item.name).toList();
+    final muscles = definition.muscles.map((item) => item.muscle.name).toList();
+
+    return _buildDetailCard(
+      icon: Icons.accessibility_new,
+      title: 'Target anatomy',
+      accent: theme.colorScheme.tertiary,
+      isExpanded: expandable ? _targetAnatomyExpanded : true,
+      onExpandedChanged:
+          expandable
+              ? (expanded) => setState(() => _targetAnatomyExpanded = expanded)
+              : null,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildDetailLabel('Body parts'),
+          const SizedBox(height: 7),
+          if (bodyParts.isEmpty)
+            Text(
+              'No body parts listed.',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            )
+          else
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children:
+                  bodyParts
+                      .map(
+                        (item) => _buildDetailTag(
+                          item,
+                          color: theme.colorScheme.tertiary,
+                        ),
+                      )
+                      .toList(),
+            ),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12),
+            child: Divider(height: 1),
+          ),
+          _buildDetailLabel('Muscles'),
+          const SizedBox(height: 7),
+          if (muscles.isEmpty)
+            Text(
+              'No muscles listed.',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            )
+          else
+            Wrap(
+              spacing: 7,
+              runSpacing: 7,
+              children:
+                  muscles
+                      .map(
+                        (item) => _buildDetailTag(
+                          item,
+                          color: theme.colorScheme.secondary,
+                        ),
+                      )
+                      .toList(),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFormGuideCard(
+    ExerciseDefinition definition, {
+    bool expandable = true,
+  }) {
+    final theme = Theme.of(context);
+    final guideEntries = [
+      (
+        icon: Icons.self_improvement_outlined,
+        title: 'Set-up',
+        body:
+            definition.setupNotes.isNotEmpty
+                ? definition.setupNotes
+                : 'No setup instructions provided.',
+      ),
+      (
+        icon: Icons.directions_run_outlined,
+        title: 'Execution',
+        body:
+            definition.executionNotes.isNotEmpty
+                ? definition.executionNotes
+                : 'No execution notes provided.',
+      ),
+      (
+        icon: Icons.lightbulb_outline,
+        title: 'Tips',
+        body:
+            definition.tipsNotes.isNotEmpty
+                ? definition.tipsNotes
+                : 'No additional tips.',
+      ),
+    ];
+
+    return _buildDetailCard(
+      icon: Icons.menu_book_outlined,
+      title: 'Form guide',
+      accent: theme.colorScheme.secondary,
+      isExpanded: expandable ? _formGuideExpanded : true,
+      onExpandedChanged:
+          expandable
+              ? (expanded) => setState(() => _formGuideExpanded = expanded)
+              : null,
+      child: Column(
+        children: [
+          for (var index = 0; index < guideEntries.length; index++) ...[
+            if (index > 0) const Divider(height: 24),
+            _buildGuideEntry(
+              icon: guideEntries[index].icon,
+              title: guideEntries[index].title,
+              body: guideEntries[index].body,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailCard({
+    required IconData icon,
+    required String title,
+    required Color accent,
+    required bool isExpanded,
+    required ValueChanged<bool>? onExpandedChanged,
+    required Widget child,
+  }) {
+    final theme = Theme.of(context);
+    final isExpandable = onExpandedChanged != null;
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOutCubic,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerHighest.withValues(
+            alpha: 0.52,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: accent.withValues(alpha: 0.32)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Semantics(
+              button: isExpandable,
+              expanded: isExpanded,
+              label: '$title section',
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap:
+                    isExpandable ? () => onExpandedChanged(!isExpanded) : null,
+                child: Row(
+                  children: [
+                    Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(
+                        color: accent.withValues(alpha: 0.16),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(icon, color: accent, size: 19),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                    if (isExpandable)
+                      Icon(
+                        isExpanded
+                            ? Icons.keyboard_arrow_up_rounded
+                            : Icons.keyboard_arrow_down_rounded,
+                        color: accent,
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            if (isExpanded) ...[const SizedBox(height: 13), child],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailLabel(String label) {
+    return Text(
+      label,
+      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+        fontWeight: FontWeight.w800,
+        letterSpacing: 0.2,
+      ),
+    );
+  }
+
+  Widget _buildDetailTag(String label, {required Color color}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.13),
+        borderRadius: BorderRadius.circular(9),
+        border: Border.all(color: color.withValues(alpha: 0.28)),
+      ),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+          color: color,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGuideEntry({
+    required IconData icon,
+    required String title,
+    required String body,
+  }) {
+    final theme = Theme.of(context);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 19, color: theme.colorScheme.secondary),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                body,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  height: 1.35,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildHeatmapButton({
+    required ExerciseDefinition definition,
     required Map<String, double> frequencyMap,
     required Color lowColor,
     required Color highColor,
@@ -411,6 +785,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
         onTap:
             hasHeatmap
                 ? () => _showHeatmapViewer(
+                  definition: definition,
                   frequencyMap: frequencyMap,
                   lowColor: lowColor,
                   highColor: highColor,
@@ -456,7 +831,10 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     );
   }
 
-  Future<void> _showImageViewer(File imageFile) {
+  Future<void> _showImageViewer(
+    File imageFile, {
+    required ExerciseDefinition definition,
+  }) {
     return showDialog<void>(
       context: context,
       barrierColor: Colors.black87,
@@ -467,12 +845,38 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
               child: Stack(
                 children: [
                   Positioned.fill(
-                    child: InteractiveViewer(
-                      minScale: 0.8,
-                      maxScale: 4,
-                      boundaryMargin: const EdgeInsets.all(48),
-                      child: Center(
-                        child: Image.file(imageFile, fit: BoxFit.contain),
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(16, 64, 16, 28),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(20),
+                            child: AspectRatio(
+                              aspectRatio: 1,
+                              child: InteractiveViewer(
+                                minScale: 0.8,
+                                maxScale: 4,
+                                boundaryMargin: const EdgeInsets.all(48),
+                                child: SizedBox.expand(
+                                  child: Image.file(
+                                    imageFile,
+                                    fit: BoxFit.contain,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          const Center(
+                            child: Text(
+                              'Pinch or drag to zoom',
+                              style: TextStyle(color: Colors.white70),
+                            ),
+                          ),
+                          const SizedBox(height: 18),
+                          _buildFormGuideCard(definition, expandable: false),
+                        ],
                       ),
                     ),
                   ),
@@ -485,19 +889,6 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                       icon: const Icon(Icons.close),
                     ),
                   ),
-                  const Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 20,
-                    child: IgnorePointer(
-                      child: Center(
-                        child: Text(
-                          'Pinch or drag to zoom',
-                          style: TextStyle(color: Colors.white70),
-                        ),
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -506,6 +897,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
   }
 
   Future<void> _showHeatmapViewer({
+    required ExerciseDefinition definition,
     required Map<String, double> frequencyMap,
     required Color lowColor,
     required Color highColor,
@@ -520,34 +912,58 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
               child: Stack(
                 children: [
                   Positioned.fill(
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        final size =
-                            (math.min(
-                                  constraints.maxWidth,
-                                  constraints.maxHeight,
-                                ) *
-                                0.78)
-                                .toDouble();
-                        return InteractiveViewer(
-                          minScale: 0.8,
-                          maxScale: 3,
-                          boundaryMargin: const EdgeInsets.all(48),
-                          child: Center(
-                            child: SizedBox(
-                              width: size,
-                              height: size,
-                              child: BodyHeatmap(
-                                frequencyMap: frequencyMap,
-                                lowColor: lowColor,
-                                highColor: highColor,
-                                width: size,
-                                height: size,
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(16, 64, 16, 28),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              color:
+                                  Theme.of(
+                                    dialogContext,
+                                  ).colorScheme.surfaceContainerHighest,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color:
+                                    Theme.of(
+                                      dialogContext,
+                                    ).colorScheme.outlineVariant,
+                              ),
+                            ),
+                            clipBehavior: Clip.antiAlias,
+                            child: AspectRatio(
+                              aspectRatio: 1,
+                              child: LayoutBuilder(
+                                builder: (context, constraints) {
+                                  final size = constraints.maxWidth;
+                                  return InteractiveViewer(
+                                    minScale: 0.8,
+                                    maxScale: 3,
+                                    boundaryMargin: const EdgeInsets.all(48),
+                                    child: SizedBox.expand(
+                                      child: BodyHeatmap(
+                                        frequencyMap: frequencyMap,
+                                        lowColor: lowColor,
+                                        highColor: highColor,
+                                        width: size,
+                                        height: size,
+                                      ),
+                                    ),
+                                  );
+                                },
                               ),
                             ),
                           ),
-                        );
-                      },
+                          const SizedBox(height: 10),
+                          const Center(child: Text('Pinch or drag to zoom')),
+                          const SizedBox(height: 18),
+                          _buildTargetAnatomyCard(
+                            definition,
+                            expandable: false,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   Positioned(
@@ -559,16 +975,6 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                       icon: const Icon(Icons.close),
                     ),
                   ),
-                  const Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 20,
-                    child: IgnorePointer(
-                      child: Center(
-                        child: Text('Pinch or drag to zoom'),
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -577,118 +983,226 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
   }
 
   Widget _buildMetricsTab(ScrollController scrollCtrl) {
-    final idx = _tfSelected.indexWhere((sel) => sel);
-    final timeframe = _timeframes[idx];
+    final selectedIndex = _tfSelected.indexWhere((selected) => selected);
+    final safeSelectedIndex =
+        selectedIndex < 0 ? _timeframes.length - 1 : selectedIndex;
+    final timeframe = _timeframes[safeSelectedIndex];
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
 
-    return Column(
-      children: [
-        const SizedBox(height: 12),
-        ToggleButtons(
-          isSelected: _tfSelected,
-          onPressed:
-              (i) => setState(() {
-                _tfSelected = List.generate(_timeframes.length, (j) => j == i);
-              }),
-          children: const [Text('Week'), Text('Month'), Text('All‑time')],
-        ),
-        const SizedBox(height: 12),
-        Expanded(
-          child: FutureBuilder<List<RepMaxRow>>(
-            future: _repMaxFuture(timeframe),
-            builder: (ctx, snap) {
-              if (snap.connectionState != ConnectionState.done) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (snap.hasError) {
-                return const Center(child: Text('Unable to load metrics.'));
-              }
-              final rows = snap.data ?? <RepMaxRow>[];
-              if (rows.isEmpty) {
-                return const Center(child: Text('No metrics available.'));
-              }
+    return FutureBuilder<List<RepMaxRow>>(
+      future: _repMaxFuture(timeframe),
+      builder: (context, snapshot) {
+        return ListView(
+          controller: scrollCtrl,
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 28),
+          children: [
+            _buildMetricsTimeframePicker(safeSelectedIndex),
+            const SizedBox(height: 18),
+            if (snapshot.connectionState != ConnectionState.done)
+              const _MetricsStateCard(
+                icon: Icons.insights_outlined,
+                title: 'Loading best lifts',
+                message: 'Your completed set records are being calculated.',
+                isLoading: true,
+              )
+            else if (snapshot.hasError)
+              const _MetricsStateCard(
+                icon: Icons.error_outline,
+                title: 'Metrics unavailable',
+                message:
+                    'Try reopening this exercise to load its completed set records.',
+              )
+            else if ((snapshot.data ?? const <RepMaxRow>[]).isEmpty)
+              const _MetricsStateCard(
+                icon: Icons.bar_chart_outlined,
+                title: 'No best lifts yet',
+                message:
+                    'Complete a weighted set for this exercise to begin tracking rep bests.',
+              )
+            else
+              _buildMetricResults(
+                rows: snapshot.data!,
+                timeframe: timeframe,
+                weightUnit: weightUnit,
+              ),
+          ],
+        );
+      },
+    );
+  }
 
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  children: [
-                    FutureBuilder<double?>(
-                      future: _volumeMaxFuture(timeframe),
-                      builder: (ctx2, snap2) {
-                        final vm = snap2.data;
-                        if (snap2.hasError) {
-                          return const Text('Volume Max: --');
-                        }
-                        return Text(
-                          'Volume Max: ${vm == null ? '--' : WeightUnitFormatter.formatVolume(vm, weightUnit)}',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        );
-                      },
+  Widget _buildMetricsTimeframePicker(int selectedIndex) {
+    final theme = Theme.of(context);
+    const labels = <String>['Week', 'Month', 'All time'];
+
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(
+          alpha: 0.58,
+        ),
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.6),
+        ),
+      ),
+      child: Row(
+        children: List<Widget>.generate(labels.length, (index) {
+          final selected = selectedIndex == index;
+          return Expanded(
+            child: Semantics(
+              button: true,
+              selected: selected,
+              label: '${labels[index]} metrics',
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(11),
+                  onTap:
+                      selected
+                          ? null
+                          : () => setState(() {
+                            _tfSelected = List<bool>.generate(
+                              labels.length,
+                              (itemIndex) => itemIndex == index,
+                            );
+                          }),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 160),
+                    curve: Curves.easeOutCubic,
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    decoration: BoxDecoration(
+                      color:
+                          selected
+                              ? theme.colorScheme.primary
+                              : Colors.transparent,
+                      borderRadius: BorderRadius.circular(11),
                     ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: const [
-                        Expanded(child: Text('Reps', maxLines: 1)),
-                        Expanded(child: Text('1RM', maxLines: 1)),
-                        Expanded(child: Text('Volume', maxLines: 1)),
-                      ],
-                    ),
-                    const Divider(),
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: rows.length,
-                        itemBuilder: (_, i) {
-                          final r = rows[i];
-                          return Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  r.repCount.toString(),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              Expanded(
-                                child: Text(
-                                  r.isErm
-                                      ? '${WeightUnitFormatter.formatWeight(r.oneErm, weightUnit)} (ERM)'
-                                      : WeightUnitFormatter.formatWeight(
-                                        r.oneErm,
-                                        weightUnit,
-                                      ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              Expanded(
-                                child: Text(
-                                  WeightUnitFormatter.formatVolume(
-                                    r.rmValue * r.repCount,
-                                    weightUnit,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          );
-                        },
+                    child: Text(
+                      labels[index],
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color:
+                            selected
+                                ? theme.colorScheme.onPrimary
+                                : theme.colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
-                  ],
+                  ),
                 ),
-              );
-            },
-          ),
-        ),
-      ],
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _buildMetricResults({
+    required List<RepMaxRow> rows,
+    required String timeframe,
+    required WeightUnit weightUnit,
+  }) {
+    final theme = Theme.of(context);
+    final highestEstimatedOneRm = rows.fold<double>(
+      0,
+      (currentHighest, row) => math.max(currentHighest, row.oneErm),
+    );
+
+    return FutureBuilder<double?>(
+      future: _volumeMaxFuture(timeframe),
+      builder: (context, volumeSnapshot) {
+        final volumeValue = volumeSnapshot.data;
+        final volumeLabel =
+            volumeSnapshot.connectionState != ConnectionState.done ||
+                    volumeSnapshot.hasError ||
+                    volumeValue == null
+                ? '--'
+                : WeightUnitFormatter.formatVolume(volumeValue, weightUnit);
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: _MetricSummaryCard(
+                    icon: Icons.trending_up_rounded,
+                    label: 'Top est. 1RM',
+                    value: WeightUnitFormatter.formatWeight(
+                      highestEstimatedOneRm,
+                      weightUnit,
+                    ),
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _MetricSummaryCard(
+                    icon: Icons.workspace_premium_outlined,
+                    label: 'Volume best',
+                    value: volumeLabel,
+                    color: theme.colorScheme.tertiary,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Rep bests',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Best completed weight for each rep count',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(9),
+                  ),
+                  child: Text(
+                    '${rows.length} ranges',
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            _RepBestMetricsList(rows: rows, weightUnit: weightUnit),
+          ],
+        );
+      },
     );
   }
 
   Widget _buildRecordsTab(ScrollController scrollCtrl) {
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
-    return FutureBuilder<List<HistoryRecord>>(
+    return FutureBuilder<_ExerciseHistoryPage>(
       future: _historyFuture,
       builder: (ctx, snap) {
         if (snap.connectionState != ConnectionState.done) {
@@ -697,89 +1211,151 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
         if (snap.hasError) {
           return const Center(child: Text('Unable to load exercise history.'));
         }
-        final history = snap.data ?? const <HistoryRecord>[];
+        final firstPage = snap.data;
+        final history = <HistoryRecord>[
+          ...?firstPage?.records,
+          ..._olderHistory,
+        ];
         if (history.isEmpty) {
           return const Center(child: Text('No history for this exercise.'));
         }
+        final hasMoreHistory =
+            _olderHistory.isEmpty
+                ? firstPage?.hasMore ?? false
+                : _hasMoreHistory;
 
         final records = _buildRecordTrendPoints(history);
 
-        return Column(
+        return ListView(
+          controller: scrollCtrl,
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 28),
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
-              child: _ExerciseRecordTrendChart(
-                points: records,
+            Text(
+              'Performance trend',
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 10),
+            _ExerciseRecordTrendChart(points: records, weightUnit: weightUnit),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                _RecordLegendDot(
+                  color: Theme.of(context).colorScheme.primary,
+                  label: 'Best weight',
+                ),
+                const SizedBox(width: 16),
+                _RecordLegendDot(
+                  color: Colors.green.shade400,
+                  label: 'Estimated 1RM',
+                ),
+              ],
+            ),
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: Divider(height: 1),
+            ),
+            for (var index = 0; index < history.length; index++) ...[
+              _ExerciseHistorySessionCard(
+                record: history[index],
                 weightUnit: weightUnit,
+                onOpenSession:
+                    () =>
+                        _openHistorySession(context, history[index].sessionId),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  _RecordLegendDot(
-                    color: Theme.of(context).colorScheme.primary,
-                    label: 'Best weight',
-                  ),
-                  const SizedBox(width: 16),
-                  _RecordLegendDot(
-                    color: Colors.green.shade400,
-                    label: 'Estimated 1RM',
-                  ),
-                ],
-              ),
-            ),
-            const Divider(),
-            Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.all(16),
-                itemCount: history.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
-                itemBuilder: (ctx, i) {
-                  final rec = history[i];
-                  final dateStr = DateFormat.yMMMd().add_jm().format(rec.date);
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        dateStr,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 4),
-                      ...rec.sets.asMap().entries.map((entry) {
-                        final j = entry.key;
-                        final s = entry.value;
-                        final oneErm = _estimatedOneRm(s);
-                        return Row(
-                          children: [
-                            Text('${j + 1}. ${_formatSet(s, weightUnit)}'),
-                            const Spacer(),
-                            Text(
-                              'ERM=${WeightUnitFormatter.formatWeight(oneErm, weightUnit)}',
-                              style: const TextStyle(
-                                fontStyle: FontStyle.italic,
-                              ),
+              if (index < history.length - 1) const SizedBox(height: 10),
+            ],
+            if (hasMoreHistory) ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed:
+                      _isLoadingMoreHistory
+                          ? null
+                          : () => _loadMoreHistory(history),
+                  icon:
+                      _isLoadingMoreHistory
+                          ? SizedBox(
+                            width: 17,
+                            height: 17,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Theme.of(context).colorScheme.primary,
                             ),
-                          ],
-                        );
-                      }),
-                    ],
-                  );
-                },
+                          )
+                          : const Icon(Icons.expand_more_rounded),
+                  label: Text(
+                    _isLoadingMoreHistory
+                        ? 'Loading sessions'
+                        : 'Load 10 more sessions',
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Theme.of(context).colorScheme.primary,
+                    side: BorderSide(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.55),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(13),
+                    ),
+                  ),
+                ),
               ),
-            ),
+            ],
           ],
         );
       },
     );
   }
 
+  Widget _buildSheetDragHandle(BuildContext context) {
+    return Semantics(
+      label: 'Resize exercise details',
+      hint: 'Drag up or down to resize the sheet',
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onVerticalDragUpdate: (details) {
+          final screenHeight = MediaQuery.sizeOf(context).height;
+          if (screenHeight <= 0) return;
+
+          final nextSize =
+              (_sheetController.size - details.delta.dy / screenHeight)
+                  .clamp(_sheetMinSize, _sheetMaxSize)
+                  .toDouble();
+          _sheetController.jumpTo(nextSize);
+        },
+        child: SizedBox(
+          height: 28,
+          width: double.infinity,
+          child: Center(
+            child: Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurfaceVariant.withValues(alpha: 0.55),
+                borderRadius: BorderRadius.circular(99),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return DraggableScrollableSheet(
+      controller: _sheetController,
       expand: false,
-      initialChildSize: 0.7,
-      maxChildSize: 0.95,
+      minChildSize: _sheetMinSize,
+      initialChildSize: _sheetInitialSize,
+      maxChildSize: _sheetMaxSize,
       builder:
           (_, scrollCtrl) => DefaultTabController(
             length: 3,
@@ -791,6 +1367,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
               clipBehavior: Clip.hardEdge,
               child: Column(
                 children: [
+                  _buildSheetDragHandle(context),
                   // Header with Close Icon
                   KeyedSubtree(
                     key: _headerTutorialKey,
@@ -856,6 +1433,455 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
               ),
             ),
           ),
+    );
+  }
+}
+
+class _ExerciseHistorySessionCard extends StatelessWidget {
+  final HistoryRecord record;
+  final WeightUnit weightUnit;
+  final VoidCallback onOpenSession;
+
+  const _ExerciseHistorySessionCard({
+    required this.record,
+    required this.weightUnit,
+    required this.onOpenSession,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final dateLabel = DateFormat.yMMMd().add_jm().format(record.date);
+    final setCount = record.sets.length;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.42),
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: scheme.primary.withValues(alpha: 0.36)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: scheme.primary.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.calendar_today_outlined,
+                  color: scheme.primary,
+                  size: 17,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  dateLabel,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    color: scheme.primary,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Semantics(
+                button: true,
+                label: 'Open workout with $setCount completed sets',
+                child: Material(
+                  color: Colors.transparent,
+                  borderRadius: BorderRadius.circular(9),
+                  child: InkWell(
+                    onTap: onOpenSession,
+                    borderRadius: BorderRadius.circular(9),
+                    child: Container(
+                      padding: const EdgeInsets.fromLTRB(8, 5, 5, 5),
+                      decoration: BoxDecoration(
+                        color: scheme.secondary.withValues(alpha: 0.13),
+                        borderRadius: BorderRadius.circular(9),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '$setCount ${setCount == 1 ? 'set' : 'sets'}',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: scheme.secondary,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(width: 2),
+                          Icon(
+                            Icons.chevron_right_rounded,
+                            size: 18,
+                            color: scheme.secondary,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 10),
+            child: Divider(height: 1),
+          ),
+          for (final entry in record.sets.asMap().entries)
+            _ExerciseHistorySetRow(
+              index: entry.key + 1,
+              set: entry.value,
+              weightUnit: weightUnit,
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ExerciseHistorySetRow extends StatelessWidget {
+  final int index;
+  final ExerciseSet set;
+  final WeightUnit weightUnit;
+
+  const _ExerciseHistorySetRow({
+    required this.index,
+    required this.set,
+    required this.weightUnit,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Container(
+            width: 25,
+            height: 25,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: scheme.primary.withValues(alpha: 0.18),
+              shape: BoxShape.circle,
+            ),
+            child: Text(
+              index.toString(),
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: scheme.primary,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              _formatSet(set, weightUnit),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerRight,
+            child: Text(
+              'ERM ${WeightUnitFormatter.formatWeight(_estimatedOneRm(set), weightUnit)}',
+              maxLines: 1,
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: scheme.onSurfaceVariant,
+                fontStyle: FontStyle.italic,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MetricSummaryCard extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color color;
+
+  const _MetricSummaryCard({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      height: 92,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: color.withValues(alpha: 0.38)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 17, color: color),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: color,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const Spacer(),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              value,
+              maxLines: 1,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RepBestMetricsList extends StatelessWidget {
+  final List<RepMaxRow> rows;
+  final WeightUnit weightUnit;
+
+  const _RepBestMetricsList({required this.rows, required this.weightUnit});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.44),
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.65),
+        ),
+      ),
+      child: Column(
+        children: List<Widget>.generate(rows.length, (index) {
+          final row = rows[index];
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 54,
+                      height: 40,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: scheme.primary.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(11),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            row.repCount.toString(),
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              color: scheme.primary,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          const SizedBox(width: 3),
+                          Text(
+                            'reps',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: scheme.primary,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _CompactRepMetricValue(
+                        label: 'Best weight',
+                        value: WeightUnitFormatter.formatWeight(
+                          row.rmValue,
+                          weightUnit,
+                        ),
+                        color: scheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _CompactRepMetricValue(
+                        label: 'Set volume',
+                        value: WeightUnitFormatter.formatVolume(
+                          row.rmValue * row.repCount,
+                          weightUnit,
+                        ),
+                        color: scheme.tertiary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (index < rows.length - 1)
+                Divider(
+                  height: 1,
+                  color: scheme.outlineVariant.withValues(alpha: 0.58),
+                ),
+            ],
+          );
+        }),
+      ),
+    );
+  }
+}
+
+class _CompactRepMetricValue extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
+
+  const _CompactRepMetricValue({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 3),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(
+            value,
+            maxLines: 1,
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _MetricsStateCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String message;
+  final bool isLoading;
+
+  const _MetricsStateCard({
+    required this.icon,
+    required this.title,
+    required this.message,
+    this.isLoading = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(
+          alpha: 0.44,
+        ),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.65),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (isLoading)
+            SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.5,
+                color: theme.colorScheme.primary,
+              ),
+            )
+          else
+            Icon(icon, color: theme.colorScheme.primary, size: 24),
+          const SizedBox(width: 13),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  message,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -956,7 +1982,7 @@ class _ExerciseRecordTrendChart extends StatelessWidget {
 
     return Container(
       height: 214,
-      padding: const EdgeInsets.fromLTRB(12, 14, 12, 8),
+      padding: const EdgeInsets.fromLTRB(8, 14, 10, 8),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest.withValues(alpha: 0.26),
         borderRadius: BorderRadius.circular(18),
@@ -1034,11 +2060,11 @@ class _ExerciseRecordTrendChart extends StatelessWidget {
               sideTitles: SideTitles(
                 showTitles: true,
                 interval: bounds.interval,
-                reservedSize: 46,
+                reservedSize: 38,
                 getTitlesWidget: (value, meta) {
                   return SideTitleWidget(
                     meta: meta,
-                    space: 4,
+                    space: 2,
                     fitInside: SideTitleFitInsideData.fromTitleMeta(
                       meta,
                       distanceFromEdge: 2,
@@ -1069,6 +2095,11 @@ class _ExerciseRecordTrendChart extends StatelessWidget {
                   }
                   return SideTitleWidget(
                     meta: meta,
+                    space: 4,
+                    fitInside: SideTitleFitInsideData.fromTitleMeta(
+                      meta,
+                      distanceFromEdge: 4,
+                    ),
                     child: Text(
                       _recordAxisLabel(points[index].date, showTimes),
                       style: theme.textTheme.labelSmall?.copyWith(

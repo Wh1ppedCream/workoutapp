@@ -9,6 +9,7 @@ import 'schema.dart';
 import 'seed.dart';
 import 'session_dao.dart';
 import 'exercise_dao.dart';
+import 'exercise_history_dao.dart';
 import 'set_dao.dart';
 import 'cardio_dao.dart';
 import 'stretch_dao.dart';
@@ -1941,33 +1942,26 @@ class DatabaseHelper {
   }
 
   /// Calculates record badges for the parent sets saved in one workout.
-  Future<Map<int, WorkoutExerciseRecordBadges>>
-  fetchSessionRecordBadges(int sessionId) async {
+  Future<Map<int, WorkoutExerciseRecordBadges>> fetchSessionRecordBadges(
+    int sessionId,
+  ) async {
     final db = await database;
     return SessionRecordBadgesDao.forSession(db, sessionId);
   }
 
   Future<List<Map<String, dynamic>>> fetchRecentWeightExerciseHistoryRows({
     required int definitionId,
+    String? beforeSessionDate,
+    int? beforeExerciseId,
     int limit = 10,
   }) async {
-    if (limit <= 0) return const <Map<String, dynamic>>[];
-
     final db = await database;
-    return db.rawQuery(
-      '''
-      SELECT
-        e.id AS exercise_id,
-        s.id AS session_id,
-        s.date AS session_date
-      FROM exercises e
-      INNER JOIN sessions s ON s.id = e.session_id
-      WHERE e.type = 'weight'
-        AND e.exercise_def_id = ?
-      ORDER BY s.date DESC, e.order_index ASC
-      LIMIT ?
-      ''',
-      [definitionId, limit],
+    return ExerciseHistoryDao.fetchWeightExerciseRows(
+      db,
+      definitionId: definitionId,
+      beforeSessionDate: beforeSessionDate,
+      beforeExerciseId: beforeExerciseId,
+      limit: limit,
     );
   }
 

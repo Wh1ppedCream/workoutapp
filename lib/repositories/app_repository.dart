@@ -157,9 +157,13 @@ class AppRepository {
 
   Future<List<Map<String, dynamic>>> fetchRecentWeightExerciseHistoryRows({
     required int definitionId,
+    String? beforeSessionDate,
+    int? beforeExerciseId,
     int limit = 10,
   }) => _dbHelper.fetchRecentWeightExerciseHistoryRows(
     definitionId: definitionId,
+    beforeSessionDate: beforeSessionDate,
+    beforeExerciseId: beforeExerciseId,
     limit: limit,
   );
 
