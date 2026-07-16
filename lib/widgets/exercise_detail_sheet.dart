@@ -32,24 +32,30 @@ class HistoryRecord {
   });
 }
 
-class _ExerciseMediaPreviewCard extends StatelessWidget {
+class _LoadedExerciseMedia {
   final ExerciseMediaItem media;
-  final Future<File?> previewFileFuture;
+  final File previewFile;
+
+  const _LoadedExerciseMedia({
+    required this.media,
+    required this.previewFile,
+  });
+}
+
+class _ExerciseMediaPreviewCard extends StatelessWidget {
+  final File previewFile;
+  final Widget? heatmapOverlay;
+  final VoidCallback onImageTap;
 
   const _ExerciseMediaPreviewCard({
-    required this.media,
-    required this.previewFileFuture,
+    required this.previewFile,
+    required this.heatmapOverlay,
+    required this.onImageTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final title =
-        media.title?.isNotEmpty == true
-            ? media.title!
-            : media.mediaType == 'animation'
-            ? 'Exercise demo'
-            : 'Exercise image';
 
     return Container(
       decoration: BoxDecoration(
@@ -58,130 +64,42 @@ class _ExerciseMediaPreviewCard extends StatelessWidget {
         border: Border.all(color: theme.colorScheme.outlineVariant),
       ),
       clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          AspectRatio(
-            aspectRatio: 16 / 9,
-            child: FutureBuilder<File?>(
-              future: previewFileFuture,
-              builder: (context, snapshot) {
-                final file = snapshot.data;
-                if (file != null) {
-                  return Image.file(file, fit: BoxFit.cover);
-                }
-                if (snapshot.connectionState != ConnectionState.done) {
-                  return _MediaPlaceholder(
-                    icon: Icons.cloud_download_outlined,
-                    label: 'Loading preview',
-                    color: theme.colorScheme.primary,
-                  );
-                }
-                return _RemoteMediaFallback(media: media);
-              },
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
-            child: Row(
-              children: [
-                Icon(
-                  media.mediaType == 'animation'
-                      ? Icons.play_circle_outline
-                      : Icons.image_outlined,
-                  color: theme.colorScheme.primary,
+      child: AspectRatio(
+        // A 4:3 frame keeps square source art compact while preserving the
+        // complete original image in the tap-to-zoom viewer.
+        aspectRatio: 4 / 3,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Semantics(
+              button: true,
+              label: 'Open exercise image',
+              child: GestureDetector(
+                onTap: onImageTap,
+                child: ColoredBox(
+                  color: theme.colorScheme.surface,
+                  child: Image.file(previewFile, fit: BoxFit.cover),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+              ),
+            ),
+            Positioned(
+              top: 8,
+              left: 8,
+              child: IgnorePointer(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.45),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Padding(
+                    padding: EdgeInsets.all(6),
+                    child: Icon(Icons.zoom_in, color: Colors.white, size: 18),
                   ),
                 ),
-                if (media.version > 1)
-                  Text('v${media.version}', style: theme.textTheme.labelSmall),
-              ],
+              ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _RemoteMediaFallback extends StatelessWidget {
-  final ExerciseMediaItem media;
-
-  const _RemoteMediaFallback({required this.media});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final url = media.thumbnailUrl ?? media.remoteUrl;
-    final lowerUrl = url.toLowerCase();
-    final isImage =
-        lowerUrl.endsWith('.png') ||
-        lowerUrl.endsWith('.jpg') ||
-        lowerUrl.endsWith('.jpeg') ||
-        lowerUrl.endsWith('.webp');
-
-    if (isImage) {
-      return Image.network(
-        url,
-        fit: BoxFit.cover,
-        errorBuilder:
-            (_, __, ___) => _MediaPlaceholder(
-              icon: Icons.broken_image_outlined,
-              label: 'Preview unavailable',
-            ),
-      );
-    }
-
-    return _MediaPlaceholder(
-      icon:
-          media.mediaType == 'animation'
-              ? Icons.play_circle_outline
-              : Icons.cloud_outlined,
-      label:
-          media.mediaType == 'animation'
-              ? 'Animation available'
-              : 'Media available',
-      color: theme.colorScheme.primary,
-    );
-  }
-}
-
-class _MediaPlaceholder extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color? color;
-
-  const _MediaPlaceholder({
-    required this.icon,
-    required this.label,
-    this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final resolvedColor = color ?? theme.colorScheme.onSurfaceVariant;
-    return ColoredBox(
-      color: theme.colorScheme.surface,
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: resolvedColor, size: 36),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: theme.textTheme.labelLarge?.copyWith(color: resolvedColor),
-            ),
+            if (heatmapOverlay != null)
+              Positioned(right: 8, bottom: 8, child: heatmapOverlay!),
           ],
         ),
       ),
@@ -207,7 +125,7 @@ class ExerciseDetailSheet extends StatefulWidget {
 class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
   late final AppRepository _repo;
   late Future<List<HistoryRecord>> _historyFuture;
-  late Future<ExerciseMediaItem?> _primaryMediaFuture;
+  late Future<_LoadedExerciseMedia?> _primaryMediaFuture;
   final Map<String, Future<List<RepMaxRow>>> _repMaxFutures = {};
   final Map<String, Future<double?>> _volumeMaxFutures = {};
   final Map<String, Future<File?>> _mediaPreviewFutures = {};
@@ -331,14 +249,20 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     return records;
   }
 
-  Future<ExerciseMediaItem?> _loadPrimaryMedia() async {
+  Future<_LoadedExerciseMedia?> _loadPrimaryMedia() async {
     try {
       await _repo.syncBundledExerciseMediaManifest();
     } catch (_) {
       // Media is optional. If the bundled manifest cannot be read, the detail
       // sheet should still work from local exercise metadata.
     }
-    return _repo.fetchPrimaryExerciseMedia(widget.defId);
+    final media = await _repo.fetchPrimaryExerciseMedia(widget.defId);
+    if (media == null) return null;
+
+    final previewFile = await _previewFileFuture(media);
+    if (previewFile == null) return null;
+
+    return _LoadedExerciseMedia(media: media, previewFile: previewFile);
   }
 
   Future<File?> _previewFileFuture(ExerciseMediaItem item) {
@@ -367,7 +291,6 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
 
   Widget _buildDetailsTab(ScrollController scrollCtrl) {
     final def = widget.definition;
-    final theme = Theme.of(context);
     final colors = context.colors;
     final heatmapFrequencyMap = bodyPartFrequencyMapFromNames({
       for (final bodyPart in def.bodyParts) bodyPart.name: 1.0,
@@ -379,51 +302,46 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          FutureBuilder<_LoadedExerciseMedia?>(
+            future: _primaryMediaFuture,
+            builder: (context, snapshot) {
+              final loadedMedia = snapshot.data;
+              if (loadedMedia == null) {
+                return Center(
+                  child: _buildHeatmapButton(
+                    frequencyMap: heatmapFrequencyMap,
+                    lowColor: colors.historySummaryHeatmapLow!,
+                    highColor: colors.historySummaryHeatmapHigh!,
+                    size: 220,
+                    padding: 12,
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                );
+              }
+
+              return _ExerciseMediaPreviewCard(
+                previewFile: loadedMedia.previewFile,
+                heatmapOverlay:
+                    heatmapFrequencyMap.isEmpty
+                        ? null
+                        : _buildHeatmapButton(
+                          frequencyMap: heatmapFrequencyMap,
+                          lowColor: colors.historySummaryHeatmapLow!,
+                          highColor: colors.historySummaryHeatmapHigh!,
+                          size: 98,
+                          padding: 6,
+                          borderRadius: BorderRadius.circular(12),
+                          elevated: true,
+                        ),
+                onImageTap: () => _showImageViewer(loadedMedia.previewFile),
+              );
+            },
+          ),
+          const SizedBox(height: 12),
           Text(
             'EQUIPMENT: ${def.equipmentList.map((e) => e.name).join(', ')}',
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 12),
-          FutureBuilder<ExerciseMediaItem?>(
-            future: _primaryMediaFuture,
-            builder: (context, snapshot) {
-              final media = snapshot.data;
-              if (media == null) return const SizedBox.shrink();
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: _ExerciseMediaPreviewCard(
-                  media: media,
-                  previewFileFuture: _previewFileFuture(media),
-                ),
-              );
-            },
-          ),
-          Center(
-            child: Container(
-              width: 220,
-              constraints: const BoxConstraints(maxWidth: 260),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: theme.colorScheme.outlineVariant),
-              ),
-              child:
-                  heatmapFrequencyMap.isEmpty
-                      ? Icon(
-                        Icons.accessibility_new,
-                        size: 88,
-                        color: theme.colorScheme.primary,
-                      )
-                      : BodyHeatmap(
-                        frequencyMap: heatmapFrequencyMap,
-                        lowColor: colors.historySummaryHeatmapLow!,
-                        highColor: colors.historySummaryHeatmapHigh!,
-                        width: 196,
-                        height: 196,
-                      ),
-            ),
           ),
           const SizedBox(height: 12),
           Text(
@@ -467,6 +385,194 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildHeatmapButton({
+    required Map<String, double> frequencyMap,
+    required Color lowColor,
+    required Color highColor,
+    required double size,
+    required BorderRadius borderRadius,
+    double padding = 8,
+    bool elevated = false,
+  }) {
+    final theme = Theme.of(context);
+    final hasHeatmap = frequencyMap.isNotEmpty;
+
+    return Semantics(
+      button: hasHeatmap,
+      label:
+          hasHeatmap
+              ? 'Open targeted body heatmap'
+              : 'No targeted body areas available',
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap:
+            hasHeatmap
+                ? () => _showHeatmapViewer(
+                  frequencyMap: frequencyMap,
+                  lowColor: lowColor,
+                  highColor: highColor,
+                )
+                : null,
+        child: Container(
+          width: size,
+          height: size,
+          padding: EdgeInsets.all(padding),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHighest.withValues(
+              alpha: elevated ? 0.96 : 1,
+            ),
+            borderRadius: borderRadius,
+            border: Border.all(color: theme.colorScheme.outlineVariant),
+            boxShadow:
+                elevated
+                    ? [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.30),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
+                      ),
+                    ]
+                    : null,
+          ),
+          child:
+              hasHeatmap
+                  ? BodyHeatmap(
+                    frequencyMap: frequencyMap,
+                    lowColor: lowColor,
+                    highColor: highColor,
+                    width: size - (padding * 2),
+                    height: size - (padding * 2),
+                  )
+                  : Icon(
+                    Icons.accessibility_new,
+                    color: theme.colorScheme.primary,
+                    size: (size - (padding * 2)).clamp(32, 88).toDouble(),
+                  ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showImageViewer(File imageFile) {
+    return showDialog<void>(
+      context: context,
+      barrierColor: Colors.black87,
+      builder:
+          (dialogContext) => Material(
+            color: Colors.black,
+            child: SafeArea(
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: InteractiveViewer(
+                      minScale: 0.8,
+                      maxScale: 4,
+                      boundaryMargin: const EdgeInsets.all(48),
+                      child: Center(
+                        child: Image.file(imageFile, fit: BoxFit.contain),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: IconButton.filledTonal(
+                      tooltip: 'Close',
+                      onPressed: () => Navigator.of(dialogContext).pop(),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ),
+                  const Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 20,
+                    child: IgnorePointer(
+                      child: Center(
+                        child: Text(
+                          'Pinch or drag to zoom',
+                          style: TextStyle(color: Colors.white70),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+    );
+  }
+
+  Future<void> _showHeatmapViewer({
+    required Map<String, double> frequencyMap,
+    required Color lowColor,
+    required Color highColor,
+  }) {
+    return showDialog<void>(
+      context: context,
+      barrierColor: Colors.black87,
+      builder:
+          (dialogContext) => Material(
+            color: Theme.of(dialogContext).colorScheme.surface,
+            child: SafeArea(
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final size =
+                            (math.min(
+                                  constraints.maxWidth,
+                                  constraints.maxHeight,
+                                ) *
+                                0.78)
+                                .toDouble();
+                        return InteractiveViewer(
+                          minScale: 0.8,
+                          maxScale: 3,
+                          boundaryMargin: const EdgeInsets.all(48),
+                          child: Center(
+                            child: SizedBox(
+                              width: size,
+                              height: size,
+                              child: BodyHeatmap(
+                                frequencyMap: frequencyMap,
+                                lowColor: lowColor,
+                                highColor: highColor,
+                                width: size,
+                                height: size,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: IconButton.filledTonal(
+                      tooltip: 'Close',
+                      onPressed: () => Navigator.of(dialogContext).pop(),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ),
+                  const Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 20,
+                    child: IgnorePointer(
+                      child: Center(
+                        child: Text('Pinch or drag to zoom'),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
     );
   }
 
