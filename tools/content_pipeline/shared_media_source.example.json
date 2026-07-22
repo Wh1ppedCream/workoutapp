@@ -1,0 +1,691 @@
+{
+  "namespace": "shared_media",
+  "version": 2,
+  "baseUrl": "https://pub-7eb72a1a315f4da3b30100ff6e694651.r2.dev",
+  "entities": [
+    {
+      "entityType": "equipment",
+      "entityId": 2,
+      "entityName": "Ab Roller",
+      "slug": "ab_roller",
+      "assets": [
+        {
+          "assetId": "ab_roller_thumb_v1",
+          "type": "thumbnail",
+          "path": "equipment/ab_roller/v1/thumb.webp",
+          "width": 512,
+          "height": 512,
+          "licenseId": "tonos_owned",
+          "bytes": 8636,
+          "sha256": "48b263b136106b2300af5294431736224ff4790c07aabed6381b30a1357cd614"
+        }
+      ]
+    },
+    {
+      "entityType": "equipment",
+      "entityId": 3,
+      "entityName": "Adjustable Bench",
+      "slug": "adjustable_bench",
+      "assets": [
+        {
+          "assetId": "adjustable_bench_thumb_v1",
+          "type": "thumbnail",
+          "path": "equipment/adjustable_bench/v1/thumb.webp",
+          "width": 512,
+          "height": 512,
+          "licenseId": "tonos_owned",
+          "bytes": 9122,
+          "sha256": "a571aee5707c3fb163b939518042e99bece82e7267727b0d0af7dd38fad8443a"
+        }
+      ]
+    },
+    {
+      "entityType": "equipment",
+      "entityId": 4,
+      "entityName": "Assisted Dip/Pull-Up Machine",
+      "slug": "assisted_dip_pull_up_machine",
+      "assets": [
+        {
+          "assetId": "assisted_dip_pull_up_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "equipment/assisted_dip_pull_up_machine/v1/thumb.webp",
+          "width": 512,
+          "height": 512,
+          "licenseId": "tonos_owned",
+          "bytes": 8892,
+          "sha256": "af3ab67a7f85ff8169724442ef256000546819a989edcb3f6b0c98a5c713d19a"
+        }
+      ]
+    },
+    {
+      "entityType": "equipment",
+      "entityId": 5,
+      "entityName": "Barbell",
+      "slug": "barbell",
+      "assets": [
+        {
+          "assetId": "barbell_equipment_thumb_v1",
+          "type": "thumbnail",
+          "path": "equipment/barbell/v1/thumb.webp",
+          "width": 512,
+          "height": 512,
+          "licenseId": "tonos_owned",
+          "bytes": 8666,
+          "sha256": "3cc9314d77a7fb14910c9fb5538adf192c5cac960858608fdcf3d7514868294d"
+        }
+      ]
+    },
+    {
+      "entityType": "equipment",
+      "entityId": 7,
+      "entityName": "Cable Ankle Cuff Attachment",
+      "slug": "cable_ankle_cuff_attachment",
+      "assets": [
+        {
+          "assetId": "cable_ankle_cuff_attachment_thumb_v1",
+          "type": "thumbnail",
+          "path": "equipment/cable_ankle_cuff_attachment/v1/thumb.webp",
+          "width": 512,
+          "height": 512,
+          "licenseId": "tonos_owned",
+          "bytes": 14160,
+          "sha256": "e831b30dfe97501c3b81d7ba48e774c1adc32449ce22c6665456a116c8501c2b"
+        }
+      ]
+    },
+    {
+      "entityType": "equipment",
+      "entityId": 8,
+      "entityName": "Cable Handle Attachment",
+      "slug": "cable_handle_attachment",
+      "assets": [
+        {
+          "assetId": "cable_handle_attachment_thumb_v1",
+          "type": "thumbnail",
+          "path": "equipment/cable_handle_attachment/v1/thumb.webp",
+          "width": 512,
+          "height": 512,
+          "licenseId": "tonos_owned",
+          "bytes": 8886,
+          "sha256": "8e26483dd44536dce793d6bed2177492463e0786731b21880907cc518c39137d"
+        }
+      ]
+    },
+    {
+      "entityType": "equipment",
+      "entityId": 9,
+      "entityName": "Cable Rope Attachment",
+      "slug": "cable_rope_attachment",
+      "assets": [
+        {
+          "assetId": "cable_rope_attachment_thumb_v1",
+          "type": "thumbnail",
+          "path": "equipment/cable_rope_attachment/v1/thumb.webp",
+          "width": 512,
+          "height": 512,
+          "licenseId": "tonos_owned",
+          "bytes": 10340,
+          "sha256": "a6bd2a8014114160159717de8b128da9a31897fc5e8cf6c32c88cec5d0079676"
+        }
+      ]
+    },
+    {
+      "entityType": "equipment",
+      "entityId": 10,
+      "entityName": "Cable Straight Bar Attachment",
+      "slug": "cable_straight_bar_attachment",
+      "assets": [
+        {
+          "assetId": "cable_straight_bar_attachment_thumb_v1",
+          "type": "thumbnail",
+          "path": "equipment/cable_straight_bar_attachment/v1/thumb.webp",
+          "width": 512,
+          "height": 512,
+          "licenseId": "tonos_owned",
+          "bytes": 7342,
+          "sha256": "b5006d5c7dc56d10d45c68caebff06b2c784ed5e22f435711bf51bcca5da0276"
+        }
+      ]
+    },
+    {
+      "entityType": "equipment",
+      "entityId": 11,
+      "entityName": "Cable Machine",
+      "slug": "cable_machine",
+      "assets": [
+        {
+          "assetId": "cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "equipment/cable_machine/v1/thumb.webp",
+          "width": 512,
+          "height": 512,
+          "licenseId": "tonos_owned",
+          "bytes": 13094,
+          "sha256": "5eb8d2eac6d0d4cb395261100e8c69130a03644b99377f26f3af2a67f1067d91"
+        }
+      ]
+    },
+    {
+      "entityType": "equipment",
+      "entityId": 12,
+      "entityName": "Chest Press Machine",
+      "slug": "chest_press_machine",
+      "assets": [
+        {
+          "assetId": "chest_press_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "equipment/chest_press_machine/v1/thumb.webp",
+          "width": 512,
+          "height": 512,
+          "licenseId": "tonos_owned",
+          "bytes": 14888,
+          "sha256": "fc69fc7ec294fe15ad9eea74b7250678b3016f1996fff0ce7e04885efb446891"
+        }
+      ]
+    },
+    {
+      "entityType": "equipment",
+      "entityId": 13,
+      "entityName": "Dip Bars",
+      "slug": "dip_bars",
+      "assets": [
+        {
+          "assetId": "dip_bars_thumb_v1",
+          "type": "thumbnail",
+          "path": "equipment/dip_bars/v1/thumb.webp",
+          "width": 512,
+          "height": 512,
+          "licenseId": "tonos_owned",
+          "bytes": 11094,
+          "sha256": "8fce5c0fe0d7739dc0a1fa63e139d36fa44c591f05b60a8b09425b90f696aaf4"
+        }
+      ]
+    },
+    {
+      "entityType": "equipment",
+      "entityId": 14,
+      "entityName": "Dumbbell",
+      "slug": "dumbbell",
+      "assets": [
+        {
+          "assetId": "dumbbell_equipment_thumb_v1",
+          "type": "thumbnail",
+          "path": "equipment/dumbbell/v1/thumb.webp",
+          "width": 512,
+          "height": 512,
+          "licenseId": "tonos_owned",
+          "bytes": 8106,
+          "sha256": "3faa5efca9e276a83976f5a33a95a8ebce3a18cf2cee669c0608d44b8ac25567"
+        }
+      ]
+    },
+    {
+      "entityType": "equipment",
+      "entityId": 15,
+      "entityName": "Glute-Ham Developer (GHD) Machine",
+      "slug": "glute_ham_developer_ghd_machine",
+      "assets": [
+        {
+          "assetId": "glute_ham_developer_ghd_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "equipment/glute_ham_developer_ghd_machine/v1/thumb.webp",
+          "width": 512,
+          "height": 512,
+          "licenseId": "tonos_owned",
+          "bytes": 12686,
+          "sha256": "e64100237e84bdbd2b4b6ea5c77cdd1a235415f75dbfa24d9cda1af04301bab5"
+        }
+      ]
+    },
+    {
+      "entityType": "equipment",
+      "entityId": 16,
+      "entityName": "Gymnastics Rings",
+      "slug": "gymnastics_rings",
+      "assets": [
+        {
+          "assetId": "gymnastics_rings_thumb_v1",
+          "type": "thumbnail",
+          "path": "equipment/gymnastics_rings/v1/thumb.webp",
+          "width": 512,
+          "height": 512,
+          "licenseId": "tonos_owned",
+          "bytes": 12722,
+          "sha256": "8f8a3b09c3581a7707da5c5b27bf5c6a58cd87a5795ab12b1c16e67d4199dde9"
+        }
+      ]
+    },
+    {
+      "entityType": "equipment",
+      "entityId": 17,
+      "entityName": "Hack Squat Machine",
+      "slug": "hack_squat_machine",
+      "assets": [
+        {
+          "assetId": "hack_squat_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "equipment/hack_squat_machine/v1/thumb.webp",
+          "width": 512,
+          "height": 512,
+          "licenseId": "tonos_owned",
+          "bytes": 17140,
+          "sha256": "6d51fe600d0d2fa23edf8897b968ddc6a44913042552b035c305c3d30c4d756c"
+        }
+      ]
+    },
+    {
+      "entityType": "equipment",
+      "entityId": 18,
+      "entityName": "Hip Thrust Machine",
+      "slug": "hip_thrust_machine",
+      "assets": [
+        {
+          "assetId": "hip_thrust_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "equipment/hip_thrust_machine/v1/thumb.webp",
+          "width": 512,
+          "height": 512,
+          "licenseId": "tonos_owned",
+          "bytes": 14378,
+          "sha256": "ba3b89db8f5846bf6c978c57aa010da47295cd2455af06352d084d61707619b1"
+        }
+      ]
+    },
+    {
+      "entityType": "equipment",
+      "entityId": 19,
+      "entityName": "HyperExtension Bench/Machine",
+      "slug": "hyperextension_bench_machine",
+      "assets": [
+        {
+          "assetId": "hyperextension_bench_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "equipment/hyperextension_bench_machine/v1/thumb.webp",
+          "width": 512,
+          "height": 512,
+          "licenseId": "tonos_owned",
+          "bytes": 12162,
+          "sha256": "700e30b73b3de38cffeec06b0ad31ad5215021390f532393d80c3e92a1465b37"
+        }
+      ]
+    },
+    {
+      "entityType": "equipment",
+      "entityId": 20,
+      "entityName": "Incline Leg Press Machine",
+      "slug": "incline_leg_press_machine",
+      "assets": [
+        {
+          "assetId": "incline_leg_press_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "equipment/incline_leg_press_machine/v1/thumb.webp",
+          "width": 512,
+          "height": 512,
+          "licenseId": "tonos_owned",
+          "bytes": 19676,
+          "sha256": "2c1e7fd07a4ed6ded9f2ab7abc267f9d746ba618449230862408d8e7025f76bb"
+        }
+      ]
+    },
+    {
+      "entityType": "equipment",
+      "entityId": 21,
+      "entityName": "Kettlebell",
+      "slug": "kettlebell",
+      "assets": [
+        {
+          "assetId": "kettlebell_thumb_v1",
+          "type": "thumbnail",
+          "path": "equipment/kettlebell/v1/thumb.webp",
+          "width": 512,
+          "height": 512,
+          "licenseId": "tonos_owned",
+          "bytes": 8814,
+          "sha256": "e2f4a426eb49dc7c820de09e953b6e369dba82fb5f874dcf3954537f98c1211e"
+        }
+      ]
+    },
+    {
+      "entityType": "equipment",
+      "entityId": 22,
+      "entityName": "Landmine Attachment",
+      "slug": "landmine_attachment",
+      "assets": [
+        {
+          "assetId": "landmine_attachment_thumb_v1",
+          "type": "thumbnail",
+          "path": "equipment/landmine_attachment/v1/thumb.webp",
+          "width": 512,
+          "height": 512,
+          "licenseId": "tonos_owned",
+          "bytes": 12016,
+          "sha256": "b70170ed814d47aecfeeeaa529162785a192808055d9419b084dc04d91b4153b"
+        }
+      ]
+    },
+    {
+      "entityType": "equipment",
+      "entityId": 23,
+      "entityName": "Lat Pulldown Machine",
+      "slug": "lat_pulldown_machine",
+      "assets": [
+        {
+          "assetId": "lat_pulldown_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "equipment/lat_pulldown_machine/v1/thumb.webp",
+          "width": 512,
+          "height": 512,
+          "licenseId": "tonos_owned",
+          "bytes": 10240,
+          "sha256": "d1e2f577cfb550e5e168fa04d3da558aeebdf3f22e6f1ac2546f4a15c4652104"
+        }
+      ]
+    },
+    {
+      "entityType": "equipment",
+      "entityId": 24,
+      "entityName": "Lat Raise Machine",
+      "slug": "lat_raise_machine",
+      "assets": [
+        {
+          "assetId": "lat_raise_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "equipment/lat_raise_machine/v1/thumb.webp",
+          "width": 512,
+          "height": 512,
+          "licenseId": "tonos_owned",
+          "bytes": 17730,
+          "sha256": "50efaab6c4ec3c29ffc2bd55e60e30b9195659eac02d5f59ef2665321079a45a"
+        }
+      ]
+    },
+    {
+      "entityType": "equipment",
+      "entityId": 25,
+      "entityName": "Leg Curl Machine (lying)",
+      "slug": "leg_curl_machine_lying",
+      "assets": [
+        {
+          "assetId": "leg_curl_machine_lying_thumb_v1",
+          "type": "thumbnail",
+          "path": "equipment/leg_curl_machine_lying/v1/thumb.webp",
+          "width": 512,
+          "height": 512,
+          "licenseId": "tonos_owned",
+          "bytes": 15940,
+          "sha256": "4098c548143c5e51e7e4d8ba6bf153029f2e36ef083c6851589423ecd1ff8569"
+        }
+      ]
+    },
+    {
+      "entityType": "equipment",
+      "entityId": 26,
+      "entityName": "Leg Curl Machine (seated)",
+      "slug": "leg_curl_machine_seated",
+      "assets": [
+        {
+          "assetId": "leg_curl_machine_seated_thumb_v1",
+          "type": "thumbnail",
+          "path": "equipment/leg_curl_machine_seated/v1/thumb.webp",
+          "width": 512,
+          "height": 512,
+          "licenseId": "tonos_owned",
+          "bytes": 16280,
+          "sha256": "491b64c50ac1004851629360cf3bf6642238e3fb29a42494a890adbef6ef5d18"
+        }
+      ]
+    },
+    {
+      "entityType": "equipment",
+      "entityId": 27,
+      "entityName": "Leg Extension Machine",
+      "slug": "leg_extension_machine",
+      "assets": [
+        {
+          "assetId": "leg_extension_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "equipment/leg_extension_machine/v1/thumb.webp",
+          "width": 512,
+          "height": 512,
+          "licenseId": "tonos_owned",
+          "bytes": 17344,
+          "sha256": "57eec79407f2c8f31b84a42d225f045085a11c878e417c25aa6ec5138853fd3f"
+        }
+      ]
+    },
+    {
+      "entityType": "equipment",
+      "entityId": 28,
+      "entityName": "Leg Press Machine",
+      "slug": "leg_press_machine",
+      "assets": [
+        {
+          "assetId": "leg_press_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "equipment/leg_press_machine/v1/thumb.webp",
+          "width": 512,
+          "height": 512,
+          "licenseId": "tonos_owned",
+          "bytes": 16246,
+          "sha256": "b08e68de11377dc2412748187678abcce038306354d9bda36a783c65ec061c5b"
+        }
+      ]
+    },
+    {
+      "entityType": "equipment",
+      "entityId": 29,
+      "entityName": "Medicine Ball",
+      "slug": "medicine_ball",
+      "assets": [
+        {
+          "assetId": "medicine_ball_thumb_v1",
+          "type": "thumbnail",
+          "path": "equipment/medicine_ball/v1/thumb.webp",
+          "width": 512,
+          "height": 512,
+          "licenseId": "tonos_owned",
+          "bytes": 26968,
+          "sha256": "e57c0266038c1a9a3636e077f589c079343c32d587016dec91daca3d6ef5c528"
+        }
+      ]
+    },
+    {
+      "entityType": "equipment",
+      "entityId": 30,
+      "entityName": "Pec Deck Machine",
+      "slug": "pec_deck_machine",
+      "assets": [
+        {
+          "assetId": "pec_deck_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "equipment/pec_deck_machine/v1/thumb.webp",
+          "width": 512,
+          "height": 512,
+          "licenseId": "tonos_owned",
+          "bytes": 17458,
+          "sha256": "c99033ff5cc2744f0868be089b8f6f5154991aafb06e74938f58a3442116dd1a"
+        }
+      ]
+    },
+    {
+      "entityType": "equipment",
+      "entityId": 31,
+      "entityName": "Power Rack",
+      "slug": "power_rack",
+      "assets": [
+        {
+          "assetId": "power_rack_thumb_v1",
+          "type": "thumbnail",
+          "path": "equipment/power_rack/v1/thumb.webp",
+          "width": 512,
+          "height": 512,
+          "licenseId": "tonos_owned",
+          "bytes": 15638,
+          "sha256": "86d36724b734fba691526c5d1e6d847e92280133a00c9c30f1a5d7b0574e3654"
+        }
+      ]
+    },
+    {
+      "entityType": "equipment",
+      "entityId": 32,
+      "entityName": "Preacher Bench",
+      "slug": "preacher_bench",
+      "assets": [
+        {
+          "assetId": "preacher_bench_thumb_v1",
+          "type": "thumbnail",
+          "path": "equipment/preacher_bench/v1/thumb.webp",
+          "width": 512,
+          "height": 512,
+          "licenseId": "tonos_owned",
+          "bytes": 19392,
+          "sha256": "2be9c6e89aab620c9bebc8301162f9eacff7e7247c35c678e668b7fbff824725"
+        }
+      ]
+    },
+    {
+      "entityType": "equipment",
+      "entityId": 33,
+      "entityName": "Pull-Up Bar",
+      "slug": "pull_up_bar",
+      "assets": [
+        {
+          "assetId": "pull_up_bar_thumb_v1",
+          "type": "thumbnail",
+          "path": "equipment/pull_up_bar/v1/thumb.webp",
+          "width": 512,
+          "height": 512,
+          "licenseId": "tonos_owned",
+          "bytes": 10872,
+          "sha256": "c260e0733070e6e835eaaa5c7f61e872e9557f3722d5f67354603d79b377d6db"
+        }
+      ]
+    },
+    {
+      "entityType": "equipment",
+      "entityId": 34,
+      "entityName": "Resistance Band",
+      "slug": "resistance_band",
+      "assets": [
+        {
+          "assetId": "resistance_band_thumb_v1",
+          "type": "thumbnail",
+          "path": "equipment/resistance_band/v1/thumb.webp",
+          "width": 512,
+          "height": 512,
+          "licenseId": "tonos_owned",
+          "bytes": 12520,
+          "sha256": "fe3872577f3bedb9366ecb88ce90ffb5ac708fbc7ed44fee746174841fe916a9"
+        }
+      ]
+    },
+    {
+      "entityType": "equipment",
+      "entityId": 35,
+      "entityName": "Seated Calf Raise Machine",
+      "slug": "seated_calf_raise_machine",
+      "assets": [
+        {
+          "assetId": "seated_calf_raise_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "equipment/seated_calf_raise_machine/v1/thumb.webp",
+          "width": 512,
+          "height": 512,
+          "licenseId": "tonos_owned",
+          "bytes": 12738,
+          "sha256": "afb4246b1c0f0e7cfadf3a22d1bb701c0cd12a81c70389e3e11cc7d124447cec"
+        }
+      ]
+    },
+    {
+      "entityType": "equipment",
+      "entityId": 36,
+      "entityName": "Sled",
+      "slug": "sled",
+      "assets": [
+        {
+          "assetId": "sled_thumb_v1",
+          "type": "thumbnail",
+          "path": "equipment/sled/v1/thumb.webp",
+          "width": 512,
+          "height": 512,
+          "licenseId": "tonos_owned",
+          "bytes": 12520,
+          "sha256": "3f57612d78ac73f853318cfc8745ecb78ed3573faddba54ef58363dd2b8674e5"
+        }
+      ]
+    },
+    {
+      "entityType": "equipment",
+      "entityId": 37,
+      "entityName": "Squat Rack",
+      "slug": "squat_rack",
+      "assets": [
+        {
+          "assetId": "squat_rack_thumb_v1",
+          "type": "thumbnail",
+          "path": "equipment/squat_rack/v1/thumb.webp",
+          "width": 512,
+          "height": 512,
+          "licenseId": "tonos_owned",
+          "bytes": 12622,
+          "sha256": "4eb2835160c3ca9328f13b773a45135dd5817765e01d455d96988b90b4fccdf2"
+        }
+      ]
+    },
+    {
+      "entityType": "equipment",
+      "entityId": 38,
+      "entityName": "Smith Machine",
+      "slug": "smith_machine",
+      "assets": [
+        {
+          "assetId": "smith_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "equipment/smith_machine/v1/thumb.webp",
+          "width": 512,
+          "height": 512,
+          "licenseId": "tonos_owned",
+          "bytes": 14728,
+          "sha256": "481efa072a0aaf66eceb7958e9c0939a9fdf0a68b18960e58da20769c0323b79"
+        }
+      ]
+    },
+    {
+      "entityType": "equipment",
+      "entityId": 39,
+      "entityName": "Standing Calf Raise Machine",
+      "slug": "standing_calf_raise_machine",
+      "assets": [
+        {
+          "assetId": "standing_calf_raise_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "equipment/standing_calf_raise_machine/v1/thumb.webp",
+          "width": 512,
+          "height": 512,
+          "licenseId": "tonos_owned",
+          "bytes": 14998,
+          "sha256": "c89f1181a6b98bfb56e498c353d140e3466d44207e834178b68dd02bf04ca2fa"
+        }
+      ]
+    },
+    {
+      "entityType": "equipment",
+      "entityId": 40,
+      "entityName": "Weight Plates",
+      "slug": "weight_plates",
+      "assets": [
+        {
+          "assetId": "weight_plates_thumb_v1",
+          "type": "thumbnail",
+          "path": "equipment/weight_plates/v1/thumb.webp",
+          "width": 512,
+          "height": 512,
+          "licenseId": "tonos_owned",
+          "bytes": 11704,
+          "sha256": "844d1b9d9fbabece4411ab0f11fe49cef005eb39c82090a94973eefc109b0070"
+        }
+      ]
+    }
+  ]
+}

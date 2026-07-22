@@ -7,7 +7,12 @@ import '../theme/theme_extensions.dart';
 
 /// A calendar‐style grid plus summary for “Data & Records”.
 class DataRecordsSection extends StatelessWidget {
-  const DataRecordsSection({super.key});
+  final EdgeInsetsGeometry padding;
+
+  const DataRecordsSection({
+    super.key,
+    this.padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +23,7 @@ class DataRecordsSection extends StatelessWidget {
     const dayLabels = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: padding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -51,6 +56,7 @@ class DataRecordsSection extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: GridView.count(
               shrinkWrap: true,
+              primary: false,
               physics: const NeverScrollableScrollPhysics(),
               crossAxisCount: 7,
               crossAxisSpacing: 8,

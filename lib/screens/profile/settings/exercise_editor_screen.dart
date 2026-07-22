@@ -1,11 +1,18 @@
 // file: lib/screens/profile/settings/exercise_editor_screen.dart
-// Exercise Editor Screen: allows viewing and editing an exercise definition.
+// Advanced editor for shared exercise definition data.
 
 import 'package:flutter/material.dart';
-import '../../../repositories/app_repository.dart';
+
 import '../../../models/models.dart';
+import '../../../repositories/app_repository.dart';
+import '../../../widgets/settings_tiles.dart';
+import '../../exercise/exercise_catalog_page.dart';
+import 'exercise_analytics_screen.dart';
 
 /// Exercise Editor Screen: allows viewing and editing an exercise definition.
+///
+/// TODO: Revisit this screen's information hierarchy and editing controls once
+/// the wider settings UI has settled, then refine the editor's visual design.
 class ExerciseEditorScreen extends StatefulWidget {
   const ExerciseEditorScreen({super.key});
 
@@ -13,18 +20,32 @@ class ExerciseEditorScreen extends StatefulWidget {
   State<ExerciseEditorScreen> createState() => _ExerciseEditorScreenState();
 }
 
+class _CustomExerciseDraft {
+  final String name;
+  final int? primaryEquipmentId;
+
+  const _CustomExerciseDraft({
+    required this.name,
+    required this.primaryEquipmentId,
+  });
+}
+
 class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
     with SingleTickerProviderStateMixin {
   final _repo = AppRepository();
   late final TabController _tabController;
+  int _activeTabIndex = 0;
   bool _isEditing = false;
   bool _isSaving = false;
 
   // Definitions
-  List<ExerciseDefinition> _defs = [];
+  List<Equipment> _allEquipment = [];
   ExerciseDefinition? _selectedDef;
-  bool _isNewExercise = false;
   int _definitionLoadRequest = 0;
+  bool _isLoadingDefinitions = true;
+  bool _isLoadingDetails = false;
+  String? _loadError;
+  bool _hasPendingChanges = false;
 
   // Tab data
   List<Map<String, Object>> _muscleEntries =
@@ -34,7 +55,6 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
 
   // just below `bool _useManualBody = false;`
   bool _useManualMuscles = false;
-  List<Map<String, Object>> _muscleAutoEntries = [];
 
   // new:
   List<Map<String, Object>> _equipmentEntries =
@@ -46,12 +66,16 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
   // Notes & media metadata. Remote URLs are durable; local cache paths are optional.
   List<ExerciseMediaItem> _mediaItems = [];
 
+  // Retained for the legacy form kept during this screen's staged migration.
   int _rating = 0;
-  bool _multiplyByRating = false; // UI-only for now
+  bool _multiplyByRating = false;
 
   late final TextEditingController _setupController;
   late final TextEditingController _executionController;
   late final TextEditingController _tipsController;
+  late final TextEditingController _nameController;
+  late final TextEditingController _ratingController;
+  int? _primaryEquipmentId;
 
   @override
   void initState() {
@@ -60,6 +84,8 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
     _setupController = TextEditingController();
     _executionController = TextEditingController();
     _tipsController = TextEditingController();
+    _nameController = TextEditingController();
+    _ratingController = TextEditingController();
     _loadExerciseList();
   }
 
@@ -69,27 +95,47 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
     _setupController.dispose();
     _executionController.dispose();
     _tipsController.dispose();
+    _nameController.dispose();
+    _ratingController.dispose();
     super.dispose();
   }
 
   /// Load all definitions and select the first one
   Future<void> _loadExerciseList() async {
-    final defs = await _repo.lookupDefsDetailed();
-    if (!mounted) return;
     setState(() {
-      _defs = defs;
-      _selectedDef = null;
-      _isNewExercise = false;
-      _isEditing = false;
+      _isLoadingDefinitions = true;
+      _loadError = null;
     });
+    try {
+      final defsFuture = _repo.lookupDefsDetailed();
+      final equipmentFuture = _repo.fetchAllEquipment();
+      await defsFuture;
+      final equipment = await equipmentFuture;
+      if (!mounted) return;
+      setState(() {
+        _allEquipment = equipment;
+        _selectedDef = null;
+        _isEditing = false;
+        _hasPendingChanges = false;
+        _isLoadingDefinitions = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _isLoadingDefinitions = false;
+        _loadError = error.toString();
+      });
+    }
   }
 
   /// Handle selecting an exercise definition
   Future<void> _onExerciseSelected(ExerciseDefinition def) async {
     setState(() {
       _selectedDef = def;
-      _isNewExercise = false;
       _isEditing = false;
+      _hasPendingChanges = false;
+      _isLoadingDetails = true;
+      _activeTabIndex = 0;
     });
     _tabController.index = 0;
     await _loadDefinitionDetails(def);
@@ -100,182 +146,268 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
     final request = ++_definitionLoadRequest;
     final defId = def.id;
 
-    // Start independent reads together so changing exercises does not wait on
-    // a long serial chain of database queries.
-    final results = await Future.wait<Object>([
-      _repo.computeMusclePercents(defId),
-      _repo.getUseManualMuscles(defId),
-      _repo.fetchAllMusclesFull(),
-      _repo.computeMuscleCalculatedBodyparts(defId),
-      _repo.fetchBodyPartPercentsManual(defId),
-      _repo.getUseManualBodyparts(defId),
-      _repo.fetchExerciseMedia(defId),
-      _repo.getMultiplyByRating(defId),
-      Future.wait(
-        def.bodyParts.map(
-          (bodyPart) => _repo.fetchMusclesForBodyPart(bodyPart.id),
-        ),
-      ),
-    ]);
+    try {
+      // Start independent reads together so changing exercises does not wait on
+      // a long serial chain of database queries.
+      final results = await Future.wait<Object>([
+        _repo.computeMusclePercents(defId),
+        _repo.getUseManualMuscles(defId),
+        _repo.computeMuscleCalculatedBodyparts(defId),
+        _repo.fetchBodyPartPercentsManual(defId),
+        _repo.getUseManualBodyparts(defId),
+        _repo.fetchExerciseMedia(defId),
+        _repo.getMultiplyByRating(defId),
+      ]);
 
-    final musclePercents = results[0] as List<ExerciseMusclePercent>;
-    final useManualMuscles = results[1] as bool;
-    final allMuscles = results[2] as List<Muscle>;
-    final autoBpMap = results[3] as Map<BodyPart, double>;
-    final manualList = results[4] as List<ExerciseBodyPartPercent>;
-    final useManualBody = results[5] as bool;
-    final mediaItems = results[6] as List<ExerciseMediaItem>;
-    final multiplyByRating = results[7] as bool;
-    final bodyPartLinks = results[8] as List<List<MuscleBodyPart>>;
+      final musclePercents = results[0] as List<ExerciseMusclePercent>;
+      final useManualMuscles = results[1] as bool;
+      final autoBpMap = results[2] as Map<BodyPart, double>;
+      final manualList = results[3] as List<ExerciseBodyPartPercent>;
+      final useManualBody = results[4] as bool;
+      final mediaItems = results[5] as List<ExerciseMediaItem>;
+      final multiplyByRating = results[6] as bool;
 
-    final muscleById = {for (var m in allMuscles) m.id: m};
-    final seenMuscles = <int>{};
-    final autoMuscles = <Map<String, Object>>[];
-    final manualMap = {for (var e in manualList) e.bodyPartId: e.percent};
+      final manualMap = {for (var e in manualList) e.bodyPartId: e.percent};
 
-    for (var index = 0; index < def.bodyParts.length; index++) {
-      final bp = def.bodyParts[index];
-      final links = bodyPartLinks[index];
-      for (var link in links) {
-        final mid = link.muscleId;
-        if (!seenMuscles.contains(mid) && muscleById.containsKey(mid)) {
-          seenMuscles.add(mid);
-          final m = muscleById[mid]!;
-          autoMuscles.add({
-            'id': m.id,
-            'name': m.name,
-            // use the manual bodypart count if set, otherwise fallback to computed
-            'count': manualMap[bp.id] ?? autoBpMap[bp] ?? 0.0,
-          });
-        }
+      if (!mounted ||
+          request != _definitionLoadRequest ||
+          _selectedDef?.id != defId) {
+        return;
       }
-    }
 
-    if (!mounted ||
-        request != _definitionLoadRequest ||
-        _selectedDef?.id != defId) {
+      // Now update all UI state in one batch:
+      setState(() {
+        // — Toggles
+        _useManualBody = useManualBody;
+        _useManualMuscles = useManualMuscles;
+        _multiplyByRating = multiplyByRating;
+
+        // — Muscles Tab
+        _muscleEntries =
+            def.muscles.map((rm) {
+              final override = musclePercents.firstWhere(
+                (e) => e.muscleId == rm.muscle.id,
+                orElse:
+                    () => ExerciseMusclePercent(
+                      exerciseDefId: defId,
+                      muscleId: rm.muscle.id,
+                      percent: 0.0,
+                    ),
+              );
+              return {
+                'id': rm.muscle.id,
+                'name': rm.muscle.name,
+                'percent': override.percent,
+              };
+            }).toList();
+        // --- Muscle-Calculated Bodyparts ---
+        _bodyAutoEntries =
+            autoBpMap.entries.map((e) {
+              return {'id': e.key.id, 'name': e.key.name, 'count': e.value};
+            }).toList();
+
+        // --- Manual-Assigned Bodyparts ---
+        _bodyManualEntries =
+            def.bodyParts.map((bp) {
+              // seed with override if present, else default 1 set per set
+              final autoMap = {
+                for (var e in autoBpMap.entries) e.key.id: e.value,
+              };
+              final count = manualMap[bp.id] ?? autoMap[bp.id] ?? 0.0;
+              return {'id': bp.id, 'name': bp.name, 'count': count};
+            }).toList();
+
+        // Equipment (unchanged)
+        _equipmentEntries =
+            def.equipmentList.map((e) => {'id': e.id, 'name': e.name}).toList();
+        _rating = def.rating;
+        _mediaItems = mediaItems;
+        _primaryEquipmentId = def.equipmentId;
+      });
+      // after your setState block…
+      _nameController.text = def.name;
+      _ratingController.text = def.rating.toString();
+      _setupController.text = def.setupNotes;
+      _executionController.text = def.executionNotes;
+      _tipsController.text = def.tipsNotes;
+      if (mounted && request == _definitionLoadRequest) {
+        setState(() => _isLoadingDetails = false);
+      }
+    } catch (error) {
+      if (!mounted ||
+          request != _definitionLoadRequest ||
+          _selectedDef?.id != defId) {
+        return;
+      }
+      setState(() => _isLoadingDetails = false);
+      _showMessage('Could not load this exercise definition. $error');
+    }
+  }
+
+  void _startEditing() {
+    if (_selectedDef == null || _isSaving) return;
+    setState(() {
+      _isEditing = true;
+      _hasPendingChanges = false;
+    });
+  }
+
+  void _markChanged() {
+    if (_isEditing && !_hasPendingChanges) {
+      setState(() => _hasPendingChanges = true);
+    }
+  }
+
+  Future<void> _saveDefinition() async {
+    final def = _selectedDef;
+    if (def == null || !_isEditing || _isSaving) return;
+
+    final name = _nameController.text.trim();
+    final rating = int.tryParse(_ratingController.text.trim());
+    if (name.isEmpty) {
+      _showMessage('Enter an exercise name before saving.');
+      return;
+    }
+    if (rating == null || rating < 0 || rating > 100) {
+      _showMessage('Exercise rating must be a whole number from 0 to 100.');
+      return;
+    }
+    if (_muscleEntries.isEmpty || _bodyManualEntries.isEmpty) {
+      _showMessage(
+        'Add at least one target muscle and one body part before saving.',
+      );
       return;
     }
 
-    // Now update all UI state in one batch:
-    setState(() {
-      // — Toggles
-      _useManualBody = useManualBody;
-      _useManualMuscles = useManualMuscles;
-      _multiplyByRating = multiplyByRating;
+    final equipmentIds =
+        _equipmentEntries.map((entry) => entry['id'] as int).toSet();
+    if (_primaryEquipmentId != null) equipmentIds.add(_primaryEquipmentId!);
+    final equipmentById = <int, Equipment>{
+      for (final equipment in _allEquipment) equipment.id: equipment,
+      for (final equipment in def.equipmentList) equipment.id: equipment,
+    };
+    final equipmentList = <Equipment>[
+      for (final id in equipmentIds)
+        equipmentById[id] ?? Equipment(id, 'Equipment $id'),
+    ];
 
-      // — Muscles Tab
-      _muscleAutoEntries = autoMuscles;
-      _muscleEntries =
-          def.muscles.map((rm) {
-            final override = musclePercents.firstWhere(
-              (e) => e.muscleId == rm.muscle.id,
-              orElse:
-                  () => ExerciseMusclePercent(
-                    exerciseDefId: defId,
-                    muscleId: rm.muscle.id,
-                    percent: 0.0,
+    setState(() => _isSaving = true);
+    try {
+      await _repo.saveExerciseDefinitionAtomic(
+        ExerciseDefinitionWrite(
+          definition: ExerciseDefinition(
+            id: def.id,
+            name: name,
+            equipmentId: _primaryEquipmentId,
+            rating: rating,
+            equipmentList: equipmentList,
+            bodyParts:
+                _bodyManualEntries
+                    .map(
+                      (entry) =>
+                          BodyPart(entry['id'] as int, entry['name'] as String),
+                    )
+                    .toList(),
+            muscles: [
+              for (var index = 0; index < _muscleEntries.length; index++)
+                RankedMuscle(
+                  muscle: Muscle(
+                    id: _muscleEntries[index]['id'] as int,
+                    name: _muscleEntries[index]['name'] as String,
                   ),
-            );
-            return {
-              'id': rm.muscle.id,
-              'name': rm.muscle.name,
-              'percent': override.percent,
-            };
-          }).toList();
-      // --- Muscle-Calculated Bodyparts ---
-      _bodyAutoEntries =
-          autoBpMap.entries.map((e) {
-            return {'id': e.key.id, 'name': e.key.name, 'count': e.value};
-          }).toList();
+                  rank: index + 1,
+                ),
+            ],
+            useManualBodyparts: _useManualBody,
+            multiplyByRating: _multiplyByRating,
+            setupNotes: _setupController.text.trim(),
+            executionNotes: _executionController.text.trim(),
+            tipsNotes: _tipsController.text.trim(),
+            starterLoadProfile: def.starterLoadProfile,
+          ),
+          useManualMuscles: _useManualMuscles,
+          muscleIds: _muscleEntries.map((entry) => entry['id'] as int).toList(),
+          musclePercents: {
+            for (final entry in _muscleEntries)
+              entry['id'] as int: entry['percent'] as double,
+          },
+          equipmentIds: equipmentIds,
+          bodyPartPercents: {
+            for (final entry in _bodyManualEntries)
+              entry['id'] as int: entry['count'] as double,
+          },
+          mediaItems: _mediaItems,
+        ),
+      );
 
-      // --- Manual-Assigned Bodyparts ---
-      _bodyManualEntries =
-          def.bodyParts.map((bp) {
-            // seed with override if present, else default 1 set per set
-            final autoMap = {
-              for (var e in autoBpMap.entries) e.key.id: e.value,
-            };
-            final count = manualMap[bp.id] ?? autoMap[bp.id] ?? 0.0;
-            return {'id': bp.id, 'name': bp.name, 'count': count};
-          }).toList();
-
-      // Equipment (unchanged)
-      _equipmentEntries =
-          def.equipmentList.map((e) => {'id': e.id, 'name': e.name}).toList();
-      _rating = def.rating;
-      _mediaItems = mediaItems;
-    });
-    // after your setState block…
-    _setupController.text = def.setupNotes;
-    _executionController.text = def.executionNotes;
-    _tipsController.text = def.tipsNotes;
+      final refreshedDefinition = await _repo.fetchDefinitionById(def.id);
+      if (!mounted || refreshedDefinition == null) return;
+      setState(() {
+        _selectedDef = refreshedDefinition;
+        _isEditing = false;
+        _hasPendingChanges = false;
+        _isLoadingDetails = true;
+      });
+      await _loadDefinitionDetails(refreshedDefinition);
+      if (mounted) _showMessage('Exercise definition saved.');
+    } catch (error) {
+      if (mounted) {
+        _showMessage(
+          'Could not save exercise. No changes were applied. $error',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
   }
 
-  Future<void> _toggleEdit() async {
-    if (_isSaving) return;
-    if (_isEditing && _selectedDef != null) {
-      final def = _selectedDef!;
-      final defId = def.id;
-      setState(() => _isSaving = true);
-      try {
-        await _repo.saveExerciseDefinitionAtomic(
-          ExerciseDefinitionWrite(
-            definition: ExerciseDefinition(
-              id: def.id,
-              name: def.name,
-              equipmentId: def.equipmentId,
-              rating: _rating,
-              equipmentList: def.equipmentList,
-              bodyParts: def.bodyParts,
-              muscles: def.muscles,
-              useManualBodyparts: _useManualBody,
-              multiplyByRating: _multiplyByRating,
-              setupNotes: _setupController.text,
-              executionNotes: _executionController.text,
-              tipsNotes: _tipsController.text,
-              starterLoadProfile: def.starterLoadProfile,
-            ),
-            useManualMuscles: _useManualMuscles,
-            muscleIds:
-                _muscleEntries.map((entry) => entry['id'] as int).toList(),
-            musclePercents: {
-              for (final entry in _muscleEntries)
-                entry['id'] as int: entry['percent'] as double,
-            },
-            equipmentIds:
-                _equipmentEntries
-                    .map((entry) => entry['id'] as int)
-                    .toSet(),
-            bodyPartPercents: {
-              for (final entry in _bodyManualEntries)
-                entry['id'] as int: entry['count'] as double,
-            },
-            mediaItems: _mediaItems,
-          ),
-        );
+  Future<void> _cancelEditing() async {
+    final def = _selectedDef;
+    if (def == null) return;
+    if (_hasPendingChanges && !await _confirmDiscard()) return;
 
-        final refreshedDefinition = await _repo.fetchDefinitionById(defId);
-        if (!mounted || refreshedDefinition == null) return;
-        _selectedDef = refreshedDefinition;
-        await _loadDefinitionDetails(refreshedDefinition);
-        if (!mounted) return;
-      } catch (error) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Could not save exercise. The previous definition is unchanged. $error',
+    final refreshedDefinition = await _repo.fetchDefinitionById(def.id);
+    if (!mounted || refreshedDefinition == null) return;
+    setState(() {
+      _selectedDef = refreshedDefinition;
+      _isEditing = false;
+      _hasPendingChanges = false;
+      _isLoadingDetails = true;
+    });
+    await _loadDefinitionDetails(refreshedDefinition);
+  }
+
+  Future<bool> _confirmDiscard() async {
+    if (!_isEditing || !_hasPendingChanges) return true;
+    final result = await showDialog<bool>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Discard changes?'),
+            content: const Text(
+              'Your edits are not saved yet. You can keep editing or discard them.',
             ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Keep editing'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Discard'),
+              ),
+            ],
           ),
-        );
-        return;
-      } finally {
-        if (mounted) setState(() => _isSaving = false);
-      }
+    );
+    return result ?? false;
+  }
+
+  Future<void> _handleBack() async {
+    if (!await _confirmDiscard() || !mounted) return;
+    if (_hasPendingChanges) {
+      setState(() => _hasPendingChanges = false);
     }
-
-    setState(() => _isEditing = !_isEditing);
+    Navigator.maybePop(context);
   }
 
   /// Let the user pick one or more new BodyParts to stage.
@@ -337,6 +469,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
           final bp = allBps.firstWhere((b) => b.id == id);
           _bodyManualEntries.add({'id': bp.id, 'name': bp.name, 'count': 1.0});
         }
+        _hasPendingChanges = true;
       });
     }
   }
@@ -414,6 +547,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
             'percent': 0.0,
           });
         }
+        _hasPendingChanges = true;
       });
     }
   }
@@ -477,383 +611,797 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
           final eq = allEq.firstWhere((e) => e.id == id);
           _equipmentEntries.add({'id': eq.id, 'name': eq.name});
         }
+        _hasPendingChanges = true;
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // **ADD**: show a loader until an exercise is selected
-    if (_defs.isEmpty) {
+    if (_isLoadingDefinitions) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
-    return Scaffold(
-      appBar: AppBar(
-        title: SizedBox(
-          width: 250,
-          child: Autocomplete<String>(
-            optionsBuilder: (TextEditingValue txt) {
-              final names = _defs.map((d) => d.name).toList();
-              if (txt.text.isEmpty) return names;
-              return names
-                  .where(
-                    (name) =>
-                        name.toLowerCase().contains(txt.text.toLowerCase()),
-                  )
-                  .toList();
-            },
-            onSelected: (selection) {
-              final match = _defs.firstWhere(
-                (d) => d.name == selection,
-                orElse:
-                    () => ExerciseDefinition(
-                      id: -1,
-                      name: selection,
-                      equipmentId: null,
-                      rating: 0,
-                      equipmentList: [],
-                      bodyParts: [],
-                      muscles: [],
-                      useManualBodyparts: false,
-                      multiplyByRating: false,
-                    ),
-              );
-              if (match.id == -1) {
-                // New exercise
-                setState(() {
-                  _isNewExercise = true;
-                  _selectedDef = null;
-                  _isEditing = true;
-                  _setupController.clear();
-                  _executionController.clear();
-                  _tipsController.clear();
-                  _muscleEntries = [];
-                  _equipmentEntries = [];
-                  _rating = 0;
-                  _multiplyByRating = false;
-                });
-              } else {
-                _onExerciseSelected(match);
-              }
-            },
-            fieldViewBuilder: (
-              context,
-              textController,
-              focusNode,
-              onFieldSubmitted,
-            ) {
-              return TextField(
-                controller: textController,
-                focusNode: focusNode,
-                decoration: InputDecoration(
-                  hintText: 'Select or enter exercise',
-                  isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 8,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white60),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  filled: true,
-                  fillColor: Theme.of(
-                    context,
-                  ).colorScheme.surface.withAlpha(25),
+    if (_loadError != null) {
+      return Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.error_outline, size: 40),
+                const SizedBox(height: 12),
+                const Text('Exercise definitions could not load.'),
+                const SizedBox(height: 12),
+                FilledButton(
+                  onPressed: _loadExerciseList,
+                  child: const Text('Try again'),
                 ),
-                onSubmitted: (_) => onFieldSubmitted(),
-              );
-            },
-            optionsViewBuilder: (ctx, onSelected, options) {
-              return Material(
-                elevation: 4,
-                child: ListView(
-                  padding: EdgeInsets.zero,
-                  shrinkWrap: true,
-                  children:
-                      options
-                          .map(
-                            (opt) => ListTile(
-                              title: Text(opt),
-                              onTap: () => onSelected(opt),
-                            ),
-                          )
-                          .toList(),
-                ),
-              );
-            },
+              ],
+            ),
           ),
         ),
-        actions: [
-          IconButton(
-            icon: Icon(_isEditing ? Icons.check : Icons.edit),
-            onPressed:
-                _isSaving
-                    ? null
-                    :
-                (_selectedDef != null || _isNewExercise)
-                    ? () => _toggleEdit()
-                    : null,
-            tooltip: _isEditing ? 'Save' : 'Edit',
+      );
+    }
+    final navigator = Navigator.of(context);
+    return PopScope<Object?>(
+      canPop: !_isEditing || !_hasPendingChanges,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop || !_isEditing || !_hasPendingChanges) return;
+        if (!await _confirmDiscard() || !mounted) return;
+        setState(() => _hasPendingChanges = false);
+        navigator.pop();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            tooltip: 'Back',
+            onPressed: _handleBack,
+            icon: const Icon(Icons.arrow_back),
           ),
-        ],
+          title: const SizedBox.shrink(),
+          actions: [
+            IconButton(
+              tooltip: 'Choose exercise',
+              icon: const Icon(Icons.search),
+              onPressed: _isEditing || _isSaving ? null : _openCatalogPicker,
+            ),
+            IconButton(
+              icon: const Icon(Icons.edit_outlined),
+              onPressed:
+                  _isSaving
+                      ? null
+                      : (_selectedDef != null && !_isEditing)
+                      ? _startEditing
+                      : null,
+              tooltip: 'Edit definition',
+            ),
+            IconButton(
+              tooltip: 'Create custom exercise',
+              icon: const Icon(Icons.add_circle_outline),
+              onPressed: _isEditing || _isSaving ? null : _createCustomExercise,
+            ),
+          ],
+        ),
+        bottomNavigationBar:
+            _isEditing && _selectedDef != null
+                ? SafeArea(
+                  minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: _isSaving ? null : _cancelEditing,
+                          child: const Text('Cancel'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: FilledButton.icon(
+                          onPressed: _isSaving ? null : _saveDefinition,
+                          icon: const Icon(Icons.save_outlined),
+                          label: Text(_isSaving ? 'Saving' : 'Save changes'),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+                : null,
+        body: _selectedDef == null ? _buildPickerLanding() : _buildEditor(),
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Material(
-            color: Theme.of(context).appBarTheme.backgroundColor,
-            child: TabBar(
-              controller: _tabController,
-              tabs: const [
-                Tab(text: 'Muscles'),
-                Tab(text: 'Bodyparts'),
-                Tab(text: 'Equipment'),
-                Tab(text: 'Notes'),
-              ],
-            ),
+    );
+  }
+
+  Widget _buildEditor() {
+    return ListView(
+      padding: const EdgeInsets.only(bottom: 112),
+      children: [
+        _buildEditorHeader(),
+        Container(
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          decoration: BoxDecoration(
+            color: Theme.of(
+              context,
+            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.34),
+            borderRadius: BorderRadius.circular(18),
           ),
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildMusclesTab(),
-                _buildBodypartsTab(),
-                _buildEquipmentTab(),
-                _buildNotesMediaTab(),
-              ],
+          child: TabBar(
+            controller: _tabController,
+            onTap: (index) => setState(() => _activeTabIndex = index),
+            dividerColor: Colors.transparent,
+            indicatorSize: TabBarIndicatorSize.tab,
+            indicator: BoxDecoration(
+              color: SettingsAccent.advanced.withValues(alpha: 0.20),
+              borderRadius: BorderRadius.circular(14),
             ),
+            labelColor: SettingsAccent.advanced,
+            unselectedLabelColor:
+                Theme.of(context).colorScheme.onSurfaceVariant,
+            tabs: const [
+              Tab(text: 'Muscles'),
+              Tab(text: 'Bodyparts'),
+              Tab(text: 'Equipment'),
+              Tab(text: 'Guide'),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+          child:
+              _isLoadingDetails
+                  ? const Padding(
+                    padding: EdgeInsets.only(top: 64),
+                    child: Center(child: CircularProgressIndicator()),
+                  )
+                  : _buildCurrentTab(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCurrentTab() {
+    switch (_activeTabIndex) {
+      case 0:
+        return _buildMusclesTab();
+      case 1:
+        return _buildBodypartsTab();
+      case 2:
+        return _buildEquipmentTab();
+      case 3:
+        return _buildNotesMediaTab();
+      default:
+        return const SizedBox.shrink();
+    }
+  }
+
+  Future<void> _openCatalogPicker() async {
+    if (_isEditing) {
+      _showMessage('Save or cancel changes before selecting another exercise.');
+      return;
+    }
+    final selected = await Navigator.of(context).push<ExerciseDefinition>(
+      MaterialPageRoute(
+        builder: (_) => ExerciseCatalogPage(onExercisePicked: (_) {}),
+      ),
+    );
+    if (!mounted || selected == null) return;
+    await _onExerciseSelected(selected);
+  }
+
+  Future<void> _createCustomExercise() async {
+    if (_isEditing || _isSaving) return;
+
+    var exerciseName = '';
+    var selectedEquipmentId = 0;
+    final draft = await showDialog<_CustomExerciseDraft>(
+      context: context,
+      builder:
+          (context) => StatefulBuilder(
+            builder: (context, setDialogState) {
+              final mediaQuery = MediaQuery.of(context);
+              final usableHeight =
+                  mediaQuery.size.height - mediaQuery.viewInsets.bottom;
+              return AlertDialog(
+                title: const Text('Create custom exercise'),
+                content: ConstrainedBox(
+                  constraints: BoxConstraints(maxHeight: usableHeight * 0.48),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          'Create a custom catalog definition, then add its target anatomy and guidance before saving.',
+                        ),
+                        const SizedBox(height: 14),
+                        TextFormField(
+                          textCapitalization: TextCapitalization.words,
+                          autofocus: true,
+                          decoration: const InputDecoration(
+                            labelText: 'Exercise name',
+                          ),
+                          onChanged: (value) => exerciseName = value,
+                        ),
+                        const SizedBox(height: 12),
+                        DropdownButtonFormField<int>(
+                          value: selectedEquipmentId,
+                          isExpanded: true,
+                          decoration: const InputDecoration(
+                            labelText: 'Equipment',
+                          ),
+                          items: [
+                            const DropdownMenuItem(
+                              value: 0,
+                              child: Text('No equipment'),
+                            ),
+                            ..._allEquipment.map(
+                              (equipment) => DropdownMenuItem(
+                                value: equipment.id,
+                                child: Text(equipment.name),
+                              ),
+                            ),
+                          ],
+                          onChanged:
+                              (value) => setDialogState(
+                                () => selectedEquipmentId = value ?? 0,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Cancel'),
+                  ),
+                  FilledButton(
+                    onPressed: () {
+                      final name = exerciseName.trim();
+                      if (name.isEmpty) return;
+                      Navigator.of(context).pop(
+                        _CustomExerciseDraft(
+                          name: name,
+                          primaryEquipmentId:
+                              selectedEquipmentId == 0
+                                  ? null
+                                  : selectedEquipmentId,
+                        ),
+                      );
+                    },
+                    child: const Text('Create'),
+                  ),
+                ],
+              );
+            },
+          ),
+    );
+    if (!mounted || draft == null) return;
+
+    setState(() => _isSaving = true);
+    try {
+      String equipmentName = '';
+      for (final equipment in _allEquipment) {
+        if (equipment.id == draft.primaryEquipmentId) {
+          equipmentName = equipment.name;
+          break;
+        }
+      }
+      final definitionId = await _repo.findOrCreateExerciseDefinition(
+        draft.name,
+        equipmentName,
+      );
+      final definition = await _repo.fetchDefinitionById(definitionId);
+      if (!mounted || definition == null) return;
+      await _onExerciseSelected(definition);
+      if (!mounted) return;
+      setState(() {
+        _isEditing = true;
+        _hasPendingChanges = false;
+      });
+      _showMessage('Exercise opened. Add its target anatomy, then save.');
+    } catch (error) {
+      _showMessage('Could not create the custom exercise. $error');
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  void _showMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Widget _buildPickerLanding() {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 28),
+      children: [
+        _buildTitleCard(),
+        const SizedBox(height: 16),
+        const SettingsInfoCard(
+          icon: Icons.info_outline,
+          title: 'What this changes',
+          body:
+              'Use this advanced editor to update an exercise name, target anatomy, equipment, form guidance, rating, and reference media. Exact per-set credit is managed separately so it stays consistent across the app.',
+          iconColor: SettingsAccent.advanced,
+        ),
+        const SizedBox(height: 16),
+        FilledButton.icon(
+          onPressed: _isSaving ? null : _openCatalogPicker,
+          icon: const Icon(Icons.search),
+          label: const Text('Choose an exercise from the catalog'),
+        ),
+        const SizedBox(height: 10),
+        OutlinedButton.icon(
+          onPressed: _isSaving ? null : _createCustomExercise,
+          icon: const Icon(Icons.add),
+          label: const Text('Create a custom exercise'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTitleCard() {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            SettingsAccent.advanced.withValues(alpha: 0.26),
+            scheme.surfaceContainerHighest.withValues(alpha: 0.54),
+          ],
+        ),
+        border: Border.all(
+          color: SettingsAccent.advanced.withValues(alpha: 0.42),
+        ),
+      ),
+      child: Text(
+        'Exercise Editor',
+        style: theme.textTheme.headlineSmall?.copyWith(
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEditorHeader() {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final selected = _selectedDef!;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+      child: Column(
+        children: [
+          _buildTitleCard(),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: scheme.surfaceContainerHighest.withValues(alpha: 0.34),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: SettingsAccent.advanced.withValues(alpha: 0.42),
+              ),
+            ),
+            child:
+                _isEditing
+                    ? Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _nameController,
+                            textCapitalization: TextCapitalization.words,
+                            decoration: const InputDecoration(
+                              labelText: 'Exercise name',
+                              isDense: true,
+                            ),
+                            onChanged: (_) => _markChanged(),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        SizedBox(
+                          width: 88,
+                          child: TextField(
+                            controller: _ratingController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: 'Rating',
+                              suffixText: '/100',
+                              isDense: true,
+                            ),
+                            onChanged: (_) => _markChanged(),
+                          ),
+                        ),
+                      ],
+                    )
+                    : Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            selected.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 7,
+                          ),
+                          decoration: BoxDecoration(
+                            color: SettingsAccent.advanced.withValues(
+                              alpha: 0.16,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '${selected.rating}/100',
+                            style: theme.textTheme.labelLarge?.copyWith(
+                              color: SettingsAccent.advanced,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildAllocationShortcut({
+    required String title,
+    required String body,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: scheme.surfaceContainerHighest.withValues(alpha: 0.34),
+      borderRadius: BorderRadius.circular(22),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(22),
+        onTap: _openAllocation,
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: SettingsAccent.advanced.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: const Icon(Icons.tune, color: SettingsAccent.advanced),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      _isEditing
+                          ? 'Save or cancel definition changes first.'
+                          : body,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openAllocation() async {
+    final definition = _selectedDef;
+    if (definition == null) return;
+    if (_isEditing) {
+      _showMessage(
+        'Save or cancel definition changes before editing set credit.',
+      );
+      return;
+    }
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ExerciseAnalyticsScreen(initialDefinition: definition),
+      ),
+    );
+    if (!mounted || _selectedDef?.id != definition.id) return;
+    await _loadDefinitionDetails(definition);
+  }
+
+  Future<bool> _confirmRemove(String itemName, String itemType) async {
+    final shouldRemove = await showDialog<bool>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: Text('Remove $itemType?'),
+            content: Text('Remove "$itemName" from this exercise definition?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Keep'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Remove'),
+              ),
+            ],
+          ),
+    );
+    return shouldRemove ?? false;
   }
 
   Widget _buildMusclesTab() {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Use Manual Muscles toggle
-          Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SettingsInfoCard(
+          icon: Icons.fitness_center,
+          title: 'Target muscle order',
+          body:
+              'Order muscles by how strongly the exercise targets them. This helps Tonos estimate anatomy focus and make better exercise recommendations.',
+          iconColor: SettingsAccent.training,
+        ),
+        const SizedBox(height: 14),
+        _buildAllocationShortcut(
+          title: 'Exact set credit',
+          body:
+              'Change the precise credit one set gives each muscle or body part in Exercise Set Allocation.',
+        ),
+        if (_isEditing) ...[
+          const SizedBox(height: 12),
+          SettingsSection(
+            title: 'Set-credit scaling',
+            subtitle: 'Choose whether this exercise rating scales set credit.',
+            accentColor: SettingsAccent.advanced,
             children: [
-              Checkbox(
-                value: _useManualMuscles,
-                onChanged:
-                    _isEditing
-                        ? (v) => setState(() => _useManualMuscles = v!)
-                        : null,
+              SettingsSwitchTile(
+                icon: Icons.tune,
+                iconColor: SettingsAccent.advanced,
+                title: 'Scale credit by rating',
+                subtitle: 'Applies the exercise rating to analytic set totals.',
+                value: _multiplyByRating,
+                onChanged: (value) {
+                  setState(() {
+                    _multiplyByRating = value;
+                    _hasPendingChanges = true;
+                  });
+                },
               ),
-              const Text('Use Manual Muscles'),
             ],
           ),
-          const SizedBox(height: 16),
-
-          // 1) Bodypart-Calculated Muscles
-          const Text(
-            'Bodypart-Calculated Muscles',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          Expanded(child: _buildAutoMuscles()),
-
-          const SizedBox(height: 24),
-
-          // 2) Manually Assigned Muscles
-          const Text(
-            'Manually Assigned Muscles',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          Expanded(child: _buildManualMuscles()),
-
-          // Add button
-          if (_isEditing && _useManualMuscles)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: ElevatedButton.icon(
-                onPressed: _openAddMuscleDialog,
-                icon: const Icon(Icons.add),
-                label: const Text('Add Associated Muscle'),
-              ),
-            ),
         ],
-      ),
+        const SizedBox(height: 16),
+        SettingsSection(
+          title: 'Target muscles',
+          subtitle:
+              _isEditing
+                  ? 'Use arrows to order muscles by target emphasis.'
+                  : '${_muscleEntries.length} muscles currently associated.',
+          accentColor: SettingsAccent.training,
+          children: [
+            if (_muscleEntries.isEmpty)
+              const Padding(
+                padding: EdgeInsets.all(18),
+                child: Text('No target muscles are associated yet.'),
+              )
+            else
+              for (var index = 0; index < _muscleEntries.length; index++)
+                _buildMuscleTile(index),
+            if (_isEditing)
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: OutlinedButton.icon(
+                  onPressed: _openAddMuscleDialog,
+                  icon: const Icon(Icons.add),
+                  label: const Text('Add target muscles'),
+                ),
+              ),
+          ],
+        ),
+      ],
     );
   }
 
-  /// Placeholder list for the auto-calculated muscles (empty for now).
-  Widget _buildAutoMuscles() {
-    return _muscleAutoEntries.isEmpty
-        ? const Center(child: Text('No calculated muscles'))
-        : ListView(
-          children:
-              _muscleAutoEntries.map((e) {
-                final name = e['name'] as String;
-                final count = e['count'] as double;
-                return ListTile(
-                  title: Text(name),
-                  trailing: Text(
-                    count.toString(),
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+  Widget _buildMuscleTile(int index) {
+    final entry = _muscleEntries[index];
+    final name = entry['name'] as String;
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+      leading: Container(
+        width: 36,
+        height: 36,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: SettingsAccent.training.withValues(alpha: 0.16),
+          shape: BoxShape.circle,
+        ),
+        child: Text(
+          '${index + 1}',
+          style: const TextStyle(fontWeight: FontWeight.w900),
+        ),
+      ),
+      title: Text(name),
+      trailing:
+          !_isEditing
+              ? null
+              : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    tooltip: 'Move up',
+                    onPressed:
+                        index == 0
+                            ? null
+                            : () => setState(() {
+                              final previous = _muscleEntries[index - 1];
+                              _muscleEntries[index - 1] = entry;
+                              _muscleEntries[index] = previous;
+                              _hasPendingChanges = true;
+                            }),
+                    icon: const Icon(Icons.keyboard_arrow_up),
                   ),
-                );
-              }).toList(),
-        );
+                  IconButton(
+                    tooltip: 'Move down',
+                    onPressed:
+                        index == _muscleEntries.length - 1
+                            ? null
+                            : () => setState(() {
+                              final next = _muscleEntries[index + 1];
+                              _muscleEntries[index + 1] = entry;
+                              _muscleEntries[index] = next;
+                              _hasPendingChanges = true;
+                            }),
+                    icon: const Icon(Icons.keyboard_arrow_down),
+                  ),
+                  IconButton(
+                    tooltip: 'Remove muscle',
+                    onPressed: () async {
+                      if (!await _confirmRemove(name, 'muscle')) return;
+                      setState(() {
+                        _muscleEntries.removeAt(index);
+                        _hasPendingChanges = true;
+                      });
+                    },
+                    icon: const Icon(Icons.delete_outline),
+                  ),
+                ],
+              ),
+    );
   }
 
   /// Mirrors the old _buildMusclesTab list, but showing “sets” instead of “%”.
-  Widget _buildManualMuscles() {
-    return ListView.builder(
-      itemCount: _muscleEntries.length,
-      itemBuilder: (_, i) {
-        final entry = _muscleEntries[i];
-        final name = entry['name'] as String;
-        final count =
-            entry['percent'] as double; // still stored under 'percent'
-        return ListTile(
-          leading:
-              _isEditing
-                  ? IconButton(
-                    icon: const Icon(Icons.delete),
-                    onPressed: () async {
-                      final confirmed = await showDialog<bool>(
-                        context: context,
-                        builder:
-                            (_) => AlertDialog(
-                              title: const Text('Remove Muscle'),
-                              content: Text(
-                                'Remove "$name" from this exercise?',
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed:
-                                      () => Navigator.of(context).pop(false),
-                                  child: const Text('Cancel'),
-                                ),
-                                TextButton(
-                                  onPressed:
-                                      () => Navigator.of(context).pop(true),
-                                  child: const Text('Remove'),
-                                ),
-                              ],
-                            ),
-                      );
-                      if (confirmed != true) return;
-                      setState(() => _muscleEntries.removeAt(i));
-                    },
-                  )
-                  : null,
-          title: Text(name),
-          trailing: SizedBox(
-            width: 80,
-            child: TextFormField(
-              enabled: _isEditing && _useManualMuscles,
-              initialValue: count.toString(),
-              decoration: const InputDecoration(suffixText: 'sets'),
-              keyboardType: TextInputType.numberWithOptions(decimal: true),
-              onFieldSubmitted: (val) {
-                // keep the old value if parsing fails
-                final oldCount = entry['percent'] as double;
-                final newCount = double.tryParse(val) ?? oldCount;
-                setState(() {
-                  entry['percent'] = newCount;
-                });
-              },
-            ),
-          ),
-        );
-      },
-    );
-  }
-
   Widget _buildBodypartsTab() {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Checkbox(
-                value: _useManualBody,
-                onChanged:
-                    _isEditing
-                        ? (v) async {
-                          await _repo.setUseManualBodyparts(
-                            _selectedDef!.id,
-                            v!,
-                          );
-                          setState(() => _useManualBody = v);
-                        }
-                        : null,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SettingsInfoCard(
+          icon: Icons.accessibility_new,
+          title: 'Associated body parts',
+          body:
+              'These broad areas drive body heatmaps, weekly coverage, and equipment-aware workout recommendations.',
+          iconColor: SettingsAccent.training,
+        ),
+        const SizedBox(height: 14),
+        _buildAllocationShortcut(
+          title: 'Exact body-part credit',
+          body:
+              'Use Exercise Set Allocation when a set should count as a specific partial amount for a body part.',
+        ),
+        const SizedBox(height: 16),
+        SettingsSection(
+          title: 'Associated body parts',
+          subtitle:
+              _isEditing
+                  ? 'Add every broad body area this exercise trains.'
+                  : '${_bodyManualEntries.length} body parts currently associated.',
+          accentColor: SettingsAccent.training,
+          children: [
+            if (_bodyManualEntries.isEmpty)
+              const Padding(
+                padding: EdgeInsets.all(18),
+                child: Text('No body parts are associated yet.'),
+              )
+            else
+              for (var index = 0; index < _bodyManualEntries.length; index++)
+                _buildBodyPartTile(index),
+            if (_isEditing)
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: OutlinedButton.icon(
+                  onPressed: _openAddBodypartDialog,
+                  icon: const Icon(Icons.add),
+                  label: const Text('Add body parts'),
+                ),
               ),
-              const Text('Use Manual Bodyparts'),
+          ],
+        ),
+        if (_bodyAutoEntries.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          SettingsSection(
+            title: 'Automatic preview',
+            subtitle: 'Current focus derived from the target-muscle structure.',
+            accentColor: SettingsAccent.progress,
+            children: [
+              for (final entry in _bodyAutoEntries)
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 3,
+                  ),
+                  leading: const Icon(Icons.auto_graph),
+                  title: Text(entry['name'] as String),
+                  trailing: Text((entry['count'] as double).toStringAsFixed(2)),
+                ),
             ],
           ),
-          const SizedBox(height: 16),
-
-          // 1) Muscle-Calculated section
-          const Text(
-            'Muscle-Calculated Bodyparts',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          Expanded(child: _buildAutoBodyparts()),
-
-          const SizedBox(height: 24),
-
-          // 2) Manually-Assigned section
-          const Text(
-            'Manually Assigned Bodyparts',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          Expanded(child: _buildManualBodyparts()),
-
-          // Only allow adding when in edit mode & manual toggled on
-          if (_isEditing && _useManualBody)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: ElevatedButton.icon(
-                onPressed: _openAddBodypartDialog,
-                icon: const Icon(Icons.add),
-                label: const Text('Add Bodypart'),
-              ),
-            ),
         ],
+      ],
+    );
+  }
+
+  Widget _buildBodyPartTile(int index) {
+    final entry = _bodyManualEntries[index];
+    final name = entry['name'] as String;
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+      leading: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: SettingsAccent.training.withValues(alpha: 0.14),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Icon(
+          Icons.accessibility_new,
+          color: SettingsAccent.training,
+        ),
       ),
-    );
-  }
-
-  // ========= Muscle-Calculated Bodyparts =========
-  Widget _buildAutoBodyparts() {
-    // No editing here, just show the count each muscle contributes to each body-part
-    return ListView(
-      children:
-          _bodyAutoEntries.map((e) {
-            final name = e['name'] as String;
-            final count =
-                e['count'] as double; // this is actually a count, not a %
-            return ListTile(
-              title: Text(name),
-              trailing: Text(
-                count.toStringAsFixed(1),
-                style: const TextStyle(fontWeight: FontWeight.bold),
+      title: Text(name),
+      trailing:
+          !_isEditing
+              ? null
+              : IconButton(
+                tooltip: 'Remove body part',
+                onPressed: () async {
+                  if (!await _confirmRemove(name, 'body part')) return;
+                  setState(() {
+                    _bodyManualEntries.removeAt(index);
+                    _hasPendingChanges = true;
+                  });
+                },
+                icon: const Icon(Icons.delete_outline),
               ),
-            );
-          }).toList(),
     );
   }
 
-  // ========= Manually-Assigned Bodyparts =========
+  // ignore: unused_element
   Widget _buildManualBodyparts() {
     return ListView.builder(
       itemCount: _bodyManualEntries.length,
@@ -926,72 +1474,83 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
 
   Widget _buildEquipmentTab() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child:
-              _equipmentEntries.isEmpty
-                  ? const Center(child: Text('No equipment associated'))
-                  : ListView.builder(
-                    itemCount: _equipmentEntries.length,
-                    itemBuilder: (context, i) {
-                      final entry = _equipmentEntries[i];
-                      return ListTile(
-                        leading:
-                            _isEditing
-                                ? IconButton(
-                                  icon: const Icon(Icons.delete),
-                                  onPressed: () async {
-                                    final eqName = entry['name'] as String;
-                                    final confirm = await showDialog<bool>(
-                                      context: context,
-                                      builder:
-                                          (_) => AlertDialog(
-                                            title: const Text(
-                                              'Remove Equipment',
-                                            ),
-                                            content: Text(
-                                              'Remove "$eqName" from this exercise?',
-                                            ),
-                                            actions: [
-                                              TextButton(
-                                                onPressed:
-                                                    () => Navigator.of(
-                                                      context,
-                                                    ).pop(false),
-                                                child: const Text('Cancel'),
-                                              ),
-                                              TextButton(
-                                                onPressed:
-                                                    () => Navigator.of(
-                                                      context,
-                                                    ).pop(true),
-                                                child: const Text('Remove'),
-                                              ),
-                                            ],
-                                          ),
-                                    );
-                                    if (confirm != true) return;
-                                    setState(() {
-                                      _equipmentEntries.removeAt(i);
-                                    });
-                                  },
-                                )
-                                : null,
-                        title: Text(entry['name'] as String),
-                      );
-                    },
-                  ),
+        const SettingsInfoCard(
+          icon: Icons.precision_manufacturing_outlined,
+          title: 'Available equipment',
+          body:
+              'Associated equipment determines which profiles can use this exercise and which replacements Tonos can recommend.',
+          iconColor: SettingsAccent.training,
         ),
-        if (_isEditing)
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: ElevatedButton.icon(
-              onPressed: _openAddEquipmentDialog,
-              icon: const Icon(Icons.add),
-              label: const Text('Add Equipment'),
-            ),
-          ),
+        const SizedBox(height: 16),
+        SettingsSection(
+          title: 'Equipment',
+          subtitle:
+              _isEditing
+                  ? 'Add every item needed to perform this exercise.'
+                  : '${_equipmentEntries.length} items associated.',
+          accentColor: SettingsAccent.training,
+          children: [
+            if (_equipmentEntries.isEmpty)
+              const Padding(
+                padding: EdgeInsets.all(18),
+                child: Text('No equipment is associated yet.'),
+              )
+            else
+              for (var index = 0; index < _equipmentEntries.length; index++)
+                _buildEquipmentTile(index),
+            if (_isEditing)
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: OutlinedButton.icon(
+                  onPressed: _openAddEquipmentDialog,
+                  icon: const Icon(Icons.add),
+                  label: const Text('Add equipment'),
+                ),
+              ),
+          ],
+        ),
       ],
+    );
+  }
+
+  Widget _buildEquipmentTile(int index) {
+    final entry = _equipmentEntries[index];
+    final equipmentId = entry['id'] as int;
+    final equipmentName = entry['name'] as String;
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+      leading: Container(
+        width: 38,
+        height: 38,
+        decoration: BoxDecoration(
+          color: SettingsAccent.training.withValues(alpha: 0.14),
+          borderRadius: BorderRadius.circular(13),
+        ),
+        child: const Icon(
+          Icons.precision_manufacturing_outlined,
+          color: SettingsAccent.training,
+        ),
+      ),
+      title: Text(equipmentName),
+      trailing:
+          !_isEditing
+              ? null
+              : IconButton(
+                tooltip: 'Remove equipment',
+                onPressed: () async {
+                  if (!await _confirmRemove(equipmentName, 'equipment')) return;
+                  setState(() {
+                    _equipmentEntries.removeAt(index);
+                    if (_primaryEquipmentId == equipmentId) {
+                      _primaryEquipmentId = null;
+                    }
+                    _hasPendingChanges = true;
+                  });
+                },
+                icon: const Icon(Icons.delete_outline),
+              ),
     );
   }
 
@@ -1026,19 +1585,9 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
   }) async {
     if (!mounted) return null;
 
-    final remoteUrlController = TextEditingController(
-      text: initial?.remoteUrl ?? '',
-    );
-    final titleController = TextEditingController(text: initial?.title ?? '');
-    final thumbnailUrlController = TextEditingController(
-      text: initial?.thumbnailUrl ?? '',
-    );
-    final cachePathController = TextEditingController(
-      text: initial?.localCachePath ?? '',
-    );
-    final thumbnailCacheController = TextEditingController(
-      text: initial?.localThumbnailPath ?? '',
-    );
+    var remoteUrlValue = initial?.remoteUrl ?? '';
+    var titleValue = initial?.title ?? '';
+    var thumbnailUrlValue = initial?.thumbnailUrl ?? '';
     var mediaType = initial?.mediaType ?? 'image';
 
     final result = await showDialog<ExerciseMediaItem>(
@@ -1066,44 +1615,31 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
                       decoration: const InputDecoration(labelText: 'Type'),
                     ),
                     const SizedBox(height: 12),
-                    TextField(
-                      controller: titleController,
+                    TextFormField(
+                      initialValue: titleValue,
                       decoration: const InputDecoration(
                         labelText: 'Title',
                         hintText: 'Optional display label',
                       ),
+                      onChanged: (value) => titleValue = value,
                     ),
                     const SizedBox(height: 12),
-                    TextField(
-                      controller: remoteUrlController,
+                    TextFormField(
+                      initialValue: remoteUrlValue,
                       decoration: const InputDecoration(
                         labelText: 'Remote URL',
                         hintText: 'https://...',
                       ),
+                      onChanged: (value) => remoteUrlValue = value,
                     ),
                     const SizedBox(height: 12),
-                    TextField(
-                      controller: thumbnailUrlController,
+                    TextFormField(
+                      initialValue: thumbnailUrlValue,
                       decoration: const InputDecoration(
                         labelText: 'Thumbnail URL',
                         hintText: 'Optional image preview URL',
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: cachePathController,
-                      decoration: const InputDecoration(
-                        labelText: 'Local Cache Path',
-                        hintText: 'Optional downloaded file path',
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: thumbnailCacheController,
-                      decoration: const InputDecoration(
-                        labelText: 'Local Thumbnail Path',
-                        hintText: 'Optional cached thumbnail path',
-                      ),
+                      onChanged: (value) => thumbnailUrlValue = value,
                     ),
                   ],
                 ),
@@ -1115,7 +1651,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
                 ),
                 TextButton(
                   onPressed: () {
-                    final remoteUrl = _trimToNull(remoteUrlController.text);
+                    final remoteUrl = _trimToNull(remoteUrlValue);
                     if (remoteUrl == null) return;
                     Navigator.of(ctx).pop(
                       ExerciseMediaItem(
@@ -1124,12 +1660,10 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
                             initial?.exerciseDefId ?? _selectedDef?.id ?? -1,
                         mediaType: mediaType,
                         remoteUrl: remoteUrl,
-                        thumbnailUrl: _trimToNull(thumbnailUrlController.text),
-                        localCachePath: _trimToNull(cachePathController.text),
-                        localThumbnailPath: _trimToNull(
-                          thumbnailCacheController.text,
-                        ),
-                        title: _trimToNull(titleController.text),
+                        thumbnailUrl: _trimToNull(thumbnailUrlValue),
+                        localCachePath: initial?.localCachePath,
+                        localThumbnailPath: initial?.localThumbnailPath,
+                        title: _trimToNull(titleValue),
                         sortOrder: initial?.sortOrder ?? _mediaItems.length,
                       ),
                     );
@@ -1142,12 +1676,6 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
         );
       },
     );
-
-    remoteUrlController.dispose();
-    titleController.dispose();
-    thumbnailUrlController.dispose();
-    cachePathController.dispose();
-    thumbnailCacheController.dispose();
 
     return result;
   }
@@ -1173,6 +1701,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
           sortOrder: _mediaItems.length,
         ),
       );
+      _hasPendingChanges = true;
     });
   }
 
@@ -1185,10 +1714,138 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
         exerciseDefId: _selectedDef?.id ?? updated.exerciseDefId,
         sortOrder: index,
       );
+      _hasPendingChanges = true;
     });
   }
 
   Widget _buildNotesMediaTab() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SettingsInfoCard(
+          icon: Icons.menu_book_outlined,
+          title: 'Form guide',
+          body:
+              'These notes appear in the exercise details sheet to help people set up, perform, and understand the movement safely.',
+          iconColor: SettingsAccent.advanced,
+        ),
+        const SizedBox(height: 16),
+        SettingsSection(
+          title: 'Guidance',
+          subtitle:
+              _isEditing
+                  ? 'Write clear, practical cues. Changes are staged until saved.'
+                  : 'The current exercise instructions and cues.',
+          accentColor: SettingsAccent.advanced,
+          children: [
+            _buildGuideField(
+              controller: _setupController,
+              label: 'Set up',
+              hint: 'Starting position, equipment setup, and safety notes.',
+            ),
+            _buildGuideField(
+              controller: _executionController,
+              label: 'How to perform',
+              hint: 'The key movement steps and range of motion.',
+            ),
+            _buildGuideField(
+              controller: _tipsController,
+              label: 'Coaching tips',
+              hint: 'Helpful cues, common mistakes, and variations.',
+            ),
+          ],
+        ),
+        const SettingsInfoCard(
+          icon: Icons.cloud_sync_outlined,
+          title: 'Reference media',
+          body:
+              'Use media links for private reference material. Managed catalog media can be refreshed by the content sync pipeline.',
+          iconColor: SettingsAccent.data,
+        ),
+        const SizedBox(height: 16),
+        SettingsSection(
+          title: 'Media links',
+          subtitle:
+              _isEditing
+                  ? 'Add or update a remote image, video, or reference link.'
+                  : '${_mediaItems.length} media items currently linked.',
+          accentColor: SettingsAccent.data,
+          children: [
+            if (_mediaItems.isEmpty)
+              const Padding(
+                padding: EdgeInsets.all(18),
+                child: Text('No reference media is linked yet.'),
+              )
+            else
+              for (var index = 0; index < _mediaItems.length; index++)
+                _buildMediaTile(index),
+            if (_isEditing)
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: OutlinedButton.icon(
+                  onPressed: _openAddMediaDialog,
+                  icon: const Icon(Icons.add),
+                  label: const Text('Add media link'),
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGuideField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 4),
+      child: TextField(
+        controller: controller,
+        readOnly: !_isEditing,
+        minLines: 3,
+        maxLines: null,
+        textCapitalization: TextCapitalization.sentences,
+        decoration: InputDecoration(labelText: label, hintText: hint),
+        onChanged: _isEditing ? (_) => _markChanged() : null,
+      ),
+    );
+  }
+
+  Widget _buildMediaTile(int index) {
+    final item = _mediaItems[index];
+    return SettingsActionTile(
+      icon: _mediaIcon(item.mediaType),
+      iconColor: SettingsAccent.data,
+      title: _mediaLabel(item),
+      subtitle:
+          '${item.mediaType[0].toUpperCase()}${item.mediaType.substring(1)} reference',
+      onTap: _isEditing ? () => _editMediaItem(index) : null,
+      trailing:
+          _isEditing
+              ? IconButton(
+                tooltip: 'Remove media',
+                onPressed: () async {
+                  if (!await _confirmRemove(_mediaLabel(item), 'media link')) {
+                    return;
+                  }
+                  setState(() {
+                    _mediaItems.removeAt(index);
+                    _hasPendingChanges = true;
+                  });
+                },
+                icon: const Icon(Icons.delete_outline),
+              )
+              : Text(
+                item.mediaType.toUpperCase(),
+                style: Theme.of(context).textTheme.labelMedium,
+              ),
+    );
+  }
+
+  // ignore: unused_element
+  Widget _buildLegacyNotesMediaTab() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(

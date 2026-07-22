@@ -1,108 +1,183 @@
 // file: lib/providers/dashboard_config.dart
 
 import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class DashboardConfig extends ChangeNotifier {
   static const _prefsKey = 'dashboard_config';
 
-  // These IDs must match whatever widget types you define
-  final List<String> defaultOrder = [
-    'quickBar',
+  static const List<String> defaultOrder = <String>[
+    'quickActions',
+    'training',
     'nutritionDash',
     'dataRecords',
-    'healthTrends',
-    'workoutDashboard',
+    'weeklyFocus',
+    'workoutMetrics',
+    'exerciseProgress',
     'historySummary',
-    'sessionList',
-    'CurrentMetricsSection',
+    'healthTrends',
+    'recentWorkouts',
+    'activePlans',
+    'archivedPlans',
+    'premadePlans',
+    'planTools',
+    'exerciseCatalog',
+    'targetAnatomy',
   ];
 
-  // initialize immediately so we can read them before prefs load
-  List<String> _widgetOrder;
-  Set<String> _hiddenWidgets;
+  /// Extra home-tab modules stay available without making a fresh Dashboard
+  /// overwhelming. Users can show them from Customize Dashboard at any time.
+  static const Set<String> defaultHiddenWidgets = <String>{
+    'workoutMetrics',
+    'activePlans',
+    'archivedPlans',
+    'premadePlans',
+    'planTools',
+    'exerciseCatalog',
+    'targetAnatomy',
+  };
 
-  DashboardConfig()
-    : _widgetOrder = List.from([
-        'quickBar',
-        'nutritionDash',
-        'dataRecords',
-        'healthTrends',
-        'workoutDashboard',
-        'historySummary',
-        'sessionList',
-        'CurrentMetricsSection',
-      ]),
-      _hiddenWidgets = {} {
+  static const Map<String, String> _legacyWidgetIds = <String, String>{
+    'quickBar': 'quickActions',
+    'workoutDashboard': 'training',
+    'sessionList': 'recentWorkouts',
+  };
+
+  List<String> _widgetOrder = List<String>.from(defaultOrder);
+  Set<String> _hiddenWidgets = Set<String>.from(defaultHiddenWidgets);
+
+  DashboardConfig() {
     _load();
   }
 
-  List<String> get widgetOrder => List.unmodifiable(_widgetOrder);
+  List<String> get widgetOrder => List<String>.unmodifiable(_widgetOrder);
+
   bool isVisible(String id) => !_hiddenWidgets.contains(id);
+
+  bool isSupported(String id) => defaultOrder.contains(id);
 
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
     final jsonStr = prefs.getString(_prefsKey);
     if (jsonStr != null) {
       try {
-        final data = json.decode(jsonStr) as Map<String, dynamic>;
-        _widgetOrder = List<String>.from(data['order']);
-        _hiddenWidgets = Set<String>.from(data['hidden']);
+        final decoded = json.decode(jsonStr);
+        if (decoded is! Map) throw const FormatException('Invalid layout');
+        final data = Map<String, dynamic>.from(decoded);
+        final normalized = normalizeLayout(
+          rawOrder: data['order'],
+          rawHidden: data['hidden'],
+        );
+        _widgetOrder = normalized.order;
+        _hiddenWidgets = normalized.hidden;
 
-        // ─── Ensure all newly-added defaults appear ─────────────────
-        for (var id in defaultOrder) {
-          if (!_widgetOrder.contains(id)) {
-            _widgetOrder.add(id);
-          }
+        if (jsonStr != _encode()) {
+          await _save(prefs);
         }
       } catch (_) {
-        // Keep defaults when an older or corrupted value exists.
+        _widgetOrder = List<String>.from(defaultOrder);
+        _hiddenWidgets = Set<String>.from(defaultHiddenWidgets);
       }
     }
     // else: keep the initial defaults you set in the constructor
     notifyListeners();
   }
 
-  Future<void> _save() async {
-    final prefs = await SharedPreferences.getInstance();
-    final data = {'order': _widgetOrder, 'hidden': _hiddenWidgets.toList()};
-    await prefs.setString(_prefsKey, json.encode(data));
+  /// Makes stored layouts safe to use after dashboard sections change.
+  ///
+  /// Older configurations are migrated rather than discarded so a person's
+  /// chosen ordering remains useful after an app update.
+  @visibleForTesting
+  static DashboardLayout normalizeLayout({
+    Object? rawOrder,
+    Object? rawHidden,
+  }) {
+    final order = <String>[];
+    if (rawOrder is Iterable) {
+      for (final rawId in rawOrder) {
+        final id = _legacyWidgetIds[rawId.toString()] ?? rawId.toString();
+        if (defaultOrder.contains(id) && !order.contains(id)) {
+          order.add(id);
+        }
+      }
+    }
+    final hidden = <String>{};
+    if (rawHidden is Iterable) {
+      for (final rawId in rawHidden) {
+        final id = _legacyWidgetIds[rawId.toString()] ?? rawId.toString();
+        if (defaultOrder.contains(id)) hidden.add(id);
+      }
+    }
+    for (final id in defaultOrder) {
+      if (order.contains(id)) continue;
+      order.add(id);
+      if (defaultHiddenWidgets.contains(id)) {
+        hidden.add(id);
+      }
+    }
+    return DashboardLayout(order: order, hidden: hidden);
   }
 
-  void toggleVisibility(String id) {
+  Future<void> _save([SharedPreferences? preferences]) async {
+    final prefs = preferences ?? await SharedPreferences.getInstance();
+    await prefs.setString(_prefsKey, _encode());
+  }
+
+  String _encode() => json.encode(<String, Object>{
+    'order': _widgetOrder,
+    'hidden': _hiddenWidgets.toList()..sort(),
+  });
+
+  Future<void> toggleVisibility(String id) async {
+    if (!isSupported(id)) return;
     if (_hiddenWidgets.contains(id)) {
       _hiddenWidgets.remove(id);
     } else {
       _hiddenWidgets.add(id);
     }
-    _save();
+    await _save();
     notifyListeners();
   }
 
-  void reorder(int oldVisibleIndex, int newVisibleIndex) {
+  Future<void> restoreDefaults() async {
+    _widgetOrder = List<String>.from(defaultOrder);
+    _hiddenWidgets = Set<String>.from(defaultHiddenWidgets);
+    await _save();
+    notifyListeners();
+  }
+
+  Future<void> reorder(int oldVisibleIndex, int newVisibleIndex) async {
     // 1. Build the visible‐only list
     final visible =
         _widgetOrder.where((id) => !_hiddenWidgets.contains(id)).toList();
-
-    // 2. Which widget are we actually moving?
-    final movingId = visible[oldVisibleIndex];
-
-    // 3. Pull it out of the full order
-    _widgetOrder.remove(movingId);
-
-    // 4. Compute its new spot in the *full* list:
-    //    If they're dragging to the end of the visible list, just append.
-    if (newVisibleIndex >= visible.length - 1) {
-      _widgetOrder.add(movingId);
-    } else {
-      // Otherwise insert it before the pivot visible ID at newVisibleIndex
-      final pivotId = visible[newVisibleIndex];
-      final pivotFullIndex = _widgetOrder.indexOf(pivotId);
-      _widgetOrder.insert(pivotFullIndex, movingId);
+    if (oldVisibleIndex < 0 ||
+        oldVisibleIndex >= visible.length ||
+        newVisibleIndex < 0) {
+      return;
     }
 
-    _save();
+    final movingId = visible.removeAt(oldVisibleIndex);
+    _widgetOrder.remove(movingId);
+
+    final insertAt = newVisibleIndex.clamp(0, visible.length).toInt();
+    if (insertAt >= visible.length) {
+      _widgetOrder.add(movingId);
+    } else {
+      final pivotId = visible[insertAt];
+      _widgetOrder.insert(_widgetOrder.indexOf(pivotId), movingId);
+    }
+
+    await _save();
     notifyListeners();
   }
+}
+
+@immutable
+class DashboardLayout {
+  final List<String> order;
+  final Set<String> hidden;
+
+  const DashboardLayout({required this.order, required this.hidden});
 }

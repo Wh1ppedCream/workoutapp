@@ -50,7 +50,13 @@ class DefinitionDao {
   /// resulting model shape identical for callers.
   static Future<List<ExerciseDefinition>>
   getAllExerciseDefinitionsDetailedBatched(Database db) async {
-    final defRows = await db.query('exercise_definitions', orderBy: 'name');
+    final defRows = await db.rawQuery('''
+      SELECT ed.*, primary_equipment.name AS equipment_name
+      FROM exercise_definitions ed
+      LEFT JOIN equipment primary_equipment
+        ON primary_equipment.id = ed.equipment_id
+      ORDER BY ed.name
+    ''');
     if (defRows.isEmpty) return const <ExerciseDefinition>[];
 
     final equipmentRowsFuture = db.rawQuery('''
@@ -162,12 +168,19 @@ class DefinitionDao {
   }) {
     final primaryEquipmentId = row['equipment_id'] as int?;
     final primaryEquipmentName = row['equipment_name'] as String?;
-    final resolvedEquipmentList =
-        equipmentList.isNotEmpty ||
-                primaryEquipmentId == null ||
-                primaryEquipmentName == null
-            ? equipmentList
-            : <Equipment>[Equipment(primaryEquipmentId, primaryEquipmentName)];
+    final resolvedEquipmentList = List<Equipment>.from(equipmentList);
+    if (primaryEquipmentId != null &&
+        primaryEquipmentName != null &&
+        !resolvedEquipmentList.any(
+          (equipment) => equipment.id == primaryEquipmentId,
+        )) {
+      // Older rows can have a primary equipment value without its matching
+      // join-table row. Keep it a required item while loading the definition.
+      resolvedEquipmentList.insert(
+        0,
+        Equipment(primaryEquipmentId, primaryEquipmentName),
+      );
+    }
 
     return ExerciseDefinition(
       id: row['id'] as int,
@@ -244,12 +257,14 @@ class DefinitionDao {
     for (final chunk in sqliteChunks(uniqueDefinitionIds)) {
       final placeholders = sqlitePlaceholders(chunk.length);
       defRows.addAll(
-        await db.query(
-          'exercise_definitions',
-          where: 'id IN ($placeholders)',
-          whereArgs: chunk,
-          orderBy: 'name',
-        ),
+        await db.rawQuery('''
+            SELECT ed.*, primary_equipment.name AS equipment_name
+            FROM exercise_definitions ed
+            LEFT JOIN equipment primary_equipment
+              ON primary_equipment.id = ed.equipment_id
+            WHERE ed.id IN ($placeholders)
+            ORDER BY ed.name
+          ''', chunk),
       );
     }
     if (defRows.isEmpty) return const <ExerciseDefinition>[];

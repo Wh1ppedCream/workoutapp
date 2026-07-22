@@ -6,11 +6,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../db/database_helper.dart';
+import '../../models/content_models.dart';
 import '../../models/gym_models.dart';
 import '../../providers/selected_profile.dart';
 import '../../services/tutorial_state_store.dart';
 import '../../utils/tutorial_launcher.dart';
 import '../../widgets/guided_tutorial_overlay.dart';
+import '../../widgets/shared_entity_media_thumbnail.dart';
 
 /// Profile edits returned to onboarding before the real profile is created.
 class GymProfileDraft {
@@ -786,21 +788,27 @@ class _EquipmentTile extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(14, 10, 8, 10),
         child: Row(
           children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color:
-                    selected
-                        ? scheme.primary.withValues(alpha: 0.18)
-                        : scheme.surface.withValues(alpha: 0.34),
-                borderRadius: BorderRadius.circular(13),
-              ),
-              child: Icon(
-                _equipmentIconFor(item.name),
-                color: selected ? scheme.primary : scheme.onSurfaceVariant,
-                size: 20,
-              ),
+            SharedEntityMediaThumbnail(
+              entityType: SharedMediaEntityType.equipment,
+              entityId: item.id,
+              size: 42,
+              borderRadius: BorderRadius.circular(11),
+              padding: EdgeInsets.zero,
+              imageScale: 1.13,
+              backgroundColor:
+                  selected
+                      ? scheme.primary.withValues(alpha: 0.18)
+                      : scheme.surface.withValues(alpha: 0.34),
+              borderColor:
+                  selected
+                      ? scheme.primary.withValues(alpha: 0.6)
+                      : scheme.outlineVariant.withValues(alpha: 0.34),
+              fallbackBuilder:
+                  (context, contentSize) => Icon(
+                    _equipmentIconFor(item.name),
+                    color: selected ? scheme.primary : scheme.onSurfaceVariant,
+                    size: contentSize * 0.6,
+                  ),
             ),
             const SizedBox(width: 12),
             Expanded(

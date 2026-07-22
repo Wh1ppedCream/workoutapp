@@ -4,27 +4,25 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets(
-    'bundled content configuration and exercise manifest are usable',
-    (tester) async {
-      const service = ContentManifestService();
+  testWidgets('bundled content configuration and manifests are usable', (
+    tester,
+  ) async {
+    const service = ContentManifestService();
 
-      final environments = await service.loadBundledContentEnvironments();
-      final manifest = await service.loadBundledExerciseMediaManifest();
+    final environments = await service.loadBundledContentEnvironments();
+    final manifest = await service.loadBundledExerciseMediaManifest();
+    final sharedManifest = await service.loadBundledSharedMediaManifest();
 
-      expect(environments.environments, isNotEmpty);
-      expect(
-        environments.defaultEnvironment.hasExerciseMediaManifestUrl,
-        isTrue,
-      );
-      expect(manifest.namespace, 'exercise_media');
-      expect(manifest.version, greaterThan(0));
-      expect(
-        manifest.exerciseMedia.every(
-          (entry) => entry.assets.every((asset) => asset.remoteUrl.isNotEmpty),
-        ),
-        isTrue,
-      );
-    },
-  );
+    expect(environments.environments, isNotEmpty);
+    expect(environments.defaultEnvironment.hasExerciseMediaManifestUrl, isTrue);
+    expect(manifest.namespace, 'exercise_media');
+    expect(sharedManifest.namespace, 'shared_media');
+    expect(manifest.version, greaterThan(0));
+    expect(
+      manifest.exerciseMedia.every(
+        (entry) => entry.assets.every((asset) => asset.remoteUrl.isNotEmpty),
+      ),
+      isTrue,
+    );
+  });
 }

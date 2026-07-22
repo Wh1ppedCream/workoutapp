@@ -12,15 +12,13 @@ import '../../providers/selected_profile.dart';
 import '../../repositories/app_repository.dart';
 import '../../services/active_plan_store.dart';
 import '../../services/preset_generation_service.dart';
-import '../../theme/theme_extensions.dart';
 import '../../utils/workout_exercise_clone.dart';
-import '../../widgets/body_heatmap.dart';
 import '../../widgets/drawers.dart';
 import '../../widgets/exercise_card.dart';
-import '../../widgets/focused_sets_list.dart';
 import '../../widgets/generic_bar.dart';
 import '../../widgets/guided_tutorial_overlay.dart';
 import '../../widgets/presets_loaded.dart';
+import '../../widgets/seven_day_focus_card.dart';
 import '../../services/tutorial_state_store.dart';
 import 'analytics_dashboard_screen.dart';
 import 'gym_profile_screen.dart';
@@ -803,7 +801,15 @@ class _OverviewTab extends StatelessWidget {
       children: [
         KeyedSubtree(
           key: weeklyOverviewKey,
-          child: _SevenDayFocusCard(refreshToken: refreshToken),
+          child: SevenDayFocusCard(
+            refreshToken: refreshToken,
+            onFocusedSetsTap:
+                () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const AnalyticsDashboardScreen(),
+                  ),
+                ),
+          ),
         ),
         const SizedBox(height: 16),
         KeyedSubtree(
@@ -815,219 +821,6 @@ class _OverviewTab extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _SevenDayFocusData {
-  final Map<String, double> heatmapFrequencyMap;
-  final List<FocusedSetHit> topBodyParts;
-
-  const _SevenDayFocusData({
-    required this.heatmapFrequencyMap,
-    required this.topBodyParts,
-  });
-}
-
-const _emptySevenDayFocusData = _SevenDayFocusData(
-  heatmapFrequencyMap: <String, double>{},
-  topBodyParts: <FocusedSetHit>[],
-);
-
-class _SevenDayFocusCard extends StatefulWidget {
-  final int refreshToken;
-
-  const _SevenDayFocusCard({required this.refreshToken});
-
-  @override
-  State<_SevenDayFocusCard> createState() => _SevenDayFocusCardState();
-}
-
-class _SevenDayFocusCardState extends State<_SevenDayFocusCard> {
-  final _repo = AppRepository();
-  late Future<_SevenDayFocusData> _dataFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    unawaited(BodyHeatmap.preload());
-    _dataFuture = _loadData();
-  }
-
-  @override
-  void didUpdateWidget(covariant _SevenDayFocusCard oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.refreshToken != widget.refreshToken) {
-      _dataFuture = _loadData();
-    }
-  }
-
-  Future<_SevenDayFocusData> _loadData() async {
-    final now = DateTime.now();
-    final weekAgo = now.subtract(const Duration(days: 7));
-    final Map<BodyPart, double> bodyPartSets = await _repo
-        .fetchAllBodyPartSetsOverTimeRange(start: weekAgo, end: now);
-    final hits =
-        bodyPartSets.entries
-            .where((entry) => entry.value > 0)
-            .map(
-              (entry) => FocusedSetHit(bodyPart: entry.key, units: entry.value),
-            )
-            .toList()
-          ..sort((a, b) => b.units.compareTo(a.units));
-
-    return _SevenDayFocusData(
-      heatmapFrequencyMap: bodyPartFrequencyMapFromNames({
-        for (final hit in hits) hit.bodyPart.name: hit.units,
-      }),
-      topBodyParts: hits,
-    );
-  }
-
-  void _openAnalyticsDashboard() {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => const AnalyticsDashboardScreen()));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return FutureBuilder<_SevenDayFocusData>(
-      future: _dataFuture,
-      builder: (context, snapshot) {
-        final data = snapshot.data;
-        return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Weekly Overview',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                if (snapshot.connectionState != ConnectionState.done &&
-                    data == null)
-                  const SizedBox(
-                    height: 176,
-                    child: Center(child: CircularProgressIndicator()),
-                  )
-                else if (snapshot.hasError && data == null)
-                  const SizedBox(
-                    height: 176,
-                    child: Center(child: Text('Unable to load 7-day focus')),
-                  )
-                else
-                  _SevenDayFocusLayout(
-                    data: data ?? _emptySevenDayFocusData,
-                    onFocusedSetsTap: _openAnalyticsDashboard,
-                  ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _SevenDayFocusLayout extends StatelessWidget {
-  final _SevenDayFocusData data;
-  final VoidCallback onFocusedSetsTap;
-
-  const _SevenDayFocusLayout({
-    required this.data,
-    required this.onFocusedSetsTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final heatmapBox =
-            (constraints.maxWidth * 0.43).clamp(118.0, 170.0).toDouble();
-        final heatmapSize = (heatmapBox - 6).clamp(112.0, 164.0).toDouble();
-        final gap = constraints.maxWidth < 330 ? 10.0 : 14.0;
-
-        return SizedBox(
-          height: 198,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                width: heatmapBox,
-                height: 198,
-                child: Center(
-                  child: BodyHeatmap(
-                    frequencyMap: data.heatmapFrequencyMap,
-                    lowColor: colors.historySummaryHeatmapLow!,
-                    highColor: colors.historySummaryHeatmapHigh!,
-                    width: heatmapSize,
-                    height: heatmapSize,
-                  ),
-                ),
-              ),
-              SizedBox(width: gap),
-              Expanded(
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(16),
-                    onTap: onFocusedSetsTap,
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(6),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          FocusedSetsList(
-                            hits: data.topBodyParts,
-                            maxVisible: 3,
-                            emptyMessage:
-                                'No completed bodypart set units in the last 7 days.',
-                            titleWeight: FontWeight.w800,
-                          ),
-                          if (data.topBodyParts.length > 3)
-                            const _MoreFocusedSetsHint(),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _MoreFocusedSetsHint extends StatelessWidget {
-  const _MoreFocusedSetsHint();
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(top: 2),
-      child: Row(
-        children: [
-          Icon(Icons.more_horiz, size: 18, color: theme.colorScheme.primary),
-          const SizedBox(width: 6),
-          Text(
-            'more',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.primary,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

@@ -32,8 +32,10 @@ class ContentRepository {
   final MediaDownloadPolicy _downloadPolicy;
   final ContentEnvironmentPreferences _environmentPreferences;
   static Future<ContentManifest>? _bundledExerciseManifestSync;
+  static Future<SharedMediaManifest>? _bundledSharedMediaManifestSync;
   static Future<ContentEnvironmentConfig>? _bundledContentEnvironments;
   static Future<void>? _exerciseMediaBootstrapSync;
+  static Future<void>? _sharedMediaBootstrapSync;
 
   Future<ContentEnvironmentConfig> loadContentEnvironments() {
     return _bundledContentEnvironments ??=
@@ -79,6 +81,45 @@ class ContentRepository {
     return manifest;
   }
 
+  Future<SharedMediaManifest> syncBundledSharedMediaManifest() async {
+    final inFlight = _bundledSharedMediaManifestSync;
+    if (inFlight != null) return inFlight;
+
+    final sync = _syncBundledSharedMediaManifest();
+    _bundledSharedMediaManifestSync = sync;
+    try {
+      return await sync;
+    } catch (_) {
+      _bundledSharedMediaManifestSync = null;
+      rethrow;
+    }
+  }
+
+  Future<SharedMediaManifest> _syncBundledSharedMediaManifest() async {
+    final manifest = await _manifestService.loadBundledSharedMediaManifest();
+    final db = await _db.database;
+    final existingVersion = await ContentDao.getManifestVersion(
+      db,
+      manifest.namespace,
+    );
+    if (existingVersion != null && existingVersion >= manifest.version) {
+      return manifest;
+    }
+    await ContentDao.upsertSharedMediaManifest(db, manifest);
+    return manifest;
+  }
+
+  Future<SharedMediaManifest> syncRemoteSharedMediaManifest(
+    Uri manifestUri,
+  ) async {
+    final manifest = await _manifestService.fetchSharedMediaManifest(
+      manifestUri,
+    );
+    final db = await _db.database;
+    await ContentDao.upsertSharedMediaManifest(db, manifest);
+    return manifest;
+  }
+
   Future<void> ensureExerciseMediaManifestReady() async {
     final inFlight = _exerciseMediaBootstrapSync;
     if (inFlight != null) return inFlight;
@@ -95,6 +136,25 @@ class ContentRepository {
       await syncBundledExerciseMediaManifest();
     } catch (_) {
       // Exercise media is optional; the UI can still fall back to heatmaps.
+    }
+  }
+
+  Future<void> ensureSharedMediaManifestReady() async {
+    final inFlight = _sharedMediaBootstrapSync;
+    if (inFlight != null) return inFlight;
+
+    final sync = _bootstrapSharedMediaManifest();
+    _sharedMediaBootstrapSync = sync;
+    return sync;
+  }
+
+  Future<void> _bootstrapSharedMediaManifest() async {
+    if (await _trySyncConfiguredRemoteSharedMediaManifest()) return;
+
+    try {
+      await syncBundledSharedMediaManifest();
+    } catch (_) {
+      // Shared media is optional; each caller owns a meaningful local fallback.
     }
   }
 
@@ -119,6 +179,27 @@ class ContentRepository {
     }
   }
 
+  Future<bool> _trySyncConfiguredRemoteSharedMediaManifest() async {
+    try {
+      final config = await loadContentEnvironments();
+      final manifestUrl =
+          (await _environmentPreferences.loadSharedMediaManifestUrl(
+            config,
+          )).trim();
+      final uri = Uri.tryParse(manifestUrl);
+      final validRemoteUri =
+          uri != null &&
+          (uri.scheme == 'https' || uri.scheme == 'http') &&
+          uri.host.isNotEmpty;
+      if (!validRemoteUri) return false;
+
+      await syncRemoteSharedMediaManifest(uri);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<List<ExerciseMediaItem>> fetchExerciseMedia(int exerciseDefId) {
     return _db.getExerciseMedia(exerciseDefId);
   }
@@ -130,6 +211,23 @@ class ContentRepository {
     if (media.isEmpty) return null;
 
     final images = media.where(_isDisplayableImage).toList();
+    return images.isNotEmpty ? images.first : media.first;
+  }
+
+  Future<List<SharedMediaItem>> fetchSharedMedia(
+    SharedMediaEntityType entityType,
+    int entityId,
+  ) {
+    return _db.getSharedMedia(entityType, entityId);
+  }
+
+  Future<SharedMediaItem?> fetchPrimarySharedMedia(
+    SharedMediaEntityType entityType,
+    int entityId,
+  ) async {
+    final media = await fetchSharedMedia(entityType, entityId);
+    if (media.isEmpty) return null;
+    final images = media.where(_isDisplayableSharedImage).toList();
     return images.isNotEmpty ? images.first : media.first;
   }
 
@@ -159,9 +257,43 @@ class ContentRepository {
     return file;
   }
 
+  Future<File?> cachedSharedMediaFile(
+    SharedMediaItem item, {
+    required bool thumbnail,
+  }) {
+    return _cacheService.cachedSharedFileFor(item, thumbnail: thumbnail);
+  }
+
+  Future<File> cacheSharedMedia(
+    SharedMediaItem item, {
+    required bool thumbnail,
+  }) async {
+    if (!await _downloadPolicy.canDownloadRemoteMedia()) {
+      throw const MediaDownloadBlockedException();
+    }
+
+    final file = await _cacheService.downloadSharedMedia(
+      item,
+      thumbnail: thumbnail,
+    );
+    final db = await _db.database;
+    await ContentDao.updateCachedSharedMediaPath(
+      db,
+      item,
+      thumbnail: thumbnail,
+      localPath: file.path,
+    );
+    return file;
+  }
+
   Future<void> markMediaAccessed(ExerciseMediaItem item) async {
     final db = await _db.database;
     await ContentDao.markMediaAccessed(db, item);
+  }
+
+  Future<void> markSharedMediaAccessed(SharedMediaItem item) async {
+    final db = await _db.database;
+    await ContentDao.markSharedMediaAccessed(db, item);
   }
 
   Future<ContentCacheUsage> getCacheUsage() => _cacheService.getCacheUsage();
@@ -182,6 +314,16 @@ class ContentRepository {
   }
 
   bool _isDisplayableImage(ExerciseMediaItem item) {
+    final type = item.mediaType.toLowerCase();
+    if (type == 'image' || type == 'thumbnail' || type == 'still') return true;
+    final url = (item.thumbnailUrl ?? item.remoteUrl).toLowerCase();
+    return url.endsWith('.png') ||
+        url.endsWith('.jpg') ||
+        url.endsWith('.jpeg') ||
+        url.endsWith('.webp');
+  }
+
+  bool _isDisplayableSharedImage(SharedMediaItem item) {
     final type = item.mediaType.toLowerCase();
     if (type == 'image' || type == 'thumbnail' || type == 'still') return true;
     final url = (item.thumbnailUrl ?? item.remoteUrl).toLowerCase();

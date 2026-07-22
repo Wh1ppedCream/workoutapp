@@ -3,16 +3,19 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../models/models.dart';
 import '../providers/active_session.dart';
 import '../providers/dashboard_config.dart';
 import '../providers/nutrition_profile.dart';
-import '../widgets/current_metrics_section.dart';
+import '../screens/exercise/full_history_screen.dart';
+import '../screens/exercise/session_detail_screen.dart';
 import '../widgets/data_records_section.dart';
+import '../widgets/dashboard_sections.dart';
+import '../widgets/exercise_progress_section.dart';
 import '../widgets/health_trends_section.dart';
-import '../widgets/history_summary_widget.dart';
 import '../widgets/nutrition_dash.dart';
-import '../widgets/past_sessions_list.dart';
-import '../widgets/quick_bar.dart';
+import '../widgets/workout_history_calendar.dart';
+import '../widgets/workout_metric_chart_card.dart';
 import '../widgets/workout_dashboard.dart';
 
 class DashboardPage extends StatefulWidget {
@@ -24,12 +27,35 @@ class DashboardPage extends StatefulWidget {
 
 class _DashboardPageState extends State<DashboardPage> {
   bool _isEditing = false;
-  bool _hasShownHint = false;
   int _historyRefreshToken = 0;
   int? _seenCompletedSessionVersion;
 
   void _refreshHistoryWidgets() {
+    if (!mounted) return;
     setState(() => _historyRefreshToken++);
+  }
+
+  void _openHistorySession(WorkoutReportSession reportSession) {
+    Navigator.of(context)
+        .push(
+          MaterialPageRoute(
+            builder:
+                (_) => SessionDetailScreen(
+                  WorkoutSession(
+                    id: reportSession.id,
+                    date: reportSession.date,
+                    duration: reportSession.durationSeconds,
+                  ),
+                ),
+          ),
+        )
+        .then((_) => _refreshHistoryWidgets());
+  }
+
+  void _openFullHistory() {
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (_) => const FullHistoryScreen()))
+        .then((_) => _refreshHistoryWidgets());
   }
 
   @override
@@ -47,144 +73,223 @@ class _DashboardPageState extends State<DashboardPage> {
       _historyRefreshToken++;
     }
 
-    if (_isEditing && !_hasShownHint) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Drag the handle to reorder, tap the trash icon to remove widgets, or tap + to add back.',
-            ),
-          ),
-        );
-      });
-      _hasShownHint = true;
-    }
-
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Dashboard'),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: Icon(_isEditing ? Icons.check : Icons.edit),
-            onPressed: () => setState(() => _isEditing = !_isEditing),
-          ),
-        ],
+      body: SafeArea(
+        child:
+            _isEditing
+                ? _buildEditableDashboardList(visibleIds)
+                : _buildDashboardScrollView(visibleIds),
       ),
-      body: _isEditing
-          ? _buildEditableDashboardList(visibleIds)
-          : _buildDashboardScrollView(visibleIds),
     );
   }
 
   Widget _buildDashboardScrollView(List<String> visibleIds) {
-    return SingleChildScrollView(
+    return ListView(
       key: const PageStorageKey('dashboard_scroll'),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (var i = 0; i < visibleIds.length; i++)
-            _buildEditableTile(visibleIds[i], i, false),
-        ],
-      ),
+      padding: const EdgeInsets.fromLTRB(0, 14, 0, 28),
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: DashboardHero(
+            isEditing: false,
+            onEdit: () => setState(() => _isEditing = true),
+          ),
+        ),
+        const SizedBox(height: 18),
+        if (visibleIds.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _buildEmptyDashboard(),
+          )
+        else
+          for (final id in visibleIds) ...[
+            _buildDashboardSection(id),
+            const SizedBox(height: 18),
+          ],
+      ],
     );
   }
 
   Widget _buildEditableDashboardList(List<String> visibleIds) {
     return ReorderableListView(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 28),
       buildDefaultDragHandles: false,
+      header: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          DashboardHero(
+            isEditing: true,
+            onEdit: () => setState(() => _isEditing = false),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            'Drag sections into the order that works best for you.',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+      ),
+      footer: Padding(
+        padding: const EdgeInsets.only(top: 4),
+        child: _buildDashboardEditorFooter(),
+      ),
       onReorder: (oldIndex, newIndex) {
         if (newIndex > oldIndex) newIndex -= 1;
         context.read<DashboardConfig>().reorder(oldIndex, newIndex);
       },
       children: [
         for (var i = 0; i < visibleIds.length; i++)
-          _buildEditableTile(visibleIds[i], i, true),
-        Card(
-          key: const ValueKey('add_widget'),
-          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-          shape: RoundedRectangleBorder(
-            side: BorderSide(color: Theme.of(context).dividerColor),
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: InkWell(
-            onTap: _showAddWidgetDialog,
-            child: const SizedBox(
-              height: 100,
-              child: Center(child: Icon(Icons.add_box, size: 40)),
-            ),
-          ),
-        ),
+          _buildEditableTile(visibleIds[i], i),
       ],
     );
   }
 
-  Widget _buildEditableTile(String id, int index, bool isEditing) {
-    final config = context.read<DashboardConfig>();
-    final visibleCount = config.widgetOrder.where(config.isVisible).length;
-    final tileContent = Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _buildDashboardTile(id),
-        if (index < visibleCount - 1)
-          const Divider(height: 1, thickness: 1),
-      ],
-    );
-
-    if (!isEditing) {
-      return Container(
-        key: ValueKey(id),
-        padding: const EdgeInsets.symmetric(horizontal: 5),
-        child: tileContent,
-      );
-    }
-
-    return Card(
+  Widget _buildEditableTile(String id, int index) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final details = dashboardSectionDetails(id);
+    return Container(
       key: ValueKey(id),
-      elevation: 4,
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      child: Column(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.46),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: details.color.withValues(alpha: 0.48)),
+      ),
+      child: Row(
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Row(
-              children: [
-                SizedBox(
-                  width: 48,
-                  child: Center(
-                    child: ReorderableDragStartListener(
-                      index: index,
-                      child: const Icon(Icons.drag_handle),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: Text(
-                    _labelFor(id),
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-                SizedBox(
-                  width: 48,
-                  child: Center(
-                    child: IconButton(
-                      icon: const Icon(Icons.delete),
-                      tooltip: 'Remove widget',
-                      onPressed: () =>
-                          context.read<DashboardConfig>().toggleVisibility(id),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                    ),
-                  ),
-                ),
-              ],
+          ReorderableDragStartListener(
+            index: index,
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Icon(
+                Icons.drag_indicator_rounded,
+                color: scheme.onSurfaceVariant,
+              ),
             ),
           ),
-          tileContent,
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: details.color.withValues(alpha: 0.16),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(details.icon, color: details.color, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 13),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    details.title,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    details.description,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          IconButton(
+            tooltip: 'Hide section',
+            icon: Icon(Icons.visibility_off_outlined, color: scheme.error),
+            onPressed:
+                () => context.read<DashboardConfig>().toggleVisibility(id),
+          ),
+          const SizedBox(width: 4),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDashboardEditorFooter() {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final config = context.watch<DashboardConfig>();
+    final hiddenCount =
+        config.widgetOrder.where((id) => !config.isVisible(id)).length;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.34),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: scheme.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            hiddenCount == 0
+                ? 'All sections are shown'
+                : '$hiddenCount section(s) hidden',
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 10),
+          OutlinedButton.icon(
+            onPressed: hiddenCount == 0 ? null : _showAddWidgetDialog,
+            icon: const Icon(Icons.add),
+            label: const Text('Show hidden sections'),
+          ),
+          TextButton.icon(
+            onPressed: () => context.read<DashboardConfig>().restoreDefaults(),
+            icon: const Icon(Icons.restart_alt, size: 18),
+            label: const Text('Reset dashboard'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyDashboard() {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.34),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: scheme.outlineVariant),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            Icons.dashboard_outlined,
+            size: 34,
+            color: scheme.onSurfaceVariant,
+          ),
+          const SizedBox(height: 10),
+          Text('Your dashboard is empty', style: theme.textTheme.titleMedium),
+          const SizedBox(height: 4),
+          Text(
+            'Add back any section whenever you are ready.',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: scheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 14),
+          FilledButton.tonalIcon(
+            onPressed: () => setState(() => _isEditing = true),
+            icon: const Icon(Icons.edit_outlined),
+            label: const Text('Customize dashboard'),
+          ),
         ],
       ),
     );
@@ -197,96 +302,126 @@ class _DashboardPageState extends State<DashboardPage> {
     if (hiddenIds.isEmpty) return;
     await showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Add Widgets'),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: ListView(
-            shrinkWrap: true,
-            children: [
-              for (final id in hiddenIds)
-                ListTile(
-                  title: Text(_labelFor(id)),
-                  onTap: () {
-                    context.read<DashboardConfig>().toggleVisibility(id);
-                    Navigator.of(context).pop();
-                  },
-                ),
-            ],
+      builder:
+          (_) => AlertDialog(
+            title: const Text('Show hidden sections'),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: ListView(
+                shrinkWrap: true,
+                children: [
+                  for (final id in hiddenIds)
+                    ListTile(
+                      leading: Icon(
+                        dashboardSectionDetails(id).icon,
+                        color: dashboardSectionDetails(id).color,
+                      ),
+                      title: Text(_labelFor(id)),
+                      subtitle: Text(dashboardSectionDetails(id).description),
+                      onTap: () {
+                        context.read<DashboardConfig>().toggleVisibility(id);
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                ],
+              ),
+            ),
           ),
-        ),
-      ),
     );
   }
 
   Widget _buildDashboardTile(String id) {
     switch (id) {
-      case 'quickBar':
-        return const QuickBar();
+      case 'quickActions':
+        return DashboardQuickActions(onChanged: _refreshHistoryWidgets);
+      case 'weeklyFocus':
+        return DashboardWeeklyFocusCard(
+          refreshToken: _historyRefreshToken,
+          onChanged: _refreshHistoryWidgets,
+        );
+      case 'workoutMetrics':
+        return WorkoutMetricChartCard(refreshToken: _historyRefreshToken);
+      case 'exerciseProgress':
+        return ExerciseProgressSection(refreshToken: _historyRefreshToken);
+      // TODO(nutrition): Add the remaining nutrition Dashboard widgets after
+      // the nutrition tracking flows and calculations are fully rebuilt.
       case 'nutritionDash':
-        return Padding(
-          padding: const EdgeInsets.all(8),
-          child: Consumer<NutritionProfile>(
-            builder: (context, p, _) {
-              return NutritionDash(
-                caloriesConsumed: (p.totals?.kcal ?? 0).round(),
-                calorieGoal: (p.activeGoal?.kcalTarget ?? 0).round(),
-                proteinConsumed: (p.totals?.proteinG ?? 0).round(),
-                proteinTarget: (p.activeGoal?.proteinG ?? 0).round(),
-                carbConsumed: (p.totals?.carbsG ?? 0).round(),
-                carbTarget: (p.activeGoal?.carbsG ?? 0).round(),
-                fatConsumed: (p.totals?.fatG ?? 0).round(),
-                fatTarget: (p.activeGoal?.fatG ?? 0).round(),
-                scale: 0.7,
-              );
-            },
-          ),
+        return Consumer<NutritionProfile>(
+          builder: (context, profile, _) {
+            return NutritionDash(
+              caloriesConsumed: (profile.totals?.kcal ?? 0).round(),
+              calorieGoal: (profile.activeGoal?.kcalTarget ?? 0).round(),
+              proteinConsumed: (profile.totals?.proteinG ?? 0).round(),
+              proteinTarget: (profile.activeGoal?.proteinG ?? 0).round(),
+              carbConsumed: (profile.totals?.carbsG ?? 0).round(),
+              carbTarget: (profile.activeGoal?.carbsG ?? 0).round(),
+              fatConsumed: (profile.totals?.fatG ?? 0).round(),
+              fatTarget: (profile.activeGoal?.fatG ?? 0).round(),
+              scale: 0.7,
+            );
+          },
         );
       case 'dataRecords':
-        return const DataRecordsSection();
+        return const DataRecordsSection(padding: EdgeInsets.zero);
       case 'healthTrends':
-        return const HealthTrendsSection();
-      case 'workoutDashboard':
-        return WorkoutDashboard(
-          scale: 0.7,
-          onSessionComplete: _refreshHistoryWidgets,
-        );
+        return HealthTrendsSection(refreshToken: _historyRefreshToken);
+      case 'training':
+        return WorkoutDashboard(onSessionComplete: _refreshHistoryWidgets);
       case 'historySummary':
-        return HistorySummaryWidget(refreshToken: _historyRefreshToken);
-      case 'sessionList':
-        return PastSessionsList(
-          key: const ValueKey('sessionList'),
-          height: 320,
+        return WorkoutHistoryCalendar(
           refreshToken: _historyRefreshToken,
-          onReload: _refreshHistoryWidgets,
+          onSessionTap: _openHistorySession,
+          onOpenFullHistory: _openFullHistory,
         );
-      case 'CurrentMetricsSection':
-        return const CurrentMetricsSection();
+      case 'recentWorkouts':
+        return DashboardRecentWorkoutsCard(
+          refreshToken: _historyRefreshToken,
+          onChanged: _refreshHistoryWidgets,
+        );
+      case 'activePlans':
+        return DashboardPlanCollectionCard(
+          archived: false,
+          refreshToken: _historyRefreshToken,
+          onChanged: _refreshHistoryWidgets,
+        );
+      case 'archivedPlans':
+        return DashboardPlanCollectionCard(
+          archived: true,
+          refreshToken: _historyRefreshToken,
+          onChanged: _refreshHistoryWidgets,
+        );
+      case 'premadePlans':
+        return DashboardPremadePlansCard(onChanged: _refreshHistoryWidgets);
+      case 'planTools':
+        return DashboardPlanToolsCard(onChanged: _refreshHistoryWidgets);
+      case 'exerciseCatalog':
+        return DashboardExerciseCatalogCard(refreshToken: _historyRefreshToken);
+      case 'targetAnatomy':
+        return DashboardTargetAnatomyCard(refreshToken: _historyRefreshToken);
       default:
         return const SizedBox.shrink();
     }
   }
 
+  Widget _buildDashboardSection(String id) {
+    final tile = _buildDashboardTile(id);
+    final section =
+        id == 'exerciseProgress' ||
+                id == 'workoutMetrics' ||
+                id == 'historySummary' ||
+                id == 'healthTrends'
+            ? tile
+            : Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: tile,
+            );
+    return KeyedSubtree(
+      key: ValueKey<String>('dashboard_section_$id'),
+      child: section,
+    );
+  }
+
   String _labelFor(String id) {
-    switch (id) {
-      case 'quickBar':
-        return 'Quick Actions';
-      case 'nutritionDash':
-        return 'Nutrition Dashboard';
-      case 'dataRecords':
-        return 'Data & Records';
-      case 'healthTrends':
-        return 'Health Trends';
-      case 'workoutDashboard':
-        return 'Workout Dashboard';
-      case 'historySummary':
-        return 'History Summary';
-      case 'sessionList':
-        return 'Past Sessions List';
-      case 'CurrentMetricsSection':
-        return 'Current Metrics';
-      default:
-        return id;
-    }
+    return dashboardSectionDetails(id).title;
   }
 }

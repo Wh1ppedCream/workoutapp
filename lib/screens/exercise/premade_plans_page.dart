@@ -7,6 +7,7 @@ import '../../data/premade_training_plans.dart';
 import '../../models/models.dart';
 import '../../repositories/app_repository.dart';
 import '../../services/active_plan_store.dart';
+import '../../services/exercise_equipment_compatibility.dart';
 import '../../services/tutorial_state_store.dart';
 import '../../utils/async_pool.dart';
 import '../../utils/tutorial_launcher.dart';
@@ -133,10 +134,8 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
               equipment: exercise.equipment,
               sets: List<ExerciseSet>.generate(
                 exercise.sets,
-                (_) => ExerciseSet(
-                  weight: exercise.weight,
-                  reps: exercise.reps,
-                ),
+                (_) =>
+                    ExerciseSet(weight: exercise.weight, reps: exercise.reps),
               ),
             ),
             type: 'weight',
@@ -190,7 +189,7 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
     final normalizedProfileEquipmentNames = _normalizeEquipmentNames(
       profileEquipmentNames,
     );
-    if (!_filterForProfileEquipment || profileEquipmentNames.isEmpty) {
+    if (!_filterForProfileEquipment || widget.profileId == null) {
       return _PremadePlanAdaptationData(
         profileEquipmentNames: profileEquipmentNames,
         adaptations: const <String, _PremadePlanAdaptation>{},
@@ -202,7 +201,6 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
             .where((plan) => plan.durationMinutes == _selectedDurationMinutes)
             .toList();
     final candidates = await _loadProfileCandidateEntries(
-      profileEquipmentNames,
       normalizedProfileEquipmentNames,
     );
     if (candidates.isEmpty) {
@@ -213,31 +211,31 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
     }
 
     final replacementCache = <String, PremadeTrainingExercise?>{};
+    final definitionCache = <String, Future<ExerciseDefinition?>>{};
     final adaptations = <String, _PremadePlanAdaptation>{};
     for (final plan in plans) {
       var replacementCount = 0;
       final adaptedExercises = <PremadeTrainingExercise>[];
 
       for (final exercise in plan.exercises) {
+        final cacheKey = _premadeExerciseCacheKey(exercise);
+        final definition = await definitionCache.putIfAbsent(
+          cacheKey,
+          () => _findPremadeExerciseDefinition(exercise),
+        );
         if (_premadeExerciseFitsProfile(
           exercise,
           normalizedProfileEquipmentNames,
+          definition: definition,
         )) {
           adaptedExercises.add(exercise);
           continue;
         }
 
-        final cacheKey =
-            '${exercise.name.trim().toLowerCase()}|'
-            '${exercise.equipment.trim().toLowerCase()}';
         final replacement =
             replacementCache.containsKey(cacheKey)
                 ? replacementCache[cacheKey]
-                : await _findReplacementExercise(
-                  exercise,
-                  candidates,
-                  normalizedProfileEquipmentNames,
-                );
+                : await _findReplacementExercise(exercise, candidates);
         replacementCache[cacheKey] = replacement;
 
         if (replacement == null) {
@@ -283,17 +281,9 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
   }
 
   Future<List<_PremadeExerciseMatchEntry>> _loadProfileCandidateEntries(
-    Set<String> profileEquipmentNames,
     Set<String> normalizedProfileEquipmentNames,
   ) async {
-    final shallowDefinitions = await _repo.lookupDefsOnlyWithEquipment(
-      profileEquipmentNames.toList(),
-    );
-    final definitionIds =
-        shallowDefinitions.map((definition) => definition.id).toSet().toList();
-    if (definitionIds.isEmpty) return const <_PremadeExerciseMatchEntry>[];
-
-    final definitions = await _repo.lookupDefsDetailedByIds(definitionIds);
+    final definitions = await _repo.lookupDefsDetailed();
     final entries = await mapWithConcurrency<
       ExerciseDefinition,
       _PremadeExerciseMatchEntry?
@@ -320,7 +310,6 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
   Future<PremadeTrainingExercise?> _findReplacementExercise(
     PremadeTrainingExercise exercise,
     List<_PremadeExerciseMatchEntry> candidates,
-    Set<String> profileEquipmentNames,
   ) async {
     final current = await _buildPremadeExerciseEntry(exercise);
     if (current == null) return null;
@@ -338,9 +327,6 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
 
     if (bestCandidate == null || bestScore <= 0.05) return null;
     final equipment = _primaryEquipmentName(bestCandidate.definition);
-    if (!_profileContainsEquipment(profileEquipmentNames, equipment)) {
-      return null;
-    }
 
     return PremadeTrainingExercise(
       name: bestCandidate.definition.name,
@@ -383,7 +369,9 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
     final targetEquipment = exercise.equipment.trim().toLowerCase();
 
     for (final definition in detailedResults) {
-      final names = _definitionEquipmentNames(definition);
+      final names = ExerciseEquipmentCompatibility.requiredEquipmentNames(
+        definition,
+      );
       if (definition.name.trim().toLowerCase() == targetName &&
           names.contains(targetEquipment)) {
         return definition;
@@ -452,27 +440,28 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
 
   bool _premadeExerciseFitsProfile(
     PremadeTrainingExercise exercise,
-    Set<String> profileEquipmentNames,
-  ) => _profileContainsEquipment(profileEquipmentNames, exercise.equipment);
+    Set<String> profileEquipmentNames, {
+    ExerciseDefinition? definition,
+  }) {
+    if (definition != null) {
+      return _definitionFitsProfile(definition, profileEquipmentNames);
+    }
+    // Keep static-plan entries without a matching definition compatible with
+    // their existing one-equipment fallback behavior.
+    return _profileContainsEquipment(profileEquipmentNames, exercise.equipment);
+  }
 
   bool _definitionFitsProfile(
     ExerciseDefinition definition,
     Set<String> profileEquipmentNames,
-  ) {
-    final equipmentNames = _definitionEquipmentNames(definition);
-    if (equipmentNames.isEmpty) return true;
-    return equipmentNames.every(
-      (equipment) =>
-          _profileContainsEquipment(profileEquipmentNames, equipment),
-    );
-  }
+  ) => ExerciseEquipmentCompatibility.fitsProfileNames(
+    definition,
+    profileEquipmentNames,
+  );
 
-  Set<String> _definitionEquipmentNames(ExerciseDefinition definition) {
-    return definition.equipmentList
-        .map((equipment) => equipment.name.trim().toLowerCase())
-        .where((name) => name.isNotEmpty)
-        .toSet();
-  }
+  String _premadeExerciseCacheKey(PremadeTrainingExercise exercise) =>
+      '${exercise.name.trim().toLowerCase()}|'
+      '${exercise.equipment.trim().toLowerCase()}';
 
   bool _profileContainsEquipment(
     Set<String> profileEquipmentNames,

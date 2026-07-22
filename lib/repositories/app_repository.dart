@@ -25,6 +25,8 @@ class AppRepository {
   _musclePercentCache = <int, Future<List<ExerciseMusclePercent>>>{};
   static final Map<int, Future<Map<BodyPart, double>>> _bodyPartPercentCache =
       <int, Future<Map<BodyPart, double>>>{};
+  static final Map<int, Future<ResolvedExerciseAllocation>>
+  _exerciseAllocationCache = <int, Future<ResolvedExerciseAllocation>>{};
 
   final DatabaseHelper _dbHelper;
   late final ContentRepository content = ContentRepository(db: _dbHelper);
@@ -38,11 +40,13 @@ class AppRepository {
   static void clearExerciseAnalysisCache() {
     _musclePercentCache.clear();
     _bodyPartPercentCache.clear();
+    _exerciseAllocationCache.clear();
   }
 
   static void clearExerciseAnalysisCacheFor(int defId) {
     _musclePercentCache.remove(defId);
     _bodyPartPercentCache.remove(defId);
+    _exerciseAllocationCache.remove(defId);
   }
 
   static void _trimExerciseAnalysisCache() {
@@ -51,6 +55,9 @@ class AppRepository {
     }
     while (_bodyPartPercentCache.length > _maxExerciseAnalysisCacheEntries) {
       _bodyPartPercentCache.remove(_bodyPartPercentCache.keys.first);
+    }
+    while (_exerciseAllocationCache.length > _maxExerciseAnalysisCacheEntries) {
+      _exerciseAllocationCache.remove(_exerciseAllocationCache.keys.first);
     }
   }
 
@@ -479,11 +486,17 @@ class AppRepository {
   Future<void> ensureExerciseMediaManifestReady() =>
       content.ensureExerciseMediaManifestReady();
 
+  Future<void> ensureSharedMediaManifestReady() =>
+      content.ensureSharedMediaManifestReady();
+
   Future<ContentEnvironmentConfig> loadContentEnvironments() =>
       content.loadContentEnvironments();
 
   Future<ContentManifest> syncRemoteExerciseMediaManifest(Uri manifestUri) =>
       content.syncRemoteExerciseMediaManifest(manifestUri);
+
+  Future<SharedMediaManifest> syncRemoteSharedMediaManifest(Uri manifestUri) =>
+      content.syncRemoteSharedMediaManifest(manifestUri);
 
   Future<File?> cachedExerciseMediaFile(
     ExerciseMediaItem item, {
@@ -497,6 +510,33 @@ class AppRepository {
 
   Future<void> markExerciseMediaAccessed(ExerciseMediaItem item) =>
       content.markMediaAccessed(item);
+
+  Future<SharedMediaItem?> fetchPrimarySharedMedia(
+    SharedMediaEntityType entityType,
+    int entityId,
+  ) => content.fetchPrimarySharedMedia(entityType, entityId);
+
+  Future<SharedMediaItem?> fetchPrimaryEquipmentMedia(int equipmentId) =>
+      fetchPrimarySharedMedia(SharedMediaEntityType.equipment, equipmentId);
+
+  Future<SharedMediaItem?> fetchPrimaryBodyPartMedia(int bodyPartId) =>
+      fetchPrimarySharedMedia(SharedMediaEntityType.bodypart, bodyPartId);
+
+  Future<SharedMediaItem?> fetchPrimaryMuscleMedia(int muscleId) =>
+      fetchPrimarySharedMedia(SharedMediaEntityType.muscle, muscleId);
+
+  Future<File?> cachedSharedMediaFile(
+    SharedMediaItem item, {
+    required bool thumbnail,
+  }) => content.cachedSharedMediaFile(item, thumbnail: thumbnail);
+
+  Future<File> cacheSharedMedia(
+    SharedMediaItem item, {
+    required bool thumbnail,
+  }) => content.cacheSharedMedia(item, thumbnail: thumbnail);
+
+  Future<void> markSharedMediaAccessed(SharedMediaItem item) =>
+      content.markSharedMediaAccessed(item);
 
   Future<ContentCacheUsage> getContentCacheUsage() => content.getCacheUsage();
 
@@ -886,6 +926,77 @@ class AppRepository {
     _musclePercentCache[defId] = future;
     _trimExerciseAnalysisCache();
     return future;
+  }
+
+  Future<ResolvedExerciseAllocation> resolveExerciseAllocation(int defId) {
+    final cached = _exerciseAllocationCache.remove(defId);
+    if (cached != null) {
+      _exerciseAllocationCache[defId] = cached;
+      return cached;
+    }
+
+    final future = _dbHelper.resolveExerciseAllocation(defId).catchError((
+      Object error,
+      StackTrace stackTrace,
+    ) {
+      _exerciseAllocationCache.remove(defId);
+      Error.throwWithStackTrace(error, stackTrace);
+    });
+    _exerciseAllocationCache[defId] = future;
+    _trimExerciseAnalysisCache();
+    return future;
+  }
+
+  Future<void> setPersonalExerciseAllocationCredit({
+    required int defId,
+    required ExerciseAllocationDimension dimension,
+    required int targetId,
+    required double credit,
+  }) async {
+    await _dbHelper.setPersonalExerciseAllocationCredit(
+      defId: defId,
+      dimension: dimension,
+      targetId: targetId,
+      credit: credit,
+    );
+    clearExerciseAnalysisCacheFor(defId);
+  }
+
+  Future<void> replacePersonalExerciseAllocationCredits({
+    required int defId,
+    required ExerciseAllocationDimension dimension,
+    required Map<int, double> credits,
+  }) async {
+    await _dbHelper.replacePersonalExerciseAllocationCredits(
+      defId: defId,
+      dimension: dimension,
+      credits: credits,
+    );
+    clearExerciseAnalysisCacheFor(defId);
+  }
+
+  Future<void> resetPersonalExerciseAllocation({
+    required int defId,
+    required ExerciseAllocationDimension dimension,
+  }) async {
+    await _dbHelper.resetPersonalExerciseAllocation(
+      defId: defId,
+      dimension: dimension,
+    );
+    clearExerciseAnalysisCacheFor(defId);
+  }
+
+  Future<void> replaceCreatorExerciseAllocationCredits({
+    required int defId,
+    required ExerciseAllocationDimension dimension,
+    required Map<int, double> credits,
+  }) async {
+    await _dbHelper.replaceCreatorExerciseAllocationCredits(
+      defId: defId,
+      dimension: dimension,
+      credits: credits,
+    );
+    clearExerciseAnalysisCacheFor(defId);
   }
 
   Future<Map<BodyPart, double>> computeBodyPartPercents(int defId) {
@@ -1771,7 +1882,10 @@ class AppRepository {
   /// Optionally runs a quick integrity check.
   Future<bool> warmUp({bool verify = false}) async {
     final db = await _dbHelper.database;
-    await ensureExerciseMediaManifestReady();
+    await Future.wait<void>([
+      ensureExerciseMediaManifestReady(),
+      ensureSharedMediaManifestReady(),
+    ]);
     if (!verify) return true;
     try {
       await db.rawQuery('PRAGMA quick_check');

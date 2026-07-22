@@ -39,12 +39,15 @@ import 'profile_transaction_dao.dart';
 import 'progression_rule_propagation_dao.dart';
 import 'workout_transaction_dao.dart';
 import 'session_record_badges_dao.dart';
+import 'exercise_allocation_dao.dart';
+import '../services/exercise_allocation_resolver.dart';
+import '../services/exercise_equipment_compatibility.dart';
 
 import 'package:flutter/foundation.dart' show debugPrint;
 
 /// Singleton helper for managing the SQLite database.
 class DatabaseHelper {
-  static const int _kDbVersion = 52;
+  static const int _kDbVersion = 54;
   static int get currentSchemaVersion => _kDbVersion;
   static const String _kOpenTriggerResetKey = 'open_trigger_reset_v1';
   static const String _kOpenIndexEnsureKey = 'open_index_ensure_v3';
@@ -131,6 +134,7 @@ class DatabaseHelper {
           db,
           onFoodProgress: (c) => _logProgress('foods', c),
         );
+        await Seed.syncCreatorExerciseAllocationDefaults(db);
         await _backfillNormalizedFoodKeys(db);
         await _backfillEnergyKcalFromMacros(db);
         if (oldVersion < 22 && await _tableExists(db, 'recipes')) {
@@ -156,6 +160,8 @@ class DatabaseHelper {
         await Schema.migrateV50(db);
         await Schema.migrateV51(db);
         await Schema.migrateV52(db);
+        await Schema.migrateV53(db);
+        await Schema.migrateV54(db);
         await _resetDbTriggers(db); // <—
         await _maybeCompactLegacyFoodCatalog(db);
         await _removeEmptyStarterPlans(db);
@@ -212,6 +218,7 @@ class DatabaseHelper {
       db,
       onFoodProgress: (c) => _logProgress('foods', c),
     );
+    await Seed.syncCreatorExerciseAllocationDefaults(db);
     _logDbInitStep(
       'onCreate',
       'seed-missing-blocks',
@@ -2513,6 +2520,14 @@ class DatabaseHelper {
     return rows.map(ExerciseMediaItem.fromMap).toList();
   }
 
+  Future<List<SharedMediaItem>> getSharedMedia(
+    SharedMediaEntityType entityType,
+    int entityId,
+  ) async {
+    final db = await database;
+    return ContentDao.getSharedMedia(db, entityType, entityId);
+  }
+
   Future<void> replaceExerciseMedia(
     int defId,
     List<ExerciseMediaItem> items,
@@ -2559,46 +2574,68 @@ class DatabaseHelper {
     List<int>? bodypartIds,
     List<int>? muscleIds,
   }) async {
-    // 1) Base equipment names from profile
-    List<String>? eqNames;
+    var definitions = await lookupDefsDetailed();
+
+    // Require the complete equipment list for profile-aware generation.
     if (useProfileFilter && profileId != null) {
-      final eqMaps = await fetchEquipmentForProfile(profileId);
-      eqNames = eqMaps.map((e) => e['name'] as String).toList();
-    }
-    // 2) Override by single filter
-    if (equipmentFilter != null) {
-      eqNames = [equipmentFilter];
+      final profileEquipment = await fetchEquipmentForProfile(profileId);
+      final profileEquipmentIds = <int>{
+        for (final row in profileEquipment)
+          if (row['id'] is int) row['id'] as int,
+      };
+      definitions =
+          definitions
+              .where(
+                (definition) => ExerciseEquipmentCompatibility.fitsProfileIds(
+                  definition,
+                  profileEquipmentIds,
+                ),
+              )
+              .toList();
     }
 
-    // 3) Get defs
-    List<ExerciseDefinition> defs;
-    if (eqNames != null && eqNames.isNotEmpty) {
-      defs = await lookupDefsOnlyWithEquipment(eqNames);
-    } else {
-      defs = await lookupDefsFiltered(
-        equipmentNames: eqNames,
-        bodypartIds: bodypartIds,
-        muscleIds: muscleIds,
-      );
+    final selectedEquipment = equipmentFilter?.trim();
+    if (selectedEquipment != null &&
+        selectedEquipment.isNotEmpty &&
+        selectedEquipment != 'All') {
+      definitions =
+          definitions
+              .where(
+                (definition) =>
+                    ExerciseEquipmentCompatibility.usesEquipmentName(
+                      definition,
+                      selectedEquipment,
+                    ),
+              )
+              .toList();
     }
 
     // 4) Post‐filter by body/muscle
-    if (eqNames != null && eqNames.isNotEmpty) {
-      defs =
-          defs.where((d) {
-            final areaOk =
-                bodypartIds == null ||
-                bodypartIds.any((id) => d.bodyParts.any((bp) => bp.id == id));
-            final muscleOk =
-                muscleIds == null ||
-                muscleIds.any(
-                  (id) => d.muscles.any((rm) => rm.muscle.id == id),
-                );
-            return areaOk && muscleOk;
-          }).toList();
+    if (bodypartIds != null && bodypartIds.isNotEmpty) {
+      final selectedBodypartIds = bodypartIds.toSet();
+      definitions =
+          definitions
+              .where(
+                (definition) => definition.bodyParts.any(
+                  (bodyPart) => selectedBodypartIds.contains(bodyPart.id),
+                ),
+              )
+              .toList();
     }
 
-    return defs;
+    if (muscleIds != null && muscleIds.isNotEmpty) {
+      final selectedMuscleIds = muscleIds.toSet();
+      definitions =
+          definitions
+              .where(
+                (definition) => definition.muscles.any(
+                  (muscle) => selectedMuscleIds.contains(muscle.muscle.id),
+                ),
+              )
+              .toList();
+    }
+
+    return definitions;
   }
 
   Future<int> insertExerciseMuscleMapping(
@@ -3608,82 +3645,119 @@ class DatabaseHelper {
     return (row['vm_value'] as num).toDouble();
   }
 
-  // ─── Muscle % Computations ────────────────────────────────
+  // ─── Exercise allocation resolution ────────────────────────
 
-  static const List<double> _rankedMuscleUnitsPerSet = <double>[
-    1.0,
-    0.85,
-    0.60,
-    0.35,
-    0.25,
-    0.15,
-    0.10,
-  ];
-
-  static double _defaultMuscleUnitsForRank(int rank) {
-    if (rank <= 0 || rank > _rankedMuscleUnitsPerSet.length) return 0.0;
-    return _rankedMuscleUnitsPerSet[rank - 1];
+  /// Returns the source-aware anatomy allocation for one exercise.
+  ///
+  /// New personal values and future creator values are resolved here, while
+  /// legacy percent rows are preserved as a compatibility source.
+  Future<ResolvedExerciseAllocation> resolveExerciseAllocation(
+    int defId,
+  ) async {
+    return ExerciseAllocationResolver.resolve(await database, defId);
   }
 
-  static Map<BodyPart, double> _normalizeBodyPartUnits(
-    Map<BodyPart, double> units,
-  ) {
-    if (units.isEmpty) return units;
-
-    final maxUnits = units.values.fold<double>(
-      0.0,
-      (max, value) => value > max ? value : max,
+  Future<void> setPersonalExerciseAllocationCredit({
+    required int defId,
+    required ExerciseAllocationDimension dimension,
+    required int targetId,
+    required double credit,
+  }) async {
+    if (!credit.isFinite || credit < 0) {
+      throw ArgumentError.value(
+        credit,
+        'credit',
+        'Set credit must be a finite value of zero or more.',
+      );
+    }
+    final current = await resolveExerciseAllocation(defId);
+    final credits = Map<int, double>.from(
+      dimension == ExerciseAllocationDimension.muscle
+          ? current.muscleCredits
+          : current.bodyPartCredits,
     );
-    if (maxUnits <= 0.0) return units;
+    credits[targetId] = credit;
+    await ExerciseAllocationDao.replacePersonalCredits(
+      await database,
+      exerciseDefinitionId: defId,
+      dimension: dimension,
+      credits: credits,
+    );
+  }
 
-    return {
-      for (final entry in units.entries)
-        if (entry.value > 0.0) entry.key: entry.value / maxUnits,
-    };
+  Future<void> replacePersonalExerciseAllocationCredits({
+    required int defId,
+    required ExerciseAllocationDimension dimension,
+    required Map<int, double> credits,
+  }) async {
+    if (credits.values.any((credit) => !credit.isFinite || credit < 0)) {
+      throw ArgumentError(
+        'Personal allocation credits must be finite and non-negative.',
+      );
+    }
+    await ExerciseAllocationDao.replacePersonalCredits(
+      await database,
+      exerciseDefinitionId: defId,
+      dimension: dimension,
+      credits: credits,
+    );
+  }
+
+  Future<void> resetPersonalExerciseAllocation({
+    required int defId,
+    required ExerciseAllocationDimension dimension,
+  }) async {
+    await ExerciseAllocationDao.resetPersonalCredits(
+      await database,
+      exerciseDefinitionId: defId,
+      dimension: dimension,
+    );
+  }
+
+  /// Creator defaults are content-owned. This API exists for content seeding
+  /// and tests, not normal user-facing settings.
+  Future<void> replaceCreatorExerciseAllocationCredits({
+    required int defId,
+    required ExerciseAllocationDimension dimension,
+    required Map<int, double> credits,
+  }) async {
+    if (credits.values.any((credit) => !credit.isFinite || credit < 0)) {
+      throw ArgumentError(
+        'Creator allocation credits must be finite and non-negative.',
+      );
+    }
+    await ExerciseAllocationDao.replaceCreatorCredits(
+      await database,
+      exerciseDefinitionId: defId,
+      dimension: dimension,
+      credits: credits,
+    );
   }
 
   Future<List<ExerciseMusclePercent>> computeMusclePercents(int defId) async {
     final def = await getExerciseDefinitionById(defId);
     if (def == null) return [];
-
-    final overrides = await AnalyticsDao.getPercentsForExercise(
-      await database,
-      defId,
-    );
-    final overrideMap = {for (var e in overrides) e.muscleId: e.percent};
+    final allocation = await resolveExerciseAllocation(defId);
 
     return def.muscles.map((rm) {
-      final defaultPct = _defaultMuscleUnitsForRank(rm.rank);
       return ExerciseMusclePercent(
         exerciseDefId: defId,
         muscleId: rm.muscle.id,
-        percent: overrideMap[rm.muscle.id] ?? defaultPct,
+        percent: allocation.muscleCredits[rm.muscle.id] ?? 0.0,
       );
     }).toList();
   }
 
   Future<Map<BodyPart, double>> computeBodyPartPercents(int defId) async {
     final db = await database;
-    final def = await DefinitionDao.getExerciseDefinitionById(db, defId);
-    if (def == null) return {};
-
-    // 1) If the exercise is configured for manual body-parts, load those:
-    if (def.useManualBodyparts) {
-      final rows = await AnalyticsDao.getPercentsForExerciseBodyPart(db, defId);
-      // rows: List<ExerciseBodyPartPercent>
-      // build a map from your definition.bodyParts
-      final bpById = {for (var bp in def.bodyParts) bp.id: bp};
-      final out = <BodyPart, double>{};
-      for (var p in rows) {
-        final bp = bpById[p.bodyPartId];
-        if (bp != null) out[bp] = p.percent;
-      }
-      return out;
-    }
-
-    // 2) Otherwise, calculate from ranked muscle hits and normalize the final
-    // body-part totals so the strongest body-part contribution equals 1 set.
-    return computeMuscleCalculatedBodyparts(defId);
+    final allocation = await resolveExerciseAllocation(defId);
+    if (allocation.bodyPartCredits.isEmpty) return {};
+    final bodyParts = await LookupDao.getAllBodyParts(db);
+    final byId = {for (final bodyPart in bodyParts) bodyPart.id: bodyPart};
+    return <BodyPart, double>{
+      for (final entry in allocation.bodyPartCredits.entries)
+        if (byId[entry.key] != null) byId[entry.key]!: entry.value,
+    };
   }
 
   /// Estimate how one single set of [exerciseDefId] splits across its body-parts,
@@ -3700,48 +3774,14 @@ class DatabaseHelper {
     int defId,
   ) async {
     final db = await database;
-    // 1) Load the full definition (so we know which muscles are on it)
-    final def = await DefinitionDao.getExerciseDefinitionById(db, defId);
-    if (def == null) return {};
-
-    // 2) Grab per-exercise muscle percentages (overrides or computed)
-    final musclePercs = await computeMusclePercents(defId);
-    final hitMap = {for (var e in musclePercs) e.muscleId: e.percent};
-
-    final muscleIds = def.muscles.map((rm) => rm.muscle.id).toSet().toList();
-    if (muscleIds.isEmpty) return {};
-
-    // 3) Load every muscle -> body-part link for this exercise in one query.
-    final placeholders = sqlitePlaceholders(muscleIds.length);
-    final linkRows = await db.rawQuery('''
-      SELECT
-        mb.muscle_id AS muscle_id,
-        bp.id AS bodypart_id,
-        bp.name AS bodypart_name
-      FROM muscle_bodypart mb
-      JOIN bodypart bp ON bp.id = mb.bodypart_id
-      WHERE mb.muscle_id IN ($placeholders)
-      ''', muscleIds);
-
-    final bpById = <int, BodyPart>{};
-
-    // 4) Add each linked body-part contribution. This used to query once per
-    // muscle, which made first-time exercise analysis much more expensive.
-    final result = <BodyPart, double>{};
-    for (final row in linkRows) {
-      final mid = row['muscle_id'] as int;
-      final p = hitMap[mid] ?? 0.0;
-      if (p <= 0) continue;
-
-      final bodyPartId = row['bodypart_id'] as int;
-      final bp = bpById.putIfAbsent(
-        bodyPartId,
-        () => BodyPart(bodyPartId, row['bodypart_name'] as String),
-      );
-      result[bp] = (result[bp] ?? 0.0) + p;
-    }
-
-    return _normalizeBodyPartUnits(result);
+    final allocation = await resolveExerciseAllocation(defId);
+    if (allocation.derivedBodyPartCredits.isEmpty) return {};
+    final bodyParts = await LookupDao.getAllBodyParts(db);
+    final byId = {for (final bodyPart in bodyParts) bodyPart.id: bodyPart};
+    return <BodyPart, double>{
+      for (final entry in allocation.derivedBodyPartCredits.entries)
+        if (byId[entry.key] != null) byId[entry.key]!: entry.value,
+    };
   }
 
   // ─── Session/Set Analytics ───────────────────────────────
@@ -3842,53 +3882,17 @@ class DatabaseHelper {
         bodyPartByIdOverride ??
         {for (final bp in await LookupDao.getAllBodyParts(db)) bp.id: bp};
 
-    // right after `final bpById = …;`
     final def = await DefinitionDao.getExerciseDefinitionById(db, defId);
     if (def == null) return {};
     final multiply = def.multiplyByRating;
     final ratingMul = def.rating / 100.0;
-    final defBodyPartIds = def.bodyParts.map((bp) => bp.id).toList();
-
-    // 3) check if we should use manual body-part percents
-    final useManual = await getUseManualBodyparts(defId);
-
-    // 4a) if manual, load the per-def body-part % overrides
-    Map<int, double> manualCountPerSet = {};
-    if (useManual) {
-      // 1) default every linked bodyPart to 1.0 per set
-      for (var bpId in defBodyPartIds) {
-        manualCountPerSet[bpId] = 1.0;
+    final allocation = await resolveExerciseAllocation(defId);
+    allocation.bodyPartHistoryCredits.forEach((bodyPartId, perSetCredit) {
+      final bodyPart = bpById[bodyPartId];
+      if (bodyPart != null) {
+        result[bodyPart] = (result[bodyPart] ?? 0.0) + perSetCredit * setCount;
       }
-      // 2) overwrite with any saved overrides
-      final manualRows = await AnalyticsDao.getPercentsForExerciseBodyPart(
-        db,
-        defId,
-      );
-      for (var row in manualRows) {
-        manualCountPerSet[row.bodyPartId] = row.percent;
-      }
-    }
-
-    // 4b) if not manual, compute the per-set distribution via your existing helper
-    //     this gives you a Map<BodyPart, double> telling you, for one set,
-    //     how many “body-part units” it should count.
-    Map<BodyPart, double> perSetBpMap = {};
-    if (!useManual) {
-      perSetBpMap = await computeMuscleCalculatedBodyparts(defId);
-    }
-
-    if (useManual) {
-      manualCountPerSet.forEach((bpId, countPerSet) {
-        final bp = bpById[bpId];
-        if (bp != null) {
-          result[bp] = (result[bp] ?? 0.0) + countPerSet * setCount;
-        }
-      });
-    } else {
-      perSetBpMap.forEach((bp, valPerSet) {
-        result[bp] = (result[bp] ?? 0.0) + valPerSet * setCount;
-      });
-    }
+    });
 
     if (multiply) {
       result.updateAll((bp, val) => val * ratingMul);
@@ -3896,8 +3900,9 @@ class DatabaseHelper {
     return result;
   }
 
-  /// Fetches the total number of “muscle-units” for a specific exercise definition
-  /// over a given time range, obeying the “Use Manual Muscles” toggle.
+  /// Fetches muscle set credits for a specific exercise definition over a time
+  /// range. The allocation resolver retains the legacy manual-toggle behavior
+  /// until an explicit creator or personal allocation replaces it.
   Future<Map<int, double>> fetchMuscleSetsForExerciseOverTimeRange({
     required int defId,
     required DateTime start,
@@ -3915,45 +3920,17 @@ class DatabaseHelper {
         0;
     if (setCount <= 0) return {};
 
-    // 2) should we use manual muscles?
-    final useManual = await getUseManualMuscles(defId);
-
-    // 3) load definition & its body-parts
     final def = await DefinitionDao.getExerciseDefinitionById(db, defId);
     if (def == null) return {};
 
     final multiply = def.multiplyByRating;
     final ratingMul = def.rating / 100.0;
 
-    // 4) prepare manual map: muscleId -> countPerSet
-    final manualCountPerSet = <int, double>{};
-    if (useManual) {
-      // default every linked muscle to 1.0 per set
-      for (var rm in def.muscles) {
-        manualCountPerSet[rm.muscle.id] = 1.0;
-      }
-      // overwrite with any saved overrides
-      final rows = await AnalyticsDao.getPercentsForExercise(db, defId);
-      for (var row in rows) {
-        manualCountPerSet[row.muscleId] = row.percent;
-      }
-    }
+    final allocation = await resolveExerciseAllocation(defId);
 
-    // 5) prepare auto map: muscleId -> countPerSet
-    final autoCountPerSet = <int, double>{};
-    if (!useManual) {
-      final musclePercs = await computeMusclePercents(defId);
-      for (final row in musclePercs) {
-        if (row.percent > 0) {
-          autoCountPerSet[row.muscleId] = row.percent;
-        }
-      }
-    }
-
-    // 6) final: multiply per-set units by the SQL-counted completed rows.
+    // Multiply resolved per-set credits by the SQL-counted completed rows.
     final result = <int, double>{};
-    final countPerSet = useManual ? manualCountPerSet : autoCountPerSet;
-    countPerSet.forEach((mid, perSet) {
+    allocation.muscleHistoryCredits.forEach((mid, perSet) {
       result[mid] = (result[mid] ?? 0) + perSet * setCount;
     });
 

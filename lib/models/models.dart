@@ -12,6 +12,7 @@ export 'unit_preference.dart';
 export 'content_models.dart';
 export 'persistence_models.dart';
 export 'session_record_badge_models.dart';
+export 'exercise_allocation_models.dart';
 
 //new:
 export 'training_plan_models.dart';

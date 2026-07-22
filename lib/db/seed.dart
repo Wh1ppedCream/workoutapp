@@ -170,6 +170,119 @@ int? _resolveNutrientIdFast(
 ///
 /// Reads static JSON files from assets and populates the database using transactions.
 class Seed {
+  /// Applies creator-authored allocation defaults from [assets/exercises.json].
+  ///
+  /// The optional content shape is:
+  /// {
+  ///   "creatorAllocation": {
+  ///     "muscles": {"Pectoralis Major": 1.0},
+  ///     "bodyparts": {"Chest": 1.0}
+  ///   }
+  /// }
+  ///
+  /// Values are per-set credits. Missing dimensions intentionally remain
+  /// automatic, and personal user overrides are stored separately.
+  static Future<void> syncCreatorExerciseAllocationDefaults(Database db) async {
+    final exJson = await rootBundle.loadString('assets/exercises.json');
+    final List exercises = json.decode(exJson) as List;
+    if (exercises.isEmpty) return;
+
+    await db.transaction((txn) async {
+      final equipmentRows = await txn.query(
+        'equipment',
+        columns: ['id', 'name'],
+      );
+      final bodyPartRows = await txn.query('bodypart', columns: ['id', 'name']);
+      final muscleRows = await txn.query('muscles', columns: ['id', 'name']);
+      final definitionRows = await txn.query(
+        'exercise_definitions',
+        columns: ['id', 'name', 'equipment_id'],
+      );
+      final equipmentIds = <String, int>{
+        for (final row in equipmentRows)
+          row['name'] as String: row['id'] as int,
+      };
+      final bodyPartIds = <String, int>{
+        for (final row in bodyPartRows) row['name'] as String: row['id'] as int,
+      };
+      final muscleIds = <String, int>{
+        for (final row in muscleRows) row['name'] as String: row['id'] as int,
+      };
+      String definitionKey(String name, int? equipmentId) =>
+          '$name\x1f${equipmentId ?? 'null'}';
+      final definitionIds = <String, int>{
+        for (final row in definitionRows)
+          definitionKey(row['name'] as String, row['equipment_id'] as int?):
+              row['id'] as int,
+      };
+
+      Future<void> syncDimension({
+        required int definitionId,
+        required String dimension,
+        required Map<dynamic, dynamic> values,
+        required Map<String, int> targetIds,
+      }) async {
+        await txn.delete(
+          'exercise_allocation_creator_default',
+          where: 'exercise_def_id = ? AND dimension = ?',
+          whereArgs: [definitionId, dimension],
+        );
+        for (final entry in values.entries) {
+          final targetId = targetIds[entry.key];
+          final credit = entry.value;
+          if (targetId == null || credit is! num || credit < 0) {
+            debugPrint(
+              '[seed] skipped invalid creator allocation $dimension '
+              'for exercise $definitionId: ${entry.key}',
+            );
+            continue;
+          }
+          await txn.insert('exercise_allocation_creator_default', {
+            'exercise_def_id': definitionId,
+            'dimension': dimension,
+            'target_id': targetId,
+            'credit': credit.toDouble(),
+          });
+        }
+      }
+
+      for (final rawExercise in exercises) {
+        if (rawExercise is! Map) continue;
+        final allocation = rawExercise['creatorAllocation'];
+        if (allocation is! Map) continue;
+        final equipment = rawExercise['equipment'];
+        final equipmentNames =
+            equipment is List ? equipment : const <dynamic>[];
+        final equipmentId =
+            equipmentNames.isEmpty ? null : equipmentIds[equipmentNames.first];
+        final exerciseName = rawExercise['name'];
+        if (exerciseName is! String) continue;
+        final definitionId =
+            definitionIds[definitionKey(exerciseName, equipmentId)];
+        if (definitionId == null) continue;
+
+        final muscles = allocation['muscles'];
+        if (muscles is Map) {
+          await syncDimension(
+            definitionId: definitionId,
+            dimension: 'muscle',
+            values: muscles,
+            targetIds: muscleIds,
+          );
+        }
+        final bodyParts = allocation['bodyparts'];
+        if (bodyParts is Map) {
+          await syncDimension(
+            definitionId: definitionId,
+            dimension: 'bodypart',
+            values: bodyParts,
+            targetIds: bodyPartIds,
+          );
+        }
+      }
+    });
+  }
+
   /// Seeds equipment, body parts, muscles, and exercise definitions.
   static Future<void> seedLookupsAndExercises(Database db) async {
     final eqJson = await rootBundle.loadString('assets/equipment.json');

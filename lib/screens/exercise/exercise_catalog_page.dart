@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../../models/models.dart';
 import '../../providers/selected_profile.dart';
 import '../../repositories/app_repository.dart';
+import '../../services/exercise_equipment_compatibility.dart';
 import '../../services/tutorial_state_store.dart';
 import '../../utils/tutorial_launcher.dart';
 import '../../widgets/exercise_detail_sheet.dart';
@@ -194,10 +195,12 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
     if (_useProfileFilter && _dialogProfileId != null) {
       final allowedList = await _equipmentForProfile(_dialogProfileId!);
       if (generation != _filterGeneration || !mounted) return;
-      final allowed = allowedList.toSet();
       filtered =
           filtered.where((d) {
-            return d.equipmentList.every((eq) => allowed.contains(eq.name));
+            return ExerciseEquipmentCompatibility.fitsProfileNames(
+              d,
+              allowedList,
+            );
           }).toList();
       nextEquipmentOptions = ['All', ...allowedList];
     } else {
@@ -216,7 +219,10 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
       filtered =
           filtered
               .where(
-                (d) => d.equipmentList.any((eq) => eq.name == equipmentFilter),
+                (d) => ExerciseEquipmentCompatibility.usesEquipmentName(
+                  d,
+                  equipmentFilter,
+                ),
               )
               .toList();
     }

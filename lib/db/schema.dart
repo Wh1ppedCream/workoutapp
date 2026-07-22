@@ -2,6 +2,8 @@
 
 import 'package:sqflite/sqflite.dart';
 
+import 'content_dao.dart';
+
 /// Database schema manager: handles initial schema and migrations up to v10.
 class Schema {
   /// Creates initial schema (version 1).
@@ -154,6 +156,8 @@ class Schema {
     await migrateV50(db);
     await migrateV51(db);
     await migrateV52(db);
+    await migrateV53(db);
+    await migrateV54(db);
   }
 
   /// Handler for onUpgrade callback.
@@ -213,6 +217,8 @@ class Schema {
     if (oldVersion < 50) await migrateV50(db);
     if (oldVersion < 51) await migrateV51(db);
     if (oldVersion < 52) await migrateV52(db);
+    if (oldVersion < 53) await migrateV53(db);
+    if (oldVersion < 54) await migrateV54(db);
   }
 
   /// Migration to version 3: adds rating, equipment/muscle tables.
@@ -3155,6 +3161,65 @@ WHERE source_id IS NULL
         ON active_plans(profile_id, activated_at)
       ''');
     });
+  }
+
+  /// v53 - Source-aware creator and personal exercise allocation credits.
+  ///
+  /// Legacy percent tables intentionally remain in place. The resolver reads
+  /// them as a compatibility source so this migration cannot change an
+  /// existing user's anatomy calculations on its own.
+  static Future<void> migrateV53(Database db) async {
+    await db.transaction((txn) async {
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS exercise_allocation_source (
+          exercise_def_id INTEGER PRIMARY KEY,
+          muscle_mode TEXT NOT NULL DEFAULT 'automatic'
+            CHECK (muscle_mode IN ('automatic', 'user')),
+          bodypart_mode TEXT NOT NULL DEFAULT 'automatic'
+            CHECK (bodypart_mode IN ('automatic', 'user')),
+          FOREIGN KEY(exercise_def_id)
+            REFERENCES exercise_definitions(id) ON DELETE CASCADE
+        )
+      ''');
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS exercise_allocation_creator_default (
+          exercise_def_id INTEGER NOT NULL,
+          dimension TEXT NOT NULL
+            CHECK (dimension IN ('muscle', 'bodypart')),
+          target_id INTEGER NOT NULL,
+          credit REAL NOT NULL CHECK (credit >= 0),
+          PRIMARY KEY(exercise_def_id, dimension, target_id),
+          FOREIGN KEY(exercise_def_id)
+            REFERENCES exercise_definitions(id) ON DELETE CASCADE
+        )
+      ''');
+      await txn.execute('''
+        CREATE TABLE IF NOT EXISTS exercise_allocation_user_override (
+          exercise_def_id INTEGER NOT NULL,
+          dimension TEXT NOT NULL
+            CHECK (dimension IN ('muscle', 'bodypart')),
+          target_id INTEGER NOT NULL,
+          credit REAL NOT NULL CHECK (credit >= 0),
+          PRIMARY KEY(exercise_def_id, dimension, target_id),
+          FOREIGN KEY(exercise_def_id)
+            REFERENCES exercise_definitions(id) ON DELETE CASCADE
+        )
+      ''');
+      await txn.execute('''
+        CREATE INDEX IF NOT EXISTS idx_exercise_allocation_creator_lookup
+        ON exercise_allocation_creator_default(exercise_def_id, dimension)
+      ''');
+      await txn.execute('''
+        CREATE INDEX IF NOT EXISTS idx_exercise_allocation_user_lookup
+        ON exercise_allocation_user_override(exercise_def_id, dimension)
+      ''');
+    });
+  }
+
+  /// v54 - optional cloud media for shared catalog entities such as equipment
+  /// and anatomy. This never changes local workout or definition data.
+  static Future<void> migrateV54(Database db) async {
+    await ContentDao.ensureTables(db);
   }
 
   static Future<bool> _fts4Available(DatabaseExecutor db) async {

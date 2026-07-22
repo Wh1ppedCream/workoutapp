@@ -10,6 +10,7 @@ import '../../services/tutorial_state_store.dart';
 import '../../utils/tutorial_launcher.dart';
 import '../../widgets/body_heatmap.dart';
 import '../../widgets/guided_tutorial_overlay.dart';
+import '../../widgets/shared_entity_media_thumbnail.dart';
 import 'definitions_by_bodypart_page.dart';
 import 'definitions_by_muscle_page.dart';
 
@@ -185,9 +186,20 @@ class _MuscleFilterPageState extends State<MuscleFilterPage> {
                             return _exerciseCountLabel(count);
                           },
                           leadingFor:
-                              (part) => SingleBodyPartHeatmap(
-                                bodyPartName: part.name,
+                              (part) => SharedEntityMediaThumbnail(
+                                entityType: SharedMediaEntityType.bodypart,
+                                entityId: part.id,
                                 size: 54,
+                                padding: EdgeInsets.zero,
+                                fallbackBuilder:
+                                    (context, contentSize) =>
+                                        SingleBodyPartHeatmap(
+                                          bodyPartName: part.name,
+                                          size: contentSize,
+                                          padding: 3,
+                                          backgroundColor: Colors.transparent,
+                                          borderRadius: BorderRadius.zero,
+                                        ),
                               ),
                           onTap: (part) {
                             Navigator.of(context).push(
@@ -209,7 +221,24 @@ class _MuscleFilterPageState extends State<MuscleFilterPage> {
                                 data.muscleExerciseCounts[muscle.id] ?? 0;
                             return _exerciseCountLabel(count);
                           },
-                          icon: Icons.fitness_center,
+                          leadingFor:
+                              (muscle) => SharedEntityMediaThumbnail(
+                                entityType: SharedMediaEntityType.muscle,
+                                entityId: muscle.id,
+                                size: 44,
+                                borderRadius: BorderRadius.circular(22),
+                                fallbackBuilder:
+                                    (context, contentSize) => Icon(
+                                      Icons.fitness_center,
+                                      size: contentSize * 0.48,
+                                      color:
+                                          Theme.of(
+                                            context,
+                                          ).colorScheme.onPrimary,
+                                    ),
+                                backgroundColor:
+                                    Theme.of(context).colorScheme.primary,
+                              ),
                           onTap: (muscle) {
                             Navigator.of(context).push(
                               MaterialPageRoute(

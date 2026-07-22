@@ -37,6 +37,16 @@ class ContentEnvironmentPreferences {
     return environment.exerciseMediaManifestUrl;
   }
 
+  /// Shared catalog media always follows the selected content environment.
+  /// A custom exercise-media URL intentionally does not redirect equipment or
+  /// anatomy content to an unrelated manifest.
+  Future<String> loadSharedMediaManifestUrl(
+    ContentEnvironmentConfig config,
+  ) async {
+    final environment = await loadSelectedEnvironment(config);
+    return environment.sharedMediaManifestUrl;
+  }
+
   Future<void> saveSelectedEnvironment(String environmentId) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(exerciseMediaEnvironmentKey, environmentId);

@@ -19,10 +19,15 @@ class MediaCacheService {
     final path = thumbnail ? item.localThumbnailPath : item.localCachePath;
     if (path == null || path.isEmpty) return null;
 
-    final file = File(path);
-    if (!file.existsSync()) return null;
-    if (await file.length() == 0) return null;
-    return file;
+    return _cachedFileAtPath(path);
+  }
+
+  Future<File?> cachedSharedFileFor(
+    SharedMediaItem item, {
+    required bool thumbnail,
+  }) {
+    final path = thumbnail ? item.localThumbnailPath : item.localCachePath;
+    return _cachedFileAtPath(path);
   }
 
   Future<File> downloadMedia(
@@ -37,6 +42,37 @@ class MediaCacheService {
     }
 
     final targetFile = await _targetFileFor(item, uri, thumbnail: thumbnail);
+    return _downloadToTarget(uri, targetFile);
+  }
+
+  Future<File> downloadSharedMedia(
+    SharedMediaItem item, {
+    required bool thumbnail,
+  }) async {
+    final url =
+        thumbnail ? item.thumbnailUrl ?? item.remoteUrl : item.remoteUrl;
+    final uri = Uri.tryParse(url);
+    if (uri == null || !uri.hasScheme) {
+      throw ArgumentError.value(url, 'url', 'Expected an absolute media URL.');
+    }
+
+    final targetFile = await _targetFileForShared(
+      item,
+      uri,
+      thumbnail: thumbnail,
+    );
+    return _downloadToTarget(uri, targetFile);
+  }
+
+  Future<File?> _cachedFileAtPath(String? path) async {
+    if (path == null || path.isEmpty) return null;
+    final file = File(path);
+    if (!file.existsSync()) return null;
+    if (await file.length() == 0) return null;
+    return file;
+  }
+
+  Future<File> _downloadToTarget(Uri uri, File targetFile) async {
     await targetFile.parent.create(recursive: true);
     final tempFile = File(
       '${targetFile.path}.${DateTime.now().microsecondsSinceEpoch}.download',
@@ -112,6 +148,30 @@ class MediaCacheService {
     final urlHash = _stableHash(uri.toString()).toRadixString(16);
     return File(
       p.join(dir.path, 'exercises', '$idPart.$role.$urlHash$extension'),
+    );
+  }
+
+  Future<File> _targetFileForShared(
+    SharedMediaItem item,
+    Uri uri, {
+    required bool thumbnail,
+  }) async {
+    final dir = await _cacheDirectory();
+    final extension =
+        p.extension(uri.path).isEmpty ? '.bin' : p.extension(uri.path);
+    final role = thumbnail ? 'thumb' : 'media';
+    final idPart =
+        item.assetId?.isNotEmpty == true
+            ? _safeFilePart(item.assetId!)
+            : '${item.entityType.name}_${item.entityId}_${item.sortOrder}_${item.mediaType}';
+    final urlHash = _stableHash(uri.toString()).toRadixString(16);
+    return File(
+      p.join(
+        dir.path,
+        'shared',
+        item.entityType.name,
+        '$idPart.$role.$urlHash$extension',
+      ),
     );
   }
 

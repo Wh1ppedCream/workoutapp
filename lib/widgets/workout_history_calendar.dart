@@ -17,12 +17,14 @@ class WorkoutHistoryCalendar extends StatefulWidget {
   final int refreshToken;
   final ValueChanged<WorkoutReportSession>? onSessionTap;
   final VoidCallback? onOpenFullHistory;
+  final EdgeInsetsGeometry margin;
 
   const WorkoutHistoryCalendar({
     super.key,
     this.refreshToken = 0,
     this.onSessionTap,
     this.onOpenFullHistory,
+    this.margin = const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
   });
 
   @override
@@ -82,8 +84,8 @@ class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting &&
             !snapshot.hasData) {
-          return const Card(
-            margin: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          return Card(
+            margin: widget.margin,
             child: SizedBox(
               height: 280,
               child: Center(child: CircularProgressIndicator()),
@@ -92,8 +94,8 @@ class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
         }
 
         if (snapshot.hasError && !snapshot.hasData) {
-          return const Card(
-            margin: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          return Card(
+            margin: widget.margin,
             child: Padding(
               padding: EdgeInsets.all(16),
               child: Text('Unable to load workout calendar.'),
@@ -114,16 +116,13 @@ class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
         final maxSessionsPerDay = _maxSessionsPerDayCache;
 
         return Card(
-          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          margin: widget.margin,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(14, 14, 14, 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _CalendarModeTabs(
-                  selectedMode: _mode,
-                  onChanged: _selectMode,
-                ),
+                _CalendarModeTabs(selectedMode: _mode, onChanged: _selectMode),
                 const SizedBox(height: 14),
                 _CalendarModeBody(
                   mode: _mode,
@@ -169,8 +168,7 @@ class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
                         _selectedMonth = month;
                         _visibleYear = month.year;
                       }),
-                  onSelectYear:
-                      (year) => setState(() => _selectedYear = year),
+                  onSelectYear: (year) => setState(() => _selectedYear = year),
                 ),
                 const SizedBox(height: 14),
                 _SelectedPeriodHeatmapSummary(
@@ -274,10 +272,9 @@ class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
       case _CalendarRangeMode.month:
         return DateFormat('EEE, MMM d').format(_selectedDay);
       case _CalendarRangeMode.threeMonth:
-        final end =
-            _monthWeekEndExclusive(
-              _selectedWeekStart,
-            ).subtract(const Duration(days: 1));
+        final end = _monthWeekEndExclusive(
+          _selectedWeekStart,
+        ).subtract(const Duration(days: 1));
         return _formatDateRange(_selectedWeekStart, end);
       case _CalendarRangeMode.year:
         return DateFormat('MMMM yyyy').format(_selectedMonth);
@@ -442,9 +439,11 @@ int _sessionCountInRange(
   DateTime endExclusive,
 ) {
   var count = 0;
-  for (var day = DateUtils.dateOnly(start);
-      day.isBefore(endExclusive);
-      day = day.add(const Duration(days: 1))) {
+  for (
+    var day = DateUtils.dateOnly(start);
+    day.isBefore(endExclusive);
+    day = day.add(const Duration(days: 1))
+  ) {
     count += sessionsByDay[day]?.length ?? 0;
   }
   return count;
@@ -501,8 +500,7 @@ class _CalendarModeTabs extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color:
-                  isSelected ? context.cs.onPrimary : context.cs.onSurface,
+              color: isSelected ? context.cs.onPrimary : context.cs.onSurface,
               fontWeight: FontWeight.w900,
             ),
           ),
@@ -564,8 +562,7 @@ class _CalendarModeBody extends StatelessWidget {
         return Column(
           children: [
             _CalendarHeader(
-              title:
-                  DateFormat('MMMM yyyy').format(visibleMonth).toUpperCase(),
+              title: DateFormat('MMMM yyyy').format(visibleMonth).toUpperCase(),
               onPrevious: onPreviousMonth,
               onNext: onNextMonth,
               previousTooltip: 'Previous month',
@@ -711,13 +708,14 @@ class _MonthWeekPanel extends StatelessWidget {
           DateFormat.MMMM().format(month),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w900,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900),
         ),
         const SizedBox(height: 8),
         GridView.builder(
           shrinkWrap: true,
+          primary: false,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: 4,
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -793,6 +791,7 @@ class _YearMonthSelector extends StatelessWidget {
         const SizedBox(height: 12),
         GridView.builder(
           shrinkWrap: true,
+          primary: false,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: months.length,
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -850,6 +849,7 @@ class _FourYearSelector extends StatelessWidget {
 
     return GridView.builder(
       shrinkWrap: true,
+      primary: false,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: years.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -934,14 +934,13 @@ class _PeriodCircleButton extends StatelessWidget {
                 label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style:
-                    (compact
-                            ? Theme.of(context).textTheme.labelLarge
-                            : Theme.of(context).textTheme.titleSmall)
-                        ?.copyWith(
-                          color: foregroundColor,
-                          fontWeight: FontWeight.w900,
-                        ),
+                style: (compact
+                        ? Theme.of(context).textTheme.labelLarge
+                        : Theme.of(context).textTheme.titleSmall)
+                    ?.copyWith(
+                      color: foregroundColor,
+                      fontWeight: FontWeight.w900,
+                    ),
               ),
             ),
             if (sessionCount > 1)
@@ -1052,6 +1051,7 @@ class _CalendarGrid extends StatelessWidget {
     final days = _visibleDays();
     return GridView.builder(
       shrinkWrap: true,
+      primary: false,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: days.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -1192,7 +1192,10 @@ class _WorkoutCountBadge extends StatelessWidget {
         width: size,
         height: size,
         alignment: Alignment.center,
-        decoration: BoxDecoration(color: backgroundColor, shape: BoxShape.circle),
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          shape: BoxShape.circle,
+        ),
         child: Text(
           count.toString(),
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -1242,8 +1245,7 @@ class _SelectedPeriodHeatmapSummary extends StatelessWidget {
             final colors = context.colors;
             final maxWidth = constraints.maxWidth;
             final gap = maxWidth < 330 ? 10.0 : 16.0;
-            final heatmapBox =
-                (maxWidth * 0.57).clamp(138.0, 250.0).toDouble();
+            final heatmapBox = (maxWidth * 0.57).clamp(138.0, 250.0).toDouble();
             final heatmapSize = heatmapBox.clamp(128.0, 200.0).toDouble();
             final summaryHeight = heatmapBox.clamp(210.0, 250.0).toDouble();
             final compactMetrics = summaryHeight < 230 || maxWidth < 360;
@@ -1500,7 +1502,8 @@ class _SessionRow extends StatelessWidget {
   }
 }
 
-String _pluralize(int count, String noun) => '$count $noun${count == 1 ? '' : 's'}';
+String _pluralize(int count, String noun) =>
+    '$count $noun${count == 1 ? '' : 's'}';
 
 String _durationLabel(int totalSeconds) {
   final hours = totalSeconds ~/ 3600;

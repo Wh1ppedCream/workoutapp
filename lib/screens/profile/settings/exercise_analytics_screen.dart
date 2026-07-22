@@ -1,11 +1,13 @@
-// File: lib/screens/exercise/exercise_analytics_screen.dart
-
 import 'package:flutter/material.dart';
-import '../../../repositories/app_repository.dart';
 import '../../../models/models.dart';
+import '../../../repositories/app_repository.dart';
+import '../../exercise/exercise_catalog_page.dart';
+import '../../../widgets/settings_tiles.dart';
 
 class ExerciseAnalyticsScreen extends StatefulWidget {
-  const ExerciseAnalyticsScreen({super.key});
+  final ExerciseDefinition? initialDefinition;
+
+  const ExerciseAnalyticsScreen({super.key, this.initialDefinition});
 
   @override
   State<ExerciseAnalyticsScreen> createState() =>
@@ -18,54 +20,79 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
   late final TabController _tabController;
 
   // --- Definitions ---
-  List<ExerciseDefinition> _defs = [];
   ExerciseDefinition? _sel;
   bool _isLoadingDefs = true;
   String? _defsError;
 
   // --- Muscles tab ---
   List<ExerciseMusclePercent> _muscleEntries = [];
-  Set<int> _overrideIds = {};
+  ExerciseAllocationSource _muscleSource = ExerciseAllocationSource.automatic;
   bool _isLoadingMuscles = false;
 
   // --- BodyParts tab ---
   Map<BodyPart, double> _bodyEntries = {};
+  ExerciseAllocationSource _bodyPartSource = ExerciseAllocationSource.automatic;
   bool _isLoadingBody = false;
 
-  // --- Defaults tab ---
+  final Map<int, TextEditingController> _muscleCreditControllers = {};
+  final Map<int, TextEditingController> _bodyPartCreditControllers = {};
+  bool _muscleCreditsDirty = false;
+  bool _bodyPartCreditsDirty = false;
+  bool _isSavingCredits = false;
 
-  //TODO: right now this just shows the formula step/min/max, i want this to eventually fully allow users to change the entire formula
-
-  final _stepCtrl = TextEditingController();
-  final _minCtrl = TextEditingController();
-  final _maxCtrl = TextEditingController();
-  bool _isLoadingDefaults = false;
-  String? _defaultsError;
+  bool get _hasPendingCreditChanges =>
+      _muscleCreditsDirty || _bodyPartCreditsDirty;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 2, vsync: this);
     _loadDefinitions();
-    _loadDefaults();
   }
 
   @override
   void dispose() {
     _tabController.dispose();
-    _stepCtrl.dispose();
-    _minCtrl.dispose();
-    _maxCtrl.dispose();
+    _disposeControllers(_muscleCreditControllers);
+    _disposeControllers(_bodyPartCreditControllers);
     super.dispose();
+  }
+
+  void _disposeControllers(Map<int, TextEditingController> controllers) {
+    for (final controller in controllers.values) {
+      controller.dispose();
+    }
+    controllers.clear();
+  }
+
+  void _replaceControllers(
+    Map<int, TextEditingController> controllers,
+    Map<int, double> credits,
+  ) {
+    _disposeControllers(controllers);
+    for (final entry in credits.entries) {
+      controllers[entry.key] = TextEditingController(
+        text: entry.value.toStringAsFixed(2),
+      );
+    }
   }
 
   Future<void> _loadDefinitions() async {
     try {
       final defs = await _repo.lookupDefsDetailed();
       if (!mounted) return;
+      final initialDefinition = widget.initialDefinition;
+      ExerciseDefinition? initialMatch;
+      if (initialDefinition != null) {
+        for (final definition in defs) {
+          if (definition.id == initialDefinition.id) {
+            initialMatch = definition;
+            break;
+          }
+        }
+      }
       setState(() {
-        _defs = defs;
-        _sel = defs.isNotEmpty ? defs.first : null;
+        _sel = initialMatch ?? (defs.isNotEmpty ? defs.first : null);
         _defsError = null;
       });
       if (_sel != null) {
@@ -89,24 +116,43 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
     setState(() {
       _sel = def;
       _muscleEntries = [];
-      _overrideIds = {};
       _bodyEntries = {};
+      _muscleCreditsDirty = false;
+      _bodyPartCreditsDirty = false;
+      _disposeControllers(_muscleCreditControllers);
+      _disposeControllers(_bodyPartCreditControllers);
     });
     await Future.wait([_loadMuscleEntries(def), _loadBodyEntries(def)]);
+  }
+
+  Future<void> _pickExercise() async {
+    final definition = await Navigator.of(context).push<ExerciseDefinition>(
+      MaterialPageRoute(
+        builder: (_) => ExerciseCatalogPage(onExercisePicked: (_) {}),
+      ),
+    );
+    if (!mounted || definition == null) return;
+    await _onSelectDef(definition);
   }
 
   Future<void> _loadMuscleEntries(ExerciseDefinition def) async {
     setState(() => _isLoadingMuscles = true);
     try {
-      // merged defaults + overrides
-      final computed = await _repo.computeMusclePercents(def.id);
-      // explicit overrides
-      final saved = await _repo.fetchPercentsForExercise(def.id);
-      final overrideIds = saved.map((e) => e.muscleId).toSet();
+      final allocation = await _repo.resolveExerciseAllocation(def.id);
       if (!mounted || _sel?.id != def.id) return;
       setState(() {
-        _muscleEntries = computed;
-        _overrideIds = overrideIds;
+        _muscleEntries =
+            def.muscles
+                .map(
+                  (ranked) => ExerciseMusclePercent(
+                    exerciseDefId: def.id,
+                    muscleId: ranked.muscle.id,
+                    percent: allocation.muscleCredits[ranked.muscle.id] ?? 0,
+                  ),
+                )
+                .toList();
+        _muscleSource = allocation.muscleSource;
+        _replaceControllers(_muscleCreditControllers, allocation.muscleCredits);
       });
     } catch (e) {
       // swallow: muscle tab will just show empty
@@ -120,10 +166,20 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
   Future<void> _loadBodyEntries(ExerciseDefinition def) async {
     setState(() => _isLoadingBody = true);
     try {
-      final bodyMap = await _repo.computeBodyPartPercents(def.id);
+      final allocation = await _repo.resolveExerciseAllocation(def.id);
+      final allBodyParts = await _repo.fetchAllBodyParts();
+      final byId = {for (final bodyPart in allBodyParts) bodyPart.id: bodyPart};
       if (!mounted || _sel?.id != def.id) return;
       setState(() {
-        _bodyEntries = bodyMap;
+        _bodyEntries = <BodyPart, double>{
+          for (final entry in allocation.bodyPartCredits.entries)
+            if (byId[entry.key] != null) byId[entry.key]!: entry.value,
+        };
+        _bodyPartSource = allocation.bodyPartSource;
+        _replaceControllers(
+          _bodyPartCreditControllers,
+          allocation.bodyPartCredits,
+        );
       });
     } catch (e) {
       // swallow
@@ -134,276 +190,739 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
     }
   }
 
-  Future<void> _loadDefaults() async {
-    setState(() => _isLoadingDefaults = true);
-    try {
-      final step = await _repo.getFormulaStep();
-      final mn = await _repo.getFormulaMin();
-      final mx = await _repo.getFormulaMax();
-      if (!mounted) return;
-      setState(() {
-        _stepCtrl.text = step.toString();
-        _minCtrl.text = mn.toString();
-        _maxCtrl.text = mx.toString();
-        _defaultsError = null;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _defaultsError = e.toString();
-      });
-    } finally {
-      if (mounted) {
-        setState(() => _isLoadingDefaults = false);
+  void _markCreditsDirty(ExerciseAllocationDimension dimension) {
+    final isDirty =
+        dimension == ExerciseAllocationDimension.muscle
+            ? _muscleCreditsDirty
+            : _bodyPartCreditsDirty;
+    if (isDirty) return;
+
+    setState(() {
+      if (dimension == ExerciseAllocationDimension.muscle) {
+        _muscleCreditsDirty = true;
+      } else {
+        _bodyPartCreditsDirty = true;
       }
-    }
+    });
   }
 
-  Future<void> _saveDefaults() async {
-    double? parse(String txt) {
-      try {
-        return double.parse(txt);
-      } catch (_) {
+  Map<int, double>? _creditsFromControllers(
+    Map<int, TextEditingController> controllers,
+  ) {
+    final credits = <int, double>{};
+    for (final entry in controllers.entries) {
+      final credit = double.tryParse(entry.value.text.trim());
+      if (credit == null || !credit.isFinite || credit < 0) {
         return null;
       }
+      credits[entry.key] = credit;
     }
+    return credits;
+  }
 
-    final step = parse(_stepCtrl.text);
-    final mn = parse(_minCtrl.text);
-    final mx = parse(_maxCtrl.text);
-    if (step == null || mn == null || mx == null) {
+  Future<void> _savePendingCredits() async {
+    final def = _sel;
+    if (def == null || !_hasPendingCreditChanges || _isSavingCredits) return;
+
+    final muscleCredits =
+        _muscleCreditsDirty
+            ? _creditsFromControllers(_muscleCreditControllers)
+            : null;
+    final bodyPartCredits =
+        _bodyPartCreditsDirty
+            ? _creditsFromControllers(_bodyPartCreditControllers)
+            : null;
+    if ((_muscleCreditsDirty && muscleCredits == null) ||
+        (_bodyPartCreditsDirty && bodyPartCredits == null)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter valid numbers')),
+        const SnackBar(
+          content: Text('Enter a zero or positive number for every credit.'),
+        ),
       );
       return;
     }
 
+    setState(() => _isSavingCredits = true);
     try {
-      await _repo.setFormulaStep(step);
-      await _repo.setFormulaMin(mn);
-      await _repo.setFormulaMax(mx);
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Defaults saved')));
-      // reload so UI reflects clamp if needed
-      await _loadDefaults();
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to save defaults: $e')));
+      await Future.wait([
+        if (muscleCredits != null)
+          _repo.replacePersonalExerciseAllocationCredits(
+            defId: def.id,
+            dimension: ExerciseAllocationDimension.muscle,
+            credits: muscleCredits,
+          ),
+        if (bodyPartCredits != null)
+          _repo.replacePersonalExerciseAllocationCredits(
+            defId: def.id,
+            dimension: ExerciseAllocationDimension.bodyPart,
+            credits: bodyPartCredits,
+          ),
+      ]);
+      await Future.wait([_loadMuscleEntries(def), _loadBodyEntries(def)]);
+      if (!mounted || _sel?.id != def.id) return;
+      setState(() {
+        _muscleCreditsDirty = false;
+        _bodyPartCreditsDirty = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Exercise allocation saved.')),
+      );
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not save the exercise allocation. Try again.'),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSavingCredits = false);
+      }
     }
   }
 
-  Future<void> _updateMuscle(int muscleId, String txt) async {
-    final val = double.tryParse(txt) ?? 0.0;
+  Future<void> _resetDimension(ExerciseAllocationDimension dimension) async {
     final def = _sel;
     if (def == null) return;
-    await _repo.setExerciseMuscleHitPercent(def.id, muscleId, val);
-    await _loadMuscleEntries(def);
-  }
-
-  Future<void> _resetMuscle(int muscleId) async {
-    final def = _sel;
-    if (def == null) return;
-    await _repo.removeExerciseMusclePercent(def.id, muscleId);
-    await _loadMuscleEntries(def);
+    if (_hasPendingCreditChanges) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Save or discard your edits before resetting.'),
+        ),
+      );
+      return;
+    }
+    await _repo.resetPersonalExerciseAllocation(
+      defId: def.id,
+      dimension: dimension,
+    );
+    await Future.wait([_loadMuscleEntries(def), _loadBodyEntries(def)]);
   }
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          _sel == null ? 'Exercise Analytics' : 'Analytics: ${_sel!.name}',
+      backgroundColor: scheme.surface,
+      floatingActionButton:
+          _hasPendingCreditChanges
+              ? FloatingActionButton.extended(
+                onPressed: _isSavingCredits ? null : _savePendingCredits,
+                backgroundColor: SettingsAccent.advanced,
+                foregroundColor: Colors.white,
+                icon: Icon(
+                  _isSavingCredits ? Icons.hourglass_top : Icons.save_outlined,
+                ),
+                label: Text(_isSavingCredits ? 'Saving' : 'Save changes'),
+              )
+              : null,
+      body: SafeArea(
+        child: NestedScrollView(
+          headerSliverBuilder:
+              (context, innerBoxIsScrolled) => [
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: IconButton(
+                        tooltip: 'Back',
+                        onPressed: () => Navigator.maybePop(context),
+                        icon: const Icon(Icons.arrow_back),
+                      ),
+                    ),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: SettingsHeroCard(
+                      title: 'Exercise Set Allocation',
+                      subtitle:
+                          'Review how completed sets contribute to target muscles and body parts.',
+                      icon: Icons.account_tree_outlined,
+                      accentColor: SettingsAccent.advanced,
+                    ),
+                  ),
+                ),
+                if (!_isLoadingDefs && _defsError == null && _sel != null) ...[
+                  const SliverToBoxAdapter(child: SizedBox(height: 12)),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: SettingsInfoCard(
+                        icon: Icons.info_outline,
+                        title: 'How set credit works',
+                        body:
+                            'A primary muscle usually receives 1.00 credit for one completed set. Supporting muscles receive less credit. This guides anatomy summaries and recommendations, but never changes the sets you log.',
+                        iconColor: SettingsAccent.advanced,
+                      ),
+                    ),
+                  ),
+                  const SliverToBoxAdapter(child: SizedBox(height: 12)),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: _buildExercisePicker(context),
+                    ),
+                  ),
+                  const SliverToBoxAdapter(child: SizedBox(height: 12)),
+                  SliverPersistentHeader(
+                    pinned: true,
+                    delegate: _AllocationTabBarDelegate(
+                      backgroundColor: scheme.surface,
+                      child: _buildTabBar(context),
+                    ),
+                  ),
+                ],
+              ],
+          body: _buildTabBody(context),
         ),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: '% Muscles'),
-            Tab(text: '% BodyParts'),
-            Tab(text: 'Defaults'),
+      ),
+    );
+  }
+
+  Widget _buildTabBody(BuildContext context) {
+    if (_isLoadingDefs) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_defsError != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text('Could not load exercises. $_defsError'),
+        ),
+      );
+    }
+
+    if (_sel == null) {
+      return const Center(child: Text('No exercises are available yet.'));
+    }
+
+    return TabBarView(
+      controller: _tabController,
+      children: [_buildMuscleTab(context), _buildBodyPartTab(context)],
+    );
+  }
+
+  Widget _buildExercisePicker(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: _pickExercise,
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
+          decoration: BoxDecoration(
+            color: scheme.surfaceContainerHighest.withValues(alpha: 0.34),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: SettingsAccent.advanced.withValues(alpha: 0.42),
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: SettingsAccent.advanced.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(13),
+                ),
+                child: const Icon(
+                  Icons.fitness_center,
+                  color: SettingsAccent.advanced,
+                  size: 21,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Selected exercise',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                    Text(
+                      _sel!.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTabBar(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.34),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: TabBar(
+        controller: _tabController,
+        dividerColor: Colors.transparent,
+        indicatorSize: TabBarIndicatorSize.tab,
+        indicator: BoxDecoration(
+          color: SettingsAccent.advanced.withValues(alpha: 0.24),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        labelColor: SettingsAccent.advanced,
+        unselectedLabelColor: scheme.onSurfaceVariant,
+        labelStyle: theme.textTheme.labelLarge?.copyWith(
+          fontWeight: FontWeight.w900,
+        ),
+        tabs: const [Tab(text: 'Muscle credit'), Tab(text: 'Body parts')],
+      ),
+    );
+  }
+
+  Widget _buildMuscleTab(BuildContext context) {
+    if (_isLoadingMuscles) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_muscleEntries.isEmpty) {
+      return const _AllocationEmptyState(
+        icon: Icons.account_tree_outlined,
+        title: 'No target muscles',
+        body: 'This exercise does not have target-muscle data yet.',
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 104),
+      itemCount: _muscleEntries.length + 1,
+      itemBuilder: (context, index) {
+        if (index == 0) {
+          return _AllocationSectionHeader(
+            title: 'Muscle credit',
+            body:
+                'Change a value to create a personal allocation. It is used for muscle summaries and derived body-part focus.',
+            source: _muscleSource,
+            onReset:
+                _muscleSource == ExerciseAllocationSource.personalOverride
+                    ? () => _resetDimension(ExerciseAllocationDimension.muscle)
+                    : null,
+          );
+        }
+
+        final entry = _muscleEntries[index - 1];
+        final muscleName =
+            _sel!.muscles
+                .firstWhere((ranked) => ranked.muscle.id == entry.muscleId)
+                .muscle
+                .name;
+        return _MuscleCreditCard(
+          muscleName: muscleName,
+          source: _muscleSource,
+          controller: _muscleCreditControllers[entry.muscleId]!,
+          onChanged:
+              () => _markCreditsDirty(ExerciseAllocationDimension.muscle),
+          onSubmitted: _savePendingCredits,
+        );
+      },
+    );
+  }
+
+  Widget _buildBodyPartTab(BuildContext context) {
+    if (_isLoadingBody) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_bodyEntries.isEmpty) {
+      return const _AllocationEmptyState(
+        icon: Icons.accessibility_new,
+        title: 'No body-part mapping',
+        body: 'This exercise does not have body-part mapping data yet.',
+      );
+    }
+
+    final entries =
+        _bodyEntries.entries.toList()
+          ..sort((a, b) => b.value.compareTo(a.value));
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 104),
+      itemCount: entries.length + 1,
+      itemBuilder: (context, index) {
+        if (index == 0) {
+          return _AllocationSectionHeader(
+            title: 'Body-part credit',
+            body:
+                'Automatic values are derived from muscles and anatomy mapping. Editing one creates a direct personal body-part allocation.',
+            source: _bodyPartSource,
+            onReset:
+                _bodyPartSource == ExerciseAllocationSource.personalOverride
+                    ? () =>
+                        _resetDimension(ExerciseAllocationDimension.bodyPart)
+                    : null,
+          );
+        }
+
+        final entry = entries[index - 1];
+        return _BodyPartCreditCard(
+          bodyPart: entry.key,
+          source: _bodyPartSource,
+          controller: _bodyPartCreditControllers[entry.key.id]!,
+          onChanged:
+              () => _markCreditsDirty(ExerciseAllocationDimension.bodyPart),
+          onSubmitted: _savePendingCredits,
+        );
+      },
+    );
+  }
+}
+
+class _AllocationTabBarDelegate extends SliverPersistentHeaderDelegate {
+  final Color backgroundColor;
+  final Widget child;
+
+  const _AllocationTabBarDelegate({
+    required this.backgroundColor,
+    required this.child,
+  });
+
+  @override
+  double get minExtent => 60;
+
+  @override
+  double get maxExtent => 60;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return ColoredBox(
+      color: backgroundColor,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
+        child: child,
+      ),
+    );
+  }
+
+  @override
+  bool shouldRebuild(covariant _AllocationTabBarDelegate oldDelegate) {
+    return oldDelegate.backgroundColor != backgroundColor ||
+        oldDelegate.child != child;
+  }
+}
+
+class _AllocationSectionHeader extends StatelessWidget {
+  final String title;
+  final String body;
+  final ExerciseAllocationSource source;
+  final VoidCallback? onReset;
+
+  const _AllocationSectionHeader({
+    required this.title,
+    required this.body,
+    required this.source,
+    this.onReset,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 4, 4, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    color: SettingsAccent.advanced,
+                  ),
+                ),
+              ),
+              if (onReset != null)
+                TextButton.icon(
+                  onPressed: onReset,
+                  icon: const Icon(Icons.restart_alt, size: 17),
+                  label: const Text('Reset'),
+                ),
+            ],
+          ),
+          Container(
+            margin: const EdgeInsets.only(top: 2, bottom: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: _sourceColor(source).withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(99),
+            ),
+            child: Text(
+              source.label,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: _sourceColor(source),
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            body,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: scheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+Color _sourceColor(ExerciseAllocationSource source) => switch (source) {
+  ExerciseAllocationSource.automatic => SettingsAccent.training,
+  ExerciseAllocationSource.creatorDefault => SettingsAccent.progress,
+  ExerciseAllocationSource.personalOverride => SettingsAccent.advanced,
+  ExerciseAllocationSource.legacy => SettingsAccent.muted,
+};
+
+class _MuscleCreditCard extends StatelessWidget {
+  final String muscleName;
+  final ExerciseAllocationSource source;
+  final TextEditingController controller;
+  final VoidCallback onChanged;
+  final Future<void> Function() onSubmitted;
+
+  const _MuscleCreditCard({
+    required this.muscleName,
+    required this.source,
+    required this.controller,
+    required this.onChanged,
+    required this.onSubmitted,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.34),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: (source == ExerciseAllocationSource.personalOverride
+                  ? SettingsAccent.advanced
+                  : scheme.outlineVariant)
+              .withValues(
+                alpha:
+                    source == ExerciseAllocationSource.personalOverride
+                        ? 0.58
+                        : 0.56,
+              ),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: SettingsAccent.advanced.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.fitness_center,
+              size: 19,
+              color: SettingsAccent.advanced,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  muscleName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  source.label,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color:
+                        source == ExerciseAllocationSource.personalOverride
+                            ? SettingsAccent.advanced
+                            : scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(
+            width: 72,
+            child: TextFormField(
+              controller: controller,
+              textAlign: TextAlign.center,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              textInputAction: TextInputAction.done,
+              decoration: const InputDecoration(
+                labelText: 'Credit',
+                isDense: true,
+              ),
+              onChanged: (_) => onChanged(),
+              onFieldSubmitted: (_) => onSubmitted(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BodyPartCreditCard extends StatelessWidget {
+  final BodyPart bodyPart;
+  final ExerciseAllocationSource source;
+  final TextEditingController controller;
+  final VoidCallback onChanged;
+  final Future<void> Function() onSubmitted;
+
+  const _BodyPartCreditCard({
+    required this.bodyPart,
+    required this.source,
+    required this.controller,
+    required this.onChanged,
+    required this.onSubmitted,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.34),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: _sourceColor(source).withValues(alpha: 0.48)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: SettingsAccent.training.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.accessibility_new,
+              size: 20,
+              color: SettingsAccent.training,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              bodyPart.name,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+          SizedBox(
+            width: 76,
+            child: TextFormField(
+              controller: controller,
+              textAlign: TextAlign.center,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              textInputAction: TextInputAction.done,
+              decoration: const InputDecoration(
+                labelText: 'Credit',
+                isDense: true,
+              ),
+              onChanged: (_) => onChanged(),
+              onFieldSubmitted: (_) => onSubmitted(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AllocationEmptyState extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String body;
+
+  const _AllocationEmptyState({
+    required this.icon,
+    required this.title,
+    required this.body,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 38, color: scheme.onSurfaceVariant),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              body,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
           ],
         ),
       ),
-      body:
-          _isLoadingDefs
-              ? const Center(child: CircularProgressIndicator())
-              : (_defsError != null
-                  ? Center(child: Text('Error: $_defsError'))
-                  : Column(
-                    children: [
-                      // Definition dropdown
-                      Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: DropdownButton<ExerciseDefinition>(
-                          isExpanded: true,
-                          value: _sel,
-                          items:
-                              _defs
-                                  .map(
-                                    (d) => DropdownMenuItem(
-                                      value: d,
-                                      child: Text(d.name),
-                                    ),
-                                  )
-                                  .toList(),
-                          onChanged: (d) {
-                            if (d == null) return;
-                            _onSelectDef(d);
-                          },
-                        ),
-                      ),
-                      const Divider(height: 1),
-                      // Tab views
-                      Expanded(
-                        child: TabBarView(
-                          controller: _tabController,
-                          children: [
-                            // --- % Muscles ---
-                            _isLoadingMuscles
-                                ? const Center(
-                                  child: CircularProgressIndicator(),
-                                )
-                                : _muscleEntries.isEmpty
-                                ? const Center(child: Text('No muscles'))
-                                : ListView.builder(
-                                  itemCount: _muscleEntries.length,
-                                  itemBuilder: (_, i) {
-                                    final e = _muscleEntries[i];
-                                    final muscleName =
-                                        _sel!.muscles
-                                            .firstWhere(
-                                              (rm) =>
-                                                  rm.muscle.id == e.muscleId,
-                                            )
-                                            .muscle
-                                            .name;
-                                    final isOverride = _overrideIds.contains(
-                                      e.muscleId,
-                                    );
-                                    return ListTile(
-                                      title: Text(muscleName),
-                                      trailing: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          SizedBox(
-                                            width: 70,
-                                            child: TextFormField(
-                                              initialValue: e.percent
-                                                  .toStringAsFixed(1),
-                                              keyboardType:
-                                                  TextInputType.numberWithOptions(
-                                                    decimal: true,
-                                                  ),
-                                              decoration: const InputDecoration(
-                                                labelText: '%',
-                                              ),
-                                              onFieldSubmitted:
-                                                  (v) => _updateMuscle(
-                                                    e.muscleId,
-                                                    v,
-                                                  ),
-                                            ),
-                                          ),
-                                          if (isOverride)
-                                            IconButton(
-                                              icon: const Icon(Icons.refresh),
-                                              tooltip: 'Reset to default',
-                                              onPressed:
-                                                  () =>
-                                                      _resetMuscle(e.muscleId),
-                                            ),
-                                        ],
-                                      ),
-                                    );
-                                  },
-                                ),
-
-                            // --- % BodyParts ---
-                            _isLoadingBody
-                                ? const Center(
-                                  child: CircularProgressIndicator(),
-                                )
-                                : _bodyEntries.isEmpty
-                                ? const Center(child: Text('No bodyparts'))
-                                : ListView(
-                                  children:
-                                      _bodyEntries.entries
-                                          .map(
-                                            (kv) => ListTile(
-                                              title: Text(kv.key.name),
-                                              trailing: Text(
-                                                kv.value.toStringAsFixed(2),
-                                                style: const TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                            ),
-                                          )
-                                          .toList(),
-                                ),
-
-                            // --- Defaults ---
-                            _isLoadingDefaults
-                                ? const Center(
-                                  child: CircularProgressIndicator(),
-                                )
-                                : (_defaultsError != null
-                                    ? Center(
-                                      child: Text('Error: $_defaultsError'),
-                                    )
-                                    : Padding(
-                                      padding: const EdgeInsets.all(16),
-                                      child: Column(
-                                        children: [
-                                          TextFormField(
-                                            controller: _stepCtrl,
-                                            decoration: const InputDecoration(
-                                              labelText:
-                                                  'Step (decrement per rank)',
-                                            ),
-                                            keyboardType:
-                                                const TextInputType.numberWithOptions(
-                                                  decimal: true,
-                                                ),
-                                          ),
-                                          const SizedBox(height: 12),
-                                          TextFormField(
-                                            controller: _minCtrl,
-                                            decoration: const InputDecoration(
-                                              labelText: 'Min clamp',
-                                            ),
-                                            keyboardType:
-                                                const TextInputType.numberWithOptions(
-                                                  decimal: true,
-                                                ),
-                                          ),
-                                          const SizedBox(height: 12),
-                                          TextFormField(
-                                            controller: _maxCtrl,
-                                            decoration: const InputDecoration(
-                                              labelText: 'Max clamp',
-                                            ),
-                                            keyboardType:
-                                                const TextInputType.numberWithOptions(
-                                                  decimal: true,
-                                                ),
-                                          ),
-                                          const Spacer(),
-                                          ElevatedButton(
-                                            onPressed: _saveDefaults,
-                                            child: const Text('Save'),
-                                          ),
-                                        ],
-                                      ),
-                                    )),
-                          ],
-                        ),
-                      ),
-                    ],
-                  )),
     );
   }
 }

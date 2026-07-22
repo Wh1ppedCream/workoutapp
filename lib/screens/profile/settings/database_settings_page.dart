@@ -29,7 +29,9 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
   late Future<DatabaseHealthSnapshot> _healthFuture;
   late Future<ContentCacheUsage> _contentCacheFuture;
   late Future<ContentManifestStatus?> _exerciseMediaManifestStatusFuture;
+  late Future<ContentManifestStatus?> _sharedMediaManifestStatusFuture;
   late Future<String> _manifestUrlFuture;
+  late Future<String> _sharedMediaManifestUrlFuture;
   late Future<ContentEnvironment> _selectedContentEnvironmentFuture;
   late Future<bool> _wifiOnlyMediaDownloadsFuture;
   final _fileActionsTutorialKey = GlobalKey(
@@ -52,8 +54,12 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
     _exerciseMediaManifestStatusFuture = _repo.getContentManifestStatus(
       'exercise_media',
     );
+    _sharedMediaManifestStatusFuture = _repo.getContentManifestStatus(
+      'shared_media',
+    );
     _selectedContentEnvironmentFuture = _loadSelectedContentEnvironment();
     _manifestUrlFuture = _loadManifestUrl();
+    _sharedMediaManifestUrlFuture = _loadSharedMediaManifestUrl();
     _wifiOnlyMediaDownloadsFuture = _repo.isWifiOnlyMediaDownloadEnabled();
     _repoBound = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -73,8 +79,12 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
       _exerciseMediaManifestStatusFuture = _repo.getContentManifestStatus(
         'exercise_media',
       );
+      _sharedMediaManifestStatusFuture = _repo.getContentManifestStatus(
+        'shared_media',
+      );
       _selectedContentEnvironmentFuture = _loadSelectedContentEnvironment();
       _manifestUrlFuture = _loadManifestUrl();
+      _sharedMediaManifestUrlFuture = _loadSharedMediaManifestUrl();
       _wifiOnlyMediaDownloadsFuture = _repo.isWifiOnlyMediaDownloadEnabled();
     });
   }
@@ -393,6 +403,11 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
     return _contentEnvironmentPreferences.loadExerciseMediaManifestUrl(config);
   }
 
+  Future<String> _loadSharedMediaManifestUrl() async {
+    final config = await _repo.loadContentEnvironments();
+    return _contentEnvironmentPreferences.loadSharedMediaManifestUrl(config);
+  }
+
   Future<void> _saveSelectedContentEnvironment(String environmentId) async {
     await _contentEnvironmentPreferences.saveSelectedEnvironment(environmentId);
     if (!mounted) return;
@@ -528,6 +543,47 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
     }
   }
 
+  Future<void> _syncRemoteSharedMediaManifest() async {
+    if (_contentActionRunning) return;
+    final manifestUrl = (await _loadSharedMediaManifestUrl()).trim();
+    final uri = Uri.tryParse(manifestUrl);
+    final validRemoteUri =
+        uri != null &&
+        (uri.scheme == 'https' || uri.scheme == 'http') &&
+        uri.host.isNotEmpty;
+    if (!validRemoteUri) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('This content environment has no shared media URL.'),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _contentActionRunning = true);
+    try {
+      final manifest = await _repo.syncRemoteSharedMediaManifest(uri);
+      if (!mounted) return;
+      _refreshContentStatus();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Synced ${manifest.entities.length} equipment and anatomy media entries '
+            '(v${manifest.version}).',
+          ),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Shared content sync failed: $error')),
+      );
+    } finally {
+      if (mounted) setState(() => _contentActionRunning = false);
+    }
+  }
+
   Future<void> _clearContentCache() async {
     if (_contentActionRunning) return;
     final confirmed = await showDialog<bool>(
@@ -536,7 +592,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
           (ctx) => AlertDialog(
             title: const Text('Clear Downloaded Media?'),
             content: const Text(
-              'This removes cached exercise thumbnails and media files. '
+              'This removes cached exercise, equipment, and anatomy media. '
               'The app can download them again when needed.',
             ),
             actions: [
@@ -579,7 +635,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
 
     return SettingsSection(
       title: 'Cloud Content',
-      subtitle: 'Manage exercise thumbnails, manifests, and cache storage.',
+      subtitle: 'Manage exercise, equipment, and anatomy media storage.',
       accentColor: SettingsAccent.data,
       children: settingsTilesWithDividers(context, [
         FutureBuilder<ContentEnvironment>(
@@ -611,7 +667,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
             final url = snapshot.data ?? '';
             return SettingsActionTile(
               icon: Icons.cloud_outlined,
-              title: 'Manifest URL',
+              title: 'Exercise Media Manifest URL',
               subtitle:
                   url.isEmpty
                       ? 'No remote manifest URL set for this environment.'
@@ -638,6 +694,37 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
                       : 'Manifest v${status.version}',
               subtitle:
                   'Last checked: ${_formatDateTime(status?.lastCheckedAt)}',
+              trailing: const SizedBox.shrink(),
+            );
+          },
+        ),
+        FutureBuilder<ContentManifestStatus?>(
+          future: _sharedMediaManifestStatusFuture,
+          builder: (context, snapshot) {
+            final status = snapshot.data;
+            return SettingsActionTile(
+              icon: Icons.category_outlined,
+              title: 'Shared Catalog Media',
+              subtitle:
+                  status == null
+                      ? 'Not synced yet. Equipment, bodyparts, and muscles.'
+                      : 'Manifest v${status.version}. Last checked: '
+                          '${_formatDateTime(status.lastCheckedAt)}',
+              trailing: const SizedBox.shrink(),
+            );
+          },
+        ),
+        FutureBuilder<String>(
+          future: _sharedMediaManifestUrlFuture,
+          builder: (context, snapshot) {
+            final url = snapshot.data ?? '';
+            return SettingsActionTile(
+              icon: Icons.collections_outlined,
+              title: 'Shared Media Manifest URL',
+              subtitle:
+                  url.isEmpty
+                      ? 'No remote shared media URL set for this environment.'
+                      : url,
               trailing: const SizedBox.shrink(),
             );
           },
@@ -689,6 +776,20 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
                   : null,
           onTap:
               _contentActionRunning ? null : _syncRemoteExerciseMediaManifest,
+        ),
+        SettingsActionTile(
+          icon: Icons.collections_outlined,
+          title: 'Sync Shared Catalog Media',
+          subtitle: 'Equipment, bodypart, and muscle illustrations.',
+          trailing:
+              _contentActionRunning
+                  ? const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                  : null,
+          onTap: _contentActionRunning ? null : _syncRemoteSharedMediaManifest,
         ),
         SettingsActionTile(
           icon: Icons.inventory_2_outlined,

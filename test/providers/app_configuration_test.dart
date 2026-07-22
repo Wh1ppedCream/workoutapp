@@ -86,9 +86,73 @@ void main() {
       final config = DashboardConfig();
       await settlePreferenceReads();
 
-      expect(config.widgetOrder, contains('quickBar'));
-      expect(config.isVisible('quickBar'), isTrue);
+      expect(config.widgetOrder, contains('quickActions'));
+      expect(config.isVisible('quickActions'), isTrue);
     });
+
+    test(
+      'dashboard keeps optional main-tab sections available by default',
+      () async {
+        SharedPreferences.setMockInitialValues({});
+        final config = DashboardConfig();
+        await settlePreferenceReads();
+
+        expect(
+          config.widgetOrder,
+          containsAll(<String>[
+            'workoutMetrics',
+            'activePlans',
+            'archivedPlans',
+            'premadePlans',
+            'planTools',
+            'exerciseCatalog',
+            'targetAnatomy',
+          ]),
+        );
+        expect(config.isVisible('exerciseCatalog'), isFalse);
+
+        await config.toggleVisibility('exerciseCatalog');
+        expect(config.isVisible('exerciseCatalog'), isTrue);
+      },
+    );
+
+    test(
+      'dashboard migrates supported legacy sections into the new layout',
+      () {
+        final layout = DashboardConfig.normalizeLayout(
+          rawOrder: <String>[
+            'sessionList',
+            'quickBar',
+            'nutritionDash',
+            'workoutDashboard',
+          ],
+          rawHidden: <String>['quickBar', 'CurrentMetricsSection'],
+        );
+
+        expect(layout.order.take(4), <String>[
+          'recentWorkouts',
+          'quickActions',
+          'nutritionDash',
+          'training',
+        ]);
+        expect(layout.order, contains('exerciseProgress'));
+        expect(layout.order, contains('nutritionDash'));
+        expect(layout.order, contains('dataRecords'));
+        expect(
+          layout.hidden,
+          containsAll(<String>{
+            'quickActions',
+            'workoutMetrics',
+            'activePlans',
+            'archivedPlans',
+            'premadePlans',
+            'planTools',
+            'exerciseCatalog',
+            'targetAnatomy',
+          }),
+        );
+      },
+    );
 
     test('active plans are stored independently per profile', () async {
       SharedPreferences.setMockInitialValues({});

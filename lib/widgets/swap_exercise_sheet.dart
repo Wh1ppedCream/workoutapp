@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../models/models.dart';
 import '../repositories/app_repository.dart';
 import '../screens/exercise/exercise_catalog_page.dart';
+import '../services/exercise_equipment_compatibility.dart';
 import '../theme/theme_extensions.dart';
 import '../utils/async_pool.dart';
 import 'body_heatmap.dart';
@@ -62,8 +63,9 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
 
     return _SwapExerciseData(
       current: current,
-      candidates: candidates.take(40).toList(),
+      candidates: candidates,
       profileEquipmentNames: profileEquipmentNames,
+      hasProfile: widget.profileId != null,
     );
   }
 
@@ -316,6 +318,22 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
       return;
     }
 
+    final data = await _dataFuture;
+    if (!mounted) return;
+    if (_filterForProfileEquipment &&
+        data.hasProfile &&
+        !ExerciseEquipmentCompatibility.fitsProfileNames(
+          picked,
+          data.profileEquipmentNames,
+        )) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('That exercise needs equipment outside this profile.'),
+        ),
+      );
+      return;
+    }
+
     setState(() => _isLoadingManualReplacement = true);
     try {
       final entry = await _buildEntry(picked);
@@ -383,8 +401,7 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
     ScrollController scrollController,
     _SwapExerciseData data,
   ) {
-    final canFilterForProfile =
-        data.profileEquipmentNames.isNotEmpty && data.candidates.isNotEmpty;
+    final canFilterForProfile = data.hasProfile;
     final candidates = _filteredCandidates(data);
     final hasCandidates = candidates.isNotEmpty;
     final selectedIndex =
@@ -514,32 +531,17 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
   }
 
   List<_ExerciseSwapEntry> _filteredCandidates(_SwapExerciseData data) {
-    if (!_filterForProfileEquipment || data.profileEquipmentNames.isEmpty) {
+    if (!_filterForProfileEquipment || !data.hasProfile) {
       return data.candidates;
     }
-    final filtered =
-        data.candidates
-            .where(
-              (candidate) => _fitsProfileEquipment(
-                candidate.definition,
-                data.profileEquipmentNames,
-              ),
-            )
-            .toList();
-    return filtered.isEmpty ? data.candidates : filtered;
-  }
-
-  bool _fitsProfileEquipment(
-    ExerciseDefinition definition,
-    Set<String> profileEquipmentNames,
-  ) {
-    final equipmentNames =
-        definition.equipmentList
-            .map((equipment) => equipment.name.trim().toLowerCase())
-            .where((name) => name.isNotEmpty)
-            .toSet();
-    if (equipmentNames.isEmpty) return true;
-    return equipmentNames.every(profileEquipmentNames.contains);
+    return data.candidates
+        .where(
+          (candidate) => ExerciseEquipmentCompatibility.fitsProfileNames(
+            candidate.definition,
+            data.profileEquipmentNames,
+          ),
+        )
+        .toList();
   }
 }
 
@@ -865,11 +867,13 @@ class _SwapExerciseData {
   final _ExerciseSwapEntry current;
   final List<_ExerciseSwapEntry> candidates;
   final Set<String> profileEquipmentNames;
+  final bool hasProfile;
 
   const _SwapExerciseData({
     required this.current,
     required this.candidates,
     this.profileEquipmentNames = const <String>{},
+    this.hasProfile = false,
   });
 }
 
