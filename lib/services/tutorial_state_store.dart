@@ -25,6 +25,7 @@ class TutorialIds {
   static const gymProfileEditor = 'gym_profile_editor_v1';
   static const uiAppearanceSettings = 'ui_appearance_settings_v1';
   static const databaseSettings = 'database_settings_v1';
+  static const onboardingManualPlan = 'onboarding_manual_plan_v1';
 
   static const all = <String>[
     firstWorkoutSession,
@@ -51,6 +52,7 @@ class TutorialIds {
     gymProfileEditor,
     uiAppearanceSettings,
     databaseSettings,
+    onboardingManualPlan,
   ];
 }
 
@@ -78,6 +80,14 @@ class TutorialStateStore {
     final prefs = await SharedPreferences.getInstance();
     for (final tutorialId in TutorialIds.all) {
       await prefs.remove('$_prefix$tutorialId');
+    }
+  }
+
+  /// Hides every tutorial without preventing an individual replay later.
+  Future<void> skipAll() async {
+    final prefs = await SharedPreferences.getInstance();
+    for (final tutorialId in TutorialIds.all) {
+      await prefs.setBool('$_prefix$tutorialId', true);
     }
   }
 }

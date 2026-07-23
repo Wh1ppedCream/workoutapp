@@ -10,18 +10,36 @@ class TutorialsSettingsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return SettingsPageScaffold(
       title: 'Guided Tutorials',
-      subtitle: 'Replay walkthroughs or reset them while learning the app.',
+      subtitle: 'Replay a walkthrough when you want a quick refresher.',
       icon: Icons.school_outlined,
       heroAccentColor: SettingsAccent.appearance,
       children: [
+        SettingsSection(
+          title: 'Tutorial Controls',
+          subtitle: 'Testing or starting fresh?',
+          accentColor: SettingsAccent.data,
+          children: settingsTilesWithDividers(context, [
+            SettingsActionTile(
+              icon: Icons.restart_alt,
+              title: 'Reset All Tutorials',
+              subtitle: 'Makes every guided tutorial available again.',
+              trailing: const _ResetPill(label: 'Reset all'),
+              onTap:
+                  () => _resetAllTutorials(
+                    context,
+                    'All tutorials have been reset.',
+                  ),
+            ),
+          ]),
+        ),
         const SettingsInfoCard(
           icon: Icons.lightbulb_outline,
           title: 'How tutorials work',
           body:
-              'Tutorials appear once, then stay out of the way. Reset one here when you want it to show again.',
+              'Tutorials appear once, then stay out of the way. Expand a group to reset a specific walkthrough.',
         ),
         const SizedBox(height: 16),
-        SettingsSection(
+        _TutorialSettingsSection(
           title: 'Main Tabs',
           subtitle: 'Replay walkthroughs for each main area.',
           accentColor: SettingsAccent.appearance,
@@ -68,7 +86,7 @@ class TutorialsSettingsPage extends StatelessWidget {
             ),
           ]),
         ),
-        SettingsSection(
+        _TutorialSettingsSection(
           title: 'Workout',
           subtitle: 'Help for logging your first session.',
           accentColor: SettingsAccent.training,
@@ -83,7 +101,7 @@ class TutorialsSettingsPage extends StatelessWidget {
             ),
           ]),
         ),
-        SettingsSection(
+        _TutorialSettingsSection(
           title: 'Plans & Workouts',
           subtitle: 'Replay plan creation, editing, and workout detail help.',
           accentColor: SettingsAccent.training,
@@ -131,6 +149,15 @@ class TutorialsSettingsPage extends StatelessWidget {
             ),
             _tutorialResetTile(
               context,
+              icon: Icons.school_outlined,
+              title: 'Replay Plan Builder Tutorial',
+              subtitle:
+                  'Shows next time you manually create a plan in onboarding.',
+              tutorialId: TutorialIds.onboardingManualPlan,
+              message: 'Plan builder tutorial will replay next time.',
+            ),
+            _tutorialResetTile(
+              context,
               icon: Icons.receipt_long,
               title: 'Replay Workout Detail Tutorial',
               subtitle: 'Shows next time you open a past workout.',
@@ -139,7 +166,7 @@ class TutorialsSettingsPage extends StatelessWidget {
             ),
           ]),
         ),
-        SettingsSection(
+        _TutorialSettingsSection(
           title: 'Catalog & Anatomy',
           subtitle: 'Replay exercise and target anatomy help.',
           accentColor: SettingsAccent.advanced,
@@ -194,7 +221,7 @@ class TutorialsSettingsPage extends StatelessWidget {
             ),
           ]),
         ),
-        SettingsSection(
+        _TutorialSettingsSection(
           title: 'Progress & Settings',
           subtitle: 'Replay progress detail and settings page help.',
           accentColor: SettingsAccent.progress,
@@ -241,24 +268,6 @@ class TutorialsSettingsPage extends StatelessWidget {
             ),
           ]),
         ),
-        SettingsSection(
-          title: 'All Tutorials',
-          subtitle: 'Useful while testing new guided help.',
-          accentColor: SettingsAccent.data,
-          children: settingsTilesWithDividers(context, [
-            SettingsActionTile(
-              icon: Icons.restart_alt,
-              title: 'Reset All Tutorials',
-              subtitle: 'Makes every guided tutorial available again.',
-              trailing: _ResetPill(label: 'Reset all'),
-              onTap:
-                  () => _resetAllTutorials(
-                    context,
-                    'All tutorials have been reset.',
-                  ),
-            ),
-          ]),
-        ),
       ],
     );
   }
@@ -298,6 +307,74 @@ class TutorialsSettingsPage extends StatelessWidget {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
+  }
+}
+
+class _TutorialSettingsSection extends StatelessWidget {
+  const _TutorialSettingsSection({
+    required this.title,
+    required this.subtitle,
+    required this.children,
+    required this.accentColor,
+  });
+
+  final String title;
+  final String subtitle;
+  final List<Widget> children;
+  final Color accentColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Container(
+        decoration: BoxDecoration(
+          color: scheme.surfaceContainerHighest.withValues(alpha: 0.34),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: accentColor.withValues(alpha: 0.46)),
+        ),
+        child: Theme(
+          data: theme.copyWith(
+            dividerColor: Colors.transparent,
+            colorScheme: scheme.copyWith(primary: accentColor),
+          ),
+          child: ExpansionTile(
+            tilePadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 4,
+            ),
+            childrenPadding: EdgeInsets.zero,
+            leading: Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: accentColor.withValues(alpha: 0.16),
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Icon(Icons.school_outlined, color: accentColor, size: 22),
+            ),
+            title: Text(
+              title,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            subtitle: Text(
+              subtitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+            children: children,
+          ),
+        ),
+      ),
+    );
   }
 }
 

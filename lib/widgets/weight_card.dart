@@ -26,6 +26,13 @@ class WeightCard extends StatefulWidget {
   final VoidCallback? onDetails;
   final VoidCallback? onSwapExercise;
   final bool forceCollapsed;
+  final Key? firstSetWeightKey;
+  final Key? firstSetRepsKey;
+  final Key? addSetKey;
+  final FocusNode? firstSetWeightFocusNode;
+  final FocusNode? firstSetRepsFocusNode;
+  final VoidCallback? onFirstSetWeightSubmitted;
+  final VoidCallback? onFirstSetRepsSubmitted;
 
   const WeightCard({
     super.key,
@@ -40,6 +47,13 @@ class WeightCard extends StatefulWidget {
     this.onDetails,
     this.onSwapExercise,
     this.forceCollapsed = false,
+    this.firstSetWeightKey,
+    this.firstSetRepsKey,
+    this.addSetKey,
+    this.firstSetWeightFocusNode,
+    this.firstSetRepsFocusNode,
+    this.onFirstSetWeightSubmitted,
+    this.onFirstSetRepsSubmitted,
   });
 
   @override
@@ -407,6 +421,20 @@ class _WeightCardState extends State<WeightCard> {
                             const SizedBox(width: 8),
                             Expanded(
                               child: TextFormField(
+                                key:
+                                    index == 0
+                                        ? widget.firstSetWeightKey
+                                        : null,
+                                focusNode:
+                                    index == 0
+                                        ? widget.firstSetWeightFocusNode
+                                        : null,
+                                textInputAction:
+                                    index == 0 &&
+                                            widget.onFirstSetWeightSubmitted !=
+                                                null
+                                        ? TextInputAction.next
+                                        : null,
                                 controller: _weightControllers[index],
                                 readOnly: readOnly,
                                 keyboardType: TextInputType.number,
@@ -423,11 +451,28 @@ class _WeightCardState extends State<WeightCard> {
                                     readOnly
                                         ? null
                                         : (_) => _updateWeightSet(index),
+                                onFieldSubmitted:
+                                    index == 0
+                                        ? (_) =>
+                                            widget.onFirstSetWeightSubmitted
+                                                ?.call()
+                                        : null,
                               ),
                             ),
                             SizedBox(width: fieldGap),
                             Expanded(
                               child: TextFormField(
+                                key: index == 0 ? widget.firstSetRepsKey : null,
+                                focusNode:
+                                    index == 0
+                                        ? widget.firstSetRepsFocusNode
+                                        : null,
+                                textInputAction:
+                                    index == 0 &&
+                                            widget.onFirstSetRepsSubmitted !=
+                                                null
+                                        ? TextInputAction.done
+                                        : null,
                                 controller: _repsControllers[index],
                                 readOnly: readOnly,
                                 keyboardType: TextInputType.number,
@@ -441,6 +486,12 @@ class _WeightCardState extends State<WeightCard> {
                                     readOnly
                                         ? null
                                         : (_) => _updateWeightSet(index),
+                                onFieldSubmitted:
+                                    index == 0
+                                        ? (_) =>
+                                            widget.onFirstSetRepsSubmitted
+                                                ?.call()
+                                        : null,
                               ),
                             ),
                             SizedBox(width: compact ? 6 : 10),
@@ -704,6 +755,7 @@ class _WeightCardState extends State<WeightCard> {
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton.icon(
+                  key: widget.addSetKey,
                   onPressed:
                       readOnly
                           ? null

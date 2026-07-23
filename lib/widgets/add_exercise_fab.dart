@@ -10,8 +10,19 @@ typedef WeightPicker = Future<void> Function(ExerciseDefinition definition);
 
 class AddExerciseFab extends StatelessWidget {
   final WeightPicker? onWeightPicked;
+  final ValueChanged<bool>? onCatalogSelectionChanged;
+  final VoidCallback? onCatalogExerciseAdded;
+  final VoidCallback? onCatalogTutorialSkipped;
+  final VoidCallback? onCatalogClosed;
 
-  const AddExerciseFab({super.key, this.onWeightPicked});
+  const AddExerciseFab({
+    super.key,
+    this.onWeightPicked,
+    this.onCatalogSelectionChanged,
+    this.onCatalogExerciseAdded,
+    this.onCatalogTutorialSkipped,
+    this.onCatalogClosed,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -29,18 +40,23 @@ class AddExerciseFab extends StatelessWidget {
     );
   }
 
-  void _openExerciseCatalog(BuildContext ctx) {
+  Future<void> _openExerciseCatalog(BuildContext ctx) async {
     // TODO(cardio/stretch): restore the Exercise/Cardio/Stretch chooser after
     // cardio and stretch cards are fixed, updated, and ready for users again.
-    Navigator.of(ctx).push(
+    await Navigator.of(ctx).push(
       MaterialPageRoute(
         builder:
             (_) => ExerciseCatalogPage(
+              showPlanBuilderGuide: onCatalogSelectionChanged != null,
+              onPlanBuilderSelectionChanged: onCatalogSelectionChanged,
+              onPlanBuilderExerciseAdded: onCatalogExerciseAdded,
+              onPlanBuilderGuideSkipped: onCatalogTutorialSkipped,
               onExercisePicked: (def) async {
                 await onWeightPicked?.call(def);
               },
             ),
       ),
     );
+    onCatalogClosed?.call();
   }
 }

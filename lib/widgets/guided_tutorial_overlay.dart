@@ -3,6 +3,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../services/tutorial_state_store.dart';
+
 class GuidedTutorialStep {
   final GlobalKey targetKey;
   final String title;
@@ -70,6 +72,7 @@ class _GuidedTutorialOverlayState extends State<GuidedTutorialOverlay>
   int _measureRequest = 0;
   Rect? _targetRect;
   bool _isMeasuring = true;
+  bool _showSkipAllConfirmation = false;
 
   GuidedTutorialStep get _step => widget.steps[_index];
 
@@ -169,6 +172,22 @@ class _GuidedTutorialOverlayState extends State<GuidedTutorialOverlay>
     widget.onFinished(completed);
   }
 
+  void _skipAllTutorials() {
+    if (_showSkipAllConfirmation) return;
+    setState(() => _showSkipAllConfirmation = true);
+  }
+
+  void _keepTutorials() {
+    setState(() => _showSkipAllConfirmation = false);
+  }
+
+  Future<void> _confirmSkipAllTutorials() async {
+    setState(() => _showSkipAllConfirmation = false);
+    await const TutorialStateStore().skipAll();
+    if (!mounted) return;
+    _finish(false);
+  }
+
   @override
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
@@ -208,8 +227,14 @@ class _GuidedTutorialOverlayState extends State<GuidedTutorialOverlay>
                               ? () => _finish(true)
                               : () => _goTo(_index + 1),
                       onSkip: () => _finish(false),
+                      onSkipAll: _skipAllTutorials,
                     ),
                   ),
+                  if (_showSkipAllConfirmation)
+                    _SkipAllTutorialConfirmation(
+                      onKeepTutorials: _keepTutorials,
+                      onSkipAll: _confirmSkipAllTutorials,
+                    ),
                 ],
               );
             }
@@ -262,8 +287,14 @@ class _GuidedTutorialOverlayState extends State<GuidedTutorialOverlay>
                             ? () => _finish(true)
                             : () => _goTo(_index + 1),
                     onSkip: () => _finish(false),
+                    onSkipAll: _skipAllTutorials,
                   ),
                 ),
+                if (_showSkipAllConfirmation)
+                  _SkipAllTutorialConfirmation(
+                    onKeepTutorials: _keepTutorials,
+                    onSkipAll: _confirmSkipAllTutorials,
+                  ),
               ],
             );
           },
@@ -296,6 +327,7 @@ class _TutorialCard extends StatelessWidget {
   final VoidCallback onBack;
   final VoidCallback onNext;
   final VoidCallback onSkip;
+  final VoidCallback onSkipAll;
 
   const _TutorialCard({
     required this.step,
@@ -306,6 +338,7 @@ class _TutorialCard extends StatelessWidget {
     required this.onBack,
     required this.onNext,
     required this.onSkip,
+    required this.onSkipAll,
   });
 
   @override
@@ -373,6 +406,7 @@ class _TutorialCard extends StatelessWidget {
           Row(
             children: [
               TextButton(onPressed: onSkip, child: const Text('Skip')),
+              TextButton(onPressed: onSkipAll, child: const Text('Skip All')),
               const Spacer(),
               if (canGoBack) ...[
                 TextButton(onPressed: onBack, child: const Text('Back')),
@@ -383,6 +417,51 @@ class _TutorialCard extends StatelessWidget {
                 child: Text(isLast ? 'Done' : 'Next'),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SkipAllTutorialConfirmation extends StatelessWidget {
+  const _SkipAllTutorialConfirmation({
+    required this.onKeepTutorials,
+    required this.onSkipAll,
+  });
+
+  final VoidCallback onKeepTutorials;
+  final VoidCallback onSkipAll;
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: Stack(
+        children: [
+          const ModalBarrier(color: Color(0xB3000000), dismissible: false),
+          Center(
+            child: SafeArea(
+              minimum: const EdgeInsets.all(24),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 360),
+                child: AlertDialog(
+                  title: const Text('Skip all tutorials?'),
+                  content: const Text(
+                    'This hides every guided tutorial. You can turn them back on anytime in Settings > Guided Tutorials by using Reset All Tutorials.',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: onKeepTutorials,
+                      child: const Text('Keep tutorials'),
+                    ),
+                    FilledButton(
+                      onPressed: onSkipAll,
+                      child: const Text('Skip all'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ],
       ),

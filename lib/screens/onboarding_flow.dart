@@ -4,14 +4,18 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/models.dart';
+import '../providers/active_session.dart';
 import '../providers/onboarding_provider.dart';
+import '../providers/preset_session.dart';
 import '../providers/selected_profile.dart';
 import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
+import '../services/active_plan_store.dart';
 import '../widgets/body_heatmap.dart';
 import '../widgets/preset_bar.dart';
 import 'exercise/gym_profile_screen.dart';
 import 'exercise/premade_plans_page.dart';
+import 'exercise/preset_detail_screen.dart';
 import 'exercise/preset_generation_qa.dart';
 
 /// Initial setup flow for basic user details plus optional workout and
@@ -361,8 +365,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
           _selectedGymEquipmentNames.isNotEmpty;
     }
     if (page.label == 'Workout Plan') {
-      return _workoutPlanSetupOption != null &&
-          _workoutPlanSetupOption != _WorkoutPlanSetupOption.manual;
+      return _workoutPlanSetupOption != null;
     }
     return true;
   }
@@ -475,6 +478,8 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         await _openOnboardingPlanGenerator();
         return;
       case _WorkoutPlanSetupOption.manual:
+        await _openOnboardingManualPlan();
+        return;
       case null:
         return;
     }
@@ -542,6 +547,59 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     _goToNextPage();
   }
 
+  Future<void> _openOnboardingManualPlan() async {
+    final profileId = await _ensureWorkoutPlanProfileId();
+    if (!mounted || profileId == null) return;
+
+    final repo = context.read<AppRepository>();
+    final existingPlans = await repo.fetchAllPresetsRaw(profileId: profileId);
+    if (!mounted) return;
+
+    final nextNumber = existingPlans.length + 1;
+    final name = nextNumber == 1 ? 'New Plan' : 'New Plan $nextNumber';
+    final presetId = await repo.createPreset(name, profileId: profileId);
+    if (!mounted) return;
+
+    final activeSession = context.read<ActiveSession>();
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder:
+            (_) => MultiProvider(
+              providers: [
+                ChangeNotifierProvider<ActiveSession>.value(
+                  value: activeSession,
+                ),
+                ChangeNotifierProvider(create: (_) => PresetSession(presetId)),
+              ],
+              child: const PresetDetailScreen(
+                startInEditingMode: true,
+                showOnboardingManualPlanTutorial: true,
+                closeAfterSave: true,
+              ),
+            ),
+      ),
+    );
+    if (!mounted) return;
+
+    final latestPlans = await repo.fetchAllPresetsRaw(profileId: profileId);
+    final planStillExists = latestPlans.any(
+      (row) => (row['id'] as num?)?.toInt() == presetId,
+    );
+    if (!planStillExists) {
+      await ActivePlanStore.remove(profileId, presetId);
+      return;
+    }
+
+    await ActivePlanStore.add(profileId, presetId);
+    if (!mounted) return;
+    setState(() {
+      _onboardingPlansAdded++;
+      _onboardingPlanIds.add(presetId);
+      _planOverviewRefreshToken++;
+    });
+    _goToNextPage();
+  }
+
   String _workoutPlanSummary() {
     if (_onboardingPlansAdded > 0) {
       return '$_onboardingPlansAdded added';
@@ -554,7 +612,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       case _WorkoutPlanSetupOption.skip:
         return 'Skipped';
       case _WorkoutPlanSetupOption.manual:
-        return 'Manual later';
+        return 'Manual selected';
       case null:
         return 'Not selected';
     }
@@ -1190,12 +1248,14 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         _WorkoutPlanSetupTile(
           title: 'Manually create your own plans',
           subtitle:
-              'Build plans exercise by exercise. This onboarding shortcut will be added later.',
+              'Start with a blank plan, then add exercises and sets yourself.',
           icon: Icons.edit_note,
           selected: _workoutPlanSetupOption == _WorkoutPlanSetupOption.manual,
-          disabled: true,
-          trailingLabel: 'Later',
-          onTap: null,
+          onTap: () {
+            setState(() {
+              _workoutPlanSetupOption = _WorkoutPlanSetupOption.manual;
+            });
+          },
         ),
         const SizedBox(height: 12),
         _WorkoutPlanSetupTile(
@@ -2558,17 +2618,13 @@ class _WorkoutPlanSetupTile extends StatelessWidget {
   final String subtitle;
   final IconData icon;
   final bool selected;
-  final bool disabled;
-  final String? trailingLabel;
-  final VoidCallback? onTap;
+  final VoidCallback onTap;
 
   const _WorkoutPlanSetupTile({
     required this.title,
     required this.subtitle,
     required this.icon,
     required this.selected,
-    this.disabled = false,
-    this.trailingLabel,
     required this.onTap,
   });
 
@@ -2576,78 +2632,65 @@ class _WorkoutPlanSetupTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final accent = disabled ? scheme.onSurfaceVariant : scheme.primary;
-    final opacity = disabled ? 0.48 : 1.0;
+    final accent = scheme.primary;
 
-    return Opacity(
-      opacity: opacity,
-      child: InkWell(
-        onTap: disabled ? null : onTap,
-        borderRadius: BorderRadius.circular(22),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color:
-                selected
-                    ? scheme.primary.withValues(alpha: 0.16)
-                    : scheme.surface.withValues(alpha: 0.46),
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(
-              color: selected ? scheme.primary : scheme.outlineVariant,
-              width: selected ? 2 : 1,
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(22),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color:
+              selected
+                  ? scheme.primary.withValues(alpha: 0.16)
+                  : scheme.surface.withValues(alpha: 0.46),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(
+            color: selected ? scheme.primary : scheme.outlineVariant,
+            width: selected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 46,
+              height: 46,
+              decoration: BoxDecoration(
+                color: accent.withValues(alpha: 0.16),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(icon, color: accent),
             ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 46,
-                height: 46,
-                decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.16),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Icon(icon, color: accent),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w900,
-                      ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w900,
                     ),
-                    const SizedBox(height: 3),
-                    Text(
-                      subtitle,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              if (trailingLabel != null)
-                Text(
-                  trailingLabel!,
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w800,
                   ),
-                )
-              else
-                Icon(
-                  selected
-                      ? Icons.radio_button_checked
-                      : Icons.radio_button_unchecked,
-                  color: selected ? scheme.primary : scheme.onSurfaceVariant,
-                ),
-            ],
-          ),
+                  const SizedBox(height: 3),
+                  Text(
+                    subtitle,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(
+              selected
+                  ? Icons.radio_button_checked
+                  : Icons.radio_button_unchecked,
+              color: selected ? scheme.primary : scheme.onSurfaceVariant,
+            ),
+          ],
         ),
       ),
     );

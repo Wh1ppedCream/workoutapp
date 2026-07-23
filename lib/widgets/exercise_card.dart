@@ -19,6 +19,13 @@ class ExerciseCard extends StatelessWidget {
   final VoidCallback? onDetails;
   final VoidCallback? onSwapExercise;
   final bool forceCollapsed;
+  final Key? firstSetWeightKey;
+  final Key? firstSetRepsKey;
+  final Key? addSetKey;
+  final FocusNode? firstSetWeightFocusNode;
+  final FocusNode? firstSetRepsFocusNode;
+  final VoidCallback? onFirstSetWeightSubmitted;
+  final VoidCallback? onFirstSetRepsSubmitted;
 
   const ExerciseCard({
     super.key,
@@ -34,6 +41,13 @@ class ExerciseCard extends StatelessWidget {
     this.onDetails,
     this.onSwapExercise,
     this.forceCollapsed = false,
+    this.firstSetWeightKey,
+    this.firstSetRepsKey,
+    this.addSetKey,
+    this.firstSetWeightFocusNode,
+    this.firstSetRepsFocusNode,
+    this.onFirstSetWeightSubmitted,
+    this.onFirstSetRepsSubmitted,
   });
 
   @override
@@ -52,6 +66,13 @@ class ExerciseCard extends StatelessWidget {
           onDetails: onDetails,
           onSwapExercise: onSwapExercise,
           forceCollapsed: forceCollapsed,
+          firstSetWeightKey: firstSetWeightKey,
+          firstSetRepsKey: firstSetRepsKey,
+          addSetKey: addSetKey,
+          firstSetWeightFocusNode: firstSetWeightFocusNode,
+          firstSetRepsFocusNode: firstSetRepsFocusNode,
+          onFirstSetWeightSubmitted: onFirstSetWeightSubmitted,
+          onFirstSetRepsSubmitted: onFirstSetRepsSubmitted,
         );
       case CardType.cardio:
       case CardType.stretch:
