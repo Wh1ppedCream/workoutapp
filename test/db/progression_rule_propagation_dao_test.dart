@@ -20,7 +20,8 @@ void main() {
       CREATE TABLE preset_definitions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
-        profile_id INTEGER
+        profile_id INTEGER,
+        is_draft INTEGER NOT NULL DEFAULT 0
       )
     ''');
     await db.execute('''
@@ -141,6 +142,11 @@ void main() {
         'name': 'Other',
         'profile_id': profileId + 1,
       });
+      final draftPlan = await db.insert('preset_definitions', {
+        'name': 'Unfinished onboarding plan',
+        'profile_id': profileId,
+        'is_draft': 1,
+      });
       await db.insert('preset_auto_settings', {
         'preset_id': firstPlan,
         'is_automatic': 1,
@@ -201,6 +207,14 @@ void main() {
           'preset_flow_methods',
           where: 'preset_id = ?',
           whereArgs: [otherPlan],
+        ),
+        isEmpty,
+      );
+      expect(
+        await db.query(
+          'preset_flow_methods',
+          where: 'preset_id = ?',
+          whereArgs: [draftPlan],
         ),
         isEmpty,
       );

@@ -89,8 +89,8 @@ class _WorkingSet {
 class AutoIncrementService {
   final AppRepository _repo;
 
-  /// Allows injecting a custom repo for tests; defaults to real.
-  AutoIncrementService([AppRepository? repo]) : _repo = repo ?? AppRepository();
+  /// Receives the application repository from the composition root.
+  AutoIncrementService(AppRepository repo) : _repo = repo;
 
   /// Applies auto-increment for [sessionId] and [presetId].
   Future<void> apply({required int sessionId, required int presetId}) async {

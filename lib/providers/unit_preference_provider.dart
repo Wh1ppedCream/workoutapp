@@ -8,12 +8,13 @@ class UnitPreferenceProvider extends ChangeNotifier {
 
   WeightUnit _weightUnit = WeightUnit.pounds;
   bool _loaded = false;
+  late final Future<void> ready;
 
   WeightUnit get weightUnit => _weightUnit;
   bool get loaded => _loaded;
 
   UnitPreferenceProvider() {
-    _load();
+    ready = _load();
   }
 
   Future<void> _load() async {

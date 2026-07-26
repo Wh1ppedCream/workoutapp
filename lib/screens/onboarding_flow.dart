@@ -10,7 +10,7 @@ import '../providers/preset_session.dart';
 import '../providers/selected_profile.dart';
 import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
-import '../services/active_plan_store.dart';
+import '../utils/weight_unit_formatter.dart';
 import '../widgets/body_heatmap.dart';
 import '../widgets/preset_bar.dart';
 import 'exercise/gym_profile_screen.dart';
@@ -52,6 +52,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   bool _useExerciseData = false;
   bool _unitPreferenceLoaded = false;
   WeightUnit _selectedWeightUnit = WeightUnit.pounds;
+  double? _weightInputCanonicalLbs;
   _GymSpaceTemplate? _selectedGymSpace;
   _WorkoutPlanSetupOption? _workoutPlanSetupOption;
   List<Equipment> _availableGymEquipment = const [];
@@ -60,6 +61,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   int _onboardingPlansAdded = 0;
   int _planOverviewRefreshToken = 0;
   final List<int> _onboardingPlanIds = [];
+  final Set<int> _onboardingDraftProfileIds = {};
 
   double _goalWeightValue = 140;
   final DateTime _projectedEndDate = DateTime.now().add(
@@ -80,9 +82,10 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!_unitPreferenceLoaded) {
+    final unitPreferences = context.watch<UnitPreferenceProvider>();
+    if (!_unitPreferenceLoaded && unitPreferences.loaded) {
       _unitPreferenceLoaded = true;
-      _selectedWeightUnit = context.read<UnitPreferenceProvider>().weightUnit;
+      _selectedWeightUnit = unitPreferences.weightUnit;
     }
     if (!_gymEquipmentLoaded) {
       _gymEquipmentLoaded = true;
@@ -169,23 +172,57 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     final messenger = ScaffoldMessenger.of(context);
 
     try {
+      final enteredWeight = double.tryParse(_weightController.text.trim());
+      final bodyWeightLbs =
+          _weightInputCanonicalLbs ??
+          (enteredWeight == null || enteredWeight <= 0
+              ? null
+              : WeightUnitFormatter.toPounds(
+                enteredWeight,
+                _selectedWeightUnit,
+              ));
       final info = PersonalInfo(
         name: _clean(_nameController.text),
         gender: _gender,
         dob: _dob,
         height: _clean(_heightController.text),
-        weight: _clean(_weightController.text),
+        weight:
+            bodyWeightLbs == null
+                ? _clean(_weightController.text)
+                : WeightUnitFormatter.formatInputWeight(
+                  bodyWeightLbs,
+                  WeightUnit.pounds,
+                ),
         bodyFatEstimate: _bodyFatEstimate,
         weightTrend: _weightTrend,
         activityLevel: null,
       );
 
       if (_hasAnyInput()) {
-        await repo.savePersonalInfo(info);
+        await repo.savePersonalInfoWithBodyWeight(
+          info: info,
+          bodyWeightValue:
+              bodyWeightLbs == null
+                  ? null
+                  : WeightUnitFormatter.fromPounds(
+                    bodyWeightLbs,
+                    _selectedWeightUnit,
+                  ),
+          bodyWeightUnit: _selectedWeightUnit,
+          measurementNote: 'Onboarding',
+        );
       }
 
       await unitPrefs.setWeightUnit(_selectedWeightUnit);
-      await _createOrUpdateSelectedGymProfile(repo);
+      final profileId = await _createOrUpdateSelectedGymProfile(repo);
+      if (profileId != null) _onboardingProfileId = profileId;
+      final draftProfileIds = <int>{
+        ..._onboardingDraftProfileIds,
+        if (_onboardingProfileId != null) _onboardingProfileId!,
+      };
+      for (final draftProfileId in draftProfileIds) {
+        await repo.deleteDraftPresetsForProfile(draftProfileId);
+      }
       await onboardingConfig.markCompleted();
       if (!mounted) return;
       Navigator.pushReplacementNamed(context, '/main');
@@ -555,13 +592,21 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     final existingPlans = await repo.fetchAllPresetsRaw(profileId: profileId);
     if (!mounted) return;
 
-    final nextNumber = existingPlans.length + 1;
-    final name = nextNumber == 1 ? 'New Plan' : 'New Plan $nextNumber';
-    final presetId = await repo.createPreset(name, profileId: profileId);
+    final existingDraft = await repo.fetchDraftPresetForProfile(profileId);
+    final presetId =
+        (existingDraft?['id'] as num?)?.toInt() ??
+        await repo.createPreset(
+          existingPlans.isEmpty
+              ? 'New Plan'
+              : 'New Plan ${existingPlans.length + 1}',
+          profileId: profileId,
+          isDraft: true,
+        );
+    _onboardingDraftProfileIds.add(profileId);
     if (!mounted) return;
 
     final activeSession = context.read<ActiveSession>();
-    await Navigator.of(context).push(
+    final result = await Navigator.of(context).push<PresetDetailResult>(
       MaterialPageRoute(
         builder:
             (_) => MultiProvider(
@@ -569,7 +614,9 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                 ChangeNotifierProvider<ActiveSession>.value(
                   value: activeSession,
                 ),
-                ChangeNotifierProvider(create: (_) => PresetSession(presetId)),
+                ChangeNotifierProvider(
+                  create: (_) => PresetSession(presetId, repository: repo),
+                ),
               ],
               child: const PresetDetailScreen(
                 startInEditingMode: true,
@@ -581,20 +628,18 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     );
     if (!mounted) return;
 
-    final latestPlans = await repo.fetchAllPresetsRaw(profileId: profileId);
-    final planStillExists = latestPlans.any(
-      (row) => (row['id'] as num?)?.toInt() == presetId,
-    );
-    if (!planStillExists) {
-      await ActivePlanStore.remove(profileId, presetId);
+    if (result != PresetDetailResult.saved) {
+      await repo.deletePreset(presetId);
+      _onboardingDraftProfileIds.remove(profileId);
       return;
     }
 
-    await ActivePlanStore.add(profileId, presetId);
-    if (!mounted) return;
+    _onboardingDraftProfileIds.remove(profileId);
     setState(() {
-      _onboardingPlansAdded++;
-      _onboardingPlanIds.add(presetId);
+      if (!_onboardingPlanIds.contains(presetId)) {
+        _onboardingPlansAdded++;
+        _onboardingPlanIds.add(presetId);
+      }
       _planOverviewRefreshToken++;
     });
     _goToNextPage();
@@ -754,6 +799,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         ),
         _FieldGap.small,
         DropdownButtonFormField<String>(
+          isExpanded: true,
           value: _gender,
           decoration: _inputDecoration(
             label: 'Gender',
@@ -789,11 +835,12 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
           labelBuilder: (unit) => unit.shortLabel,
           onChanged: (unit) {
             if (unit == null) return;
-            setState(() => _selectedWeightUnit = unit);
+            _changeWeightUnit(unit);
           },
         ),
         _FieldGap.small,
         _TextInput(
+          key: const Key('onboarding-current-weight'),
           controller: _weightController,
           label: 'Current weight',
           hint:
@@ -801,9 +848,30 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
           icon: Icons.monitor_weight_outlined,
           keyboardType: TextInputType.number,
           suffixText: _selectedWeightUnit.shortLabel,
+          onChanged: (_) {
+            _weightInputCanonicalLbs = null;
+            _unitPreferenceLoaded = true;
+          },
         ),
       ],
     );
+  }
+
+  void _changeWeightUnit(WeightUnit unit) {
+    _unitPreferenceLoaded = true;
+    if (unit == _selectedWeightUnit) return;
+    final enteredWeight = double.tryParse(_weightController.text.trim());
+    if (enteredWeight != null && enteredWeight > 0) {
+      _weightInputCanonicalLbs ??= WeightUnitFormatter.toPounds(
+        enteredWeight,
+        _selectedWeightUnit,
+      );
+      _weightController.text = WeightUnitFormatter.formatInputWeight(
+        _weightInputCanonicalLbs!,
+        unit,
+      );
+    }
+    setState(() => _selectedWeightUnit = unit);
   }
 
   Widget _buildUsageIntentPage() {
@@ -946,6 +1014,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       subtitle: 'These preferences shape nutrition suggestions after setup.',
       children: [
         DropdownButtonFormField<String>(
+          isExpanded: true,
           value: _preferredDiet,
           decoration: _inputDecoration(
             label: 'Preferred diet',
@@ -1317,6 +1386,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
           'These plans were added to your active plans. Open any plan to inspect or adjust it before continuing.',
       children: [
         _OnboardingPlanOverviewList(
+          repository: context.read<AppRepository>(),
           profileId: _onboardingProfileId,
           planIds: Set<int>.from(_onboardingPlanIds),
           refreshToken: _planOverviewRefreshToken,
@@ -1567,14 +1637,17 @@ class _TextInput extends StatelessWidget {
   final IconData icon;
   final TextInputType? keyboardType;
   final String? suffixText;
+  final ValueChanged<String>? onChanged;
 
   const _TextInput({
+    super.key,
     required this.controller,
     required this.label,
     required this.icon,
     this.hint,
     this.keyboardType,
     this.suffixText,
+    this.onChanged,
   });
 
   @override
@@ -1582,6 +1655,7 @@ class _TextInput extends StatelessWidget {
     return TextField(
       controller: controller,
       keyboardType: keyboardType,
+      onChanged: onChanged,
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
@@ -2145,12 +2219,14 @@ class _OnboardingPlanItem {
 }
 
 class _OnboardingPlanOverviewList extends StatefulWidget {
+  final AppRepository repository;
   final int? profileId;
   final Set<int> planIds;
   final int refreshToken;
   final VoidCallback onChanged;
 
   const _OnboardingPlanOverviewList({
+    required this.repository,
     required this.profileId,
     required this.planIds,
     required this.refreshToken,
@@ -2164,7 +2240,6 @@ class _OnboardingPlanOverviewList extends StatefulWidget {
 
 class _OnboardingPlanOverviewListState
     extends State<_OnboardingPlanOverviewList> {
-  final _repo = AppRepository();
   Future<List<_OnboardingPlanItem>>? _plansFuture;
   int? _loadedProfileId;
   int? _loadedRefreshToken;
@@ -2214,7 +2289,9 @@ class _OnboardingPlanOverviewListState
     Set<int> planIds,
   ) async {
     if (planIds.isEmpty) return const <_OnboardingPlanItem>[];
-    final rows = await _repo.fetchPresetSummariesRaw(profileId: profileId);
+    final rows = await widget.repository.fetchPresetSummariesRaw(
+      profileId: profileId,
+    );
     final order = {
       for (var index = 0; index < planIds.length; index++)
         planIds.elementAt(index): index,
@@ -2226,7 +2303,7 @@ class _OnboardingPlanOverviewListState
           ),
         );
     final presetIds = filteredRows.map((row) => row['id'] as int).toList();
-    final focusRows = await _repo.fetchPresetFocusSetCountsRaw(
+    final focusRows = await widget.repository.fetchPresetFocusSetCountsRaw(
       presetIds: presetIds,
     );
     final focusSetCountsByPreset = _groupFocusSetCounts(focusRows);
@@ -2274,7 +2351,7 @@ class _OnboardingPlanOverviewListState
 
     final result = <int, Map<String, double>>{};
     for (final defId in defIds) {
-      final units = await _repo.computeBodyPartPercents(defId);
+      final units = await widget.repository.computeBodyPartPercents(defId);
       result[defId] = {
         for (final entry in units.entries)
           if (entry.value > 0.0) entry.key.name: entry.value,

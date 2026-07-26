@@ -17,11 +17,13 @@ import 'body_heatmap.dart';
 /// can override the recommendations manually when they know exactly what they
 /// want.
 class SwapExerciseSheet extends StatefulWidget {
+  final AppRepository repository;
   final ExerciseDefinition currentDefinition;
   final int? profileId;
 
   const SwapExerciseSheet({
     super.key,
+    required this.repository,
     required this.currentDefinition,
     this.profileId,
   });
@@ -33,7 +35,6 @@ class SwapExerciseSheet extends StatefulWidget {
 class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
   static const int _candidateBuildConcurrency = 4;
 
-  final _repo = AppRepository();
   late final Future<_SwapExerciseData> _dataFuture;
   int _selectedIndex = 0;
   _ExerciseSwapEntry? _manualReplacement;
@@ -72,7 +73,7 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
   Future<Set<String>> _loadProfileEquipmentNames() async {
     final profileId = widget.profileId;
     if (profileId == null) return const <String>{};
-    final rows = await _repo.fetchEquipmentForProfile(profileId);
+    final rows = await widget.repository.fetchEquipmentForProfile(profileId);
     return {
       for (final row in rows)
         if ((row['name'] as String?)?.trim().isNotEmpty ?? false)
@@ -88,26 +89,30 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
     final bodyPartIds = current.bodyPartUnitsById.keys.toList();
     final muscleIds = current.muscleUnitsById.keys.toList();
 
-    var definitions = await _repo.lookupDefsFiltered(
+    var definitions = await widget.repository.lookupDefsFiltered(
       bodypartIds: bodyPartIds.isEmpty ? null : bodyPartIds,
       muscleIds: muscleIds.isEmpty ? null : muscleIds,
     );
 
     if (definitions.where((def) => def.id != current.definition.id).isEmpty &&
         bodyPartIds.isNotEmpty) {
-      definitions = await _repo.lookupDefsFiltered(bodypartIds: bodyPartIds);
+      definitions = await widget.repository.lookupDefsFiltered(
+        bodypartIds: bodyPartIds,
+      );
     }
 
     if (definitions.where((def) => def.id != current.definition.id).isEmpty &&
         muscleIds.isNotEmpty) {
-      definitions = await _repo.lookupDefsFiltered(muscleIds: muscleIds);
+      definitions = await widget.repository.lookupDefsFiltered(
+        muscleIds: muscleIds,
+      );
     }
 
     if (definitions.where((def) => def.id != current.definition.id).isEmpty) {
-      return _repo.lookupDefsDetailed();
+      return widget.repository.lookupDefsDetailed();
     }
 
-    return _repo.lookupDefsDetailedByIds(
+    return widget.repository.lookupDefsDetailedByIds(
       definitions.map((definition) => definition.id).toList(),
     );
   }
@@ -120,10 +125,12 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
   }) async {
     final detailedDefinition =
         hydrateDefinition ? await _hydrateDefinition(definition) : definition;
-    final bodyPartUnitsFuture = _repo.computeBodyPartPercents(
+    final bodyPartUnitsFuture = widget.repository.computeBodyPartPercents(
       detailedDefinition.id,
     );
-    final muscleRowsFuture = _repo.computeMusclePercents(detailedDefinition.id);
+    final muscleRowsFuture = widget.repository.computeMusclePercents(
+      detailedDefinition.id,
+    );
     final bodyPartUnits = await bodyPartUnitsFuture;
     final muscleRows = await muscleRowsFuture;
     final muscleUnitsById = <int, double>{
@@ -205,11 +212,11 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
   Future<ExerciseDefinition> _hydrateDefinition(
     ExerciseDefinition definition,
   ) async {
-    final detailed = await _repo.fetchDefinitionById(definition.id);
+    final detailed = await widget.repository.fetchDefinitionById(definition.id);
     final hydrated = detailed ?? definition;
     if (hydrated.equipmentList.isNotEmpty) return hydrated;
 
-    final info = await _repo.fetchDefinitionInfo(hydrated.id);
+    final info = await widget.repository.fetchDefinitionInfo(hydrated.id);
     final equipmentName = info['equipmentName']?.trim();
     if (equipmentName == null || equipmentName.isEmpty) return hydrated;
 

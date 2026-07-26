@@ -21,15 +21,14 @@ class NutritionProfile extends ChangeNotifier {
 
   // Data for the day
   DayTotals? totals;
-NutritionGoal? activeGoal;
+  NutritionGoal? activeGoal;
 
-// Store rich rows internally...
-List<DiaryEntryWithItem> _meals = [];
+  // Store rich rows internally...
+  List<DiaryEntryWithItem> _meals = [];
 
-// ...but keep a back-compat view that returns plain DiaryEntry.
-List<DiaryEntryWithItem> get mealsWithItems => _meals;
-List<DiaryEntry> get meals => _meals.map((r) => r.entry).toList();
-
+  // ...but keep a back-compat view that returns plain DiaryEntry.
+  List<DiaryEntryWithItem> get mealsWithItems => _meals;
+  List<DiaryEntry> get meals => _meals.map((r) => r.entry).toList();
 
   bool isLoading = false;
   String? error;
@@ -54,8 +53,7 @@ List<DiaryEntry> get meals => _meals.map((r) => r.entry).toList();
   // Debounced coalescer for bursty updates
   Timer? _reloadDebounce;
 
-  NutritionProfile({AppRepository? repository})
-      : _repo = repository ?? AppRepository() {
+  NutritionProfile({required AppRepository repository}) : _repo = repository {
     _catalog = _repo.foodCatalog;
     _init();
   }
@@ -103,7 +101,10 @@ List<DiaryEntry> get meals => _meals.map((r) => r.entry).toList();
     if (profiles.isEmpty) {
       final id = await _repo.createProfile('General');
       profiles = await _repo.fetchAllProfiles();
-      current = profiles.firstWhere((p) => p.id == id, orElse: () => profiles.first);
+      current = profiles.firstWhere(
+        (p) => p.id == id,
+        orElse: () => profiles.first,
+      );
     } else {
       current = profiles.first;
     }
@@ -144,7 +145,10 @@ List<DiaryEntry> get meals => _meals.map((r) => r.entry).toList();
 
   Future<void> selectProfileById(int profileId) async {
     if (profiles.isEmpty) await _loadProfilesIfNeeded();
-    final p = profiles.firstWhere((p) => p.id == profileId, orElse: () => profiles.first);
+    final p = profiles.firstWhere(
+      (p) => p.id == profileId,
+      orElse: () => profiles.first,
+    );
     await selectProfile(p);
   }
 
@@ -153,7 +157,10 @@ List<DiaryEntry> get meals => _meals.map((r) => r.entry).toList();
     final id = await _repo.createProfile(name);
     await refreshProfiles();
     if (profiles.isNotEmpty) {
-      final p = profiles.firstWhere((p) => p.id == id, orElse: () => profiles.first);
+      final p = profiles.firstWhere(
+        (p) => p.id == id,
+        orElse: () => profiles.first,
+      );
       await selectProfile(p);
     }
   }
@@ -196,21 +203,20 @@ List<DiaryEntry> get meals => _meals.map((r) => r.entry).toList();
     try {
       // Fetch in parallel for snappier UI.
       final results = await Future.wait([
-  _repo.getDayTotals(profileId!, day),
-  _repo.getActiveGoals(profileId!, day),
-  _repo.getDiaryEntriesWithItemsForDate(profileId!, day),
-]);
+        _repo.getDayTotals(profileId!, day),
+        _repo.getActiveGoals(profileId!, day),
+        _repo.getDiaryEntriesWithItemsForDate(profileId!, day),
+      ]);
 
       // If a newer reload started or we got disposed, drop these results.
       if (_disposed || seq != _reloadSeq) return;
 
       totals = results[0] as DayTotals;
-activeGoal = results[1] as NutritionGoal?;
+      activeGoal = results[1] as NutritionGoal?;
 
-final rows = results[2] as List<DiaryEntryWithItem>;
-rows.sort((a, b) => _compareMeals(a.entry, b.entry)); // reuse your sorter
-_meals = rows;
-
+      final rows = results[2] as List<DiaryEntryWithItem>;
+      rows.sort((a, b) => _compareMeals(a.entry, b.entry)); // reuse your sorter
+      _meals = rows;
 
       _safeNotify();
     } catch (e) {
@@ -266,12 +272,11 @@ _meals = rows;
     required int foodId,
     required int portionId,
     double quantity = 1.0,
-  }) =>
-      _catalog.calcForPortion(
-        foodId: foodId,
-        portionId: portionId,
-        quantity: quantity,
-      );
+  }) => _catalog.calcForPortion(
+    foodId: foodId,
+    portionId: portionId,
+    quantity: quantity,
+  );
 
   /// Macro snapshot per 100g with legacy-safe keys.
   Future<Map<String, double>> macroPer100g(int foodId) =>
@@ -390,16 +395,21 @@ _meals = rows;
   }
 
   /// Batch-add multiple foods with a single reload.
-  Future<void> addFoodsBatch(List<({
-    MealType meal,
-    int foodId,
-    int? portionId,
-    double quantity,
-    double? gramsOverride,
-    double? loggedGrams,
-    DateTime? loggedAt,
-    String? notes,
-  })> items) async {
+  Future<void> addFoodsBatch(
+    List<
+      ({
+        MealType meal,
+        int foodId,
+        int? portionId,
+        double quantity,
+        double? gramsOverride,
+        double? loggedGrams,
+        DateTime? loggedAt,
+        String? notes,
+      })
+    >
+    items,
+  ) async {
     await _runAndReload(() async {
       for (final i in items) {
         await _repo.addDiaryFood(
@@ -759,8 +769,11 @@ _meals = rows;
   void _scheduleMidnightTick() {
     _midnightTimer?.cancel();
     final now = DateTime.now();
-    final nextMidnight =
-        DateTime(now.year, now.month, now.day).add(const Duration(days: 1));
+    final nextMidnight = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).add(const Duration(days: 1));
     final delay = nextMidnight.difference(now);
 
     _midnightTimer = Timer(delay, () async {
@@ -776,42 +789,40 @@ _meals = rows;
         await reloadDay();
       }
 
-      if (!_disposed) _scheduleMidnightTick(); // reschedule for the following midnight
+      if (!_disposed) {
+        _scheduleMidnightTick(); // reschedule for the following midnight
+      }
     });
   }
 
   // Fast-path wrappers so UI code can “quick log” with sensible defaults.
-Future<void> quickLogFood({
-  required MealType meal,
-  required int foodId,
-  int? portionId,
-  double quantity = 1.0,
-  String? notes,
-}) {
-  return addFoodSmartWithDefaultTime(
-    meal: meal,
-    foodId: foodId,
-    portionId: portionId,
-    quantity: quantity,
-    notes: notes,
-  );
+  Future<void> quickLogFood({
+    required MealType meal,
+    required int foodId,
+    int? portionId,
+    double quantity = 1.0,
+    String? notes,
+  }) {
+    return addFoodSmartWithDefaultTime(
+      meal: meal,
+      foodId: foodId,
+      portionId: portionId,
+      quantity: quantity,
+      notes: notes,
+    );
+  }
+
+  Future<void> quickLogRecipe({
+    required MealType meal,
+    required int recipeId,
+    double quantity = 1.0,
+    String? notes,
+  }) {
+    return addRecipeWithDefaultTime(
+      meal: meal,
+      recipeId: recipeId,
+      quantity: quantity,
+      notes: notes,
+    );
+  }
 }
-
-Future<void> quickLogRecipe({
-  required MealType meal,
-  required int recipeId,
-  double quantity = 1.0,
-  String? notes,
-}) {
-  return addRecipeWithDefaultTime(
-    meal: meal,
-    recipeId: recipeId,
-    quantity: quantity,
-    notes: notes,
-  );
-}
-
-
-
-}
-

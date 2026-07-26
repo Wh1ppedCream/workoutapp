@@ -29,6 +29,31 @@ class ContentDao {
       );
     ''');
 
+    // This table originally lived in DatabaseHelper's repair path. Keep its
+    // base schema here as well so versioned migrations can safely run before
+    // DatabaseHelper.onOpen performs any defensive repairs.
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS exercise_media (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        exercise_def_id INTEGER NOT NULL,
+        media_type TEXT NOT NULL,
+        remote_url TEXT NOT NULL,
+        thumbnail_url TEXT,
+        local_cache_path TEXT,
+        local_thumbnail_path TEXT,
+        title TEXT,
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT,
+        updated_at TEXT,
+        FOREIGN KEY(exercise_def_id)
+          REFERENCES exercise_definitions(id) ON DELETE CASCADE
+      );
+    ''');
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_exercise_media_def_sort '
+      'ON exercise_media(exercise_def_id, sort_order, id)',
+    );
+
     await _addColumnIfMissing(
       db,
       table: 'exercise_media',

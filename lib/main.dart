@@ -45,10 +45,16 @@ Future<void> main() async {
       child: MultiProvider(
         providers: [
           Provider<AppRepository>.value(value: repo), // repo FIRST
-          ChangeNotifierProvider(create: (_) => NutritionProfile()),
+          ChangeNotifierProvider(
+            create: (_) => NutritionProfile(repository: repo),
+          ),
           ChangeNotifierProvider(create: (_) => OnboardingConfig()..init()),
-          ChangeNotifierProvider(create: (_) => ActiveSession()),
-          ChangeNotifierProvider(create: (_) => SelectedProfile()),
+          ChangeNotifierProvider(
+            create: (_) => ActiveSession(repository: repo),
+          ),
+          ChangeNotifierProvider(
+            create: (_) => SelectedProfile(repository: repo),
+          ),
           ChangeNotifierProvider(create: (_) => DashboardConfig()),
           ChangeNotifierProvider(create: (_) => ThemeProvider()),
           ChangeNotifierProvider(create: (_) => UnitPreferenceProvider()),

@@ -18,12 +18,14 @@ import 'focused_sets_list.dart';
 /// units from exercise definitions. The widget keeps its loaded summary alive
 /// while scrolling so the body heatmap does not repeatedly reload.
 class PresetInfoCard extends StatefulWidget {
+  final AppRepository repository;
   final List<WorkoutExercise> exercises;
   final List<CardType> cardTypes;
   final List<int?> definitionIds;
 
   const PresetInfoCard({
     super.key,
+    required this.repository,
     required this.exercises,
     required this.cardTypes,
     required this.definitionIds,
@@ -37,7 +39,6 @@ class _PresetInfoCardState extends State<PresetInfoCard>
     with AutomaticKeepAliveClientMixin<PresetInfoCard> {
   static const int _focusLoadConcurrency = 6;
 
-  final _repo = AppRepository();
   late Future<_PresetInfoSummary> _summaryFuture;
   late String _signature;
 
@@ -162,7 +163,7 @@ class _PresetInfoCardState extends State<PresetInfoCard>
     }
 
     try {
-      return await _repo.findExerciseDefinitionId(
+      return await widget.repository.findExerciseDefinitionId(
         exercise.name,
         exercise.equipment,
       );
@@ -179,7 +180,7 @@ class _PresetInfoCardState extends State<PresetInfoCard>
     final defId = await _definitionIdFor(index, exercise);
     if (defId == null) return null;
 
-    final unitsPerSet = await _repo.computeBodyPartPercents(defId);
+    final unitsPerSet = await widget.repository.computeBodyPartPercents(defId);
     if (unitsPerSet.isEmpty) return null;
 
     return _PresetBodyPartFocus(unitsPerSet: unitsPerSet, setCount: setCount);

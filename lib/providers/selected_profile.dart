@@ -13,8 +13,7 @@ class SelectedProfile extends ChangeNotifier {
   GymProfile? currentProfile;
   List<Map<String, dynamic>> equipment = [];
 
-  SelectedProfile({AppRepository? repository})
-      : _repo = repository ?? AppRepository() {
+  SelectedProfile({required AppRepository repository}) : _repo = repository {
     _init();
   }
 

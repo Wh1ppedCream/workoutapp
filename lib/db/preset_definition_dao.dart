@@ -8,8 +8,13 @@ class PresetDefinitionDao {
   /// Inserts a new preset and returns its ID.
   ///
   /// Optionally scopes the preset to [profileId].
-  static Future<int> insertPreset(Database db, String name, {int? profileId}) {
-    final data = <String, dynamic>{'name': name};
+  static Future<int> insertPreset(
+    Database db,
+    String name, {
+    int? profileId,
+    bool isDraft = false,
+  }) {
+    final data = <String, dynamic>{'name': name, 'is_draft': isDraft ? 1 : 0};
     if (profileId != null) {
       data['profile_id'] = profileId;
     }
@@ -26,8 +31,8 @@ class PresetDefinitionDao {
   }) async {
     final whereClause =
         profileId != null
-            ? 'name = ? AND profile_id = ?'
-            : 'name = ? AND profile_id IS NULL';
+            ? 'name = ? AND profile_id = ? AND is_draft = 0'
+            : 'name = ? AND profile_id IS NULL AND is_draft = 0';
     final whereArgs = profileId != null ? [name, profileId] : [name];
     final rows = await db.query(
       'preset_definitions',
@@ -50,12 +55,39 @@ class PresetDefinitionDao {
     if (profileId != null) {
       return db.query(
         'preset_definitions',
-        where: 'profile_id = ?',
+        where: 'profile_id = ? AND is_draft = 0',
         whereArgs: [profileId],
         orderBy: 'created_at',
       );
     }
-    return db.query('preset_definitions', orderBy: 'created_at');
+    return db.query(
+      'preset_definitions',
+      where: 'is_draft = 0',
+      orderBy: 'created_at',
+    );
+  }
+
+  /// Retrieves the resumable onboarding draft for a profile, if one exists.
+  static Future<Map<String, dynamic>?> getDraftForProfile(
+    Database db,
+    int profileId,
+  ) async {
+    final rows = await db.query(
+      'preset_definitions',
+      where: 'profile_id = ? AND is_draft = 1',
+      whereArgs: [profileId],
+      orderBy: 'created_at DESC, id DESC',
+      limit: 1,
+    );
+    return firstDynamicRow(rows);
+  }
+
+  static Future<int> deleteDraftsForProfile(Database db, int profileId) {
+    return db.delete(
+      'preset_definitions',
+      where: 'profile_id = ? AND is_draft = 1',
+      whereArgs: [profileId],
+    );
   }
 
   /// Retrieves a single preset definition by ID.

@@ -24,6 +24,8 @@ import '../../utils/workout_exercise_clone.dart';
 import 'session_screen.dart';
 import 'auto_preset_flow_screen.dart';
 
+enum PresetDetailResult { saved, discarded, deleted }
+
 enum _OnboardingPlanBuilderStep {
   namePlan,
   addExercise,
@@ -99,7 +101,14 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _queueTutorial();
       unawaited(_loadOnboardingPlanGuideAvailability());
+      unawaited(_syncLoadedPresetName(preset));
     });
+  }
+
+  Future<void> _syncLoadedPresetName(PresetSession preset) async {
+    await preset.ready;
+    if (!mounted || _nameController.text.trim().isNotEmpty) return;
+    _nameController.text = preset.presetName;
   }
 
   Future<void> _loadOnboardingPlanGuideAvailability() async {
@@ -150,7 +159,7 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
     final exercise = preset.exercises[index];
     if (exercise is! WeightExercise) return;
 
-    final repo = AppRepository();
+    final repo = context.read<AppRepository>();
     final defId =
         preset.definitionIdForExercise(index) ??
         await repo.findOrCreateExerciseDefinition(
@@ -370,11 +379,12 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
     try {
       await session.saveChanges(
         newName: newName.isNotEmpty ? newName : session.presetName,
+        publishDraft: widget.closeAfterSave && session.isDraft,
       );
       if (!mounted) return;
       setState(() => _isEditing = false);
       if (widget.closeAfterSave) {
-        Navigator.of(context).pop(true);
+        Navigator.of(context).pop(PresetDetailResult.saved);
       }
     } catch (error) {
       if (!context.mounted) return;
@@ -428,7 +438,7 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
     final exercise = preset.exercises[index];
     if (exercise is! WeightExercise) return;
 
-    final repo = AppRepository();
+    final repo = context.read<AppRepository>();
     final defId =
         preset.definitionIdForExercise(index) ??
         await repo.findOrCreateExerciseDefinition(
@@ -443,6 +453,7 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
       isScrollControlled: true,
       builder:
           (_) => SwapExerciseSheet(
+            repository: repo,
             currentDefinition: definition,
             profileId: context.read<SelectedProfile>().currentProfile?.id,
           ),
@@ -463,18 +474,20 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
         _showsOnboardingPlanGuide &&
         _onboardingPlanBuilderStep == _OnboardingPlanBuilderStep.namePlan;
 
-    return PopScope<bool>(
+    return PopScope<PresetDetailResult>(
       // Disable the system back gesture so we can intercept it
       canPop: false,
       // Called whenever a pop is attempted (back button or gesture)
-      onPopInvokedWithResult: (bool didPop, Object? result) async {
+      onPopInvokedWithResult: (bool didPop, PresetDetailResult? result) async {
         final nav = Navigator.of(context);
         // If it actually popped (unlikely, since canPop is false), do nothing
         if (didPop) return;
         // Otherwise show our unsaved-changes dialog
         final shouldPop = await _onWillPop();
         if (!mounted) return;
-        if (shouldPop) nav.pop();
+        if (shouldPop) {
+          nav.pop(widget.closeAfterSave ? PresetDetailResult.discarded : null);
+        }
       },
       child: Stack(
         children: [
@@ -534,6 +547,8 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                   icon: const Icon(Icons.more_vert),
                   onSelected: (action) async {
                     if (action == 'delete') {
+                      final repository = context.read<AppRepository>();
+                      final navigator = Navigator.of(context);
                       final confirm = await showDialog<bool>(
                         context: context,
                         builder:
@@ -555,10 +570,13 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                             ),
                       );
                       if (confirm == true) {
-                        final navContext = context;
-                        await AppRepository().deletePreset(preset.presetId);
-                        if (navContext.mounted) {
-                          Navigator.of(navContext).pop();
+                        await repository.deletePreset(preset.presetId);
+                        if (mounted) {
+                          navigator.pop(
+                            widget.closeAfterSave
+                                ? PresetDetailResult.deleted
+                                : null,
+                          );
                         }
                       }
                     } else if (action == 'toggle_auto') {
@@ -730,6 +748,7 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                           return KeyedSubtree(
                             key: _summaryTutorialKey,
                             child: PresetInfoCard(
+                              repository: context.read<AppRepository>(),
                               exercises: preset.exercises,
                               cardTypes: preset.cardTypes,
                               definitionIds: List<int?>.generate(

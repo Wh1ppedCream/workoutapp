@@ -22,8 +22,7 @@ class ActiveSession extends ChangeNotifier with WidgetsBindingObserver {
   bool _isRestoring = true;
   bool _isFinishing = false;
 
-  ActiveSession({AppRepository? repository})
-    : _repo = repository ?? AppRepository() {
+  ActiveSession({required AppRepository repository}) : _repo = repository {
     WidgetsBinding.instance.addObserver(this);
     _restoreFuture = _restoreDraft();
   }

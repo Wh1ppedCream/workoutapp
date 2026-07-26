@@ -28,6 +28,7 @@ import 'preset_set_auto_dao.dart';
 import 'preset_progression_dao.dart';
 import 'preset_flow_methods_dao.dart';
 import 'personal_info_dao.dart';
+import 'personal_info_transaction_dao.dart';
 import 'nutrition_dao.dart';
 import 'content_dao.dart';
 import 'database_maintenance.dart';
@@ -47,7 +48,7 @@ import 'package:flutter/foundation.dart' show debugPrint;
 
 /// Singleton helper for managing the SQLite database.
 class DatabaseHelper {
-  static const int _kDbVersion = 54;
+  static const int _kDbVersion = 55;
   static int get currentSchemaVersion => _kDbVersion;
   static const String _kOpenTriggerResetKey = 'open_trigger_reset_v1';
   static const String _kOpenIndexEnsureKey = 'open_index_ensure_v3';
@@ -162,6 +163,7 @@ class DatabaseHelper {
         await Schema.migrateV52(db);
         await Schema.migrateV53(db);
         await Schema.migrateV54(db);
+        await Schema.migrateV55(db);
         await _resetDbTriggers(db); // <—
         await _maybeCompactLegacyFoodCatalog(db);
         await _removeEmptyStarterPlans(db);
@@ -2743,7 +2745,7 @@ class DatabaseHelper {
         FROM measurements m
         JOIN measurement_definitions md ON md.id = m.def_id
        WHERE md.type = ?
-       ORDER BY m.timestamp DESC
+       ORDER BY m.timestamp DESC, m.id DESC
        LIMIT 1
     ''',
       [MeasurementType.BodyWeight.name],
@@ -2753,11 +2755,15 @@ class DatabaseHelper {
     final value = (rows.first['value'] as num?)?.toDouble();
     if (value == null || value <= 0) return null;
 
-    final unit = ((rows.first['unit'] as String?) ?? 'lbs').toLowerCase();
-    if (unit == 'kg' || unit == 'kgs' || unit == 'kilogram') {
+    final unit =
+        ((rows.first['unit'] as String?) ?? 'lbs').trim().toLowerCase();
+    if (unit == 'kg' ||
+        unit == 'kgs' ||
+        unit == 'kilogram' ||
+        unit == 'kilograms') {
       return value * 2.2046226218;
     }
-    if (unit == 'lb' || unit == 'lbs' || unit == 'pound') {
+    if (unit == 'lb' || unit == 'lbs' || unit == 'pound' || unit == 'pounds') {
       return value;
     }
     return null;
@@ -4125,13 +4131,18 @@ class DatabaseHelper {
 
   // ─── PRESETS: Definition CRUD ─────────────────────────────
 
-  Future<int> createPreset(String name, {int? profileId}) async {
+  Future<int> createPreset(
+    String name, {
+    int? profileId,
+    bool isDraft = false,
+  }) async {
     final db = await database;
     return PresetTransactionDao.createPreset(
       db,
       name: name,
       profileId: profileId,
       exercises: const <WorkoutExerciseWrite>[],
+      isDraft: isDraft,
     );
     // copy profile‐default methods into this preset (if profileId != null)
   }
@@ -4142,6 +4153,7 @@ class DatabaseHelper {
     required List<WorkoutExerciseWrite> exercises,
     PresetAutoSettingsWrite? autoSettings,
     bool activate = false,
+    bool isDraft = false,
   }) async {
     final db = await database;
     return PresetTransactionDao.createPreset(
@@ -4151,6 +4163,7 @@ class DatabaseHelper {
       exercises: exercises,
       autoSettings: autoSettings,
       activate: activate,
+      isDraft: isDraft,
     );
   }
 
@@ -4159,6 +4172,7 @@ class DatabaseHelper {
     required String? name,
     required List<WorkoutExerciseWrite> exercises,
     PresetAutoSettingsWrite? autoSettings,
+    bool publishDraft = false,
   }) async {
     final db = await database;
     await PresetTransactionDao.replacePreset(
@@ -4167,6 +4181,7 @@ class DatabaseHelper {
       name: name,
       exercises: exercises,
       autoSettings: autoSettings,
+      publishDraft: publishDraft,
     );
   }
 
@@ -4186,8 +4201,8 @@ class DatabaseHelper {
     final db = await database;
     final whereClause =
         profileId != null
-            ? 'name = ? AND profile_id = ?'
-            : 'name = ? AND profile_id IS NULL';
+            ? 'name = ? AND profile_id = ? AND is_draft = 0'
+            : 'name = ? AND profile_id IS NULL AND is_draft = 0';
     final whereArgs = profileId != null ? [name, profileId] : [name];
     final existing = await db.query(
       'preset_definitions',
@@ -4202,6 +4217,18 @@ class DatabaseHelper {
     return createPreset(name, profileId: profileId);
   }
 
+  Future<Map<String, dynamic>?> fetchDraftPresetForProfile(
+    int profileId,
+  ) async {
+    final db = await database;
+    return PresetDefinitionDao.getDraftForProfile(db, profileId);
+  }
+
+  Future<void> deleteDraftPresetsForProfile(int profileId) async {
+    final db = await database;
+    await PresetDefinitionDao.deleteDraftsForProfile(db, profileId);
+  }
+
   Future<List<Map<String, dynamic>>> fetchAllPresetsRaw({
     int? profileId,
   }) async {
@@ -4213,7 +4240,10 @@ class DatabaseHelper {
     int? profileId,
   }) async {
     final db = await database;
-    final where = profileId != null ? 'WHERE p.profile_id = ?' : '';
+    final where =
+        profileId != null
+            ? 'WHERE p.profile_id = ? AND p.is_draft = 0'
+            : 'WHERE p.is_draft = 0';
     return db.rawQuery('''
       SELECT
         p.id AS id,
@@ -4265,6 +4295,8 @@ class DatabaseHelper {
       id: row['id'] as int,
       name: row['name'] as String,
       createdAt: DateTime.parse(row['created_at'] as String),
+      profileId: row['profile_id'] as int?,
+      isDraft: (row['is_draft'] as int? ?? 0) == 1,
     );
   }
 
@@ -4836,6 +4868,22 @@ class DatabaseHelper {
   Future<int> upsertPersonalInfo(PersonalInfo info) async {
     final db = await database;
     return PersonalInfoDao(db).upsert(info);
+  }
+
+  Future<void> savePersonalInfoWithBodyWeight({
+    required PersonalInfo info,
+    double? bodyWeightValue,
+    required WeightUnit bodyWeightUnit,
+    String? measurementNote,
+  }) async {
+    final db = await database;
+    await PersonalInfoTransactionDao.save(
+      db,
+      info: info,
+      bodyWeightValue: bodyWeightValue,
+      bodyWeightUnit: bodyWeightUnit,
+      measurementNote: measurementNote,
+    );
   }
 
   // NUTIRITOINNNNN ------------------------------------

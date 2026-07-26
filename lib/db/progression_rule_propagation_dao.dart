@@ -84,7 +84,7 @@ class ProgressionRulePropagationDao {
       final plans = await txn.query(
         'preset_definitions',
         columns: ['id'],
-        where: 'profile_id = ?',
+        where: 'profile_id = ? AND is_draft = 0',
         whereArgs: [profileId],
       );
       var copied = 0;

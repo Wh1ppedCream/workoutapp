@@ -1,4 +1,5 @@
 import 'package:env_test/db/preset_transaction_dao.dart';
+import 'package:env_test/db/preset_definition_dao.dart';
 import 'package:env_test/models/models.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -15,7 +16,9 @@ void main() {
       CREATE TABLE preset_definitions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
-        profile_id INTEGER
+        profile_id INTEGER,
+        is_draft INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
       )
     ''');
     await db.execute('''
@@ -176,6 +179,115 @@ void main() {
     expect(await db.query('preset_definitions'), isEmpty);
     expect(await db.query('preset_exercises'), isEmpty);
     expect(await db.query('active_plans'), isEmpty);
+  });
+
+  test('publishes a draft and activates it in the same transaction', () async {
+    final presetId = await PresetTransactionDao.createPreset(
+      db,
+      name: 'Onboarding Draft',
+      profileId: 2,
+      isDraft: true,
+      exercises: const <WorkoutExerciseWrite>[],
+    );
+
+    expect((await db.query('preset_definitions')).single['is_draft'], 1);
+    expect(await db.query('active_plans'), isEmpty);
+
+    await PresetTransactionDao.replacePreset(
+      db,
+      presetId: presetId,
+      name: 'First Plan',
+      publishDraft: true,
+      exercises: [
+        WorkoutExerciseWrite(
+          exercise: WeightExercise(
+            name: 'Bench Press',
+            equipment: 'Barbell',
+            sets: [ExerciseSet(weight: 95, reps: 8)],
+          ),
+          type: 'weight',
+          definitionId: 7,
+        ),
+      ],
+    );
+
+    final definition = (await db.query('preset_definitions')).single;
+    expect(definition['name'], 'First Plan');
+    expect(definition['is_draft'], 0);
+    expect((await db.query('preset_exercises')), hasLength(1));
+    expect((await db.query('active_plans')).single['preset_id'], presetId);
+  });
+
+  test('failed draft publication stays hidden and inactive', () async {
+    final presetId = await PresetTransactionDao.createPreset(
+      db,
+      name: 'Onboarding Draft',
+      profileId: 2,
+      isDraft: true,
+      exercises: const <WorkoutExerciseWrite>[],
+    );
+
+    await expectLater(
+      PresetTransactionDao.replacePreset(
+        db,
+        presetId: presetId,
+        name: 'Invalid Plan',
+        publishDraft: true,
+        exercises: [
+          WorkoutExerciseWrite(
+            exercise: WeightExercise(
+              name: 'Bench Press',
+              equipment: 'Barbell',
+              sets: [ExerciseSet(weight: 95, reps: -1)],
+            ),
+            type: 'weight',
+            definitionId: 7,
+          ),
+        ],
+      ),
+      throwsA(anything),
+    );
+
+    final definition = (await db.query('preset_definitions')).single;
+    expect(definition['name'], 'Onboarding Draft');
+    expect(definition['is_draft'], 1);
+    expect(await db.query('preset_exercises'), isEmpty);
+    expect(await db.query('active_plans'), isEmpty);
+  });
+
+  test('drafts are resumable but excluded from ordinary plan lists', () async {
+    final savedId = await PresetTransactionDao.createPreset(
+      db,
+      name: 'Saved Plan',
+      profileId: 2,
+      exercises: const <WorkoutExerciseWrite>[],
+    );
+    final draftId = await PresetTransactionDao.createPreset(
+      db,
+      name: 'Draft Plan',
+      profileId: 2,
+      isDraft: true,
+      exercises: const <WorkoutExerciseWrite>[],
+    );
+
+    final visible = await PresetDefinitionDao.getAllPresetsRaw(
+      db,
+      profileId: 2,
+    );
+    final draft = await PresetDefinitionDao.getDraftForProfile(db, 2);
+
+    expect(visible.map((row) => row['id']), [savedId]);
+    expect(draft?['id'], draftId);
+
+    await PresetDefinitionDao.deleteDraftsForProfile(db, 2);
+    expect(
+      (await PresetDefinitionDao.getAllPresetsRaw(
+        db,
+        profileId: 2,
+      )).map((row) => row['id']),
+      [savedId],
+    );
+    expect(await PresetDefinitionDao.getDraftForProfile(db, 2), isNull);
   });
 
   test(

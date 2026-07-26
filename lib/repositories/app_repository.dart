@@ -1101,8 +1101,11 @@ class AppRepository {
 
   // ─── PRESETS: Definition CRUD ─────────────────────────────
 
-  Future<int> createPreset(String name, {int? profileId}) =>
-      _dbHelper.createPreset(name, profileId: profileId);
+  Future<int> createPreset(
+    String name, {
+    int? profileId,
+    bool isDraft = false,
+  }) => _dbHelper.createPreset(name, profileId: profileId, isDraft: isDraft);
 
   Future<int> createPresetAtomic({
     required String name,
@@ -1110,12 +1113,14 @@ class AppRepository {
     required List<WorkoutExerciseWrite> exercises,
     PresetAutoSettingsWrite? autoSettings,
     bool activate = false,
+    bool isDraft = false,
   }) => _dbHelper.createPresetAtomic(
     name: name,
     profileId: profileId,
     exercises: exercises,
     autoSettings: autoSettings,
     activate: activate,
+    isDraft: isDraft,
   );
 
   Future<void> replacePresetAtomic({
@@ -1123,12 +1128,20 @@ class AppRepository {
     required String? name,
     required List<WorkoutExerciseWrite> exercises,
     PresetAutoSettingsWrite? autoSettings,
+    bool publishDraft = false,
   }) => _dbHelper.replacePresetAtomic(
     presetId: presetId,
     name: name,
     exercises: exercises,
     autoSettings: autoSettings,
+    publishDraft: publishDraft,
   );
+
+  Future<Map<String, dynamic>?> fetchDraftPresetForProfile(int profileId) =>
+      _dbHelper.fetchDraftPresetForProfile(profileId);
+
+  Future<void> deleteDraftPresetsForProfile(int profileId) =>
+      _dbHelper.deleteDraftPresetsForProfile(profileId);
 
   Future<void> savePresetAutoConfigurationAtomic({
     required int presetId,
@@ -1610,6 +1623,18 @@ class AppRepository {
   Future<PersonalInfo?> fetchPersonalInfo() => _dbHelper.getPersonalInfo();
   Future<void> savePersonalInfo(PersonalInfo info) =>
       _dbHelper.upsertPersonalInfo(info);
+
+  Future<void> savePersonalInfoWithBodyWeight({
+    required PersonalInfo info,
+    double? bodyWeightValue,
+    required WeightUnit bodyWeightUnit,
+    String? measurementNote,
+  }) => _dbHelper.savePersonalInfoWithBodyWeight(
+    info: info,
+    bodyWeightValue: bodyWeightValue,
+    bodyWeightUnit: bodyWeightUnit,
+    measurementNote: measurementNote,
+  );
 
   // ─── NUTRITION ──────────────────────────────────────────────────────────
 

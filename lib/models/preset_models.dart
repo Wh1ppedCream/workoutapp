@@ -10,16 +10,22 @@ class PresetDefinition {
   final int id;
   final String name;
   final DateTime createdAt;
+  final int? profileId;
+  final bool isDraft;
 
   PresetDefinition({
     required this.id,
     required this.name,
     required this.createdAt,
+    this.profileId,
+    this.isDraft = false,
   });
   Map<String, dynamic> toMap() => {
     'id': id,
     'name': name,
     'created_at': createdAt.toIso8601String(),
+    'profile_id': profileId,
+    'is_draft': isDraft ? 1 : 0,
   };
 }
 

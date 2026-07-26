@@ -14,11 +14,13 @@ import 'dart:convert';
 /// without refetching everything.
 class PresetSession extends ChangeNotifier {
   final int presetId;
-  final _repo = AppRepository();
+  final AppRepository _repo;
   late final Future<void> ready;
 
   /// Preset's current name, loaded from the definition.
   String presetName = '';
+  int? profileId;
+  bool isDraft = false;
 
   // ─── Automatic Preset State ─────────────────────────────────────────────
 
@@ -71,7 +73,8 @@ class PresetSession extends ChangeNotifier {
   bool _hasChanges = false;
   bool get hasChanges => _hasChanges;
 
-  PresetSession(this.presetId) {
+  PresetSession(this.presetId, {required AppRepository repository})
+    : _repo = repository {
     ready = _loadPreset();
   }
 
@@ -84,6 +87,8 @@ class PresetSession extends ChangeNotifier {
   Future<void> _loadPreset() async {
     final def = await _repo.fetchPresetById(presetId);
     presetName = def?.name ?? '';
+    profileId = def?.profileId;
+    isDraft = def?.isDraft ?? false;
 
     // 2) Clear all in-memory state (including our new auto-ID lists and overrides)
     exercises.clear();
@@ -445,7 +450,7 @@ class PresetSession extends ChangeNotifier {
 
   /// Persists all in-memory exercises back to the preset tables,
   /// but preserves any existing per-exercise and per-set overrides.
-  Future<void> saveChanges({String? newName}) async {
+  Future<void> saveChanges({String? newName, bool publishDraft = false}) async {
     final writes = <WorkoutExerciseWrite>[];
     for (var index = 0; index < exercises.length; index++) {
       final exercise = exercises[index];
@@ -498,12 +503,18 @@ class PresetSession extends ChangeNotifier {
                 successCountMode: successScope.name,
               )
               : null,
+      publishDraft: publishDraft,
     );
 
     if (newName != null && newName.trim().isNotEmpty) {
       presetName = newName.trim();
     }
     _hasChanges = false;
+    if (publishDraft) {
+      isDraft = false;
+      notifyListeners();
+      return;
+    }
     await _loadPreset();
   }
 

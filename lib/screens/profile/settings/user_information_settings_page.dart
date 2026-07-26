@@ -56,8 +56,11 @@ class _UserInformationSettingsPageState
 
   Future<void> _load() async {
     final repo = context.read<AppRepository>();
-    final weightUnit = context.read<UnitPreferenceProvider>().weightUnit;
+    final unitPreferences = context.read<UnitPreferenceProvider>();
+    await unitPreferences.ready;
+    final weightUnit = unitPreferences.weightUnit;
     final personalInfo = await repo.fetchPersonalInfo();
+    final latestBodyWeightLbs = await repo.fetchLatestBodyWeightLbs();
     if (!mounted) return;
 
     setState(() {
@@ -70,6 +73,7 @@ class _UserInformationSettingsPageState
       _weightController.text = _formatStoredWeightForDisplay(
         personalInfo?.weight,
         weightUnit,
+        latestBodyWeightLbs: latestBodyWeightLbs,
       );
       _bodyFatEstimate = personalInfo?.bodyFatEstimate;
       _weightTrend = personalInfo?.weightTrend;
@@ -107,6 +111,7 @@ class _UserInformationSettingsPageState
     try {
       final repo = context.read<AppRepository>();
       final weightUnit = context.read<UnitPreferenceProvider>().weightUnit;
+      final enteredWeight = double.tryParse(_weightController.text.trim());
       final info = PersonalInfo(
         name: _clean(_nameController.text),
         gender: _gender,
@@ -117,7 +122,13 @@ class _UserInformationSettingsPageState
         weightTrend: _weightTrend,
         activityLevel: _activityLevel,
       );
-      await repo.savePersonalInfo(info);
+      await repo.savePersonalInfoWithBodyWeight(
+        info: info,
+        bodyWeightValue:
+            enteredWeight != null && enteredWeight > 0 ? enteredWeight : null,
+        bodyWeightUnit: weightUnit,
+        measurementNote: 'Profile update',
+      );
       if (!mounted) return;
       setState(() => _dirty = false);
       ScaffoldMessenger.of(
@@ -136,7 +147,14 @@ class _UserInformationSettingsPageState
     return trimmed.isEmpty ? null : trimmed;
   }
 
-  String _formatStoredWeightForDisplay(String? storedWeight, WeightUnit unit) {
+  String _formatStoredWeightForDisplay(
+    String? storedWeight,
+    WeightUnit unit, {
+    double? latestBodyWeightLbs,
+  }) {
+    if (latestBodyWeightLbs != null && latestBodyWeightLbs > 0) {
+      return WeightUnitFormatter.formatInputWeight(latestBodyWeightLbs, unit);
+    }
     final cleaned = _clean(storedWeight ?? '');
     if (cleaned == null) return '';
     final pounds = double.tryParse(cleaned);

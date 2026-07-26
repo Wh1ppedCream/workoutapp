@@ -3,7 +3,7 @@ import 'package:sqflite/sqflite.dart';
 import '../models/personal_info.dart';
 
 class PersonalInfoDao {
-  final Database db;
+  final DatabaseExecutor db;
   PersonalInfoDao(this.db);
 
   Future<PersonalInfo?> get() async {

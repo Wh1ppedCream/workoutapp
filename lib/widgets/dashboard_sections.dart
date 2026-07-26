@@ -675,7 +675,13 @@ class DashboardPlanToolsCard extends StatelessWidget {
                 ChangeNotifierProvider<ActiveSession>.value(
                   value: activeSession,
                 ),
-                ChangeNotifierProvider(create: (_) => PresetSession(presetId)),
+                ChangeNotifierProvider(
+                  create:
+                      (context) => PresetSession(
+                        presetId,
+                        repository: context.read<AppRepository>(),
+                      ),
+                ),
               ],
               child: const PresetDetailScreen(),
             ),

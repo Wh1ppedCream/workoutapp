@@ -4,7 +4,7 @@ import 'package:sqflite/sqflite.dart';
 
 import 'content_dao.dart';
 
-/// Database schema manager: handles initial schema and migrations up to v10.
+/// Database schema manager for fresh installs and every historical migration.
 class Schema {
   /// Creates initial schema (version 1).
   static Future<void> createV1(Database db) async {
@@ -158,6 +158,7 @@ class Schema {
     await migrateV52(db);
     await migrateV53(db);
     await migrateV54(db);
+    await migrateV55(db);
   }
 
   /// Handler for onUpgrade callback.
@@ -219,6 +220,7 @@ class Schema {
     if (oldVersion < 52) await migrateV52(db);
     if (oldVersion < 53) await migrateV53(db);
     if (oldVersion < 54) await migrateV54(db);
+    if (oldVersion < 55) await migrateV55(db);
   }
 
   /// Migration to version 3: adds rating, equipment/muscle tables.
@@ -3220,6 +3222,24 @@ WHERE source_id IS NULL
   /// and anatomy. This never changes local workout or definition data.
   static Future<void> migrateV54(Database db) async {
     await ContentDao.ensureTables(db);
+  }
+
+  /// v55 - keeps unfinished onboarding plans out of normal plan lists.
+  static Future<void> migrateV55(Database db) async {
+    final columns = await db.rawQuery(
+      "PRAGMA table_info('preset_definitions')",
+    );
+    final hasDraftColumn = columns.any((row) => row['name'] == 'is_draft');
+    if (!hasDraftColumn) {
+      await db.execute('''
+        ALTER TABLE preset_definitions
+        ADD COLUMN is_draft INTEGER NOT NULL DEFAULT 0
+      ''');
+    }
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_preset_definitions_draft_profile
+      ON preset_definitions(is_draft, profile_id, created_at)
+    ''');
   }
 
   static Future<bool> _fts4Available(DatabaseExecutor db) async {

@@ -110,7 +110,13 @@ class _Train2PageState extends State<Train2Page> {
                 ChangeNotifierProvider<ActiveSession>.value(
                   value: outerCtx.read<ActiveSession>(),
                 ),
-                ChangeNotifierProvider(create: (_) => PresetSession(presetId)),
+                ChangeNotifierProvider(
+                  create:
+                      (context) => PresetSession(
+                        presetId,
+                        repository: context.read<AppRepository>(),
+                      ),
+                ),
               ],
               child: const PresetDetailScreen(),
             ),
@@ -377,7 +383,7 @@ class _Train2PageState extends State<Train2Page> {
       final generationResult = await generator.generatePresetWithDetails(spec);
       final presetId = generationResult.presetId;
       temporaryPresetId = presetId;
-      final preset = PresetSession(presetId);
+      final preset = PresetSession(presetId, repository: _repo);
       await preset.ready;
 
       if (!mounted) return;

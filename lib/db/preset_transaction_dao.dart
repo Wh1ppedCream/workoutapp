@@ -13,9 +13,16 @@ class PresetTransactionDao {
     required List<WorkoutExerciseWrite> exercises,
     PresetAutoSettingsWrite? autoSettings,
     bool activate = false,
+    bool isDraft = false,
   }) {
+    if (activate && isDraft) {
+      throw ArgumentError('A draft plan cannot be active.');
+    }
     return db.transaction((txn) async {
-      final values = <String, Object?>{'name': name};
+      final values = <String, Object?>{
+        'name': name,
+        'is_draft': isDraft ? 1 : 0,
+      };
       if (profileId != null) values['profile_id'] = profileId;
       final presetId = await txn.insert('preset_definitions', values);
       final defaultFlow = await _copyDefaultProgression(
@@ -50,8 +57,25 @@ class PresetTransactionDao {
     required String? name,
     required List<WorkoutExerciseWrite> exercises,
     PresetAutoSettingsWrite? autoSettings,
+    bool publishDraft = false,
   }) async {
     await db.transaction((txn) async {
+      final definitions = await txn.query(
+        'preset_definitions',
+        columns: ['profile_id', 'is_draft'],
+        where: 'id = ?',
+        whereArgs: [presetId],
+        limit: 1,
+      );
+      if (definitions.isEmpty) {
+        throw StateError('Plan $presetId no longer exists.');
+      }
+      final definition = definitions.first;
+      final isDraft = (definition['is_draft'] as int? ?? 0) == 1;
+      if (publishDraft && !isDraft) {
+        throw StateError('Only a draft plan can be published.');
+      }
+
       if (name != null && name.trim().isNotEmpty) {
         await txn.update(
           'preset_definitions',
@@ -169,6 +193,24 @@ class PresetTransactionDao {
           flowDefinition,
           remappedManualSelections,
         );
+      }
+
+      if (publishDraft) {
+        final profileId = definition['profile_id'] as int?;
+        if (profileId == null) {
+          throw StateError('A published onboarding plan needs a gym profile.');
+        }
+        await txn.update(
+          'preset_definitions',
+          {'is_draft': 0},
+          where: 'id = ?',
+          whereArgs: [presetId],
+        );
+        await txn.insert('active_plans', {
+          'profile_id': profileId,
+          'preset_id': presetId,
+          'activated_at': DateTime.now().toUtc().toIso8601String(),
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
       }
     });
   }
