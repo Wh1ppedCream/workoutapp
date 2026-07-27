@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../models/gym_models.dart';
 import '../../../models/preset_models.dart';
 import '../../../repositories/app_repository.dart';
@@ -18,7 +20,7 @@ class WorkoutProgressFlowsPage extends StatefulWidget {
 }
 
 class _WorkoutProgressFlowsPageState extends State<WorkoutProgressFlowsPage> {
-  final _repository = AppRepository();
+  AppRepository get _repository => context.read<AppRepository>();
 
   bool _isLoading = true;
   String? _loadError;
@@ -63,7 +65,7 @@ class _WorkoutProgressFlowsPageState extends State<WorkoutProgressFlowsPage> {
       if (!mounted || request != _loadRequest) return;
       setState(() {
         _isLoading = false;
-        _loadError = 'Workout progression flows could not be loaded.';
+        _loadError = 'load_failed';
       });
     }
   }
@@ -106,22 +108,21 @@ class _WorkoutProgressFlowsPageState extends State<WorkoutProgressFlowsPage> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final strings = AppLocalizations.of(context);
     final appColor = scheme.primary;
     final profileColor = _profileColor(context);
     final planColor = _planColor(context);
 
     return SettingsPageScaffold(
-      title: 'Workout Progress Flows',
-      subtitle:
-          'Set the paths that decide how progression actions are applied after workout results.',
+      title: strings.flowPageTitle,
+      subtitle: strings.flowPageSubtitle,
       icon: Icons.account_tree_outlined,
       heroAccentColor: SettingsAccent.advanced,
       children: [
-        const SettingsInfoCard(
+        SettingsInfoCard(
           icon: Icons.copy_all_outlined,
-          title: 'How flows are copied',
-          body:
-              'App flows become the starting point for new gym profiles. Gym flows become the starting point for new plans. Later edits stay scoped to the flow you open here.',
+          title: strings.flowHowCopiedTitle,
+          body: strings.flowHowCopiedBody,
         ),
         const SizedBox(height: 14),
         _ScopeLegend(
@@ -136,18 +137,18 @@ class _WorkoutProgressFlowsPageState extends State<WorkoutProgressFlowsPage> {
             child: Center(child: CircularProgressIndicator()),
           )
         else if (_loadError != null)
-          _FlowLoadError(message: _loadError!, onRetry: _loadFlows)
+          _FlowLoadError(message: strings.flowLoadError, onRetry: _loadFlows)
         else ...[
           _FlowScopeCard(
             color: appColor,
             icon: Icons.apps_outlined,
-            title: 'App-wide defaults',
-            subtitle: 'The starting flow for new gym profiles.',
+            title: strings.rulesAppDefaultsTitle,
+            subtitle: strings.flowAppDefaultsSubtitle,
             initiallyExpanded: true,
             child: _FlowEntryTile(
               color: appColor,
               icon: Icons.account_tree_outlined,
-              title: 'App default flow',
+              title: strings.flowAppDefaultEntry,
               summary: _appSummary,
               onTap:
                   () => _openEditor(const AutoPresetFlowScreen.appDefaults()),
@@ -156,14 +157,12 @@ class _WorkoutProgressFlowsPageState extends State<WorkoutProgressFlowsPage> {
           const SizedBox(height: 22),
           _SectionHeading(
             color: profileColor,
-            title: 'Gym profiles',
-            subtitle: 'Each profile has defaults and its own plan flows.',
+            title: strings.rulesGymProfilesTitle,
+            subtitle: strings.flowGymProfilesSubtitle,
           ),
           const SizedBox(height: 10),
           if (_profiles.isEmpty)
-            const _EmptyFlowsCard(
-              message: 'Create a gym profile to set profile and plan flows.',
-            )
+            _EmptyFlowsCard(message: strings.flowNoProfiles)
           else
             for (var index = 0; index < _profiles.length; index++) ...[
               _ProfileFlowCard(
@@ -242,9 +241,9 @@ class _FlowSummary {
     );
   }
 
-  String get label {
-    if (nodes == 0) return 'No saved flow yet';
-    return '$nodes nodes | $branches branches | $actions actions';
+  String label(AppLocalizations strings) {
+    if (nodes == 0) return strings.flowNoSavedYet;
+    return strings.flowSummary(nodes, branches, actions);
   }
 }
 
@@ -265,9 +264,18 @@ class _ScopeLegend extends StatelessWidget {
       spacing: 8,
       runSpacing: 8,
       children: [
-        _LegendChip(color: appColor, label: 'App defaults'),
-        _LegendChip(color: profileColor, label: 'Gym profiles'),
-        _LegendChip(color: planColor, label: 'Plans'),
+        _LegendChip(
+          color: appColor,
+          label: AppLocalizations.of(context).rulesAppDefaultsChip,
+        ),
+        _LegendChip(
+          color: profileColor,
+          label: AppLocalizations.of(context).rulesGymProfilesTitle,
+        ),
+        _LegendChip(
+          color: planColor,
+          label: AppLocalizations.of(context).rulesPlansChip,
+        ),
       ],
     );
   }
@@ -394,18 +402,19 @@ class _ProfileFlowCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     return _FlowScopeCard(
       color: profileColor,
       icon: Icons.fitness_center_outlined,
       title: group.profile.name,
-      subtitle: '${group.plans.length} plan flows available',
+      subtitle: strings.flowPlansAvailable(group.plans.length),
       initiallyExpanded: initiallyExpanded,
       child: Column(
         children: [
           _FlowEntryTile(
             color: profileColor,
             icon: Icons.tune_outlined,
-            title: 'Gym default flow',
+            title: strings.flowGymDefaultEntry,
             summary: group.summary,
             onTap: onOpenProfile,
           ),
@@ -415,7 +424,7 @@ class _ProfileFlowCard extends StatelessWidget {
               Icon(Icons.event_note_outlined, color: planColor, size: 20),
               const SizedBox(width: 8),
               Text(
-                'Plans',
+                strings.rulesPlansTitle,
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
                   color: planColor,
                   fontWeight: FontWeight.w900,
@@ -425,10 +434,7 @@ class _ProfileFlowCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           if (group.plans.isEmpty)
-            const _EmptyFlowsCard(
-              message: 'No plans belong to this gym profile yet.',
-              compact: true,
-            )
+            _EmptyFlowsCard(message: strings.rulesNoPlans, compact: true)
           else
             for (var index = 0; index < group.plans.length; index++) ...[
               _FlowEntryTile(
@@ -502,7 +508,7 @@ class _FlowEntryTile extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      summary.label,
+                      summary.label(AppLocalizations.of(context)),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -615,7 +621,10 @@ class _FlowLoadError extends StatelessWidget {
           Icon(Icons.error_outline, color: scheme.error),
           const SizedBox(width: 10),
           Expanded(child: Text(message)),
-          TextButton(onPressed: onRetry, child: const Text('Retry')),
+          TextButton(
+            onPressed: onRetry,
+            child: Text(AppLocalizations.of(context).commonRetry),
+          ),
         ],
       ),
     );

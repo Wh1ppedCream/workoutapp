@@ -6,6 +6,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/generated/app_localizations.dart';
 import '../../models/models.dart';
 import '../../providers/unit_preference_provider.dart';
 import '../../repositories/app_repository.dart';
@@ -30,7 +31,7 @@ class AnalyticsDashboardScreen extends StatefulWidget {
 class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
-  final _repo = AppRepository();
+  AppRepository get _repo => context.read<AppRepository>();
   final _headerTutorialKey = GlobalKey(debugLabel: 'weekly_sets_header');
   final _tabsTutorialKey = GlobalKey(debugLabel: 'weekly_sets_tabs');
   final _listTutorialKey = GlobalKey(debugLabel: 'weekly_sets_list');
@@ -163,6 +164,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
 
   Future<void> _showTutorial() async {
     try {
+      final strings = AppLocalizations.of(context);
       await showGuidedTutorialOnce(
         context,
         tutorialId: TutorialIds.weeklySetsOverview,
@@ -170,23 +172,20 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
           GuidedTutorialStep(
             targetKey: _headerTutorialKey,
             icon: Icons.accessibility_new,
-            title: 'Weekly overview',
-            body:
-                'This summarizes the last seven days with a heatmap plus total sets, time, and volume.',
+            title: strings.weeklySetsTutorialOverviewTitle,
+            body: strings.weeklySetsTutorialOverviewBody,
           ),
           GuidedTutorialStep(
             targetKey: _tabsTutorialKey,
             icon: Icons.swap_horiz,
-            title: 'Bodyparts or muscles',
-            body:
-                'Switch between bodypart set units and individual muscle set units.',
+            title: strings.weeklySetsTutorialAnatomyTitle,
+            body: strings.weeklySetsTutorialAnatomyBody,
           ),
           GuidedTutorialStep(
             targetKey: _listTutorialKey,
             icon: Icons.check_circle_outline,
-            title: 'Set status',
-            body:
-                'Each row is tinted based on whether your recent work is under, inside, or above its recommended range. Tap a row for linked exercises.',
+            title: strings.weeklySetsTutorialStatusTitle,
+            body: strings.weeklySetsTutorialStatusBody,
           ),
         ],
       );
@@ -223,13 +222,14 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
   @override
   Widget build(BuildContext context) {
     final data = _data;
+    final strings = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Weekly Sets Overview')),
+      appBar: AppBar(title: Text(strings.weeklySetsTitle)),
       body:
           _isLoading && data == null
               ? const Center(child: CircularProgressIndicator())
               : _error != null && data == null
-              ? Center(child: Text('Error: $_error'))
+              ? Center(child: Text(strings.weeklySetsLoadError))
               : Column(
                 children: [
                   KeyedSubtree(
@@ -242,9 +242,9 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
                     key: _tabsTutorialKey,
                     child: TabBar(
                       controller: _tabController,
-                      tabs: const [
-                        Tab(text: 'Bodyparts'),
-                        Tab(text: 'Muscles'),
+                      tabs: [
+                        Tab(text: strings.weeklySetsBodyParts),
+                        Tab(text: strings.weeklySetsMuscles),
                       ],
                     ),
                   ),
@@ -315,17 +315,20 @@ class _WeeklyOverviewHeader extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         _SummaryStatBox(
-                          label: 'Total Sets',
+                          label: AppLocalizations.of(context).weeklySetsTotal,
                           value: data.totalSets.toString(),
                         ),
                         const SizedBox(height: 8),
                         _SummaryStatBox(
-                          label: 'Time',
-                          value: _durationLabel(data.totalDurationSeconds),
+                          label: AppLocalizations.of(context).weeklySetsTime,
+                          value: _durationLabel(
+                            AppLocalizations.of(context),
+                            data.totalDurationSeconds,
+                          ),
                         ),
                         const SizedBox(height: 8),
                         _SummaryStatBox(
-                          label: 'Volume',
+                          label: AppLocalizations.of(context).weeklySetsVolume,
                           value: WeightUnitFormatter.formatVolume(
                             data.totalVolume,
                             weightUnit,
@@ -395,7 +398,9 @@ class _BodyPartSetList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (items.isEmpty) {
-      return const Center(child: Text('No bodypart sets'));
+      return Center(
+        child: Text(AppLocalizations.of(context).weeklySetsNoBodyParts),
+      );
     }
 
     return ListView.separated(
@@ -428,7 +433,9 @@ class _MuscleSetList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (items.isEmpty) {
-      return const Center(child: Text('No muscle sets'));
+      return Center(
+        child: Text(AppLocalizations.of(context).weeklySetsNoMuscles),
+      );
     }
 
     return ListView.separated(
@@ -497,7 +504,7 @@ class _SetOverviewRow extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Text(
-                _setUnitsLabel(count),
+                _setUnitsLabel(AppLocalizations.of(context), count),
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w900,
                 ),
@@ -563,22 +570,24 @@ _StatusTint _tintForBoundaryStatus(ThemeData theme, _BoundaryStatus status) {
   );
 }
 
-String _setUnitsLabel(double count) {
+String _setUnitsLabel(AppLocalizations strings, double count) {
   final rounded = count.roundToDouble();
   final value =
       (count - rounded).abs() < 0.05
           ? rounded.toInt().toString()
           : count.toStringAsFixed(1);
-  return value == '1' ? '1 set' : '$value sets';
+  return strings.weeklySetsCount(value);
 }
 
-String _durationLabel(int seconds) {
+String _durationLabel(AppLocalizations strings, int seconds) {
   final duration = Duration(seconds: seconds);
   final hours = duration.inHours;
   final minutes = duration.inMinutes.remainder(60);
-  if (hours > 0 && minutes > 0) return '${hours}h ${minutes}m';
-  if (hours > 0) return '${hours}h';
-  return '${duration.inMinutes}m';
+  if (hours > 0 && minutes > 0) {
+    return strings.durationHoursMinutes(hours, minutes);
+  }
+  if (hours > 0) return strings.durationHours(hours);
+  return strings.durationMinutes(duration.inMinutes);
 }
 
 const _emptyWeeklyData = _WeeklySetOverviewData(

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/models.dart';
+import '../l10n/generated/app_localizations.dart';
 import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
 import '../theme/theme_extensions.dart';
@@ -90,7 +91,7 @@ class _HistoryTabData {
 
 class HistorySummaryWidgetState extends State<HistorySummaryWidget>
     with AutomaticKeepAliveClientMixin<HistorySummaryWidget> {
-  static const _tabLabels = ['1W', '1M', '3M', '6M', '1Y', 'All'];
+  static const _tabLabels = ['1W', '1M', '3M', '6M', '1Y'];
   static const _durations = [7, 30, 90, 180, 365];
 
   late Future<void> _loadFuture;
@@ -116,10 +117,10 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
   void _reloadData() {
     _loadGeneration++;
     _tabFutures = List<Future<_HistoryTabData>?>.filled(
-      _tabLabels.length,
+      _tabLabels.length + 1,
       null,
     );
-    _tabData = List<_HistoryTabData?>.filled(_tabLabels.length, null);
+    _tabData = List<_HistoryTabData?>.filled(_tabLabels.length + 1, null);
     _loadFuture = _ensureTabLoaded(_selectedIndex);
   }
 
@@ -143,7 +144,7 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
   }
 
   Future<_HistoryTabData> _loadTab(int index) async {
-    final repo = AppRepository();
+    final repo = context.read<AppRepository>();
     final now = DateTime.now();
     final start = _startForTab(index, now);
     final results = await Future.wait([
@@ -180,6 +181,8 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
     super.build(context);
     final theme = Theme.of(context);
     final colors = context.colors;
+    final strings = AppLocalizations.of(context);
+    final tabLabels = [..._tabLabels, strings.historySummaryAll];
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     return FutureBuilder<void>(
       future: _loadFuture,
@@ -196,9 +199,9 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
           );
         }
         if (snap.hasError && _tabData[_selectedIndex] == null) {
-          return const Padding(
-            padding: EdgeInsets.all(16),
-            child: Center(child: Text('Error loading history')),
+          return Padding(
+            padding: const EdgeInsets.all(16),
+            child: Center(child: Text(strings.historySummaryLoadFailed)),
           );
         }
 
@@ -216,7 +219,7 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
-                    children: List.generate(_tabLabels.length, (i) {
+                    children: List.generate(tabLabels.length, (i) {
                       final isSelected = i == _selectedIndex;
                       return Expanded(
                         child: GestureDetector(
@@ -236,7 +239,7 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
                             ),
                             alignment: Alignment.center,
                             child: Text(
-                              _tabLabels[i],
+                              tabLabels[i],
                               style: TextStyle(
                                 color:
                                     isSelected
@@ -315,18 +318,23 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
                   children: [
                     InfoCard(
                       value: data.workoutCount.toString(),
-                      label: 'Workouts',
+                      label:
+                          AppLocalizations.of(context).historySummaryWorkouts,
                     ),
                     InfoCard(
                       value: _durationLabel(data.totalDurationSeconds),
-                      label: 'Total Time',
+                      label:
+                          AppLocalizations.of(context).historySummaryTotalTime,
                     ),
                     InfoCard(
                       value: WeightUnitFormatter.formatVolume(
                         data.totalVolume,
                         weightUnit,
                       ),
-                      label: 'Total Volume',
+                      label:
+                          AppLocalizations.of(
+                            context,
+                          ).historySummaryTotalVolume,
                     ),
                   ],
                 ),
@@ -345,7 +353,7 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
         bottomLeft: Radius.circular(8),
       );
     }
-    if (index == _tabLabels.length - 1) {
+    if (index == _tabLabels.length) {
       return const BorderRadius.only(
         topRight: Radius.circular(8),
         bottomRight: Radius.circular(8),
@@ -357,6 +365,6 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
   String _durationLabel(int totalSeconds) {
     final hours = totalSeconds ~/ 3600;
     final mins = (totalSeconds % 3600) ~/ 60;
-    return '${hours}h ${mins}m';
+    return AppLocalizations.of(context).historySummaryDuration(hours, mins);
   }
 }

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../models/models.dart';
 import '../repositories/app_repository.dart';
@@ -46,13 +47,12 @@ class SharedEntityMediaThumbnail extends StatefulWidget {
 
 class _SharedEntityMediaThumbnailState
     extends State<SharedEntityMediaThumbnail> {
-  late final AppRepository _repo;
+  AppRepository get _repo => context.read<AppRepository>();
   late Future<_SharedThumbnailData?> _thumbnailFuture;
 
   @override
   void initState() {
     super.initState();
-    _repo = AppRepository();
     _thumbnailFuture = _loadThumbnail();
   }
 

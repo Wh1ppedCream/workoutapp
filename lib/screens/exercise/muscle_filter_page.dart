@@ -3,7 +3,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../../l10n/generated/app_localizations.dart';
 import '../../models/models.dart';
 import '../../repositories/app_repository.dart';
 import '../../services/tutorial_state_store.dart';
@@ -25,7 +27,7 @@ class MuscleFilterPage extends StatefulWidget {
 }
 
 class _MuscleFilterPageState extends State<MuscleFilterPage> {
-  final _repo = AppRepository();
+  AppRepository get _repo => context.read<AppRepository>();
   final _searchTutorialKey = GlobalKey(debugLabel: 'target_anatomy_search');
   final _listTutorialKey = GlobalKey(debugLabel: 'target_anatomy_list');
   late Future<_FilterData> _dataFuture;
@@ -83,6 +85,7 @@ class _MuscleFilterPageState extends State<MuscleFilterPage> {
 
   Future<void> _showTutorial() async {
     try {
+      final strings = AppLocalizations.of(context);
       await showGuidedTutorialOnce(
         context,
         tutorialId: TutorialIds.targetAnatomy,
@@ -90,16 +93,14 @@ class _MuscleFilterPageState extends State<MuscleFilterPage> {
           GuidedTutorialStep(
             targetKey: _searchTutorialKey,
             icon: Icons.search,
-            title: 'Search anatomy',
-            body:
-                'Search for a bodypart or a specific muscle when you want targeted exercise options.',
+            title: strings.anatomyTutorialSearchTitle,
+            body: strings.anatomyTutorialSearchBody,
           ),
           GuidedTutorialStep(
             targetKey: _listTutorialKey,
             icon: Icons.accessibility_new,
-            title: 'Bodyparts and muscles',
-            body:
-                'Switch tabs, then tap any row to see linked exercises, recent set totals, and recommended set boundaries.',
+            title: strings.anatomyTutorialListsTitle,
+            body: strings.anatomyTutorialListsBody,
           ),
         ],
       );
@@ -110,14 +111,18 @@ class _MuscleFilterPageState extends State<MuscleFilterPage> {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     return DefaultTabController(
       length: 2,
       initialIndex: widget.initialTabIndex <= 0 ? 0 : 1,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Exercise Focus Library'),
-          bottom: const TabBar(
-            tabs: [Tab(text: 'Bodyparts'), Tab(text: 'Muscles')],
+          title: Text(strings.anatomyLibraryTitle),
+          bottom: TabBar(
+            tabs: [
+              Tab(text: strings.anatomyBodyParts),
+              Tab(text: strings.anatomyMuscles),
+            ],
           ),
         ),
         body: FutureBuilder<_FilterData>(
@@ -127,9 +132,7 @@ class _MuscleFilterPageState extends State<MuscleFilterPage> {
               return const Center(child: CircularProgressIndicator());
             }
             if (snapshot.hasError) {
-              return Center(
-                child: Text('Unable to load filters: ${snapshot.error}'),
-              );
+              return Center(child: Text(strings.anatomyLoadFailed));
             }
 
             final data = snapshot.data!;
@@ -162,10 +165,10 @@ class _MuscleFilterPageState extends State<MuscleFilterPage> {
                   child: KeyedSubtree(
                     key: _searchTutorialKey,
                     child: TextField(
-                      decoration: const InputDecoration(
-                        labelText: 'Search bodyparts or muscles',
-                        prefixIcon: Icon(Icons.search),
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        labelText: strings.anatomySearchLabel,
+                        prefixIcon: const Icon(Icons.search),
+                        border: const OutlineInputBorder(),
                       ),
                       onChanged: (value) => setState(() => _query = value),
                     ),
@@ -177,7 +180,7 @@ class _MuscleFilterPageState extends State<MuscleFilterPage> {
                     child: TabBarView(
                       children: [
                         _FocusList<BodyPart>(
-                          emptyText: 'No bodyparts match your search.',
+                          emptyText: strings.anatomyNoBodyParts,
                           items: bodyParts,
                           titleFor: (part) => part.name,
                           subtitleFor: (part) {
@@ -213,7 +216,7 @@ class _MuscleFilterPageState extends State<MuscleFilterPage> {
                           },
                         ),
                         _FocusList<Muscle>(
-                          emptyText: 'No muscles match your search.',
+                          emptyText: strings.anatomyNoMuscles,
                           items: muscles,
                           titleFor: (muscle) => muscle.name,
                           subtitleFor: (muscle) {
@@ -262,8 +265,7 @@ class _MuscleFilterPageState extends State<MuscleFilterPage> {
   }
 
   String _exerciseCountLabel(int count) {
-    if (count == 1) return '1 exercise';
-    return '$count exercises';
+    return AppLocalizations.of(context).anatomyExerciseCount(count);
   }
 }
 

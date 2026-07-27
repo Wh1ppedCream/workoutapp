@@ -2,7 +2,9 @@
 // Advanced editor for shared exercise definition data.
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../models/models.dart';
 import '../../../repositories/app_repository.dart';
 import '../../../widgets/settings_tiles.dart';
@@ -32,7 +34,7 @@ class _CustomExerciseDraft {
 
 class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
     with SingleTickerProviderStateMixin {
-  final _repo = AppRepository();
+  AppRepository get _repo => context.read<AppRepository>();
   late final TabController _tabController;
   int _activeTabIndex = 0;
   bool _isEditing = false;
@@ -76,6 +78,8 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
   late final TextEditingController _nameController;
   late final TextEditingController _ratingController;
   int? _primaryEquipmentId;
+
+  AppLocalizations get _strings => AppLocalizations.of(context);
 
   @override
   void initState() {
@@ -383,18 +387,16 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
       context: context,
       builder:
           (context) => AlertDialog(
-            title: const Text('Discard changes?'),
-            content: const Text(
-              'Your edits are not saved yet. You can keep editing or discard them.',
-            ),
+            title: Text(_strings.exerciseEditorDiscardTitle),
+            content: Text(_strings.exerciseEditorDiscardBody),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Keep editing'),
+                child: Text(_strings.exerciseEditorKeepEditing),
               ),
               FilledButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Discard'),
+                child: Text(_strings.exerciseEditorDiscard),
               ),
             ],
           ),
@@ -422,7 +424,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
       context: context,
       builder:
           (ctx) => AlertDialog(
-            title: const Text('Add Associated Bodyparts'),
+            title: Text(_strings.exerciseEditorAddBodyparts),
             content: SizedBox(
               width: double.maxFinite,
               child: StatefulBuilder(
@@ -453,11 +455,11 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('Cancel'),
+                child: Text(_strings.commonCancel),
               ),
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(selectedIds),
-                child: const Text('Add'),
+                child: Text(_strings.commonAdd),
               ),
             ],
           ),
@@ -493,7 +495,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
       context: context,
       builder:
           (ctx) => AlertDialog(
-            title: const Text('Add Associated Muscles'),
+            title: Text(_strings.exerciseEditorAddMuscles),
             content: SizedBox(
               width: double.maxFinite,
               // need StatefulBuilder to update the checkboxes
@@ -525,11 +527,11 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
             ),
             actions: [
               TextButton(
-                child: const Text('Cancel'),
+                child: Text(_strings.commonCancel),
                 onPressed: () => Navigator.of(ctx).pop(),
               ),
               TextButton(
-                child: const Text('Add'),
+                child: Text(_strings.commonAdd),
                 onPressed: () => Navigator.of(ctx).pop(selectedIds),
               ),
             ],
@@ -564,7 +566,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
       context: context,
       builder:
           (ctx) => AlertDialog(
-            title: const Text('Add Equipment'),
+            title: Text(_strings.exerciseEditorAddEquipment),
             content: SizedBox(
               width: double.maxFinite,
               child: StatefulBuilder(
@@ -595,11 +597,11 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('Cancel'),
+                child: Text(_strings.commonCancel),
               ),
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(selectedIds),
-                child: const Text('Add'),
+                child: Text(_strings.commonAdd),
               ),
             ],
           ),
@@ -631,11 +633,11 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
               children: [
                 const Icon(Icons.error_outline, size: 40),
                 const SizedBox(height: 12),
-                const Text('Exercise definitions could not load.'),
+                Text(_strings.exerciseEditorLoadFailed),
                 const SizedBox(height: 12),
                 FilledButton(
                   onPressed: _loadExerciseList,
-                  child: const Text('Try again'),
+                  child: Text(_strings.commonRetry),
                 ),
               ],
             ),
@@ -655,14 +657,14 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
       child: Scaffold(
         appBar: AppBar(
           leading: IconButton(
-            tooltip: 'Back',
+            tooltip: _strings.commonBack,
             onPressed: _handleBack,
             icon: const Icon(Icons.arrow_back),
           ),
           title: const SizedBox.shrink(),
           actions: [
             IconButton(
-              tooltip: 'Choose exercise',
+              tooltip: _strings.exerciseEditorChoose,
               icon: const Icon(Icons.search),
               onPressed: _isEditing || _isSaving ? null : _openCatalogPicker,
             ),
@@ -674,10 +676,10 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
                       : (_selectedDef != null && !_isEditing)
                       ? _startEditing
                       : null,
-              tooltip: 'Edit definition',
+              tooltip: _strings.exerciseEditorEdit,
             ),
             IconButton(
-              tooltip: 'Create custom exercise',
+              tooltip: _strings.exerciseEditorCreate,
               icon: const Icon(Icons.add_circle_outline),
               onPressed: _isEditing || _isSaving ? null : _createCustomExercise,
             ),
@@ -692,7 +694,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
                       Expanded(
                         child: OutlinedButton(
                           onPressed: _isSaving ? null : _cancelEditing,
-                          child: const Text('Cancel'),
+                          child: Text(_strings.commonCancel),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -700,7 +702,11 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
                         child: FilledButton.icon(
                           onPressed: _isSaving ? null : _saveDefinition,
                           icon: const Icon(Icons.save_outlined),
-                          label: Text(_isSaving ? 'Saving' : 'Save changes'),
+                          label: Text(
+                            _isSaving
+                                ? _strings.exerciseEditorSaving
+                                : _strings.exerciseEditorSaveChanges,
+                          ),
                         ),
                       ),
                     ],
@@ -737,11 +743,11 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
             labelColor: SettingsAccent.advanced,
             unselectedLabelColor:
                 Theme.of(context).colorScheme.onSurfaceVariant,
-            tabs: const [
-              Tab(text: 'Muscles'),
-              Tab(text: 'Bodyparts'),
-              Tab(text: 'Equipment'),
-              Tab(text: 'Guide'),
+            tabs: [
+              Tab(text: _strings.exerciseEditorMuscles),
+              Tab(text: _strings.exerciseEditorBodyparts),
+              Tab(text: _strings.exerciseEditorEquipment),
+              Tab(text: _strings.exerciseEditorGuide),
             ],
           ),
         ),
@@ -802,22 +808,20 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
               final usableHeight =
                   mediaQuery.size.height - mediaQuery.viewInsets.bottom;
               return AlertDialog(
-                title: const Text('Create custom exercise'),
+                title: Text(_strings.exerciseEditorCreateCustomTitle),
                 content: ConstrainedBox(
                   constraints: BoxConstraints(maxHeight: usableHeight * 0.48),
                   child: SingleChildScrollView(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text(
-                          'Create a custom catalog definition, then add its target anatomy and guidance before saving.',
-                        ),
+                        Text(_strings.exerciseEditorCreateCustomBody),
                         const SizedBox(height: 14),
                         TextFormField(
                           textCapitalization: TextCapitalization.words,
                           autofocus: true,
-                          decoration: const InputDecoration(
-                            labelText: 'Exercise name',
+                          decoration: InputDecoration(
+                            labelText: _strings.exerciseEditorExerciseName,
                           ),
                           onChanged: (value) => exerciseName = value,
                         ),
@@ -825,13 +829,15 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
                         DropdownButtonFormField<int>(
                           value: selectedEquipmentId,
                           isExpanded: true,
-                          decoration: const InputDecoration(
-                            labelText: 'Equipment',
+                          decoration: InputDecoration(
+                            labelText: _strings.exerciseEditorEquipment,
                           ),
                           items: [
-                            const DropdownMenuItem(
+                            DropdownMenuItem(
                               value: 0,
-                              child: Text('No equipment'),
+                              child: Text(
+                                _strings.exerciseEditorNoEquipmentChoice,
+                              ),
                             ),
                             ..._allEquipment.map(
                               (equipment) => DropdownMenuItem(
@@ -852,7 +858,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Cancel'),
+                    child: Text(_strings.commonCancel),
                   ),
                   FilledButton(
                     onPressed: () {
@@ -868,7 +874,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
                         ),
                       );
                     },
-                    child: const Text('Create'),
+                    child: Text(_strings.healthCreate),
                   ),
                 ],
               );
@@ -898,9 +904,9 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
         _isEditing = true;
         _hasPendingChanges = false;
       });
-      _showMessage('Exercise opened. Add its target anatomy, then save.');
+      _showMessage(_strings.exerciseEditorOpenedMessage);
     } catch (error) {
-      _showMessage('Could not create the custom exercise. $error');
+      _showMessage(_strings.exerciseEditorCreateFailed(error.toString()));
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -919,24 +925,23 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
       children: [
         _buildTitleCard(),
         const SizedBox(height: 16),
-        const SettingsInfoCard(
+        SettingsInfoCard(
           icon: Icons.info_outline,
-          title: 'What this changes',
-          body:
-              'Use this advanced editor to update an exercise name, target anatomy, equipment, form guidance, rating, and reference media. Exact per-set credit is managed separately so it stays consistent across the app.',
+          title: _strings.exerciseEditorWhatChangesTitle,
+          body: _strings.exerciseEditorWhatChangesBody,
           iconColor: SettingsAccent.advanced,
         ),
         const SizedBox(height: 16),
         FilledButton.icon(
           onPressed: _isSaving ? null : _openCatalogPicker,
           icon: const Icon(Icons.search),
-          label: const Text('Choose an exercise from the catalog'),
+          label: Text(_strings.exerciseEditorChooseCatalog),
         ),
         const SizedBox(height: 10),
         OutlinedButton.icon(
           onPressed: _isSaving ? null : _createCustomExercise,
           icon: const Icon(Icons.add),
-          label: const Text('Create a custom exercise'),
+          label: Text(_strings.exerciseEditorCreateCustomTitle),
         ),
       ],
     );
@@ -962,7 +967,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
         ),
       ),
       child: Text(
-        'Exercise Editor',
+        _strings.exerciseEditorTitle,
         style: theme.textTheme.headlineSmall?.copyWith(
           fontWeight: FontWeight.w900,
         ),
@@ -999,8 +1004,8 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
                           child: TextField(
                             controller: _nameController,
                             textCapitalization: TextCapitalization.words,
-                            decoration: const InputDecoration(
-                              labelText: 'Exercise name',
+                            decoration: InputDecoration(
+                              labelText: _strings.exerciseEditorExerciseName,
                               isDense: true,
                             ),
                             onChanged: (_) => _markChanged(),
@@ -1012,8 +1017,8 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
                           child: TextField(
                             controller: _ratingController,
                             keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                              labelText: 'Rating',
+                            decoration: InputDecoration(
+                              labelText: _strings.exerciseEditorRating,
                               suffixText: '/100',
                               isDense: true,
                             ),
@@ -1121,9 +1126,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
     final definition = _selectedDef;
     if (definition == null) return;
     if (_isEditing) {
-      _showMessage(
-        'Save or cancel definition changes before editing set credit.',
-      );
+      _showMessage(_strings.exerciseEditorSaveBeforeAllocation);
       return;
     }
     await Navigator.of(context).push(
@@ -1140,16 +1143,16 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
       context: context,
       builder:
           (context) => AlertDialog(
-            title: Text('Remove $itemType?'),
-            content: Text('Remove "$itemName" from this exercise definition?'),
+            title: Text(_strings.exerciseEditorRemoveItemTitle(itemType)),
+            content: Text(_strings.exerciseEditorRemoveItemBody(itemName)),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Keep'),
+                child: Text(_strings.exerciseEditorKeep),
               ),
               FilledButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Remove'),
+                child: Text(_strings.commonRemove),
               ),
             ],
           ),
@@ -1161,31 +1164,29 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SettingsInfoCard(
+        SettingsInfoCard(
           icon: Icons.fitness_center,
-          title: 'Target muscle order',
-          body:
-              'Order muscles by how strongly the exercise targets them. This helps Tonos estimate anatomy focus and make better exercise recommendations.',
+          title: _strings.exerciseEditorMuscleOrderTitle,
+          body: _strings.exerciseEditorMuscleOrderBody,
           iconColor: SettingsAccent.training,
         ),
         const SizedBox(height: 14),
         _buildAllocationShortcut(
-          title: 'Exact set credit',
-          body:
-              'Change the precise credit one set gives each muscle or body part in Exercise Set Allocation.',
+          title: _strings.exerciseEditorExactSetCredit,
+          body: _strings.exerciseEditorExactSetCreditBody,
         ),
         if (_isEditing) ...[
           const SizedBox(height: 12),
           SettingsSection(
-            title: 'Set-credit scaling',
-            subtitle: 'Choose whether this exercise rating scales set credit.',
+            title: _strings.exerciseEditorSetCreditScaling,
+            subtitle: _strings.exerciseEditorSetCreditScalingBody,
             accentColor: SettingsAccent.advanced,
             children: [
               SettingsSwitchTile(
                 icon: Icons.tune,
                 iconColor: SettingsAccent.advanced,
-                title: 'Scale credit by rating',
-                subtitle: 'Applies the exercise rating to analytic set totals.',
+                title: _strings.exerciseEditorScaleCreditByRating,
+                subtitle: _strings.exerciseEditorScaleCreditByRatingBody,
                 value: _multiplyByRating,
                 onChanged: (value) {
                   setState(() {
@@ -1199,17 +1200,19 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
         ],
         const SizedBox(height: 16),
         SettingsSection(
-          title: 'Target muscles',
+          title: _strings.exerciseEditorTargetMuscles,
           subtitle:
               _isEditing
-                  ? 'Use arrows to order muscles by target emphasis.'
-                  : '${_muscleEntries.length} muscles currently associated.',
+                  ? _strings.exerciseEditorOrderMusclesHint
+                  : _strings.exerciseEditorMusclesAssociated(
+                    _muscleEntries.length,
+                  ),
           accentColor: SettingsAccent.training,
           children: [
             if (_muscleEntries.isEmpty)
-              const Padding(
+              Padding(
                 padding: EdgeInsets.all(18),
-                child: Text('No target muscles are associated yet.'),
+                child: Text(_strings.exerciseEditorNoTargetMuscles),
               )
             else
               for (var index = 0; index < _muscleEntries.length; index++)
@@ -1220,7 +1223,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
                 child: OutlinedButton.icon(
                   onPressed: _openAddMuscleDialog,
                   icon: const Icon(Icons.add),
-                  label: const Text('Add target muscles'),
+                  label: Text(_strings.exerciseEditorAddTargetMuscles),
                 ),
               ),
           ],
@@ -1255,7 +1258,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
-                    tooltip: 'Move up',
+                    tooltip: _strings.exerciseEditorMoveUp,
                     onPressed:
                         index == 0
                             ? null
@@ -1268,7 +1271,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
                     icon: const Icon(Icons.keyboard_arrow_up),
                   ),
                   IconButton(
-                    tooltip: 'Move down',
+                    tooltip: _strings.exerciseEditorMoveDown,
                     onPressed:
                         index == _muscleEntries.length - 1
                             ? null
@@ -1281,9 +1284,14 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
                     icon: const Icon(Icons.keyboard_arrow_down),
                   ),
                   IconButton(
-                    tooltip: 'Remove muscle',
+                    tooltip: _strings.exerciseEditorRemoveMuscle,
                     onPressed: () async {
-                      if (!await _confirmRemove(name, 'muscle')) return;
+                      if (!await _confirmRemove(
+                        name,
+                        _strings.exerciseEditorMuscleItem,
+                      )) {
+                        return;
+                      }
                       setState(() {
                         _muscleEntries.removeAt(index);
                         _hasPendingChanges = true;
@@ -1301,32 +1309,32 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SettingsInfoCard(
+        SettingsInfoCard(
           icon: Icons.accessibility_new,
-          title: 'Associated body parts',
-          body:
-              'These broad areas drive body heatmaps, weekly coverage, and equipment-aware workout recommendations.',
+          title: _strings.exerciseEditorAssociatedBodyparts,
+          body: _strings.exerciseEditorAssociatedBodypartsBody,
           iconColor: SettingsAccent.training,
         ),
         const SizedBox(height: 14),
         _buildAllocationShortcut(
-          title: 'Exact body-part credit',
-          body:
-              'Use Exercise Set Allocation when a set should count as a specific partial amount for a body part.',
+          title: _strings.exerciseEditorExactBodypartCredit,
+          body: _strings.exerciseEditorExactBodypartCreditBody,
         ),
         const SizedBox(height: 16),
         SettingsSection(
-          title: 'Associated body parts',
+          title: _strings.exerciseEditorAssociatedBodyparts,
           subtitle:
               _isEditing
-                  ? 'Add every broad body area this exercise trains.'
-                  : '${_bodyManualEntries.length} body parts currently associated.',
+                  ? _strings.exerciseEditorBodypartsHint
+                  : _strings.exerciseEditorBodypartsAssociated(
+                    _bodyManualEntries.length,
+                  ),
           accentColor: SettingsAccent.training,
           children: [
             if (_bodyManualEntries.isEmpty)
-              const Padding(
+              Padding(
                 padding: EdgeInsets.all(18),
-                child: Text('No body parts are associated yet.'),
+                child: Text(_strings.exerciseEditorNoBodyparts),
               )
             else
               for (var index = 0; index < _bodyManualEntries.length; index++)
@@ -1337,7 +1345,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
                 child: OutlinedButton.icon(
                   onPressed: _openAddBodypartDialog,
                   icon: const Icon(Icons.add),
-                  label: const Text('Add body parts'),
+                  label: Text(_strings.exerciseEditorAddBodyparts),
                 ),
               ),
           ],
@@ -1345,8 +1353,8 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
         if (_bodyAutoEntries.isNotEmpty) ...[
           const SizedBox(height: 16),
           SettingsSection(
-            title: 'Automatic preview',
-            subtitle: 'Current focus derived from the target-muscle structure.',
+            title: _strings.exerciseEditorAutomaticPreview,
+            subtitle: _strings.exerciseEditorAutomaticPreviewBody,
             accentColor: SettingsAccent.progress,
             children: [
               for (final entry in _bodyAutoEntries)
@@ -1388,9 +1396,14 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
           !_isEditing
               ? null
               : IconButton(
-                tooltip: 'Remove body part',
+                tooltip: _strings.exerciseEditorRemoveBodypart,
                 onPressed: () async {
-                  if (!await _confirmRemove(name, 'body part')) return;
+                  if (!await _confirmRemove(
+                    name,
+                    _strings.exerciseEditorBodypartItem,
+                  )) {
+                    return;
+                  }
                   setState(() {
                     _bodyManualEntries.removeAt(index);
                     _hasPendingChanges = true;
@@ -1476,26 +1489,27 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SettingsInfoCard(
+        SettingsInfoCard(
           icon: Icons.precision_manufacturing_outlined,
-          title: 'Available equipment',
-          body:
-              'Associated equipment determines which profiles can use this exercise and which replacements Tonos can recommend.',
+          title: _strings.exerciseEditorAvailableEquipment,
+          body: _strings.exerciseEditorAvailableEquipmentBody,
           iconColor: SettingsAccent.training,
         ),
         const SizedBox(height: 16),
         SettingsSection(
-          title: 'Equipment',
+          title: _strings.exerciseEditorEquipment,
           subtitle:
               _isEditing
-                  ? 'Add every item needed to perform this exercise.'
-                  : '${_equipmentEntries.length} items associated.',
+                  ? _strings.exerciseEditorEquipmentHint
+                  : _strings.exerciseEditorEquipmentAssociated(
+                    _equipmentEntries.length,
+                  ),
           accentColor: SettingsAccent.training,
           children: [
             if (_equipmentEntries.isEmpty)
-              const Padding(
+              Padding(
                 padding: EdgeInsets.all(18),
-                child: Text('No equipment is associated yet.'),
+                child: Text(_strings.exerciseEditorNoEquipment),
               )
             else
               for (var index = 0; index < _equipmentEntries.length; index++)
@@ -1506,7 +1520,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
                 child: OutlinedButton.icon(
                   onPressed: _openAddEquipmentDialog,
                   icon: const Icon(Icons.add),
-                  label: const Text('Add equipment'),
+                  label: Text(_strings.exerciseEditorAddEquipment),
                 ),
               ),
           ],
@@ -1538,9 +1552,14 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
           !_isEditing
               ? null
               : IconButton(
-                tooltip: 'Remove equipment',
+                tooltip: _strings.exerciseEditorRemoveEquipment,
                 onPressed: () async {
-                  if (!await _confirmRemove(equipmentName, 'equipment')) return;
+                  if (!await _confirmRemove(
+                    equipmentName,
+                    _strings.exerciseEditorEquipmentItem,
+                  )) {
+                    return;
+                  }
                   setState(() {
                     _equipmentEntries.removeAt(index);
                     if (_primaryEquipmentId == equipmentId) {
@@ -1596,38 +1615,53 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
         return StatefulBuilder(
           builder: (ctx2, setDialogState) {
             return AlertDialog(
-              title: Text(initial == null ? 'Add Media' : 'Edit Media'),
+              title: Text(
+                initial == null
+                    ? _strings.exerciseEditorAddMedia
+                    : _strings.exerciseEditorEditMedia,
+              ),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     DropdownButtonFormField<String>(
                       value: mediaType,
-                      items: const [
-                        DropdownMenuItem(value: 'image', child: Text('Image')),
-                        DropdownMenuItem(value: 'video', child: Text('Video')),
-                        DropdownMenuItem(value: 'link', child: Text('Link')),
+                      items: [
+                        DropdownMenuItem(
+                          value: 'image',
+                          child: Text(_strings.exerciseEditorMediaImage),
+                        ),
+                        DropdownMenuItem(
+                          value: 'video',
+                          child: Text(_strings.exerciseEditorMediaVideo),
+                        ),
+                        DropdownMenuItem(
+                          value: 'link',
+                          child: Text(_strings.exerciseEditorMediaLink),
+                        ),
                       ],
                       onChanged: (value) {
                         if (value == null) return;
                         setDialogState(() => mediaType = value);
                       },
-                      decoration: const InputDecoration(labelText: 'Type'),
+                      decoration: InputDecoration(
+                        labelText: _strings.exerciseEditorMediaType,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
                       initialValue: titleValue,
-                      decoration: const InputDecoration(
-                        labelText: 'Title',
-                        hintText: 'Optional display label',
+                      decoration: InputDecoration(
+                        labelText: _strings.exerciseEditorMediaTitle,
+                        hintText: _strings.exerciseEditorMediaTitleHint,
                       ),
                       onChanged: (value) => titleValue = value,
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
                       initialValue: remoteUrlValue,
-                      decoration: const InputDecoration(
-                        labelText: 'Remote URL',
+                      decoration: InputDecoration(
+                        labelText: _strings.exerciseEditorMediaRemoteUrl,
                         hintText: 'https://...',
                       ),
                       onChanged: (value) => remoteUrlValue = value,
@@ -1635,9 +1669,9 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
                     const SizedBox(height: 12),
                     TextFormField(
                       initialValue: thumbnailUrlValue,
-                      decoration: const InputDecoration(
-                        labelText: 'Thumbnail URL',
-                        hintText: 'Optional image preview URL',
+                      decoration: InputDecoration(
+                        labelText: _strings.exerciseEditorMediaThumbnailUrl,
+                        hintText: _strings.exerciseEditorMediaThumbnailHint,
                       ),
                       onChanged: (value) => thumbnailUrlValue = value,
                     ),
@@ -1647,7 +1681,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(ctx).pop(),
-                  child: const Text('Cancel'),
+                  child: Text(_strings.commonCancel),
                 ),
                 TextButton(
                   onPressed: () {
@@ -1668,7 +1702,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
                       ),
                     );
                   },
-                  child: const Text('Save'),
+                  child: Text(_strings.commonSave),
                 ),
               ],
             );
@@ -1684,9 +1718,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
     if (_selectedDef == null) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Select an existing exercise before attaching media.'),
-        ),
+        SnackBar(content: Text(_strings.exerciseEditorSelectBeforeMedia)),
       );
       return;
     }
@@ -1722,59 +1754,57 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SettingsInfoCard(
+        SettingsInfoCard(
           icon: Icons.menu_book_outlined,
-          title: 'Form guide',
-          body:
-              'These notes appear in the exercise details sheet to help people set up, perform, and understand the movement safely.',
+          title: _strings.exerciseEditorFormGuide,
+          body: _strings.exerciseEditorFormGuideBody,
           iconColor: SettingsAccent.advanced,
         ),
         const SizedBox(height: 16),
         SettingsSection(
-          title: 'Guidance',
+          title: _strings.exerciseEditorGuidance,
           subtitle:
               _isEditing
-                  ? 'Write clear, practical cues. Changes are staged until saved.'
-                  : 'The current exercise instructions and cues.',
+                  ? _strings.exerciseEditorGuidanceEditing
+                  : _strings.exerciseEditorGuidanceReadOnly,
           accentColor: SettingsAccent.advanced,
           children: [
             _buildGuideField(
               controller: _setupController,
-              label: 'Set up',
-              hint: 'Starting position, equipment setup, and safety notes.',
+              label: _strings.exerciseEditorSetUp,
+              hint: _strings.exerciseEditorSetUpHint,
             ),
             _buildGuideField(
               controller: _executionController,
-              label: 'How to perform',
-              hint: 'The key movement steps and range of motion.',
+              label: _strings.exerciseEditorHowToPerform,
+              hint: _strings.exerciseEditorHowToPerformHint,
             ),
             _buildGuideField(
               controller: _tipsController,
-              label: 'Coaching tips',
-              hint: 'Helpful cues, common mistakes, and variations.',
+              label: _strings.exerciseEditorCoachingTips,
+              hint: _strings.exerciseEditorCoachingTipsHint,
             ),
           ],
         ),
-        const SettingsInfoCard(
+        SettingsInfoCard(
           icon: Icons.cloud_sync_outlined,
-          title: 'Reference media',
-          body:
-              'Use media links for private reference material. Managed catalog media can be refreshed by the content sync pipeline.',
+          title: _strings.exerciseEditorReferenceMedia,
+          body: _strings.exerciseEditorReferenceMediaBody,
           iconColor: SettingsAccent.data,
         ),
         const SizedBox(height: 16),
         SettingsSection(
-          title: 'Media links',
+          title: _strings.exerciseEditorMediaLinks,
           subtitle:
               _isEditing
-                  ? 'Add or update a remote image, video, or reference link.'
-                  : '${_mediaItems.length} media items currently linked.',
+                  ? _strings.exerciseEditorMediaLinksEditing
+                  : _strings.exerciseEditorMediaLinksCount(_mediaItems.length),
           accentColor: SettingsAccent.data,
           children: [
             if (_mediaItems.isEmpty)
-              const Padding(
-                padding: EdgeInsets.all(18),
-                child: Text('No reference media is linked yet.'),
+              Padding(
+                padding: const EdgeInsets.all(18),
+                child: Text(_strings.exerciseEditorNoReferenceMedia),
               )
             else
               for (var index = 0; index < _mediaItems.length; index++)
@@ -1785,7 +1815,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
                 child: OutlinedButton.icon(
                   onPressed: _openAddMediaDialog,
                   icon: const Icon(Icons.add),
-                  label: const Text('Add media link'),
+                  label: Text(_strings.exerciseEditorAddMediaLink),
                 ),
               ),
           ],
@@ -1819,15 +1849,19 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
       icon: _mediaIcon(item.mediaType),
       iconColor: SettingsAccent.data,
       title: _mediaLabel(item),
-      subtitle:
-          '${item.mediaType[0].toUpperCase()}${item.mediaType.substring(1)} reference',
+      subtitle: _strings.exerciseEditorMediaReference(
+        _localizedMediaType(item.mediaType),
+      ),
       onTap: _isEditing ? () => _editMediaItem(index) : null,
       trailing:
           _isEditing
               ? IconButton(
-                tooltip: 'Remove media',
+                tooltip: _strings.exerciseEditorRemoveMedia,
                 onPressed: () async {
-                  if (!await _confirmRemove(_mediaLabel(item), 'media link')) {
+                  if (!await _confirmRemove(
+                    _mediaLabel(item),
+                    _strings.exerciseEditorMediaLinkItem,
+                  )) {
                     return;
                   }
                   setState(() {
@@ -1842,6 +1876,17 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
                 style: Theme.of(context).textTheme.labelMedium,
               ),
     );
+  }
+
+  String _localizedMediaType(String mediaType) {
+    switch (mediaType) {
+      case 'image':
+        return _strings.exerciseEditorMediaImage;
+      case 'video':
+        return _strings.exerciseEditorMediaVideo;
+      default:
+        return _strings.exerciseEditorMediaLink;
+    }
   }
 
   // ignore: unused_element

@@ -2,6 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_flow_chart/flutter_flow_chart.dart';
+
+import '../l10n/generated/app_localizations.dart';
 import '../models/preset_models.dart';
 import '../theme/theme_extensions.dart';
 
@@ -62,6 +64,7 @@ class BranchControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     final cs = context.cs;
     final extras = context.colors;
     final dropdownBg = extras.dialogBackground ?? cs.surface;
@@ -79,7 +82,10 @@ class BranchControls extends StatelessWidget {
           child: DropdownButton<String>(
             dropdownColor: dropdownBg,
             isExpanded: true,
-            hint: Text('Branch From', style: TextStyle(color: textColor)),
+            hint: Text(
+              strings.flowBranchFrom,
+              style: TextStyle(color: textColor),
+            ),
             value: branchable.contains(selectedParent) ? selectedParent : null,
             items:
                 branchable.map((name) {
@@ -100,7 +106,7 @@ class BranchControls extends StatelessWidget {
               (selectedParent == null || existingSuccess >= 1)
                   ? null
                   : onAddSuccess,
-          child: const Text('+ Success'),
+          child: Text(strings.flowAddSuccess),
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
@@ -111,7 +117,7 @@ class BranchControls extends StatelessWidget {
               (selectedParent == null || existingFailure >= 1)
                   ? null
                   : onAddFailure,
-          child: const Text('+ Failure'),
+          child: Text(strings.flowAddFailure),
         ),
       ],
     );
@@ -151,6 +157,7 @@ class MethodControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     final cs = context.cs;
     final extras = context.colors;
     final dropdownBg = extras.dialogBackground ?? cs.surface;
@@ -168,7 +175,10 @@ class MethodControls extends StatelessWidget {
           child: DropdownButton<String>(
             dropdownColor: dropdownBg,
             isExpanded: true,
-            hint: Text('Select Node', style: TextStyle(color: textColor)),
+            hint: Text(
+              strings.flowSelectNode,
+              style: TextStyle(color: textColor),
+            ),
             value: methodTargets.contains(selectedNode) ? selectedNode : null,
             items:
                 methodTargets.map((name) {
@@ -185,7 +195,10 @@ class MethodControls extends StatelessWidget {
           child: DropdownButton<FlowMethod>(
             dropdownColor: dropdownBg,
             isExpanded: true,
-            hint: Text('Select Method', style: TextStyle(color: textColor)),
+            hint: Text(
+              strings.flowSelectMethod,
+              style: TextStyle(color: textColor),
+            ),
             value:
                 availableMethods.contains(selectedMethod)
                     ? selectedMethod
@@ -206,7 +219,7 @@ class MethodControls extends StatelessWidget {
             foregroundColor: btnText,
           ),
           onPressed: canAdd ? onAddMethod : null,
-          child: const Text('+ Method'),
+          child: Text(strings.flowAddMethod),
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
@@ -214,7 +227,7 @@ class MethodControls extends StatelessWidget {
             foregroundColor: btnText,
           ),
           onPressed: hasMethods ? onRemoveMethod : null,
-          child: const Text('- Method'),
+          child: Text(strings.flowRemoveMethod),
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
@@ -222,7 +235,7 @@ class MethodControls extends StatelessWidget {
             foregroundColor: btnText,
           ),
           onPressed: canDeleteNode ? onRemoveNode : null,
-          child: const Text('- Node'),
+          child: Text(strings.flowRemoveNode),
         ),
       ],
     );

@@ -3,9 +3,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../profile/settings/bodypart_ranking_screen.dart';
 import '../profile/settings/muscle_ranking_screen.dart';
 
+import '../../l10n/generated/app_localizations.dart';
 import '../../models/definition_models.dart';
 import '../../repositories/app_repository.dart';
 import '../../services/active_plan_store.dart';
@@ -44,7 +46,7 @@ class PresetGenerationQaScreen extends StatefulWidget {
 }
 
 class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
-  final AppRepository _repo = AppRepository();
+  AppRepository get _repo => context.read<AppRepository>();
   final _introTutorialKey = GlobalKey(debugLabel: 'generate_plans_intro');
   final _workoutSetupTutorialKey = GlobalKey(
     debugLabel: 'generate_plans_workout_setup',
@@ -134,6 +136,7 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
 
   Future<void> _showTutorial() async {
     try {
+      final strings = AppLocalizations.of(context);
       await showGuidedTutorialOnce(
         context,
         tutorialId: TutorialIds.generatePlans,
@@ -141,44 +144,38 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
           GuidedTutorialStep(
             targetKey: _introTutorialKey,
             icon: Icons.auto_awesome,
-            title: 'Build plans',
-            body:
-                'This page can create one plan or a balanced weekly bundle using your gym profile and training preferences.',
+            title: strings.generateTutorialIntroTitle,
+            body: strings.generateTutorialIntroBody,
           ),
           GuidedTutorialStep(
             targetKey: _workoutSetupTutorialKey,
             icon: Icons.timer_outlined,
-            title: 'Workout setup',
-            body:
-                'Set session length, how many plans to create, and the maximum sets allowed for each exercise.',
+            title: strings.generateWorkoutSetupTitle,
+            body: strings.generateTutorialSetupBody,
           ),
           GuidedTutorialStep(
             targetKey: _focusTutorialKey,
             icon: Icons.track_changes_outlined,
-            title: 'Training focus',
-            body:
-                'Prefer or avoid bodyparts here. The 7-day history toggle only biases generation when you want recent training considered.',
+            title: strings.generateTrainingFocusTitle,
+            body: strings.generateTutorialFocusBody,
           ),
           GuidedTutorialStep(
             targetKey: _repWeightTutorialKey,
             icon: Icons.fitness_center_outlined,
-            title: 'Reps and weights',
-            body:
-                'Choose pyramid, mixed, or consistent set patterns plus the target reps and starter weight intensity.',
+            title: strings.generateRepsWeightsTitle,
+            body: strings.generateTutorialRepsBody,
           ),
           GuidedTutorialStep(
             targetKey: _allocationTutorialKey,
             icon: Icons.tune_outlined,
-            title: 'Set allocation',
-            body:
-                'Pick whether sets are spread evenly or biased toward your bodypart or muscle rankings.',
+            title: strings.generateSetAllocationTitle,
+            body: strings.generateTutorialAllocationBody,
           ),
           GuidedTutorialStep(
             targetKey: _generateTutorialKey,
             icon: Icons.play_arrow,
-            title: 'Generate',
-            body:
-                'When everything looks right, generate the plan or plan bundle. New plans can be reviewed and edited afterward.',
+            title: strings.generateTutorialGenerateTitle,
+            body: strings.generateTutorialGenerateBody,
           ),
         ],
       );
@@ -210,10 +207,8 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
         targetRepCount == null ||
         targetRepCount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Please enter valid duration, plan count, set limit, and rep values.',
-          ),
+        SnackBar(
+          content: Text(AppLocalizations.of(context).generateValidationError),
         ),
       );
       return;
@@ -263,10 +258,8 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
       if (!mounted) return;
       if (generatedPlanIds.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'No viable plans could be generated with the current settings.',
-            ),
+          SnackBar(
+            content: Text(AppLocalizations.of(context).generateNoViablePlans),
           ),
         );
         return;
@@ -291,8 +284,9 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
       }
       if (!mounted) return;
       if (widget.onboardingMode) {
+        final activePlanStore = context.read<ActivePlanStore>();
         for (final presetId in generatedPlanIds) {
-          await ActivePlanStore.add(widget.profileId, presetId);
+          await activePlanStore.add(widget.profileId, presetId);
         }
         if (!mounted) return;
         setState(() => _onboardingGeneratedPlanIds.addAll(generatedPlanIds));
@@ -324,9 +318,11 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
     } catch (e, st) {
       debugPrint('Error generating preset: $e\n$st');
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to generate preset: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).generateFailed('$e')),
+        ),
+      );
     } finally {
       if (mounted) {
         setState(() => _isGenerating = false);
@@ -336,18 +332,24 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
 
   Future<void> _discardOnboardingPlans() async {
     if (_isDiscardingOnboardingPlans) return;
+    final activePlanStore = context.read<ActivePlanStore>();
+    final repository = _repo;
     setState(() => _isDiscardingOnboardingPlans = true);
     try {
       for (final presetId in List<int>.from(_onboardingGeneratedPlanIds)) {
-        await ActivePlanStore.remove(widget.profileId, presetId);
-        await _repo.deletePreset(presetId);
+        await activePlanStore.remove(widget.profileId, presetId);
+        await repository.deletePreset(presetId);
       }
       if (!mounted) return;
       Navigator.of(context).pop<List<int>>(const <int>[]);
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not discard generated plans: $error')),
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).generateDiscardFailed('$error'),
+          ),
+        ),
       );
       setState(() => _isDiscardingOnboardingPlans = false);
     }
@@ -367,6 +369,7 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
 
   Widget _buildIntroCard() {
     final scheme = Theme.of(context).colorScheme;
+    final strings = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -401,14 +404,14 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Build your plan week',
+                      strings.generateIntroTitle,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w900,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Create one plan or a balanced bundle using your profile, focus, and limits.',
+                      strings.generateIntroBody,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: scheme.onSurfaceVariant,
                       ),
@@ -426,22 +429,31 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
   }
 
   Widget _buildSummaryPills() {
+    final strings = AppLocalizations.of(context);
+    final planCount =
+        int.tryParse(_fieldValue(_weeklyFrequencyController, '1')) ?? 1;
     return Wrap(
       spacing: 8,
       runSpacing: 8,
       children: [
         _buildSummaryPill(
           icon: Icons.calendar_month_outlined,
-          text: '${_fieldValue(_weeklyFrequencyController, '1')} plan(s)',
+          text: strings.generatePlanCountPill(planCount),
         ),
         _buildSummaryPill(
           icon: Icons.timer_outlined,
-          text: '${_fieldValue(_sessionDurationController, '60')} min',
+          text: strings.generateDurationPill(
+            _fieldValue(_sessionDurationController, '60'),
+          ),
         ),
         _buildSummaryPill(
           icon: Icons.format_list_numbered_outlined,
-          text:
-              '${_fieldValue(_maxSetsController, SessionSpec.defaultMaxSetsPerExercise.toString())} sets max',
+          text: strings.generateMaxSetsPill(
+            _fieldValue(
+              _maxSetsController,
+              SessionSpec.defaultMaxSetsPerExercise.toString(),
+            ),
+          ),
         ),
       ],
     );
@@ -632,80 +644,83 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
   }
 
   String _requirementSummary() {
+    final strings = AppLocalizations.of(context);
     switch (_requirementOption) {
       case RequirementOption.biasRankBodyPart:
-        return 'Bodypart rankings';
+        return strings.generateRequirementBodyparts;
       case RequirementOption.biasRankMuscle:
-        return 'Muscle rankings';
+        return strings.generateRequirementMuscles;
       case RequirementOption.equalSplitBodyPart:
       case null:
-        return 'Even coverage';
+        return strings.generateRequirementEven;
     }
   }
 
   String _repWeightModeLabel(RepWeightGenerationMode mode) {
+    final strings = AppLocalizations.of(context);
     switch (mode) {
       case RepWeightGenerationMode.pyramid:
-        return 'Pyramid';
+        return strings.repModePyramid;
       case RepWeightGenerationMode.consistent:
-        return 'Consistent';
+        return strings.repModeConsistent;
       case RepWeightGenerationMode.mixed:
-        return 'Mixed';
+        return strings.repModeMixed;
     }
   }
 
   String _starterWeightIntensityLabel(StarterWeightIntensity intensity) {
+    final strings = AppLocalizations.of(context);
     switch (intensity) {
       case StarterWeightIntensity.easy:
-        return 'Easy';
+        return strings.intensityEasy;
       case StarterWeightIntensity.medium:
-        return 'Medium';
+        return strings.intensityMedium;
       case StarterWeightIntensity.hard:
-        return 'Hard';
+        return strings.intensityHard;
     }
   }
 
   String _generateButtonLabel() {
-    if (_isGenerating) return 'Generating...';
+    final strings = AppLocalizations.of(context);
+    if (_isGenerating) return strings.generateGenerating;
     final count = int.tryParse(_weeklyFrequencyController.text.trim()) ?? 1;
-    return count <= 1 ? 'Generate plan' : 'Generate $count plans';
+    return strings.generateButton(count);
   }
 
   String _generatedPlansMessage({
     required int generated,
     required int requested,
   }) {
-    final planWord = requested == 1 ? 'plan' : 'plans';
+    final strings = AppLocalizations.of(context);
     if (generated < requested) {
-      return 'Generated $generated of $requested $planWord. Your current settings limited the rest.';
+      return strings.generatePartialMessage(generated, requested);
     }
-    return generated == 1
-        ? 'Generated plan added. Review it when ready.'
-        : 'Generated $generated plans. Review them when ready.';
+    return strings.generateSuccessMessage(generated);
   }
 
   Future<void> _showStarterWeightDialog({
     required List<String> starterEstimateNames,
     required List<String> unavailableStarterNames,
   }) {
+    final strings = AppLocalizations.of(context);
     String namesText(List<String> names) {
       final visibleNames = names.take(6).toList();
       final extraCount = names.length - visibleNames.length;
       return [
         ...visibleNames.map((name) => '- $name'),
-        if (extraCount > 0) '- $extraCount more',
+        if (extraCount > 0) '- ${strings.generateMoreNames(extraCount)}',
       ].join('\n');
     }
 
     final body = [
       if (starterEstimateNames.isNotEmpty) ...[
-        'Starter weights were estimated for new exercises. Adjust as needed after your first set.',
+        strings.generateStarterEstimatedBody,
         '',
         namesText(starterEstimateNames),
       ],
       if (unavailableStarterNames.isNotEmpty) ...[
         if (starterEstimateNames.isNotEmpty) '',
-        'Some exercises still need manual weights because no safe starter estimate is available yet.',
+        strings.generateStarterUnavailableBody,
         '',
         namesText(unavailableStarterNames),
       ],
@@ -715,12 +730,12 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
       context: context,
       builder:
           (context) => AlertDialog(
-            title: const Text('Starter weights added'),
+            title: Text(strings.generateStarterDialogTitle),
             content: Text(body),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('OK'),
+                child: Text(strings.commonOkay),
               ),
             ],
           ),
@@ -729,8 +744,9 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     final content = Scaffold(
-      appBar: AppBar(title: const Text('Generate Plans')),
+      appBar: AppBar(title: Text(strings.generatePageTitle)),
       floatingActionButton: KeyedSubtree(
         key: _generateTutorialKey,
         child: FloatingActionButton.extended(
@@ -777,36 +793,43 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
               key: _workoutSetupTutorialKey,
               child: _buildSettingsSection(
                 icon: Icons.timer_outlined,
-                title: 'Workout setup',
-                subtitle:
-                    '${_fieldValue(_weeklyFrequencyController, '1')} plan(s), '
-                    '${_fieldValue(_sessionDurationController, '60')} min, '
-                    '${_fieldValue(_maxSetsController, SessionSpec.defaultMaxSetsPerExercise.toString())} max sets',
+                title: strings.generateWorkoutSetupTitle,
+                subtitle: strings.generateSetupSummary(
+                  _fieldValue(_weeklyFrequencyController, '1'),
+                  _fieldValue(_sessionDurationController, '60'),
+                  _fieldValue(
+                    _maxSetsController,
+                    SessionSpec.defaultMaxSetsPerExercise.toString(),
+                  ),
+                ),
                 children: [
                   _buildNumberField(
                     controller: _sessionDurationController,
-                    label: 'Session length',
+                    label: strings.generateSessionLength,
                     hintText: '60',
-                    helperText: 'Estimated as 3 min/set + 5 min/exercise.',
-                    suffixText: 'min',
+                    helperText: strings.generateSessionLengthHelp,
+                    suffixText: strings.unitMinutesShort,
                   ),
                   const SizedBox(height: 14),
                   _buildNumberField(
                     controller: _weeklyFrequencyController,
-                    label: 'Plans to create',
+                    label: strings.generatePlansToCreate,
                     hintText: '1',
-                    helperText:
-                        'Usually matches training days/week. Max ${SessionSpec.maxGeneratedPlansPerBundle}.',
-                    suffixText: 'plans',
+                    helperText: strings.generatePlansToCreateHelp(
+                      SessionSpec.maxGeneratedPlansPerBundle,
+                    ),
+                    suffixText: strings.unitPlans,
                   ),
                   const SizedBox(height: 14),
                   _buildNumberField(
                     controller: _maxSetsController,
-                    label: 'Max sets per exercise',
+                    label: strings.generateMaxSetsPerExercise,
                     hintText: SessionSpec.defaultMaxSetsPerExercise.toString(),
-                    helperText:
-                        '${SessionSpec.defaultMinSetsPerExercise}-${SessionSpec.maxAllowedSetsPerExercise} sets allowed.',
-                    suffixText: 'sets',
+                    helperText: strings.generateSetLimitHelp(
+                      SessionSpec.defaultMinSetsPerExercise,
+                      SessionSpec.maxAllowedSetsPerExercise,
+                    ),
+                    suffixText: strings.unitSets,
                   ),
                 ],
               ),
@@ -815,18 +838,19 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
               key: _focusTutorialKey,
               child: _buildSettingsSection(
                 icon: Icons.track_changes_outlined,
-                title: 'Training focus',
-                subtitle:
-                    '${_preferredBodypartIds.length} preferred, '
-                    '${_blacklistedBodypartIds.length} avoided, '
-                    '${_useRecentTrainingHistory ? 'using' : 'not using'} 7-day history',
+                title: strings.generateTrainingFocusTitle,
+                subtitle: strings.generateFocusSummary(
+                  _preferredBodypartIds.length,
+                  _blacklistedBodypartIds.length,
+                  _useRecentTrainingHistory
+                      ? strings.generateHistoryUsing
+                      : strings.generateHistoryNotUsing,
+                ),
                 children: [
                   CheckboxListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text('Use recent training'),
-                    subtitle: const Text(
-                      'Bias toward under-trained areas from the last 7 days.',
-                    ),
+                    title: Text(strings.generateUseRecentTraining),
+                    subtitle: Text(strings.generateUseRecentTrainingBody),
                     value: _useRecentTrainingHistory,
                     onChanged:
                         (value) => setState(
@@ -834,21 +858,21 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
                         ),
                   ),
                   const SizedBox(height: 16),
-                  const Text(
-                    'Bodypart focus',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                  Text(
+                    strings.optimizedBodypartFocusTitle,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
-                    'Tap once to prefer, twice to avoid, third to clear.',
-                    style: TextStyle(fontSize: 12),
+                  Text(
+                    strings.generateBodypartFocusInstruction,
+                    style: const TextStyle(fontSize: 12),
                   ),
                   const SizedBox(height: 8),
                   BodypartFocusChips(
                     bodyParts: _bodyParts,
                     preferredBodypartIds: _preferredBodypartIds,
                     blacklistedBodypartIds: _blacklistedBodypartIds,
-                    emptyText: 'Bodyparts could not be loaded.',
+                    emptyText: strings.optimizedBodypartsUnavailable,
                     onChanged:
                         (selection) => setState(() {
                           _preferredBodypartIds =
@@ -864,15 +888,19 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
               key: _repWeightTutorialKey,
               child: _buildSettingsSection(
                 icon: Icons.fitness_center_outlined,
-                title: 'Reps & weights',
-                subtitle:
-                    '${_repWeightModeLabel(_repWeightMode)}, '
-                    '${_fieldValue(_targetRepCountController, SessionSpec.defaultTargetRepCount.toString())} reps, '
-                    '${_starterWeightIntensityLabel(_starterWeightIntensity)} intensity',
+                title: strings.generateRepsWeightsTitle,
+                subtitle: strings.generateRepsSummary(
+                  _repWeightModeLabel(_repWeightMode),
+                  _fieldValue(
+                    _targetRepCountController,
+                    SessionSpec.defaultTargetRepCount.toString(),
+                  ),
+                  _starterWeightIntensityLabel(_starterWeightIntensity),
+                ),
                 children: [
                   _buildChoiceTile<RepWeightGenerationMode>(
-                    title: 'Mixed',
-                    subtitle: 'Pyramid for 3+ sets; steady for shorter work.',
+                    title: strings.repModeMixed,
+                    subtitle: strings.generateMixedBody,
                     value: RepWeightGenerationMode.mixed,
                     groupValue: _repWeightMode,
                     onChanged:
@@ -883,8 +911,8 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
                         ),
                   ),
                   _buildChoiceTile<RepWeightGenerationMode>(
-                    title: 'Pyramid',
-                    subtitle: 'Peak set uses the generated working weight.',
+                    title: strings.repModePyramid,
+                    subtitle: strings.generatePyramidBody,
                     value: RepWeightGenerationMode.pyramid,
                     groupValue: _repWeightMode,
                     onChanged:
@@ -895,8 +923,8 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
                         ),
                   ),
                   _buildChoiceTile<RepWeightGenerationMode>(
-                    title: 'Consistent',
-                    subtitle: 'Same reps and suggested weight each set.',
+                    title: strings.repModeConsistent,
+                    subtitle: strings.generateConsistentBody,
                     value: RepWeightGenerationMode.consistent,
                     groupValue: _repWeightMode,
                     onChanged:
@@ -909,21 +937,20 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
                   const SizedBox(height: 8),
                   _buildNumberField(
                     controller: _targetRepCountController,
-                    label: 'Target reps',
+                    label: strings.optimizedTargetReps,
                     hintText: SessionSpec.defaultTargetRepCount.toString(),
-                    helperText: 'Peak reps for pyramid; steady reps otherwise.',
-                    suffixText: 'reps',
+                    helperText: strings.generateTargetRepsHelp,
+                    suffixText: strings.unitReps,
                   ),
                   const SizedBox(height: 14),
-                  const Text(
-                    'Weight intensity',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                  Text(
+                    strings.optimizedWeightIntensity,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 6),
                   _buildChoiceTile<StarterWeightIntensity>(
-                    title: 'Easy',
-                    subtitle:
-                        'Most conservative history or starter recommendation.',
+                    title: strings.intensityEasy,
+                    subtitle: strings.generateEasyBody,
                     value: StarterWeightIntensity.easy,
                     groupValue: _starterWeightIntensity,
                     onChanged:
@@ -934,8 +961,8 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
                         ),
                   ),
                   _buildChoiceTile<StarterWeightIntensity>(
-                    title: 'Medium',
-                    subtitle: 'Balanced working-weight recommendation.',
+                    title: strings.intensityMedium,
+                    subtitle: strings.generateMediumBody,
                     value: StarterWeightIntensity.medium,
                     groupValue: _starterWeightIntensity,
                     onChanged:
@@ -946,9 +973,8 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
                         ),
                   ),
                   _buildChoiceTile<StarterWeightIntensity>(
-                    title: 'Hard',
-                    subtitle:
-                        'Heaviest recommendation, still rounded and effort-aware.',
+                    title: strings.intensityHard,
+                    subtitle: strings.generateHardBody,
                     value: StarterWeightIntensity.hard,
                     groupValue: _starterWeightIntensity,
                     onChanged:
@@ -965,19 +991,19 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
               key: _allocationTutorialKey,
               child: _buildSettingsSection(
                 icon: Icons.tune_outlined,
-                title: 'Set allocation',
+                title: strings.generateSetAllocationTitle,
                 subtitle: _requirementSummary(),
                 children: [
                   _buildChoiceTile<RequirementOption>(
-                    title: 'Even bodypart coverage',
-                    subtitle: 'Spread work broadly across available bodyparts.',
+                    title: strings.generateEvenCoverageTitle,
+                    subtitle: strings.generateEvenCoverageBody,
                     value: RequirementOption.equalSplitBodyPart,
                     groupValue: _requirementOption,
                     onChanged: (v) => setState(() => _requirementOption = v),
                   ),
                   _buildChoiceTile<RequirementOption>(
-                    title: 'Use bodypart rankings',
-                    subtitle: 'Give higher-ranked bodyparts more planned work.',
+                    title: strings.generateBodypartRankingsTitle,
+                    subtitle: strings.generateBodypartRankingsBody,
                     value: RequirementOption.biasRankBodyPart,
                     groupValue: _requirementOption,
                     onChanged: (v) => setState(() => _requirementOption = v),
@@ -991,12 +1017,11 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
                           ),
                         );
                       },
-                      child: const Text('Rank Body Parts'),
+                      child: Text(strings.generateRankBodyparts),
                     ),
                   _buildChoiceTile<RequirementOption>(
-                    title: 'Use muscle rankings',
-                    subtitle:
-                        'Allocate work from your ranked muscle priorities.',
+                    title: strings.generateMuscleRankingsTitle,
+                    subtitle: strings.generateMuscleRankingsBody,
                     value: RequirementOption.biasRankMuscle,
                     groupValue: _requirementOption,
                     onChanged: (v) => setState(() => _requirementOption = v),
@@ -1010,7 +1035,7 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
                           ),
                         );
                       },
-                      child: const Text('Rank Muscles'),
+                      child: Text(strings.generateRankMuscles),
                     ),
                 ],
               ),
@@ -1049,6 +1074,7 @@ class _OnboardingPlanActionBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final strings = AppLocalizations.of(context);
     return SafeArea(
       top: false,
       child: Container(
@@ -1066,7 +1092,9 @@ class _OnboardingPlanActionBar extends StatelessWidget {
             Expanded(
               child: OutlinedButton(
                 onPressed: isBusy ? null : onCancel,
-                child: Text(isBusy ? 'Discarding...' : 'Cancel'),
+                child: Text(
+                  isBusy ? strings.generateDiscarding : strings.commonCancel,
+                ),
               ),
             ),
             const SizedBox(width: 12),
@@ -1075,7 +1103,7 @@ class _OnboardingPlanActionBar extends StatelessWidget {
               child: FilledButton.icon(
                 onPressed: isBusy ? null : onSave,
                 icon: _PlanCountBadge(count: addedCount),
-                label: const Text('Review Plans'),
+                label: Text(strings.generateReviewPlans),
               ),
             ),
           ],

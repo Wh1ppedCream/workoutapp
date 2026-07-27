@@ -3,7 +3,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../../l10n/generated/app_localizations.dart';
 import '../../models/models.dart';
 import '../../repositories/app_repository.dart';
 import '../../services/tutorial_state_store.dart';
@@ -30,7 +32,7 @@ class DefinitionsByBodyPartPage extends StatefulWidget {
 }
 
 class _DefinitionsByBodyPartPageState extends State<DefinitionsByBodyPartPage> {
-  final _repo = AppRepository();
+  AppRepository get _repo => context.read<AppRepository>();
   final _headerTutorialKey = GlobalKey(debugLabel: 'bodypart_detail_header');
   final _exerciseListTutorialKey = GlobalKey(
     debugLabel: 'bodypart_detail_exercise_list',
@@ -103,6 +105,7 @@ class _DefinitionsByBodyPartPageState extends State<DefinitionsByBodyPartPage> {
 
   Future<void> _showTutorial() async {
     try {
+      final strings = AppLocalizations.of(context);
       await showGuidedTutorialOnce(
         context,
         tutorialId: TutorialIds.bodypartDetail,
@@ -110,16 +113,14 @@ class _DefinitionsByBodyPartPageState extends State<DefinitionsByBodyPartPage> {
           GuidedTutorialStep(
             targetKey: _headerTutorialKey,
             icon: Icons.accessibility_new,
-            title: 'Anatomy detail',
-            body:
-                'The header shows recent sets, recommended set boundaries, and related anatomy links.',
+            title: strings.anatomyTutorialDetailTitle,
+            body: strings.anatomyTutorialBodypartDetailBody,
           ),
           GuidedTutorialStep(
             targetKey: _exerciseListTutorialKey,
             icon: Icons.fitness_center,
-            title: 'Linked exercises',
-            body:
-                'These are exercises connected to this target. Tap one to open its full exercise details.',
+            title: strings.anatomyTutorialLinkedExercisesTitle,
+            body: strings.anatomyTutorialBodypartExercisesBody,
           ),
         ],
       );
@@ -130,10 +131,11 @@ class _DefinitionsByBodyPartPageState extends State<DefinitionsByBodyPartPage> {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          '${widget.bodyPart.name} Exercises',
+          strings.anatomyTargetExercises(widget.bodyPart.name),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
@@ -145,9 +147,7 @@ class _DefinitionsByBodyPartPageState extends State<DefinitionsByBodyPartPage> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
-            return Center(
-              child: Text('Unable to load bodypart: ${snapshot.error}'),
-            );
+            return Center(child: Text(strings.anatomyBodypartLoadFailed));
           }
 
           final data = snapshot.data!;
@@ -210,14 +210,18 @@ class _DefinitionsByBodyPartPageState extends State<DefinitionsByBodyPartPage> {
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${widget.bodyPart.name} recommended sets updated.'),
+          content: Text(
+            AppLocalizations.of(
+              context,
+            ).anatomyRecommendedSetsUpdated(widget.bodyPart.name),
+          ),
         ),
       );
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Save failed: $error')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).anatomySaveFailed)),
+      );
     }
   }
 }
@@ -256,7 +260,11 @@ class _BodyPartHeader extends StatelessWidget {
                     style: theme.textTheme.titleLarge,
                   ),
                   const SizedBox(height: 4),
-                  Text(_exerciseCountLabel(data.definitions.length)),
+                  Text(
+                    AppLocalizations.of(
+                      context,
+                    ).anatomyLinkedExerciseCount(data.definitions.length),
+                  ),
                   const SizedBox(height: 14),
                   LayoutBuilder(
                     builder: (context, constraints) {
@@ -288,14 +296,26 @@ class _BodyPartHeader extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 SetStatChip(
-                                  label: 'Done (7 days)',
-                                  value:
-                                      '${data.recentSetUnits.toStringAsFixed(1)} sets',
+                                  label:
+                                      AppLocalizations.of(
+                                        context,
+                                      ).anatomyDoneLastSevenDays,
+                                  value: AppLocalizations.of(
+                                    context,
+                                  ).anatomySetUnits(
+                                    data.recentSetUnits.toStringAsFixed(1),
+                                  ),
                                 ),
                                 const SizedBox(height: 10),
                                 SetStatChip(
-                                  label: 'Recommended',
-                                  value: _rangeLabel(data.volumeBounds),
+                                  label:
+                                      AppLocalizations.of(
+                                        context,
+                                      ).anatomyRecommended,
+                                  value: _rangeLabel(
+                                    AppLocalizations.of(context),
+                                    data.volumeBounds,
+                                  ),
                                   onEdit: onEditRecommended,
                                 ),
                               ],
@@ -310,11 +330,14 @@ class _BodyPartHeader extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          Text('Associated Muscles', style: theme.textTheme.titleMedium),
+          Text(
+            AppLocalizations.of(context).anatomyAssociatedMuscles,
+            style: theme.textTheme.titleMedium,
+          ),
           const SizedBox(height: 8),
           if (data.muscles.isEmpty)
             Text(
-              'No muscle links have been added for this bodypart yet.',
+              AppLocalizations.of(context).anatomyNoMuscleLinks,
               style: theme.textTheme.bodyMedium,
             )
           else
@@ -333,26 +356,26 @@ class _BodyPartHeader extends StatelessWidget {
                       .toList(),
             ),
           const Divider(height: 32),
-          Text('Exercises', style: theme.textTheme.titleMedium),
+          Text(
+            AppLocalizations.of(context).anatomyExercises,
+            style: theme.textTheme.titleMedium,
+          ),
           if (data.definitions.isEmpty) ...[
             const SizedBox(height: 12),
-            Text('No exercises are currently linked to ${bodyPart.name}.'),
+            Text(
+              AppLocalizations.of(context).anatomyNoExercisesFor(bodyPart.name),
+            ),
           ],
         ],
       ),
     );
   }
 
-  String _exerciseCountLabel(int count) {
-    if (count == 1) return '1 linked exercise';
-    return '$count linked exercises';
-  }
-
-  String _rangeLabel(VolumeBoundaries? bounds) {
-    if (bounds == null) return 'Not set';
+  String _rangeLabel(AppLocalizations strings, VolumeBoundaries? bounds) {
+    if (bounds == null) return strings.anatomyNotSet;
     final min = bounds.minEffective.toStringAsFixed(0);
     final max = bounds.maxRecoverable.toStringAsFixed(0);
-    return '$min-$max sets';
+    return strings.anatomySetRange(min, max);
   }
 }
 
@@ -380,13 +403,13 @@ class _ExerciseMetadata extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     final equipment =
         definition.equipmentList.isEmpty
-            ? 'No equipment listed'
+            ? AppLocalizations.of(context).anatomyNoEquipment
             : definition.equipmentList
                 .map((equipment) => equipment.name)
                 .join(', ');
     final muscles =
         definition.muscles.isEmpty
-            ? 'No muscles listed'
+            ? AppLocalizations.of(context).anatomyNoMusclesListed
             : definition.muscles
                 .take(3)
                 .map((ranked) => ranked.muscle.name)

@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/generated/app_localizations.dart';
 import '../models/models.dart';
 import '../providers/active_session.dart';
 import '../providers/dashboard_config.dart';
@@ -149,7 +150,8 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget _buildEditableTile(String id, int index) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final details = dashboardSectionDetails(id);
+    final strings = AppLocalizations.of(context);
+    final details = dashboardSectionDetails(strings, id);
     return Container(
       key: ValueKey(id),
       margin: const EdgeInsets.only(bottom: 10),
@@ -206,7 +208,7 @@ class _DashboardPageState extends State<DashboardPage> {
             ),
           ),
           IconButton(
-            tooltip: 'Hide section',
+            tooltip: strings.dashboardHideSection,
             icon: Icon(Icons.visibility_off_outlined, color: scheme.error),
             onPressed:
                 () => context.read<DashboardConfig>().toggleVisibility(id),
@@ -223,6 +225,7 @@ class _DashboardPageState extends State<DashboardPage> {
     final config = context.watch<DashboardConfig>();
     final hiddenCount =
         config.widgetOrder.where((id) => !config.isVisible(id)).length;
+    final strings = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -235,8 +238,8 @@ class _DashboardPageState extends State<DashboardPage> {
         children: [
           Text(
             hiddenCount == 0
-                ? 'All sections are shown'
-                : '$hiddenCount section(s) hidden',
+                ? strings.dashboardAllSectionsShown
+                : strings.dashboardHiddenSectionCount(hiddenCount),
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w800,
             ),
@@ -245,12 +248,12 @@ class _DashboardPageState extends State<DashboardPage> {
           OutlinedButton.icon(
             onPressed: hiddenCount == 0 ? null : _showAddWidgetDialog,
             icon: const Icon(Icons.add),
-            label: const Text('Show hidden sections'),
+            label: Text(strings.dashboardShowHiddenSections),
           ),
           TextButton.icon(
             onPressed: () => context.read<DashboardConfig>().restoreDefaults(),
             icon: const Icon(Icons.restart_alt, size: 18),
-            label: const Text('Reset dashboard'),
+            label: Text(strings.dashboardReset),
           ),
         ],
       ),
@@ -260,6 +263,7 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget _buildEmptyDashboard() {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final strings = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -275,10 +279,10 @@ class _DashboardPageState extends State<DashboardPage> {
             color: scheme.onSurfaceVariant,
           ),
           const SizedBox(height: 10),
-          Text('Your dashboard is empty', style: theme.textTheme.titleMedium),
+          Text(strings.dashboardEmptyTitle, style: theme.textTheme.titleMedium),
           const SizedBox(height: 4),
           Text(
-            'Add back any section whenever you are ready.',
+            strings.dashboardEmptyBody,
             textAlign: TextAlign.center,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: scheme.onSurfaceVariant,
@@ -288,7 +292,7 @@ class _DashboardPageState extends State<DashboardPage> {
           FilledButton.tonalIcon(
             onPressed: () => setState(() => _isEditing = true),
             icon: const Icon(Icons.edit_outlined),
-            label: const Text('Customize dashboard'),
+            label: Text(strings.dashboardCustomize),
           ),
         ],
       ),
@@ -300,11 +304,12 @@ class _DashboardPageState extends State<DashboardPage> {
     final hiddenIds =
         config.widgetOrder.where((id) => !config.isVisible(id)).toList();
     if (hiddenIds.isEmpty) return;
+    final strings = AppLocalizations.of(context);
     await showDialog(
       context: context,
       builder:
           (_) => AlertDialog(
-            title: const Text('Show hidden sections'),
+            title: Text(strings.dashboardShowHiddenSections),
             content: SizedBox(
               width: double.maxFinite,
               child: ListView(
@@ -313,11 +318,13 @@ class _DashboardPageState extends State<DashboardPage> {
                   for (final id in hiddenIds)
                     ListTile(
                       leading: Icon(
-                        dashboardSectionDetails(id).icon,
-                        color: dashboardSectionDetails(id).color,
+                        dashboardSectionDetails(strings, id).icon,
+                        color: dashboardSectionDetails(strings, id).color,
                       ),
-                      title: Text(_labelFor(id)),
-                      subtitle: Text(dashboardSectionDetails(id).description),
+                      title: Text(dashboardSectionDetails(strings, id).title),
+                      subtitle: Text(
+                        dashboardSectionDetails(strings, id).description,
+                      ),
                       onTap: () {
                         context.read<DashboardConfig>().toggleVisibility(id);
                         Navigator.of(context).pop();
@@ -419,9 +426,5 @@ class _DashboardPageState extends State<DashboardPage> {
       key: ValueKey<String>('dashboard_section_$id'),
       child: section,
     );
-  }
-
-  String _labelFor(String id) {
-    return dashboardSectionDetails(id).title;
   }
 }

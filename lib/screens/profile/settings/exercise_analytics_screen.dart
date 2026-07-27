@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../models/models.dart';
 import '../../../repositories/app_repository.dart';
 import '../../exercise/exercise_catalog_page.dart';
@@ -16,7 +19,7 @@ class ExerciseAnalyticsScreen extends StatefulWidget {
 
 class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
     with SingleTickerProviderStateMixin {
-  final _repo = AppRepository();
+  AppRepository get _repo => context.read<AppRepository>();
   late final TabController _tabController;
 
   // --- Definitions ---
@@ -39,6 +42,8 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
   bool _muscleCreditsDirty = false;
   bool _bodyPartCreditsDirty = false;
   bool _isSavingCredits = false;
+
+  AppLocalizations get _strings => AppLocalizations.of(context);
 
   bool get _hasPendingCreditChanges =>
       _muscleCreditsDirty || _bodyPartCreditsDirty;
@@ -234,11 +239,9 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
             : null;
     if ((_muscleCreditsDirty && muscleCredits == null) ||
         (_bodyPartCreditsDirty && bodyPartCredits == null)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Enter a zero or positive number for every credit.'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(_strings.allocationInvalidCredit)));
       return;
     }
 
@@ -264,16 +267,14 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
         _muscleCreditsDirty = false;
         _bodyPartCreditsDirty = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Exercise allocation saved.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(_strings.allocationSaved)));
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Could not save the exercise allocation. Try again.'),
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(_strings.allocationSaveFailed)));
       }
     } finally {
       if (mounted) {
@@ -286,11 +287,9 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
     final def = _sel;
     if (def == null) return;
     if (_hasPendingCreditChanges) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Save or discard your edits before resetting.'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(_strings.allocationSaveOrDiscard)));
       return;
     }
     await _repo.resetPersonalExerciseAllocation(
@@ -302,6 +301,7 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
@@ -315,7 +315,11 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
                 icon: Icon(
                   _isSavingCredits ? Icons.hourglass_top : Icons.save_outlined,
                 ),
-                label: Text(_isSavingCredits ? 'Saving' : 'Save changes'),
+                label: Text(
+                  _isSavingCredits
+                      ? strings.allocationSaving
+                      : strings.allocationSaveChanges,
+                ),
               )
               : null,
       body: SafeArea(
@@ -328,7 +332,7 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
                     child: Align(
                       alignment: Alignment.centerLeft,
                       child: IconButton(
-                        tooltip: 'Back',
+                        tooltip: strings.commonBack,
                         onPressed: () => Navigator.maybePop(context),
                         icon: const Icon(Icons.arrow_back),
                       ),
@@ -339,9 +343,8 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: SettingsHeroCard(
-                      title: 'Exercise Set Allocation',
-                      subtitle:
-                          'Review how completed sets contribute to target muscles and body parts.',
+                      title: strings.allocationTitle,
+                      subtitle: strings.allocationSubtitle,
                       icon: Icons.account_tree_outlined,
                       accentColor: SettingsAccent.advanced,
                     ),
@@ -354,9 +357,8 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: SettingsInfoCard(
                         icon: Icons.info_outline,
-                        title: 'How set credit works',
-                        body:
-                            'A primary muscle usually receives 1.00 credit for one completed set. Supporting muscles receive less credit. This guides anatomy summaries and recommendations, but never changes the sets you log.',
+                        title: strings.allocationHowTitle,
+                        body: strings.allocationHowBody,
                         iconColor: SettingsAccent.advanced,
                       ),
                     ),
@@ -393,13 +395,13 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Text('Could not load exercises. $_defsError'),
+          child: Text(_strings.allocationLoadFailed(_defsError!)),
         ),
       );
     }
 
     if (_sel == null) {
-      return const Center(child: Text('No exercises are available yet.'));
+      return Center(child: Text(_strings.allocationNoExercises));
     }
 
     return TabBarView(
@@ -448,7 +450,7 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Selected exercise',
+                      _strings.allocationSelectedExercise,
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: scheme.onSurfaceVariant,
                       ),
@@ -494,7 +496,10 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
         labelStyle: theme.textTheme.labelLarge?.copyWith(
           fontWeight: FontWeight.w900,
         ),
-        tabs: const [Tab(text: 'Muscle credit'), Tab(text: 'Body parts')],
+        tabs: [
+          Tab(text: _strings.allocationMuscleCredit),
+          Tab(text: _strings.allocationBodypartCredit),
+        ],
       ),
     );
   }
@@ -505,10 +510,10 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
     }
 
     if (_muscleEntries.isEmpty) {
-      return const _AllocationEmptyState(
+      return _AllocationEmptyState(
         icon: Icons.account_tree_outlined,
-        title: 'No target muscles',
-        body: 'This exercise does not have target-muscle data yet.',
+        title: _strings.allocationNoTargetMuscles,
+        body: _strings.allocationNoTargetMusclesBody,
       );
     }
 
@@ -518,9 +523,8 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
       itemBuilder: (context, index) {
         if (index == 0) {
           return _AllocationSectionHeader(
-            title: 'Muscle credit',
-            body:
-                'Change a value to create a personal allocation. It is used for muscle summaries and derived body-part focus.',
+            title: _strings.allocationMuscleCredit,
+            body: _strings.allocationMuscleCreditBody,
             source: _muscleSource,
             onReset:
                 _muscleSource == ExerciseAllocationSource.personalOverride
@@ -553,10 +557,10 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
     }
 
     if (_bodyEntries.isEmpty) {
-      return const _AllocationEmptyState(
+      return _AllocationEmptyState(
         icon: Icons.accessibility_new,
-        title: 'No body-part mapping',
-        body: 'This exercise does not have body-part mapping data yet.',
+        title: _strings.allocationNoBodypartMapping,
+        body: _strings.allocationNoBodypartMappingBody,
       );
     }
 
@@ -569,9 +573,8 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
       itemBuilder: (context, index) {
         if (index == 0) {
           return _AllocationSectionHeader(
-            title: 'Body-part credit',
-            body:
-                'Automatic values are derived from muscles and anatomy mapping. Editing one creates a direct personal body-part allocation.',
+            title: _strings.allocationBodypartCredit,
+            body: _strings.allocationBodypartCreditBody,
             source: _bodyPartSource,
             onReset:
                 _bodyPartSource == ExerciseAllocationSource.personalOverride
@@ -669,7 +672,7 @@ class _AllocationSectionHeader extends StatelessWidget {
                 TextButton.icon(
                   onPressed: onReset,
                   icon: const Icon(Icons.restart_alt, size: 17),
-                  label: const Text('Reset'),
+                  label: Text(AppLocalizations.of(context).allocationReset),
                 ),
             ],
           ),
@@ -795,8 +798,8 @@ class _MuscleCreditCard extends StatelessWidget {
                 decimal: true,
               ),
               textInputAction: TextInputAction.done,
-              decoration: const InputDecoration(
-                labelText: 'Credit',
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context).allocationCredit,
                 isDense: true,
               ),
               onChanged: (_) => onChanged(),
@@ -869,8 +872,8 @@ class _BodyPartCreditCard extends StatelessWidget {
                 decimal: true,
               ),
               textInputAction: TextInputAction.done,
-              decoration: const InputDecoration(
-                labelText: 'Credit',
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context).allocationCredit,
                 isDense: true,
               ),
               onChanged: (_) => onChanged(),

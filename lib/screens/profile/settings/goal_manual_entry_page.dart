@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../models/nutrition_models.dart';
 import '../../../providers/nutrition_profile.dart';
 import '../../../widgets/settings_tiles.dart';
@@ -108,10 +109,11 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
   @override
   Widget build(BuildContext context) {
     final canSave = context.watch<NutritionProfile>().current?.id != null;
+    final strings = AppLocalizations.of(context);
 
     return SettingsPageScaffold(
-      title: 'Manual Nutrition Goals',
-      subtitle: 'Set calorie, macro, and nutrient targets manually.',
+      title: strings.nutritionManualGoalsTitle,
+      subtitle: strings.nutritionManualGoalsPageSubtitle,
       icon: Icons.flag,
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),
@@ -120,7 +122,7 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
             Expanded(
               child: OutlinedButton(
                 onPressed: _saving ? null : () => Navigator.pop(context, false),
-                child: const Text('Cancel'),
+                child: Text(strings.commonCancel),
               ),
             ),
             const SizedBox(width: 12),
@@ -135,7 +137,11 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                         : const Icon(Icons.save),
-                label: Text(_saving ? 'Saving...' : 'Save Goals'),
+                label: Text(
+                  _saving
+                      ? strings.nutritionSaving
+                      : strings.nutritionSaveGoals,
+                ),
               ),
             ),
           ],
@@ -147,11 +153,11 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
           child: Column(
             children: [
               SettingsSection(
-                title: 'Start Date',
+                title: strings.nutritionStartDate,
                 children: [
                   SettingsActionTile(
                     icon: Icons.date_range,
-                    title: 'Goal starts',
+                    title: strings.nutritionGoalStarts,
                     subtitle:
                         '${_startDate.year}-${_two(_startDate.month)}-${_two(_startDate.day)}',
                     trailing: const Icon(Icons.calendar_month),
@@ -160,7 +166,7 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
                 ],
               ),
               SettingsSection(
-                title: 'Calories & Macros',
+                title: strings.nutritionCaloriesAndMacros,
                 children: [
                   Padding(
                     padding: const EdgeInsets.all(14),
@@ -168,7 +174,7 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
                       children: [
                         _numField(
                           _kcalCtrl,
-                          label: 'Calories (kcal)',
+                          label: strings.nutritionCalories,
                           integerOnly: true,
                         ),
                         const SizedBox(height: 12),
@@ -177,12 +183,15 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
                             Expanded(
                               child: _numField(
                                 _proteinCtrl,
-                                label: 'Protein (g)',
+                                label: strings.nutritionProtein,
                               ),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
-                              child: _numField(_carbCtrl, label: 'Carbs (g)'),
+                              child: _numField(
+                                _carbCtrl,
+                                label: strings.nutritionCarbs,
+                              ),
                             ),
                           ],
                         ),
@@ -190,11 +199,17 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
                         Row(
                           children: [
                             Expanded(
-                              child: _numField(_fatCtrl, label: 'Fat (g)'),
+                              child: _numField(
+                                _fatCtrl,
+                                label: strings.nutritionFat,
+                              ),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
-                              child: _numField(_fiberCtrl, label: 'Fiber (g)'),
+                              child: _numField(
+                                _fiberCtrl,
+                                label: strings.nutritionFiber,
+                              ),
                             ),
                           ],
                         ),
@@ -204,7 +219,7 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
                 ],
               ),
               SettingsSection(
-                title: 'Additional Nutrients',
+                title: strings.nutritionAdditionalNutrients,
                 children: [
                   Padding(
                     padding: const EdgeInsets.all(14),
@@ -213,13 +228,16 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
                         Row(
                           children: [
                             Expanded(
-                              child: _numField(_sugarCtrl, label: 'Sugar (g)'),
+                              child: _numField(
+                                _sugarCtrl,
+                                label: strings.nutritionSugar,
+                              ),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
                               child: _numField(
                                 _satFatCtrl,
-                                label: 'Sat. Fat (g)',
+                                label: strings.nutritionSatFat,
                               ),
                             ),
                           ],
@@ -227,7 +245,7 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
                         const SizedBox(height: 12),
                         _numField(
                           _sodiumCtrl,
-                          label: 'Sodium (mg)',
+                          label: strings.nutritionSodium,
                           integerOnly: true,
                         ),
                       ],
@@ -267,8 +285,12 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
       validator: (value) {
         if (value == null || value.trim().isEmpty) return null;
         final parsed = num.tryParse(value);
-        if (parsed == null) return 'Enter a number';
-        if (parsed < 0) return 'Must be >= 0';
+        if (parsed == null) {
+          return AppLocalizations.of(context).nutritionEnterNumber;
+        }
+        if (parsed < 0) {
+          return AppLocalizations.of(context).nutritionNumberAtLeastZero;
+        }
         return null;
       },
     );

@@ -6,6 +6,7 @@ import 'dart:async';
 import 'package:env_test/providers/active_session.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../models/models.dart';
 import '../../providers/selected_profile.dart';
 import '../../repositories/app_repository.dart';
@@ -134,20 +135,21 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
 
   Future<bool> _onWillPop() async {
     if (!_isEditing || !context.read<PresetSession>().hasChanges) return true;
+    final strings = AppLocalizations.of(context);
     final discard = await showDialog<bool>(
       context: context,
       builder:
           (ctx) => AlertDialog(
-            title: const Text('Unsaved Changes'),
-            content: const Text('Discard changes?'),
+            title: Text(strings.planUnsavedChangesTitle),
+            content: Text(strings.planDiscardChangesQuestion),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Cancel'),
+                child: Text(strings.commonCancel),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(ctx, true),
-                child: const Text('Discard'),
+                child: Text(strings.planDiscard),
               ),
             ],
           ),
@@ -199,36 +201,35 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
     }
   }
 
-  List<GuidedTutorialStep> get _planDetailTutorialSteps => [
-    GuidedTutorialStep(
-      targetKey: _editTutorialKey,
-      icon: Icons.edit,
-      title: 'Edit plan',
-      body:
-          'Use this to rename the plan, reorder exercises, add exercises, swap movements, and change sets.',
-    ),
-    GuidedTutorialStep(
-      targetKey: _summaryTutorialKey,
-      icon: Icons.accessibility_new,
-      title: 'Plan summary',
-      body:
-          'This shows estimated time, volume, and the main bodyparts this plan targets before you start it.',
-    ),
-    GuidedTutorialStep(
-      targetKey: _exerciseTutorialKey,
-      icon: Icons.fitness_center,
-      title: 'Exercise cards',
-      body:
-          'Open exercise cards to review the planned sets. In edit mode, use the menu to swap or remove exercises.',
-    ),
-    GuidedTutorialStep(
-      targetKey: _actionTutorialKey,
-      icon: Icons.play_circle_outline,
-      title: 'Start or save',
-      body:
-          'Start Session begins this plan as a workout. In edit mode, this changes to Save Preset so your changes are stored.',
-    ),
-  ];
+  List<GuidedTutorialStep> get _planDetailTutorialSteps {
+    final strings = AppLocalizations.of(context);
+    return [
+      GuidedTutorialStep(
+        targetKey: _editTutorialKey,
+        icon: Icons.edit,
+        title: strings.planTutorialEditTitle,
+        body: strings.planTutorialEditBody,
+      ),
+      GuidedTutorialStep(
+        targetKey: _summaryTutorialKey,
+        icon: Icons.accessibility_new,
+        title: strings.planTutorialSummaryTitle,
+        body: strings.planTutorialSummaryBody,
+      ),
+      GuidedTutorialStep(
+        targetKey: _exerciseTutorialKey,
+        icon: Icons.fitness_center,
+        title: strings.planTutorialExerciseCardsTitle,
+        body: strings.planTutorialExerciseCardsBody,
+      ),
+      GuidedTutorialStep(
+        targetKey: _actionTutorialKey,
+        icon: Icons.play_circle_outline,
+        title: strings.planTutorialStartOrSaveTitle,
+        body: strings.planTutorialStartOrSaveBody,
+      ),
+    ];
+  }
 
   void _advanceOnboardingPlanGuide(_OnboardingPlanBuilderStep expectedStep) {
     if (!_showsOnboardingPlanGuide ||
@@ -293,6 +294,7 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
 
   InteractiveTutorialStep? _buildOnboardingPlanGuideStep() {
     if (!_showsOnboardingPlanGuide) return null;
+    final strings = AppLocalizations.of(context);
 
     switch (_onboardingPlanBuilderStep) {
       case _OnboardingPlanBuilderStep.namePlan:
@@ -301,10 +303,9 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
           stepNumber: 1,
           totalSteps: 8,
           icon: Icons.edit_note,
-          title: 'Name your plan',
-          body:
-              'Give this plan a name you will recognize, such as Upper Body or Day 1.',
-          continueLabel: 'Continue',
+          title: strings.planGuideNameTitle,
+          body: strings.planGuideNameBody,
+          continueLabel: strings.commonContinue,
           onContinue:
               () => _advanceOnboardingPlanGuide(
                 _OnboardingPlanBuilderStep.namePlan,
@@ -316,8 +317,8 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
           stepNumber: 2,
           totalSteps: 8,
           icon: Icons.add_circle_outline,
-          title: 'Browse exercises',
-          body: 'Tap the + button to choose the first exercise in this plan.',
+          title: strings.planGuideBrowseTitle,
+          body: strings.planGuideBrowseBody,
         );
       case _OnboardingPlanBuilderStep.configureWeight:
         return InteractiveTutorialStep(
@@ -325,10 +326,9 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
           stepNumber: 5,
           totalSteps: 8,
           icon: Icons.tune,
-          title: 'Choose a weight',
-          body:
-              'Enter a starting weight for the first set. Use 0 for a bodyweight exercise.',
-          continueLabel: 'Weight set',
+          title: strings.planGuideWeightTitle,
+          body: strings.planGuideWeightBody,
+          continueLabel: strings.planGuideWeightSet,
           onContinue:
               () => _advanceOnboardingPlanGuide(
                 _OnboardingPlanBuilderStep.configureWeight,
@@ -340,9 +340,9 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
           stepNumber: 6,
           totalSteps: 8,
           icon: Icons.repeat,
-          title: 'Choose your reps',
-          body: 'Enter how many repetitions you plan to perform for this set.',
-          continueLabel: 'Reps set',
+          title: strings.planGuideRepsTitle,
+          body: strings.planGuideRepsBody,
+          continueLabel: strings.planGuideRepsSet,
           onContinue:
               () => _advanceOnboardingPlanGuide(
                 _OnboardingPlanBuilderStep.configureReps,
@@ -354,9 +354,8 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
           stepNumber: 7,
           totalSteps: 8,
           icon: Icons.playlist_add,
-          title: 'Add more sets',
-          body:
-              'Use Add Set when you need another set. New sets start with the previous set\'s values.',
+          title: strings.planGuideAddSetTitle,
+          body: strings.planGuideAddSetBody,
         );
       case _OnboardingPlanBuilderStep.savePlan:
         return InteractiveTutorialStep(
@@ -364,9 +363,8 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
           stepNumber: 8,
           totalSteps: 8,
           icon: Icons.save_outlined,
-          title: 'Save your plan',
-          body:
-              'Tap Save Preset to keep this plan and return to the onboarding overview.',
+          title: strings.planGuideSaveTitle,
+          body: strings.planGuideSaveBody,
         );
     }
   }
@@ -388,12 +386,9 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
       }
     } catch (error) {
       if (!context.mounted) return;
+      final strings = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Could not save plan. The previous version is unchanged. $error',
-          ),
-        ),
+        SnackBar(content: Text(strings.planSaveFailed(error.toString()))),
       );
     }
   }
@@ -421,10 +416,8 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
     if (!mounted) return;
     if (!started) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Your ongoing workout was kept. Finish or cancel it before starting this plan.',
-          ),
+        SnackBar(
+          content: Text(AppLocalizations.of(context).planOngoingWorkoutKept),
         ),
       );
     }
@@ -469,6 +462,7 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final preset = context.watch<PresetSession>();
+    final strings = AppLocalizations.of(context);
     final onboardingPlanGuideStep = _buildOnboardingPlanGuideStep();
     final isNamingPlan =
         _showsOnboardingPlanGuide &&
@@ -553,18 +547,16 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                         context: context,
                         builder:
                             (ctx) => AlertDialog(
-                              title: const Text('Delete Preset'),
-                              content: const Text(
-                                'Are you sure you want to delete this preset?',
-                              ),
+                              title: Text(strings.planDeleteTitle),
+                              content: Text(strings.planDeleteBody),
                               actions: [
                                 TextButton(
                                   onPressed: () => Navigator.pop(ctx, false),
-                                  child: const Text('Cancel'),
+                                  child: Text(strings.commonCancel),
                                 ),
                                 TextButton(
                                   onPressed: () => Navigator.pop(ctx, true),
-                                  child: const Text('Delete'),
+                                  child: Text(strings.commonDelete),
                                 ),
                               ],
                             ),
@@ -585,6 +577,7 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                       } else {
                         await preset.enableAutomatic();
                       }
+                      if (!mounted) return;
                       setState(() {});
                     } else if (action == 'settings' && preset.isAutomatic) {
                       // Open Automatic Settings modal
@@ -610,28 +603,28 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                   },
                   itemBuilder: (_) {
                     return [
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'delete',
-                        child: Text('Delete Preset'),
+                        child: Text(strings.planDeletePreset),
                       ),
                       PopupMenuItem(
                         value: 'toggle_auto',
                         child: Text(
                           preset.isAutomatic
-                              ? 'Disable Automatic'
-                              : 'Make Automatic',
+                              ? strings.planDisableAutomatic
+                              : strings.planMakeAutomatic,
                         ),
                       ),
                       PopupMenuItem(
                         value: 'settings',
                         enabled: preset.isAutomatic,
-                        child: const Text('Automatic Settings'),
+                        child: Text(strings.planAutomaticSettings),
                       ),
 
                       PopupMenuItem(
                         value: 'flow',
                         enabled: preset.isAutomatic,
-                        child: const Text('Edit Auto‐Flow'),
+                        child: Text(strings.planProgression),
                       ),
                     ];
                   },
@@ -641,7 +634,7 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
 
             body:
                 preset.exercises.isEmpty && !_isEditing
-                    ? const Center(child: Text('No exercises in this preset.'))
+                    ? Center(child: Text(strings.planNoExercises))
                     : _isEditing
                     ? ReorderableListView(
                       padding: const EdgeInsets.all(16),
@@ -850,11 +843,11 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                       _isEditing
                           ? ElevatedButton(
                             onPressed: _savePlan,
-                            child: const Text('Save Preset'),
+                            child: Text(strings.planSavePreset),
                           )
                           : ElevatedButton(
                             onPressed: _startPlanSession,
-                            child: const Text('Start Session'),
+                            child: Text(strings.planStartSession),
                           ),
                 ),
               ),

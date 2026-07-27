@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/generated/app_localizations.dart';
 import '../data/premade_training_plans.dart';
 import '../models/models.dart';
 import '../providers/active_session.dart';
@@ -77,7 +78,9 @@ class DashboardHero extends StatelessWidget {
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    isEditing ? 'Customize Dashboard' : 'Dashboard',
+                    isEditing
+                        ? AppLocalizations.of(context).dashboardCustomize
+                        : AppLocalizations.of(context).dashboardTitle,
                     maxLines: 1,
                     style: theme.textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.w900,
@@ -88,7 +91,10 @@ class DashboardHero extends StatelessWidget {
             ),
           ),
           IconButton.filledTonal(
-            tooltip: isEditing ? 'Done customizing' : 'Customize dashboard',
+            tooltip:
+                isEditing
+                    ? AppLocalizations.of(context).dashboardDoneCustomizing
+                    : AppLocalizations.of(context).dashboardCustomize,
             onPressed: onEdit,
             icon: Icon(isEditing ? Icons.check : Icons.edit_outlined),
           ),
@@ -120,7 +126,7 @@ class DashboardQuickActions extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Quick actions',
+            AppLocalizations.of(context).dashboardQuickActions,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w900,
             ),
@@ -131,7 +137,7 @@ class DashboardQuickActions extends StatelessWidget {
               Expanded(
                 child: _DashboardActionButton(
                   icon: Icons.add_chart_outlined,
-                  title: 'Measurement',
+                  title: AppLocalizations.of(context).dashboardMeasurement,
                   color: const Color(0xFF4DB6AC),
                   onPressed: () async {
                     final changed = await Navigator.of(context).push<bool>(
@@ -150,7 +156,10 @@ class DashboardQuickActions extends StatelessWidget {
                       workoutActive
                           ? Icons.play_arrow_rounded
                           : Icons.fitness_center,
-                  title: workoutActive ? 'Resume workout' : 'Start workout',
+                  title:
+                      workoutActive
+                          ? AppLocalizations.of(context).dashboardResumeWorkout
+                          : AppLocalizations.of(context).dashboardStartWorkout,
                   color: const Color(0xFF81C784),
                   onPressed: () async {
                     if (!workoutActive) {
@@ -258,7 +267,7 @@ class DashboardRecentWorkoutsCard extends StatefulWidget {
 
 class _DashboardRecentWorkoutsCardState
     extends State<DashboardRecentWorkoutsCard> {
-  final _repo = AppRepository();
+  AppRepository get _repo => context.read<AppRepository>();
   late Future<List<WorkoutSession>> _sessionsFuture;
 
   @override
@@ -275,19 +284,30 @@ class _DashboardRecentWorkoutsCardState
     }
   }
 
-  String _dateLabel(DateTime date) {
+  String _dateLabel(BuildContext context, DateTime date) {
     final now = DateTime.now();
     final isToday =
         now.year == date.year && now.month == date.month && now.day == date.day;
     return isToday
-        ? 'Today, ${DateFormat.jm().format(date)}'
-        : DateFormat('EEE, MMM d').format(date);
+        ? AppLocalizations.of(context).dashboardTodayAt(
+          DateFormat.jm(
+            Localizations.localeOf(context).toLanguageTag(),
+          ).format(date),
+        )
+        : DateFormat(
+          'EEE, MMM d',
+          Localizations.localeOf(context).toLanguageTag(),
+        ).format(date);
   }
 
-  String _durationLabel(int seconds) {
+  String _durationLabel(BuildContext context, int seconds) {
     final minutes = seconds ~/ 60;
-    if (minutes < 60) return '$minutes min';
-    return '${minutes ~/ 60}h ${minutes % 60}m';
+    if (minutes < 60) {
+      return AppLocalizations.of(context).durationMinutes(minutes);
+    }
+    return AppLocalizations.of(
+      context,
+    ).durationHoursMinutes(minutes ~/ 60, minutes % 60);
   }
 
   @override
@@ -307,7 +327,7 @@ class _DashboardRecentWorkoutsCardState
             children: [
               Expanded(
                 child: Text(
-                  'Recent workouts',
+                  AppLocalizations.of(context).dashboardRecentWorkouts,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w900,
                   ),
@@ -322,7 +342,7 @@ class _DashboardRecentWorkoutsCardState
                   );
                   widget.onChanged();
                 },
-                child: const Text('View all'),
+                child: Text(AppLocalizations.of(context).dashboardViewAll),
               ),
             ],
           ),
@@ -339,7 +359,7 @@ class _DashboardRecentWorkoutsCardState
                 return Padding(
                   padding: const EdgeInsets.all(10),
                   child: Text(
-                    'Could not load recent workouts.',
+                    AppLocalizations.of(context).dashboardRecentWorkoutsFailed,
                     style: theme.textTheme.bodySmall,
                   ),
                 );
@@ -351,7 +371,7 @@ class _DashboardRecentWorkoutsCardState
                 return Padding(
                   padding: const EdgeInsets.fromLTRB(8, 8, 8, 16),
                   child: Text(
-                    'Finish a workout and it will appear here.',
+                    AppLocalizations.of(context).dashboardRecentWorkoutsEmpty,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: scheme.onSurfaceVariant,
                     ),
@@ -362,8 +382,11 @@ class _DashboardRecentWorkoutsCardState
                 children: [
                   for (var index = 0; index < sessions.length; index++) ...[
                     _DashboardWorkoutRow(
-                      dateLabel: _dateLabel(sessions[index].date),
-                      durationLabel: _durationLabel(sessions[index].duration),
+                      dateLabel: _dateLabel(context, sessions[index].date),
+                      durationLabel: _durationLabel(
+                        context,
+                        sessions[index].duration,
+                      ),
                       onOpen: () async {
                         await Navigator.of(context).push(
                           MaterialPageRoute(
@@ -482,7 +505,7 @@ class _DashboardPlanCollectionCardState
     final profileId = context.watch<SelectedProfile>().currentProfile?.id;
     if (_profileId != profileId || _activePlanIdsFuture == null) {
       _profileId = profileId;
-      _activePlanIdsFuture = ActivePlanStore.load(profileId);
+      _activePlanIdsFuture = context.read<ActivePlanStore>().load(profileId);
     }
   }
 
@@ -490,7 +513,7 @@ class _DashboardPlanCollectionCardState
   void didUpdateWidget(covariant DashboardPlanCollectionCard oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.refreshToken != widget.refreshToken) {
-      _activePlanIdsFuture = ActivePlanStore.load(_profileId);
+      _activePlanIdsFuture = context.read<ActivePlanStore>().load(_profileId);
     }
   }
 
@@ -498,7 +521,9 @@ class _DashboardPlanCollectionCardState
     final profileId = _profileId;
     if (profileId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a gym profile first.')),
+        SnackBar(
+          content: Text(AppLocalizations.of(context).trainSelectProfileFirst),
+        ),
       );
       return;
     }
@@ -510,14 +535,23 @@ class _DashboardPlanCollectionCardState
       ),
     );
     if (!mounted) return;
-    setState(() => _activePlanIdsFuture = ActivePlanStore.load(profileId));
+    setState(
+      () =>
+          _activePlanIdsFuture = context.read<ActivePlanStore>().load(
+            profileId,
+          ),
+    );
     widget.onChanged();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final title = widget.archived ? 'Archived Plans' : 'Active Plans';
+    final strings = AppLocalizations.of(context);
+    final title =
+        widget.archived
+            ? strings.dashboardArchivedPlans
+            : strings.dashboardActivePlans;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -542,7 +576,7 @@ class _DashboardPlanCollectionCardState
                       ),
                     ),
                     IconButton(
-                      tooltip: 'Manage plans',
+                      tooltip: strings.dashboardManagePlans,
                       onPressed: loading ? null : _openPlanManagement,
                       icon: const Icon(Icons.edit_outlined),
                     ),
@@ -556,7 +590,7 @@ class _DashboardPlanCollectionCardState
                   )
                 else if (_profileId == null)
                   Text(
-                    'Select a gym profile to view its plans.',
+                    strings.dashboardSelectProfilePlans,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -575,8 +609,8 @@ class _DashboardPlanCollectionCardState
                     physics: const NeverScrollableScrollPhysics(),
                     emptyMessage:
                         widget.archived
-                            ? 'No archived plans for this profile.'
-                            : 'No active plans yet. Use the pen to choose plans.',
+                            ? strings.dashboardNoArchivedPlans
+                            : strings.dashboardNoActivePlans,
                     onRefresh: widget.onChanged,
                   ),
               ],
@@ -596,6 +630,7 @@ class DashboardPremadePlansCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = AppLocalizations.of(context);
     final profileId = context.watch<SelectedProfile>().currentProfile?.id;
     return Card(
       child: Padding(
@@ -613,7 +648,7 @@ class DashboardPremadePlansCard extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Premade Plans',
+                    strings.premadePlansTitle,
                     style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w800,
                     ),
@@ -623,7 +658,7 @@ class DashboardPremadePlansCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              '${premadeTrainingPlans.length} ready-to-use routines are available to add.',
+              strings.dashboardPremadeCount(premadeTrainingPlans.length),
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -649,7 +684,7 @@ class DashboardPremadePlansCard extends StatelessWidget {
                           onChanged();
                         },
                 icon: const Icon(Icons.arrow_forward),
-                label: const Text('Browse Premade Plans'),
+                label: Text(strings.dashboardBrowsePremadePlans),
               ),
             ),
           ],
@@ -695,7 +730,9 @@ class DashboardPlanToolsCard extends StatelessWidget {
     final profileId = context.read<SelectedProfile>().currentProfile?.id;
     if (profileId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a gym profile first.')),
+        SnackBar(
+          content: Text(AppLocalizations.of(context).trainSelectProfileFirst),
+        ),
       );
       return;
     }
@@ -718,23 +755,35 @@ class DashboardPlanToolsCard extends StatelessWidget {
     }
     onChanged();
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Generated ${generatedPresetIds.length} plans.')),
+      SnackBar(
+        content: Text(
+          AppLocalizations.of(
+            context,
+          ).trainPlansGenerated(generatedPresetIds.length),
+        ),
+      ),
     );
   }
 
   Future<void> _createManualPlan(BuildContext context) async {
+    final strings = AppLocalizations.of(context);
     final profileId = context.read<SelectedProfile>().currentProfile?.id;
     if (profileId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a gym profile first.')),
+        SnackBar(
+          content: Text(AppLocalizations.of(context).trainSelectProfileFirst),
+        ),
       );
       return;
     }
 
-    final repo = AppRepository();
+    final repo = context.read<AppRepository>();
     final existing = await repo.fetchAllPresetsRaw(profileId: profileId);
     final nextNumber = existing.length + 1;
-    final name = nextNumber == 1 ? 'New Plan' : 'New Plan $nextNumber';
+    final name =
+        nextNumber == 1
+            ? strings.dashboardNewPlanFirst
+            : strings.dashboardNewPlan(nextNumber);
     final presetId = await repo.createPreset(name, profileId: profileId);
     if (!context.mounted) return;
     await _openPlanEditor(context, presetId);
@@ -744,6 +793,7 @@ class DashboardPlanToolsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final strings = AppLocalizations.of(context);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -752,11 +802,11 @@ class DashboardPlanToolsCard extends StatelessWidget {
           children: [
             _DashboardCardTitle(
               icon: Icons.add_task_outlined,
-              title: 'Plan Tools',
+              title: strings.dashboardPlanTools,
             ),
             const SizedBox(height: 8),
             Text(
-              'Build a plan from your training preferences or start a blank one.',
+              strings.dashboardPlanToolsBody,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: scheme.onSurfaceVariant,
               ),
@@ -768,7 +818,7 @@ class DashboardPlanToolsCard extends StatelessWidget {
                   child: OutlinedButton.icon(
                     onPressed: () => _createManualPlan(context),
                     icon: const Icon(Icons.edit_note_outlined),
-                    label: const Text('Manual'),
+                    label: Text(strings.dashboardManual),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -776,7 +826,7 @@ class DashboardPlanToolsCard extends StatelessWidget {
                   child: FilledButton.icon(
                     onPressed: () => _generatePlans(context),
                     icon: const Icon(Icons.auto_awesome_outlined),
-                    label: const Text('Generate'),
+                    label: Text(strings.dashboardGenerate),
                   ),
                 ),
               ],
@@ -800,7 +850,7 @@ class DashboardExerciseCatalogCard extends StatefulWidget {
 
 class _DashboardExerciseCatalogCardState
     extends State<DashboardExerciseCatalogCard> {
-  final _repo = AppRepository();
+  AppRepository get _repo => context.read<AppRepository>();
   late Future<List<_DashboardExerciseUsage>> _usageFuture;
 
   @override
@@ -841,6 +891,7 @@ class _DashboardExerciseCatalogCardState
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = AppLocalizations.of(context);
     return FutureBuilder<List<_DashboardExerciseUsage>>(
       future: _usageFuture,
       builder: (context, snapshot) {
@@ -861,11 +912,11 @@ class _DashboardExerciseCatalogCardState
                 children: [
                   _DashboardCardTitle(
                     icon: Icons.menu_book_outlined,
-                    title: 'Exercise Catalog',
+                    title: strings.trainExerciseCatalog,
                   ),
                   const SizedBox(height: 14),
                   Text(
-                    'Most used exercises',
+                    strings.dashboardMostUsedExercises,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w800,
                     ),
@@ -879,7 +930,7 @@ class _DashboardExerciseCatalogCardState
                     )
                   else if (usages.isEmpty)
                     Text(
-                      'Complete workouts to see your most common exercises here.',
+                      strings.dashboardMostUsedExercisesEmpty,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -909,7 +960,7 @@ class DashboardTargetAnatomyCard extends StatefulWidget {
 
 class _DashboardTargetAnatomyCardState
     extends State<DashboardTargetAnatomyCard> {
-  final _repo = AppRepository();
+  AppRepository get _repo => context.read<AppRepository>();
   late Future<_DashboardAnatomyUsage> _usageFuture;
 
   @override
@@ -980,7 +1031,7 @@ class _DashboardTargetAnatomyCardState
               children: [
                 _DashboardCardTitle(
                   icon: Icons.bubble_chart_outlined,
-                  title: 'Target Anatomy',
+                  title: AppLocalizations.of(context).dashboardTargetAnatomy,
                 ),
                 const SizedBox(height: 14),
                 if (snapshot.connectionState != ConnectionState.done &&
@@ -995,7 +1046,8 @@ class _DashboardTargetAnatomyCardState
                       children: [
                         Expanded(
                           child: _DashboardFocusPane(
-                            title: 'Bodyparts',
+                            title:
+                                AppLocalizations.of(context).dashboardBodyparts,
                             items: usage?.bodyParts ?? const [],
                             emptyText: 'No bodypart history yet.',
                             onTap:
@@ -1012,7 +1064,8 @@ class _DashboardTargetAnatomyCardState
                         const VerticalDivider(width: 25),
                         Expanded(
                           child: _DashboardFocusPane(
-                            title: 'Muscles',
+                            title:
+                                AppLocalizations.of(context).dashboardMuscles,
                             items: usage?.muscles ?? const [],
                             emptyText: 'No muscle history yet.',
                             onTap:
@@ -1237,124 +1290,127 @@ class DashboardSectionDetails {
   });
 }
 
-DashboardSectionDetails dashboardSectionDetails(String id) {
+DashboardSectionDetails dashboardSectionDetails(
+  AppLocalizations strings,
+  String id,
+) {
   switch (id) {
     case 'quickActions':
-      return const DashboardSectionDetails(
-        title: 'Quick actions',
-        description: 'Log a measurement or start a workout.',
+      return DashboardSectionDetails(
+        title: strings.dashboardSectionQuickActionsTitle,
+        description: strings.dashboardSectionQuickActionsBody,
         icon: Icons.bolt_outlined,
         color: Color(0xFF64B5F6),
       );
     case 'training':
-      return const DashboardSectionDetails(
-        title: 'Ready to train',
-        description: 'Select your gym profile, plans, and start a session.',
+      return DashboardSectionDetails(
+        title: strings.dashboardSectionTrainingTitle,
+        description: strings.dashboardSectionTrainingBody,
         icon: Icons.fitness_center,
         color: Color(0xFF81C784),
       );
     case 'nutritionDash':
-      return const DashboardSectionDetails(
-        title: 'Nutrition dashboard',
-        description: 'Review current calorie and macro targets.',
+      return DashboardSectionDetails(
+        title: strings.dashboardSectionNutritionTitle,
+        description: strings.dashboardSectionNutritionBody,
         icon: Icons.restaurant_outlined,
         color: Color(0xFFFFB74D),
       );
     case 'dataRecords':
-      return const DashboardSectionDetails(
-        title: 'Data & records',
-        description: 'Review and add daily nutrition entries.',
+      return DashboardSectionDetails(
+        title: strings.dashboardSectionDataRecordsTitle,
+        description: strings.dashboardSectionDataRecordsBody,
         icon: Icons.calendar_month_outlined,
         color: Color(0xFF64B5F6),
       );
     case 'weeklyFocus':
-      return const DashboardSectionDetails(
-        title: 'Weekly focus',
-        description: 'Review bodypart and muscle work from the last 7 days.',
+      return DashboardSectionDetails(
+        title: strings.dashboardSectionWeeklyFocusTitle,
+        description: strings.dashboardSectionWeeklyFocusBody,
         icon: Icons.accessibility_new,
         color: Color(0xFF4DB6AC),
       );
     case 'workoutMetrics':
-      return const DashboardSectionDetails(
-        title: 'Workout report',
-        description: 'Compare workout count, time, and volume over time.',
+      return DashboardSectionDetails(
+        title: strings.dashboardSectionWorkoutReportTitle,
+        description: strings.dashboardSectionWorkoutReportBody,
         icon: Icons.show_chart_outlined,
         color: Color(0xFF64B5F6),
       );
     case 'exerciseProgress':
-      return const DashboardSectionDetails(
-        title: 'Exercise progress',
-        description: 'Follow strength trends for your selected exercises.',
+      return DashboardSectionDetails(
+        title: strings.dashboardSectionExerciseProgressTitle,
+        description: strings.dashboardSectionExerciseProgressBody,
         icon: Icons.trending_up_rounded,
         color: Color(0xFFCE93D8),
       );
     case 'historySummary':
-      return const DashboardSectionDetails(
-        title: 'Training history',
-        description: 'Compare workout totals and focus across time ranges.',
+      return DashboardSectionDetails(
+        title: strings.dashboardSectionHistoryTitle,
+        description: strings.dashboardSectionHistoryBody,
         icon: Icons.history_rounded,
         color: Color(0xFF64B5F6),
       );
     case 'healthTrends':
-      return const DashboardSectionDetails(
-        title: 'Health trends',
-        description: 'Track measurements such as bodyweight and sizes.',
+      return DashboardSectionDetails(
+        title: strings.dashboardSectionHealthTrendsTitle,
+        description: strings.dashboardSectionHealthTrendsBody,
         icon: Icons.monitor_heart_outlined,
         color: Color(0xFF81C784),
       );
     case 'recentWorkouts':
-      return const DashboardSectionDetails(
-        title: 'Recent workouts',
-        description: 'Open your latest completed workout sessions.',
+      return DashboardSectionDetails(
+        title: strings.dashboardSectionRecentWorkoutsTitle,
+        description: strings.dashboardSectionRecentWorkoutsBody,
         icon: Icons.event_note_outlined,
         color: Color(0xFFFFB74D),
       );
     case 'activePlans':
-      return const DashboardSectionDetails(
-        title: 'Active plans',
-        description: 'Keep the plans you use most often close at hand.',
+      return DashboardSectionDetails(
+        title: strings.dashboardSectionActivePlansTitle,
+        description: strings.dashboardSectionActivePlansBody,
         icon: Icons.assignment_turned_in_outlined,
         color: Color(0xFF81C784),
       );
     case 'archivedPlans':
-      return const DashboardSectionDetails(
-        title: 'Archived plans',
-        description: 'Browse plans that are not currently active.',
+      return DashboardSectionDetails(
+        title: strings.dashboardSectionArchivedPlansTitle,
+        description: strings.dashboardSectionArchivedPlansBody,
         icon: Icons.inventory_2_outlined,
         color: Color(0xFF90A4AE),
       );
     case 'premadePlans':
-      return const DashboardSectionDetails(
-        title: 'Premade plans',
-        description: 'Browse routines that can be added to this profile.',
+      return DashboardSectionDetails(
+        title: strings.dashboardSectionPremadePlansTitle,
+        description: strings.dashboardSectionPremadePlansBody,
         icon: Icons.auto_stories_outlined,
         color: Color(0xFFCE93D8),
       );
     case 'planTools':
-      return const DashboardSectionDetails(
-        title: 'Plan tools',
-        description: 'Generate a balanced plan or create one manually.',
+      return DashboardSectionDetails(
+        title: strings.dashboardSectionPlanToolsTitle,
+        description: strings.dashboardSectionPlanToolsBody,
         icon: Icons.add_task_outlined,
         color: Color(0xFFCE93D8),
       );
     case 'exerciseCatalog':
-      return const DashboardSectionDetails(
-        title: 'Exercise catalog',
-        description: 'Open your most used exercises and the full catalog.',
+      return DashboardSectionDetails(
+        title: strings.dashboardSectionCatalogTitle,
+        description: strings.dashboardSectionCatalogBody,
         icon: Icons.menu_book_outlined,
         color: Color(0xFF64B5F6),
       );
     case 'targetAnatomy':
-      return const DashboardSectionDetails(
-        title: 'Target anatomy',
-        description: 'Review the bodyparts and muscles you train most.',
+      return DashboardSectionDetails(
+        title: strings.dashboardSectionAnatomyTitle,
+        description: strings.dashboardSectionAnatomyBody,
         icon: Icons.bubble_chart_outlined,
         color: Color(0xFFBA68C8),
       );
     default:
-      return const DashboardSectionDetails(
-        title: 'Dashboard section',
-        description: 'A dashboard section.',
+      return DashboardSectionDetails(
+        title: strings.dashboardSectionFallbackTitle,
+        description: strings.dashboardSectionFallbackBody,
         icon: Icons.dashboard_outlined,
         color: Color(0xFF9E9E9E),
       );

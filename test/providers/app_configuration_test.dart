@@ -1,6 +1,7 @@
 import 'package:env_test/models/unit_preference.dart';
 import 'package:env_test/providers/dashboard_config.dart';
 import 'package:env_test/providers/nav_bar_config.dart';
+import 'package:env_test/providers/locale_preference_provider.dart';
 import 'package:env_test/providers/onboarding_provider.dart';
 import 'package:env_test/providers/theme_provider.dart';
 import 'package:env_test/providers/unit_preference_provider.dart';
@@ -30,6 +31,44 @@ void main() {
       final prefs = await SharedPreferences.getInstance();
       expect(prefs.getString('weight_unit_preference'), 'pounds');
     });
+
+    test(
+      'locale preference loads safely and persists supported locales',
+      () async {
+        SharedPreferences.setMockInitialValues({
+          LocalePreferenceProvider.preferenceKey: 'unsupported-old-value',
+        });
+        final provider = LocalePreferenceProvider();
+        await provider.ready;
+
+        expect(provider.loaded, isTrue);
+        expect(provider.preference, AppLanguagePreference.system);
+        expect(provider.locale, isNull);
+
+        await provider.setPreference(AppLanguagePreference.english);
+        final prefs = await SharedPreferences.getInstance();
+        expect(
+          prefs.getString(LocalePreferenceProvider.preferenceKey),
+          'english',
+        );
+        expect(provider.locale, const Locale('en'));
+
+        await provider.setPreference(AppLanguagePreference.canadianFrench);
+        expect(
+          prefs.getString(LocalePreferenceProvider.preferenceKey),
+          'canadianFrench',
+        );
+        expect(provider.locale, const Locale('fr', 'CA'));
+
+        final reloadedProvider = LocalePreferenceProvider();
+        await reloadedProvider.ready;
+        expect(
+          reloadedProvider.preference,
+          AppLanguagePreference.canadianFrench,
+        );
+        expect(reloadedProvider.locale, const Locale('fr', 'CA'));
+      },
+    );
 
     test('theme defaults to dark and persists changes', () async {
       SharedPreferences.setMockInitialValues({});
@@ -157,16 +196,15 @@ void main() {
     test('active plans are stored independently per profile', () async {
       SharedPreferences.setMockInitialValues({});
       final repository = _FakeActivePlanRepository();
-      ActivePlanStore.useRepositoryForTesting(repository);
-      addTearDown(() => ActivePlanStore.useRepositoryForTesting(null));
+      final store = ActivePlanStore(repository: repository);
 
-      await ActivePlanStore.save(1, {3, 5});
-      await ActivePlanStore.add(1, 8);
-      await ActivePlanStore.remove(1, 5);
+      await store.save(1, {3, 5});
+      await store.add(1, 8);
+      await store.remove(1, 5);
 
-      expect(await ActivePlanStore.load(1), {3, 8});
-      expect(await ActivePlanStore.load(2), isEmpty);
-      expect(await ActivePlanStore.load(null), isEmpty);
+      expect(await store.load(1), {3, 8});
+      expect(await store.load(2), isEmpty);
+      expect(await store.load(null), isEmpty);
     });
   });
 }

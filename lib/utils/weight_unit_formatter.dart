@@ -41,8 +41,10 @@ class WeightUnitFormatter {
     final value = fromPounds(pounds, unit);
     return switch (unit) {
       WeightUnit.pounds => value.roundToDouble(),
-      WeightUnit.kilograms =>
-        _roundToIncrement(value, _kgWeightDisplayIncrement),
+      WeightUnit.kilograms => _roundToIncrement(
+        value,
+        _kgWeightDisplayIncrement,
+      ),
     };
   }
 

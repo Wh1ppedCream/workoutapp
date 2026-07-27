@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../services/workout_exit_preferences.dart';
 import '../../../widgets/settings_tiles.dart';
 import 'analytics_setting_screen.dart';
@@ -21,24 +22,23 @@ class _GymExerciseSettingsPageState extends State<GymExerciseSettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     return SettingsPageScaffold(
-      title: 'Gym & Workout Settings',
-      subtitle:
-          'Tune workout generation, analytics, and workout-flow behavior.',
+      title: strings.gymSettingsTitle,
+      subtitle: strings.gymSettingsSubtitle,
       icon: Icons.fitness_center,
       heroAccentColor: SettingsAccent.training,
       children: [
         SettingsSection(
-          title: 'Workout Logic',
-          subtitle: 'Settings that affect planning and generated workouts.',
+          title: strings.gymSettingsLogicTitle,
+          subtitle: strings.gymSettingsLogicSubtitle,
           accentColor: SettingsAccent.training,
           children: settingsTilesWithDividers(context, [
             SettingsActionTile(
               icon: Icons.bar_chart,
               iconColor: SettingsAccent.training,
-              title: 'Workout Settings',
-              subtitle:
-                  'Volume limits, analytics defaults, and training controls.',
+              title: strings.gymSettingsWorkoutTitle,
+              subtitle: strings.gymSettingsWorkoutSubtitle,
               onTap: () => _open(context, const AnalyticsSettingsScreen()),
             ),
             FutureBuilder<WorkoutExitBehavior>(
@@ -49,8 +49,8 @@ class _GymExerciseSettingsPageState extends State<GymExerciseSettingsPage> {
                 return SettingsActionTile(
                   icon: Icons.exit_to_app_outlined,
                   iconColor: SettingsAccent.training,
-                  title: 'Ongoing Workout Exit',
-                  subtitle: _exitBehaviorLabel(behavior),
+                  title: strings.gymSettingsExitTitle,
+                  subtitle: _exitBehaviorLabel(behavior, strings),
                   onTap: () => _chooseExitBehavior(behavior),
                 );
               },
@@ -58,23 +58,22 @@ class _GymExerciseSettingsPageState extends State<GymExerciseSettingsPage> {
           ]),
         ),
         SettingsSection(
-          title: 'Flow Tools',
-          subtitle: 'Manage saved progression paths and actions.',
+          title: strings.gymSettingsFlowToolsTitle,
+          subtitle: strings.gymSettingsFlowToolsSubtitle,
           accentColor: SettingsAccent.advanced,
           children: settingsTilesWithDividers(context, [
             SettingsActionTile(
               icon: Icons.schema_outlined,
               iconColor: SettingsAccent.advanced,
-              title: 'Workout Progress Flows',
-              subtitle:
-                  'Edit progression flows for app defaults, gyms, and plans.',
+              title: strings.flowPageTitle,
+              subtitle: strings.gymSettingsFlowsSubtitle,
               onTap: () => _open(context, const WorkoutProgressFlowsPage()),
             ),
             SettingsActionTile(
               icon: Icons.route_outlined,
               iconColor: SettingsAccent.advanced,
-              title: 'Workout Progress Rules',
-              subtitle: 'Manage weight, rep, and set progression rules.',
+              title: strings.rulesPageTitle,
+              subtitle: strings.gymSettingsRulesSubtitle,
               onTap: () => _open(context, const FlowMethodsPage()),
             ),
           ]),
@@ -87,35 +86,36 @@ class _GymExerciseSettingsPageState extends State<GymExerciseSettingsPage> {
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => page));
   }
 
-  String _exitBehaviorLabel(WorkoutExitBehavior behavior) {
+  String _exitBehaviorLabel(
+    WorkoutExitBehavior behavior,
+    AppLocalizations strings,
+  ) {
     return switch (behavior) {
-      WorkoutExitBehavior.askEveryTime => 'Ask before ending completed work.',
-      WorkoutExitBehavior.discard => 'Cancel without saving completed work.',
-      WorkoutExitBehavior.saveCompleted => 'Save completed work to Logbook.',
+      WorkoutExitBehavior.askEveryTime => strings.gymExitAskBody,
+      WorkoutExitBehavior.discard => strings.gymExitDiscardBody,
+      WorkoutExitBehavior.saveCompleted => strings.gymExitSaveBody,
     };
   }
 
   Future<void> _chooseExitBehavior(WorkoutExitBehavior current) async {
+    final strings = AppLocalizations.of(context);
     final selected = await showDialog<WorkoutExitBehavior>(
       context: context,
       builder:
           (dialogContext) => SimpleDialog(
-            title: const Text('Ongoing Workout Exit'),
+            title: Text(strings.gymSettingsExitTitle),
             children: [
               for (final behavior in WorkoutExitBehavior.values)
                 RadioListTile<WorkoutExitBehavior>(
                   value: behavior,
                   groupValue: current,
-                  title: Text(
-                    switch (behavior) {
-                      WorkoutExitBehavior.askEveryTime => 'Ask every time',
-                      WorkoutExitBehavior.discard => 'Cancel workout',
-                      WorkoutExitBehavior.saveCompleted => 'End and save',
-                    },
-                  ),
-                  subtitle: Text(_exitBehaviorLabel(behavior)),
-                  onChanged:
-                      (value) => Navigator.pop(dialogContext, value),
+                  title: Text(switch (behavior) {
+                    WorkoutExitBehavior.askEveryTime => strings.gymExitAsk,
+                    WorkoutExitBehavior.discard => strings.gymExitDiscard,
+                    WorkoutExitBehavior.saveCompleted => strings.gymExitSave,
+                  }),
+                  subtitle: Text(_exitBehaviorLabel(behavior, strings)),
+                  onChanged: (value) => Navigator.pop(dialogContext, value),
                 ),
             ],
           ),

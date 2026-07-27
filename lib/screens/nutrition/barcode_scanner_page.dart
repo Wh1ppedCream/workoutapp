@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
+import '../../l10n/generated/app_localizations.dart';
+
 /// Full-screen barcode scanner that returns the first barcode string via Navigator.pop(code).
 class BarcodeScannerPage extends StatefulWidget {
   const BarcodeScannerPage({super.key});
@@ -74,41 +76,43 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage>
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
-        title: const Text('Scan a barcode'),
+        title: Text(strings.barcodeScannerTitle),
         actions: [
           IconButton(
-            tooltip: 'Switch camera',
+            tooltip: strings.barcodeSwitchCamera,
             icon: const Icon(Icons.cameraswitch),
             onPressed: () async {
-              _facing = _facing == CameraFacing.back
-                  ? CameraFacing.front
-                  : CameraFacing.back;
+              _facing =
+                  _facing == CameraFacing.back
+                      ? CameraFacing.front
+                      : CameraFacing.back;
               await _controller.switchCamera();
               setState(() {});
             },
           ),
           IconButton(
-            tooltip: _torchOn ? 'Torch off' : 'Torch on',
+            tooltip:
+                _torchOn ? strings.barcodeTorchOff : strings.barcodeTorchOn,
             icon: Icon(_torchOn ? Icons.flash_on : Icons.flash_off),
             onPressed: () async {
-  try {
-    await _controller.toggleTorch();
-    // Optimistically flip our local UI state; if the device has no torch,
-    // toggleTorch() throws and we show a message instead.
-    setState(() => _torchOn = !_torchOn);
-  } catch (_) {
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Torch not available on this device')),
-    );
-  }
-},
-
+              try {
+                await _controller.toggleTorch();
+                // Optimistically flip our local UI state; if the device has no torch,
+                // toggleTorch() throws and we show a message instead.
+                setState(() => _torchOn = !_torchOn);
+              } catch (_) {
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(strings.barcodeTorchUnavailable)),
+                );
+              }
+            },
           ),
         ],
       ),
@@ -128,7 +132,10 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage>
                 height: MediaQuery.of(context).size.width * 0.45,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.9), width: 2),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.9),
+                    width: 2,
+                  ),
                 ),
               ),
             ),
@@ -140,8 +147,8 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage>
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
               color: const Color(0xAA000000),
-              child: const Text(
-                'Align the barcode within the frame',
+              child: Text(
+                strings.barcodeAlignHint,
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Colors.white70),
               ),

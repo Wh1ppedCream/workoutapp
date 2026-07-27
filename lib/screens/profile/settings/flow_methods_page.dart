@@ -1,6 +1,8 @@
 // File: lib/screens/profile/settings/flow_methods_page.dart
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../models/preset_models.dart';
 import '../../../models/gym_models.dart';
 import '../../../repositories/app_repository.dart';
@@ -22,7 +24,7 @@ class FlowMethodsPage extends StatefulWidget {
 }
 
 class _FlowMethodsPageState extends State<FlowMethodsPage> {
-  final _repo = AppRepository();
+  AppRepository get _repo => context.read<AppRepository>();
 
   bool _isLoading = true;
   int _loadRequest = 0;
@@ -102,10 +104,15 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
     FlowMethod? existing,
   }) async {
     final isEdit = existing != null;
+    final strings = AppLocalizations.of(context);
     final dialogTitle =
         isEdit
-            ? 'Edit ${scope == 'app' ? 'App' : 'Profile'} Default Rule'
-            : 'Add ${scope == 'app' ? 'App' : 'Profile'} Default Rule';
+            ? (scope == 'app'
+                ? strings.rulesEditAppDefault
+                : strings.rulesEditProfileDefault)
+            : (scope == 'app'
+                ? strings.rulesAddAppDefault
+                : strings.rulesAddProfileDefault);
 
     // Controllers
     final nameCtl = TextEditingController(text: existing?.name);
@@ -148,7 +155,9 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
                       children: [
                         TextField(
                           controller: nameCtl,
-                          decoration: const InputDecoration(labelText: 'Name'),
+                          decoration: InputDecoration(
+                            labelText: strings.commonName,
+                          ),
                         ),
                         const SizedBox(height: 12),
                         DropdownButton<MethodType>(
@@ -160,7 +169,7 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
                                   .map(
                                     (t) => DropdownMenuItem(
                                       value: t,
-                                      child: Text(_methodTypeLabel(t)),
+                                      child: Text(_methodTypeLabel(t, strings)),
                                     ),
                                   )
                                   .toList(),
@@ -182,8 +191,8 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
                             keyboardType: TextInputType.numberWithOptions(
                               decimal: true,
                             ),
-                            decoration: const InputDecoration(
-                              labelText: 'Factor',
+                            decoration: InputDecoration(
+                              labelText: strings.flowFactor,
                             ),
                           ),
                         ] else if (type == MethodType.rep) ...[
@@ -200,8 +209,8 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
                           TextField(
                             controller: amountCtl,
                             keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                              labelText: 'Amount',
+                            decoration: InputDecoration(
+                              labelText: strings.flowAmount,
                             ),
                           ),
                         ] else if (type == MethodType.addSet) ...[
@@ -212,13 +221,13 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
                                 groupValue: addMode,
                                 onChanged: (v) => setSt(() => addMode = v!),
                               ),
-                              const Text('Explicit'),
+                              Text(strings.flowExplicit),
                               Radio<AddSetMode>(
                                 value: AddSetMode.copy,
                                 groupValue: addMode,
                                 onChanged: (v) => setSt(() => addMode = v!),
                               ),
-                              const Text('Copy'),
+                              Text(strings.rulesCopy),
                             ],
                           ),
                           const SizedBox(height: 8),
@@ -228,29 +237,29 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
                               keyboardType: TextInputType.numberWithOptions(
                                 decimal: true,
                               ),
-                              decoration: const InputDecoration(
-                                labelText: 'Weight',
+                              decoration: InputDecoration(
+                                labelText: strings.flowWeight,
                               ),
                             ),
                             const SizedBox(height: 8),
                             TextField(
                               controller: repsCtl,
                               keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(
-                                labelText: 'Reps',
+                              decoration: InputDecoration(
+                                labelText: strings.flowReps,
                               ),
                             ),
                           ] else ...[
                             TextField(
                               controller: copyIndexCtl,
                               keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(
-                                labelText: 'Copy index',
+                              decoration: InputDecoration(
+                                labelText: strings.rulesCopyIndex,
                               ),
                             ),
                           ],
                         ] else if (type == MethodType.delSet) ...[
-                          const Text('This will delete the last set.'),
+                          Text(strings.rulesDeleteLastSetBody),
                         ],
                       ],
                     ),
@@ -258,11 +267,11 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(ctx, false),
-                      child: const Text('Cancel'),
+                      child: Text(strings.commonCancel),
                     ),
                     ElevatedButton(
                       onPressed: () => Navigator.pop(ctx, true),
-                      child: const Text('Save'),
+                      child: Text(strings.commonSave),
                     ),
                   ],
                 ),
@@ -315,9 +324,9 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
     }
     if (methodName.isEmpty) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Rule name cannot be empty')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(strings.rulesNameRequired)));
       return;
     }
 
@@ -361,6 +370,7 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
     required MethodType type,
     required Map<String, dynamic> params,
   }) async {
+    final strings = AppLocalizations.of(context);
     final isAppDefault = scope == 'app';
     final destinationCount =
         isAppDefault
@@ -370,25 +380,30 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
             : (_presetsByProfile[profileId] ?? const []).length;
     if (destinationCount == 0 || (!isAppDefault && profileId == null)) return;
 
-    final destinationLabel = isAppDefault ? 'profiles' : 'plans';
+    final destinationLabel =
+        isAppDefault
+            ? strings.rulesProfilesLowercase
+            : strings.rulesPlansLowercase;
     final confirmed = await showDialog<bool>(
       context: context,
       builder:
           (dialogContext) => AlertDialog(
-            title: Text('Add to existing $destinationLabel?'),
+            title: Text(strings.rulesAddToExistingTitle(destinationLabel)),
             content: Text(
-              'Make "$name" available in $destinationCount existing '
-              '$destinationLabel? Existing rules with the same name and all '
-              'saved progression flows will stay unchanged.',
+              strings.rulesAddToExistingBody(
+                name,
+                destinationCount,
+                destinationLabel,
+              ),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(dialogContext, false),
-                child: const Text('Not now'),
+                child: Text(strings.rulesNotNow),
               ),
               FilledButton(
                 onPressed: () => Navigator.pop(dialogContext, true),
-                child: Text('Add to $destinationLabel'),
+                child: Text(strings.rulesAddTo(destinationLabel)),
               ),
             ],
           ),
@@ -410,26 +425,20 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
                 params: params,
               );
       if (!mounted) return;
-      final plural =
-          copied == 1
-              ? destinationLabel.substring(0, destinationLabel.length - 1)
-              : destinationLabel;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             copied == 0
-                ? 'No existing $destinationLabel needed this rule.'
-                : 'Added "$name" to $copied $plural.',
+                ? strings.rulesNoExistingNeeded(destinationLabel)
+                : strings.rulesCopiedMessage(name, copied, destinationLabel),
           ),
         ),
       );
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Could not add the rule to existing items.'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(strings.rulesPropagationFailed)));
     }
   }
 
@@ -462,6 +471,7 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final color = _methodTypeColor(m.type, cs);
+    final strings = AppLocalizations.of(context);
 
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 3),
@@ -483,11 +493,11 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
         ),
       ),
       subtitle: Text(
-        _methodTypeLabel(m.type),
+        _methodTypeLabel(m.type, strings),
         style: theme.textTheme.bodySmall?.copyWith(color: color),
       ),
       trailing: PopupMenuButton<_RuleAction>(
-        tooltip: 'Rule options',
+        tooltip: strings.rulesOptionsTooltip,
         onSelected: (action) {
           if (action == _RuleAction.edit) {
             onEdit();
@@ -496,13 +506,13 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
           }
         },
         itemBuilder:
-            (context) => const [
+            (context) => [
               PopupMenuItem(
                 value: _RuleAction.edit,
                 child: ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: Icon(Icons.edit_outlined),
-                  title: Text('Edit'),
+                  title: Text(strings.commonEdit),
                 ),
               ),
               PopupMenuItem(
@@ -510,7 +520,7 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
                 child: ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: Icon(Icons.delete_outline),
-                  title: Text('Delete'),
+                  title: Text(strings.commonDelete),
                 ),
               ),
             ],
@@ -541,33 +551,30 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
+    final strings = AppLocalizations.of(context);
     return SettingsPageScaffold(
-      title: 'Workout Progress Rules',
-      subtitle:
-          'Create reusable rules for how weights, reps, and sets change after workout attempts.',
+      title: strings.rulesPageTitle,
+      subtitle: strings.rulesPageSubtitle,
       icon: Icons.route_outlined,
       children: [
         SettingsInfoCard(
           icon: Icons.copy_all_outlined,
-          title: 'How defaults work',
-          body:
-              'App defaults are copied into new gym profiles. Profile defaults are copied into new plans, so later edits do not unexpectedly rewrite existing plans.',
+          title: strings.rulesHowDefaultsTitle,
+          body: strings.rulesHowDefaultsBody,
         ),
         const SizedBox(height: 14),
-        const _RuleScopeLegend(),
+        _RuleScopeLegend(strings: strings),
         const SizedBox(height: 18),
         _RuleScopeCard(
           color: context.cs.primary,
           icon: Icons.apps_outlined,
-          title: 'App-wide defaults',
-          subtitle: 'The starting rules for new gym profiles.',
+          title: strings.rulesAppDefaultsTitle,
+          subtitle: strings.rulesAppDefaultsSubtitle,
           count: _appMethods.length,
           initiallyExpanded: true,
           children: [
             if (_appMethods.isEmpty)
-              const _EmptyRuleState(
-                message: 'No app-wide rules have been created yet.',
-              )
+              _EmptyRuleState(message: strings.rulesNoAppDefaults)
             else
               ..._ruleTiles(
                 _appMethods,
@@ -585,19 +592,19 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
               ),
             _AddRuleButton(
               color: context.cs.primary,
-              label: 'Add app rule',
+              label: strings.rulesAddApp,
               onPressed: () => _showAddEditDefault(scope: 'app'),
             ),
           ],
         ),
         const SizedBox(height: 22),
-        const _SectionHeading(
-          title: 'Gym profiles',
-          subtitle: 'Each profile keeps its defaults and plan rules together.',
+        _SectionHeading(
+          title: strings.rulesGymProfilesTitle,
+          subtitle: strings.rulesGymProfilesSubtitle,
         ),
         const SizedBox(height: 10),
         if (_profiles.isEmpty)
-          const _EmptyProfilesCard()
+          _EmptyProfilesCard(message: strings.rulesNoProfiles)
         else
           for (
             var profileIndex = 0;
@@ -622,23 +629,25 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
                   color: profileColor,
                   icon: Icons.fitness_center,
                   title: profile.name,
-                  subtitle:
-                      '${profileMethods.length} profile rules  •  $planRuleCount plan rules',
+                  subtitle: strings.rulesProfileSummary(
+                    profileMethods.length,
+                    planRuleCount,
+                  ),
                   count: profileMethods.length + planRuleCount,
                   initiallyExpanded: profileIndex == 0,
                   children: [
                     _RuleScopeCard(
                       color: profileColor,
                       icon: Icons.tune,
-                      title: 'Profile defaults',
-                      subtitle: 'Starting rules for new plans in this profile.',
+                      title: strings.rulesProfileDefaultsTitle,
+                      subtitle: strings.rulesProfileDefaultsSubtitle,
                       count: profileMethods.length,
                       initiallyExpanded: true,
                       compact: true,
                       children: [
                         if (profileMethods.isEmpty)
-                          const _EmptyRuleState(
-                            message: 'This profile has no default rules.',
+                          _EmptyRuleState(
+                            message: strings.rulesNoProfileDefaults,
                           )
                         else
                           ..._ruleTiles(
@@ -661,7 +670,7 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
                           ),
                         _AddRuleButton(
                           color: profileColor,
-                          label: 'Add profile rule',
+                          label: strings.rulesAddProfile,
                           onPressed:
                               () => _showAddEditDefault(
                                 scope: 'profile',
@@ -674,14 +683,12 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
                     _NestedHeading(
                       color: planColor,
                       icon: Icons.event_note_outlined,
-                      title: 'Plans',
+                      title: strings.rulesPlansTitle,
                       count: presets.length,
                     ),
                     const SizedBox(height: 8),
                     if (presets.isEmpty)
-                      const _EmptyRuleState(
-                        message: 'No plans belong to this gym profile yet.',
-                      )
+                      _EmptyRuleState(message: strings.rulesNoPlans)
                     else
                       for (
                         var presetIndex = 0;
@@ -698,14 +705,13 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
                               color: planColor,
                               icon: Icons.event_note_outlined,
                               title: preset['name'] as String,
-                              subtitle: 'Rules used only by this plan.',
+                              subtitle: strings.rulesPlanOnlySubtitle,
                               count: methods.length,
                               compact: true,
                               children: [
                                 if (methods.isEmpty)
-                                  const _EmptyRuleState(
-                                    message:
-                                        'This plan has no specific progression rules.',
+                                  _EmptyRuleState(
+                                    message: strings.rulesNoPlanRules,
                                   )
                                 else
                                   ..._ruleTiles(
@@ -725,7 +731,7 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
                                   ),
                                 _AddRuleButton(
                                   color: planColor,
-                                  label: 'Add plan rule',
+                                  label: strings.rulesAddPlan,
                                   onPressed:
                                       () => _showAddEditPresetMethod(
                                         presetId: presetId,
@@ -796,7 +802,9 @@ Color _planScopeColor(BuildContext context) {
 }
 
 class _RuleScopeLegend extends StatelessWidget {
-  const _RuleScopeLegend();
+  final AppLocalizations strings;
+
+  const _RuleScopeLegend({required this.strings});
 
   @override
   Widget build(BuildContext context) {
@@ -805,9 +813,15 @@ class _RuleScopeLegend extends StatelessWidget {
       spacing: 8,
       runSpacing: 8,
       children: [
-        _LegendChip(color: scheme.primary, label: 'App defaults'),
-        _LegendChip(color: _profileScopeColor(context), label: 'Profiles'),
-        _LegendChip(color: _planScopeColor(context), label: 'Plans'),
+        _LegendChip(color: scheme.primary, label: strings.rulesAppDefaultsChip),
+        _LegendChip(
+          color: _profileScopeColor(context),
+          label: strings.rulesProfilesChip,
+        ),
+        _LegendChip(
+          color: _planScopeColor(context),
+          label: strings.rulesPlansChip,
+        ),
       ],
     );
   }
@@ -1088,7 +1102,9 @@ class _AddRuleButton extends StatelessWidget {
 }
 
 class _EmptyProfilesCard extends StatelessWidget {
-  const _EmptyProfilesCard();
+  final String message;
+
+  const _EmptyProfilesCard({required this.message});
 
   @override
   Widget build(BuildContext context) {
@@ -1100,19 +1116,17 @@ class _EmptyProfilesCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(22),
         border: Border.all(color: scheme.outlineVariant),
       ),
-      child: const _EmptyRuleState(
-        message: 'Create a gym profile to add profile and plan rules.',
-      ),
+      child: _EmptyRuleState(message: message),
     );
   }
 }
 
-String _methodTypeLabel(MethodType type) {
+String _methodTypeLabel(MethodType type, AppLocalizations strings) {
   return switch (type) {
-    MethodType.weight => 'Weight',
-    MethodType.rep => 'Reps',
-    MethodType.addSet => 'Add set',
-    MethodType.delSet => 'Remove set',
+    MethodType.weight => strings.flowMethodWeight,
+    MethodType.rep => strings.flowMethodReps,
+    MethodType.addSet => strings.flowMethodAddSet,
+    MethodType.delSet => strings.flowMethodDeleteSet,
   };
 }
 
@@ -1131,7 +1145,7 @@ class AddPresetMethodDialog extends StatefulWidget {
 }
 
 class AddPresetMethodDialogState extends State<AddPresetMethodDialog> {
-  final _repo = AppRepository();
+  AppRepository get _repo => context.read<AppRepository>();
 
   late TextEditingController _nameCtl;
   late MethodType _type;
@@ -1177,15 +1191,16 @@ class AddPresetMethodDialogState extends State<AddPresetMethodDialog> {
   @override
   Widget build(BuildContext context) {
     final isEdit = widget.existing != null;
+    final strings = AppLocalizations.of(context);
     return AlertDialog(
-      title: Text(isEdit ? 'Edit Rule' : 'Add Rule'),
+      title: Text(isEdit ? strings.rulesEditPlan : strings.rulesAddPlanTitle),
       content: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             TextField(
               controller: _nameCtl,
-              decoration: const InputDecoration(labelText: 'Name'),
+              decoration: InputDecoration(labelText: strings.commonName),
             ),
             const SizedBox(height: 12),
             DropdownButton<MethodType>(
@@ -1197,7 +1212,7 @@ class AddPresetMethodDialogState extends State<AddPresetMethodDialog> {
                       .map(
                         (t) => DropdownMenuItem(
                           value: t,
-                          child: Text(_methodTypeLabel(t)),
+                          child: Text(_methodTypeLabel(t, strings)),
                         ),
                       )
                       .toList(),
@@ -1217,7 +1232,7 @@ class AddPresetMethodDialogState extends State<AddPresetMethodDialog> {
               TextField(
                 controller: _factorCtl,
                 keyboardType: TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(labelText: 'Factor'),
+                decoration: InputDecoration(labelText: strings.flowFactor),
               ),
             ] else if (_type == MethodType.rep) ...[
               DropdownButton<String>(
@@ -1233,7 +1248,7 @@ class AddPresetMethodDialogState extends State<AddPresetMethodDialog> {
               TextField(
                 controller: _amountCtl,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Amount'),
+                decoration: InputDecoration(labelText: strings.flowAmount),
               ),
             ] else if (_type == MethodType.addSet) ...[
               Row(
@@ -1243,13 +1258,13 @@ class AddPresetMethodDialogState extends State<AddPresetMethodDialog> {
                     groupValue: _addMode,
                     onChanged: (v) => setState(() => _addMode = v!),
                   ),
-                  const Text('Explicit'),
+                  Text(strings.flowExplicit),
                   Radio<AddSetMode>(
                     value: AddSetMode.copy,
                     groupValue: _addMode,
                     onChanged: (v) => setState(() => _addMode = v!),
                   ),
-                  const Text('Copy'),
+                  Text(strings.rulesCopy),
                 ],
               ),
               const SizedBox(height: 8),
@@ -1257,23 +1272,25 @@ class AddPresetMethodDialogState extends State<AddPresetMethodDialog> {
                 TextField(
                   controller: _weightCtl,
                   keyboardType: TextInputType.numberWithOptions(decimal: true),
-                  decoration: const InputDecoration(labelText: 'Weight'),
+                  decoration: InputDecoration(labelText: strings.flowWeight),
                 ),
                 const SizedBox(height: 8),
                 TextField(
                   controller: _repsCtl,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Reps'),
+                  decoration: InputDecoration(labelText: strings.flowReps),
                 ),
               ] else ...[
                 TextField(
                   controller: _copyIndexCtl,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Copy index'),
+                  decoration: InputDecoration(
+                    labelText: strings.rulesCopyIndex,
+                  ),
                 ),
               ],
             ] else if (_type == MethodType.delSet) ...[
-              const Text('This will delete the last set.'),
+              Text(strings.rulesDeleteLastSetBody),
             ],
           ],
         ),
@@ -1281,14 +1298,14 @@ class AddPresetMethodDialogState extends State<AddPresetMethodDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(strings.commonCancel),
         ),
         ElevatedButton(
           onPressed: () async {
             final name = _nameCtl.text.trim();
             if (name.isEmpty) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Rule name cannot be empty')),
+                SnackBar(content: Text(strings.rulesNameRequired)),
               );
               return;
             }
@@ -1332,7 +1349,7 @@ class AddPresetMethodDialogState extends State<AddPresetMethodDialog> {
               ),
             );
           },
-          child: const Text('Save'),
+          child: Text(strings.commonSave),
         ),
       ],
     );

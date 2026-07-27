@@ -2,6 +2,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+
+import '../l10n/generated/app_localizations.dart';
 import '../screens/exercise/gym_profile_screen.dart';
 
 /// Represents an entry in the main drawer.
@@ -18,13 +20,15 @@ class DrawerItem {
 /// A simple, configurable drawer for main navigation options.
 /// If [items] is null or empty, shows default placeholder options.
 class MainDrawer extends StatelessWidget {
-  final String headerTitle;
   final List<DrawerItem>? items;
 
-  const MainDrawer({super.key, this.headerTitle = 'Navigation', this.items});
+  const MainDrawer({super.key, this.headerTitle, this.items});
+
+  final String? headerTitle;
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     final useDefault = items == null || items!.isEmpty;
     return Drawer(
       child: ListView(
@@ -35,14 +39,14 @@ class MainDrawer extends StatelessWidget {
               color: Theme.of(context).colorScheme.primary,
             ),
             child: Text(
-              headerTitle,
+              headerTitle ?? strings.drawerNavigation,
               style: const TextStyle(color: Colors.white, fontSize: 18),
             ),
           ),
           if (useDefault) ...[
-            const ListTile(title: Text('Option A')),
-            const ListTile(title: Text('Option B')),
-            const ListTile(title: Text('Option C')),
+            ListTile(title: Text(strings.drawerOptionA)),
+            ListTile(title: Text(strings.drawerOptionB)),
+            ListTile(title: Text(strings.drawerOptionC)),
           ] else
             ...items!.map((item) {
               return ListTile(
@@ -97,6 +101,7 @@ class ProfileDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     const palette = [
@@ -136,7 +141,7 @@ class ProfileDrawer extends StatelessWidget {
                   ),
                   const SizedBox(height: 14),
                   Text(
-                    'Gym Profiles',
+                    strings.drawerGymProfiles,
                     style: theme.textTheme.headlineSmall?.copyWith(
                       color: scheme.onPrimaryContainer,
                       fontWeight: FontWeight.w900,
@@ -145,8 +150,8 @@ class ProfileDrawer extends StatelessWidget {
                   const SizedBox(height: 6),
                   Text(
                     selected == null
-                        ? '${profiles.length} saved spaces'
-                        : '${selected.name} is active',
+                        ? strings.drawerSavedSpaces(profiles.length)
+                        : strings.drawerProfileActive(selected.name),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodyMedium?.copyWith(
@@ -214,6 +219,7 @@ class ProfileTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final tileColor =
@@ -227,7 +233,8 @@ class ProfileTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: tileColor,
         border: Border.all(
-          color: isSelected ? color : scheme.outlineVariant.withValues(alpha: 0.5),
+          color:
+              isSelected ? color : scheme.outlineVariant.withValues(alpha: 0.5),
           width: isSelected ? 1.4 : 1,
         ),
         borderRadius: BorderRadius.circular(18),
@@ -267,7 +274,9 @@ class ProfileTile extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      isSelected ? 'Active profile' : 'Tap to switch',
+                      isSelected
+                          ? strings.drawerActiveProfile
+                          : strings.drawerTapToSwitch,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodySmall?.copyWith(
@@ -287,9 +296,15 @@ class ProfileTile extends StatelessWidget {
                   }
                 },
                 itemBuilder:
-                    (_) => const [
-                      PopupMenuItem(value: 'edit', child: Text('Edit')),
-                      PopupMenuItem(value: 'delete', child: Text('Delete')),
+                    (_) => [
+                      PopupMenuItem(
+                        value: 'edit',
+                        child: Text(strings.commonEdit),
+                      ),
+                      PopupMenuItem(
+                        value: 'delete',
+                        child: Text(strings.commonDelete),
+                      ),
                     ],
               ),
             ],
@@ -307,6 +322,7 @@ class _NewProfileTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
 
@@ -327,7 +343,7 @@ class _NewProfileTile extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'New Profile',
+                strings.drawerNewProfile,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w800,
                 ),

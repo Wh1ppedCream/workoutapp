@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../services/tutorial_state_store.dart';
 import '../../../widgets/settings_tiles.dart';
 
@@ -8,40 +9,40 @@ class TutorialsSettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     return SettingsPageScaffold(
-      title: 'Guided Tutorials',
-      subtitle: 'Replay a walkthrough when you want a quick refresher.',
+      title: strings.tutorialsSettingsTitle,
+      subtitle: strings.tutorialsSettingsSubtitle,
       icon: Icons.school_outlined,
       heroAccentColor: SettingsAccent.appearance,
       children: [
         SettingsSection(
-          title: 'Tutorial Controls',
-          subtitle: 'Testing or starting fresh?',
+          title: strings.tutorialsControlsTitle,
+          subtitle: strings.tutorialsControlsSubtitle,
           accentColor: SettingsAccent.data,
           children: settingsTilesWithDividers(context, [
             SettingsActionTile(
               icon: Icons.restart_alt,
-              title: 'Reset All Tutorials',
-              subtitle: 'Makes every guided tutorial available again.',
-              trailing: const _ResetPill(label: 'Reset all'),
+              title: strings.tutorialsResetAllTitle,
+              subtitle: strings.tutorialsResetAllSubtitle,
+              trailing: _ResetPill(label: strings.tutorialsResetAll),
               onTap:
                   () => _resetAllTutorials(
                     context,
-                    'All tutorials have been reset.',
+                    strings.tutorialsResetAllMessage,
                   ),
             ),
           ]),
         ),
-        const SettingsInfoCard(
+        SettingsInfoCard(
           icon: Icons.lightbulb_outline,
-          title: 'How tutorials work',
-          body:
-              'Tutorials appear once, then stay out of the way. Expand a group to reset a specific walkthrough.',
+          title: strings.tutorialsHowItWorksTitle,
+          body: strings.tutorialsHowItWorksBody,
         ),
         const SizedBox(height: 16),
         _TutorialSettingsSection(
-          title: 'Main Tabs',
-          subtitle: 'Replay walkthroughs for each main area.',
+          title: strings.tutorialsMainTabsTitle,
+          subtitle: strings.tutorialsMainTabsSubtitle,
           accentColor: SettingsAccent.appearance,
           children: settingsTilesWithDividers(context, [
             _tutorialResetTile(
@@ -87,8 +88,8 @@ class TutorialsSettingsPage extends StatelessWidget {
           ]),
         ),
         _TutorialSettingsSection(
-          title: 'Workout',
-          subtitle: 'Help for logging your first session.',
+          title: strings.tutorialsWorkoutTitle,
+          subtitle: strings.tutorialsWorkoutSubtitle,
           accentColor: SettingsAccent.training,
           children: settingsTilesWithDividers(context, [
             _tutorialResetTile(
@@ -102,8 +103,8 @@ class TutorialsSettingsPage extends StatelessWidget {
           ]),
         ),
         _TutorialSettingsSection(
-          title: 'Plans & Workouts',
-          subtitle: 'Replay plan creation, editing, and workout detail help.',
+          title: strings.tutorialsPlansTitle,
+          subtitle: strings.tutorialsPlansSubtitle,
           accentColor: SettingsAccent.training,
           children: settingsTilesWithDividers(context, [
             _tutorialResetTile(
@@ -167,8 +168,8 @@ class TutorialsSettingsPage extends StatelessWidget {
           ]),
         ),
         _TutorialSettingsSection(
-          title: 'Catalog & Anatomy',
-          subtitle: 'Replay exercise and target anatomy help.',
+          title: strings.tutorialsCatalogTitle,
+          subtitle: strings.tutorialsCatalogSubtitle,
           accentColor: SettingsAccent.advanced,
           children: settingsTilesWithDividers(context, [
             _tutorialResetTile(
@@ -222,8 +223,8 @@ class TutorialsSettingsPage extends StatelessWidget {
           ]),
         ),
         _TutorialSettingsSection(
-          title: 'Progress & Settings',
-          subtitle: 'Replay progress detail and settings page help.',
+          title: strings.tutorialsProgressTitle,
+          subtitle: strings.tutorialsProgressSubtitle,
           accentColor: SettingsAccent.progress,
           children: settingsTilesWithDividers(context, [
             _tutorialResetTile(
@@ -280,12 +281,19 @@ class TutorialsSettingsPage extends StatelessWidget {
     required String tutorialId,
     required String message,
   }) {
+    final strings = AppLocalizations.of(context);
+    final topic = _tutorialTopic(strings, tutorialId);
     return SettingsActionTile(
       icon: icon,
-      title: title,
-      subtitle: subtitle,
-      trailing: _ResetPill(label: 'Reset'),
-      onTap: () => _resetTutorial(context, tutorialId, message),
+      title: strings.tutorialsReplayTitle(topic),
+      subtitle: strings.tutorialsShownNextTime(topic),
+      trailing: _ResetPill(label: strings.tutorialsReset),
+      onTap:
+          () => _resetTutorial(
+            context,
+            tutorialId,
+            strings.tutorialsWillReplayNextTime(topic),
+          ),
     );
   }
 
@@ -307,6 +315,39 @@ class TutorialsSettingsPage extends StatelessWidget {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  String _tutorialTopic(AppLocalizations strings, String tutorialId) {
+    return switch (tutorialId) {
+      TutorialIds.trainHome => strings.tutorialsTopicTrain,
+      TutorialIds.catalogHome => strings.tutorialsTopicCatalog,
+      TutorialIds.logbookHome => strings.tutorialsTopicLogbook,
+      TutorialIds.progressHome => strings.tutorialsTopicProgress,
+      TutorialIds.profileHome => strings.tutorialsTopicProfile,
+      TutorialIds.firstWorkoutSession => strings.tutorialsTopicFirstWorkout,
+      TutorialIds.generatePlans => strings.tutorialsTopicGeneratePlans,
+      TutorialIds.optimizedWorkoutSettings =>
+        strings.tutorialsTopicOptimizedSettings,
+      TutorialIds.premadePlans => strings.tutorialsTopicPremadePlans,
+      TutorialIds.planManagement => strings.tutorialsTopicPlanManagement,
+      TutorialIds.planDetail => strings.tutorialsTopicPlanDetail,
+      TutorialIds.onboardingManualPlan => strings.tutorialsTopicPlanBuilder,
+      TutorialIds.workoutDetail => strings.tutorialsTopicWorkoutDetail,
+      TutorialIds.exerciseCatalog => strings.tutorialsTopicExerciseCatalog,
+      TutorialIds.exerciseDetail => strings.tutorialsTopicExerciseDetail,
+      TutorialIds.targetAnatomy => strings.tutorialsTopicTargetAnatomy,
+      TutorialIds.bodypartDetail => strings.tutorialsTopicBodypartDetail,
+      TutorialIds.muscleDetail => strings.tutorialsTopicMuscleDetail,
+      TutorialIds.weeklySetsOverview => strings.tutorialsTopicWeeklySets,
+      TutorialIds.exerciseProgressDetail =>
+        strings.tutorialsTopicExerciseProgress,
+      TutorialIds.measurementTrendDetail =>
+        strings.tutorialsTopicMeasurementTrend,
+      TutorialIds.gymProfileEditor => strings.tutorialsTopicGymProfile,
+      TutorialIds.uiAppearanceSettings => strings.tutorialsTopicUiAppearance,
+      TutorialIds.databaseSettings => strings.tutorialsTopicDatabaseSettings,
+      _ => strings.tutorialsTopicGuide,
+    };
   }
 }
 

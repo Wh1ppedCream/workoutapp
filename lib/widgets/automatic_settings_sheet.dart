@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/generated/app_localizations.dart';
 import '../providers/preset_session.dart';
 import '../providers/unit_preference_provider.dart';
 import '../models/models.dart';
@@ -44,6 +45,8 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
   late ProgressionSuccessScope _successCountMode;
   bool _isSaving = false;
 
+  AppLocalizations get _strings => AppLocalizations.of(context);
+
   /// Iterates every parent and child preset_set row ID in the loaded preset.
   Iterable<int> _allSetIds(PresetSession preset) sync* {
     for (final parentList in preset.presetParentSetIds) {
@@ -59,7 +62,7 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
   Widget _buildSaveButton() {
     return ElevatedButton(
       onPressed: _isSaving ? null : _saveAllAndClose,
-      child: Text(_isSaving ? 'Saving...' : 'Save'),
+      child: Text(_isSaving ? _strings.automaticSaving : _strings.commonSave),
     );
   }
 
@@ -189,7 +192,7 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not save settings: $error')),
+        SnackBar(content: Text(_strings.automaticSaveFailed(error.toString()))),
       );
     } finally {
       if (mounted && !closedSheet) setState(() => _isSaving = false);
@@ -209,6 +212,7 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final extras = theme.extension<AppColors>();
@@ -230,7 +234,10 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
               child: Column(
                 children: [
                   TabBar(
-                    tabs: const [Tab(text: 'Values'), Tab(text: 'Methods')],
+                    tabs: [
+                      Tab(text: strings.automaticValuesTab),
+                      Tab(text: strings.automaticMethodsTab),
+                    ],
                     labelColor: cs.primary,
                     unselectedLabelColor: labelColor.withValues(alpha: 0.6),
                     indicatorColor: cs.primary,
@@ -251,7 +258,7 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
                                     decimal: true,
                                   ),
                               decoration: InputDecoration(
-                                labelText: 'Global Increment Amount',
+                                labelText: strings.automaticGlobalIncrement,
                                 suffixText: _weightUnit.shortLabel,
                                 border: const OutlineInputBorder(),
                               ),
@@ -263,7 +270,7 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
                               children: [
                                 Expanded(
                                   child: ChoiceChip(
-                                    label: const Text('Auto Select'),
+                                    label: Text(strings.automaticAutoSelect),
                                     selected: !_manualSelect,
                                     onSelected:
                                         (_) => setState(
@@ -274,7 +281,7 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: ChoiceChip(
-                                    label: const Text('Manual Select'),
+                                    label: Text(strings.automaticManualSelect),
                                     selected: _manualSelect,
                                     onSelected:
                                         (_) => setState(
@@ -288,7 +295,7 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
 
                             if (!_manualSelect) ...[
                               CheckboxListTile(
-                                title: const Text('Skip First Set?'),
+                                title: Text(strings.automaticSkipFirstSet),
                                 value: _skipFirst,
                                 activeColor: cs.primary,
                                 onChanged: (checked) {
@@ -503,7 +510,7 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
                           controller: scrollCtrl,
                           padding: const EdgeInsets.all(16),
                           children: [
-                            const Text('Increment When (decrement otherwise):'),
+                            Text(strings.automaticIncrementWhen),
                             CheckboxListTile(
                               title: const Text(
                                 'Completed weight ≥ target weight',
@@ -537,12 +544,12 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
                             ),
                             const SizedBox(height: 16),
 
-                            const Text(
-                              'Success/Fails counted and increments/decrements made based off:',
+                            Text(
+                              strings.automaticScopeLabel,
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
                             RadioListTile<ProgressionSuccessScope>(
-                              title: const Text('Workout Session'),
+                              title: Text(strings.automaticWorkoutSession),
                               value: ProgressionSuccessScope.session,
                               groupValue: _successCountMode,
                               activeColor: cs.primary,
@@ -550,7 +557,7 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
                                   (m) => setState(() => _successCountMode = m!),
                             ),
                             RadioListTile<ProgressionSuccessScope>(
-                              title: const Text('per Exercise'),
+                              title: Text(strings.automaticPerExercise),
                               value: ProgressionSuccessScope.exercise,
                               groupValue: _successCountMode,
                               activeColor: cs.primary,
@@ -558,7 +565,7 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
                                   (m) => setState(() => _successCountMode = m!),
                             ),
                             RadioListTile<ProgressionSuccessScope>(
-                              title: const Text('per Set'),
+                              title: Text(strings.automaticPerSet),
                               value: ProgressionSuccessScope.set,
                               groupValue: _successCountMode,
                               activeColor: cs.primary,
@@ -567,12 +574,12 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
                             ),
 
                             const SizedBox(height: 16),
-                            const Text(
-                              'For Every Exercise:',
+                            Text(
+                              strings.automaticAdjustScope,
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
                             RadioListTile<bool>(
-                              title: const Text('Adjust 1 set'),
+                              title: Text(strings.automaticAdjustOneSet),
                               value: false,
                               groupValue: widget.preset.adjustAllSets,
                               activeColor: cs.primary,
@@ -582,7 +589,7 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
                                   ),
                             ),
                             RadioListTile<bool>(
-                              title: const Text('Adjust All sets'),
+                              title: Text(strings.automaticAdjustAllSets),
                               value: true,
                               groupValue: widget.preset.adjustAllSets,
                               activeColor: cs.primary,

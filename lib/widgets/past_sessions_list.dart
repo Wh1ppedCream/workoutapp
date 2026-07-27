@@ -2,8 +2,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 import '../models/models.dart';
+import '../l10n/generated/app_localizations.dart';
 import '../repositories/app_repository.dart';
 import '../screens/exercise/full_history_screen.dart';
 import '../screens/exercise/session_detail_screen.dart';
@@ -29,11 +31,11 @@ class PastSessionsList extends StatefulWidget {
 
 class _PastSessionsListState extends State<PastSessionsList>
     with AutomaticKeepAliveClientMixin<PastSessionsList> {
-  final _repo = AppRepository();
+  AppRepository get _repo => context.read<AppRepository>();
 
-  static const _options = {'Week': 7, 'Month': 30, 'Year': 365, 'All': null};
+  static const _options = {'week': 7, 'month': 30, 'year': 365, 'all': null};
 
-  String _selected = 'Week';
+  String _selected = 'week';
   late Future<List<WorkoutSession>> _sessionsFuture;
   List<WorkoutSession>? _lastSessions;
 
@@ -76,6 +78,13 @@ class _PastSessionsListState extends State<PastSessionsList>
     super.build(context);
     final colors = context.colors;
     final cs = context.cs;
+    final strings = AppLocalizations.of(context);
+    final optionLabels = <String, String>{
+      'week': strings.pastSessionsWeek,
+      'month': strings.pastSessionsMonth,
+      'year': strings.pastSessionsYear,
+      'all': strings.pastSessionsAll,
+    };
 
     return SizedBox(
       height: widget.height,
@@ -88,7 +97,10 @@ class _PastSessionsListState extends State<PastSessionsList>
             children: [
               Row(
                 children: [
-                  Text('Show:', style: TextStyle(color: cs.onSurface)),
+                  Text(
+                    strings.pastSessionsShow,
+                    style: TextStyle(color: cs.onSurface),
+                  ),
                   const SizedBox(width: 8),
                   DropdownButton<String>(
                     value: _selected,
@@ -97,7 +109,7 @@ class _PastSessionsListState extends State<PastSessionsList>
                             .map(
                               (label) => DropdownMenuItem(
                                 value: label,
-                                child: Text(label),
+                                child: Text(optionLabels[label]!),
                               ),
                             )
                             .toList(),
@@ -115,7 +127,7 @@ class _PastSessionsListState extends State<PastSessionsList>
                       Icons.fullscreen,
                       color: colors.pastSessionsIcon!,
                     ),
-                    tooltip: 'Fullscreen',
+                    tooltip: strings.pastSessionsFullscreen,
                     onPressed: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(
@@ -140,7 +152,11 @@ class _PastSessionsListState extends State<PastSessionsList>
                       );
                     }
                     if (snap.hasError && !snap.hasData) {
-                      return Center(child: Text('Error: ${snap.error}'));
+                      return Center(
+                        child: Text(
+                          strings.pastSessionsError(snap.error.toString()),
+                        ),
+                      );
                     }
 
                     final sessions = snap.data ?? const <WorkoutSession>[];
@@ -149,7 +165,7 @@ class _PastSessionsListState extends State<PastSessionsList>
                       _lastSessions = sessions;
                     }
                     if (sessions.isEmpty) {
-                      return const Center(child: Text('No sessions yet.'));
+                      return Center(child: Text(strings.pastSessionsEmpty));
                     }
 
                     return ListView.separated(
@@ -162,8 +178,8 @@ class _PastSessionsListState extends State<PastSessionsList>
                           ),
                       itemBuilder: (ctx, i) {
                         final ses = sessions[i];
-                        final dateStr = DateFormat(
-                          'yyyy-MM-dd',
+                        final dateStr = DateFormat.yMMMd(
+                          Localizations.localeOf(context).toString(),
                         ).format(ses.date);
                         final durationMin = (ses.duration / 60).ceil();
 
@@ -174,7 +190,7 @@ class _PastSessionsListState extends State<PastSessionsList>
                           ),
                           child: ListTile(
                             title: Text(
-                              '$dateStr - $durationMin min',
+                              strings.pastSessionsItem(dateStr, durationMin),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),

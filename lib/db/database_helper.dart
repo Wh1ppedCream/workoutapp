@@ -48,7 +48,7 @@ import 'package:flutter/foundation.dart' show debugPrint;
 
 /// Singleton helper for managing the SQLite database.
 class DatabaseHelper {
-  static const int _kDbVersion = 55;
+  static const int _kDbVersion = 56;
   static int get currentSchemaVersion => _kDbVersion;
   static const String _kOpenTriggerResetKey = 'open_trigger_reset_v1';
   static const String _kOpenIndexEnsureKey = 'open_index_ensure_v3';
@@ -164,6 +164,7 @@ class DatabaseHelper {
         await Schema.migrateV53(db);
         await Schema.migrateV54(db);
         await Schema.migrateV55(db);
+        await Schema.migrateV56(db);
         await _resetDbTriggers(db); // <—
         await _maybeCompactLegacyFoodCatalog(db);
         await _removeEmptyStarterPlans(db);
@@ -1188,33 +1189,14 @@ class DatabaseHelper {
   }
 
   Future<void> _ensureFoodFtsTriggers(DatabaseExecutor db) async {
-    if (!await _hasFoodFtsTable(db)) return;
-
-    await db.execute("""
-    CREATE TRIGGER IF NOT EXISTS foods_ai AFTER INSERT ON foods BEGIN
-      INSERT INTO food_search_fts(rowid, name, brand)
-      VALUES (NEW.id, COALESCE(NEW.name,''), COALESCE(NEW.brand,''));
-    END;
-  """);
-    await db.execute("""
-    CREATE TRIGGER IF NOT EXISTS foods_ad AFTER DELETE ON foods BEGIN
-      INSERT INTO food_search_fts(food_search_fts, rowid, name, brand)
-      VALUES('delete', OLD.id, COALESCE(OLD.name,''), COALESCE(OLD.brand,''));
-    END;
-  """);
-    await db.execute("""
-    CREATE TRIGGER IF NOT EXISTS foods_au AFTER UPDATE ON foods BEGIN
-      INSERT INTO food_search_fts(food_search_fts, rowid, name, brand)
-      VALUES('delete', OLD.id, COALESCE(OLD.name,''), COALESCE(OLD.brand,''));
-      INSERT INTO food_search_fts(rowid, name, brand)
-      VALUES (NEW.id, COALESCE(NEW.name,''), COALESCE(NEW.brand,''));
-    END;
-    """);
+    await Schema.ensureFoodFtsTriggers(db);
   }
 
   Future<void> _dropFoodFtsTriggers(DatabaseExecutor db) async {
     await db.execute('DROP TRIGGER IF EXISTS foods_ai;');
     await db.execute('DROP TRIGGER IF EXISTS foods_ad;');
+    await db.execute('DROP TRIGGER IF EXISTS foods_bd;');
+    await db.execute('DROP TRIGGER IF EXISTS foods_bu;');
     await db.execute('DROP TRIGGER IF EXISTS foods_au;');
   }
 

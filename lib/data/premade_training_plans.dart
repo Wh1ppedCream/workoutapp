@@ -781,11 +781,10 @@ const _authoredPremadeTrainingPlans = <PremadeTrainingPlan>[
   ),
 ];
 
-final _oneHourPlanCounterparts =
-    _authoredPremadeTrainingPlans
-        .where((plan) => plan.durationMinutes == 120)
-        .map(_toOneHourVersion)
-        .toList(growable: false);
+final _oneHourPlanCounterparts = _authoredPremadeTrainingPlans
+    .where((plan) => plan.durationMinutes == 120)
+    .map(_toOneHourVersion)
+    .toList(growable: false);
 
 PremadeTrainingPlan _toOneHourVersion(PremadeTrainingPlan plan) {
   return PremadeTrainingPlan(

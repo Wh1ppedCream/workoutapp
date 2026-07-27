@@ -1,6 +1,8 @@
 // File: lib/screens/exercise_muscle_percent_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../l10n/generated/app_localizations.dart';
 import '../repositories/app_repository.dart';
 import '../models/models.dart';
 
@@ -8,11 +10,13 @@ class ExerciseMusclePercentScreen extends StatefulWidget {
   const ExerciseMusclePercentScreen({super.key});
 
   @override
-  State<ExerciseMusclePercentScreen> createState() => _ExerciseMusclePercentScreenState();
+  State<ExerciseMusclePercentScreen> createState() =>
+      _ExerciseMusclePercentScreenState();
 }
 
-class _ExerciseMusclePercentScreenState extends State<ExerciseMusclePercentScreen> {
-  final _repo = AppRepository();
+class _ExerciseMusclePercentScreenState
+    extends State<ExerciseMusclePercentScreen> {
+  AppRepository get _repo => context.read<AppRepository>();
 
   List<ExerciseDefinition> _defs = [];
   ExerciseDefinition? _sel;
@@ -45,7 +49,7 @@ class _ExerciseMusclePercentScreenState extends State<ExerciseMusclePercentScree
       setState(() => _error = e.toString());
     } finally {
       if (mounted) {
-      setState(() => _isLoading = false);
+        setState(() => _isLoading = false);
       }
     }
   }
@@ -67,11 +71,15 @@ class _ExerciseMusclePercentScreenState extends State<ExerciseMusclePercentScree
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load entries: $e')),
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).musclePercentLoadFailed(e.toString()),
+          ),
+        ),
       );
     } finally {
       if (mounted) {
-      setState(() => _isLoadingEntries = false);
+        setState(() => _isLoadingEntries = false);
       }
     }
   }
@@ -86,7 +94,13 @@ class _ExerciseMusclePercentScreenState extends State<ExerciseMusclePercentScree
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to update percent: $e')),
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(
+              context,
+            ).musclePercentUpdateFailed(e.toString()),
+          ),
+        ),
       );
     }
   }
@@ -100,33 +114,36 @@ class _ExerciseMusclePercentScreenState extends State<ExerciseMusclePercentScree
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to reset to default: $e')),
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).musclePercentResetFailed(e.toString()),
+          ),
+        ),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     if (_isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     if (_error != null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('% Hit per Muscle')),
-        body: Center(child: Text('Error: $_error')),
+        appBar: AppBar(title: Text(strings.musclePercentTitle)),
+        body: Center(child: Text(strings.musclePercentError(_error!))),
       );
     }
     if (_defs.isEmpty) {
       return Scaffold(
-        appBar: AppBar(title: const Text('% Hit per Muscle')),
-        body: const Center(child: Text('No exercises defined')),
+        appBar: AppBar(title: Text(strings.musclePercentTitle)),
+        body: Center(child: Text(strings.musclePercentNoExercises)),
       );
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('% Hit per Muscle')),
+      appBar: AppBar(title: Text(strings.musclePercentTitle)),
       body: Column(
         children: [
           Padding(
@@ -134,12 +151,12 @@ class _ExerciseMusclePercentScreenState extends State<ExerciseMusclePercentScree
             child: DropdownButton<ExerciseDefinition>(
               isExpanded: true,
               value: _sel,
-              items: _defs
-                  .map((d) => DropdownMenuItem(
-                        value: d,
-                        child: Text(d.name),
-                      ))
-                  .toList(),
+              items:
+                  _defs
+                      .map(
+                        (d) => DropdownMenuItem(value: d, child: Text(d.name)),
+                      )
+                      .toList(),
               onChanged: (d) {
                 if (d == null) return;
                 setState(() {
@@ -159,46 +176,51 @@ class _ExerciseMusclePercentScreenState extends State<ExerciseMusclePercentScree
             )
           else
             Expanded(
-              child: _entries.isEmpty
-                  ? const Center(child: Text('No muscle percentages set'))
-                  : ListView.builder(
-                      itemCount: _entries.length,
-                      itemBuilder: (_, i) {
-                        final e = _entries[i];
-                        final def = _sel!;
-                        final muscleName = def.muscles
-                            .firstWhere((rm) => rm.muscle.id == e.muscleId)
-                            .muscle
-                            .name;
-                        final isOverride = _overrides.contains(e.muscleId);
+              child:
+                  _entries.isEmpty
+                      ? Center(child: Text(strings.musclePercentEmpty))
+                      : ListView.builder(
+                        itemCount: _entries.length,
+                        itemBuilder: (_, i) {
+                          final e = _entries[i];
+                          final def = _sel!;
+                          final muscleName =
+                              def.muscles
+                                  .firstWhere(
+                                    (rm) => rm.muscle.id == e.muscleId,
+                                  )
+                                  .muscle
+                                  .name;
+                          final isOverride = _overrides.contains(e.muscleId);
 
-                        return ListTile(
-                          title: Text(muscleName),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              SizedBox(
-                                width: 70,
-                                child: TextFormField(
-                                  initialValue: e.percent.toStringAsFixed(1),
-                                  keyboardType: TextInputType.number,
-                                  decoration: const InputDecoration(labelText: '%'),
-                                  onFieldSubmitted: (v) =>
-                                      _updatePercent(e.muscleId, v),
+                          return ListTile(
+                            title: Text(muscleName),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                SizedBox(
+                                  width: 70,
+                                  child: TextFormField(
+                                    initialValue: e.percent.toStringAsFixed(1),
+                                    keyboardType: TextInputType.number,
+                                    decoration: InputDecoration(
+                                      labelText: strings.musclePercentLabel,
+                                    ),
+                                    onFieldSubmitted:
+                                        (v) => _updatePercent(e.muscleId, v),
+                                  ),
                                 ),
-                              ),
-                              if (isOverride)
-                                IconButton(
-                                  icon: const Icon(Icons.refresh),
-                                  tooltip: 'Revert to default',
-                                  onPressed: () =>
-                                      _resetPercent(e.muscleId),
-                                ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
+                                if (isOverride)
+                                  IconButton(
+                                    icon: const Icon(Icons.refresh),
+                                    tooltip: strings.musclePercentRevert,
+                                    onPressed: () => _resetPercent(e.muscleId),
+                                  ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
             ),
         ],
       ),

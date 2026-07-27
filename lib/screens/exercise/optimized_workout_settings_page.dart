@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../l10n/generated/app_localizations.dart';
 import '../../models/models.dart';
 import '../../services/tutorial_state_store.dart';
 import '../../widgets/bodypart_focus_chips.dart';
@@ -137,6 +138,7 @@ class _OptimizedWorkoutSettingsPageState
 
   Future<void> _showTutorial() async {
     try {
+      final strings = AppLocalizations.of(context);
       await showGuidedTutorialOnce(
         context,
         tutorialId: TutorialIds.optimizedWorkoutSettings,
@@ -144,37 +146,32 @@ class _OptimizedWorkoutSettingsPageState
           GuidedTutorialStep(
             targetKey: _budgetTutorialKey,
             icon: Icons.timer_outlined,
-            title: 'Session budget',
-            body:
-                'Set how long the optimized workout should be and how many sets each exercise can receive.',
+            title: strings.optimizedTutorialBudgetTitle,
+            body: strings.optimizedTutorialBudgetBody,
           ),
           GuidedTutorialStep(
             targetKey: _repWeightTutorialKey,
             icon: Icons.fitness_center_outlined,
-            title: 'Reps and weight',
-            body:
-                'These choices control the set pattern, target reps, and how conservative generated weights should be.',
+            title: strings.optimizedTutorialRepsTitle,
+            body: strings.optimizedTutorialRepsBody,
           ),
           GuidedTutorialStep(
             targetKey: _focusTutorialKey,
             icon: Icons.track_changes_outlined,
-            title: 'Bodypart focus',
-            body:
-                'Prefer or avoid bodyparts for the next optimized workout without changing your saved rankings.',
+            title: strings.optimizedTutorialFocusTitle,
+            body: strings.optimizedTutorialFocusBody,
           ),
           GuidedTutorialStep(
             targetKey: _resetTutorialKey,
             icon: Icons.refresh,
-            title: 'Reset',
-            body:
-                'Reset brings this page back to Tonos defaults if the current setup feels off.',
+            title: strings.commonReset,
+            body: strings.optimizedTutorialResetBody,
           ),
           GuidedTutorialStep(
             targetKey: _actionsTutorialKey,
             icon: Icons.play_circle_outline,
-            title: 'Save or start',
-            body:
-                'Start Now uses the current on-screen values once. Save keeps the settings for future optimized workouts.',
+            title: strings.optimizedTutorialActionsTitle,
+            body: strings.optimizedTutorialActionsBody,
           ),
         ],
       );
@@ -202,7 +199,9 @@ class _OptimizedWorkoutSettingsPageState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Enter a valid duration, rep target, and set range between 1-${SessionSpec.maxAllowedSetsPerExercise}.',
+            AppLocalizations.of(
+              context,
+            ).optimizedValidationError(SessionSpec.maxAllowedSetsPerExercise),
           ),
         ),
       );
@@ -227,6 +226,7 @@ class _OptimizedWorkoutSettingsPageState
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = AppLocalizations.of(context);
     return Scaffold(
       body: SafeArea(
         child: Stack(
@@ -243,14 +243,14 @@ class _OptimizedWorkoutSettingsPageState
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Session budget',
+                            strings.optimizedTutorialBudgetTitle,
                             style: theme.textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.w800,
                             ),
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Used to budget 3 minutes per set plus 5 minutes to start each exercise.',
+                            strings.optimizedBudgetDescription,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
@@ -260,10 +260,10 @@ class _OptimizedWorkoutSettingsPageState
                             controller: _minutesController,
                             keyboardType: TextInputType.number,
                             textInputAction: TextInputAction.next,
-                            decoration: const InputDecoration(
-                              labelText: 'Workout duration',
-                              suffixText: 'min',
-                              border: OutlineInputBorder(),
+                            decoration: InputDecoration(
+                              labelText: strings.optimizedWorkoutDuration,
+                              suffixText: strings.unitMinutesShort,
+                              border: const OutlineInputBorder(),
                             ),
                           ),
                           const SizedBox(height: 12),
@@ -271,10 +271,10 @@ class _OptimizedWorkoutSettingsPageState
                             controller: _minSetsController,
                             keyboardType: TextInputType.number,
                             textInputAction: TextInputAction.next,
-                            decoration: const InputDecoration(
-                              labelText: 'Minimum sets per exercise',
-                              suffixText: 'sets',
-                              border: OutlineInputBorder(),
+                            decoration: InputDecoration(
+                              labelText: strings.optimizedMinimumSets,
+                              suffixText: strings.unitSets,
+                              border: const OutlineInputBorder(),
                             ),
                           ),
                           const SizedBox(height: 12),
@@ -282,10 +282,10 @@ class _OptimizedWorkoutSettingsPageState
                             controller: _maxSetsController,
                             keyboardType: TextInputType.number,
                             textInputAction: TextInputAction.done,
-                            decoration: const InputDecoration(
-                              labelText: 'Up to sets per exercise',
-                              suffixText: 'sets',
-                              border: OutlineInputBorder(),
+                            decoration: InputDecoration(
+                              labelText: strings.optimizedMaximumSets,
+                              suffixText: strings.unitSets,
+                              border: const OutlineInputBorder(),
                             ),
                           ),
                         ],
@@ -303,34 +303,34 @@ class _OptimizedWorkoutSettingsPageState
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Reps & weights',
+                            strings.optimizedRepsWeightsTitle,
                             style: theme.textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.w800,
                             ),
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Uses history-based strength estimates when available, with Easy and Medium backing off more than Hard. New exercises use conservative starter estimates.',
+                            strings.optimizedRepsWeightsDescription,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
                           ),
                           const SizedBox(height: 14),
                           _SettingsChoice<RepWeightGenerationMode>(
-                            title: 'Rep pattern',
+                            title: strings.optimizedRepPattern,
                             value: _repWeightMode,
-                            options: const [
+                            options: [
                               _SettingsChoiceOption(
                                 value: RepWeightGenerationMode.mixed,
-                                label: 'Mixed',
+                                label: strings.repModeMixed,
                               ),
                               _SettingsChoiceOption(
                                 value: RepWeightGenerationMode.pyramid,
-                                label: 'Pyramid',
+                                label: strings.repModePyramid,
                               ),
                               _SettingsChoiceOption(
                                 value: RepWeightGenerationMode.consistent,
-                                label: 'Consistent',
+                                label: strings.repModeConsistent,
                               ),
                             ],
                             onChanged:
@@ -342,28 +342,28 @@ class _OptimizedWorkoutSettingsPageState
                             controller: _targetRepsController,
                             keyboardType: TextInputType.number,
                             textInputAction: TextInputAction.next,
-                            decoration: const InputDecoration(
-                              labelText: 'Target reps',
-                              suffixText: 'reps',
-                              border: OutlineInputBorder(),
+                            decoration: InputDecoration(
+                              labelText: strings.optimizedTargetReps,
+                              suffixText: strings.unitReps,
+                              border: const OutlineInputBorder(),
                             ),
                           ),
                           const SizedBox(height: 12),
                           _SettingsChoice<StarterWeightIntensity>(
-                            title: 'Weight intensity',
+                            title: strings.optimizedWeightIntensity,
                             value: _starterWeightIntensity,
-                            options: const [
+                            options: [
                               _SettingsChoiceOption(
                                 value: StarterWeightIntensity.easy,
-                                label: 'Easy',
+                                label: strings.intensityEasy,
                               ),
                               _SettingsChoiceOption(
                                 value: StarterWeightIntensity.medium,
-                                label: 'Medium',
+                                label: strings.intensityMedium,
                               ),
                               _SettingsChoiceOption(
                                 value: StarterWeightIntensity.hard,
-                                label: 'Hard',
+                                label: strings.intensityHard,
                               ),
                             ],
                             onChanged:
@@ -386,14 +386,14 @@ class _OptimizedWorkoutSettingsPageState
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Bodypart focus',
+                            strings.optimizedBodypartFocusTitle,
                             style: theme.textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.w800,
                             ),
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'These picks apply only to the next optimized workout you start. Tap once to prefer, tap twice to avoid, and tap again to clear.',
+                            strings.optimizedBodypartFocusDescription,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
@@ -403,7 +403,7 @@ class _OptimizedWorkoutSettingsPageState
                             bodyParts: widget.bodyParts,
                             preferredBodypartIds: _preferredBodypartIds,
                             blacklistedBodypartIds: _blacklistedBodypartIds,
-                            emptyText: 'Bodyparts could not be loaded.',
+                            emptyText: strings.optimizedBodypartsUnavailable,
                             onChanged:
                                 (selection) => setState(() {
                                   _preferredBodypartIds =
@@ -424,7 +424,7 @@ class _OptimizedWorkoutSettingsPageState
               left: 16,
               child: _FloatingHeaderButton(
                 icon: Icons.close,
-                label: 'Cancel',
+                label: strings.commonCancel,
                 onPressed: () => Navigator.of(context).pop(),
               ),
             ),
@@ -435,7 +435,7 @@ class _OptimizedWorkoutSettingsPageState
                 key: _resetTutorialKey,
                 child: _FloatingHeaderButton(
                   icon: Icons.refresh,
-                  label: 'Reset',
+                  label: strings.commonReset,
                   onPressed: _resetToDefaults,
                 ),
               ),
@@ -457,14 +457,14 @@ class _OptimizedWorkoutSettingsPageState
                     backgroundColor: Colors.green.shade700,
                     foregroundColor: Colors.white,
                   ),
-                  child: const Text('Start Now'),
+                  child: Text(strings.commonStartNow),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: FilledButton(
                   onPressed: () => _submit(OptimizedWorkoutSettingsAction.save),
-                  child: const Text('Save'),
+                  child: Text(strings.commonSave),
                 ),
               ),
             ],

@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../models/models.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../providers/active_session.dart';
 import '../../providers/preset_session.dart';
 import '../../providers/selected_profile.dart';
@@ -64,7 +65,7 @@ class _Train2PageState extends State<Train2Page> {
   static const _optimizedSessionMinutesKey = 'train.optimized_session_minutes';
   static const _optimizedMaxSetsKey = 'train.optimized_max_sets_per_exercise';
 
-  final _repo = AppRepository();
+  AppRepository get _repo => context.read<AppRepository>();
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   int _selectedTab = 0; // 0 = Train, 1 = History
   int _presetsRefreshToken = 0;
@@ -162,6 +163,7 @@ class _Train2PageState extends State<Train2Page> {
   }
 
   Future<void> _openOptimizedWorkoutSettings() async {
+    final strings = AppLocalizations.of(context);
     List<BodyPart> bodyParts = const <BodyPart>[];
     try {
       bodyParts = await _repo.fetchAllBodyParts();
@@ -181,7 +183,7 @@ class _Train2PageState extends State<Train2Page> {
           (dialogContext) => StatefulBuilder(
             builder: (dialogContext, setDialogState) {
               return AlertDialog(
-                title: const Text('Optimized workout settings'),
+                title: Text(strings.trainOptimizedSettingsTitle),
                 content: SizedBox(
                   width: double.maxFinite,
                   child: SingleChildScrollView(
@@ -189,12 +191,10 @@ class _Train2PageState extends State<Train2Page> {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Used to budget 3 minutes per set plus 5 minutes to start each exercise.',
-                        ),
+                        Text(strings.trainOptimizedSettingsBudgetBody),
                         const SizedBox(height: 4),
-                        const Text(
-                          'Bodypart picks apply only to the next optimized workout you start.',
+                        Text(
+                          strings.trainOptimizedSettingsFocusBody,
                           style: TextStyle(fontSize: 12),
                         ),
                         const SizedBox(height: 12),
@@ -202,9 +202,9 @@ class _Train2PageState extends State<Train2Page> {
                           initialValue: draftMinutes,
                           keyboardType: TextInputType.number,
                           onChanged: (value) => draftMinutes = value,
-                          decoration: const InputDecoration(
-                            labelText: 'Workout duration',
-                            suffixText: 'min',
+                          decoration: InputDecoration(
+                            labelText: strings.trainWorkoutDuration,
+                            suffixText: strings.trainMinutesShort,
                             border: OutlineInputBorder(),
                           ),
                         ),
@@ -213,20 +213,20 @@ class _Train2PageState extends State<Train2Page> {
                           initialValue: draftMaxSets,
                           keyboardType: TextInputType.number,
                           onChanged: (value) => draftMaxSets = value,
-                          decoration: const InputDecoration(
-                            labelText: 'Up to sets per exercise',
-                            suffixText: 'sets',
+                          decoration: InputDecoration(
+                            labelText: strings.trainSetsPerExercise,
+                            suffixText: strings.trainSetsShort,
                             border: OutlineInputBorder(),
                           ),
                         ),
                         const SizedBox(height: 16),
-                        const Text(
-                          'Bodypart focus',
+                        Text(
+                          strings.trainBodypartFocus,
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 4),
-                        const Text(
-                          'Tap once to prefer a bodypart, tap again to avoid it, and tap a third time to clear it.',
+                        Text(
+                          strings.trainBodypartFocusHelp,
                           style: TextStyle(fontSize: 12),
                         ),
                         const SizedBox(height: 8),
@@ -234,7 +234,7 @@ class _Train2PageState extends State<Train2Page> {
                           bodyParts: bodyParts,
                           preferredBodypartIds: draftPreferred,
                           blacklistedBodypartIds: draftBlacklisted,
-                          emptyText: 'Bodyparts could not be loaded.',
+                          emptyText: strings.trainBodypartsLoadFailed,
                           onChanged:
                               (selection) => setDialogState(() {
                                 draftPreferred
@@ -252,7 +252,7 @@ class _Train2PageState extends State<Train2Page> {
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.of(dialogContext).pop(),
-                    child: const Text('Cancel'),
+                    child: Text(strings.commonCancel),
                   ),
                   TextButton(
                     onPressed: () {
@@ -274,7 +274,7 @@ class _Train2PageState extends State<Train2Page> {
                         ),
                       );
                     },
-                    child: const Text('Save'),
+                    child: Text(strings.commonSave),
                   ),
                 ],
               );
@@ -298,7 +298,9 @@ class _Train2PageState extends State<Train2Page> {
     final profileId = sel.currentProfile?.id;
     if (profileId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a gym profile first.')),
+        SnackBar(
+          content: Text(AppLocalizations.of(context).trainSelectProfileFirst),
+        ),
       );
       return;
     }
@@ -313,12 +315,18 @@ class _Train2PageState extends State<Train2Page> {
     setState(() => _presetsRefreshToken++);
     if (presetIds.length == 1) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Plan generated. Opening it now.')),
+        SnackBar(
+          content: Text(AppLocalizations.of(context).trainPlanGenerated),
+        ),
       );
       await _openPreset(presetIds.first);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Generated ${presetIds.length} plans.')),
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).trainPlansGenerated(presetIds.length),
+          ),
+        ),
       );
     }
     if (!mounted) return;
@@ -330,14 +338,12 @@ class _Train2PageState extends State<Train2Page> {
       context: context,
       builder:
           (dialogContext) => AlertDialog(
-            title: const Text('Take some time to rest'),
-            content: const Text(
-              'Your recent training is already at several bodypart limits, so an optimized workout would push recovery too far.',
-            ),
+            title: Text(AppLocalizations.of(context).trainRestTitle),
+            content: Text(AppLocalizations.of(context).trainRestBody),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(dialogContext).pop(),
-                child: const Text('OK'),
+                child: Text(AppLocalizations.of(context).commonOkay),
               ),
             ],
           ),
@@ -350,7 +356,9 @@ class _Train2PageState extends State<Train2Page> {
     final profileId = sel.currentProfile?.id;
     if (profileId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a gym profile first.')),
+        SnackBar(
+          content: Text(AppLocalizations.of(context).trainSelectProfileFirst),
+        ),
       );
       return;
     }
@@ -392,8 +400,10 @@ class _Train2PageState extends State<Train2Page> {
         temporaryPresetId = null;
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No eligible exercises were found for this profile.'),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context).trainNoEligibleExercises,
+            ),
           ),
         );
         return;
@@ -420,10 +430,8 @@ class _Train2PageState extends State<Train2Page> {
       if (!started) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Another workout is already active, so it was kept unchanged.',
-            ),
+          SnackBar(
+            content: Text(AppLocalizations.of(context).trainActiveWorkoutKept),
           ),
         );
         await Navigator.of(
@@ -447,7 +455,13 @@ class _Train2PageState extends State<Train2Page> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to start optimized workout: $e')),
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(
+              context,
+            ).trainOptimizedStartFailed(e.toString()),
+          ),
+        ),
       );
     } finally {
       if (temporaryPresetId != null) {
@@ -475,8 +489,12 @@ class _Train2PageState extends State<Train2Page> {
 
     final message =
         unavailableCount > 0
-            ? 'Optimized workout started. $unavailableCount exercise(s) still need manual weights.'
-            : 'Optimized workout started with starter weights for $estimatedCount new exercise(s).';
+            ? AppLocalizations.of(
+              context,
+            ).trainOptimizedManualWeights(unavailableCount)
+            : AppLocalizations.of(
+              context,
+            ).trainOptimizedStarterWeights(estimatedCount);
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
@@ -484,6 +502,7 @@ class _Train2PageState extends State<Train2Page> {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     final completedSessionVersion = context.select<ActiveSession, int>(
       (session) => session.completedSessionVersion,
     );
@@ -499,18 +518,18 @@ class _Train2PageState extends State<Train2Page> {
         return Scaffold(
           key: _scaffoldKey,
           drawer: MainDrawer(
-            headerTitle: 'Training Menu',
+            headerTitle: strings.trainMenuTitle,
             items: [
               DrawerItem(
-                title: 'Exercise Catalog',
+                title: strings.trainExerciseCatalog,
                 builder: (_) => const ExerciseCatalogPage(),
               ),
               DrawerItem(
-                title: 'Muscle Filter',
+                title: strings.trainMuscleFilter,
                 builder: (_) => const MuscleFilterPage(),
               ),
               DrawerItem(
-                title: 'Gym & Workout Settings',
+                title: strings.trainGymSettings,
                 builder: (_) => const GymExerciseSettingsPage(),
               ),
             ],
@@ -593,7 +612,10 @@ class _Train2PageState extends State<Train2Page> {
                       }
                     });
                   },
-                  children: const [Text('Train'), Text('History')],
+                  children: [
+                    Text(strings.trainTab),
+                    Text(strings.trainHistoryTab),
+                  ],
                 ),
               ),
             ),
@@ -627,13 +649,14 @@ class _Train2PageState extends State<Train2Page> {
   }
 
   Widget _buildTrainContent(SelectedProfile sel) {
+    final strings = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Padding(
+        Padding(
           padding: EdgeInsets.all(16),
           child: Text(
-            'Exercise Presets',
+            strings.trainExercisePresets,
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
         ),
@@ -652,21 +675,25 @@ class _Train2PageState extends State<Train2Page> {
 
         const SizedBox(height: 8),
         GenericBar(
-          label: 'Generate Custom Plans',
+          label: AppLocalizations.of(context).trainGeneratePlans,
           color: Colors.purple,
           onTap: () => _openCustomPresetGenerator(sel),
         ),
         const SizedBox(height: 8),
         GenericBar(
-          label: 'Manually Add Preset',
+          label: AppLocalizations.of(context).trainAddPlan,
           color: Colors.purple,
           onTap: () async {
+            final strings = AppLocalizations.of(context);
             final profileId = sel.currentProfile?.id;
             final existing = await _repo.fetchAllPresetsRaw(
               profileId: profileId,
             );
             final nextNum = existing.length + 1;
-            final name = nextNum == 1 ? 'New Preset' : 'New Preset $nextNum';
+            final name =
+                nextNum == 1
+                    ? strings.trainNewPlanFirst
+                    : strings.trainNewPlan(nextNum);
             final newId = await _repo.createPreset(name, profileId: profileId);
             _openPreset(newId, edit: true);
             if (!mounted) return;
@@ -679,8 +706,8 @@ class _Train2PageState extends State<Train2Page> {
         GenericBar(
           label:
               _isStartingOptimized
-                  ? 'Building Optimized Workout...'
-                  : 'Start Optimized Workout',
+                  ? AppLocalizations.of(context).trainBuildingOptimized
+                  : AppLocalizations.of(context).trainStartOptimized,
           color: Colors.green,
           onTap:
               _isStartingOptimized ? null : () => _startOptimizedWorkout(sel),
@@ -692,7 +719,10 @@ class _Train2PageState extends State<Train2Page> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                   : IconButton(
-                    tooltip: 'Optimized workout settings',
+                    tooltip:
+                        AppLocalizations.of(
+                          context,
+                        ).trainOptimizedSettingsTitle,
                     icon: const Icon(Icons.settings_outlined),
                     iconSize: 20,
                     visualDensity: VisualDensity.compact,
@@ -720,7 +750,7 @@ class _Train2PageState extends State<Train2Page> {
               if (!mounted) return;
               setState(() => _historyRefreshToken++);
             },
-            child: const Text('New Session'),
+            child: Text(AppLocalizations.of(context).trainNewSession),
           ),
         ),
       ],

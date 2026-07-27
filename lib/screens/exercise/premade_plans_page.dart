@@ -2,8 +2,10 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../data/premade_training_plans.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../models/models.dart';
 import '../../repositories/app_repository.dart';
 import '../../services/active_plan_store.dart';
@@ -41,7 +43,7 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
     'Body Part (Bro) Split',
   ];
 
-  final _repo = AppRepository();
+  AppRepository get _repo => context.read<AppRepository>();
   final _durationTutorialKey = GlobalKey(debugLabel: 'premade_duration');
   final _equipmentFilterTutorialKey = GlobalKey(
     debugLabel: 'premade_equipment_filter',
@@ -57,6 +59,8 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
   bool _filterForProfileEquipment = true;
   var _selectedDurationMinutes = 60;
   bool _tutorialQueued = false;
+
+  AppLocalizations get _strings => AppLocalizations.of(context);
 
   @override
   void initState() {
@@ -81,23 +85,20 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
           GuidedTutorialStep(
             targetKey: _durationTutorialKey,
             icon: Icons.schedule,
-            title: 'Plan length',
-            body:
-                'Switch between 1-hour and 2-hour versions. Longer versions include more exercises and total sets.',
+            title: _strings.premadeTutorialLengthTitle,
+            body: _strings.premadeTutorialLengthBody,
           ),
           GuidedTutorialStep(
             targetKey: _equipmentFilterTutorialKey,
             icon: Icons.tune,
-            title: 'Profile equipment',
-            body:
-                'When this is on, Tonos swaps unavailable exercises for similar options your current gym profile can perform.',
+            title: _strings.premadeTutorialEquipmentTitle,
+            body: _strings.premadeTutorialEquipmentBody,
           ),
           GuidedTutorialStep(
             targetKey: _planListTutorialKey,
             icon: Icons.library_books_outlined,
-            title: 'Plan library',
-            body:
-                'Open a split, preview a plan, then add it to your Active Plans so it appears on Train.',
+            title: _strings.premadeTutorialLibraryTitle,
+            body: _strings.premadeTutorialLibraryBody,
           ),
         ],
       );
@@ -112,9 +113,9 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
   ) async {
     final profileId = widget.profileId;
     if (profileId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a gym profile first.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(_strings.premadeSelectProfile)));
       return;
     }
 
@@ -157,12 +158,16 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
         setState(() => _onboardingCreatedPlanIds.add(presetId));
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$presetName added to Active Plans.')),
+        SnackBar(content: Text(_strings.premadePlanAdded(presetName))),
       );
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not add ${plan.name}: $error')),
+        SnackBar(
+          content: Text(
+            _strings.premadePlanAddFailed(plan.name, error.toString()),
+          ),
+        ),
       );
     } finally {
       if (mounted) {
@@ -487,21 +492,25 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
 
   Future<void> _discardOnboardingPlans() async {
     if (_isDiscardingOnboardingPlans) return;
+    final activePlanStore = context.read<ActivePlanStore>();
+    final repository = _repo;
     setState(() => _isDiscardingOnboardingPlans = true);
     try {
       final profileId = widget.profileId;
       for (final presetId in List<int>.from(_onboardingCreatedPlanIds)) {
         if (profileId != null) {
-          await ActivePlanStore.remove(profileId, presetId);
+          await activePlanStore.remove(profileId, presetId);
         }
-        await _repo.deletePreset(presetId);
+        await repository.deletePreset(presetId);
       }
       if (!mounted) return;
       Navigator.of(context).pop<List<int>>(const <int>[]);
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not discard added plans: $error')),
+        SnackBar(
+          content: Text(_strings.premadeDiscardFailed(error.toString())),
+        ),
       );
       setState(() => _isDiscardingOnboardingPlans = false);
     }
@@ -543,13 +552,14 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     final groupedPlans = _plansBySource();
     final homemadePlans =
         groupedPlans.remove(_homemadeSourceName) ??
         const <PremadeTrainingPlan>[];
     final adaptationFuture = _ensureAdaptationData();
     final content = Scaffold(
-      appBar: AppBar(title: const Text('Premade Plans')),
+      appBar: AppBar(title: Text(strings.premadePlansTitle)),
       bottomNavigationBar:
           widget.onboardingMode
               ? _OnboardingPlanActionBar(
@@ -597,7 +607,7 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
                     });
                   },
                   child: Text(
-                    'Copy coach, influencer, and app-curated routines into your own plans. Once added, you can edit them like any other plan.',
+                    strings.premadeDescription,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -682,6 +692,7 @@ class _OnboardingPlanActionBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     return SafeArea(
       top: false,
@@ -700,7 +711,9 @@ class _OnboardingPlanActionBar extends StatelessWidget {
             Expanded(
               child: OutlinedButton(
                 onPressed: isBusy ? null : onCancel,
-                child: Text(isBusy ? 'Discarding...' : 'Cancel'),
+                child: Text(
+                  isBusy ? strings.premadeDiscarding : strings.commonCancel,
+                ),
               ),
             ),
             const SizedBox(width: 12),
@@ -709,7 +722,7 @@ class _OnboardingPlanActionBar extends StatelessWidget {
               child: FilledButton.icon(
                 onPressed: isBusy ? null : onSave,
                 icon: _PlanCountBadge(count: addedCount),
-                label: const Text('Review Plans'),
+                label: Text(strings.premadeReviewPlans),
               ),
             ),
           ],
@@ -827,18 +840,19 @@ class _PremadeProfileEquipmentFilterCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final strings = AppLocalizations.of(context);
     final subtitle =
         !enabled
-            ? 'Select a gym profile to adapt plans to available equipment.'
+            ? strings.premadeEquipmentSelectProfile
             : !value
-            ? 'Premade plans are shown exactly as written.'
+            ? strings.premadeEquipmentExact
             : isLoading
-            ? 'Checking plan exercises against your profile...'
+            ? strings.premadeEquipmentChecking
             : !hasProfileEquipment
-            ? 'No profile equipment found, so premade plans are unchanged.'
+            ? strings.premadeEquipmentMissing
             : replacementCount > 0
-            ? '$replacementCount unavailable exercise${replacementCount == 1 ? '' : 's'} will be swapped when plans are added.'
-            : 'Plans already fit the current profile equipment.';
+            ? strings.premadeEquipmentReplacements(replacementCount)
+            : strings.premadeEquipmentFits;
 
     return Card(
       color: scheme.surfaceContainerHighest.withValues(alpha: 0.38),
@@ -853,7 +867,7 @@ class _PremadeProfileEquipmentFilterCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Filter for profile equipment',
+                    strings.swapFilterProfileEquipment,
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w800,
                     ),
@@ -945,6 +959,7 @@ class _PremadeDurationSwitch extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = AppLocalizations.of(context);
     final isTwoHour = durationMinutes == 120;
     final activeStyle = theme.textTheme.labelLarge?.copyWith(
       color: theme.colorScheme.primary,
@@ -967,13 +982,19 @@ class _PremadeDurationSwitch extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('1hr', style: isTwoHour ? inactiveStyle : activeStyle),
+            Text(
+              strings.premadeOneHour,
+              style: isTwoHour ? inactiveStyle : activeStyle,
+            ),
             Switch(
               value: isTwoHour,
               onChanged: (value) => onChanged(value ? 120 : 60),
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
-            Text('2hr', style: isTwoHour ? activeStyle : inactiveStyle),
+            Text(
+              strings.premadeTwoHours,
+              style: isTwoHour ? activeStyle : inactiveStyle,
+            ),
           ],
         ),
       ),
@@ -1031,6 +1052,7 @@ class _PremadeSourceSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = AppLocalizations.of(context);
     final grouped = _plansByGroup();
     final orderedGroupNames = _orderedGroupNames(grouped);
     final planCount = plans.length;
@@ -1048,7 +1070,7 @@ class _PremadeSourceSection extends StatelessWidget {
           ),
         ),
         subtitle: Text(
-          '$planCount ${planCount == 1 ? 'plan' : 'plans'} available',
+          strings.premadePlansAvailable(planCount),
           style: theme.textTheme.labelMedium?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
@@ -1093,6 +1115,7 @@ class _PremadePlanGroupTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = AppLocalizations.of(context);
     final planCount = plans.length;
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
@@ -1110,8 +1133,8 @@ class _PremadePlanGroupTile extends StatelessWidget {
         ),
         subtitle: Text(
           planCount == 0
-              ? 'No plan templates yet'
-              : '$planCount ${planCount == 1 ? 'plan' : 'plans'}',
+              ? strings.premadeNoTemplates
+              : strings.premadePlansCount(planCount),
           style: theme.textTheme.labelMedium?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
@@ -1123,7 +1146,7 @@ class _PremadePlanGroupTile extends StatelessWidget {
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'Templates for this split can be added here later.',
+                  strings.premadeTemplatesLater,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -1190,6 +1213,7 @@ class _PremadePlanCardState extends State<_PremadePlanCard> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = AppLocalizations.of(context);
     final plan = widget.plan;
     final exercises = widget.exercises;
     final totalSets = exercises.fold<int>(
@@ -1226,10 +1250,10 @@ class _PremadePlanCardState extends State<_PremadePlanCard> {
         const SizedBox(height: 4),
         Text(
           [
-            '${exercises.length} exercises',
-            '$totalSets sets',
+            strings.premadeExerciseCount(exercises.length),
+            strings.premadeSetCount(totalSets),
             if (widget.replacementCount > 0)
-              '${widget.replacementCount} swapped',
+              strings.premadeSwappedCount(widget.replacementCount),
           ].join(' - '),
           style: theme.textTheme.labelMedium?.copyWith(
             color: theme.colorScheme.primary,
@@ -1250,10 +1274,10 @@ class _PremadePlanCardState extends State<_PremadePlanCard> {
               : const Icon(Icons.add),
       label: Text(
         widget.isAdding
-            ? 'Adding'
+            ? strings.premadeAdding
             : widget.isPreparing
-            ? 'Checking'
-            : 'Add',
+            ? strings.premadeChecking
+            : strings.commonAdd,
       ),
     );
 
@@ -1334,6 +1358,7 @@ class _PremadeExerciseRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -1385,7 +1410,7 @@ class _PremadeExerciseRow extends StatelessWidget {
                         vertical: 2,
                       ),
                       child: Text(
-                        'profile swap',
+                        strings.premadeProfileSwap,
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: theme.colorScheme.onPrimaryContainer,
                           fontWeight: FontWeight.w800,

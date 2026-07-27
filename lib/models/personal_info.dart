@@ -24,28 +24,29 @@ class PersonalInfo {
   });
 
   factory PersonalInfo.fromMap(Map<String, dynamic> m) => PersonalInfo(
-    id:               m['id'] as int?,
-    name:             m['name'] as String?,
-    gender:           m['gender'] as String?,
-    dob:              (m['dob'] == null || (m['dob'] as String).isEmpty)
-                        ? null
-                        : DateTime.tryParse(m['dob'] as String),
-    height:           m['height'] as String?,
-    weight:           m['weight'] as String?,
-    bodyFatEstimate:  m['bodyfat_estimate'] as String?,
-    weightTrend:      m['weight_trend'] as String?,
-    activityLevel:    m['activity_level'] as String?,
+    id: m['id'] as int?,
+    name: m['name'] as String?,
+    gender: m['gender'] as String?,
+    dob:
+        (m['dob'] == null || (m['dob'] as String).isEmpty)
+            ? null
+            : DateTime.tryParse(m['dob'] as String),
+    height: m['height'] as String?,
+    weight: m['weight'] as String?,
+    bodyFatEstimate: m['bodyfat_estimate'] as String?,
+    weightTrend: m['weight_trend'] as String?,
+    activityLevel: m['activity_level'] as String?,
   );
 
   Map<String, dynamic> toMap() => {
     if (id != null) 'id': id!,
-    'name':              name,
-    'gender':            gender,
-    'dob':               dob?.toIso8601String(),
-    'height':            height,
-    'weight':            weight,
-    'bodyfat_estimate':  bodyFatEstimate,
-    'weight_trend':      weightTrend,
-    'activity_level':    activityLevel,
+    'name': name,
+    'gender': gender,
+    'dob': dob?.toIso8601String(),
+    'height': height,
+    'weight': weight,
+    'bodyfat_estimate': bodyFatEstimate,
+    'weight_trend': weightTrend,
+    'activity_level': activityLevel,
   };
 }

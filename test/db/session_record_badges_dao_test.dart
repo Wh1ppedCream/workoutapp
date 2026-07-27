@@ -41,47 +41,50 @@ void main() {
 
   tearDown(() => db.close());
 
-  test('first completed exercise receives first-record and gold badges', () async {
-    final sessionId = await _insertSession(db, DateTime(2026, 7, 15, 10));
-    final exerciseId = await _insertWeightExercise(
-      db,
-      sessionId: sessionId,
-      definitionId: 1,
-      orderIndex: 0,
-      sets: const [(100.0, 5), (90.0, 8)],
-    );
+  test(
+    'first completed exercise receives first-record and gold badges',
+    () async {
+      final sessionId = await _insertSession(db, DateTime(2026, 7, 15, 10));
+      final exerciseId = await _insertWeightExercise(
+        db,
+        sessionId: sessionId,
+        definitionId: 1,
+        orderIndex: 0,
+        sets: const [(100.0, 5), (90.0, 8)],
+      );
 
-    final result = await SessionRecordBadgesDao.forSession(db, sessionId);
-    final badges = result[exerciseId]!;
+      final result = await SessionRecordBadgesDao.forSession(db, sessionId);
+      final badges = result[exerciseId]!;
 
-    expect(badges.isFirstRecord, isTrue);
-    expect(
-      _contains(
-        badges.forSet(0),
-        WorkoutRecordBadgeType.repBest,
-        WorkoutRecordBadgeTier.allTime,
-        reps: 5,
-      ),
-      isTrue,
-    );
-    expect(
-      _contains(
-        badges.forSet(1),
-        WorkoutRecordBadgeType.repBest,
-        WorkoutRecordBadgeTier.allTime,
-        reps: 8,
-      ),
-      isTrue,
-    );
-    expect(
-      _contains(
-        badges.forSet(1),
-        WorkoutRecordBadgeType.volumeBest,
-        WorkoutRecordBadgeTier.allTime,
-      ),
-      isTrue,
-    );
-  });
+      expect(badges.isFirstRecord, isTrue);
+      expect(
+        _contains(
+          badges.forSet(0),
+          WorkoutRecordBadgeType.repBest,
+          WorkoutRecordBadgeTier.allTime,
+          reps: 5,
+        ),
+        isTrue,
+      );
+      expect(
+        _contains(
+          badges.forSet(1),
+          WorkoutRecordBadgeType.repBest,
+          WorkoutRecordBadgeTier.allTime,
+          reps: 8,
+        ),
+        isTrue,
+      );
+      expect(
+        _contains(
+          badges.forSet(1),
+          WorkoutRecordBadgeType.volumeBest,
+          WorkoutRecordBadgeTier.allTime,
+        ),
+        isTrue,
+      );
+    },
+  );
 
   test('monthly best is awarded when all-time best remains higher', () async {
     await _insertCompletedWeightSession(
@@ -105,10 +108,8 @@ void main() {
       sets: const [(110.0, 5)],
     );
 
-    final badges = (await SessionRecordBadgesDao.forSession(
-      db,
-      sessionId,
-    ))[exerciseId]!;
+    final badges =
+        (await SessionRecordBadgesDao.forSession(db, sessionId))[exerciseId]!;
 
     expect(
       _contains(
@@ -152,10 +153,8 @@ void main() {
       sets: const [(120.0, 5)],
     );
 
-    final badges = (await SessionRecordBadgesDao.forSession(
-      db,
-      sessionId,
-    ))[exerciseId]!;
+    final badges =
+        (await SessionRecordBadgesDao.forSession(db, sessionId))[exerciseId]!;
 
     expect(
       _contains(
@@ -185,89 +184,91 @@ void main() {
     );
   });
 
-  test('rep records compare only the same rep count and use the strongest set',
-      () async {
-    await _insertCompletedWeightSession(
-      db,
-      date: DateTime(2026, 7, 1, 10),
-      definitionId: 1,
-      sets: const [(250.0, 3), (100.0, 5)],
-    );
-    final sessionId = await _insertSession(db, DateTime(2026, 7, 15, 10));
-    final exerciseId = await _insertWeightExercise(
-      db,
-      sessionId: sessionId,
-      definitionId: 1,
-      orderIndex: 0,
-      sets: const [(105.0, 5), (115.0, 5), (200.0, 8)],
-    );
+  test(
+    'rep records compare only the same rep count and use the strongest set',
+    () async {
+      await _insertCompletedWeightSession(
+        db,
+        date: DateTime(2026, 7, 1, 10),
+        definitionId: 1,
+        sets: const [(250.0, 3), (100.0, 5)],
+      );
+      final sessionId = await _insertSession(db, DateTime(2026, 7, 15, 10));
+      final exerciseId = await _insertWeightExercise(
+        db,
+        sessionId: sessionId,
+        definitionId: 1,
+        orderIndex: 0,
+        sets: const [(105.0, 5), (115.0, 5), (200.0, 8)],
+      );
 
-    final badges = (await SessionRecordBadgesDao.forSession(
-      db,
-      sessionId,
-    ))[exerciseId]!;
+      final badges =
+          (await SessionRecordBadgesDao.forSession(db, sessionId))[exerciseId]!;
 
-    expect(
-      _contains(
-        badges.forSet(0),
-        WorkoutRecordBadgeType.repBest,
-        WorkoutRecordBadgeTier.allTime,
-        reps: 5,
-      ),
-      isFalse,
-    );
-    expect(
-      _contains(
-        badges.forSet(1),
-        WorkoutRecordBadgeType.repBest,
-        WorkoutRecordBadgeTier.allTime,
-        reps: 5,
-      ),
-      isTrue,
-    );
-    expect(
-      _contains(
-        badges.forSet(2),
-        WorkoutRecordBadgeType.repBest,
-        WorkoutRecordBadgeTier.allTime,
-        reps: 8,
-      ),
-      isTrue,
-    );
-  });
+      expect(
+        _contains(
+          badges.forSet(0),
+          WorkoutRecordBadgeType.repBest,
+          WorkoutRecordBadgeTier.allTime,
+          reps: 5,
+        ),
+        isFalse,
+      );
+      expect(
+        _contains(
+          badges.forSet(1),
+          WorkoutRecordBadgeType.repBest,
+          WorkoutRecordBadgeTier.allTime,
+          reps: 5,
+        ),
+        isTrue,
+      );
+      expect(
+        _contains(
+          badges.forSet(2),
+          WorkoutRecordBadgeType.repBest,
+          WorkoutRecordBadgeTier.allTime,
+          reps: 8,
+        ),
+        isTrue,
+      );
+    },
+  );
 
-  test('later duplicate exercise instances compare against earlier instances',
-      () async {
-    final sessionId = await _insertSession(db, DateTime(2026, 7, 15, 10));
-    final firstExerciseId = await _insertWeightExercise(
-      db,
-      sessionId: sessionId,
-      definitionId: 1,
-      orderIndex: 0,
-      sets: const [(100.0, 5)],
-    );
-    final secondExerciseId = await _insertWeightExercise(
-      db,
-      sessionId: sessionId,
-      definitionId: 1,
-      orderIndex: 1,
-      sets: const [(110.0, 5)],
-    );
+  test(
+    'later duplicate exercise instances compare against earlier instances',
+    () async {
+      final sessionId = await _insertSession(db, DateTime(2026, 7, 15, 10));
+      final firstExerciseId = await _insertWeightExercise(
+        db,
+        sessionId: sessionId,
+        definitionId: 1,
+        orderIndex: 0,
+        sets: const [(100.0, 5)],
+      );
+      final secondExerciseId = await _insertWeightExercise(
+        db,
+        sessionId: sessionId,
+        definitionId: 1,
+        orderIndex: 1,
+        sets: const [(110.0, 5)],
+      );
 
-    final result = await SessionRecordBadgesDao.forSession(db, sessionId);
+      final result = await SessionRecordBadgesDao.forSession(db, sessionId);
 
-    expect(result[firstExerciseId]!.isFirstRecord, isTrue);
-    expect(result[secondExerciseId]!.isFirstRecord, isFalse);
-    expect(
-      _contains(
-        result[secondExerciseId]!.forSet(0),
-        WorkoutRecordBadgeType.repBest,
-        WorkoutRecordBadgeTier.allTime,
-        reps: 5,
-      ),
-      isTrue,
-    );
-  });
+      expect(result[firstExerciseId]!.isFirstRecord, isTrue);
+      expect(result[secondExerciseId]!.isFirstRecord, isFalse);
+      expect(
+        _contains(
+          result[secondExerciseId]!.forSet(0),
+          WorkoutRecordBadgeType.repBest,
+          WorkoutRecordBadgeTier.allTime,
+          reps: 5,
+        ),
+        isTrue,
+      );
+    },
+  );
 }
 
 Future<int> _insertCompletedWeightSession(
@@ -327,7 +328,6 @@ bool _contains(
   int? reps,
 }) {
   return badges.any(
-    (badge) =>
-        badge.type == type && badge.tier == tier && badge.reps == reps,
+    (badge) => badge.type == type && badge.tier == tier && badge.reps == reps,
   );
 }

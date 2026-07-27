@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../../db/database_maintenance.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../models/models.dart';
 import '../../../repositories/app_repository.dart';
 import '../../../services/content_environment_preferences.dart';
@@ -43,6 +44,8 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
   bool _contentActionRunning = false;
   bool _repoBound = false;
   bool _tutorialQueued = false;
+
+  AppLocalizations get _strings => AppLocalizations.of(context);
 
   @override
   void didChangeDependencies() {
@@ -104,23 +107,20 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
           GuidedTutorialStep(
             targetKey: _fileActionsTutorialKey,
             icon: Icons.import_export,
-            title: 'Database files',
-            body:
-                'Export a backup or import a saved database file. Imports require a backup first.',
+            title: _strings.databaseTutorialFilesTitle,
+            body: _strings.databaseTutorialFilesBody,
           ),
           GuidedTutorialStep(
             targetKey: _healthTutorialKey,
             icon: Icons.health_and_safety_outlined,
-            title: 'Database health',
-            body:
-                'This card shows schema version, database size, table counts, and search-index health.',
+            title: _strings.databaseTutorialHealthTitle,
+            body: _strings.databaseTutorialHealthBody,
           ),
           GuidedTutorialStep(
             targetKey: _maintenanceTutorialKey,
             icon: Icons.build_outlined,
-            title: 'Maintenance tools',
-            body:
-                'Use these actions for integrity checks, optimization, WAL checkpointing, or vacuuming when needed.',
+            title: _strings.databaseTutorialMaintenanceTitle,
+            body: _strings.databaseTutorialMaintenanceBody,
           ),
         ],
       );
@@ -189,7 +189,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('Close'),
+                child: Text(_strings.commonClose),
               ),
             ],
           ),
@@ -230,14 +230,14 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
       );
       if (location == null) return;
       await _showSavedFileDialog(
-        title: 'Database Export Saved',
-        message: 'The database export was saved to your selected location.',
+        title: _strings.databaseExportSavedTitle,
+        message: _strings.databaseExportSavedBody,
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Export failed: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_strings.databaseExportFailed(e.toString()))),
+      );
     }
   }
 
@@ -250,7 +250,9 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
       if (!preview.canImport) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Import blocked: ${preview.message}')),
+          SnackBar(
+            content: Text(_strings.databaseImportBlocked(preview.message)),
+          ),
         );
         return;
       }
@@ -267,9 +269,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
       if (backupLocation == null) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Import canceled: backup was not saved.'),
-          ),
+          SnackBar(content: Text(_strings.databaseImportBackupCanceled)),
         );
         return;
       }
@@ -278,16 +278,14 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
       if (!mounted) return;
       _refreshHealth();
       await _showSavedFileDialog(
-        title: 'Import Succeeded',
-        message:
-            'Imported ${picked.name}. A backup of the previous local database '
-            'was saved to your selected location first.',
+        title: _strings.databaseImportSucceededTitle,
+        message: _strings.databaseImportSucceededBody(picked.name),
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Import failed: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_strings.databaseImportFailed(e.toString()))),
+      );
     }
   }
 
@@ -299,7 +297,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
       context: context,
       builder:
           (ctx) => AlertDialog(
-            title: const Text('Confirm Import'),
+            title: Text(_strings.databaseConfirmImportTitle),
             content: SizedBox(
               width: double.maxFinite,
               child: SingleChildScrollView(
@@ -307,24 +305,27 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text(
-                      'This replaces the local database. A backup file of the '
-                      'current database will be written first.',
-                    ),
+                    Text(_strings.databaseConfirmImportBody),
                     if (sourceName != null) ...[
                       const SizedBox(height: 12),
-                      Text('File: $sourceName'),
+                      Text(_strings.databaseImportFile(sourceName)),
                     ],
                     const SizedBox(height: 12),
-                    Text('Tables: ${preview.importableTables.length}'),
-                    Text('Rows: ${preview.totalRows}'),
+                    Text(
+                      _strings.databaseImportTables(
+                        preview.importableTables.length,
+                      ),
+                    ),
+                    Text(_strings.databaseImportRows(preview.totalRows)),
                     if (preview.schemaVersion != null)
-                      Text('Export schema: v${preview.schemaVersion}'),
+                      Text(
+                        _strings.databaseImportSchema(preview.schemaVersion!),
+                      ),
                     if (preview.isLegacyFormat)
-                      const Text('Format: legacy table map'),
+                      Text(_strings.databaseImportLegacyFormat),
                     if (preview.warnings.isNotEmpty) ...[
                       const SizedBox(height: 12),
-                      const Text('Warnings:'),
+                      Text(_strings.databaseImportWarnings),
                       for (final warning in preview.warnings)
                         Text('- $warning'),
                     ],
@@ -335,11 +336,11 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(false),
-                child: const Text('Cancel'),
+                child: Text(_strings.commonCancel),
               ),
               ElevatedButton(
                 onPressed: () => Navigator.of(ctx).pop(true),
-                child: const Text('Back Up & Import'),
+                child: Text(_strings.databaseBackupAndImport),
               ),
             ],
           ),
@@ -361,7 +362,9 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Database maintenance failed: $e')),
+        SnackBar(
+          content: Text(_strings.databaseMaintenanceFailed(e.toString())),
+        ),
       );
     } finally {
       if (mounted) {
@@ -383,7 +386,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
   }
 
   String _formatDateTime(DateTime? value) {
-    if (value == null) return 'Never';
+    if (value == null) return _strings.databaseNever;
     final local = value.toLocal();
     return '${local.year}-${_twoDigits(local.month)}-${_twoDigits(local.day)} '
         '${_twoDigits(local.hour)}:${_twoDigits(local.minute)}';
@@ -483,9 +486,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
     if (manifestUrl.isEmpty || !validRemoteUri) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Add a valid exercise media manifest URL first.'),
-        ),
+        SnackBar(content: Text(_strings.databaseManifestUrlRequired)),
       );
       return;
     }
@@ -506,9 +507,11 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Content sync failed: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_strings.databaseContentSyncFailed(e.toString())),
+        ),
+      );
     } finally {
       if (mounted) {
         setState(() => _contentActionRunning = false);
@@ -534,7 +537,11 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Bundled content sync failed: $e')),
+        SnackBar(
+          content: Text(
+            _strings.databaseBundledContentSyncFailed(e.toString()),
+          ),
+        ),
       );
     } finally {
       if (mounted) {
@@ -554,9 +561,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
     if (!validRemoteUri) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('This content environment has no shared media URL.'),
-        ),
+        SnackBar(content: Text(_strings.databaseSharedMediaUrlMissing)),
       );
       return;
     }
@@ -577,7 +582,11 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Shared content sync failed: $error')),
+        SnackBar(
+          content: Text(
+            _strings.databaseSharedContentSyncFailed(error.toString()),
+          ),
+        ),
       );
     } finally {
       if (mounted) setState(() => _contentActionRunning = false);
@@ -586,23 +595,21 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
 
   Future<void> _clearContentCache() async {
     if (_contentActionRunning) return;
+    final strings = _strings;
     final confirmed = await showDialog<bool>(
       context: context,
       builder:
           (ctx) => AlertDialog(
-            title: const Text('Clear Downloaded Media?'),
-            content: const Text(
-              'This removes cached exercise, equipment, and anatomy media. '
-              'The app can download them again when needed.',
-            ),
+            title: Text(strings.databaseClearMediaTitle),
+            content: Text(strings.databaseClearMediaBody),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(false),
-                child: const Text('Cancel'),
+                child: Text(strings.commonCancel),
               ),
               ElevatedButton(
                 onPressed: () => Navigator.of(ctx).pop(true),
-                child: const Text('Clear Cache'),
+                child: Text(strings.databaseClearCache),
               ),
             ],
           ),
@@ -615,14 +622,14 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
       await _repo.clearContentCache();
       if (!mounted) return;
       _refreshContentStatus();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Downloaded media cache cleared.')),
-      );
-    } catch (e) {
-      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Clear cache failed: $e')));
+      ).showSnackBar(SnackBar(content: Text(strings.databaseCacheCleared)));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(strings.databaseClearCacheFailed(e.toString()))),
+      );
     } finally {
       if (mounted) {
         setState(() => _contentActionRunning = false);
@@ -632,10 +639,11 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
 
   Widget _buildCloudContentSection() {
     final theme = Theme.of(context);
+    final strings = _strings;
 
     return SettingsSection(
-      title: 'Cloud Content',
-      subtitle: 'Manage exercise, equipment, and anatomy media storage.',
+      title: strings.databaseCloudContent,
+      subtitle: strings.databaseCloudContentSubtitle,
       accentColor: SettingsAccent.data,
       children: settingsTilesWithDividers(context, [
         FutureBuilder<ContentEnvironment>(
@@ -644,14 +652,14 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
             final environment = snapshot.data;
             return SettingsActionTile(
               icon: Icons.public_outlined,
-              title: 'Content Environment',
+              title: strings.databaseContentEnvironment,
               subtitle:
                   environment == null
-                      ? 'Loading environment...'
+                      ? strings.databaseLoadingEnvironment
                       : '${environment.label}${environment.isProduction ? ' (production)' : ''}'
                           '${environment.description.isEmpty ? '' : '\n${environment.description}'}',
               trailing: IconButton(
-                tooltip: 'Change environment',
+                tooltip: strings.databaseChangeEnvironment,
                 icon: const Icon(Icons.swap_horiz),
                 color: theme.colorScheme.primary,
                 onPressed:
@@ -667,13 +675,11 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
             final url = snapshot.data ?? '';
             return SettingsActionTile(
               icon: Icons.cloud_outlined,
-              title: 'Exercise Media Manifest URL',
+              title: strings.databaseExerciseManifestUrl,
               subtitle:
-                  url.isEmpty
-                      ? 'No remote manifest URL set for this environment.'
-                      : url,
+                  url.isEmpty ? strings.databaseNoExerciseManifestUrl : url,
               trailing: IconButton(
-                tooltip: 'Override URL',
+                tooltip: strings.databaseOverrideUrl,
                 icon: const Icon(Icons.edit),
                 color: theme.colorScheme.primary,
                 onPressed: _contentActionRunning ? null : _editManifestUrl,
@@ -690,10 +696,11 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
               icon: Icons.description_outlined,
               title:
                   status == null
-                      ? 'No Manifest Synced'
-                      : 'Manifest v${status.version}',
-              subtitle:
-                  'Last checked: ${_formatDateTime(status?.lastCheckedAt)}',
+                      ? strings.databaseNoManifestSynced
+                      : strings.databaseManifestVersion(status.version),
+              subtitle: strings.databaseLastChecked(
+                _formatDateTime(status?.lastCheckedAt),
+              ),
               trailing: const SizedBox.shrink(),
             );
           },
@@ -704,12 +711,14 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
             final status = snapshot.data;
             return SettingsActionTile(
               icon: Icons.category_outlined,
-              title: 'Shared Catalog Media',
+              title: strings.databaseSharedCatalogMedia,
               subtitle:
                   status == null
-                      ? 'Not synced yet. Equipment, bodyparts, and muscles.'
-                      : 'Manifest v${status.version}. Last checked: '
-                          '${_formatDateTime(status.lastCheckedAt)}',
+                      ? strings.databaseSharedMediaNotSynced
+                      : strings.databaseManifestLastChecked(
+                        status.version,
+                        _formatDateTime(status.lastCheckedAt),
+                      ),
               trailing: const SizedBox.shrink(),
             );
           },
@@ -720,11 +729,8 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
             final url = snapshot.data ?? '';
             return SettingsActionTile(
               icon: Icons.collections_outlined,
-              title: 'Shared Media Manifest URL',
-              subtitle:
-                  url.isEmpty
-                      ? 'No remote shared media URL set for this environment.'
-                      : url,
+              title: strings.databaseSharedManifestUrl,
+              subtitle: url.isEmpty ? strings.databaseNoSharedManifestUrl : url,
               trailing: const SizedBox.shrink(),
             );
           },
@@ -737,9 +743,11 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
                 const ContentCacheUsage(fileCount: 0, totalBytes: 0);
             return SettingsActionTile(
               icon: Icons.folder_copy_outlined,
-              title: 'Downloaded Media Cache',
-              subtitle:
-                  '${usage.fileCount} files, ${_formatBytes(usage.totalBytes)}',
+              title: strings.databaseDownloadedMediaCache,
+              subtitle: strings.databaseCacheUsage(
+                usage.fileCount,
+                _formatBytes(usage.totalBytes),
+              ),
               trailing: const SizedBox.shrink(),
             );
           },
@@ -750,9 +758,8 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
             final wifiOnly = snapshot.data ?? false;
             return SettingsSwitchTile(
               icon: Icons.wifi,
-              title: 'Wi-Fi Only Downloads',
-              subtitle:
-                  'New thumbnails and videos download only on Wi-Fi. Cached media still works offline.',
+              title: strings.databaseWifiOnly,
+              subtitle: strings.databaseWifiOnlySubtitle,
               value: wifiOnly,
               onChanged:
                   _contentActionRunning
@@ -765,7 +772,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
         ),
         SettingsActionTile(
           icon: Icons.sync,
-          title: 'Sync Remote Exercise Media',
+          title: strings.databaseSyncExerciseMedia,
           trailing:
               _contentActionRunning
                   ? const SizedBox(
@@ -779,8 +786,8 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
         ),
         SettingsActionTile(
           icon: Icons.collections_outlined,
-          title: 'Sync Shared Catalog Media',
-          subtitle: 'Equipment, bodypart, and muscle illustrations.',
+          title: strings.databaseSyncSharedMedia,
+          subtitle: strings.databaseSyncSharedMediaSubtitle,
           trailing:
               _contentActionRunning
                   ? const SizedBox(
@@ -793,14 +800,14 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
         ),
         SettingsActionTile(
           icon: Icons.inventory_2_outlined,
-          title: 'Load Bundled Manifest',
+          title: strings.databaseLoadBundledManifest,
           onTap:
               _contentActionRunning ? null : _syncBundledExerciseMediaManifest,
         ),
         SettingsActionTile(
           icon: Icons.cleaning_services_outlined,
-          title: 'Clear Downloaded Media Cache',
-          subtitle: 'Removes cached remote media files from this device.',
+          title: strings.databaseClearMediaCache,
+          subtitle: strings.databaseClearMediaCacheSubtitle,
           iconColor: theme.colorScheme.error,
           onTap: _contentActionRunning ? null : _clearContentCache,
         ),
@@ -822,41 +829,46 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
       );
       if (location == null) return;
       await _showSavedFileDialog(
-        title: 'Export Saved',
+        title: _strings.databaseExportSavedTitle,
         message: '$filename was saved to your selected location.',
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Export $filename failed: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _strings.databaseDefinitionExportFailed(filename, e.toString()),
+          ),
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final strings = _strings;
     return SettingsPageScaffold(
-      title: 'Database Settings',
-      subtitle: 'Backups, cloud media, health checks, and developer exports.',
+      title: strings.databaseSettingsTitle,
+      subtitle: strings.databaseSettingsSubtitle,
       icon: Icons.storage_outlined,
       heroAccentColor: SettingsAccent.data,
       children: [
         KeyedSubtree(
           key: _fileActionsTutorialKey,
           child: SettingsSection(
-            title: 'Backup & Restore',
-            subtitle: 'Move your local Tonos data in or out safely.',
+            title: strings.databaseBackupRestore,
+            subtitle: strings.databaseBackupRestoreSubtitle,
             accentColor: SettingsAccent.data,
             children: settingsTilesWithDividers(context, [
               SettingsActionTile(
                 icon: Icons.upload_file,
-                title: 'Export Database Backup',
+                title: strings.databaseExportBackup,
                 onTap: _exportDatabase,
               ),
               SettingsActionTile(
                 icon: Icons.download,
-                title: 'Import Database Backup',
-                subtitle: 'Replace local data from a saved export file.',
+                title: strings.databaseImportBackup,
+                subtitle: strings.databaseImportBackupSubtitle,
                 iconColor: Theme.of(context).colorScheme.error,
                 onTap: _importDatabase,
               ),
@@ -878,20 +890,20 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
   }
 
   Widget _buildHealthSection() {
+    final strings = _strings;
     return SettingsSection(
-      title: 'Health',
-      subtitle:
-          'A quick read on database size, schema, and search index state.',
+      title: strings.databaseHealth,
+      subtitle: strings.databaseHealthSubtitle,
       accentColor: SettingsAccent.progress,
       children: [
         FutureBuilder<DatabaseHealthSnapshot>(
           future: _healthFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState != ConnectionState.done) {
-              return const SettingsActionTile(
+              return SettingsActionTile(
                 icon: Icons.health_and_safety_outlined,
-                title: 'Checking database health...',
-                subtitle: 'Reading schema, size, tables, and indexes.',
+                title: strings.databaseCheckingHealth,
+                subtitle: strings.databaseCheckingHealthSubtitle,
                 trailing: SizedBox(
                   width: 22,
                   height: 22,
@@ -904,10 +916,10 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
               return SettingsActionTile(
                 icon: Icons.error_outline,
                 iconColor: Theme.of(context).colorScheme.error,
-                title: 'Database health check failed',
+                title: strings.databaseHealthFailed,
                 subtitle: '${snapshot.error}',
                 trailing: IconButton(
-                  tooltip: 'Retry',
+                  tooltip: _strings.commonRetry,
                   icon: const Icon(Icons.refresh),
                   onPressed: _refreshHealth,
                 ),
@@ -926,14 +938,15 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
   }
 
   Widget _buildMaintenanceSection() {
+    final strings = _strings;
     return SettingsSection(
-      title: 'Maintenance',
-      subtitle: 'Safe tools for checks, optimization, and storage cleanup.',
+      title: strings.databaseMaintenance,
+      subtitle: strings.databaseMaintenanceSubtitle,
       accentColor: SettingsAccent.advanced,
       children: settingsTilesWithDividers(context, [
         SettingsActionTile(
           icon: Icons.refresh,
-          title: 'Refresh Health',
+          title: strings.databaseRefreshHealth,
           trailing:
               _maintenanceRunning
                   ? const SizedBox(
@@ -946,8 +959,8 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
         ),
         SettingsActionTile(
           icon: Icons.fact_check,
-          title: 'Run Integrity Check',
-          subtitle: 'Ask SQLite to verify the local database file.',
+          title: strings.databaseIntegrityCheck,
+          subtitle: strings.databaseIntegrityCheckSubtitle,
           onTap:
               _maintenanceRunning
                   ? null
@@ -955,7 +968,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
         ),
         SettingsActionTile(
           icon: Icons.auto_fix_high,
-          title: 'Optimize Database',
+          title: strings.databaseOptimize,
           onTap:
               _maintenanceRunning
                   ? null
@@ -963,8 +976,8 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
         ),
         SettingsActionTile(
           icon: Icons.save_alt,
-          title: 'Checkpoint WAL',
-          subtitle: 'Flushes the write-ahead log into the database file.',
+          title: strings.databaseCheckpointWal,
+          subtitle: strings.databaseCheckpointWalSubtitle,
           onTap:
               _maintenanceRunning
                   ? null
@@ -972,8 +985,8 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
         ),
         SettingsActionTile(
           icon: Icons.compress,
-          title: 'Vacuum Database',
-          subtitle: 'Reclaims free space after large deletes/imports.',
+          title: strings.databaseVacuum,
+          subtitle: strings.databaseVacuumSubtitle,
           onTap:
               _maintenanceRunning
                   ? null
@@ -984,43 +997,44 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
   }
 
   Widget _buildDeveloperExportSection() {
+    final strings = _strings;
     return SettingsSection(
-      title: 'Definition Exports',
-      subtitle: 'Export app definition files for inspection or tooling.',
+      title: strings.databaseDefinitionExports,
+      subtitle: strings.databaseDefinitionExportsSubtitle,
       accentColor: SettingsAccent.data,
       children: settingsTilesWithDividers(context, [
         SettingsActionTile(
           icon: Icons.data_object,
-          title: 'Export equipment.json',
+          title: strings.databaseExportDefinition('equipment.json'),
           onTap:
               () => _exportAsset(_repo.exportEquipmentJson, 'equipment.json'),
         ),
         SettingsActionTile(
           icon: Icons.data_object,
-          title: 'Export bodyparts.json',
+          title: strings.databaseExportDefinition('bodyparts.json'),
           onTap:
               () => _exportAsset(_repo.exportBodypartsJson, 'bodyparts.json'),
         ),
         SettingsActionTile(
           icon: Icons.data_object,
-          title: 'Export muscles.json',
+          title: strings.databaseExportDefinition('muscles.json'),
           onTap: () => _exportAsset(_repo.exportMusclesJson, 'muscles.json'),
         ),
         SettingsActionTile(
           icon: Icons.data_object,
-          title: 'Export exercises.json',
+          title: strings.databaseExportDefinition('exercises.json'),
           onTap:
               () => _exportAsset(_repo.exportExercisesJson, 'exercises.json'),
         ),
         SettingsActionTile(
           icon: Icons.data_object,
-          title: 'Export stretches.json',
+          title: strings.databaseExportDefinition('stretches.json'),
           onTap:
               () => _exportAsset(_repo.exportStretchesJson, 'stretches.json'),
         ),
         SettingsActionTile(
           icon: Icons.data_object,
-          title: 'Export muscle_bodypart.json',
+          title: strings.databaseExportDefinition('muscle_bodypart.json'),
           onTap:
               () => _exportAsset(
                 _repo.exportMuscleBodypartJson,
@@ -1029,7 +1043,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
         ),
         SettingsActionTile(
           icon: Icons.data_object,
-          title: 'Export bodypart_ranking.json',
+          title: strings.databaseExportDefinition('bodypart_ranking.json'),
           onTap:
               () => _exportAsset(
                 _repo.exportBodypartRankingJson,
@@ -1038,7 +1052,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
         ),
         SettingsActionTile(
           icon: Icons.data_object,
-          title: 'Export muscle_ranking.json',
+          title: strings.databaseExportDefinition('muscle_ranking.json'),
           onTap:
               () => _exportAsset(
                 _repo.exportMuscleRankingJson,
@@ -1047,7 +1061,9 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
         ),
         SettingsActionTile(
           icon: Icons.data_object,
-          title: 'Export bodypart_muscle_rankings.json',
+          title: strings.databaseExportDefinition(
+            'bodypart_muscle_rankings.json',
+          ),
           onTap:
               () => _exportAsset(
                 _repo.exportBodypartMuscleRankingsJson,
@@ -1056,7 +1072,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
         ),
         SettingsActionTile(
           icon: Icons.data_object,
-          title: 'Export volume_boundaries.json',
+          title: strings.databaseExportDefinition('volume_boundaries.json'),
           onTap:
               () => _exportAsset(
                 _repo.exportVolumeBoundariesJson,
@@ -1219,13 +1235,15 @@ class _ManifestUrlDialogState extends State<_ManifestUrlDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Exercise Media Manifest'),
+      title: Text(
+        AppLocalizations.of(context).databaseExerciseManifestDialogTitle,
+      ),
       content: TextField(
         controller: _controller,
         autofocus: false,
         keyboardType: TextInputType.url,
-        decoration: const InputDecoration(
-          labelText: 'Manifest URL',
+        decoration: InputDecoration(
+          labelText: AppLocalizations.of(context).databaseManifestUrl,
           hintText:
               'https://cdn.tonos.app/manifests/exercise_media_manifest.json',
         ),
@@ -1235,15 +1253,15 @@ class _ManifestUrlDialogState extends State<_ManifestUrlDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(AppLocalizations.of(context).commonCancel),
         ),
         TextButton(
           onPressed: () => Navigator.of(context).pop(''),
-          child: const Text('Clear'),
+          child: Text(AppLocalizations.of(context).databaseClear),
         ),
         ElevatedButton(
           onPressed: () => Navigator.of(context).pop(_controller.text.trim()),
-          child: const Text('Save'),
+          child: Text(AppLocalizations.of(context).commonSave),
         ),
       ],
     );
@@ -1276,7 +1294,7 @@ class _ContentEnvironmentDialogState extends State<_ContentEnvironmentDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Content Environment'),
+      title: Text(AppLocalizations.of(context).databaseContentEnvironment),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1297,7 +1315,9 @@ class _ContentEnvironmentDialogState extends State<_ContentEnvironmentDialog> {
                       if (environment.description.isNotEmpty)
                         environment.description,
                       if (environment.exerciseMediaManifestUrl.isEmpty)
-                        'No manifest URL configured yet.',
+                        AppLocalizations.of(
+                          context,
+                        ).databaseNoManifestConfigured,
                     ].join('\n'),
                   ),
                 );
@@ -1307,11 +1327,11 @@ class _ContentEnvironmentDialogState extends State<_ContentEnvironmentDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(AppLocalizations.of(context).commonCancel),
         ),
         ElevatedButton(
           onPressed: () => Navigator.of(context).pop(_selectedEnvironmentId),
-          child: const Text('Use Environment'),
+          child: Text(AppLocalizations.of(context).databaseUseEnvironment),
         ),
       ],
     );

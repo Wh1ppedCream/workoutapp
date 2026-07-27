@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/premade_training_plans.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../models/models.dart';
 import '../../providers/active_session.dart';
 import '../../providers/preset_session.dart';
@@ -45,7 +46,7 @@ class _TrainPageState extends State<TrainPage> {
   static const _optimizedStarterIntensityKey =
       'train.optimized_starter_intensity';
 
-  final _repo = AppRepository();
+  AppRepository get _repo => context.read<AppRepository>();
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   final _trainTabsTutorialKey = GlobalKey(debugLabel: 'train_tabs_tutorial');
   final _gymProfileTutorialKey = GlobalKey(
@@ -117,6 +118,7 @@ class _TrainPageState extends State<TrainPage> {
 
       final completed = await _tutorialStore.isCompleted(TutorialIds.trainHome);
       if (completed || !mounted || _selectedTab != 0) return;
+      final strings = AppLocalizations.of(context);
 
       await GuidedTutorialOverlay.show(
         context,
@@ -124,37 +126,32 @@ class _TrainPageState extends State<TrainPage> {
           GuidedTutorialStep(
             targetKey: _trainTabsTutorialKey,
             icon: Icons.view_week_outlined,
-            title: 'Train has two spaces',
-            body:
-                'Overview keeps your ready-to-use workout controls up front. Plans is where you browse, generate, and manage your saved plans.',
+            title: strings.trainTutorialSpacesTitle,
+            body: strings.trainTutorialSpacesBody,
           ),
           GuidedTutorialStep(
             targetKey: _weeklyOverviewTutorialKey,
             icon: Icons.accessibility_new,
-            title: 'Weekly overview',
-            body:
-                'This shows what bodyparts you have trained recently. Tap the focused sets list to open the full weekly sets breakdown.',
+            title: strings.trainTutorialWeeklyTitle,
+            body: strings.trainTutorialWeeklyBody,
           ),
           GuidedTutorialStep(
             targetKey: _activePlansTutorialKey,
             icon: Icons.assignment_outlined,
-            title: 'Active plans',
-            body:
-                'Active plans are the routines you want close at hand. Use the pen to choose which plans stay ready on the Overview tab.',
+            title: strings.trainTutorialActivePlansTitle,
+            body: strings.trainTutorialActivePlansBody,
           ),
           GuidedTutorialStep(
             targetKey: _workoutBarTutorialKey,
             icon: Icons.play_circle_outline,
-            title: 'Start or optimize',
-            body:
-                'Start Workout begins a blank session. Optimize builds a session from your history, profile equipment, focus, and recovery rules.',
+            title: strings.trainTutorialStartTitle,
+            body: strings.trainTutorialStartBody,
           ),
           GuidedTutorialStep(
             targetKey: _gymProfileTutorialKey,
             icon: Icons.storefront_outlined,
-            title: 'Gym profiles',
-            body:
-                'Switch profiles when you train somewhere different so generated workouts and exercise swaps only use available equipment.',
+            title: strings.trainTutorialProfilesTitle,
+            body: strings.trainTutorialProfilesBody,
           ),
         ],
       );
@@ -194,7 +191,9 @@ class _TrainPageState extends State<TrainPage> {
     final profileId = sel.currentProfile?.id;
     if (profileId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a gym profile first.')),
+        SnackBar(
+          content: Text(AppLocalizations.of(context).trainSelectProfileFirst),
+        ),
       );
       return;
     }
@@ -213,7 +212,13 @@ class _TrainPageState extends State<TrainPage> {
       return;
     }
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Generated ${generatedPresetIds.length} plans.')),
+      SnackBar(
+        content: Text(
+          AppLocalizations.of(
+            context,
+          ).trainGeneratedPlans(generatedPresetIds.length),
+        ),
+      ),
     );
   }
 
@@ -221,7 +226,8 @@ class _TrainPageState extends State<TrainPage> {
     final profileId = sel.currentProfile?.id;
     final existing = await _repo.fetchAllPresetsRaw(profileId: profileId);
     final nextNum = existing.length + 1;
-    final name = nextNum == 1 ? 'New Plan' : 'New Plan $nextNum';
+    if (!mounted) return;
+    final name = AppLocalizations.of(context).trainNewPlanName(nextNum);
     final newId = await _repo.createPreset(name, profileId: profileId);
     if (!mounted) return;
     setState(() => _presetsRefreshToken++);
@@ -311,9 +317,10 @@ class _TrainPageState extends State<TrainPage> {
     final time =
         '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
     final minSets = minSetsPerExercise ?? _optimizedMinSetsPerExercise;
+    final strings = AppLocalizations.of(context);
     return SessionSpec(
       profileId: profileId,
-      name: 'Optimized workout $date $time',
+      name: strings.trainOptimizedWorkoutName(date, time),
       focusBodypartIds: const [],
       preferredBodypartIds:
           (preferredBodypartIds ?? _optimizedPreferredBodypartIds).toList(),
@@ -400,18 +407,17 @@ class _TrainPageState extends State<TrainPage> {
   }
 
   Future<void> _showOptimizedWorkoutRestWarning() {
+    final strings = AppLocalizations.of(context);
     return showDialog<void>(
       context: context,
       builder:
           (dialogContext) => AlertDialog(
-            title: const Text('Take some time to rest'),
-            content: const Text(
-              'Your recent training is already at several bodypart limits, so an optimized workout would push recovery too far.',
-            ),
+            title: Text(strings.trainRestTitle),
+            content: Text(strings.trainRestBody),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(dialogContext).pop(),
-                child: const Text('OK'),
+                child: Text(strings.commonOkay),
               ),
             ],
           ),
@@ -427,7 +433,9 @@ class _TrainPageState extends State<TrainPage> {
     final profileId = sel.currentProfile?.id;
     if (profileId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a gym profile first.')),
+        SnackBar(
+          content: Text(AppLocalizations.of(context).trainSelectProfileFirst),
+        ),
       );
       return;
     }
@@ -476,8 +484,10 @@ class _TrainPageState extends State<TrainPage> {
         temporaryPresetId = null;
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No eligible exercises were found for this profile.'),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context).trainNoEligibleExercises,
+            ),
           ),
         );
         return;
@@ -503,9 +513,9 @@ class _TrainPageState extends State<TrainPage> {
       if (!started) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text(
-              'Another workout is already active, so it was kept unchanged.',
+              AppLocalizations.of(context).trainAnotherWorkoutActive,
             ),
           ),
         );
@@ -531,7 +541,11 @@ class _TrainPageState extends State<TrainPage> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to start optimized workout: $e')),
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).trainOptimizedStartFailed('$e'),
+          ),
+        ),
       );
     } finally {
       if (temporaryPresetId != null) {
@@ -559,8 +573,12 @@ class _TrainPageState extends State<TrainPage> {
 
     final message =
         unavailableCount > 0
-            ? 'Optimized workout started. $unavailableCount exercise(s) still need manual weights.'
-            : 'Optimized workout started with starter weights for $estimatedCount new exercise(s).';
+            ? AppLocalizations.of(
+              context,
+            ).trainOptimizedManualWeights(unavailableCount)
+            : AppLocalizations.of(
+              context,
+            ).trainOptimizedStarterWeights(estimatedCount);
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
@@ -568,6 +586,7 @@ class _TrainPageState extends State<TrainPage> {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     final completedSessionVersion = context.select<ActiveSession, int>(
       (session) => session.completedSessionVersion,
     );
@@ -640,7 +659,7 @@ class _TrainPageState extends State<TrainPage> {
                 key: _gymProfileTutorialKey,
                 padding: const EdgeInsets.only(right: 8),
                 child: IconButton(
-                  tooltip: 'Gym profiles',
+                  tooltip: strings.trainGymProfilesTooltip,
                   onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
                   icon: CircleAvatar(
                     radius: 18,
@@ -718,6 +737,7 @@ class _TrainTabs extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final strings = AppLocalizations.of(context);
     return Container(
       height: 44,
       constraints: const BoxConstraints(maxWidth: 320),
@@ -729,12 +749,12 @@ class _TrainTabs extends StatelessWidget {
       child: Row(
         children: [
           _TabButton(
-            label: 'Overview',
+            label: strings.trainOverviewTab,
             selected: selectedIndex == 0,
             onTap: () => onChanged(0),
           ),
           _TabButton(
-            label: 'Plans',
+            label: strings.trainPlansTab,
             selected: selectedIndex == 1,
             onTap: () => onChanged(1),
           ),
@@ -831,10 +851,6 @@ class _OverviewTab extends StatelessWidget {
   }
 }
 
-Future<Set<int>> _loadActivePresetIds(int? profileId) async {
-  return ActivePlanStore.load(profileId);
-}
-
 class _ActivePresetsCard extends StatefulWidget {
   final int? profileId;
   final int refreshToken;
@@ -869,14 +885,16 @@ class _ActivePresetsCardState extends State<_ActivePresetsCard> {
   }
 
   Future<Set<int>> _loadSelectedIds(int? profileId) async {
-    return _loadActivePresetIds(profileId);
+    return context.read<ActivePlanStore>().load(profileId);
   }
 
   Future<void> _openPlanManagement() async {
     final profileId = widget.profileId;
     if (profileId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a gym profile first.')),
+        SnackBar(
+          content: Text(AppLocalizations.of(context).trainSelectProfileFirst),
+        ),
       );
       return;
     }
@@ -896,6 +914,7 @@ class _ActivePresetsCardState extends State<_ActivePresetsCard> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = AppLocalizations.of(context);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -913,14 +932,14 @@ class _ActivePresetsCardState extends State<_ActivePresetsCard> {
                   children: [
                     Expanded(
                       child: Text(
-                        'Active Plans',
+                        strings.trainActivePlans,
                         style: theme.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w800,
                         ),
                       ),
                     ),
                     IconButton(
-                      tooltip: 'Edit active plans',
+                      tooltip: strings.trainEditActivePlans,
                       onPressed: isLoading ? null : _openPlanManagement,
                       icon: const Icon(Icons.edit_outlined),
                     ),
@@ -934,14 +953,14 @@ class _ActivePresetsCardState extends State<_ActivePresetsCard> {
                   )
                 else if (widget.profileId == null)
                   Text(
-                    'Select a gym profile to choose active plans.',
+                    strings.trainSelectProfileForPlans,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
                   )
                 else if (selectedIds.isEmpty)
                   Text(
-                    'Tap the pen to choose which plans show here.',
+                    strings.trainChooseActivePlans,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -954,8 +973,7 @@ class _ActivePresetsCardState extends State<_ActivePresetsCard> {
                     planActiveState: true,
                     padding: EdgeInsets.zero,
                     physics: const NeverScrollableScrollPhysics(),
-                    emptyMessage:
-                        'Selected plans are no longer available. Tap the pen to update them.',
+                    emptyMessage: strings.trainSelectedPlansMissing,
                     onRefresh: widget.onRefresh,
                   ),
               ],
@@ -993,7 +1011,9 @@ class _PlansTabState extends State<_PlansTab> {
   @override
   void initState() {
     super.initState();
-    _activePresetIdsFuture = _loadActivePresetIds(widget.profileId);
+    _activePresetIdsFuture = context.read<ActivePlanStore>().load(
+      widget.profileId,
+    );
   }
 
   @override
@@ -1004,7 +1024,9 @@ class _PlansTabState extends State<_PlansTab> {
       if (oldWidget.profileId != widget.profileId) {
         _lastActivePresetIds = null;
       }
-      _activePresetIdsFuture = _loadActivePresetIds(widget.profileId);
+      _activePresetIdsFuture = context.read<ActivePlanStore>().load(
+        widget.profileId,
+      );
     }
   }
 
@@ -1026,7 +1048,9 @@ class _PlansTabState extends State<_PlansTab> {
     final profileId = widget.profileId;
     if (profileId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a gym profile first.')),
+        SnackBar(
+          content: Text(AppLocalizations.of(context).trainSelectProfileFirst),
+        ),
       );
       return;
     }
@@ -1038,13 +1062,14 @@ class _PlansTabState extends State<_PlansTab> {
     );
     if (!mounted) return;
     setState(() {
-      _activePresetIdsFuture = _loadActivePresetIds(profileId);
+      _activePresetIdsFuture = context.read<ActivePlanStore>().load(profileId);
     });
     widget.onRefresh();
   }
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     return FutureBuilder<Set<int>>(
       future: _activePresetIdsFuture,
       builder: (context, snapshot) {
@@ -1059,7 +1084,7 @@ class _PlansTabState extends State<_PlansTab> {
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
           children: [
             _PresetSectionCard(
-              title: 'Active Plans',
+              title: strings.trainActivePlans,
               onEdit: _openPlanManagement,
               child: PresetsLoaded(
                 scale: 0.96,
@@ -1071,14 +1096,13 @@ class _PlansTabState extends State<_PlansTab> {
                 revealBatchSize: 5,
                 padding: EdgeInsets.zero,
                 physics: const NeverScrollableScrollPhysics(),
-                emptyMessage:
-                    'No active plans yet. Use the pen on the Overview Active Plans card to choose what stays ready.',
+                emptyMessage: strings.trainNoActivePlans,
                 onRefresh: widget.onRefresh,
               ),
             ),
             const SizedBox(height: 16),
             _PresetSectionCard(
-              title: 'Archived Plans',
+              title: strings.trainArchivedPlans,
               onEdit: _openPlanManagement,
               child: PresetsLoaded(
                 scale: 0.96,
@@ -1090,7 +1114,7 @@ class _PlansTabState extends State<_PlansTab> {
                 revealBatchSize: 5,
                 padding: EdgeInsets.zero,
                 physics: const NeverScrollableScrollPhysics(),
-                emptyMessage: 'No archived plans.',
+                emptyMessage: strings.trainNoArchivedPlans,
                 onRefresh: widget.onRefresh,
               ),
             ),
@@ -1098,13 +1122,13 @@ class _PlansTabState extends State<_PlansTab> {
             _PremadePlansCard(onOpen: _openPremadePlans),
             const SizedBox(height: 16),
             GenericBar(
-              label: 'Generate Custom Plans',
+              label: strings.trainGenerateCustomPlans,
               color: Colors.purple,
               onTap: widget.onGeneratePreset,
             ),
             const SizedBox(height: 8),
             GenericBar(
-              label: 'Manually Add Plan',
+              label: strings.trainManuallyAddPlan,
               color: Colors.purple,
               onTap: widget.onCreatePreset,
             ),
@@ -1129,6 +1153,7 @@ class _PresetSectionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = AppLocalizations.of(context);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -1147,7 +1172,7 @@ class _PresetSectionCard extends StatelessWidget {
                 ),
                 if (onEdit != null)
                   IconButton(
-                    tooltip: 'Manage plans',
+                    tooltip: strings.trainManagePlans,
                     onPressed: onEdit,
                     icon: const Icon(Icons.edit_outlined),
                   ),
@@ -1170,6 +1195,7 @@ class _PremadePlansCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = AppLocalizations.of(context);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -1186,7 +1212,7 @@ class _PremadePlansCard extends StatelessWidget {
                 const SizedBox(width: 14),
                 Expanded(
                   child: Text(
-                    'Premade Plans',
+                    strings.trainPremadePlans,
                     style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w800,
                     ),
@@ -1196,7 +1222,7 @@ class _PremadePlansCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              '${premadeTrainingPlans.length} curated routines available to copy into your plans.',
+              strings.trainPremadeDescription(premadeTrainingPlans.length),
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -1207,7 +1233,7 @@ class _PremadePlansCard extends StatelessWidget {
               child: FilledButton.tonalIcon(
                 onPressed: onOpen,
                 icon: const Icon(Icons.arrow_forward),
-                label: const Text('Browse Premade Plans'),
+                label: Text(strings.trainBrowsePremadePlans),
               ),
             ),
           ],
@@ -1233,6 +1259,7 @@ class _SplitWorkoutBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final strings = AppLocalizations.of(context);
     final green = Colors.green.shade700;
     return SafeArea(
       minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),
@@ -1251,10 +1278,10 @@ class _SplitWorkoutBar extends StatelessWidget {
                   color: green,
                   child: InkWell(
                     onTap: onStartWorkout,
-                    child: const Center(
+                    child: Center(
                       child: Text(
-                        'Start Workout',
-                        style: TextStyle(
+                        strings.trainStartWorkout,
+                        style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w800,
                           fontSize: 16,
@@ -1292,7 +1319,7 @@ class _SplitWorkoutBar extends StatelessWidget {
                                         ),
                                       )
                                       : Text(
-                                        'Optimize',
+                                        strings.trainOptimize,
                                         textAlign: TextAlign.center,
                                         style: TextStyle(
                                           color: colorScheme.onPrimaryContainer,
@@ -1309,7 +1336,7 @@ class _SplitWorkoutBar extends StatelessWidget {
                         top: 0,
                         bottom: 0,
                         child: IconButton(
-                          tooltip: 'Optimized workout settings',
+                          tooltip: strings.trainOptimizedSettings,
                           onPressed:
                               isStartingOptimized ? null : onOptimizeSettings,
                           icon: const Icon(Icons.settings_outlined),

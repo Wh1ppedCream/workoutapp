@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/generated/app_localizations.dart';
 import '../providers/selected_profile.dart';
 import '../repositories/app_repository.dart';
 import '../services/active_plan_store.dart';
@@ -15,6 +16,8 @@ import 'preset_bar.dart';
 /// Fetches & displays presets for the current profile.
 /// Handles loading, empty, and error states, then renders a scrollable list of [PresetBar]s.
 class PresetsLoaded extends StatefulWidget {
+  static const defaultEmptyMessage = 'No plans found.';
+
   /// Uniform scale factor for paddings and font sizes.
   final double scale;
 
@@ -38,7 +41,7 @@ class PresetsLoaded extends StatefulWidget {
     this.refreshToken = 0,
     this.presetIds,
     this.excludedPresetIds,
-    this.emptyMessage = 'No plans found.',
+    this.emptyMessage = defaultEmptyMessage,
     this.physics,
     this.padding,
     this.shrinkWrap = true,
@@ -74,7 +77,7 @@ class _PresetsLoadedState extends State<PresetsLoaded>
     with AutomaticKeepAliveClientMixin<PresetsLoaded> {
   static const int _bodyPartAnalysisConcurrency = 6;
 
-  final _repo = AppRepository();
+  AppRepository get _repo => context.read<AppRepository>();
   int? _loadedProfileId;
   int? _loadedRefreshToken;
   Future<List<_PresetListItem>>? _presetsFuture;
@@ -220,9 +223,9 @@ class _PresetsLoadedState extends State<PresetsLoaded>
 
   Future<void> _setPlanActive(int profileId, int presetId, bool active) async {
     if (active) {
-      await ActivePlanStore.add(profileId, presetId);
+      await context.read<ActivePlanStore>().add(profileId, presetId);
     } else {
-      await ActivePlanStore.remove(profileId, presetId);
+      await context.read<ActivePlanStore>().remove(profileId, presetId);
     }
     if (!mounted) return;
     _refreshPresets();
@@ -234,6 +237,7 @@ class _PresetsLoadedState extends State<PresetsLoaded>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    final strings = AppLocalizations.of(context);
     final sel = context.watch<SelectedProfile>();
     final profileId = sel.currentProfile?.id;
 
@@ -248,7 +252,7 @@ class _PresetsLoadedState extends State<PresetsLoaded>
     }
 
     if (profileId == null) {
-      return const Center(child: Text('No profile selected.'));
+      return Center(child: Text(strings.presetsNoProfile));
     }
 
     return FutureBuilder<List<_PresetListItem>>(
@@ -261,7 +265,7 @@ class _PresetsLoadedState extends State<PresetsLoaded>
         if (snap.hasError && !snap.hasData) {
           return Padding(
             padding: EdgeInsets.all(16 * widget.scale),
-            child: const Text('Error loading plans'),
+            child: Text(strings.presetsLoadError),
           );
         }
 
@@ -279,9 +283,13 @@ class _PresetsLoadedState extends State<PresetsLoaded>
               return included && !excluded;
             }).toList();
         if (rows.isEmpty) {
+          final emptyMessage =
+              widget.emptyMessage == PresetsLoaded.defaultEmptyMessage
+                  ? strings.presetsNoPlans
+                  : widget.emptyMessage;
           return Padding(
             padding: EdgeInsets.all(16 * widget.scale),
-            child: Text(widget.emptyMessage),
+            child: Text(emptyMessage),
           );
         }
 
@@ -361,9 +369,11 @@ class _ShowMorePlansButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final countText = revealCount == remainingCount
-        ? 'Show $revealCount more'
-        : 'Show $revealCount more ($remainingCount left)';
+    final strings = AppLocalizations.of(context);
+    final countText =
+        revealCount == remainingCount
+            ? strings.presetsShowMore(revealCount)
+            : strings.presetsShowMoreRemaining(revealCount, remainingCount);
     return Padding(
       padding: EdgeInsets.only(top: 8 * scale),
       child: OutlinedButton.icon(

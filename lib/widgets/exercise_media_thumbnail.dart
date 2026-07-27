@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../models/models.dart';
 import '../repositories/app_repository.dart';
@@ -32,13 +33,12 @@ class ExerciseMediaThumbnail extends StatefulWidget {
 }
 
 class _ExerciseMediaThumbnailState extends State<ExerciseMediaThumbnail> {
-  late final AppRepository _repo;
+  AppRepository get _repo => context.read<AppRepository>();
   late Future<_ThumbnailData?> _thumbnailFuture;
 
   @override
   void initState() {
     super.initState();
-    _repo = AppRepository();
     _thumbnailFuture = _loadThumbnail();
   }
 

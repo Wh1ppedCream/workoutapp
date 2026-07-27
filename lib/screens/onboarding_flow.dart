@@ -3,8 +3,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/generated/app_localizations.dart';
 import '../models/models.dart';
 import '../providers/active_session.dart';
+import '../providers/locale_preference_provider.dart';
 import '../providers/onboarding_provider.dart';
 import '../providers/preset_session.dart';
 import '../providers/selected_profile.dart';
@@ -74,6 +76,8 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
 
   bool get _nutritionOnboardingEnabled => false;
 
+  AppLocalizations get _strings => AppLocalizations.of(context);
+
   bool get _showWorkoutPlanOverview =>
       _useExerciseData &&
       _workoutPlanSetupOption != _WorkoutPlanSetupOption.skip &&
@@ -105,25 +109,74 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   }
 
   List<_OnboardingPage> get _pages {
+    final strings = _strings;
     return [
-      _OnboardingPage('Welcome', _buildWelcomePage),
-      _OnboardingPage('Basics', _buildPersonalInfoPage),
-      _OnboardingPage('Focus', _buildUsageIntentPage),
+      _OnboardingPage(
+        id: 'welcome',
+        label: strings.onboardingPageWelcome,
+        builder: _buildWelcomePage,
+      ),
+      _OnboardingPage(
+        id: 'basics',
+        label: strings.onboardingPageBasics,
+        builder: _buildPersonalInfoPage,
+      ),
+      _OnboardingPage(
+        id: 'focus',
+        label: strings.onboardingPageFocus,
+        builder: _buildUsageIntentPage,
+      ),
       if (_nutritionOnboardingEnabled && _useNutritionData) ...[
-        _OnboardingPage('Weight', _buildWeightHistoryPage),
-        _OnboardingPage('Body Fat', _buildBodyFatPage),
-        _OnboardingPage('Nutrition', _buildNutritionAndTrainingPage),
-        _OnboardingPage('Goal', _buildNutritionGoalPage),
+        _OnboardingPage(
+          id: 'weight',
+          label: 'Weight',
+          builder: _buildWeightHistoryPage,
+        ),
+        _OnboardingPage(
+          id: 'body-fat',
+          label: 'Body Fat',
+          builder: _buildBodyFatPage,
+        ),
+        _OnboardingPage(
+          id: 'nutrition',
+          label: 'Nutrition',
+          builder: _buildNutritionAndTrainingPage,
+        ),
+        _OnboardingPage(
+          id: 'goal',
+          label: 'Goal',
+          builder: _buildNutritionGoalPage,
+        ),
       ],
       if (_useExerciseData) ...[
-        _OnboardingPage('Gym Profile', _buildGymSpacePage),
+        _OnboardingPage(
+          id: 'gym-profile',
+          label: strings.onboardingPageGymProfile,
+          builder: _buildGymSpacePage,
+        ),
         if (_selectedGymSpace != null && !_selectedGymSpace!.skipSetup)
-          _OnboardingPage('Equipment', _buildGymEquipmentPage),
-        _OnboardingPage('Workout Plan', _buildWorkoutPlanPage),
+          _OnboardingPage(
+            id: 'equipment',
+            label: strings.onboardingPageEquipment,
+            builder: _buildGymEquipmentPage,
+          ),
+        _OnboardingPage(
+          id: 'workout-plan',
+          label: strings.onboardingPageWorkoutPlan,
+          builder: _buildWorkoutPlanPage,
+        ),
         if (_showWorkoutPlanOverview)
-          _OnboardingPage('Plan Overview', _buildWorkoutPlanOverviewPage),
+          _OnboardingPage(
+            id: 'plan-overview',
+            label: strings.onboardingPagePlanOverview,
+            builder: _buildWorkoutPlanOverviewPage,
+          ),
       ],
-      _OnboardingPage('Summary', _buildSummaryPage),
+      _OnboardingPage(
+        id: 'summary',
+        label: strings.onboardingPageSummary,
+        builder: _buildSummaryPage,
+      ),
     ];
   }
 
@@ -230,7 +283,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       if (!mounted) return;
       setState(() => _isFinishing = false);
       messenger.showSnackBar(
-        SnackBar(content: Text('Could not finish setup: $error')),
+        SnackBar(content: Text(_strings.onboardingFinishError('$error'))),
       );
     }
   }
@@ -246,13 +299,13 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
             .where((item) => _selectedGymEquipmentNames.contains(item.name))
             .toList();
     if (selectedEquipment.isEmpty) {
-      throw StateError('Select at least one equipment option.');
+      throw StateError(_strings.onboardingSelectEquipmentError);
     }
 
     final existingProfiles = await repo.fetchAllProfiles();
     final requestedName =
         _gymProfileNameController.text.trim().isEmpty
-            ? template.defaultProfileName
+            ? _gymSpaceDefaultProfileName(template)
             : _gymProfileNameController.text.trim();
 
     final profileId = _onboardingProfileId;
@@ -331,14 +384,14 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
 
     setState(() {
       _selectedGymSpace = template;
-      _gymProfileNameController.text = template.defaultProfileName;
+      _gymProfileNameController.text = _gymSpaceDefaultProfileName(template);
       _selectedGymEquipmentNames = Set<String>.from(equipmentNames);
     });
   }
 
   void _goToGymEquipmentPage() {
     final equipmentPageIndex = _pages.indexWhere(
-      (page) => page.label == 'Equipment',
+      (page) => page.id == 'equipment',
     );
     if (equipmentPageIndex == -1 || equipmentPageIndex == _currentPage) {
       return;
@@ -394,14 +447,14 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   }
 
   bool _canAdvance(_OnboardingPage page) {
-    if (page.label == 'Gym Profile') {
+    if (page.id == 'gym-profile') {
       return _selectedGymSpace != null;
     }
-    if (page.label == 'Equipment') {
+    if (page.id == 'equipment') {
       return _gymProfileNameController.text.trim().isNotEmpty &&
           _selectedGymEquipmentNames.isNotEmpty;
     }
-    if (page.label == 'Workout Plan') {
+    if (page.id == 'workout-plan') {
       return _workoutPlanSetupOption != null;
     }
     return true;
@@ -415,19 +468,16 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('Skip setup?'),
-          content: const Text(
-            'You can skip to the app homepage now and finish setup later. '
-            'You can also reopen onboarding from the settings page.',
-          ),
+          title: Text(_strings.onboardingSkipSetupTitle),
+          content: Text(_strings.onboardingSkipSetupBody),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Cancel'),
+              child: Text(_strings.onboardingCancel),
             ),
             FilledButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('OK'),
+              child: Text(_strings.onboardingConfirm),
             ),
           ],
         );
@@ -473,22 +523,21 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         _currentPage >= pages.length ? lastPageIndex : _currentPage;
     final currentPage = pages[currentIndex];
 
-    if (currentPage.label == 'Focus' && !_hasSelectedOnboardingFocus) {
+    if (currentPage.id == 'focus' && !_hasSelectedOnboardingFocus) {
       final shouldSkip = await _confirmSkipOnboarding();
       if (!mounted || !shouldSkip) return;
       await _skipToHomeAfterConfirmation();
       return;
     }
 
-    if (currentPage.label == 'Gym Profile' &&
-        _selectedGymSpace?.id == 'custom') {
+    if (currentPage.id == 'gym-profile' && _selectedGymSpace?.id == 'custom') {
       await _openGymProfileEditor();
       if (!mounted) return;
       _goToGymEquipmentPage();
       return;
     }
 
-    if (currentPage.label == 'Workout Plan') {
+    if (currentPage.id == 'workout-plan') {
       await _handleWorkoutPlanNext();
       return;
     }
@@ -597,8 +646,8 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         (existingDraft?['id'] as num?)?.toInt() ??
         await repo.createPreset(
           existingPlans.isEmpty
-              ? 'New Plan'
-              : 'New Plan ${existingPlans.length + 1}',
+              ? _strings.onboardingNewPlan
+              : _strings.onboardingNumberedNewPlan(existingPlans.length + 1),
           profileId: profileId,
           isDraft: true,
         );
@@ -647,19 +696,19 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
 
   String _workoutPlanSummary() {
     if (_onboardingPlansAdded > 0) {
-      return '$_onboardingPlansAdded added';
+      return _strings.onboardingPlanSummaryAdded(_onboardingPlansAdded);
     }
     switch (_workoutPlanSetupOption) {
       case _WorkoutPlanSetupOption.premade:
-        return 'Premade selected';
+        return _strings.onboardingPlanSummaryPremade;
       case _WorkoutPlanSetupOption.generate:
-        return 'Generate selected';
+        return _strings.onboardingPlanSummaryGenerated;
       case _WorkoutPlanSetupOption.skip:
-        return 'Skipped';
+        return _strings.onboardingPlanSummarySkipped;
       case _WorkoutPlanSetupOption.manual:
-        return 'Manual selected';
+        return _strings.onboardingPlanSummaryManual;
       case null:
-        return 'Not selected';
+        return _strings.onboardingPlanSummaryNotSelected;
     }
   }
 
@@ -685,6 +734,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
 
   @override
   Widget build(BuildContext context) {
+    final strings = _strings;
     final pages = _pages;
     final lastPageIndex = pages.length - 1;
     final scheme = Theme.of(context).colorScheme;
@@ -707,7 +757,10 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                 onSkip: () {
                   _skipOrFinish();
                 },
-                skipLabel: safePage == lastPageIndex ? 'Finish' : 'Skip',
+                skipLabel:
+                    safePage == lastPageIndex
+                        ? strings.onboardingFinish
+                        : strings.onboardingSkip,
               ),
             ),
             Expanded(
@@ -741,10 +794,10 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                               : null,
                       child: Text(
                         _isFinishing
-                            ? 'Finishing...'
+                            ? strings.onboardingFinishing
                             : safePage == lastPageIndex
-                            ? 'Finish Setup'
-                            : 'Next',
+                            ? strings.onboardingFinishSetup
+                            : strings.onboardingNext,
                       ),
                     ),
                   ),
@@ -758,43 +811,62 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   }
 
   Widget _buildWelcomePage() {
+    final strings = _strings;
+    final language = context.watch<LocalePreferenceProvider>().preference;
     return _OnboardingCard(
       icon: Icons.favorite,
-      title: 'Welcome to Tonos',
-      subtitle:
-          'A quick setup helps personalize workouts, nutrition, and progress tracking.',
-      children: const [
+      title: strings.onboardingWelcomeTitle,
+      subtitle: strings.onboardingWelcomeSubtitle,
+      children: [
+        _ChoiceGroup<AppLanguagePreference>(
+          title: strings.onboardingLanguageSelectionTitle,
+          options: AppLanguagePreference.values,
+          value: language,
+          labelBuilder: (preference) => _languagePreferenceLabel(preference),
+          onChanged: (preference) {
+            if (preference == null) return;
+            context.read<LocalePreferenceProvider>().setPreference(preference);
+          },
+        ),
+        const SizedBox(height: 8),
+        Text(
+          strings.onboardingLanguageSelectionHelp,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 20),
         _FeatureRow(
           icon: Icons.fitness_center,
-          title: 'Train with context',
-          body:
-              'Use your preferences and history to shape workout suggestions.',
+          title: strings.onboardingTrainFeatureTitle,
+          body: strings.onboardingTrainFeatureBody,
         ),
         _FeatureRow(
           icon: Icons.restaurant_menu,
-          title: 'Support nutrition goals',
-          body: 'Set the level of nutrition guidance you want from the app.',
+          title: strings.onboardingNutritionFeatureTitle,
+          body: strings.onboardingNutritionFeatureBody,
         ),
         _FeatureRow(
           icon: Icons.insights,
-          title: 'Track progress',
-          body: 'Keep your training and nutrition data connected over time.',
+          title: strings.onboardingProgressFeatureTitle,
+          body: strings.onboardingProgressFeatureBody,
         ),
       ],
     );
   }
 
   Widget _buildPersonalInfoPage() {
+    final strings = _strings;
+    const genderValues = ['Male', 'Female', 'Other', 'Prefer not to say'];
     return _OnboardingCard(
       icon: Icons.badge_outlined,
-      title: 'Tell us the basics',
-      subtitle:
-          'These details are optional, but they help future calculations.',
+      title: strings.onboardingBasicsTitle,
+      subtitle: strings.onboardingBasicsSubtitle,
       children: [
         _TextInput(
           controller: _nameController,
-          label: 'Name',
-          hint: 'Enter your name',
+          label: strings.onboardingNameLabel,
+          hint: strings.onboardingNameHint,
           icon: Icons.person_outline,
         ),
         _FieldGap.small,
@@ -802,34 +874,36 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
           isExpanded: true,
           value: _gender,
           decoration: _inputDecoration(
-            label: 'Gender',
+            label: strings.onboardingGenderLabel,
             icon: Icons.wc_outlined,
           ),
           items:
-              const ['Male', 'Female', 'Other', 'Prefer not to say'].map((
-                gender,
-              ) {
-                return DropdownMenuItem(value: gender, child: Text(gender));
+              genderValues.map((gender) {
+                return DropdownMenuItem(
+                  value: gender,
+                  child: Text(_genderLabel(gender)),
+                );
               }).toList(),
           onChanged: (value) => setState(() => _gender = value),
         ),
         _FieldGap.small,
         _ActionField(
           icon: Icons.calendar_today,
-          label: 'Date of birth',
-          value: _dob == null ? 'Select date' : _formatDate(_dob!),
+          label: strings.onboardingDateOfBirthLabel,
+          value:
+              _dob == null ? strings.onboardingSelectDate : _formatDate(_dob!),
           onTap: _pickDob,
         ),
         _FieldGap.small,
         _TextInput(
           controller: _heightController,
-          label: 'Height',
-          hint: 'e.g. 5\'10" or 178 cm',
+          label: strings.onboardingHeightLabel,
+          hint: strings.onboardingHeightHint,
           icon: Icons.height,
         ),
         _FieldGap.small,
         _ChoiceGroup<WeightUnit>(
-          title: 'Workout weight units',
+          title: strings.onboardingWorkoutWeightUnits,
           options: WeightUnit.values,
           value: _selectedWeightUnit,
           labelBuilder: (unit) => unit.shortLabel,
@@ -842,9 +916,11 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         _TextInput(
           key: const Key('onboarding-current-weight'),
           controller: _weightController,
-          label: 'Current weight',
+          label: strings.onboardingCurrentWeightLabel,
           hint:
-              _selectedWeightUnit == WeightUnit.pounds ? 'e.g. 160' : 'e.g. 72',
+              _selectedWeightUnit == WeightUnit.pounds
+                  ? strings.onboardingWeightHintPounds
+                  : strings.onboardingWeightHintKilograms,
           icon: Icons.monitor_weight_outlined,
           keyboardType: TextInputType.number,
           suffixText: _selectedWeightUnit.shortLabel,
@@ -875,26 +951,26 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   }
 
   Widget _buildUsageIntentPage() {
+    final strings = _strings;
     return _OnboardingCard(
       icon: Icons.tune,
-      title: 'What should Tonos personalize?',
-      subtitle:
-          'Choose the areas you want to set up now. You can change this later.',
+      title: strings.onboardingFocusTitle,
+      subtitle: strings.onboardingFocusSubtitle,
       children: [
         _IntentTile(
           icon: Icons.restaurant_menu,
-          title: 'Nutrition data',
-          body: 'Nutrition setup is paused while this area is rebuilt.',
+          title: strings.onboardingNutritionDataTitle,
+          body: strings.onboardingNutritionDataPausedBody,
           value: false,
           enabled: _nutritionOnboardingEnabled,
-          statusLabel: 'Later',
+          statusLabel: strings.onboardingLater,
           onChanged: (value) => setState(() => _useNutritionData = value),
         ),
         const SizedBox(height: 12),
         _IntentTile(
           icon: Icons.fitness_center,
-          title: 'Exercise data',
-          body: 'Set training frequency, activity, and experience.',
+          title: strings.onboardingExerciseDataTitle,
+          body: strings.onboardingExerciseDataBody,
           value: _useExerciseData,
           onChanged: (value) => setState(() => _useExerciseData = value),
         ),
@@ -1134,11 +1210,11 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   }
 
   Widget _buildGymSpacePage() {
+    final strings = _strings;
     return _OnboardingCard(
       icon: Icons.location_on_outlined,
-      title: 'Where do you work out?',
-      subtitle:
-          'Choose a starting space. Its equipment will shape exercise suggestions and generated workouts.',
+      title: strings.onboardingGymSpaceTitle,
+      subtitle: strings.onboardingGymSpaceSubtitle,
       children: [
         if (_isGymEquipmentLoading)
           const Padding(
@@ -1150,6 +1226,8 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
           const SizedBox(height: 12),
           _GymSpaceTile(
             template: _skipGymSpaceTemplate,
+            title: _gymSpaceTitle(_skipGymSpaceTemplate),
+            subtitle: _gymSpaceSubtitle(_skipGymSpaceTemplate),
             selected: _selectedGymSpace?.skipSetup ?? false,
             onTap: () => _selectGymSpace(_skipGymSpaceTemplate),
           ),
@@ -1159,6 +1237,8 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
               padding: const EdgeInsets.only(bottom: 12),
               child: _GymSpaceTile(
                 template: template,
+                title: _gymSpaceTitle(template),
+                subtitle: _gymSpaceSubtitle(template),
                 selected: _selectedGymSpace?.id == template.id,
                 onTap: () => _selectGymSpace(template),
               ),
@@ -1169,6 +1249,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   }
 
   Widget _buildGymEquipmentPage() {
+    final strings = _strings;
     final template = _selectedGymSpace;
     if (template == null || template.skipSetup) {
       return const SizedBox.shrink();
@@ -1182,16 +1263,15 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
 
     return _OnboardingCard(
       icon: Icons.fitness_center,
-      title: 'Review your workout space',
-      subtitle:
-          'Rename the profile or adjust its equipment before Tonos creates it.',
+      title: strings.onboardingReviewWorkoutSpaceTitle,
+      subtitle: strings.onboardingReviewWorkoutSpaceSubtitle,
       children: [
         TextField(
           controller: _gymProfileNameController,
           textInputAction: TextInputAction.done,
           onChanged: (_) => setState(() {}),
           decoration: InputDecoration(
-            labelText: 'Profile name',
+            labelText: strings.onboardingProfileNameLabel,
             prefixIcon: const Icon(Icons.edit_outlined),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(18)),
           ),
@@ -1215,7 +1295,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                 children: [
                   Expanded(
                     child: Text(
-                      'Included equipment',
+                      strings.onboardingIncludedEquipmentTitle,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w900,
                       ),
@@ -1232,7 +1312,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
               ),
               const SizedBox(height: 4),
               Text(
-                'Only exercises supported by this equipment will be suggested when the profile is active.',
+                strings.onboardingIncludedEquipmentBody,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
@@ -1240,7 +1320,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
               const SizedBox(height: 14),
               if (selectedEquipment.isEmpty)
                 Text(
-                  'No equipment selected yet.',
+                  strings.onboardingNoEquipmentSelected,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Theme.of(context).colorScheme.error,
                   ),
@@ -1271,7 +1351,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
               child: OutlinedButton.icon(
                 onPressed: _resetGymEquipment,
                 icon: const Icon(Icons.restart_alt),
-                label: const Text('Reset'),
+                label: Text(strings.onboardingReset),
               ),
             ),
             const SizedBox(width: 10),
@@ -1279,7 +1359,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
               child: FilledButton.tonalIcon(
                 onPressed: _openGymProfileEditor,
                 icon: const Icon(Icons.tune),
-                label: const Text('Edit profile'),
+                label: Text(strings.onboardingEditProfile),
               ),
             ),
           ],
@@ -1296,7 +1376,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
               initialName: _gymProfileNameController.text.trim(),
               initialEquipmentNames: _selectedGymEquipmentNames,
               returnDraftOnly: true,
-              title: 'Edit Workout Space',
+              title: _strings.onboardingEditWorkoutSpaceTitle,
             ),
       ),
     );
@@ -1308,16 +1388,15 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   }
 
   Widget _buildWorkoutPlanPage() {
+    final strings = _strings;
     return _OnboardingCard(
       icon: Icons.assignment_outlined,
-      title: 'Set up your workout plan',
-      subtitle:
-          'Choose how Tonos should prepare your first plans. You can always add, archive, or edit plans later.',
+      title: strings.onboardingWorkoutPlanTitle,
+      subtitle: strings.onboardingWorkoutPlanSubtitle,
       children: [
         _WorkoutPlanSetupTile(
-          title: 'Manually create your own plans',
-          subtitle:
-              'Start with a blank plan, then add exercises and sets yourself.',
+          title: strings.onboardingManualPlanTitle,
+          subtitle: strings.onboardingManualPlanSubtitle,
           icon: Icons.edit_note,
           selected: _workoutPlanSetupOption == _WorkoutPlanSetupOption.manual,
           onTap: () {
@@ -1328,9 +1407,8 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         ),
         const SizedBox(height: 12),
         _WorkoutPlanSetupTile(
-          title: 'Use premade exercise plans',
-          subtitle:
-              'Browse built-in full body, upper/lower, push-pull-legs, and body-part split plans.',
+          title: strings.onboardingPremadePlanTitle,
+          subtitle: strings.onboardingPremadePlanSubtitle,
           icon: Icons.library_books_outlined,
           selected: _workoutPlanSetupOption == _WorkoutPlanSetupOption.premade,
           onTap: () {
@@ -1341,9 +1419,8 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         ),
         const SizedBox(height: 12),
         _WorkoutPlanSetupTile(
-          title: 'Generate exercise plans',
-          subtitle:
-              'Answer a few setup questions and let Tonos generate a custom plan for your profile.',
+          title: strings.onboardingGeneratePlanTitle,
+          subtitle: strings.onboardingGeneratePlanSubtitle,
           icon: Icons.auto_awesome,
           selected: _workoutPlanSetupOption == _WorkoutPlanSetupOption.generate,
           onTap: () {
@@ -1354,9 +1431,8 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         ),
         const SizedBox(height: 12),
         _WorkoutPlanSetupTile(
-          title: 'Skip this step',
-          subtitle:
-              'Start without adding plans. You can set them up from Train later.',
+          title: strings.onboardingSkipPlanTitle,
+          subtitle: strings.onboardingSkipPlanSubtitle,
           icon: Icons.fast_forward,
           selected: _workoutPlanSetupOption == _WorkoutPlanSetupOption.skip,
           onTap: () {
@@ -1369,8 +1445,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
           const SizedBox(height: 14),
           _OnboardingInfoCallout(
             icon: Icons.check_circle_outline,
-            text:
-                '$_onboardingPlansAdded ${_onboardingPlansAdded == 1 ? 'plan has' : 'plans have'} been added to Active Plans.',
+            text: strings.onboardingPlansAdded(_onboardingPlansAdded),
           ),
         ],
       ],
@@ -1378,12 +1453,12 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   }
 
   Widget _buildWorkoutPlanOverviewPage() {
+    final strings = _strings;
     final planCount = _onboardingPlanIds.length;
     return _OnboardingCard(
       icon: Icons.fact_check_outlined,
-      title: 'Review your plans',
-      subtitle:
-          'These plans were added to your active plans. Open any plan to inspect or adjust it before continuing.',
+      title: strings.onboardingReviewPlansTitle,
+      subtitle: strings.onboardingReviewPlansSubtitle,
       children: [
         _OnboardingPlanOverviewList(
           repository: context.read<AppRepository>(),
@@ -1398,36 +1473,55 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         const SizedBox(height: 14),
         _OnboardingInfoCallout(
           icon: Icons.check_circle_outline,
-          text:
-              '$planCount ${planCount == 1 ? 'plan is' : 'plans are'} ready in Active Plans.',
+          text: strings.onboardingPlansReady(planCount),
         ),
       ],
     );
   }
 
   Widget _buildSummaryPage() {
+    final strings = _strings;
     final usesNutrition = _nutritionOnboardingEnabled && _useNutritionData;
     final included = [
-      if (usesNutrition) 'Nutrition setup',
-      if (_useExerciseData) 'Exercise setup',
-      if (!usesNutrition && !_useExerciseData) 'Basic profile only',
+      if (usesNutrition) strings.onboardingIncludedNutrition,
+      if (_useExerciseData) strings.onboardingIncludedExercise,
+      if (!usesNutrition && !_useExerciseData)
+        strings.onboardingIncludedBasicOnly,
     ];
 
     return _OnboardingCard(
       icon: Icons.check_circle,
-      title: 'Ready to start',
-      subtitle: 'Review your setup, then finish to enter Tonos.',
+      title: strings.onboardingReadyTitle,
+      subtitle: strings.onboardingReadySubtitle,
       children: [
-        _SummaryRow(label: 'Name', value: _nameController.text.trim()),
-        _SummaryRow(label: 'Gender', value: _gender ?? ''),
         _SummaryRow(
-          label: 'DOB',
+          label: strings.onboardingSummaryName,
+          value: _nameController.text.trim(),
+        ),
+        _SummaryRow(
+          label: strings.onboardingSummaryGender,
+          value: _gender == null ? '' : _genderLabel(_gender!),
+        ),
+        _SummaryRow(
+          label: strings.onboardingSummaryDateOfBirth,
           value: _dob == null ? '' : _formatDate(_dob!),
         ),
-        _SummaryRow(label: 'Height', value: _heightController.text.trim()),
-        _SummaryRow(label: 'Weight', value: _weightController.text.trim()),
-        _SummaryRow(label: 'Workout units', value: _selectedWeightUnit.label),
-        _SummaryRow(label: 'Included', value: included.join(', ')),
+        _SummaryRow(
+          label: strings.onboardingSummaryHeight,
+          value: _heightController.text.trim(),
+        ),
+        _SummaryRow(
+          label: strings.onboardingSummaryWeight,
+          value: _weightController.text.trim(),
+        ),
+        _SummaryRow(
+          label: strings.onboardingSummaryWorkoutUnits,
+          value: _weightUnitLabel(_selectedWeightUnit),
+        ),
+        _SummaryRow(
+          label: strings.onboardingSummaryIncluded,
+          value: included.join(', '),
+        ),
         if (usesNutrition) ...[
           _SummaryRow(label: 'Weight trend', value: _weightTrend ?? ''),
           _SummaryRow(label: 'Body fat', value: _bodyFatEstimate ?? ''),
@@ -1436,21 +1530,95 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         ],
         if (_useExerciseData) ...[
           _SummaryRow(
-            label: 'Gym profile',
+            label: strings.onboardingSummaryGymProfile,
             value:
                 _selectedGymSpace?.skipSetup ?? true
-                    ? 'General'
+                    ? strings.onboardingGymGeneralName
                     : _gymProfileNameController.text.trim(),
           ),
           if (!(_selectedGymSpace?.skipSetup ?? true))
             _SummaryRow(
-              label: 'Equipment',
-              value: '${_selectedGymEquipmentNames.length} selected',
+              label: strings.onboardingSummaryEquipment,
+              value: strings.onboardingEquipmentSelected(
+                _selectedGymEquipmentNames.length,
+              ),
             ),
-          _SummaryRow(label: 'Workout plans', value: _workoutPlanSummary()),
+          _SummaryRow(
+            label: strings.onboardingSummaryWorkoutPlans,
+            value: _workoutPlanSummary(),
+          ),
         ],
       ],
     );
+  }
+
+  String _languagePreferenceLabel(AppLanguagePreference preference) {
+    final strings = _strings;
+    return switch (preference) {
+      AppLanguagePreference.system => strings.systemDefaultLanguage,
+      AppLanguagePreference.english => strings.englishLanguage,
+      AppLanguagePreference.canadianFrench => strings.canadianFrenchLanguage,
+    };
+  }
+
+  String _genderLabel(String gender) {
+    final strings = _strings;
+    return switch (gender) {
+      'Male' => strings.onboardingGenderMale,
+      'Female' => strings.onboardingGenderFemale,
+      'Other' => strings.onboardingGenderOther,
+      'Prefer not to say' => strings.onboardingGenderPreferNotToSay,
+      _ => gender,
+    };
+  }
+
+  String _weightUnitLabel(WeightUnit unit) {
+    return switch (unit) {
+      WeightUnit.pounds => _strings.onboardingPounds,
+      WeightUnit.kilograms => _strings.onboardingKilograms,
+    };
+  }
+
+  String _gymSpaceTitle(_GymSpaceTemplate template) {
+    final strings = _strings;
+    return switch (template.id) {
+      'custom' => strings.onboardingGymCustomTitle,
+      'skip' => strings.onboardingGymSkipTitle,
+      'commercial' => strings.onboardingGymCommercialTitle,
+      'home_gym' => strings.onboardingGymHomeTitle,
+      'calisthenics' => strings.onboardingGymCalisthenicsTitle,
+      'powerlifting' => strings.onboardingGymPowerliftingTitle,
+      'free_weights' => strings.onboardingGymFreeWeightsTitle,
+      _ => template.id,
+    };
+  }
+
+  String _gymSpaceSubtitle(_GymSpaceTemplate template) {
+    final strings = _strings;
+    return switch (template.id) {
+      'custom' => strings.onboardingGymCustomSubtitle,
+      'skip' => strings.onboardingGymSkipSubtitle,
+      'commercial' => strings.onboardingGymCommercialSubtitle,
+      'home_gym' => strings.onboardingGymHomeSubtitle,
+      'calisthenics' => strings.onboardingGymCalisthenicsSubtitle,
+      'powerlifting' => strings.onboardingGymPowerliftingSubtitle,
+      'free_weights' => strings.onboardingGymFreeWeightsSubtitle,
+      _ => template.id,
+    };
+  }
+
+  String _gymSpaceDefaultProfileName(_GymSpaceTemplate template) {
+    final strings = _strings;
+    return switch (template.id) {
+      'custom' => strings.onboardingGymCustomDefaultName,
+      'skip' => strings.onboardingGymGeneralName,
+      'commercial' => strings.onboardingGymCommercialDefaultName,
+      'home_gym' => strings.onboardingGymHomeDefaultName,
+      'calisthenics' => strings.onboardingGymCalisthenicsDefaultName,
+      'powerlifting' => strings.onboardingGymPowerliftingDefaultName,
+      'free_weights' => strings.onboardingGymFreeWeightsDefaultName,
+      _ => template.id,
+    };
   }
 
   InputDecoration _inputDecoration({
@@ -1467,14 +1635,12 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   }
 
   String _formatDate(DateTime date) {
-    return '${date.year}-${_two(date.month)}-${_two(date.day)}';
+    return MaterialLocalizations.of(context).formatMediumDate(date);
   }
 
   String _shortDate(DateTime date) {
-    return '${date.month}/${date.day}/${date.year}';
+    return MaterialLocalizations.of(context).formatMediumDate(date);
   }
-
-  String _two(int value) => value.toString().padLeft(2, '0');
 }
 
 class _OnboardingHeader extends StatelessWidget {
@@ -1498,6 +1664,7 @@ class _OnboardingHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final strings = AppLocalizations.of(context);
     final progress = pageCount <= 1 ? 1.0 : (currentPage + 1) / pageCount;
 
     return Column(
@@ -1517,7 +1684,7 @@ class _OnboardingHeader extends StatelessWidget {
                           ? null
                           : IconButton(
                             onPressed: onBack,
-                            tooltip: 'Previous step',
+                            tooltip: strings.onboardingPreviousStepTooltip,
                             alignment: Alignment.centerLeft,
                             padding: EdgeInsets.zero,
                             icon: const Icon(Icons.chevron_left, size: 26),
@@ -1557,7 +1724,7 @@ class _OnboardingHeader extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         Text(
-          'Step ${currentPage + 1} of $pageCount',
+          strings.onboardingStepProgress(currentPage + 1, pageCount),
           style: theme.textTheme.bodySmall?.copyWith(
             color: scheme.onSurfaceVariant,
           ),
@@ -2403,6 +2570,7 @@ class _OnboardingPlanOverviewListState
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final strings = AppLocalizations.of(context);
     return FutureBuilder<List<_OnboardingPlanItem>>(
       future: _plansFuture,
       builder: (context, snapshot) {
@@ -2411,7 +2579,7 @@ class _OnboardingPlanOverviewListState
         }
         if (snapshot.hasError) {
           return Text(
-            'Could not load plan overview yet.',
+            strings.onboardingPlanOverviewLoadError,
             style: TextStyle(color: scheme.error),
           );
         }
@@ -2419,7 +2587,7 @@ class _OnboardingPlanOverviewListState
         final plans = snapshot.data ?? const <_OnboardingPlanItem>[];
         if (plans.isEmpty) {
           return Text(
-            'No added plans were found. Go back to add plans, or skip this step.',
+            strings.onboardingNoAddedPlans,
             style: TextStyle(color: scheme.onSurfaceVariant),
           );
         }
@@ -2451,9 +2619,6 @@ class _OnboardingPlanOverviewListState
 
 class _GymSpaceTemplate {
   final String id;
-  final String title;
-  final String subtitle;
-  final String defaultProfileName;
   final IconData icon;
   final Set<String> equipmentNames;
   final bool includeAllEquipment;
@@ -2462,9 +2627,6 @@ class _GymSpaceTemplate {
 
   const _GymSpaceTemplate({
     required this.id,
-    required this.title,
-    required this.subtitle,
-    required this.defaultProfileName,
     required this.icon,
     this.equipmentNames = const {},
     this.includeAllEquipment = false,
@@ -2474,37 +2636,15 @@ class _GymSpaceTemplate {
 }
 
 const _gymSpaceTemplates = <_GymSpaceTemplate>[
-  _GymSpaceTemplate(
-    id: 'custom',
-    title: 'Customized Space',
-    subtitle: 'Design your own profile by choosing every available item.',
-    defaultProfileName: 'Custom Space',
-    icon: Icons.tune,
-    highlighted: true,
-  ),
-  _GymSpaceTemplate(
-    id: 'skip',
-    title: 'Skip this step',
-    subtitle: 'Keep the General profile and choose your equipment later.',
-    defaultProfileName: 'General',
-    icon: Icons.fast_forward,
-    skipSetup: true,
-  ),
+  _GymSpaceTemplate(id: 'custom', icon: Icons.tune, highlighted: true),
+  _GymSpaceTemplate(id: 'skip', icon: Icons.fast_forward, skipSetup: true),
   _GymSpaceTemplate(
     id: 'commercial',
-    title: 'Commercial Gym',
-    subtitle:
-        'Start with every available equipment option, then remove anything your gym does not have.',
-    defaultProfileName: 'Commercial Gym',
     icon: Icons.apartment,
     includeAllEquipment: true,
   ),
   _GymSpaceTemplate(
     id: 'home_gym',
-    title: 'Home Gym',
-    subtitle:
-        'A practical home setup with free weights, bands, a bench, and bodyweight equipment.',
-    defaultProfileName: 'Home Gym',
     icon: Icons.home_work_outlined,
     equipmentNames: {
       'None',
@@ -2519,10 +2659,6 @@ const _gymSpaceTemplates = <_GymSpaceTemplate>[
   ),
   _GymSpaceTemplate(
     id: 'calisthenics',
-    title: 'Calisthenics',
-    subtitle:
-        'Bodyweight-focused equipment including bars, rings, bands, and basic accessories.',
-    defaultProfileName: 'Calisthenics',
     icon: Icons.accessibility_new,
     equipmentNames: {
       'None',
@@ -2538,9 +2674,6 @@ const _gymSpaceTemplates = <_GymSpaceTemplate>[
   ),
   _GymSpaceTemplate(
     id: 'powerlifting',
-    title: 'Powerlifting',
-    subtitle: 'A barbell-based space with plates, a power rack, and a bench.',
-    defaultProfileName: 'Powerlifting',
     icon: Icons.fitness_center,
     equipmentNames: {
       'Barbell',
@@ -2551,10 +2684,6 @@ const _gymSpaceTemplates = <_GymSpaceTemplate>[
   ),
   _GymSpaceTemplate(
     id: 'free_weights',
-    title: 'Free Weights',
-    subtitle:
-        'Dumbbells, kettlebells, plates, a bench, and bodyweight movements.',
-    defaultProfileName: 'Free Weights',
     icon: Icons.sports_gymnastics,
     equipmentNames: {
       'Dumbbell',
@@ -2572,11 +2701,15 @@ final _skipGymSpaceTemplate = _gymSpaceTemplates.firstWhere(
 
 class _GymSpaceTile extends StatelessWidget {
   final _GymSpaceTemplate template;
+  final String title;
+  final String subtitle;
   final bool selected;
   final VoidCallback onTap;
 
   const _GymSpaceTile({
     required this.template,
+    required this.title,
+    required this.subtitle,
     required this.selected,
     required this.onTap,
   });
@@ -2622,7 +2755,7 @@ class _GymSpaceTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    template.title,
+                    title,
                     style: theme.textTheme.titleSmall?.copyWith(
                       color: template.highlighted ? accent : null,
                       fontWeight: FontWeight.w900,
@@ -2630,7 +2763,7 @@ class _GymSpaceTile extends StatelessWidget {
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    template.subtitle,
+                    subtitle,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: scheme.onSurfaceVariant,
                     ),
@@ -2661,6 +2794,7 @@ class _GymEquipmentLoadError extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final strings = AppLocalizations.of(context);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -2673,7 +2807,7 @@ class _GymEquipmentLoadError extends StatelessWidget {
           Icon(Icons.cloud_off, color: scheme.error),
           const SizedBox(height: 8),
           Text(
-            'Equipment could not be loaded.',
+            strings.onboardingEquipmentLoadError,
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w900,
             ),
@@ -2682,7 +2816,7 @@ class _GymEquipmentLoadError extends StatelessWidget {
           OutlinedButton.icon(
             onPressed: onRetry,
             icon: const Icon(Icons.refresh),
-            label: const Text('Try again'),
+            label: Text(strings.onboardingTryAgain),
           ),
         ],
       ),
@@ -2836,8 +2970,13 @@ class _FieldGap {
 }
 
 class _OnboardingPage {
+  final String id;
   final String label;
   final Widget Function() builder;
 
-  const _OnboardingPage(this.label, this.builder);
+  const _OnboardingPage({
+    required this.id,
+    required this.label,
+    required this.builder,
+  });
 }

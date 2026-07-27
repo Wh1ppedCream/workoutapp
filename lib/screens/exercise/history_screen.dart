@@ -4,6 +4,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../providers/active_session.dart';
 import '../../services/tutorial_state_store.dart';
 import '../../widgets/guided_tutorial_overlay.dart';
@@ -61,15 +62,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
       );
       if (completed || !mounted) return;
 
+      final strings = AppLocalizations.of(context);
       await GuidedTutorialOverlay.show(
         context,
         steps: [
           GuidedTutorialStep(
             targetKey: _logbookCalendarTutorialKey,
             icon: Icons.history_outlined,
-            title: 'Logbook calendar',
-            body:
-                'Use M, 3M, Y, and 4Y to browse workout history. Select a day, week, month, or year to see sessions and summary stats for that range.',
+            title: strings.logbookTutorialCalendarTitle,
+            body: strings.logbookTutorialCalendarBody,
           ),
         ],
       );

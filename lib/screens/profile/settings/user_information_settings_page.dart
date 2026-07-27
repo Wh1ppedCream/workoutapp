@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../models/models.dart';
 import '../../../providers/unit_preference_provider.dart';
 import '../../../repositories/app_repository.dart';
@@ -108,6 +109,7 @@ class _UserInformationSettingsPageState
   }
 
   Future<void> _save() async {
+    final strings = AppLocalizations.of(context);
     try {
       final repo = context.read<AppRepository>();
       final weightUnit = context.read<UnitPreferenceProvider>().weightUnit;
@@ -127,18 +129,18 @@ class _UserInformationSettingsPageState
         bodyWeightValue:
             enteredWeight != null && enteredWeight > 0 ? enteredWeight : null,
         bodyWeightUnit: weightUnit,
-        measurementNote: 'Profile update',
+        measurementNote: strings.userInfoProfileUpdateNote,
       );
       if (!mounted) return;
       setState(() => _dirty = false);
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Changes saved')));
+      ).showSnackBar(SnackBar(content: Text(strings.userInfoChangesSaved)));
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text("Couldn't save: $error")));
+      ).showSnackBar(SnackBar(content: Text(strings.userInfoSaveFailed)));
     }
   }
 
@@ -178,6 +180,7 @@ class _UserInformationSettingsPageState
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     final bodyFatOptions = <String>[
       '0-5%',
@@ -204,15 +207,15 @@ class _UserInformationSettingsPageState
     }
 
     return SettingsPageScaffold(
-      title: 'User Information',
-      subtitle: 'Keep basic profile details available for app calculations.',
+      title: strings.userInfoTitle,
+      subtitle: strings.userInfoSubtitle,
       icon: Icons.badge_outlined,
       heroAccentColor: SettingsAccent.account,
       bottomNavigationBar: _SaveBar(isVisible: _dirty, onSave: _save),
       children: [
         SettingsSection(
-          title: 'Identity',
-          subtitle: 'Basic personal details.',
+          title: strings.userInfoIdentityTitle,
+          subtitle: strings.userInfoIdentitySubtitle,
           accentColor: SettingsAccent.account,
           children: [
             _FieldPadding(
@@ -220,8 +223,8 @@ class _UserInformationSettingsPageState
                 controller: _nameController,
                 decoration: _inputDecoration(
                   context,
-                  label: 'Name',
-                  hint: 'Enter your name',
+                  label: strings.userInfoName,
+                  hint: strings.userInfoNameHint,
                   icon: Icons.person_outline,
                 ),
               ),
@@ -234,7 +237,7 @@ class _UserInformationSettingsPageState
                         .map(
                           (gender) => DropdownMenuItem<String?>(
                             value: gender,
-                            child: Text(gender),
+                            child: Text(_genderLabel(strings, gender)),
                           ),
                         )
                         .toList(),
@@ -244,7 +247,7 @@ class _UserInformationSettingsPageState
                 },
                 decoration: _inputDecoration(
                   context,
-                  label: 'Gender',
+                  label: strings.userInfoGender,
                   icon: Icons.wc_outlined,
                 ),
               ),
@@ -257,8 +260,8 @@ class _UserInformationSettingsPageState
                     controller: _dobController,
                     decoration: _inputDecoration(
                       context,
-                      label: 'Date of Birth',
-                      hint: 'YYYY-MM-DD',
+                      label: strings.userInfoDateOfBirth,
+                      hint: strings.userInfoDateHint,
                       icon: Icons.calendar_today,
                     ),
                   ),
@@ -268,9 +271,8 @@ class _UserInformationSettingsPageState
           ],
         ),
         SettingsSection(
-          title: 'Body Metrics',
-          subtitle:
-              'Optional details used by progress and nutrition estimates.',
+          title: strings.userInfoBodyMetricsTitle,
+          subtitle: strings.userInfoBodyMetricsSubtitle,
           accentColor: SettingsAccent.progress,
           children: [
             _FieldPadding(
@@ -278,8 +280,8 @@ class _UserInformationSettingsPageState
                 controller: _heightController,
                 decoration: _inputDecoration(
                   context,
-                  label: 'Height',
-                  hint: 'e.g. 5\'10" or 178 cm',
+                  label: strings.userInfoHeight,
+                  hint: strings.userInfoHeightHint,
                   icon: Icons.height,
                 ),
               ),
@@ -289,9 +291,11 @@ class _UserInformationSettingsPageState
                 controller: _weightController,
                 decoration: _inputDecoration(
                   context,
-                  label: 'Current Weight',
+                  label: strings.userInfoCurrentWeight,
                   hint:
-                      weightUnit == WeightUnit.pounds ? 'e.g. 160' : 'e.g. 72',
+                      weightUnit == WeightUnit.pounds
+                          ? strings.userInfoWeightPoundsHint
+                          : strings.userInfoWeightKilogramsHint,
                   icon: Icons.monitor_weight_outlined,
                   suffixText: weightUnit.shortLabel,
                 ),
@@ -316,7 +320,7 @@ class _UserInformationSettingsPageState
                 },
                 decoration: _inputDecoration(
                   context,
-                  label: 'Body-fat % estimate',
+                  label: strings.userInfoBodyFat,
                   icon: Icons.percent,
                 ),
               ),
@@ -324,8 +328,8 @@ class _UserInformationSettingsPageState
           ],
         ),
         SettingsSection(
-          title: 'Activity Context',
-          subtitle: 'Used later for recommendations and health estimates.',
+          title: strings.userInfoActivityTitle,
+          subtitle: strings.userInfoActivitySubtitle,
           accentColor: SettingsAccent.training,
           children: [
             _FieldPadding(
@@ -336,7 +340,7 @@ class _UserInformationSettingsPageState
                         .map(
                           (option) => DropdownMenuItem<String?>(
                             value: option,
-                            child: Text(option),
+                            child: Text(_weightTrendLabel(strings, option)),
                           ),
                         )
                         .toList(),
@@ -346,7 +350,7 @@ class _UserInformationSettingsPageState
                 },
                 decoration: _inputDecoration(
                   context,
-                  label: 'Weight trend',
+                  label: strings.userInfoWeightTrend,
                   icon: Icons.trending_up,
                 ),
               ),
@@ -359,7 +363,7 @@ class _UserInformationSettingsPageState
                         .map(
                           (option) => DropdownMenuItem<String?>(
                             value: option,
-                            child: Text(option),
+                            child: Text(_activityLevelLabel(strings, option)),
                           ),
                         )
                         .toList(),
@@ -369,7 +373,7 @@ class _UserInformationSettingsPageState
                 },
                 decoration: _inputDecoration(
                   context,
-                  label: 'Estimated avg steps',
+                  label: strings.userInfoAverageSteps,
                   icon: Icons.directions_walk,
                 ),
               ),
@@ -398,6 +402,35 @@ class _UserInformationSettingsPageState
       fillColor: scheme.surface.withValues(alpha: 0.44),
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
     );
+  }
+
+  String _genderLabel(AppLocalizations strings, String value) {
+    return switch (value) {
+      'Male' => strings.userInfoGenderMale,
+      'Female' => strings.userInfoGenderFemale,
+      'Other' => strings.userInfoGenderOther,
+      'Prefer not to say' => strings.userInfoGenderPreferNotToSay,
+      _ => value,
+    };
+  }
+
+  String _weightTrendLabel(AppLocalizations strings, String value) {
+    return switch (value) {
+      'Gaining weight' => strings.userInfoTrendGaining,
+      'Losing weight' => strings.userInfoTrendLosing,
+      'Maintaining weight' => strings.userInfoTrendMaintaining,
+      'Not sure' => strings.userInfoTrendNotSure,
+      _ => value,
+    };
+  }
+
+  String _activityLevelLabel(AppLocalizations strings, String value) {
+    return switch (value) {
+      'Low (0-5k)' => strings.userInfoActivityLow,
+      'Moderate (5-15k)' => strings.userInfoActivityModerate,
+      'High (15k+)' => strings.userInfoActivityHigh,
+      _ => value,
+    };
   }
 }
 
@@ -441,7 +474,7 @@ class _SaveBar extends StatelessWidget {
             child: FilledButton.icon(
               onPressed: isVisible ? onSave : null,
               icon: const Icon(Icons.save_outlined),
-              label: const Text('Save Changes'),
+              label: Text(AppLocalizations.of(context).userInfoSaveChanges),
             ),
           ),
         ),

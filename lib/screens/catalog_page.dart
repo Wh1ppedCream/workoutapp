@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/generated/app_localizations.dart';
 import '../models/models.dart';
 import '../providers/active_session.dart';
 import '../repositories/app_repository.dart';
@@ -160,6 +161,7 @@ class _CatalogPageState extends State<CatalogPage> {
         TutorialIds.catalogHome,
       );
       if (completed || !mounted) return;
+      final strings = AppLocalizations.of(context);
 
       await GuidedTutorialOverlay.show(
         context,
@@ -167,16 +169,14 @@ class _CatalogPageState extends State<CatalogPage> {
           GuidedTutorialStep(
             targetKey: _exerciseCatalogTutorialKey,
             icon: Icons.menu_book_outlined,
-            title: 'Exercise catalog',
-            body:
-                'Your most used exercises show here first. Tap the card to open the full catalog, search movements, and review exercise details.',
+            title: strings.catalogExerciseTutorialTitle,
+            body: strings.catalogExerciseTutorialBody,
           ),
           GuidedTutorialStep(
             targetKey: _targetAnatomyTutorialKey,
             icon: Icons.bubble_chart_outlined,
-            title: 'Target Anatomy',
-            body:
-                'This summarizes your most trained bodyparts and muscles. Tap either side to open the anatomy library for focused exercise lists.',
+            title: strings.catalogAnatomyTutorialTitle,
+            body: strings.catalogAnatomyTutorialBody,
           ),
         ],
       );
@@ -188,6 +188,7 @@ class _CatalogPageState extends State<CatalogPage> {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     return Scaffold(
       body: SafeArea(
         bottom: false,
@@ -204,7 +205,7 @@ class _CatalogPageState extends State<CatalogPage> {
               return Center(
                 child: Padding(
                   padding: const EdgeInsets.all(24),
-                  child: Text('Unable to load catalog: ${snapshot.error}'),
+                  child: Text(strings.catalogLoadError('${snapshot.error}')),
                 ),
               );
             }
@@ -215,10 +216,10 @@ class _CatalogPageState extends State<CatalogPage> {
             }
             final overview = data;
             if (overview == null) {
-              return const Center(
+              return Center(
                 child: Padding(
-                  padding: EdgeInsets.all(24),
-                  child: Text('No catalog data available yet.'),
+                  padding: const EdgeInsets.all(24),
+                  child: Text(strings.catalogNoData),
                 ),
               );
             }
@@ -268,6 +269,7 @@ class _ExerciseCatalogCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = AppLocalizations.of(context);
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -279,11 +281,11 @@ class _ExerciseCatalogCard extends StatelessWidget {
             children: [
               _CatalogCardHeader(
                 icon: Icons.fitness_center,
-                title: 'Exercise Catalog',
+                title: strings.catalogExerciseTitle,
               ),
               const SizedBox(height: 16),
               Text(
-                'Most used exercises',
+                strings.catalogMostUsedExercises,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w800,
                 ),
@@ -291,7 +293,7 @@ class _ExerciseCatalogCard extends StatelessWidget {
               const SizedBox(height: 10),
               if (exercises.isEmpty)
                 Text(
-                  'Complete workouts to see your most common exercises here.',
+                  strings.catalogNoExerciseHistory,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -327,6 +329,7 @@ class _TargetAnatomyCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = AppLocalizations.of(context);
     return Card(
       clipBehavior: Clip.antiAlias,
       child: Padding(
@@ -336,7 +339,7 @@ class _TargetAnatomyCard extends StatelessWidget {
           children: [
             _CatalogCardHeader(
               icon: Icons.bubble_chart_outlined,
-              title: 'Target Anatomy',
+              title: strings.catalogTargetAnatomyTitle,
             ),
             const SizedBox(height: 16),
             IntrinsicHeight(
@@ -344,10 +347,10 @@ class _TargetAnatomyCard extends StatelessWidget {
                 children: [
                   Expanded(
                     child: _FocusSummaryPane(
-                      title: 'Bodyparts',
+                      title: strings.catalogBodyparts,
                       icon: Icons.accessibility_new,
                       items: bodyParts,
-                      emptyText: 'No bodypart history yet.',
+                      emptyText: strings.catalogNoBodypartHistory,
                       onTap: onBodyPartsTap,
                     ),
                   ),
@@ -359,10 +362,10 @@ class _TargetAnatomyCard extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: _FocusSummaryPane(
-                      title: 'Muscles',
+                      title: strings.catalogMuscles,
                       icon: Icons.fitness_center,
                       items: muscles,
-                      emptyText: 'No muscle history yet.',
+                      emptyText: strings.catalogNoMuscleHistory,
                       onTap: onMusclesTap,
                     ),
                   ),
@@ -413,6 +416,7 @@ class _ExerciseUsageBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = AppLocalizations.of(context);
     final equipmentNames = summary.definition.equipmentList
         .map((equipment) => equipment.name)
         .where((name) => name.trim().isNotEmpty)
@@ -447,7 +451,7 @@ class _ExerciseUsageBar extends StatelessWidget {
                 Text(
                   [
                     if (equipmentNames.isNotEmpty) equipmentNames,
-                    _timesUsedLabel(summary.useCount),
+                    strings.catalogTimesUsed(summary.useCount),
                   ].join(' - '),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -538,6 +542,7 @@ class _FocusUsageRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
@@ -552,7 +557,7 @@ class _FocusUsageRow extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Text(
-            _setUnitsLabel(summary.units),
+            strings.catalogSetUnits(summary.units.round()),
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.primary,
               fontWeight: FontWeight.w800,
@@ -562,13 +567,6 @@ class _FocusUsageRow extends StatelessWidget {
       ),
     );
   }
-}
-
-String _timesUsedLabel(int count) => count == 1 ? '1 time' : '$count times';
-
-String _setUnitsLabel(double units) {
-  final rounded = units.round();
-  return rounded == 1 ? '1 set' : '$rounded sets';
 }
 
 class _CatalogOverviewData {

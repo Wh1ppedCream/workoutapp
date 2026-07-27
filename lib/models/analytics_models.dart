@@ -8,6 +8,7 @@ class RepMaxRow {
   final double rmValue;
   final double oneErm;
   final bool isErm;
+
   /// NEW: timeframe string (e.g. '7d', '30d')
   final String timeframe;
 
@@ -22,23 +23,23 @@ class RepMaxRow {
 
   /// NEW: helper to decode a row from SQL
   factory RepMaxRow.fromMap(Map<String, dynamic> m) => RepMaxRow(
-        defId:     m['def_id']    as int,
-        repCount:  m['rep_count'] as int,
-        timeframe: m['timeframe'] as String,
-        rmValue:   (m['rm_value'] as num).toDouble(),
-        oneErm:    (m['one_erm']  as num).toDouble(),
-        isErm:     (m['is_erm']   as int) == 1,
-      );
+    defId: m['def_id'] as int,
+    repCount: m['rep_count'] as int,
+    timeframe: m['timeframe'] as String,
+    rmValue: (m['rm_value'] as num).toDouble(),
+    oneErm: (m['one_erm'] as num).toDouble(),
+    isErm: (m['is_erm'] as int) == 1,
+  );
 
   /// NEW: helper to encode back to SQL
   Map<String, dynamic> toMap() => {
-        'def_id':     defId,
-        'rep_count':  repCount,
-        'timeframe':  timeframe,
-        'rm_value':   rmValue,
-        'one_erm':    oneErm,
-        'is_erm':     isErm ? 1 : 0,
-      };
+    'def_id': defId,
+    'rep_count': repCount,
+    'timeframe': timeframe,
+    'rm_value': rmValue,
+    'one_erm': oneErm,
+    'is_erm': isErm ? 1 : 0,
+  };
 }
 
 /// Associates a muscle with a body part
@@ -93,34 +94,32 @@ class VolumeBoundaries {
   factory VolumeBoundaries.fromMap(Map<String, dynamic> m) {
     final keyId = m.containsKey('muscle_id') ? 'muscle_id' : 'bodypart_id';
     return VolumeBoundaries(
-      id:               m[keyId] as int,
-      maintenance:      (m['maintenance_volume']   as num).toDouble(),
-      minEffective:     (m['min_effective_volume'] as num).toDouble(),
-      maxAdaptive:      (m['max_adaptive_volume']  as num).toDouble(),
-      maxRecoverable:   (m['max_recoverable_volume'] as num).toDouble(),
+      id: m[keyId] as int,
+      maintenance: (m['maintenance_volume'] as num).toDouble(),
+      minEffective: (m['min_effective_volume'] as num).toDouble(),
+      maxAdaptive: (m['max_adaptive_volume'] as num).toDouble(),
+      maxRecoverable: (m['max_recoverable_volume'] as num).toDouble(),
     );
   }
 
   /// NEW: encode for muscle table
   Map<String, dynamic> toMuscleMap() => {
-        'muscle_id':            id,
-        'maintenance_volume':   maintenance,
-        'min_effective_volume': minEffective,
-        'max_adaptive_volume':  maxAdaptive,
-        'max_recoverable_volume': maxRecoverable,
-      };
+    'muscle_id': id,
+    'maintenance_volume': maintenance,
+    'min_effective_volume': minEffective,
+    'max_adaptive_volume': maxAdaptive,
+    'max_recoverable_volume': maxRecoverable,
+  };
 
   /// NEW: encode for bodypart table
   Map<String, dynamic> toBodyPartMap() => {
-        'bodypart_id':           id,
-        'maintenance_volume':    maintenance,
-        'min_effective_volume':  minEffective,
-        'max_adaptive_volume':   maxAdaptive,
-        'max_recoverable_volume': maxRecoverable,
-      };
+    'bodypart_id': id,
+    'maintenance_volume': maintenance,
+    'min_effective_volume': minEffective,
+    'max_adaptive_volume': maxAdaptive,
+    'max_recoverable_volume': maxRecoverable,
+  };
 }
-
-
 
 /// Percent association between exercise and body-part
 class ExerciseBodyPartPercent {
@@ -138,15 +137,15 @@ class ExerciseBodyPartPercent {
   factory ExerciseBodyPartPercent.fromMap(Map<String, dynamic> m) {
     return ExerciseBodyPartPercent(
       exerciseDefId: m['exercise_def_id'] as int,
-      bodyPartId:    m['bodypart_id'] as int,
-      percent:       (m['percent'] as num).toDouble(),
+      bodyPartId: m['bodypart_id'] as int,
+      percent: (m['percent'] as num).toDouble(),
     );
   }
 
   /// Encode to SQL insert/update
   Map<String, dynamic> toMap() => {
-        'exercise_def_id': exerciseDefId,
-        'bodypart_id':     bodyPartId,
-        'percent':         percent,
-      };
+    'exercise_def_id': exerciseDefId,
+    'bodypart_id': bodyPartId,
+    'percent': percent,
+  };
 }

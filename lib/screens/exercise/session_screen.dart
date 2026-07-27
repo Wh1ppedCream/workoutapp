@@ -4,6 +4,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../models/models.dart';
 import '../../widgets/exercise_card.dart';
 import '../../providers/active_session.dart';
@@ -59,28 +60,26 @@ class _SessionScreenState extends State<SessionScreen> {
     if (completed || !mounted) return;
 
     final session = context.read<ActiveSession>();
+    final strings = AppLocalizations.of(context);
     final steps = <GuidedTutorialStep>[
       if (session.exercises.isNotEmpty)
         GuidedTutorialStep(
           targetKey: _firstExerciseTutorialKey,
           icon: Icons.fitness_center,
-          title: 'Exercise cards',
-          body:
-              'Each card holds one exercise. Open it to edit weights and reps, then tick sets off as you complete them.',
+          title: strings.sessionTutorialCardsTitle,
+          body: strings.sessionTutorialCardsBody,
         ),
       GuidedTutorialStep(
         targetKey: _addExerciseTutorialKey,
         icon: Icons.add_circle_outline,
-        title: 'Add exercises',
-        body:
-            'Use this button when you want to add another exercise from the catalog during the workout.',
+        title: strings.sessionTutorialAddTitle,
+        body: strings.sessionTutorialAddBody,
       ),
       GuidedTutorialStep(
         targetKey: _finishWorkoutTutorialKey,
         icon: Icons.flag_outlined,
-        title: 'Finish workout',
-        body:
-            'When you are done, finish the session so Tonos can save the workout and update your history, analytics, and progress widgets.',
+        title: strings.sessionTutorialFinishTitle,
+        body: strings.sessionTutorialFinishBody,
       ),
     ];
 
@@ -91,6 +90,7 @@ class _SessionScreenState extends State<SessionScreen> {
   @override
   Widget build(BuildContext context) {
     final session = context.watch<ActiveSession>();
+    final strings = AppLocalizations.of(context);
     _queueWorkoutTutorial();
 
     return Scaffold(
@@ -98,9 +98,12 @@ class _SessionScreenState extends State<SessionScreen> {
         child: SafeArea(
           child: Column(
             children: [
-              const Padding(
-                padding: EdgeInsets.all(16),
-                child: Text('Workout Timer', style: TextStyle(fontSize: 20)),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  strings.sessionTimerTitle,
+                  style: const TextStyle(fontSize: 20),
+                ),
               ),
               ValueListenableBuilder<int>(
                 valueListenable: session.elapsedSecondsListenable,
@@ -125,13 +128,13 @@ class _SessionScreenState extends State<SessionScreen> {
                 onPressed: () => Scaffold.of(innerCtx).openDrawer(),
               ),
         ),
-        title: const Text('Workout Session'),
+        title: Text(strings.sessionTitle),
         centerTitle: true,
       ),
 
       body:
           session.exercises.isEmpty
-              ? const Center(child: Text('No exercises added.'))
+              ? Center(child: Text(strings.sessionNoExercises))
               : ListView.builder(
                 padding: const EdgeInsets.all(16),
                 itemCount: session.exercises.length,
@@ -146,7 +149,7 @@ class _SessionScreenState extends State<SessionScreen> {
                       onDetails:
                           type == CardType.weight
                               ? () async {
-                                final repo = AppRepository();
+                                final repo = context.read<AppRepository>();
                                 final defId = await repo
                                     .findOrCreateExerciseDefinition(
                                       ex.name,
@@ -222,10 +225,8 @@ class _SessionScreenState extends State<SessionScreen> {
                           if (!context.mounted) return;
                           if (sid == null) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Complete at least one set before finishing the workout.',
-                                ),
+                              SnackBar(
+                                content: Text(strings.sessionNeedCompletedSet),
                               ),
                             );
                             return;
@@ -244,7 +245,7 @@ class _SessionScreenState extends State<SessionScreen> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
-                                'Could not save workout. Your ongoing workout is still available. $error',
+                                strings.sessionSaveFailed('$error'),
                               ),
                             ),
                           );
@@ -256,7 +257,7 @@ class _SessionScreenState extends State<SessionScreen> {
                         dimension: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                      : const Text('Finish Workout'),
+                      : Text(strings.sessionFinishWorkout),
             ),
           ),
         ),

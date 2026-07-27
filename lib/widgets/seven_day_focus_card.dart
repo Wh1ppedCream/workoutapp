@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../l10n/generated/app_localizations.dart';
 import '../repositories/app_repository.dart';
 import '../theme/theme_extensions.dart';
 import 'body_heatmap.dart';
@@ -39,7 +41,7 @@ const _emptySevenDayFocusData = _SevenDayFocusData(
 );
 
 class _SevenDayFocusCardState extends State<SevenDayFocusCard> {
-  final _repo = AppRepository();
+  AppRepository get _repo => context.read<AppRepository>();
   late Future<_SevenDayFocusData> _dataFuture;
 
   @override
@@ -84,6 +86,7 @@ class _SevenDayFocusCardState extends State<SevenDayFocusCard> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = AppLocalizations.of(context);
     return FutureBuilder<_SevenDayFocusData>(
       future: _dataFuture,
       builder: (context, snapshot) {
@@ -95,7 +98,7 @@ class _SevenDayFocusCardState extends State<SevenDayFocusCard> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Weekly Overview',
+                  strings.sevenDayFocusTitle,
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w800,
                   ),
@@ -108,9 +111,9 @@ class _SevenDayFocusCardState extends State<SevenDayFocusCard> {
                     child: Center(child: CircularProgressIndicator()),
                   )
                 else if (snapshot.hasError && data == null)
-                  const SizedBox(
+                  SizedBox(
                     height: 176,
-                    child: Center(child: Text('Unable to load 7-day focus')),
+                    child: Center(child: Text(strings.sevenDayFocusLoadFailed)),
                   )
                 else
                   _SevenDayFocusLayout(
@@ -179,7 +182,7 @@ class _SevenDayFocusLayout extends StatelessWidget {
                             hits: data.topBodyParts,
                             maxVisible: 3,
                             emptyMessage:
-                                'No completed bodypart set units in the last 7 days.',
+                                AppLocalizations.of(context).sevenDayFocusEmpty,
                             titleWeight: FontWeight.w800,
                           ),
                           if (data.topBodyParts.length > 3)
@@ -211,7 +214,7 @@ class _MoreFocusedSetsHint extends StatelessWidget {
           Icon(Icons.more_horiz, size: 18, color: theme.colorScheme.primary),
           const SizedBox(width: 6),
           Text(
-            'more',
+            AppLocalizations.of(context).sevenDayFocusMore,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.primary,
               fontWeight: FontWeight.w700,

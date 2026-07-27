@@ -128,11 +128,7 @@ class PresetGenerationService {
       muscleTargets: muscleTargets,
     );
 
-    return _createPresetInDb(
-      spec,
-      selected,
-      bodyTargets: bodyTargets,
-    );
+    return _createPresetInDb(spec, selected, bodyTargets: bodyTargets);
   }
 
   Future<PresetBundleGenerationResult> generatePresetBundle(

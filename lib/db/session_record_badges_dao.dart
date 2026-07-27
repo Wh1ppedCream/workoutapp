@@ -25,7 +25,8 @@ class SessionRecordBadgesDao {
       return const <int, WorkoutExerciseRecordBadges>{};
     }
 
-    final currentRows = await db.rawQuery('''
+    final currentRows = await db.rawQuery(
+      '''
       SELECT
         e.id AS exercise_id,
         e.exercise_def_id AS definition_id,
@@ -39,20 +40,24 @@ class SessionRecordBadgesDao {
         AND e.exercise_def_id IS NOT NULL
         AND st.parent_set_id IS NULL
       ORDER BY e.order_index ASC, st.order_index ASC
-    ''', [sessionId]);
+    ''',
+      [sessionId],
+    );
 
     final byExercise = <int, List<_RecordedSet>>{};
     final definitionByExercise = <int, int>{};
     for (final row in currentRows) {
       final exerciseId = row['exercise_id'] as int;
       definitionByExercise[exerciseId] = row['definition_id'] as int;
-      byExercise.putIfAbsent(exerciseId, () => <_RecordedSet>[]).add(
-        _RecordedSet(
-          index: row['set_index'] as int,
-          weight: (row['weight'] as num).toDouble(),
-          reps: row['reps'] as int,
-        ),
-      );
+      byExercise
+          .putIfAbsent(exerciseId, () => <_RecordedSet>[])
+          .add(
+            _RecordedSet(
+              index: row['set_index'] as int,
+              weight: (row['weight'] as num).toDouble(),
+              reps: row['reps'] as int,
+            ),
+          );
     }
 
     if (byExercise.isEmpty) return const <int, WorkoutExerciseRecordBadges>{};
@@ -65,7 +70,10 @@ class SessionRecordBadgesDao {
     for (final entry in byExercise.entries) {
       final definitionId = definitionByExercise[entry.key]!;
       exercisesByDefinition
-          .putIfAbsent(definitionId, () => <MapEntry<int, List<_RecordedSet>>>[])
+          .putIfAbsent(
+            definitionId,
+            () => <MapEntry<int, List<_RecordedSet>>>[],
+          )
           .add(entry);
     }
 
@@ -105,7 +113,8 @@ class SessionRecordBadgesDao {
     required int definitionId,
     required int excludedSessionId,
   }) async {
-    final rows = await db.rawQuery('''
+    final rows = await db.rawQuery(
+      '''
       SELECT
         st.weight AS weight,
         st.reps AS reps,
@@ -117,7 +126,9 @@ class SessionRecordBadgesDao {
         AND e.exercise_def_id = ?
         AND e.session_id != ?
         AND st.parent_set_id IS NULL
-    ''', [definitionId, excludedSessionId]);
+    ''',
+      [definitionId, excludedSessionId],
+    );
 
     return rows
         .map(
@@ -136,19 +147,22 @@ class SessionRecordBadgesDao {
     required DateTime monthStart,
     required DateTime nextMonthStart,
   }) {
-    final monthlyHistory = history
-        .where(
-          (set) =>
-              !set.completedAt.isBefore(monthStart) &&
-              set.completedAt.isBefore(nextMonthStart),
-        )
-        .toList();
+    final monthlyHistory =
+        history
+            .where(
+              (set) =>
+                  !set.completedAt.isBefore(monthStart) &&
+                  set.completedAt.isBefore(nextMonthStart),
+            )
+            .toList();
     final allTimeWeights = _maxWeightByRep(history);
     final monthlyWeights = _maxWeightByRep(monthlyHistory);
     final badgesBySet = <int, List<WorkoutRecordBadge>>{};
 
     void addBadge(int setIndex, WorkoutRecordBadge badge) {
-      badgesBySet.putIfAbsent(setIndex, () => <WorkoutRecordBadge>[]).add(badge);
+      badgesBySet
+          .putIfAbsent(setIndex, () => <WorkoutRecordBadge>[])
+          .add(badge);
     }
 
     final strongestCurrentSetByRep = <int, _RecordedSet>{};
@@ -198,9 +212,8 @@ class SessionRecordBadgesDao {
             type: WorkoutRecordBadgeType.volumeBest,
           ),
         );
-      } else if (
-        monthlyVolume == null || strongestVolumeSet.volume > monthlyVolume
-      ) {
+      } else if (monthlyVolume == null ||
+          strongestVolumeSet.volume > monthlyVolume) {
         addBadge(
           strongestVolumeSet.index,
           const WorkoutRecordBadge(

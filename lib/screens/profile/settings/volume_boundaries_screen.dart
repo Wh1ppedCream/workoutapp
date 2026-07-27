@@ -1,17 +1,12 @@
 // File: lib/screens/profile/settings/volume_boundaries_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../models/models.dart';
 import '../../../repositories/app_repository.dart';
 import '../../../widgets/settings_tiles.dart';
-
-const _boundaryLabels = [
-  'Maintenance',
-  'Min Effective',
-  'Max Adaptive',
-  'Max Recoverable',
-];
 
 class VolumeBoundariesScreen extends StatefulWidget {
   const VolumeBoundariesScreen({super.key});
@@ -22,7 +17,7 @@ class VolumeBoundariesScreen extends StatefulWidget {
 
 class _VolumeBoundariesScreenState extends State<VolumeBoundariesScreen>
     with SingleTickerProviderStateMixin {
-  final _repo = AppRepository();
+  AppRepository get _repo => context.read<AppRepository>();
   late final TabController _tabCtrl;
 
   List<BodyPart> _bodyParts = [];
@@ -106,7 +101,11 @@ class _VolumeBoundariesScreenState extends State<VolumeBoundariesScreen>
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load body part bounds: $e')),
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).volumeLoadBodyPartFailed(e.toString()),
+          ),
+        ),
       );
     } finally {
       if (mounted) {
@@ -131,7 +130,11 @@ class _VolumeBoundariesScreenState extends State<VolumeBoundariesScreen>
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load muscle bounds: $e')),
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).volumeLoadMuscleFailed(e.toString()),
+          ),
+        ),
       );
     } finally {
       if (mounted) {
@@ -178,13 +181,19 @@ class _VolumeBoundariesScreenState extends State<VolumeBoundariesScreen>
       await _repo.setBodyPartVolumeBounds(_selectedBodyPart!.id, bounds);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Body part boundaries saved')),
+        SnackBar(
+          content: Text(AppLocalizations.of(context).volumeBodyPartSaved),
+        ),
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Save failed: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).rankingsSaveError(e.toString()),
+          ),
+        ),
+      );
     } finally {
       if (mounted) {
         setState(() => _isSavingBodyPart = false);
@@ -211,14 +220,18 @@ class _VolumeBoundariesScreenState extends State<VolumeBoundariesScreen>
       );
       await _repo.setMuscleVolumeBounds(_selectedMuscle!.id, bounds);
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Muscle boundaries saved')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).volumeMuscleSaved)),
+      );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Save failed: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).rankingsSaveError(e.toString()),
+          ),
+        ),
+      );
     } finally {
       if (mounted) {
         setState(() => _isSavingMuscle = false);
@@ -227,20 +240,26 @@ class _VolumeBoundariesScreenState extends State<VolumeBoundariesScreen>
   }
 
   void _showInvalidNumbers() {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Please enter valid numbers')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(AppLocalizations.of(context).volumeInvalidNumbers),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Volume Boundaries'),
+        title: Text(strings.settingsVolumeBoundaries),
         scrolledUnderElevation: 0,
         bottom: TabBar(
           controller: _tabCtrl,
-          tabs: const [Tab(text: 'Body Parts'), Tab(text: 'Muscles')],
+          tabs: [
+            Tab(text: strings.volumeBodyParts),
+            Tab(text: strings.volumeMuscles),
+          ],
         ),
       ),
       body: SafeArea(child: _buildBody()),
@@ -248,20 +267,27 @@ class _VolumeBoundariesScreenState extends State<VolumeBoundariesScreen>
   }
 
   Widget _buildBody() {
+    final strings = AppLocalizations.of(context);
     if (_isLoadingLookups) {
       return const Center(child: CircularProgressIndicator());
     }
     if (_lookupError != null) {
-      return Center(child: Text('Error: $_lookupError'));
+      return Center(
+        child: Text(
+          strings.rankingsLoadError(
+            strings.settingsVolumeBoundaries,
+            _lookupError!,
+          ),
+        ),
+      );
     }
 
     return TabBarView(
       controller: _tabCtrl,
       children: [
         _BoundaryTab<BodyPart>(
-          title: 'Body Part Volume',
-          subtitle:
-              'Set weekly target ranges used by weekly analytics and workout generation.',
+          title: strings.volumeBodyPartTitle,
+          subtitle: strings.volumeBodyPartSubtitle,
           icon: Icons.accessibility_new,
           selected: _selectedBodyPart,
           items: _bodyParts,
@@ -277,8 +303,8 @@ class _VolumeBoundariesScreenState extends State<VolumeBoundariesScreen>
           onSave: _saveBodyPart,
         ),
         _BoundaryTab<Muscle>(
-          title: 'Muscle Volume',
-          subtitle: 'Fine-tune weekly target ranges for individual muscles.',
+          title: strings.volumeMuscleTitle,
+          subtitle: strings.volumeMuscleSubtitle,
           icon: Icons.fitness_center,
           selected: _selectedMuscle,
           items: _muscles,
@@ -327,13 +353,20 @@ class _BoundaryTab<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
+    final boundaryLabels = [
+      strings.volumeMaintenance,
+      strings.volumeMinEffective,
+      strings.volumeMaxAdaptive,
+      strings.volumeMaxRecoverable,
+    ];
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
       children: [
         SettingsHeroCard(title: title, subtitle: subtitle, icon: icon),
         const SizedBox(height: 16),
         SettingsSection(
-          title: 'Selection',
+          title: strings.volumeSelection,
           accentColor: SettingsAccent.training,
           children: [
             Padding(
@@ -362,8 +395,8 @@ class _BoundaryTab<T> extends StatelessWidget {
           ],
         ),
         SettingsSection(
-          title: 'Recommended Range',
-          subtitle: 'Numbers are set units per week.',
+          title: strings.volumeRecommendedRange,
+          subtitle: strings.volumeRecommendedRangeSubtitle,
           accentColor: SettingsAccent.progress,
           children: [
             if (isLoading)
@@ -383,7 +416,7 @@ class _BoundaryTab<T> extends StatelessWidget {
                           decimal: true,
                         ),
                         decoration: InputDecoration(
-                          labelText: _boundaryLabels[i],
+                          labelText: boundaryLabels[i],
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),
@@ -407,7 +440,11 @@ class _BoundaryTab<T> extends StatelessWidget {
                                   ),
                                 )
                                 : const Icon(Icons.save),
-                        label: Text(isSaving ? 'Saving...' : 'Save Boundaries'),
+                        label: Text(
+                          isSaving
+                              ? strings.nutritionSaving
+                              : strings.volumeSaveBoundaries,
+                        ),
                       ),
                     ),
                   ],

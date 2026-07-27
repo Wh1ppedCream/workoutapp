@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../l10n/generated/app_localizations.dart';
 import '../models/models.dart';
 import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
@@ -34,7 +35,7 @@ class ExerciseProgressSection extends StatefulWidget {
 
 class _ExerciseProgressSectionState extends State<ExerciseProgressSection>
     with AutomaticKeepAliveClientMixin<ExerciseProgressSection> {
-  final _repo = AppRepository();
+  AppRepository get _repo => context.read<AppRepository>();
 
   late Future<_ExerciseProgressSectionData> _dataFuture;
   _ExerciseProgressSectionData? _lastData;
@@ -43,6 +44,8 @@ class _ExerciseProgressSectionState extends State<ExerciseProgressSection>
   List<int> _visibleDefinitionIds = const <int>[];
   int? _selectedDefinitionId;
   bool _isEditingExerciseProgress = false;
+
+  AppLocalizations get _strings => AppLocalizations.of(context);
 
   @override
   void initState() {
@@ -136,7 +139,9 @@ class _ExerciseProgressSectionState extends State<ExerciseProgressSection>
     if (_visibleDefinitionIds.contains(definition.id)) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${definition.name} is already shown.')),
+        SnackBar(
+          content: Text(_strings.exerciseProgressAlreadyShown(definition.name)),
+        ),
       );
       return;
     }
@@ -1112,6 +1117,8 @@ class _ExerciseProgressDetailPageState
   );
   bool _tutorialQueued = false;
 
+  AppLocalizations get _strings => AppLocalizations.of(context);
+
   @override
   void initState() {
     super.initState();
@@ -1135,16 +1142,14 @@ class _ExerciseProgressDetailPageState
           GuidedTutorialStep(
             targetKey: _chartTutorialKey,
             icon: Icons.show_chart,
-            title: '1RM trend',
-            body:
-                'This chart compares actual recorded 1RM and estimated 1RM over time. Tap points for exact values.',
+            title: _strings.exerciseProgressTrendTitle,
+            body: _strings.exerciseProgressTrendBody,
           ),
           GuidedTutorialStep(
             targetKey: _recordsTutorialKey,
             icon: Icons.history,
-            title: 'Recordings',
-            body:
-                'Each recording opens the workout where that lift happened, so you can review the full context.',
+            title: _strings.exerciseProgressRecordings,
+            body: _strings.exerciseProgressRecordingsBody,
           ),
         ],
       );
@@ -1158,11 +1163,11 @@ class _ExerciseProgressDetailPageState
     final navigator = Navigator.of(context);
     WorkoutSession? session;
     try {
-      session = await AppRepository().fetchSessionById(sessionId);
+      session = await context.read<AppRepository>().fetchSessionById(sessionId);
     } catch (_) {
       if (!context.mounted) return;
       messenger.showSnackBar(
-        const SnackBar(content: Text('Workout session could not be opened.')),
+        SnackBar(content: Text(_strings.exerciseProgressSessionOpenFailed)),
       );
       return;
     }
@@ -1171,7 +1176,7 @@ class _ExerciseProgressDetailPageState
     final resolvedSession = session;
     if (resolvedSession == null) {
       messenger.showSnackBar(
-        const SnackBar(content: Text('Workout session could not be found.')),
+        SnackBar(content: Text(_strings.exerciseProgressSessionMissing)),
       );
       return;
     }
@@ -1202,7 +1207,7 @@ class _ExerciseProgressDetailPageState
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      '1RM Progress',
+                      _strings.exerciseProgressTitle,
                       style: theme.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w900,
                       ),
@@ -1227,7 +1232,7 @@ class _ExerciseProgressDetailPageState
           ),
           const SizedBox(height: 16),
           Text(
-            'Recordings',
+            _strings.exerciseProgressRecordings,
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w900,
             ),
@@ -1235,7 +1240,7 @@ class _ExerciseProgressDetailPageState
           const SizedBox(height: 8),
           if (widget.tile.points.isEmpty)
             Text(
-              'Complete this exercise to start building progress history.',
+              _strings.exerciseProgressEmpty,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -1271,10 +1276,13 @@ class _ExerciseProgressLegend extends StatelessWidget {
       spacing: 14,
       runSpacing: 8,
       children: [
-        _LegendItem(color: cs.primary, label: 'Actual 1RM'),
+        _LegendItem(
+          color: cs.primary,
+          label: AppLocalizations.of(context).exerciseProgressActual,
+        ),
         _LegendItem(
           color: cs.onSurfaceVariant,
-          label: 'Estimated 1RM',
+          label: AppLocalizations.of(context).exerciseProgressEstimated,
           dashed: true,
         ),
       ],
@@ -1344,13 +1352,19 @@ class _ExerciseProgressRecordingRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    'Est. ${_formatWeight(point.estimatedOneRm, weightUnit)}',
+                    AppLocalizations.of(context).exerciseProgressEstimatedValue(
+                      _formatWeight(point.estimatedOneRm, weightUnit),
+                    ),
                     style: theme.textTheme.bodyMedium,
                   ),
                   Text(
                     point.actualOneRm == null
-                        ? 'No actual 1RM'
-                        : 'Actual ${_formatWeight(point.actualOneRm!, weightUnit)}',
+                        ? AppLocalizations.of(context).exerciseProgressNoActual
+                        : AppLocalizations.of(
+                          context,
+                        ).exerciseProgressActualValue(
+                          _formatWeight(point.actualOneRm!, weightUnit),
+                        ),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -1421,7 +1435,7 @@ class _ExerciseProgressChartState extends State<_ExerciseProgressChart> {
     if (widget.points.isEmpty && widget.showEmptyLabel) {
       return Center(
         child: Text(
-          'No recordings yet',
+          AppLocalizations.of(context).exerciseProgressNoRecordings,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),

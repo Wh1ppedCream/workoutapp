@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/generated/app_localizations.dart';
 import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
 import '../models/models.dart';
@@ -16,7 +17,7 @@ class NewMeasurementItemPage extends StatefulWidget {
 }
 
 class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
-  final _repo = AppRepository();
+  AppRepository get _repo => context.read<AppRepository>();
 
   bool _usePresets = true;
   MeasurementType? _selectedType;
@@ -96,12 +97,13 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
   }
 
   Future<void> _saveMeasurement() async {
+    final strings = AppLocalizations.of(context);
     if (!_usePresets) {
       final name = _customNameController.text.trim();
       final unit = _customUnitController.text.trim();
       final value = double.tryParse(_valController1.text.trim());
       if (name.isEmpty || unit.isEmpty || value == null) {
-        _showError('Enter a custom name, value, and unit');
+        _showError(strings.measurementCustomRequired);
         return;
       }
 
@@ -133,7 +135,7 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
     final defId = await _repo.fetchMeasurementDefinitionId(queryName);
 
     if (defId == null) {
-      _showError('Definition not found for $queryName');
+      _showError(strings.measurementDefinitionNotFound(queryName));
       return;
     }
 
@@ -160,7 +162,7 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
         unit = 'cm';
       }
     } catch (_) {
-      _showError('Invalid numeric value');
+      _showError(strings.measurementInvalidValue);
       return;
     }
 
@@ -186,8 +188,9 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('New Measurement')),
+      appBar: AppBar(title: Text(strings.measurementNewTitle)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -204,7 +207,7 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _usePresets ? Colors.deepPurple : null,
                   ),
-                  child: const Text('Presets'),
+                  child: Text(strings.measurementPresets),
                 ),
               ),
               const SizedBox(width: 8),
@@ -218,7 +221,7 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: !_usePresets ? Colors.deepPurple : null,
                   ),
-                  child: const Text('Custom'),
+                  child: Text(strings.measurementCustom),
                 ),
               ),
             ],
@@ -228,7 +231,9 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
           if (_usePresets) ...[
             // Preset selector
             DropdownButtonFormField<MeasurementType>(
-              decoration: const InputDecoration(labelText: 'Preset Type'),
+              decoration: InputDecoration(
+                labelText: strings.measurementPresetType,
+              ),
               value: _selectedType,
               items:
                   MeasurementType.values
@@ -236,7 +241,7 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
                       .map((mt) {
                         return DropdownMenuItem<MeasurementType>(
                           value: mt,
-                          child: Text(_measurementTypeLabel(mt)),
+                          child: Text(_measurementTypeLabel(strings, mt)),
                         );
                       })
                       .toList(),
@@ -249,7 +254,7 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
             const SizedBox(height: 16),
 
             if (_selectedType == MeasurementType.BodyWeight) ...[
-              const Text('Variation'),
+              Text(strings.measurementVariation),
               const SizedBox(height: 8),
               ToggleButtons(
                 isSelected: [
@@ -261,10 +266,10 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
                   const opts = ['WakeUp', 'BedTime', 'Overall'];
                   setState(() => _bodyweightVariation = opts[i]);
                 },
-                children: const [
-                  Text('WakeUp'),
-                  Text('BedTime'),
-                  Text('Overall'),
+                children: [
+                  Text(strings.measurementWakeUp),
+                  Text(strings.measurementBedtime),
+                  Text(strings.measurementOverall),
                 ],
               ),
               const SizedBox(height: 16),
@@ -273,7 +278,9 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
                   Expanded(
                     child: TextFormField(
                       controller: _valController1,
-                      decoration: const InputDecoration(labelText: 'Weight'),
+                      decoration: InputDecoration(
+                        labelText: strings.measurementValueWeight,
+                      ),
                       keyboardType: TextInputType.number,
                       onChanged: (_) => setState(() {}),
                     ),
@@ -296,7 +303,7 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
             ],
 
             if (_selectedType == MeasurementType.Height) ...[
-              const Text('Units'),
+              Text(strings.measurementUnits),
               const SizedBox(height: 8),
               ToggleButtons(
                 isSelected: [_heightIsFeet, !_heightIsFeet],
@@ -310,7 +317,9 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
                     Expanded(
                       child: TextFormField(
                         controller: _valController1,
-                        decoration: const InputDecoration(labelText: 'Feet'),
+                        decoration: InputDecoration(
+                          labelText: strings.measurementFeet,
+                        ),
                         keyboardType: TextInputType.number,
                         onChanged: (_) => setState(() {}),
                       ),
@@ -319,7 +328,9 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
                     Expanded(
                       child: TextFormField(
                         controller: _valController2,
-                        decoration: const InputDecoration(labelText: 'Inches'),
+                        decoration: InputDecoration(
+                          labelText: strings.measurementInches,
+                        ),
                         keyboardType: TextInputType.number,
                         onChanged: (_) => setState(() {}),
                       ),
@@ -329,7 +340,9 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
               else
                 TextFormField(
                   controller: _valController1,
-                  decoration: const InputDecoration(labelText: 'Centimeters'),
+                  decoration: InputDecoration(
+                    labelText: strings.measurementCentimeters,
+                  ),
                   keyboardType: TextInputType.number,
                   onChanged: (_) => setState(() {}),
                 ),
@@ -341,20 +354,23 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
                 _selectedType != MeasurementType.Height) ...[
               // Body part selected
               Text(
-                _notesFor[_selectedType!.name]!,
+                _measurementInstruction(strings, _selectedType!),
                 style: const TextStyle(fontStyle: FontStyle.italic),
               ),
               const SizedBox(height: 8),
               ToggleButtons(
                 isSelected: [!_pump, _pump],
                 onPressed: (i) => setState(() => _pump = (i == 1)),
-                children: const [Text('Without pump'), Text('With pump')],
+                children: [
+                  Text(strings.measurementWithoutPump),
+                  Text(strings.measurementWithPump),
+                ],
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _valController1,
-                decoration: const InputDecoration(
-                  labelText: 'Centimeters',
+                decoration: InputDecoration(
+                  labelText: strings.measurementCentimeters,
                   suffixText: 'cm',
                 ),
                 keyboardType: TextInputType.number,
@@ -364,9 +380,9 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
           ] else ...[
             TextFormField(
               controller: _customNameController,
-              decoration: const InputDecoration(
-                labelText: 'Measurement name',
-                hintText: 'Chest size, resting heart rate...',
+              decoration: InputDecoration(
+                labelText: strings.measurementName,
+                hintText: strings.measurementNameHint,
               ),
               textCapitalization: TextCapitalization.words,
               onChanged: (_) => setState(() {}),
@@ -378,7 +394,9 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
                   flex: 2,
                   child: TextFormField(
                     controller: _valController1,
-                    decoration: const InputDecoration(labelText: 'Value'),
+                    decoration: InputDecoration(
+                      labelText: strings.measurementValue,
+                    ),
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
@@ -389,7 +407,9 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
                 Expanded(
                   child: TextFormField(
                     controller: _customUnitController,
-                    decoration: const InputDecoration(labelText: 'Unit'),
+                    decoration: InputDecoration(
+                      labelText: strings.measurementUnit,
+                    ),
                     onChanged: (_) => setState(() {}),
                   ),
                 ),
@@ -398,9 +418,9 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _customNoteController,
-              decoration: const InputDecoration(
-                labelText: 'Note',
-                hintText: 'Optional',
+              decoration: InputDecoration(
+                labelText: strings.measurementNote,
+                hintText: strings.measurementOptional,
               ),
             ),
           ],
@@ -411,7 +431,7 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
           padding: const EdgeInsets.all(16),
           child: ElevatedButton(
             onPressed: _canSave ? _saveMeasurement : null,
-            child: const Text('Save New Measurement'),
+            child: Text(strings.measurementSaveNew),
           ),
         ),
       ),
@@ -419,32 +439,34 @@ class _NewMeasurementItemPageState extends State<NewMeasurementItemPage> {
   }
 }
 
-/// Notes for each body part (must match MeasurementType names).
-const Map<String, String> _notesFor = {
-  'Forearm': 'Go to widest, largest part and measure around',
-  'Arm': 'Go to widest part of bicep and measure around',
-  'Neck': 'Go to area where measuring rope is straight',
-  'Shoulder': 'Keep tape straight, measure around side delt',
-  'Chest': 'Under armpit, above nipple line',
-  'Waist': 'Around belly button',
-  'Hip': 'Around biggest part of glute',
-  'Thigh': 'Around widest part of thigh',
-  'Calf': 'Around widest part of calf',
-};
-
-String _measurementTypeLabel(MeasurementType type) {
+String _measurementInstruction(AppLocalizations strings, MeasurementType type) {
   return switch (type) {
-    MeasurementType.BodyWeight => 'Weight',
-    MeasurementType.Height => 'Height',
-    MeasurementType.Forearm => 'Forearm',
-    MeasurementType.Arm => 'Arm',
-    MeasurementType.Neck => 'Neck',
-    MeasurementType.Shoulder => 'Shoulders',
-    MeasurementType.Chest => 'Chest',
-    MeasurementType.Waist => 'Waist',
-    MeasurementType.Hip => 'Hips',
-    MeasurementType.Thigh => 'Thigh',
-    MeasurementType.Calf => 'Calves',
-    MeasurementType.Custom => 'Custom',
+    MeasurementType.Forearm => strings.measurementInstructionsForearm,
+    MeasurementType.Arm => strings.measurementInstructionsArm,
+    MeasurementType.Neck => strings.measurementInstructionsNeck,
+    MeasurementType.Shoulder => strings.measurementInstructionsShoulder,
+    MeasurementType.Chest => strings.measurementInstructionsChest,
+    MeasurementType.Waist => strings.measurementInstructionsWaist,
+    MeasurementType.Hip => strings.measurementInstructionsHip,
+    MeasurementType.Thigh => strings.measurementInstructionsThigh,
+    MeasurementType.Calf => strings.measurementInstructionsCalf,
+    _ => '',
+  };
+}
+
+String _measurementTypeLabel(AppLocalizations strings, MeasurementType type) {
+  return switch (type) {
+    MeasurementType.BodyWeight => strings.measurementWeight,
+    MeasurementType.Height => strings.measurementHeight,
+    MeasurementType.Forearm => strings.measurementForearm,
+    MeasurementType.Arm => strings.measurementArm,
+    MeasurementType.Neck => strings.measurementNeck,
+    MeasurementType.Shoulder => strings.measurementShoulders,
+    MeasurementType.Chest => strings.measurementChest,
+    MeasurementType.Waist => strings.measurementWaist,
+    MeasurementType.Hip => strings.measurementHips,
+    MeasurementType.Thigh => strings.measurementThigh,
+    MeasurementType.Calf => strings.measurementCalves,
+    MeasurementType.Custom => strings.measurementCustom,
   };
 }

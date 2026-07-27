@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../widgets/settings_tiles.dart';
 import '../../nutrition/measured_items_page.dart';
 
@@ -10,23 +11,23 @@ class MeasurementsTrendsSettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     return SettingsPageScaffold(
-      title: 'Progress Settings',
-      subtitle: 'Manage body measurements and trend tracking setup.',
+      title: strings.progressSettingsTitle,
+      subtitle: strings.progressSettingsSubtitle,
       icon: Icons.monitor_outlined,
       heroAccentColor: SettingsAccent.progress,
       children: [
         SettingsSection(
-          title: 'Measurements',
-          subtitle: 'Configure the body metrics you want to track over time.',
+          title: strings.progressMeasurements,
+          subtitle: strings.progressMeasurementsSubtitle,
           accentColor: SettingsAccent.progress,
           children: [
             SettingsActionTile(
               icon: Icons.straighten,
               iconColor: SettingsAccent.progress,
-              title: 'Measurement Library',
-              subtitle:
-                  'Manage weight, height, body measurements, and custom metrics.',
+              title: strings.progressMeasurementLibrary,
+              subtitle: strings.progressMeasurementLibrarySubtitle,
               onTap:
                   () => Navigator.of(context).push(
                     MaterialPageRoute(

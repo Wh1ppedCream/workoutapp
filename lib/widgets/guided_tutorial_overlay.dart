@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../l10n/generated/app_localizations.dart';
 import '../services/tutorial_state_store.dart';
 
 class GuidedTutorialStep {
@@ -343,6 +344,7 @@ class _TutorialCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
 
@@ -405,16 +407,21 @@ class _TutorialCard extends StatelessWidget {
           const SizedBox(height: 16),
           Row(
             children: [
-              TextButton(onPressed: onSkip, child: const Text('Skip')),
-              TextButton(onPressed: onSkipAll, child: const Text('Skip All')),
+              TextButton(onPressed: onSkip, child: Text(strings.tutorialSkip)),
+              TextButton(
+                onPressed: onSkipAll,
+                child: Text(strings.tutorialSkipAll),
+              ),
               const Spacer(),
               if (canGoBack) ...[
-                TextButton(onPressed: onBack, child: const Text('Back')),
+                TextButton(onPressed: onBack, child: Text(strings.commonBack)),
                 const SizedBox(width: 6),
               ],
               FilledButton(
                 onPressed: onNext,
-                child: Text(isLast ? 'Done' : 'Next'),
+                child: Text(
+                  isLast ? strings.tutorialDone : strings.tutorialNext,
+                ),
               ),
             ],
           ),
@@ -435,6 +442,7 @@ class _SkipAllTutorialConfirmation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     return Positioned.fill(
       child: Stack(
         children: [
@@ -445,18 +453,16 @@ class _SkipAllTutorialConfirmation extends StatelessWidget {
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 360),
                 child: AlertDialog(
-                  title: const Text('Skip all tutorials?'),
-                  content: const Text(
-                    'This hides every guided tutorial. You can turn them back on anytime in Settings > Guided Tutorials by using Reset All Tutorials.',
-                  ),
+                  title: Text(strings.tutorialSkipAllTitle),
+                  content: Text(strings.tutorialSkipAllBody),
                   actions: [
                     TextButton(
                       onPressed: onKeepTutorials,
-                      child: const Text('Keep tutorials'),
+                      child: Text(strings.tutorialKeep),
                     ),
                     FilledButton(
                       onPressed: onSkipAll,
-                      child: const Text('Skip all'),
+                      child: Text(strings.tutorialSkipEverything),
                     ),
                   ],
                 ),

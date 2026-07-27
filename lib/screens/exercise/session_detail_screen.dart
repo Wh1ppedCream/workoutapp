@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/generated/app_localizations.dart';
 import '../../models/models.dart';
 import '../../providers/active_session.dart';
 import '../../providers/selected_profile.dart';
@@ -43,8 +44,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
   static const int _exerciseLoadConcurrency = 6;
   static const int _bodyPartSummaryConcurrency = 6;
 
-  final _repo = AppRepository();
-  final _dateFmt = DateFormat('MMM d, yyyy - h:mm a');
+  AppRepository get _repo => context.read<AppRepository>();
   final _editTutorialKey = GlobalKey(debugLabel: 'workout_detail_edit');
   final _summaryTutorialKey = GlobalKey(debugLabel: 'workout_detail_summary');
   final _exerciseTutorialKey = GlobalKey(debugLabel: 'workout_detail_exercise');
@@ -207,6 +207,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
 
   Future<void> _showTutorial() async {
     try {
+      final strings = AppLocalizations.of(context);
       await showGuidedTutorialOnce(
         context,
         tutorialId: TutorialIds.workoutDetail,
@@ -214,30 +215,26 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
           GuidedTutorialStep(
             targetKey: _summaryTutorialKey,
             icon: Icons.insights,
-            title: 'Workout summary',
-            body:
-                'Review total sets, volume, duration, exercise count, and the bodyparts this workout hit.',
+            title: strings.workoutDetailTutorialSummaryTitle,
+            body: strings.workoutDetailTutorialSummaryBody,
           ),
           GuidedTutorialStep(
             targetKey: _exerciseTutorialKey,
             icon: Icons.fitness_center,
-            title: 'Exercise records',
-            body:
-                'Each exercise shows the completed sets from that session. Tap details to inspect the exercise.',
+            title: strings.workoutDetailTutorialExercisesTitle,
+            body: strings.workoutDetailTutorialExercisesBody,
           ),
           GuidedTutorialStep(
             targetKey: _editTutorialKey,
             icon: Icons.edit,
-            title: 'Edit session',
-            body:
-                'Use edit mode if you need to correct sets, reps, or exercises after the workout.',
+            title: strings.workoutDetailTutorialEditTitle,
+            body: strings.workoutDetailTutorialEditBody,
           ),
           GuidedTutorialStep(
             targetKey: _actionsTutorialKey,
             icon: Icons.replay,
-            title: 'Reuse this workout',
-            body:
-                'Do the workout again or save the completed session as a reusable plan.',
+            title: strings.workoutDetailTutorialReuseTitle,
+            body: strings.workoutDetailTutorialReuseBody,
           ),
         ],
       );
@@ -391,22 +388,21 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
   }
 
   Future<void> _deleteSession() async {
+    final strings = AppLocalizations.of(context);
     final confirm = await showDialog<bool>(
       context: context,
       builder:
           (context) => AlertDialog(
-            title: const Text('Delete Session'),
-            content: const Text(
-              'Are you sure you want to delete this session?',
-            ),
+            title: Text(strings.workoutDetailDeleteTitle),
+            content: Text(strings.workoutDetailDeleteBody),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel'),
+                child: Text(strings.commonCancel),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(context, true),
-                child: const Text('Delete'),
+                child: Text(strings.commonDelete),
               ),
             ],
           ),
@@ -421,13 +417,14 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not delete session: $error')),
+        SnackBar(content: Text(strings.workoutDetailDeleteFailed)),
       );
     }
   }
 
   Future<void> _saveChanges() async {
     if (_isSavingChanges) return;
+    final strings = AppLocalizations.of(context);
     setState(() => _isSavingChanges = true);
     try {
       final writes = <WorkoutExerciseWrite>[
@@ -454,34 +451,27 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
         _summary = summary;
         _hasChanges = false;
       });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Changes saved.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(strings.workoutDetailChangesSaved)),
+      );
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Could not save changes. The previous session is unchanged. $error',
-          ),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(strings.workoutDetailSaveFailed)));
     } finally {
       if (mounted) setState(() => _isSavingChanges = false);
     }
   }
 
   Future<void> _startWorkoutAgain() async {
+    final strings = AppLocalizations.of(context);
     final active = context.read<ActiveSession>();
     await active.ready;
     if (!mounted) return;
     if (active.isActive) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Finish your current workout before repeating this one.',
-          ),
-        ),
+        SnackBar(content: Text(strings.workoutDetailFinishCurrentFirst)),
       );
       return;
     }
@@ -504,17 +494,13 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
       );
       if (!started && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Your ongoing workout was kept. Finish or cancel it before repeating this workout.',
-            ),
-          ),
+          SnackBar(content: Text(strings.workoutDetailOngoingWorkoutKept)),
         );
       }
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not repeat workout: $error')),
+        SnackBar(content: Text(strings.workoutDetailRepeatFailed)),
       );
     } finally {
       if (mounted) setState(() => _isStartingWorkout = false);
@@ -527,28 +513,31 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
   }
 
   Future<void> _saveAsPreset() async {
+    final strings = AppLocalizations.of(context);
     final defaultName = _defaultPresetName();
     final controller = TextEditingController(text: defaultName);
     final name = await showDialog<String>(
       context: context,
       builder:
           (context) => AlertDialog(
-            title: const Text('Save as Preset'),
+            title: Text(strings.workoutDetailSaveAsPlan),
             content: TextField(
               controller: controller,
               autofocus: true,
-              decoration: const InputDecoration(labelText: 'Preset name'),
+              decoration: InputDecoration(
+                labelText: strings.workoutDetailPlanName,
+              ),
               textInputAction: TextInputAction.done,
               onSubmitted: (value) => Navigator.pop(context, value.trim()),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
+                child: Text(strings.commonCancel),
               ),
               FilledButton(
                 onPressed: () => Navigator.pop(context, controller.text.trim()),
-                child: const Text('Save'),
+                child: Text(strings.commonSave),
               ),
             ],
           ),
@@ -581,13 +570,13 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Saved "$presetName" as a preset.')),
+        SnackBar(content: Text(strings.workoutDetailPlanSaved(presetName))),
       );
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to save preset: $error')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(strings.workoutDetailPlanSaveFailed)),
+      );
     } finally {
       if (mounted) setState(() => _isSavingPreset = false);
     }
@@ -614,7 +603,11 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
             .map((hit) => hit.bodyPart.name)
             .toList();
     if (focusNames.isNotEmpty) return focusNames.join(', ');
-    return 'Workout ${DateFormat('MMM d').format(widget.session.date)}';
+    return AppLocalizations.of(context).workoutDetailDefaultPlanName(
+      DateFormat.MMM(
+        Localizations.localeOf(context).toLanguageTag(),
+      ).format(widget.session.date),
+    );
   }
 
   Future<void> _showExerciseInfo(_SessionExerciseDetail detail) async {
@@ -638,22 +631,21 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
 
   Future<bool> _onWillPop() async {
     if (!_hasChanges) return true;
+    final strings = AppLocalizations.of(context);
     final discard = await showDialog<bool>(
       context: context,
       builder:
           (context) => AlertDialog(
-            title: const Text('Unsaved Changes'),
-            content: const Text(
-              'You have unsaved changes. Do you want to discard them and leave?',
-            ),
+            title: Text(strings.workoutDetailUnsavedTitle),
+            content: Text(strings.workoutDetailUnsavedBody),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel'),
+                child: Text(strings.commonCancel),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(context, true),
-                child: const Text('Discard'),
+                child: Text(strings.workoutDetailDiscard),
               ),
             ],
           ),
@@ -663,6 +655,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     return PopScope<Object?>(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
@@ -673,10 +666,13 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Workout Detail'),
+          title: Text(strings.workoutDetailTitle),
           actions: [
             IconButton(
-              tooltip: _isEditing ? 'Stop editing' : 'Edit session',
+              tooltip:
+                  _isEditing
+                      ? strings.workoutDetailStopEditing
+                      : strings.workoutDetailEditSession,
               icon: KeyedSubtree(
                 key: _editTutorialKey,
                 child: Icon(
@@ -687,7 +683,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
               onPressed: () => setState(() => _isEditing = !_isEditing),
             ),
             IconButton(
-              tooltip: 'Delete session',
+              tooltip: strings.workoutDetailDeleteSession,
               icon: const Icon(Icons.delete_forever),
               onPressed: _deleteSession,
             ),
@@ -704,10 +700,14 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
       return const Center(child: CircularProgressIndicator());
     }
     if (_loadError != null) {
-      return Center(child: Text('Error loading session: $_loadError'));
+      return Center(
+        child: Text(AppLocalizations.of(context).workoutDetailLoadFailed),
+      );
     }
     if (_exerciseDetails.isEmpty) {
-      return const Center(child: Text('No exercises in this session.'));
+      return Center(
+        child: Text(AppLocalizations.of(context).workoutDetailEmpty),
+      );
     }
 
     return ListView(
@@ -718,7 +718,9 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
           child: _SessionSummaryCard(
             session: widget.session,
             summary: _summary!,
-            dateText: _dateFmt.format(widget.session.date),
+            dateText: DateFormat.yMMMd(
+              Localizations.localeOf(context).toLanguageTag(),
+            ).add_jm().format(widget.session.date),
           ),
         ),
         const SizedBox(height: 12),
@@ -798,7 +800,9 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
                         dimension: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                      : const Text('Save Changes'),
+                      : Text(
+                        AppLocalizations.of(context).workoutDetailSaveChanges,
+                      ),
             ),
           ),
         ),
@@ -829,7 +833,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                           : const Icon(Icons.replay),
-                  label: const Text('Do Workout Again'),
+                  label: Text(AppLocalizations.of(context).workoutDetailRepeat),
                 ),
               ),
               const SizedBox(height: 10),
@@ -845,7 +849,9 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                           : const Icon(Icons.bookmark_add_outlined),
-                  label: const Text('Save as Preset'),
+                  label: Text(
+                    AppLocalizations.of(context).workoutDetailSaveAsPlan,
+                  ),
                 ),
               ),
             ],
@@ -872,7 +878,10 @@ class _SessionSummaryCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = context.colors;
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
-    final durationText = _formatDuration(Duration(seconds: session.duration));
+    final durationText = _formatDuration(
+      AppLocalizations.of(context),
+      Duration(seconds: session.duration),
+    );
 
     return Card(
       child: Padding(
@@ -881,7 +890,7 @@ class _SessionSummaryCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Past Workout',
+              AppLocalizations.of(context).workoutDetailPastWorkout,
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.w800,
               ),
@@ -895,7 +904,9 @@ class _SessionSummaryCard extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              '${summary.totalSets} completed sets',
+              AppLocalizations.of(
+                context,
+              ).workoutDetailCompletedSets(summary.totalSets),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -905,7 +916,7 @@ class _SessionSummaryCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: _SummaryMetricTile(
-                    label: 'Volume',
+                    label: AppLocalizations.of(context).workoutDetailVolume,
                     value: WeightUnitFormatter.formatVolume(
                       summary.totalVolume,
                       weightUnit,
@@ -915,14 +926,14 @@ class _SessionSummaryCard extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: _SummaryMetricTile(
-                    label: 'Duration',
+                    label: AppLocalizations.of(context).workoutDetailDuration,
                     value: durationText,
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: _SummaryMetricTile(
-                    label: 'Exercises',
+                    label: AppLocalizations.of(context).workoutDetailExercises,
                     value: summary.exerciseCount.toString(),
                   ),
                 ),
@@ -1086,7 +1097,8 @@ class _CompletedWeightCard extends StatelessWidget {
                 ),
                 if (onDetails != null)
                   IconButton(
-                    tooltip: 'Exercise info',
+                    tooltip:
+                        AppLocalizations.of(context).workoutDetailExerciseInfo,
                     onPressed: onDetails,
                     icon: const Icon(Icons.info_outline),
                   ),
@@ -1183,8 +1195,8 @@ class _CompletedSetRow extends StatelessWidget {
                 color: Colors.amber.withValues(alpha: 0.9),
                 borderRadius: BorderRadius.circular(999),
               ),
-              child: const Text(
-                'Best',
+              child: Text(
+                AppLocalizations.of(context).workoutDetailBest,
                 style: TextStyle(
                   color: Colors.black,
                   fontWeight: FontWeight.w900,
@@ -1195,7 +1207,9 @@ class _CompletedSetRow extends StatelessWidget {
           ],
           Expanded(
             child: Text(
-              '1RM = ${WeightUnitFormatter.formatWeight(eRm, weightUnit)}',
+              AppLocalizations.of(context).workoutDetailEstimatedOneRm(
+                WeightUnitFormatter.formatWeight(eRm, weightUnit),
+              ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.right,
@@ -1333,15 +1347,15 @@ double _epley(ExerciseSet set) {
   return set.weight * (1 + 0.0333 * set.reps);
 }
 
-String _formatDuration(Duration duration) {
+String _formatDuration(AppLocalizations strings, Duration duration) {
   final hours = duration.inHours;
   final minutes = duration.inMinutes.remainder(60);
   final seconds = duration.inSeconds.remainder(60);
   if (hours > 0) {
-    return '${hours}h ${minutes.toString().padLeft(2, '0')}m';
+    return strings.durationHoursMinutes(hours, minutes);
   }
   if (minutes > 0) {
-    return '${minutes}m ${seconds.toString().padLeft(2, '0')}s';
+    return strings.durationMinutesSeconds(minutes, seconds);
   }
-  return '${seconds}s';
+  return strings.durationSeconds(seconds);
 }

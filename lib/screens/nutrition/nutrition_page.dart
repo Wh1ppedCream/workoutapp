@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/generated/app_localizations.dart';
 import '../../providers/nutrition_profile.dart';
 import '../../widgets/speed_dial_fab.dart';
 import '../../widgets/nutrition_dash.dart';
@@ -20,10 +21,11 @@ class NutritionPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     return Scaffold(
-      drawer: _buildNutritionDrawer(),
+      drawer: _buildNutritionDrawer(strings),
       appBar: AppBar(
-        title: const Text('Nutrition Dashboard'),
+        title: Text(strings.nutritionDashboardTitle),
         centerTitle: true,
       ),
       body: Consumer<NutritionProfile>(
@@ -32,7 +34,9 @@ class NutritionPage extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
           if (p.error != null) {
-            return Center(child: Text('Error: ${p.error}'));
+            return Center(
+              child: Text(strings.nutritionDashboardError(p.error!)),
+            );
           }
 
           final kcalGoal = (p.activeGoal?.kcalTarget ?? 0).round();
@@ -86,32 +90,32 @@ class NutritionPage extends StatelessWidget {
     );
   }
 
-  MainDrawer _buildNutritionDrawer() {
+  MainDrawer _buildNutritionDrawer(AppLocalizations strings) {
     return MainDrawer(
-      headerTitle: 'Nutrition Menu',
+      headerTitle: strings.nutritionMenuTitle,
       items: [
         DrawerItem(
-          title: 'Log Food',
+          title: strings.nutritionLogFood,
           icon: Icons.restaurant,
           onTap: _openFoodLogger,
         ),
         DrawerItem(
-          title: 'Track Measurement',
+          title: strings.nutritionTrackMeasurement,
           icon: Icons.straighten,
           onTap: _openMeasurementLogger,
         ),
         DrawerItem(
-          title: 'Measured Items',
+          title: strings.nutritionMeasuredItems,
           icon: Icons.monitor_weight,
           builder: (_) => const MeasuredItemsPage(),
         ),
         DrawerItem(
-          title: "Today's Records",
+          title: strings.nutritionTodayRecords,
           icon: Icons.calendar_today,
           builder: (_) => LogEntryPage(date: DateTime.now()),
         ),
         DrawerItem(
-          title: 'Nutrition Goals',
+          title: strings.nutritionGoalsMenu,
           icon: Icons.flag,
           builder: (_) => const DietNutritionSettingsPage(),
         ),

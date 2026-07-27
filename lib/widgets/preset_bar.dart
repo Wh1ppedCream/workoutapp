@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../l10n/generated/app_localizations.dart';
 import '../repositories/app_repository.dart';
 import '../providers/active_session.dart';
 import '../providers/preset_session.dart';
@@ -41,8 +42,11 @@ class PresetBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     final title =
-        label.trim().isNotEmpty ? _planDisplayText(label) : 'Plan ${index + 1}';
+        label.trim().isNotEmpty
+            ? _planDisplayText(label)
+            : strings.planDefaultName(index + 1);
     // pull theme defaults if needed (but we'll still use the passed‐in color)
     final accent = color;
 
@@ -69,10 +73,20 @@ class PresetBar extends StatelessWidget {
                   if (isActivePlan != null)
                     PopupMenuItem(
                       value: isActivePlan! ? 'archive' : 'activate',
-                      child: Text(isActivePlan! ? 'Archive' : 'Activate'),
+                      child: Text(
+                        isActivePlan!
+                            ? strings.planArchive
+                            : strings.planActivate,
+                      ),
                     ),
-                  const PopupMenuItem(value: 'delete', child: Text('Delete')),
-                  const PopupMenuItem(value: 'rename', child: Text('Rename')),
+                  PopupMenuItem(
+                    value: 'delete',
+                    child: Text(strings.commonDelete),
+                  ),
+                  PopupMenuItem(
+                    value: 'rename',
+                    child: Text(strings.commonRename),
+                  ),
                 ],
           ),
         ],
@@ -104,29 +118,32 @@ class PresetBar extends StatelessWidget {
   }
 
   Future<void> _handleMenu(BuildContext context, String action) async {
+    final strings = AppLocalizations.of(context);
     if (action == 'activate' || action == 'archive') {
       final active = action == 'activate';
       await onSetActivePlan?.call(active);
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(active ? 'Plan activated.' : 'Plan archived.')),
+        SnackBar(
+          content: Text(active ? strings.planActivated : strings.planArchived),
+        ),
       );
     } else if (action == 'delete') {
-      final repo = AppRepository();
+      final repo = context.read<AppRepository>();
       final confirm = await showDialog<bool>(
         context: context,
         builder:
             (dCtx) => AlertDialog(
-              title: const Text('Delete Plan'),
-              content: const Text('Are you sure you want to delete this plan?'),
+              title: Text(strings.planDeleteTitle),
+              content: Text(strings.planDeleteConfirmation),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(dCtx, false),
-                  child: const Text('Cancel'),
+                  child: Text(strings.commonCancel),
                 ),
                 TextButton(
                   onPressed: () => Navigator.pop(dCtx, true),
-                  child: const Text('Delete'),
+                  child: Text(strings.commonDelete),
                 ),
               ],
             ),
@@ -137,26 +154,26 @@ class PresetBar extends StatelessWidget {
         onRefresh();
       }
     } else if (action == 'rename') {
-      final repo = AppRepository();
+      final repo = context.read<AppRepository>();
       final ctl = TextEditingController(text: _planDisplayText(label));
       final newName = await showDialog<String>(
         context: context,
         builder: (dCtx) {
           return AlertDialog(
-            title: const Text('Rename Plan'),
+            title: Text(strings.planRenameTitle),
             content: TextField(
               controller: ctl,
-              decoration: const InputDecoration(labelText: 'Plan Name'),
+              decoration: InputDecoration(labelText: strings.planNameLabel),
               autofocus: true,
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(dCtx),
-                child: const Text('Cancel'),
+                child: Text(strings.commonCancel),
               ),
               ElevatedButton(
                 onPressed: () => Navigator.pop(dCtx, ctl.text.trim()),
-                child: const Text('Rename'),
+                child: Text(strings.commonRename),
               ),
             ],
           );

@@ -5,10 +5,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../db/database_helper.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../models/content_models.dart';
 import '../../models/gym_models.dart';
 import '../../providers/selected_profile.dart';
+import '../../repositories/app_repository.dart';
 import '../../services/tutorial_state_store.dart';
 import '../../utils/tutorial_launcher.dart';
 import '../../widgets/guided_tutorial_overlay.dart';
@@ -44,6 +45,8 @@ class GymProfileScreen extends StatefulWidget {
 }
 
 class _GymProfileScreenState extends State<GymProfileScreen> {
+  AppRepository get _repo => context.read<AppRepository>();
+
   final _formKey = GlobalKey<FormState>();
   final _profileTutorialKey = GlobalKey(debugLabel: 'gym_profile_profile');
   final _searchTutorialKey = GlobalKey(debugLabel: 'gym_profile_search');
@@ -59,6 +62,7 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
   bool _isLoading = true;
   bool _isSaving = false;
   bool _tutorialQueued = false;
+  bool _initialEquipmentLoadStarted = false;
   String _searchQuery = '';
 
   bool get _isEditing => widget.profile != null || widget.returnDraftOnly;
@@ -78,7 +82,14 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
     _nameController = TextEditingController(text: _originalName);
     _searchController = TextEditingController();
     _searchController.addListener(_handleSearchChanged);
-    _loadEquipment();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_initialEquipmentLoadStarted) return;
+    _initialEquipmentLoadStarted = true;
+    unawaited(_loadEquipment());
   }
 
   @override
@@ -94,26 +105,17 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
   }
 
   Future<void> _loadEquipment() async {
-    final dbHelper = DatabaseHelper();
-    final db = await dbHelper.database;
-    final all = await db.query(
-      'equipment',
-      columns: ['id', 'name'],
-      orderBy: 'name',
-    );
+    final repo = _repo;
+    final strings = AppLocalizations.of(context);
+    final all = await repo.fetchAllEquipment();
     final assigned = <Map<String, dynamic>>[];
     if (widget.profile?.id != null) {
-      assigned.addAll(
-        await dbHelper.fetchEquipmentForProfile(widget.profile!.id!),
-      );
+      assigned.addAll(await repo.fetchEquipmentForProfile(widget.profile!.id!));
     }
 
     final equipment =
-        all.map((row) {
-          return _EquipmentOption(
-            id: row['id'] as int,
-            name: row['name'] as String,
-          );
+        all.map((item) {
+          return _EquipmentOption(id: item.id, name: item.name);
         }).toList();
 
     if (!mounted) return;
@@ -133,6 +135,7 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
       _expandedCategoryKeys =
           _buildEquipmentGroups(
             equipment,
+            strings,
           ).map((group) => group.category.key).toSet();
       _isLoading = false;
     });
@@ -148,7 +151,7 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
             : _allEquipment
                 .where((item) => item.name.toLowerCase().contains(_searchQuery))
                 .toList();
-    return _buildEquipmentGroups(filtered);
+    return _buildEquipmentGroups(filtered, AppLocalizations.of(context));
   }
 
   void _toggleEquipment(int id, bool selected) {
@@ -202,6 +205,7 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
   }
 
   Future<void> _showTutorial() async {
+    final strings = AppLocalizations.of(context);
     try {
       await showGuidedTutorialOnce(
         context,
@@ -210,30 +214,26 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
           GuidedTutorialStep(
             targetKey: _profileTutorialKey,
             icon: Icons.home_work_outlined,
-            title: 'Workout space',
-            body:
-                'Name this profile for where you train, like Home Gym, Commercial Gym, or Travel Setup.',
+            title: strings.gymProfileTutorialSpaceTitle,
+            body: strings.gymProfileTutorialSpaceBody,
           ),
           GuidedTutorialStep(
             targetKey: _searchTutorialKey,
             icon: Icons.search,
-            title: 'Find equipment',
-            body:
-                'Use search when the equipment list gets long and you want to jump to one item quickly.',
+            title: strings.gymProfileTutorialFindTitle,
+            body: strings.gymProfileTutorialFindBody,
           ),
           GuidedTutorialStep(
             targetKey: _equipmentTutorialKey,
             icon: Icons.inventory_2_outlined,
-            title: 'Available equipment',
-            body:
-                'Select what this workout space has. Generated plans and swaps can use this to avoid unavailable exercises.',
+            title: strings.gymProfileTutorialAvailableTitle,
+            body: strings.gymProfileTutorialAvailableBody,
           ),
           GuidedTutorialStep(
             targetKey: _saveTutorialKey,
             icon: Icons.save_outlined,
-            title: 'Save profile',
-            body:
-                'Save stores the profile and equipment. Cancel asks before discarding unsaved changes.',
+            title: strings.gymProfileTutorialSaveTitle,
+            body: strings.gymProfileTutorialSaveBody,
           ),
         ],
       );
@@ -259,9 +259,11 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
       context: context,
       builder:
           (dialogContext) => AlertDialog(
-            title: const Text('Save changes?'),
-            content: const Text(
-              'You have unsaved gym profile changes. Save them before leaving?',
+            title: Text(
+              AppLocalizations.of(context).gymProfileSaveChangesTitle,
+            ),
+            content: Text(
+              AppLocalizations.of(context).gymProfileSaveChangesBody,
             ),
             actions: [
               TextButton(
@@ -269,21 +271,21 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
                     () => Navigator.of(
                       dialogContext,
                     ).pop(_UnsavedGymProfileAction.keepEditing),
-                child: const Text('Keep Editing'),
+                child: Text(AppLocalizations.of(context).gymProfileKeepEditing),
               ),
               TextButton(
                 onPressed:
                     () => Navigator.of(
                       dialogContext,
                     ).pop(_UnsavedGymProfileAction.discard),
-                child: const Text('Discard'),
+                child: Text(AppLocalizations.of(context).gymProfileDiscard),
               ),
               FilledButton(
                 onPressed:
                     () => Navigator.of(
                       dialogContext,
                     ).pop(_UnsavedGymProfileAction.save),
-                child: const Text('Save'),
+                child: Text(AppLocalizations.of(context).commonSave),
               ),
             ],
           ),
@@ -304,10 +306,13 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
   }
 
   Future<bool> _save() async {
-    if (!_formKey.currentState!.validate()) return false;
+    final strings = AppLocalizations.of(context);
+    final name = _nameController.text.trim();
+    final formState = _formKey.currentState;
+    if (formState != null && !formState.validate()) return false;
+    if (name.isEmpty) return false;
     setState(() => _isSaving = true);
 
-    final name = _nameController.text.trim();
     final navigator = Navigator.of(context);
     final messenger = ScaffoldMessenger.of(context);
 
@@ -315,7 +320,7 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
       if (_selectedEquipmentIds.isEmpty) {
         setState(() => _isSaving = false);
         messenger.showSnackBar(
-          const SnackBar(content: Text('Select at least one equipment item.')),
+          SnackBar(content: Text(strings.gymProfileSelectEquipment)),
         );
         return false;
       }
@@ -336,11 +341,10 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
       return true;
     }
 
-    final dbHelper = DatabaseHelper();
     final selectedProv = context.read<SelectedProfile>();
 
     try {
-      final profileId = await dbHelper.saveGymProfileAtomic(
+      final profileId = await _repo.saveGymProfileAtomic(
         existingProfile: widget.profile,
         name: name,
         equipmentIds: _selectedEquipmentIds,
@@ -361,7 +365,7 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
       if (!mounted) return false;
       setState(() => _isSaving = false);
       messenger.showSnackBar(
-        SnackBar(content: Text('Could not save profile: $error')),
+        SnackBar(content: Text(strings.gymProfileSaveFailed(error.toString()))),
       );
       return false;
     }
@@ -370,6 +374,7 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = AppLocalizations.of(context);
     final groups = _visibleEquipmentGroups();
 
     return PopScope<Object?>(
@@ -383,7 +388,9 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
           leading: BackButton(onPressed: _attemptClose),
           title: Text(
             widget.title ??
-                (_isEditing ? 'Edit Gym Profile' : 'New Gym Profile'),
+                (_isEditing
+                    ? strings.gymProfileEditTitle
+                    : strings.gymProfileNewTitle),
           ),
           scrolledUnderElevation: 0,
         ),
@@ -420,7 +427,7 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Pick what this gym has so generated plans only use available equipment.',
+                      strings.gymProfileEquipmentHint,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -489,6 +496,7 @@ class _ProfileSetupCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final strings = AppLocalizations.of(context);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -522,14 +530,17 @@ class _ProfileSetupCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Workout Space',
+                      strings.gymProfileSpace,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w900,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '$selectedCount of $totalCount equipment options selected',
+                      strings.gymProfileEquipmentSelected(
+                        selectedCount,
+                        totalCount,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodySmall?.copyWith(
@@ -548,8 +559,8 @@ class _ProfileSetupCard extends StatelessWidget {
               controller: controller,
               textInputAction: TextInputAction.done,
               decoration: InputDecoration(
-                labelText: 'Profile name',
-                hintText: 'Home gym, Commercial gym, Travel setup...',
+                labelText: strings.gymProfileName,
+                hintText: strings.gymProfileNameHint,
                 filled: true,
                 fillColor: scheme.surface.withValues(alpha: 0.45),
                 border: OutlineInputBorder(
@@ -559,7 +570,7 @@ class _ProfileSetupCard extends StatelessWidget {
               validator:
                   (value) =>
                       value == null || value.trim().isEmpty
-                          ? 'Name required'
+                          ? strings.gymProfileNameRequired
                           : null,
             ),
           ),
@@ -577,13 +588,14 @@ class _EquipmentSearchField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final strings = AppLocalizations.of(context);
 
     return TextField(
       controller: controller,
       textInputAction: TextInputAction.search,
       decoration: InputDecoration(
         prefixIcon: const Icon(Icons.filter_list),
-        hintText: 'Filter equipment by name',
+        hintText: strings.gymProfileFilterEquipment,
         filled: true,
         fillColor: scheme.surfaceContainerHighest.withValues(alpha: 0.48),
         border: OutlineInputBorder(
@@ -611,12 +623,13 @@ class _EquipmentSectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = AppLocalizations.of(context);
 
     return Row(
       children: [
         Expanded(
           child: Text(
-            'Equipment',
+            strings.gymProfileEquipment,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: theme.textTheme.titleLarge?.copyWith(
@@ -630,7 +643,7 @@ class _EquipmentSectionHeader extends StatelessWidget {
             visualDensity: VisualDensity.compact,
             padding: const EdgeInsets.symmetric(horizontal: 10),
           ),
-          child: const Text('Reset'),
+          child: Text(strings.commonReset),
         ),
         const SizedBox(width: 4),
         FilledButton.tonal(
@@ -639,7 +652,7 @@ class _EquipmentSectionHeader extends StatelessWidget {
             visualDensity: VisualDensity.compact,
             padding: const EdgeInsets.symmetric(horizontal: 12),
           ),
-          child: const Text('Select All'),
+          child: Text(strings.gymProfileSelectAll),
         ),
       ],
     );
@@ -667,6 +680,7 @@ class _EquipmentCategorySection extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final strings = AppLocalizations.of(context);
     final selectedCount =
         group.items
             .where((item) => selectedEquipmentIds.contains(item.id))
@@ -720,7 +734,10 @@ class _EquipmentCategorySection extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          '$selectedCount/${group.items.length} selected',
+                          strings.gymProfileSelectedCount(
+                            selectedCount,
+                            group.items.length,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.bodySmall?.copyWith(
@@ -730,7 +747,11 @@ class _EquipmentCategorySection extends StatelessWidget {
                       ),
                       TextButton(
                         onPressed: onToggleCategory,
-                        child: Text(allSelected ? 'Clear' : 'Select all'),
+                        child: Text(
+                          allSelected
+                              ? strings.gymProfileClear
+                              : strings.gymProfileSelectAll,
+                        ),
                       ),
                     ],
                   ),
@@ -781,6 +802,7 @@ class _EquipmentTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final strings = AppLocalizations.of(context);
 
     return InkWell(
       onTap: () => onChanged(!selected),
@@ -825,7 +847,7 @@ class _EquipmentTile extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    _equipmentSubtitleFor(item.name),
+                    _equipmentSubtitleFor(item.name, strings),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodySmall?.copyWith(
@@ -859,6 +881,7 @@ class _SaveProfileBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final strings = AppLocalizations.of(context);
 
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
@@ -871,7 +894,7 @@ class _SaveProfileBar extends StatelessWidget {
           Expanded(
             child: OutlinedButton(
               onPressed: isSaving ? null : onCancel,
-              child: const Text('Cancel'),
+              child: Text(strings.commonCancel),
             ),
           ),
           const SizedBox(width: 12),
@@ -879,7 +902,9 @@ class _SaveProfileBar extends StatelessWidget {
             flex: 2,
             child: FilledButton(
               onPressed: isSaving || isLoading ? null : () => onSave(),
-              child: Text(isSaving ? 'Saving...' : 'Save Profile'),
+              child: Text(
+                isSaving ? strings.gymProfileSaving : strings.gymProfileSave,
+              ),
             ),
           ),
         ],
@@ -897,6 +922,7 @@ class _EmptyEquipmentSearch extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final strings = AppLocalizations.of(context);
 
     return Container(
       padding: const EdgeInsets.all(18),
@@ -910,7 +936,7 @@ class _EmptyEquipmentSearch extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'No equipment matches "$query".',
+              strings.gymProfileNoEquipmentMatch(query),
               style: theme.textTheme.bodyMedium,
             ),
           ),
@@ -958,10 +984,13 @@ class _EquipmentGroup {
   const _EquipmentGroup({required this.category, required this.items});
 }
 
-List<_EquipmentGroup> _buildEquipmentGroups(List<_EquipmentOption> equipment) {
+List<_EquipmentGroup> _buildEquipmentGroups(
+  List<_EquipmentOption> equipment,
+  AppLocalizations strings,
+) {
   final groups = <String, _MutableEquipmentGroup>{};
   for (final item in equipment) {
-    final category = _categoryForEquipment(item.name);
+    final category = _categoryForEquipment(item.name, strings);
     groups
         .putIfAbsent(
           category.key,
@@ -987,12 +1016,15 @@ class _MutableEquipmentGroup {
   _MutableEquipmentGroup({required this.category});
 }
 
-_EquipmentCategory _categoryForEquipment(String name) {
+_EquipmentCategory _categoryForEquipment(
+  String name,
+  AppLocalizations strings,
+) {
   final lower = name.toLowerCase();
   if (lower == 'none' || lower.contains('bodyweight')) {
-    return const _EquipmentCategory(
+    return _EquipmentCategory(
       key: 'basics',
-      label: 'Basics',
+      label: strings.equipmentCategoryBasics,
       icon: Icons.accessibility_new,
       order: 0,
     );
@@ -1002,9 +1034,9 @@ _EquipmentCategory _categoryForEquipment(String name) {
       lower.contains('kettlebell') ||
       lower.contains('plates') ||
       lower.contains('medicine ball')) {
-    return const _EquipmentCategory(
+    return _EquipmentCategory(
       key: 'free_weights',
-      label: 'Free Weights',
+      label: strings.equipmentCategoryFreeWeights,
       icon: Icons.fitness_center,
       order: 1,
     );
@@ -1015,9 +1047,9 @@ _EquipmentCategory _categoryForEquipment(String name) {
       lower.contains('pull-up') ||
       lower.contains('ring') ||
       lower.contains('developer')) {
-    return const _EquipmentCategory(
+    return _EquipmentCategory(
       key: 'benches_racks',
-      label: 'Benches & Racks',
+      label: strings.equipmentCategoryBenchesRacks,
       icon: Icons.event_seat,
       order: 2,
     );
@@ -1029,9 +1061,9 @@ _EquipmentCategory _categoryForEquipment(String name) {
       lower.contains('straight bar') ||
       lower.contains('landmine') ||
       lower.contains('band')) {
-    return const _EquipmentCategory(
+    return _EquipmentCategory(
       key: 'attachments',
-      label: 'Cable & Attachments',
+      label: strings.equipmentCategoryCableAttachments,
       icon: Icons.cable,
       order: 3,
     );
@@ -1044,16 +1076,16 @@ _EquipmentCategory _categoryForEquipment(String name) {
       lower.contains('raise') ||
       lower.contains('pulldown') ||
       lower.contains('squat')) {
-    return const _EquipmentCategory(
+    return _EquipmentCategory(
       key: 'machines',
-      label: 'Machines',
+      label: strings.equipmentCategoryMachines,
       icon: Icons.precision_manufacturing,
       order: 4,
     );
   }
-  return const _EquipmentCategory(
+  return _EquipmentCategory(
     key: 'other',
-    label: 'Other Equipment',
+    label: strings.equipmentCategoryOther,
     icon: Icons.category,
     order: 5,
   );
@@ -1081,25 +1113,25 @@ IconData _equipmentIconFor(String name) {
   return Icons.fitness_center;
 }
 
-String _equipmentSubtitleFor(String name) {
+String _equipmentSubtitleFor(String name, AppLocalizations strings) {
   final lower = name.toLowerCase();
-  if (lower == 'none') return 'No required equipment';
-  if (lower.contains('bodyweight')) return 'Bodyweight movement support';
-  if (lower.contains('machine')) return 'Machine based movement';
+  if (lower == 'none') return strings.equipmentNoRequirement;
+  if (lower.contains('bodyweight')) return strings.equipmentBodyweightSupport;
+  if (lower.contains('machine')) return strings.equipmentMachineBased;
   if (lower.contains('attachment') || lower.contains('cable')) {
-    return 'Cable station accessory';
+    return strings.equipmentCableAccessory;
   }
   if (lower.contains('bench') ||
       lower.contains('rack') ||
       lower.contains('pull-up') ||
       lower.contains('ring')) {
-    return 'Bench, rack, or station setup';
+    return strings.equipmentBenchRackSetup;
   }
   if (lower.contains('barbell') ||
       lower.contains('dumbbell') ||
       lower.contains('kettlebell') ||
       lower.contains('plates')) {
-    return 'Free weight training';
+    return strings.equipmentFreeWeightTraining;
   }
-  return 'Available equipment';
+  return strings.equipmentAvailable;
 }

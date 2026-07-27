@@ -1,7 +1,9 @@
 // File: lib/screens/profile/settings/muscle_ranking_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../models/models.dart';
 import '../../../repositories/app_repository.dart';
 import '../../../widgets/settings_tiles.dart';
@@ -14,7 +16,7 @@ class MuscleRankingScreen extends StatefulWidget {
 }
 
 class _MuscleRankingScreenState extends State<MuscleRankingScreen> {
-  final _repo = AppRepository();
+  AppRepository get _repo => context.read<AppRepository>();
   List<Muscle> _muscles = [];
   Map<int, int> _ranks = {};
   bool _isLoading = true;
@@ -81,25 +83,36 @@ class _MuscleRankingScreenState extends State<MuscleRankingScreen> {
         _isSaving = false;
         _dirty = false;
       });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Muscle rankings saved')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(
+              context,
+            ).rankingsSaved(AppLocalizations.of(context).anatomyMuscles),
+          ),
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       setState(() => _isSaving = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to save: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).rankingsSaveError(e.toString()),
+          ),
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final strings = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Muscle Rankings'),
+        title: Text(strings.rankingsTitle(strings.anatomyMuscles)),
         scrolledUnderElevation: 0,
       ),
       bottomNavigationBar:
@@ -116,7 +129,9 @@ class _MuscleRankingScreenState extends State<MuscleRankingScreen> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                           : const Icon(Icons.save),
-                  label: Text(_isSaving ? 'Saving...' : 'Save Rankings'),
+                  label: Text(
+                    _isSaving ? strings.nutritionSaving : strings.rankingsSave,
+                  ),
                 ),
               )
               : null,
@@ -125,24 +140,28 @@ class _MuscleRankingScreenState extends State<MuscleRankingScreen> {
   }
 
   Widget _buildBody(ColorScheme scheme) {
+    final strings = AppLocalizations.of(context);
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
     if (_error != null) {
-      return Center(child: Text('Error loading muscles: $_error'));
+      return Center(
+        child: Text(strings.rankingsLoadError(strings.anatomyMuscles, _error!)),
+      );
     }
     if (_muscles.isEmpty) {
-      return const Center(child: Text('No muscles defined'));
+      return Center(child: Text(strings.rankingsNoMuscles));
     }
 
     return Column(
       children: [
-        const Padding(
-          padding: EdgeInsets.fromLTRB(16, 14, 16, 8),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
           child: SettingsHeroCard(
-            title: 'Muscle Rankings',
-            subtitle:
-                'Drag muscles into the order you want generated training to prefer.',
+            title: strings.rankingsTitle(strings.anatomyMuscles),
+            subtitle: strings.rankingsHero(
+              strings.anatomyMuscles.toLowerCase(),
+            ),
             icon: Icons.fitness_center,
           ),
         ),
@@ -159,6 +178,7 @@ class _MuscleRankingScreenState extends State<MuscleRankingScreen> {
                 index: index,
                 name: muscle.name,
                 rank: rank,
+                rankLabel: strings.rankingsRank,
                 onRankSubmitted: (value) {
                   setState(() {
                     _ranks[muscle.id] = int.tryParse(value) ?? rank;
@@ -179,6 +199,7 @@ class _MuscleRankingTile extends StatelessWidget {
   final int index;
   final String name;
   final int rank;
+  final String rankLabel;
   final ValueChanged<String> onRankSubmitted;
 
   const _MuscleRankingTile({
@@ -186,6 +207,7 @@ class _MuscleRankingTile extends StatelessWidget {
     required this.index,
     required this.name,
     required this.rank,
+    required this.rankLabel,
     required this.onRankSubmitted,
   });
 
@@ -236,7 +258,7 @@ class _MuscleRankingTile extends StatelessWidget {
               textAlign: TextAlign.center,
               keyboardType: TextInputType.number,
               decoration: InputDecoration(
-                labelText: 'Rank',
+                labelText: rankLabel,
                 isDense: true,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),

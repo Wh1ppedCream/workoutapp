@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../../l10n/generated/app_localizations.dart';
 import '../../repositories/app_repository.dart';
 import '../../services/active_plan_store.dart';
 import '../../services/tutorial_state_store.dart';
@@ -18,7 +20,7 @@ class PlanManagementPage extends StatefulWidget {
 }
 
 class _PlanManagementPageState extends State<PlanManagementPage> {
-  final _repo = AppRepository();
+  AppRepository get _repo => context.read<AppRepository>();
   final _activePlansTutorialKey = GlobalKey(debugLabel: 'manage_active_plans');
   final _archivedPlansTutorialKey = GlobalKey(
     debugLabel: 'manage_archived_plans',
@@ -30,20 +32,26 @@ class _PlanManagementPageState extends State<PlanManagementPage> {
   List<_ManagedPlan> _plans = const <_ManagedPlan>[];
   Set<int> _activePlanIds = const <int>{};
   bool _tutorialQueued = false;
+  bool _initialLoadStarted = false;
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_initialLoadStarted) return;
+    _initialLoadStarted = true;
     unawaited(_loadPlans());
   }
 
   Future<void> _loadPlans() async {
+    final repository = _repo;
+    final activePlanStore = context.read<ActivePlanStore>();
+    final strings = AppLocalizations.of(context);
     setState(() {
       _isLoading = true;
       _error = null;
     });
     try {
-      final rows = await _repo.fetchPresetSummariesRaw(
+      final rows = await repository.fetchPresetSummariesRaw(
         profileId: widget.profileId,
       );
       final plans =
@@ -55,15 +63,15 @@ class _PlanManagementPageState extends State<PlanManagementPage> {
               name:
                   rawName?.isNotEmpty == true
                       ? _planDisplayText(rawName!)
-                      : 'Plan $id',
+                      : strings.planManagementDefaultName(id),
               isAutomatic: ((row['is_automatic'] as num?) ?? 0).toInt() == 1,
             );
           }).toList();
-      final activeIds = await ActivePlanStore.load(widget.profileId);
+      final activeIds = await activePlanStore.load(widget.profileId);
       final validPlanIds = plans.map((plan) => plan.id).toSet();
       final validActiveIds = activeIds.intersection(validPlanIds);
       if (validActiveIds.length != activeIds.length) {
-        await ActivePlanStore.save(widget.profileId, validActiveIds);
+        await activePlanStore.save(widget.profileId, validActiveIds);
       }
 
       if (!mounted) return;
@@ -92,6 +100,7 @@ class _PlanManagementPageState extends State<PlanManagementPage> {
 
   Future<void> _showTutorial() async {
     try {
+      final strings = AppLocalizations.of(context);
       await showGuidedTutorialOnce(
         context,
         tutorialId: TutorialIds.planManagement,
@@ -99,16 +108,14 @@ class _PlanManagementPageState extends State<PlanManagementPage> {
           GuidedTutorialStep(
             targetKey: _activePlansTutorialKey,
             icon: Icons.push_pin_outlined,
-            title: 'Active plans',
-            body:
-                'These plans stay visible on the Train overview. Use Archive when you want to hide one without deleting it.',
+            title: strings.planManagementActiveTutorialTitle,
+            body: strings.planManagementActiveTutorialBody,
           ),
           GuidedTutorialStep(
             targetKey: _archivedPlansTutorialKey,
             icon: Icons.inventory_2_outlined,
-            title: 'Archived plans',
-            body:
-                'Archived plans are still saved. Activate any plan here when you want it back on the overview.',
+            title: strings.planManagementArchivedTutorialTitle,
+            body: strings.planManagementArchivedTutorialBody,
           ),
         ],
       );
@@ -133,15 +140,21 @@ class _PlanManagementPageState extends State<PlanManagementPage> {
 
     try {
       if (active) {
-        await ActivePlanStore.add(widget.profileId, plan.id);
+        await context.read<ActivePlanStore>().add(widget.profileId, plan.id);
       } else {
-        await ActivePlanStore.remove(widget.profileId, plan.id);
+        await context.read<ActivePlanStore>().remove(widget.profileId, plan.id);
       }
     } catch (error) {
       if (!mounted) return;
       setState(() => _activePlanIds = previousIds);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not update ${plan.name}: $error')),
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(
+              context,
+            ).planManagementUpdateFailed(plan.name, '$error'),
+          ),
+        ),
       );
     } finally {
       if (mounted) {
@@ -154,22 +167,26 @@ class _PlanManagementPageState extends State<PlanManagementPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final strings = AppLocalizations.of(context);
     final activePlans =
         _plans.where((plan) => _activePlanIds.contains(plan.id)).toList();
     final archivedPlans =
         _plans.where((plan) => !_activePlanIds.contains(plan.id)).toList();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Manage Plans'), centerTitle: true),
+      appBar: AppBar(
+        title: Text(strings.planManagementTitle),
+        centerTitle: true,
+      ),
       body:
           _isLoading
               ? const Center(child: CircularProgressIndicator())
               : _error != null
               ? _PlanManagementMessage(
                 icon: Icons.error_outline,
-                title: 'Unable to load plans',
+                title: strings.planManagementLoadFailed,
                 message: _error!,
-                actionLabel: 'Try again',
+                actionLabel: strings.commonTryAgain,
                 onAction: _loadPlans,
               )
               : RefreshIndicator(
@@ -179,7 +196,7 @@ class _PlanManagementPageState extends State<PlanManagementPage> {
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
                   children: [
                     Text(
-                      'Choose what stays ready on your Train overview. Archived plans are still saved and can be activated anytime.',
+                      strings.planManagementIntro,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: colorScheme.onSurfaceVariant,
                       ),
@@ -188,14 +205,13 @@ class _PlanManagementPageState extends State<PlanManagementPage> {
                     KeyedSubtree(
                       key: _activePlansTutorialKey,
                       child: _PlanManagementSection(
-                        title: 'Active Plans',
-                        subtitle: 'Shown on the Train overview.',
-                        emptyMessage:
-                            'No active plans yet. Activate a plan below to pin it to the overview.',
+                        title: strings.trainActivePlans,
+                        subtitle: strings.planManagementActiveSubtitle,
+                        emptyMessage: strings.planManagementNoActive,
                         plans: activePlans,
                         activePlanIds: _activePlanIds,
                         savingPlanIds: _savingPlanIds,
-                        actionLabel: 'Archive',
+                        actionLabel: strings.planManagementArchive,
                         actionIcon: Icons.archive_outlined,
                         onAction: (plan) => _setPlanActive(plan, false),
                       ),
@@ -204,13 +220,13 @@ class _PlanManagementPageState extends State<PlanManagementPage> {
                     KeyedSubtree(
                       key: _archivedPlansTutorialKey,
                       child: _PlanManagementSection(
-                        title: 'Archived Plans',
-                        subtitle: 'Saved plans that stay out of the overview.',
-                        emptyMessage: 'No archived plans.',
+                        title: strings.trainArchivedPlans,
+                        subtitle: strings.planManagementArchivedSubtitle,
+                        emptyMessage: strings.planManagementNoArchived,
                         plans: archivedPlans,
                         activePlanIds: _activePlanIds,
                         savingPlanIds: _savingPlanIds,
-                        actionLabel: 'Activate',
+                        actionLabel: strings.planManagementActivate,
                         actionIcon: Icons.check_circle_outline,
                         onAction: (plan) => _setPlanActive(plan, true),
                       ),
@@ -327,6 +343,7 @@ class _PlanManagementTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final strings = AppLocalizations.of(context);
     final statusColor =
         isActive ? colorScheme.primary : colorScheme.onSurfaceVariant;
 
@@ -365,10 +382,10 @@ class _PlanManagementTile extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     plan.isAutomatic
-                        ? 'Automatic plan'
+                        ? strings.planManagementAutomatic
                         : isActive
-                        ? 'Visible on overview'
-                        : 'Hidden from overview',
+                        ? strings.planManagementVisible
+                        : strings.planManagementHidden,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodySmall?.copyWith(

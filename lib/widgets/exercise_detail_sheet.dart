@@ -9,6 +9,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart'; // for date formatting
 import 'package:provider/provider.dart';
 
+import '../l10n/generated/app_localizations.dart';
 import '../models/models.dart';
 import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
@@ -82,7 +83,7 @@ class _ExerciseMediaPreviewCard extends StatelessWidget {
           children: [
             Semantics(
               button: true,
-              label: 'Open exercise image',
+              label: AppLocalizations.of(context).exerciseDetailOpenImage,
               child: GestureDetector(
                 onTap: onImageTap,
                 child: ColoredBox(
@@ -137,7 +138,8 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
   static const _sheetInitialSize = 0.7;
   static const _sheetMaxSize = 0.95;
 
-  late final AppRepository _repo;
+  AppRepository get _repo => context.read<AppRepository>();
+  AppLocalizations get _strings => AppLocalizations.of(context);
   final DraggableScrollableController _sheetController =
       DraggableScrollableController();
   late Future<_ExerciseHistoryPage> _historyFuture;
@@ -164,7 +166,6 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
   @override
   void initState() {
     super.initState();
-    _repo = AppRepository();
     _tfSelected = [false, false, true]; // default to "all"
     unawaited(BodyHeatmap.preload());
     _historyFuture = _loadHistoryPage();
@@ -218,23 +219,20 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
           GuidedTutorialStep(
             targetKey: _headerTutorialKey,
             icon: Icons.info_outline,
-            title: 'Exercise details',
-            body:
-                'The sheet title is the exercise you opened. Close it from here when you are done.',
+            title: _strings.exerciseDetailTutorialTitle,
+            body: _strings.exerciseDetailTutorialBody,
           ),
           GuidedTutorialStep(
             targetKey: _tabsTutorialKey,
             icon: Icons.tab,
-            title: 'Details, metrics, records',
-            body:
-                'Use these tabs to switch between instructions, best lifts, and recent workout records.',
+            title: _strings.exerciseDetailTabsTutorialTitle,
+            body: _strings.exerciseDetailTabsTutorialBody,
           ),
           GuidedTutorialStep(
             targetKey: _contentTutorialKey,
             icon: Icons.accessibility_new,
-            title: 'Exercise context',
-            body:
-                'The details tab shows equipment, trained bodyparts, muscles, and form notes for the exercise.',
+            title: _strings.exerciseDetailContextTutorialTitle,
+            body: _strings.exerciseDetailContextTutorialBody,
           ),
         ],
       );
@@ -325,7 +323,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     } catch (_) {
       if (!mounted) return;
       messenger.showSnackBar(
-        const SnackBar(content: Text('Workout session could not be opened.')),
+        SnackBar(content: Text(_strings.exerciseDetailSessionOpenFailed)),
       );
       return;
     }
@@ -334,7 +332,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     final resolvedSession = session;
     if (resolvedSession == null) {
       messenger.showSnackBar(
-        const SnackBar(content: Text('Workout session could not be found.')),
+        SnackBar(content: Text(_strings.exerciseDetailSessionNotFound)),
       );
       return;
     }
@@ -460,12 +458,13 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
 
   Widget _buildEquipmentCard(ExerciseDefinition definition) {
     final theme = Theme.of(context);
+    final strings = _strings;
     final equipment =
         definition.equipmentList.map((item) => item.name).toList();
 
     return _buildDetailCard(
       icon: Icons.fitness_center_outlined,
-      title: 'Equipment',
+      title: strings.catalogEquipment,
       accent: theme.colorScheme.primary,
       isExpanded: _equipmentExpanded,
       onExpandedChanged:
@@ -473,7 +472,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
       child:
           equipment.isEmpty
               ? Text(
-                'No equipment listed for this exercise.',
+                strings.exerciseDetailNoEquipment,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -499,12 +498,13 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     bool expandable = true,
   }) {
     final theme = Theme.of(context);
+    final strings = _strings;
     final bodyParts = definition.bodyParts.map((item) => item.name).toList();
     final muscles = definition.muscles.map((item) => item.muscle.name).toList();
 
     return _buildDetailCard(
       icon: Icons.accessibility_new,
-      title: 'Target anatomy',
+      title: strings.exerciseDetailTargetAnatomy,
       accent: theme.colorScheme.tertiary,
       isExpanded: expandable ? _targetAnatomyExpanded : true,
       onExpandedChanged:
@@ -514,11 +514,11 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildDetailLabel('Body parts'),
+          _buildDetailLabel(strings.exerciseDetailBodyParts),
           const SizedBox(height: 7),
           if (bodyParts.isEmpty)
             Text(
-              'No body parts listed.',
+              strings.exerciseDetailNoBodyParts,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -541,11 +541,11 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
             padding: EdgeInsets.symmetric(vertical: 12),
             child: Divider(height: 1),
           ),
-          _buildDetailLabel('Muscles'),
+          _buildDetailLabel(strings.exerciseDetailMuscles),
           const SizedBox(height: 7),
           if (muscles.isEmpty)
             Text(
-              'No muscles listed.',
+              strings.exerciseDetailNoMuscles,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -574,36 +574,37 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     bool expandable = true,
   }) {
     final theme = Theme.of(context);
+    final strings = _strings;
     final guideEntries = [
       (
         icon: Icons.self_improvement_outlined,
-        title: 'Set-up',
+        title: strings.exerciseDetailSetup,
         body:
             definition.setupNotes.isNotEmpty
                 ? definition.setupNotes
-                : 'No setup instructions provided.',
+                : strings.exerciseDetailNoSetup,
       ),
       (
         icon: Icons.directions_run_outlined,
-        title: 'Execution',
+        title: strings.exerciseDetailExecution,
         body:
             definition.executionNotes.isNotEmpty
                 ? definition.executionNotes
-                : 'No execution notes provided.',
+                : strings.exerciseDetailNoExecution,
       ),
       (
         icon: Icons.lightbulb_outline,
-        title: 'Tips',
+        title: strings.exerciseDetailTips,
         body:
             definition.tipsNotes.isNotEmpty
                 ? definition.tipsNotes
-                : 'No additional tips.',
+                : strings.exerciseDetailNoTips,
       ),
     ];
 
     return _buildDetailCard(
       icon: Icons.menu_book_outlined,
-      title: 'Form guide',
+      title: strings.exerciseDetailFormGuide,
       accent: theme.colorScheme.secondary,
       isExpanded: expandable ? _formGuideExpanded : true,
       onExpandedChanged:
@@ -654,7 +655,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
             Semantics(
               button: isExpandable,
               expanded: isExpanded,
-              label: '$title section',
+              label: _strings.exerciseDetailSectionLabel(title),
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTap:
@@ -778,8 +779,8 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
       button: hasHeatmap,
       label:
           hasHeatmap
-              ? 'Open targeted body heatmap'
-              : 'No targeted body areas available',
+              ? _strings.exerciseDetailOpenHeatmap
+              : _strings.exerciseDetailNoHeatmap,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap:
@@ -868,10 +869,10 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                             ),
                           ),
                           const SizedBox(height: 10),
-                          const Center(
+                          Center(
                             child: Text(
-                              'Pinch or drag to zoom',
-                              style: TextStyle(color: Colors.white70),
+                              _strings.exerciseDetailZoomHint,
+                              style: const TextStyle(color: Colors.white70),
                             ),
                           ),
                           const SizedBox(height: 18),
@@ -884,7 +885,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                     top: 8,
                     right: 8,
                     child: IconButton.filledTonal(
-                      tooltip: 'Close',
+                      tooltip: _strings.commonClose,
                       onPressed: () => Navigator.of(dialogContext).pop(),
                       icon: const Icon(Icons.close),
                     ),
@@ -956,7 +957,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                             ),
                           ),
                           const SizedBox(height: 10),
-                          const Center(child: Text('Pinch or drag to zoom')),
+                          Center(child: Text(_strings.exerciseDetailZoomHint)),
                           const SizedBox(height: 18),
                           _buildTargetAnatomyCard(
                             definition,
@@ -970,7 +971,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                     top: 8,
                     right: 8,
                     child: IconButton.filledTonal(
-                      tooltip: 'Close',
+                      tooltip: _strings.commonClose,
                       onPressed: () => Navigator.of(dialogContext).pop(),
                       icon: const Icon(Icons.close),
                     ),
@@ -999,25 +1000,23 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
             _buildMetricsTimeframePicker(safeSelectedIndex),
             const SizedBox(height: 18),
             if (snapshot.connectionState != ConnectionState.done)
-              const _MetricsStateCard(
+              _MetricsStateCard(
                 icon: Icons.insights_outlined,
-                title: 'Loading best lifts',
-                message: 'Your completed set records are being calculated.',
+                title: _strings.exerciseDetailLoadingBestLifts,
+                message: _strings.exerciseDetailLoadingBestLiftsBody,
                 isLoading: true,
               )
             else if (snapshot.hasError)
-              const _MetricsStateCard(
+              _MetricsStateCard(
                 icon: Icons.error_outline,
-                title: 'Metrics unavailable',
-                message:
-                    'Try reopening this exercise to load its completed set records.',
+                title: _strings.exerciseDetailMetricsUnavailable,
+                message: _strings.exerciseDetailMetricsUnavailableBody,
               )
             else if ((snapshot.data ?? const <RepMaxRow>[]).isEmpty)
-              const _MetricsStateCard(
+              _MetricsStateCard(
                 icon: Icons.bar_chart_outlined,
-                title: 'No best lifts yet',
-                message:
-                    'Complete a weighted set for this exercise to begin tracking rep bests.',
+                title: _strings.exerciseDetailNoBestLifts,
+                message: _strings.exerciseDetailNoBestLiftsBody,
               )
             else
               _buildMetricResults(
@@ -1033,7 +1032,11 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
 
   Widget _buildMetricsTimeframePicker(int selectedIndex) {
     final theme = Theme.of(context);
-    const labels = <String>['Week', 'Month', 'All time'];
+    final labels = <String>[
+      _strings.exerciseDetailWeek,
+      _strings.exerciseDetailMonth,
+      _strings.exerciseDetailAllTime,
+    ];
 
     return Container(
       padding: const EdgeInsets.all(4),
@@ -1053,7 +1056,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
             child: Semantics(
               button: true,
               selected: selected,
-              label: '${labels[index]} metrics',
+              label: _strings.exerciseDetailTimeframeMetrics(labels[index]),
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
@@ -1131,7 +1134,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                 Expanded(
                   child: _MetricSummaryCard(
                     icon: Icons.trending_up_rounded,
-                    label: 'Top est. 1RM',
+                    label: _strings.exerciseDetailTopEstimatedOneRm,
                     value: WeightUnitFormatter.formatWeight(
                       highestEstimatedOneRm,
                       weightUnit,
@@ -1143,7 +1146,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                 Expanded(
                   child: _MetricSummaryCard(
                     icon: Icons.workspace_premium_outlined,
-                    label: 'Volume best',
+                    label: _strings.exerciseDetailVolumeBest,
                     value: volumeLabel,
                     color: theme.colorScheme.tertiary,
                   ),
@@ -1158,14 +1161,14 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Rep bests',
+                        _strings.exerciseDetailRepBests,
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w800,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Best completed weight for each rep count',
+                        _strings.exerciseDetailRepBestsBody,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
@@ -1183,7 +1186,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                     borderRadius: BorderRadius.circular(9),
                   ),
                   child: Text(
-                    '${rows.length} ranges',
+                    _strings.exerciseDetailRanges(rows.length),
                     style: theme.textTheme.labelMedium?.copyWith(
                       color: theme.colorScheme.primary,
                       fontWeight: FontWeight.w800,
@@ -1209,7 +1212,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
           return const Center(child: CircularProgressIndicator());
         }
         if (snap.hasError) {
-          return const Center(child: Text('Unable to load exercise history.'));
+          return Center(child: Text(_strings.exerciseDetailHistoryLoadFailed));
         }
         final firstPage = snap.data;
         final history = <HistoryRecord>[
@@ -1217,7 +1220,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
           ..._olderHistory,
         ];
         if (history.isEmpty) {
-          return const Center(child: Text('No history for this exercise.'));
+          return Center(child: Text(_strings.exerciseDetailNoHistory));
         }
         final hasMoreHistory =
             _olderHistory.isEmpty
@@ -1231,7 +1234,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 28),
           children: [
             Text(
-              'Performance trend',
+              _strings.exerciseDetailPerformanceTrend,
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
@@ -1243,12 +1246,12 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
               children: [
                 _RecordLegendDot(
                   color: Theme.of(context).colorScheme.primary,
-                  label: 'Best weight',
+                  label: _strings.exerciseDetailBestWeight,
                 ),
                 const SizedBox(width: 16),
                 _RecordLegendDot(
                   color: Colors.green.shade400,
-                  label: 'Estimated 1RM',
+                  label: _strings.exerciseDetailEstimatedOneRm,
                 ),
               ],
             ),
@@ -1288,8 +1291,8 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                           : const Icon(Icons.expand_more_rounded),
                   label: Text(
                     _isLoadingMoreHistory
-                        ? 'Loading sessions'
-                        : 'Load 10 more sessions',
+                        ? _strings.exerciseDetailLoadingSessions
+                        : _strings.exerciseDetailLoadMoreSessions,
                   ),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Theme.of(context).colorScheme.primary,
@@ -1314,8 +1317,8 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
 
   Widget _buildSheetDragHandle(BuildContext context) {
     return Semantics(
-      label: 'Resize exercise details',
-      hint: 'Drag up or down to resize the sheet',
+      label: _strings.exerciseDetailResizeLabel,
+      hint: _strings.exerciseDetailResizeHint,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onVerticalDragUpdate: (details) {
@@ -1405,11 +1408,11 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                   // Tab Bar
                   KeyedSubtree(
                     key: _tabsTutorialKey,
-                    child: const TabBar(
+                    child: TabBar(
                       tabs: [
-                        Tab(text: 'Details'),
-                        Tab(text: 'Metrics'),
-                        Tab(text: 'Records'),
+                        Tab(text: _strings.exerciseDetailTabDetails),
+                        Tab(text: _strings.exerciseDetailTabMetrics),
+                        Tab(text: _strings.exerciseDetailTabRecords),
                       ],
                     ),
                   ),
@@ -1452,6 +1455,7 @@ class _ExerciseHistorySessionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final strings = AppLocalizations.of(context);
     final dateLabel = DateFormat.yMMMd().add_jm().format(record.date);
     final setCount = record.sets.length;
 
@@ -1495,7 +1499,7 @@ class _ExerciseHistorySessionCard extends StatelessWidget {
               const SizedBox(width: 10),
               Semantics(
                 button: true,
-                label: 'Open workout with $setCount completed sets',
+                label: strings.exerciseDetailOpenWorkoutWithSets(setCount),
                 child: Material(
                   color: Colors.transparent,
                   borderRadius: BorderRadius.circular(9),
@@ -1512,7 +1516,7 @@ class _ExerciseHistorySessionCard extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            '$setCount ${setCount == 1 ? 'set' : 'sets'}',
+                            strings.exerciseDetailSetCount(setCount),
                             style: theme.textTheme.labelSmall?.copyWith(
                               color: scheme.secondary,
                               fontWeight: FontWeight.w800,
@@ -1600,7 +1604,12 @@ class _ExerciseHistorySetRow extends StatelessWidget {
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerRight,
             child: Text(
-              'ERM ${WeightUnitFormatter.formatWeight(_estimatedOneRm(set), weightUnit)}',
+              AppLocalizations.of(context).exerciseDetailEstimatedMax(
+                WeightUnitFormatter.formatWeight(
+                  _estimatedOneRm(set),
+                  weightUnit,
+                ),
+              ),
               maxLines: 1,
               style: theme.textTheme.labelMedium?.copyWith(
                 color: scheme.onSurfaceVariant,
@@ -1726,7 +1735,7 @@ class _RepBestMetricsList extends StatelessWidget {
                           ),
                           const SizedBox(width: 3),
                           Text(
-                            'reps',
+                            AppLocalizations.of(context).exerciseDetailReps,
                             style: theme.textTheme.labelSmall?.copyWith(
                               color: scheme.primary,
                               fontWeight: FontWeight.w800,
@@ -1738,7 +1747,10 @@ class _RepBestMetricsList extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: _CompactRepMetricValue(
-                        label: 'Best weight',
+                        label:
+                            AppLocalizations.of(
+                              context,
+                            ).exerciseDetailBestWeight,
                         value: WeightUnitFormatter.formatWeight(
                           row.rmValue,
                           weightUnit,
@@ -1749,7 +1761,10 @@ class _RepBestMetricsList extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: _CompactRepMetricValue(
-                        label: 'Set volume',
+                        label:
+                            AppLocalizations.of(
+                              context,
+                            ).exerciseDetailSetVolume,
                         value: WeightUnitFormatter.formatVolume(
                           row.rmValue * row.repCount,
                           weightUnit,
@@ -1952,6 +1967,7 @@ class _ExerciseRecordTrendChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final strings = AppLocalizations.of(context);
 
     if (points.isEmpty) {
       return Container(
@@ -1962,7 +1978,7 @@ class _ExerciseRecordTrendChart extends StatelessWidget {
           borderRadius: BorderRadius.circular(18),
         ),
         child: Text(
-          'No completed set records to chart yet.',
+          AppLocalizations.of(context).exerciseDetailNoChartData,
           style: theme.textTheme.bodyMedium?.copyWith(
             color: scheme.onSurfaceVariant,
           ),
@@ -2028,10 +2044,10 @@ class _ExerciseRecordTrendChart extends StatelessWidget {
                     );
                 return [
                   LineTooltipItem(
-                    '${DateFormat('MMM d, h:mm a').format(point.date)}\n'
-                    'Wt ${WeightUnitFormatter.formatWeight(point.bestWeight, weightUnit)} | '
-                    'Est ${WeightUnitFormatter.formatWeight(point.bestEstimatedOneRm, weightUnit)} | '
-                    'Top ${_formatSet(point.bestSet, weightUnit)}',
+                    '${DateFormat.yMMMd(Localizations.localeOf(context).toLanguageTag()).add_jm().format(point.date)}\n'
+                    '${strings.exerciseDetailWeightAbbreviation} ${WeightUnitFormatter.formatWeight(point.bestWeight, weightUnit)} | '
+                    '${strings.exerciseDetailEstimatedAbbreviation} ${WeightUnitFormatter.formatWeight(point.bestEstimatedOneRm, weightUnit)} | '
+                    '${strings.exerciseDetailTopAbbreviation} ${_formatSet(point.bestSet, weightUnit)}',
                     textStyle,
                   ),
                   for (var i = 1; i < touchedSpots.length; i++) null,

@@ -158,7 +158,8 @@ class DatabaseImportPreview {
       importableTables.isNotEmpty &&
       invalidTables.isEmpty;
 
-  int get totalRows => rowCounts.values.fold<int>(0, (sum, count) => sum + count);
+  int get totalRows =>
+      rowCounts.values.fold<int>(0, (sum, count) => sum + count);
 }
 
 Map<String, dynamic> buildDatabaseExportEnvelope({
@@ -183,7 +184,9 @@ Map<String, dynamic> decodeDatabaseExportTables(String jsonStr) {
   if (decoded['format'] == kDatabaseExportFormat) {
     final tables = decoded['tables'];
     if (tables is! Map<String, dynamic>) {
-      throw const FormatException('Database export is missing a tables object.');
+      throw const FormatException(
+        'Database export is missing a tables object.',
+      );
     }
     return tables;
   }
@@ -266,9 +269,10 @@ DatabaseImportPreview inspectDatabaseImport(
       warnings.add('${unknownTables.length} unknown table(s) will be skipped.');
     }
 
-    final message = schemaVersionTooNew
-        ? 'Export schema v$schemaVersion is newer than app schema v$currentSchemaVersion.'
-        : invalidTables.isNotEmpty
+    final message =
+        schemaVersionTooNew
+            ? 'Export schema v$schemaVersion is newer than app schema v$currentSchemaVersion.'
+            : invalidTables.isNotEmpty
             ? '${invalidTables.length} table(s) have invalid row data.'
             : 'Found ${importableTables.length} importable table(s).';
 

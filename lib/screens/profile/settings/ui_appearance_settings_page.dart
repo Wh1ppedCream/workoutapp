@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../models/models.dart';
+import '../../../l10n/generated/app_localizations.dart';
+import '../../../providers/locale_preference_provider.dart';
 import '../../../providers/onboarding_provider.dart';
 import '../../../providers/theme_provider.dart';
 import '../../../providers/unit_preference_provider.dart';
@@ -45,6 +47,7 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
   }
 
   Future<void> _showTutorial() async {
+    final strings = AppLocalizations.of(context);
     try {
       await showGuidedTutorialOnce(
         context,
@@ -53,16 +56,14 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
           GuidedTutorialStep(
             targetKey: _displayTutorialKey,
             icon: Icons.palette_outlined,
-            title: 'Display settings',
-            body:
-                'Control dark mode, replay onboarding, and switch between pounds and kilograms.',
+            title: strings.displaySettingsTutorialTitle,
+            body: strings.displaySettingsTutorialBody,
           ),
           GuidedTutorialStep(
             targetKey: _navigationTutorialKey,
             icon: Icons.space_dashboard_outlined,
-            title: 'Bottom tabs',
-            body:
-                'Edit which bottom tabs are shown and the order they appear in.',
+            title: strings.bottomTabsTutorialTitle,
+            body: strings.bottomTabsTutorialBody,
           ),
         ],
       );
@@ -76,25 +77,27 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
     final themeMode = context.watch<ThemeProvider>().mode;
     final onboarding = context.watch<OnboardingConfig>();
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
+    final language = context.watch<LocalePreferenceProvider>().preference;
+    final strings = AppLocalizations.of(context);
 
     return SettingsPageScaffold(
-      title: 'UI & Appearance',
-      subtitle: 'Control the way Tonos looks and how the bottom tabs behave.',
+      title: strings.uiAppearanceTitle,
+      subtitle: strings.uiAppearanceSubtitle,
       icon: Icons.palette_outlined,
       heroAccentColor: SettingsAccent.appearance,
       children: [
         KeyedSubtree(
           key: _displayTutorialKey,
           child: SettingsSection(
-            title: 'Display',
-            subtitle: 'Quick visual preferences.',
+            title: strings.displaySettingsTitle,
+            subtitle: strings.displaySettingsSubtitle,
             accentColor: SettingsAccent.appearance,
             children: settingsTilesWithDividers(context, [
               SettingsSwitchTile(
                 icon: Icons.dark_mode_outlined,
                 iconColor: SettingsAccent.appearance,
-                title: 'Dark Mode',
-                subtitle: 'Use the darker app theme.',
+                title: strings.darkModeTitle,
+                subtitle: strings.darkModeSubtitle,
                 value: themeMode == ThemeMode.dark,
                 onChanged:
                     (on) => context.read<ThemeProvider>().setMode(
@@ -104,18 +107,16 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
               SettingsSwitchTile(
                 icon: Icons.auto_awesome_outlined,
                 iconColor: SettingsAccent.appearance,
-                title: 'Replay Onboarding',
-                subtitle:
-                    'Turn this on to open setup again. It turns off after completion.',
+                title: strings.replayOnboardingTitle,
+                subtitle: strings.replayOnboardingSubtitle,
                 value: onboarding.showOnboarding,
                 onChanged: context.read<OnboardingConfig>().setShowOnboarding,
               ),
               SettingsActionTile(
                 icon: Icons.monitor_weight_outlined,
                 iconColor: SettingsAccent.progress,
-                title: 'Weight Units',
-                subtitle:
-                    'Show workout weights and volume in ${weightUnit.shortLabel}.',
+                title: strings.weightUnitsTitle,
+                subtitle: strings.weightUnitsSubtitle(weightUnit.shortLabel),
                 trailing: Text(
                   weightUnit.label,
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
@@ -125,21 +126,35 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
                 ),
                 onTap: () => _showWeightUnitDialog(context, weightUnit),
               ),
+              SettingsActionTile(
+                icon: Icons.language_outlined,
+                iconColor: SettingsAccent.appearance,
+                title: strings.languageTitle,
+                subtitle: strings.languageSubtitle,
+                trailing: Text(
+                  _languageLabel(strings, language),
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                onTap: () => _showLanguageDialog(context, language),
+              ),
             ]),
           ),
         ),
         KeyedSubtree(
           key: _navigationTutorialKey,
           child: SettingsSection(
-            title: 'Navigation',
-            subtitle: 'Choose which bottom tabs show up and in what order.',
+            title: strings.navigationSettingsTitle,
+            subtitle: strings.navigationSettingsSubtitle,
             accentColor: SettingsAccent.data,
             children: [
               SettingsActionTile(
                 icon: Icons.space_dashboard_outlined,
                 iconColor: SettingsAccent.data,
-                title: 'Edit Bottom Tabs',
-                subtitle: 'Reorder active tabs or hide unused ones.',
+                title: strings.editBottomTabsTitle,
+                subtitle: strings.editBottomTabsSubtitle,
                 onTap:
                     () => Navigator.of(context).push(
                       MaterialPageRoute(
@@ -158,11 +173,12 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
     BuildContext context,
     WeightUnit selectedUnit,
   ) async {
+    final strings = AppLocalizations.of(context);
     final nextUnit = await showDialog<WeightUnit>(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('Weight Units'),
+          title: Text(strings.weightUnitsTitle),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -181,5 +197,43 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
     );
     if (nextUnit == null || !context.mounted) return;
     await context.read<UnitPreferenceProvider>().setWeightUnit(nextUnit);
+  }
+
+  String _languageLabel(
+    AppLocalizations strings,
+    AppLanguagePreference preference,
+  ) => switch (preference) {
+    AppLanguagePreference.system => strings.systemDefaultLanguage,
+    AppLanguagePreference.english => strings.englishLanguage,
+    AppLanguagePreference.canadianFrench => strings.canadianFrenchLanguage,
+  };
+
+  Future<void> _showLanguageDialog(
+    BuildContext context,
+    AppLanguagePreference selectedLanguage,
+  ) async {
+    final strings = AppLocalizations.of(context);
+    final nextLanguage = await showDialog<AppLanguagePreference>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(strings.languageTitle),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (final language in AppLanguagePreference.values)
+                RadioListTile<AppLanguagePreference>(
+                  value: language,
+                  groupValue: selectedLanguage,
+                  title: Text(_languageLabel(strings, language)),
+                  onChanged: (value) => Navigator.of(dialogContext).pop(value),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+    if (nextLanguage == null || !context.mounted) return;
+    await context.read<LocalePreferenceProvider>().setPreference(nextLanguage);
   }
 }

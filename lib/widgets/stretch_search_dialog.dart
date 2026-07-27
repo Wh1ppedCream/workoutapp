@@ -1,6 +1,7 @@
 // File: lib/widgets/stretch_search_dialog.dart
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/models.dart';
 import '../repositories/app_repository.dart';
 
@@ -9,7 +10,7 @@ import '../repositories/app_repository.dart';
 class StretchSearchDialog {
   static Future<StretchDefinition?> show(BuildContext context) {
     // Use the repository instead of DatabaseHelper directly
-    final repo = AppRepository();
+    final repo = context.read<AppRepository>();
     final bodyPartsFuture = repo.fetchAllBodyParts();
 
     return showDialog<StretchDefinition>(

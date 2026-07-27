@@ -13,6 +13,9 @@ import 'providers/onboarding_provider.dart';
 import 'providers/nav_bar_config.dart';
 import 'providers/nutrition_profile.dart';
 import 'providers/unit_preference_provider.dart';
+import 'providers/locale_preference_provider.dart';
+import 'l10n/app_localization_extensions.dart';
+import 'l10n/generated/app_localizations.dart';
 
 import 'screens/dashboard_page.dart';
 import 'screens/catalog_page.dart';
@@ -33,6 +36,7 @@ import 'widgets/body_heatmap.dart';
 import '../theme/app_colors.dart';
 
 import 'repositories/app_repository.dart';
+import 'services/active_plan_store.dart';
 
 Future<void> main() async {
   final launchStopwatch = Stopwatch()..start();
@@ -45,6 +49,9 @@ Future<void> main() async {
       child: MultiProvider(
         providers: [
           Provider<AppRepository>.value(value: repo), // repo FIRST
+          Provider<ActivePlanStore>(
+            create: (_) => ActivePlanStore(repository: repo),
+          ),
           ChangeNotifierProvider(
             create: (_) => NutritionProfile(repository: repo),
           ),
@@ -58,6 +65,7 @@ Future<void> main() async {
           ChangeNotifierProvider(create: (_) => DashboardConfig()),
           ChangeNotifierProvider(create: (_) => ThemeProvider()),
           ChangeNotifierProvider(create: (_) => UnitPreferenceProvider()),
+          ChangeNotifierProvider(create: (_) => LocalePreferenceProvider()),
           ChangeNotifierProvider(create: (_) => NavBarConfig()),
         ],
         child: const MyApp(),
@@ -120,8 +128,8 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer2<ThemeProvider, OnboardingConfig>(
-      builder: (context, themeProv, onboardingConf, _) {
+    return Consumer3<ThemeProvider, OnboardingConfig, LocalePreferenceProvider>(
+      builder: (context, themeProv, onboardingConf, localePreferences, _) {
         // Light theme with default AppColors
         final lightTheme = ThemeData.from(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
@@ -434,7 +442,10 @@ class MyApp extends StatelessWidget {
         );
 
         return MaterialApp(
-          title: 'Fitness Tracker',
+          onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
+          locale: localePreferences.locale,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           theme: lightTheme,
           darkTheme: darkTheme,
           themeMode: themeProv.mode,
@@ -510,6 +521,7 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     final navConfig = context.watch<NavBarConfig>();
+    final strings = AppLocalizations.of(context);
 
     // 1) While loading, show a spinner
     if (!navConfig.loaded) {
@@ -547,7 +559,7 @@ class _MainScreenState extends State<MainScreen> {
           for (final tab in tabs)
             BottomNavigationBarItem(
               icon: Icon(tab.icon),
-              label: tab.bottomLabel, // ← use short label
+              label: tab.localizedTitle(strings),
             ),
         ],
         currentIndex: _selectedIndex,

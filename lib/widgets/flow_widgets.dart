@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_flow_chart/flutter_flow_chart.dart';
 
+import '../l10n/generated/app_localizations.dart';
 import '../theme/app_colors.dart';
 
 /// Data class to track child counts, depth, and event list for each node.
@@ -37,6 +38,8 @@ class FlowChartWidgetState extends State<FlowChartWidget> {
   static const double _hSpacing = 60;
   static const double _vSpacing = 100;
   final Map<int, int> _placement = {};
+
+  AppLocalizations get _strings => AppLocalizations.of(context);
 
   List<String> get _targetableNodes =>
       _nodes.keys.where((n) => n != '1st attempt').toList();
@@ -139,18 +142,20 @@ class FlowChartWidgetState extends State<FlowChartWidget> {
         context: context,
         builder:
             (ctx) => AlertDialog(
-              title: const Text('New Event'),
+              title: Text(_strings.flowNewEvent),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TextField(
                     controller: keyCtrl,
-                    decoration: const InputDecoration(labelText: 'Event key'),
+                    decoration: InputDecoration(
+                      labelText: _strings.flowEventKey,
+                    ),
                   ),
                   TextField(
                     controller: labelCtrl,
-                    decoration: const InputDecoration(
-                      labelText: 'Display label (optional)',
+                    decoration: InputDecoration(
+                      labelText: _strings.flowEventDisplayLabel,
                     ),
                   ),
                 ],
@@ -158,7 +163,7 @@ class FlowChartWidgetState extends State<FlowChartWidget> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(ctx).pop(null),
-                  child: const Text('Cancel'),
+                  child: Text(_strings.commonCancel),
                 ),
                 ElevatedButton(
                   onPressed: () {
@@ -166,7 +171,7 @@ class FlowChartWidgetState extends State<FlowChartWidget> {
                     if (k.isEmpty) return;
                     Navigator.of(ctx).pop(k);
                   },
-                  child: const Text('Add'),
+                  child: Text(_strings.commonAdd),
                 ),
               ],
             ),
@@ -241,6 +246,7 @@ class FlowChartWidgetState extends State<FlowChartWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final extras = theme.extension<AppColors>()!;
@@ -257,7 +263,7 @@ class FlowChartWidgetState extends State<FlowChartWidget> {
               NodeSelector(
                 nodes: _leafSelectableNodes,
                 selected: _selectedNode,
-                hint: 'Select node',
+                hint: strings.flowSelectNode,
                 onChanged: (v) => setState(() => _selectedNode = v),
               ),
               ElevatedButton(
@@ -276,7 +282,7 @@ class FlowChartWidgetState extends State<FlowChartWidget> {
                           );
                           setState(() {});
                         },
-                child: const Text('Add Success Node'),
+                child: Text(strings.flowAddSuccessNode),
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
@@ -294,7 +300,7 @@ class FlowChartWidgetState extends State<FlowChartWidget> {
                           );
                           setState(() {});
                         },
-                child: const Text('Add Failure Node'),
+                child: Text(strings.flowAddFailureNode),
               ),
             ],
           ),
@@ -307,7 +313,7 @@ class FlowChartWidgetState extends State<FlowChartWidget> {
               NodeSelector(
                 nodes: _targetableNodes,
                 selected: _selectedTargetNode,
-                hint: 'Select node',
+                hint: strings.flowSelectNode,
                 onChanged:
                     (v) => setState(() {
                       _selectedTargetNode = v;
@@ -321,7 +327,7 @@ class FlowChartWidgetState extends State<FlowChartWidget> {
                   foregroundColor: extras.buttonText ?? cs.onPrimary,
                 ),
                 onPressed: _showAddEventDialog,
-                child: const Text('+ Event'),
+                child: Text(strings.flowAddEvent),
               ),
             ],
           ),
@@ -335,7 +341,7 @@ class FlowChartWidgetState extends State<FlowChartWidget> {
                 NodeSelector(
                   nodes: _nodeData[_selectedTargetNode!]!.events,
                   selected: _selectedEvent,
-                  hint: 'Select Event',
+                  hint: strings.flowSelectEvent,
                   onChanged: (v) => setState(() => _selectedEvent = v),
                 ),
                 const SizedBox(width: 8),
@@ -345,7 +351,7 @@ class FlowChartWidgetState extends State<FlowChartWidget> {
                     foregroundColor: extras.buttonText ?? cs.onPrimary,
                   ),
                   onPressed: _onRemoveSelectedEvent,
-                  child: const Text('Remove Event'),
+                  child: Text(strings.flowRemoveEvent),
                 ),
               ],
             ),

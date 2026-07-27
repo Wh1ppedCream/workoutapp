@@ -4,6 +4,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../services/tutorial_state_store.dart';
 import '../../../widgets/guided_tutorial_overlay.dart';
 import '../../../widgets/settings_tiles.dart';
@@ -68,6 +69,7 @@ class _ProfilePageState extends State<ProfilePage> {
         TutorialIds.profileHome,
       );
       if (completed || !mounted) return;
+      final strings = AppLocalizations.of(context);
 
       await GuidedTutorialOverlay.show(
         context,
@@ -75,23 +77,20 @@ class _ProfilePageState extends State<ProfilePage> {
           GuidedTutorialStep(
             targetKey: _accountSettingsTutorialKey,
             icon: Icons.person_outline,
-            title: 'Account settings',
-            body:
-                'Update your personal info, display preferences, weight units, onboarding, bottom tabs, and guided tutorials from here.',
+            title: strings.profileAccountTutorialTitle,
+            body: strings.profileAccountTutorialBody,
           ),
           GuidedTutorialStep(
             targetKey: _trainingSettingsTutorialKey,
             icon: Icons.fitness_center,
-            title: 'Training settings',
-            body:
-                'Control gym profiles, generation rules, bodypart rankings, progress settings, and other training defaults.',
+            title: strings.profileTrainingTutorialTitle,
+            body: strings.profileTrainingTutorialBody,
           ),
           GuidedTutorialStep(
             targetKey: _dataSettingsTutorialKey,
             icon: Icons.storage_outlined,
-            title: 'Data tools',
-            body:
-                'Database settings are where you export, import, check, and maintain your local workout data.',
+            title: strings.profileDataTutorialTitle,
+            body: strings.profileDataTutorialBody,
           ),
         ],
       );
@@ -103,10 +102,10 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     return SettingsPageScaffold(
-      title: 'Profile',
-      subtitle:
-          'Personalize Tonos, manage training defaults, and keep your data healthy.',
+      title: strings.profileTitle,
+      subtitle: strings.profileSubtitle,
       icon: Icons.person,
       heroAccentColor: SettingsAccent.account,
       showBackButton: false,
@@ -114,30 +113,30 @@ class _ProfilePageState extends State<ProfilePage> {
         KeyedSubtree(
           key: _accountSettingsTutorialKey,
           child: SettingsSection(
-            title: 'Account',
-            subtitle: 'Your identity and app-level appearance.',
+            title: strings.profileAccountSectionTitle,
+            subtitle: strings.profileAccountSectionSubtitle,
             accentColor: SettingsAccent.account,
             children: settingsTilesWithDividers(context, [
               SettingsActionTile(
                 icon: Icons.badge_outlined,
                 iconColor: SettingsAccent.account,
-                title: 'User Information',
-                subtitle: 'Name, body details, and activity profile.',
+                title: strings.profileUserInformationTitle,
+                subtitle: strings.profileUserInformationSubtitle,
                 onTap:
                     () => _open(context, const UserInformationSettingsPage()),
               ),
               SettingsActionTile(
                 icon: Icons.palette_outlined,
                 iconColor: SettingsAccent.appearance,
-                title: 'UI & Appearance',
-                subtitle: 'Theme, onboarding, and bottom tab setup.',
+                title: strings.profileUiAppearanceTitle,
+                subtitle: strings.profileUiAppearanceSubtitle,
                 onTap: () => _open(context, const UIAppearanceSettingsPage()),
               ),
               SettingsActionTile(
                 icon: Icons.school_outlined,
                 iconColor: SettingsAccent.appearance,
-                title: 'Guided Tutorials',
-                subtitle: 'Replay walkthroughs and reset guided help.',
+                title: strings.profileGuidedTutorialsTitle,
+                subtitle: strings.profileGuidedTutorialsSubtitle,
                 onTap: () => _open(context, const TutorialsSettingsPage()),
               ),
             ]),
@@ -146,23 +145,22 @@ class _ProfilePageState extends State<ProfilePage> {
         KeyedSubtree(
           key: _trainingSettingsTutorialKey,
           child: SettingsSection(
-            title: 'Training',
-            subtitle: 'Exercise defaults and progress-related controls.',
+            title: strings.profileTrainingSectionTitle,
+            subtitle: strings.profileTrainingSectionSubtitle,
             accentColor: SettingsAccent.training,
             children: settingsTilesWithDividers(context, [
               SettingsActionTile(
                 icon: Icons.fitness_center,
                 iconColor: SettingsAccent.training,
-                title: 'Gym & Workout Settings',
-                subtitle:
-                    'Workout generation, rankings, flows, and equipment logic.',
+                title: strings.profileGymWorkoutSettingsTitle,
+                subtitle: strings.profileGymWorkoutSettingsSubtitle,
                 onTap: () => _open(context, const GymExerciseSettingsPage()),
               ),
               SettingsActionTile(
                 icon: Icons.monitor_outlined,
                 iconColor: SettingsAccent.progress,
-                title: 'Progress Settings',
-                subtitle: 'Measurement and trend tracking setup.',
+                title: strings.profileProgressSettingsTitle,
+                subtitle: strings.profileProgressSettingsSubtitle,
                 onTap:
                     () =>
                         _open(context, const MeasurementsTrendsSettingsPage()),
@@ -173,24 +171,23 @@ class _ProfilePageState extends State<ProfilePage> {
         KeyedSubtree(
           key: _dataSettingsTutorialKey,
           child: SettingsSection(
-            title: 'Data',
-            subtitle: 'Database tools, exports, imports, and maintenance.',
+            title: strings.profileDataSectionTitle,
+            subtitle: strings.profileDataSectionSubtitle,
             accentColor: SettingsAccent.data,
             children: settingsTilesWithDividers(context, [
               SettingsActionTile(
                 icon: Icons.storage_outlined,
                 iconColor: SettingsAccent.data,
-                title: 'Database Settings',
-                subtitle:
-                    'Import, export, health checks, and maintenance tools.',
+                title: strings.profileDatabaseSettingsTitle,
+                subtitle: strings.profileDatabaseSettingsSubtitle,
                 onTap: () => _open(context, const DatabaseSettingsPage()),
               ),
             ]),
           ),
         ),
         SettingsSection(
-          title: 'Nutrition',
-          subtitle: 'Nutrition settings are paused while this area is rebuilt.',
+          title: strings.profileNutritionSectionTitle,
+          subtitle: strings.profileNutritionSectionSubtitle,
           accentColor: SettingsAccent.muted,
           children: settingsTilesWithDividers(context, [
             _disabledNutritionTile(context),
@@ -206,14 +203,15 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Widget _disabledNutritionTile(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final strings = AppLocalizations.of(context);
 
     return Opacity(
       opacity: 0.48,
       child: SettingsActionTile(
         icon: Icons.restaurant_menu,
         iconColor: scheme.onSurfaceVariant,
-        title: 'Diet & Nutrition Settings',
-        subtitle: 'Nutrition goals and preferences will return later.',
+        title: strings.profileDietNutritionSettingsTitle,
+        subtitle: strings.profileDietNutritionSettingsSubtitle,
         trailing: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
@@ -222,7 +220,7 @@ class _ProfilePageState extends State<ProfilePage> {
             border: Border.all(color: scheme.outlineVariant),
           ),
           child: Text(
-            'Later',
+            strings.profileLater,
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
               color: scheme.onSurfaceVariant,
               fontWeight: FontWeight.w900,

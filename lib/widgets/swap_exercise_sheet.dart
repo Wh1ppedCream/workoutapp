@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../l10n/generated/app_localizations.dart';
 import '../models/models.dart';
 import '../repositories/app_repository.dart';
 import '../screens/exercise/exercise_catalog_page.dart';
@@ -40,6 +41,8 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
   _ExerciseSwapEntry? _manualReplacement;
   bool _isLoadingManualReplacement = false;
   bool _filterForProfileEquipment = true;
+
+  AppLocalizations get _strings => AppLocalizations.of(context);
 
   @override
   void initState() {
@@ -319,9 +322,9 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
     if (picked == null || !mounted) return;
 
     if (picked.id == current.definition.id) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('That exercise is already selected.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(_strings.swapAlreadySelected)));
       return;
     }
 
@@ -334,9 +337,7 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
           data.profileEquipmentNames,
         )) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('That exercise needs equipment outside this profile.'),
-        ),
+        SnackBar(content: Text(_strings.swapNeedsProfileEquipment)),
       );
       return;
     }
@@ -354,11 +355,9 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
     } catch (_) {
       if (!mounted) return;
       setState(() => _isLoadingManualReplacement = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Could not load that replacement exercise.'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(_strings.swapLoadFailed)));
     }
   }
 
@@ -408,6 +407,7 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
     ScrollController scrollController,
     _SwapExerciseData data,
   ) {
+    final strings = AppLocalizations.of(context);
     final canFilterForProfile = data.hasProfile;
     final candidates = _filteredCandidates(data);
     final hasCandidates = candidates.isNotEmpty;
@@ -439,7 +439,7 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
                 },
               ),
               const SizedBox(height: 12),
-              _ExerciseSwapBox(label: 'Current', entry: data.current),
+              _ExerciseSwapBox(label: strings.swapCurrent, entry: data.current),
               const SizedBox(height: 12),
               OutlinedButton.icon(
                 onPressed:
@@ -456,8 +456,8 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
                         : const Icon(Icons.search),
                 label: Text(
                   _isLoadingManualReplacement
-                      ? 'Loading selected exercise...'
-                      : 'Browse Exercise Catalog',
+                      ? strings.swapLoadingSelected
+                      : strings.swapBrowseCatalog,
                 ),
               ),
               const SizedBox(height: 16),
@@ -474,7 +474,7 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
                         selected == null
                             ? const _NoReplacementBox()
                             : _ExerciseSwapBox(
-                              label: 'Replacement',
+                              label: strings.swapReplacement,
                               entry: selected,
                               matchScore: selected.score,
                             ),
@@ -503,7 +503,7 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                     onPressed: () => Navigator.pop(context),
-                    child: const Text('Cancel'),
+                    child: Text(strings.commonCancel),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -518,7 +518,7 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
                         selected == null
                             ? null
                             : () => Navigator.pop(context, selected.definition),
-                    child: const Text('Confirm Swap'),
+                    child: Text(strings.swapConfirm),
                   ),
                 ),
               ],
@@ -529,12 +529,12 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
     );
   }
 
-  static String _equipmentText(ExerciseDefinition definition) {
+  String _equipmentText(ExerciseDefinition definition) {
     final equipment = definition.equipmentList
         .map((item) => item.name)
         .where((name) => name.trim().isNotEmpty)
         .join(', ');
-    return equipment.isEmpty ? 'No equipment listed' : equipment;
+    return equipment.isEmpty ? _strings.swapNoEquipment : equipment;
   }
 
   List<_ExerciseSwapEntry> _filteredCandidates(_SwapExerciseData data) {
@@ -559,6 +559,7 @@ class _SwapSheetHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
       child: Row(
@@ -568,7 +569,7 @@ class _SwapSheetHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Swap Exercise',
+                  strings.swapTitle,
                   style: Theme.of(
                     context,
                   ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
@@ -576,8 +577,8 @@ class _SwapSheetHeader extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   isLoading
-                      ? 'Finding similar bodypart and muscle matches...'
-                      : 'Choose a similar replacement.',
+                      ? strings.swapFindingMatches
+                      : strings.swapChooseReplacement,
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],
@@ -606,6 +607,7 @@ class _ProfileEquipmentFilterRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     return Container(
@@ -621,7 +623,7 @@ class _ProfileEquipmentFilterRow extends StatelessWidget {
         children: [
           Expanded(
             child: Text(
-              'Filter for profile equipment',
+              strings.swapFilterProfileEquipment,
               style: theme.textTheme.bodyMedium?.copyWith(
                 fontWeight: FontWeight.w700,
                 color: enabled ? null : scheme.onSurfaceVariant,
@@ -739,6 +741,7 @@ class _BodyPartNameList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final visibleHits = hits.take(8).toList();
 
@@ -746,14 +749,14 @@ class _BodyPartNameList extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Bodyparts Hit',
+          strings.swapBodypartsHit,
           style: theme.textTheme.labelMedium?.copyWith(
             fontWeight: FontWeight.w700,
           ),
         ),
         const SizedBox(height: 6),
         if (visibleHits.isEmpty)
-          Text('No bodypart data found.', style: theme.textTheme.bodySmall)
+          Text(strings.swapNoBodypartData, style: theme.textTheme.bodySmall)
         else
           for (final hit in visibleHits)
             Padding(
@@ -795,6 +798,7 @@ class _MatchBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     final percent = (score * 100).clamp(0, 100).round();
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
@@ -804,7 +808,7 @@ class _MatchBadge extends StatelessWidget {
         border: Border.all(color: Colors.green.withAlpha(110)),
       ),
       child: Text(
-        '$percent% match',
+        strings.swapMatch(percent),
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
           color: Colors.green,
           fontSize: 10,
@@ -841,6 +845,7 @@ class _NoReplacementBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -853,13 +858,13 @@ class _NoReplacementBox extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              'No similar replacements found yet.',
+              strings.swapNoReplacements,
               style: Theme.of(context).textTheme.titleMedium,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
-              'This exercise may need more muscle or bodypart metadata before it can be swapped well.',
+              strings.swapNoReplacementsBody,
               style: Theme.of(context).textTheme.bodySmall,
               textAlign: TextAlign.center,
             ),

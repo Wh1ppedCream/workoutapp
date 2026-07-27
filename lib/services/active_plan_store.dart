@@ -1,24 +1,15 @@
-import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../repositories/app_repository.dart';
 
 /// Persists which plans should appear in the Train overview and Active Plans.
 class ActivePlanStore {
-  const ActivePlanStore._();
+  const ActivePlanStore({required AppRepository repository})
+    : _repository = repository;
 
-  static final AppRepository _repository = AppRepository();
-  static AppRepository? _repositoryOverride;
+  final AppRepository _repository;
 
-  static AppRepository get _activeRepository =>
-      _repositoryOverride ?? _repository;
-
-  @visibleForTesting
-  static void useRepositoryForTesting(AppRepository? repository) {
-    _repositoryOverride = repository;
-  }
-
-  static Future<Set<int>> load(int? profileId) async {
+  Future<Set<int>> load(int? profileId) async {
     if (profileId == null) return const <int>{};
     final prefs = await SharedPreferences.getInstance();
     final legacyKey = _key(profileId);
@@ -26,28 +17,27 @@ class ActivePlanStore {
     if (legacyIds != null) {
       final migrated =
           legacyIds.map((id) => int.tryParse(id)).whereType<int>().toSet();
-      await _activeRepository.replaceActivePlans(profileId, migrated);
+      await _repository.replaceActivePlans(profileId, migrated);
       await prefs.remove(legacyKey);
     }
-    return _activeRepository.loadActivePlans(profileId);
+    return _repository.loadActivePlans(profileId);
   }
 
-  static Future<void> save(int profileId, Set<int> ids) async {
-    await _activeRepository.replaceActivePlans(profileId, ids);
+  Future<void> save(int profileId, Set<int> ids) async {
+    await _repository.replaceActivePlans(profileId, ids);
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_key(profileId));
   }
 
-  static Future<void> add(int profileId, int planId) async {
+  Future<void> add(int profileId, int planId) async {
     await load(profileId);
-    await _activeRepository.addActivePlan(profileId, planId);
+    await _repository.addActivePlan(profileId, planId);
   }
 
-  static Future<void> remove(int profileId, int planId) async {
+  Future<void> remove(int profileId, int planId) async {
     await load(profileId);
-    await _activeRepository.removeActivePlan(profileId, planId);
+    await _repository.removeActivePlan(profileId, planId);
   }
 
-  static String _key(int profileId) =>
-      'train.active_presets.profile.$profileId';
+  String _key(int profileId) => 'train.active_presets.profile.$profileId';
 }

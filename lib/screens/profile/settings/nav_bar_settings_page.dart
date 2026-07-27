@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../l10n/app_localization_extensions.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../providers/nav_bar_config.dart';
 import '../../../widgets/settings_tiles.dart';
 
@@ -47,9 +49,10 @@ class _NavBarSettingsPageState extends State<NavBarSettingsPage> {
   }
 
   void _save() {
+    final strings = AppLocalizations.of(context);
     if (_activeTabs.length < 2) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please keep at least two active tabs.')),
+        SnackBar(content: Text(strings.navEditorMinimumTabsError)),
       );
       return;
     }
@@ -67,18 +70,18 @@ class _NavBarSettingsPageState extends State<NavBarSettingsPage> {
     });
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text('Bottom tabs saved')));
+    ).showSnackBar(SnackBar(content: Text(strings.navEditorSavedMessage)));
   }
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     final inactiveDisplay =
         _inactiveTabs.where((tab) => tab != TabItem.profile).toList();
 
     return SettingsPageScaffold(
-      title: 'Edit Bottom Tabs',
-      subtitle:
-          'Choose what appears in the bottom bar and reorder active tabs.',
+      title: strings.navEditorTitle,
+      subtitle: strings.navEditorSubtitle,
       icon: Icons.space_dashboard_outlined,
       heroAccentColor: SettingsAccent.data,
       bottomNavigationBar: SafeArea(
@@ -88,14 +91,14 @@ class _NavBarSettingsPageState extends State<NavBarSettingsPage> {
           child: FilledButton.icon(
             onPressed: _save,
             icon: const Icon(Icons.save_outlined),
-            label: const Text('Save Tabs'),
+            label: Text(strings.navEditorSave),
           ),
         ),
       ),
       children: [
         SettingsSection(
-          title: 'Active Tabs',
-          subtitle: 'Drag to reorder. Profile stays available.',
+          title: strings.navEditorActiveTitle,
+          subtitle: strings.navEditorActiveSubtitle,
           accentColor: SettingsAccent.data,
           children: [
             ReorderableListView.builder(
@@ -131,15 +134,15 @@ class _NavBarSettingsPageState extends State<NavBarSettingsPage> {
           ],
         ),
         SettingsSection(
-          title: 'Inactive Tabs',
-          subtitle: 'Turn these on whenever you want them back.',
+          title: strings.navEditorInactiveTitle,
+          subtitle: strings.navEditorInactiveSubtitle,
           accentColor: SettingsAccent.muted,
           children:
               inactiveDisplay.isEmpty
-                  ? const [
+                  ? [
                     Padding(
-                      padding: EdgeInsets.all(16),
-                      child: Text('No inactive tabs.'),
+                      padding: const EdgeInsets.all(16),
+                      child: Text(strings.navEditorNoInactiveTabs),
                     ),
                   ]
                   : settingsTilesWithDividers(context, [
@@ -178,6 +181,7 @@ class _NavTabTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final strings = AppLocalizations.of(context);
 
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
@@ -192,7 +196,7 @@ class _NavTabTile extends StatelessWidget {
                 ),
               ),
       title: Text(
-        tab.title,
+        tab.localizedTitle(strings),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: theme.textTheme.titleSmall?.copyWith(
@@ -201,10 +205,10 @@ class _NavTabTile extends StatelessWidget {
       ),
       subtitle: Text(
         isLocked
-            ? 'Always shown'
+            ? strings.navEditorAlwaysShown
             : isActive
-            ? 'Visible in bottom navigation'
-            : 'Hidden from bottom navigation',
+            ? strings.navEditorVisible
+            : strings.navEditorHidden,
         style: theme.textTheme.bodySmall?.copyWith(
           color: scheme.onSurfaceVariant,
         ),

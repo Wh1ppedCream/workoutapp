@@ -2,7 +2,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import '../../../repositories/app_repository.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 class AppSettingsPage extends StatefulWidget {
   const AppSettingsPage({super.key}); // use_super_parameters
@@ -12,7 +14,7 @@ class AppSettingsPage extends StatefulWidget {
 }
 
 class _AppSettingsPageState extends State<AppSettingsPage> {
-  final _repo = AppRepository();
+  AppRepository get _repo => context.read<AppRepository>();
 
   Future<void> _exportDatabase() async {
     try {
@@ -24,7 +26,7 @@ class _AppSettingsPageState extends State<AppSettingsPage> {
         context: context,
         builder:
             (ctx) => AlertDialog(
-              title: const Text('Export Database'),
+              title: Text(AppLocalizations.of(context).databaseExportTitle),
               content: SizedBox(
                 width: double.maxFinite,
                 child: SingleChildScrollView(child: SelectableText(jsonStr)),
@@ -34,23 +36,31 @@ class _AppSettingsPageState extends State<AppSettingsPage> {
                   onPressed: () {
                     Clipboard.setData(ClipboardData(text: jsonStr));
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Copied to clipboard')),
+                      SnackBar(
+                        content: Text(
+                          AppLocalizations.of(context).databaseCopied,
+                        ),
+                      ),
                     );
                   },
-                  child: const Text('Copy'),
+                  child: Text(AppLocalizations.of(context).commonCopy),
                 ),
                 TextButton(
                   onPressed: () => Navigator.of(ctx).pop(),
-                  child: const Text('Close'),
+                  child: Text(AppLocalizations.of(context).commonClose),
                 ),
               ],
             ),
       );
     } catch (e) {
       if (!mounted) return; // guard context
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Export failed: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).databaseExportFailed(e.toString()),
+          ),
+        ),
+      );
     }
   }
 
@@ -63,14 +73,14 @@ class _AppSettingsPageState extends State<AppSettingsPage> {
         context: context,
         builder:
             (ctx) => AlertDialog(
-              title: const Text('Import Database'),
+              title: Text(AppLocalizations.of(context).databaseImportTitle),
               content: SizedBox(
                 width: double.maxFinite,
                 child: TextField(
                   controller: controller,
                   maxLines: 10,
-                  decoration: const InputDecoration(
-                    hintText: 'Paste JSON here',
+                  decoration: InputDecoration(
+                    hintText: AppLocalizations.of(context).databasePasteJson,
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -78,11 +88,11 @@ class _AppSettingsPageState extends State<AppSettingsPage> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(ctx).pop(null),
-                  child: const Text('Cancel'),
+                  child: Text(AppLocalizations.of(context).commonCancel),
                 ),
                 ElevatedButton(
                   onPressed: () => Navigator.of(ctx).pop(controller.text),
-                  child: const Text('Import'),
+                  child: Text(AppLocalizations.of(context).commonImport),
                 ),
               ],
             ),
@@ -96,31 +106,37 @@ class _AppSettingsPageState extends State<AppSettingsPage> {
       await _repo.importDatabase(result, clearFirst: true);
 
       if (!mounted) return; // guard before showing snackbar
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Import succeeded')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).databaseImportSucceeded),
+        ),
+      );
     } catch (e) {
       if (!mounted) return; // guard before showing snackbar
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Import failed: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).databaseImportFailed(e.toString()),
+          ),
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(title: Text(AppLocalizations.of(context).settingsTitle)),
       body: ListView(
         children: [
           ListTile(
             leading: const Icon(Icons.upload_file),
-            title: const Text('Export Database'),
+            title: Text(AppLocalizations.of(context).databaseExportTitle),
             onTap: _exportDatabase,
           ),
           ListTile(
             leading: const Icon(Icons.download),
-            title: const Text('Import Database'),
+            title: Text(AppLocalizations.of(context).databaseImportTitle),
             onTap: _importDatabase,
           ),
         ],

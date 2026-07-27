@@ -5,6 +5,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/generated/app_localizations.dart';
 import '../models/models.dart';
 import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
@@ -24,8 +25,10 @@ class HealthTrendsSection extends StatefulWidget {
 
 class HealthTrendsSectionState extends State<HealthTrendsSection>
     with AutomaticKeepAliveClientMixin<HealthTrendsSection> {
-  final _repo = AppRepository();
+  AppRepository get _repo => context.read<AppRepository>();
   late Future<List<_MeasurementTrend>> _trendsFuture;
+
+  AppLocalizations get _strings => AppLocalizations.of(context);
 
   @override
   void initState() {
@@ -94,7 +97,9 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
       context: context,
       builder:
           (_) => _MeasurementEntryDialog(
-            title: 'Log ${_measurementTitle(trend.definition)}',
+            title: _strings.healthLogMeasurement(
+              _measurementTitle(trend.definition),
+            ),
             definition: trend.definition,
             defaultUnit:
                 trend.latest?.unit ??
@@ -143,6 +148,7 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
   Widget build(BuildContext context) {
     super.build(context);
     final theme = Theme.of(context);
+    final strings = AppLocalizations.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -152,12 +158,15 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
           child: Row(
             children: [
               Expanded(
-                child: Text('Health Trends', style: theme.textTheme.titleLarge),
+                child: Text(
+                  strings.healthTrendsTitle,
+                  style: theme.textTheme.titleLarge,
+                ),
               ),
               TextButton.icon(
                 onPressed: _createCustomMetric,
                 icon: const Icon(Icons.add, size: 18),
-                label: const Text('Metric'),
+                label: Text(strings.healthMetric),
               ),
             ],
           ),
@@ -175,7 +184,7 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
             if (snapshot.hasError) {
               return _HealthTrendMessageCard(
                 icon: Icons.error_outline,
-                title: 'Unable to load measurements',
+                title: strings.healthUnableToLoad,
                 message: snapshot.error.toString(),
               );
             }
@@ -184,9 +193,9 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
             if (trends.isEmpty) {
               return _HealthTrendMessageCard(
                 icon: Icons.straighten,
-                title: 'No measurements yet',
-                message: 'Create a metric to start tracking progress.',
-                actionLabel: 'Create metric',
+                title: strings.healthNoMeasurements,
+                message: strings.healthNoMeasurementsBody,
+                actionLabel: strings.healthCreateMetric,
                 onAction: _createCustomMetric,
               );
             }
@@ -230,7 +239,7 @@ class MeasurementTrendDetailPage extends StatefulWidget {
 
 class _MeasurementTrendDetailPageState
     extends State<MeasurementTrendDetailPage> {
-  final _repo = AppRepository();
+  AppRepository get _repo => context.read<AppRepository>();
   final _addTutorialKey = GlobalKey(debugLabel: 'measurement_trend_add');
   final _summaryTutorialKey = GlobalKey(
     debugLabel: 'measurement_trend_summary',
@@ -241,6 +250,8 @@ class _MeasurementTrendDetailPageState
   );
   late Future<List<Measurement>> _entriesFuture;
   bool _changed = false;
+
+  AppLocalizations get _strings => AppLocalizations.of(context);
   bool _tutorialQueued = false;
 
   @override
@@ -282,30 +293,26 @@ class _MeasurementTrendDetailPageState
           GuidedTutorialStep(
             targetKey: _summaryTutorialKey,
             icon: Icons.speed,
-            title: 'Measurement summary',
-            body:
-                'See the latest value, change from the previous entry, and how many records exist.',
+            title: _strings.healthTutorialSummaryTitle,
+            body: _strings.healthTutorialSummaryBody,
           ),
           GuidedTutorialStep(
             targetKey: _chartTutorialKey,
             icon: Icons.show_chart,
-            title: 'Trend chart',
-            body:
-                'The chart shows how this measurement changes over time as you log more entries.',
+            title: _strings.healthTutorialChartTitle,
+            body: _strings.healthTutorialChartBody,
           ),
           GuidedTutorialStep(
             targetKey: _entriesTutorialKey,
             icon: Icons.list_alt,
-            title: 'Entries',
-            body:
-                'Tap an entry to edit it, or remove entries that were logged by mistake.',
+            title: _strings.healthTutorialEntriesTitle,
+            body: _strings.healthTutorialEntriesBody,
           ),
           GuidedTutorialStep(
             targetKey: _addTutorialKey,
             icon: Icons.add,
-            title: 'Log new entry',
-            body:
-                'Use this button whenever you want to add a new measurement record.',
+            title: _strings.healthTutorialLogTitle,
+            body: _strings.healthTutorialLogBody,
           ),
         ],
       );
@@ -320,7 +327,9 @@ class _MeasurementTrendDetailPageState
       context: context,
       builder:
           (_) => _MeasurementEntryDialog(
-            title: 'Log ${_measurementTitle(widget.definition)}',
+            title: _strings.healthLogMeasurement(
+              _measurementTitle(widget.definition),
+            ),
             definition: widget.definition,
             defaultUnit:
                 entries.isNotEmpty
@@ -345,7 +354,9 @@ class _MeasurementTrendDetailPageState
       context: context,
       builder:
           (_) => _MeasurementEntryDialog(
-            title: 'Edit ${_measurementTitle(widget.definition)}',
+            title: _strings.healthEditMeasurement(
+              _measurementTitle(widget.definition),
+            ),
             definition: widget.definition,
             defaultUnit: entry.unit,
             entry: entry,
@@ -368,18 +379,21 @@ class _MeasurementTrendDetailPageState
       context: context,
       builder:
           (context) => AlertDialog(
-            title: const Text('Delete entry?'),
+            title: Text(_strings.healthDeleteEntryTitle),
             content: Text(
-              '${_formatMeasurement(entry)} from ${_formatDateTime(entry.timestamp)} will be removed.',
+              _strings.healthDeleteEntryBody(
+                _formatMeasurement(entry),
+                _formatDateTime(entry.timestamp),
+              ),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Cancel'),
+                child: Text(_strings.commonCancel),
               ),
               TextButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Delete'),
+                child: Text(_strings.commonDelete),
               ),
             ],
           ),
@@ -393,6 +407,7 @@ class _MeasurementTrendDetailPageState
   @override
   Widget build(BuildContext context) {
     final title = _measurementTitle(widget.definition);
+    final strings = AppLocalizations.of(context);
 
     return PopScope<bool>(
       canPop: false,
@@ -408,7 +423,7 @@ class _MeasurementTrendDetailPageState
           title: Text(title),
           actions: [
             IconButton(
-              tooltip: 'Log entry',
+              tooltip: strings.healthLogEntry,
               onPressed: () async {
                 final entries = await _entriesFuture;
                 if (!context.mounted) return;
@@ -425,7 +440,11 @@ class _MeasurementTrendDetailPageState
               return const Center(child: CircularProgressIndicator());
             }
             if (snapshot.hasError) {
-              return Center(child: Text('Unable to load: ${snapshot.error}'));
+              return Center(
+                child: Text(
+                  strings.healthLoadFailed(snapshot.error.toString()),
+                ),
+              );
             }
 
             final entries = snapshot.data ?? const <Measurement>[];
@@ -458,16 +477,16 @@ class _MeasurementTrendDetailPageState
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Text(
-                        'Entries',
+                        strings.healthEntries,
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                       const SizedBox(height: 8),
                       if (entries.isEmpty)
                         _HealthTrendMessageCard(
                           icon: Icons.add_chart,
-                          title: 'No entries yet',
-                          message: 'Log your first $title measurement.',
-                          actionLabel: 'Log entry',
+                          title: strings.healthNoEntries,
+                          message: strings.healthFirstEntry(title),
+                          actionLabel: strings.healthLogEntry,
                           onAction: () => _addEntry(entries),
                         )
                       else
@@ -496,7 +515,7 @@ class _MeasurementTrendDetailPageState
                   await _addEntry(entries);
                 },
                 icon: const Icon(Icons.add),
-                label: const Text('Log Entry'),
+                label: Text(strings.healthLogEntry),
               ),
             ),
           ),
@@ -961,9 +980,15 @@ class _MeasurementEntryTile extends StatelessWidget {
             if (value == 'delete') onDelete();
           },
           itemBuilder:
-              (_) => const [
-                PopupMenuItem(value: 'edit', child: Text('Edit')),
-                PopupMenuItem(value: 'delete', child: Text('Delete')),
+              (_) => [
+                PopupMenuItem(
+                  value: 'edit',
+                  child: Text(AppLocalizations.of(context).commonEdit),
+                ),
+                PopupMenuItem(
+                  value: 'delete',
+                  child: Text(AppLocalizations.of(context).commonDelete),
+                ),
               ],
         ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -1101,7 +1126,11 @@ class _MeasurementEntryDialogState extends State<_MeasurementEntryDialog> {
     final unit = _unitController.text.trim();
     if (value == null || unit.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter a value and unit first.')),
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).healthEntryValueUnitRequired,
+          ),
+        ),
       );
       return;
     }
@@ -1139,14 +1168,16 @@ class _MeasurementEntryDialogState extends State<_MeasurementEntryDialog> {
             const SizedBox(height: 10),
             TextField(
               controller: _unitController,
-              decoration: const InputDecoration(labelText: 'Unit'),
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context).healthUnit,
+              ),
             ),
             const SizedBox(height: 10),
             TextField(
               controller: _noteController,
-              decoration: const InputDecoration(
-                labelText: 'Note',
-                hintText: 'Optional',
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context).healthNote,
+                hintText: AppLocalizations.of(context).healthOptional,
               ),
             ),
             const SizedBox(height: 12),
@@ -1161,9 +1192,12 @@ class _MeasurementEntryDialogState extends State<_MeasurementEntryDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(AppLocalizations.of(context).commonCancel),
         ),
-        FilledButton(onPressed: _save, child: const Text('Save')),
+        FilledButton(
+          onPressed: _save,
+          child: Text(AppLocalizations.of(context).commonSave),
+        ),
       ],
     );
   }
@@ -1204,7 +1238,11 @@ class _MeasurementDefinitionDialogState
         unit.isEmpty ||
         (initialText.isNotEmpty && initialValue == null)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter a name, unit, and valid value.')),
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).healthDefinitionFieldsRequired,
+          ),
+        ),
       );
       return;
     }
@@ -1226,7 +1264,7 @@ class _MeasurementDefinitionDialogState
   Widget build(BuildContext context) {
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     return AlertDialog(
-      title: const Text('Create Metric'),
+      title: Text(AppLocalizations.of(context).healthCreateMetric),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1235,17 +1273,19 @@ class _MeasurementDefinitionDialogState
               controller: _nameController,
               autofocus: true,
               textCapitalization: TextCapitalization.words,
-              decoration: const InputDecoration(
-                labelText: 'Metric name',
-                hintText: 'Arm size, resting heart rate...',
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context).healthMetricName,
+                hintText: AppLocalizations.of(context).healthMetricNameHint,
               ),
             ),
             const SizedBox(height: 10),
             TextField(
               controller: _unitController,
               decoration: InputDecoration(
-                labelText: 'Unit',
-                hintText: 'in, ${weightUnit.shortLabel}, %, bpm...',
+                labelText: AppLocalizations.of(context).healthUnit,
+                hintText: AppLocalizations.of(
+                  context,
+                ).healthUnitHint(weightUnit.shortLabel),
               ),
             ),
             const SizedBox(height: 10),
@@ -1254,17 +1294,17 @@ class _MeasurementDefinitionDialogState
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
-              decoration: const InputDecoration(
-                labelText: 'Starting value',
-                hintText: 'Optional',
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context).healthStartingValue,
+                hintText: AppLocalizations.of(context).healthOptional,
               ),
             ),
             const SizedBox(height: 10),
             TextField(
               controller: _noteController,
-              decoration: const InputDecoration(
-                labelText: 'Note',
-                hintText: 'Optional',
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context).healthNote,
+                hintText: AppLocalizations.of(context).healthOptional,
               ),
             ),
           ],
@@ -1273,9 +1313,12 @@ class _MeasurementDefinitionDialogState
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(AppLocalizations.of(context).commonCancel),
         ),
-        FilledButton(onPressed: _save, child: const Text('Create')),
+        FilledButton(
+          onPressed: _save,
+          child: Text(AppLocalizations.of(context).healthCreate),
+        ),
       ],
     );
   }

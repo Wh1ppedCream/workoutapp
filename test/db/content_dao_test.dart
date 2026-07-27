@@ -261,11 +261,7 @@ void main() {
       expect(resolved, hasLength(1));
       expect(resolved.single.remoteUrl, 'https://cdn.example/barbell.webp');
       expect(
-        await ContentDao.getSharedMedia(
-          db,
-          SharedMediaEntityType.equipment,
-          4,
-        ),
+        await ContentDao.getSharedMedia(db, SharedMediaEntityType.equipment, 4),
         isEmpty,
       );
       expect((await db.query('shared_media')), hasLength(1));

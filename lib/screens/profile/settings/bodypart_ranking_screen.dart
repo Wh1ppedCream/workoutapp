@@ -1,7 +1,9 @@
 // File: lib/screens/profile/settings/bodypart_ranking_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../models/models.dart';
 import '../../../repositories/app_repository.dart';
 import '../../../widgets/settings_tiles.dart';
@@ -14,7 +16,7 @@ class BodyPartRankingScreen extends StatefulWidget {
 }
 
 class _BodyPartRankingScreenState extends State<BodyPartRankingScreen> {
-  final _repo = AppRepository();
+  AppRepository get _repo => context.read<AppRepository>();
   List<BodyPart> _parts = [];
   Map<int, int> _ranks = {};
   bool _isLoading = true;
@@ -81,25 +83,36 @@ class _BodyPartRankingScreenState extends State<BodyPartRankingScreen> {
         _isSaving = false;
         _dirty = false;
       });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Body part rankings saved')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(
+              context,
+            ).rankingsSaved(AppLocalizations.of(context).anatomyBodyParts),
+          ),
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       setState(() => _isSaving = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to save: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).rankingsSaveError(e.toString()),
+          ),
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final strings = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Body Part Rankings'),
+        title: Text(strings.rankingsTitle(strings.anatomyBodyParts)),
         scrolledUnderElevation: 0,
       ),
       bottomNavigationBar:
@@ -116,7 +129,9 @@ class _BodyPartRankingScreenState extends State<BodyPartRankingScreen> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                           : const Icon(Icons.save),
-                  label: Text(_isSaving ? 'Saving...' : 'Save Rankings'),
+                  label: Text(
+                    _isSaving ? strings.nutritionSaving : strings.rankingsSave,
+                  ),
                 ),
               )
               : null,
@@ -125,24 +140,30 @@ class _BodyPartRankingScreenState extends State<BodyPartRankingScreen> {
   }
 
   Widget _buildBody(ColorScheme scheme) {
+    final strings = AppLocalizations.of(context);
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
     if (_error != null) {
-      return Center(child: Text('Error: $_error'));
+      return Center(
+        child: Text(
+          strings.rankingsLoadError(strings.anatomyBodyParts, _error!),
+        ),
+      );
     }
     if (_parts.isEmpty) {
-      return const Center(child: Text('No body parts defined'));
+      return Center(child: Text(strings.rankingsNoBodyParts));
     }
 
     return Column(
       children: [
-        const Padding(
-          padding: EdgeInsets.fromLTRB(16, 14, 16, 8),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
           child: SettingsHeroCard(
-            title: 'Body Part Rankings',
-            subtitle:
-                'Drag body parts into the order you want generated training to prefer.',
+            title: strings.rankingsTitle(strings.anatomyBodyParts),
+            subtitle: strings.rankingsHero(
+              strings.anatomyBodyParts.toLowerCase(),
+            ),
             icon: Icons.accessibility_new,
           ),
         ),
@@ -160,6 +181,7 @@ class _BodyPartRankingScreenState extends State<BodyPartRankingScreen> {
                 name: part.name,
                 rank: rank,
                 icon: Icons.accessibility_new,
+                rankLabel: strings.rankingsRank,
                 onRankSubmitted: (value) {
                   setState(() {
                     _ranks[part.id] = int.tryParse(value) ?? rank;
@@ -181,6 +203,7 @@ class _RankingTile extends StatelessWidget {
   final String name;
   final int rank;
   final IconData icon;
+  final String rankLabel;
   final ValueChanged<String> onRankSubmitted;
 
   const _RankingTile({
@@ -189,6 +212,7 @@ class _RankingTile extends StatelessWidget {
     required this.name,
     required this.rank,
     required this.icon,
+    required this.rankLabel,
     required this.onRankSubmitted,
   });
 
@@ -239,7 +263,7 @@ class _RankingTile extends StatelessWidget {
               textAlign: TextAlign.center,
               keyboardType: TextInputType.number,
               decoration: InputDecoration(
-                labelText: 'Rank',
+                labelText: rankLabel,
                 isDense: true,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),

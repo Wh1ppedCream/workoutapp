@@ -159,6 +159,7 @@ class Schema {
     await migrateV53(db);
     await migrateV54(db);
     await migrateV55(db);
+    await migrateV56(db);
   }
 
   /// Handler for onUpgrade callback.
@@ -221,6 +222,7 @@ class Schema {
     if (oldVersion < 53) await migrateV53(db);
     if (oldVersion < 54) await migrateV54(db);
     if (oldVersion < 55) await migrateV55(db);
+    if (oldVersion < 56) await migrateV56(db);
   }
 
   /// Migration to version 3: adds rating, equipment/muscle tables.
@@ -3239,6 +3241,61 @@ WHERE source_id IS NULL
     await db.execute('''
       CREATE INDEX IF NOT EXISTS idx_preset_definitions_draft_profile
       ON preset_definitions(is_draft, profile_id, created_at)
+    ''');
+  }
+
+  /// v56 - repair FTS4 synchronization triggers created with FTS5 syntax.
+  static Future<void> migrateV56(Database db) async {
+    await ensureFoodFtsTriggers(db);
+  }
+
+  /// Keeps the external-content FTS4 index synchronized with `foods`.
+  ///
+  /// FTS4 removes indexed rows with a normal DELETE. The special `'delete'`
+  /// INSERT command used by older migrations belongs to FTS5 and can make an
+  /// otherwise harmless food update fail with `SQL logic error`.
+  static Future<void> ensureFoodFtsTriggers(DatabaseExecutor db) async {
+    final ftsTable = await db.rawQuery('''
+      SELECT 1
+      FROM sqlite_master
+      WHERE type = 'table'
+        AND name = 'food_search_fts'
+        AND lower(coalesce(sql, '')) LIKE '%using fts4%'
+      LIMIT 1
+    ''');
+    if (ftsTable.isEmpty) return;
+
+    await db.execute('DROP TRIGGER IF EXISTS foods_ai;');
+    await db.execute('DROP TRIGGER IF EXISTS foods_ad;');
+    await db.execute('DROP TRIGGER IF EXISTS foods_bd;');
+    await db.execute('DROP TRIGGER IF EXISTS foods_bu;');
+    await db.execute('DROP TRIGGER IF EXISTS foods_au;');
+
+    await db.execute('''
+      CREATE TRIGGER foods_ai
+      AFTER INSERT ON foods BEGIN
+        INSERT INTO food_search_fts(rowid, name, brand)
+        VALUES (NEW.id, COALESCE(NEW.name, ''), COALESCE(NEW.brand, ''));
+      END;
+    ''');
+    await db.execute('''
+      CREATE TRIGGER foods_bd
+      BEFORE DELETE ON foods BEGIN
+        DELETE FROM food_search_fts WHERE docid = OLD.id;
+      END;
+    ''');
+    await db.execute('''
+      CREATE TRIGGER foods_bu
+      BEFORE UPDATE ON foods BEGIN
+        DELETE FROM food_search_fts WHERE docid = OLD.id;
+      END;
+    ''');
+    await db.execute('''
+      CREATE TRIGGER foods_au
+      AFTER UPDATE ON foods BEGIN
+        INSERT INTO food_search_fts(rowid, name, brand)
+        VALUES (NEW.id, COALESCE(NEW.name, ''), COALESCE(NEW.brand, ''));
+      END;
     ''');
   }
 

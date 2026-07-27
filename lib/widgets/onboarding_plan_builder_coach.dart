@@ -3,6 +3,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../l10n/generated/app_localizations.dart';
+
 class InteractiveTutorialStep {
   final GlobalKey targetKey;
   final int stepNumber;
@@ -292,6 +294,7 @@ class _InteractiveTutorialCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final strings = AppLocalizations.of(context);
 
     return Material(
       color: Colors.transparent,
@@ -328,7 +331,11 @@ class _InteractiveTutorialCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '${step.stepNumber}/${step.totalSteps} - ${step.title}',
+                    strings.planCoachStepTitle(
+                      step.stepNumber,
+                      step.totalSteps,
+                      step.title,
+                    ),
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w900,
                     ),
@@ -340,13 +347,15 @@ class _InteractiveTutorialCard extends StatelessWidget {
                     children: [
                       TextButton(
                         onPressed: onSkip,
-                        child: const Text('Skip guide'),
+                        child: Text(strings.planCoachSkipGuide),
                       ),
                       const Spacer(),
                       if (step.onContinue != null)
                         FilledButton.tonal(
                           onPressed: step.onContinue,
-                          child: Text(step.continueLabel ?? 'Continue'),
+                          child: Text(
+                            step.continueLabel ?? strings.planCoachContinue,
+                          ),
                         ),
                     ],
                   ),

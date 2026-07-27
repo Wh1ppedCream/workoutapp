@@ -1,7 +1,9 @@
 // File: lib/screens/profile/settings/bodypart_muscle_mapping_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../models/models.dart';
 import '../../../repositories/app_repository.dart';
 import '../../../widgets/settings_tiles.dart';
@@ -16,7 +18,7 @@ class BodyPartMuscleMappingScreen extends StatefulWidget {
 
 class _BodyPartMuscleMappingScreenState
     extends State<BodyPartMuscleMappingScreen> {
-  final _repo = AppRepository();
+  AppRepository get _repo => context.read<AppRepository>();
   List<BodyPart> _bodyParts = [];
   List<Muscle> _muscles = [];
   BodyPart? _selectedBodyPart;
@@ -84,15 +86,19 @@ class _BodyPartMuscleMappingScreenState
         _isSaving = false;
         _originalLinked = null;
       });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Mappings saved')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).mappingSaved)),
+      );
     } catch (e) {
       if (!mounted) return;
       setState(() => _isSaving = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Save failed: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).mappingSaveFailed(e.toString()),
+          ),
+        ),
+      );
     }
   }
 
@@ -113,9 +119,10 @@ class _BodyPartMuscleMappingScreenState
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Anatomy Mapping'),
+        title: Text(strings.mappingTitle),
         scrolledUnderElevation: 0,
       ),
       bottomNavigationBar:
@@ -127,7 +134,7 @@ class _BodyPartMuscleMappingScreenState
                     Expanded(
                       child: OutlinedButton(
                         onPressed: _isSaving ? null : _cancelEditing,
-                        child: const Text('Cancel'),
+                        child: Text(strings.commonCancel),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -144,7 +151,11 @@ class _BodyPartMuscleMappingScreenState
                                   ),
                                 )
                                 : const Icon(Icons.save),
-                        label: Text(_isSaving ? 'Saving...' : 'Save'),
+                        label: Text(
+                          _isSaving
+                              ? strings.nutritionSaving
+                              : strings.commonSave,
+                        ),
                       ),
                     ),
                   ],
@@ -157,18 +168,21 @@ class _BodyPartMuscleMappingScreenState
               ? FloatingActionButton.extended(
                 onPressed: _startEditing,
                 icon: const Icon(Icons.edit),
-                label: const Text('Edit'),
+                label: Text(strings.commonEdit),
               )
               : null,
     );
   }
 
   Widget _buildBody() {
+    final strings = AppLocalizations.of(context);
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
     if (_error != null) {
-      return Center(child: Text('Error: $_error'));
+      return Center(
+        child: Text(strings.rankingsLoadError(strings.mappingTitle, _error!)),
+      );
     }
 
     final linkedMuscles =
@@ -177,15 +191,14 @@ class _BodyPartMuscleMappingScreenState
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 112),
       children: [
-        const SettingsHeroCard(
-          title: 'Anatomy Mapping',
-          subtitle:
-              'Connect muscles to body parts so heatmaps, analytics, and generated workouts agree.',
+        SettingsHeroCard(
+          title: strings.mappingTitle,
+          subtitle: strings.mappingHero,
           icon: Icons.hub,
         ),
         const SizedBox(height: 16),
         SettingsSection(
-          title: 'Selected Body Part',
+          title: strings.mappingSelectedBodyPart,
           accentColor: SettingsAccent.training,
           children: [
             Padding(
@@ -194,7 +207,7 @@ class _BodyPartMuscleMappingScreenState
                 isExpanded: true,
                 value: _selectedBodyPart,
                 decoration: InputDecoration(
-                  labelText: 'Body part',
+                  labelText: strings.mappingBodyPart,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
@@ -220,12 +233,15 @@ class _BodyPartMuscleMappingScreenState
           ],
         ),
         SettingsSection(
-          title: _editing ? 'Choose Linked Muscles' : 'Linked Muscles',
+          title:
+              _editing
+                  ? strings.mappingChooseLinkedMuscles
+                  : strings.mappingLinkedMuscles,
           accentColor: SettingsAccent.advanced,
           subtitle:
               _editing
-                  ? 'Select every muscle that belongs to this body part.'
-                  : '${linkedMuscles.length} muscles currently linked.',
+                  ? strings.mappingChooseLinkedSubtitle
+                  : strings.mappingLinkedCount(linkedMuscles.length),
           children:
               _editing
                   ? _editableMuscleTiles()
@@ -237,10 +253,10 @@ class _BodyPartMuscleMappingScreenState
 
   List<Widget> _editableMuscleTiles() {
     if (_muscles.isEmpty) {
-      return const [
+      return [
         Padding(
-          padding: EdgeInsets.all(18),
-          child: Text('No muscles defined.'),
+          padding: const EdgeInsets.all(18),
+          child: Text(AppLocalizations.of(context).mappingNoMuscles),
         ),
       ];
     }
@@ -275,10 +291,10 @@ class _BodyPartMuscleMappingScreenState
 
   List<Widget> _readOnlyMuscleTiles(List<Muscle> linkedMuscles) {
     if (linkedMuscles.isEmpty) {
-      return const [
+      return [
         Padding(
-          padding: EdgeInsets.all(18),
-          child: Text('No muscles linked yet. Tap Edit to add some.'),
+          padding: const EdgeInsets.all(18),
+          child: Text(AppLocalizations.of(context).mappingNoLinkedMuscles),
         ),
       ];
     }

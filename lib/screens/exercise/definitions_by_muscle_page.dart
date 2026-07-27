@@ -3,7 +3,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../../l10n/generated/app_localizations.dart';
 import '../../models/models.dart';
 import '../../repositories/app_repository.dart';
 import '../../services/tutorial_state_store.dart';
@@ -34,7 +36,7 @@ class DefinitionsByMusclePage extends StatefulWidget {
 }
 
 class _DefinitionsByMusclePageState extends State<DefinitionsByMusclePage> {
-  final _repo = AppRepository();
+  AppRepository get _repo => context.read<AppRepository>();
   final _headerTutorialKey = GlobalKey(debugLabel: 'muscle_detail_header');
   final _exerciseListTutorialKey = GlobalKey(
     debugLabel: 'muscle_detail_exercise_list',
@@ -128,14 +130,18 @@ class _DefinitionsByMusclePageState extends State<DefinitionsByMusclePage> {
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${widget.muscle.name} recommended sets updated.'),
+          content: Text(
+            AppLocalizations.of(
+              context,
+            ).anatomyRecommendedSetsUpdated(widget.muscle.name),
+          ),
         ),
       );
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Save failed: $error')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).anatomySaveFailed)),
+      );
     }
   }
 
@@ -147,6 +153,7 @@ class _DefinitionsByMusclePageState extends State<DefinitionsByMusclePage> {
 
   Future<void> _showTutorial() async {
     try {
+      final strings = AppLocalizations.of(context);
       await showGuidedTutorialOnce(
         context,
         tutorialId: TutorialIds.muscleDetail,
@@ -154,16 +161,14 @@ class _DefinitionsByMusclePageState extends State<DefinitionsByMusclePage> {
           GuidedTutorialStep(
             targetKey: _headerTutorialKey,
             icon: Icons.fitness_center,
-            title: 'Muscle detail',
-            body:
-                'The header shows recent sets, recommended set boundaries, and related bodyparts.',
+            title: strings.anatomyTutorialMuscleDetailTitle,
+            body: strings.anatomyTutorialMuscleDetailBody,
           ),
           GuidedTutorialStep(
             targetKey: _exerciseListTutorialKey,
             icon: Icons.list_alt,
-            title: 'Linked exercises',
-            body:
-                'Exercises are ranked by how directly they train this muscle. Tap one for full details.',
+            title: strings.anatomyTutorialLinkedExercisesTitle,
+            body: strings.anatomyTutorialMuscleExercisesBody,
           ),
         ],
       );
@@ -174,10 +179,11 @@ class _DefinitionsByMusclePageState extends State<DefinitionsByMusclePage> {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          '${widget.muscle.name} Exercises',
+          strings.anatomyTargetExercises(widget.muscle.name),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
@@ -189,9 +195,7 @@ class _DefinitionsByMusclePageState extends State<DefinitionsByMusclePage> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
-            return Center(
-              child: Text('Unable to load muscle: ${snapshot.error}'),
-            );
+            return Center(child: Text(strings.anatomyMuscleLoadFailed));
           }
 
           final data = snapshot.data!;
@@ -289,7 +293,13 @@ class _MuscleHeader extends StatelessWidget {
                               style: theme.textTheme.titleLarge,
                             ),
                             const SizedBox(height: 4),
-                            Text(_exerciseCountLabel(data.definitions.length)),
+                            Text(
+                              AppLocalizations.of(
+                                context,
+                              ).anatomyLinkedExerciseCount(
+                                data.definitions.length,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -298,7 +308,9 @@ class _MuscleHeader extends StatelessWidget {
                   if (sourceBodyPart != null) ...[
                     const SizedBox(height: 10),
                     Text(
-                      'Opened from ${sourceBodyPart!.name}',
+                      AppLocalizations.of(
+                        context,
+                      ).anatomyOpenedFrom(sourceBodyPart!.name),
                       style: theme.textTheme.bodySmall,
                     ),
                   ],
@@ -308,12 +320,20 @@ class _MuscleHeader extends StatelessWidget {
                     runSpacing: 10,
                     children: [
                       SetStatChip(
-                        label: 'Sets last 7 days',
-                        value: '${data.recentSetUnits.toStringAsFixed(1)} sets',
+                        label:
+                            AppLocalizations.of(
+                              context,
+                            ).anatomySetsLastSevenDays,
+                        value: AppLocalizations.of(context).anatomySetUnits(
+                          data.recentSetUnits.toStringAsFixed(1),
+                        ),
                       ),
                       SetStatChip(
-                        label: 'Recommended',
-                        value: _rangeLabel(data.volumeBounds),
+                        label: AppLocalizations.of(context).anatomyRecommended,
+                        value: _rangeLabel(
+                          AppLocalizations.of(context),
+                          data.volumeBounds,
+                        ),
                         onEdit: onEditRecommended,
                       ),
                     ],
@@ -323,11 +343,14 @@ class _MuscleHeader extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          Text('Related Bodyparts', style: theme.textTheme.titleMedium),
+          Text(
+            AppLocalizations.of(context).anatomyRelatedBodyParts,
+            style: theme.textTheme.titleMedium,
+          ),
           const SizedBox(height: 8),
           if (data.bodyParts.isEmpty)
             Text(
-              'No bodypart links have been added for this muscle yet.',
+              AppLocalizations.of(context).anatomyNoBodyPartLinks,
               style: theme.textTheme.bodyMedium,
             )
           else
@@ -346,19 +369,19 @@ class _MuscleHeader extends StatelessWidget {
                       .toList(),
             ),
           const Divider(height: 32),
-          Text('Exercises', style: theme.textTheme.titleMedium),
+          Text(
+            AppLocalizations.of(context).anatomyExercises,
+            style: theme.textTheme.titleMedium,
+          ),
           if (data.definitions.isEmpty) ...[
             const SizedBox(height: 12),
-            Text('No exercises are currently linked to ${muscle.name}.'),
+            Text(
+              AppLocalizations.of(context).anatomyNoExercisesFor(muscle.name),
+            ),
           ],
         ],
       ),
     );
-  }
-
-  String _exerciseCountLabel(int count) {
-    if (count == 1) return '1 linked exercise';
-    return '$count linked exercises';
   }
 
   String _initialFor(String value) {
@@ -366,11 +389,11 @@ class _MuscleHeader extends StatelessWidget {
     return trimmed.isEmpty ? '?' : trimmed[0].toUpperCase();
   }
 
-  String _rangeLabel(VolumeBoundaries? bounds) {
-    if (bounds == null) return 'Not set';
+  String _rangeLabel(AppLocalizations strings, VolumeBoundaries? bounds) {
+    if (bounds == null) return strings.anatomyNotSet;
     final min = bounds.minEffective.toStringAsFixed(0);
     final max = bounds.maxRecoverable.toStringAsFixed(0);
-    return '$min-$max sets';
+    return strings.anatomySetRange(min, max);
   }
 }
 
@@ -411,13 +434,13 @@ class _ExerciseMetadata extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     final equipment =
         definition.equipmentList.isEmpty
-            ? 'No equipment listed'
+            ? AppLocalizations.of(context).anatomyNoEquipment
             : definition.equipmentList
                 .map((equipment) => equipment.name)
                 .join(', ');
     final bodyParts =
         definition.bodyParts.isEmpty
-            ? 'No bodyparts listed'
+            ? AppLocalizations.of(context).anatomyNoBodyPartsListed
             : definition.bodyParts.map((bodyPart) => bodyPart.name).join(', ');
 
     return Padding(
@@ -436,7 +459,9 @@ class _ExerciseMetadata extends StatelessWidget {
           ),
           const SizedBox(height: 3),
           Text(
-            'Rank $muscleRank for this muscle - $bodyParts',
+            AppLocalizations.of(
+              context,
+            ).anatomyRankForMuscle(muscleRank, bodyParts),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(

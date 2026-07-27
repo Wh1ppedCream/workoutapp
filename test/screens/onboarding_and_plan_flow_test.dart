@@ -1,4 +1,6 @@
+import 'package:env_test/l10n/generated/app_localizations.dart';
 import 'package:env_test/models/models.dart';
+import 'package:env_test/providers/locale_preference_provider.dart';
 import 'package:env_test/providers/onboarding_provider.dart';
 import 'package:env_test/providers/preset_session.dart';
 import 'package:env_test/providers/unit_preference_provider.dart';
@@ -20,6 +22,51 @@ void main() {
     });
   });
 
+  testWidgets('first onboarding page changes and persists its language', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(430, 932));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          Provider<AppRepository>.value(value: _OnboardingRepository()),
+          ChangeNotifierProvider(create: (_) => UnitPreferenceProvider()),
+          ChangeNotifierProvider(create: (_) => LocalePreferenceProvider()),
+        ],
+        child: Consumer<LocalePreferenceProvider>(
+          builder: (context, localePreferences, _) {
+            return MaterialApp(
+              locale: localePreferences.locale,
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: const OnboardingFlow(),
+            );
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Welcome to Tonos'), findsOneWidget);
+    await tester.tap(find.widgetWithText(ChoiceChip, 'Français (Canada)'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Bienvenue dans Tonos'), findsOneWidget);
+    expect(find.widgetWithText(FilledButton, 'Suivant'), findsOneWidget);
+    final preferences = await SharedPreferences.getInstance();
+    expect(
+      preferences.getString(LocalePreferenceProvider.preferenceKey),
+      'canadianFrench',
+    );
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Suivant'));
+    await tester.pumpAndSettle();
+    expect(find.text('Parlez-nous de vous'), findsOneWidget);
+    expect(find.text('Renseignements'), findsOneWidget);
+  });
+
   testWidgets('onboarding converts an entered weight when units change', (
     tester,
   ) async {
@@ -32,8 +79,18 @@ void main() {
         providers: [
           Provider<AppRepository>.value(value: repository),
           ChangeNotifierProvider(create: (_) => UnitPreferenceProvider()),
+          ChangeNotifierProvider(create: (_) => LocalePreferenceProvider()),
         ],
-        child: const MaterialApp(home: OnboardingFlow()),
+        child: Consumer<LocalePreferenceProvider>(
+          builder: (context, localePreferences, _) {
+            return MaterialApp(
+              locale: localePreferences.locale,
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: const OnboardingFlow(),
+            );
+          },
+        ),
       ),
     );
     await tester.pumpAndSettle();
@@ -69,11 +126,19 @@ void main() {
         providers: [
           Provider<AppRepository>.value(value: repository),
           ChangeNotifierProvider(create: (_) => UnitPreferenceProvider()),
+          ChangeNotifierProvider(create: (_) => LocalePreferenceProvider()),
           ChangeNotifierProvider(create: (_) => OnboardingConfig()..init()),
         ],
-        child: MaterialApp(
-          home: const OnboardingFlow(),
-          routes: {'/main': (_) => const Scaffold(body: Text('Home'))},
+        child: Consumer<LocalePreferenceProvider>(
+          builder: (context, localePreferences, _) {
+            return MaterialApp(
+              locale: localePreferences.locale,
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: const OnboardingFlow(),
+              routes: {'/main': (_) => const Scaffold(body: Text('Home'))},
+            );
+          },
         ),
       ),
     );
@@ -151,6 +216,8 @@ class _PlanTestApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => UnitPreferenceProvider()),
       ],
       child: MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: Builder(
           builder:
               (context) => Scaffold(

@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/generated/app_localizations.dart';
 import '../providers/active_session.dart';
 import '../services/tutorial_state_store.dart';
 import '../widgets/exercise_progress_section.dart';
@@ -78,23 +79,29 @@ class _MeasurementsTrendsPageState extends State<MeasurementsTrendsPage> {
           GuidedTutorialStep(
             targetKey: _workoutReportTutorialKey,
             icon: Icons.show_chart_outlined,
-            title: 'Workout report',
+            title:
+                AppLocalizations.of(context).progressTutorialWorkoutReportTitle,
             body:
-                'This tracks workout count, training time, and volume over different time ranges. Tap a metric to change what the graph shows.',
+                AppLocalizations.of(context).progressTutorialWorkoutReportBody,
           ),
           GuidedTutorialStep(
             targetKey: _exerciseProgressTutorialKey,
             icon: Icons.trending_up,
-            title: 'Exercise progress',
+            title:
+                AppLocalizations.of(
+                  context,
+                ).progressTutorialExerciseProgressTitle,
             body:
-                'Track strength trends for selected exercises. Use the edit tile to add or remove exercises from this dashboard.',
+                AppLocalizations.of(
+                  context,
+                ).progressTutorialExerciseProgressBody,
           ),
           GuidedTutorialStep(
             targetKey: _healthTrendsTutorialKey,
             icon: Icons.monitor_heart_outlined,
-            title: 'Health trends',
-            body:
-                'Log bodyweight and custom measurements here, then watch those measurements change over time.',
+            title:
+                AppLocalizations.of(context).progressTutorialHealthTrendsTitle,
+            body: AppLocalizations.of(context).progressTutorialHealthTrendsBody,
           ),
         ],
       );

@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../l10n/generated/app_localizations.dart';
 import '../providers/active_session.dart';
 import '../screens/exercise/session_screen.dart'; // adjust path if needed
 import '../services/workout_exit_preferences.dart';
@@ -21,6 +22,7 @@ class _OngoingSessionFabState extends State<OngoingSessionFab> {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     if (!_open) {
       return FloatingActionButton(
         backgroundColor: Colors.green,
@@ -35,7 +37,7 @@ class _OngoingSessionFabState extends State<OngoingSessionFab> {
         FloatingActionButton.extended(
           backgroundColor: Colors.green,
           icon: const Icon(Icons.play_arrow),
-          label: const Text('Resume'),
+          label: Text(strings.sessionResume),
           onPressed: () {
             setState(() => _open = false);
             Navigator.of(
@@ -47,7 +49,7 @@ class _OngoingSessionFabState extends State<OngoingSessionFab> {
         FloatingActionButton.extended(
           backgroundColor: Colors.red,
           icon: const Icon(Icons.exit_to_app),
-          label: const Text('Exit'),
+          label: Text(strings.sessionExit),
           onPressed:
               activeSession.isFinishing
                   ? null
@@ -90,36 +92,39 @@ class _OngoingSessionFabState extends State<OngoingSessionFab> {
         SnackBar(
           content: Text(
             behavior == WorkoutExitBehavior.saveCompleted
-                ? 'Completed work saved to Logbook.'
-                : 'Workout cancelled.',
+                ? AppLocalizations.of(context).sessionCompletedSaved
+                : AppLocalizations.of(context).sessionCancelled,
           ),
         ),
       );
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Could not end workout: $error')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).sessionEndFailed('$error'),
+          ),
+        ),
+      );
     }
   }
 
   Future<bool?> _showDiscardConfirmation() {
+    final strings = AppLocalizations.of(context);
     return showDialog<bool>(
       context: context,
       builder:
           (dialogContext) => AlertDialog(
-            title: const Text('Cancel workout?'),
-            content: const Text(
-              'This removes the ongoing workout without adding it to your history.',
-            ),
+            title: Text(strings.sessionCancelQuestion),
+            content: Text(strings.sessionCancelBody),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(dialogContext, false),
-                child: const Text('Keep Workout'),
+                child: Text(strings.sessionKeepWorkout),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(dialogContext, true),
-                child: const Text('Cancel Workout'),
+                child: Text(strings.sessionCancelWorkout),
               ),
             ],
           ),
@@ -128,6 +133,7 @@ class _OngoingSessionFabState extends State<OngoingSessionFab> {
 
   Future<_WorkoutExitDecision?> _showCompletedWorkDialog() {
     var remember = false;
+    final strings = AppLocalizations.of(context);
     return showDialog<_WorkoutExitDecision>(
       context: context,
       builder:
@@ -169,7 +175,7 @@ class _OngoingSessionFabState extends State<OngoingSessionFab> {
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
-                                'End workout?',
+                                strings.sessionEndQuestion,
                                 style: textTheme.titleLarge?.copyWith(
                                   fontWeight: FontWeight.w700,
                                 ),
@@ -188,7 +194,7 @@ class _OngoingSessionFabState extends State<OngoingSessionFab> {
                                 ),
                               ),
                           icon: const Icon(Icons.delete_outline, size: 18),
-                          label: const Text('Cancel and Delete'),
+                          label: Text(strings.sessionCancelDelete),
                           style: OutlinedButton.styleFrom(
                             minimumSize: const Size.fromHeight(48),
                             foregroundColor: colors.error,
@@ -208,7 +214,7 @@ class _OngoingSessionFabState extends State<OngoingSessionFab> {
                                 ),
                               ),
                           icon: const Icon(Icons.save_outlined, size: 18),
-                          label: const Text('End and Save Workout'),
+                          label: Text(strings.sessionEndSave),
                           style: FilledButton.styleFrom(
                             minimumSize: const Size.fromHeight(48),
                           ),
@@ -228,13 +234,13 @@ class _OngoingSessionFabState extends State<OngoingSessionFab> {
                             ),
                             controlAffinity: ListTileControlAffinity.leading,
                             title: Text(
-                              'Remember choice',
+                              strings.sessionRememberChoice,
                               style: textTheme.bodyMedium?.copyWith(
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
                             subtitle: Text(
-                              'Change this later in Gym & Workout Settings.',
+                              strings.sessionRememberChoiceBody,
                               style: textTheme.bodySmall?.copyWith(
                                 color: colors.onSurfaceVariant,
                               ),

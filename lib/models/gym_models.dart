@@ -1,6 +1,5 @@
 // File: lib/models/gym_models.dart
 
-
 /// Represents a workout space with its own presets and equipment list.
 class GymProfile {
   final int? id;

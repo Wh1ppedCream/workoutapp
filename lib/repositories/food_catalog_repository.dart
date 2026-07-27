@@ -29,7 +29,8 @@ class LocalFoodCatalogSource implements FoodCatalogSource {
   Future<Food?> getFood(int id) => _dbHelper.getFood(id);
 
   @override
-  Future<Food?> getFoodByBarcode(String code) => _dbHelper.getFoodByBarcode(code);
+  Future<Food?> getFoodByBarcode(String code) =>
+      _dbHelper.getFoodByBarcode(code);
 
   @override
   Future<List<FoodPortion>> getPortionsForFood(int foodId) =>
@@ -41,10 +42,10 @@ class LocalFoodCatalogSource implements FoodCatalogSource {
     required int portionId,
     double quantity = 1.0,
   }) => _dbHelper.calcForPortion(
-        foodId: foodId,
-        portionId: portionId,
-        quantity: quantity,
-      );
+    foodId: foodId,
+    portionId: portionId,
+    quantity: quantity,
+  );
 
   @override
   Future<Map<String, double>> getMacroPer100gLegacySafe(int foodId) =>
@@ -53,7 +54,7 @@ class LocalFoodCatalogSource implements FoodCatalogSource {
 
 class FoodCatalogRepository implements FoodCatalogSource {
   FoodCatalogRepository({FoodCatalogSource? source})
-      : _source = source ?? LocalFoodCatalogSource(DatabaseHelper());
+    : _source = source ?? LocalFoodCatalogSource(DatabaseHelper());
 
   final FoodCatalogSource _source;
 
@@ -77,10 +78,10 @@ class FoodCatalogRepository implements FoodCatalogSource {
     required int portionId,
     double quantity = 1.0,
   }) => _source.calcForPortion(
-        foodId: foodId,
-        portionId: portionId,
-        quantity: quantity,
-      );
+    foodId: foodId,
+    portionId: portionId,
+    quantity: quantity,
+  );
 
   @override
   Future<Map<String, double>> getMacroPer100gLegacySafe(int foodId) =>

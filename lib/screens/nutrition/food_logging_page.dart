@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/generated/app_localizations.dart';
 import '../../models/nutrition_models.dart';
 import '../../repositories/app_repository.dart';
 import '../../providers/nutrition_profile.dart';
@@ -11,7 +12,6 @@ import '../../providers/nutrition_profile.dart';
 import 'food_customization_page.dart';
 
 import 'barcode_scanner_page.dart';
-
 
 class _PlateItem {
   final Food food;
@@ -57,7 +57,7 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
   bool _searching = false;
   List<Food> _results = [];
 
-  late final AppRepository _repo = widget.repository ?? AppRepository();
+  AppRepository get _repo => widget.repository ?? context.read<AppRepository>();
 
   final Map<int, Future<_MacroPreview>> _previewFuture = {};
 
@@ -77,8 +77,6 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
   String _digitsOnly(String s) => s.replaceAll(RegExp(r'\D'), '');
   bool _instantLogOnScan = true;
 
-
-
   // Pre-planned tab state (which meal to log recipes to)
   MealType _plannedMeal = MealType.dinner;
 
@@ -94,8 +92,12 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final viewingToday =
-        p.day.year == today.year && p.day.month == today.month && p.day.day == today.day;
-    if (!viewingToday) return MealType.lunch; // neutral default for past/future days
+        p.day.year == today.year &&
+        p.day.month == today.month &&
+        p.day.day == today.day;
+    if (!viewingToday) {
+      return MealType.lunch; // neutral default for past/future days
+    }
     final h = now.hour;
     if (h < 11) return MealType.breakfast;
     if (h < 17) return MealType.lunch;
@@ -105,7 +107,8 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
   DateTime _defaultLogTimeFor(NutritionProfile p) {
     final d = p.day;
     final now = DateTime.now();
-    final isToday = d.year == now.year && d.month == now.month && d.day == now.day;
+    final isToday =
+        d.year == now.year && d.month == now.month && d.day == now.day;
     return isToday ? now : DateTime(d.year, d.month, d.day, 12);
   }
 
@@ -173,10 +176,10 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
 
     if (portionId != null) {
       final m = await context.read<NutritionProfile>().previewPortion(
-            foodId: it.food.id!,
-            portionId: portionId,
-            quantity: qty,
-          );
+        foodId: it.food.id!,
+        portionId: portionId,
+        quantity: qty,
+      );
       final kcal = _pick(m, ['kcal', 'ENERGY_KCAL', 'KCAL']);
       final p = _pick(m, ['protein_g', 'PROTEIN', 'PROTEIN_G']);
       final f = _pick(m, ['fat_g', 'FAT', 'FAT_G']);
@@ -187,10 +190,11 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
     // Fallback: virtual “100 g” row
     final per100 = await _getPer100(it.food.id!);
     final grams = _gramsForOne(it.food, it.portion) * qty;
-    double k(List<String> keys) => keys
-        .map((k) => per100[k])
-        .whereType<num>()
-        .fold<double>(0, (a, b) => a + b.toDouble()) *
+    double k(List<String> keys) =>
+        keys
+            .map((k) => per100[k])
+            .whereType<num>()
+            .fold<double>(0, (a, b) => a + b.toDouble()) *
         (grams / 100.0);
 
     return _LineMacros(
@@ -202,63 +206,70 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
   }
 
   Future<_MacroPreview> _loadPreview(Food f) async {
-  if (f.id == null) return _MacroPreview.empty('—');
+    if (f.id == null) return _MacroPreview.empty('—');
 
-  // ✅ Cache provider before any await
-  final prof = context.read<NutritionProfile>();
+    // ✅ Cache provider before any await
+    final prof = context.read<NutritionProfile>();
 
-  // choose portion (default → first → 100 g fallback)
-  final portions = await prof.portionsFor(f.id!); // (was: context.read(...).portionsFor)
-  FoodPortion? portion = portions.isEmpty
-      ? null
-      : portions.firstWhere(
-          (p) => p.isDefault == true,
-          orElse: () => portions.first,
-        );
+    // choose portion (default → first → 100 g fallback)
+    final portions = await prof.portionsFor(
+      f.id!,
+    ); // (was: context.read(...).portionsFor)
+    FoodPortion? portion =
+        portions.isEmpty
+            ? null
+            : portions.firstWhere(
+              (p) => p.isDefault == true,
+              orElse: () => portions.first,
+            );
 
-  // fallback virtual "100 g"
-  portion ??= FoodPortion(
-    id: null,
-    foodId: f.id!,
-    measureName: '100 g',
-    gramWeight: 100,
-    mlVolume: null,
-    isDefault: true,
-  );
-
-  // If it's a real portion, compute 1× portion:
-  if (portion.id != null) {
-    final m = await prof.previewPortion( // (was: context.read(...).previewPortion)
+    // fallback virtual "100 g"
+    portion ??= FoodPortion(
+      id: null,
       foodId: f.id!,
-      portionId: portion.id!,
-      quantity: 1.0,
+      measureName: '100 g',
+      gramWeight: 100,
+      mlVolume: null,
+      isDefault: true,
     );
-    final p = _pick(m, ['protein_g', 'PROTEIN', 'PROTEIN_G']).round();
-    final s = _pick(m, ['fat_g', 'FAT', 'FAT_G']).round();
-    final c = _pick(m, ['carbs_g', 'CARB', 'CARB_G']).round();
+
+    // If it's a real portion, compute 1× portion:
+    if (portion.id != null) {
+      final m = await prof.previewPortion(
+        // (was: context.read(...).previewPortion)
+        foodId: f.id!,
+        portionId: portion.id!,
+        quantity: 1.0,
+      );
+      final p = _pick(m, ['protein_g', 'PROTEIN', 'PROTEIN_G']).round();
+      final s = _pick(m, ['fat_g', 'FAT', 'FAT_G']).round();
+      final c = _pick(m, ['carbs_g', 'CARB', 'CARB_G']).round();
+      return _MacroPreview(
+        proteinG: p,
+        fatG: s,
+        carbG: c,
+        portionLabel: portion.measureName,
+      );
+    }
+
+    // Fallback: virtual “100 g” math
+    final per100 = await prof.macroPer100g(
+      f.id!,
+    ); // (was: context.read(...).macroPer100g)
+    double pick(List<String> keys) => keys
+        .map((k) => per100[k])
+        .whereType<num>()
+        .fold<double>(0, (a, b) => a + b.toDouble());
+    final p100 = pick(['PROTEIN', 'PROTEIN_G']);
+    final f100 = pick(['FAT', 'FAT_G']);
+    final c100 = pick(['CARB', 'CARB_G']);
     return _MacroPreview(
-      proteinG: p,
-      fatG: s,
-      carbG: c,
+      proteinG: p100.round(),
+      fatG: f100.round(),
+      carbG: c100.round(),
       portionLabel: portion.measureName,
     );
   }
-
-  // Fallback: virtual “100 g” math
-  final per100 = await prof.macroPer100g(f.id!); // (was: context.read(...).macroPer100g)
-  double pick(List<String> keys) =>
-      keys.map((k) => per100[k]).whereType<num>().fold<double>(0, (a, b) => a + b.toDouble());
-  final p100 = pick(['PROTEIN', 'PROTEIN_G']);
-  final f100 = pick(['FAT', 'FAT_G']);
-  final c100 = pick(['CARB', 'CARB_G']);
-  return _MacroPreview(
-    proteinG: p100.round(),
-    fatG: f100.round(),
-    carbG: c100.round(),
-    portionLabel: portion.measureName,
-  );
-}
-
 
   String _fmtInt(int? v) => v == null ? '--' : v.toString();
 
@@ -278,8 +289,8 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
     _searchCtrl.dispose();
     _barcodeCtrl.dispose();
     _previewFuture.clear();
- _portionCache.clear();
- _per100Cache.clear();
+    _portionCache.clear();
+    _per100Cache.clear();
     super.dispose();
   }
 
@@ -307,7 +318,10 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
         _previewFuture.clear();
       });
       try {
-        final rows = await context.read<NutritionProfile>().searchFoods(q, limit: 50);
+        final rows = await context.read<NutritionProfile>().searchFoods(
+          q,
+          limit: 50,
+        );
         if (!mounted || myEpoch != _searchEpoch) return; // drop stale result
         setState(() => _results = rows);
       } finally {
@@ -321,6 +335,7 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
   @override
   Widget build(BuildContext context) {
     final p = context.watch<NutritionProfile>();
+    final strings = AppLocalizations.of(context);
 
     // One-time defaults
     if (!_didInitScanMeal) {
@@ -341,54 +356,70 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
     final fatTgt = (p.activeGoal?.fatG ?? 0).round();
     final carb = (p.totals?.carbsG ?? 0).round();
     final carbTgt = (p.activeGoal?.carbsG ?? 0).round();
-    final plateSummaryFuture =
-        _plate.isEmpty ? null : _computePlateSummary();
+    final plateSummaryFuture = _plate.isEmpty ? null : _computePlateSummary();
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Food Logging'),
+        title: Text(strings.foodLoggingTitle),
         actions: [
           if (_plate.isNotEmpty)
             Builder(
-              builder: (ctx) => FutureBuilder<_PlateSummary>(
-                future: plateSummaryFuture,
-                builder: (context, snap) {
-                  final s = snap.data;
-                  final top = s == null ? '… kcal' : '${s.kcal} kcal';
-                  final bottom = s == null ? '…P …F …C' : '${s.p}P ${s.f}F ${s.c}C';
+              builder:
+                  (ctx) => FutureBuilder<_PlateSummary>(
+                    future: plateSummaryFuture,
+                    builder: (context, snap) {
+                      final s = snap.data;
+                      final top = s == null ? '… kcal' : '${s.kcal} kcal';
+                      final bottom =
+                          s == null ? '…P …F …C' : '${s.p}P ${s.f}F ${s.c}C';
 
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: InkWell(
-                      onTap: () => Scaffold.of(ctx).openEndDrawer(),
-                      borderRadius: BorderRadius.circular(8),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.green),
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: InkWell(
+                          onTap: () => Scaffold.of(ctx).openEndDrawer(),
                           borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: SizedBox(
-                          height: kToolbarHeight - 12,
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            alignment: Alignment.centerRight,
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(top, style: Theme.of(context).textTheme.bodyMedium),
-                                const SizedBox(height: 2),
-                                Text(bottom, style: Theme.of(context).textTheme.labelSmall),
-                              ],
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.green),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: SizedBox(
+                              height: kToolbarHeight - 12,
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerRight,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      top,
+                                      style:
+                                          Theme.of(
+                                            context,
+                                          ).textTheme.bodyMedium,
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      bottom,
+                                      style:
+                                          Theme.of(
+                                            context,
+                                          ).textTheme.labelSmall,
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ),
-                  );
-                },
-              ),
+                      );
+                    },
+                  ),
             ),
         ],
       ),
@@ -407,11 +438,15 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(s == null ? '— kcal' : '${s.kcal} kcal',
-                            style: Theme.of(context).textTheme.titleMedium),
+                        Text(
+                          s == null ? '— kcal' : '${s.kcal} kcal',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
                         const SizedBox(height: 2),
-                        Text(s == null ? '—P —F —C' : '${s.p}P ${s.f}F ${s.c}C',
-                            style: Theme.of(context).textTheme.labelMedium),
+                        Text(
+                          s == null ? '—P —F —C' : '${s.p}P ${s.f}F ${s.c}C',
+                          style: Theme.of(context).textTheme.labelMedium,
+                        ),
                       ],
                     );
                   },
@@ -430,30 +465,42 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                       children: [
                         const Icon(Icons.schedule, size: 18),
                         const SizedBox(width: 8),
-                        const Text('Log time:'),
+                        Text(strings.foodLogTime),
                         const SizedBox(width: 8),
                         OutlinedButton(
-  onPressed: () async {
-    final t0 = TimeOfDay(hour: effective.hour, minute: effective.minute);
-    final picked = await showTimePicker(context: ctx, initialTime: t0);
+                          onPressed: () async {
+                            final t0 = TimeOfDay(
+                              hour: effective.hour,
+                              minute: effective.minute,
+                            );
+                            final picked = await showTimePicker(
+                              context: ctx,
+                              initialTime: t0,
+                            );
 
-    // ✅ Guard State.context use (setState) after the await:
-    if (!mounted) return;
+                            // ✅ Guard State.context use (setState) after the await:
+                            if (!mounted) return;
 
-    if (picked != null) {
-      final d = prof.day;
-      setState(() {
-        _plateLogAt = DateTime(d.year, d.month, d.day, picked.hour, picked.minute);
-      });
-    }
-  },
-  child: Text(_fmtHM(effective)),
-),
+                            if (picked != null) {
+                              final d = prof.day;
+                              setState(() {
+                                _plateLogAt = DateTime(
+                                  d.year,
+                                  d.month,
+                                  d.day,
+                                  picked.hour,
+                                  picked.minute,
+                                );
+                              });
+                            }
+                          },
+                          child: Text(_fmtHM(effective)),
+                        ),
                         const Spacer(),
                         if (_plateLogAt != null)
                           TextButton(
                             onPressed: () => setState(() => _plateLogAt = null),
-                            child: const Text('Reset'),
+                            child: Text(strings.commonReset),
                           ),
                       ],
                     );
@@ -493,18 +540,27 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                                     builder: (context, snap) {
                                       final m = snap.data;
                                       return Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
-                                          Text(it.food.name,
-                                              style: Theme.of(context).textTheme.bodyLarge,
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis),
+                                          Text(
+                                            it.food.name,
+                                            style:
+                                                Theme.of(
+                                                  context,
+                                                ).textTheme.bodyLarge,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
                                           const SizedBox(height: 2),
                                           Text(
                                             m == null
                                                 ? '… kcal • …P …F …C'
                                                 : '${m.kcalText()} • ${m.macroText()}',
-                                            style: Theme.of(context).textTheme.labelSmall,
+                                            style:
+                                                Theme.of(
+                                                  context,
+                                                ).textTheme.labelSmall,
                                           ),
                                         ],
                                       );
@@ -512,8 +568,9 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                                   ),
                                 ),
                                 IconButton(
-                                  tooltip: 'Remove',
-                                  onPressed: () => setState(() => _plate.removeAt(i)),
+                                  tooltip: strings.foodRemove,
+                                  onPressed:
+                                      () => setState(() => _plate.removeAt(i)),
                                   icon: const Icon(Icons.delete_outline),
                                 ),
                               ],
@@ -525,7 +582,8 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                             FutureBuilder<List<FoodPortion>>(
                               future: _getPortions(it.food.id!),
                               builder: (context, snap) {
-                                final portions = snap.data ?? const <FoodPortion>[];
+                                final portions =
+                                    snap.data ?? const <FoodPortion>[];
                                 final fallback = FoodPortion(
                                   id: null,
                                   foodId: it.food.id!,
@@ -534,36 +592,42 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                                   mlVolume: null,
                                   isDefault: portions.isEmpty,
                                 );
-                                final items = portions.isEmpty ? [fallback] : portions;
+                                final items =
+                                    portions.isEmpty ? [fallback] : portions;
 
                                 // Use identical instance from items (by id) or fallbacks
                                 FoodPortion? current =
                                     _matchPortionById(items, it.portion) ??
-                                        items.firstWhere(
-                                          (p) => p.isDefault == true,
-                                          orElse: () => items.first,
-                                        );
+                                    items.firstWhere(
+                                      (p) => p.isDefault == true,
+                                      orElse: () => items.first,
+                                    );
 
                                 return Row(
                                   children: [
-                                    const Text('Portion:'),
+                                    Text(strings.foodPortion),
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: DropdownButton<FoodPortion>(
                                         isExpanded: true,
                                         value: current,
-                                        items: items.map((p) {
-                                          final label = '${p.measureName}'
-                                              '${p.gramWeight != null ? ' • ${p.gramWeight!.round()} g' : ''}'
-                                              '${p.mlVolume != null ? ' • ${p.mlVolume!.round()} ml' : ''}';
-                                          return DropdownMenuItem(value: p, child: Text(label));
-                                        }).toList(),
+                                        items:
+                                            items.map((p) {
+                                              final label =
+                                                  '${p.measureName}'
+                                                  '${p.gramWeight != null ? ' • ${p.gramWeight!.round()} g' : ''}'
+                                                  '${p.mlVolume != null ? ' • ${p.mlVolume!.round()} ml' : ''}';
+                                              return DropdownMenuItem(
+                                                value: p,
+                                                child: Text(label),
+                                              );
+                                            }).toList(),
                                         onChanged: (v) {
                                           if (v == null) return;
                                           setState(() {
-   it.portion = v;
-   _mergeIfDuplicate(it);
- });
+                                            it.portion = v;
+                                            _mergeIfDuplicate(it);
+                                          });
                                         },
                                       ),
                                     ),
@@ -577,20 +641,23 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                             // Row 2b: Meal chooser (inline) + duplicate merge
                             Wrap(
                               spacing: 6,
-                              children: MealType.values.map((m) {
-                                final label = m.name[0].toUpperCase() + m.name.substring(1);
-                                final selected = it.meal == m;
-                                return ChoiceChip(
-                                  label: Text(label),
-                                  selected: selected,
-                                  onSelected: (_) {
-                                    setState(() {
-   it.meal = m;
-   _mergeIfDuplicate(it);
- });
-                                  },
-                                );
-                              }).toList(),
+                              children:
+                                  MealType.values.map((m) {
+                                    final label =
+                                        m.name[0].toUpperCase() +
+                                        m.name.substring(1);
+                                    final selected = it.meal == m;
+                                    return ChoiceChip(
+                                      label: Text(label),
+                                      selected: selected,
+                                      onSelected: (_) {
+                                        setState(() {
+                                          it.meal = m;
+                                          _mergeIfDuplicate(it);
+                                        });
+                                      },
+                                    );
+                                  }).toList(),
                             ),
 
                             const SizedBox(height: 8),
@@ -598,20 +665,28 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                             // Row 3: Quantity stepper
                             Row(
                               children: [
-                                const Text('Qty:'),
+                                Text(strings.foodQuantity),
                                 const SizedBox(width: 8),
                                 _qtyButton(
                                   icon: Icons.remove,
                                   onTap: () {
-                                    setState(() =>
-                                        it.qty = (it.qty - 1).clamp(0, 9999).toDouble());
+                                    setState(
+                                      () =>
+                                          it.qty =
+                                              (it.qty - 1)
+                                                  .clamp(0, 9999)
+                                                  .toDouble(),
+                                    );
                                   },
                                 ),
                                 SizedBox(
                                   width: 60,
                                   child: _QtyEditor(
                                     qty: it.qty,
-                                    onChanged: (v) => setState(() => it.qty = v < 0 ? 0 : v),
+                                    onChanged:
+                                        (v) => setState(
+                                          () => it.qty = v < 0 ? 0 : v,
+                                        ),
                                   ),
                                 ),
                                 _qtyButton(
@@ -623,11 +698,14 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                                 const SizedBox(width: 8),
                                 Flexible(
                                   child: Text(
-                                    '${_gramsForOne(it.food, it.portion).round()} g / unit',
+                                    strings.foodGramsPerUnit(
+                                      _gramsForOne(it.food, it.portion).round(),
+                                    ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     textAlign: TextAlign.right,
-                                    style: Theme.of(context).textTheme.labelSmall,
+                                    style:
+                                        Theme.of(context).textTheme.labelSmall,
                                   ),
                                 ),
                               ],
@@ -639,14 +717,19 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                               Wrap(
                                 spacing: 6,
                                 runSpacing: -6,
-                                children: it.tags
-                                    .map((t) => Chip(
-                                          label: Text('#$t'),
-                                          visualDensity: VisualDensity.compact,
-                                          materialTapTargetSize:
-                                              MaterialTapTargetSize.shrinkWrap,
-                                        ))
-                                    .toList(),
+                                children:
+                                    it.tags
+                                        .map(
+                                          (t) => Chip(
+                                            label: Text('#$t'),
+                                            visualDensity:
+                                                VisualDensity.compact,
+                                            materialTapTargetSize:
+                                                MaterialTapTargetSize
+                                                    .shrinkWrap,
+                                          ),
+                                        )
+                                        .toList(),
                               ),
                             ],
                           ],
@@ -665,18 +748,29 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                   child: SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
-                      icon: _logBusy
-                          ? const SizedBox(
-                              height: 16,
-                              width: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.check),
-                      label: Text(_logBusy ? 'Logging…' : 'Add All to Diary'),
+                      icon:
+                          _logBusy
+                              ? const SizedBox(
+                                height: 16,
+                                width: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                              : const Icon(Icons.check),
+                      label: Text(
+                        _logBusy
+                            ? strings.foodLogging
+                            : strings.foodAddAllToDiary,
+                      ),
                       onPressed:
-                          _plate.isEmpty || _logBusy ? null : () => _logPlateAndClose(context: context),
+                          _plate.isEmpty || _logBusy
+                              ? null
+                              : () => _logPlateAndClose(context: context),
                       style: ButtonStyle(
-                        padding: WidgetStateProperty.all(const EdgeInsets.symmetric(vertical: 14)),
+                        padding: WidgetStateProperty.all(
+                          const EdgeInsets.symmetric(vertical: 14),
+                        ),
                         shape: WidgetStateProperty.all(
                           RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
@@ -690,7 +784,7 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                     ),
                   ),
                 ),
-              )
+              ),
             ],
           ),
         ),
@@ -702,13 +796,24 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
               children: [
-                Expanded(child: _StatCard(label: 'Calories', value: '$kcal / $kcalTgt kcal')),
+                Expanded(
+                  child: _StatCard(
+                    label: 'Calories',
+                    value: '$kcal / $kcalTgt kcal',
+                  ),
+                ),
                 const SizedBox(width: 8),
-                Expanded(child: _StatCard(label: 'Protein', value: '$pro / $proTgt g')),
+                Expanded(
+                  child: _StatCard(label: 'Protein', value: '$pro / $proTgt g'),
+                ),
                 const SizedBox(width: 8),
-                Expanded(child: _StatCard(label: 'Carbs', value: '$carb / $carbTgt g')),
+                Expanded(
+                  child: _StatCard(label: 'Carbs', value: '$carb / $carbTgt g'),
+                ),
                 const SizedBox(width: 8),
-                Expanded(child: _StatCard(label: 'Fat', value: '$fat / $fatTgt g')),
+                Expanded(
+                  child: _StatCard(label: 'Fat', value: '$fat / $fatTgt g'),
+                ),
               ],
             ),
           ),
@@ -718,19 +823,32 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: ToggleButtons(
               isSelected: _tabs,
-              onPressed: (i) => setState(() {
-                for (var idx = 0; idx < _tabs.length; idx++) {
-                  _tabs[idx] = idx == i;
-                }
-              }),
+              onPressed:
+                  (i) => setState(() {
+                    for (var idx = 0; idx < _tabs.length; idx++) {
+                      _tabs[idx] = idx == i;
+                    }
+                  }),
               borderRadius: BorderRadius.circular(8),
               selectedColor: Colors.white,
               fillColor: Theme.of(context).primaryColor,
-              children: const [
-                Padding(padding: EdgeInsets.symmetric(horizontal: 12), child: Text('Scan')),
-                Padding(padding: EdgeInsets.symmetric(horizontal: 12), child: Text('Search')),
-                Padding(padding: EdgeInsets.symmetric(horizontal: 12), child: Text('Pre-Planned')),
-                Padding(padding: EdgeInsets.symmetric(horizontal: 12), child: Text('Custom')),
+              children: [
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  child: Text(AppLocalizations.of(context).foodTabScan),
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  child: Text(AppLocalizations.of(context).foodTabSearch),
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  child: Text(AppLocalizations.of(context).foodTabPlanned),
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  child: Text(AppLocalizations.of(context).foodTabCustom),
+                ),
               ],
             ),
           ),
@@ -739,13 +857,14 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
 
           // ─── Content ───────────────────────────────────────────────────────
           Expanded(
-            child: _tabs[0]
-                ? _buildScanTab(context)
-                : _tabs[1]
+            child:
+                _tabs[0]
+                    ? _buildScanTab(context)
+                    : _tabs[1]
                     ? _buildSearchList(context)
                     : _tabs[2]
-                        ? _buildPrePlanned(context)
-                        : _buildCustomList(context),
+                    ? _buildPrePlanned(context)
+                    : _buildCustomList(context),
           ),
 
           // ─── Bottom search & add row (search filter + close) ──────────────
@@ -757,20 +876,23 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                   child: TextField(
                     controller: _searchCtrl,
                     decoration: InputDecoration(
-                      hintText: 'Search for a food...',
+                      hintText: AppLocalizations.of(context).foodSearchHint,
                       prefixIcon: const Icon(Icons.search),
-                      suffixIcon: (_searchCtrl.text.isEmpty)
-                          ? null
-                          : IconButton(
-                              icon: const Icon(Icons.clear),
-                              onPressed: () {
-                                _searchCtrl.clear();
-                                _kickoffSearch('');
-                                FocusScope.of(context).unfocus();
-                                setState(() {}); // refresh suffixIcon state
-                              },
-                            ),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                      suffixIcon:
+                          (_searchCtrl.text.isEmpty)
+                              ? null
+                              : IconButton(
+                                icon: const Icon(Icons.clear),
+                                onPressed: () {
+                                  _searchCtrl.clear();
+                                  _kickoffSearch('');
+                                  FocusScope.of(context).unfocus();
+                                  setState(() {}); // refresh suffixIcon state
+                                },
+                              ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                     onChanged: (s) {
                       _kickoffSearch(s);
@@ -781,17 +903,22 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                 ),
                 const SizedBox(width: 8),
                 ElevatedButton(
-   onPressed: _logBusy
-       ? null
-       : (_plate.isEmpty
-           ? () => Navigator.of(context).maybePop()
-           : () => _logPlateAndClose(
-                 context: context,
-                 closeDrawerToo: false,
-                 popPageAfter: false,
-               )),
-   child: Text(_logBusy ? 'Logging…' : (_plate.isEmpty ? 'Close' : 'Log ${_plate.length}')),
- ),
+                  onPressed:
+                      _logBusy
+                          ? null
+                          : (_plate.isEmpty
+                              ? () => Navigator.of(context).maybePop()
+                              : () => _logPlateAndClose(
+                                context: context,
+                                closeDrawerToo: false,
+                                popPageAfter: false,
+                              )),
+                  child: Text(
+                    _logBusy
+                        ? 'Logging…'
+                        : (_plate.isEmpty ? 'Close' : 'Log ${_plate.length}'),
+                  ),
+                ),
               ],
             ),
           ),
@@ -811,7 +938,9 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
         }
         final recipes = snap.data ?? const <Recipe>[];
         if (recipes.isEmpty) {
-          return const Center(child: Text('No recent recipes yet.'));
+          return Center(
+            child: Text(AppLocalizations.of(context).foodNoRecentRecipes),
+          );
         }
         return ListView.separated(
           padding: const EdgeInsets.all(16),
@@ -822,40 +951,41 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
               // Meal selector header
               return Wrap(
                 spacing: 8,
-                children: MealType.values.map((m) {
-                  final label = m.name[0].toUpperCase() + m.name.substring(1);
-                  return ChoiceChip(
-                    label: Text(label),
-                    selected: _plannedMeal == m,
-                    onSelected: (_) => setState(() => _plannedMeal = m),
-                  );
-                }).toList(),
+                children:
+                    MealType.values.map((m) {
+                      final label =
+                          m.name[0].toUpperCase() + m.name.substring(1);
+                      return ChoiceChip(
+                        label: Text(label),
+                        selected: _plannedMeal == m,
+                        onSelected: (_) => setState(() => _plannedMeal = m),
+                      );
+                    }).toList(),
               );
             }
             final r = recipes[i - 1];
             return Card(
               child: ListTile(
                 title: Text(r.name),
-                subtitle: const Text('Recent recipe'),
+                subtitle: Text(AppLocalizations.of(context).foodRecentRecipe),
                 trailing: IconButton(
                   tooltip: 'Log 1× now',
                   icon: const Icon(Icons.playlist_add_check),
                   onPressed: () async {
-  final messenger = ScaffoldMessenger.of(context);
-  final prof = context.read<NutritionProfile>();
+                    final messenger = ScaffoldMessenger.of(context);
+                    final prof = context.read<NutritionProfile>();
 
-  await prof.addRecipeWithDefaultTime(
-    meal: _plannedMeal,
-    recipeId: r.id!,
-    quantity: 1.0,
-  );
+                    await prof.addRecipeWithDefaultTime(
+                      meal: _plannedMeal,
+                      recipeId: r.id!,
+                      quantity: 1.0,
+                    );
 
-  if (!mounted) return; // ✅ guard context use after await
-  messenger.showSnackBar(
-    SnackBar(content: Text('Logged "${r.name}"')),
-  );
-},
-
+                    if (!mounted) return; // ✅ guard context use after await
+                    messenger.showSnackBar(
+                      SnackBar(content: Text('Logged "${r.name}"')),
+                    );
+                  },
                 ),
               ),
             );
@@ -873,7 +1003,7 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
       return const Center(child: CircularProgressIndicator());
     }
     if (_results.isEmpty) {
-      return const Center(child: Text('No foods found.'));
+      return Center(child: Text(AppLocalizations.of(context).foodNoFoodsFound));
     }
     return ListView.separated(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -884,245 +1014,266 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
   }
 
   Widget _buildScanTab(BuildContext context) {
-
-  return Padding(
-    padding: const EdgeInsets.all(16),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        // Meal selector
-        Wrap(
-          spacing: 8,
-          children: MealType.values.map((m) {
-            final label = m.name[0].toUpperCase() + m.name.substring(1);
-            return ChoiceChip(
-              label: Text(label),
-              selected: _scanMeal == m,
-              onSelected: (_) => setState(() => _scanMeal = m),
-            );
-          }).toList(),
-        ),
-        const SizedBox(height: 12),
-
-        // New: instant-log toggle
-        SwitchListTile(
-          contentPadding: EdgeInsets.zero,
-          title: const Text('Instant log after scan'),
-          subtitle: const Text('If off, you can edit portion/qty before logging'),
-          value: _instantLogOnScan,
-          onChanged: (v) => setState(() => _instantLogOnScan = v),
-        ),
-        const SizedBox(height: 8),
-
-        // New: open camera
-        ElevatedButton.icon(
-          icon: const Icon(Icons.qr_code_scanner),
-          label: const Text('Open camera scanner'),
-          onPressed: _openCameraScanner,
-        ),
-        const SizedBox(height: 16),
-
-        // Existing manual fallback
-        TextField(
-          controller: _barcodeCtrl,
-          keyboardType: TextInputType.number,
-          decoration: InputDecoration(
-            labelText: 'Enter barcode manually',
-            hintText: 'e.g. 012345678905',
-            prefixIcon: const Icon(Icons.qr_code),
-            suffixIcon: (_barcodeCtrl.text.isEmpty)
-                ? null
-                : IconButton(
-                    icon: const Icon(Icons.clear),
-                    onPressed: () => setState(() => _barcodeCtrl.clear()),
-                  ),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+    final strings = AppLocalizations.of(context);
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Meal selector
+          Wrap(
+            spacing: 8,
+            children:
+                MealType.values.map((m) {
+                  final label = m.name[0].toUpperCase() + m.name.substring(1);
+                  return ChoiceChip(
+                    label: Text(label),
+                    selected: _scanMeal == m,
+                    onSelected: (_) => setState(() => _scanMeal = m),
+                  );
+                }).toList(),
           ),
-          onChanged: (_) => setState(() {}),
-          onSubmitted: (_) => _handleScanAdd(),
-        ),
-        const SizedBox(height: 12),
-        ElevatedButton.icon(
-          icon: _scanBusy
-              ? const SizedBox(
-                  height: 16,
-                  width: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Icon(Icons.check),
-          label: const Text('Log by barcode'),
-          onPressed: (_barcodeCtrl.text.trim().isEmpty || _scanBusy) ? null : _handleScanAdd,
-        ),
-        const SizedBox(height: 8),
-        const Text('Tip: camera scanning available above; manual entry stays as fallback.'),
-      ],
-    ),
-  );
-}
+          const SizedBox(height: 12),
 
+          // New: instant-log toggle
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text(strings.foodInstantLogAfterScan),
+            subtitle: Text(strings.foodInstantLogAfterScanSubtitle),
+            value: _instantLogOnScan,
+            onChanged: (v) => setState(() => _instantLogOnScan = v),
+          ),
+          const SizedBox(height: 8),
 
-// Add this helper somewhere near the scan handlers
-Future<void> _processBarcode(String normalized) async {
-  final messenger = ScaffoldMessenger.of(context);
-  final prof = context.read<NutritionProfile>();
+          // New: open camera
+          ElevatedButton.icon(
+            icon: const Icon(Icons.qr_code_scanner),
+            label: Text(strings.foodOpenCameraScanner),
+            onPressed: _openCameraScanner,
+          ),
+          const SizedBox(height: 16),
 
-  if (_instantLogOnScan) {
-    try {
-      await prof.addFoodByBarcodeWithDefaultTime(meal: _scanMeal, barcode: normalized);
-      if (!mounted) return;
-      messenger.showSnackBar(const SnackBar(content: Text('Logged item from barcode')));
-    } on StateError catch (e) {
-      if (mounted) messenger.showSnackBar(SnackBar(content: Text(e.message)));
-    } catch (e) {
-      if (mounted) messenger.showSnackBar(SnackBar(content: Text('Failed: $e')));
-    }
-    return;
+          // Existing manual fallback
+          TextField(
+            controller: _barcodeCtrl,
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(
+              labelText: strings.foodEnterBarcode,
+              hintText: strings.foodEnterBarcodeHint,
+              prefixIcon: const Icon(Icons.qr_code),
+              suffixIcon:
+                  (_barcodeCtrl.text.isEmpty)
+                      ? null
+                      : IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () => setState(() => _barcodeCtrl.clear()),
+                      ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            onChanged: (_) => setState(() {}),
+            onSubmitted: (_) => _handleScanAdd(),
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton.icon(
+            icon:
+                _scanBusy
+                    ? const SizedBox(
+                      height: 16,
+                      width: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                    : const Icon(Icons.check),
+            label: Text(strings.foodLogByBarcode),
+            onPressed:
+                (_barcodeCtrl.text.trim().isEmpty || _scanBusy)
+                    ? null
+                    : _handleScanAdd,
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Tip: camera scanning available above; manual entry stays as fallback.',
+          ),
+        ],
+      ),
+    );
   }
 
-  // Edit-first path
-  try {
-    final food = await _repo.foodCatalog.getFoodByBarcode(normalized);
-    if (!mounted) return;
+  // Add this helper somewhere near the scan handlers
+  Future<void> _processBarcode(String normalized) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final prof = context.read<NutritionProfile>();
+    final strings = AppLocalizations.of(context);
 
-    if (food != null) {
-      await _openAddSheet(context, food);
+    if (_instantLogOnScan) {
+      try {
+        await prof.addFoodByBarcodeWithDefaultTime(
+          meal: _scanMeal,
+          barcode: normalized,
+        );
+        if (!mounted) return;
+        messenger.showSnackBar(
+          SnackBar(content: Text(strings.foodBarcodeLogged)),
+        );
+      } on StateError catch (e) {
+        if (mounted) messenger.showSnackBar(SnackBar(content: Text(e.message)));
+      } catch (e) {
+        if (mounted) {
+          messenger.showSnackBar(
+            SnackBar(content: Text(strings.foodFailed(e.toString()))),
+          );
+        }
+      }
       return;
     }
 
-    final result = await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const FoodCustomizationPage()),
-    );
-    if (!mounted) return;
-
-    if (result is Map) {
-      final newId = await _saveCustomFoodFromPayloadReturningId(result);
-      await _repo.addBarcode(newId, normalized);
-
-      final created = await _repo.getFood(newId);
+    // Edit-first path
+    try {
+      final food = await _repo.foodCatalog.getFoodByBarcode(normalized);
       if (!mounted) return;
 
-      if (created != null) {
-        await _openAddSheet(context, created);
+      if (food != null) {
+        await _openAddSheet(context, food);
+        return;
       }
-      messenger.showSnackBar(
-        const SnackBar(content: Text('Custom food saved & barcode linked')),
+
+      final result = await Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (_) => const FoodCustomizationPage()));
+      if (!mounted) return;
+
+      if (result is Map) {
+        final newId = await _saveCustomFoodFromPayloadReturningId(result);
+        await _repo.addBarcode(newId, normalized);
+
+        final created = await _repo.getFood(newId);
+        if (!mounted) return;
+
+        if (created != null) {
+          await _openAddSheet(context, created);
+        }
+        messenger.showSnackBar(
+          SnackBar(content: Text(strings.foodCustomSavedBarcode)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        messenger.showSnackBar(
+          SnackBar(content: Text(strings.foodFailed(e.toString()))),
+        );
+      }
+    }
+  }
+
+  Future<void> _openCameraScanner() async {
+    if (!mounted) return;
+    final navigator = Navigator.of(context);
+
+    final code = await navigator.push<String>(
+      MaterialPageRoute(builder: (_) => const BarcodeScannerPage()),
+    );
+    if (!mounted || code == null) return;
+
+    final normalized = _digitsOnly(code);
+    if (normalized.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No valid barcode detected')),
+      );
+      return;
+    }
+    await _processBarcode(normalized);
+  }
+
+  // CHANGE RETURN TYPE to int and return the created ID
+  Future<int> _saveCustomFoodFromPayloadReturningId(Map payload) async {
+    final name = (payload['name'] as String?)?.trim();
+    if (name == null || name.isEmpty) {
+      throw StateError('Food must have a name');
+    }
+    final brand = (payload['brand'] as String?)?.trim();
+
+    // 1) Create the food shell
+    final foodId = await _repo.createCustomFood(name: name, brand: brand);
+
+    // persist density if provided
+    final dens = (payload['density_g_per_ml'] as num?)?.toDouble();
+    if (dens != null) {
+      await _repo.upsertFoodWithKeys(
+        id: foodId,
+        name: name,
+        brandName: brand,
+        densityGPerMl: dens,
       );
     }
-  } catch (e) {
-    if (mounted) messenger.showSnackBar(SnackBar(content: Text('Failed: $e')));
-  }
-}
 
-
-Future<void> _openCameraScanner() async {
-  if (!mounted) return;
-  final navigator = Navigator.of(context);
-
-  final code = await navigator.push<String>(
-     MaterialPageRoute(builder: (_) => const BarcodeScannerPage()),
-   );
-   if (!mounted || code == null) return;
-  
-  final normalized = _digitsOnly(code);
-  if (normalized.isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('No valid barcode detected')),
+    // 2) Per-100g nutrients from labels/codes/aliases
+    await _repo.saveExtendedPer100gFromPayload(
+      foodId,
+      Map<String, dynamic>.from(payload),
     );
-    return;
-  }
-  await _processBarcode(normalized);
-  
-}
 
-
-// CHANGE RETURN TYPE to int and return the created ID
-Future<int> _saveCustomFoodFromPayloadReturningId(Map payload) async {
-  final name = (payload['name'] as String?)?.trim();
-  if (name == null || name.isEmpty) {
-    throw StateError('Food must have a name');
-  }
-  final brand = (payload['brand'] as String?)?.trim();
-
-  // 1) Create the food shell
-  final foodId = await _repo.createCustomFood(name: name, brand: brand);
-
-  // persist density if provided
-  final dens = (payload['density_g_per_ml'] as num?)?.toDouble();
-  if (dens != null) {
-    await _repo.upsertFoodWithKeys(
-      id: foodId,
-      name: name,
-      brandName: brand,
-      densityGPerMl: dens,
-    );
-  }
-
-  // 2) Per-100g nutrients from labels/codes/aliases
-  await _repo.saveExtendedPer100gFromPayload(foodId, Map<String, dynamic>.from(payload));
-
-  // 3) Portions (or default 100 g)
-  final List portionsJson = (payload['portions'] as List?) ?? [];
-  if (portionsJson.isEmpty) {
-    await _repo.replacePortions(foodId, [
-      FoodPortion(
-        id: null,
-        foodId: foodId,
-        measureName: '100 g',
-        gramWeight: 100,
-        mlVolume: null,
-        isDefault: true,
-        listKind: 'basis',
-        sortOrder: 0,
-        amount: 100,
-        unit: 'g',
-        label: null,
-      ),
-    ]);
-  } else {
-    final portions = <FoodPortion>[];
-    for (final p in portionsJson) {
-      final m = Map<String, dynamic>.from(p as Map);
-      final rawDefault = m['is_default'];
-      final isDefault = rawDefault is bool
-          ? rawDefault
-          : (rawDefault is num ? rawDefault.toInt() == 1 : false);
-
-      portions.add(
+    // 3) Portions (or default 100 g)
+    final List portionsJson = (payload['portions'] as List?) ?? [];
+    if (portionsJson.isEmpty) {
+      await _repo.replacePortions(foodId, [
         FoodPortion(
           id: null,
           foodId: foodId,
-          measureName: m['measure_name'] as String,
-          gramWeight: (m['gram_weight'] as num?)?.toDouble(),
-          mlVolume: (m['ml_volume'] as num?)?.toDouble(),
-          isDefault: isDefault,
-          listKind: m['list_kind'] as String?,
-          sortOrder: m['sort_order'] as int?,
-          amount: (m['amount'] as num?)?.toDouble(),
-          unit: m['unit'] as String?,
-          label: m['label'] as String?,
+          measureName: '100 g',
+          gramWeight: 100,
+          mlVolume: null,
+          isDefault: true,
+          listKind: 'basis',
+          sortOrder: 0,
+          amount: 100,
+          unit: 'g',
+          label: null,
         ),
-      );
+      ]);
+    } else {
+      final portions = <FoodPortion>[];
+      for (final p in portionsJson) {
+        final m = Map<String, dynamic>.from(p as Map);
+        final rawDefault = m['is_default'];
+        final isDefault =
+            rawDefault is bool
+                ? rawDefault
+                : (rawDefault is num ? rawDefault.toInt() == 1 : false);
+
+        portions.add(
+          FoodPortion(
+            id: null,
+            foodId: foodId,
+            measureName: m['measure_name'] as String,
+            gramWeight: (m['gram_weight'] as num?)?.toDouble(),
+            mlVolume: (m['ml_volume'] as num?)?.toDouble(),
+            isDefault: isDefault,
+            listKind: m['list_kind'] as String?,
+            sortOrder: m['sort_order'] as int?,
+            amount: (m['amount'] as num?)?.toDouble(),
+            unit: m['unit'] as String?,
+            label: m['label'] as String?,
+          ),
+        );
+      }
+      await _repo.replacePortions(foodId, portions);
     }
-    await _repo.replacePortions(foodId, portions);
+
+    return foodId;
   }
-
-  return foodId;
-}
-
-
-
 
   Future<void> _handleScanAdd() async {
-  final code = _digitsOnly(_barcodeCtrl.text.trim());
-  if (code.isEmpty || _scanBusy) return;
-  setState(() => _scanBusy = true);
-  try {
-    await _processBarcode(code);
-    if (!mounted) return;
-    _barcodeCtrl.clear();
-  } finally {
-    if (mounted) setState(() => _scanBusy = false);
-  }
+    final code = _digitsOnly(_barcodeCtrl.text.trim());
+    if (code.isEmpty || _scanBusy) return;
+    setState(() => _scanBusy = true);
+    try {
+      await _processBarcode(code);
+      if (!mounted) return;
+      _barcodeCtrl.clear();
+    } finally {
+      if (mounted) setState(() => _scanBusy = false);
+    }
   }
 
   Widget _buildSuggestions(BuildContext context) {
@@ -1176,9 +1327,10 @@ Future<int> _saveCustomFoodFromPayloadReturningId(Map payload) async {
         subtitle: FutureBuilder<_MacroPreview>(
           future: _previewFuture[f.id!] ??= _loadPreview(f),
           builder: (context, snap) {
-            final m = (snap.connectionState == ConnectionState.done && snap.hasData)
-                ? snap.data!
-                : _MacroPreview.empty('—');
+            final m =
+                (snap.connectionState == ConnectionState.done && snap.hasData)
+                    ? snap.data!
+                    : _MacroPreview.empty('—');
             return Text(_macroLine(m));
           },
         ),
@@ -1186,15 +1338,18 @@ Future<int> _saveCustomFoodFromPayloadReturningId(Map payload) async {
           mainAxisSize: MainAxisSize.min,
           children: [
             Selector<NutritionProfile, bool>(
-  selector: (_, p) => p.isFavorite(f.id!),
-  builder: (ctx, isFav, _) => IconButton(
-    tooltip: isFav ? 'Unfavorite' : 'Favorite',
-    icon: Icon(isFav ? Icons.star : Icons.star_border),
-    color: isFav ? Colors.amber : Colors.grey,
-    visualDensity: VisualDensity.compact,
-    onPressed: () => ctx.read<NutritionProfile>().toggleFavorite(f.id!),
-  ),
-),
+              selector: (_, p) => p.isFavorite(f.id!),
+              builder:
+                  (ctx, isFav, _) => IconButton(
+                    tooltip: isFav ? 'Unfavorite' : 'Favorite',
+                    icon: Icon(isFav ? Icons.star : Icons.star_border),
+                    color: isFav ? Colors.amber : Colors.grey,
+                    visualDensity: VisualDensity.compact,
+                    onPressed:
+                        () =>
+                            ctx.read<NutritionProfile>().toggleFavorite(f.id!),
+                  ),
+            ),
             IconButton(
               tooltip: 'Customize food',
               icon: const Icon(Icons.settings),
@@ -1246,7 +1401,9 @@ Future<int> _saveCustomFoodFromPayloadReturningId(Map payload) async {
               final messenger = ScaffoldMessenger.of(context);
 
               final result = await Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const FoodCustomizationPage()),
+                MaterialPageRoute(
+                  builder: (_) => const FoodCustomizationPage(),
+                ),
               );
 
               if (result is Map) {
@@ -1265,79 +1422,81 @@ Future<int> _saveCustomFoodFromPayloadReturningId(Map payload) async {
     );
   }
 
-
   Future<void> _quickAddOne(Food f) async {
-  // ✅ Cache provider & compute meal before any await
-  final prof = context.read<NutritionProfile>();
-  final meal = _defaultMealForNow(prof);
+    // ✅ Cache provider & compute meal before any await
+    final prof = context.read<NutritionProfile>();
+    final meal = _defaultMealForNow(prof);
 
-  final portions = await _getPortions(f.id!);
-  if (!mounted) return;
+    final portions = await _getPortions(f.id!);
+    if (!mounted) return;
 
-  // pick default → first → virtual "100 g"
-  FoodPortion? portion;
-  if (portions.isEmpty) {
-    portion = FoodPortion(
-      id: null,
-      foodId: f.id!,
-      measureName: '100 g',
-      gramWeight: 100,
-      mlVolume: null,
-      isDefault: true,
-    );
-  } else {
-    portion = portions.firstWhere(
-      (p) => p.isDefault == true,
-      orElse: () => portions.first,
-    );
+    // pick default → first → virtual "100 g"
+    FoodPortion? portion;
+    if (portions.isEmpty) {
+      portion = FoodPortion(
+        id: null,
+        foodId: f.id!,
+        measureName: '100 g',
+        gramWeight: 100,
+        mlVolume: null,
+        isDefault: true,
+      );
+    } else {
+      portion = portions.firstWhere(
+        (p) => p.isDefault == true,
+        orElse: () => portions.first,
+      );
+    }
+
+    setState(() {
+      final keyId = portion?.id ?? -1;
+      final idx = _plate.indexWhere(
+        (x) =>
+            x.food.id == f.id &&
+            (x.portion?.id ?? -1) == keyId &&
+            x.meal == meal,
+      );
+      if (idx >= 0) {
+        _plate[idx].qty += 1.0;
+      } else {
+        _plate.add(_PlateItem(food: f, portion: portion, qty: 1.0, meal: meal));
+      }
+    });
   }
 
-  setState(() {
-    final keyId = portion?.id ?? -1;
-    final idx = _plate.indexWhere(
-      (x) => x.food.id == f.id && (x.portion?.id ?? -1) == keyId && x.meal == meal,
-    );
-    if (idx >= 0) {
-      _plate[idx].qty += 1.0;
-    } else {
-      _plate.add(_PlateItem(food: f, portion: portion, qty: 1.0, meal: meal));
-    }
-  });
-}
-
-
-  Future<void> _openAddSheet(BuildContext context, Food food) async {    
+  Future<void> _openAddSheet(BuildContext context, Food food) async {
     final prof = context.read<NutritionProfile>();
     MealType meal = _defaultMealForNow(prof);
 
     final portions = await _getPortions(food.id!);
 
     // ✅ Guard context usage after the async gap
-   if (!context.mounted) return;
+    if (!context.mounted) return;
 
     // Choose default portion if flagged; otherwise first; fallback to "100 g"
     FoodPortion? selected = portions.firstWhere(
       (p) => p.isDefault == true,
-      orElse: () => portions.isNotEmpty
-          ? portions.first
-          : FoodPortion(
-              id: null,
-              foodId: food.id!,
-              measureName: '100 g',
-              gramWeight: 100,
-              mlVolume: null,
-              isDefault: true,
-            ),
+      orElse:
+          () =>
+              portions.isNotEmpty
+                  ? portions.first
+                  : FoodPortion(
+                    id: null,
+                    foodId: food.id!,
+                    measureName: '100 g',
+                    gramWeight: 100,
+                    mlVolume: null,
+                    isDefault: true,
+                  ),
     );
-
 
     double qty = 1.0;
     String? note;
     String tagsText = ''; // NEW: capture tags input
 
     await showModalBottomSheet(
-    context: context, // ok to pass context here
-    isScrollControlled: true,
+      context: context, // ok to pass context here
+      isScrollControlled: true,
       builder: (ctx) {
         final navigator = Navigator.of(ctx);
         return Padding(
@@ -1358,15 +1517,17 @@ Future<int> _saveCustomFoodFromPayloadReturningId(Map payload) async {
                   // Meal chips
                   Wrap(
                     spacing: 8,
-                    children: MealType.values.map((m) {
-                      final selectedChip = m == meal;
-                      final label = m.name[0].toUpperCase() + m.name.substring(1);
-                      return ChoiceChip(
-                        label: Text(label),
-                        selected: selectedChip,
-                        onSelected: (_) => setB(() => meal = m),
-                      );
-                    }).toList(),
+                    children:
+                        MealType.values.map((m) {
+                          final selectedChip = m == meal;
+                          final label =
+                              m.name[0].toUpperCase() + m.name.substring(1);
+                          return ChoiceChip(
+                            label: Text(label),
+                            selected: selectedChip,
+                            onSelected: (_) => setB(() => meal = m),
+                          );
+                        }).toList(),
                   ),
 
                   const SizedBox(height: 12),
@@ -1380,25 +1541,26 @@ Future<int> _saveCustomFoodFromPayloadReturningId(Map payload) async {
                         child: DropdownButton<FoodPortion>(
                           isExpanded: true,
                           value: selected,
-                          items: portions.isNotEmpty
-                              ? portions
-                                  .map(
-                                    (p) => DropdownMenuItem(
-                                      value: p,
-                                      child: Text(
-                                        '${p.measureName}'
-                                        '${p.gramWeight != null ? ' • ${p.gramWeight!.toStringAsFixed(0)} g' : ''}'
-                                        '${p.mlVolume != null ? ' • ${p.mlVolume!.toStringAsFixed(0)} ml' : ''}',
-                                      ),
+                          items:
+                              portions.isNotEmpty
+                                  ? portions
+                                      .map(
+                                        (p) => DropdownMenuItem(
+                                          value: p,
+                                          child: Text(
+                                            '${p.measureName}'
+                                            '${p.gramWeight != null ? ' • ${p.gramWeight!.toStringAsFixed(0)} g' : ''}'
+                                            '${p.mlVolume != null ? ' • ${p.mlVolume!.toStringAsFixed(0)} ml' : ''}',
+                                          ),
+                                        ),
+                                      )
+                                      .toList()
+                                  : [
+                                    DropdownMenuItem(
+                                      value: selected,
+                                      child: const Text('100 g'),
                                     ),
-                                  )
-                                  .toList()
-                              : [
-                                  DropdownMenuItem(
-                                    value: selected,
-                                    child: const Text('100 g'),
-                                  )
-                                ],
+                                  ],
                           onChanged: (v) => setB(() => selected = v),
                         ),
                       ),
@@ -1416,9 +1578,12 @@ Future<int> _saveCustomFoodFromPayloadReturningId(Map payload) async {
                         width: 100,
                         child: TextFormField(
                           initialValue: qty.toStringAsFixed(1),
-                          keyboardType:
-                              const TextInputType.numberWithOptions(decimal: true),
-                          onChanged: (s) => setB(() => qty = double.tryParse(s) ?? 1.0),
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          onChanged:
+                              (s) =>
+                                  setB(() => qty = double.tryParse(s) ?? 1.0),
                           decoration: const InputDecoration(
                             isDense: true,
                             border: OutlineInputBorder(),
@@ -1451,7 +1616,8 @@ Future<int> _saveCustomFoodFromPayloadReturningId(Map payload) async {
                     minLines: 1,
                     maxLines: 2,
                     decoration: const InputDecoration(
-                      labelText: 'Tags (comma-separated, e.g. "post-workout, high-protein")',
+                      labelText:
+                          'Tags (comma-separated, e.g. "post-workout, high-protein")',
                       isDense: true,
                       border: OutlineInputBorder(),
                     ),
@@ -1482,20 +1648,24 @@ Future<int> _saveCustomFoodFromPayloadReturningId(Map payload) async {
                                   x.meal == meal,
                             );
 
- final newTags = tagsText
-     .split(',')
-     .map((t) => t.trim().toLowerCase())
-     .where((t) => t.isNotEmpty)
-     .toSet()
-     .toList();
+                            final newTags =
+                                tagsText
+                                    .split(',')
+                                    .map((t) => t.trim().toLowerCase())
+                                    .where((t) => t.isNotEmpty)
+                                    .toSet()
+                                    .toList();
 
                             setState(() {
                               if (idx >= 0) {
                                 _plate[idx].qty += qty;
                                 _plate[idx].note ??= note;
                                 // merge tags (set union)
-                                final merged = {..._plate[idx].tags, ...newTags}.toList();
-                                _plate[idx].tags..clear()..addAll(merged);
+                                final merged =
+                                    {..._plate[idx].tags, ...newTags}.toList();
+                                _plate[idx].tags
+                                  ..clear()
+                                  ..addAll(merged);
                               } else {
                                 _plate.add(
                                   _PlateItem(
@@ -1527,24 +1697,28 @@ Future<int> _saveCustomFoodFromPayloadReturningId(Map payload) async {
   Future<void> _openCustomizeFood(Food f) async {
     final navigator = Navigator.of(context);
     final byCode = await _getPer100(f.id!);
-    double pick(List<String> keys) =>
-        keys.map((k) => byCode[k]).whereType<num>().fold<double>(0, (a, b) => a + b.toDouble());
+    double pick(List<String> keys) => keys
+        .map((k) => byCode[k])
+        .whereType<num>()
+        .fold<double>(0, (a, b) => a + b.toDouble());
 
     final portions = await _getPortions(f.id!);
 
     final result = await navigator.push(
       MaterialPageRoute(
-        builder: (_) => FoodCustomizationPage(
-          initialFoodId: f.id!,
-          initialName: f.name,
-          initialBrand: f.brand,
-          initialCalories: (byCode['ENERGY_KCAL'] ?? byCode['KCAL'] ?? 0).toDouble(),
-          initialProteinG: pick(['PROTEIN', 'PROTEIN_G']),
-          initialCarbsG: pick(['CARB', 'CARB_G']),
-          initialFatsG: pick(['FAT', 'FAT_G']),
-          initialPortions: portions,
-          initialDensityGPerMl: f.densityGPerMl,     // ← add this
-        ),
+        builder:
+            (_) => FoodCustomizationPage(
+              initialFoodId: f.id!,
+              initialName: f.name,
+              initialBrand: f.brand,
+              initialCalories:
+                  (byCode['ENERGY_KCAL'] ?? byCode['KCAL'] ?? 0).toDouble(),
+              initialProteinG: pick(['PROTEIN', 'PROTEIN_G']),
+              initialCarbsG: pick(['CARB', 'CARB_G']),
+              initialFatsG: pick(['FAT', 'FAT_G']),
+              initialPortions: portions,
+              initialDensityGPerMl: f.densityGPerMl, // ← add this
+            ),
       ),
     );
 
@@ -1552,14 +1726,16 @@ Future<int> _saveCustomFoodFromPayloadReturningId(Map payload) async {
       await _updateExistingFoodFromPayload(Map<String, dynamic>.from(result));
 
       _portionCache.remove(f.id!);
-  _per100Cache.remove(f.id!);
-  _previewFuture.remove(f.id!);
+      _per100Cache.remove(f.id!);
+      _previewFuture.remove(f.id!);
 
       if (mounted) _kickoffSearch(_searchCtrl.text);
     }
   }
 
-  Future<void> _updateExistingFoodFromPayload(Map<String, dynamic> payload) async {
+  Future<void> _updateExistingFoodFromPayload(
+    Map<String, dynamic> payload,
+  ) async {
     final int foodId = payload['food_id'] as int;
     final String? name = (payload['name'] as String?)?.trim();
     final String? brand = (payload['brand'] as String?)?.trim();
@@ -1571,14 +1747,14 @@ Future<int> _saveCustomFoodFromPayloadReturningId(Map payload) async {
     final dens = (payload['density_g_per_ml'] as num?)?.toDouble();
     if (dens != null) {
       final existing = await _repo.getFood(foodId);
-    final safeName = name ?? existing?.name ?? '';
-    final safeBrand = brand ?? existing?.brand;
-    await _repo.upsertFoodWithKeys(
-      id: foodId,
-      name: safeName,         // don’t blank it out
-      brandName: safeBrand,
-      densityGPerMl: dens,
-    );
+      final safeName = name ?? existing?.name ?? '';
+      final safeBrand = brand ?? existing?.brand;
+      await _repo.upsertFoodWithKeys(
+        id: foodId,
+        name: safeName, // don’t blank it out
+        brandName: safeBrand,
+        densityGPerMl: dens,
+      );
     }
 
     // 2) Replace per-100g nutrients
@@ -1592,7 +1768,9 @@ Future<int> _saveCustomFoodFromPayloadReturningId(Map payload) async {
         final m = Map<String, dynamic>.from(p as Map);
         final rawDefault = m['is_default'];
         final isDefault =
-            rawDefault is bool ? rawDefault : (rawDefault is num ? rawDefault.toInt() == 1 : false);
+            rawDefault is bool
+                ? rawDefault
+                : (rawDefault is num ? rawDefault.toInt() == 1 : false);
 
         portions.add(
           FoodPortion(
@@ -1632,14 +1810,16 @@ Future<int> _saveCustomFoodFromPayloadReturningId(Map payload) async {
     setState(() => _logBusy = true);
 
     final navigator = Navigator.of(context);
-final messenger = ScaffoldMessenger.of(context);
-final prof = context.read<NutritionProfile>();
-final pid = prof.profileId;
- if (pid == null) {
-   messenger.showSnackBar(const SnackBar(content: Text('Profile not ready yet.')));
-   if (mounted) setState(() => _logBusy = false);
-   return;
- }
+    final messenger = ScaffoldMessenger.of(context);
+    final prof = context.read<NutritionProfile>();
+    final pid = prof.profileId;
+    if (pid == null) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Profile not ready yet.')),
+      );
+      if (mounted) setState(() => _logBusy = false);
+      return;
+    }
 
     // Use plate override if set; otherwise provider default
     final stamp = _plateLogAt ?? _defaultLogTimeFor(prof);
@@ -1648,7 +1828,7 @@ final pid = prof.profileId;
       // Insert each line, then add its tags (if any)
       for (final it in _plate) {
         final grams = _gramsForOne(it.food, it.portion) * it.qty;
- final isVirtual = it.portion?.id == null;
+        final isVirtual = it.portion?.id == null;
 
         final entryId = await _repo.addDiaryFood(
           profileId: pid,
@@ -1657,8 +1837,9 @@ final pid = prof.profileId;
           foodId: it.food.id!,
           portionId: it.portion?.id,
           quantity: it.qty,
-          gramsOverride: isVirtual ? grams : null, // only needed when no portion exists
-          loggedGrams: grams,                      // always record the grams consumed   
+          gramsOverride:
+              isVirtual ? grams : null, // only needed when no portion exists
+          loggedGrams: grams, // always record the grams consumed
           loggedAt: stamp,
           notes: it.note,
         );
@@ -1680,13 +1861,12 @@ final pid = prof.profileId;
       // Refresh if we're on today (cheap, provider-coalesced)
       await prof.reloadIfToday();
 
-messenger.showSnackBar(
-  const SnackBar(content: Text('Items logged to diary')),
-);
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Items logged to diary')),
+      );
 
-      if (closeDrawerToo) navigator.pop();     // close endDrawer
-      if (popPageAfter) navigator.pop(true);   // optionally leave page
-
+      if (closeDrawerToo) navigator.pop(); // close endDrawer
+      if (popPageAfter) navigator.pop(true); // optionally leave page
     } catch (e) {
       if (!mounted) return;
       messenger.showSnackBar(SnackBar(content: Text('Failed to log: $e')));
@@ -1731,23 +1911,24 @@ messenger.showSnackBar(
   }
   */
 
-void _mergeIfDuplicate(_PlateItem it) {
-  final keyId = it.portion?.id ?? -1;
-  for (int j = _plate.length - 1; j >= 0; j--) {
-    final other = _plate[j];
-    if (identical(other, it)) continue;
-    if (other.food.id == it.food.id &&
-        (other.portion?.id ?? -1) == keyId &&
-        other.meal == it.meal) {
-      it.qty += other.qty;
-      it.note ??= other.note;
-      final merged = {...it.tags, ...other.tags}.toList();
-      it.tags..clear()..addAll(merged);
-      _plate.removeAt(j);
+  void _mergeIfDuplicate(_PlateItem it) {
+    final keyId = it.portion?.id ?? -1;
+    for (int j = _plate.length - 1; j >= 0; j--) {
+      final other = _plate[j];
+      if (identical(other, it)) continue;
+      if (other.food.id == it.food.id &&
+          (other.portion?.id ?? -1) == keyId &&
+          other.meal == it.meal) {
+        it.qty += other.qty;
+        it.note ??= other.note;
+        final merged = {...it.tags, ...other.tags}.toList();
+        it.tags
+          ..clear()
+          ..addAll(merged);
+        _plate.removeAt(j);
+      }
     }
   }
-}
-
 }
 
 class _StatCard extends StatelessWidget {
@@ -1780,14 +1961,28 @@ class _MacroPreview {
   final int? fatG;
   final int? carbG;
   final String portionLabel;
-  _MacroPreview({this.proteinG, this.fatG, this.carbG, required this.portionLabel});
-  factory _MacroPreview.empty(String label) =>
-      _MacroPreview(proteinG: null, fatG: null, carbG: null, portionLabel: label);
+  _MacroPreview({
+    this.proteinG,
+    this.fatG,
+    this.carbG,
+    required this.portionLabel,
+  });
+  factory _MacroPreview.empty(String label) => _MacroPreview(
+    proteinG: null,
+    fatG: null,
+    carbG: null,
+    portionLabel: label,
+  );
 }
 
 class _LineMacros {
   final double kcal, p, f, c;
-  const _LineMacros({required this.kcal, required this.p, required this.f, required this.c});
+  const _LineMacros({
+    required this.kcal,
+    required this.p,
+    required this.f,
+    required this.c,
+  });
   String macroText() => '${p.round()}P ${f.round()}F ${c.round()}C';
   String kcalText() => '${kcal.round()} kcal';
 }
@@ -1836,7 +2031,8 @@ class _QtyEditorState extends State<_QtyEditor> {
     }
   }
 
-  String _fmt(double v) => (v % 1 == 0) ? v.toStringAsFixed(0) : v.toStringAsFixed(1);
+  String _fmt(double v) =>
+      (v % 1 == 0) ? v.toStringAsFixed(0) : v.toStringAsFixed(1);
 
   @override
   void dispose() {

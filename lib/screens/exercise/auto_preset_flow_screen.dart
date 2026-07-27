@@ -4,7 +4,9 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_flow_chart/flutter_flow_chart.dart';
+import 'package:provider/provider.dart';
 
+import '../../l10n/generated/app_localizations.dart';
 import '../../models/preset_models.dart';
 import '../../repositories/app_repository.dart';
 import '../../widgets/flow_screen_widgets.dart';
@@ -12,6 +14,15 @@ import '../../widgets/flow_screen_widgets.dart';
 import '../../theme/theme_extensions.dart';
 
 enum AddSetMode { explicit, copy }
+
+String _methodTypeLabel(MethodType type, AppLocalizations strings) {
+  return switch (type) {
+    MethodType.weight => strings.flowMethodWeight,
+    MethodType.rep => strings.flowMethodReps,
+    MethodType.addSet => strings.flowMethodAddSet,
+    MethodType.delSet => strings.flowMethodDeleteSet,
+  };
+}
 
 /// The persisted location for a progression flow and its reusable actions.
 enum FlowProgressionScope { plan, appDefault, profileDefault }
@@ -46,19 +57,18 @@ class FlowProgressionTarget {
          profileName: profileName,
        );
 
-  String get title => switch (scope) {
-    FlowProgressionScope.plan => 'Plan Progression',
-    FlowProgressionScope.appDefault => 'App Default Progression',
-    FlowProgressionScope.profileDefault => 'Gym Default Progression',
+  String titleFor(AppLocalizations strings) => switch (scope) {
+    FlowProgressionScope.plan => strings.planProgression,
+    FlowProgressionScope.appDefault => strings.flowAppDefaultTitle,
+    FlowProgressionScope.profileDefault => strings.flowProfileDefaultTitle,
   };
 
-  String get subtitle => switch (scope) {
-    FlowProgressionScope.plan =>
-      'Set how this plan progresses after each workout.',
-    FlowProgressionScope.appDefault =>
-      'Set the starting progression flow for new gym profiles.',
-    FlowProgressionScope.profileDefault =>
-      'Set the starting progression flow for new plans in ${profileName ?? 'this gym profile'}.',
+  String subtitleFor(AppLocalizations strings) => switch (scope) {
+    FlowProgressionScope.plan => strings.flowPlanSubtitle,
+    FlowProgressionScope.appDefault => strings.flowAppDefaultSubtitle,
+    FlowProgressionScope.profileDefault => strings.flowProfileDefaultSubtitle(
+      profileName ?? strings.flowThisGymProfile,
+    ),
   };
 
   Future<FlowDefinition> fetchDefinition(AppRepository repository) {
@@ -179,7 +189,7 @@ class AutoPresetFlowScreen extends StatefulWidget {
 }
 
 class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
-  final _repo = AppRepository();
+  AppRepository get _repo => context.read<AppRepository>();
 
   late Dashboard _dashboard;
   final Map<String, FlowElement> _nodes = {};
@@ -548,11 +558,12 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
   }
 
   Future<void> _showManageMethodsDialog() async {
+    final strings = AppLocalizations.of(context);
     await showDialog(
       context: context,
       builder:
           (ctx) => AlertDialog(
-            title: const Text('Manage Methods'),
+            title: Text(strings.flowManageMethods),
             content: SizedBox(
               width: 300,
               child: ListView(
@@ -566,7 +577,7 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
                         overflow: TextOverflow.ellipsis,
                       ),
                       subtitle: Text(
-                        m.type.toShortString(),
+                        _methodTypeLabel(m.type, strings),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -582,7 +593,7 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
                     ),
                   ListTile(
                     leading: const Icon(Icons.add),
-                    title: const Text('Add New Method…'),
+                    title: Text(strings.flowAddNewMethod),
                     onTap: () {
                       Navigator.of(ctx).pop();
                       _showAddMethodDialog();
@@ -598,6 +609,7 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
   }
 
   Future<void> _showAddMethodDialog() async {
+    final strings = AppLocalizations.of(context);
     final nameCtl = TextEditingController();
     MethodType type = MethodType.weight;
     String sign = '+';
@@ -614,14 +626,16 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
           (ctx) => StatefulBuilder(
             builder:
                 (ctx, setState) => AlertDialog(
-                  title: const Text('New Method'),
+                  title: Text(strings.flowNewMethod),
                   content: SingleChildScrollView(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         TextField(
                           controller: nameCtl,
-                          decoration: const InputDecoration(labelText: 'Name'),
+                          decoration: InputDecoration(
+                            labelText: strings.commonName,
+                          ),
                         ),
                         const SizedBox(height: 12),
                         DropdownButton<MethodType>(
@@ -633,7 +647,7 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
                                   .map(
                                     (t) => DropdownMenuItem(
                                       value: t,
-                                      child: Text(t.toShortString()),
+                                      child: Text(_methodTypeLabel(t, strings)),
                                     ),
                                   )
                                   .toList(),
@@ -654,8 +668,8 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
                             keyboardType: TextInputType.numberWithOptions(
                               decimal: true,
                             ),
-                            decoration: const InputDecoration(
-                              labelText: 'Factor',
+                            decoration: InputDecoration(
+                              labelText: strings.flowFactor,
                             ),
                           ),
                         ] else if (type == MethodType.rep) ...[
@@ -671,8 +685,8 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
                           TextField(
                             controller: amountCtl,
                             keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                              labelText: 'Amount',
+                            decoration: InputDecoration(
+                              labelText: strings.flowAmount,
                             ),
                           ),
                         ] else if (type == MethodType.addSet) ...[
@@ -683,13 +697,13 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
                                 groupValue: addMode,
                                 onChanged: (v) => setState(() => addMode = v!),
                               ),
-                              const Text('Explicit'),
+                              Text(strings.flowExplicit),
                               Radio<AddSetMode>(
                                 value: AddSetMode.copy,
                                 groupValue: addMode,
                                 onChanged: (v) => setState(() => addMode = v!),
                               ),
-                              const Text('Copy from set'),
+                              Text(strings.flowCopyFromSet),
                             ],
                           ),
                           const SizedBox(height: 8),
@@ -699,8 +713,8 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
                               keyboardType: TextInputType.numberWithOptions(
                                 decimal: true,
                               ),
-                              decoration: const InputDecoration(
-                                labelText: 'Weight',
+                              decoration: InputDecoration(
+                                labelText: strings.flowWeight,
                               ),
                             ),
                           if (addMode == AddSetMode.explicit)
@@ -709,20 +723,20 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
                             TextField(
                               controller: repsCtl,
                               keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(
-                                labelText: 'Reps',
+                              decoration: InputDecoration(
+                                labelText: strings.flowReps,
                               ),
                             ),
                           if (addMode == AddSetMode.copy)
                             TextField(
                               controller: copyIndexCtl,
                               keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(
-                                labelText: 'Set index (-1 = last)',
+                              decoration: InputDecoration(
+                                labelText: strings.flowSetIndex,
                               ),
                             ),
                         ] else if (type == MethodType.delSet) ...[
-                          const Text('This method will delete the last set.'),
+                          Text(strings.flowDeleteLastSetBody),
                         ],
                       ],
                     ),
@@ -730,11 +744,11 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(ctx, false),
-                      child: const Text('Cancel'),
+                      child: Text(strings.commonCancel),
                     ),
                     ElevatedButton(
                       onPressed: () => Navigator.pop(ctx, true),
-                      child: const Text('Save'),
+                      child: Text(strings.commonSave),
                     ),
                   ],
                 ),
@@ -780,9 +794,9 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
     }
 
     if (methodName.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Method name cannot be empty')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(strings.flowMethodNameRequired)));
       return;
     }
 
@@ -866,6 +880,7 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
   Widget build(BuildContext context) {
     //for colors
     final cs = context.cs;
+    final strings = AppLocalizations.of(context);
 
     // branchable nodes
     final outCounts = <String, int>{};
@@ -928,8 +943,8 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
         child: Column(
           children: [
             _AutoFlowHeader(
-              title: widget.target.title,
-              subtitle: widget.target.subtitle,
+              title: widget.target.titleFor(strings),
+              subtitle: widget.target.subtitleFor(strings),
               onBack: () => Navigator.maybePop(context),
               onManageMethods: _showManageMethodsDialog,
               onSave: _saveFlow,
@@ -1019,7 +1034,7 @@ class _AutoFlowHeader extends StatelessWidget {
       child: Row(
         children: [
           IconButton(
-            tooltip: 'Back',
+            tooltip: AppLocalizations.of(context).commonBack,
             onPressed: onBack,
             icon: const Icon(Icons.arrow_back),
           ),
@@ -1054,7 +1069,7 @@ class _AutoFlowHeader extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           IconButton.filledTonal(
-            tooltip: 'Manage progression actions',
+            tooltip: AppLocalizations.of(context).flowManageActionsTooltip,
             onPressed: onManageMethods,
             icon: const Icon(Icons.tune_outlined),
           ),
@@ -1062,7 +1077,7 @@ class _AutoFlowHeader extends StatelessWidget {
           FilledButton.icon(
             onPressed: onSave,
             icon: const Icon(Icons.save_outlined, size: 18),
-            label: const Text('Save'),
+            label: Text(AppLocalizations.of(context).commonSave),
           ),
         ],
       ),
@@ -1116,6 +1131,7 @@ class _FlowControlDeck extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final strings = AppLocalizations.of(context);
     final success = context.colors.flowArrowSuccess ?? const Color(0xFF66BB6A);
     final failure = context.colors.flowArrowFailure ?? scheme.error;
 
@@ -1124,8 +1140,8 @@ class _FlowControlDeck extends StatelessWidget {
         _FlowControlCard(
           color: success,
           icon: Icons.account_tree_outlined,
-          title: 'Add a branch',
-          subtitle: 'Choose where the next success or miss should lead.',
+          title: strings.flowAddBranchTitle,
+          subtitle: strings.flowAddBranchSubtitle,
           child: Column(
             children: [
               DropdownButtonFormField<String>(
@@ -1134,9 +1150,9 @@ class _FlowControlDeck extends StatelessWidget {
                         ? selectedBranchParent
                         : null,
                 isExpanded: true,
-                decoration: const InputDecoration(
-                  labelText: 'Branch from',
-                  prefixIcon: Icon(Icons.account_tree_outlined),
+                decoration: InputDecoration(
+                  labelText: strings.flowBranchFrom,
+                  prefixIcon: const Icon(Icons.account_tree_outlined),
                 ),
                 items:
                     branchable
@@ -1161,7 +1177,7 @@ class _FlowControlDeck extends StatelessWidget {
                               ? null
                               : onAddSuccess,
                       icon: const Icon(Icons.trending_up, size: 18),
-                      label: const Text('Success'),
+                      label: Text(strings.flowSuccess),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -1176,7 +1192,7 @@ class _FlowControlDeck extends StatelessWidget {
                               ? null
                               : onAddFailure,
                       icon: const Icon(Icons.trending_down, size: 18),
-                      label: const Text('Miss'),
+                      label: Text(strings.flowMiss),
                     ),
                   ),
                 ],
@@ -1188,8 +1204,8 @@ class _FlowControlDeck extends StatelessWidget {
         _FlowControlCard(
           color: scheme.primary,
           icon: Icons.tune_outlined,
-          title: 'Attach a progression action',
-          subtitle: 'Apply one adjustment of each type to a flow node.',
+          title: strings.flowAttachActionTitle,
+          subtitle: strings.flowAttachActionSubtitle,
           child: Column(
             children: [
               DropdownButtonFormField<String>(
@@ -1198,9 +1214,9 @@ class _FlowControlDeck extends StatelessWidget {
                         ? selectedMethodNode
                         : null,
                 isExpanded: true,
-                decoration: const InputDecoration(
-                  labelText: 'Apply action to',
-                  prefixIcon: Icon(Icons.location_on_outlined),
+                decoration: InputDecoration(
+                  labelText: strings.flowApplyActionTo,
+                  prefixIcon: const Icon(Icons.location_on_outlined),
                 ),
                 items:
                     methodTargets
@@ -1218,9 +1234,9 @@ class _FlowControlDeck extends StatelessWidget {
                         ? selectedMethod
                         : null,
                 isExpanded: true,
-                decoration: const InputDecoration(
-                  labelText: 'Progression action',
-                  prefixIcon: Icon(Icons.bolt_outlined),
+                decoration: InputDecoration(
+                  labelText: strings.flowProgressionAction,
+                  prefixIcon: const Icon(Icons.bolt_outlined),
                 ),
                 items:
                     availableMethods
@@ -1247,7 +1263,7 @@ class _FlowControlDeck extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(horizontal: 6),
                       ),
                       onPressed: canAddMethod ? onAddMethod : null,
-                      child: const Text('+ Action'),
+                      child: Text(strings.flowAddAction),
                     ),
                   ),
                   const SizedBox(width: 6),
@@ -1258,7 +1274,7 @@ class _FlowControlDeck extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(horizontal: 6),
                       ),
                       onPressed: hasAttachedMethods ? onRemoveMethod : null,
-                      child: const Text('- Action'),
+                      child: Text(strings.flowRemoveAction),
                     ),
                   ),
                   const SizedBox(width: 6),
@@ -1273,7 +1289,7 @@ class _FlowControlDeck extends StatelessWidget {
                         ),
                       ),
                       onPressed: canDeleteNode ? onRemoveNode : null,
-                      child: const Text('- Node'),
+                      child: Text(strings.flowRemoveNode),
                     ),
                   ),
                 ],

@@ -1,7 +1,9 @@
 // File: lib/screens/nutrition/measured_items_page.dart
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../../l10n/generated/app_localizations.dart';
 import '../../models/models.dart';
 import '../../repositories/app_repository.dart';
 import '../../widgets/health_trends_section.dart';
@@ -15,7 +17,7 @@ class MeasuredItemsPage extends StatefulWidget {
 }
 
 class _MeasuredItemsPageState extends State<MeasuredItemsPage> {
-  final _repo = AppRepository();
+  AppRepository get _repo => context.read<AppRepository>();
   late Future<List<MeasurementDefinition>> _defsFuture;
 
   @override
@@ -37,8 +39,9 @@ class _MeasuredItemsPageState extends State<MeasuredItemsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Measured Items')),
+      appBar: AppBar(title: Text(strings.nutritionMeasuredItems)),
       body: FutureBuilder<List<MeasurementDefinition>>(
         future: _defsFuture,
         builder: (context, snapshot) {
@@ -52,19 +55,22 @@ class _MeasuredItemsPageState extends State<MeasuredItemsPage> {
             children: [
               for (final def in defs)
                 ListTile(
-                  title: Text(_measurementLabel(def)),
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => MeasurementTrendDetailPage(definition: def),
-                    ),
-                  ),
+                  title: Text(_measurementLabel(strings, def)),
+                  onTap:
+                      () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder:
+                              (_) =>
+                                  MeasurementTrendDetailPage(definition: def),
+                        ),
+                      ),
                 ),
               if (defs.isNotEmpty) const Divider(),
               const SizedBox(height: 20),
               ListTile(
                 tileColor: Colors.deepPurple,
                 textColor: Colors.white,
-                title: const Text('Track a New Measurement'),
+                title: Text(strings.measurementTrackNew),
                 onTap: () async {
                   final changed = await Navigator.of(context).push<bool>(
                     MaterialPageRoute(
@@ -84,10 +90,21 @@ class _MeasuredItemsPageState extends State<MeasuredItemsPage> {
   }
 }
 
-String _measurementLabel(MeasurementDefinition definition) {
-  if (definition.type == MeasurementType.BodyWeight) return 'Weight';
-  if (definition.type == MeasurementType.Hip) return 'Hips';
-  if (definition.type == MeasurementType.Shoulder) return 'Shoulders';
-  if (definition.type == MeasurementType.Calf) return 'Calves';
+String _measurementLabel(
+  AppLocalizations strings,
+  MeasurementDefinition definition,
+) {
+  if (definition.type == MeasurementType.BodyWeight) {
+    return strings.measurementWeight;
+  }
+  if (definition.type == MeasurementType.Hip) {
+    return strings.measurementHips;
+  }
+  if (definition.type == MeasurementType.Shoulder) {
+    return strings.measurementShoulders;
+  }
+  if (definition.type == MeasurementType.Calf) {
+    return strings.measurementCalves;
+  }
   return definition.name;
 }

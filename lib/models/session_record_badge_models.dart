@@ -10,11 +10,7 @@ class WorkoutRecordBadge {
   final WorkoutRecordBadgeType type;
   final int? reps;
 
-  const WorkoutRecordBadge({
-    required this.tier,
-    required this.type,
-    this.reps,
-  });
+  const WorkoutRecordBadge({required this.tier, required this.type, this.reps});
 
   String get label {
     switch (type) {

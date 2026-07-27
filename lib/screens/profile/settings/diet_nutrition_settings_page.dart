@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../providers/nutrition_profile.dart';
 import '../../../widgets/settings_tiles.dart';
 import 'goal_manual_entry_page.dart';
@@ -12,28 +13,29 @@ class DietNutritionSettingsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final profile = context.watch<NutritionProfile>();
     final goal = profile.activeGoal;
+    final strings = AppLocalizations.of(context);
 
     return SettingsPageScaffold(
-      title: 'Diet & Nutrition Settings',
-      subtitle: 'Configure nutrition targets and food-related preferences.',
+      title: strings.nutritionSettingsTitle,
+      subtitle: strings.nutritionSettingsSubtitle,
       icon: Icons.restaurant_menu,
       children: [
         if (goal != null) ...[
           SettingsInfoCard(
             icon: Icons.flag_outlined,
-            title: 'Current Goals',
-            body: _formatGoalSummary(goal),
+            title: strings.nutritionCurrentGoals,
+            body: _formatGoalSummary(strings, goal),
           ),
           const SizedBox(height: 16),
         ],
         SettingsSection(
-          title: 'Goals',
-          subtitle: 'Set the targets used by nutrition tracking.',
+          title: strings.nutritionGoals,
+          subtitle: strings.nutritionGoalsSubtitle,
           children: [
             SettingsActionTile(
               icon: Icons.edit_note,
-              title: 'Manually Set Nutrition Goals',
-              subtitle: 'Enter calories, macros, and key nutrients yourself.',
+              title: strings.nutritionManualGoals,
+              subtitle: strings.nutritionManualGoalsSubtitle,
               onTap: () async {
                 final changed = await Navigator.push<bool>(
                   context,
@@ -42,9 +44,9 @@ class DietNutritionSettingsPage extends StatelessWidget {
                   ),
                 );
                 if (changed == true && context.mounted) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(const SnackBar(content: Text('Goals saved')));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(strings.nutritionGoalsSaved)),
+                  );
                 }
               },
             ),
@@ -54,21 +56,21 @@ class DietNutritionSettingsPage extends StatelessWidget {
     );
   }
 
-  String _formatGoalSummary(dynamic goal) {
+  String _formatGoalSummary(AppLocalizations strings, dynamic goal) {
     String number(double? value, {String unit = ''}) {
       if (value == null) return '-';
       return '${value.toStringAsFixed(0)}$unit';
     }
 
-    return [
-      'Calories: ${number(goal.kcalTarget, unit: ' kcal')}',
-      'Protein: ${number(goal.proteinG, unit: ' g')}',
-      'Carbs: ${number(goal.carbsG, unit: ' g')}',
-      'Fat: ${number(goal.fatG, unit: ' g')}',
-      'Fiber: ${number(goal.fiberG, unit: ' g')}',
-      'Sugar: ${number(goal.sugarG, unit: ' g')}',
-      'Sat. Fat: ${number(goal.satFatG, unit: ' g')}',
-      'Sodium: ${goal.sodiumMg == null ? '-' : '${goal.sodiumMg!.round()} mg'}',
-    ].join(' / ');
+    return strings.nutritionGoalSummary(
+      number(goal.kcalTarget, unit: ' kcal'),
+      number(goal.proteinG, unit: ' g'),
+      number(goal.carbsG, unit: ' g'),
+      number(goal.fatG, unit: ' g'),
+      number(goal.fiberG, unit: ' g'),
+      number(goal.sugarG, unit: ' g'),
+      number(goal.satFatG, unit: ' g'),
+      goal.sodiumMg == null ? '-' : '${goal.sodiumMg!.round()} mg',
+    );
   }
 }

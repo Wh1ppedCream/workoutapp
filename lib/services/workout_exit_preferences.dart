@@ -1,11 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Controls what the ongoing-workout Exit action does.
-enum WorkoutExitBehavior {
-  askEveryTime,
-  discard,
-  saveCompleted,
-}
+enum WorkoutExitBehavior { askEveryTime, discard, saveCompleted }
 
 class WorkoutExitPreferences {
   static const _key = 'workout_exit_behavior';

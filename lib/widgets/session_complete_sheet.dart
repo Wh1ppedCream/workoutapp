@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/generated/app_localizations.dart';
 import '../models/models.dart';
 import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
@@ -42,13 +43,12 @@ class SessionCompleteSheet extends StatefulWidget {
 class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
   static const int _exerciseHydrationConcurrency = 6;
 
-  late final AppRepository _repo;
+  AppRepository get _repo => context.read<AppRepository>();
   late final Future<_SessionData> _dataFuture;
 
   @override
   void initState() {
     super.initState();
-    _repo = AppRepository();
     _dataFuture = _loadData();
   }
 
@@ -66,7 +66,11 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
         if (snap.hasError || snap.data == null) {
           return SizedBox(
             height: 200,
-            child: Center(child: Text('Error loading session')),
+            child: Center(
+              child: Text(
+                AppLocalizations.of(context).sessionCompleteLoadError,
+              ),
+            ),
           );
         }
         final data = snap.data!;
@@ -127,6 +131,7 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
     final session = data.session;
     final exercises = data.exercises;
     final theme = Theme.of(context);
+    final strings = AppLocalizations.of(context);
     const completionColor = Color(0xFF7CFF8B);
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
 
@@ -200,7 +205,7 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
                                       ),
                                       const SizedBox(width: 8),
                                       Text(
-                                        'WORKOUT COMPLETE',
+                                        strings.sessionCompleteTitle,
                                         textAlign: TextAlign.center,
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
@@ -226,7 +231,7 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
                                     child: _buildSummaryMetric(
                                       context,
                                       icon: Icons.fitness_center_outlined,
-                                      label: 'Exercises',
+                                      label: strings.sessionMetricExercises,
                                       value: '${exercises.length}',
                                       compact: true,
                                       accentColor: const Color(0xFF64B5F6),
@@ -237,7 +242,7 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
                                     child: _buildSummaryMetric(
                                       context,
                                       icon: Icons.format_list_numbered,
-                                      label: 'Sets',
+                                      label: strings.sessionMetricSets,
                                       value: '$totalSets',
                                       compact: true,
                                       accentColor: const Color(0xFF81C784),
@@ -248,7 +253,7 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
                                     child: _buildSummaryMetric(
                                       context,
                                       icon: Icons.timer_outlined,
-                                      label: 'Duration',
+                                      label: strings.sessionMetricDuration,
                                       value: durationText,
                                       compact: true,
                                       accentColor: const Color(0xFFFFD54F),
@@ -259,7 +264,7 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
                                     child: _buildSummaryMetric(
                                       context,
                                       icon: Icons.monitor_weight_outlined,
-                                      label: 'Volume',
+                                      label: strings.sessionMetricVolume,
                                       value: volumeText,
                                       compact: true,
                                       accentColor: const Color(0xFFF48FB1),
@@ -303,7 +308,7 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
                     child: FilledButton.icon(
                       onPressed: () => Navigator.of(context).pop(),
                       icon: const Icon(Icons.check_rounded),
-                      label: const Text('Done'),
+                      label: Text(strings.commonDone),
                       style: FilledButton.styleFrom(
                         minimumSize: const Size.fromHeight(48),
                       ),
@@ -318,6 +323,7 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
 
   Widget _buildBadgeLegend() {
     final theme = Theme.of(context);
+    final strings = AppLocalizations.of(context);
     final textStyle = theme.textTheme.labelMedium?.copyWith(
       fontWeight: FontWeight.w700,
     );
@@ -330,13 +336,13 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
         children: [
           _buildBadgeLegendItem(
             color: const Color(0xFF81C784),
-            label: 'Monthly',
+            label: strings.recordMonthly,
             style: textStyle?.copyWith(color: const Color(0xFF81C784)),
           ),
           const SizedBox(width: 18),
           _buildBadgeLegendItem(
             color: const Color(0xFFFFC857),
-            label: 'All Time',
+            label: strings.recordAllTime,
             style: textStyle?.copyWith(color: const Color(0xFFFFC857)),
           ),
         ],
@@ -452,8 +458,9 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
       final erm = s.weight * (1 + 0.0333 * s.reps);
       final setText =
           '${WeightUnitFormatter.formatWeight(s.weight, weightUnit)} x ${s.reps}';
-      final ermText =
-          'ERM=${WeightUnitFormatter.formatWeight(erm, weightUnit)}';
+      final ermText = AppLocalizations.of(
+        context,
+      ).sessionEstimatedMax(WeightUnitFormatter.formatWeight(erm, weightUnit));
       rows.add(
         Padding(
           padding: EdgeInsets.only(top: i == 0 ? 6 : 7),
@@ -576,13 +583,13 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
         borderRadius: BorderRadius.circular(7),
         border: Border.all(color: Colors.white.withValues(alpha: 0.72)),
       ),
-      child: const Row(
+      child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'First Record',
+            AppLocalizations.of(context).recordFirst,
             maxLines: 1,
-            style: TextStyle(
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 9,
               fontWeight: FontWeight.w800,
@@ -609,7 +616,9 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            badge.label,
+            badge.type == WorkoutRecordBadgeType.repBest
+                ? AppLocalizations.of(context).recordRepBest(badge.reps ?? 0)
+                : AppLocalizations.of(context).recordVolumeBest,
             style: TextStyle(
               color: color,
               fontSize: 9,
@@ -622,10 +631,11 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
   }
 
   String _formatDuration(Duration duration) {
+    final strings = AppLocalizations.of(context);
     final hours = duration.inHours;
     final minutes = duration.inMinutes.remainder(60);
-    if (hours == 0) return '${minutes}m';
-    if (minutes == 0) return '${hours}h';
-    return '${hours}h ${minutes}m';
+    if (hours == 0) return strings.durationMinutesCompact(minutes);
+    if (minutes == 0) return strings.durationHoursCompact(hours);
+    return strings.durationHoursMinutesCompact(hours, minutes);
   }
 }

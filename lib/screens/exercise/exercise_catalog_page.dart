@@ -4,6 +4,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../models/models.dart';
 import '../../providers/selected_profile.dart';
 import '../../repositories/app_repository.dart';
@@ -41,7 +42,8 @@ class ExerciseCatalogPage extends StatefulWidget {
 }
 
 class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
-  final _repo = AppRepository();
+  static const _allFilter = '__all__';
+  AppRepository get _repo => context.read<AppRepository>();
   final _searchTutorialKey = GlobalKey(debugLabel: 'exercise_catalog_search');
   final _filterTutorialKey = GlobalKey(debugLabel: 'exercise_catalog_filter');
   final _listTutorialKey = GlobalKey(debugLabel: 'exercise_catalog_list');
@@ -65,15 +67,15 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
   // Filter dialog state
   bool _useProfileFilter = true;
   int? _dialogProfileId;
-  String _filterEquipment = 'All';
-  String _filterArea = 'All';
-  String _filterMuscle = 'All';
+  String _filterEquipment = _allFilter;
+  String _filterArea = _allFilter;
+  String _filterMuscle = _allFilter;
 
   // Dropdown options
   List<GymProfile> _profiles = [];
-  List<String> _equipmentOptions = ['All'];
-  List<String> _areaOptions = ['All'];
-  List<String> _muscleOptions = ['All'];
+  List<String> _equipmentOptions = [_allFilter];
+  List<String> _areaOptions = [_allFilter];
+  List<String> _muscleOptions = [_allFilter];
   List<String>? _allEquipmentNames;
   final Map<int, List<String>> _equipmentNamesByProfileId = {};
 
@@ -129,9 +131,9 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
 
     if (!mounted) return;
     setState(() {
-      _areaOptions = ['All', ...areas.map((b) => b.name)];
-      _muscleOptions = ['All', ...muscles.map((m) => m.name)];
-      _equipmentOptions = ['All', ...initialEquipment];
+      _areaOptions = [_allFilter, ...areas.map((b) => b.name)];
+      _muscleOptions = [_allFilter, ...muscles.map((m) => m.name)];
+      _equipmentOptions = [_allFilter, ...initialEquipment];
       _displayedDefs = List.from(_allDefs); // show all until they hit “Save”
       _isLoading = false;
     });
@@ -160,9 +162,8 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
         stepNumber: 3,
         totalSteps: 8,
         icon: Icons.touch_app_outlined,
-        title: 'Choose an exercise',
-        body:
-            'Tap any exercise row to select it. Search or filters can help you find the right movement.',
+        title: AppLocalizations.of(context).catalogGuideChooseTitle,
+        body: AppLocalizations.of(context).catalogGuideChooseBody,
       );
     }
     return InteractiveTutorialStep(
@@ -170,8 +171,10 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
       stepNumber: 4,
       totalSteps: 8,
       icon: Icons.add_circle_outline,
-      title: 'Add it to your plan',
-      body: 'Tap + to add ${_selectedDef!.name} and return to your plan.',
+      title: AppLocalizations.of(context).catalogGuideAddTitle,
+      body: AppLocalizations.of(
+        context,
+      ).catalogGuideAddBody(_selectedDef!.name),
     );
   }
 
@@ -184,23 +187,20 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
           GuidedTutorialStep(
             targetKey: _searchTutorialKey,
             icon: Icons.search,
-            title: 'Search exercises',
-            body:
-                'Search by exercise name when you already know what movement you want.',
+            title: AppLocalizations.of(context).catalogGuideSearchTitle,
+            body: AppLocalizations.of(context).catalogGuideSearchBody,
           ),
           GuidedTutorialStep(
             targetKey: _filterTutorialKey,
             icon: Icons.filter_list,
-            title: 'Filters',
-            body:
-                'Filter by gym profile, equipment, bodypart, or muscle to narrow the catalog quickly.',
+            title: AppLocalizations.of(context).catalogFilters,
+            body: AppLocalizations.of(context).catalogGuideFiltersBody,
           ),
           GuidedTutorialStep(
             targetKey: _listTutorialKey,
             icon: Icons.accessibility_new,
-            title: 'Exercise rows',
-            body:
-                'Each row shows equipment and a heatmap. Tap the heatmap for details or select the row when choosing an exercise.',
+            title: AppLocalizations.of(context).catalogGuideRowsTitle,
+            body: AppLocalizations.of(context).catalogGuideRowsBody,
           ),
         ],
       );
@@ -248,20 +248,20 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
               allowedList,
             );
           }).toList();
-      nextEquipmentOptions = ['All', ...allowedList];
+      nextEquipmentOptions = [_allFilter, ...allowedList];
     } else {
       // Profile off: use global equipment list
       final allEq = await _allEquipment();
       if (generation != _filterGeneration || !mounted) return;
-      nextEquipmentOptions = ['All', ...allEq];
+      nextEquipmentOptions = [_allFilter, ...allEq];
     }
     final equipmentFilter =
         nextEquipmentOptions.contains(_filterEquipment)
             ? _filterEquipment
-            : 'All';
+            : _allFilter;
 
     // 2) Single-equipment any-of filter
-    if (equipmentFilter != 'All') {
+    if (equipmentFilter != _allFilter) {
       filtered =
           filtered
               .where(
@@ -274,7 +274,7 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
     }
 
     // 3) Area of Focus filter
-    if (_filterArea != 'All') {
+    if (_filterArea != _allFilter) {
       filtered =
           filtered
               .where((d) => d.bodyParts.any((bp) => bp.name == _filterArea))
@@ -282,7 +282,7 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
     }
 
     // 4) Specific Muscle filter
-    if (_filterMuscle != 'All') {
+    if (_filterMuscle != _allFilter) {
       filtered =
           filtered
               .where(
@@ -318,6 +318,7 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
   }
 
   void _openFilterDialog() {
+    final strings = AppLocalizations.of(context);
     // Dialog local copies
     bool useProfile = _useProfileFilter;
     int? chosenProfile = _dialogProfileId;
@@ -331,13 +332,13 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
           (ctx) => StatefulBuilder(
             builder:
                 (ctx, setDialogState) => AlertDialog(
-                  title: const Text('Selected Filters'),
+                  title: Text(strings.catalogSelectedFilters),
                   content: SingleChildScrollView(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         SwitchListTile(
-                          title: const Text('Use Workspace Profile'),
+                          title: Text(strings.catalogUseWorkspaceProfile),
                           value: useProfile,
                           onChanged:
                               (v) => setDialogState(() => useProfile = v),
@@ -345,8 +346,8 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                         const SizedBox(height: 8),
                         DropdownButtonFormField<int>(
                           isExpanded: true,
-                          decoration: const InputDecoration(
-                            labelText: 'Workspace Profile',
+                          decoration: InputDecoration(
+                            labelText: strings.catalogWorkspaceProfile,
                           ),
                           value: chosenProfile,
                           items:
@@ -371,8 +372,8 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                         const SizedBox(height: 8),
                         DropdownButtonFormField<String>(
                           isExpanded: true,
-                          decoration: const InputDecoration(
-                            labelText: 'Equipment',
+                          decoration: InputDecoration(
+                            labelText: strings.catalogEquipment,
                           ),
                           value: eq,
                           items:
@@ -381,7 +382,9 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                                     (name) => DropdownMenuItem(
                                       value: name,
                                       child: Text(
-                                        name,
+                                        name == _allFilter
+                                            ? strings.commonAll
+                                            : name,
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
@@ -393,8 +396,8 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                         const SizedBox(height: 8),
                         DropdownButtonFormField<String>(
                           isExpanded: true,
-                          decoration: const InputDecoration(
-                            labelText: 'Area of Focus',
+                          decoration: InputDecoration(
+                            labelText: strings.catalogFocusArea,
                           ),
                           value: area,
                           items:
@@ -403,7 +406,9 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                                     (name) => DropdownMenuItem(
                                       value: name,
                                       child: Text(
-                                        name,
+                                        name == _allFilter
+                                            ? strings.commonAll
+                                            : name,
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
@@ -415,8 +420,8 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                         const SizedBox(height: 8),
                         DropdownButtonFormField<String>(
                           isExpanded: true,
-                          decoration: const InputDecoration(
-                            labelText: 'Specific Muscle',
+                          decoration: InputDecoration(
+                            labelText: strings.catalogSpecificMuscle,
                           ),
                           value: muscle,
                           items:
@@ -425,7 +430,9 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                                     (name) => DropdownMenuItem(
                                       value: name,
                                       child: Text(
-                                        name,
+                                        name == _allFilter
+                                            ? strings.commonAll
+                                            : name,
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
@@ -440,7 +447,7 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.of(ctx).pop(),
-                      child: const Text('Cancel'),
+                      child: Text(strings.commonCancel),
                     ),
                     ElevatedButton(
                       onPressed: () {
@@ -454,7 +461,7 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                         Navigator.of(ctx).pop();
                         _applyAllFilters();
                       },
-                      child: const Text('Save'),
+                      child: Text(strings.commonSave),
                     ),
                   ],
                 ),
@@ -473,11 +480,12 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
   @override
   Widget build(BuildContext context) {
     final planBuilderGuideStep = _planBuilderGuideStep();
+    final strings = AppLocalizations.of(context);
     return Stack(
       children: [
         Scaffold(
           appBar: AppBar(
-            title: const Text('Exercise Catalog'),
+            title: Text(strings.catalogPageTitle),
             centerTitle: true,
           ),
           body: Padding(
@@ -493,10 +501,10 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                       child: KeyedSubtree(
                         key: _searchTutorialKey,
                         child: TextField(
-                          decoration: const InputDecoration(
-                            labelText: 'Search Exercises',
-                            prefixIcon: Icon(Icons.search),
-                            border: OutlineInputBorder(),
+                          decoration: InputDecoration(
+                            labelText: strings.catalogSearchExercises,
+                            prefixIcon: const Icon(Icons.search),
+                            border: const OutlineInputBorder(),
                           ),
                           onChanged: _onSearchChanged,
                         ),
@@ -510,13 +518,13 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                           key: _filterTutorialKey,
                           child: ElevatedButton(
                             onPressed: _openFilterDialog,
-                            child: const FittedBox(
+                            child: FittedBox(
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Icon(Icons.filter_list),
                                   SizedBox(width: 6),
-                                  Text('Filters'),
+                                  Text(strings.catalogFilters),
                                 ],
                               ),
                             ),
@@ -534,9 +542,7 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                         _isLoading
                             ? const Center(child: CircularProgressIndicator())
                             : _displayedDefs.isEmpty
-                            ? const Center(
-                              child: Text('No exercises match filters.'),
-                            )
+                            ? Center(child: Text(strings.catalogNoMatches))
                             : ListView.builder(
                               itemCount: _displayedDefs.length,
                               itemBuilder: (_, i) {
@@ -682,7 +688,7 @@ class _ExerciseInfoMediaButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      label: 'Open exercise information',
+      label: AppLocalizations.of(context).catalogOpenExerciseInfo,
       child: ExerciseMediaThumbnail(
         definition: definition,
         size: 64,

@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/generated/app_localizations.dart';
 import '../models/models.dart';
 import '../providers/unit_preference_provider.dart';
 import '../utils/weight_unit_formatter.dart';
@@ -219,6 +220,7 @@ class _WeightCardState extends State<WeightCard> {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     final we = widget.exercise;
     final sets = we.sets;
     final readOnly = widget.readOnlyMode;
@@ -248,7 +250,10 @@ class _WeightCardState extends State<WeightCard> {
                         ? Icons.keyboard_arrow_down
                         : Icons.keyboard_arrow_up,
                   ),
-                  tooltip: effectiveCollapsed ? 'Expand sets' : 'Collapse sets',
+                  tooltip:
+                      effectiveCollapsed
+                          ? strings.weightExpandSets
+                          : strings.weightCollapseSets,
                   onPressed:
                       widget.forceCollapsed
                           ? null
@@ -290,7 +295,7 @@ class _WeightCardState extends State<WeightCard> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.info_outline),
-                  tooltip: 'Details',
+                  tooltip: strings.weightDetails,
                   onPressed: widget.onDetails,
                 ),
                 PopupMenuButton<String>(
@@ -302,18 +307,16 @@ class _WeightCardState extends State<WeightCard> {
                         context: context,
                         builder:
                             (ctx) => AlertDialog(
-                              title: const Text('Remove Exercise'),
-                              content: const Text(
-                                'Are you sure you want to remove this exercise?',
-                              ),
+                              title: Text(strings.weightRemoveExerciseTitle),
+                              content: Text(strings.weightRemoveExerciseBody),
                               actions: [
                                 TextButton(
                                   onPressed: () => Navigator.pop(ctx, false),
-                                  child: const Text('Cancel'),
+                                  child: Text(strings.commonCancel),
                                 ),
                                 TextButton(
                                   onPressed: () => Navigator.pop(ctx, true),
-                                  child: const Text('Remove'),
+                                  child: Text(strings.commonRemove),
                                 ),
                               ],
                             ),
@@ -329,17 +332,17 @@ class _WeightCardState extends State<WeightCard> {
                   itemBuilder:
                       (_) => [
                         if (widget.onSwapExercise != null)
-                          const PopupMenuItem(
+                          PopupMenuItem(
                             value: 'swap',
-                            child: Text('Swap Exercise'),
+                            child: Text(strings.weightSwapExercise),
                           ),
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'remove',
-                          child: Text('Remove Exercise'),
+                          child: Text(strings.weightRemoveExerciseTitle),
                         ),
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'changeSet',
-                          child: Text('Make ChangeSet'),
+                          child: Text(strings.weightMakeChangeSet),
                         ),
                       ],
                 ),
@@ -413,7 +416,7 @@ class _WeightCardState extends State<WeightCard> {
                             SizedBox(
                               width: setLabelWidth,
                               child: Text(
-                                'Set ${index + 1}',
+                                strings.weightSetLabel(index + 1),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -440,8 +443,9 @@ class _WeightCardState extends State<WeightCard> {
                                 keyboardType: TextInputType.number,
                                 style: Theme.of(context).textTheme.bodyLarge,
                                 decoration: InputDecoration(
-                                  labelText:
-                                      'Weight (${_weightUnit.shortLabel})',
+                                  labelText: strings.weightLabel(
+                                    _weightUnit.shortLabel,
+                                  ),
                                   isDense: true,
                                   contentPadding: const EdgeInsets.only(
                                     bottom: 6,
@@ -477,8 +481,8 @@ class _WeightCardState extends State<WeightCard> {
                                 readOnly: readOnly,
                                 keyboardType: TextInputType.number,
                                 style: Theme.of(context).textTheme.bodyLarge,
-                                decoration: const InputDecoration(
-                                  labelText: 'Reps',
+                                decoration: InputDecoration(
+                                  labelText: strings.weightReps,
                                   isDense: true,
                                   contentPadding: EdgeInsets.only(bottom: 6),
                                 ),
@@ -514,11 +518,12 @@ class _WeightCardState extends State<WeightCard> {
                                             context: context,
                                             builder:
                                                 (ctx) => AlertDialog(
-                                                  title: const Text(
-                                                    'Remove Set',
+                                                  title: Text(
+                                                    strings
+                                                        .weightRemoveSetTitle,
                                                   ),
-                                                  content: const Text(
-                                                    'Are you sure you want to remove this set?',
+                                                  content: Text(
+                                                    strings.weightRemoveSetBody,
                                                   ),
                                                   actions: [
                                                     TextButton(
@@ -527,8 +532,8 @@ class _WeightCardState extends State<WeightCard> {
                                                             ctx,
                                                             false,
                                                           ),
-                                                      child: const Text(
-                                                        'Cancel',
+                                                      child: Text(
+                                                        strings.commonCancel,
                                                       ),
                                                     ),
                                                     TextButton(
@@ -537,8 +542,8 @@ class _WeightCardState extends State<WeightCard> {
                                                             ctx,
                                                             true,
                                                           ),
-                                                      child: const Text(
-                                                        'Remove',
+                                                      child: Text(
+                                                        strings.commonRemove,
                                                       ),
                                                     ),
                                                   ],
@@ -592,7 +597,7 @@ class _WeightCardState extends State<WeightCard> {
                           ),
                           child: Row(
                             children: [
-                              Text('CSet ${ci + 1}'),
+                              Text(strings.weightChangeSetLabel(ci + 1)),
                               const SizedBox(width: 8),
                               // Weight
                               SizedBox(
@@ -606,7 +611,9 @@ class _WeightCardState extends State<WeightCard> {
                                         _weightUnit,
                                       ),
                                   decoration: InputDecoration(
-                                    labelText: 'Wt (${_weightUnit.shortLabel})',
+                                    labelText: strings.weightShortLabel(
+                                      _weightUnit.shortLabel,
+                                    ),
                                   ),
                                   onChanged:
                                       readOnly
@@ -635,8 +642,8 @@ class _WeightCardState extends State<WeightCard> {
                                   readOnly: readOnly,
                                   keyboardType: TextInputType.number,
                                   initialValue: cset.reps.toString(),
-                                  decoration: const InputDecoration(
-                                    labelText: 'Reps',
+                                  decoration: InputDecoration(
+                                    labelText: strings.weightReps,
                                   ),
                                   onChanged:
                                       readOnly
@@ -659,9 +666,12 @@ class _WeightCardState extends State<WeightCard> {
                                       context: context,
                                       builder:
                                           (ctx) => AlertDialog(
-                                            title: const Text('Remove CSet'),
-                                            content: const Text(
-                                              'Are you sure you want to remove this CSet?',
+                                            title: Text(
+                                              strings
+                                                  .weightRemoveChangeSetTitle,
+                                            ),
+                                            content: Text(
+                                              strings.weightRemoveChangeSetBody,
                                             ),
                                             actions: [
                                               TextButton(
@@ -670,7 +680,9 @@ class _WeightCardState extends State<WeightCard> {
                                                       ctx,
                                                       false,
                                                     ),
-                                                child: const Text('Cancel'),
+                                                child: Text(
+                                                  strings.commonCancel,
+                                                ),
                                               ),
                                               TextButton(
                                                 onPressed:
@@ -678,7 +690,9 @@ class _WeightCardState extends State<WeightCard> {
                                                       ctx,
                                                       true,
                                                     ),
-                                                child: const Text('Remove'),
+                                                child: Text(
+                                                  strings.commonRemove,
+                                                ),
                                               ),
                                             ],
                                           ),
@@ -741,7 +755,7 @@ class _WeightCardState extends State<WeightCard> {
                             });
                             widget.onValueChanged?.call();
                           },
-                          child: const Text('Add CSet'),
+                          child: Text(strings.weightAddChangeSet),
                         ),
                       ),
                     ),
@@ -787,7 +801,7 @@ class _WeightCardState extends State<WeightCard> {
                             widget.onSetAdded?.call();
                           },
                   icon: const Icon(Icons.add),
-                  label: const Text('Add Set'),
+                  label: Text(strings.weightAddSet),
                 ),
               ),
             ],

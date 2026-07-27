@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/generated/app_localizations.dart';
 import '../models/models.dart';
 import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
@@ -69,7 +70,7 @@ class WorkoutMetricChartCard extends StatefulWidget {
 }
 
 class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
-  final _repo = AppRepository();
+  AppRepository get _repo => context.read<AppRepository>();
   final _pageController = PageController();
 
   late Future<List<WorkoutReportSession>> _sessionsFuture;
@@ -146,6 +147,7 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     final colors = context.colors;
 
     return FutureBuilder<List<WorkoutReportSession>>(
@@ -168,11 +170,11 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
         }
 
         if (snapshot.hasError && !snapshot.hasData) {
-          return const Card(
+          return Card(
             margin: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: Padding(
               padding: EdgeInsets.all(16),
-              child: Text('Unable to load workout report.'),
+              child: Text(strings.workoutReportLoadFailed),
             ),
           );
         }
@@ -223,7 +225,7 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Workout Report',
+                  strings.workoutReportTitle,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
@@ -236,9 +238,12 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
                   children: [
                     Expanded(
                       child: _ReportStat(
-                        label: 'Workouts',
+                        label: strings.workoutReportWorkouts,
                         value: _formatCompact(totalWorkouts.toDouble()),
-                        unit: totalWorkouts == 1 ? 'workout' : 'total',
+                        unit:
+                            totalWorkouts == 1
+                                ? strings.workoutReportWorkout
+                                : strings.workoutReportTotal,
                         trend: _metricTrend(
                           buckets,
                           WorkoutReportMetric.workouts,
@@ -252,7 +257,7 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: _ReportStat(
-                        label: 'Time',
+                        label: strings.workoutReportTime,
                         value: _formatDurationValue(totalMinutes),
                         unit: _formatDurationUnit(totalMinutes),
                         trend: _metricTrend(
@@ -268,7 +273,7 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: _ReportStat(
-                        label: 'Volume',
+                        label: strings.workoutReportVolume,
                         value: WeightUnitFormatter.formatCompactVolumeValue(
                           totalVolume,
                           weightUnit,
