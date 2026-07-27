@@ -84,6 +84,152 @@ class WorkoutRecordEventsDao {
     };
   }
 
+  /// Resolves the current record holders for one exercise definition.
+  ///
+  /// Unlike persisted event history, this is intended for leaderboard-style
+  /// history lists: a set loses its visible record badge when a later set
+  /// surpasses it. Monthly leaders are evaluated independently per calendar
+  /// month, while all-time leaders are evaluated across the full history.
+  static Future<Map<int, WorkoutExerciseRecordBadges>>
+  currentLeadersForDefinition(DatabaseExecutor db, int definitionId) async {
+    final exerciseRows = await db.rawQuery(
+      '''
+      SELECT e.id AS exercise_id, er.is_first_record AS is_first_record
+      FROM exercises e
+      LEFT JOIN workout_exercise_record_events er ON er.exercise_id = e.id
+      WHERE e.type = 'weight' AND e.exercise_def_id = ?
+      ''',
+      [definitionId],
+    );
+    final badgesByExercise = <int, Map<int, List<WorkoutRecordBadge>>>{
+      for (final row in exerciseRows)
+        row['exercise_id'] as int: <int, List<WorkoutRecordBadge>>{},
+    };
+    final firstByExercise = <int, bool>{
+      for (final row in exerciseRows)
+        row['exercise_id'] as int:
+            ((row['is_first_record'] as num?)?.toInt() ?? 0) == 1,
+    };
+    if (badgesByExercise.isEmpty) {
+      return const <int, WorkoutExerciseRecordBadges>{};
+    }
+
+    final rows = await db.rawQuery(
+      '''
+      SELECT
+        e.id AS exercise_id,
+        sess.date AS session_date,
+        st.id AS set_id,
+        st.order_index AS set_index,
+        st.weight AS weight,
+        st.reps AS reps
+      FROM exercises e
+      INNER JOIN sessions sess ON sess.id = e.session_id
+      INNER JOIN sets st ON st.exercise_id = e.id
+      WHERE e.type = 'weight'
+        AND e.exercise_def_id = ?
+        AND st.parent_set_id IS NULL
+      ORDER BY sess.date ASC, sess.id ASC, e.id ASC, st.order_index ASC
+      ''',
+      [definitionId],
+    );
+
+    final allTimeRepLeaders = <int, _CurrentRecordSet>{};
+    final monthlyRepLeaders = <String, _CurrentRecordSet>{};
+    _CurrentRecordSet? allTimeVolumeLeader;
+    final monthlyVolumeLeaders = <String, _CurrentRecordSet>{};
+
+    for (final row in rows) {
+      final set = _CurrentRecordSet(
+        id: row['set_id'] as int,
+        exerciseId: row['exercise_id'] as int,
+        setIndex: row['set_index'] as int,
+        completedAt: DateTime.parse(row['session_date'] as String),
+        weight: (row['weight'] as num).toDouble(),
+        reps: (row['reps'] as num).toInt(),
+      );
+      if (set.weight <= 0 || set.reps <= 0) continue;
+
+      final currentRepLeader = allTimeRepLeaders[set.reps];
+      if (currentRepLeader == null || set.weight > currentRepLeader.weight) {
+        allTimeRepLeaders[set.reps] = set;
+      }
+      final monthRepKey = _monthlyKey(set.completedAt, set.reps);
+      final currentMonthlyRepLeader = monthlyRepLeaders[monthRepKey];
+      if (currentMonthlyRepLeader == null ||
+          set.weight > currentMonthlyRepLeader.weight) {
+        monthlyRepLeaders[monthRepKey] = set;
+      }
+
+      if (allTimeVolumeLeader == null ||
+          set.volume > allTimeVolumeLeader.volume) {
+        allTimeVolumeLeader = set;
+      }
+      final monthVolumeKey = _monthlyKey(set.completedAt, null);
+      final currentMonthlyVolumeLeader = monthlyVolumeLeaders[monthVolumeKey];
+      if (currentMonthlyVolumeLeader == null ||
+          set.volume > currentMonthlyVolumeLeader.volume) {
+        monthlyVolumeLeaders[monthVolumeKey] = set;
+      }
+    }
+
+    void addBadge(_CurrentRecordSet set, WorkoutRecordBadge badge) {
+      badgesByExercise[set.exerciseId]!
+          .putIfAbsent(set.setIndex, () => <WorkoutRecordBadge>[])
+          .add(badge);
+    }
+
+    for (final entry in allTimeRepLeaders.entries) {
+      addBadge(
+        entry.value,
+        WorkoutRecordBadge(
+          type: WorkoutRecordBadgeType.repBest,
+          tier: WorkoutRecordBadgeTier.allTime,
+          reps: entry.key,
+        ),
+      );
+    }
+    for (final entry in monthlyRepLeaders.entries) {
+      final allTimeLeader = allTimeRepLeaders[entry.value.reps];
+      if (allTimeLeader?.id == entry.value.id) continue;
+      addBadge(
+        entry.value,
+        WorkoutRecordBadge(
+          type: WorkoutRecordBadgeType.repBest,
+          tier: WorkoutRecordBadgeTier.monthly,
+          reps: entry.value.reps,
+        ),
+      );
+    }
+    if (allTimeVolumeLeader != null) {
+      addBadge(
+        allTimeVolumeLeader,
+        const WorkoutRecordBadge(
+          type: WorkoutRecordBadgeType.volumeBest,
+          tier: WorkoutRecordBadgeTier.allTime,
+        ),
+      );
+    }
+    for (final entry in monthlyVolumeLeaders.entries) {
+      if (allTimeVolumeLeader?.id == entry.value.id) continue;
+      addBadge(
+        entry.value,
+        const WorkoutRecordBadge(
+          type: WorkoutRecordBadgeType.volumeBest,
+          tier: WorkoutRecordBadgeTier.monthly,
+        ),
+      );
+    }
+
+    return <int, WorkoutExerciseRecordBadges>{
+      for (final exerciseId in badgesByExercise.keys)
+        exerciseId: WorkoutExerciseRecordBadges(
+          isFirstRecord: firstByExercise[exerciseId] ?? false,
+          setBadges: badgesByExercise[exerciseId]!,
+        ),
+    };
+  }
+
   static Future<void> rebuildAll(DatabaseExecutor db) async {
     final rows = await db.rawQuery('''
       SELECT DISTINCT exercise_def_id
@@ -344,6 +490,12 @@ class WorkoutRecordEventsDao {
   static String _tierToDb(WorkoutRecordBadgeTier tier) {
     return tier == WorkoutRecordBadgeTier.monthly ? 'monthly' : 'all_time';
   }
+
+  static String _monthlyKey(DateTime date, int? reps) {
+    return reps == null
+        ? '${date.year}-${date.month}'
+        : '${date.year}-${date.month}-$reps';
+  }
 }
 
 class _RecordedExercise {
@@ -382,6 +534,26 @@ class _HistoricalSet {
     required this.weight,
     required this.reps,
     required this.completedAt,
+  });
+
+  double get volume => weight * reps;
+}
+
+class _CurrentRecordSet {
+  final int id;
+  final int exerciseId;
+  final int setIndex;
+  final DateTime completedAt;
+  final double weight;
+  final int reps;
+
+  const _CurrentRecordSet({
+    required this.id,
+    required this.exerciseId,
+    required this.setIndex,
+    required this.completedAt,
+    required this.weight,
+    required this.reps,
   });
 
   double get volume => weight * reps;

@@ -35,8 +35,13 @@ class FirstRecordBadge extends StatelessWidget {
 /// Compact history-backed badge for one completed weighted parent set.
 class WorkoutRecordBadgeChip extends StatelessWidget {
   final WorkoutRecordBadge badge;
+  final bool compact;
 
-  const WorkoutRecordBadgeChip({super.key, required this.badge});
+  const WorkoutRecordBadgeChip({
+    super.key,
+    required this.badge,
+    this.compact = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -46,10 +51,13 @@ class WorkoutRecordBadgeChip extends StatelessWidget {
             : _monthlyRecordColor;
     final strings = AppLocalizations.of(context);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+      padding:
+          compact
+              ? const EdgeInsets.symmetric(horizontal: 4, vertical: 0)
+              : const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(7),
+        borderRadius: BorderRadius.circular(compact ? 5 : 7),
         border: Border.all(color: color.withValues(alpha: 0.62)),
       ),
       child: Text(
@@ -58,7 +66,8 @@ class WorkoutRecordBadgeChip extends StatelessWidget {
             : strings.recordVolumeBest,
         style: TextStyle(
           color: color,
-          fontSize: 9,
+          fontSize: compact ? 7.5 : 9,
+          height: compact ? 1 : null,
           fontWeight: FontWeight.w800,
         ),
       ),

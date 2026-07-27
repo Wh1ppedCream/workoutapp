@@ -1146,7 +1146,10 @@ class _CompletedWeightCard extends StatelessWidget {
                             .forSet(rows[i].parentIndex!)
                             .where(
                               (badge) =>
-                                  badge.type == WorkoutRecordBadgeType.repBest,
+                                  badge.type ==
+                                      WorkoutRecordBadgeType.repBest ||
+                                  badge.type ==
+                                      WorkoutRecordBadgeType.volumeBest,
                             )
                             .toList(growable: false),
               ),
@@ -1224,7 +1227,25 @@ class _CompletedSetRow extends StatelessWidget {
           ),
           if (badges.isNotEmpty) ...[
             const SizedBox(width: 8),
-            WorkoutRecordBadgeChip(badge: badges.single),
+            if (badges.length == 1)
+              WorkoutRecordBadgeChip(badge: badges.single)
+            else
+              SizedBox(
+                height: 28,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    for (var index = 0; index < badges.length; index++) ...[
+                      if (index > 0) const SizedBox(height: 2),
+                      WorkoutRecordBadgeChip(
+                        badge: badges[index],
+                        compact: true,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
           ],
           const SizedBox(width: 12),
           SizedBox(

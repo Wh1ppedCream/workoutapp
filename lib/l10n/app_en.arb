@@ -657,7 +657,7 @@
       "reps": {"type": "int"}
     }
   },
-  "recordVolumeBest": "Volume Best",
+  "recordVolumeBest": "Best Volume",
   "sessionEstimatedMax": "ERM={weight}",
   "@sessionEstimatedMax": {
     "placeholders": {

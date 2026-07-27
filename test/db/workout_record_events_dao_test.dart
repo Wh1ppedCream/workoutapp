@@ -215,6 +215,89 @@ void main() {
     },
   );
 
+  test(
+    'current leaders hide superseded records in an exercise history list',
+    () async {
+      final maySession = await _insertSession(db, DateTime(2026, 5, 15));
+      final mayExercise = await _insertWeightExercise(
+        db,
+        sessionId: maySession,
+        definitionId: 1,
+        orderIndex: 0,
+        sets: const [(150.0, 8), (120.0, 10)],
+      );
+      final earlyJulySession = await _insertSession(db, DateTime(2026, 7, 2));
+      final earlyJulyExercise = await _insertWeightExercise(
+        db,
+        sessionId: earlyJulySession,
+        definitionId: 1,
+        orderIndex: 0,
+        sets: const [(100.0, 8), (100.0, 10)],
+      );
+      final lateJulySession = await _insertSession(db, DateTime(2026, 7, 26));
+      final lateJulyExercise = await _insertWeightExercise(
+        db,
+        sessionId: lateJulySession,
+        definitionId: 1,
+        orderIndex: 0,
+        sets: const [(120.0, 8), (110.0, 10)],
+      );
+
+      await WorkoutRecordEventsDao.rebuildAll(db);
+      final leaders = await WorkoutRecordEventsDao.currentLeadersForDefinition(
+        db,
+        1,
+      );
+
+      expect(leaders[mayExercise]!.isFirstRecord, isTrue);
+      expect(
+        _contains(
+          leaders[mayExercise]!.forSet(0),
+          WorkoutRecordBadgeType.repBest,
+          WorkoutRecordBadgeTier.allTime,
+          reps: 8,
+        ),
+        isTrue,
+      );
+      expect(
+        _contains(
+          leaders[mayExercise]!.forSet(0),
+          WorkoutRecordBadgeType.volumeBest,
+          WorkoutRecordBadgeTier.allTime,
+        ),
+        isTrue,
+      );
+      expect(leaders[earlyJulyExercise]!.forSet(0), isEmpty);
+      expect(leaders[earlyJulyExercise]!.forSet(1), isEmpty);
+      expect(
+        _contains(
+          leaders[lateJulyExercise]!.forSet(0),
+          WorkoutRecordBadgeType.repBest,
+          WorkoutRecordBadgeTier.monthly,
+          reps: 8,
+        ),
+        isTrue,
+      );
+      expect(
+        _contains(
+          leaders[lateJulyExercise]!.forSet(1),
+          WorkoutRecordBadgeType.repBest,
+          WorkoutRecordBadgeTier.monthly,
+          reps: 10,
+        ),
+        isTrue,
+      );
+      expect(
+        _contains(
+          leaders[lateJulyExercise]!.forSet(1),
+          WorkoutRecordBadgeType.volumeBest,
+          WorkoutRecordBadgeTier.monthly,
+        ),
+        isTrue,
+      );
+    },
+  );
+
   test('only parent sets receive persisted record awards', () async {
     final session = await _insertSession(db, DateTime(2026, 1, 15));
     final exercise = await _insertWeightExercise(

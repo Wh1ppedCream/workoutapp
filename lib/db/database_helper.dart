@@ -1967,6 +1967,12 @@ class DatabaseHelper {
     return WorkoutRecordEventsDao.forExerciseIds(db, exerciseIds);
   }
 
+  Future<Map<int, WorkoutExerciseRecordBadges>>
+  fetchCurrentExerciseRecordBadges(int definitionId) async {
+    final db = await database;
+    return WorkoutRecordEventsDao.currentLeadersForDefinition(db, definitionId);
+  }
+
   Future<List<Map<String, dynamic>>> fetchRecentWeightExerciseHistoryRows({
     required int definitionId,
     String? beforeSessionDate,

@@ -2739,7 +2739,7 @@ abstract class AppLocalizations {
   /// No description provided for @recordVolumeBest.
   ///
   /// In en, this message translates to:
-  /// **'Volume Best'**
+  /// **'Best Volume'**
   String get recordVolumeBest;
 
   /// No description provided for @sessionEstimatedMax.

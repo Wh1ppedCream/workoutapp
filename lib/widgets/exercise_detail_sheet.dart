@@ -146,6 +146,8 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
   final DraggableScrollableController _sheetController =
       DraggableScrollableController();
   late Future<_ExerciseHistoryPage> _historyFuture;
+  late Future<Map<int, WorkoutExerciseRecordBadges>>
+  _currentHistoryBadgesFuture;
   late Future<_LoadedExerciseMedia?> _primaryMediaFuture;
   final Map<String, Future<List<RepMaxRow>>> _repMaxFutures = {};
   final Map<String, Future<double?>> _volumeMaxFutures = {};
@@ -171,6 +173,9 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     super.initState();
     _tfSelected = [false, false, true]; // default to "all"
     unawaited(BodyHeatmap.preload());
+    _currentHistoryBadgesFuture = _repo.fetchCurrentExerciseRecordBadges(
+      widget.defId,
+    );
     _historyFuture = _loadHistoryPage();
     _primaryMediaFuture = _loadPrimaryMedia();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -195,6 +200,9 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
       _olderHistory.clear();
       _isLoadingMoreHistory = false;
       _hasMoreHistory = true;
+      _currentHistoryBadgesFuture = _repo.fetchCurrentExerciseRecordBadges(
+        widget.defId,
+      );
       _historyFuture = _loadHistoryPage();
       _primaryMediaFuture = _loadPrimaryMedia();
       _tutorialQueued = false;
@@ -274,9 +282,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
         (row) => _repo.fetchDetailedExercise(row['exercise_id'] as int),
       ),
     );
-    final badgesByExercise = await _repo.fetchExerciseRecordBadges(
-      pageRows.map((row) => row['exercise_id'] as int),
-    );
+    final badgesByExercise = await _currentHistoryBadgesFuture;
 
     final records = <HistoryRecord>[];
     for (var i = 0; i < pageRows.length; i++) {

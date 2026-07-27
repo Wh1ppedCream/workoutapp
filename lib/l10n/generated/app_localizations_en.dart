@@ -1483,7 +1483,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get recordVolumeBest => 'Volume Best';
+  String get recordVolumeBest => 'Best Volume';
 
   @override
   String sessionEstimatedMax(String weight) {

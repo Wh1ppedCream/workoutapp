@@ -17,7 +17,7 @@ class WorkoutRecordBadge {
       case WorkoutRecordBadgeType.repBest:
         return '${reps ?? 0} Rep Best';
       case WorkoutRecordBadgeType.volumeBest:
-        return 'Volume Best';
+        return 'Best Volume';
     }
   }
 }

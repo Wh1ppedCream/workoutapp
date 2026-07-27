@@ -166,6 +166,12 @@ class AppRepository {
     Iterable<int> exerciseIds,
   ) => _dbHelper.fetchExerciseRecordBadges(exerciseIds);
 
+  /// Returns current all-time and calendar-month leaders for one exercise.
+  /// This powers leaderboard-style records, not historical award views.
+  Future<Map<int, WorkoutExerciseRecordBadges>>
+  fetchCurrentExerciseRecordBadges(int definitionId) =>
+      _dbHelper.fetchCurrentExerciseRecordBadges(definitionId);
+
   Future<List<Map<String, dynamic>>> fetchRecentWeightExerciseHistoryRows({
     required int definitionId,
     String? beforeSessionDate,
