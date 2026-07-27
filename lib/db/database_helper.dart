@@ -39,7 +39,7 @@ import 'preset_transaction_dao.dart';
 import 'profile_transaction_dao.dart';
 import 'progression_rule_propagation_dao.dart';
 import 'workout_transaction_dao.dart';
-import 'session_record_badges_dao.dart';
+import 'workout_record_events_dao.dart';
 import 'exercise_allocation_dao.dart';
 import '../services/exercise_allocation_resolver.dart';
 import '../services/exercise_equipment_compatibility.dart';
@@ -48,7 +48,7 @@ import 'package:flutter/foundation.dart' show debugPrint;
 
 /// Singleton helper for managing the SQLite database.
 class DatabaseHelper {
-  static const int _kDbVersion = 56;
+  static const int _kDbVersion = 57;
   static int get currentSchemaVersion => _kDbVersion;
   static const String _kOpenTriggerResetKey = 'open_trigger_reset_v1';
   static const String _kOpenIndexEnsureKey = 'open_index_ensure_v3';
@@ -144,6 +144,9 @@ class DatabaseHelper {
         await _resetDbTriggers(db);
         await _rebuildFoodFtsIfExists(db);
         await _ensureIndexes(db);
+        if (oldVersion < 57) {
+          await WorkoutRecordEventsDao.rebuildAll(db);
+        }
 
         debugPrint(
           '[db] onUpgrade $oldVersion -> $newVersion (done in ${sw.elapsedMilliseconds}ms)',
@@ -165,6 +168,7 @@ class DatabaseHelper {
         await Schema.migrateV54(db);
         await Schema.migrateV55(db);
         await Schema.migrateV56(db);
+        await Schema.migrateV57(db);
         await _resetDbTriggers(db); // <—
         await _maybeCompactLegacyFoodCatalog(db);
         await _removeEmptyStarterPlans(db);
@@ -1885,12 +1889,28 @@ class DatabaseHelper {
 
   Future<void> updateSession(int id, DateTime newDate, int newDuration) async {
     final db = await database;
-    await SessionDao.updateSession(
-      db,
-      id,
-      newDate.toIso8601String(),
-      newDuration,
-    );
+    await db.transaction((txn) async {
+      final definitionRows = await txn.rawQuery(
+        '''
+        SELECT DISTINCT exercise_def_id
+        FROM exercises
+        WHERE session_id = ?
+          AND type = 'weight'
+          AND exercise_def_id IS NOT NULL
+      ''',
+        [id],
+      );
+      await txn.update(
+        'sessions',
+        {'date': newDate.toIso8601String(), 'duration': newDuration},
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      await WorkoutRecordEventsDao.rebuildForDefinitions(
+        txn,
+        definitionRows.map((row) => row['exercise_def_id'] as int),
+      );
+    });
   }
 
   // Fetch range + map
@@ -1937,7 +1957,14 @@ class DatabaseHelper {
     int sessionId,
   ) async {
     final db = await database;
-    return SessionRecordBadgesDao.forSession(db, sessionId);
+    return WorkoutRecordEventsDao.forSession(db, sessionId);
+  }
+
+  Future<Map<int, WorkoutExerciseRecordBadges>> fetchExerciseRecordBadges(
+    Iterable<int> exerciseIds,
+  ) async {
+    final db = await database;
+    return WorkoutRecordEventsDao.forExerciseIds(db, exerciseIds);
   }
 
   Future<List<Map<String, dynamic>>> fetchRecentWeightExerciseHistoryRows({
@@ -2193,13 +2220,52 @@ class DatabaseHelper {
   // Update a single set.
   Future<void> updateSet(int setId, double weight, int reps) async {
     final db = await database;
-    await SetDao.updateSet(db, setId, weight, reps);
+    await db.transaction((txn) async {
+      final definitionRows = await txn.rawQuery(
+        '''
+        SELECT e.exercise_def_id
+        FROM sets st
+        INNER JOIN exercises e ON e.id = st.exercise_id
+        WHERE st.id = ? AND e.type = 'weight'
+      ''',
+        [setId],
+      );
+      await txn.update(
+        'sets',
+        {'weight': weight, 'reps': reps},
+        where: 'id = ?',
+        whereArgs: [setId],
+      );
+      await WorkoutRecordEventsDao.rebuildForDefinitions(
+        txn,
+        definitionRows
+            .map((row) => row['exercise_def_id'] as int?)
+            .whereType<int>(),
+      );
+    });
   }
 
   // Delete a single set.
   Future<void> deleteSet(int setId) async {
     final db = await database;
-    await SetDao.deleteSet(db, setId);
+    await db.transaction((txn) async {
+      final definitionRows = await txn.rawQuery(
+        '''
+        SELECT e.exercise_def_id
+        FROM sets st
+        INNER JOIN exercises e ON e.id = st.exercise_id
+        WHERE st.id = ? AND e.type = 'weight'
+      ''',
+        [setId],
+      );
+      await txn.delete('sets', where: 'id = ?', whereArgs: [setId]);
+      await WorkoutRecordEventsDao.rebuildForDefinitions(
+        txn,
+        definitionRows
+            .map((row) => row['exercise_def_id'] as int?)
+            .whereType<int>(),
+      );
+    });
   }
 
   // Reorder sets.

@@ -1,4 +1,5 @@
 import 'package:env_test/db/active_workout_dao.dart';
+import 'package:env_test/db/workout_record_events_dao.dart';
 import 'package:env_test/db/workout_transaction_dao.dart';
 import 'package:env_test/models/models.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -108,6 +109,21 @@ void main() {
         updated_at TEXT NOT NULL
       )
     ''');
+    await db.execute('''
+      CREATE TABLE workout_exercise_record_events (
+        exercise_id INTEGER PRIMARY KEY,
+        is_first_record INTEGER NOT NULL DEFAULT 0
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE workout_set_record_events (
+        set_id INTEGER NOT NULL,
+        badge_type TEXT NOT NULL,
+        badge_tier TEXT NOT NULL,
+        reps INTEGER,
+        PRIMARY KEY(set_id, badge_type)
+      )
+    ''');
   });
 
   tearDown(() => db.close());
@@ -163,6 +179,20 @@ void main() {
     expect(await db.query('sessions'), hasLength(1));
     expect(await db.query('sets'), hasLength(1));
     expect(await ActiveWorkoutDao.load(db), isNull);
+    final badges =
+        (await WorkoutRecordEventsDao.forSession(db, sessionId)).values.single;
+    expect(badges.isFirstRecord, isTrue);
+    expect(
+      badges
+          .forSet(0)
+          .any(
+            (badge) =>
+                badge.type == WorkoutRecordBadgeType.repBest &&
+                badge.tier == WorkoutRecordBadgeTier.allTime &&
+                badge.reps == 5,
+          ),
+      isTrue,
+    );
   });
 
   test('failed completion keeps both draft and history unchanged', () async {

@@ -20,6 +20,7 @@ import '../utils/tutorial_launcher.dart';
 import '../utils/weight_unit_formatter.dart';
 import 'body_heatmap.dart';
 import 'guided_tutorial_overlay.dart';
+import 'workout_record_badges.dart';
 
 /// Simple record model for history tab
 class HistoryRecord {
@@ -28,6 +29,7 @@ class HistoryRecord {
   final int exerciseId;
   final String sessionDateValue;
   final List<ExerciseSet> sets;
+  final WorkoutExerciseRecordBadges badges;
 
   HistoryRecord({
     required this.date,
@@ -35,6 +37,7 @@ class HistoryRecord {
     required this.exerciseId,
     required this.sessionDateValue,
     required this.sets,
+    required this.badges,
   });
 }
 
@@ -271,6 +274,9 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
         (row) => _repo.fetchDetailedExercise(row['exercise_id'] as int),
       ),
     );
+    final badgesByExercise = await _repo.fetchExerciseRecordBadges(
+      pageRows.map((row) => row['exercise_id'] as int),
+    );
 
     final records = <HistoryRecord>[];
     for (var i = 0; i < pageRows.length; i++) {
@@ -285,6 +291,9 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
           exerciseId: row['exercise_id'] as int,
           sessionDateValue: sessionDateValue,
           sets: exercise.sets,
+          badges:
+              badgesByExercise[row['exercise_id'] as int] ??
+              const WorkoutExerciseRecordBadges(isFirstRecord: false),
         ),
       );
     }
@@ -1228,6 +1237,10 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                 : _hasMoreHistory;
 
         final records = _buildRecordTrendPoints(history);
+        final hasSetRecordBadges = history.any(
+          (record) =>
+              record.badges.setBadges.values.any((badges) => badges.isNotEmpty),
+        );
 
         return ListView(
           controller: scrollCtrl,
@@ -1259,6 +1272,10 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
               padding: EdgeInsets.symmetric(vertical: 16),
               child: Divider(height: 1),
             ),
+            if (hasSetRecordBadges)
+              const WorkoutRecordBadgeLegend(
+                padding: EdgeInsets.only(bottom: 6),
+              ),
             for (var index = 0; index < history.length; index++) ...[
               _ExerciseHistorySessionCard(
                 record: history[index],
@@ -1496,6 +1513,10 @@ class _ExerciseHistorySessionCard extends StatelessWidget {
                   ),
                 ),
               ),
+              if (record.badges.isFirstRecord) ...[
+                const SizedBox(width: 8),
+                const FirstRecordBadge(),
+              ],
               const SizedBox(width: 10),
               Semantics(
                 button: true,
@@ -1544,6 +1565,7 @@ class _ExerciseHistorySessionCard extends StatelessWidget {
             _ExerciseHistorySetRow(
               index: entry.key + 1,
               set: entry.value,
+              badges: record.badges.forSet(entry.key),
               weightUnit: weightUnit,
             ),
         ],
@@ -1555,11 +1577,13 @@ class _ExerciseHistorySessionCard extends StatelessWidget {
 class _ExerciseHistorySetRow extends StatelessWidget {
   final int index;
   final ExerciseSet set;
+  final List<WorkoutRecordBadge> badges;
   final WeightUnit weightUnit;
 
   const _ExerciseHistorySetRow({
     required this.index,
     required this.set,
+    required this.badges,
     required this.weightUnit,
   });
 
@@ -1589,16 +1613,54 @@ class _ExerciseHistorySetRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              _formatSet(set, weightUnit),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
+          if (badges.isEmpty)
+            Expanded(
+              child: Text(
+                _formatSet(set, weightUnit),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            )
+          else ...[
+            Expanded(
+              flex: 2,
+              child: Text(
+                _formatSet(set, weightUnit),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
-          ),
+            const SizedBox(width: 4),
+            Expanded(
+              flex: 3,
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (
+                        var badgeIndex = 0;
+                        badgeIndex < badges.length;
+                        badgeIndex++
+                      ) ...[
+                        if (badgeIndex > 0) const SizedBox(width: 4),
+                        WorkoutRecordBadgeChip(badge: badges[badgeIndex]),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
           const SizedBox(width: 12),
           FittedBox(
             fit: BoxFit.scaleDown,

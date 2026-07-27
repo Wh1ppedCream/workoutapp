@@ -160,6 +160,7 @@ class Schema {
     await migrateV54(db);
     await migrateV55(db);
     await migrateV56(db);
+    await migrateV57(db);
   }
 
   /// Handler for onUpgrade callback.
@@ -223,6 +224,7 @@ class Schema {
     if (oldVersion < 54) await migrateV54(db);
     if (oldVersion < 55) await migrateV55(db);
     if (oldVersion < 56) await migrateV56(db);
+    if (oldVersion < 57) await migrateV57(db);
   }
 
   /// Migration to version 3: adds rating, equipment/muscle tables.
@@ -3247,6 +3249,35 @@ WHERE source_id IS NULL
   /// v56 - repair FTS4 synchronization triggers created with FTS5 syntax.
   static Future<void> migrateV56(Database db) async {
     await ensureFoodFtsTriggers(db);
+  }
+
+  /// v57 - persisted record events let historical workout lists show the same
+  /// awards that were earned when a session was completed.
+  static Future<void> migrateV57(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS workout_exercise_record_events (
+        exercise_id INTEGER PRIMARY KEY,
+        is_first_record INTEGER NOT NULL DEFAULT 0
+          CHECK (is_first_record IN (0, 1)),
+        FOREIGN KEY(exercise_id) REFERENCES exercises(id) ON DELETE CASCADE
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS workout_set_record_events (
+        set_id INTEGER NOT NULL,
+        badge_type TEXT NOT NULL
+          CHECK (badge_type IN ('rep_best', 'set_volume_best')),
+        badge_tier TEXT NOT NULL
+          CHECK (badge_tier IN ('monthly', 'all_time')),
+        reps INTEGER,
+        PRIMARY KEY(set_id, badge_type),
+        FOREIGN KEY(set_id) REFERENCES sets(id) ON DELETE CASCADE
+      )
+    ''');
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_workout_set_record_events_set
+      ON workout_set_record_events(set_id)
+    ''');
   }
 
   /// Keeps the external-content FTS4 index synchronized with `foods`.

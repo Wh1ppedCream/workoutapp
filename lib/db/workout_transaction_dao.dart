@@ -4,6 +4,7 @@ import 'package:sqflite/sqflite.dart';
 
 import '../models/models.dart';
 import 'active_workout_dao.dart';
+import 'workout_record_events_dao.dart';
 
 /// Atomic writes for completed and edited workout-session graphs.
 class WorkoutTransactionDao {
@@ -25,8 +26,14 @@ class WorkoutTransactionDao {
         'date': completedAt.toIso8601String(),
         'duration': durationSeconds,
       });
-      await _insertExercises(txn, sessionId, exercises, updateStats: true);
+      final definitionIds = await _insertExercises(
+        txn,
+        sessionId,
+        exercises,
+        updateStats: true,
+      );
       await ActiveWorkoutDao.clear(txn);
+      await WorkoutRecordEventsDao.rebuildForDefinitions(txn, definitionIds);
       return sessionId;
     });
   }
@@ -46,8 +53,18 @@ class WorkoutTransactionDao {
         where: 'session_id = ?',
         whereArgs: [sessionId],
       );
-      await _insertExercises(txn, sessionId, exercises, updateStats: false);
+      final insertedDefinitionIds = await _insertExercises(
+        txn,
+        sessionId,
+        exercises,
+        updateStats: false,
+      );
+      touchedDefinitionIds.addAll(insertedDefinitionIds);
       await _clearStoredStats(txn, touchedDefinitionIds);
+      await WorkoutRecordEventsDao.rebuildForDefinitions(
+        txn,
+        touchedDefinitionIds,
+      );
     });
   }
 
@@ -56,15 +73,17 @@ class WorkoutTransactionDao {
       final definitionIds = await _sessionDefinitionIds(txn, sessionId);
       await txn.delete('sessions', where: 'id = ?', whereArgs: [sessionId]);
       await _clearStoredStats(txn, definitionIds);
+      await WorkoutRecordEventsDao.rebuildForDefinitions(txn, definitionIds);
     });
   }
 
-  static Future<void> _insertExercises(
+  static Future<Set<int>> _insertExercises(
     Transaction txn,
     int sessionId,
     List<WorkoutExerciseWrite> exercises, {
     required bool updateStats,
   }) async {
+    final definitionIds = <int>{};
     for (var index = 0; index < exercises.length; index++) {
       final item = exercises[index];
       final exercise = item.exercise;
@@ -87,6 +106,7 @@ class WorkoutTransactionDao {
 
       if (exercise is WeightExercise) {
         await _insertWeightSets(txn, exerciseId, exercise);
+        if (definitionId != null) definitionIds.add(definitionId);
         if (updateStats && definitionId != null) {
           await _updateStoredStats(txn, definitionId, exercise.sets);
         }
@@ -112,6 +132,7 @@ class WorkoutTransactionDao {
         }
       }
     }
+    return definitionIds;
   }
 
   static Future<void> _insertWeightSets(

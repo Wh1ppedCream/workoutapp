@@ -162,6 +162,10 @@ class AppRepository {
     int sessionId,
   ) => _dbHelper.fetchSessionRecordBadges(sessionId);
 
+  Future<Map<int, WorkoutExerciseRecordBadges>> fetchExerciseRecordBadges(
+    Iterable<int> exerciseIds,
+  ) => _dbHelper.fetchExerciseRecordBadges(exerciseIds);
+
   Future<List<Map<String, dynamic>>> fetchRecentWeightExerciseHistoryRows({
     required int definitionId,
     String? beforeSessionDate,

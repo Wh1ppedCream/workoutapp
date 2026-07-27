@@ -32,7 +32,18 @@ void main() {
     }
   });
 
-  for (final historicalVersion in const [1, 7, 18, 21, 42, 47, 52, 54, 55]) {
+  for (final historicalVersion in const [
+    1,
+    7,
+    18,
+    21,
+    42,
+    47,
+    52,
+    54,
+    55,
+    56,
+  ]) {
     test(
       'upgrades a populated v$historicalVersion database and preserves data',
       () async {
@@ -209,6 +220,7 @@ Future<void> _createSchemaThroughVersion(Database db, int version) async {
     54: Schema.migrateV54,
     55: Schema.migrateV55,
     56: Schema.migrateV56,
+    57: Schema.migrateV57,
   };
   for (final entry in migrations.entries) {
     if (entry.key > version) break;

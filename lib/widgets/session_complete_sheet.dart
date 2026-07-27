@@ -9,6 +9,7 @@ import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
 import '../utils/async_pool.dart';
 import '../utils/weight_unit_formatter.dart';
+import 'workout_record_badges.dart';
 
 /// A container for session metadata and its exercises.
 class _SessionData {
@@ -322,51 +323,7 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
   }
 
   Widget _buildBadgeLegend() {
-    final theme = Theme.of(context);
-    final strings = AppLocalizations.of(context);
-    final textStyle = theme.textTheme.labelMedium?.copyWith(
-      fontWeight: FontWeight.w700,
-    );
-
-    return Padding(
-      // Match the exercise-card gutters so the legend reads as part of the list.
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          _buildBadgeLegendItem(
-            color: const Color(0xFF81C784),
-            label: strings.recordMonthly,
-            style: textStyle?.copyWith(color: const Color(0xFF81C784)),
-          ),
-          const SizedBox(width: 18),
-          _buildBadgeLegendItem(
-            color: const Color(0xFFFFC857),
-            label: strings.recordAllTime,
-            style: textStyle?.copyWith(color: const Color(0xFFFFC857)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBadgeLegendItem({
-    required Color color,
-    required String label,
-    required TextStyle? style,
-  }) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        ),
-        const SizedBox(width: 6),
-        Text(label, style: style),
-      ],
-    );
+    return const WorkoutRecordBadgeLegend();
   }
 
   Widget _buildSummaryMetric(
@@ -446,7 +403,7 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
             ),
             if (badges.isFirstRecord) ...[
               const SizedBox(width: 8),
-              _buildFirstRecordBadge(),
+              const FirstRecordBadge(),
             ],
           ],
         ),
@@ -519,7 +476,9 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
                             badgeIndex++
                           ) ...[
                             if (badgeIndex > 0) const SizedBox(width: 4),
-                            _buildSetRecordBadge(setBadges[badgeIndex]),
+                            WorkoutRecordBadgeChip(
+                              badge: setBadges[badgeIndex],
+                            ),
                           ],
                         ],
                       ),
@@ -573,61 +532,6 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
       (value, codeUnit) => value + codeUnit,
     );
     return palette[hash % palette.length];
-  }
-
-  Widget _buildFirstRecordBadge() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(7),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.72)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            AppLocalizations.of(context).recordFirst,
-            maxLines: 1,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 9,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSetRecordBadge(WorkoutRecordBadge badge) {
-    final color =
-        badge.tier == WorkoutRecordBadgeTier.allTime
-            ? const Color(0xFFFFC857)
-            : const Color(0xFF81C784);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(7),
-        border: Border.all(color: color.withValues(alpha: 0.62)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            badge.type == WorkoutRecordBadgeType.repBest
-                ? AppLocalizations.of(context).recordRepBest(badge.reps ?? 0)
-                : AppLocalizations.of(context).recordVolumeBest,
-            style: TextStyle(
-              color: color,
-              fontSize: 9,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   String _formatDuration(Duration duration) {

@@ -22,6 +22,7 @@ import '../../widgets/exercise_card.dart';
 import '../../widgets/exercise_detail_sheet.dart';
 import '../../widgets/focused_sets_list.dart';
 import '../../widgets/guided_tutorial_overlay.dart';
+import '../../widgets/workout_record_badges.dart';
 import 'session_screen.dart';
 
 /// Displays a saved workout session with summary, exercise detail, and reuse
@@ -51,6 +52,8 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
   final _actionsTutorialKey = GlobalKey(debugLabel: 'workout_detail_actions');
 
   List<_SessionExerciseDetail> _exerciseDetails = [];
+  Map<int, WorkoutExerciseRecordBadges> _badgesByExercise =
+      const <int, WorkoutExerciseRecordBadges>{};
   _SessionSummary? _summary;
   Object? _loadError;
   bool _isLoading = true;
@@ -78,12 +81,15 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
 
     try {
       final exRows = await _repo.fetchExercises(widget.session.id);
+      final badgeFuture = _repo.fetchSessionRecordBadges(widget.session.id);
       final loaded = await _loadExerciseDetails(exRows);
+      final badges = await badgeFuture;
 
       final summary = await _buildSummary(loaded);
       if (!mounted) return;
       setState(() {
         _exerciseDetails = loaded;
+        _badgesByExercise = badges;
         _summary = summary;
         _hasChanges = false;
         _isLoading = false;
@@ -196,6 +202,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
       ),
       cardType: CardType.weight,
       definitionId: defId,
+      exerciseId: instanceId,
     );
   }
 
@@ -257,6 +264,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
         elapsedSeconds: (row['elapsed_seconds'] as num).toInt(),
       ),
       cardType: CardType.cardio,
+      exerciseId: instanceId,
     );
   }
 
@@ -291,6 +299,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
         completedStretchIndices: completed,
       ),
       cardType: CardType.stretch,
+      exerciseId: instanceId,
     );
   }
 
@@ -444,13 +453,10 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
         exercises: writes,
       );
 
-      final summary = await _buildSummary(_exerciseDetails);
       if (!mounted) return;
       context.read<ActiveSession>().markHistoryChanged();
-      setState(() {
-        _summary = summary;
-        _hasChanges = false;
-      });
+      await _loadExercises();
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(strings.workoutDetailChangesSaved)),
       );
@@ -733,6 +739,9 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
               key: index == 0 ? _exerciseTutorialKey : null,
               child: _CompletedExerciseCard(
                 detail: detail,
+                badges:
+                    _badgesByExercise[detail.exerciseId] ??
+                    const WorkoutExerciseRecordBadges(isFirstRecord: false),
                 onDetails:
                     detail.cardType == CardType.weight
                         ? () => _showExerciseInfo(detail)
@@ -1028,15 +1037,24 @@ class _SummaryMetricTile extends StatelessWidget {
 
 class _CompletedExerciseCard extends StatelessWidget {
   final _SessionExerciseDetail detail;
+  final WorkoutExerciseRecordBadges badges;
   final VoidCallback? onDetails;
 
-  const _CompletedExerciseCard({required this.detail, this.onDetails});
+  const _CompletedExerciseCard({
+    required this.detail,
+    required this.badges,
+    this.onDetails,
+  });
 
   @override
   Widget build(BuildContext context) {
     final exercise = detail.exercise;
     if (exercise is WeightExercise) {
-      return _CompletedWeightCard(exercise: exercise, onDetails: onDetails);
+      return _CompletedWeightCard(
+        exercise: exercise,
+        badges: badges,
+        onDetails: onDetails,
+      );
     }
     // TODO(cardio/stretch): restore completed cardio and stretch detail cards
     // after those cards are fixed, updated, and ready for the user flow.
@@ -1046,14 +1064,18 @@ class _CompletedExerciseCard extends StatelessWidget {
 
 class _CompletedWeightCard extends StatelessWidget {
   final WeightExercise exercise;
+  final WorkoutExerciseRecordBadges badges;
   final VoidCallback? onDetails;
 
-  const _CompletedWeightCard({required this.exercise, this.onDetails});
+  const _CompletedWeightCard({
+    required this.exercise,
+    required this.badges,
+    this.onDetails,
+  });
 
   @override
   Widget build(BuildContext context) {
     final rows = _setRows(exercise);
-    final bestIndex = _bestSetIndex(rows);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 14),
@@ -1077,6 +1099,13 @@ class _CompletedWeightCard extends StatelessWidget {
                           fontWeight: FontWeight.w900,
                         ),
                       ),
+                      if (badges.isFirstRecord) ...[
+                        const SizedBox(height: 6),
+                        const Align(
+                          alignment: Alignment.centerLeft,
+                          child: FirstRecordBadge(),
+                        ),
+                      ],
                       if (exercise.equipment.trim().isNotEmpty) ...[
                         const SizedBox(height: 2),
                         Text(
@@ -1108,7 +1137,19 @@ class _CompletedWeightCard extends StatelessWidget {
             Divider(color: Theme.of(context).colorScheme.outlineVariant),
             const SizedBox(height: 6),
             for (var i = 0; i < rows.length; i++)
-              _CompletedSetRow(row: rows[i], isBest: i == bestIndex),
+              _CompletedSetRow(
+                row: rows[i],
+                badges:
+                    rows[i].parentIndex == null
+                        ? const <WorkoutRecordBadge>[]
+                        : badges
+                            .forSet(rows[i].parentIndex!)
+                            .where(
+                              (badge) =>
+                                  badge.type == WorkoutRecordBadgeType.repBest,
+                            )
+                            .toList(growable: false),
+              ),
           ],
         ),
       ),
@@ -1122,7 +1163,13 @@ class _CompletedWeightCard extends StatelessWidget {
   static List<_SetDisplayRow> _setRows(WeightExercise exercise) {
     final rows = <_SetDisplayRow>[];
     for (var i = 0; i < exercise.sets.length; i++) {
-      rows.add(_SetDisplayRow(label: '${i + 1}', set: exercise.sets[i]));
+      rows.add(
+        _SetDisplayRow(
+          label: '${i + 1}',
+          set: exercise.sets[i],
+          parentIndex: i,
+        ),
+      );
       final childSets = exercise.changeSets[i] ?? const <ExerciseSet>[];
       for (var childIndex = 0; childIndex < childSets.length; childIndex++) {
         rows.add(
@@ -1136,26 +1183,13 @@ class _CompletedWeightCard extends StatelessWidget {
     }
     return rows;
   }
-
-  static int _bestSetIndex(List<_SetDisplayRow> rows) {
-    var bestIndex = -1;
-    var bestErm = 0.0;
-    for (var i = 0; i < rows.length; i++) {
-      final erm = _epley(rows[i].set);
-      if (erm > bestErm) {
-        bestErm = erm;
-        bestIndex = i;
-      }
-    }
-    return bestIndex;
-  }
 }
 
 class _CompletedSetRow extends StatelessWidget {
   final _SetDisplayRow row;
-  final bool isBest;
+  final List<WorkoutRecordBadge> badges;
 
-  const _CompletedSetRow({required this.row, required this.isBest});
+  const _CompletedSetRow({required this.row, required this.badges});
 
   @override
   Widget build(BuildContext context) {
@@ -1188,34 +1222,26 @@ class _CompletedSetRow extends StatelessWidget {
               style: theme.textTheme.titleMedium,
             ),
           ),
-          if (isBest && eRm > 0) ...[
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.amber.withValues(alpha: 0.9),
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Text(
-                AppLocalizations.of(context).workoutDetailBest,
-                style: TextStyle(
-                  color: Colors.black,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
+          if (badges.isNotEmpty) ...[
+            const SizedBox(width: 8),
+            WorkoutRecordBadgeChip(badge: badges.single),
           ],
-          Expanded(
-            child: Text(
-              AppLocalizations.of(context).workoutDetailEstimatedOneRm(
-                WeightUnitFormatter.formatWeight(eRm, weightUnit),
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.right,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                fontStyle: FontStyle.italic,
+          const SizedBox(width: 12),
+          SizedBox(
+            width: 88,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerRight,
+              child: Text(
+                AppLocalizations.of(context).workoutDetailEstimatedOneRm(
+                  WeightUnitFormatter.formatWeight(eRm, weightUnit),
+                ),
+                maxLines: 1,
+                textAlign: TextAlign.right,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontStyle: FontStyle.italic,
+                ),
               ),
             ),
           ),
@@ -1230,10 +1256,12 @@ class _SessionExerciseDetail {
   final WorkoutExercise exercise;
   final CardType cardType;
   final int? definitionId;
+  final int exerciseId;
 
   const _SessionExerciseDetail({
     required this.exercise,
     required this.cardType,
+    required this.exerciseId,
     this.definitionId,
   });
 }
@@ -1259,11 +1287,13 @@ class _SetDisplayRow {
   final String label;
   final ExerciseSet set;
   final bool isChild;
+  final int? parentIndex;
 
   const _SetDisplayRow({
     required this.label,
     required this.set,
     this.isChild = false,
+    this.parentIndex,
   });
 }
 
