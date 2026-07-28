@@ -49,6 +49,15 @@ import 'package:flutter/foundation.dart' show debugPrint;
 /// Singleton helper for managing the SQLite database.
 class DatabaseHelper {
   static const int _kDbVersion = 57;
+  static const bool _kIntegrationTestMode = bool.fromEnvironment(
+    'TONOS_INTEGRATION_TEST',
+  );
+  static const String _kDatabaseName = String.fromEnvironment(
+    'TONOS_DATABASE_NAME',
+    defaultValue: 'fitness_tracker.db',
+  );
+  static const String _kIntegrationTestDatabaseName =
+      'tonos_integration_test.db';
   static int get currentSchemaVersion => _kDbVersion;
   static const String _kOpenTriggerResetKey = 'open_trigger_reset_v1';
   static const String _kOpenIndexEnsureKey = 'open_index_ensure_v3';
@@ -5495,6 +5504,24 @@ class DatabaseHelper {
     _dbFuture = null;
   }
 
+  /// Removes only the explicitly named device-test database.
+  ///
+  /// This is intentionally guarded by compile-time defines so integration
+  /// tests cannot accidentally clear a person's normal workout history.
+  Future<void> resetIntegrationTestDatabase() async {
+    if (!_kIntegrationTestMode ||
+        _kDatabaseName != _kIntegrationTestDatabaseName) {
+      throw StateError(
+        'Integration database reset requires '
+        'TONOS_INTEGRATION_TEST=true and '
+        'TONOS_DATABASE_NAME=$_kIntegrationTestDatabaseName.',
+      );
+    }
+    await close();
+    await deleteDatabase(await _dbFilePath());
+    _fts4Available = null;
+  }
+
   Future<void> _bumpAutoincrement(Database db) async {
     // sqlite_sequence only exists if at least one table was created with AUTOINCREMENT
     if (!await _tableExists(db, 'sqlite_sequence')) return;
@@ -5642,6 +5669,6 @@ class DatabaseHelper {
 
   Future<String> _dbFilePath() async {
     final dbPath = await getDatabasesPath();
-    return join(dbPath, 'fitness_tracker.db'); // keep your existing filename
+    return join(dbPath, _kDatabaseName);
   }
 }

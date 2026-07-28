@@ -57,6 +57,8 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  integration_test:
+    sdk: flutter
 
   crypto: ^3.0.6
   sqflite_common_ffi: ^2.3.4
