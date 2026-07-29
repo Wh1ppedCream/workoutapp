@@ -69,6 +69,14 @@ where the important logic lives and how the major workout features fit together.
   timing logs.
 - For repeated SQL list placeholders, use helpers from `lib/db/db_query_utils.dart`.
 
+### DatabaseHelper Boundary
+
+`DatabaseHelper` is still the public database lifecycle coordinator and a
+compatibility facade for existing callers. New work should not add unrelated
+feature SQL there. Put table-specific queries in a focused DAO, expose them
+through `AppRepository`, and extract lifecycle or maintenance behavior only
+when that behavior can be covered by focused database-upgrade tests.
+
 ## Performance Patterns
 
 - Use `BodyHeatmap.preload()` before screens that show many heatmaps.
@@ -87,3 +95,6 @@ where the important logic lives and how the major workout features fit together.
 - Avoid comments that restate a single line of code.
 - When documenting generation, analytics, or database code, explain where inputs
   come from and what downstream feature depends on the output.
+- Keep `screen-routing-map.md` for active navigation, `maintenance-backlog.md`
+  for prioritized engineering work, and the cloud-content documents for
+  publishing operations.

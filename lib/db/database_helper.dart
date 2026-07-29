@@ -31,6 +31,7 @@ import 'personal_info_dao.dart';
 import 'personal_info_transaction_dao.dart';
 import 'nutrition_dao.dart';
 import 'content_dao.dart';
+import 'database_connection.dart';
 import 'database_maintenance.dart';
 import 'db_query_utils.dart';
 import 'active_plan_dao.dart';
@@ -99,23 +100,7 @@ class DatabaseHelper {
     final db = await openDatabase(
       path,
       version: _kDbVersion,
-      onConfigure: (db) async {
-        // OK with execute (doesn't return rows)
-        await db.execute('PRAGMA foreign_keys = ON');
-
-        // Use rawQuery for PRAGMA that return a value
-        try {
-          await db.rawQuery('PRAGMA journal_mode = WAL');
-          // Optional: log result -> [{'journal_mode': 'wal'}] on success
-          // debugPrint('WAL result: $res');
-        } catch (e) {
-          // Some devices/contexts may reject this; safe to continue without WAL
-          // debugPrint('Could not enable WAL: $e');
-        }
-
-        // If you set other PRAGMAs that return data, also prefer rawQuery:
-        // await db.rawQuery('PRAGMA synchronous = NORMAL');
-      },
+      onConfigure: DatabaseConnection.configure,
 
       onCreate: _onCreate,
       onUpgrade: (db, oldVersion, newVersion) async {

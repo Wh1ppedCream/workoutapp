@@ -11,6 +11,7 @@ screen name:
 - `test/db` runs selected DAO contracts against in-memory SQLite.
 - `test/widgets` smoke-tests reusable user-interface components and their
   accessibility actions.
+- `integration_test` runs device-level core flows against an isolated database.
 
 Run the complete suite from the repository root:
 
@@ -22,6 +23,15 @@ Run a focused test file while developing a feature:
 
 ```powershell
 flutter test test\services\flow_executor_test.dart
+```
+
+Run the Android core-flow suite on a connected device:
+
+```powershell
+flutter test integration_test\core_flows_test.dart `
+  -d <android-device-id> `
+  --dart-define=TONOS_INTEGRATION_TEST=true `
+  --dart-define=TONOS_DATABASE_NAME=tonos_integration_test.db
 ```
 
 For every new user-visible feature, add at least one test at the lowest useful

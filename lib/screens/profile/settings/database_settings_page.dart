@@ -157,7 +157,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
     required String contents,
     required String dialogTitle,
   }) {
-    return FilePicker.platform.saveFile(
+    return FilePicker.saveFile(
       dialogTitle: dialogTitle,
       fileName: _timestampedFilename(filename),
       type: FileType.custom,
@@ -197,7 +197,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
   }
 
   Future<({String name, String contents})?> _pickJsonFile() async {
-    final result = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.pickFiles(
       allowMultiple: false,
       type: FileType.custom,
       allowedExtensions: const ['json'],
