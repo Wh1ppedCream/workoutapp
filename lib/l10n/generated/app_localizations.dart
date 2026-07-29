@@ -8226,6 +8226,54 @@ abstract class AppLocalizations {
   /// **'Workout Report'**
   String get workoutReportTitle;
 
+  /// No description provided for @workoutReportAdditionalDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Additional Details'**
+  String get workoutReportAdditionalDetails;
+
+  /// No description provided for @recommendedSetsEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit recommended sets'**
+  String get recommendedSetsEdit;
+
+  /// No description provided for @recommendedSetsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended sets'**
+  String get recommendedSetsTitle;
+
+  /// No description provided for @recommendedSetsMinimum.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum recommended sets'**
+  String get recommendedSetsMinimum;
+
+  /// No description provided for @recommendedSetsMaximum.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum recommended sets'**
+  String get recommendedSetsMaximum;
+
+  /// No description provided for @recommendedSetsValidNumbers.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter valid set numbers.'**
+  String get recommendedSetsValidNumbers;
+
+  /// No description provided for @recommendedSetsNonNegative.
+  ///
+  /// In en, this message translates to:
+  /// **'Set numbers cannot be negative.'**
+  String get recommendedSetsNonNegative;
+
+  /// No description provided for @recommendedSetsRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum must be at least the minimum.'**
+  String get recommendedSetsRange;
+
   /// No description provided for @workoutReportWorkouts.
   ///
   /// In en, this message translates to:

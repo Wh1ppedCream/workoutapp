@@ -1433,20 +1433,24 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
                         context: context,
                         builder:
                             (_) => AlertDialog(
-                              title: const Text('Remove Bodypart'),
+                              title: Text(
+                                _strings.exerciseEditorRemoveItemTitle(
+                                  _strings.exerciseEditorBodypartItem,
+                                ),
+                              ),
                               content: Text(
-                                'Remove "$name" from this exercise?',
+                                _strings.exerciseEditorRemoveItemBody(name),
                               ),
                               actions: [
                                 TextButton(
                                   onPressed:
                                       () => Navigator.of(context).pop(false),
-                                  child: const Text('Cancel'),
+                                  child: Text(_strings.commonCancel),
                                 ),
                                 TextButton(
                                   onPressed:
                                       () => Navigator.of(context).pop(true),
-                                  child: const Text('Remove'),
+                                  child: Text(_strings.commonRemove),
                                 ),
                               ],
                             ),
@@ -1467,7 +1471,9 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
               key: ValueKey('${entry['id']}_$count'),
               enabled: _isEditing && _useManualBody,
               initialValue: count.toString(),
-              decoration: const InputDecoration(suffixText: 'sets'),
+              decoration: InputDecoration(
+                suffixText: _strings.sessionMetricSets,
+              ),
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
@@ -1933,16 +1939,15 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
                         ? (v) => setState(() => _multiplyByRating = v!)
                         : null,
               ),
-              const Expanded(
-                child: Text(
-                  'Multiply by Exercise Rating when calculating sets',
-                ),
-              ),
+              Expanded(child: Text(_strings.exerciseEditorScaleCreditByRating)),
             ],
           ),
 
           const Divider(height: 32),
-          const Text('Setup', style: TextStyle(fontWeight: FontWeight.bold)),
+          Text(
+            _strings.exerciseEditorSetUp,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 4),
           TextField(
             enabled: _isEditing,
@@ -1951,9 +1956,9 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
             decoration: const InputDecoration(border: OutlineInputBorder()),
           ),
           const SizedBox(height: 12),
-          const Text(
-            'Execution',
-            style: TextStyle(fontWeight: FontWeight.bold),
+          Text(
+            _strings.exerciseEditorHowToPerform,
+            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 4),
 
@@ -1964,7 +1969,10 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
             decoration: const InputDecoration(border: OutlineInputBorder()),
           ),
           const SizedBox(height: 12),
-          const Text('Tips', style: TextStyle(fontWeight: FontWeight.bold)),
+          Text(
+            _strings.exerciseEditorCoachingTips,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 4),
 
           TextField(
@@ -1975,7 +1983,10 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
           ),
 
           const SizedBox(height: 24),
-          const Text('Media', style: TextStyle(fontWeight: FontWeight.bold)),
+          Text(
+            _strings.exerciseEditorReferenceMedia,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 8),
           GridView.builder(
             shrinkWrap: true,

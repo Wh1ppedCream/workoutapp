@@ -512,9 +512,7 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
                           children: [
                             Text(strings.automaticIncrementWhen),
                             CheckboxListTile(
-                              title: const Text(
-                                'Completed weight ≥ target weight',
-                              ),
+                              title: Text(strings.automaticWeightTarget),
                               value: widget.preset.weightCheck,
                               activeColor: cs.primary,
                               onChanged:
@@ -523,7 +521,7 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
                                   ),
                             ),
                             CheckboxListTile(
-                              title: const Text('Completed reps ≥ target reps'),
+                              title: Text(strings.automaticRepsTarget),
                               value: widget.preset.repCheck,
                               activeColor: cs.primary,
                               onChanged:
@@ -532,9 +530,7 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
                                   ),
                             ),
                             CheckboxListTile(
-                              title: const Text(
-                                'Completed volume ≥ target volume',
-                              ),
+                              title: Text(strings.automaticVolumeTarget),
                               value: widget.preset.volumeCheck,
                               activeColor: cs.primary,
                               onChanged:

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/generated/app_localizations.dart';
 import '../models/models.dart';
 
 class RecommendedSetsEditButton extends StatelessWidget {
@@ -9,9 +10,15 @@ class RecommendedSetsEditButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = Localizations.of<AppLocalizations>(
+      context,
+      AppLocalizations,
+    );
     return Semantics(
       button: true,
-      label: 'Edit recommended sets',
+      // Keep this shared control usable in lightweight widget hosts that do
+      // not install the app localization delegate.
+      label: strings?.recommendedSetsEdit ?? 'Edit recommended sets',
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: onPressed,
@@ -85,8 +92,9 @@ class _RecommendedSetsEditorDialogState
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     return AlertDialog(
-      title: Text('Recommended sets'),
+      title: Text(strings.recommendedSetsTitle),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -99,18 +107,18 @@ class _RecommendedSetsEditorDialogState
           TextField(
             controller: _minController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(
-              labelText: 'Minimum recommended sets',
-              suffixText: 'sets',
+            decoration: InputDecoration(
+              labelText: strings.recommendedSetsMinimum,
+              suffixText: strings.sessionMetricSets,
             ),
           ),
           const SizedBox(height: 10),
           TextField(
             controller: _maxController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(
-              labelText: 'Maximum recommended sets',
-              suffixText: 'sets',
+            decoration: InputDecoration(
+              labelText: strings.recommendedSetsMaximum,
+              suffixText: strings.sessionMetricSets,
             ),
           ),
           if (_errorText != null) ...[
@@ -125,9 +133,9 @@ class _RecommendedSetsEditorDialogState
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(strings.commonCancel),
         ),
-        FilledButton(onPressed: _save, child: const Text('Save')),
+        FilledButton(onPressed: _save, child: Text(strings.commonSave)),
       ],
     );
   }
@@ -137,15 +145,25 @@ class _RecommendedSetsEditorDialogState
     final max = double.tryParse(_maxController.text.trim());
 
     if (min == null || max == null) {
-      setState(() => _errorText = 'Enter valid set numbers.');
+      setState(
+        () =>
+            _errorText =
+                AppLocalizations.of(context).recommendedSetsValidNumbers,
+      );
       return;
     }
     if (min < 0 || max < 0) {
-      setState(() => _errorText = 'Set numbers cannot be negative.');
+      setState(
+        () =>
+            _errorText =
+                AppLocalizations.of(context).recommendedSetsNonNegative,
+      );
       return;
     }
     if (max < min) {
-      setState(() => _errorText = 'Maximum must be at least the minimum.');
+      setState(
+        () => _errorText = AppLocalizations.of(context).recommendedSetsRange,
+      );
       return;
     }
 

@@ -1670,48 +1670,36 @@ class _OnboardingHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SizedBox(
-          height: 48,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Align(
-                alignment: Alignment.centerLeft,
-                child: SizedBox(
-                  width: 72,
-                  child:
-                      onBack == null
-                          ? null
-                          : IconButton(
-                            onPressed: onBack,
-                            tooltip: strings.onboardingPreviousStepTooltip,
-                            alignment: Alignment.centerLeft,
-                            padding: EdgeInsets.zero,
-                            icon: const Icon(Icons.chevron_left, size: 26),
-                          ),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 48,
+              child:
+                  onBack == null
+                      ? null
+                      : IconButton(
+                        onPressed: onBack,
+                        tooltip: strings.onboardingPreviousStepTooltip,
+                        padding: EdgeInsets.zero,
+                        icon: const Icon(Icons.chevron_left, size: 26),
+                      ),
+            ),
+            Expanded(
+              child: Text(
+                title,
+                maxLines: 2,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w900,
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 76),
-                child: Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ),
-              Align(
-                alignment: Alignment.centerRight,
-                child: SizedBox(
-                  width: 72,
-                  child: TextButton(onPressed: onSkip, child: Text(skipLabel)),
-                ),
-              ),
-            ],
-          ),
+            ),
+            SizedBox(
+              width: 72,
+              child: TextButton(onPressed: onSkip, child: Text(skipLabel)),
+            ),
+          ],
         ),
         const SizedBox(height: 8),
         ClipRRect(

@@ -229,6 +229,11 @@ class _GuidedTutorialOverlayState extends State<GuidedTutorialOverlay>
                               : () => _goTo(_index + 1),
                       onSkip: () => _finish(false),
                       onSkipAll: _skipAllTutorials,
+                      maxHeight: _cardHeightFor(
+                        size,
+                        media.padding,
+                        media.textScaler,
+                      ),
                     ),
                   ),
                   if (_showSkipAllConfirmation)
@@ -243,7 +248,16 @@ class _GuidedTutorialOverlayState extends State<GuidedTutorialOverlay>
             final target = measuredTarget
                 .inflate(_targetPadding)
                 .intersect(Offset.zero & size);
-            final cardTop = _cardTopFor(size, media.padding, target);
+            final cardTop = _cardTopFor(
+              size,
+              media.padding,
+              target,
+              estimatedCardHeight: _cardHeightFor(
+                size,
+                media.padding,
+                media.textScaler,
+              ),
+            );
 
             return Stack(
               children: [
@@ -289,6 +303,11 @@ class _GuidedTutorialOverlayState extends State<GuidedTutorialOverlay>
                             : () => _goTo(_index + 1),
                     onSkip: () => _finish(false),
                     onSkipAll: _skipAllTutorials,
+                    maxHeight: _cardHeightFor(
+                      size,
+                      media.padding,
+                      media.textScaler,
+                    ),
                   ),
                 ),
                 if (_showSkipAllConfirmation)
@@ -304,18 +323,35 @@ class _GuidedTutorialOverlayState extends State<GuidedTutorialOverlay>
     );
   }
 
-  double _cardTopFor(Size size, EdgeInsets padding, Rect target) {
+  double _cardTopFor(
+    Size size,
+    EdgeInsets padding,
+    Rect target, {
+    required double estimatedCardHeight,
+  }) {
     final minTop = padding.top + 12;
-    final maxTop = size.height - padding.bottom - _cardEstimateHeight - 12;
+    final maxTop = size.height - padding.bottom - estimatedCardHeight - 12;
     final below = target.bottom + 14;
-    final above = target.top - _cardEstimateHeight - 14;
+    final above = target.top - estimatedCardHeight - 14;
 
     final preferredTop =
-        below + _cardEstimateHeight <= size.height - padding.bottom
+        below + estimatedCardHeight <= size.height - padding.bottom
             ? below
             : above;
 
     return preferredTop.clamp(minTop, math.max(minTop, maxTop)).toDouble();
+  }
+
+  double _cardHeightFor(Size size, EdgeInsets padding, TextScaler textScaler) {
+    final scale = textScaler.scale(1);
+    if (scale <= 1.15) {
+      return _cardEstimateHeight;
+    }
+
+    // Keep the tutorial controls reachable when translated text wraps at a
+    // larger accessibility scale. The explanation itself can scroll.
+    final safeHeight = size.height - padding.top - padding.bottom - 24;
+    return math.min(520, safeHeight).toDouble();
   }
 }
 
@@ -329,6 +365,7 @@ class _TutorialCard extends StatelessWidget {
   final VoidCallback onNext;
   final VoidCallback onSkip;
   final VoidCallback onSkipAll;
+  final double maxHeight;
 
   const _TutorialCard({
     required this.step,
@@ -340,6 +377,7 @@ class _TutorialCard extends StatelessWidget {
     required this.onNext,
     required this.onSkip,
     required this.onSkipAll,
+    required this.maxHeight,
   });
 
   @override
@@ -347,10 +385,10 @@ class _TutorialCard extends StatelessWidget {
     final strings = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final useStackedActions = MediaQuery.textScalerOf(context).scale(1) > 1.15;
 
     return Container(
       constraints: const BoxConstraints(maxWidth: 420),
-      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(26),
@@ -363,70 +401,161 @@ class _TutorialCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: scheme.primary.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: Icon(step.icon, color: scheme.primary),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  step.title,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w900,
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child:
+            useStackedActions
+                ? SizedBox(
+                  height: maxHeight - 36,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: SingleChildScrollView(
+                          child: _TutorialCardContent(
+                            step: step,
+                            stepNumber: stepNumber,
+                            totalSteps: totalSteps,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Wrap(
+                            spacing: 4,
+                            runSpacing: 2,
+                            children: [
+                              TextButton(
+                                onPressed: onSkip,
+                                child: Text(strings.tutorialSkip),
+                              ),
+                              TextButton(
+                                onPressed: onSkipAll,
+                                child: Text(strings.tutorialSkipAll),
+                              ),
+                              if (canGoBack)
+                                TextButton(
+                                  onPressed: onBack,
+                                  child: Text(strings.commonBack),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          FilledButton(
+                            onPressed: onNext,
+                            child: Text(
+                              isLast
+                                  ? strings.tutorialDone
+                                  : strings.tutorialNext,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
+                )
+                : Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _TutorialCardContent(
+                      step: step,
+                      stepNumber: stepNumber,
+                      totalSteps: totalSteps,
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        TextButton(
+                          onPressed: onSkip,
+                          child: Text(strings.tutorialSkip),
+                        ),
+                        TextButton(
+                          onPressed: onSkipAll,
+                          child: Text(strings.tutorialSkipAll),
+                        ),
+                        const Spacer(),
+                        if (canGoBack) ...[
+                          TextButton(
+                            onPressed: onBack,
+                            child: Text(strings.commonBack),
+                          ),
+                          const SizedBox(width: 6),
+                        ],
+                        FilledButton(
+                          onPressed: onNext,
+                          child: Text(
+                            isLast
+                                ? strings.tutorialDone
+                                : strings.tutorialNext,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
+      ),
+    );
+  }
+}
+
+class _TutorialCardContent extends StatelessWidget {
+  const _TutorialCardContent({
+    required this.step,
+    required this.stepNumber,
+    required this.totalSteps,
+  });
+
+  final GuidedTutorialStep step;
+  final int stepNumber;
+  final int totalSteps;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: scheme.primary.withValues(alpha: 0.18),
+                borderRadius: BorderRadius.circular(15),
               ),
-              Text(
-                '$stepNumber/$totalSteps',
-                style: theme.textTheme.labelLarge?.copyWith(
-                  color: scheme.primary,
+              child: Icon(step.icon, color: scheme.primary),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                step.title,
+                style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w900,
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            step.body,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: scheme.onSurfaceVariant,
-              height: 1.35,
             ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              TextButton(onPressed: onSkip, child: Text(strings.tutorialSkip)),
-              TextButton(
-                onPressed: onSkipAll,
-                child: Text(strings.tutorialSkipAll),
+            Text(
+              '$stepNumber/$totalSteps',
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: scheme.primary,
+                fontWeight: FontWeight.w900,
               ),
-              const Spacer(),
-              if (canGoBack) ...[
-                TextButton(onPressed: onBack, child: Text(strings.commonBack)),
-                const SizedBox(width: 6),
-              ],
-              FilledButton(
-                onPressed: onNext,
-                child: Text(
-                  isLast ? strings.tutorialDone : strings.tutorialNext,
-                ),
-              ),
-            ],
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Text(
+          step.body,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: scheme.onSurfaceVariant,
+            height: 1.35,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

@@ -13,6 +13,22 @@ void main() {
     );
   });
 
+  test(
+    'Canadian French includes workout report and set-editor labels',
+    () async {
+      final strings = await AppLocalizations.delegate.load(
+        const Locale('fr', 'CA'),
+      );
+
+      expect(
+        strings.workoutReportAdditionalDetails,
+        isNot('Additional Details'),
+      );
+      expect(strings.recommendedSetsTitle, isNot('Recommended sets'));
+      expect(strings.recommendedSetsMinimum, isNot('Minimum recommended sets'));
+    },
+  );
+
   testWidgets('English localization delegates resolve app strings', (
     tester,
   ) async {

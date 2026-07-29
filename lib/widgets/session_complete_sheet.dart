@@ -226,52 +226,12 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
                                 ),
                               ),
                               const SizedBox(height: 16),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: _buildSummaryMetric(
-                                      context,
-                                      icon: Icons.fitness_center_outlined,
-                                      label: strings.sessionMetricExercises,
-                                      value: '${exercises.length}',
-                                      compact: true,
-                                      accentColor: const Color(0xFF64B5F6),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Expanded(
-                                    child: _buildSummaryMetric(
-                                      context,
-                                      icon: Icons.format_list_numbered,
-                                      label: strings.sessionMetricSets,
-                                      value: '$totalSets',
-                                      compact: true,
-                                      accentColor: const Color(0xFF81C784),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Expanded(
-                                    child: _buildSummaryMetric(
-                                      context,
-                                      icon: Icons.timer_outlined,
-                                      label: strings.sessionMetricDuration,
-                                      value: durationText,
-                                      compact: true,
-                                      accentColor: const Color(0xFFFFD54F),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Expanded(
-                                    child: _buildSummaryMetric(
-                                      context,
-                                      icon: Icons.monitor_weight_outlined,
-                                      label: strings.sessionMetricVolume,
-                                      value: volumeText,
-                                      compact: true,
-                                      accentColor: const Color(0xFFF48FB1),
-                                    ),
-                                  ),
-                                ],
+                              _buildSummaryMetricsGrid(
+                                context,
+                                exercises: exercises.length,
+                                sets: totalSets,
+                                duration: durationText,
+                                volume: volumeText,
                               ),
                             ],
                           ),
@@ -350,20 +310,22 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
         children: [
           Icon(icon, size: compact ? 14 : 16, color: accentColor),
           SizedBox(height: compact ? 4 : 6),
-          Text(
-            value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: (compact
-                    ? theme.textTheme.labelLarge
-                    : theme.textTheme.titleSmall)
-                ?.copyWith(fontWeight: FontWeight.w700),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              value,
+              maxLines: 1,
+              style: (compact
+                      ? theme.textTheme.labelLarge
+                      : theme.textTheme.titleSmall)
+                  ?.copyWith(fontWeight: FontWeight.w700),
+            ),
           ),
           const SizedBox(height: 1),
           Text(
             label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+            maxLines: 2,
             style: theme.textTheme.labelSmall?.copyWith(
               fontSize: compact ? 9 : null,
               color: colorScheme.onSurfaceVariant,
@@ -371,6 +333,76 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildSummaryMetricsGrid(
+    BuildContext context, {
+    required int exercises,
+    required int sets,
+    required String duration,
+    required String volume,
+  }) {
+    final strings = AppLocalizations.of(context);
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    final metrics = [
+      (
+        icon: Icons.fitness_center_outlined,
+        label: strings.sessionMetricExercises,
+        value: '$exercises',
+        accent: const Color(0xFF64B5F6),
+      ),
+      (
+        icon: Icons.format_list_numbered,
+        label: strings.sessionMetricSets,
+        value: '$sets',
+        accent: const Color(0xFF81C784),
+      ),
+      (
+        icon: Icons.timer_outlined,
+        label: strings.sessionMetricDuration,
+        value: duration,
+        accent: const Color(0xFFFFD54F),
+      ),
+      (
+        icon: Icons.monitor_weight_outlined,
+        label: strings.sessionMetricVolume,
+        value: volume,
+        accent: const Color(0xFFF48FB1),
+      ),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = textScale > 1.15 || constraints.maxWidth < 360 ? 2 : 4;
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: metrics.length,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: columns,
+            crossAxisSpacing: 6,
+            mainAxisSpacing: 6,
+            childAspectRatio:
+                columns == 4
+                    ? 1.28
+                    : textScale > 1.5
+                    ? 1.6
+                    : 2.2,
+          ),
+          itemBuilder: (context, index) {
+            final metric = metrics[index];
+            return _buildSummaryMetric(
+              context,
+              icon: metric.icon,
+              label: metric.label,
+              value: metric.value,
+              compact: true,
+              accentColor: metric.accent,
+            );
+          },
+        );
+      },
     );
   }
 

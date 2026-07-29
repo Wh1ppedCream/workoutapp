@@ -548,22 +548,24 @@ class _MainScreenState extends State<MainScreen> {
 
     return Scaffold(
       body: IndexedStack(index: _selectedIndex, children: pages),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        selectedItemColor: Theme.of(context).colorScheme.primary,
-        unselectedItemColor: Theme.of(
-          context,
-        ).colorScheme.onSurface.withValues(alpha: 0.6),
-        items: [
-          for (final tab in tabs)
-            BottomNavigationBarItem(
-              icon: Icon(tab.icon),
-              label: tab.localizedTitle(strings),
-            ),
-        ],
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
+      bottomNavigationBar: MediaQuery.withNoTextScaling(
+        child: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          selectedItemColor: Theme.of(context).colorScheme.primary,
+          unselectedItemColor: Theme.of(
+            context,
+          ).colorScheme.onSurface.withValues(alpha: 0.6),
+          items: [
+            for (final tab in tabs)
+              BottomNavigationBarItem(
+                icon: Icon(tab.icon),
+                label: tab.localizedTitle(strings),
+              ),
+          ],
+          currentIndex: _selectedIndex,
+          onTap: _onItemTapped,
+        ),
       ),
       floatingActionButton: Consumer<ActiveSession>(
         builder:

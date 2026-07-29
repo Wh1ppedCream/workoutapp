@@ -4444,6 +4444,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get workoutReportTitle => 'Workout Report';
 
   @override
+  String get workoutReportAdditionalDetails => 'Additional Details';
+
+  @override
+  String get recommendedSetsEdit => 'Edit recommended sets';
+
+  @override
+  String get recommendedSetsTitle => 'Recommended sets';
+
+  @override
+  String get recommendedSetsMinimum => 'Minimum recommended sets';
+
+  @override
+  String get recommendedSetsMaximum => 'Maximum recommended sets';
+
+  @override
+  String get recommendedSetsValidNumbers => 'Enter valid set numbers.';
+
+  @override
+  String get recommendedSetsNonNegative => 'Set numbers cannot be negative.';
+
+  @override
+  String get recommendedSetsRange => 'Maximum must be at least the minimum.';
+
+  @override
   String get workoutReportWorkouts => 'Workouts';
 
   @override

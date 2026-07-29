@@ -68,8 +68,7 @@ class GenericBar extends StatelessWidget {
               Expanded(
                 child: Text(
                   label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
                   style: TextStyle(
                     fontSize: 15,
                     color: accent,

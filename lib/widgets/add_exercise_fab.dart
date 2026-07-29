@@ -1,6 +1,7 @@
 // File: lib/widgets/add_exercise_fab.dart
 
 import 'package:flutter/material.dart';
+import '../l10n/generated/app_localizations.dart';
 import '../screens/exercise/exercise_catalog_page.dart';
 import '../models/models.dart';
 import '../theme/app_colors.dart';
@@ -33,6 +34,7 @@ class AddExerciseFab extends StatelessWidget {
     final fabFg = extras?.addExerciseFabIcon ?? cs.onPrimary;
 
     return FloatingActionButton(
+      tooltip: AppLocalizations.of(context).commonAdd,
       backgroundColor: fabBg,
       foregroundColor: fabFg,
       onPressed: () => _openExerciseCatalog(context),

@@ -1261,6 +1261,7 @@ class _SplitWorkoutBar extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final strings = AppLocalizations.of(context);
     final green = Colors.green.shade700;
+    final useVerticalLayout = MediaQuery.textScalerOf(context).scale(1) > 1.15;
     return SafeArea(
       minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       child: Material(
@@ -1269,93 +1270,189 @@ class _SplitWorkoutBar extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         elevation: 8,
         child: SizedBox(
-          height: 64,
-          child: Row(
-            children: [
-              Expanded(
-                flex: 3,
-                child: Material(
-                  color: green,
-                  child: InkWell(
-                    onTap: onStartWorkout,
-                    child: Center(
-                      child: Text(
-                        strings.trainStartWorkout,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Container(
-                width: 1,
-                height: double.infinity,
-                color: colorScheme.outline.withValues(alpha: 0.18),
-              ),
-              Expanded(
-                flex: 2,
-                child: Material(
-                  color: colorScheme.primaryContainer,
-                  child: Stack(
+          height: useVerticalLayout ? 120 : 64,
+          child:
+              useVerticalLayout
+                  ? Column(
                     children: [
-                      Positioned.fill(
-                        child: InkWell(
-                          onTap: isStartingOptimized ? null : onOptimizeWorkout,
-                          child: Padding(
-                            padding: const EdgeInsets.only(right: 36),
+                      Expanded(
+                        child: Material(
+                          color: green,
+                          child: InkWell(
+                            onTap: onStartWorkout,
                             child: Center(
-                              child:
-                                  isStartingOptimized
-                                      ? SizedBox(
-                                        width: 18,
-                                        height: 18,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: colorScheme.onPrimaryContainer,
-                                        ),
-                                      )
-                                      : Text(
-                                        strings.trainOptimize,
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          color: colorScheme.onPrimaryContainer,
-                                          fontWeight: FontWeight.w800,
-                                          fontSize: 14,
-                                        ),
-                                      ),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                ),
+                                child: Text(
+                                  strings.trainStartWorkout,
+                                  maxLines: 2,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
                         ),
                       ),
-                      Positioned(
-                        right: 0,
-                        top: 0,
-                        bottom: 0,
-                        child: IconButton(
-                          tooltip: strings.trainOptimizedSettings,
-                          onPressed:
-                              isStartingOptimized ? null : onOptimizeSettings,
-                          icon: const Icon(Icons.settings_outlined),
-                          iconSize: 19,
-                          visualDensity: VisualDensity.compact,
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(
-                            minWidth: 36,
-                            minHeight: 64,
+                      Container(
+                        height: 1,
+                        color: colorScheme.outline.withValues(alpha: 0.18),
+                      ),
+                      Expanded(
+                        child: Material(
+                          color: colorScheme.primaryContainer,
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: InkWell(
+                                  onTap:
+                                      isStartingOptimized
+                                          ? null
+                                          : onOptimizeWorkout,
+                                  child: Center(
+                                    child:
+                                        isStartingOptimized
+                                            ? SizedBox(
+                                              width: 18,
+                                              height: 18,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                color:
+                                                    colorScheme
+                                                        .onPrimaryContainer,
+                                              ),
+                                            )
+                                            : Text(
+                                              strings.trainOptimize,
+                                              maxLines: 2,
+                                              textAlign: TextAlign.center,
+                                              style: TextStyle(
+                                                color:
+                                                    colorScheme
+                                                        .onPrimaryContainer,
+                                                fontWeight: FontWeight.w800,
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                tooltip: strings.trainOptimizedSettings,
+                                onPressed:
+                                    isStartingOptimized
+                                        ? null
+                                        : onOptimizeSettings,
+                                icon: const Icon(Icons.settings_outlined),
+                                color: colorScheme.onPrimaryContainer,
+                              ),
+                            ],
                           ),
-                          color: colorScheme.onPrimaryContainer,
+                        ),
+                      ),
+                    ],
+                  )
+                  : Row(
+                    children: [
+                      Expanded(
+                        flex: 3,
+                        child: Material(
+                          color: green,
+                          child: InkWell(
+                            onTap: onStartWorkout,
+                            child: Center(
+                              child: Text(
+                                strings.trainStartWorkout,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Container(
+                        width: 1,
+                        height: double.infinity,
+                        color: colorScheme.outline.withValues(alpha: 0.18),
+                      ),
+                      Expanded(
+                        flex: 2,
+                        child: Material(
+                          color: colorScheme.primaryContainer,
+                          child: Stack(
+                            children: [
+                              Positioned.fill(
+                                child: InkWell(
+                                  onTap:
+                                      isStartingOptimized
+                                          ? null
+                                          : onOptimizeWorkout,
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(right: 36),
+                                    child: Center(
+                                      child:
+                                          isStartingOptimized
+                                              ? SizedBox(
+                                                width: 18,
+                                                height: 18,
+                                                child: CircularProgressIndicator(
+                                                  strokeWidth: 2,
+                                                  color:
+                                                      colorScheme
+                                                          .onPrimaryContainer,
+                                                ),
+                                              )
+                                              : Text(
+                                                strings.trainOptimize,
+                                                textAlign: TextAlign.center,
+                                                style: TextStyle(
+                                                  color:
+                                                      colorScheme
+                                                          .onPrimaryContainer,
+                                                  fontWeight: FontWeight.w800,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Positioned(
+                                right: 0,
+                                top: 0,
+                                bottom: 0,
+                                child: IconButton(
+                                  tooltip: strings.trainOptimizedSettings,
+                                  onPressed:
+                                      isStartingOptimized
+                                          ? null
+                                          : onOptimizeSettings,
+                                  icon: const Icon(Icons.settings_outlined),
+                                  iconSize: 19,
+                                  visualDensity: VisualDensity.compact,
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(
+                                    minWidth: 36,
+                                    minHeight: 64,
+                                  ),
+                                  color: colorScheme.onPrimaryContainer,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ],
                   ),
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );

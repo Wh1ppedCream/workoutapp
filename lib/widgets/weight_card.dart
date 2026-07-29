@@ -387,6 +387,9 @@ class _WeightCardState extends State<WeightCard> {
                                 alignment: Alignment.centerLeft,
                                 child: Checkbox(
                                   value: _completedSets.contains(index),
+                                  semanticLabel: strings.weightSetLabel(
+                                    index + 1,
+                                  ),
                                   activeColor: Colors.green,
                                   visualDensity: VisualDensity.compact,
                                   onChanged:
@@ -503,6 +506,7 @@ class _WeightCardState extends State<WeightCard> {
                               width: removeWidth,
                               child: IconButton(
                                 icon: const Icon(Icons.remove_circle_outline),
+                                tooltip: strings.weightRemoveSetTitle,
                                 constraints: BoxConstraints.tightFor(
                                   width: removeWidth,
                                   height: 40,

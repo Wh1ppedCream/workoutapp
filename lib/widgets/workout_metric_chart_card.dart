@@ -216,6 +216,45 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
           interval: bucketSet.interval,
           weightUnit: weightUnit,
         );
+        final reportStats = <Widget>[
+          _ReportStat(
+            label: strings.workoutReportWorkouts,
+            value: _formatCompact(totalWorkouts.toDouble()),
+            unit:
+                totalWorkouts == 1
+                    ? strings.workoutReportWorkout
+                    : strings.workoutReportTotal,
+            trend: _metricTrend(buckets, WorkoutReportMetric.workouts),
+            selected:
+                _metrics[_selectedMetricIndex] == WorkoutReportMetric.workouts,
+            onTap: () => selectMetric(0),
+          ),
+          _ReportStat(
+            label: strings.workoutReportTime,
+            value: _formatDurationValue(totalMinutes),
+            unit: _formatDurationUnit(totalMinutes),
+            trend: _metricTrend(buckets, WorkoutReportMetric.minutes),
+            selected:
+                _metrics[_selectedMetricIndex] == WorkoutReportMetric.minutes,
+            onTap: () => selectMetric(1),
+          ),
+          _ReportStat(
+            label: strings.workoutReportVolume,
+            value: WeightUnitFormatter.formatCompactVolumeValue(
+              totalVolume,
+              weightUnit,
+            ),
+            unit: weightUnit.shortLabel,
+            trend: _metricTrend(
+              buckets,
+              WorkoutReportMetric.volume,
+              weightUnit,
+            ),
+            selected:
+                _metrics[_selectedMetricIndex] == WorkoutReportMetric.volume,
+            onTap: () => selectMetric(2),
+          ),
+        ];
 
         return Card(
           margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -226,71 +265,43 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
               children: [
                 Text(
                   strings.workoutReportTitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
                   textAlign: TextAlign.center,
                   style: Theme.of(
                     context,
                   ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
                 ),
                 const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _ReportStat(
-                        label: strings.workoutReportWorkouts,
-                        value: _formatCompact(totalWorkouts.toDouble()),
-                        unit:
-                            totalWorkouts == 1
-                                ? strings.workoutReportWorkout
-                                : strings.workoutReportTotal,
-                        trend: _metricTrend(
-                          buckets,
-                          WorkoutReportMetric.workouts,
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final useTwoRows =
+                        constraints.maxWidth < 360 ||
+                        MediaQuery.textScalerOf(context).scale(1) > 1.15;
+                    if (!useTwoRows) {
+                      return Row(
+                        children: [
+                          Expanded(child: reportStats[0]),
+                          const SizedBox(width: 10),
+                          Expanded(child: reportStats[1]),
+                          const SizedBox(width: 10),
+                          Expanded(child: reportStats[2]),
+                        ],
+                      );
+                    }
+                    return Column(
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(child: reportStats[0]),
+                            const SizedBox(width: 10),
+                            Expanded(child: reportStats[1]),
+                          ],
                         ),
-                        selected:
-                            _metrics[_selectedMetricIndex] ==
-                            WorkoutReportMetric.workouts,
-                        onTap: () => selectMetric(0),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: _ReportStat(
-                        label: strings.workoutReportTime,
-                        value: _formatDurationValue(totalMinutes),
-                        unit: _formatDurationUnit(totalMinutes),
-                        trend: _metricTrend(
-                          buckets,
-                          WorkoutReportMetric.minutes,
-                        ),
-                        selected:
-                            _metrics[_selectedMetricIndex] ==
-                            WorkoutReportMetric.minutes,
-                        onTap: () => selectMetric(1),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: _ReportStat(
-                        label: strings.workoutReportVolume,
-                        value: WeightUnitFormatter.formatCompactVolumeValue(
-                          totalVolume,
-                          weightUnit,
-                        ),
-                        unit: weightUnit.shortLabel,
-                        trend: _metricTrend(
-                          buckets,
-                          WorkoutReportMetric.volume,
-                          weightUnit,
-                        ),
-                        selected:
-                            _metrics[_selectedMetricIndex] ==
-                            WorkoutReportMetric.volume,
-                        onTap: () => selectMetric(2),
-                      ),
-                    ),
-                  ],
+                        const SizedBox(height: 10),
+                        SizedBox(width: double.infinity, child: reportStats[2]),
+                      ],
+                    );
+                  },
                 ),
                 const SizedBox(height: 16),
                 SizedBox(
@@ -712,7 +723,7 @@ class _ReportStat extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  maxLines: 1,
+                  maxLines: 2,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: selected ? cs.primary : cs.onSurface,
                     fontWeight: FontWeight.w700,
@@ -1072,9 +1083,10 @@ class _AdditionalDetailsDropdown extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      'Additional Details',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      AppLocalizations.of(
+                        context,
+                      ).workoutReportAdditionalDetails,
+                      maxLines: 2,
                       style: Theme.of(context).textTheme.labelLarge?.copyWith(
                         color: cs.onSurface,
                         fontWeight: FontWeight.w800,

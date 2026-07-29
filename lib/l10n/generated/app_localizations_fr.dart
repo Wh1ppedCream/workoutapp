@@ -4444,6 +4444,30 @@ class AppLocalizationsFr extends AppLocalizations {
   String get workoutReportTitle => 'Rapport d\'entrainement';
 
   @override
+  String get workoutReportAdditionalDetails => 'Additional Details';
+
+  @override
+  String get recommendedSetsEdit => 'Edit recommended sets';
+
+  @override
+  String get recommendedSetsTitle => 'Recommended sets';
+
+  @override
+  String get recommendedSetsMinimum => 'Minimum recommended sets';
+
+  @override
+  String get recommendedSetsMaximum => 'Maximum recommended sets';
+
+  @override
+  String get recommendedSetsValidNumbers => 'Enter valid set numbers.';
+
+  @override
+  String get recommendedSetsNonNegative => 'Set numbers cannot be negative.';
+
+  @override
+  String get recommendedSetsRange => 'Maximum must be at least the minimum.';
+
+  @override
   String get workoutReportWorkouts => 'Seances';
 
   @override
@@ -9983,6 +10007,30 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
 
   @override
   String get workoutReportTitle => 'Rapport d’entraînement';
+
+  @override
+  String get workoutReportAdditionalDetails => 'Détails supplémentaires';
+
+  @override
+  String get recommendedSetsEdit => 'Modifier les séries recommandées';
+
+  @override
+  String get recommendedSetsTitle => 'Séries recommandées';
+
+  @override
+  String get recommendedSetsMinimum => 'Minimum de séries recommandées';
+
+  @override
+  String get recommendedSetsMaximum => 'Maximum de séries recommandées';
+
+  @override
+  String get recommendedSetsValidNumbers => 'Entrez des nombres de séries valides.';
+
+  @override
+  String get recommendedSetsNonNegative => 'Le nombre de séries ne peut pas être négatif.';
+
+  @override
+  String get recommendedSetsRange => 'Le maximum doit être au moins égal au minimum.';
 
   @override
   String get workoutReportWorkouts => 'Entraînements';

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/generated/app_localizations.dart';
+
 /// Shared semantic accents for grouped settings content.
 abstract final class SettingsAccent {
   static const Color account = Color(0xFFB39DDB);
@@ -44,13 +46,14 @@ class SettingsPageScaffold extends StatelessWidget {
       bottomNavigationBar: bottomNavigationBar,
       body: SafeArea(
         child: ListView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
           children: [
             if (showBackButton) ...[
               Align(
                 alignment: Alignment.centerLeft,
                 child: IconButton(
-                  tooltip: 'Back',
+                  tooltip: AppLocalizations.of(context).commonBack,
                   onPressed: () => Navigator.maybePop(context),
                   icon: const Icon(Icons.arrow_back),
                 ),
@@ -123,28 +126,13 @@ class SettingsHeroCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    final fontSize =
-                        constraints.maxWidth >= 290
-                            ? 28.0
-                            : constraints.maxWidth >= 220
-                            ? 25.0
-                            : 22.0;
-                    return FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        title,
-                        maxLines: 1,
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          fontSize: fontSize,
-                          fontWeight: FontWeight.w900,
-                          color: scheme.onSurface,
-                        ),
-                      ),
-                    );
-                  },
+                Text(
+                  title,
+                  maxLines: 2,
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    color: scheme.onSurface,
+                  ),
                 ),
                 if (subtitle != null) ...[
                   const SizedBox(height: 4),
@@ -296,8 +284,7 @@ class SettingsActionTile extends StatelessWidget {
       ),
       title: Text(
         title,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
+        maxLines: 2,
         style: theme.textTheme.titleSmall?.copyWith(
           fontWeight: FontWeight.w900,
         ),
@@ -307,8 +294,7 @@ class SettingsActionTile extends StatelessWidget {
               ? null
               : Text(
                 subtitle!,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+                maxLines: 3,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: scheme.onSurfaceVariant,
                 ),

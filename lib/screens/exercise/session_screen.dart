@@ -94,6 +94,7 @@ class _SessionScreenState extends State<SessionScreen> {
     _queueWorkoutTutorial();
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       drawer: Drawer(
         child: SafeArea(
           child: Column(
@@ -136,6 +137,8 @@ class _SessionScreenState extends State<SessionScreen> {
           session.exercises.isEmpty
               ? Center(child: Text(strings.sessionNoExercises))
               : ListView.builder(
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
                 padding: const EdgeInsets.all(16),
                 itemCount: session.exercises.length,
                 itemBuilder: (ctx, i) {
