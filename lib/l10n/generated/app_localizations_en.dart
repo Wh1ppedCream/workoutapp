@@ -460,6 +460,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingSummaryWorkoutPlans => 'Workout plans';
 
   @override
+  String get onboardingSummaryProfileSection => 'Profile';
+
+  @override
+  String get onboardingSummaryTrainingSection => 'Training setup';
+
+  @override
+  String get onboardingSummaryNutritionSection => 'Nutrition preferences';
+
+  @override
+  String get onboardingSummaryDiet => 'Diet';
+
+  @override
+  String get onboardingSummaryProteinPreference => 'Protein preference';
+
+  @override
   String get onboardingIncludedNutrition => 'Nutrition setup';
 
   @override

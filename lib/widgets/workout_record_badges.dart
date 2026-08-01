@@ -8,23 +8,29 @@ const _allTimeRecordColor = Color(0xFFFFC857);
 
 /// Compact first-completion badge shared by workout record lists.
 class FirstRecordBadge extends StatelessWidget {
-  const FirstRecordBadge({super.key});
+  final bool compact;
+
+  const FirstRecordBadge({super.key, this.compact = false});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      padding:
+          compact
+              ? const EdgeInsets.symmetric(horizontal: 4, vertical: 1)
+              : const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(7),
+        borderRadius: BorderRadius.circular(compact ? 5 : 7),
         border: Border.all(color: Colors.white.withValues(alpha: 0.72)),
       ),
       child: Text(
         AppLocalizations.of(context).recordFirst,
         maxLines: 1,
-        style: const TextStyle(
+        style: TextStyle(
           color: Colors.white,
-          fontSize: 9,
+          fontSize: compact ? 7.5 : 9,
+          height: compact ? 1 : null,
           fontWeight: FontWeight.w800,
         ),
       ),
@@ -36,11 +42,15 @@ class FirstRecordBadge extends StatelessWidget {
 class WorkoutRecordBadgeChip extends StatelessWidget {
   final WorkoutRecordBadge badge;
   final bool compact;
+  final double? width;
+  final TextAlign textAlign;
 
   const WorkoutRecordBadgeChip({
     super.key,
     required this.badge,
     this.compact = false,
+    this.width,
+    this.textAlign = TextAlign.start,
   });
 
   @override
@@ -51,6 +61,7 @@ class WorkoutRecordBadgeChip extends StatelessWidget {
             : _monthlyRecordColor;
     final strings = AppLocalizations.of(context);
     return Container(
+      width: width,
       padding:
           compact
               ? const EdgeInsets.symmetric(horizontal: 4, vertical: 0)
@@ -64,6 +75,7 @@ class WorkoutRecordBadgeChip extends StatelessWidget {
         badge.type == WorkoutRecordBadgeType.repBest
             ? strings.recordRepBest(badge.reps ?? 0)
             : strings.recordVolumeBest,
+        textAlign: textAlign,
         style: TextStyle(
           color: color,
           fontSize: compact ? 7.5 : 9,

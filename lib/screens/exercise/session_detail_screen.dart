@@ -20,6 +20,7 @@ import '../../utils/weight_unit_formatter.dart';
 import '../../widgets/body_heatmap.dart';
 import '../../widgets/exercise_card.dart';
 import '../../widgets/exercise_detail_sheet.dart';
+import '../../widgets/exercise_media_thumbnail.dart';
 import '../../widgets/focused_sets_list.dart';
 import '../../widgets/guided_tutorial_overlay.dart';
 import '../../widgets/workout_record_badges.dart';
@@ -140,8 +141,10 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     if (defId == null) return null;
 
     final defInfoFuture = _repo.fetchDefinitionInfo(defId);
+    final definitionFuture = _repo.fetchDefinitionById(defId);
     final allSetRowsFuture = _repo.fetchSets(instanceId);
     final defInfo = await defInfoFuture;
+    final definition = await definitionFuture;
     final name = defInfo['name'] ?? 'Exercise';
     final equipmentName = defInfo['equipmentName'] ?? '';
     final allSetRows = await allSetRowsFuture;
@@ -202,6 +205,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
       ),
       cardType: CardType.weight,
       definitionId: defId,
+      definition: definition,
       exerciseId: instanceId,
     );
   }
@@ -521,20 +525,21 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
   Future<void> _saveAsPreset() async {
     final strings = AppLocalizations.of(context);
     final defaultName = _defaultPresetName();
-    final controller = TextEditingController(text: defaultName);
+    var planName = defaultName;
     final name = await showDialog<String>(
       context: context,
       builder:
           (context) => AlertDialog(
             title: Text(strings.workoutDetailSaveAsPlan),
-            content: TextField(
-              controller: controller,
+            content: TextFormField(
+              initialValue: defaultName,
               autofocus: true,
               decoration: InputDecoration(
                 labelText: strings.workoutDetailPlanName,
               ),
               textInputAction: TextInputAction.done,
-              onSubmitted: (value) => Navigator.pop(context, value.trim()),
+              onChanged: (value) => planName = value,
+              onFieldSubmitted: (value) => Navigator.pop(context, value.trim()),
             ),
             actions: [
               TextButton(
@@ -542,13 +547,12 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
                 child: Text(strings.commonCancel),
               ),
               FilledButton(
-                onPressed: () => Navigator.pop(context, controller.text.trim()),
+                onPressed: () => Navigator.pop(context, planName.trim()),
                 child: Text(strings.commonSave),
               ),
             ],
           ),
     );
-    controller.dispose();
     if (name == null || name.trim().isEmpty) return;
     if (!mounted) return;
 
@@ -763,6 +767,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
           key: ValueKey('session-detail-$index-${detail.exercise.name}'),
           exercise: detail.exercise,
           cardType: detail.cardType,
+          definitionId: detail.definitionId,
           readOnlyMode: false,
           initialCompletedParents:
               detail.exercise is WeightExercise
@@ -1053,6 +1058,7 @@ class _CompletedExerciseCard extends StatelessWidget {
       return _CompletedWeightCard(
         exercise: exercise,
         badges: badges,
+        definition: detail.definition,
         onDetails: onDetails,
       );
     }
@@ -1065,11 +1071,13 @@ class _CompletedExerciseCard extends StatelessWidget {
 class _CompletedWeightCard extends StatelessWidget {
   final WeightExercise exercise;
   final WorkoutExerciseRecordBadges badges;
+  final ExerciseDefinition? definition;
   final VoidCallback? onDetails;
 
   const _CompletedWeightCard({
     required this.exercise,
     required this.badges,
+    this.definition,
     this.onDetails,
   });
 
@@ -1099,13 +1107,6 @@ class _CompletedWeightCard extends StatelessWidget {
                           fontWeight: FontWeight.w900,
                         ),
                       ),
-                      if (badges.isFirstRecord) ...[
-                        const SizedBox(height: 6),
-                        const Align(
-                          alignment: Alignment.centerLeft,
-                          child: FirstRecordBadge(),
-                        ),
-                      ],
                       if (exercise.equipment.trim().isNotEmpty) ...[
                         const SizedBox(height: 2),
                         Text(
@@ -1124,7 +1125,20 @@ class _CompletedWeightCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (onDetails != null)
+                if (onDetails != null && definition != null)
+                  Semantics(
+                    button: true,
+                    label: AppLocalizations.of(context).catalogOpenExerciseInfo,
+                    child: ExerciseMediaThumbnail(
+                      definition: definition!,
+                      size: 56,
+                      borderRadius: BorderRadius.circular(10),
+                      padding: EdgeInsets.zero,
+                      framed: false,
+                      onTap: onDetails,
+                    ),
+                  )
+                else if (onDetails != null)
                   IconButton(
                     tooltip:
                         AppLocalizations.of(context).workoutDetailExerciseInfo,
@@ -1133,8 +1147,23 @@ class _CompletedWeightCard extends StatelessWidget {
                   ),
               ],
             ),
-            const SizedBox(height: 10),
-            Divider(color: Theme.of(context).colorScheme.outlineVariant),
+            if (badges.isFirstRecord) ...[
+              const SizedBox(height: 2),
+              const Align(
+                alignment: Alignment.centerRight,
+                child: FirstRecordBadge(compact: true),
+              ),
+              Divider(
+                height: 1,
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
+            ] else ...[
+              const SizedBox(height: 6),
+              Divider(
+                height: 1,
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
+            ],
             const SizedBox(height: 6),
             for (var i = 0; i < rows.length; i++)
               _CompletedSetRow(
@@ -1189,6 +1218,8 @@ class _CompletedWeightCard extends StatelessWidget {
 }
 
 class _CompletedSetRow extends StatelessWidget {
+  static const _recordBadgeWidth = 68.0;
+
   final _SetDisplayRow row;
   final List<WorkoutRecordBadge> badges;
 
@@ -1228,9 +1259,14 @@ class _CompletedSetRow extends StatelessWidget {
           if (badges.isNotEmpty) ...[
             const SizedBox(width: 8),
             if (badges.length == 1)
-              WorkoutRecordBadgeChip(badge: badges.single)
+              WorkoutRecordBadgeChip(
+                badge: badges.single,
+                width: _recordBadgeWidth,
+                textAlign: TextAlign.center,
+              )
             else
               SizedBox(
+                width: _recordBadgeWidth,
                 height: 28,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -1241,6 +1277,8 @@ class _CompletedSetRow extends StatelessWidget {
                       WorkoutRecordBadgeChip(
                         badge: badges[index],
                         compact: true,
+                        width: _recordBadgeWidth,
+                        textAlign: TextAlign.center,
                       ),
                     ],
                   ],
@@ -1277,6 +1315,7 @@ class _SessionExerciseDetail {
   final WorkoutExercise exercise;
   final CardType cardType;
   final int? definitionId;
+  final ExerciseDefinition? definition;
   final int exerciseId;
 
   const _SessionExerciseDetail({
@@ -1284,6 +1323,7 @@ class _SessionExerciseDetail {
     required this.cardType,
     required this.exerciseId,
     this.definitionId,
+    this.definition,
   });
 }
 

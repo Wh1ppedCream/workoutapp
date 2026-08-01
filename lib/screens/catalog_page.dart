@@ -466,8 +466,9 @@ class _ExerciseUsageBar extends StatelessWidget {
           ExerciseMediaThumbnail(
             definition: summary.definition,
             size: 52,
-            borderRadius: BorderRadius.circular(13),
-            padding: const EdgeInsets.all(4),
+            borderRadius: BorderRadius.circular(12),
+            padding: EdgeInsets.zero,
+            framed: false,
           ),
         ],
       ),

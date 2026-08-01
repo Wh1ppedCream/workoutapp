@@ -659,6 +659,7 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                               child: ExerciseCard(
                                 exercise: preset.exercises[i],
                                 cardType: preset.cardTypes[i],
+                                definitionId: preset.definitionIdForExercise(i),
                                 readOnlyMode: false,
                                 forceCollapsed: _collapseWeightCardsForReorder,
                                 initialCompletedParents:
@@ -758,6 +759,9 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                           child: ExerciseCard(
                             exercise: preset.exercises[exerciseIndex],
                             cardType: preset.cardTypes[exerciseIndex],
+                            definitionId: preset.definitionIdForExercise(
+                              exerciseIndex,
+                            ),
                             readOnlyMode: true,
                             initialCompletedParents:
                                 preset.exercises[exerciseIndex]

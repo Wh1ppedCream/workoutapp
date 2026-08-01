@@ -274,9 +274,12 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
                 const SizedBox(height: 12),
                 LayoutBuilder(
                   builder: (context, constraints) {
+                    final usesLocalizedLayout =
+                        Localizations.localeOf(context).languageCode != 'en';
                     final useTwoRows =
-                        constraints.maxWidth < 360 ||
-                        MediaQuery.textScalerOf(context).scale(1) > 1.15;
+                        usesLocalizedLayout &&
+                        (constraints.maxWidth < 360 ||
+                            MediaQuery.textScalerOf(context).scale(1) > 1.15);
                     if (!useTwoRows) {
                       return Row(
                         children: [

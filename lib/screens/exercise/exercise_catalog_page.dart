@@ -692,8 +692,9 @@ class _ExerciseInfoMediaButton extends StatelessWidget {
       child: ExerciseMediaThumbnail(
         definition: definition,
         size: 64,
-        borderRadius: BorderRadius.circular(14),
-        padding: const EdgeInsets.all(5),
+        borderRadius: BorderRadius.circular(12),
+        padding: EdgeInsets.zero,
+        framed: false,
         onTap: onTap,
       ),
     );

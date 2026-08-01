@@ -50,7 +50,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Welcome to Tonos'), findsOneWidget);
-    await tester.tap(find.widgetWithText(ChoiceChip, 'Français (Canada)'));
+    await tester.tap(
+      find.byType(DropdownButtonFormField<AppLanguagePreference>),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Français (Canada)').last);
     await tester.pumpAndSettle();
 
     expect(find.text('Bienvenue dans Tonos'), findsOneWidget);

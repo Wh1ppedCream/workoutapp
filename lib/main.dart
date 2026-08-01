@@ -546,27 +546,30 @@ class _MainScreenState extends State<MainScreen> {
         ),
     ];
 
+    final bottomNavigationBar = BottomNavigationBar(
+      type: BottomNavigationBarType.fixed,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      selectedItemColor: Theme.of(context).colorScheme.primary,
+      unselectedItemColor: Theme.of(
+        context,
+      ).colorScheme.onSurface.withValues(alpha: 0.6),
+      items: [
+        for (final tab in tabs)
+          BottomNavigationBarItem(
+            icon: Icon(tab.icon),
+            label: tab.localizedTitle(strings),
+          ),
+      ],
+      currentIndex: _selectedIndex,
+      onTap: _onItemTapped,
+    );
+
     return Scaffold(
       body: IndexedStack(index: _selectedIndex, children: pages),
-      bottomNavigationBar: MediaQuery.withNoTextScaling(
-        child: BottomNavigationBar(
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: Theme.of(context).colorScheme.surface,
-          selectedItemColor: Theme.of(context).colorScheme.primary,
-          unselectedItemColor: Theme.of(
-            context,
-          ).colorScheme.onSurface.withValues(alpha: 0.6),
-          items: [
-            for (final tab in tabs)
-              BottomNavigationBarItem(
-                icon: Icon(tab.icon),
-                label: tab.localizedTitle(strings),
-              ),
-          ],
-          currentIndex: _selectedIndex,
-          onTap: _onItemTapped,
-        ),
-      ),
+      bottomNavigationBar:
+          Localizations.localeOf(context).languageCode == 'en'
+              ? bottomNavigationBar
+              : MediaQuery.withNoTextScaling(child: bottomNavigationBar),
       floatingActionButton: Consumer<ActiveSession>(
         builder:
             (_, session, __) =>

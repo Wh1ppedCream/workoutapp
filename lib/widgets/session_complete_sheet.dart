@@ -296,6 +296,8 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
   }) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final usesLocalizedLayout =
+        Localizations.localeOf(context).languageCode != 'en';
     return Container(
       constraints: BoxConstraints(minHeight: compact ? 70 : 76),
       padding: EdgeInsets.all(compact ? 7 : 10),
@@ -310,22 +312,33 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
         children: [
           Icon(icon, size: compact ? 14 : 16, color: accentColor),
           SizedBox(height: compact ? 4 : 6),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: Text(
-              value,
-              maxLines: 1,
-              style: (compact
-                      ? theme.textTheme.labelLarge
-                      : theme.textTheme.titleSmall)
-                  ?.copyWith(fontWeight: FontWeight.w700),
-            ),
-          ),
+          usesLocalizedLayout
+              ? FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  value,
+                  maxLines: 1,
+                  style: (compact
+                          ? theme.textTheme.labelLarge
+                          : theme.textTheme.titleSmall)
+                      ?.copyWith(fontWeight: FontWeight.w700),
+                ),
+              )
+              : Text(
+                value,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: (compact
+                        ? theme.textTheme.labelLarge
+                        : theme.textTheme.titleSmall)
+                    ?.copyWith(fontWeight: FontWeight.w700),
+              ),
           const SizedBox(height: 1),
           Text(
             label,
-            maxLines: 2,
+            maxLines: usesLocalizedLayout ? 2 : 1,
+            overflow: usesLocalizedLayout ? null : TextOverflow.ellipsis,
             style: theme.textTheme.labelSmall?.copyWith(
               fontSize: compact ? 9 : null,
               color: colorScheme.onSurfaceVariant,
@@ -345,6 +358,8 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
   }) {
     final strings = AppLocalizations.of(context);
     final textScale = MediaQuery.textScalerOf(context).scale(1);
+    final usesLocalizedLayout =
+        Localizations.localeOf(context).languageCode != 'en';
     final metrics = [
       (
         icon: Icons.fitness_center_outlined,
@@ -371,6 +386,26 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
         accent: const Color(0xFFF48FB1),
       ),
     ];
+
+    if (!usesLocalizedLayout) {
+      return Row(
+        children: [
+          for (var index = 0; index < metrics.length; index++) ...[
+            if (index > 0) const SizedBox(width: 6),
+            Expanded(
+              child: _buildSummaryMetric(
+                context,
+                icon: metrics[index].icon,
+                label: metrics[index].label,
+                value: metrics[index].value,
+                compact: true,
+                accentColor: metrics[index].accent,
+              ),
+            ),
+          ],
+        ],
+      );
+    }
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -520,15 +555,18 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
               ],
               const SizedBox(width: 8),
               SizedBox(
-                width: 74,
-                child: Text(
-                  ermText,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.right,
-                  style: const TextStyle(
-                    fontStyle: FontStyle.italic,
-                    fontSize: 12,
+                width: 88,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    ermText,
+                    maxLines: 1,
+                    textAlign: TextAlign.right,
+                    style: const TextStyle(
+                      fontStyle: FontStyle.italic,
+                      fontSize: 12,
+                    ),
                   ),
                 ),
               ),

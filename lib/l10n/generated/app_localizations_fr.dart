@@ -460,6 +460,21 @@ class AppLocalizationsFr extends AppLocalizations {
   String get onboardingSummaryWorkoutPlans => 'Plans d’entraînement';
 
   @override
+  String get onboardingSummaryProfileSection => 'Profile';
+
+  @override
+  String get onboardingSummaryTrainingSection => 'Training setup';
+
+  @override
+  String get onboardingSummaryNutritionSection => 'Nutrition preferences';
+
+  @override
+  String get onboardingSummaryDiet => 'Diet';
+
+  @override
+  String get onboardingSummaryProteinPreference => 'Protein preference';
+
+  @override
   String get onboardingIncludedNutrition => 'Configuration nutritionnelle';
 
   @override
@@ -6029,6 +6044,21 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
 
   @override
   String get onboardingSummaryWorkoutPlans => 'Plans d\'entraînement';
+
+  @override
+  String get onboardingSummaryProfileSection => 'Profil';
+
+  @override
+  String get onboardingSummaryTrainingSection => 'Configuration de l\'entraînement';
+
+  @override
+  String get onboardingSummaryNutritionSection => 'Préférences nutritionnelles';
+
+  @override
+  String get onboardingSummaryDiet => 'Régime';
+
+  @override
+  String get onboardingSummaryProteinPreference => 'Préférence de protéines';
 
   @override
   String get onboardingIncludedNutrition => 'Configuration nutritionnelle';

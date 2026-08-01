@@ -954,6 +954,36 @@ abstract class AppLocalizations {
   /// **'Workout plans'**
   String get onboardingSummaryWorkoutPlans;
 
+  /// No description provided for @onboardingSummaryProfileSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get onboardingSummaryProfileSection;
+
+  /// No description provided for @onboardingSummaryTrainingSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Training setup'**
+  String get onboardingSummaryTrainingSection;
+
+  /// No description provided for @onboardingSummaryNutritionSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition preferences'**
+  String get onboardingSummaryNutritionSection;
+
+  /// No description provided for @onboardingSummaryDiet.
+  ///
+  /// In en, this message translates to:
+  /// **'Diet'**
+  String get onboardingSummaryDiet;
+
+  /// No description provided for @onboardingSummaryProteinPreference.
+  ///
+  /// In en, this message translates to:
+  /// **'Protein preference'**
+  String get onboardingSummaryProteinPreference;
+
   /// No description provided for @onboardingIncludedNutrition.
   ///
   /// In en, this message translates to:

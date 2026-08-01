@@ -43,6 +43,8 @@ class GenericBar extends StatelessWidget {
     final horizontalPadding = 12 * scale;
     final verticalPadding = 16 * scale;
     final borderWidth = 1 * scale;
+    final usesLocalizedLayout =
+        Localizations.localeOf(context).languageCode != 'en';
 
     return Material(
       color: accent.withValues(alpha: 0.1),
@@ -68,7 +70,8 @@ class GenericBar extends StatelessWidget {
               Expanded(
                 child: Text(
                   label,
-                  maxLines: 2,
+                  maxLines: usesLocalizedLayout ? 2 : 1,
+                  overflow: usesLocalizedLayout ? null : TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 15,
                     color: accent,

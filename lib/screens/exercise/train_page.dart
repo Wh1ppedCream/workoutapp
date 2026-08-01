@@ -1261,7 +1261,9 @@ class _SplitWorkoutBar extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final strings = AppLocalizations.of(context);
     final green = Colors.green.shade700;
-    final useVerticalLayout = MediaQuery.textScalerOf(context).scale(1) > 1.15;
+    final useVerticalLayout =
+        Localizations.localeOf(context).languageCode != 'en' &&
+        MediaQuery.textScalerOf(context).scale(1) > 1.15;
     return SafeArea(
       minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       child: Material(

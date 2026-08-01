@@ -18,6 +18,7 @@ class ExerciseMediaThumbnail extends StatefulWidget {
   final BorderRadius borderRadius;
   final EdgeInsets padding;
   final VoidCallback? onTap;
+  final bool framed;
 
   const ExerciseMediaThumbnail({
     super.key,
@@ -26,6 +27,7 @@ class ExerciseMediaThumbnail extends StatefulWidget {
     this.borderRadius = const BorderRadius.all(Radius.circular(14)),
     this.padding = const EdgeInsets.all(4),
     this.onTap,
+    this.framed = true,
   });
 
   @override
@@ -102,9 +104,12 @@ class _ExerciseMediaThumbnailState extends State<ExerciseMediaThumbnail> {
       height: widget.size,
       padding: widget.padding,
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
+        color: widget.framed ? theme.colorScheme.surfaceContainerHighest : null,
         borderRadius: widget.borderRadius,
-        border: Border.all(color: theme.colorScheme.outlineVariant),
+        border:
+            widget.framed
+                ? Border.all(color: theme.colorScheme.outlineVariant)
+                : null,
       ),
       clipBehavior: Clip.antiAlias,
       child: FutureBuilder<_ThumbnailData?>(

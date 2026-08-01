@@ -818,11 +818,36 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       title: strings.onboardingWelcomeTitle,
       subtitle: strings.onboardingWelcomeSubtitle,
       children: [
-        _ChoiceGroup<AppLanguagePreference>(
-          title: strings.onboardingLanguageSelectionTitle,
-          options: AppLanguagePreference.values,
+        Text(
+          strings.onboardingLanguageSelectionTitle,
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900),
+        ),
+        const SizedBox(height: 10),
+        DropdownButtonFormField<AppLanguagePreference>(
           value: language,
-          labelBuilder: (preference) => _languagePreferenceLabel(preference),
+          isExpanded: true,
+          decoration: InputDecoration(
+            prefixIcon: const Icon(Icons.language_outlined),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 12,
+            ),
+          ),
+          items:
+              AppLanguagePreference.values
+                  .map(
+                    (preference) => DropdownMenuItem(
+                      value: preference,
+                      child: Text(
+                        _languagePreferenceLabel(preference),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  )
+                  .toList(),
           onChanged: (preference) {
             if (preference == null) return;
             context.read<LocalePreferenceProvider>().setPreference(preference);
@@ -1494,58 +1519,91 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       title: strings.onboardingReadyTitle,
       subtitle: strings.onboardingReadySubtitle,
       children: [
-        _SummaryRow(
-          label: strings.onboardingSummaryName,
-          value: _nameController.text.trim(),
-        ),
-        _SummaryRow(
-          label: strings.onboardingSummaryGender,
-          value: _gender == null ? '' : _genderLabel(_gender!),
-        ),
-        _SummaryRow(
-          label: strings.onboardingSummaryDateOfBirth,
-          value: _dob == null ? '' : _formatDate(_dob!),
-        ),
-        _SummaryRow(
-          label: strings.onboardingSummaryHeight,
-          value: _heightController.text.trim(),
-        ),
-        _SummaryRow(
-          label: strings.onboardingSummaryWeight,
-          value: _weightController.text.trim(),
-        ),
-        _SummaryRow(
-          label: strings.onboardingSummaryWorkoutUnits,
-          value: _weightUnitLabel(_selectedWeightUnit),
-        ),
-        _SummaryRow(
+        _OnboardingSummaryCallout(
           label: strings.onboardingSummaryIncluded,
           value: included.join(', '),
         ),
-        if (usesNutrition) ...[
-          _SummaryRow(label: 'Weight trend', value: _weightTrend ?? ''),
-          _SummaryRow(label: 'Body fat', value: _bodyFatEstimate ?? ''),
-          _SummaryRow(label: 'Diet', value: _preferredDiet),
-          _SummaryRow(label: 'Protein', value: _proteinPreference),
-        ],
-        if (_useExerciseData) ...[
-          _SummaryRow(
-            label: strings.onboardingSummaryGymProfile,
-            value:
-                _selectedGymSpace?.skipSetup ?? true
-                    ? strings.onboardingGymGeneralName
-                    : _gymProfileNameController.text.trim(),
-          ),
-          if (!(_selectedGymSpace?.skipSetup ?? true))
+        const SizedBox(height: 14),
+        _OnboardingSummarySection(
+          icon: Icons.person_outline,
+          title: strings.onboardingSummaryProfileSection,
+          children: [
             _SummaryRow(
-              label: strings.onboardingSummaryEquipment,
-              value: strings.onboardingEquipmentSelected(
-                _selectedGymEquipmentNames.length,
-              ),
+              label: strings.onboardingSummaryName,
+              value: _nameController.text.trim(),
             ),
-          _SummaryRow(
-            label: strings.onboardingSummaryWorkoutPlans,
-            value: _workoutPlanSummary(),
+            _SummaryRow(
+              label: strings.onboardingSummaryGender,
+              value: _gender == null ? '' : _genderLabel(_gender!),
+            ),
+            _SummaryRow(
+              label: strings.onboardingSummaryDateOfBirth,
+              value: _dob == null ? '' : _formatDate(_dob!),
+            ),
+            _SummaryRow(
+              label: strings.onboardingSummaryHeight,
+              value: _heightController.text.trim(),
+            ),
+            _SummaryRow(
+              label: strings.onboardingSummaryWeight,
+              value: _weightController.text.trim(),
+            ),
+          ],
+        ),
+        if (_useExerciseData) ...[
+          const SizedBox(height: 12),
+          _OnboardingSummarySection(
+            icon: Icons.fitness_center_outlined,
+            title: strings.onboardingSummaryTrainingSection,
+            children: [
+              _SummaryRow(
+                label: strings.onboardingSummaryWorkoutUnits,
+                value: _weightUnitLabel(_selectedWeightUnit),
+              ),
+              _SummaryRow(
+                label: strings.onboardingSummaryGymProfile,
+                value:
+                    _selectedGymSpace?.skipSetup ?? true
+                        ? strings.onboardingGymGeneralName
+                        : _gymProfileNameController.text.trim(),
+              ),
+              if (!(_selectedGymSpace?.skipSetup ?? true))
+                _SummaryRow(
+                  label: strings.onboardingSummaryEquipment,
+                  value: strings.onboardingEquipmentSelected(
+                    _selectedGymEquipmentNames.length,
+                  ),
+                ),
+              _SummaryRow(
+                label: strings.onboardingSummaryWorkoutPlans,
+                value: _workoutPlanSummary(),
+              ),
+            ],
+          ),
+        ],
+        if (usesNutrition) ...[
+          const SizedBox(height: 12),
+          _OnboardingSummarySection(
+            icon: Icons.restaurant_menu_outlined,
+            title: strings.onboardingSummaryNutritionSection,
+            children: [
+              _SummaryRow(
+                label: strings.userInfoWeightTrend,
+                value: _weightTrend ?? '',
+              ),
+              _SummaryRow(
+                label: strings.userInfoBodyFat,
+                value: _bodyFatEstimate ?? '',
+              ),
+              _SummaryRow(
+                label: strings.onboardingSummaryDiet,
+                value: _preferredDiet,
+              ),
+              _SummaryRow(
+                label: strings.onboardingSummaryProteinPreference,
+                value: _proteinPreference,
+              ),
+            ],
           ),
         ],
       ],
@@ -1666,41 +1724,90 @@ class _OnboardingHeader extends StatelessWidget {
     final scheme = theme.colorScheme;
     final strings = AppLocalizations.of(context);
     final progress = pageCount <= 1 ? 1.0 : (currentPage + 1) / pageCount;
+    final usesLocalizedLayout =
+        Localizations.localeOf(context).languageCode != 'en';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            SizedBox(
-              width: 48,
-              child:
-                  onBack == null
-                      ? null
-                      : IconButton(
-                        onPressed: onBack,
-                        tooltip: strings.onboardingPreviousStepTooltip,
-                        padding: EdgeInsets.zero,
-                        icon: const Icon(Icons.chevron_left, size: 26),
-                      ),
-            ),
-            Expanded(
-              child: Text(
-                title,
-                maxLines: 2,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w900,
+        usesLocalizedLayout
+            ? Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                SizedBox(
+                  width: 48,
+                  child:
+                      onBack == null
+                          ? null
+                          : IconButton(
+                            onPressed: onBack,
+                            tooltip: strings.onboardingPreviousStepTooltip,
+                            padding: EdgeInsets.zero,
+                            icon: const Icon(Icons.chevron_left, size: 26),
+                          ),
                 ),
+                Expanded(
+                  child: Text(
+                    title,
+                    maxLines: 2,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  width: 72,
+                  child: TextButton(onPressed: onSkip, child: Text(skipLabel)),
+                ),
+              ],
+            )
+            : SizedBox(
+              height: 48,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: SizedBox(
+                      width: 72,
+                      child:
+                          onBack == null
+                              ? null
+                              : IconButton(
+                                onPressed: onBack,
+                                tooltip: strings.onboardingPreviousStepTooltip,
+                                alignment: Alignment.centerLeft,
+                                padding: EdgeInsets.zero,
+                                icon: const Icon(Icons.chevron_left, size: 26),
+                              ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 76),
+                    child: Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: SizedBox(
+                      width: 72,
+                      child: TextButton(
+                        onPressed: onSkip,
+                        child: Text(skipLabel),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            SizedBox(
-              width: 72,
-              child: TextButton(onPressed: onSkip, child: Text(skipLabel)),
-            ),
-          ],
-        ),
         const SizedBox(height: 8),
         ClipRRect(
           borderRadius: BorderRadius.circular(999),
@@ -2299,28 +2406,143 @@ class _SummaryRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final scheme = Theme.of(context).colorScheme;
+    final valueText = value.trim().isEmpty ? '-' : value;
+    final usesStackedLayout =
+        MediaQuery.textScalerOf(context).scale(1) > 1.15 ||
+        MediaQuery.sizeOf(context).width < 360;
+    final labelStyle = theme.textTheme.bodySmall?.copyWith(
+      color: scheme.onSurfaceVariant,
+      fontWeight: FontWeight.w700,
+    );
+    final valueStyle = theme.textTheme.bodyMedium?.copyWith(
+      fontWeight: FontWeight.w800,
+    );
+
+    if (usesStackedLayout) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: labelStyle),
+            const SizedBox(height: 2),
+            Text(valueText, style: valueStyle),
+          ],
+        ),
+      );
+    }
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 108,
-            child: Text(
-              label,
-              style: TextStyle(
-                color: scheme.onSurfaceVariant,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
+          Expanded(child: Text(label, style: labelStyle)),
+          const SizedBox(width: 16),
+          Expanded(flex: 2, child: Text(valueText, style: valueStyle)),
+        ],
+      ),
+    );
+  }
+}
+
+class _OnboardingSummaryCallout extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _OnboardingSummaryCallout({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: scheme.primary.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: scheme.primary.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.auto_awesome_outlined, color: scheme.primary, size: 21),
+          const SizedBox(width: 10),
           Expanded(
-            child: Text(
-              value.trim().isEmpty ? '-' : value,
-              style: const TextStyle(fontWeight: FontWeight.w800),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: scheme.primary,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  value,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OnboardingSummarySection extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final List<Widget> children;
+
+  const _OnboardingSummarySection({
+    required this.icon,
+    required this.title,
+    required this.children,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(14, 13, 14, 4),
+      decoration: BoxDecoration(
+        color: scheme.surface.withValues(alpha: 0.46),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.6)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: scheme.primary, size: 19),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 10),
+            child: Divider(height: 1),
+          ),
+          ...children,
         ],
       ),
     );

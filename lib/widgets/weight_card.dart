@@ -6,7 +6,9 @@ import 'package:provider/provider.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../models/models.dart';
 import '../providers/unit_preference_provider.dart';
+import '../repositories/app_repository.dart';
 import '../utils/weight_unit_formatter.dart';
+import 'exercise_media_thumbnail.dart';
 
 /// Displays and edits a [WeightExercise], including parent sets and change sets.
 ///
@@ -25,6 +27,7 @@ class WeightCard extends StatefulWidget {
   final VoidCallback? onSetDeleted;
   final VoidCallback? onValueChanged;
   final VoidCallback? onDetails;
+  final int? definitionId;
   final VoidCallback? onSwapExercise;
   final bool forceCollapsed;
   final Key? firstSetWeightKey;
@@ -46,6 +49,7 @@ class WeightCard extends StatefulWidget {
     this.onSetDeleted,
     this.onValueChanged,
     this.onDetails,
+    this.definitionId,
     this.onSwapExercise,
     this.forceCollapsed = false,
     this.firstSetWeightKey,
@@ -293,11 +297,16 @@ class _WeightCardState extends State<WeightCard> {
                     ],
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.info_outline),
-                  tooltip: strings.weightDetails,
-                  onPressed: widget.onDetails,
-                ),
+                if (widget.onDetails != null)
+                  Semantics(
+                    button: true,
+                    label: strings.weightDetails,
+                    child: _WeightExerciseThumbnailButton(
+                      definitionId: widget.definitionId,
+                      exercise: we,
+                      onTap: widget.onDetails!,
+                    ),
+                  ),
                 PopupMenuButton<String>(
                   enabled: !readOnly,
                   icon: const Icon(Icons.more_vert),
@@ -812,6 +821,96 @@ class _WeightCardState extends State<WeightCard> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _WeightExerciseThumbnailButton extends StatefulWidget {
+  final int? definitionId;
+  final WeightExercise exercise;
+  final VoidCallback onTap;
+
+  const _WeightExerciseThumbnailButton({
+    required this.definitionId,
+    required this.exercise,
+    required this.onTap,
+  });
+
+  @override
+  State<_WeightExerciseThumbnailButton> createState() =>
+      _WeightExerciseThumbnailButtonState();
+}
+
+class _WeightExerciseThumbnailButtonState
+    extends State<_WeightExerciseThumbnailButton> {
+  AppRepository get _repo => context.read<AppRepository>();
+  late Future<ExerciseDefinition?> _definitionFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _definitionFuture = _loadDefinition();
+  }
+
+  @override
+  void didUpdateWidget(covariant _WeightExerciseThumbnailButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.definitionId != widget.definitionId ||
+        oldWidget.exercise.name != widget.exercise.name ||
+        oldWidget.exercise.equipment != widget.exercise.equipment) {
+      _definitionFuture = _loadDefinition();
+    }
+  }
+
+  Future<ExerciseDefinition?> _loadDefinition() async {
+    try {
+      final definitionId =
+          widget.definitionId ??
+          await _repo.findOrCreateExerciseDefinition(
+            widget.exercise.name,
+            widget.exercise.equipment,
+          );
+      return _repo.fetchDefinitionById(definitionId);
+    } catch (_) {
+      // A custom or legacy exercise may not have a resolvable definition yet.
+      return null;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<ExerciseDefinition?>(
+      future: _definitionFuture,
+      builder: (context, snapshot) {
+        final definition = snapshot.data;
+        if (definition != null) {
+          return ExerciseMediaThumbnail(
+            definition: definition,
+            size: 48,
+            borderRadius: BorderRadius.circular(10),
+            padding: EdgeInsets.zero,
+            framed: false,
+            onTap: widget.onTap,
+          );
+        }
+
+        return SizedBox.square(
+          dimension: 48,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(10),
+            onTap: widget.onTap,
+            child: Center(
+              child:
+                  snapshot.connectionState == ConnectionState.waiting
+                      ? const SizedBox.square(
+                        dimension: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                      : const Icon(Icons.fitness_center, size: 22),
+            ),
+          ),
+        );
+      },
     );
   }
 }

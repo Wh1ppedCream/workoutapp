@@ -193,6 +193,8 @@ class _GuidedTutorialOverlayState extends State<GuidedTutorialOverlay>
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
     final scheme = Theme.of(context).colorScheme;
+    final usesLocalizedLayout =
+        Localizations.localeOf(context).languageCode != 'en';
 
     return SizedBox.expand(
       key: _overlayKey,
@@ -233,6 +235,7 @@ class _GuidedTutorialOverlayState extends State<GuidedTutorialOverlay>
                         size,
                         media.padding,
                         media.textScaler,
+                        usesLocalizedLayout: usesLocalizedLayout,
                       ),
                     ),
                   ),
@@ -256,6 +259,7 @@ class _GuidedTutorialOverlayState extends State<GuidedTutorialOverlay>
                 size,
                 media.padding,
                 media.textScaler,
+                usesLocalizedLayout: usesLocalizedLayout,
               ),
             );
 
@@ -307,6 +311,7 @@ class _GuidedTutorialOverlayState extends State<GuidedTutorialOverlay>
                       size,
                       media.padding,
                       media.textScaler,
+                      usesLocalizedLayout: usesLocalizedLayout,
                     ),
                   ),
                 ),
@@ -342,9 +347,14 @@ class _GuidedTutorialOverlayState extends State<GuidedTutorialOverlay>
     return preferredTop.clamp(minTop, math.max(minTop, maxTop)).toDouble();
   }
 
-  double _cardHeightFor(Size size, EdgeInsets padding, TextScaler textScaler) {
+  double _cardHeightFor(
+    Size size,
+    EdgeInsets padding,
+    TextScaler textScaler, {
+    required bool usesLocalizedLayout,
+  }) {
     final scale = textScaler.scale(1);
-    if (scale <= 1.15) {
+    if (!usesLocalizedLayout || scale <= 1.15) {
       return _cardEstimateHeight;
     }
 
@@ -385,7 +395,9 @@ class _TutorialCard extends StatelessWidget {
     final strings = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final useStackedActions = MediaQuery.textScalerOf(context).scale(1) > 1.15;
+    final useStackedActions =
+        Localizations.localeOf(context).languageCode != 'en' &&
+        MediaQuery.textScalerOf(context).scale(1) > 1.15;
 
     return Container(
       constraints: const BoxConstraints(maxWidth: 420),

@@ -95,6 +95,8 @@ class SettingsHeroCard extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final accent = accentColor ?? scheme.primary;
+    final usesLocalizedLayout =
+        Localizations.localeOf(context).languageCode != 'en';
 
     return Container(
       padding: const EdgeInsets.all(18),
@@ -126,14 +128,38 @@ class SettingsHeroCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  maxLines: 2,
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    color: scheme.onSurface,
-                  ),
-                ),
+                usesLocalizedLayout
+                    ? Text(
+                      title,
+                      maxLines: 2,
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w900,
+                        color: scheme.onSurface,
+                      ),
+                    )
+                    : LayoutBuilder(
+                      builder: (context, constraints) {
+                        final fontSize =
+                            constraints.maxWidth >= 290
+                                ? 28.0
+                                : constraints.maxWidth >= 220
+                                ? 25.0
+                                : 22.0;
+                        return FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            title,
+                            maxLines: 1,
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              fontSize: fontSize,
+                              fontWeight: FontWeight.w900,
+                              color: scheme.onSurface,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                 if (subtitle != null) ...[
                   const SizedBox(height: 4),
                   Text(
@@ -270,6 +296,8 @@ class SettingsActionTile extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final resolvedIconColor = iconColor ?? scheme.primary;
+    final usesLocalizedLayout =
+        Localizations.localeOf(context).languageCode != 'en';
 
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
@@ -284,7 +312,8 @@ class SettingsActionTile extends StatelessWidget {
       ),
       title: Text(
         title,
-        maxLines: 2,
+        maxLines: usesLocalizedLayout ? 2 : 1,
+        overflow: usesLocalizedLayout ? null : TextOverflow.ellipsis,
         style: theme.textTheme.titleSmall?.copyWith(
           fontWeight: FontWeight.w900,
         ),
@@ -294,7 +323,8 @@ class SettingsActionTile extends StatelessWidget {
               ? null
               : Text(
                 subtitle!,
-                maxLines: 3,
+                maxLines: usesLocalizedLayout ? 3 : 2,
+                overflow: usesLocalizedLayout ? null : TextOverflow.ellipsis,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: scheme.onSurfaceVariant,
                 ),

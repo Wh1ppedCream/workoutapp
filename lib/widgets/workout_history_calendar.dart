@@ -310,7 +310,7 @@ class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
           final day = DateUtils.dateOnly(session.date);
           return !day.isBefore(startDay) && day.isBefore(endDay);
         }).toList();
-    periodSessions.sort((a, b) => a.date.compareTo(b.date));
+    periodSessions.sort((a, b) => b.date.compareTo(a.date));
     return periodSessions;
   }
 
@@ -379,7 +379,7 @@ class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
       grouped.putIfAbsent(day, () => <WorkoutReportSession>[]).add(session);
     }
     for (final daySessions in grouped.values) {
-      daySessions.sort((a, b) => a.date.compareTo(b.date));
+      daySessions.sort((a, b) => b.date.compareTo(a.date));
     }
     return grouped;
   }
