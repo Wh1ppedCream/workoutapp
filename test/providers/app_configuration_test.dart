@@ -67,6 +67,13 @@ void main() {
           AppLanguagePreference.canadianFrench,
         );
         expect(reloadedProvider.locale, const Locale('fr', 'CA'));
+
+        await provider.setPreference(AppLanguagePreference.bengaliBangladesh);
+        expect(
+          prefs.getString(LocalePreferenceProvider.preferenceKey),
+          'bengaliBangladesh',
+        );
+        expect(provider.locale, const Locale('bn'));
       },
     );
 

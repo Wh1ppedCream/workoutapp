@@ -5588,4 +5588,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String exerciseEditorMediaReference(String type) {
     return '$type reference';
   }
+
+  @override
+  String get bengaliBangladeshLanguage => 'Bangla (Bangladesh)';
 }

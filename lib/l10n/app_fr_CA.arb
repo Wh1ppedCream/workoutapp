@@ -1,6 +1,7 @@
 {
   "@@locale": "fr_CA",
   "appTitle": "Tonos",
+  "bengaliBangladeshLanguage": "Bengali (Bangladesh)",
   "uiAppearanceTitle": "Interface et apparence",
   "uiAppearanceSubtitle": "Contrôlez l'apparence de Tonos et le comportement des onglets du bas.",
   "displaySettingsTitle": "Affichage",

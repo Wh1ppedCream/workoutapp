@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-enum AppLanguagePreference { system, english, canadianFrench }
+enum AppLanguagePreference {
+  system,
+  english,
+  canadianFrench,
+  bengaliBangladesh,
+}
 
 class LocalePreferenceProvider extends ChangeNotifier {
   static const preferenceKey = 'app_language_preference';
@@ -23,6 +28,7 @@ class LocalePreferenceProvider extends ChangeNotifier {
     AppLanguagePreference.system => null,
     AppLanguagePreference.english => const Locale('en'),
     AppLanguagePreference.canadianFrench => const Locale('fr', 'CA'),
+    AppLanguagePreference.bengaliBangladesh => const Locale('bn'),
   };
 
   Future<void> _load() async {

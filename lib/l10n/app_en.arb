@@ -2293,5 +2293,6 @@
   "exerciseEditorRemoveMedia": "Remove media",
   "exerciseEditorMediaLinkItem": "media link",
   "exerciseEditorMediaReference": "{type} reference",
-  "@exerciseEditorMediaReference": {"placeholders": {"type": {"type": "String"}}}
+  "@exerciseEditorMediaReference": {"placeholders": {"type": {"type": "String"}}},
+  "bengaliBangladeshLanguage": "Bangla (Bangladesh)"
 }

@@ -5,12 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('localization bundle exposes French and Canadian French', () {
+  test('localization bundle exposes French, Canadian French, and Bangla', () {
     expect(AppLocalizations.supportedLocales, contains(const Locale('fr')));
     expect(
       AppLocalizations.supportedLocales,
       contains(const Locale('fr', 'CA')),
     );
+    expect(AppLocalizations.supportedLocales, contains(const Locale('bn')));
   });
 
   test(
@@ -26,6 +27,17 @@ void main() {
       );
       expect(strings.recommendedSetsTitle, isNot('Recommended sets'));
       expect(strings.recommendedSetsMinimum, isNot('Minimum recommended sets'));
+    },
+  );
+
+  test(
+    'Bangla localization includes translated training and nutrition copy',
+    () async {
+      final strings = await AppLocalizations.delegate.load(const Locale('bn'));
+
+      expect(strings.trainTab, 'প্রশিক্ষণ');
+      expect(strings.nutritionDashboardTitle, 'পুষ্টি ড্যাশবোর্ড');
+      expect(strings.bengaliBangladeshLanguage, 'বাংলা (বাংলাদেশ)');
     },
   );
 

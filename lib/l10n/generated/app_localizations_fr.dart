@@ -5588,6 +5588,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String exerciseEditorMediaReference(String type) {
     return 'Référence $type';
   }
+
+  @override
+  String get bengaliBangladeshLanguage => 'Bengali (Bangladesh)';
 }
 
 /// The translations for French, as used in Canada (`fr_CA`).
@@ -11168,4 +11171,7 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String exerciseEditorMediaReference(String type) {
     return 'référence $type';
   }
+
+  @override
+  String get bengaliBangladeshLanguage => 'Bengali (Bangladesh)';
 }
