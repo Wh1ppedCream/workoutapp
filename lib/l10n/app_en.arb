@@ -2294,5 +2294,6 @@
   "exerciseEditorMediaLinkItem": "media link",
   "exerciseEditorMediaReference": "{type} reference",
   "@exerciseEditorMediaReference": {"placeholders": {"type": {"type": "String"}}},
-  "bengaliBangladeshLanguage": "Bangla (Bangladesh)"
+  "bengaliBangladeshLanguage": "Bangla (Bangladesh)",
+  "simplifiedChineseLanguage": "Chinese (Simplified)"
 }

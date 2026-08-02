@@ -5597,4 +5597,7 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get bengaliBangladeshLanguage => 'বাংলা (বাংলাদেশ)';
+
+  @override
+  String get simplifiedChineseLanguage => 'সরলীকৃত চীনা';
 }

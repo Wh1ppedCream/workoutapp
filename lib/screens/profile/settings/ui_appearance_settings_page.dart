@@ -208,6 +208,8 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
     AppLanguagePreference.canadianFrench => strings.canadianFrenchLanguage,
     AppLanguagePreference.bengaliBangladesh =>
       strings.bengaliBangladeshLanguage,
+    AppLanguagePreference.simplifiedChinese =>
+      strings.simplifiedChineseLanguage,
   };
 
   Future<void> _showLanguageDialog(

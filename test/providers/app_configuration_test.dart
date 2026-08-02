@@ -74,6 +74,13 @@ void main() {
           'bengaliBangladesh',
         );
         expect(provider.locale, const Locale('bn'));
+
+        await provider.setPreference(AppLanguagePreference.simplifiedChinese);
+        expect(
+          prefs.getString(LocalePreferenceProvider.preferenceKey),
+          'simplifiedChinese',
+        );
+        expect(provider.locale, const Locale('zh'));
       },
     );
 

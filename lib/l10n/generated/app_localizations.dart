@@ -8,6 +8,7 @@ import 'package:intl/intl.dart' as intl;
 import 'app_localizations_bn.dart';
 import 'app_localizations_en.dart';
 import 'app_localizations_fr.dart';
+import 'app_localizations_zh.dart';
 
 // ignore_for_file: type=lint
 
@@ -95,7 +96,8 @@ abstract class AppLocalizations {
     Locale('bn'),
     Locale('en'),
     Locale('fr'),
-    Locale('fr', 'CA')
+    Locale('fr', 'CA'),
+    Locale('zh')
   ];
 
   /// No description provided for @appTitle.
@@ -10333,6 +10335,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Bangla (Bangladesh)'**
   String get bengaliBangladeshLanguage;
+
+  /// No description provided for @simplifiedChineseLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Chinese (Simplified)'**
+  String get simplifiedChineseLanguage;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
@@ -10344,7 +10352,7 @@ class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> 
   }
 
   @override
-  bool isSupported(Locale locale) => <String>['bn', 'en', 'fr'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>['bn', 'en', 'fr', 'zh'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -10367,6 +10375,7 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
     case 'bn': return AppLocalizationsBn();
     case 'en': return AppLocalizationsEn();
     case 'fr': return AppLocalizationsFr();
+    case 'zh': return AppLocalizationsZh();
   }
 
   throw FlutterError(

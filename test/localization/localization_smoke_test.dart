@@ -5,14 +5,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('localization bundle exposes French, Canadian French, and Bangla', () {
-    expect(AppLocalizations.supportedLocales, contains(const Locale('fr')));
-    expect(
-      AppLocalizations.supportedLocales,
-      contains(const Locale('fr', 'CA')),
-    );
-    expect(AppLocalizations.supportedLocales, contains(const Locale('bn')));
-  });
+  test(
+    'localization bundle exposes French, Bangla, and Simplified Chinese',
+    () {
+      expect(AppLocalizations.supportedLocales, contains(const Locale('fr')));
+      expect(
+        AppLocalizations.supportedLocales,
+        contains(const Locale('fr', 'CA')),
+      );
+      expect(AppLocalizations.supportedLocales, contains(const Locale('bn')));
+      expect(AppLocalizations.supportedLocales, contains(const Locale('zh')));
+    },
+  );
 
   test(
     'Canadian French includes workout report and set-editor labels',
@@ -38,6 +42,17 @@ void main() {
       expect(strings.trainTab, 'প্রশিক্ষণ');
       expect(strings.nutritionDashboardTitle, 'পুষ্টি ড্যাশবোর্ড');
       expect(strings.bengaliBangladeshLanguage, 'বাংলা (বাংলাদেশ)');
+    },
+  );
+
+  test(
+    'Simplified Chinese localization includes translated core copy',
+    () async {
+      final strings = await AppLocalizations.delegate.load(const Locale('zh'));
+
+      expect(strings.trainTab, '训练');
+      expect(strings.nutritionDashboardTitle, '营养仪表板');
+      expect(strings.simplifiedChineseLanguage, '简体中文');
     },
   );
 

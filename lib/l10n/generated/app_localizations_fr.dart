@@ -5591,6 +5591,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bengaliBangladeshLanguage => 'Bengali (Bangladesh)';
+
+  @override
+  String get simplifiedChineseLanguage => 'Chinois simplifié';
 }
 
 /// The translations for French, as used in Canada (`fr_CA`).
@@ -11174,4 +11177,7 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
 
   @override
   String get bengaliBangladeshLanguage => 'Bengali (Bangladesh)';
+
+  @override
+  String get simplifiedChineseLanguage => 'Chinois simplifié';
 }

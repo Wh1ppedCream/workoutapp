@@ -1618,6 +1618,8 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       AppLanguagePreference.canadianFrench => strings.canadianFrenchLanguage,
       AppLanguagePreference.bengaliBangladesh =>
         strings.bengaliBangladeshLanguage,
+      AppLanguagePreference.simplifiedChinese =>
+        strings.simplifiedChineseLanguage,
     };
   }
 
