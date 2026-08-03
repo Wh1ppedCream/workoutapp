@@ -81,6 +81,20 @@ void main() {
           'simplifiedChinese',
         );
         expect(provider.locale, const Locale('zh'));
+
+        await provider.setPreference(AppLanguagePreference.hindi);
+        expect(
+          prefs.getString(LocalePreferenceProvider.preferenceKey),
+          'hindi',
+        );
+        expect(provider.locale, const Locale('hi'));
+
+        await provider.setPreference(AppLanguagePreference.spanish);
+        expect(
+          prefs.getString(LocalePreferenceProvider.preferenceKey),
+          'spanish',
+        );
+        expect(provider.locale, const Locale('es'));
       },
     );
 

@@ -4210,7 +4210,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get swapNeedsProfileEquipment => '此动作需要本资料之外的器械。';
 
   @override
-  String get swapLoadFailed => '无法加载该替代动作。';
+  String swapLoadFailed(Object error) {
+    return '无法加载该替代动作。';
+  }
 
   @override
   String get swapCurrent => '当前';
@@ -5594,4 +5596,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get simplifiedChineseLanguage => '简体中文';
+
+  @override
+  String get hindiLanguage => '印地语';
+
+  @override
+  String get spanishLanguage => '西班牙语';
 }

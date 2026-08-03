@@ -7,7 +7,9 @@ import 'package:intl/intl.dart' as intl;
 
 import 'app_localizations_bn.dart';
 import 'app_localizations_en.dart';
+import 'app_localizations_es.dart';
 import 'app_localizations_fr.dart';
+import 'app_localizations_hi.dart';
 import 'app_localizations_zh.dart';
 
 // ignore_for_file: type=lint
@@ -95,8 +97,10 @@ abstract class AppLocalizations {
   static const List<Locale> supportedLocales = <Locale>[
     Locale('bn'),
     Locale('en'),
+    Locale('es'),
     Locale('fr'),
     Locale('fr', 'CA'),
+    Locale('hi'),
     Locale('zh')
   ];
 
@@ -7802,7 +7806,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Could not load that replacement exercise.'**
-  String get swapLoadFailed;
+  String swapLoadFailed(Object error);
 
   /// No description provided for @swapCurrent.
   ///
@@ -10341,6 +10345,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Chinese (Simplified)'**
   String get simplifiedChineseLanguage;
+
+  /// No description provided for @hindiLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Hindi'**
+  String get hindiLanguage;
+
+  /// No description provided for @spanishLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Spanish'**
+  String get spanishLanguage;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
@@ -10352,7 +10368,7 @@ class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> 
   }
 
   @override
-  bool isSupported(Locale locale) => <String>['bn', 'en', 'fr', 'zh'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>['bn', 'en', 'es', 'fr', 'hi', 'zh'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -10374,7 +10390,9 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
   switch (locale.languageCode) {
     case 'bn': return AppLocalizationsBn();
     case 'en': return AppLocalizationsEn();
+    case 'es': return AppLocalizationsEs();
     case 'fr': return AppLocalizationsFr();
+    case 'hi': return AppLocalizationsHi();
     case 'zh': return AppLocalizationsZh();
   }
 

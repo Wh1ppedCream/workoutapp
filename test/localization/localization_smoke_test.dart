@@ -6,7 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test(
-    'localization bundle exposes French, Bangla, and Simplified Chinese',
+    'localization bundle exposes French, Bangla, Simplified Chinese, Hindi, and Spanish',
     () {
       expect(AppLocalizations.supportedLocales, contains(const Locale('fr')));
       expect(
@@ -15,6 +15,8 @@ void main() {
       );
       expect(AppLocalizations.supportedLocales, contains(const Locale('bn')));
       expect(AppLocalizations.supportedLocales, contains(const Locale('zh')));
+      expect(AppLocalizations.supportedLocales, contains(const Locale('hi')));
+      expect(AppLocalizations.supportedLocales, contains(const Locale('es')));
     },
   );
 
@@ -55,6 +57,22 @@ void main() {
       expect(strings.simplifiedChineseLanguage, '简体中文');
     },
   );
+
+  test('Hindi localization includes translated core copy', () async {
+    final strings = await AppLocalizations.delegate.load(const Locale('hi'));
+
+    expect(strings.trainTab, 'प्रशिक्षण');
+    expect(strings.nutritionDashboardTitle, 'पोषण डैशबोर्ड');
+    expect(strings.hindiLanguage, 'हिंदी');
+  });
+
+  test('Spanish localization includes translated core copy', () async {
+    final strings = await AppLocalizations.delegate.load(const Locale('es'));
+
+    expect(strings.trainTab, 'Entrenamiento');
+    expect(strings.nutritionDashboardTitle, 'Panel de nutrición');
+    expect(strings.spanishLanguage, 'Español');
+  });
 
   testWidgets('English localization delegates resolve app strings', (
     tester,

@@ -4216,7 +4216,9 @@ class AppLocalizationsBn extends AppLocalizations {
   String get swapNeedsProfileEquipment => 'ওই ব্যায়ামের জন্য এই প্রোফাইলের বাইরের সরঞ্জাম প্রয়োজন।';
 
   @override
-  String get swapLoadFailed => 'বিকল্প ব্যায়ামটি লোড করা যায়নি।';
+  String swapLoadFailed(Object error) {
+    return 'বিকল্প ব্যায়ামটি লোড করা যায়নি।';
+  }
 
   @override
   String get swapCurrent => 'বর্তমান';
@@ -5600,4 +5602,10 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get simplifiedChineseLanguage => 'সরলীকৃত চীনা';
+
+  @override
+  String get hindiLanguage => 'হিন্দি';
+
+  @override
+  String get spanishLanguage => 'স্প্যানিশ';
 }

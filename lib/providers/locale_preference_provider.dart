@@ -7,6 +7,8 @@ enum AppLanguagePreference {
   canadianFrench,
   bengaliBangladesh,
   simplifiedChinese,
+  hindi,
+  spanish,
 }
 
 class LocalePreferenceProvider extends ChangeNotifier {
@@ -31,6 +33,8 @@ class LocalePreferenceProvider extends ChangeNotifier {
     AppLanguagePreference.canadianFrench => const Locale('fr', 'CA'),
     AppLanguagePreference.bengaliBangladesh => const Locale('bn'),
     AppLanguagePreference.simplifiedChinese => const Locale('zh'),
+    AppLanguagePreference.hindi => const Locale('hi'),
+    AppLanguagePreference.spanish => const Locale('es'),
   };
 
   Future<void> _load() async {

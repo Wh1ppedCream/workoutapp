@@ -4210,7 +4210,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get swapNeedsProfileEquipment => 'That exercise needs equipment outside this profile.';
 
   @override
-  String get swapLoadFailed => 'Could not load that replacement exercise.';
+  String swapLoadFailed(Object error) {
+    return 'Could not load that replacement exercise.';
+  }
 
   @override
   String get swapCurrent => 'Current';
@@ -5594,4 +5596,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get simplifiedChineseLanguage => 'Chinese (Simplified)';
+
+  @override
+  String get hindiLanguage => 'Hindi';
+
+  @override
+  String get spanishLanguage => 'Spanish';
 }

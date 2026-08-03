@@ -352,12 +352,12 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
         _manualReplacement = entry.copyWith(score: score);
         _isLoadingManualReplacement = false;
       });
-    } catch (_) {
+    } catch (error) {
       if (!mounted) return;
       setState(() => _isLoadingManualReplacement = false);
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(_strings.swapLoadFailed)));
+      ).showSnackBar(SnackBar(content: Text(_strings.swapLoadFailed(error))));
     }
   }
 

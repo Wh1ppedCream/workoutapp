@@ -1,0 +1,262 @@
+{
+  "namespace": "exercise_media",
+  "version": 1,
+  "baseUrl": "https://pub-7eb72a1a315f4da3b30100ff6e694651.r2.dev",
+  "exercises": [
+    {
+      "exerciseId": 118,
+      "exerciseName": "Kettlebell Swings",
+      "slug": "kettlebell_swings",
+      "assets": [
+        {
+          "assetId": "kettlebell_swings_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/kettlebell_swings/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_005\\exercises\\kettlebell_swings\\v1\\thumb.webp",
+          "title": "Kettlebell Swings thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 119,
+      "exerciseName": "Knee Push-Up",
+      "slug": "knee_push_up",
+      "assets": [
+        {
+          "assetId": "knee_push_up_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/knee_push_up/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_005\\exercises\\knee_push_up\\v1\\thumb.webp",
+          "title": "Knee Push-Up thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 120,
+      "exerciseName": "Knee Raise",
+      "slug": "knee_raise",
+      "assets": [
+        {
+          "assetId": "knee_raise_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/knee_raise/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_005\\exercises\\knee_raise\\v1\\thumb.webp",
+          "title": "Knee Raise thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 121,
+      "exerciseName": "Knee Raise (Hanging)",
+      "slug": "knee_raise_hanging",
+      "assets": [
+        {
+          "assetId": "knee_raise_hanging_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/knee_raise_hanging/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_005\\exercises\\knee_raise_hanging\\v1\\thumb.webp",
+          "title": "Knee Raise (Hanging) thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 123,
+      "exerciseName": "Knee Raise Twist (Hanging)",
+      "slug": "knee_raise_twist_hanging",
+      "assets": [
+        {
+          "assetId": "knee_raise_twist_hanging_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/knee_raise_twist_hanging/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_005\\exercises\\knee_raise_twist_hanging\\v1\\thumb.webp",
+          "title": "Knee Raise Twist (Hanging) thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 125,
+      "exerciseName": "Kneeling Plank",
+      "slug": "kneeling_plank",
+      "assets": [
+        {
+          "assetId": "kneeling_plank_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/kneeling_plank/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_005\\exercises\\kneeling_plank\\v1\\thumb.webp",
+          "title": "Kneeling Plank thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 130,
+      "exerciseName": "Lat Pulldown - Lat Pulldown Machine",
+      "slug": "lat_pulldown_lat_pulldown_machine",
+      "assets": [
+        {
+          "assetId": "lat_pulldown_lat_pulldown_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/lat_pulldown_lat_pulldown_machine/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_005\\exercises\\lat_pulldown_lat_pulldown_machine\\v1\\thumb.webp",
+          "title": "Lat Pulldown - Lat Pulldown Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 131,
+      "exerciseName": "Lat Pulldown - Cable Machine",
+      "slug": "lat_pulldown_cable_machine",
+      "assets": [
+        {
+          "assetId": "lat_pulldown_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/lat_pulldown_cable_machine/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_005\\exercises\\lat_pulldown_cable_machine\\v1\\thumb.webp",
+          "title": "Lat Pulldown - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 135,
+      "exerciseName": "Lateral Raise - Lateral raise Machine",
+      "slug": "lateral_raise_lateral_raise_machine",
+      "assets": [
+        {
+          "assetId": "lateral_raise_lateral_raise_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/lateral_raise_lateral_raise_machine/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_005\\exercises\\lateral_raise_lateral_raise_machine\\v1\\thumb.webp",
+          "title": "Lateral Raise - Lateral raise Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 136,
+      "exerciseName": "Lateral Raise - Cable Machine",
+      "slug": "lateral_raise_cable_machine",
+      "assets": [
+        {
+          "assetId": "lateral_raise_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/lateral_raise_cable_machine/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_005\\exercises\\lateral_raise_cable_machine\\v1\\thumb.webp",
+          "title": "Lateral Raise - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 150,
+      "exerciseName": "Lying Leg Curl - Leg Curl Machine (lying)",
+      "slug": "lying_leg_curl_leg_curl_machine_lying",
+      "assets": [
+        {
+          "assetId": "lying_leg_curl_leg_curl_machine_lying_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/lying_leg_curl_leg_curl_machine_lying/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_005\\exercises\\lying_leg_curl_leg_curl_machine_lying\\v1\\thumb.webp",
+          "title": "Lying Leg Curl - Leg Curl Machine (lying) thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 151,
+      "exerciseName": "Lying Leg Curl - Dumbbell",
+      "slug": "lying_leg_curl_dumbbell",
+      "assets": [
+        {
+          "assetId": "lying_leg_curl_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/lying_leg_curl_dumbbell/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_005\\exercises\\lying_leg_curl_dumbbell\\v1\\thumb.webp",
+          "title": "Lying Leg Curl - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 152,
+      "exerciseName": "Lunge",
+      "slug": "lunge",
+      "assets": [
+        {
+          "assetId": "lunge_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/lunge/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_005\\exercises\\lunge\\v1\\thumb.webp",
+          "title": "Lunge thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 154,
+      "exerciseName": "Lunge - Dumbbell",
+      "slug": "lunge_dumbbell",
+      "assets": [
+        {
+          "assetId": "lunge_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/lunge_dumbbell/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_005\\exercises\\lunge_dumbbell\\v1\\thumb.webp",
+          "title": "Lunge - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 155,
+      "exerciseName": "Lunge - Barbell",
+      "slug": "lunge_barbell",
+      "assets": [
+        {
+          "assetId": "lunge_barbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/lunge_barbell/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_005\\exercises\\lunge_barbell\\v1\\thumb.webp",
+          "title": "Lunge - Barbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    }
+  ]
+}

@@ -4210,7 +4210,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get swapNeedsProfileEquipment => 'Cet exercice exige de l\'equipement absent de ce profil.';
 
   @override
-  String get swapLoadFailed => 'Impossible de charger cet exercice de remplacement.';
+  String swapLoadFailed(Object error) {
+    return 'Impossible de charger cet exercice de remplacement.';
+  }
 
   @override
   String get swapCurrent => 'Actuel';
@@ -5594,6 +5596,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get simplifiedChineseLanguage => 'Chinois simplifié';
+
+  @override
+  String get hindiLanguage => 'Hindi';
+
+  @override
+  String get spanishLanguage => 'Espagnol';
 }
 
 /// The translations for French, as used in Canada (`fr_CA`).
@@ -9796,7 +9804,9 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get swapNeedsProfileEquipment => 'Cet exercice nécessite de l’équipement qui ne figure pas dans ce profil.';
 
   @override
-  String get swapLoadFailed => 'Impossible de charger cet exercice de remplacement.';
+  String swapLoadFailed(Object error) {
+    return 'Impossible de charger cet exercice de remplacement.';
+  }
 
   @override
   String get swapCurrent => 'Actuel';
@@ -11180,4 +11190,10 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
 
   @override
   String get simplifiedChineseLanguage => 'Chinois simplifié';
+
+  @override
+  String get hindiLanguage => 'Hindi';
+
+  @override
+  String get spanishLanguage => 'Espagnol';
 }

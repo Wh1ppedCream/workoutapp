@@ -2295,5 +2295,7 @@
   "exerciseEditorMediaReference": "{type} reference",
   "@exerciseEditorMediaReference": {"placeholders": {"type": {"type": "String"}}},
   "bengaliBangladeshLanguage": "Bangla (Bangladesh)",
-  "simplifiedChineseLanguage": "Chinese (Simplified)"
+  "simplifiedChineseLanguage": "Chinese (Simplified)",
+  "hindiLanguage": "Hindi",
+  "spanishLanguage": "Spanish"
 }
