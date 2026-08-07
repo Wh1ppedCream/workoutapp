@@ -10,6 +10,7 @@ import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
 import '../theme/theme_extensions.dart';
 import '../utils/weight_unit_formatter.dart';
+import '../utils/app_test_keys.dart';
 import 'body_heatmap.dart';
 
 enum _CalendarRangeMode { month, threeMonth, year, fourYear }
@@ -1528,6 +1529,7 @@ class _SessionRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     return ListTile(
+      key: AppTestKeys.historySession(session.id),
       dense: true,
       contentPadding: EdgeInsets.zero,
       onTap: onTap,

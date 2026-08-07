@@ -37,6 +37,7 @@ import '../theme/app_colors.dart';
 
 import 'repositories/app_repository.dart';
 import 'services/active_plan_store.dart';
+import 'utils/app_test_keys.dart';
 
 Future<void> main() async {
   final launchStopwatch = Stopwatch()..start();
@@ -559,7 +560,10 @@ class _MainScreenState extends State<MainScreen> {
       items: [
         for (final tab in tabs)
           BottomNavigationBarItem(
-            icon: Icon(tab.icon),
+            icon: KeyedSubtree(
+              key: AppTestKeys.mainTab(tab.name),
+              child: Icon(tab.icon),
+            ),
             label: tab.localizedTitle(strings),
           ),
       ],

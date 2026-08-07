@@ -8,6 +8,7 @@ import '../../../l10n/generated/app_localizations.dart';
 import '../../../services/tutorial_state_store.dart';
 import '../../../widgets/guided_tutorial_overlay.dart';
 import '../../../widgets/settings_tiles.dart';
+import '../../../utils/app_test_keys.dart';
 import 'database_settings_page.dart';
 import 'gym_exercise_settings_page.dart';
 import 'measurements_trends_settings_page.dart';
@@ -118,6 +119,7 @@ class _ProfilePageState extends State<ProfilePage> {
             accentColor: SettingsAccent.account,
             children: settingsTilesWithDividers(context, [
               SettingsActionTile(
+                key: AppTestKeys.profileUserInformation,
                 icon: Icons.badge_outlined,
                 iconColor: SettingsAccent.account,
                 title: strings.profileUserInformationTitle,
@@ -176,6 +178,7 @@ class _ProfilePageState extends State<ProfilePage> {
             accentColor: SettingsAccent.data,
             children: settingsTilesWithDividers(context, [
               SettingsActionTile(
+                key: AppTestKeys.profileDatabaseSettings,
                 icon: Icons.storage_outlined,
                 iconColor: SettingsAccent.data,
                 title: strings.profileDatabaseSettingsTitle,

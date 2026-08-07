@@ -8,6 +8,7 @@ import '../../../models/models.dart';
 import '../../../providers/unit_preference_provider.dart';
 import '../../../repositories/app_repository.dart';
 import '../../../utils/weight_unit_formatter.dart';
+import '../../../utils/app_test_keys.dart';
 import '../../../widgets/settings_tiles.dart';
 
 class UserInformationSettingsPage extends StatefulWidget {
@@ -220,6 +221,7 @@ class _UserInformationSettingsPageState
           children: [
             _FieldPadding(
               child: TextFormField(
+                key: AppTestKeys.userInformationName,
                 controller: _nameController,
                 decoration: _inputDecoration(
                   context,
@@ -472,6 +474,7 @@ class _SaveBar extends StatelessWidget {
               border: Border(top: BorderSide(color: scheme.outlineVariant)),
             ),
             child: FilledButton.icon(
+              key: AppTestKeys.userInformationSave,
               onPressed: isVisible ? onSave : null,
               icon: const Icon(Icons.save_outlined),
               label: Text(AppLocalizations.of(context).userInfoSaveChanges),

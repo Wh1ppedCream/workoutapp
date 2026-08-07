@@ -6,6 +6,7 @@ import '../l10n/generated/app_localizations.dart';
 import '../providers/active_session.dart';
 import '../screens/exercise/session_screen.dart'; // adjust path if needed
 import '../services/workout_exit_preferences.dart';
+import '../utils/app_test_keys.dart';
 
 /// A FAB that toggles between a single dumbbell icon and
 /// a green “Resume” + red “Exit” pair when tapped.
@@ -25,6 +26,7 @@ class _OngoingSessionFabState extends State<OngoingSessionFab> {
     final strings = AppLocalizations.of(context);
     if (!_open) {
       return FloatingActionButton(
+        key: AppTestKeys.ongoingSessionMenu,
         backgroundColor: Colors.green,
         child: const Icon(Icons.fitness_center),
         onPressed: () => setState(() => _open = true),
@@ -35,6 +37,7 @@ class _OngoingSessionFabState extends State<OngoingSessionFab> {
       mainAxisSize: MainAxisSize.min,
       children: [
         FloatingActionButton.extended(
+          key: AppTestKeys.ongoingSessionResume,
           backgroundColor: Colors.green,
           icon: const Icon(Icons.play_arrow),
           label: Text(strings.sessionResume),
@@ -47,6 +50,7 @@ class _OngoingSessionFabState extends State<OngoingSessionFab> {
         ),
         const SizedBox(width: 8),
         FloatingActionButton.extended(
+          key: AppTestKeys.ongoingSessionExit,
           backgroundColor: Colors.red,
           icon: const Icon(Icons.exit_to_app),
           label: Text(strings.sessionExit),
@@ -119,6 +123,7 @@ class _OngoingSessionFabState extends State<OngoingSessionFab> {
             content: Text(strings.sessionCancelBody),
             actions: [
               TextButton(
+                key: AppTestKeys.ongoingSessionKeep,
                 onPressed: () => Navigator.pop(dialogContext, false),
                 child: Text(strings.sessionKeepWorkout),
               ),

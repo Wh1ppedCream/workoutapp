@@ -22,6 +22,7 @@ import '../../widgets/onboarding_plan_builder_coach.dart';
 import '../../services/tutorial_state_store.dart';
 import '../../utils/tutorial_launcher.dart';
 import '../../utils/workout_exercise_clone.dart';
+import '../../utils/app_test_keys.dart';
 import 'session_screen.dart';
 import 'auto_preset_flow_screen.dart';
 
@@ -493,6 +494,7 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                       ? KeyedSubtree(
                         key: _nameTutorialKey,
                         child: TextField(
+                          key: AppTestKeys.planName,
                           controller: _nameController,
                           focusNode: _nameFocusNode,
                           decoration: InputDecoration(
@@ -529,6 +531,7 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                 KeyedSubtree(
                   key: _editTutorialKey,
                   child: IconButton(
+                    key: AppTestKeys.planEdit,
                     icon: Icon(
                       Icons.edit,
                       color: _isEditing ? Colors.green : Colors.grey,
@@ -846,10 +849,12 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                   child:
                       _isEditing
                           ? ElevatedButton(
+                            key: AppTestKeys.planSave,
                             onPressed: _savePlan,
                             child: Text(strings.planSavePreset),
                           )
                           : ElevatedButton(
+                            key: AppTestKeys.planStartSession,
                             onPressed: _startPlanSession,
                             child: Text(strings.planStartSession),
                           ),

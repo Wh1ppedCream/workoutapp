@@ -9,6 +9,7 @@ import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
 import '../utils/async_pool.dart';
 import '../utils/weight_unit_formatter.dart';
+import '../utils/app_test_keys.dart';
 import 'workout_record_badges.dart';
 
 /// A container for session metadata and its exercises.
@@ -267,6 +268,7 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
                   child: Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: FilledButton.icon(
+                      key: AppTestKeys.sessionCompleteDone,
                       onPressed: () => Navigator.of(context).pop(),
                       icon: const Icon(Icons.check_rounded),
                       label: Text(strings.commonDone),

@@ -14,6 +14,7 @@ import '../../repositories/app_repository.dart';
 import '../../services/active_plan_store.dart';
 import '../../services/preset_generation_service.dart';
 import '../../utils/workout_exercise_clone.dart';
+import '../../utils/app_test_keys.dart';
 import '../../widgets/drawers.dart';
 import '../../widgets/exercise_card.dart';
 import '../../widgets/generic_bar.dart';
@@ -749,11 +750,13 @@ class _TrainTabs extends StatelessWidget {
       child: Row(
         children: [
           _TabButton(
+            key: AppTestKeys.trainOverviewTab,
             label: strings.trainOverviewTab,
             selected: selectedIndex == 0,
             onTap: () => onChanged(0),
           ),
           _TabButton(
+            key: AppTestKeys.trainPlansTab,
             label: strings.trainPlansTab,
             selected: selectedIndex == 1,
             onTap: () => onChanged(1),
@@ -766,6 +769,7 @@ class _TrainTabs extends StatelessWidget {
 
 class _TabButton extends StatelessWidget {
   const _TabButton({
+    super.key,
     required this.label,
     required this.selected,
     required this.onTap,
@@ -1128,6 +1132,7 @@ class _PlansTabState extends State<_PlansTab> {
             ),
             const SizedBox(height: 8),
             GenericBar(
+              key: AppTestKeys.trainCreateManualPlan,
               label: strings.trainManuallyAddPlan,
               color: Colors.purple,
               onTap: widget.onCreatePreset,
@@ -1281,6 +1286,7 @@ class _SplitWorkoutBar extends StatelessWidget {
                         child: Material(
                           color: green,
                           child: InkWell(
+                            key: AppTestKeys.trainStartWorkout,
                             onTap: onStartWorkout,
                             child: Center(
                               child: Padding(
@@ -1367,6 +1373,7 @@ class _SplitWorkoutBar extends StatelessWidget {
                         child: Material(
                           color: green,
                           child: InkWell(
+                            key: AppTestKeys.trainStartWorkout,
                             onTap: onStartWorkout,
                             child: Center(
                               child: Text(

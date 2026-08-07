@@ -14,6 +14,7 @@ import '../../widgets/exercise_detail_sheet.dart';
 import '../../widgets/guided_tutorial_overlay.dart';
 import '../../repositories/app_repository.dart';
 import '../../services/tutorial_state_store.dart';
+import '../../utils/app_test_keys.dart';
 
 class SessionScreen extends StatefulWidget {
   const SessionScreen({super.key});
@@ -219,6 +220,7 @@ class _SessionScreenState extends State<SessionScreen> {
           child: KeyedSubtree(
             key: _finishWorkoutTutorialKey,
             child: ElevatedButton(
+              key: AppTestKeys.sessionFinish,
               onPressed:
                   session.isFinishing
                       ? null

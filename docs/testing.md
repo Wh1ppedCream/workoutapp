@@ -12,6 +12,10 @@ screen name:
 - `test/widgets` smoke-tests reusable user-interface components and their
   accessibility actions.
 - `integration_test` runs device-level core flows against an isolated database.
+  Its core suite drives plan creation, workout start/resume/exit/completion,
+  record presentation, Save as plan, profile editing, and database
+  export/import through the real UI. Repository calls are limited to fixture
+  setup and persisted-result assertions.
 
 Run the complete suite from the repository root:
 
@@ -67,6 +71,26 @@ flutter drive `
 
 The integration setup clears app SharedPreferences, so run it on a development
 device or emulator where resetting Tonos settings is acceptable.
+
+## Continuous integration
+
+`.github/workflows/ci.yml` runs for pull requests, pushes to `local-db`, and
+manual dispatches. It installs the pinned Flutter SDK, regenerates localization
+sources, fails if the tracked generated files change, analyzes application and
+test code, runs the complete unit/widget suite, and builds a release APK.
+
+The CI release APK is signed with a disposable key generated during the job. It
+proves that the release variant compiles, but it is not a production-signed or
+distributable artifact. Successful APKs are retained as workflow artifacts for
+seven days to aid investigation.
+
+`.github/workflows/android-device.yml` runs weekly and can also be started with
+`workflow_dispatch`. It boots a clean API 35 Android emulator and runs
+`integration_test/core_flows_test.dart` against the isolated integration-test
+database. The emulator job uses debug mode because Android emulators do not
+support Flutter's profile/release device-test modes. Continue using the
+physical-device profile command above when validating release networking and
+performance before a release.
 
 For every new user-visible feature, add at least one test at the lowest useful
 level: pure model/utility first, then DAO/service, then widget or integration

@@ -14,6 +14,7 @@ import '../../../repositories/app_repository.dart';
 import '../../../services/content_environment_preferences.dart';
 import '../../../services/tutorial_state_store.dart';
 import '../../../utils/tutorial_launcher.dart';
+import '../../../utils/app_test_keys.dart';
 import '../../../widgets/guided_tutorial_overlay.dart';
 import '../../../widgets/settings_tiles.dart';
 
@@ -188,6 +189,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
             ),
             actions: [
               TextButton(
+                key: AppTestKeys.databaseResultClose,
                 onPressed: () => Navigator.of(ctx).pop(),
                 child: Text(_strings.commonClose),
               ),
@@ -339,6 +341,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
                 child: Text(_strings.commonCancel),
               ),
               ElevatedButton(
+                key: AppTestKeys.databaseConfirmImport,
                 onPressed: () => Navigator.of(ctx).pop(true),
                 child: Text(_strings.databaseBackupAndImport),
               ),
@@ -861,11 +864,13 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
             accentColor: SettingsAccent.data,
             children: settingsTilesWithDividers(context, [
               SettingsActionTile(
+                key: AppTestKeys.databaseExport,
                 icon: Icons.upload_file,
                 title: strings.databaseExportBackup,
                 onTap: _exportDatabase,
               ),
               SettingsActionTile(
+                key: AppTestKeys.databaseImport,
                 icon: Icons.download,
                 title: strings.databaseImportBackup,
                 subtitle: strings.databaseImportBackupSubtitle,

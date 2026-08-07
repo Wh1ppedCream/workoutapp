@@ -17,6 +17,7 @@ import '../../theme/theme_extensions.dart';
 import '../../utils/async_pool.dart';
 import '../../utils/tutorial_launcher.dart';
 import '../../utils/weight_unit_formatter.dart';
+import '../../utils/app_test_keys.dart';
 import '../../widgets/body_heatmap.dart';
 import '../../widgets/exercise_card.dart';
 import '../../widgets/exercise_detail_sheet.dart';
@@ -532,6 +533,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
           (context) => AlertDialog(
             title: Text(strings.workoutDetailSaveAsPlan),
             content: TextFormField(
+              key: AppTestKeys.workoutPlanName,
               initialValue: defaultName,
               autofocus: true,
               decoration: InputDecoration(
@@ -547,6 +549,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
                 child: Text(strings.commonCancel),
               ),
               FilledButton(
+                key: AppTestKeys.workoutPlanSave,
                 onPressed: () => Navigator.pop(context, planName.trim()),
                 child: Text(strings.commonSave),
               ),
@@ -854,6 +857,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
+                  key: AppTestKeys.workoutSaveAsPlan,
                   onPressed: _isSavingPreset ? null : _saveAsPreset,
                   icon:
                       _isSavingPreset

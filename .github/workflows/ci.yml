@@ -1,0 +1,115 @@
+name: Flutter CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - local-db
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: flutter-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: 3.29.3
+
+jobs:
+  quality:
+    name: Localization, analyzer, and tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate localization sources
+        run: flutter gen-l10n
+
+      - name: Verify generated localization sources are committed
+        shell: bash
+        run: |
+          if [[ -n "$(git status --porcelain -- lib/l10n/generated)" ]]; then
+            git status --short -- lib/l10n/generated
+            git diff -- lib/l10n/generated
+            echo "::error::Localization output is stale. Run 'flutter gen-l10n' and commit the generated files."
+            exit 1
+          fi
+
+      - name: Analyze source and tests
+        run: dart analyze lib test integration_test test_driver
+
+      - name: Run unit and widget tests
+        run: flutter test
+
+  release-apk:
+    name: Release APK
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Create disposable CI signing key
+        shell: bash
+        run: |
+          keytool -genkeypair \
+            -keystore android/app/ci-release-key.jks \
+            -storepass tonos-ci \
+            -alias tonos-ci \
+            -keypass tonos-ci \
+            -dname "CN=Tonos CI, OU=CI, O=Tonos, L=Toronto, ST=Ontario, C=CA" \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 1
+
+          cat > android/key.properties <<'EOF'
+          storePassword=tonos-ci
+          keyPassword=tonos-ci
+          keyAlias=tonos-ci
+          storeFile=ci-release-key.jks
+          EOF
+
+      - name: Build release APK
+        run: flutter build apk --release
+
+      - name: Upload release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: tonos-release-apk-${{ github.sha }}
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+          retention-days: 7
