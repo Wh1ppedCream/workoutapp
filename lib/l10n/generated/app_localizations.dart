@@ -104,6 +104,204 @@ abstract class AppLocalizations {
     Locale('zh')
   ];
 
+  /// No description provided for @onboardingBodyWeightPerWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% BW/wk'**
+  String onboardingBodyWeightPerWeek(String percent);
+
+  /// No description provided for @dashboardExerciseFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Exercise'**
+  String get dashboardExerciseFallback;
+
+  /// No description provided for @dashboardExerciseUsage.
+  ///
+  /// In en, this message translates to:
+  /// **'{equipment} - {count, plural, =1 {1 time} other {{count} times}}'**
+  String dashboardExerciseUsage(String equipment, int count);
+
+  /// No description provided for @weightCardSetsDone.
+  ///
+  /// In en, this message translates to:
+  /// **'{completed}/{total} done'**
+  String weightCardSetsDone(int completed, int total);
+
+  /// No description provided for @bodyHeatmapSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'{bodyPart} body heatmap'**
+  String bodyHeatmapSemantics(String bodyPart);
+
+  /// No description provided for @databaseSaveFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Save {filename}'**
+  String databaseSaveFile(String filename);
+
+  /// No description provided for @databaseFileSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'{filename} was saved to your selected location.'**
+  String databaseFileSaved(String filename);
+
+  /// No description provided for @databaseProductionEnvironment.
+  ///
+  /// In en, this message translates to:
+  /// **'{label} (production)'**
+  String databaseProductionEnvironment(String label);
+
+  /// No description provided for @dashboardDaysAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1 {1 day ago} other {{count} days ago}}'**
+  String dashboardDaysAgo(int count);
+
+  /// No description provided for @workoutReportRangeOneWeekShort.
+  ///
+  /// In en, this message translates to:
+  /// **'1W'**
+  String get workoutReportRangeOneWeekShort;
+
+  /// No description provided for @workoutReportRangeOneMonthShort.
+  ///
+  /// In en, this message translates to:
+  /// **'1M'**
+  String get workoutReportRangeOneMonthShort;
+
+  /// No description provided for @workoutReportRangeThreeMonthsShort.
+  ///
+  /// In en, this message translates to:
+  /// **'3M'**
+  String get workoutReportRangeThreeMonthsShort;
+
+  /// No description provided for @workoutReportRangeSixMonthsShort.
+  ///
+  /// In en, this message translates to:
+  /// **'6M'**
+  String get workoutReportRangeSixMonthsShort;
+
+  /// No description provided for @workoutReportRangeOneYearShort.
+  ///
+  /// In en, this message translates to:
+  /// **'1Y'**
+  String get workoutReportRangeOneYearShort;
+
+  /// No description provided for @workoutReportRangeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get workoutReportRangeAll;
+
+  /// No description provided for @workoutReportRangeOneWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'1 Week'**
+  String get workoutReportRangeOneWeek;
+
+  /// No description provided for @workoutReportRangeOneMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'1 Month'**
+  String get workoutReportRangeOneMonth;
+
+  /// No description provided for @workoutReportRangeThreeMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'3 Months'**
+  String get workoutReportRangeThreeMonths;
+
+  /// No description provided for @workoutReportRangeSixMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'6 Months'**
+  String get workoutReportRangeSixMonths;
+
+  /// No description provided for @workoutReportRangeOneYear.
+  ///
+  /// In en, this message translates to:
+  /// **'1 Year'**
+  String get workoutReportRangeOneYear;
+
+  /// No description provided for @workoutReportChartTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{metric} ({period})'**
+  String workoutReportChartTitle(String metric, String period);
+
+  /// No description provided for @workoutReportWorkoutCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0 {0 workouts} =1 {1 workout} other {{count} workouts}}'**
+  String workoutReportWorkoutCount(int count);
+
+  /// No description provided for @workoutReportMinutesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} min'**
+  String workoutReportMinutesCount(int count);
+
+  /// No description provided for @workoutReportHoursCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1 {1 hour} other {{count} hours}}'**
+  String workoutReportHoursCount(int count);
+
+  /// No description provided for @workoutReportHoursMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}h {minutes}m'**
+  String workoutReportHoursMinutes(int hours, int minutes);
+
+  /// No description provided for @workoutReportMinuteShort.
+  ///
+  /// In en, this message translates to:
+  /// **'min'**
+  String get workoutReportMinuteShort;
+
+  /// No description provided for @workoutReportHourShort.
+  ///
+  /// In en, this message translates to:
+  /// **'hr'**
+  String get workoutReportHourShort;
+
+  /// No description provided for @workoutReportNoWorkoutsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No workouts yet'**
+  String get workoutReportNoWorkoutsYet;
+
+  /// No description provided for @workoutReportNoTrainingTimeYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No training time yet'**
+  String get workoutReportNoTrainingTimeYet;
+
+  /// No description provided for @workoutReportNoVolumeYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No volume logged yet'**
+  String get workoutReportNoVolumeYet;
+
+  /// No description provided for @workoutReportNoWorkoutsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete a workout to start building this report.'**
+  String get workoutReportNoWorkoutsBody;
+
+  /// No description provided for @workoutReportNoTrainingTimeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Finished sessions will add minutes here automatically.'**
+  String get workoutReportNoTrainingTimeBody;
+
+  /// No description provided for @workoutReportNoVolumeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Log weights in completed sets to build volume trends.'**
+  String get workoutReportNoVolumeBody;
+
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
@@ -10357,6 +10555,546 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Spanish'**
   String get spanishLanguage;
+
+  /// No description provided for @onboardingWeightHistoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight history'**
+  String get onboardingWeightHistoryTitle;
+
+  /// No description provided for @onboardingWeightHistorySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A few details help estimate nutrition targets more sensibly.'**
+  String get onboardingWeightHistorySubtitle;
+
+  /// No description provided for @onboardingPreviouslyHeavier.
+  ///
+  /// In en, this message translates to:
+  /// **'Have you weighed 10+ lbs above your current weight before?'**
+  String get onboardingPreviouslyHeavier;
+
+  /// No description provided for @onboardingWeightTrendTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Current weight trend'**
+  String get onboardingWeightTrendTitle;
+
+  /// No description provided for @onboardingWeightTrendGaining.
+  ///
+  /// In en, this message translates to:
+  /// **'Gaining weight'**
+  String get onboardingWeightTrendGaining;
+
+  /// No description provided for @onboardingWeightTrendLosing.
+  ///
+  /// In en, this message translates to:
+  /// **'Losing weight'**
+  String get onboardingWeightTrendLosing;
+
+  /// No description provided for @onboardingWeightTrendMaintaining.
+  ///
+  /// In en, this message translates to:
+  /// **'Maintaining weight'**
+  String get onboardingWeightTrendMaintaining;
+
+  /// No description provided for @onboardingNotSure.
+  ///
+  /// In en, this message translates to:
+  /// **'Not sure'**
+  String get onboardingNotSure;
+
+  /// No description provided for @onboardingBodyFatEstimateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Body-fat estimate'**
+  String get onboardingBodyFatEstimateTitle;
+
+  /// No description provided for @onboardingBodyFatEstimateSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the closest visual estimate. Precision is not required.'**
+  String get onboardingBodyFatEstimateSubtitle;
+
+  /// No description provided for @onboardingNutritionPreferencesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition preferences'**
+  String get onboardingNutritionPreferencesTitle;
+
+  /// No description provided for @onboardingNutritionPreferencesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'These preferences shape nutrition suggestions after setup.'**
+  String get onboardingNutritionPreferencesSubtitle;
+
+  /// No description provided for @onboardingPreferredDiet.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferred diet'**
+  String get onboardingPreferredDiet;
+
+  /// No description provided for @onboardingDietBalanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Balanced'**
+  String get onboardingDietBalanced;
+
+  /// No description provided for @onboardingDietLowFat.
+  ///
+  /// In en, this message translates to:
+  /// **'Low fat'**
+  String get onboardingDietLowFat;
+
+  /// No description provided for @onboardingDietLowCarb.
+  ///
+  /// In en, this message translates to:
+  /// **'Low carb'**
+  String get onboardingDietLowCarb;
+
+  /// No description provided for @onboardingDietKeto.
+  ///
+  /// In en, this message translates to:
+  /// **'Keto'**
+  String get onboardingDietKeto;
+
+  /// No description provided for @onboardingCalorieFloor.
+  ///
+  /// In en, this message translates to:
+  /// **'Calorie floor'**
+  String get onboardingCalorieFloor;
+
+  /// No description provided for @onboardingCalorieFloorHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum daily kcal'**
+  String get onboardingCalorieFloorHint;
+
+  /// No description provided for @onboardingTrainingDuringProgram.
+  ///
+  /// In en, this message translates to:
+  /// **'Training during program'**
+  String get onboardingTrainingDuringProgram;
+
+  /// No description provided for @onboardingTrainingNone.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get onboardingTrainingNone;
+
+  /// No description provided for @onboardingTrainingLifting.
+  ///
+  /// In en, this message translates to:
+  /// **'Lifting'**
+  String get onboardingTrainingLifting;
+
+  /// No description provided for @onboardingTrainingCardio.
+  ///
+  /// In en, this message translates to:
+  /// **'Cardio'**
+  String get onboardingTrainingCardio;
+
+  /// No description provided for @onboardingTrainingLiftingAndCardio.
+  ///
+  /// In en, this message translates to:
+  /// **'Lifting and cardio'**
+  String get onboardingTrainingLiftingAndCardio;
+
+  /// No description provided for @onboardingProteinPreference.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferred protein intake'**
+  String get onboardingProteinPreference;
+
+  /// No description provided for @onboardingProteinLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Low'**
+  String get onboardingProteinLow;
+
+  /// No description provided for @onboardingProteinModerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderate'**
+  String get onboardingProteinModerate;
+
+  /// No description provided for @onboardingProteinHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'High'**
+  String get onboardingProteinHigh;
+
+  /// No description provided for @onboardingProteinVeryHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'Very high'**
+  String get onboardingProteinVeryHigh;
+
+  /// No description provided for @onboardingGoalPaceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal pace'**
+  String get onboardingGoalPaceTitle;
+
+  /// No description provided for @onboardingGoalPaceSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview a target weight and weekly goal rate.'**
+  String get onboardingGoalPaceSubtitle;
+
+  /// No description provided for @onboardingInitialDailyBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'Initial daily budget'**
+  String get onboardingInitialDailyBudget;
+
+  /// No description provided for @onboardingProjectedEndDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Projected end date'**
+  String get onboardingProjectedEndDate;
+
+  /// No description provided for @onboardingTargetWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Target weight'**
+  String get onboardingTargetWeight;
+
+  /// No description provided for @onboardingTargetGoalRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Target goal rate'**
+  String get onboardingTargetGoalRate;
+
+  /// No description provided for @onboardingPerWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Per week'**
+  String get onboardingPerWeek;
+
+  /// No description provided for @onboardingPerMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Per month'**
+  String get onboardingPerMonth;
+
+  /// No description provided for @exerciseProgressTrackExercise.
+  ///
+  /// In en, this message translates to:
+  /// **'Track an exercise'**
+  String get exerciseProgressTrackExercise;
+
+  /// No description provided for @exerciseProgressTrackExerciseBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose an exercise to start watching its 1RM trend here.'**
+  String get exerciseProgressTrackExerciseBody;
+
+  /// No description provided for @healthCustomMetric.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom metric'**
+  String get healthCustomMetric;
+
+  /// No description provided for @healthLatest.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest'**
+  String get healthLatest;
+
+  /// No description provided for @healthNoEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'No entry'**
+  String get healthNoEntry;
+
+  /// No description provided for @healthNotTrackedYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not tracked yet'**
+  String get healthNotTrackedYet;
+
+  /// No description provided for @healthChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Change'**
+  String get healthChange;
+
+  /// No description provided for @healthNeedTwoEntries.
+  ///
+  /// In en, this message translates to:
+  /// **'Need 2 entries'**
+  String get healthNeedTwoEntries;
+
+  /// No description provided for @healthVersusPrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'Vs previous'**
+  String get healthVersusPrevious;
+
+  /// No description provided for @healthRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'Records'**
+  String get healthRecords;
+
+  /// No description provided for @presetEstimatedTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated time'**
+  String get presetEstimatedTime;
+
+  /// No description provided for @presetNoFocusData.
+  ///
+  /// In en, this message translates to:
+  /// **'No focus data yet.'**
+  String get presetNoFocusData;
+
+  /// No description provided for @presetFocusPreviewHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Add weight exercises with bodypart data to preview preset focus.'**
+  String get presetFocusPreviewHelp;
+
+  /// No description provided for @dashboardReorderHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag sections into the order that works best for you.'**
+  String get dashboardReorderHelp;
+
+  /// No description provided for @exerciseEditorCachedLocally.
+  ///
+  /// In en, this message translates to:
+  /// **'Cached locally'**
+  String get exerciseEditorCachedLocally;
+
+  /// No description provided for @databaseExerciseMediaSyncSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Synced {count} exercise media entries (v{version}).'**
+  String databaseExerciseMediaSyncSuccess(int count, int version);
+
+  /// No description provided for @databaseBundledManifestLoaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Loaded bundled exercise media manifest (v{version}).'**
+  String databaseBundledManifestLoaded(int version);
+
+  /// No description provided for @databaseSharedMediaSyncSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Synced {count} equipment and anatomy media entries (v{version}).'**
+  String databaseSharedMediaSyncSuccess(int count, int version);
+
+  /// No description provided for @databaseHealthSchema.
+  ///
+  /// In en, this message translates to:
+  /// **'Schema'**
+  String get databaseHealthSchema;
+
+  /// No description provided for @databaseHealthSchemaValue.
+  ///
+  /// In en, this message translates to:
+  /// **'v{current} / target v{target}'**
+  String databaseHealthSchemaValue(int current, int target);
+
+  /// No description provided for @databaseHealthSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Size'**
+  String get databaseHealthSize;
+
+  /// No description provided for @databaseHealthJournal.
+  ///
+  /// In en, this message translates to:
+  /// **'Journal'**
+  String get databaseHealthJournal;
+
+  /// No description provided for @databaseHealthTables.
+  ///
+  /// In en, this message translates to:
+  /// **'Tables'**
+  String get databaseHealthTables;
+
+  /// No description provided for @databaseHealthTablesValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{tables} tables, {indexes} indexes, {triggers} triggers'**
+  String databaseHealthTablesValue(int tables, int indexes, int triggers);
+
+  /// No description provided for @databaseHealthFoodSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Food search'**
+  String get databaseHealthFoodSearch;
+
+  /// No description provided for @databaseHealthFoodSearchValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{foods} foods, {rows} FTS rows'**
+  String databaseHealthFoodSearchValue(int foods, int rows);
+
+  /// No description provided for @databaseHealthPath.
+  ///
+  /// In en, this message translates to:
+  /// **'Path'**
+  String get databaseHealthPath;
+
+  /// No description provided for @dashboardWorkoutInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout in progress'**
+  String get dashboardWorkoutInProgress;
+
+  /// No description provided for @dashboardNoSavedPlans.
+  ///
+  /// In en, this message translates to:
+  /// **'No plans saved for this gym profile yet.'**
+  String get dashboardNoSavedPlans;
+
+  /// No description provided for @exerciseProgressOneRepMax.
+  ///
+  /// In en, this message translates to:
+  /// **'1 Rep Max'**
+  String get exerciseProgressOneRepMax;
+
+  /// No description provided for @exerciseProgressEstimatedOneRepMax.
+  ///
+  /// In en, this message translates to:
+  /// **'Est. 1RM'**
+  String get exerciseProgressEstimatedOneRepMax;
+
+  /// No description provided for @onboardingPageWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight'**
+  String get onboardingPageWeight;
+
+  /// No description provided for @onboardingPageBodyFat.
+  ///
+  /// In en, this message translates to:
+  /// **'Body Fat'**
+  String get onboardingPageBodyFat;
+
+  /// No description provided for @onboardingPageNutrition.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition'**
+  String get onboardingPageNutrition;
+
+  /// No description provided for @onboardingPageGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal'**
+  String get onboardingPageGoal;
+
+  /// No description provided for @dashboardRecordsThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}/{total} this week'**
+  String dashboardRecordsThisWeek(int count, int total);
+
+  /// No description provided for @dashboardRecordsAllTime.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} all time'**
+  String dashboardRecordsAllTime(int count);
+
+  /// No description provided for @dashboardVisualBodyFat.
+  ///
+  /// In en, this message translates to:
+  /// **'Visual Body Fat'**
+  String get dashboardVisualBodyFat;
+
+  /// No description provided for @dashboardNewMetric.
+  ///
+  /// In en, this message translates to:
+  /// **'New Metric'**
+  String get dashboardNewMetric;
+
+  /// No description provided for @dashboardCurrentMetrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Metrics'**
+  String get dashboardCurrentMetrics;
+
+  /// No description provided for @workoutReportDay.
+  ///
+  /// In en, this message translates to:
+  /// **'day'**
+  String get workoutReportDay;
+
+  /// No description provided for @workoutReportDays.
+  ///
+  /// In en, this message translates to:
+  /// **'days'**
+  String get workoutReportDays;
+
+  /// No description provided for @workoutReportWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'week'**
+  String get workoutReportWeek;
+
+  /// No description provided for @workoutReportMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'month'**
+  String get workoutReportMonth;
+
+  /// No description provided for @workoutReportAveragePer.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg / {period}'**
+  String workoutReportAveragePer(String period);
+
+  /// No description provided for @workoutReportWorkoutsLowercase.
+  ///
+  /// In en, this message translates to:
+  /// **'workouts'**
+  String get workoutReportWorkoutsLowercase;
+
+  /// No description provided for @workoutReportLongestStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Longest streak'**
+  String get workoutReportLongestStreak;
+
+  /// No description provided for @workoutReportMostActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Most active'**
+  String get workoutReportMostActive;
+
+  /// No description provided for @workoutReportNoSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'no sessions'**
+  String get workoutReportNoSessions;
+
+  /// No description provided for @workoutReportWeekday.
+  ///
+  /// In en, this message translates to:
+  /// **'weekday'**
+  String get workoutReportWeekday;
+
+  /// No description provided for @workoutReportMetricSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'{label} report metric'**
+  String workoutReportMetricSemantics(String label);
+
+  /// No description provided for @workoutReportUnitLogged.
+  ///
+  /// In en, this message translates to:
+  /// **'{unit} logged'**
+  String workoutReportUnitLogged(String unit);
+
+  /// No description provided for @workoutReportUnitOnDate.
+  ///
+  /// In en, this message translates to:
+  /// **'{unit} on {date}'**
+  String workoutReportUnitOnDate(String unit, String date);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

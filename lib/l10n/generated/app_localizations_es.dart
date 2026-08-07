@@ -9,6 +9,156 @@ class AppLocalizationsEs extends AppLocalizations {
   AppLocalizationsEs([String locale = 'es']) : super(locale);
 
   @override
+  String onboardingBodyWeightPerWeek(String percent) {
+    return '$percent % del peso corporal/sem.';
+  }
+
+  @override
+  String get dashboardExerciseFallback => 'Ejercicio';
+
+  @override
+  String dashboardExerciseUsage(String equipment, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count veces',
+      one: '1 vez',
+    );
+    return '$equipment - $_temp0';
+  }
+
+  @override
+  String weightCardSetsDone(int completed, int total) {
+    return '$completed/$total completadas';
+  }
+
+  @override
+  String bodyHeatmapSemantics(String bodyPart) {
+    return 'Mapa de calor corporal de $bodyPart';
+  }
+
+  @override
+  String databaseSaveFile(String filename) {
+    return 'Guardar $filename';
+  }
+
+  @override
+  String databaseFileSaved(String filename) {
+    return '$filename se guardó en la ubicación seleccionada.';
+  }
+
+  @override
+  String databaseProductionEnvironment(String label) {
+    return '$label (producción)';
+  }
+
+  @override
+  String dashboardDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'hace $count días',
+      one: 'hace 1 día',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get workoutReportRangeOneWeekShort => '1S';
+
+  @override
+  String get workoutReportRangeOneMonthShort => '1M';
+
+  @override
+  String get workoutReportRangeThreeMonthsShort => '3M';
+
+  @override
+  String get workoutReportRangeSixMonthsShort => '6M';
+
+  @override
+  String get workoutReportRangeOneYearShort => '1A';
+
+  @override
+  String get workoutReportRangeAll => 'Todo';
+
+  @override
+  String get workoutReportRangeOneWeek => '1 semana';
+
+  @override
+  String get workoutReportRangeOneMonth => '1 mes';
+
+  @override
+  String get workoutReportRangeThreeMonths => '3 meses';
+
+  @override
+  String get workoutReportRangeSixMonths => '6 meses';
+
+  @override
+  String get workoutReportRangeOneYear => '1 año';
+
+  @override
+  String workoutReportChartTitle(String metric, String period) {
+    return '$metric ($period)';
+  }
+
+  @override
+  String workoutReportWorkoutCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count entrenamientos',
+      one: '1 entrenamiento',
+      zero: '0 entrenamientos',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String workoutReportMinutesCount(int count) {
+    return '$count min';
+  }
+
+  @override
+  String workoutReportHoursCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count horas',
+      one: '1 hora',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String workoutReportHoursMinutes(int hours, int minutes) {
+    return '$hours h $minutes min';
+  }
+
+  @override
+  String get workoutReportMinuteShort => 'min';
+
+  @override
+  String get workoutReportHourShort => 'h';
+
+  @override
+  String get workoutReportNoWorkoutsYet => 'Aún no hay entrenamientos';
+
+  @override
+  String get workoutReportNoTrainingTimeYet => 'Aún no hay tiempo de entrenamiento';
+
+  @override
+  String get workoutReportNoVolumeYet => 'Aún no hay volumen registrado';
+
+  @override
+  String get workoutReportNoWorkoutsBody => 'Completa un entrenamiento para empezar a crear este informe.';
+
+  @override
+  String get workoutReportNoTrainingTimeBody => 'Las sesiones finalizadas añadirán minutos aquí automáticamente.';
+
+  @override
+  String get workoutReportNoVolumeBody => 'Registra pesos en series completadas para crear tendencias de volumen.';
+
+  @override
   String get appTitle => 'Tonos';
 
   @override
@@ -5602,4 +5752,298 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get spanishLanguage => 'Español';
+
+  @override
+  String get onboardingWeightHistoryTitle => 'Historial de peso';
+
+  @override
+  String get onboardingWeightHistorySubtitle => 'Algunos datos ayudan a estimar los objetivos nutricionales de forma más razonable.';
+
+  @override
+  String get onboardingPreviouslyHeavier => '¿Alguna vez pesaste 10 lb o más por encima de tu peso actual?';
+
+  @override
+  String get onboardingWeightTrendTitle => 'Tendencia actual del peso';
+
+  @override
+  String get onboardingWeightTrendGaining => 'Aumentando de peso';
+
+  @override
+  String get onboardingWeightTrendLosing => 'Perdiendo peso';
+
+  @override
+  String get onboardingWeightTrendMaintaining => 'Manteniendo el peso';
+
+  @override
+  String get onboardingNotSure => 'No estoy seguro';
+
+  @override
+  String get onboardingBodyFatEstimateTitle => 'Estimación de grasa corporal';
+
+  @override
+  String get onboardingBodyFatEstimateSubtitle => 'Elige la estimación visual más cercana. No es necesario que sea exacta.';
+
+  @override
+  String get onboardingNutritionPreferencesTitle => 'Preferencias nutricionales';
+
+  @override
+  String get onboardingNutritionPreferencesSubtitle => 'Estas preferencias orientan las sugerencias nutricionales después de la configuración.';
+
+  @override
+  String get onboardingPreferredDiet => 'Dieta preferida';
+
+  @override
+  String get onboardingDietBalanced => 'Equilibrada';
+
+  @override
+  String get onboardingDietLowFat => 'Baja en grasa';
+
+  @override
+  String get onboardingDietLowCarb => 'Baja en carbohidratos';
+
+  @override
+  String get onboardingDietKeto => 'Keto';
+
+  @override
+  String get onboardingCalorieFloor => 'Mínimo de calorías';
+
+  @override
+  String get onboardingCalorieFloorHint => 'Mínimo diario de kcal';
+
+  @override
+  String get onboardingTrainingDuringProgram => 'Entrenamiento durante el programa';
+
+  @override
+  String get onboardingTrainingNone => 'Ninguno';
+
+  @override
+  String get onboardingTrainingLifting => 'Fuerza';
+
+  @override
+  String get onboardingTrainingCardio => 'Cardio';
+
+  @override
+  String get onboardingTrainingLiftingAndCardio => 'Fuerza y cardio';
+
+  @override
+  String get onboardingProteinPreference => 'Ingesta de proteína preferida';
+
+  @override
+  String get onboardingProteinLow => 'Baja';
+
+  @override
+  String get onboardingProteinModerate => 'Moderada';
+
+  @override
+  String get onboardingProteinHigh => 'Alta';
+
+  @override
+  String get onboardingProteinVeryHigh => 'Muy alta';
+
+  @override
+  String get onboardingGoalPaceTitle => 'Ritmo del objetivo';
+
+  @override
+  String get onboardingGoalPaceSubtitle => 'Previsualiza un peso objetivo y un ritmo semanal.';
+
+  @override
+  String get onboardingInitialDailyBudget => 'Presupuesto diario inicial';
+
+  @override
+  String get onboardingProjectedEndDate => 'Fecha de finalización prevista';
+
+  @override
+  String get onboardingTargetWeight => 'Peso objetivo';
+
+  @override
+  String get onboardingTargetGoalRate => 'Ritmo objetivo';
+
+  @override
+  String get onboardingPerWeek => 'Por semana';
+
+  @override
+  String get onboardingPerMonth => 'Por mes';
+
+  @override
+  String get exerciseProgressTrackExercise => 'Seguir un ejercicio';
+
+  @override
+  String get exerciseProgressTrackExerciseBody => 'Elige un ejercicio para ver aquí la tendencia de su 1RM.';
+
+  @override
+  String get healthCustomMetric => 'Medida personalizada';
+
+  @override
+  String get healthLatest => 'Último';
+
+  @override
+  String get healthNoEntry => 'Sin registros';
+
+  @override
+  String get healthNotTrackedYet => 'Aún sin seguimiento';
+
+  @override
+  String get healthChange => 'Cambio';
+
+  @override
+  String get healthNeedTwoEntries => 'Se necesitan 2 registros';
+
+  @override
+  String get healthVersusPrevious => 'Frente al anterior';
+
+  @override
+  String get healthRecords => 'Registros';
+
+  @override
+  String get presetEstimatedTime => 'Tiempo estimado';
+
+  @override
+  String get presetNoFocusData => 'Aún no hay datos de enfoque.';
+
+  @override
+  String get presetFocusPreviewHelp => 'Añade ejercicios con peso y datos de partes del cuerpo para previsualizar el enfoque del plan.';
+
+  @override
+  String get dashboardReorderHelp => 'Arrastra las secciones al orden que mejor te funcione.';
+
+  @override
+  String get exerciseEditorCachedLocally => 'Guardado en caché local';
+
+  @override
+  String databaseExerciseMediaSyncSuccess(int count, int version) {
+    return 'Se sincronizaron $count elementos multimedia de ejercicios (v$version).';
+  }
+
+  @override
+  String databaseBundledManifestLoaded(int version) {
+    return 'Se cargó el manifiesto multimedia de ejercicios incluido (v$version).';
+  }
+
+  @override
+  String databaseSharedMediaSyncSuccess(int count, int version) {
+    return 'Se sincronizaron $count elementos multimedia de equipo y anatomía (v$version).';
+  }
+
+  @override
+  String get databaseHealthSchema => 'Esquema';
+
+  @override
+  String databaseHealthSchemaValue(int current, int target) {
+    return 'v$current / objetivo v$target';
+  }
+
+  @override
+  String get databaseHealthSize => 'Tamaño';
+
+  @override
+  String get databaseHealthJournal => 'Diario';
+
+  @override
+  String get databaseHealthTables => 'Tablas';
+
+  @override
+  String databaseHealthTablesValue(int tables, int indexes, int triggers) {
+    return '$tables tablas, $indexes índices, $triggers activadores';
+  }
+
+  @override
+  String get databaseHealthFoodSearch => 'Búsqueda de alimentos';
+
+  @override
+  String databaseHealthFoodSearchValue(int foods, int rows) {
+    return '$foods alimentos, $rows filas FTS';
+  }
+
+  @override
+  String get databaseHealthPath => 'Ruta';
+
+  @override
+  String get dashboardWorkoutInProgress => 'Entrenamiento en curso';
+
+  @override
+  String get dashboardNoSavedPlans => 'Aún no hay planes guardados para este perfil de gimnasio.';
+
+  @override
+  String get exerciseProgressOneRepMax => 'Máximo de 1 repetición';
+
+  @override
+  String get exerciseProgressEstimatedOneRepMax => '1RM estimado';
+
+  @override
+  String get onboardingPageWeight => 'Peso';
+
+  @override
+  String get onboardingPageBodyFat => 'Grasa corporal';
+
+  @override
+  String get onboardingPageNutrition => 'Nutrición';
+
+  @override
+  String get onboardingPageGoal => 'Objetivo';
+
+  @override
+  String dashboardRecordsThisWeek(int count, int total) {
+    return '$count/$total esta semana';
+  }
+
+  @override
+  String dashboardRecordsAllTime(int count) {
+    return '$count en total';
+  }
+
+  @override
+  String get dashboardVisualBodyFat => 'Grasa corporal visual';
+
+  @override
+  String get dashboardNewMetric => 'Nueva medida';
+
+  @override
+  String get dashboardCurrentMetrics => 'Medidas actuales';
+
+  @override
+  String get workoutReportDay => 'día';
+
+  @override
+  String get workoutReportDays => 'días';
+
+  @override
+  String get workoutReportWeek => 'semana';
+
+  @override
+  String get workoutReportMonth => 'mes';
+
+  @override
+  String workoutReportAveragePer(String period) {
+    return 'Prom. / $period';
+  }
+
+  @override
+  String get workoutReportWorkoutsLowercase => 'entrenamientos';
+
+  @override
+  String get workoutReportLongestStreak => 'Racha más larga';
+
+  @override
+  String get workoutReportMostActive => 'Más activo';
+
+  @override
+  String get workoutReportNoSessions => 'sin sesiones';
+
+  @override
+  String get workoutReportWeekday => 'día de la semana';
+
+  @override
+  String workoutReportMetricSemantics(String label) {
+    return 'Métrica de informe $label';
+  }
+
+  @override
+  String workoutReportUnitLogged(String unit) {
+    return '$unit registradas';
+  }
+
+  @override
+  String workoutReportUnitOnDate(String unit, String date) {
+    return '$unit el $date';
+  }
 }

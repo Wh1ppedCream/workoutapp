@@ -299,7 +299,9 @@ class _ExerciseProgressSectionState extends State<ExerciseProgressSection>
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Text(
-                        'Exercise Progress',
+                        AppLocalizations.of(
+                          context,
+                        ).dashboardSectionExerciseProgressTitle,
                         textAlign: TextAlign.center,
                         style: theme.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w900,
@@ -632,6 +634,7 @@ class _ExerciseProgressStatsColumn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
+    final strings = AppLocalizations.of(context);
     final latest = tile.latestPoint;
     final actualOneRm = latest?.actualOneRm;
     final actualDelta = _deltaFromPrevious(
@@ -647,7 +650,7 @@ class _ExerciseProgressStatsColumn extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         _ExerciseProgressStatBox(
-          label: '1 Rep Max',
+          label: strings.exerciseProgressOneRepMax,
           value:
               actualOneRm == null
                   ? '--'
@@ -656,7 +659,7 @@ class _ExerciseProgressStatsColumn extends StatelessWidget {
           layout: layout,
         ),
         _ExerciseProgressStatBox(
-          label: 'Est. 1 RM',
+          label: strings.exerciseProgressEstimatedOneRepMax,
           value:
               latest == null
                   ? '--'
@@ -997,6 +1000,7 @@ class _ExerciseProgressEmptyHero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = AppLocalizations.of(context);
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(layout.heroRadius),
@@ -1017,14 +1021,14 @@ class _ExerciseProgressEmptyHero extends StatelessWidget {
             ),
             SizedBox(height: layout.emptyTitleGap),
             Text(
-              'Track an exercise',
+              strings.exerciseProgressTrackExercise,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w900,
               ),
             ),
             SizedBox(height: layout.emptyBodyGap),
             Text(
-              'Choose an exercise to start watching its 1RM trend here.',
+              strings.exerciseProgressTrackExerciseBody,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,

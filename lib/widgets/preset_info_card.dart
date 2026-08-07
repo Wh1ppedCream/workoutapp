@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/generated/app_localizations.dart';
 import '../models/models.dart';
 import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
@@ -222,6 +223,7 @@ class _PresetInfoCardState extends State<PresetInfoCard>
       future: _summaryFuture,
       builder: (context, snapshot) {
         final summary = snapshot.data;
+        final strings = AppLocalizations.of(context);
 
         return Card(
           margin: const EdgeInsets.only(bottom: 16),
@@ -242,7 +244,7 @@ class _PresetInfoCardState extends State<PresetInfoCard>
                               child: _PresetMetricTile(
                                 icon: Icons.schedule,
                                 value: _formatMinutes(summary.estimatedMinutes),
-                                label: 'Estimated time',
+                                label: strings.presetEstimatedTime,
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -253,7 +255,7 @@ class _PresetInfoCardState extends State<PresetInfoCard>
                                   summary.totalVolume,
                                   weightUnit,
                                 ),
-                                label: 'Total volume',
+                                label: strings.logbookTotalVolume,
                               ),
                             ),
                           ],
@@ -284,7 +286,7 @@ class _PresetInfoCardState extends State<PresetInfoCard>
                             );
                             final focusList = FocusedSetsList(
                               hits: summary.bodyPartHits,
-                              emptyMessage: 'No focus data yet.',
+                              emptyMessage: strings.presetNoFocusData,
                             );
 
                             return Row(
@@ -300,7 +302,7 @@ class _PresetInfoCardState extends State<PresetInfoCard>
                         if (summary.bodyPartHits.isEmpty) ...[
                           const SizedBox(height: 8),
                           Text(
-                            'Add weight exercises with bodypart data to preview preset focus.',
+                            strings.presetFocusPreviewHelp,
                             style: theme.textTheme.bodySmall,
                           ),
                         ],

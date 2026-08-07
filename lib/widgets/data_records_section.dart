@@ -1,6 +1,7 @@
 // File: lib/widgets/data_records_section.dart
 
 import 'package:flutter/material.dart';
+import '../l10n/generated/app_localizations.dart';
 import '../screens/nutrition/log_entry_page.dart';
 
 import '../theme/theme_extensions.dart';
@@ -18,6 +19,7 @@ class DataRecordsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final today = DateTime.now();
     final colors = context.colors;
+    final strings = AppLocalizations.of(context);
 
     // Two‐letter labels for Monday–Sunday
     const dayLabels = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
@@ -28,7 +30,7 @@ class DataRecordsSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Data & Records',
+            strings.dashboardSectionDataRecordsTitle,
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 8),
@@ -110,7 +112,7 @@ class DataRecordsSection extends StatelessWidget {
             children: [
               Flexible(
                 child: Text(
-                  '1/7 this week',
+                  strings.dashboardRecordsThisWeek(1, 7),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodySmall,
@@ -118,7 +120,7 @@ class DataRecordsSection extends StatelessWidget {
               ),
               Flexible(
                 child: Text(
-                  '1 all time',
+                  strings.dashboardRecordsAllTime(1),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,

@@ -43,14 +43,14 @@ _ReportBucketInterval _bucketIntervalForRange(
   }
 }
 
-String _bucketNoun(_ReportBucketInterval interval) {
+String _bucketNoun(_ReportBucketInterval interval, AppLocalizations strings) {
   switch (interval) {
     case _ReportBucketInterval.day:
-      return 'day';
+      return strings.workoutReportDay;
     case _ReportBucketInterval.week:
-      return 'week';
+      return strings.workoutReportWeek;
     case _ReportBucketInterval.month:
-      return 'month';
+      return strings.workoutReportMonth;
   }
 }
 
@@ -215,6 +215,7 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
           buckets: buckets,
           interval: bucketSet.interval,
           weightUnit: weightUnit,
+          strings: strings,
         );
         final reportStats = <Widget>[
           _ReportStat(
@@ -224,7 +225,12 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
                 totalWorkouts == 1
                     ? strings.workoutReportWorkout
                     : strings.workoutReportTotal,
-            trend: _metricTrend(buckets, WorkoutReportMetric.workouts),
+            trend: _metricTrend(
+              buckets,
+              WorkoutReportMetric.workouts,
+              weightUnit,
+              strings,
+            ),
             selected:
                 _metrics[_selectedMetricIndex] == WorkoutReportMetric.workouts,
             onTap: () => selectMetric(0),
@@ -232,8 +238,13 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
           _ReportStat(
             label: strings.workoutReportTime,
             value: _formatDurationValue(totalMinutes),
-            unit: _formatDurationUnit(totalMinutes),
-            trend: _metricTrend(buckets, WorkoutReportMetric.minutes),
+            unit: _formatDurationUnit(totalMinutes, strings),
+            trend: _metricTrend(
+              buckets,
+              WorkoutReportMetric.minutes,
+              weightUnit,
+              strings,
+            ),
             selected:
                 _metrics[_selectedMetricIndex] == WorkoutReportMetric.minutes,
             onTap: () => selectMetric(1),
@@ -249,6 +260,7 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
               buckets,
               WorkoutReportMetric.volume,
               weightUnit,
+              strings,
             ),
             selected:
                 _metrics[_selectedMetricIndex] == WorkoutReportMetric.volume,
@@ -605,37 +617,44 @@ class _ReportInsightSummary {
     required List<WorkoutReportBucket> buckets,
     required _ReportBucketInterval interval,
     required WeightUnit weightUnit,
+    required AppLocalizations strings,
   }) {
     final workoutCount = sessions.length;
     final activeBucketCount = buckets.isEmpty ? 1 : buckets.length;
     final avgWorkouts = workoutCount / activeBucketCount;
-    final bucketLabel = _bucketNoun(interval);
+    final bucketLabel = _bucketNoun(interval, strings);
     final longestStreak = _longestWorkoutDayStreak(sessions);
-    final activeDay = _mostActiveWeekday(sessions);
-    final bestVolume = _bestVolumeDay(sessions, weightUnit);
+    final activeDay = _mostActiveWeekday(sessions, strings.localeName);
+    final bestVolume = _bestVolumeDay(sessions, weightUnit, strings);
 
     return _ReportInsightSummary(
       insights: [
         _ReportInsight(
-          label: 'Avg / $bucketLabel',
+          label: strings.workoutReportAveragePer(bucketLabel),
           value: avgWorkouts.toStringAsFixed(avgWorkouts >= 10 ? 0 : 1),
-          detail: 'workouts',
+          detail: strings.workoutReportWorkoutsLowercase,
           icon: Icons.trending_up,
         ),
         _ReportInsight(
-          label: 'Longest streak',
+          label: strings.workoutReportLongestStreak,
           value: longestStreak.toString(),
-          detail: longestStreak == 1 ? 'day' : 'days',
+          detail:
+              longestStreak == 1
+                  ? strings.workoutReportDay
+                  : strings.workoutReportDays,
           icon: Icons.local_fire_department_outlined,
         ),
         _ReportInsight(
-          label: 'Most active',
+          label: strings.workoutReportMostActive,
           value: activeDay,
-          detail: workoutCount == 0 ? 'no sessions' : 'weekday',
+          detail:
+              workoutCount == 0
+                  ? strings.workoutReportNoSessions
+                  : strings.workoutReportWeekday,
           icon: Icons.calendar_today_outlined,
         ),
         _ReportInsight(
-          label: 'Best volume',
+          label: strings.recordVolumeBest,
           value: bestVolume.value,
           detail: bestVolume.detail,
           icon: Icons.fitness_center,
@@ -695,11 +714,12 @@ class _ReportStat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = context.cs;
+    final strings = AppLocalizations.of(context);
     final trendColor = _trendColor(cs);
     return Semantics(
       button: true,
       selected: selected,
-      label: '$label report metric',
+      label: strings.workoutReportMetricSemantics(label),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -820,6 +840,7 @@ class _MetricChartPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     final hasValue = buckets.any((bucket) => bucket.valueFor(metric) > 0);
     return Container(
       decoration: BoxDecoration(
@@ -833,7 +854,7 @@ class _MetricChartPage extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
             child: Text(
-              _chartTitle(metric, range),
+              _chartTitle(metric, range, strings),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: Theme.of(
@@ -907,6 +928,7 @@ class _InteractiveWorkoutLineChartState
             buckets: widget.buckets,
             metric: widget.metric,
             interval: widget.interval,
+            strings: AppLocalizations.of(context),
             accent: context.cs.primary,
             grid: context.cs.outlineVariant,
             labelColor: context.cs.onSurfaceVariant,
@@ -960,6 +982,7 @@ class _EmptyMetricChartMessage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     final cs = context.cs;
     return Center(
       child: Padding(
@@ -970,7 +993,7 @@ class _EmptyMetricChartMessage extends StatelessWidget {
             Icon(_emptyMetricIcon(metric), color: cs.onSurfaceVariant),
             const SizedBox(height: 8),
             Text(
-              _emptyMetricTitle(metric),
+              _emptyMetricTitle(metric, strings),
               textAlign: TextAlign.center,
               style: Theme.of(
                 context,
@@ -978,7 +1001,7 @@ class _EmptyMetricChartMessage extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              _emptyMetricSubtitle(metric),
+              _emptyMetricSubtitle(metric, strings),
               textAlign: TextAlign.center,
               style: Theme.of(
                 context,
@@ -1002,6 +1025,7 @@ class _RangeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
@@ -1028,7 +1052,7 @@ class _RangeSelector extends StatelessWidget {
                         borderRadius: BorderRadius.circular(11),
                       ),
                       child: Text(
-                        _rangeLabel(range),
+                        _rangeLabel(range, strings),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(
@@ -1270,6 +1294,7 @@ class _WorkoutLineChartPainter extends CustomPainter {
   final List<WorkoutReportBucket> buckets;
   final WorkoutReportMetric metric;
   final _ReportBucketInterval interval;
+  final AppLocalizations strings;
   final Color accent;
   final Color grid;
   final Color labelColor;
@@ -1283,6 +1308,7 @@ class _WorkoutLineChartPainter extends CustomPainter {
     required this.buckets,
     required this.metric,
     required this.interval,
+    required this.strings,
     required this.accent,
     required this.grid,
     required this.labelColor,
@@ -1458,8 +1484,8 @@ class _WorkoutLineChartPainter extends CustomPainter {
       fontWeight: FontWeight.w800,
     );
     final tooltipLines = [
-      (_bucketTooltipLabel(bucket, interval), titleStyle),
-      (_metricTooltipValue(value, metric, weightUnit), bodyStyle),
+      (_bucketTooltipLabel(bucket, interval, strings.localeName), titleStyle),
+      (_metricTooltipValue(value, metric, weightUnit, strings), bodyStyle),
     ];
     final painters =
         tooltipLines
@@ -1503,6 +1529,7 @@ class _WorkoutLineChartPainter extends CustomPainter {
     return oldDelegate.buckets != buckets ||
         oldDelegate.metric != metric ||
         oldDelegate.interval != interval ||
+        oldDelegate.strings.localeName != strings.localeName ||
         oldDelegate.accent != accent ||
         oldDelegate.grid != grid ||
         oldDelegate.labelColor != labelColor ||
@@ -1579,138 +1606,146 @@ class _WorkoutLineChartPainter extends CustomPainter {
   }
 }
 
-String _rangeLabel(WorkoutReportRange range) {
+String _rangeLabel(WorkoutReportRange range, AppLocalizations strings) {
   switch (range) {
     case WorkoutReportRange.oneWeek:
-      return '1W';
+      return strings.workoutReportRangeOneWeekShort;
     case WorkoutReportRange.oneMonth:
-      return '1M';
+      return strings.workoutReportRangeOneMonthShort;
     case WorkoutReportRange.threeMonths:
-      return '3M';
+      return strings.workoutReportRangeThreeMonthsShort;
     case WorkoutReportRange.sixMonths:
-      return '6M';
+      return strings.workoutReportRangeSixMonthsShort;
     case WorkoutReportRange.oneYear:
-      return '1Y';
+      return strings.workoutReportRangeOneYearShort;
     case WorkoutReportRange.all:
-      return 'All';
+      return strings.workoutReportRangeAll;
   }
 }
 
-String _chartTitle(WorkoutReportMetric metric, WorkoutReportRange range) {
-  final period = _rangeTitlePhrase(range);
-  switch (metric) {
-    case WorkoutReportMetric.workouts:
-      return 'Workouts ($period)';
-    case WorkoutReportMetric.minutes:
-      return 'Time ($period)';
-    case WorkoutReportMetric.volume:
-      return 'Volume ($period)';
-  }
+String _chartTitle(
+  WorkoutReportMetric metric,
+  WorkoutReportRange range,
+  AppLocalizations strings,
+) {
+  final period = _rangeTitlePhrase(range, strings);
+  final metricLabel = switch (metric) {
+    WorkoutReportMetric.workouts => strings.workoutReportWorkouts,
+    WorkoutReportMetric.minutes => strings.workoutReportTime,
+    WorkoutReportMetric.volume => strings.workoutReportVolume,
+  };
+  return strings.workoutReportChartTitle(metricLabel, period);
 }
 
 String _bucketTooltipLabel(
   WorkoutReportBucket bucket,
   _ReportBucketInterval interval,
+  String localeName,
 ) {
   switch (interval) {
     case _ReportBucketInterval.day:
-      return DateFormat.yMMMd().format(bucket.start);
+      return DateFormat.yMMMd(localeName).format(bucket.start);
     case _ReportBucketInterval.week:
       final sameDay = DateUtils.isSameDay(bucket.start, bucket.end);
-      if (sameDay) return DateFormat.yMMMd().format(bucket.start);
-      return '${DateFormat.MMMd().format(bucket.start)} - '
-          '${DateFormat.yMMMd().format(bucket.end)}';
+      if (sameDay) return DateFormat.yMMMd(localeName).format(bucket.start);
+      return '${DateFormat.MMMd(localeName).format(bucket.start)} - '
+          '${DateFormat.yMMMd(localeName).format(bucket.end)}';
     case _ReportBucketInterval.month:
-      return DateFormat.yMMMM().format(bucket.start);
+      return DateFormat.yMMMM(localeName).format(bucket.start);
   }
 }
 
 String _metricTooltipValue(
   double value,
-  WorkoutReportMetric metric, [
-  WeightUnit weightUnit = WeightUnit.pounds,
-]) {
+  WorkoutReportMetric metric,
+  WeightUnit weightUnit,
+  AppLocalizations strings,
+) {
   switch (metric) {
     case WorkoutReportMetric.workouts:
-      final count = value.round();
-      return '$count ${count == 1 ? 'workout' : 'workouts'}';
+      return strings.workoutReportWorkoutCount(value.round());
     case WorkoutReportMetric.minutes:
       final minutes = value.round();
-      if (minutes < 60) return '$minutes min';
+      if (minutes < 60) return strings.workoutReportMinutesCount(minutes);
       final hours = minutes ~/ 60;
       final remainingMinutes = minutes % 60;
       if (remainingMinutes == 0) {
-        return '$hours ${hours == 1 ? 'hour' : 'hours'}';
+        return strings.workoutReportHoursCount(hours);
       }
-      return '${hours}h ${remainingMinutes}m';
+      return strings.workoutReportHoursMinutes(hours, remainingMinutes);
     case WorkoutReportMetric.volume:
       return WeightUnitFormatter.formatVolume(value, weightUnit);
   }
 }
 
-String _rangeTitlePhrase(WorkoutReportRange range) {
+String _rangeTitlePhrase(WorkoutReportRange range, AppLocalizations strings) {
   switch (range) {
     case WorkoutReportRange.oneWeek:
-      return '1 Week';
+      return strings.workoutReportRangeOneWeek;
     case WorkoutReportRange.oneMonth:
-      return '1 Month';
+      return strings.workoutReportRangeOneMonth;
     case WorkoutReportRange.threeMonths:
-      return '3 Month';
+      return strings.workoutReportRangeThreeMonths;
     case WorkoutReportRange.sixMonths:
-      return '6 Month';
+      return strings.workoutReportRangeSixMonths;
     case WorkoutReportRange.oneYear:
-      return '1 Year';
+      return strings.workoutReportRangeOneYear;
     case WorkoutReportRange.all:
-      return 'All';
+      return strings.workoutReportRangeAll;
   }
 }
 
 _MetricTrend _metricTrend(
   List<WorkoutReportBucket> buckets,
-  WorkoutReportMetric metric, [
-  WeightUnit weightUnit = WeightUnit.pounds,
-]) {
-  if (buckets.isEmpty) return _flatMetricTrend(metric, weightUnit);
+  WorkoutReportMetric metric,
+  WeightUnit weightUnit,
+  AppLocalizations strings,
+) {
+  if (buckets.isEmpty) return _flatMetricTrend(metric, weightUnit, strings);
 
   final current = buckets.last.valueFor(metric);
   final previous =
       buckets.length > 1 ? buckets[buckets.length - 2].valueFor(metric) : 0.0;
   if (current <= 0 && previous <= 0) {
-    return _flatMetricTrend(metric, weightUnit);
+    return _flatMetricTrend(metric, weightUnit, strings);
   }
 
   final diff = current - previous;
-  if (diff.abs() < 0.001) return _flatMetricTrend(metric, weightUnit);
+  if (diff.abs() < 0.001) {
+    return _flatMetricTrend(metric, weightUnit, strings);
+  }
 
   final isUp = diff > 0;
   final arrow = isUp ? '↑' : '↓';
   return _MetricTrend(
-    label: '$arrow ${_formatTrendAmount(diff.abs(), metric, weightUnit)}',
+    label:
+        '$arrow ${_formatTrendAmount(diff.abs(), metric, weightUnit, strings)}',
     direction: isUp ? _MetricTrendDirection.up : _MetricTrendDirection.down,
   );
 }
 
 _MetricTrend _flatMetricTrend(
-  WorkoutReportMetric metric, [
-  WeightUnit weightUnit = WeightUnit.pounds,
-]) {
+  WorkoutReportMetric metric,
+  WeightUnit weightUnit,
+  AppLocalizations strings,
+) {
   return _MetricTrend(
-    label: _formatTrendAmount(0, metric, weightUnit),
+    label: _formatTrendAmount(0, metric, weightUnit, strings),
     direction: _MetricTrendDirection.flat,
   );
 }
 
 String _formatTrendAmount(
   double value,
-  WorkoutReportMetric metric, [
-  WeightUnit weightUnit = WeightUnit.pounds,
-]) {
+  WorkoutReportMetric metric,
+  WeightUnit weightUnit,
+  AppLocalizations strings,
+) {
   switch (metric) {
     case WorkoutReportMetric.workouts:
-      final rounded = value.round();
-      return '$rounded Workouts';
+      return strings.workoutReportWorkoutCount(value.round());
     case WorkoutReportMetric.minutes:
-      return '${value.round()} mins';
+      return strings.workoutReportMinutesCount(value.round());
     case WorkoutReportMetric.volume:
       return '${WeightUnitFormatter.formatCompactVolumeValue(value, weightUnit)} ${weightUnit.shortLabel}';
   }
@@ -1724,9 +1759,9 @@ String _formatDurationValue(int minutes) {
   return '$hours:${remainingMinutes.toString().padLeft(2, '0')}';
 }
 
-String _formatDurationUnit(int minutes) {
-  if (minutes < 60) return 'min';
-  return 'hr';
+String _formatDurationUnit(int minutes, AppLocalizations strings) {
+  if (minutes < 60) return strings.workoutReportMinuteShort;
+  return strings.workoutReportHourShort;
 }
 
 IconData _emptyMetricIcon(WorkoutReportMetric metric) {
@@ -1740,25 +1775,28 @@ IconData _emptyMetricIcon(WorkoutReportMetric metric) {
   }
 }
 
-String _emptyMetricTitle(WorkoutReportMetric metric) {
+String _emptyMetricTitle(WorkoutReportMetric metric, AppLocalizations strings) {
   switch (metric) {
     case WorkoutReportMetric.workouts:
-      return 'No workouts yet';
+      return strings.workoutReportNoWorkoutsYet;
     case WorkoutReportMetric.minutes:
-      return 'No training time yet';
+      return strings.workoutReportNoTrainingTimeYet;
     case WorkoutReportMetric.volume:
-      return 'No volume logged yet';
+      return strings.workoutReportNoVolumeYet;
   }
 }
 
-String _emptyMetricSubtitle(WorkoutReportMetric metric) {
+String _emptyMetricSubtitle(
+  WorkoutReportMetric metric,
+  AppLocalizations strings,
+) {
   switch (metric) {
     case WorkoutReportMetric.workouts:
-      return 'Complete a workout to start building this report.';
+      return strings.workoutReportNoWorkoutsBody;
     case WorkoutReportMetric.minutes:
-      return 'Finished sessions will add minutes here automatically.';
+      return strings.workoutReportNoTrainingTimeBody;
     case WorkoutReportMetric.volume:
-      return 'Log weights in completed sets to build volume trends.';
+      return strings.workoutReportNoVolumeBody;
   }
 }
 
@@ -1785,8 +1823,11 @@ int _longestWorkoutDayStreak(List<WorkoutReportSession> sessions) {
   return longest;
 }
 
-String _mostActiveWeekday(List<WorkoutReportSession> sessions) {
-  if (sessions.isEmpty) return 'None';
+String _mostActiveWeekday(
+  List<WorkoutReportSession> sessions,
+  String localeName,
+) {
+  if (sessions.isEmpty) return '-';
   final counts = <int, int>{};
   for (final session in sessions) {
     counts.update(
@@ -1799,17 +1840,18 @@ String _mostActiveWeekday(List<WorkoutReportSession> sessions) {
     (best, entry) => entry.value > best.value ? entry : best,
   );
   final monday = DateTime(2026, 1, 5);
-  return DateFormat.E().format(
-    monday.add(Duration(days: bestWeekday.key - DateTime.monday)),
-  );
+  return DateFormat.E(
+    localeName,
+  ).format(monday.add(Duration(days: bestWeekday.key - DateTime.monday)));
 }
 
 _BestVolumeDay _bestVolumeDay(
   List<WorkoutReportSession> sessions,
   WeightUnit weightUnit,
+  AppLocalizations strings,
 ) {
   if (sessions.isEmpty) {
-    return const _BestVolumeDay(value: 'None', detail: 'no sessions');
+    return _BestVolumeDay(value: '-', detail: strings.workoutReportNoSessions);
   }
 
   final totalsByDay = <DateTime, double>{};
@@ -1828,12 +1870,15 @@ _BestVolumeDay _bestVolumeDay(
   if (best.value <= 0) {
     return _BestVolumeDay(
       value: '0',
-      detail: '${weightUnit.shortLabel} logged',
+      detail: strings.workoutReportUnitLogged(weightUnit.shortLabel),
     );
   }
   return _BestVolumeDay(
     value: WeightUnitFormatter.formatCompactVolumeValue(best.value, weightUnit),
-    detail: '${weightUnit.shortLabel} on ${DateFormat.MMMd().format(best.key)}',
+    detail: strings.workoutReportUnitOnDate(
+      weightUnit.shortLabel,
+      DateFormat.MMMd(strings.localeName).format(best.key),
+    ),
   );
 }
 

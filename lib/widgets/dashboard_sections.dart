@@ -1129,6 +1129,7 @@ class _DashboardExerciseUsageRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = AppLocalizations.of(context);
     final equipment = usage.definition.equipmentList
         .map((item) => item.name)
         .where((name) => name.trim().isNotEmpty)
@@ -1156,7 +1157,12 @@ class _DashboardExerciseUsageRow extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${equipment.isEmpty ? 'Exercise' : equipment} - ${usage.useCount} ${usage.useCount == 1 ? 'time' : 'times'}',
+                  strings.dashboardExerciseUsage(
+                    equipment.isEmpty
+                        ? strings.dashboardExerciseFallback
+                        : equipment,
+                    usage.useCount,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodySmall?.copyWith(
@@ -1195,6 +1201,7 @@ class _DashboardFocusPane extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = AppLocalizations.of(context);
     return InkWell(
       borderRadius: BorderRadius.circular(14),
       onTap: onTap,
@@ -1233,7 +1240,7 @@ class _DashboardFocusPane extends StatelessWidget {
                       ),
                       const SizedBox(width: 5),
                       Text(
-                        '${item.units.round()} sets',
+                        strings.weeklySetsCount(item.units.round().toString()),
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: theme.colorScheme.primary,
                           fontWeight: FontWeight.w800,

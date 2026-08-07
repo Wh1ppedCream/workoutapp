@@ -1,15 +1,19 @@
 // File: lib/widgets/current_metrics_section.dart
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import '../l10n/generated/app_localizations.dart';
 import '../theme/theme_extensions.dart';
 
+enum _MetricKind { visualBodyFat, waist, hips, custom }
+
 /// Data holder for a metric tile
-class MetricData {
+class _MetricData {
   final Color color;
-  final String label;
+  final _MetricKind kind;
   final String value;
 
-  MetricData({required this.color, required this.label, required this.value});
+  _MetricData({required this.color, required this.kind, required this.value});
 }
 
 /// A single dot + value + label
@@ -67,16 +71,24 @@ class CurrentMetricsSectionState extends State<CurrentMetricsSection>
   final DateTime _lastMeasured = DateTime.now();
   final int _daysAgo = 0;
 
-  final List<MetricData> _metrics = [
-    MetricData(color: Colors.green, label: 'Visual Body Fat', value: '26.0 %'),
-    MetricData(color: Colors.blue, label: 'Waist', value: '27 in'),
-    MetricData(color: Colors.purple, label: 'Hips', value: '36 in'),
+  final List<_MetricData> _metrics = [
+    _MetricData(
+      color: Colors.green,
+      kind: _MetricKind.visualBodyFat,
+      value: '26.0 %',
+    ),
+    _MetricData(color: Colors.blue, kind: _MetricKind.waist, value: '27 in'),
+    _MetricData(color: Colors.purple, kind: _MetricKind.hips, value: '36 in'),
   ];
 
   void _addMetric() {
     setState(() {
       _metrics.add(
-        MetricData(color: Colors.orange, label: 'New Metric', value: '123 u'),
+        _MetricData(
+          color: Colors.orange,
+          kind: _MetricKind.custom,
+          value: '123 u',
+        ),
       );
     });
   }
@@ -87,7 +99,8 @@ class CurrentMetricsSectionState extends State<CurrentMetricsSection>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final fmtDate = '${_lastMeasured.month}/${_lastMeasured.day}';
+    final strings = AppLocalizations.of(context);
+    final fmtDate = DateFormat.Md(strings.localeName).format(_lastMeasured);
     final colors = context.colors;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -95,7 +108,7 @@ class CurrentMetricsSectionState extends State<CurrentMetricsSection>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Current Metrics',
+            strings.dashboardCurrentMetrics,
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 4),
@@ -110,7 +123,7 @@ class CurrentMetricsSectionState extends State<CurrentMetricsSection>
                     padding: const EdgeInsets.only(right: 16),
                     child: MetricItem(
                       color: m.color,
-                      label: m.label,
+                      label: _metricLabel(m.kind, strings),
                       value: m.value,
                     ),
                   ),
@@ -140,7 +153,7 @@ class CurrentMetricsSectionState extends State<CurrentMetricsSection>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '$_daysAgo days ago',
+                strings.dashboardDaysAgo(_daysAgo),
                 style: Theme.of(context).textTheme.bodySmall,
               ),
               Icon(
@@ -156,5 +169,14 @@ class CurrentMetricsSectionState extends State<CurrentMetricsSection>
         ],
       ),
     );
+  }
+
+  String _metricLabel(_MetricKind kind, AppLocalizations strings) {
+    return switch (kind) {
+      _MetricKind.visualBodyFat => strings.dashboardVisualBodyFat,
+      _MetricKind.waist => strings.measurementWaist,
+      _MetricKind.hips => strings.measurementHips,
+      _MetricKind.custom => strings.dashboardNewMetric,
+    };
   }
 }

@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/generated/app_localizations.dart';
 import '../providers/selected_profile.dart';
 import '../providers/active_session.dart';
 import '../screens/exercise/session_screen.dart';
@@ -48,6 +49,7 @@ class _WorkoutDashboardState extends State<WorkoutDashboard>
             : null;
     final hasActiveWorkout =
         activeSession.isActive && !activeSession.isRestoring;
+    final strings = AppLocalizations.of(context);
 
     return Container(
       padding: EdgeInsets.all(16 * s),
@@ -78,7 +80,9 @@ class _WorkoutDashboardState extends State<WorkoutDashboard>
               SizedBox(width: 12 * s),
               Expanded(
                 child: Text(
-                  hasActiveWorkout ? 'Workout in progress' : 'Ready to train',
+                  hasActiveWorkout
+                      ? strings.dashboardWorkoutInProgress
+                      : strings.dashboardSectionTrainingTitle,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w900,
                   ),
@@ -93,7 +97,7 @@ class _WorkoutDashboardState extends State<WorkoutDashboard>
             child: DropdownButtonFormField<int>(
               value: dropdownValue,
               decoration: InputDecoration(
-                labelText: 'Gym profile',
+                labelText: strings.onboardingSummaryGymProfile,
                 contentPadding: EdgeInsets.symmetric(
                   horizontal: 12 * s,
                   vertical: 8 * s,
@@ -129,7 +133,7 @@ class _WorkoutDashboardState extends State<WorkoutDashboard>
           // 2️⃣ Gym presets list (now delegated)
           SizedBox(height: 14 * s),
           Text(
-            'Plans',
+            strings.trainPlansTab,
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w800,
             ),
@@ -139,7 +143,7 @@ class _WorkoutDashboardState extends State<WorkoutDashboard>
             child: PresetsLoaded(
               scale: 0.8 * s,
               progressiveReveal: true,
-              emptyMessage: 'No plans saved for this gym profile yet.',
+              emptyMessage: strings.dashboardNoSavedPlans,
               physics: const NeverScrollableScrollPhysics(),
               onRefresh: () => setState(() {}),
             ),
@@ -173,7 +177,9 @@ class _WorkoutDashboardState extends State<WorkoutDashboard>
                 ),
               ),
               child: Text(
-                hasActiveWorkout ? 'Resume Workout' : 'Start Workout',
+                hasActiveWorkout
+                    ? strings.dashboardResumeWorkout
+                    : strings.trainStartWorkout,
                 style: TextStyle(fontSize: 16 * s, fontWeight: FontWeight.bold),
               ),
             ),

@@ -351,8 +351,13 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
                                             (ex as WeightExercise).sets[pi];
                                         final setCtrl = _setControllers[setId]!;
                                         return _buildSetIncrementRow(
-                                          label:
-                                              'Set ${pi + 1}: ${set.weight} × ${set.reps}',
+                                          label: AppLocalizations.of(
+                                            context,
+                                          ).automaticSetLabel(
+                                            pi + 1,
+                                            set.weight.toString(),
+                                            set.reps,
+                                          ),
                                           controller: setCtrl,
                                         );
                                       },
@@ -375,8 +380,14 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
                                             final childCtrl =
                                                 _setControllers[cid]!;
                                             return _buildSetIncrementRow(
-                                              label:
-                                                  'Set ${parentIdx + 1}.${childIndex + 1}: ${childSet.weight} × ${childSet.reps}',
+                                              label: AppLocalizations.of(
+                                                context,
+                                              ).automaticChildSetLabel(
+                                                parentIdx + 1,
+                                                childIndex + 1,
+                                                childSet.weight.toString(),
+                                                childSet.reps,
+                                              ),
                                               controller: childCtrl,
                                             );
                                           });
@@ -450,8 +461,13 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
                                                 ),
                                             activeColor: cs.primary,
                                           ),
-                                          label:
-                                              'Set ${pi + 1}: ${set.weight} × ${set.reps}',
+                                          label: AppLocalizations.of(
+                                            context,
+                                          ).automaticSetLabel(
+                                            pi + 1,
+                                            set.weight.toString(),
+                                            set.reps,
+                                          ),
                                           controller: setCtrl,
                                         );
                                       },
@@ -486,8 +502,14 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
                                                     ),
                                                 activeColor: cs.primary,
                                               ),
-                                              label:
-                                                  'Set ${parentIdx + 1}.${ci + 1}: ${child.weight} × ${child.reps}',
+                                              label: AppLocalizations.of(
+                                                context,
+                                              ).automaticChildSetLabel(
+                                                parentIdx + 1,
+                                                ci + 1,
+                                                child.weight.toString(),
+                                                child.reps,
+                                              ),
                                               controller: childCtrl,
                                             );
                                           });

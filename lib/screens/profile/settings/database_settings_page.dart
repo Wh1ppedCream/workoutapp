@@ -503,8 +503,10 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Synced ${manifest.exerciseMedia.length} exercise media entries '
-            '(v${manifest.version}).',
+            _strings.databaseExerciseMediaSyncSuccess(
+              manifest.exerciseMedia.length,
+              manifest.version,
+            ),
           ),
         ),
       );
@@ -532,8 +534,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Loaded bundled exercise media manifest '
-            '(v${manifest.version}).',
+            _strings.databaseBundledManifestLoaded(manifest.version),
           ),
         ),
       );
@@ -577,8 +578,10 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Synced ${manifest.entities.length} equipment and anatomy media entries '
-            '(v${manifest.version}).',
+            _strings.databaseSharedMediaSyncSuccess(
+              manifest.entities.length,
+              manifest.version,
+            ),
           ),
         ),
       );
@@ -828,12 +831,12 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
       final location = await _saveJsonFileWithPicker(
         filename: filename,
         contents: jsonStr,
-        dialogTitle: 'Save $filename',
+        dialogTitle: _strings.databaseSaveFile(filename),
       );
       if (location == null) return;
       await _showSavedFileDialog(
         title: _strings.databaseExportSavedTitle,
-        message: '$filename was saved to your selected location.',
+        message: _strings.databaseFileSaved(filename),
       );
     } catch (e) {
       if (!mounted) return;
@@ -1098,6 +1101,7 @@ class _DatabaseHealthCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final strings = AppLocalizations.of(context);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
@@ -1105,29 +1109,47 @@ class _DatabaseHealthCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _HealthInfoRow(
-            label: 'Schema',
-            value:
-                'v${health.schemaVersion} / target v${health.targetSchemaVersion}',
+            label: strings.databaseHealthSchema,
+            value: strings.databaseHealthSchemaValue(
+              health.schemaVersion,
+              health.targetSchemaVersion,
+            ),
             healthy: health.isSchemaCurrent,
           ),
           _HealthDivider(color: scheme.outlineVariant),
-          _HealthInfoRow(label: 'Size', value: formatBytes(health.totalBytes)),
-          _HealthDivider(color: scheme.outlineVariant),
-          _HealthInfoRow(label: 'Journal', value: health.journalMode),
-          _HealthDivider(color: scheme.outlineVariant),
           _HealthInfoRow(
-            label: 'Tables',
-            value:
-                '${health.tableCount} tables, ${health.indexCount} indexes, ${health.triggerCount} triggers',
+            label: strings.databaseHealthSize,
+            value: formatBytes(health.totalBytes),
           ),
           _HealthDivider(color: scheme.outlineVariant),
           _HealthInfoRow(
-            label: 'Food search',
-            value: '${health.foodCount} foods, ${health.foodFtsCount} FTS rows',
+            label: strings.databaseHealthJournal,
+            value: health.journalMode,
+          ),
+          _HealthDivider(color: scheme.outlineVariant),
+          _HealthInfoRow(
+            label: strings.databaseHealthTables,
+            value: strings.databaseHealthTablesValue(
+              health.tableCount,
+              health.indexCount,
+              health.triggerCount,
+            ),
+          ),
+          _HealthDivider(color: scheme.outlineVariant),
+          _HealthInfoRow(
+            label: strings.databaseHealthFoodSearch,
+            value: strings.databaseHealthFoodSearchValue(
+              health.foodCount,
+              health.foodFtsCount,
+            ),
             healthy: health.isFoodSearchAligned,
           ),
           _HealthDivider(color: scheme.outlineVariant),
-          _HealthInfoRow(label: 'Path', value: health.path, maxLines: 2),
+          _HealthInfoRow(
+            label: strings.databaseHealthPath,
+            value: health.path,
+            maxLines: 2,
+          ),
         ],
       ),
     );
@@ -1313,7 +1335,11 @@ class _ContentEnvironmentDialogState extends State<_ContentEnvironmentDialog> {
                     setState(() => _selectedEnvironmentId = value);
                   },
                   title: Text(
-                    '${environment.label}${environment.isProduction ? ' (production)' : ''}',
+                    environment.isProduction
+                        ? AppLocalizations.of(
+                          context,
+                        ).databaseProductionEnvironment(environment.label)
+                        : environment.label,
                   ),
                   subtitle: Text(
                     [

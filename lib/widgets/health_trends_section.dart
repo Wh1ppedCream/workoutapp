@@ -627,6 +627,7 @@ class _AddTrendTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = AppLocalizations.of(context);
     final colors = context.colors;
     return Material(
       color: Colors.transparent,
@@ -653,7 +654,7 @@ class _AddTrendTile extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Custom Metric',
+                strings.healthCustomMetric,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.labelLarge,
               ),
@@ -724,6 +725,7 @@ class _MeasurementSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = AppLocalizations.of(context);
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     final latest = entries.isEmpty ? null : entries.last;
     final previous = entries.length < 2 ? null : entries[entries.length - 2];
@@ -742,27 +744,33 @@ class _MeasurementSummaryCard extends StatelessWidget {
         children: [
           Expanded(
             child: _SummaryStat(
-              label: 'Latest',
-              value: latest == null ? 'No entry' : _formatMeasurement(latest),
+              label: strings.healthLatest,
+              value:
+                  latest == null
+                      ? strings.healthNoEntry
+                      : _formatMeasurement(latest),
               detail:
                   latest == null
-                      ? 'Not tracked yet'
+                      ? strings.healthNotTrackedYet
                       : _formatDate(latest.timestamp),
             ),
           ),
           const SizedBox(width: 10),
           Expanded(
             child: _SummaryStat(
-              label: 'Change',
+              label: strings.healthChange,
               value: delta == null ? '0' : _formatDelta(delta),
-              detail: entries.length < 2 ? 'Need 2 entries' : 'Vs previous',
+              detail:
+                  entries.length < 2
+                      ? strings.healthNeedTwoEntries
+                      : strings.healthVersusPrevious,
               valueColor: _deltaColor(context, delta),
             ),
           ),
           const SizedBox(width: 10),
           Expanded(
             child: _SummaryStat(
-              label: 'Records',
+              label: strings.healthRecords,
               value: '${entries.length}',
               detail: _defaultUnitFor(definition, weightUnit),
             ),

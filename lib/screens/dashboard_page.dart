@@ -124,7 +124,7 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
           const SizedBox(height: 14),
           Text(
-            'Drag sections into the order that works best for you.',
+            AppLocalizations.of(context).dashboardReorderHelp,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),

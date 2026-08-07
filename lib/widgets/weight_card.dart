@@ -283,7 +283,9 @@ class _WeightCardState extends State<WeightCard> {
                             const SizedBox(width: 4),
                           ],
                           Text(
-                            '$completedCount/${sets.length} done',
+                            AppLocalizations.of(
+                              context,
+                            ).weightCardSetsDone(completedCount, sets.length),
                             style: Theme.of(
                               context,
                             ).textTheme.bodySmall!.copyWith(

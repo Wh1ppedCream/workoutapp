@@ -129,22 +129,22 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       if (_nutritionOnboardingEnabled && _useNutritionData) ...[
         _OnboardingPage(
           id: 'weight',
-          label: 'Weight',
+          label: strings.onboardingPageWeight,
           builder: _buildWeightHistoryPage,
         ),
         _OnboardingPage(
           id: 'body-fat',
-          label: 'Body Fat',
+          label: strings.onboardingPageBodyFat,
           builder: _buildBodyFatPage,
         ),
         _OnboardingPage(
           id: 'nutrition',
-          label: 'Nutrition',
+          label: strings.onboardingPageNutrition,
           builder: _buildNutritionAndTrainingPage,
         ),
         _OnboardingPage(
           id: 'goal',
-          label: 'Goal',
+          label: strings.onboardingPageGoal,
           builder: _buildNutritionGoalPage,
         ),
       ],
@@ -1004,19 +1004,20 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   }
 
   Widget _buildWeightHistoryPage() {
+    final strings = _strings;
     return _OnboardingCard(
       icon: Icons.monitor_weight_outlined,
-      title: 'Weight history',
-      subtitle: 'A few details help estimate nutrition targets more sensibly.',
+      title: strings.onboardingWeightHistoryTitle,
+      subtitle: strings.onboardingWeightHistorySubtitle,
       children: [
         _SwitchCard(
-          title: 'Have you weighed 10+ lbs above your current weight before?',
+          title: strings.onboardingPreviouslyHeavier,
           value: _weighedHeavy,
           onChanged: (value) => setState(() => _weighedHeavy = value),
         ),
         const SizedBox(height: 16),
         _ChoiceGroup<String>(
-          title: 'Current weight trend',
+          title: strings.onboardingWeightTrendTitle,
           options: const [
             'Gaining weight',
             'Losing weight',
@@ -1024,6 +1025,14 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
             'Not sure',
           ],
           value: _weightTrend,
+          labelBuilder:
+              (value) => switch (value) {
+                'Gaining weight' => strings.onboardingWeightTrendGaining,
+                'Losing weight' => strings.onboardingWeightTrendLosing,
+                'Maintaining weight' =>
+                  strings.onboardingWeightTrendMaintaining,
+                _ => strings.onboardingNotSure,
+              },
           onChanged: (value) => setState(() => _weightTrend = value),
         ),
       ],
@@ -1031,6 +1040,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   }
 
   Widget _buildBodyFatPage() {
+    final strings = _strings;
     final isFemale = _gender == 'Female';
     final options =
         isFemale
@@ -1079,9 +1089,8 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
 
     return _OnboardingCard(
       icon: Icons.image_search,
-      title: 'Body-fat estimate',
-      subtitle:
-          'Choose the closest visual estimate. Precision is not required.',
+      title: strings.onboardingBodyFatEstimateTitle,
+      subtitle: strings.onboardingBodyFatEstimateSubtitle,
       children: [
         GridView.builder(
           shrinkWrap: true,
@@ -1109,44 +1118,65 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   }
 
   Widget _buildNutritionAndTrainingPage() {
+    final strings = _strings;
     return _OnboardingCard(
       icon: Icons.restaurant,
-      title: 'Nutrition preferences',
-      subtitle: 'These preferences shape nutrition suggestions after setup.',
+      title: strings.onboardingNutritionPreferencesTitle,
+      subtitle: strings.onboardingNutritionPreferencesSubtitle,
       children: [
         DropdownButtonFormField<String>(
           isExpanded: true,
           value: _preferredDiet,
           decoration: _inputDecoration(
-            label: 'Preferred diet',
+            label: strings.onboardingPreferredDiet,
             icon: Icons.restaurant_menu,
           ),
           items:
               const ['Balanced', 'Low fat', 'Low carb', 'Keto'].map((diet) {
-                return DropdownMenuItem(value: diet, child: Text(diet));
+                final label = switch (diet) {
+                  'Balanced' => strings.onboardingDietBalanced,
+                  'Low fat' => strings.onboardingDietLowFat,
+                  'Low carb' => strings.onboardingDietLowCarb,
+                  _ => strings.onboardingDietKeto,
+                };
+                return DropdownMenuItem(value: diet, child: Text(label));
               }).toList(),
           onChanged: (value) => setState(() => _preferredDiet = value!),
         ),
         _FieldGap.small,
         _TextInput(
           controller: _calorieFloorController,
-          label: 'Calorie floor',
-          hint: 'Minimum daily kcal',
+          label: strings.onboardingCalorieFloor,
+          hint: strings.onboardingCalorieFloorHint,
           icon: Icons.local_fire_department_outlined,
           keyboardType: TextInputType.number,
         ),
         const SizedBox(height: 16),
         _ChoiceGroup<String>(
-          title: 'Training during program',
+          title: strings.onboardingTrainingDuringProgram,
           options: const ['None', 'Lifting', 'Cardio', 'Lifting and cardio'],
           value: _trainingType,
+          labelBuilder:
+              (value) => switch (value) {
+                'None' => strings.onboardingTrainingNone,
+                'Lifting' => strings.onboardingTrainingLifting,
+                'Cardio' => strings.onboardingTrainingCardio,
+                _ => strings.onboardingTrainingLiftingAndCardio,
+              },
           onChanged: (value) => setState(() => _trainingType = value!),
         ),
         const SizedBox(height: 16),
         _ChoiceGroup<String>(
-          title: 'Preferred protein intake',
+          title: strings.onboardingProteinPreference,
           options: const ['Low', 'Moderate', 'High', 'Very high'],
           value: _proteinPreference,
+          labelBuilder:
+              (value) => switch (value) {
+                'Low' => strings.onboardingProteinLow,
+                'Moderate' => strings.onboardingProteinModerate,
+                'High' => strings.onboardingProteinHigh,
+                _ => strings.onboardingProteinVeryHigh,
+              },
           onChanged: (value) => setState(() => _proteinPreference = value!),
         ),
       ],
@@ -1154,10 +1184,11 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   }
 
   Widget _buildNutritionGoalPage() {
+    final strings = _strings;
     return _OnboardingCard(
       icon: Icons.flag_outlined,
-      title: 'Goal pace',
-      subtitle: 'Preview a target weight and weekly goal rate.',
+      title: strings.onboardingGoalPaceTitle,
+      subtitle: strings.onboardingGoalPaceSubtitle,
       children: [
         Row(
           children: [
@@ -1165,7 +1196,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
               child: _MetricPreviewCard(
                 icon: Icons.local_fire_department_outlined,
                 value: '2025 kcal',
-                label: 'Initial daily budget',
+                label: strings.onboardingInitialDailyBudget,
               ),
             ),
             const SizedBox(width: 12),
@@ -1173,14 +1204,14 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
               child: _MetricPreviewCard(
                 icon: Icons.event,
                 value: _shortDate(_projectedEndDate),
-                label: 'Projected end date',
+                label: strings.onboardingProjectedEndDate,
               ),
             ),
           ],
         ),
         const SizedBox(height: 22),
         _SliderPanel(
-          title: 'Target weight',
+          title: strings.onboardingTargetWeight,
           valueLabel: '${_goalWeightValue.round()} lbs',
           child: Slider(
             value: _goalWeightValue,
@@ -1193,14 +1224,18 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         ),
         const SizedBox(height: 16),
         _SliderPanel(
-          title: 'Target goal rate',
-          valueLabel: '${_weeklyRatePct.toStringAsFixed(1)}% BW/wk',
+          title: strings.onboardingTargetGoalRate,
+          valueLabel: strings.onboardingBodyWeightPerWeek(
+            _weeklyRatePct.toStringAsFixed(1),
+          ),
           child: Slider(
             value: _weeklyRatePct,
             min: 0.1,
             max: 1.0,
             divisions: 9,
-            label: '${_weeklyRatePct.toStringAsFixed(1)}% BW/wk',
+            label: strings.onboardingBodyWeightPerWeek(
+              _weeklyRatePct.toStringAsFixed(1),
+            ),
             onChanged:
                 (value) => setState(() {
                   _weeklyRatePct = value;
@@ -1215,7 +1250,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
           children: [
             Expanded(
               child: _MiniStat(
-                label: 'Per week',
+                label: strings.onboardingPerWeek,
                 value:
                     '-${_weeklyRateLbs.toStringAsFixed(1)} lbs / ${_weeklyRatePct.toStringAsFixed(1)}%',
               ),
@@ -1223,7 +1258,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
             const SizedBox(width: 12),
             Expanded(
               child: _MiniStat(
-                label: 'Per month',
+                label: strings.onboardingPerMonth,
                 value:
                     '-${_monthlyRateLbs.toStringAsFixed(1)} lbs / ${_monthlyRatePct.toStringAsFixed(1)}%',
               ),

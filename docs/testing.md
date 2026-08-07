@@ -11,6 +11,10 @@ screen name:
 - `test/db` runs selected DAO contracts against in-memory SQLite.
 - `test/widgets` smoke-tests reusable user-interface components and their
   accessibility actions.
+- `test/localization/hardcoded_ui_copy_contract_test.dart` rejects direct
+  user-facing English literals in active screens and widgets. Deliberately
+  deferred nutrition, cardio/stretch, and placeholder surfaces are narrowly
+  excluded until those product areas are rebuilt.
 - `integration_test` runs device-level core flows against an isolated database.
   Its core suite drives plan creation, workout start/resume/exit/completion,
   record presentation, Save as plan, profile editing, and database

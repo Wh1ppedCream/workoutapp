@@ -1905,8 +1905,8 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
           // ─── RATING EDITOR ──────────────────────
           Row(
             children: [
-              const Text(
-                'Rating:',
+              Text(
+                '${AppLocalizations.of(context).exerciseEditorRating}:',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               const SizedBox(width: 8),
@@ -2049,7 +2049,9 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
                                   media.localThumbnailPath) !=
                               null)
                             Text(
-                              'Cached locally',
+                              AppLocalizations.of(
+                                context,
+                              ).exerciseEditorCachedLocally,
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
                         ],

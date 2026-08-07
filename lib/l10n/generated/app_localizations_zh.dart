@@ -9,6 +9,131 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
+  String onboardingBodyWeightPerWeek(String percent) {
+    return '每周体重的 $percent%';
+  }
+
+  @override
+  String get dashboardExerciseFallback => '动作';
+
+  @override
+  String dashboardExerciseUsage(String equipment, int count) {
+    return '$equipment - $count 次';
+  }
+
+  @override
+  String weightCardSetsDone(int completed, int total) {
+    return '已完成 $completed/$total';
+  }
+
+  @override
+  String bodyHeatmapSemantics(String bodyPart) {
+    return '$bodyPart 身体热图';
+  }
+
+  @override
+  String databaseSaveFile(String filename) {
+    return '保存 $filename';
+  }
+
+  @override
+  String databaseFileSaved(String filename) {
+    return '$filename 已保存到您选择的位置。';
+  }
+
+  @override
+  String databaseProductionEnvironment(String label) {
+    return '$label（生产）';
+  }
+
+  @override
+  String dashboardDaysAgo(int count) {
+    return '$count 天前';
+  }
+
+  @override
+  String get workoutReportRangeOneWeekShort => '1周';
+
+  @override
+  String get workoutReportRangeOneMonthShort => '1月';
+
+  @override
+  String get workoutReportRangeThreeMonthsShort => '3月';
+
+  @override
+  String get workoutReportRangeSixMonthsShort => '6月';
+
+  @override
+  String get workoutReportRangeOneYearShort => '1年';
+
+  @override
+  String get workoutReportRangeAll => '全部';
+
+  @override
+  String get workoutReportRangeOneWeek => '1周';
+
+  @override
+  String get workoutReportRangeOneMonth => '1个月';
+
+  @override
+  String get workoutReportRangeThreeMonths => '3个月';
+
+  @override
+  String get workoutReportRangeSixMonths => '6个月';
+
+  @override
+  String get workoutReportRangeOneYear => '1年';
+
+  @override
+  String workoutReportChartTitle(String metric, String period) {
+    return '$metric（$period）';
+  }
+
+  @override
+  String workoutReportWorkoutCount(int count) {
+    return '$count 次训练';
+  }
+
+  @override
+  String workoutReportMinutesCount(int count) {
+    return '$count 分钟';
+  }
+
+  @override
+  String workoutReportHoursCount(int count) {
+    return '$count 小时';
+  }
+
+  @override
+  String workoutReportHoursMinutes(int hours, int minutes) {
+    return '$hours 小时 $minutes 分钟';
+  }
+
+  @override
+  String get workoutReportMinuteShort => '分钟';
+
+  @override
+  String get workoutReportHourShort => '小时';
+
+  @override
+  String get workoutReportNoWorkoutsYet => '暂无训练';
+
+  @override
+  String get workoutReportNoTrainingTimeYet => '暂无训练时长';
+
+  @override
+  String get workoutReportNoVolumeYet => '暂无训练容量记录';
+
+  @override
+  String get workoutReportNoWorkoutsBody => '完成一次训练即可开始生成此报告。';
+
+  @override
+  String get workoutReportNoTrainingTimeBody => '已完成训练的分钟数会自动添加到这里。';
+
+  @override
+  String get workoutReportNoVolumeBody => '记录已完成组的重量，以生成训练容量趋势。';
+
+  @override
   String get appTitle => 'Tonos';
 
   @override
@@ -5602,4 +5727,298 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get spanishLanguage => '西班牙语';
+
+  @override
+  String get onboardingWeightHistoryTitle => '体重历史';
+
+  @override
+  String get onboardingWeightHistorySubtitle => '这些信息有助于更合理地估算营养目标。';
+
+  @override
+  String get onboardingPreviouslyHeavier => '您以前的体重是否曾比当前体重高 10 磅以上？';
+
+  @override
+  String get onboardingWeightTrendTitle => '当前体重趋势';
+
+  @override
+  String get onboardingWeightTrendGaining => '体重增加';
+
+  @override
+  String get onboardingWeightTrendLosing => '体重下降';
+
+  @override
+  String get onboardingWeightTrendMaintaining => '体重维持';
+
+  @override
+  String get onboardingNotSure => '不确定';
+
+  @override
+  String get onboardingBodyFatEstimateTitle => '体脂估算';
+
+  @override
+  String get onboardingBodyFatEstimateSubtitle => '请选择最接近的视觉估算，无需十分精确。';
+
+  @override
+  String get onboardingNutritionPreferencesTitle => '营养偏好';
+
+  @override
+  String get onboardingNutritionPreferencesSubtitle => '这些偏好会影响设置完成后的营养建议。';
+
+  @override
+  String get onboardingPreferredDiet => '偏好的饮食方式';
+
+  @override
+  String get onboardingDietBalanced => '均衡';
+
+  @override
+  String get onboardingDietLowFat => '低脂';
+
+  @override
+  String get onboardingDietLowCarb => '低碳水';
+
+  @override
+  String get onboardingDietKeto => '生酮';
+
+  @override
+  String get onboardingCalorieFloor => '最低热量';
+
+  @override
+  String get onboardingCalorieFloorHint => '每日最低千卡';
+
+  @override
+  String get onboardingTrainingDuringProgram => '计划期间的训练';
+
+  @override
+  String get onboardingTrainingNone => '无';
+
+  @override
+  String get onboardingTrainingLifting => '力量训练';
+
+  @override
+  String get onboardingTrainingCardio => '有氧训练';
+
+  @override
+  String get onboardingTrainingLiftingAndCardio => '力量和有氧训练';
+
+  @override
+  String get onboardingProteinPreference => '偏好的蛋白质摄入量';
+
+  @override
+  String get onboardingProteinLow => '低';
+
+  @override
+  String get onboardingProteinModerate => '中等';
+
+  @override
+  String get onboardingProteinHigh => '高';
+
+  @override
+  String get onboardingProteinVeryHigh => '很高';
+
+  @override
+  String get onboardingGoalPaceTitle => '目标进度';
+
+  @override
+  String get onboardingGoalPaceSubtitle => '预览目标体重和每周目标速度。';
+
+  @override
+  String get onboardingInitialDailyBudget => '初始每日热量预算';
+
+  @override
+  String get onboardingProjectedEndDate => '预计结束日期';
+
+  @override
+  String get onboardingTargetWeight => '目标体重';
+
+  @override
+  String get onboardingTargetGoalRate => '目标速度';
+
+  @override
+  String get onboardingPerWeek => '每周';
+
+  @override
+  String get onboardingPerMonth => '每月';
+
+  @override
+  String get exerciseProgressTrackExercise => '跟踪一项动作';
+
+  @override
+  String get exerciseProgressTrackExerciseBody => '选择一项动作，在此查看其 1RM 趋势。';
+
+  @override
+  String get healthCustomMetric => '自定义指标';
+
+  @override
+  String get healthLatest => '最新';
+
+  @override
+  String get healthNoEntry => '暂无记录';
+
+  @override
+  String get healthNotTrackedYet => '尚未跟踪';
+
+  @override
+  String get healthChange => '变化';
+
+  @override
+  String get healthNeedTwoEntries => '需要 2 条记录';
+
+  @override
+  String get healthVersusPrevious => '与上一条相比';
+
+  @override
+  String get healthRecords => '记录';
+
+  @override
+  String get presetEstimatedTime => '预计时间';
+
+  @override
+  String get presetNoFocusData => '暂无重点数据。';
+
+  @override
+  String get presetFocusPreviewHelp => '添加包含身体部位数据的负重动作，以预览计划重点。';
+
+  @override
+  String get dashboardReorderHelp => '拖动各部分，按最适合您的顺序排列。';
+
+  @override
+  String get exerciseEditorCachedLocally => '已缓存到本地';
+
+  @override
+  String databaseExerciseMediaSyncSuccess(int count, int version) {
+    return '已同步 $count 条动作媒体记录（v$version）。';
+  }
+
+  @override
+  String databaseBundledManifestLoaded(int version) {
+    return '已加载内置动作媒体清单（v$version）。';
+  }
+
+  @override
+  String databaseSharedMediaSyncSuccess(int count, int version) {
+    return '已同步 $count 条器材和解剖媒体记录（v$version）。';
+  }
+
+  @override
+  String get databaseHealthSchema => '架构';
+
+  @override
+  String databaseHealthSchemaValue(int current, int target) {
+    return 'v$current / 目标 v$target';
+  }
+
+  @override
+  String get databaseHealthSize => '大小';
+
+  @override
+  String get databaseHealthJournal => '日志';
+
+  @override
+  String get databaseHealthTables => '数据表';
+
+  @override
+  String databaseHealthTablesValue(int tables, int indexes, int triggers) {
+    return '$tables 个表，$indexes 个索引，$triggers 个触发器';
+  }
+
+  @override
+  String get databaseHealthFoodSearch => '食物搜索';
+
+  @override
+  String databaseHealthFoodSearchValue(int foods, int rows) {
+    return '$foods 种食物，$rows 行 FTS 数据';
+  }
+
+  @override
+  String get databaseHealthPath => '路径';
+
+  @override
+  String get dashboardWorkoutInProgress => '训练进行中';
+
+  @override
+  String get dashboardNoSavedPlans => '此健身房资料尚未保存计划。';
+
+  @override
+  String get exerciseProgressOneRepMax => '单次最大重量';
+
+  @override
+  String get exerciseProgressEstimatedOneRepMax => '估算 1RM';
+
+  @override
+  String get onboardingPageWeight => '体重';
+
+  @override
+  String get onboardingPageBodyFat => '体脂';
+
+  @override
+  String get onboardingPageNutrition => '营养';
+
+  @override
+  String get onboardingPageGoal => '目标';
+
+  @override
+  String dashboardRecordsThisWeek(int count, int total) {
+    return '本周 $count/$total';
+  }
+
+  @override
+  String dashboardRecordsAllTime(int count) {
+    return '总计 $count';
+  }
+
+  @override
+  String get dashboardVisualBodyFat => '目测体脂';
+
+  @override
+  String get dashboardNewMetric => '新指标';
+
+  @override
+  String get dashboardCurrentMetrics => '当前指标';
+
+  @override
+  String get workoutReportDay => '天';
+
+  @override
+  String get workoutReportDays => '天';
+
+  @override
+  String get workoutReportWeek => '周';
+
+  @override
+  String get workoutReportMonth => '月';
+
+  @override
+  String workoutReportAveragePer(String period) {
+    return '平均 / $period';
+  }
+
+  @override
+  String get workoutReportWorkoutsLowercase => '次训练';
+
+  @override
+  String get workoutReportLongestStreak => '最长连续记录';
+
+  @override
+  String get workoutReportMostActive => '最活跃';
+
+  @override
+  String get workoutReportNoSessions => '暂无训练';
+
+  @override
+  String get workoutReportWeekday => '星期';
+
+  @override
+  String workoutReportMetricSemantics(String label) {
+    return '$label 报告指标';
+  }
+
+  @override
+  String workoutReportUnitLogged(String unit) {
+    return '已记录 $unit';
+  }
+
+  @override
+  String workoutReportUnitOnDate(String unit, String date) {
+    return '$date的 $unit';
+  }
 }
