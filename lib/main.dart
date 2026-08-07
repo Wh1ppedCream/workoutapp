@@ -43,40 +43,43 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   unawaited(BodyHeatmap.preload());
   final repo = AppRepository();
-  runApp(
-    RepositoryLifecycle(
-      repo: repo,
-      child: MultiProvider(
-        providers: [
-          Provider<AppRepository>.value(value: repo), // repo FIRST
-          Provider<ActivePlanStore>(
-            create: (_) => ActivePlanStore(repository: repo),
-          ),
-          ChangeNotifierProvider(
-            create: (_) => NutritionProfile(repository: repo),
-          ),
-          ChangeNotifierProvider(create: (_) => OnboardingConfig()..init()),
-          ChangeNotifierProvider(
-            create: (_) => ActiveSession(repository: repo),
-          ),
-          ChangeNotifierProvider(
-            create: (_) => SelectedProfile(repository: repo),
-          ),
-          ChangeNotifierProvider(create: (_) => DashboardConfig()),
-          ChangeNotifierProvider(create: (_) => ThemeProvider()),
-          ChangeNotifierProvider(create: (_) => UnitPreferenceProvider()),
-          ChangeNotifierProvider(create: (_) => LocalePreferenceProvider()),
-          ChangeNotifierProvider(create: (_) => NavBarConfig()),
-        ],
-        child: const MyApp(),
-      ),
-    ),
-  );
+  runApp(buildTonosApp(repo: repo));
   WidgetsBinding.instance.addPostFrameCallback((_) {
     debugPrint(
       '[startup] first frame rendered in ${launchStopwatch.elapsedMilliseconds}ms',
     );
   });
+}
+
+/// Builds the production provider tree around an injected repository.
+///
+/// Device tests can disable repository ownership so pumping the widget tree
+/// does not race their test-scoped repository lifecycle.
+Widget buildTonosApp({
+  required AppRepository repo,
+  bool closeRepositoryOnDispose = true,
+}) {
+  final app = MultiProvider(
+    providers: [
+      Provider<AppRepository>.value(value: repo), // repo FIRST
+      Provider<ActivePlanStore>(
+        create: (_) => ActivePlanStore(repository: repo),
+      ),
+      ChangeNotifierProvider(create: (_) => NutritionProfile(repository: repo)),
+      ChangeNotifierProvider(create: (_) => OnboardingConfig()..init()),
+      ChangeNotifierProvider(create: (_) => ActiveSession(repository: repo)),
+      ChangeNotifierProvider(create: (_) => SelectedProfile(repository: repo)),
+      ChangeNotifierProvider(create: (_) => DashboardConfig()),
+      ChangeNotifierProvider(create: (_) => ThemeProvider()),
+      ChangeNotifierProvider(create: (_) => UnitPreferenceProvider()),
+      ChangeNotifierProvider(create: (_) => LocalePreferenceProvider()),
+      ChangeNotifierProvider(create: (_) => NavBarConfig()),
+    ],
+    child: const MyApp(),
+  );
+
+  if (!closeRepositoryOnDispose) return app;
+  return RepositoryLifecycle(repo: repo, child: app);
 }
 
 /// Ensures the repository is closed when the app is disposed (hot restart/quit).

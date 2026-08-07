@@ -46,7 +46,9 @@ void main() {
   testWidgets('first install opens onboarding and advances from welcome', (
     tester,
   ) async {
-    await tonos.main();
+    await tester.pumpWidget(
+      tonos.buildTonosApp(repo: repository, closeRepositoryOnDispose: false),
+    );
     await tester.pumpAndSettle(const Duration(seconds: 8));
 
     expect(find.byType(OnboardingFlow), findsOneWidget);
@@ -70,6 +72,31 @@ void main() {
       contains('exercise_media'),
     );
     expect(manifests.map((row) => row['namespace']), contains('shared_media'));
+
+    final exerciseMediaCount =
+        (await database.rawQuery(
+              'SELECT COUNT(*) AS count FROM exercise_media',
+            )).single['count']
+            as int;
+    final sharedMediaCount =
+        (await database.rawQuery(
+              'SELECT COUNT(*) AS count FROM shared_media',
+            )).single['count']
+            as int;
+    expect(
+      exerciseMediaCount,
+      greaterThan(0),
+      reason:
+          'A fresh install must download the configured exercise-media '
+          'manifest; the bundled manifest is intentionally empty.',
+    );
+    expect(
+      sharedMediaCount,
+      greaterThan(0),
+      reason:
+          'A fresh install must download the configured shared-media '
+          'manifest; the bundled manifest is intentionally empty.',
+    );
 
     final equipmentId =
         (await database.query(
