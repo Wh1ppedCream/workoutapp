@@ -1,11 +1,11 @@
 {
-    "name": "env_test",
-    "short_name": "env_test",
+    "name": "Tonos",
+    "short_name": "Tonos",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "Local-first fitness tracking for workouts, progress, and plans.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

@@ -3,6 +3,19 @@
 This checklist tracks the cloud content rollout for exercise media first, then
 future nutrition content.
 
+## Current Development Snapshot
+
+As of 2026-08-08, the canonical development source is
+`tools/content_pipeline/exercise_media_source.example.json` version 9. It
+contains thumbnails for 127 of 313 exercises (40.6%); 186 exercises still use
+the heatmap fallback. Batches 001 through 007 are merged into this source and
+the current canonical manifest is live in the development bucket.
+
+`development` remains the app default. The production bucket and temporary
+public URL are configured, but the current 127-asset canonical manifest has not
+been promoted and validated there. Do not describe production as current until
+that promotion and a clean-install sync check are complete.
+
 ## Phase 1 - Architecture Baseline
 
 - [x] Decide on public cloud-hosted shared content instead of bundling all media
@@ -29,7 +42,8 @@ future nutrition content.
 
 Outside-code dependencies:
 
-- [ ] Continue uploading real media files as they are produced.
+- [ ] Continue uploading real media files as they are produced; 186 exercise
+  thumbnails remain uncovered.
 
 ## Phase 4 - Local Pipeline
 
@@ -76,6 +90,10 @@ Outside-code dependencies:
 - [x] Merge Batch 001 into the canonical source file after media exists.
 - [x] Upload the expanded development manifest.
 - [x] Sync in-app and spot-check new media plus missing-media fallbacks.
+- [x] Create, validate, merge, and publish development batches 002 through
+  007.
+- [ ] Complete a fresh development spot-check for batches 004 through 007 and
+  uncovered-exercise fallbacks before production promotion.
 
 ## Phase 8 - Media Quality
 
@@ -97,10 +115,14 @@ Outside-code dependencies:
 - [x] Create production R2 bucket: `tonos-public-content-prod`.
 - [x] Configure production public access with temporary R2 public URL.
 - [x] Configure production CORS.
-- [x] Upload production media assets.
-- [x] Upload production manifest.
+- [x] Upload initial production media assets and manifest for pipeline
+  validation.
 - [x] Update `assets/content/content_environments.json` with the production
   URL.
+- [ ] Promote the current 127-exercise canonical assets and manifest to
+  production after development validation.
+- [ ] Verify remote production URLs and a clean-install production sync before
+  changing the app default.
 - [ ] Switch the app default environment to production after a custom production
   domain is connected, or after deciding the temporary R2 URL should be used for
   app builds before a custom domain exists.

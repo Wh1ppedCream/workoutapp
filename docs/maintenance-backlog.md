@@ -1,52 +1,79 @@
 # Maintenance Backlog
 
-This is the current prioritized engineering backlog. It replaces the stale
-"unfinished areas" list that was previously embedded in the routing map.
+Last updated: 2026-08-08.
+
+This is Tonos's maintained, prioritized engineering backlog. Historical
+roadmap snapshots live in `docs/archive/roadmaps/`; do not use them to plan new
+work. Cloud-media publishing state and commands live in
+`cloud-content-roadmap.md`, `content-production-setup.md`, and
+`content-release-playbook.md`.
 
 ## Active Priorities
 
-1. **Consolidate the alternative Train hub.** Migrate any remaining unique
-   behavior from `Train2Page`, remove it from navigation configuration, then
-   delete its route and duplicate UI.
-2. **Revisit the Exercise Editor workflow.** Decide the final creator/editor
-   experience and simplify the deferred staged UI around that decision.
-3. **Choose the production media environment.** Decide whether the temporary
-   R2 URL is acceptable for releases or connect a permanent domain, then make
-   production the default only after a fresh-install sync check.
-4. **Continue exercise media coverage.** Publish verified thumbnail batches and
-   retain the heatmap fallback for uncovered exercises.
-5. **Finish shared media direction.** Complete equipment coverage, then define
-   a consistent illustration and/or heatmap approach for body parts and
-   muscles.
-6. **Improve starter-weight calibration.** Add a first-set feedback loop so
-   generated workout recommendations can learn whether a suggested load was
-   too easy, appropriate, or too hard.
+1. **Confirm hosted automation and release safeguards.** Check the latest CI
+   run, manually run the scheduled Android emulator workflow, publish the
+   privacy pages, and run the protected production-release workflow.
+2. **Validate production diagnostics end to end.** Install the
+   production-configured build, opt in, send one controlled report, and verify
+   in Sentry that its redaction and consent behavior match the release guide.
+3. **Hide unimplemented navigation.** Remove Nutrition Log, Combined History,
+   and Form and Posing from selectable navigation until their flows are usable.
+4. **Finalize the production media environment.** Validate development batches
+   004 through 007, promote the current canonical manifest and assets, choose
+   the permanent content host, perform a clean-install sync test, then switch
+   the app default deliberately.
+5. **Run visual locale QA.** Test Bangla, Chinese, Hindi, and Spanish on a
+   device across onboarding, Train, plans, sessions, records, reports,
+   tutorials, diagnostics, settings, and enlarged text.
+6. **Retire the alternative Train hub.** Migrate any remaining unique behavior
+   from `Train2Page`, migrate saved navigation settings, remove `TabItem.train2`,
+   then delete the duplicate route and UI.
+7. **Rework the Exercise Editor.** Decide the final creator/editor flow,
+   expose starter-load controls where they belong, remove legacy form state,
+   and split the screen into focused sections.
+8. **Improve starter-weight calibration.** Add a first-set feedback loop for
+   too easy, appropriate, and too hard recommendations, with conservative
+   persisted adjustments and clear user-facing explanations.
+
+## Product And Content Work
+
+1. **Decide the offline media experience.** Either accept fallback visuals on
+   an offline first launch or bundle a small, useful core media collection.
+2. **Continue exercise and anatomy media.** The current development canonical
+   source covers 127 of 313 exercises (40.6%). Continue thumbnail batches, then
+   establish the bodypart and muscle illustration or heatmap direction.
+3. **Restore cardio and stretch as a complete vertical feature.** Reintroduce
+   creation, plans, sessions, completion, repeat, history, and Save as plan
+   together rather than as isolated screens.
+4. **Complete nutrition as its own product stream.** Replace fake-data and
+   placeholder surfaces before adding the intended media and logging workflows.
 
 ## Reliability And Cleanup
 
-1. Remove `session_record_badges_dao.dart` after retaining any useful test
-   cases under the persisted workout-record-event system.
-2. Remove the commented legacy provider implementation in
-   `lib/providers/active_session.dart` after the durable-session migration has
-   remained stable through another release.
-3. Keep database coordination small: extract lifecycle, migration, and
-   maintenance responsibilities from `DatabaseHelper` only when they have a
-   clear owner and focused test coverage.
-4. Run a responsive and screen-reader regression pass whenever a core layout,
-   localization, or navigation component changes. The current baseline covers
-   French and enlarged text on onboarding, Train, sessions, completion,
-   reports, tutorials, and settings.
+1. Preserve useful record assertions, then remove the old
+   `session_record_badges_dao.dart` implementation.
+2. Reduce `lib/providers/active_session.dart` to the durable-provider export
+   after the commented legacy implementation has remained unnecessary through a
+   release.
+3. Extract backup, import, or maintenance responsibilities from
+   `DatabaseHelper` only when the related feature changes and focused tests can
+   establish ownership.
+4. Run a responsive and screen-reader regression pass whenever core layout,
+   localization, navigation, or diagnostics UI changes.
+5. Keep any internal Dart package rename (`env_test`) as a dedicated all-import
+   migration; platform release identities already use `Tonos` and `com.tonos`.
 
-## Platform Maintenance
+## Documentation Rules
 
-1. Upgrade Flutter and dependencies in a dedicated branch. Validate unit,
-   widget, Android integration, and release-bundle builds before merging.
-2. Keep localization generation in CI or release verification after changing
-   ARB files.
-3. Keep the routing map, this backlog, and the cloud publishing playbook up to
-   date as part of relevant feature changes.
+1. Update this backlog when priorities materially change.
+2. Update the routing map with navigation changes.
+3. Update the content roadmap, production setup guide, playbook, and changelog
+   for every media promotion.
+4. Archive superseded planning snapshots instead of leaving competing root-level
+   roadmaps.
 
 ## Deferred Areas
 
 Nutrition, cardio/stretch, and unfinished alternate bottom-tab work remain
-intentionally deferred until their product direction is revisited.
+intentionally deferred unless a task above explicitly brings one back into
+scope.

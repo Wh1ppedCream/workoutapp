@@ -163,13 +163,21 @@ The nutrition catalog tooling lives in `tools/catalog_builder/` and is separate 
 
 ## Project Status
 
-This is an active work-in-progress application rather than a finished public release. The repository includes ongoing feature work around nutrition flows, preset generation, analytics, and UI organization.
+This is an active work-in-progress application rather than a finished public
+release. The maintained priorities are in
+[`docs/maintenance-backlog.md`](docs/maintenance-backlog.md), while cloud-media
+operations are documented under `docs/content-*.md`.
 
 ## Notes For Visitors
 
-- The current package name is still `env_test`, which reflects the project history more than the product name.
-- Some repository contents are development-oriented, including notes, roadmap files, and generated artifacts from ongoing work.
-- The default Flutter test coverage is still minimal, so this repository currently reflects active product development more than a polished library package.
+- The internal Dart package name remains `env_test`, reflecting project history rather
+  than the product. Release identities use `Tonos` and `com.tonos` across supported
+  platform shells.
+- Historical roadmap snapshots are preserved under `docs/archive/roadmaps/`;
+  they are context only, not the active plan.
+- The repository includes unit, widget, localization, contract, and Android
+  integration coverage, but it remains active product development rather than a
+  finished public release.
 
 ## Future Improvements For The Repo
 

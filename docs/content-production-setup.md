@@ -34,8 +34,11 @@ Current temporary production manifest:
 https://pub-3e431bbfeef5400c9ccbea926ea9904f.r2.dev/manifests/exercise_media_manifest.json
 ```
 
-The temporary production manifest has passed release checks for the current
-15 exercise thumbnail assets.
+The production bucket was seeded for pipeline validation, but it is not yet the
+current release source. The canonical development source is version 9 with 127
+of 313 exercises covered (40.6%) across batches 001 through 007. Promote the
+same complete canonical asset set and manifest to production before calling the
+production environment release-ready.
 
 ## Current Environment Decision
 
@@ -52,11 +55,15 @@ TODO before broad release:
 1. Buy/connect a stable content domain, for example `content.tonos.app`, or
    explicitly decide that the temporary R2 public URL should be used for the
    current release.
-2. Rebuild and upload the production manifest with the final production
+2. Complete development spot checks for batches 004 through 007 and an
+   uncovered-exercise heatmap fallback.
+3. Upload all current canonical media assets to the production bucket.
+4. Rebuild and upload the production manifest with the final production
    `--base-url`.
-3. Update the production `exerciseMediaManifestUrl` if the host changes.
-4. Change `defaultEnvironment` from `development` to `production`.
-5. Run app-side sync and thumbnail fallback checks again.
+5. Update the production `exerciseMediaManifestUrl` if the host changes.
+6. Run a clean-install production sync and thumbnail fallback check.
+7. Change `defaultEnvironment` from `development` to `production` only after
+   those checks pass.
 
 ## Recommended Cloud Layout
 
@@ -166,28 +173,22 @@ successfully serves those objects.
 
 ## Production Media Uploads
 
-Before publishing a production manifest, upload the current media batches to the
-production bucket. These commands reuse the local batch sources that already
-contain `localFile` paths:
+Before publishing a production manifest, upload every current media batch to
+the production bucket. The following pattern reuses a local batch source that
+already contains `localFile` paths; replace `007` with each batch that has not
+yet been promoted:
 
 ```powershell
-dart run tools/content_pipeline.dart build-exercise-media `
-  --source tools/content_pipeline/exercise_media_batch_001.source.json `
-  --output build/content/exercise_media_batch_001_prod_preview_manifest.json `
-  --upload-script build/content/upload_exercise_media_batch_001_prod.ps1 `
-  --bucket tonos-public-content-prod `
-  --manifest-object manifests/exercise_media_batch_001.preview.json
-
-powershell -ExecutionPolicy Bypass -File .\build\content\upload_exercise_media_batch_001_prod.ps1
+$batch = "007"
 
 dart run tools/content_pipeline.dart build-exercise-media `
-  --source tools/content_pipeline/exercise_media_legacy_thumb_upgrade.source.json `
-  --output build/content/exercise_media_legacy_thumb_upgrade_prod_preview_manifest.json `
-  --upload-script build/content/upload_exercise_media_legacy_thumb_upgrade_prod.ps1 `
+  --source "tools/content_pipeline/exercise_media_batch_$batch.source.json" `
+  --output "build/content/exercise_media_batch_$batch.prod_preview_manifest.json" `
+  --upload-script "build/content/upload_exercise_media_batch_$batch.prod.ps1" `
   --bucket tonos-public-content-prod `
-  --manifest-object manifests/exercise_media_legacy_thumb_upgrade.preview.json
+  --manifest-object "manifests/exercise_media_batch_$batch.preview.json"
 
-powershell -ExecutionPolicy Bypass -File .\build\content\upload_exercise_media_legacy_thumb_upgrade_prod.ps1
+powershell -ExecutionPolicy Bypass -File "./build/content/upload_exercise_media_batch_$batch.prod.ps1"
 ```
 
 The preview manifests are useful for upload verification only. The app should
