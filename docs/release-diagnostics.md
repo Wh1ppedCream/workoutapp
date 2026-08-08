@@ -25,7 +25,8 @@ project or environment.
 
 The repository also provides a manually triggered **Production Android
 release** workflow. It is protected by the GitHub `production` environment and
-requires these environment secrets:
+uploads a signed APK for device validation plus the signed AAB intended for
+distribution. It requires these environment secrets:
 
 - `TONOS_SENTRY_DSN`
 - `ANDROID_KEYSTORE_BASE64`
@@ -63,8 +64,9 @@ fields requires a privacy-policy update and an explicit product review.
 1. Run localization generation, analyzer, the full test suite, and a release
    build.
 2. Confirm `test/release_diagnostics_contract_test.dart` passes.
-3. Install the production-configured build and confirm crash reporting is off
-   on first launch.
+3. Download the workflow's signed `tonos-production-apk-*` artifact, install
+   it on a dedicated test device, and confirm crash reporting is off on first
+   launch.
 4. Confirm Profile > Diagnostics & Privacy shows the expected app version and
    build number.
 5. Exercise remote and bundled media sync and inspect the local event fields.

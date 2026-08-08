@@ -55,6 +55,13 @@ void main() {
     expect(release, contains('environment: production'));
     expect(release, contains(r'${{ secrets.TONOS_SENTRY_DSN }}'));
     expect(release, contains('TONOS_ENVIRONMENT=production'));
+    expect(release, contains('Build signed production APK'));
+    expect(release, contains('tonos-production-apk-'));
+    expect(
+      RegExp('Build signed production APK').allMatches(release),
+      hasLength(1),
+    );
+    expect(RegExp('Upload production APK').allMatches(release), hasLength(1));
     expect(release, isNot(contains('ingest.sentry.io')));
     expect(pages, contains('pages: write'));
     expect(pages, contains('docs/privacy.html'));

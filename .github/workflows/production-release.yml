@@ -95,6 +95,14 @@ jobs:
       - name: Run unit and widget tests
         run: flutter test
 
+      - name: Build signed production APK
+        env:
+          TONOS_SENTRY_DSN: ${{ secrets.TONOS_SENTRY_DSN }}
+        run: >-
+          flutter build apk --release
+          --dart-define=TONOS_ENVIRONMENT=production
+          --dart-define=TONOS_SENTRY_DSN="$TONOS_SENTRY_DSN"
+
       - name: Build signed production app bundle
         env:
           TONOS_SENTRY_DSN: ${{ secrets.TONOS_SENTRY_DSN }}
@@ -102,6 +110,14 @@ jobs:
           flutter build appbundle --release
           --dart-define=TONOS_ENVIRONMENT=production
           --dart-define=TONOS_SENTRY_DSN="$TONOS_SENTRY_DSN"
+
+      - name: Upload production APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: tonos-production-apk-${{ github.sha }}
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+          retention-days: 7
 
       - name: Upload production app bundle
         uses: actions/upload-artifact@v4
