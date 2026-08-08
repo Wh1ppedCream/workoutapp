@@ -4,6 +4,7 @@ import '../db/content_dao.dart';
 import '../db/database_helper.dart';
 import '../models/models.dart';
 import '../services/content_environment_preferences.dart';
+import '../services/diagnostics_service.dart';
 import '../services/content_manifest_service.dart';
 import '../services/media_cache_service.dart';
 import '../services/media_download_preferences.dart';
@@ -19,18 +20,21 @@ class ContentRepository {
     MediaCacheService? cacheService,
     MediaDownloadPolicy? downloadPolicy,
     ContentEnvironmentPreferences? environmentPreferences,
+    DiagnosticsService? diagnostics,
   }) : _db = db ?? DatabaseHelper(),
        _manifestService = manifestService ?? const ContentManifestService(),
        _cacheService = cacheService ?? const MediaCacheService(),
        _downloadPolicy = downloadPolicy ?? MediaDownloadPolicy(),
        _environmentPreferences =
-           environmentPreferences ?? const ContentEnvironmentPreferences();
+           environmentPreferences ?? const ContentEnvironmentPreferences(),
+       _diagnostics = diagnostics ?? DiagnosticsService.instance;
 
   final DatabaseHelper _db;
   final ContentManifestService _manifestService;
   final MediaCacheService _cacheService;
   final MediaDownloadPolicy _downloadPolicy;
   final ContentEnvironmentPreferences _environmentPreferences;
+  final DiagnosticsService _diagnostics;
   static Future<ContentManifest>? _bundledExerciseManifestSync;
   static Future<SharedMediaManifest>? _bundledSharedMediaManifestSync;
   static Future<ContentEnvironmentConfig>? _bundledContentEnvironments;
@@ -46,7 +50,13 @@ class ContentRepository {
     final inFlight = _bundledExerciseManifestSync;
     if (inFlight != null) return inFlight;
 
-    final sync = _syncBundledExerciseMediaManifest();
+    final sync = _recordManifestSync<ContentManifest>(
+      operation: 'exercise_media',
+      source: 'bundled',
+      action: _syncBundledExerciseMediaManifest,
+      versionOf: (manifest) => manifest.version,
+      itemCountOf: (manifest) => manifest.exerciseMedia.length,
+    );
     _bundledExerciseManifestSync = sync;
     try {
       return await sync;
@@ -72,20 +82,32 @@ class ContentRepository {
 
   Future<ContentManifest> syncRemoteExerciseMediaManifest(
     Uri manifestUri,
-  ) async {
-    final manifest = await _manifestService.fetchExerciseMediaManifest(
-      manifestUri,
-    );
-    final db = await _db.database;
-    await ContentDao.upsertExerciseMediaManifest(db, manifest);
-    return manifest;
-  }
+  ) => _recordManifestSync<ContentManifest>(
+    operation: 'exercise_media',
+    source: 'remote',
+    action: () async {
+      final manifest = await _manifestService.fetchExerciseMediaManifest(
+        manifestUri,
+      );
+      final db = await _db.database;
+      await ContentDao.upsertExerciseMediaManifest(db, manifest);
+      return manifest;
+    },
+    versionOf: (manifest) => manifest.version,
+    itemCountOf: (manifest) => manifest.exerciseMedia.length,
+  );
 
   Future<SharedMediaManifest> syncBundledSharedMediaManifest() async {
     final inFlight = _bundledSharedMediaManifestSync;
     if (inFlight != null) return inFlight;
 
-    final sync = _syncBundledSharedMediaManifest();
+    final sync = _recordManifestSync<SharedMediaManifest>(
+      operation: 'shared_media',
+      source: 'bundled',
+      action: _syncBundledSharedMediaManifest,
+      versionOf: (manifest) => manifest.version,
+      itemCountOf: (manifest) => manifest.entities.length,
+    );
     _bundledSharedMediaManifestSync = sync;
     try {
       return await sync;
@@ -111,13 +133,56 @@ class ContentRepository {
 
   Future<SharedMediaManifest> syncRemoteSharedMediaManifest(
     Uri manifestUri,
-  ) async {
-    final manifest = await _manifestService.fetchSharedMediaManifest(
-      manifestUri,
-    );
-    final db = await _db.database;
-    await ContentDao.upsertSharedMediaManifest(db, manifest);
-    return manifest;
+  ) => _recordManifestSync<SharedMediaManifest>(
+    operation: 'shared_media',
+    source: 'remote',
+    action: () async {
+      final manifest = await _manifestService.fetchSharedMediaManifest(
+        manifestUri,
+      );
+      final db = await _db.database;
+      await ContentDao.upsertSharedMediaManifest(db, manifest);
+      return manifest;
+    },
+    versionOf: (manifest) => manifest.version,
+    itemCountOf: (manifest) => manifest.entities.length,
+  );
+
+  Future<T> _recordManifestSync<T>({
+    required String operation,
+    required String source,
+    required Future<T> Function() action,
+    required int Function(T result) versionOf,
+    required int Function(T result) itemCountOf,
+  }) async {
+    final stopwatch = Stopwatch()..start();
+    try {
+      final result = await action();
+      await _diagnostics.recordSync(
+        SyncDiagnosticEvent(
+          timestamp: DateTime.now().toUtc(),
+          operation: operation,
+          source: source,
+          outcome: SyncDiagnosticOutcome.succeeded,
+          durationMilliseconds: stopwatch.elapsedMilliseconds,
+          manifestVersion: versionOf(result),
+          itemCount: itemCountOf(result),
+        ),
+      );
+      return result;
+    } catch (error) {
+      await _diagnostics.recordSync(
+        SyncDiagnosticEvent(
+          timestamp: DateTime.now().toUtc(),
+          operation: operation,
+          source: source,
+          outcome: SyncDiagnosticOutcome.failed,
+          durationMilliseconds: stopwatch.elapsedMilliseconds,
+          errorType: DiagnosticsSanitizer.errorType(error),
+        ),
+      );
+      rethrow;
+    }
   }
 
   Future<void> ensureExerciseMediaManifestReady() async {

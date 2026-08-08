@@ -103,3 +103,11 @@ real device storage, and production content URLs in ordinary tests; use bundled
 assets, SharedPreferences mocks, in-memory SQLite, or a mocked platform channel.
 The profile-mode release-networking verification above is the intentional
 exception and uses the configured development content environment.
+
+## Release diagnostics verification
+
+Crash reporting is disabled unless both a build-time Sentry DSN and explicit
+user consent are present. The unit and contract tests verify default-off
+consent, redaction, bounded local sync history, the absence of a committed DSN,
+and privacy-safe SDK options. See `docs/release-diagnostics.md` for production
+configuration and the manual release checklist.

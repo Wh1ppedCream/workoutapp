@@ -10,6 +10,7 @@ import '../../../widgets/guided_tutorial_overlay.dart';
 import '../../../widgets/settings_tiles.dart';
 import '../../../utils/app_test_keys.dart';
 import 'database_settings_page.dart';
+import 'diagnostics_settings_page.dart';
 import 'gym_exercise_settings_page.dart';
 import 'measurements_trends_settings_page.dart';
 import 'tutorials_settings_page.dart';
@@ -184,6 +185,13 @@ class _ProfilePageState extends State<ProfilePage> {
                 title: strings.profileDatabaseSettingsTitle,
                 subtitle: strings.profileDatabaseSettingsSubtitle,
                 onTap: () => _open(context, const DatabaseSettingsPage()),
+              ),
+              SettingsActionTile(
+                icon: Icons.shield_outlined,
+                iconColor: SettingsAccent.progress,
+                title: strings.profileDiagnosticsTitle,
+                subtitle: strings.profileDiagnosticsSubtitle,
+                onTap: () => _open(context, const DiagnosticsSettingsPage()),
               ),
             ]),
           ),

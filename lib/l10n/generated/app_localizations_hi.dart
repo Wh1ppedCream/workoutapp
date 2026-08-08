@@ -6021,4 +6021,122 @@ class AppLocalizationsHi extends AppLocalizations {
   String workoutReportUnitOnDate(String unit, String date) {
     return '$date को $unit';
   }
+
+  @override
+  String get profileDiagnosticsTitle => 'डायग्नोस्टिक्स और गोपनीयता';
+
+  @override
+  String get profileDiagnosticsSubtitle => 'वर्ज़न, क्रैश रिपोर्ट सहमति, सिंक इतिहास और डेटा हटाना।';
+
+  @override
+  String get diagnosticsTitle => 'डायग्नोस्टिक्स और गोपनीयता';
+
+  @override
+  String get diagnosticsSubtitle => 'रिलीज़ डायग्नोस्टिक्स को समझें और नियंत्रित करें।';
+
+  @override
+  String get diagnosticsAppSection => 'ऐप की जानकारी';
+
+  @override
+  String get diagnosticsAppSectionSubtitle => 'समस्या बताते समय उपयोगी।';
+
+  @override
+  String get diagnosticsVersion => 'वर्ज़न और बिल्ड';
+
+  @override
+  String get diagnosticsLoading => 'लोड हो रहा है...';
+
+  @override
+  String get diagnosticsUnavailable => 'उपलब्ध नहीं';
+
+  @override
+  String get diagnosticsCrashSection => 'क्रैश रिपोर्टिंग';
+
+  @override
+  String get diagnosticsCrashSectionSubtitle => 'अचानक हुई ऐप विफलताओं की वैकल्पिक और संशोधित रिपोर्ट।';
+
+  @override
+  String get diagnosticsCrashReporting => 'क्रैश रिपोर्ट साझा करें';
+
+  @override
+  String get diagnosticsCrashUnavailable => 'इस बिल्ड में कॉन्फ़िगर नहीं है। कोई रिपोर्ट नहीं भेजी जा सकती।';
+
+  @override
+  String get diagnosticsCrashEnabledBody => 'आपकी सहमति से चालू है। आप इसे कभी भी बंद कर सकते हैं।';
+
+  @override
+  String get diagnosticsCrashDisabledBody => 'डिफ़ॉल्ट रूप से बंद। क्रैश जाँच में मदद करना चाहें तभी चालू करें।';
+
+  @override
+  String get diagnosticsPrivacyPromiseTitle => 'डिज़ाइन से गोपनीयता';
+
+  @override
+  String get diagnosticsPrivacyPromiseBody => 'रिपोर्ट में ऐप वर्ज़न, प्लेटफ़ॉर्म संदर्भ, संशोधित त्रुटि प्रकार और स्टैक ट्रेस होते हैं। Tonos नाम, स्वास्थ्य डेटा, डेटाबेस सामग्री, स्क्रीनशॉट, व्यू पदानुक्रम, नेटवर्क पते, प्रदर्शन ट्रेस और एनालिटिक्स को बाहर रखता है।';
+
+  @override
+  String get diagnosticsSyncSection => 'कॉन्टेंट सिंक इतिहास';
+
+  @override
+  String get diagnosticsSyncSectionSubtitle => 'पिछले 30 मीडिया-मैनिफ़ेस्ट परिणाम केवल इस डिवाइस पर रखे जाते हैं।';
+
+  @override
+  String get diagnosticsNoSyncEvents => 'अभी कोई सिंक डायग्नोस्टिक नहीं';
+
+  @override
+  String get diagnosticsNoSyncEventsBody => 'बिना URL या निजी डेटा के सिंक परिणाम यहाँ दिखाई देंगे।';
+
+  @override
+  String get diagnosticsClearHistory => 'सिंक इतिहास साफ़ करें';
+
+  @override
+  String get diagnosticsClearHistoryBody => 'स्थानीय रूप से रखी सभी सिंक डायग्नोस्टिक प्रविष्टियाँ हटाएँ।';
+
+  @override
+  String get diagnosticsHistoryCleared => 'सिंक डायग्नोस्टिक इतिहास साफ़ हो गया।';
+
+  @override
+  String get diagnosticsExerciseMedia => 'व्यायाम मीडिया';
+
+  @override
+  String get diagnosticsSharedMedia => 'साझा मीडिया';
+
+  @override
+  String get diagnosticsRemoteSource => 'रिमोट';
+
+  @override
+  String get diagnosticsBundledSource => 'बंडल किया हुआ';
+
+  @override
+  String get diagnosticsSyncSucceeded => 'सफल';
+
+  @override
+  String get diagnosticsSyncFailed => 'विफल';
+
+  @override
+  String diagnosticsSyncEventTitle(String operation, String outcome) {
+    return '$operation: $outcome';
+  }
+
+  @override
+  String diagnosticsSyncEventDetails(String source, String timestamp, int duration, String version, String items) {
+    return '$source • $timestamp • $duration मि.से. • मैनिफ़ेस्ट $version • $items आइटम';
+  }
+
+  @override
+  String get diagnosticsPrivacySection => 'आपका डेटा';
+
+  @override
+  String get diagnosticsPrivacySectionSubtitle => 'स्थानीय स्टोरेज, प्रतिधारण और हटाना।';
+
+  @override
+  String get diagnosticsLocalDataTitle => 'फ़िटनेस डेटा स्थानीय रहता है';
+
+  @override
+  String get diagnosticsLocalDataBody => 'जब तक आप स्वयं बैकअप एक्सपोर्ट नहीं करते, वर्कआउट, पोषण, शारीरिक माप और प्रोफ़ाइल रिकॉर्ड इसी डिवाइस के ऐप डेटाबेस में रहते हैं।';
+
+  @override
+  String get diagnosticsDeletionTitle => 'डायग्नोस्टिक और ऐप डेटा हटाएँ';
+
+  @override
+  String get diagnosticsDeletionBody => 'ऊपर का सिंक इतिहास साफ़ करें और क्रैश रिपोर्टिंग बंद करें। स्थानीय डेटाबेस और कैश हटाने के लिए डिवाइस सेटिंग में Tonos स्टोरेज साफ़ करें या ऐप अनइंस्टॉल करें। पहले भेजी गई क्रैश रिपोर्ट हटवाने के लिए उपलब्ध इवेंट विवरण के साथ डेवलपर से संपर्क करें।';
 }

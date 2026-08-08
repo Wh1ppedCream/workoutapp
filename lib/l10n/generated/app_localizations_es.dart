@@ -6046,4 +6046,122 @@ class AppLocalizationsEs extends AppLocalizations {
   String workoutReportUnitOnDate(String unit, String date) {
     return '$unit el $date';
   }
+
+  @override
+  String get profileDiagnosticsTitle => 'Diagnóstico y privacidad';
+
+  @override
+  String get profileDiagnosticsSubtitle => 'Versión, consentimiento de informes, historial de sincronización y eliminación de datos.';
+
+  @override
+  String get diagnosticsTitle => 'Diagnóstico y privacidad';
+
+  @override
+  String get diagnosticsSubtitle => 'Comprende y controla el diagnóstico de producción.';
+
+  @override
+  String get diagnosticsAppSection => 'Información de la aplicación';
+
+  @override
+  String get diagnosticsAppSectionSubtitle => 'Útil al informar de un problema.';
+
+  @override
+  String get diagnosticsVersion => 'Versión y compilación';
+
+  @override
+  String get diagnosticsLoading => 'Cargando...';
+
+  @override
+  String get diagnosticsUnavailable => 'No disponible';
+
+  @override
+  String get diagnosticsCrashSection => 'Informes de fallos';
+
+  @override
+  String get diagnosticsCrashSectionSubtitle => 'Informes opcionales y depurados sobre fallos inesperados.';
+
+  @override
+  String get diagnosticsCrashReporting => 'Compartir informes de fallos';
+
+  @override
+  String get diagnosticsCrashUnavailable => 'No está configurado en esta compilación. No se puede enviar ningún informe.';
+
+  @override
+  String get diagnosticsCrashEnabledBody => 'Activado con tu consentimiento. Puedes desactivarlo cuando quieras.';
+
+  @override
+  String get diagnosticsCrashDisabledBody => 'Desactivado de forma predeterminada. Actívalo solo si quieres ayudar a diagnosticar fallos.';
+
+  @override
+  String get diagnosticsPrivacyPromiseTitle => 'Privacidad desde el diseño';
+
+  @override
+  String get diagnosticsPrivacyPromiseBody => 'Los informes contienen la versión de la aplicación, el contexto de la plataforma, un tipo de error depurado y el seguimiento de pila. Tonos excluye nombres, datos de salud, contenido de la base de datos, capturas de pantalla, jerarquía de vistas, direcciones de red, trazas de rendimiento y analíticas.';
+
+  @override
+  String get diagnosticsSyncSection => 'Historial de sincronización';
+
+  @override
+  String get diagnosticsSyncSectionSubtitle => 'Los 30 resultados más recientes de manifiestos multimedia se guardan solo en este dispositivo.';
+
+  @override
+  String get diagnosticsNoSyncEvents => 'Aún no hay diagnósticos de sincronización';
+
+  @override
+  String get diagnosticsNoSyncEventsBody => 'Los resultados aparecerán aquí sin URL ni datos personales.';
+
+  @override
+  String get diagnosticsClearHistory => 'Borrar historial de sincronización';
+
+  @override
+  String get diagnosticsClearHistoryBody => 'Elimina todas las entradas de diagnóstico guardadas localmente.';
+
+  @override
+  String get diagnosticsHistoryCleared => 'Se borró el historial de diagnóstico.';
+
+  @override
+  String get diagnosticsExerciseMedia => 'Contenido de ejercicios';
+
+  @override
+  String get diagnosticsSharedMedia => 'Contenido compartido';
+
+  @override
+  String get diagnosticsRemoteSource => 'Remoto';
+
+  @override
+  String get diagnosticsBundledSource => 'Incluido';
+
+  @override
+  String get diagnosticsSyncSucceeded => 'Correcto';
+
+  @override
+  String get diagnosticsSyncFailed => 'Falló';
+
+  @override
+  String diagnosticsSyncEventTitle(String operation, String outcome) {
+    return '$operation: $outcome';
+  }
+
+  @override
+  String diagnosticsSyncEventDetails(String source, String timestamp, int duration, String version, String items) {
+    return '$source • $timestamp • $duration ms • manifiesto $version • $items elementos';
+  }
+
+  @override
+  String get diagnosticsPrivacySection => 'Tus datos';
+
+  @override
+  String get diagnosticsPrivacySectionSubtitle => 'Almacenamiento local, conservación y eliminación.';
+
+  @override
+  String get diagnosticsLocalDataTitle => 'Los datos de actividad permanecen locales';
+
+  @override
+  String get diagnosticsLocalDataBody => 'Los entrenamientos, la nutrición, las medidas corporales y el perfil permanecen en la base de datos de este dispositivo, salvo que exportes una copia de seguridad.';
+
+  @override
+  String get diagnosticsDeletionTitle => 'Eliminar diagnósticos y datos';
+
+  @override
+  String get diagnosticsDeletionBody => 'Borra el historial anterior y desactiva los informes. Borra el almacenamiento de Tonos en los ajustes del dispositivo o desinstala Tonos para eliminar la base de datos local y las cachés. Para eliminar un informe ya enviado, contacta con el desarrollador e incluye los datos del evento que tengas.';
 }

@@ -6046,4 +6046,122 @@ class AppLocalizationsEn extends AppLocalizations {
   String workoutReportUnitOnDate(String unit, String date) {
     return '$unit on $date';
   }
+
+  @override
+  String get profileDiagnosticsTitle => 'Diagnostics & Privacy';
+
+  @override
+  String get profileDiagnosticsSubtitle => 'Version, crash-reporting consent, sync history, and data deletion.';
+
+  @override
+  String get diagnosticsTitle => 'Diagnostics & Privacy';
+
+  @override
+  String get diagnosticsSubtitle => 'Understand and control release diagnostics.';
+
+  @override
+  String get diagnosticsAppSection => 'App information';
+
+  @override
+  String get diagnosticsAppSectionSubtitle => 'Useful when reporting a problem.';
+
+  @override
+  String get diagnosticsVersion => 'Version and build';
+
+  @override
+  String get diagnosticsLoading => 'Loading...';
+
+  @override
+  String get diagnosticsUnavailable => 'Unavailable';
+
+  @override
+  String get diagnosticsCrashSection => 'Crash reporting';
+
+  @override
+  String get diagnosticsCrashSectionSubtitle => 'Optional, redacted reports for unexpected app failures.';
+
+  @override
+  String get diagnosticsCrashReporting => 'Share crash reports';
+
+  @override
+  String get diagnosticsCrashUnavailable => 'Not configured in this build. No crash reports can be sent.';
+
+  @override
+  String get diagnosticsCrashEnabledBody => 'Enabled with your consent. You can turn it off at any time.';
+
+  @override
+  String get diagnosticsCrashDisabledBody => 'Off by default. Turn it on only if you want to help diagnose crashes.';
+
+  @override
+  String get diagnosticsPrivacyPromiseTitle => 'Privacy by design';
+
+  @override
+  String get diagnosticsPrivacyPromiseBody => 'Reports contain the app version, platform context, redacted error type, and stack trace. Tonos disables names, health data, database contents, screenshots, view hierarchy, network addresses, performance traces, and analytics.';
+
+  @override
+  String get diagnosticsSyncSection => 'Content sync history';
+
+  @override
+  String get diagnosticsSyncSectionSubtitle => 'The 30 most recent media-manifest outcomes are kept only on this device.';
+
+  @override
+  String get diagnosticsNoSyncEvents => 'No sync diagnostics yet';
+
+  @override
+  String get diagnosticsNoSyncEventsBody => 'Exercise and shared-media sync outcomes will appear here without URLs or personal data.';
+
+  @override
+  String get diagnosticsClearHistory => 'Clear sync history';
+
+  @override
+  String get diagnosticsClearHistoryBody => 'Remove all locally stored sync diagnostic entries.';
+
+  @override
+  String get diagnosticsHistoryCleared => 'Sync diagnostic history cleared.';
+
+  @override
+  String get diagnosticsExerciseMedia => 'Exercise media';
+
+  @override
+  String get diagnosticsSharedMedia => 'Shared media';
+
+  @override
+  String get diagnosticsRemoteSource => 'Remote';
+
+  @override
+  String get diagnosticsBundledSource => 'Bundled';
+
+  @override
+  String get diagnosticsSyncSucceeded => 'Succeeded';
+
+  @override
+  String get diagnosticsSyncFailed => 'Failed';
+
+  @override
+  String diagnosticsSyncEventTitle(String operation, String outcome) {
+    return '$operation: $outcome';
+  }
+
+  @override
+  String diagnosticsSyncEventDetails(String source, String timestamp, int duration, String version, String items) {
+    return '$source • $timestamp • $duration ms • manifest $version • $items items';
+  }
+
+  @override
+  String get diagnosticsPrivacySection => 'Your data';
+
+  @override
+  String get diagnosticsPrivacySectionSubtitle => 'Local storage, retention, and deletion.';
+
+  @override
+  String get diagnosticsLocalDataTitle => 'Fitness data stays local';
+
+  @override
+  String get diagnosticsLocalDataBody => 'Workout, nutrition, body metric, and profile records remain in the app database on this device unless you export a backup yourself.';
+
+  @override
+  String get diagnosticsDeletionTitle => 'Delete diagnostic and app data';
+
+  @override
+  String get diagnosticsDeletionBody => 'Clear sync history above and turn off crash reporting. Clear Tonos storage in device settings or uninstall Tonos to remove the local database and caches. For deletion of an already-sent crash report, contact the developer with the event details available to you.';
 }

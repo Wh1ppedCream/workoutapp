@@ -11095,6 +11095,234 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{unit} on {date}'**
   String workoutReportUnitOnDate(String unit, String date);
+
+  /// No description provided for @profileDiagnosticsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Diagnostics & Privacy'**
+  String get profileDiagnosticsTitle;
+
+  /// No description provided for @profileDiagnosticsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Version, crash-reporting consent, sync history, and data deletion.'**
+  String get profileDiagnosticsSubtitle;
+
+  /// No description provided for @diagnosticsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Diagnostics & Privacy'**
+  String get diagnosticsTitle;
+
+  /// No description provided for @diagnosticsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Understand and control release diagnostics.'**
+  String get diagnosticsSubtitle;
+
+  /// No description provided for @diagnosticsAppSection.
+  ///
+  /// In en, this message translates to:
+  /// **'App information'**
+  String get diagnosticsAppSection;
+
+  /// No description provided for @diagnosticsAppSectionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Useful when reporting a problem.'**
+  String get diagnosticsAppSectionSubtitle;
+
+  /// No description provided for @diagnosticsVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Version and build'**
+  String get diagnosticsVersion;
+
+  /// No description provided for @diagnosticsLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading...'**
+  String get diagnosticsLoading;
+
+  /// No description provided for @diagnosticsUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Unavailable'**
+  String get diagnosticsUnavailable;
+
+  /// No description provided for @diagnosticsCrashSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Crash reporting'**
+  String get diagnosticsCrashSection;
+
+  /// No description provided for @diagnosticsCrashSectionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional, redacted reports for unexpected app failures.'**
+  String get diagnosticsCrashSectionSubtitle;
+
+  /// No description provided for @diagnosticsCrashReporting.
+  ///
+  /// In en, this message translates to:
+  /// **'Share crash reports'**
+  String get diagnosticsCrashReporting;
+
+  /// No description provided for @diagnosticsCrashUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Not configured in this build. No crash reports can be sent.'**
+  String get diagnosticsCrashUnavailable;
+
+  /// No description provided for @diagnosticsCrashEnabledBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Enabled with your consent. You can turn it off at any time.'**
+  String get diagnosticsCrashEnabledBody;
+
+  /// No description provided for @diagnosticsCrashDisabledBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Off by default. Turn it on only if you want to help diagnose crashes.'**
+  String get diagnosticsCrashDisabledBody;
+
+  /// No description provided for @diagnosticsPrivacyPromiseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy by design'**
+  String get diagnosticsPrivacyPromiseTitle;
+
+  /// No description provided for @diagnosticsPrivacyPromiseBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports contain the app version, platform context, redacted error type, and stack trace. Tonos disables names, health data, database contents, screenshots, view hierarchy, network addresses, performance traces, and analytics.'**
+  String get diagnosticsPrivacyPromiseBody;
+
+  /// No description provided for @diagnosticsSyncSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Content sync history'**
+  String get diagnosticsSyncSection;
+
+  /// No description provided for @diagnosticsSyncSectionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The 30 most recent media-manifest outcomes are kept only on this device.'**
+  String get diagnosticsSyncSectionSubtitle;
+
+  /// No description provided for @diagnosticsNoSyncEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'No sync diagnostics yet'**
+  String get diagnosticsNoSyncEvents;
+
+  /// No description provided for @diagnosticsNoSyncEventsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Exercise and shared-media sync outcomes will appear here without URLs or personal data.'**
+  String get diagnosticsNoSyncEventsBody;
+
+  /// No description provided for @diagnosticsClearHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear sync history'**
+  String get diagnosticsClearHistory;
+
+  /// No description provided for @diagnosticsClearHistoryBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove all locally stored sync diagnostic entries.'**
+  String get diagnosticsClearHistoryBody;
+
+  /// No description provided for @diagnosticsHistoryCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync diagnostic history cleared.'**
+  String get diagnosticsHistoryCleared;
+
+  /// No description provided for @diagnosticsExerciseMedia.
+  ///
+  /// In en, this message translates to:
+  /// **'Exercise media'**
+  String get diagnosticsExerciseMedia;
+
+  /// No description provided for @diagnosticsSharedMedia.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared media'**
+  String get diagnosticsSharedMedia;
+
+  /// No description provided for @diagnosticsRemoteSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote'**
+  String get diagnosticsRemoteSource;
+
+  /// No description provided for @diagnosticsBundledSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Bundled'**
+  String get diagnosticsBundledSource;
+
+  /// No description provided for @diagnosticsSyncSucceeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Succeeded'**
+  String get diagnosticsSyncSucceeded;
+
+  /// No description provided for @diagnosticsSyncFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get diagnosticsSyncFailed;
+
+  /// No description provided for @diagnosticsSyncEventTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{operation}: {outcome}'**
+  String diagnosticsSyncEventTitle(String operation, String outcome);
+
+  /// No description provided for @diagnosticsSyncEventDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'{source} • {timestamp} • {duration} ms • manifest {version} • {items} items'**
+  String diagnosticsSyncEventDetails(String source, String timestamp, int duration, String version, String items);
+
+  /// No description provided for @diagnosticsPrivacySection.
+  ///
+  /// In en, this message translates to:
+  /// **'Your data'**
+  String get diagnosticsPrivacySection;
+
+  /// No description provided for @diagnosticsPrivacySectionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Local storage, retention, and deletion.'**
+  String get diagnosticsPrivacySectionSubtitle;
+
+  /// No description provided for @diagnosticsLocalDataTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Fitness data stays local'**
+  String get diagnosticsLocalDataTitle;
+
+  /// No description provided for @diagnosticsLocalDataBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout, nutrition, body metric, and profile records remain in the app database on this device unless you export a backup yourself.'**
+  String get diagnosticsLocalDataBody;
+
+  /// No description provided for @diagnosticsDeletionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete diagnostic and app data'**
+  String get diagnosticsDeletionTitle;
+
+  /// No description provided for @diagnosticsDeletionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear sync history above and turn off crash reporting. Clear Tonos storage in device settings or uninstall Tonos to remove the local database and caches. For deletion of an already-sent crash report, contact the developer with the event details available to you.'**
+  String get diagnosticsDeletionBody;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

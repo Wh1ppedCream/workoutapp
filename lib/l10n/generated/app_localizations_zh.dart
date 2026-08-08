@@ -6021,4 +6021,122 @@ class AppLocalizationsZh extends AppLocalizations {
   String workoutReportUnitOnDate(String unit, String date) {
     return '$date的 $unit';
   }
+
+  @override
+  String get profileDiagnosticsTitle => '诊断与隐私';
+
+  @override
+  String get profileDiagnosticsSubtitle => '版本、崩溃报告许可、同步历史和数据删除。';
+
+  @override
+  String get diagnosticsTitle => '诊断与隐私';
+
+  @override
+  String get diagnosticsSubtitle => '了解并控制发行版诊断。';
+
+  @override
+  String get diagnosticsAppSection => '应用信息';
+
+  @override
+  String get diagnosticsAppSectionSubtitle => '报告问题时可提供帮助。';
+
+  @override
+  String get diagnosticsVersion => '版本和构建号';
+
+  @override
+  String get diagnosticsLoading => '正在加载...';
+
+  @override
+  String get diagnosticsUnavailable => '不可用';
+
+  @override
+  String get diagnosticsCrashSection => '崩溃报告';
+
+  @override
+  String get diagnosticsCrashSectionSubtitle => '针对意外故障的可选脱敏报告。';
+
+  @override
+  String get diagnosticsCrashReporting => '共享崩溃报告';
+
+  @override
+  String get diagnosticsCrashUnavailable => '此构建未配置，无法发送崩溃报告。';
+
+  @override
+  String get diagnosticsCrashEnabledBody => '已在您同意后启用，您可以随时关闭。';
+
+  @override
+  String get diagnosticsCrashDisabledBody => '默认关闭。仅在您愿意帮助诊断崩溃时开启。';
+
+  @override
+  String get diagnosticsPrivacyPromiseTitle => '隐私保护设计';
+
+  @override
+  String get diagnosticsPrivacyPromiseBody => '报告包含应用版本、平台环境、脱敏的错误类型和堆栈跟踪。Tonos 不收集姓名、健康数据、数据库内容、屏幕截图、视图层级、网络地址、性能跟踪或分析数据。';
+
+  @override
+  String get diagnosticsSyncSection => '内容同步历史';
+
+  @override
+  String get diagnosticsSyncSectionSubtitle => '最近 30 次媒体清单结果仅保存在此设备上。';
+
+  @override
+  String get diagnosticsNoSyncEvents => '暂无同步诊断';
+
+  @override
+  String get diagnosticsNoSyncEventsBody => '练习和共享媒体的同步结果会显示在这里，不含网址或个人数据。';
+
+  @override
+  String get diagnosticsClearHistory => '清除同步历史';
+
+  @override
+  String get diagnosticsClearHistoryBody => '删除本地保存的所有同步诊断条目。';
+
+  @override
+  String get diagnosticsHistoryCleared => '同步诊断历史已清除。';
+
+  @override
+  String get diagnosticsExerciseMedia => '练习媒体';
+
+  @override
+  String get diagnosticsSharedMedia => '共享媒体';
+
+  @override
+  String get diagnosticsRemoteSource => '远程';
+
+  @override
+  String get diagnosticsBundledSource => '内置';
+
+  @override
+  String get diagnosticsSyncSucceeded => '成功';
+
+  @override
+  String get diagnosticsSyncFailed => '失败';
+
+  @override
+  String diagnosticsSyncEventTitle(String operation, String outcome) {
+    return '$operation：$outcome';
+  }
+
+  @override
+  String diagnosticsSyncEventDetails(String source, String timestamp, int duration, String version, String items) {
+    return '$source • $timestamp • $duration 毫秒 • 清单 $version • $items 项';
+  }
+
+  @override
+  String get diagnosticsPrivacySection => '您的数据';
+
+  @override
+  String get diagnosticsPrivacySectionSubtitle => '本地存储、保留和删除。';
+
+  @override
+  String get diagnosticsLocalDataTitle => '健身数据保留在本地';
+
+  @override
+  String get diagnosticsLocalDataBody => '除非您自行导出备份，否则训练、营养、身体指标和个人资料记录只保存在此设备的应用数据库中。';
+
+  @override
+  String get diagnosticsDeletionTitle => '删除诊断和应用数据';
+
+  @override
+  String get diagnosticsDeletionBody => '清除上方同步历史并关闭崩溃报告。在设备设置中清除 Tonos 存储或卸载 Tonos，即可删除本地数据库和缓存。如需删除已发送的崩溃报告，请携带您掌握的事件信息联系开发者。';
 }

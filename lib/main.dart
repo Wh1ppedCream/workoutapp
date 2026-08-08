@@ -1,6 +1,7 @@
 // File: lib/main.dart
 
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -37,19 +38,59 @@ import '../theme/app_colors.dart';
 
 import 'repositories/app_repository.dart';
 import 'services/active_plan_store.dart';
+import 'services/diagnostics_service.dart';
 import 'utils/app_test_keys.dart';
 
 Future<void> main() async {
-  final launchStopwatch = Stopwatch()..start();
-  WidgetsFlutterBinding.ensureInitialized();
-  unawaited(BodyHeatmap.preload());
-  final repo = AppRepository();
-  runApp(buildTonosApp(repo: repo));
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    debugPrint(
-      '[startup] first frame rendered in ${launchStopwatch.elapsedMilliseconds}ms',
-    );
-  });
+  final diagnostics = DiagnosticsService.instance;
+  final launch = runZonedGuarded<Future<void>>(
+    () async {
+      final launchStopwatch = Stopwatch()..start();
+      WidgetsFlutterBinding.ensureInitialized();
+      await diagnostics.initialize();
+
+      FlutterError.onError = (details) {
+        FlutterError.presentError(details);
+        unawaited(
+          diagnostics.captureException(
+            details.exception,
+            details.stack ?? StackTrace.current,
+            category: 'flutter_framework',
+          ),
+        );
+      };
+      PlatformDispatcher.instance.onError = (error, stackTrace) {
+        unawaited(
+          diagnostics.captureException(
+            error,
+            stackTrace,
+            category: 'platform_dispatcher',
+          ),
+        );
+        return true;
+      };
+
+      unawaited(BodyHeatmap.preload());
+      final repo = AppRepository();
+      runApp(buildTonosApp(repo: repo));
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        debugPrint(
+          '[startup] first frame rendered in '
+          '${launchStopwatch.elapsedMilliseconds}ms',
+        );
+      });
+    },
+    (error, stackTrace) {
+      unawaited(
+        diagnostics.captureException(
+          error,
+          stackTrace,
+          category: 'uncaught_async',
+        ),
+      );
+    },
+  );
+  if (launch != null) await launch;
 }
 
 /// Builds the production provider tree around an injected repository.
@@ -112,8 +153,13 @@ class _RepositoryLifecycleState extends State<RepositoryLifecycle> {
       debugPrint(
         '[startup] repository warm-up finished in ${sw.elapsedMilliseconds}ms',
       );
-    } catch (e) {
-      debugPrint('[startup] repository warm-up failed: $e');
+    } catch (error, stackTrace) {
+      debugPrint('[startup] repository warm-up failed: ${error.runtimeType}');
+      await DiagnosticsService.instance.captureException(
+        error,
+        stackTrace,
+        category: 'repository_warmup',
+      );
     }
   }
 
