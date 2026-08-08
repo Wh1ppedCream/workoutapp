@@ -6164,6 +6164,18 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get diagnosticsDeletionBody => 'Effacez l’historique ci-dessus et désactivez les rapports. Effacez le stockage de Tonos dans les réglages de l’appareil ou désinstallez l’application pour supprimer la base locale et les caches. Pour supprimer un rapport déjà envoyé, contactez le développeur avec les détails de l’événement dont vous disposez.';
+
+  @override
+  String get diagnosticsSendTestReport => 'Envoyer un rapport de test contrôlé';
+
+  @override
+  String get diagnosticsSendTestReportBody => 'Envoie un diagnostic expurgé pour vérifier le consentement et la transmission en production.';
+
+  @override
+  String get diagnosticsTestReportSent => 'Rapport de test contrôlé envoyé.';
+
+  @override
+  String get diagnosticsTestReportFailed => 'Le rapport de test n’a pas pu être envoyé. Vérifiez la configuration du build et la connexion.';
 }
 
 /// The translations for French, as used in Canada (`fr_CA`).
@@ -12320,4 +12332,16 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
 
   @override
   String get diagnosticsDeletionBody => 'Effacez l’historique ci-dessus et désactivez les rapports. Effacez le stockage de Tonos dans les réglages de l’appareil ou désinstallez l’application pour supprimer la base locale et les caches. Pour supprimer un rapport déjà envoyé, communiquez avec le développeur en fournissant les détails de l’événement dont vous disposez.';
+
+  @override
+  String get diagnosticsSendTestReport => 'Envoyer un rapport de test contrôlé';
+
+  @override
+  String get diagnosticsSendTestReportBody => 'Envoie un diagnostic expurgé pour vérifier le consentement et la transmission en production.';
+
+  @override
+  String get diagnosticsTestReportSent => 'Rapport de test contrôlé envoyé.';
+
+  @override
+  String get diagnosticsTestReportFailed => 'Le rapport de test n’a pas pu être envoyé. Vérifiez la configuration du build et la connexion.';
 }

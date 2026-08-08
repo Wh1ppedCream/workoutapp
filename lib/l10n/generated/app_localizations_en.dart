@@ -6164,4 +6164,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get diagnosticsDeletionBody => 'Clear sync history above and turn off crash reporting. Clear Tonos storage in device settings or uninstall Tonos to remove the local database and caches. For deletion of an already-sent crash report, contact the developer with the event details available to you.';
+
+  @override
+  String get diagnosticsSendTestReport => 'Send a controlled test report';
+
+  @override
+  String get diagnosticsSendTestReportBody => 'Sends one redacted diagnostic event to verify consent and production delivery.';
+
+  @override
+  String get diagnosticsTestReportSent => 'Controlled test report sent.';
+
+  @override
+  String get diagnosticsTestReportFailed => 'The test report could not be sent. Check the build configuration and connection.';
 }

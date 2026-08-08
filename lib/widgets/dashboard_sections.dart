@@ -19,7 +19,7 @@ import '../screens/exercise/preset_detail_screen.dart';
 import '../screens/exercise/preset_generation_qa.dart';
 import '../screens/exercise/session_detail_screen.dart';
 import '../screens/exercise/session_screen.dart';
-import '../screens/nutrition/new_measurement_item_page.dart';
+import '../screens/new_measurement_item_page.dart';
 import '../services/active_plan_store.dart';
 import 'exercise_media_thumbnail.dart';
 import 'presets_loaded.dart';

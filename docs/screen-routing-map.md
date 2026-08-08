@@ -54,24 +54,13 @@ Combined History, Form and Posing, and the alternative Train hub.
 - `lib/db/`: database lifecycle, schema, migrations, seed data, and focused
   DAO queries.
 
-## Compatibility Screen Files
+## Canonical Screen Imports
 
-Some root-level files under `lib/screens/` are forwarding or legacy
-counterparts of nested feature screens. Do not assume they are active based on
-their name alone; trace the import from `main.dart` or the calling widget.
-
-Common examples:
-
-- `lib/screens/muscle_filter_page.dart` and
-  `lib/screens/exercise/muscle_filter_page.dart`
-- `lib/screens/definitions_by_bodypart_page.dart` and
-  `lib/screens/exercise/definitions_by_bodypart_page.dart`
-- `lib/screens/exercise_analytics_screen.dart` and
-  `lib/screens/profile/settings/exercise_analytics_screen.dart`
-- `lib/screens/session_detail_screen.dart` and
-  `lib/screens/exercise/session_detail_screen.dart`
-- `lib/screens/new_measurement_item_page.dart` and
-  `lib/screens/nutrition/new_measurement_item_page.dart`
+Route-level screens live in their owning feature folders. Import training
+screens from `lib/screens/exercise/`, profile configuration from
+`lib/screens/profile/settings/`, and the shared measurement-entry screen from
+`lib/screens/new_measurement_item_page.dart`. Compatibility forwarding files
+were removed; new forwarding shims should not be introduced.
 
 ## Maintenance Rules
 

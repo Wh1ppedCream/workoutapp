@@ -6164,4 +6164,16 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get diagnosticsDeletionBody => 'Borra el historial anterior y desactiva los informes. Borra el almacenamiento de Tonos en los ajustes del dispositivo o desinstala Tonos para eliminar la base de datos local y las cachés. Para eliminar un informe ya enviado, contacta con el desarrollador e incluye los datos del evento que tengas.';
+
+  @override
+  String get diagnosticsSendTestReport => 'Enviar un informe de prueba controlado';
+
+  @override
+  String get diagnosticsSendTestReportBody => 'Envía un evento de diagnóstico depurado para verificar el consentimiento y la entrega en producción.';
+
+  @override
+  String get diagnosticsTestReportSent => 'Informe de prueba controlado enviado.';
+
+  @override
+  String get diagnosticsTestReportFailed => 'No se pudo enviar el informe de prueba. Comprueba la configuración de la compilación y la conexión.';
 }

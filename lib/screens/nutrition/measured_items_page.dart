@@ -7,7 +7,7 @@ import '../../l10n/generated/app_localizations.dart';
 import '../../models/models.dart';
 import '../../repositories/app_repository.dart';
 import '../../widgets/health_trends_section.dart';
-import 'new_measurement_item_page.dart';
+import '../new_measurement_item_page.dart';
 
 class MeasuredItemsPage extends StatefulWidget {
   const MeasuredItemsPage({super.key});

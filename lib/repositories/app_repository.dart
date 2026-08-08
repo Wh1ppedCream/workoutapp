@@ -63,12 +63,6 @@ class AppRepository {
 
   // ─── SESSIONS ───────────────────────────────────────────
 
-  /// Creates a new workout session (legacy signature).
-  /// Prefer [createSessionAt] which takes a DateTime.
-  @Deprecated('Use createSessionAt(DateTime date, int duration) instead.')
-  Future<int> createSession(String date, int duration) =>
-      _dbHelper.createSession(date, duration);
-
   /// Creates a new workout session using DateTime for safety.
   Future<int> createSessionAt(DateTime date, int duration) =>
       _dbHelper.createSession(date.toIso8601String(), duration);
@@ -257,22 +251,6 @@ class AppRepository {
 
   /// Saves cardio details for an exercise (insert or replace).
   Future<void> saveCardioDetails({
-    required int exerciseId,
-    required String cardioName,
-    String? note,
-    required int plannedMinutes,
-    required int elapsedSeconds,
-  }) => _dbHelper.saveCardioDetails(
-    exerciseId: exerciseId,
-    cardioName: cardioName,
-    note: note,
-    plannedMinutes: plannedMinutes,
-    elapsedSeconds: elapsedSeconds,
-  );
-
-  /// Legacy alias of [saveCardioDetails]. Prefer the canonical name.
-  @Deprecated('Use saveCardioDetails(...)')
-  Future<void> setCardioDetails({
     required int exerciseId,
     required String cardioName,
     String? note,

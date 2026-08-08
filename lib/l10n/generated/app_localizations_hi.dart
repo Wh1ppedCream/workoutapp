@@ -6139,4 +6139,16 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get diagnosticsDeletionBody => 'ऊपर का सिंक इतिहास साफ़ करें और क्रैश रिपोर्टिंग बंद करें। स्थानीय डेटाबेस और कैश हटाने के लिए डिवाइस सेटिंग में Tonos स्टोरेज साफ़ करें या ऐप अनइंस्टॉल करें। पहले भेजी गई क्रैश रिपोर्ट हटवाने के लिए उपलब्ध इवेंट विवरण के साथ डेवलपर से संपर्क करें।';
+
+  @override
+  String get diagnosticsSendTestReport => 'नियंत्रित परीक्षण रिपोर्ट भेजें';
+
+  @override
+  String get diagnosticsSendTestReportBody => 'सहमति और प्रोडक्शन डिलीवरी जाँचने के लिए एक संशोधित डायग्नोस्टिक इवेंट भेजता है।';
+
+  @override
+  String get diagnosticsTestReportSent => 'नियंत्रित परीक्षण रिपोर्ट भेज दी गई।';
+
+  @override
+  String get diagnosticsTestReportFailed => 'परीक्षण रिपोर्ट नहीं भेजी जा सकी। बिल्ड कॉन्फ़िगरेशन और कनेक्शन जाँचें।';
 }

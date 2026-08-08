@@ -20,6 +20,8 @@ void main() {
       contains('event.throwable is! _RedactedDiagnosticException'),
     );
     expect(source, contains('hint.attachments.clear()'));
+    expect(source, contains('sendControlledTestEvent'));
+    expect(source, contains("category: 'controlled_diagnostics_test'"));
     expect(source, contains('?? false'));
     final pubspec = File('pubspec.yaml').readAsStringSync();
     expect(pubspec, contains('sentry: 9.25.0'));
@@ -40,5 +42,23 @@ void main() {
     expect(deletion, contains('Delete Your Tonos Data'));
     expect(deletion, contains('Clear sync history'));
     expect(deletion, contains('uninstall'));
+    expect(privacy, matches(RegExp(r'no\s+more than 90 days')));
+    expect(deletion, matches(RegExp(r'no\s+more than 90 days')));
+  });
+
+  test('production release and policy publishing use guarded workflows', () {
+    final release =
+        File('.github/workflows/production-release.yml').readAsStringSync();
+    final pages =
+        File('.github/workflows/privacy-pages.yml').readAsStringSync();
+
+    expect(release, contains('environment: production'));
+    expect(release, contains(r'${{ secrets.TONOS_SENTRY_DSN }}'));
+    expect(release, contains('TONOS_ENVIRONMENT=production'));
+    expect(release, isNot(contains('ingest.sentry.io')));
+    expect(pages, contains('pages: write'));
+    expect(pages, contains('docs/privacy.html'));
+    expect(pages, contains('docs/data-deletion.html'));
+    expect(pages, isNot(contains('cp -r docs')));
   });
 }

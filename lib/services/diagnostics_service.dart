@@ -265,7 +265,23 @@ class DiagnosticsService {
     debugPrint(
       '[diagnostics] $category: ${DiagnosticsSanitizer.errorType(error)}',
     );
-    if (!_remoteReportingActive) return;
+    await _captureRedactedException(error, stackTrace, category: category);
+  }
+
+  Future<bool> sendControlledTestEvent() {
+    return _captureRedactedException(
+      const _ControlledDiagnosticsTestException(),
+      StackTrace.current,
+      category: 'controlled_diagnostics_test',
+    );
+  }
+
+  Future<bool> _captureRedactedException(
+    Object error,
+    StackTrace stackTrace, {
+    required String category,
+  }) async {
+    if (!_remoteReportingActive) return false;
 
     try {
       await Sentry.addBreadcrumb(
@@ -275,15 +291,17 @@ class DiagnosticsService {
           level: SentryLevel.error,
         ),
       );
-      await Sentry.captureException(
+      final eventId = await Sentry.captureException(
         _RedactedDiagnosticException(DiagnosticsSanitizer.errorType(error)),
         stackTrace: stackTrace,
       );
+      return eventId != const SentryId.empty();
     } catch (captureError) {
       debugPrint(
         '[diagnostics] remote capture unavailable: '
         '${DiagnosticsSanitizer.errorType(captureError)}',
       );
+      return false;
     }
   }
 
@@ -337,4 +355,8 @@ class DiagnosticsService {
       buildNumber: packageInfo.buildNumber,
     );
   }
+}
+
+class _ControlledDiagnosticsTestException implements Exception {
+  const _ControlledDiagnosticsTestException();
 }

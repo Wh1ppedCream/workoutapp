@@ -6139,4 +6139,16 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get diagnosticsDeletionBody => '清除上方同步历史并关闭崩溃报告。在设备设置中清除 Tonos 存储或卸载 Tonos，即可删除本地数据库和缓存。如需删除已发送的崩溃报告，请携带您掌握的事件信息联系开发者。';
+
+  @override
+  String get diagnosticsSendTestReport => '发送受控测试报告';
+
+  @override
+  String get diagnosticsSendTestReportBody => '发送一个脱敏诊断事件，以验证用户许可和生产环境投递。';
+
+  @override
+  String get diagnosticsTestReportSent => '受控测试报告已发送。';
+
+  @override
+  String get diagnosticsTestReportFailed => '无法发送测试报告。请检查构建配置和网络连接。';
 }

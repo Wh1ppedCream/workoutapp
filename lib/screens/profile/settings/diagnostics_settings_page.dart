@@ -19,6 +19,7 @@ class _DiagnosticsSettingsPageState extends State<DiagnosticsSettingsPage> {
   AppVersionInfo? _version;
   List<SyncDiagnosticEvent> _events = const [];
   bool _crashReportingEnabled = false;
+  bool _sendingTestEvent = false;
   bool _loading = true;
 
   @override
@@ -72,6 +73,24 @@ class _DiagnosticsSettingsPageState extends State<DiagnosticsSettingsPage> {
     );
   }
 
+  Future<void> _sendTestEvent() async {
+    if (_sendingTestEvent) return;
+    setState(() => _sendingTestEvent = true);
+    final sent = await _diagnostics.sendControlledTestEvent();
+    if (!mounted) return;
+    setState(() => _sendingTestEvent = false);
+    final strings = AppLocalizations.of(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          sent
+              ? strings.diagnosticsTestReportSent
+              : strings.diagnosticsTestReportFailed,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
@@ -119,6 +138,23 @@ class _DiagnosticsSettingsPageState extends State<DiagnosticsSettingsPage> {
               subtitle: crashBody,
               value: configured && _crashReportingEnabled,
               onChanged: configured ? _setCrashReporting : null,
+            ),
+            SettingsActionTile(
+              icon: Icons.send_outlined,
+              iconColor: SettingsAccent.safety,
+              title: strings.diagnosticsSendTestReport,
+              subtitle: strings.diagnosticsSendTestReportBody,
+              trailing:
+                  _sendingTestEvent
+                      ? const SizedBox.square(
+                        dimension: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                      : null,
+              onTap:
+                  configured && _crashReportingEnabled && !_sendingTestEvent
+                      ? _sendTestEvent
+                      : null,
             ),
             SettingsInfoCard(
               icon: Icons.visibility_off_outlined,

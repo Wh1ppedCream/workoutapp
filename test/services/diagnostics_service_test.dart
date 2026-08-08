@@ -97,4 +97,10 @@ void main() {
       '1.2.3',
     );
   });
+
+  test('controlled report cannot send without active consent', () async {
+    final diagnostics = DiagnosticsService(sentryDsn: '');
+
+    expect(await diagnostics.sendControlledTestEvent(), isFalse);
+  });
 }

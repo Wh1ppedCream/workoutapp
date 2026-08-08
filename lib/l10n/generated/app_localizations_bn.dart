@@ -6145,4 +6145,16 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get diagnosticsDeletionBody => 'উপরের সিঙ্ক ইতিহাস মুছুন এবং ক্র্যাশ রিপোর্টিং বন্ধ করুন। স্থানীয় ডেটাবেস ও ক্যাশ মুছতে ডিভাইস সেটিংসে Tonos-এর স্টোরেজ পরিষ্কার করুন বা অ্যাপ আনইনস্টল করুন। আগে পাঠানো ক্র্যাশ রিপোর্ট মুছতে আপনার কাছে থাকা ইভেন্টের তথ্যসহ ডেভেলপারের সঙ্গে যোগাযোগ করুন।';
+
+  @override
+  String get diagnosticsSendTestReport => 'নিয়ন্ত্রিত পরীক্ষামূলক রিপোর্ট পাঠান';
+
+  @override
+  String get diagnosticsSendTestReportBody => 'সম্মতি ও প্রোডাকশন ডেলিভারি যাচাই করতে একটি আড়াল করা ডায়াগনস্টিক ইভেন্ট পাঠায়।';
+
+  @override
+  String get diagnosticsTestReportSent => 'নিয়ন্ত্রিত পরীক্ষামূলক রিপোর্ট পাঠানো হয়েছে।';
+
+  @override
+  String get diagnosticsTestReportFailed => 'পরীক্ষামূলক রিপোর্ট পাঠানো যায়নি। বিল্ড কনফিগারেশন ও সংযোগ পরীক্ষা করুন।';
 }

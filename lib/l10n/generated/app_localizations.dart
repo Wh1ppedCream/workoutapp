@@ -11323,6 +11323,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Clear sync history above and turn off crash reporting. Clear Tonos storage in device settings or uninstall Tonos to remove the local database and caches. For deletion of an already-sent crash report, contact the developer with the event details available to you.'**
   String get diagnosticsDeletionBody;
+
+  /// No description provided for @diagnosticsSendTestReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a controlled test report'**
+  String get diagnosticsSendTestReport;
+
+  /// No description provided for @diagnosticsSendTestReportBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Sends one redacted diagnostic event to verify consent and production delivery.'**
+  String get diagnosticsSendTestReportBody;
+
+  /// No description provided for @diagnosticsTestReportSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Controlled test report sent.'**
+  String get diagnosticsTestReportSent;
+
+  /// No description provided for @diagnosticsTestReportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The test report could not be sent. Check the build configuration and connection.'**
+  String get diagnosticsTestReportFailed;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

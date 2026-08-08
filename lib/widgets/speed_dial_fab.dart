@@ -3,7 +3,7 @@
 
 import 'package:flutter/material.dart';
 import '../screens/nutrition/food_logging_page.dart';
-import '../screens/nutrition/new_measurement_item_page.dart';
+import '../screens/new_measurement_item_page.dart';
 
 /// A toggleable FAB that expands into two actions:
 /// • Log Food → FoodLoggingPage

@@ -1,0 +1,112 @@
+name: Production Android release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-android-release
+  cancel-in-progress: false
+
+env:
+  FLUTTER_VERSION: 3.29.3
+
+jobs:
+  app-bundle:
+    name: Signed production app bundle
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: production
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Require production secrets
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          TONOS_SENTRY_DSN: ${{ secrets.TONOS_SENTRY_DSN }}
+        shell: bash
+        run: |
+          for name in \
+            ANDROID_KEYSTORE_BASE64 \
+            ANDROID_KEYSTORE_PASSWORD \
+            ANDROID_KEY_ALIAS \
+            ANDROID_KEY_PASSWORD \
+            TONOS_SENTRY_DSN; do
+            if [[ -z "${!name}" ]]; then
+              echo "::error::Missing required production environment secret: ${name}"
+              exit 1
+            fi
+          done
+
+      - name: Restore production signing key
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        shell: bash
+        run: |
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/production-release-key.jks
+          cat > android/key.properties <<EOF
+          storePassword=$ANDROID_KEYSTORE_PASSWORD
+          keyPassword=$ANDROID_KEY_PASSWORD
+          keyAlias=$ANDROID_KEY_ALIAS
+          storeFile=production-release-key.jks
+          EOF
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate localization sources
+        run: flutter gen-l10n
+
+      - name: Verify generated localization sources are committed
+        shell: bash
+        run: |
+          if [[ -n "$(git status --porcelain -- lib/l10n/generated)" ]]; then
+            echo "::error::Localization output is stale. Run 'flutter gen-l10n' and commit the generated files."
+            exit 1
+          fi
+
+      - name: Analyze source and tests
+        run: dart analyze lib test integration_test test_driver
+
+      - name: Run unit and widget tests
+        run: flutter test
+
+      - name: Build signed production app bundle
+        env:
+          TONOS_SENTRY_DSN: ${{ secrets.TONOS_SENTRY_DSN }}
+        run: >-
+          flutter build appbundle --release
+          --dart-define=TONOS_ENVIRONMENT=production
+          --dart-define=TONOS_SENTRY_DSN="$TONOS_SENTRY_DSN"
+
+      - name: Upload production app bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: tonos-production-aab-${{ github.sha }}
+          path: build/app/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 7

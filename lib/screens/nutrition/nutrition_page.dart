@@ -11,10 +11,10 @@ import '../../widgets/data_records_section.dart';
 import '../../widgets/current_metrics_section.dart';
 import '../../widgets/drawers.dart';
 import '../profile/settings/diet_nutrition_settings_page.dart';
+import '../new_measurement_item_page.dart';
 import 'food_logging_page.dart';
 import 'log_entry_page.dart';
 import 'measured_items_page.dart';
-import 'new_measurement_item_page.dart';
 
 class NutritionPage extends StatelessWidget {
   const NutritionPage({super.key});

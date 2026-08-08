@@ -2482,5 +2482,9 @@
   "diagnosticsLocalDataTitle": "Fitness data stays local",
   "diagnosticsLocalDataBody": "Workout, nutrition, body metric, and profile records remain in the app database on this device unless you export a backup yourself.",
   "diagnosticsDeletionTitle": "Delete diagnostic and app data",
-  "diagnosticsDeletionBody": "Clear sync history above and turn off crash reporting. Clear Tonos storage in device settings or uninstall Tonos to remove the local database and caches. For deletion of an already-sent crash report, contact the developer with the event details available to you."
+  "diagnosticsDeletionBody": "Clear sync history above and turn off crash reporting. Clear Tonos storage in device settings or uninstall Tonos to remove the local database and caches. For deletion of an already-sent crash report, contact the developer with the event details available to you.",
+  "diagnosticsSendTestReport": "Send a controlled test report",
+  "diagnosticsSendTestReportBody": "Sends one redacted diagnostic event to verify consent and production delivery.",
+  "diagnosticsTestReportSent": "Controlled test report sent.",
+  "diagnosticsTestReportFailed": "The test report could not be sent. Check the build configuration and connection."
 }

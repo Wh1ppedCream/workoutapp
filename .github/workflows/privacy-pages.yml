@@ -1,0 +1,54 @@
+name: Publish privacy pages
+
+on:
+  push:
+    branches:
+      - local-db
+    paths:
+      - docs/index.html
+      - docs/privacy.html
+      - docs/data-deletion.html
+      - .github/workflows/privacy-pages.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: privacy-pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy public policies
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Prepare public site
+        shell: bash
+        run: |
+          mkdir public
+          cp docs/index.html public/index.html
+          cp docs/privacy.html public/privacy.html
+          cp docs/data-deletion.html public/data-deletion.html
+          touch public/.nojekyll
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload policy pages
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: public
+
+      - name: Deploy policy pages
+        id: deployment
+        uses: actions/deploy-pages@v4
