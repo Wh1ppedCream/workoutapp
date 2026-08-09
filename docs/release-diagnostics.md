@@ -46,7 +46,8 @@ handlers; every remote capture must pass through the app's redaction boundary.
 The service also configures these release safeguards:
 
 - default PII, failed-request capture, logs, tracing, and profiling are
-  disabled; screenshots and view hierarchy capture are not installed;
+  disabled; accepted events remove user/IP data and trace context before
+  transmission, and screenshots and view hierarchy capture are not installed;
 - the original exception message is replaced by its runtime type before remote
   capture;
 - automatic isolate capture is removed and a final `beforeSend` gate rejects

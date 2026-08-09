@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:env_test/services/diagnostics_service.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sentry/sentry.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -85,6 +86,19 @@ void main() {
     expect(type, 'StateError');
     expect(type, isNot(contains('private')));
     expect(type, isNot(contains('health')));
+  });
+
+  test('remote event sanitizer removes user data and trace context', () {
+    final event = SentryEvent(
+      user: SentryUser(ipAddress: '{{auto}}'),
+      contexts: Contexts(trace: SentryTraceContext(operation: 'default')),
+    );
+    final hint = Hint();
+
+    DiagnosticsEventSanitizer.scrubRemoteEvent(event, hint);
+
+    expect(event.user, isNull);
+    expect(event.contexts.containsKey(SentryTraceContext.type), isFalse);
   });
 
   test('version display includes the build number when available', () {

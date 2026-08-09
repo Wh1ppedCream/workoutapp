@@ -144,6 +144,17 @@ abstract final class DiagnosticsSanitizer {
   static String errorType(Object error) => error.runtimeType.toString();
 }
 
+abstract final class DiagnosticsEventSanitizer {
+  static void scrubRemoteEvent(SentryEvent event, Hint hint) {
+    // Removing the user prevents Sentry from deriving IP-based geography.
+    event.user = null;
+    event.contexts.remove(SentryTraceContext.type);
+    hint.attachments.clear();
+    hint.screenshot = null;
+    hint.viewHierarchy = null;
+  }
+}
+
 class _RedactedDiagnosticException implements Exception {
   final String type;
 
@@ -235,7 +246,6 @@ class DiagnosticsService {
       options.enableLogs = false;
       options.captureFailedRequests = false;
       options.captureNativeFailedRequests = false;
-      options.tracesSampleRate = 0;
       options.maxBreadcrumbs = 30;
       options.debug = false;
       for (final integration
@@ -248,9 +258,7 @@ class DiagnosticsService {
         // Reject captures that did not pass through captureException's
         // redaction boundary, including direct SDK calls added accidentally.
         if (event.throwable is! _RedactedDiagnosticException) return null;
-        hint.attachments.clear();
-        hint.screenshot = null;
-        hint.viewHierarchy = null;
+        DiagnosticsEventSanitizer.scrubRemoteEvent(event, hint);
         return event;
       };
     });

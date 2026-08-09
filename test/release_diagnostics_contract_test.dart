@@ -13,13 +13,15 @@ void main() {
     expect(source, contains('sendDefaultPii = false'));
     expect(source, contains('captureFailedRequests = false'));
     expect(source, contains('captureNativeFailedRequests = false'));
-    expect(source, contains('tracesSampleRate = 0'));
+    expect(source, isNot(contains('tracesSampleRate =')));
     expect(source, contains('whereType<IsolateErrorIntegration>()'));
     expect(
       source,
       contains('event.throwable is! _RedactedDiagnosticException'),
     );
     expect(source, contains('hint.attachments.clear()'));
+    expect(source, contains('event.user = null'));
+    expect(source, contains('event.contexts.remove(SentryTraceContext.type)'));
     expect(source, contains('sendControlledTestEvent'));
     expect(source, contains("category: 'controlled_diagnostics_test'"));
     expect(source, contains('?? false'));
