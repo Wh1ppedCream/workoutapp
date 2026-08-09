@@ -115,9 +115,7 @@ void main() {
 
   tearDownAll(() => repository.close());
 
-  testWidgets('first install opens onboarding and advances from welcome', (
-    tester,
-  ) async {
+  testWidgets('first install and core flows use the UI', (tester) async {
     await tester.pumpWidget(
       tonos.buildTonosApp(repo: repository, closeRepositoryOnDispose: false),
     );
@@ -127,14 +125,9 @@ void main() {
     await _tapAndWait(tester, find.widgetWithText(FilledButton, 'Next'));
     await _waitFor(tester, find.text('Tell us the basics'));
     expect(find.text('Tell us the basics'), findsOneWidget);
-  });
 
-  testWidgets('core training, records, profile, and database flows use the UI', (
-    tester,
-  ) async {
-    // Dispose the first-install providers before preparing this independent
-    // fixture. Re-pumping the same provider tree could otherwise retain the
-    // onboarding profile rather than reading the configured test profile.
+    // Recreate all providers from the configured fixture rather than retaining
+    // the first-install onboarding state for the training flow.
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();
 
