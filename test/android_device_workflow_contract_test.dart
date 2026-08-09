@@ -14,7 +14,7 @@ void main() {
     expect(buildIndex, greaterThanOrEqualTo(0));
     expect(deviceTestIndex, greaterThan(buildIndex));
     expect(workflow, contains('flutter build apk --debug'));
-    expect(workflow, contains('--timeout 15m'));
+    expect(workflow, contains('--timeout=15m'));
     expect(workflow, contains('adb logcat -d -t 1000 || true'));
   });
 }

@@ -65,16 +65,9 @@ jobs:
           emulator-options: >-
             -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
             -no-snapshot-save
-          script: |
-            set +e
-            flutter test integration_test/core_flows_test.dart \
-              --timeout 15m \
-              --dart-define=TONOS_INTEGRATION_TEST=true \
-              --dart-define=TONOS_DATABASE_NAME=tonos_integration_test.db
-            test_status=$?
-
-            if [ "$test_status" -ne 0 ]; then
-              adb logcat -d -t 1000 || true
-            fi
-
-            exit "$test_status"
+          script: >-
+            flutter test integration_test/core_flows_test.dart
+            --timeout=15m
+            --dart-define=TONOS_INTEGRATION_TEST=true
+            --dart-define=TONOS_DATABASE_NAME=tonos_integration_test.db
+            || { test_status=$?; adb logcat -d -t 1000 || true; exit "$test_status"; }
