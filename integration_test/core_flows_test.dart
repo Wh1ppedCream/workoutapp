@@ -34,8 +34,12 @@ Future<void> _waitFor(
   throw TestFailure('Timed out waiting for the requested widget.');
 }
 
-Future<void> _tapAndWait(WidgetTester tester, Finder finder) async {
-  await _waitFor(tester, finder);
+Future<void> _tapAndWait(
+  WidgetTester tester,
+  Finder finder, {
+  int maxPumps = 120,
+}) async {
+  await _waitFor(tester, finder, maxPumps: maxPumps);
   await tester.ensureVisible(finder);
   await tester.pump();
   await tester.tap(finder);
@@ -200,7 +204,13 @@ void main() {
 
     // Create and rename a plan through the Train UI.
     await _tapAndWait(tester, find.byKey(AppTestKeys.trainPlansTab));
-    await _tapAndWait(tester, find.byKey(AppTestKeys.trainCreateManualPlan));
+    await _tapAndWait(
+      tester,
+      find.byKey(AppTestKeys.trainCreateManualPlan),
+      // The Plans tab waits for the asynchronously loaded profile and active
+      // plan state. A clean emulator can need longer than a physical device.
+      maxPumps: 240,
+    );
     await _waitFor(tester, find.byKey(AppTestKeys.planEdit));
     final manualPlanRows = await repository.fetchAllPresetsRaw(
       profileId: profileId,
