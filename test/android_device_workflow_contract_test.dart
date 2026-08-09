@@ -14,7 +14,13 @@ void main() {
     expect(buildIndex, greaterThanOrEqualTo(0));
     expect(deviceTestIndex, greaterThan(buildIndex));
     expect(workflow, contains('flutter build apk --debug'));
-    expect(workflow, contains('--timeout=15m'));
+    expect(workflow, contains('flutter drive'));
+    expect(workflow, contains('--driver=test_driver/integration_test.dart'));
+    expect(
+      workflow,
+      contains('--target=integration_test/core_flows_test.dart'),
+    );
+    expect(workflow, contains('--timeout=900'));
     expect(workflow, contains('adb logcat -d -t 1000 || true'));
   });
 }
