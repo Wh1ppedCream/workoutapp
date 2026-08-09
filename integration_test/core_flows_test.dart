@@ -132,6 +132,12 @@ void main() {
   testWidgets('core training, records, profile, and database flows use the UI', (
     tester,
   ) async {
+    // Dispose the first-install providers before preparing this independent
+    // fixture. Re-pumping the same provider tree could otherwise retain the
+    // onboarding profile rather than reading the configured test profile.
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+
     final preferences = await SharedPreferences.getInstance();
     await preferences.setBool('onboarding_completed', true);
     await preferences.setString('app_language_preference', 'english');
