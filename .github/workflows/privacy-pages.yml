@@ -3,7 +3,7 @@ name: Publish privacy pages
 on:
   push:
     branches:
-      - local-db
+      - master
     paths:
       - docs/index.html
       - docs/privacy.html

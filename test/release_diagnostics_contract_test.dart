@@ -74,6 +74,7 @@ void main() {
     expect(RegExp('Upload production APK').allMatches(release), hasLength(1));
     expect(release, isNot(contains('ingest.sentry.io')));
     expect(pages, contains('pages: write'));
+    expect(pages, contains('branches:\n      - master'));
     expect(pages, contains('docs/privacy.html'));
     expect(pages, contains('docs/data-deletion.html'));
     expect(pages, isNot(contains('cp -r docs')));
