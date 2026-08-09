@@ -10,11 +10,13 @@ void main() {
     expect(source, contains("String.fromEnvironment('TONOS_SENTRY_DSN')"));
     expect(source, contains("package:sentry/sentry.dart"));
     expect(source, isNot(contains('SentryFlutter.init')));
+    expect(source, isNot(contains('Sentry.init(')));
+    expect(source, isNot(contains('Sentry.captureException(')));
+    expect(source, contains('SentryClient(options)'));
     expect(source, contains('sendDefaultPii = false'));
     expect(source, contains('captureFailedRequests = false'));
     expect(source, contains('captureNativeFailedRequests = false'));
     expect(source, isNot(contains('tracesSampleRate =')));
-    expect(source, contains('whereType<IsolateErrorIntegration>()'));
     expect(
       source,
       contains('event.throwable is! _RedactedDiagnosticException'),
@@ -22,6 +24,7 @@ void main() {
     expect(source, contains('hint.attachments.clear()'));
     expect(source, contains('event.user = null'));
     expect(source, contains('event.contexts.remove(SentryTraceContext.type)'));
+    expect(source, contains('SentryEvent('));
     expect(source, contains('sendControlledTestEvent'));
     expect(source, contains("category: 'controlled_diagnostics_test'"));
     expect(source, contains('?? false'));

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -155,6 +156,41 @@ abstract final class DiagnosticsEventSanitizer {
   }
 }
 
+/// Sends the small, explicitly approved diagnostics payload without using
+/// Sentry's process-wide scope. A scoped capture always emits a trace header.
+class DiagnosticsRemoteReporter {
+  DiagnosticsRemoteReporter(SentryOptions options)
+    : _client = SentryClient(options),
+      _maxBreadcrumbs = options.maxBreadcrumbs;
+
+  final SentryClient _client;
+  final int _maxBreadcrumbs;
+  final Queue<Breadcrumb> _breadcrumbs = ListQueue<Breadcrumb>();
+
+  void addBreadcrumb(Breadcrumb breadcrumb) {
+    if (_maxBreadcrumbs == 0) return;
+    if (_breadcrumbs.length >= _maxBreadcrumbs) {
+      _breadcrumbs.removeFirst();
+    }
+    _breadcrumbs.add(breadcrumb);
+  }
+
+  Future<SentryId> captureException(Object exception, StackTrace stackTrace) {
+    return _client.captureEvent(
+      SentryEvent(
+        throwable: exception,
+        breadcrumbs: _breadcrumbs.toList(growable: false),
+      ),
+      stackTrace: stackTrace,
+    );
+  }
+
+  Future<void> close() async {
+    await _client.close();
+    _breadcrumbs.clear();
+  }
+}
+
 class _RedactedDiagnosticException implements Exception {
   final String type;
 
@@ -179,6 +215,7 @@ class DiagnosticsService {
   final SyncDiagnosticsStore _syncStore;
   final String _sentryDsn;
 
+  DiagnosticsRemoteReporter? _remoteReporter;
   bool _remoteReportingActive = false;
   bool _initialized = false;
 
@@ -206,9 +243,10 @@ class DiagnosticsService {
   Future<void> setCrashReportingEnabled(bool enabled) async {
     await _preferences.saveCrashReportingEnabled(enabled);
     if (!enabled) {
-      if (_remoteReportingActive) {
+      final reporter = _remoteReporter;
+      if (reporter != null) {
         try {
-          await Sentry.close();
+          await reporter.close();
         } catch (error) {
           debugPrint(
             '[diagnostics] shutdown unavailable: '
@@ -216,6 +254,7 @@ class DiagnosticsService {
           );
         }
       }
+      _remoteReporter = null;
       _remoteReportingActive = false;
       return;
     }
@@ -232,36 +271,30 @@ class DiagnosticsService {
       // Version context is useful but not required for crash capture.
     }
 
-    await Sentry.init((options) {
-      options.dsn = _sentryDsn;
-      options.environment = const String.fromEnvironment(
-        'TONOS_ENVIRONMENT',
-        defaultValue: 'production',
-      );
-      if (versionInfo != null) {
-        options.release =
-            'tonos@${versionInfo.version}+${versionInfo.buildNumber}';
-      }
-      options.sendDefaultPii = false;
-      options.enableLogs = false;
-      options.captureFailedRequests = false;
-      options.captureNativeFailedRequests = false;
-      options.maxBreadcrumbs = 30;
-      options.debug = false;
-      for (final integration
-          in options.integrations
-              .whereType<IsolateErrorIntegration>()
-              .toList()) {
-        options.removeIntegration(integration);
-      }
-      options.beforeSend = (event, hint) {
-        // Reject captures that did not pass through captureException's
-        // redaction boundary, including direct SDK calls added accidentally.
-        if (event.throwable is! _RedactedDiagnosticException) return null;
-        DiagnosticsEventSanitizer.scrubRemoteEvent(event, hint);
-        return event;
-      };
-    });
+    final options =
+        SentryOptions(dsn: _sentryDsn)
+          ..environment = const String.fromEnvironment(
+            'TONOS_ENVIRONMENT',
+            defaultValue: 'production',
+          )
+          ..sendDefaultPii = false
+          ..enableLogs = false
+          ..captureFailedRequests = false
+          ..captureNativeFailedRequests = false
+          ..maxBreadcrumbs = 30
+          ..debug = false
+          ..beforeSend = (event, hint) {
+            // Reject captures that did not pass through captureException's
+            // redaction boundary, including direct SDK calls added accidentally.
+            if (event.throwable is! _RedactedDiagnosticException) return null;
+            DiagnosticsEventSanitizer.scrubRemoteEvent(event, hint);
+            return event;
+          };
+    if (versionInfo != null) {
+      options.release =
+          'tonos@${versionInfo.version}+${versionInfo.buildNumber}';
+    }
+    _remoteReporter = DiagnosticsRemoteReporter(options);
     _remoteReportingActive = true;
   }
 
@@ -292,16 +325,18 @@ class DiagnosticsService {
     if (!_remoteReportingActive) return false;
 
     try {
-      await Sentry.addBreadcrumb(
+      final reporter = _remoteReporter;
+      if (reporter == null) return false;
+      reporter.addBreadcrumb(
         Breadcrumb(
           category: 'tonos.error',
           message: category,
           level: SentryLevel.error,
         ),
       );
-      final eventId = await Sentry.captureException(
+      final eventId = await reporter.captureException(
         _RedactedDiagnosticException(DiagnosticsSanitizer.errorType(error)),
-        stackTrace: stackTrace,
+        stackTrace,
       );
       return eventId != const SentryId.empty();
     } catch (captureError) {
@@ -325,7 +360,9 @@ class DiagnosticsService {
 
     if (!_remoteReportingActive) return;
     try {
-      await Sentry.addBreadcrumb(
+      final reporter = _remoteReporter;
+      if (reporter == null) return;
+      reporter.addBreadcrumb(
         Breadcrumb(
           category: 'tonos.content_sync',
           message: event.operation,

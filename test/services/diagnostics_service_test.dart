@@ -101,6 +101,30 @@ void main() {
     expect(event.contexts.containsKey(SentryTraceContext.type), isFalse);
   });
 
+  test(
+    'direct diagnostics reporter sends an envelope without trace context',
+    () async {
+      final transport = _RecordingTransport();
+      final options = SentryOptions(dsn: 'https://public@example.invalid/1')
+        ..transport = transport;
+      final reporter = DiagnosticsRemoteReporter(options);
+
+      reporter.addBreadcrumb(
+        Breadcrumb(category: 'tonos.error', message: 'approved_category'),
+      );
+      await reporter.captureException(
+        const _TestDiagnosticException(),
+        StackTrace.current,
+      );
+
+      final envelope = transport.envelope;
+      expect(envelope, isNotNull);
+      expect(envelope!.header.traceContext, isNull);
+      expect(envelope.header.toJson(), isNot(contains('trace')));
+      await reporter.close();
+    },
+  );
+
   test('version display includes the build number when available', () {
     expect(
       const AppVersionInfo(version: '1.2.3', buildNumber: '45').displayVersion,
@@ -117,4 +141,18 @@ void main() {
 
     expect(await diagnostics.sendControlledTestEvent(), isFalse);
   });
+}
+
+class _RecordingTransport implements Transport {
+  SentryEnvelope? envelope;
+
+  @override
+  Future<SentryId?> send(SentryEnvelope value) async {
+    envelope = value;
+    return value.header.eventId;
+  }
+}
+
+class _TestDiagnosticException implements Exception {
+  const _TestDiagnosticException();
 }

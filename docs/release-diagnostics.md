@@ -40,14 +40,16 @@ the production workflow to access them.
 
 ## Privacy contract
 
-`DiagnosticsService` initializes Sentry's pure Dart client only after stored
-user consent. It does not install Sentry's automatic Flutter/platform error
-handlers; every remote capture must pass through the app's redaction boundary.
-The service also configures these release safeguards:
+`DiagnosticsService` creates a dedicated, unscoped Sentry pure-Dart client only
+after stored user consent. It does not install Sentry's automatic
+Flutter/platform error handlers, and it does not use Sentry's global scope;
+every remote capture must pass through the app's redaction boundary. The
+service also configures these release safeguards:
 
 - default PII, failed-request capture, logs, tracing, and profiling are
   disabled; accepted events remove user/IP data and trace context before
-  transmission, and screenshots and view hierarchy capture are not installed;
+  transmission, and the unscoped client prevents an envelope trace header from
+  being created. Screenshots and view hierarchy capture are not installed;
 - the original exception message is replaced by its runtime type before remote
   capture;
 - automatic isolate capture is removed and a final `beforeSend` gate rejects
@@ -76,7 +78,8 @@ fields requires a privacy-policy update and an explicit product review.
    `ControlledDiagnosticsTestException` event in the `production` environment.
 7. Inspect the event and confirm that it contains no name, profile value,
    workout or nutrition content, database field, URL, attachment, screenshot,
-   view hierarchy, log, trace, or original exception message.
+   view hierarchy, log, trace identifier, IP-derived geography, or original
+   exception message.
 8. Disable reporting and confirm the controlled action becomes unavailable and
    no new event can be submitted.
 9. Confirm the Sentry organization retains error events for no more than 90
