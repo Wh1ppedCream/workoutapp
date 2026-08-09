@@ -38,7 +38,7 @@
 <body>
   <main>
     <h1>Delete Your Tonos Data</h1>
-    <p class="updated">Last updated: August 7, 2026</p>
+    <p class="updated">Last updated: August 9, 2026</p>
 
     <p>
       Tonos is local-first and does not require an account. Most information is
@@ -49,8 +49,7 @@
     <p>
       Open Profile &gt; Diagnostics &amp; Privacy and choose Clear sync history.
       This removes the capped list of content-sync outcomes stored on the
-      device. Turn off Share crash reports on the same page to stop future
-      optional crash submissions.
+      device. Current production builds do not submit remote crash reports.
     </p>
 
     <h2>Local Database and Preferences</h2>
@@ -69,15 +68,15 @@
       Tonos app storage.
     </p>
 
-    <h2>Previously Submitted Crash Reports</h2>
+    <h2>Earlier Validation Crash Reports</h2>
     <p>
-      Crash reporting is optional and does not use a Tonos account identifier.
-      If you want a previously submitted report removed, contact the developer
-      with the event time, app version, device platform, and any event identifier
-      available to you. This information is needed to locate the report without
-      collecting identity or health data. Production crash reports are also
-      automatically deleted after no more than 90 days. Some service plans
-      delete reports sooner.
+      Current production builds do not send crash reports. If you explicitly
+      opted in while using an earlier validation build and want a submitted
+      Sentry report removed, contact the developer with its event time, app
+      version, device platform, and any event identifier available to you. This
+      information helps locate the report without requesting identity or health
+      data. Earlier validation reports are automatically deleted after no more
+      than 90 days and may be deleted sooner under the service plan.
     </p>
 
     <h2>Contact</h2>

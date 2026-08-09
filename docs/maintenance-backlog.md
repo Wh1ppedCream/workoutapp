@@ -1,6 +1,6 @@
 # Maintenance Backlog
 
-Last updated: 2026-08-08.
+Last updated: 2026-08-09.
 
 This is Tonos's maintained, prioritized engineering backlog. Historical
 roadmap snapshots live in `docs/archive/roadmaps/`; do not use them to plan new
@@ -13,9 +13,10 @@ work. Cloud-media publishing state and commands live in
 1. **Confirm hosted automation and release safeguards.** Check the latest CI
    run, manually run the scheduled Android emulator workflow, publish the
    privacy pages, and run the protected production-release workflow.
-2. **Validate production diagnostics end to end.** Install the
-   production-configured build, opt in, send one controlled report, and verify
-   in Sentry that its redaction and consent behavior match the release guide.
+2. **Design a privacy-preserving diagnostics relay.** Direct device-to-Sentry
+   reporting is disabled in production after validation showed service-derived
+   geography could still appear. Define the relay, its retention, consent,
+   deletion, and event-allowlist contract before re-enabling remote reporting.
 3. **Hide unimplemented navigation.** Remove Nutrition Log, Combined History,
    and Form and Posing from selectable navigation until their flows are usable.
 4. **Finalize the production media environment.** Validate development batches

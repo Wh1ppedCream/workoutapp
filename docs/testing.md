@@ -106,8 +106,9 @@ exception and uses the configured development content environment.
 
 ## Release diagnostics verification
 
-Crash reporting is disabled unless both a build-time Sentry DSN and explicit
-user consent are present. The unit and contract tests verify default-off
-consent, redaction, bounded local sync history, the absence of a committed DSN,
-and privacy-safe SDK options. See `docs/release-diagnostics.md` for production
-configuration and the manual release checklist.
+Production builds intentionally do not configure direct remote crash reporting.
+The unit and contract tests verify the disabled default, bounded local sync
+history, the absence of a remotely routable DSN in the signed-release workflow,
+and the retained redaction boundary for any future privacy-relay integration.
+See `docs/release-diagnostics.md` for the current release posture and relay
+requirements.

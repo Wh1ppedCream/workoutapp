@@ -44,15 +44,13 @@ jobs:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-          TONOS_SENTRY_DSN: ${{ secrets.TONOS_SENTRY_DSN }}
         shell: bash
         run: |
           for name in \
             ANDROID_KEYSTORE_BASE64 \
             ANDROID_KEYSTORE_PASSWORD \
             ANDROID_KEY_ALIAS \
-            ANDROID_KEY_PASSWORD \
-            TONOS_SENTRY_DSN; do
+            ANDROID_KEY_PASSWORD; do
             if [[ -z "${!name}" ]]; then
               echo "::error::Missing required production environment secret: ${name}"
               exit 1
@@ -96,20 +94,14 @@ jobs:
         run: flutter test
 
       - name: Build signed production APK
-        env:
-          TONOS_SENTRY_DSN: ${{ secrets.TONOS_SENTRY_DSN }}
         run: >-
           flutter build apk --release
           --dart-define=TONOS_ENVIRONMENT=production
-          --dart-define=TONOS_SENTRY_DSN="$TONOS_SENTRY_DSN"
 
       - name: Build signed production app bundle
-        env:
-          TONOS_SENTRY_DSN: ${{ secrets.TONOS_SENTRY_DSN }}
         run: >-
           flutter build appbundle --release
           --dart-define=TONOS_ENVIRONMENT=production
-          --dart-define=TONOS_SENTRY_DSN="$TONOS_SENTRY_DSN"
 
       - name: Upload production APK
         uses: actions/upload-artifact@v4

@@ -1,97 +1,75 @@
 # Release diagnostics
 
-Tonos crash reporting is deliberately opt-in twice: the release must include a
-Sentry DSN, and the user must enable **Share crash reports** in **Profile >
-Diagnostics & Privacy**. Without either condition, no remote crash SDK is
-started.
+## Current production posture
 
-## Production build configuration
+Tonos production builds intentionally do not send diagnostics directly from a
+device to Sentry or another remote service. The signed production workflow does
+not require, read, or inject a diagnostics DSN, so **Share crash reports** and
+**Send a controlled test report** are unavailable in released builds.
 
-Keep the DSN outside source control and pass it as a build-time define:
+This is a privacy decision, not a broken configuration. Controlled validation
+confirmed the app's redaction boundary and consent behavior, but Sentry still
+rendered service-derived approximate geography and synthetic trace metadata for
+a direct device upload. IP-address scrubbing prevents storage of the address;
+it does not provide Tonos with a sufficient guarantee that this related metadata
+will be absent. Do not add a direct Sentry DSN back to a distributable build.
 
-```powershell
-$env:TONOS_SENTRY_DSN = "<production Sentry DSN>"
+Local sync diagnostics remain available. They are capped at 30 entries and
+contain only operation/source categories, outcome, duration, manifest version,
+item count, and a redacted error type.
 
-flutter build appbundle --release `
-  --dart-define=TONOS_ENVIRONMENT=production `
-  --dart-define=TONOS_SENTRY_DSN=$env:TONOS_SENTRY_DSN
-```
+## Current release configuration
 
-Builds without `TONOS_SENTRY_DSN` remain valid. Their diagnostics page explains
-that remote crash reporting is unavailable and disables the consent switch.
-The DSN selects the Sentry project but is not an authentication secret; still,
-supplying it from release configuration prevents accidental use of the wrong
-project or environment.
+The protected **Production Android release** workflow requires only the Android
+signing secrets:
 
-The repository also provides a manually triggered **Production Android
-release** workflow. It is protected by the GitHub `production` environment and
-uploads a signed APK for device validation plus the signed AAB intended for
-distribution. It requires these environment secrets:
-
-- `TONOS_SENTRY_DSN`
 - `ANDROID_KEYSTORE_BASE64`
 - `ANDROID_KEYSTORE_PASSWORD`
 - `ANDROID_KEY_ALIAS`
 - `ANDROID_KEY_PASSWORD`
 
-Do not add those values to workflow YAML, Dart source, Gradle files, artifacts,
-logs, or repository variables. Require an environment reviewer before allowing
-the production workflow to access them.
+It produces a signed APK for device validation and a signed AAB for
+distribution. It sets `TONOS_ENVIRONMENT=production`, but it must not receive
+or pass `TONOS_SENTRY_DSN`. Builds without a remote diagnostics endpoint are
+valid and are the only approved production artifacts today.
 
-## Privacy contract
+## Future remote diagnostics requirements
 
-`DiagnosticsService` creates a dedicated, unscoped Sentry pure-Dart client only
-after stored user consent. It does not install Sentry's automatic
-Flutter/platform error handlers, and it does not use Sentry's global scope;
-every remote capture must pass through the app's redaction boundary. The
-service also configures these release safeguards:
+Remote crash reporting can return only after a reviewed privacy relay is
+implemented. The relay design must:
 
-- default PII, failed-request capture, logs, tracing, and profiling are
-  disabled; accepted events remove user/IP data and trace context before
-  transmission, and the unscoped client prevents an envelope trace header from
-  being created. Screenshots and view hierarchy capture are not installed;
-- the original exception message is replaced by its runtime type before remote
-  capture;
-- automatic isolate capture is removed and a final `beforeSend` gate rejects
-  any event that did not pass through the redaction boundary;
-- sync breadcrumbs contain only operation/source categories, outcome, duration,
-  manifest version, item count, and redacted error type;
-- a maximum of 30 sync events is retained locally and can be cleared in-app.
+1. Keep the Sentry DSN and Sentry connection off the device; Tonos clients send
+   only to the relay.
+2. Enforce the existing consent check and a server-side allowlist of the small,
+   redacted event schema. It must reject free-form exception messages, database
+   contents, profiles, health data, URLs, attachments, screenshots, and view
+   hierarchy data.
+3. Avoid forwarding a client IP address or forwarding headers to Sentry, and
+   document the relay operator's own connection logging and retention.
+4. Provide a deletion path, a retention limit, abuse protection, and monitoring
+   for the relay itself.
+5. Update the privacy and data-deletion pages, then repeat the signed-release,
+   fresh-install, opt-in, controlled-event, and event-inspection validation.
 
-Do not add database rows, exercise names, profile fields, URLs, free-form error
-messages, or exported files to diagnostic events. Any expansion of captured
-fields requires a privacy-policy update and an explicit product review.
+The existing `DiagnosticsService` redaction boundary and focused unit tests are
+retained as a starting point for that reviewed integration. They do not approve
+direct device-to-Sentry reporting.
 
 ## Release checklist
 
-1. Run localization generation, analyzer, the full test suite, and a release
-   build.
+1. Run localization generation, analyzer, the full test suite, and a signed
+   release build.
 2. Confirm `test/release_diagnostics_contract_test.dart` passes.
-3. Download the workflow's signed `tonos-production-apk-*` artifact, install
-   it on a dedicated test device, and confirm crash reporting is off on first
-   launch.
+3. Download and hash-check the signed `tonos-production-apk-*` artifact, then
+   install it on a dedicated test device.
 4. Confirm Profile > Diagnostics & Privacy shows the expected app version and
-   build number.
-5. Exercise remote and bundled media sync and inspect the local event fields.
-6. Enable reporting on a test device and choose **Send a controlled test
-   report**. Verify that Sentry receives exactly one
-   `ControlledDiagnosticsTestException` event in the `production` environment.
-7. Inspect the event and confirm that it contains no name, profile value,
-   workout or nutrition content, database field, URL, attachment, screenshot,
-   view hierarchy, log, trace identifier, IP-derived geography, or original
-   exception message.
-8. Disable reporting and confirm the controlled action becomes unavailable and
-   no new event can be submitted.
-9. Confirm the Sentry organization retains error events for no more than 90
-   days. The Developer plan currently deletes them after 30 days; paid plans
-   may retain them for up to 90 days. Recheck this after any plan or
-   organization-policy change.
-10. Confirm the **Publish privacy pages** workflow succeeds and that
-    `privacy.html` and `data-deletion.html` are publicly reachable.
+   build number, local sync history, and unavailable crash-sharing controls.
+5. Exercise remote and bundled media sync and inspect only the local sync
+   history fields.
+6. Confirm the app has no configured remote diagnostics endpoint and that a
+   controlled test report cannot be submitted.
+7. Confirm the **Publish privacy pages** workflow succeeds and that
+   `privacy.html` and `data-deletion.html` are publicly reachable.
 
-The policy workflow publishes only `docs/index.html`, `docs/privacy.html`, and
-`docs/data-deletion.html`; internal engineering documents are not included in
-the Pages artifact.
-
-Never trigger a deliberate crash in a public production project using a real
-user profile or populated health database.
+If a future relay is approved, replace steps 4 through 6 with the relay-specific
+consent, redaction, retention, deletion, and event-inspection checks above.

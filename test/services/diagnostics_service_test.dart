@@ -141,6 +141,10 @@ void main() {
 
     expect(await diagnostics.sendControlledTestEvent(), isFalse);
   });
+
+  test('application diagnostics never configure direct remote reporting', () {
+    expect(DiagnosticsService().crashReportingConfigured, isFalse);
+  });
 }
 
 class _RecordingTransport implements Transport {

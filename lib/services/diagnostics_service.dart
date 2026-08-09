@@ -9,6 +9,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 enum SyncDiagnosticOutcome { succeeded, failed, skipped }
 
+/// Distributed builds must not send device diagnostics directly to Sentry.
+/// A future privacy relay can provide a separate, reviewed transport.
+const String _disabledDirectSentryDsn = '';
+
 class SyncDiagnosticEvent {
   final DateTime timestamp;
   final String operation;
@@ -147,7 +151,7 @@ abstract final class DiagnosticsSanitizer {
 
 abstract final class DiagnosticsEventSanitizer {
   static void scrubRemoteEvent(SentryEvent event, Hint hint) {
-    // Removing the user prevents Sentry from deriving IP-based geography.
+    // Remove data the app must never include in a remote diagnostic event.
     event.user = null;
     event.contexts.remove(SentryTraceContext.type);
     hint.attachments.clear();
@@ -204,7 +208,7 @@ class DiagnosticsService {
   DiagnosticsService({
     DiagnosticsPreferences preferences = const DiagnosticsPreferences(),
     SyncDiagnosticsStore? syncStore,
-    String sentryDsn = const String.fromEnvironment('TONOS_SENTRY_DSN'),
+    String sentryDsn = _disabledDirectSentryDsn,
   }) : _preferences = preferences,
        _syncStore = syncStore ?? SyncDiagnosticsStore(),
        _sentryDsn = sentryDsn.trim();

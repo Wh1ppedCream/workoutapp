@@ -7,7 +7,11 @@ void main() {
     final source =
         File('lib/services/diagnostics_service.dart').readAsStringSync();
 
-    expect(source, contains("String.fromEnvironment('TONOS_SENTRY_DSN')"));
+    expect(source, contains('String sentryDsn = _disabledDirectSentryDsn'));
+    expect(
+      source,
+      isNot(contains("String.fromEnvironment('TONOS_SENTRY_DSN')")),
+    );
     expect(source, contains("package:sentry/sentry.dart"));
     expect(source, isNot(contains('SentryFlutter.init')));
     expect(source, isNot(contains('Sentry.init(')));
@@ -47,8 +51,9 @@ void main() {
     expect(deletion, contains('Delete Your Tonos Data'));
     expect(deletion, contains('Clear sync history'));
     expect(deletion, contains('uninstall'));
-    expect(privacy, matches(RegExp(r'no\s+more than 90 days')));
-    expect(deletion, matches(RegExp(r'no\s+more than 90 days')));
+    final retentionLanguage = RegExp(r'no\s+more\s+than\s+90\s+days');
+    expect(privacy, matches(retentionLanguage));
+    expect(deletion, matches(retentionLanguage));
   });
 
   test('production release and policy publishing use guarded workflows', () {
@@ -58,7 +63,7 @@ void main() {
         File('.github/workflows/privacy-pages.yml').readAsStringSync();
 
     expect(release, contains('environment: production'));
-    expect(release, contains(r'${{ secrets.TONOS_SENTRY_DSN }}'));
+    expect(release, isNot(contains('TONOS_SENTRY_DSN')));
     expect(release, contains('TONOS_ENVIRONMENT=production'));
     expect(release, contains('Build signed production APK'));
     expect(release, contains('tonos-production-apk-'));

@@ -81,7 +81,7 @@
 <body>
   <main>
     <h1>Privacy Policy for Tonos - Health and Fitness</h1>
-    <p class="updated">Last updated: August 7, 2026</p>
+    <p class="updated">Last updated: August 9, 2026</p>
 
     <p>
       Tonos - Health and Fitness is a local-first fitness, nutrition, and body
@@ -121,19 +121,21 @@
 
     <h2>Optional Crash Diagnostics</h2>
     <p>
-      A production build may offer optional crash reporting through Sentry. It
-      is off by default and is activated only after you enable it in Diagnostics
-      &amp; Privacy. Reports are limited to the app version, platform context, a
-      redacted error type, and a stack trace needed to locate the failing code.
+      Current production builds do not send crash reports to Sentry or another
+      remote diagnostics service. The Share crash reports control is unavailable
+      in these builds while Tonos evaluates a privacy-preserving relay.
     </p>
     <p>
-      Tonos configures crash reporting not to include default personally
-      identifiable information, IP-derived geography, names, health records, database contents,
-      screenshots, the visible view hierarchy, failed-request URLs,
-      performance traces, profiling, logs, or analytics. You may disable crash
-      reporting at any time. Sync diagnostic history is kept locally and
-      contains only the operation, source category, outcome, duration, manifest
-      version, item count, and redacted error type.
+      Content-sync diagnostic history remains local to your device. It contains
+      only the operation, source category, outcome, duration, manifest version,
+      item count, and redacted error type. It never includes workout, nutrition,
+      body metric, profile, or database contents.
+    </p>
+    <p>
+      Earlier opt-in validation builds could submit a redacted report to Sentry.
+      Such reports were limited by the diagnostics configuration, but are not
+      submitted by current production builds. See the data deletion guide if you
+      opted in to an earlier validation build and want a report removed.
     </p>
 
     <h2>Data Storage, Security, and Retention</h2>
@@ -146,10 +148,10 @@
     </p>
     <p>
       The app keeps at most 30 content-sync diagnostic entries on the device.
-      You can clear them from Diagnostics &amp; Privacy. If optional crash
-      reporting is enabled, submitted reports are retained in Sentry for no
-      more than 90 days and are then deleted under the production service's
-      retention policy. Some service plans delete reports sooner.
+      You can clear them from Diagnostics &amp; Privacy. Current production builds
+      have no remote crash-report retention because they do not submit crash
+      reports. Earlier opt-in validation reports are retained by Sentry for no
+      more than 90 days and may be deleted sooner under its service plan.
     </p>
 
     <h2>Deleting Your Data</h2>
