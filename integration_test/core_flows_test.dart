@@ -233,7 +233,6 @@ void main() {
     );
     expect(visiblePlansList, findsOneWidget);
     expect(plansScrollable, findsOneWidget);
-    await _waitFor(tester, manualPlanAction);
     await tester.scrollUntilVisible(
       manualPlanAction,
       300,
