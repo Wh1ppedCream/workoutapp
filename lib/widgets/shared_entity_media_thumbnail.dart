@@ -80,7 +80,7 @@ class _SharedEntityMediaThumbnailState
 
     final cached = await _repo.cachedSharedMediaFile(item, thumbnail: true);
     if (cached != null) {
-      unawaited(_repo.markSharedMediaAccessed(item));
+      unawaited(_recordMediaAccess(item));
       return _SharedThumbnailData(item: item, file: cached);
     }
 
@@ -95,6 +95,14 @@ class _SharedEntityMediaThumbnailState
       return _SharedThumbnailData(item: item, wifiOnlyBlocked: true);
     } catch (_) {
       return _SharedThumbnailData(item: item, failed: true);
+    }
+  }
+
+  Future<void> _recordMediaAccess(SharedMediaItem item) async {
+    try {
+      await _repo.markSharedMediaAccessed(item);
+    } catch (_) {
+      // Access timestamps are cache bookkeeping and must not affect rendering.
     }
   }
 

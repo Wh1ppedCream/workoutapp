@@ -64,7 +64,7 @@ class _ExerciseMediaThumbnailState extends State<ExerciseMediaThumbnail> {
 
     final cached = await _repo.cachedExerciseMediaFile(item, thumbnail: true);
     if (cached != null) {
-      unawaited(_repo.markExerciseMediaAccessed(item));
+      unawaited(_recordMediaAccess(item));
       return _ThumbnailData(item: item, file: cached);
     }
 
@@ -79,6 +79,14 @@ class _ExerciseMediaThumbnailState extends State<ExerciseMediaThumbnail> {
       return _ThumbnailData(item: item, wifiOnlyBlocked: true);
     } catch (_) {
       return _ThumbnailData(item: item, failed: true);
+    }
+  }
+
+  Future<void> _recordMediaAccess(ExerciseMediaItem item) async {
+    try {
+      await _repo.markExerciseMediaAccessed(item);
+    } catch (_) {
+      // Access timestamps are cache bookkeeping and must not affect rendering.
     }
   }
 

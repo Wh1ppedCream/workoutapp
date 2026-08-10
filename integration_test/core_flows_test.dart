@@ -317,8 +317,10 @@ void main() {
     );
     await _tapAndWait(tester, historyRow);
     await _waitFor(tester, find.byKey(AppTestKeys.workoutSaveAsPlan));
-    expect(find.byType(FirstRecordBadge), findsWidgets);
-    expect(find.byType(WorkoutRecordBadgeChip), findsWidgets);
+    // The action bar renders before the historical exercise details finish
+    // loading their persisted record events.
+    await _waitFor(tester, find.byType(FirstRecordBadge));
+    await _waitFor(tester, find.byType(WorkoutRecordBadgeChip));
 
     // Save the completed workout as a new plan through its dialog.
     _logPhase('save completed workout as plan');
