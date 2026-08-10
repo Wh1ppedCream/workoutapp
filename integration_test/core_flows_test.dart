@@ -227,16 +227,21 @@ void main() {
             widget.physics is! NeverScrollableScrollPhysics,
       ),
     );
+    final manualPlanAction = find.descendant(
+      of: visiblePlansList,
+      matching: find.byKey(AppTestKeys.trainCreateManualPlan),
+    );
     expect(visiblePlansList, findsOneWidget);
     expect(plansScrollable, findsOneWidget);
+    await _waitFor(tester, manualPlanAction);
     await tester.scrollUntilVisible(
-      find.byKey(AppTestKeys.trainCreateManualPlan),
+      manualPlanAction,
       300,
       scrollable: plansScrollable,
     );
     await _tapAndWait(
       tester,
-      find.byKey(AppTestKeys.trainCreateManualPlan),
+      manualPlanAction,
       // The Plans tab waits for the asynchronously loaded profile and active
       // plan state. A clean emulator can need longer than a physical device.
       maxPumps: 240,
