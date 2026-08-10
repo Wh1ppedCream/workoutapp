@@ -1080,10 +1080,11 @@ class _PlansTabState extends State<_PlansTab> {
         if (snapshot.hasData) {
           _lastActivePresetIds = snapshot.data;
         }
-        final activeIds = snapshot.data ?? _lastActivePresetIds;
-        if (activeIds == null) {
-          return const Center(child: CircularProgressIndicator());
-        }
+        // Keep plan creation available while the persisted active-plan state is
+        // loading or unavailable. The cards refresh as soon as the lookup
+        // completes instead of trapping the user behind a spinner.
+        final activeIds =
+            snapshot.data ?? _lastActivePresetIds ?? const <int>{};
         return ListView(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
           children: [
