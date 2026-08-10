@@ -199,6 +199,10 @@ void main() {
     await tester.pumpWidget(
       tonos.buildTonosApp(repo: repository, closeRepositoryOnDispose: false),
     );
+    // MainScreen keeps tab pages alive in an IndexedStack. Select Train through
+    // the bottom bar before interacting with its child controls so the test
+    // never targets a cached but inactive page.
+    await _tapAndWait(tester, find.byKey(AppTestKeys.mainTab('train')));
     await _waitFor(tester, find.byKey(AppTestKeys.trainPlansTab));
 
     // Create and rename a plan through the Train UI.
