@@ -66,6 +66,7 @@ jobs:
             -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
             -no-snapshot-save
           script: >-
+            timeout --foreground 10m
             flutter drive
             --driver=test_driver/integration_test.dart
             --target=integration_test/core_flows_test.dart

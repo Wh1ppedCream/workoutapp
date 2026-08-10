@@ -21,6 +21,7 @@ void main() {
       contains('--target=integration_test/core_flows_test.dart'),
     );
     expect(workflow, contains('--timeout=900'));
+    expect(workflow, contains('timeout --foreground 10m'));
     expect(workflow, contains('adb logcat -d -t 1000 || true'));
   });
 }

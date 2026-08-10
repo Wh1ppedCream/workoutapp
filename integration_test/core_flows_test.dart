@@ -22,6 +22,10 @@ const _filePickerChannel = MethodChannel(
   'miguelruivo.flutter.plugins.filepicker',
 );
 
+void _logPhase(String phase) {
+  debugPrint('[integration] $phase');
+}
+
 Future<void> _waitFor(
   WidgetTester tester,
   Finder finder, {
@@ -116,6 +120,7 @@ void main() {
   tearDownAll(() => repository.close());
 
   testWidgets('first install and core flows use the UI', (tester) async {
+    _logPhase('verify first-install onboarding');
     await tester.pumpWidget(
       tonos.buildTonosApp(repo: repository, closeRepositoryOnDispose: false),
     );
@@ -136,6 +141,7 @@ void main() {
     await preferences.setString('app_language_preference', 'english');
     await const TutorialStateStore().skipAll();
 
+    _logPhase('prepare training fixture');
     final database = await repository.dbHelper.database;
 
     // A fresh database must receive both remote media manifests before the UI
@@ -206,6 +212,7 @@ void main() {
     await _waitFor(tester, find.byKey(AppTestKeys.trainPlansTab));
 
     // Create and rename a plan through the Train UI.
+    _logPhase('create and rename manual plan');
     await _tapAndWait(tester, find.byKey(AppTestKeys.trainPlansTab));
     await _tapAndWait(
       tester,
@@ -240,12 +247,14 @@ void main() {
     await _tapAndWait(tester, find.byKey(AppTestKeys.trainOverviewTab));
 
     // Open the active fixture plan and start its session through the UI.
+    _logPhase('start fixture workout');
     await _tapAndWait(tester, find.text('UI Workout Plan'));
     await _waitFor(tester, find.text(exerciseName));
     await _tapAndWait(tester, find.byKey(AppTestKeys.planStartSession));
     await _waitFor(tester, find.byKey(AppTestKeys.sessionFinish));
 
     // Leaving the route keeps the durable workout available to resume.
+    _logPhase('resume durable workout');
     await _pressSystemBack(tester);
     await _waitFor(tester, find.byKey(AppTestKeys.ongoingSessionMenu));
     await _tapAndWait(tester, find.byKey(AppTestKeys.ongoingSessionMenu));
@@ -253,6 +262,7 @@ void main() {
     await _waitFor(tester, find.byKey(AppTestKeys.sessionFinish));
 
     // Exercise the explicit Exit path, choose to keep the workout, and resume.
+    _logPhase('exit and keep durable workout');
     await _pressSystemBack(tester);
     await _waitFor(tester, find.byKey(AppTestKeys.ongoingSessionMenu));
     await _tapAndWait(tester, find.byKey(AppTestKeys.ongoingSessionMenu));
@@ -262,6 +272,7 @@ void main() {
     await _waitFor(tester, find.byKey(AppTestKeys.sessionFinish));
 
     // Complete the first visible set, finish, and verify record presentation.
+    _logPhase('complete workout and verify records');
     await _waitFor(tester, find.byType(Checkbox));
     await tester.tap(find.byType(Checkbox).first);
     await tester.pump();
@@ -279,6 +290,7 @@ void main() {
     await _waitFor(tester, find.byKey(AppTestKeys.mainTab('history')));
 
     // Open the persisted Logbook record and verify its badges remain visible.
+    _logPhase('open logbook record');
     await _tapAndWait(tester, find.byKey(AppTestKeys.mainTab('history')));
     final historyRow = find.byKey(
       AppTestKeys.historySession(completedSessionId),
@@ -289,6 +301,7 @@ void main() {
     expect(find.byType(WorkoutRecordBadgeChip), findsWidgets);
 
     // Save the completed workout as a new plan through its dialog.
+    _logPhase('save completed workout as plan');
     await _tapAndWait(tester, find.byKey(AppTestKeys.workoutSaveAsPlan));
     await _waitFor(tester, find.byKey(AppTestKeys.workoutPlanName));
     await tester.enterText(
@@ -313,6 +326,7 @@ void main() {
     await _tapAndWait(tester, find.byKey(AppTestKeys.mainTab('profile')));
 
     // Edit profile information through the Settings form.
+    _logPhase('edit profile information');
     await _tapAndWait(tester, find.byKey(AppTestKeys.profileUserInformation));
     await _waitFor(tester, find.byKey(AppTestKeys.userInformationName));
     await tester.enterText(
@@ -330,6 +344,7 @@ void main() {
 
     // Mock only the native document-picker boundary. All Settings actions,
     // dialogs, backups, export/import work, and result UI remain production code.
+    _logPhase('export and import database backup');
     Uint8List? exportedBytes;
     var saveCallCount = 0;
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
