@@ -7,6 +7,7 @@ import 'package:flutter/widgets.dart';
 abstract final class AppTestKeys {
   static const trainOverviewTab = ValueKey('train-overview-tab');
   static const trainPlansTab = ValueKey('train-plans-tab');
+  static const trainPlansList = ValueKey('train-plans-list');
   static const trainCreateManualPlan = ValueKey('train-create-manual-plan');
   static const trainStartWorkout = ValueKey('train-start-workout');
 

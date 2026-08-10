@@ -214,6 +214,26 @@ void main() {
     // Create and rename a plan through the Train UI.
     _logPhase('create and rename manual plan');
     await _tapAndWait(tester, find.byKey(AppTestKeys.trainPlansTab));
+    await _waitFor(tester, find.byKey(AppTestKeys.trainPlansList));
+    // The manual action is below the plan summaries on shorter emulators.
+    // Scroll the actual Plans list so its lazily built control is available.
+    final visiblePlansList =
+        find.byKey(AppTestKeys.trainPlansList).hitTestable();
+    final plansScrollable = find.descendant(
+      of: visiblePlansList,
+      matching: find.byWidgetPredicate(
+        (widget) =>
+            widget is Scrollable &&
+            widget.physics is! NeverScrollableScrollPhysics,
+      ),
+    );
+    expect(visiblePlansList, findsOneWidget);
+    expect(plansScrollable, findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.byKey(AppTestKeys.trainCreateManualPlan),
+      300,
+      scrollable: plansScrollable,
+    );
     await _tapAndWait(
       tester,
       find.byKey(AppTestKeys.trainCreateManualPlan),

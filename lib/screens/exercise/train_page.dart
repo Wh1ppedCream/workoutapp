@@ -1086,6 +1086,7 @@ class _PlansTabState extends State<_PlansTab> {
         final activeIds =
             snapshot.data ?? _lastActivePresetIds ?? const <int>{};
         return ListView(
+          key: AppTestKeys.trainPlansList,
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
           children: [
             _PresetSectionCard(
