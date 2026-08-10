@@ -318,10 +318,40 @@ void main() {
     );
     await _tapAndWait(tester, historyRow);
     await _waitFor(tester, find.byKey(AppTestKeys.workoutSaveAsPlan));
-    // The action bar renders before the historical exercise details finish
-    // loading their persisted record events.
-    await _waitFor(tester, find.byType(FirstRecordBadge));
-    await _waitFor(tester, find.byType(WorkoutRecordBadgeChip));
+    await _waitFor(tester, find.byKey(AppTestKeys.workoutDetailList));
+
+    // Session-detail exercise cards are lazily built below the summary. Scroll
+    // to the persisted record presentation rather than relying on device size.
+    final detailList = find.byKey(AppTestKeys.workoutDetailList).hitTestable();
+    // The list's Scrollable is the first descendant. Cards can lazily add
+    // nested scrollables as they enter the viewport, so use the stable root.
+    final detailScrollable =
+        find
+            .descendant(of: detailList, matching: find.byType(Scrollable))
+            .first;
+    final firstRecordBadge = find.descendant(
+      of: detailList,
+      matching: find.byType(FirstRecordBadge),
+    );
+    final firstRecordBadgeChip =
+        find
+            .descendant(
+              of: detailList,
+              matching: find.byType(WorkoutRecordBadgeChip),
+            )
+            .first;
+    await tester.scrollUntilVisible(
+      firstRecordBadge,
+      300,
+      scrollable: detailScrollable,
+    );
+    expect(firstRecordBadge, findsWidgets);
+    await tester.scrollUntilVisible(
+      firstRecordBadgeChip,
+      300,
+      scrollable: detailScrollable,
+    );
+    expect(firstRecordBadgeChip, findsOneWidget);
 
     // Save the completed workout as a new plan through its dialog.
     _logPhase('save completed workout as plan');

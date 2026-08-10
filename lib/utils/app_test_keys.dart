@@ -24,6 +24,7 @@ abstract final class AppTestKeys {
   static const ongoingSessionKeep = ValueKey('ongoing-session-keep');
 
   static const workoutSaveAsPlan = ValueKey('workout-save-as-plan');
+  static const workoutDetailList = ValueKey('workout-detail-list');
   static const workoutPlanName = ValueKey('workout-plan-name');
   static const workoutPlanSave = ValueKey('workout-plan-save');
 

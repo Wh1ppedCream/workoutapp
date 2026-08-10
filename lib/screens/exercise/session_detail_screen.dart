@@ -724,6 +724,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     }
 
     return ListView(
+      key: AppTestKeys.workoutDetailList,
       padding: const EdgeInsets.all(16),
       children: [
         KeyedSubtree(
