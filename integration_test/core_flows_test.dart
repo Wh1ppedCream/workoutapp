@@ -238,13 +238,10 @@ void main() {
       300,
       scrollable: plansScrollable,
     );
-    await _tapAndWait(
-      tester,
-      manualPlanAction,
-      // The Plans tab waits for the asynchronously loaded profile and active
-      // plan state. A clean emulator can need longer than a physical device.
-      maxPumps: 240,
-    );
+    // Plan previews can rebuild after their asynchronous data load. Tap in
+    // the frame that exposed the lazy action before that rebuild can evict it.
+    await tester.tap(manualPlanAction);
+    await tester.pump();
     await _waitFor(tester, find.byKey(AppTestKeys.planEdit));
     final manualPlanRows = await repository.fetchAllPresetsRaw(
       profileId: profileId,
