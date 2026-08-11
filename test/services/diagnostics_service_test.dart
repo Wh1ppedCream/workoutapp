@@ -1,8 +1,8 @@
 import 'dart:convert';
 
+import 'package:env_test/services/diagnostics_relay_client.dart';
 import 'package:env_test/services/diagnostics_service.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sentry/sentry.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -12,14 +12,20 @@ void main() {
     SharedPreferences.setMockInitialValues(<String, Object>{});
   });
 
-  test('crash reporting is opt-in and persists the choice', () async {
-    const preferences = DiagnosticsPreferences();
+  test(
+    'anonymous diagnostics are opt-in and ignore legacy Sentry consent',
+    () async {
+      SharedPreferences.setMockInitialValues(<String, Object>{
+        'diagnostics.crash_reporting.enabled': true,
+      });
+      const preferences = DiagnosticsPreferences();
 
-    expect(await preferences.loadCrashReportingEnabled(), isFalse);
+      expect(await preferences.loadAnonymousDiagnosticsEnabled(), isFalse);
 
-    await preferences.saveCrashReportingEnabled(true);
-    expect(await preferences.loadCrashReportingEnabled(), isTrue);
-  });
+      await preferences.saveAnonymousDiagnosticsEnabled(true);
+      expect(await preferences.loadAnonymousDiagnosticsEnabled(), isTrue);
+    },
+  );
 
   test('sync diagnostic JSON contains only the approved safe fields', () {
     final event = SyncDiagnosticEvent(
@@ -88,42 +94,42 @@ void main() {
     expect(type, isNot(contains('health')));
   });
 
-  test('remote event sanitizer removes user data and trace context', () {
-    final event = SentryEvent(
-      user: SentryUser(ipAddress: '{{auto}}'),
-      contexts: Contexts(trace: SentryTraceContext(operation: 'default')),
+  test('relay event JSON has only the approved categorical fields', () {
+    final event = DiagnosticsRelayEvent(
+      kind: DiagnosticsRelayKind.contentSync,
+      appVersion: '1.2.3',
+      buildNumber: 45,
+      platform: DiagnosticsRelayPlatform.android,
+      code: DiagnosticsRelayCode.contentManifestFetchFailed,
+      source: DiagnosticsRelaySource.remoteMedia,
+      outcome: DiagnosticsRelayOutcome.failed,
+      durationBucket: DiagnosticsRelayDurationBucket.oneToFiveSeconds,
+      itemCountBucket: DiagnosticsRelayItemCountBucket.unknown,
     );
-    final hint = Hint();
 
-    DiagnosticsEventSanitizer.scrubRemoteEvent(event, hint);
-
-    expect(event.user, isNull);
-    expect(event.contexts.containsKey(SentryTraceContext.type), isFalse);
+    final payload = event.toJson();
+    expect(
+      payload.keys,
+      unorderedEquals(<String>[
+        'schema_version',
+        'kind',
+        'app_version',
+        'build_number',
+        'platform',
+        'code',
+        'source',
+        'outcome',
+        'duration_bucket',
+        'item_count_bucket',
+      ]),
+    );
+    final encoded = jsonEncode(payload);
+    expect(encoded, isNot(contains('message')));
+    expect(encoded, isNot(contains('stack')));
+    expect(encoded, isNot(contains('runtime')));
+    expect(encoded, isNot(contains('url')));
+    expect(encoded, isNot(contains('profile')));
   });
-
-  test(
-    'direct diagnostics reporter sends an envelope without trace context',
-    () async {
-      final transport = _RecordingTransport();
-      final options = SentryOptions(dsn: 'https://public@example.invalid/1')
-        ..transport = transport;
-      final reporter = DiagnosticsRemoteReporter(options);
-
-      reporter.addBreadcrumb(
-        Breadcrumb(category: 'tonos.error', message: 'approved_category'),
-      );
-      await reporter.captureException(
-        const _TestDiagnosticException(),
-        StackTrace.current,
-      );
-
-      final envelope = transport.envelope;
-      expect(envelope, isNotNull);
-      expect(envelope!.header.traceContext, isNull);
-      expect(envelope.header.toJson(), isNot(contains('trace')));
-      await reporter.close();
-    },
-  );
 
   test('version display includes the build number when available', () {
     expect(
@@ -137,26 +143,99 @@ void main() {
   });
 
   test('controlled report cannot send without active consent', () async {
-    final diagnostics = DiagnosticsService(sentryDsn: '');
+    final diagnostics = DiagnosticsService(
+      relayClient: DiagnosticsRelayClient(relayUrl: ''),
+      controlledTestMode: true,
+    );
 
     expect(await diagnostics.sendControlledTestEvent(), isFalse);
   });
 
-  test('application diagnostics never configure direct remote reporting', () {
-    expect(DiagnosticsService().crashReportingConfigured, isFalse);
+  test(
+    'configured relay stores a deletion receipt and honors opt-out',
+    () async {
+      final transport = _RecordingRelayTransport();
+      final diagnostics = DiagnosticsService(
+        relayClient: DiagnosticsRelayClient(
+          relayUrl: 'https://relay.example.invalid/',
+          transport: transport,
+        ),
+        versionInfoLoader:
+            () async =>
+                const AppVersionInfo(version: '1.2.3', buildNumber: '45'),
+        controlledTestMode: true,
+      );
+
+      await diagnostics.setAnonymousDiagnosticsEnabled(true);
+      expect(await diagnostics.sendControlledTestEvent(), isTrue);
+      expect(transport.submittedPayloads, hasLength(1));
+      expect(
+        transport.submittedPayloads.single,
+        isNot(containsPair('stack_trace', anything)),
+      );
+      expect(await diagnostics.hasSharedDiagnostics(), isTrue);
+
+      await diagnostics.setAnonymousDiagnosticsEnabled(false);
+      expect(transport.deletedReceiptIds, <String>['receipt-0000000001']);
+      expect(await diagnostics.hasSharedDiagnostics(), isFalse);
+    },
+  );
+
+  test('application diagnostics keep the relay disabled without a URL', () {
+    expect(DiagnosticsService().anonymousDiagnosticsConfigured, isFalse);
+  });
+
+  test('relay endpoint rejects embedded credentials and URL metadata', () {
+    expect(
+      DiagnosticsRelayClient(
+        relayUrl: 'https://operator:secret@relay.example.invalid/',
+      ).isConfigured,
+      isFalse,
+    );
+    expect(
+      DiagnosticsRelayClient(
+        relayUrl: 'https://relay.example.invalid/?deployment=staging',
+      ).isConfigured,
+      isFalse,
+    );
+    expect(
+      DiagnosticsRelayClient(
+        relayUrl: 'https://relay.example.invalid/#diagnostics',
+      ).isConfigured,
+      isFalse,
+    );
+    expect(
+      DiagnosticsRelayClient(
+        relayUrl: 'https://relay.example.invalid/diagnostics',
+      ).isConfigured,
+      isTrue,
+    );
   });
 }
 
-class _RecordingTransport implements Transport {
-  SentryEnvelope? envelope;
+class _RecordingRelayTransport implements DiagnosticsRelayTransport {
+  final List<Map<String, Object>> submittedPayloads = <Map<String, Object>>[];
+  final List<String> deletedReceiptIds = <String>[];
 
   @override
-  Future<SentryId?> send(SentryEnvelope value) async {
-    envelope = value;
-    return value.header.eventId;
+  Future<DiagnosticsRelayResponse> post(
+    Uri endpoint,
+    Map<String, Object> payload,
+  ) async {
+    submittedPayloads.add(payload);
+    return const DiagnosticsRelayResponse(
+      statusCode: 202,
+      body:
+          '{"receipt_id":"receipt-0000000001","deletion_token":"12345678901234567890123456789012"}',
+    );
   }
-}
 
-class _TestDiagnosticException implements Exception {
-  const _TestDiagnosticException();
+  @override
+  Future<DiagnosticsRelayResponse> delete(
+    Uri endpoint, {
+    required String deletionToken,
+  }) async {
+    deletedReceiptIds.add(endpoint.pathSegments.last);
+    return const DiagnosticsRelayResponse(statusCode: 204);
+  }
 }

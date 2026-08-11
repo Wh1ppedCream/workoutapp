@@ -6075,28 +6075,28 @@ class AppLocalizationsEs extends AppLocalizations {
   String get diagnosticsUnavailable => 'No disponible';
 
   @override
-  String get diagnosticsCrashSection => 'Informes de fallos';
+  String get diagnosticsCrashSection => 'Diagnósticos anónimos';
 
   @override
-  String get diagnosticsCrashSectionSubtitle => 'Informes opcionales y depurados sobre fallos inesperados.';
+  String get diagnosticsCrashSectionSubtitle => 'Informes opcionales y categóricos sobre fallos de la aplicación y sincronización de medios.';
 
   @override
-  String get diagnosticsCrashReporting => 'Compartir informes de fallos';
+  String get diagnosticsCrashReporting => 'Compartir diagnósticos anónimos';
 
   @override
-  String get diagnosticsCrashUnavailable => 'No está configurado en esta compilación. No se puede enviar ningún informe.';
+  String get diagnosticsCrashUnavailable => 'No está configurado en esta compilación. No se pueden compartir diagnósticos anónimos.';
 
   @override
-  String get diagnosticsCrashEnabledBody => 'Activado con tu consentimiento. Puedes desactivarlo cuando quieras.';
+  String get diagnosticsCrashEnabledBody => 'Activado con tu consentimiento. Al desactivarlo se solicita eliminar los informes conservados por Tonos.';
 
   @override
-  String get diagnosticsCrashDisabledBody => 'Desactivado de forma predeterminada. Actívalo solo si quieres ayudar a diagnosticar fallos.';
+  String get diagnosticsCrashDisabledBody => 'Desactivado de forma predeterminada. Actívalo solo si quieres ayudar a diagnosticar problemas de la versión.';
 
   @override
   String get diagnosticsPrivacyPromiseTitle => 'Privacidad desde el diseño';
 
   @override
-  String get diagnosticsPrivacyPromiseBody => 'Los informes contienen la versión de la aplicación, el contexto de la plataforma, un tipo de error depurado y el seguimiento de pila. Tonos excluye nombres, datos de salud, contenido de la base de datos, capturas de pantalla, jerarquía de vistas, direcciones de red, trazas de rendimiento y analíticas.';
+  String get diagnosticsPrivacyPromiseBody => 'Los informes solo contienen la versión y compilación de la aplicación, plataforma, categoría aprobada, resultado e intervalos generales. Nunca incluyen mensajes de error, seguimientos de pila, nombres, datos de salud, contenido de base de datos, capturas, direcciones de red, trazas ni analíticas.';
 
   @override
   String get diagnosticsSyncSection => 'Historial de sincronización';
@@ -6166,14 +6166,26 @@ class AppLocalizationsEs extends AppLocalizations {
   String get diagnosticsDeletionBody => 'Borra el historial anterior y desactiva los informes. Borra el almacenamiento de Tonos en los ajustes del dispositivo o desinstala Tonos para eliminar la base de datos local y las cachés. Para eliminar un informe ya enviado, contacta con el desarrollador e incluye los datos del evento que tengas.';
 
   @override
-  String get diagnosticsSendTestReport => 'Enviar un informe de prueba controlado';
+  String get diagnosticsSendTestReport => 'Enviar un evento de diagnóstico controlado';
 
   @override
-  String get diagnosticsSendTestReportBody => 'Envía un evento de diagnóstico depurado para verificar el consentimiento y la entrega en producción.';
+  String get diagnosticsSendTestReportBody => 'Disponible solo en una compilación habilitada explícitamente para pruebas. Envía un evento fijo de la lista permitida.';
 
   @override
-  String get diagnosticsTestReportSent => 'Informe de prueba controlado enviado.';
+  String get diagnosticsTestReportSent => 'Evento de diagnóstico controlado enviado.';
 
   @override
-  String get diagnosticsTestReportFailed => 'No se pudo enviar el informe de prueba. Comprueba la configuración de la compilación y la conexión.';
+  String get diagnosticsTestReportFailed => 'No se pudo enviar el evento de diagnóstico. Comprueba la configuración de la compilación y la conexión.';
+
+  @override
+  String get diagnosticsDeleteShared => 'Eliminar diagnósticos compartidos';
+
+  @override
+  String get diagnosticsDeleteSharedBody => 'Solicita eliminar los informes que esta instalación puede demostrar que envió. El historial de recuperación del proveedor puede conservar filas eliminadas hasta 30 días.';
+
+  @override
+  String get diagnosticsSharedDeleted => 'Se solicitó eliminar los diagnósticos compartidos.';
+
+  @override
+  String get diagnosticsSharedDeletionPending => 'Algunas solicitudes de eliminación se reintentarán cuando la aplicación se abra con conexión.';
 }

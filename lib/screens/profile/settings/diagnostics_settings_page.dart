@@ -18,8 +18,10 @@ class _DiagnosticsSettingsPageState extends State<DiagnosticsSettingsPage> {
 
   AppVersionInfo? _version;
   List<SyncDiagnosticEvent> _events = const [];
-  bool _crashReportingEnabled = false;
+  bool _anonymousDiagnosticsEnabled = false;
+  bool _hasSharedDiagnostics = false;
   bool _sendingTestEvent = false;
+  bool _deletingSharedDiagnostics = false;
   bool _loading = true;
 
   @override
@@ -29,8 +31,9 @@ class _DiagnosticsSettingsPageState extends State<DiagnosticsSettingsPage> {
   }
 
   Future<void> _load() async {
-    final enabled = await _diagnostics.loadCrashReportingEnabled();
+    final enabled = await _diagnostics.loadAnonymousDiagnosticsEnabled();
     final events = await _diagnostics.loadSyncEvents();
+    final hasSharedDiagnostics = await _diagnostics.hasSharedDiagnostics();
     AppVersionInfo? version;
     try {
       version = await _diagnostics.loadVersionInfo();
@@ -39,16 +42,17 @@ class _DiagnosticsSettingsPageState extends State<DiagnosticsSettingsPage> {
     }
     if (!mounted) return;
     setState(() {
-      _crashReportingEnabled = enabled;
+      _anonymousDiagnosticsEnabled = enabled;
       _events = events;
+      _hasSharedDiagnostics = hasSharedDiagnostics;
       _version = version;
       _loading = false;
     });
   }
 
-  Future<void> _setCrashReporting(bool enabled) async {
+  Future<void> _setAnonymousDiagnostics(bool enabled) async {
     try {
-      await _diagnostics.setCrashReportingEnabled(enabled);
+      await _diagnostics.setAnonymousDiagnosticsEnabled(enabled);
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -59,7 +63,12 @@ class _DiagnosticsSettingsPageState extends State<DiagnosticsSettingsPage> {
       return;
     }
     if (!mounted) return;
-    setState(() => _crashReportingEnabled = enabled);
+    final hasSharedDiagnostics = await _diagnostics.hasSharedDiagnostics();
+    if (!mounted) return;
+    setState(() {
+      _anonymousDiagnosticsEnabled = enabled;
+      _hasSharedDiagnostics = hasSharedDiagnostics;
+    });
   }
 
   Future<void> _clearHistory() async {
@@ -91,14 +100,35 @@ class _DiagnosticsSettingsPageState extends State<DiagnosticsSettingsPage> {
     );
   }
 
+  Future<void> _deleteSharedDiagnostics() async {
+    if (_deletingSharedDiagnostics || !_hasSharedDiagnostics) return;
+    setState(() => _deletingSharedDiagnostics = true);
+    final result = await _diagnostics.deleteSharedDiagnostics();
+    if (!mounted) return;
+    setState(() {
+      _deletingSharedDiagnostics = false;
+      _hasSharedDiagnostics = result.pending > 0;
+    });
+    final strings = AppLocalizations.of(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          result.pending == 0
+              ? strings.diagnosticsSharedDeleted
+              : strings.diagnosticsSharedDeletionPending,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
-    final configured = _diagnostics.crashReportingConfigured;
-    final crashBody =
+    final configured = _diagnostics.anonymousDiagnosticsConfigured;
+    final diagnosticsBody =
         !configured
             ? strings.diagnosticsCrashUnavailable
-            : _crashReportingEnabled
+            : _anonymousDiagnosticsEnabled
             ? strings.diagnosticsCrashEnabledBody
             : strings.diagnosticsCrashDisabledBody;
 
@@ -135,27 +165,28 @@ class _DiagnosticsSettingsPageState extends State<DiagnosticsSettingsPage> {
               icon: Icons.bug_report_outlined,
               iconColor: SettingsAccent.safety,
               title: strings.diagnosticsCrashReporting,
-              subtitle: crashBody,
-              value: configured && _crashReportingEnabled,
-              onChanged: configured ? _setCrashReporting : null,
+              subtitle: diagnosticsBody,
+              value: configured && _anonymousDiagnosticsEnabled,
+              onChanged: configured ? _setAnonymousDiagnostics : null,
             ),
-            SettingsActionTile(
-              icon: Icons.send_outlined,
-              iconColor: SettingsAccent.safety,
-              title: strings.diagnosticsSendTestReport,
-              subtitle: strings.diagnosticsSendTestReportBody,
-              trailing:
-                  _sendingTestEvent
-                      ? const SizedBox.square(
-                        dimension: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                      : null,
-              onTap:
-                  configured && _crashReportingEnabled && !_sendingTestEvent
-                      ? _sendTestEvent
-                      : null,
-            ),
+            if (_diagnostics.controlledTestAvailable)
+              SettingsActionTile(
+                icon: Icons.send_outlined,
+                iconColor: SettingsAccent.safety,
+                title: strings.diagnosticsSendTestReport,
+                subtitle: strings.diagnosticsSendTestReportBody,
+                trailing:
+                    _sendingTestEvent
+                        ? const SizedBox.square(
+                          dimension: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                        : null,
+                onTap:
+                    _anonymousDiagnosticsEnabled && !_sendingTestEvent
+                        ? _sendTestEvent
+                        : null,
+              ),
             SettingsInfoCard(
               icon: Icons.visibility_off_outlined,
               iconColor: SettingsAccent.safety,
@@ -216,6 +247,24 @@ class _DiagnosticsSettingsPageState extends State<DiagnosticsSettingsPage> {
               iconColor: SettingsAccent.progress,
               title: strings.diagnosticsDeletionTitle,
               body: strings.diagnosticsDeletionBody,
+            ),
+            const SizedBox(height: 10),
+            SettingsActionTile(
+              icon: Icons.delete_outline,
+              iconColor: SettingsAccent.safety,
+              title: strings.diagnosticsDeleteShared,
+              subtitle: strings.diagnosticsDeleteSharedBody,
+              trailing:
+                  _deletingSharedDiagnostics
+                      ? const SizedBox.square(
+                        dimension: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                      : null,
+              onTap:
+                  _hasSharedDiagnostics && !_deletingSharedDiagnostics
+                      ? _deleteSharedDiagnostics
+                      : null,
             ),
           ],
         ),

@@ -1,17 +1,13 @@
 import 'dart:async';
-import 'dart:collection';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:sentry/sentry.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-enum SyncDiagnosticOutcome { succeeded, failed, skipped }
+import 'diagnostics_relay_client.dart';
 
-/// Distributed builds must not send device diagnostics directly to Sentry.
-/// A future privacy relay can provide a separate, reviewed transport.
-const String _disabledDirectSentryDsn = '';
+enum SyncDiagnosticOutcome { succeeded, failed, skipped }
 
 class SyncDiagnosticEvent {
   final DateTime timestamp;
@@ -65,19 +61,20 @@ class SyncDiagnosticEvent {
 }
 
 class DiagnosticsPreferences {
-  static const String crashReportingEnabledKey =
-      'diagnostics.crash_reporting.enabled';
+  /// New consent is intentionally separate from the retired direct endpoint key.
+  static const String anonymousDiagnosticsEnabledKey =
+      'diagnostics.relay.consent.v1';
 
   const DiagnosticsPreferences();
 
-  Future<bool> loadCrashReportingEnabled() async {
+  Future<bool> loadAnonymousDiagnosticsEnabled() async {
     final preferences = await SharedPreferences.getInstance();
-    return preferences.getBool(crashReportingEnabledKey) ?? false;
+    return preferences.getBool(anonymousDiagnosticsEnabledKey) ?? false;
   }
 
-  Future<void> saveCrashReportingEnabled(bool enabled) async {
+  Future<void> saveAnonymousDiagnosticsEnabled(bool enabled) async {
     final preferences = await SharedPreferences.getInstance();
-    await preferences.setBool(crashReportingEnabledKey, enabled);
+    await preferences.setBool(anonymousDiagnosticsEnabledKey, enabled);
   }
 }
 
@@ -135,6 +132,78 @@ class SyncDiagnosticsStore {
   }
 }
 
+class DiagnosticsRelayReceiptStore {
+  static const String receiptsKey = 'diagnostics.relay.receipts.v1';
+  static const int maxReceipts = 20;
+
+  Future<void> _writeQueue = Future<void>.value();
+
+  Future<List<DiagnosticsRelayReceipt>> load() async {
+    final preferences = await SharedPreferences.getInstance();
+    final encoded = preferences.getString(receiptsKey);
+    if (encoded == null || encoded.isEmpty) return const [];
+
+    try {
+      final rows = jsonDecode(encoded) as List<dynamic>;
+      return rows
+          .whereType<Map<dynamic, dynamic>>()
+          .map(
+            (row) => DiagnosticsRelayReceipt.fromJson(
+              row.map(
+                (key, value) =>
+                    MapEntry<String, Object?>(key.toString(), value),
+              ),
+            ),
+          )
+          .where((receipt) => receipt.isValid)
+          .toList(growable: false);
+    } on FormatException {
+      return const [];
+    } on TypeError {
+      return const [];
+    }
+  }
+
+  Future<void> add(DiagnosticsRelayReceipt receipt) {
+    _writeQueue = _writeQueue.then((_) async {
+      final receipts = await load();
+      final updated = <DiagnosticsRelayReceipt>[receipt, ...receipts];
+      if (updated.length > maxReceipts) {
+        updated.removeRange(maxReceipts, updated.length);
+      }
+      await _save(updated);
+    });
+    return _writeQueue;
+  }
+
+  Future<void> replace(List<DiagnosticsRelayReceipt> receipts) {
+    _writeQueue = _writeQueue.then((_) => _save(receipts));
+    return _writeQueue;
+  }
+
+  Future<void> _save(List<DiagnosticsRelayReceipt> receipts) async {
+    final preferences = await SharedPreferences.getInstance();
+    if (receipts.isEmpty) {
+      await preferences.remove(receiptsKey);
+      return;
+    }
+    await preferences.setString(
+      receiptsKey,
+      jsonEncode(receipts.map((receipt) => receipt.toJson()).toList()),
+    );
+  }
+}
+
+class DiagnosticsRemoteDeletionResult {
+  const DiagnosticsRemoteDeletionResult({
+    required this.deleted,
+    required this.pending,
+  });
+
+  final int deleted;
+  final int pending;
+}
+
 class AppVersionInfo {
   final String version;
   final String buildNumber;
@@ -149,89 +218,55 @@ abstract final class DiagnosticsSanitizer {
   static String errorType(Object error) => error.runtimeType.toString();
 }
 
-abstract final class DiagnosticsEventSanitizer {
-  static void scrubRemoteEvent(SentryEvent event, Hint hint) {
-    // Remove data the app must never include in a remote diagnostic event.
-    event.user = null;
-    event.contexts.remove(SentryTraceContext.type);
-    hint.attachments.clear();
-    hint.screenshot = null;
-    hint.viewHierarchy = null;
-  }
-}
-
-/// Sends the small, explicitly approved diagnostics payload without using
-/// Sentry's process-wide scope. A scoped capture always emits a trace header.
-class DiagnosticsRemoteReporter {
-  DiagnosticsRemoteReporter(SentryOptions options)
-    : _client = SentryClient(options),
-      _maxBreadcrumbs = options.maxBreadcrumbs;
-
-  final SentryClient _client;
-  final int _maxBreadcrumbs;
-  final Queue<Breadcrumb> _breadcrumbs = ListQueue<Breadcrumb>();
-
-  void addBreadcrumb(Breadcrumb breadcrumb) {
-    if (_maxBreadcrumbs == 0) return;
-    if (_breadcrumbs.length >= _maxBreadcrumbs) {
-      _breadcrumbs.removeFirst();
-    }
-    _breadcrumbs.add(breadcrumb);
-  }
-
-  Future<SentryId> captureException(Object exception, StackTrace stackTrace) {
-    return _client.captureEvent(
-      SentryEvent(
-        throwable: exception,
-        breadcrumbs: _breadcrumbs.toList(growable: false),
-      ),
-      stackTrace: stackTrace,
-    );
-  }
-
-  Future<void> close() async {
-    await _client.close();
-    _breadcrumbs.clear();
-  }
-}
-
-class _RedactedDiagnosticException implements Exception {
-  final String type;
-
-  const _RedactedDiagnosticException(this.type);
-
-  @override
-  String toString() => 'RedactedDiagnosticException($type)';
-}
-
 class DiagnosticsService {
   DiagnosticsService({
     DiagnosticsPreferences preferences = const DiagnosticsPreferences(),
     SyncDiagnosticsStore? syncStore,
-    String sentryDsn = _disabledDirectSentryDsn,
+    DiagnosticsRelayReceiptStore? receiptStore,
+    DiagnosticsRelayClient? relayClient,
+    Future<AppVersionInfo> Function()? versionInfoLoader,
+    bool controlledTestMode = const bool.fromEnvironment(
+      'TONOS_DIAGNOSTICS_TEST_MODE',
+      defaultValue: false,
+    ),
   }) : _preferences = preferences,
        _syncStore = syncStore ?? SyncDiagnosticsStore(),
-       _sentryDsn = sentryDsn.trim();
+       _receiptStore = receiptStore ?? DiagnosticsRelayReceiptStore(),
+       _relayClient =
+           relayClient ??
+           DiagnosticsRelayClient(
+             relayUrl: const String.fromEnvironment(
+               'TONOS_DIAGNOSTICS_RELAY_URL',
+               defaultValue: '',
+             ),
+           ),
+       _versionInfoLoader = versionInfoLoader,
+       _controlledTestMode = controlledTestMode;
 
   static final DiagnosticsService instance = DiagnosticsService();
 
   final DiagnosticsPreferences _preferences;
   final SyncDiagnosticsStore _syncStore;
-  final String _sentryDsn;
+  final DiagnosticsRelayReceiptStore _receiptStore;
+  final DiagnosticsRelayClient _relayClient;
+  final Future<AppVersionInfo> Function()? _versionInfoLoader;
+  final bool _controlledTestMode;
 
-  DiagnosticsRemoteReporter? _remoteReporter;
-  bool _remoteReportingActive = false;
+  bool _anonymousDiagnosticsActive = false;
   bool _initialized = false;
 
-  bool get crashReportingConfigured => _sentryDsn.isNotEmpty;
-  bool get crashReportingActive => _remoteReportingActive;
+  bool get anonymousDiagnosticsConfigured => _relayClient.isConfigured;
+  bool get anonymousDiagnosticsActive => _anonymousDiagnosticsActive;
+  bool get controlledTestAvailable =>
+      _controlledTestMode && anonymousDiagnosticsConfigured;
 
   Future<void> initialize() async {
     if (_initialized) return;
     _initialized = true;
     try {
-      final enabled = await _preferences.loadCrashReportingEnabled();
-      if (enabled) await _startRemoteReporting();
+      final enabled = await _preferences.loadAnonymousDiagnosticsEnabled();
+      _anonymousDiagnosticsActive = enabled && anonymousDiagnosticsConfigured;
+      if (!enabled) unawaited(deleteSharedDiagnostics());
     } catch (error) {
       debugPrint(
         '[diagnostics] initialization unavailable: '
@@ -240,66 +275,68 @@ class DiagnosticsService {
     }
   }
 
-  Future<bool> loadCrashReportingEnabled() {
-    return _preferences.loadCrashReportingEnabled();
+  Future<bool> loadAnonymousDiagnosticsEnabled() {
+    return _preferences.loadAnonymousDiagnosticsEnabled();
   }
 
-  Future<void> setCrashReportingEnabled(bool enabled) async {
-    await _preferences.saveCrashReportingEnabled(enabled);
-    if (!enabled) {
-      final reporter = _remoteReporter;
-      if (reporter != null) {
-        try {
-          await reporter.close();
-        } catch (error) {
-          debugPrint(
-            '[diagnostics] shutdown unavailable: '
-            '${DiagnosticsSanitizer.errorType(error)}',
-          );
-        }
-      }
-      _remoteReporter = null;
-      _remoteReportingActive = false;
-      return;
-    }
-    await _startRemoteReporting();
+  Future<void> setAnonymousDiagnosticsEnabled(bool enabled) async {
+    await _preferences.saveAnonymousDiagnosticsEnabled(enabled);
+    _anonymousDiagnosticsActive = enabled && anonymousDiagnosticsConfigured;
+    if (!enabled) await deleteSharedDiagnostics();
   }
 
-  Future<void> _startRemoteReporting() async {
-    if (_remoteReportingActive || !crashReportingConfigured) return;
-
-    AppVersionInfo? versionInfo;
+  Future<DiagnosticsRemoteDeletionResult> deleteSharedDiagnostics() async {
+    List<DiagnosticsRelayReceipt> receipts;
     try {
-      versionInfo = await loadVersionInfo();
-    } catch (_) {
-      // Version context is useful but not required for crash capture.
+      receipts = await _receiptStore.load();
+    } catch (error) {
+      debugPrint(
+        '[diagnostics] local receipt history unavailable: '
+        '${DiagnosticsSanitizer.errorType(error)}',
+      );
+      return const DiagnosticsRemoteDeletionResult(deleted: 0, pending: 0);
+    }
+    if (receipts.isEmpty) {
+      return const DiagnosticsRemoteDeletionResult(deleted: 0, pending: 0);
     }
 
-    final options =
-        SentryOptions(dsn: _sentryDsn)
-          ..environment = const String.fromEnvironment(
-            'TONOS_ENVIRONMENT',
-            defaultValue: 'production',
-          )
-          ..sendDefaultPii = false
-          ..enableLogs = false
-          ..captureFailedRequests = false
-          ..captureNativeFailedRequests = false
-          ..maxBreadcrumbs = 30
-          ..debug = false
-          ..beforeSend = (event, hint) {
-            // Reject captures that did not pass through captureException's
-            // redaction boundary, including direct SDK calls added accidentally.
-            if (event.throwable is! _RedactedDiagnosticException) return null;
-            DiagnosticsEventSanitizer.scrubRemoteEvent(event, hint);
-            return event;
-          };
-    if (versionInfo != null) {
-      options.release =
-          'tonos@${versionInfo.version}+${versionInfo.buildNumber}';
+    final pending = <DiagnosticsRelayReceipt>[];
+    var deleted = 0;
+    for (final receipt in receipts) {
+      if (await _relayClient.deleteReceipt(receipt)) {
+        deleted++;
+      } else {
+        pending.add(receipt);
+      }
     }
-    _remoteReporter = DiagnosticsRemoteReporter(options);
-    _remoteReportingActive = true;
+    try {
+      await _receiptStore.replace(pending);
+    } catch (error) {
+      debugPrint(
+        '[diagnostics] local receipt update unavailable: '
+        '${DiagnosticsSanitizer.errorType(error)}',
+      );
+      return DiagnosticsRemoteDeletionResult(
+        deleted: deleted,
+        pending: receipts.length,
+      );
+    }
+    return DiagnosticsRemoteDeletionResult(
+      deleted: deleted,
+      pending: pending.length,
+    );
+  }
+
+  Future<bool> hasSharedDiagnostics() async {
+    try {
+      return (await _receiptStore.load()).isNotEmpty;
+    } catch (error) {
+      debugPrint(
+        '[diagnostics] local receipt history unavailable: '
+        '${DiagnosticsSanitizer.errorType(error)}',
+      );
+      return false;
+    }
   }
 
   Future<void> captureException(
@@ -310,46 +347,26 @@ class DiagnosticsService {
     debugPrint(
       '[diagnostics] $category: ${DiagnosticsSanitizer.errorType(error)}',
     );
-    await _captureRedactedException(error, stackTrace, category: category);
-  }
-
-  Future<bool> sendControlledTestEvent() {
-    return _captureRedactedException(
-      const _ControlledDiagnosticsTestException(),
-      StackTrace.current,
-      category: 'controlled_diagnostics_test',
+    await _submitRelayEvent(
+      kind: DiagnosticsRelayKind.appFault,
+      code: _codeForFaultCategory(category),
+      source: DiagnosticsRelaySource.app,
+      outcome: DiagnosticsRelayOutcome.failed,
+      durationBucket: DiagnosticsRelayDurationBucket.unknown,
+      itemCountBucket: DiagnosticsRelayItemCountBucket.unknown,
     );
   }
 
-  Future<bool> _captureRedactedException(
-    Object error,
-    StackTrace stackTrace, {
-    required String category,
-  }) async {
-    if (!_remoteReportingActive) return false;
-
-    try {
-      final reporter = _remoteReporter;
-      if (reporter == null) return false;
-      reporter.addBreadcrumb(
-        Breadcrumb(
-          category: 'tonos.error',
-          message: category,
-          level: SentryLevel.error,
-        ),
-      );
-      final eventId = await reporter.captureException(
-        _RedactedDiagnosticException(DiagnosticsSanitizer.errorType(error)),
-        stackTrace,
-      );
-      return eventId != const SentryId.empty();
-    } catch (captureError) {
-      debugPrint(
-        '[diagnostics] remote capture unavailable: '
-        '${DiagnosticsSanitizer.errorType(captureError)}',
-      );
-      return false;
-    }
+  Future<bool> sendControlledTestEvent() async {
+    if (!_controlledTestMode) return false;
+    return _submitRelayEvent(
+      kind: DiagnosticsRelayKind.appFault,
+      code: DiagnosticsRelayCode.flutterFrameworkError,
+      source: DiagnosticsRelaySource.app,
+      outcome: DiagnosticsRelayOutcome.failed,
+      durationBucket: DiagnosticsRelayDurationBucket.unknown,
+      itemCountBucket: DiagnosticsRelayItemCountBucket.unknown,
+    );
   }
 
   Future<void> recordSync(SyncDiagnosticEvent event) async {
@@ -362,50 +379,114 @@ class DiagnosticsService {
       );
     }
 
-    if (!_remoteReportingActive) return;
-    try {
-      final reporter = _remoteReporter;
-      if (reporter == null) return;
-      reporter.addBreadcrumb(
-        Breadcrumb(
-          category: 'tonos.content_sync',
-          message: event.operation,
-          level:
-              event.outcome == SyncDiagnosticOutcome.failed
-                  ? SentryLevel.warning
-                  : SentryLevel.info,
-          data: <String, Object?>{
-            'source': event.source,
-            'outcome': event.outcome.name,
-            'duration_ms': event.durationMilliseconds,
-            if (event.manifestVersion != null)
-              'manifest_version': event.manifestVersion,
-            if (event.itemCount != null) 'item_count': event.itemCount,
-            if (event.errorType != null) 'error_type': event.errorType,
-          },
-        ),
-      );
-    } catch (error) {
-      debugPrint(
-        '[diagnostics] remote breadcrumb unavailable: '
-        '${DiagnosticsSanitizer.errorType(error)}',
-      );
-    }
+    if (event.outcome == SyncDiagnosticOutcome.succeeded) return;
+    await _submitRelayEvent(
+      kind: DiagnosticsRelayKind.contentSync,
+      code:
+          event.outcome == SyncDiagnosticOutcome.skipped
+              ? DiagnosticsRelayCode.contentSyncSkipped
+              : DiagnosticsRelayCode.contentManifestFetchFailed,
+      source: _sourceForSync(event.source),
+      outcome:
+          event.outcome == SyncDiagnosticOutcome.skipped
+              ? DiagnosticsRelayOutcome.skipped
+              : DiagnosticsRelayOutcome.failed,
+      durationBucket: diagnosticsDurationBucket(event.durationMilliseconds),
+      itemCountBucket: diagnosticsItemCountBucket(event.itemCount),
+      manifestVersion: event.manifestVersion,
+    );
   }
 
   Future<List<SyncDiagnosticEvent>> loadSyncEvents() => _syncStore.load();
 
   Future<void> clearSyncEvents() => _syncStore.clear();
 
-  Future<AppVersionInfo> loadVersionInfo() async {
+  Future<bool> _submitRelayEvent({
+    required DiagnosticsRelayKind kind,
+    required DiagnosticsRelayCode code,
+    required DiagnosticsRelaySource source,
+    required DiagnosticsRelayOutcome outcome,
+    required DiagnosticsRelayDurationBucket durationBucket,
+    required DiagnosticsRelayItemCountBucket itemCountBucket,
+    int? manifestVersion,
+  }) async {
+    if (!_anonymousDiagnosticsActive) return false;
+
+    try {
+      final version = await loadVersionInfo();
+      final receipt = await _relayClient.submit(
+        DiagnosticsRelayEvent(
+          kind: kind,
+          appVersion: _safeVersion(version.version),
+          buildNumber: int.tryParse(version.buildNumber) ?? 0,
+          platform: _currentPlatform(),
+          code: code,
+          source: source,
+          outcome: outcome,
+          durationBucket: durationBucket,
+          itemCountBucket: itemCountBucket,
+          manifestVersion: manifestVersion,
+        ),
+      );
+      if (receipt == null) return false;
+      await _receiptStore.add(receipt);
+      return true;
+    } catch (error) {
+      debugPrint(
+        '[diagnostics] relay unavailable: '
+        '${DiagnosticsSanitizer.errorType(error)}',
+      );
+      return false;
+    }
+  }
+
+  Future<AppVersionInfo> loadVersionInfo() {
+    final loader = _versionInfoLoader;
+    if (loader != null) return loader();
+    return _loadPlatformVersionInfo();
+  }
+
+  Future<AppVersionInfo> _loadPlatformVersionInfo() async {
     final packageInfo = await PackageInfo.fromPlatform();
     return AppVersionInfo(
       version: packageInfo.version,
       buildNumber: packageInfo.buildNumber,
     );
   }
-}
 
-class _ControlledDiagnosticsTestException implements Exception {
-  const _ControlledDiagnosticsTestException();
+  static DiagnosticsRelayCode _codeForFaultCategory(String category) {
+    return switch (category) {
+      'flutter_framework' => DiagnosticsRelayCode.flutterFrameworkError,
+      'repository_warmup' => DiagnosticsRelayCode.startupError,
+      _ => DiagnosticsRelayCode.asyncUncaughtError,
+    };
+  }
+
+  static DiagnosticsRelaySource _sourceForSync(String source) {
+    return switch (source) {
+      'remote' => DiagnosticsRelaySource.remoteMedia,
+      'bundled' => DiagnosticsRelaySource.bundledMedia,
+      'cache' => DiagnosticsRelaySource.mediaCache,
+      _ => DiagnosticsRelaySource.app,
+    };
+  }
+
+  static DiagnosticsRelayPlatform _currentPlatform() {
+    if (kIsWeb) return DiagnosticsRelayPlatform.web;
+    return switch (defaultTargetPlatform) {
+      TargetPlatform.android => DiagnosticsRelayPlatform.android,
+      TargetPlatform.iOS => DiagnosticsRelayPlatform.ios,
+      TargetPlatform.windows => DiagnosticsRelayPlatform.windows,
+      TargetPlatform.macOS => DiagnosticsRelayPlatform.macos,
+      TargetPlatform.linux => DiagnosticsRelayPlatform.linux,
+      TargetPlatform.fuchsia => DiagnosticsRelayPlatform.android,
+    };
+  }
+
+  static String _safeVersion(String version) {
+    final trimmed = version.trim();
+    return RegExp(r'^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$').hasMatch(trimmed)
+        ? trimmed
+        : '0.0.0';
+  }
 }

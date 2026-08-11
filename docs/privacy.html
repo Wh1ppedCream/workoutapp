@@ -81,7 +81,7 @@
 <body>
   <main>
     <h1>Privacy Policy for Tonos - Health and Fitness</h1>
-    <p class="updated">Last updated: August 9, 2026</p>
+    <p class="updated">Last updated: August 10, 2026</p>
 
     <p>
       Tonos - Health and Fitness is a local-first fitness, nutrition, and body
@@ -119,23 +119,33 @@
       behavioural analytics.
     </p>
 
-    <h2>Optional Crash Diagnostics</h2>
+    <h2>Optional Anonymous Diagnostics</h2>
     <p>
-      Current production builds do not send crash reports to Sentry or another
-      remote diagnostics service. The Share crash reports control is unavailable
-      in these builds while Tonos evaluates a privacy-preserving relay.
+      Current production builds do not send remote diagnostics. The Share
+      anonymous diagnostics control is unavailable unless a build has been
+      deliberately configured with Tonos' approved diagnostics relay.
+    </p>
+    <p>
+      If Tonos later enables that relay, it will receive only an app version,
+      build number, platform, approved fault or sync category, outcome, and
+      coarse duration and item-count ranges. It will never receive error
+      messages, stack traces, names, health data, database contents,
+      screenshots, network addresses, usage analytics, or a device identifier.
+      Tonos will not forward these reports to Sentry or another diagnostics
+      vendor.
+    </p>
+    <p>
+      Cloudflare would process the connection to operate the relay. Tonos will
+      not store client IP addresses, headers, user agents, location, or request
+      bodies in the relay database or application logs. Submitted primary rows
+      would expire after 14 days. Cloudflare D1 recovery history can retain a
+      deleted row for up to 30 additional days.
     </p>
     <p>
       Content-sync diagnostic history remains local to your device. It contains
       only the operation, source category, outcome, duration, manifest version,
       item count, and redacted error type. It never includes workout, nutrition,
       body metric, profile, or database contents.
-    </p>
-    <p>
-      Earlier opt-in validation builds could submit a redacted report to Sentry.
-      Such reports were limited by the diagnostics configuration, but are not
-      submitted by current production builds. See the data deletion guide if you
-      opted in to an earlier validation build and want a report removed.
     </p>
 
     <h2>Data Storage, Security, and Retention</h2>
@@ -149,16 +159,17 @@
     <p>
       The app keeps at most 30 content-sync diagnostic entries on the device.
       You can clear them from Diagnostics &amp; Privacy. Current production builds
-      have no remote crash-report retention because they do not submit crash
-      reports. Earlier opt-in validation reports are retained by Sentry for no
-      more than 90 days and may be deleted sooner under its service plan.
+      have no remote diagnostics retention because no relay endpoint is enabled.
+      Any future relay row will have a 14-day primary retention period, with up
+      to 30 additional days of provider-managed recovery history after expiry or
+      deletion.
     </p>
 
     <h2>Deleting Your Data</h2>
     <p>
       See the <a href="data-deletion.html">Tonos Data Deletion Guide</a> for
       steps covering sync history, local app data, exported backups, cached
-      media, and previously submitted crash reports.
+      media, and any future anonymous diagnostics shared through the relay.
     </p>
 
     <h2>Children's Privacy</h2>

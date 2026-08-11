@@ -6075,28 +6075,28 @@ class AppLocalizationsFr extends AppLocalizations {
   String get diagnosticsUnavailable => 'Indisponible';
 
   @override
-  String get diagnosticsCrashSection => 'Rapports de plantage';
+  String get diagnosticsCrashSection => 'Diagnostics anonymes';
 
   @override
-  String get diagnosticsCrashSectionSubtitle => 'Rapports facultatifs et expurgés sur les défaillances inattendues.';
+  String get diagnosticsCrashSectionSubtitle => 'Rapports facultatifs et catégoriels sur les défaillances de l’application et la synchronisation des médias.';
 
   @override
-  String get diagnosticsCrashReporting => 'Partager les rapports de plantage';
+  String get diagnosticsCrashReporting => 'Partager des diagnostics anonymes';
 
   @override
-  String get diagnosticsCrashUnavailable => 'Non configuré dans cette version. Aucun rapport ne peut être envoyé.';
+  String get diagnosticsCrashUnavailable => 'Non configuré dans cette version. Aucun diagnostic anonyme ne peut être partagé.';
 
   @override
-  String get diagnosticsCrashEnabledBody => 'Activé avec votre consentement. Vous pouvez le désactiver à tout moment.';
+  String get diagnosticsCrashEnabledBody => 'Activé avec votre consentement. Le désactiver demande la suppression des rapports conservés par Tonos.';
 
   @override
-  String get diagnosticsCrashDisabledBody => 'Désactivé par défaut. Activez-le seulement pour aider à diagnostiquer les plantages.';
+  String get diagnosticsCrashDisabledBody => 'Désactivé par défaut. Activez-le seulement pour aider à diagnostiquer des problèmes de version.';
 
   @override
   String get diagnosticsPrivacyPromiseTitle => 'Confidentialité intégrée';
 
   @override
-  String get diagnosticsPrivacyPromiseBody => 'Les rapports contiennent la version de l’application, le contexte de la plateforme, un type d’erreur expurgé et la pile d’appels. Tonos exclut les noms, données de santé, contenus de base de données, captures d’écran, hiérarchie des vues, adresses réseau, traces de performance et analyses.';
+  String get diagnosticsPrivacyPromiseBody => 'Les rapports contiennent uniquement la version et le numéro de build de l’application, la plateforme, une catégorie approuvée, le résultat et des tranches générales. Ils n’incluent jamais messages d’erreur, piles d’appels, noms, données de santé, contenu de base de données, captures, adresses réseau, traces ou analyses.';
 
   @override
   String get diagnosticsSyncSection => 'Historique de synchronisation';
@@ -6166,16 +6166,28 @@ class AppLocalizationsFr extends AppLocalizations {
   String get diagnosticsDeletionBody => 'Effacez l’historique ci-dessus et désactivez les rapports. Effacez le stockage de Tonos dans les réglages de l’appareil ou désinstallez l’application pour supprimer la base locale et les caches. Pour supprimer un rapport déjà envoyé, contactez le développeur avec les détails de l’événement dont vous disposez.';
 
   @override
-  String get diagnosticsSendTestReport => 'Envoyer un rapport de test contrôlé';
+  String get diagnosticsSendTestReport => 'Envoyer un événement de diagnostic contrôlé';
 
   @override
-  String get diagnosticsSendTestReportBody => 'Envoie un diagnostic expurgé pour vérifier le consentement et la transmission en production.';
+  String get diagnosticsSendTestReportBody => 'Disponible uniquement dans une version explicitement activée pour les tests. Envoie un événement fixe autorisé.';
 
   @override
-  String get diagnosticsTestReportSent => 'Rapport de test contrôlé envoyé.';
+  String get diagnosticsTestReportSent => 'Événement de diagnostic contrôlé envoyé.';
 
   @override
-  String get diagnosticsTestReportFailed => 'Le rapport de test n’a pas pu être envoyé. Vérifiez la configuration du build et la connexion.';
+  String get diagnosticsTestReportFailed => 'L’événement de diagnostic n’a pas pu être envoyé. Vérifiez la configuration du build et la connexion.';
+
+  @override
+  String get diagnosticsDeleteShared => 'Supprimer les diagnostics partagés';
+
+  @override
+  String get diagnosticsDeleteSharedBody => 'Demande la suppression des rapports que cette installation peut prouver avoir envoyés. L’historique de récupération du fournisseur peut conserver des lignes supprimées jusqu’à 30 jours.';
+
+  @override
+  String get diagnosticsSharedDeleted => 'La suppression des diagnostics partagés a été demandée.';
+
+  @override
+  String get diagnosticsSharedDeletionPending => 'Certaines demandes de suppression seront réessayées lorsque l’application s’ouvrira avec une connexion.';
 }
 
 /// The translations for French, as used in Canada (`fr_CA`).
@@ -12243,28 +12255,28 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get diagnosticsUnavailable => 'Non disponible';
 
   @override
-  String get diagnosticsCrashSection => 'Rapports de plantage';
+  String get diagnosticsCrashSection => 'Diagnostics anonymes';
 
   @override
-  String get diagnosticsCrashSectionSubtitle => 'Rapports facultatifs et expurgés sur les défaillances inattendues.';
+  String get diagnosticsCrashSectionSubtitle => 'Rapports facultatifs et catégoriels sur les défaillances de l’application et la synchronisation des médias.';
 
   @override
-  String get diagnosticsCrashReporting => 'Partager les rapports de plantage';
+  String get diagnosticsCrashReporting => 'Partager des diagnostics anonymes';
 
   @override
-  String get diagnosticsCrashUnavailable => 'Non configuré dans cette version. Aucun rapport ne peut être envoyé.';
+  String get diagnosticsCrashUnavailable => 'Non configuré dans cette version. Aucun diagnostic anonyme ne peut être partagé.';
 
   @override
-  String get diagnosticsCrashEnabledBody => 'Activé avec votre consentement. Vous pouvez le désactiver en tout temps.';
+  String get diagnosticsCrashEnabledBody => 'Activé avec votre consentement. Le désactiver demande la suppression des rapports conservés par Tonos.';
 
   @override
-  String get diagnosticsCrashDisabledBody => 'Désactivé par défaut. Activez-le seulement pour aider à diagnostiquer les plantages.';
+  String get diagnosticsCrashDisabledBody => 'Désactivé par défaut. Activez-le seulement pour aider à diagnostiquer des problèmes de version.';
 
   @override
   String get diagnosticsPrivacyPromiseTitle => 'Confidentialité dès la conception';
 
   @override
-  String get diagnosticsPrivacyPromiseBody => 'Les rapports contiennent la version de l’application, le contexte de la plateforme, un type d’erreur expurgé et la pile d’appels. Tonos exclut les noms, données de santé, contenus de base de données, captures d’écran, hiérarchie des vues, adresses réseau, traces de performance et analyses.';
+  String get diagnosticsPrivacyPromiseBody => 'Les rapports contiennent uniquement la version et le numéro de build de l’application, la plateforme, une catégorie approuvée, le résultat et des tranches générales. Ils n’incluent jamais messages d’erreur, piles d’appels, noms, données de santé, contenu de base de données, captures, adresses réseau, traces ou analyses.';
 
   @override
   String get diagnosticsSyncSection => 'Historique de synchronisation';
@@ -12334,14 +12346,26 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get diagnosticsDeletionBody => 'Effacez l’historique ci-dessus et désactivez les rapports. Effacez le stockage de Tonos dans les réglages de l’appareil ou désinstallez l’application pour supprimer la base locale et les caches. Pour supprimer un rapport déjà envoyé, communiquez avec le développeur en fournissant les détails de l’événement dont vous disposez.';
 
   @override
-  String get diagnosticsSendTestReport => 'Envoyer un rapport de test contrôlé';
+  String get diagnosticsSendTestReport => 'Envoyer un événement de diagnostic contrôlé';
 
   @override
-  String get diagnosticsSendTestReportBody => 'Envoie un diagnostic expurgé pour vérifier le consentement et la transmission en production.';
+  String get diagnosticsSendTestReportBody => 'Disponible uniquement dans une version explicitement activée pour les tests. Envoie un événement fixe autorisé.';
 
   @override
-  String get diagnosticsTestReportSent => 'Rapport de test contrôlé envoyé.';
+  String get diagnosticsTestReportSent => 'Événement de diagnostic contrôlé envoyé.';
 
   @override
-  String get diagnosticsTestReportFailed => 'Le rapport de test n’a pas pu être envoyé. Vérifiez la configuration du build et la connexion.';
+  String get diagnosticsTestReportFailed => 'L’événement de diagnostic n’a pas pu être envoyé. Vérifiez la configuration du build et la connexion.';
+
+  @override
+  String get diagnosticsDeleteShared => 'Supprimer les diagnostics partagés';
+
+  @override
+  String get diagnosticsDeleteSharedBody => 'Demande la suppression des rapports que cette installation peut prouver avoir envoyés. L’historique de récupération du fournisseur peut conserver des lignes supprimées jusqu’à 30 jours.';
+
+  @override
+  String get diagnosticsSharedDeleted => 'La suppression des diagnostics partagés a été demandée.';
+
+  @override
+  String get diagnosticsSharedDeletionPending => 'Certaines demandes de suppression seront réessayées lorsque l’application s’ouvrira avec une connexion.';
 }

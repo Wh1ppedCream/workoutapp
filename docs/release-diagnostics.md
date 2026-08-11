@@ -4,8 +4,9 @@
 
 Tonos production builds intentionally do not send diagnostics directly from a
 device to Sentry or another remote service. The signed production workflow does
-not require, read, or inject a diagnostics DSN, so **Share crash reports** and
-**Send a controlled test report** are unavailable in released builds.
+not require, read, or inject a diagnostics DSN, so **Share anonymous
+diagnostics** and **Send a controlled diagnostics event** are unavailable in
+released builds.
 
 This is a privacy decision, not a broken configuration. Controlled validation
 confirmed the app's redaction boundary and consent behavior, but Sentry still
@@ -35,25 +36,20 @@ valid and are the only approved production artifacts today.
 
 ## Future remote diagnostics requirements
 
-Remote crash reporting can return only after a reviewed privacy relay is
-implemented. The relay design must:
+Remote diagnostics can return only after the approved
+[privacy-preserving relay design](privacy-diagnostics-relay-design.md) has its
+staging resources provisioned and all release-candidate gates completed. The v1
+design does not proxy to Sentry or another external diagnostics vendor: a
+Cloudflare Worker stores a small allowlisted schema in isolated D1 storage and
+makes no outbound request.
 
-1. Keep the Sentry DSN and Sentry connection off the device; Tonos clients send
-   only to the relay.
-2. Enforce the existing consent check and a server-side allowlist of the small,
-   redacted event schema. It must reject free-form exception messages, database
-   contents, profiles, health data, URLs, attachments, screenshots, and view
-   hierarchy data.
-3. Avoid forwarding a client IP address or forwarding headers to Sentry, and
-   document the relay operator's own connection logging and retention.
-4. Provide a deletion path, a retention limit, abuse protection, and monitoring
-   for the relay itself.
-5. Update the privacy and data-deletion pages, then repeat the signed-release,
-   fresh-install, opt-in, controlled-event, and event-inspection validation.
+The design defines the consent migration, schema, header and logging rules,
+14-day primary retention, receipt-based deletion, D1 recovery-history
+disclosure, abuse controls, operational ownership, and required release gates.
+It is deliberately inactive until those gates are complete.
 
-The existing `DiagnosticsService` redaction boundary and focused unit tests are
-retained as a starting point for that reviewed integration. They do not approve
-direct device-to-Sentry reporting.
+`DiagnosticsService` now uses a typed relay payload and receipt-based deletion
+boundary. It must not be changed to restore direct device-to-Sentry reporting.
 
 ## Release checklist
 
@@ -63,13 +59,15 @@ direct device-to-Sentry reporting.
 3. Download and hash-check the signed `tonos-production-apk-*` artifact, then
    install it on a dedicated test device.
 4. Confirm Profile > Diagnostics & Privacy shows the expected app version and
-   build number, local sync history, and unavailable crash-sharing controls.
+   build number, local sync history, and unavailable anonymous-diagnostics
+   controls.
 5. Exercise remote and bundled media sync and inspect only the local sync
    history fields.
 6. Confirm the app has no configured remote diagnostics endpoint and that a
-   controlled test report cannot be submitted.
+   controlled diagnostics event cannot be submitted.
 7. Confirm the **Publish privacy pages** workflow succeeds and that
    `privacy.html` and `data-deletion.html` are publicly reachable.
 
-If a future relay is approved, replace steps 4 through 6 with the relay-specific
-consent, redaction, retention, deletion, and event-inspection checks above.
+If the relay staging and release-candidate gates are completed, replace steps 4
+through 6 with its consent, schema, retention, deletion, and event-inspection
+checks.

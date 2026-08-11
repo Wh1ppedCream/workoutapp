@@ -6050,28 +6050,28 @@ class AppLocalizationsZh extends AppLocalizations {
   String get diagnosticsUnavailable => '不可用';
 
   @override
-  String get diagnosticsCrashSection => '崩溃报告';
+  String get diagnosticsCrashSection => '匿名诊断';
 
   @override
-  String get diagnosticsCrashSectionSubtitle => '针对意外故障的可选脱敏报告。';
+  String get diagnosticsCrashSectionSubtitle => '针对应用故障和媒体同步的可选分类报告。';
 
   @override
-  String get diagnosticsCrashReporting => '共享崩溃报告';
+  String get diagnosticsCrashReporting => '共享匿名诊断';
 
   @override
-  String get diagnosticsCrashUnavailable => '此构建未配置，无法发送崩溃报告。';
+  String get diagnosticsCrashUnavailable => '此构建未配置，无法共享匿名诊断。';
 
   @override
-  String get diagnosticsCrashEnabledBody => '已在您同意后启用，您可以随时关闭。';
+  String get diagnosticsCrashEnabledBody => '已在您同意后启用。关闭后会请求删除 Tonos 保留的报告。';
 
   @override
-  String get diagnosticsCrashDisabledBody => '默认关闭。仅在您愿意帮助诊断崩溃时开启。';
+  String get diagnosticsCrashDisabledBody => '默认关闭。仅在您愿意帮助诊断发行版本问题时开启。';
 
   @override
   String get diagnosticsPrivacyPromiseTitle => '隐私保护设计';
 
   @override
-  String get diagnosticsPrivacyPromiseBody => '报告包含应用版本、平台环境、脱敏的错误类型和堆栈跟踪。Tonos 不收集姓名、健康数据、数据库内容、屏幕截图、视图层级、网络地址、性能跟踪或分析数据。';
+  String get diagnosticsPrivacyPromiseBody => '报告仅包含应用版本、构建号、平台、批准的类别、结果和粗略区间。绝不包含错误消息、堆栈跟踪、姓名、健康数据、数据库内容、屏幕截图、网络地址、跟踪信息或分析数据。';
 
   @override
   String get diagnosticsSyncSection => '内容同步历史';
@@ -6138,17 +6138,29 @@ class AppLocalizationsZh extends AppLocalizations {
   String get diagnosticsDeletionTitle => '删除诊断和应用数据';
 
   @override
-  String get diagnosticsDeletionBody => '清除上方同步历史并关闭崩溃报告。在设备设置中清除 Tonos 存储或卸载 Tonos，即可删除本地数据库和缓存。如需删除已发送的崩溃报告，请携带您掌握的事件信息联系开发者。';
+  String get diagnosticsDeletionBody => '清除上方同步历史并关闭匿名诊断，以请求删除此安装发送的报告。在设备设置中清除 Tonos 存储或卸载 Tonos，即可删除本地数据库和缓存。';
 
   @override
-  String get diagnosticsSendTestReport => '发送受控测试报告';
+  String get diagnosticsSendTestReport => '发送受控诊断事件';
 
   @override
-  String get diagnosticsSendTestReportBody => '发送一个脱敏诊断事件，以验证用户许可和生产环境投递。';
+  String get diagnosticsSendTestReportBody => '仅在明确启用测试的构建中可用。发送一个固定的允许事件。';
 
   @override
-  String get diagnosticsTestReportSent => '受控测试报告已发送。';
+  String get diagnosticsTestReportSent => '受控诊断事件已发送。';
 
   @override
-  String get diagnosticsTestReportFailed => '无法发送测试报告。请检查构建配置和网络连接。';
+  String get diagnosticsTestReportFailed => '无法发送诊断事件。请检查构建配置和网络连接。';
+
+  @override
+  String get diagnosticsDeleteShared => '删除已共享的诊断信息';
+
+  @override
+  String get diagnosticsDeleteSharedBody => '请求删除此安装可证明已发送的报告。提供商的恢复历史可能会将已删除行保留最多 30 天。';
+
+  @override
+  String get diagnosticsSharedDeleted => '已请求删除已共享的诊断信息。';
+
+  @override
+  String get diagnosticsSharedDeletionPending => '部分删除请求会在应用连接网络后再次打开时重试。';
 }

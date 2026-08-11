@@ -6056,28 +6056,28 @@ class AppLocalizationsBn extends AppLocalizations {
   String get diagnosticsUnavailable => 'পাওয়া যাচ্ছে না';
 
   @override
-  String get diagnosticsCrashSection => 'ক্র্যাশ রিপোর্টিং';
+  String get diagnosticsCrashSection => 'বেনামী ডায়াগনস্টিকস';
 
   @override
-  String get diagnosticsCrashSectionSubtitle => 'অপ্রত্যাশিত ব্যর্থতার ঐচ্ছিক ও গোপনীয়তাসুরক্ষিত রিপোর্ট।';
+  String get diagnosticsCrashSectionSubtitle => 'অ্যাপের ত্রুটি ও মিডিয়া সিঙ্কের জন্য ঐচ্ছিক বিভাগভিত্তিক রিপোর্ট।';
 
   @override
-  String get diagnosticsCrashReporting => 'ক্র্যাশ রিপোর্ট শেয়ার করুন';
+  String get diagnosticsCrashReporting => 'বেনামী ডায়াগনস্টিকস শেয়ার করুন';
 
   @override
-  String get diagnosticsCrashUnavailable => 'এই বিল্ডে কনফিগার করা নেই। কোনো রিপোর্ট পাঠানো যাবে না।';
+  String get diagnosticsCrashUnavailable => 'এই বিল্ডে কনফিগার করা নেই। কোনো বেনামী ডায়াগনস্টিকস শেয়ার করা যাবে না।';
 
   @override
-  String get diagnosticsCrashEnabledBody => 'আপনার সম্মতিতে চালু। যেকোনো সময় বন্ধ করতে পারবেন।';
+  String get diagnosticsCrashEnabledBody => 'আপনার সম্মতিতে চালু। বন্ধ করলে Tonos-এ রাখা রিপোর্ট মুছে ফেলার অনুরোধ করা হয়।';
 
   @override
-  String get diagnosticsCrashDisabledBody => 'ডিফল্টভাবে বন্ধ। ক্র্যাশ নির্ণয়ে সাহায্য করতে চাইলে চালু করুন।';
+  String get diagnosticsCrashDisabledBody => 'ডিফল্টভাবে বন্ধ। রিলিজ সমস্যার নির্ণয়ে সাহায্য করতে চাইলে চালু করুন।';
 
   @override
   String get diagnosticsPrivacyPromiseTitle => 'নকশাতেই গোপনীয়তা';
 
   @override
-  String get diagnosticsPrivacyPromiseBody => 'রিপোর্টে অ্যাপ ভার্সন, প্ল্যাটফর্ম প্রসঙ্গ, আড়াল করা ত্রুটির ধরন ও স্ট্যাক ট্রেস থাকে। Tonos নাম, স্বাস্থ্য ডেটা, ডেটাবেসের বিষয়বস্তু, স্ক্রিনশট, ভিউ হায়ারার্কি, নেটওয়ার্ক ঠিকানা, পারফরম্যান্স ট্রেস ও অ্যানালিটিকস বাদ রাখে।';
+  String get diagnosticsPrivacyPromiseBody => 'রিপোর্টে শুধু অ্যাপের সংস্করণ, বিল্ড নম্বর, প্ল্যাটফর্ম, অনুমোদিত বিভাগ, ফলাফল ও আনুমানিক সীমা থাকে। ত্রুটির বার্তা, স্ট্যাক ট্রেস, নাম, স্বাস্থ্য ডেটা, ডেটাবেসের বিষয়বস্তু, স্ক্রিনশট, নেটওয়ার্ক ঠিকানা, ট্রেস বা অ্যানালিটিকস কখনও থাকে না।';
 
   @override
   String get diagnosticsSyncSection => 'কনটেন্ট সিঙ্ক ইতিহাস';
@@ -6144,17 +6144,29 @@ class AppLocalizationsBn extends AppLocalizations {
   String get diagnosticsDeletionTitle => 'ডায়াগনস্টিক ও অ্যাপ ডেটা মুছুন';
 
   @override
-  String get diagnosticsDeletionBody => 'উপরের সিঙ্ক ইতিহাস মুছুন এবং ক্র্যাশ রিপোর্টিং বন্ধ করুন। স্থানীয় ডেটাবেস ও ক্যাশ মুছতে ডিভাইস সেটিংসে Tonos-এর স্টোরেজ পরিষ্কার করুন বা অ্যাপ আনইনস্টল করুন। আগে পাঠানো ক্র্যাশ রিপোর্ট মুছতে আপনার কাছে থাকা ইভেন্টের তথ্যসহ ডেভেলপারের সঙ্গে যোগাযোগ করুন।';
+  String get diagnosticsDeletionBody => 'উপরের সিঙ্ক ইতিহাস মুছুন এবং বেনামী ডায়াগনস্টিকস বন্ধ করে এই ইনস্টলেশন থেকে পাঠানো রিপোর্ট মুছে ফেলার অনুরোধ করুন। স্থানীয় ডেটাবেস ও ক্যাশ মুছতে ডিভাইস সেটিংসে Tonos-এর স্টোরেজ পরিষ্কার করুন বা অ্যাপ আনইনস্টল করুন।';
 
   @override
-  String get diagnosticsSendTestReport => 'নিয়ন্ত্রিত পরীক্ষামূলক রিপোর্ট পাঠান';
+  String get diagnosticsSendTestReport => 'নিয়ন্ত্রিত ডায়াগনস্টিক ইভেন্ট পাঠান';
 
   @override
-  String get diagnosticsSendTestReportBody => 'সম্মতি ও প্রোডাকশন ডেলিভারি যাচাই করতে একটি আড়াল করা ডায়াগনস্টিক ইভেন্ট পাঠায়।';
+  String get diagnosticsSendTestReportBody => 'শুধু স্পষ্টভাবে পরীক্ষার জন্য সক্রিয় করা বিল্ডে উপলব্ধ। একটি নির্দিষ্ট অনুমোদিত ইভেন্ট পাঠায়।';
 
   @override
-  String get diagnosticsTestReportSent => 'নিয়ন্ত্রিত পরীক্ষামূলক রিপোর্ট পাঠানো হয়েছে।';
+  String get diagnosticsTestReportSent => 'নিয়ন্ত্রিত ডায়াগনস্টিক ইভেন্ট পাঠানো হয়েছে।';
 
   @override
-  String get diagnosticsTestReportFailed => 'পরীক্ষামূলক রিপোর্ট পাঠানো যায়নি। বিল্ড কনফিগারেশন ও সংযোগ পরীক্ষা করুন।';
+  String get diagnosticsTestReportFailed => 'ডায়াগনস্টিক ইভেন্ট পাঠানো যায়নি। বিল্ড কনফিগারেশন ও সংযোগ পরীক্ষা করুন।';
+
+  @override
+  String get diagnosticsDeleteShared => 'শেয়ার করা ডায়াগনস্টিকস মুছুন';
+
+  @override
+  String get diagnosticsDeleteSharedBody => 'এই ইনস্টলেশন থেকে পাঠানো প্রমাণযোগ্য রিপোর্ট মুছে ফেলার অনুরোধ করে। সরবরাহকারীর পুনরুদ্ধার ইতিহাসে মুছে ফেলা সারি ৩০ দিন পর্যন্ত থাকতে পারে।';
+
+  @override
+  String get diagnosticsSharedDeleted => 'শেয়ার করা ডায়াগনস্টিকস মুছে ফেলার অনুরোধ করা হয়েছে।';
+
+  @override
+  String get diagnosticsSharedDeletionPending => 'সংযোগ থাকলে অ্যাপ খোলার সময় কিছু মুছে ফেলার অনুরোধ আবার চেষ্টা করা হবে।';
 }

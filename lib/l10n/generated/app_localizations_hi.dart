@@ -6050,28 +6050,28 @@ class AppLocalizationsHi extends AppLocalizations {
   String get diagnosticsUnavailable => 'उपलब्ध नहीं';
 
   @override
-  String get diagnosticsCrashSection => 'क्रैश रिपोर्टिंग';
+  String get diagnosticsCrashSection => 'अनाम डायग्नोस्टिक्स';
 
   @override
-  String get diagnosticsCrashSectionSubtitle => 'अचानक हुई ऐप विफलताओं की वैकल्पिक और संशोधित रिपोर्ट।';
+  String get diagnosticsCrashSectionSubtitle => 'ऐप विफलताओं और मीडिया सिंक के लिए वैकल्पिक, श्रेणीबद्ध रिपोर्ट।';
 
   @override
-  String get diagnosticsCrashReporting => 'क्रैश रिपोर्ट साझा करें';
+  String get diagnosticsCrashReporting => 'अनाम डायग्नोस्टिक्स साझा करें';
 
   @override
-  String get diagnosticsCrashUnavailable => 'इस बिल्ड में कॉन्फ़िगर नहीं है। कोई रिपोर्ट नहीं भेजी जा सकती।';
+  String get diagnosticsCrashUnavailable => 'इस बिल्ड में कॉन्फ़िगर नहीं है। कोई अनाम डायग्नोस्टिक्स साझा नहीं किया जा सकता।';
 
   @override
-  String get diagnosticsCrashEnabledBody => 'आपकी सहमति से चालू है। आप इसे कभी भी बंद कर सकते हैं।';
+  String get diagnosticsCrashEnabledBody => 'आपकी सहमति से चालू है। इसे बंद करने पर Tonos में रखी रिपोर्ट हटाने का अनुरोध किया जाता है।';
 
   @override
-  String get diagnosticsCrashDisabledBody => 'डिफ़ॉल्ट रूप से बंद। क्रैश जाँच में मदद करना चाहें तभी चालू करें।';
+  String get diagnosticsCrashDisabledBody => 'डिफ़ॉल्ट रूप से बंद। रिलीज़ की समस्या जाँचने में मदद करना चाहें तभी चालू करें।';
 
   @override
   String get diagnosticsPrivacyPromiseTitle => 'डिज़ाइन से गोपनीयता';
 
   @override
-  String get diagnosticsPrivacyPromiseBody => 'रिपोर्ट में ऐप वर्ज़न, प्लेटफ़ॉर्म संदर्भ, संशोधित त्रुटि प्रकार और स्टैक ट्रेस होते हैं। Tonos नाम, स्वास्थ्य डेटा, डेटाबेस सामग्री, स्क्रीनशॉट, व्यू पदानुक्रम, नेटवर्क पते, प्रदर्शन ट्रेस और एनालिटिक्स को बाहर रखता है।';
+  String get diagnosticsPrivacyPromiseBody => 'रिपोर्ट में केवल ऐप वर्ज़न, बिल्ड नंबर, प्लेटफ़ॉर्म, स्वीकृत श्रेणी, परिणाम और मोटे दायरे होते हैं। इनमें त्रुटि संदेश, स्टैक ट्रेस, नाम, स्वास्थ्य डेटा, डेटाबेस सामग्री, स्क्रीनशॉट, नेटवर्क पते, ट्रेस या एनालिटिक्स कभी नहीं होते।';
 
   @override
   String get diagnosticsSyncSection => 'कॉन्टेंट सिंक इतिहास';
@@ -6138,17 +6138,29 @@ class AppLocalizationsHi extends AppLocalizations {
   String get diagnosticsDeletionTitle => 'डायग्नोस्टिक और ऐप डेटा हटाएँ';
 
   @override
-  String get diagnosticsDeletionBody => 'ऊपर का सिंक इतिहास साफ़ करें और क्रैश रिपोर्टिंग बंद करें। स्थानीय डेटाबेस और कैश हटाने के लिए डिवाइस सेटिंग में Tonos स्टोरेज साफ़ करें या ऐप अनइंस्टॉल करें। पहले भेजी गई क्रैश रिपोर्ट हटवाने के लिए उपलब्ध इवेंट विवरण के साथ डेवलपर से संपर्क करें।';
+  String get diagnosticsDeletionBody => 'ऊपर का सिंक इतिहास साफ़ करें और इस इंस्टॉलेशन से साझा रिपोर्ट हटाने का अनुरोध करने के लिए अनाम डायग्नोस्टिक्स बंद करें। स्थानीय डेटाबेस और कैश हटाने के लिए डिवाइस सेटिंग में Tonos स्टोरेज साफ़ करें या ऐप अनइंस्टॉल करें।';
 
   @override
-  String get diagnosticsSendTestReport => 'नियंत्रित परीक्षण रिपोर्ट भेजें';
+  String get diagnosticsSendTestReport => 'नियंत्रित डायग्नोस्टिक इवेंट भेजें';
 
   @override
-  String get diagnosticsSendTestReportBody => 'सहमति और प्रोडक्शन डिलीवरी जाँचने के लिए एक संशोधित डायग्नोस्टिक इवेंट भेजता है।';
+  String get diagnosticsSendTestReportBody => 'केवल स्पष्ट रूप से परीक्षण-सक्षम बिल्ड में उपलब्ध। एक निश्चित स्वीकृत इवेंट भेजता है।';
 
   @override
-  String get diagnosticsTestReportSent => 'नियंत्रित परीक्षण रिपोर्ट भेज दी गई।';
+  String get diagnosticsTestReportSent => 'नियंत्रित डायग्नोस्टिक इवेंट भेज दिया गया।';
 
   @override
-  String get diagnosticsTestReportFailed => 'परीक्षण रिपोर्ट नहीं भेजी जा सकी। बिल्ड कॉन्फ़िगरेशन और कनेक्शन जाँचें।';
+  String get diagnosticsTestReportFailed => 'डायग्नोस्टिक इवेंट नहीं भेजा जा सका। बिल्ड कॉन्फ़िगरेशन और कनेक्शन जाँचें।';
+
+  @override
+  String get diagnosticsDeleteShared => 'साझा डायग्नोस्टिक्स हटाएँ';
+
+  @override
+  String get diagnosticsDeleteSharedBody => 'उन रिपोर्टों को हटाने का अनुरोध करता है जिन्हें यह इंस्टॉलेशन भेजना सिद्ध कर सकता है। प्रदाता के पुनर्प्राप्ति इतिहास में हटाई गई पंक्तियाँ 30 दिनों तक रह सकती हैं।';
+
+  @override
+  String get diagnosticsSharedDeleted => 'साझा डायग्नोस्टिक्स हटाने का अनुरोध किया गया।';
+
+  @override
+  String get diagnosticsSharedDeletionPending => 'कुछ हटाने के अनुरोध कनेक्शन के साथ ऐप खुलने पर फिर से आज़माए जाएंगे।';
 }

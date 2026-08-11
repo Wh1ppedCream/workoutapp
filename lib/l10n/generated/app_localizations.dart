@@ -11105,7 +11105,7 @@ abstract class AppLocalizations {
   /// No description provided for @profileDiagnosticsSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Version, crash-reporting consent, sync history, and data deletion.'**
+  /// **'Version, anonymous-diagnostics consent, sync history, and data deletion.'**
   String get profileDiagnosticsSubtitle;
 
   /// No description provided for @diagnosticsTitle.
@@ -11153,37 +11153,37 @@ abstract class AppLocalizations {
   /// No description provided for @diagnosticsCrashSection.
   ///
   /// In en, this message translates to:
-  /// **'Crash reporting'**
+  /// **'Anonymous diagnostics'**
   String get diagnosticsCrashSection;
 
   /// No description provided for @diagnosticsCrashSectionSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Optional, redacted reports for unexpected app failures.'**
+  /// **'Optional, categorical reports for app faults and media sync.'**
   String get diagnosticsCrashSectionSubtitle;
 
   /// No description provided for @diagnosticsCrashReporting.
   ///
   /// In en, this message translates to:
-  /// **'Share crash reports'**
+  /// **'Share anonymous diagnostics'**
   String get diagnosticsCrashReporting;
 
   /// No description provided for @diagnosticsCrashUnavailable.
   ///
   /// In en, this message translates to:
-  /// **'Not configured in this build. No crash reports can be sent.'**
+  /// **'Not configured in this build. No anonymous diagnostics can be shared.'**
   String get diagnosticsCrashUnavailable;
 
   /// No description provided for @diagnosticsCrashEnabledBody.
   ///
   /// In en, this message translates to:
-  /// **'Enabled with your consent. You can turn it off at any time.'**
+  /// **'Enabled with your consent. Turning it off requests deletion of reports held by Tonos.'**
   String get diagnosticsCrashEnabledBody;
 
   /// No description provided for @diagnosticsCrashDisabledBody.
   ///
   /// In en, this message translates to:
-  /// **'Off by default. Turn it on only if you want to help diagnose crashes.'**
+  /// **'Off by default. Turn it on only if you want to help diagnose release problems.'**
   String get diagnosticsCrashDisabledBody;
 
   /// No description provided for @diagnosticsPrivacyPromiseTitle.
@@ -11195,7 +11195,7 @@ abstract class AppLocalizations {
   /// No description provided for @diagnosticsPrivacyPromiseBody.
   ///
   /// In en, this message translates to:
-  /// **'Reports contain the app version, platform context, redacted error type, and stack trace. Tonos disables names, health data, database contents, screenshots, view hierarchy, network addresses, performance traces, and analytics.'**
+  /// **'Reports contain only the app version, build number, platform, approved category, outcome, and coarse buckets. They never include error messages, stack traces, names, health data, database contents, screenshots, network addresses, traces, or analytics.'**
   String get diagnosticsPrivacyPromiseBody;
 
   /// No description provided for @diagnosticsSyncSection.
@@ -11321,32 +11321,56 @@ abstract class AppLocalizations {
   /// No description provided for @diagnosticsDeletionBody.
   ///
   /// In en, this message translates to:
-  /// **'Clear sync history above and turn off crash reporting. Clear Tonos storage in device settings or uninstall Tonos to remove the local database and caches. For deletion of an already-sent crash report, contact the developer with the event details available to you.'**
+  /// **'Clear sync history above and turn off anonymous diagnostics to request deletion of reports shared by this installation. Clear Tonos storage in device settings or uninstall Tonos to remove the local database and caches.'**
   String get diagnosticsDeletionBody;
 
   /// No description provided for @diagnosticsSendTestReport.
   ///
   /// In en, this message translates to:
-  /// **'Send a controlled test report'**
+  /// **'Send a controlled diagnostics event'**
   String get diagnosticsSendTestReport;
 
   /// No description provided for @diagnosticsSendTestReportBody.
   ///
   /// In en, this message translates to:
-  /// **'Sends one redacted diagnostic event to verify consent and production delivery.'**
+  /// **'Available only in an explicitly test-enabled build. It sends one fixed allowlisted event.'**
   String get diagnosticsSendTestReportBody;
 
   /// No description provided for @diagnosticsTestReportSent.
   ///
   /// In en, this message translates to:
-  /// **'Controlled test report sent.'**
+  /// **'Controlled diagnostics event sent.'**
   String get diagnosticsTestReportSent;
 
   /// No description provided for @diagnosticsTestReportFailed.
   ///
   /// In en, this message translates to:
-  /// **'The test report could not be sent. Check the build configuration and connection.'**
+  /// **'The diagnostics event could not be sent. Check the build configuration and connection.'**
   String get diagnosticsTestReportFailed;
+
+  /// No description provided for @diagnosticsDeleteShared.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete shared diagnostics'**
+  String get diagnosticsDeleteShared;
+
+  /// No description provided for @diagnosticsDeleteSharedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Requests deletion of reports this app can prove it sent. Provider recovery history may retain deleted rows for up to 30 days.'**
+  String get diagnosticsDeleteSharedBody;
+
+  /// No description provided for @diagnosticsSharedDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared diagnostics deletion requested.'**
+  String get diagnosticsSharedDeleted;
+
+  /// No description provided for @diagnosticsSharedDeletionPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Some deletion requests will retry when the app opens with a connection.'**
+  String get diagnosticsSharedDeletionPending;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

@@ -6051,7 +6051,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileDiagnosticsTitle => 'Diagnostics & Privacy';
 
   @override
-  String get profileDiagnosticsSubtitle => 'Version, crash-reporting consent, sync history, and data deletion.';
+  String get profileDiagnosticsSubtitle => 'Version, anonymous-diagnostics consent, sync history, and data deletion.';
 
   @override
   String get diagnosticsTitle => 'Diagnostics & Privacy';
@@ -6075,28 +6075,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get diagnosticsUnavailable => 'Unavailable';
 
   @override
-  String get diagnosticsCrashSection => 'Crash reporting';
+  String get diagnosticsCrashSection => 'Anonymous diagnostics';
 
   @override
-  String get diagnosticsCrashSectionSubtitle => 'Optional, redacted reports for unexpected app failures.';
+  String get diagnosticsCrashSectionSubtitle => 'Optional, categorical reports for app faults and media sync.';
 
   @override
-  String get diagnosticsCrashReporting => 'Share crash reports';
+  String get diagnosticsCrashReporting => 'Share anonymous diagnostics';
 
   @override
-  String get diagnosticsCrashUnavailable => 'Not configured in this build. No crash reports can be sent.';
+  String get diagnosticsCrashUnavailable => 'Not configured in this build. No anonymous diagnostics can be shared.';
 
   @override
-  String get diagnosticsCrashEnabledBody => 'Enabled with your consent. You can turn it off at any time.';
+  String get diagnosticsCrashEnabledBody => 'Enabled with your consent. Turning it off requests deletion of reports held by Tonos.';
 
   @override
-  String get diagnosticsCrashDisabledBody => 'Off by default. Turn it on only if you want to help diagnose crashes.';
+  String get diagnosticsCrashDisabledBody => 'Off by default. Turn it on only if you want to help diagnose release problems.';
 
   @override
   String get diagnosticsPrivacyPromiseTitle => 'Privacy by design';
 
   @override
-  String get diagnosticsPrivacyPromiseBody => 'Reports contain the app version, platform context, redacted error type, and stack trace. Tonos disables names, health data, database contents, screenshots, view hierarchy, network addresses, performance traces, and analytics.';
+  String get diagnosticsPrivacyPromiseBody => 'Reports contain only the app version, build number, platform, approved category, outcome, and coarse buckets. They never include error messages, stack traces, names, health data, database contents, screenshots, network addresses, traces, or analytics.';
 
   @override
   String get diagnosticsSyncSection => 'Content sync history';
@@ -6163,17 +6163,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get diagnosticsDeletionTitle => 'Delete diagnostic and app data';
 
   @override
-  String get diagnosticsDeletionBody => 'Clear sync history above and turn off crash reporting. Clear Tonos storage in device settings or uninstall Tonos to remove the local database and caches. For deletion of an already-sent crash report, contact the developer with the event details available to you.';
+  String get diagnosticsDeletionBody => 'Clear sync history above and turn off anonymous diagnostics to request deletion of reports shared by this installation. Clear Tonos storage in device settings or uninstall Tonos to remove the local database and caches.';
 
   @override
-  String get diagnosticsSendTestReport => 'Send a controlled test report';
+  String get diagnosticsSendTestReport => 'Send a controlled diagnostics event';
 
   @override
-  String get diagnosticsSendTestReportBody => 'Sends one redacted diagnostic event to verify consent and production delivery.';
+  String get diagnosticsSendTestReportBody => 'Available only in an explicitly test-enabled build. It sends one fixed allowlisted event.';
 
   @override
-  String get diagnosticsTestReportSent => 'Controlled test report sent.';
+  String get diagnosticsTestReportSent => 'Controlled diagnostics event sent.';
 
   @override
-  String get diagnosticsTestReportFailed => 'The test report could not be sent. Check the build configuration and connection.';
+  String get diagnosticsTestReportFailed => 'The diagnostics event could not be sent. Check the build configuration and connection.';
+
+  @override
+  String get diagnosticsDeleteShared => 'Delete shared diagnostics';
+
+  @override
+  String get diagnosticsDeleteSharedBody => 'Requests deletion of reports this app can prove it sent. Provider recovery history may retain deleted rows for up to 30 days.';
+
+  @override
+  String get diagnosticsSharedDeleted => 'Shared diagnostics deletion requested.';
+
+  @override
+  String get diagnosticsSharedDeletionPending => 'Some deletion requests will retry when the app opens with a connection.';
 }

@@ -1,6 +1,6 @@
 # Maintenance Backlog
 
-Last updated: 2026-08-09.
+Last updated: 2026-08-10.
 
 This is Tonos's maintained, prioritized engineering backlog. Historical
 roadmap snapshots live in `docs/archive/roadmaps/`; do not use them to plan new
@@ -8,31 +8,42 @@ work. Cloud-media publishing state and commands live in
 `cloud-content-roadmap.md`, `content-production-setup.md`, and
 `content-release-playbook.md`.
 
+## Recently Completed
+
+1. Hosted automation and release safeguards are verified. The automatic
+   [Pages deployment](https://github.com/Wh1ppedCream/workoutapp/actions/runs/31333490317)
+   passed, and the manually dispatched
+   [Android emulator workflow](https://github.com/Wh1ppedCream/workoutapp/actions/runs/31428848661)
+   passed all setup, build, KVM, and device-driven core-flow phases on commit
+   `3dfd47a`.
+2. The Android device suite now scrolls to lazily built historical record
+   badges before asserting them, making its Logbook coverage independent of
+   emulator viewport size.
+3. The privacy-preserving diagnostics relay design and local implementation
+   are complete. Direct Sentry delivery has been removed; the typed relay
+   client, receipt-based deletion, no-egress Worker/D1 template, retention
+   job, privacy documentation, and regression tests are present. Distributed
+   builds remain relay-disabled unless a future release explicitly supplies an
+   approved relay URL.
+
 ## Active Priorities
 
-1. **Confirm hosted automation and release safeguards.** Check the latest CI
-   run, manually run the scheduled Android emulator workflow, publish the
-   privacy pages, and run the protected production-release workflow.
-2. **Design a privacy-preserving diagnostics relay.** Direct device-to-Sentry
-   reporting is disabled in production after validation showed service-derived
-   geography could still appear. Define the relay, its retention, consent,
-   deletion, and event-allowlist contract before re-enabling remote reporting.
-3. **Hide unimplemented navigation.** Remove Nutrition Log, Combined History,
+1. **Hide unimplemented navigation.** Remove Nutrition Log, Combined History,
    and Form and Posing from selectable navigation until their flows are usable.
-4. **Finalize the production media environment.** Validate development batches
+2. **Finalize the production media environment.** Validate development batches
    004 through 007, promote the current canonical manifest and assets, choose
    the permanent content host, perform a clean-install sync test, then switch
    the app default deliberately.
-5. **Run visual locale QA.** Test Bangla, Chinese, Hindi, and Spanish on a
+3. **Run visual locale QA.** Test Bangla, Chinese, Hindi, and Spanish on a
    device across onboarding, Train, plans, sessions, records, reports,
    tutorials, diagnostics, settings, and enlarged text.
-6. **Retire the alternative Train hub.** Migrate any remaining unique behavior
+4. **Retire the alternative Train hub.** Migrate any remaining unique behavior
    from `Train2Page`, migrate saved navigation settings, remove `TabItem.train2`,
    then delete the duplicate route and UI.
-7. **Rework the Exercise Editor.** Decide the final creator/editor flow,
+5. **Rework the Exercise Editor.** Decide the final creator/editor flow,
    expose starter-load controls where they belong, remove legacy form state,
    and split the screen into focused sections.
-8. **Improve starter-weight calibration.** Add a first-set feedback loop for
+6. **Improve starter-weight calibration.** Add a first-set feedback loop for
    too easy, appropriate, and too hard recommendations, with conservative
    persisted adjustments and clear user-facing explanations.
 
@@ -59,9 +70,15 @@ work. Cloud-media publishing state and commands live in
 3. Extract backup, import, or maintenance responsibilities from
    `DatabaseHelper` only when the related feature changes and focused tests can
    establish ownership.
-4. Run a responsive and screen-reader regression pass whenever core layout,
+4. **Provision the diagnostics relay only when remote diagnostics become a
+   release need.** The approved [no-egress Worker and D1 design](privacy-diagnostics-relay-design.md)
+   is intentionally disabled. When it is needed, create isolated staging
+   resources, validate schema, receipt deletion, retention, no-egress, and
+   no-logging behavior with a synthetic event, then complete the
+   release-candidate gates before configuring any production relay URL.
+5. Run a responsive and screen-reader regression pass whenever core layout,
    localization, navigation, or diagnostics UI changes.
-5. Keep any internal Dart package rename (`env_test`) as a dedicated all-import
+6. Keep any internal Dart package rename (`env_test`) as a dedicated all-import
    migration; platform release identities already use `Tonos` and `com.tonos`.
 
 ## Documentation Rules

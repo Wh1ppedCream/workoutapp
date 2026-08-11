@@ -38,7 +38,7 @@
 <body>
   <main>
     <h1>Delete Your Tonos Data</h1>
-    <p class="updated">Last updated: August 9, 2026</p>
+    <p class="updated">Last updated: August 10, 2026</p>
 
     <p>
       Tonos is local-first and does not require an account. Most information is
@@ -49,7 +49,7 @@
     <p>
       Open Profile &gt; Diagnostics &amp; Privacy and choose Clear sync history.
       This removes the capped list of content-sync outcomes stored on the
-      device. Current production builds do not submit remote crash reports.
+      device. Current production builds do not submit remote diagnostics.
     </p>
 
     <h2>Local Database and Preferences</h2>
@@ -68,15 +68,17 @@
       Tonos app storage.
     </p>
 
-    <h2>Earlier Validation Crash Reports</h2>
+    <h2>Anonymous Diagnostics Shared Through A Future Relay</h2>
     <p>
-      Current production builds do not send crash reports. If you explicitly
-      opted in while using an earlier validation build and want a submitted
-      Sentry report removed, contact the developer with its event time, app
-      version, device platform, and any event identifier available to you. This
-      information helps locate the report without requesting identity or health
-      data. Earlier validation reports are automatically deleted after no more
-      than 90 days and may be deleted sooner under the service plan.
+      Current production builds do not send remote diagnostics. If a later build
+      enables the Tonos diagnostics relay and you opt in, use Profile &gt;
+      Diagnostics &amp; Privacy &gt; Delete shared diagnostics or turn off Share
+      anonymous diagnostics. Tonos uses a deletion receipt kept only on your
+      device to delete the reports that installation can prove it sent. If you
+      clear the app before using that receipt, Tonos cannot identify a report
+      without collecting identity; it will expire automatically after 14 days.
+      Cloudflare D1 recovery history may retain a deleted row for up to a further
+      30 days.
     </p>
 
     <h2>Contact</h2>

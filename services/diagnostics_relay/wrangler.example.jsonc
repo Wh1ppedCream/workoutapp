@@ -1,0 +1,39 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "tonos-diagnostics-relay",
+  "main": "src/index.js",
+  "compatibility_date": "2026-08-10",
+  "triggers": {
+    "crons": ["17 3 * * *"]
+  },
+  "env": {
+    "staging": {
+      "name": "tonos-diagnostics-relay-staging",
+      "vars": {
+        "DIAGNOSTICS_RELAY_WRITES_ENABLED": "false"
+      },
+      "d1_databases": [
+        {
+          "binding": "DIAGNOSTICS_DB",
+          "database_name": "tonos-diagnostics-staging",
+          "database_id": "REPLACE_WITH_STAGING_D1_DATABASE_ID",
+          "migrations_dir": "migrations"
+        }
+      ]
+    },
+    "production": {
+      "name": "tonos-diagnostics-relay-production",
+      "vars": {
+        "DIAGNOSTICS_RELAY_WRITES_ENABLED": "false"
+      },
+      "d1_databases": [
+        {
+          "binding": "DIAGNOSTICS_DB",
+          "database_name": "tonos-diagnostics-production",
+          "database_id": "REPLACE_WITH_PRODUCTION_D1_DATABASE_ID",
+          "migrations_dir": "migrations"
+        }
+      ]
+    }
+  }
+}
