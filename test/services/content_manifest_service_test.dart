@@ -1,4 +1,5 @@
 import 'package:env_test/services/content_manifest_service.dart';
+import 'package:env_test/services/trusted_content_policy.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -24,5 +25,20 @@ void main() {
       ),
       isTrue,
     );
+    for (final environment in environments.environments) {
+      for (final value in [
+        environment.exerciseMediaManifestUrl,
+        environment.sharedMediaManifestUrl,
+      ]) {
+        if (value.isEmpty) continue;
+        expect(
+          () => TrustedContentPolicy.requireHttps(
+            Uri.parse(value),
+            description: 'Bundled content environment',
+          ),
+          returnsNormally,
+        );
+      }
+    }
   });
 }

@@ -71,6 +71,7 @@ void main() {
     'bytes': 12000,
     'width': 512,
     'height': 512,
+    'sha256': List.filled(64, 'a').join(),
   };
 
   test(
@@ -137,6 +138,33 @@ void main() {
     expect(updated['local_thumbnail_path'], '/cache/bench.webp');
     expect(updated['downloaded_at'], isNotNull);
     expect(updated['last_accessed_at'], isNotNull);
+
+    await ContentDao.upsertExerciseMediaManifest(
+      db,
+      manifest(
+        version: 2,
+        assets: [asset('bench_v1', 'https://cdn.example/bench.webp')],
+      ),
+    );
+    final resynced = (await db.query('exercise_media')).single;
+    expect(resynced['local_thumbnail_path'], '/cache/bench.webp');
+    expect(resynced['downloaded_at'], isNotNull);
+
+    await ContentDao.upsertExerciseMediaManifest(
+      db,
+      manifest(
+        version: 3,
+        assets: [
+          {
+            ...asset('bench_v1', 'https://cdn.example/bench-v2.webp'),
+            'sha256': List.filled(64, 'b').join(),
+          },
+        ],
+      ),
+    );
+    final replaced = (await db.query('exercise_media')).single;
+    expect(replaced['local_thumbnail_path'], isNull);
+    expect(replaced['downloaded_at'], isNull);
   });
 
   test(

@@ -415,9 +415,18 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
   }
 
   Future<void> _saveSelectedContentEnvironment(String environmentId) async {
-    await _contentEnvironmentPreferences.saveSelectedEnvironment(environmentId);
-    if (!mounted) return;
-    _refreshContentStatus();
+    if (_contentActionRunning) return;
+    setState(() => _contentActionRunning = true);
+    try {
+      await _contentEnvironmentPreferences.saveSelectedEnvironment(
+        environmentId,
+      );
+      await _repo.refreshSelectedContentEnvironment();
+      if (!mounted) return;
+      _refreshContentStatus();
+    } finally {
+      if (mounted) setState(() => _contentActionRunning = false);
+    }
   }
 
   Future<void> _editContentEnvironment() async {
@@ -439,11 +448,18 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
   }
 
   Future<void> _saveManifestUrl(String value) async {
-    await _contentEnvironmentPreferences.saveCustomExerciseMediaManifestUrl(
-      value,
-    );
-    if (!mounted) return;
-    _refreshContentStatus();
+    if (_contentActionRunning) return;
+    setState(() => _contentActionRunning = true);
+    try {
+      await _contentEnvironmentPreferences.saveCustomExerciseMediaManifestUrl(
+        value,
+      );
+      await _repo.refreshSelectedContentEnvironment();
+      if (!mounted) return;
+      _refreshContentStatus();
+    } finally {
+      if (mounted) setState(() => _contentActionRunning = false);
+    }
   }
 
   Future<void> _editManifestUrl() async {
@@ -483,9 +499,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
     final uri = Uri.tryParse(manifestUrl);
 
     final validRemoteUri =
-        uri != null &&
-        (uri.scheme == 'https' || uri.scheme == 'http') &&
-        uri.host.isNotEmpty;
+        uri != null && uri.scheme == 'https' && uri.host.isNotEmpty;
     if (manifestUrl.isEmpty || !validRemoteUri) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -559,9 +573,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
     final manifestUrl = (await _loadSharedMediaManifestUrl()).trim();
     final uri = Uri.tryParse(manifestUrl);
     final validRemoteUri =
-        uri != null &&
-        (uri.scheme == 'https' || uri.scheme == 'http') &&
-        uri.host.isNotEmpty;
+        uri != null && uri.scheme == 'https' && uri.host.isNotEmpty;
     if (!validRemoteUri) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

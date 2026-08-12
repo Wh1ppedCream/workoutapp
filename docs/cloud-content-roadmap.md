@@ -146,6 +146,9 @@ Outside-code dependencies:
 
 - [x] Cache media locally.
 - [x] Clean abandoned temporary downloads.
+- [x] Require HTTPS manifests and assets, restrict redirects, enforce response
+  sizes and content types, verify exact bytes and SHA-256 before atomic cache
+  promotion, prune orphaned files, and bound the cache with LRU eviction.
 - [x] Avoid direct network-image fallback paths that bypass cache rules.
 - [x] Show subtle loading state while thumbnails resolve.
 - [x] Show retry affordance when a known media asset fails to cache.

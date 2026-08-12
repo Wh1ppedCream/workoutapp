@@ -180,12 +180,28 @@ class ContentDao {
             activeRemoteUrls.add(asset.remoteUrl);
           }
 
-          final existingId = await _existingMediaId(txn, asset);
-          final row = {...asset.toMap(), 'id': existingId, 'updated_at': now};
+          final existing = await _existingMediaRow(txn, asset);
+          final preserveCachedFiles = _cacheMetadataMatches(existing, asset);
+          final cachedRow = preserveCachedFiles ? existing! : null;
+          final row = <String, Object?>{
+            ...asset.toMap(),
+            'id': existing == null ? null : existing['id'],
+            'local_cache_path':
+                cachedRow == null ? null : cachedRow['local_cache_path'],
+            'local_thumbnail_path':
+                cachedRow == null ? null : cachedRow['local_thumbnail_path'],
+            'downloaded_at':
+                cachedRow == null ? null : cachedRow['downloaded_at'],
+            'last_accessed_at':
+                cachedRow == null ? null : cachedRow['last_accessed_at'],
+            'updated_at': now,
+          };
           row.removeWhere((_, value) => value == null);
 
-          if (existingId == null) {
+          if (existing == null) {
             row['created_at'] = now;
+          } else if (existing['created_at'] != null) {
+            row['created_at'] = existing['created_at'];
           }
 
           await txn.insert(
@@ -304,14 +320,31 @@ class ContentDao {
             activeRemoteUrls.add(asset.remoteUrl);
           }
 
-          final existingId = await _existingSharedMediaId(txn, asset);
+          final existing = await _existingSharedMediaRow(txn, asset);
+          final preserveCachedFiles = _sharedCacheMetadataMatches(
+            existing,
+            asset,
+          );
+          final cachedRow = preserveCachedFiles ? existing! : null;
           final row = <String, Object?>{
             ...asset.toMap(),
-            'id': existingId,
+            'id': existing == null ? null : existing['id'],
+            'local_cache_path':
+                cachedRow == null ? null : cachedRow['local_cache_path'],
+            'local_thumbnail_path':
+                cachedRow == null ? null : cachedRow['local_thumbnail_path'],
+            'downloaded_at':
+                cachedRow == null ? null : cachedRow['downloaded_at'],
+            'last_accessed_at':
+                cachedRow == null ? null : cachedRow['last_accessed_at'],
             'updated_at': now,
           };
           row.removeWhere((_, value) => value == null);
-          if (existingId == null) row['created_at'] = now;
+          if (existing == null) {
+            row['created_at'] = now;
+          } else if (existing['created_at'] != null) {
+            row['created_at'] = existing['created_at'];
+          }
 
           await txn.insert(
             'shared_media',
@@ -395,13 +428,44 @@ class ContentDao {
     );
   }
 
-  static Future<int?> _existingMediaId(
+  static Future<Set<String>> getReferencedCachePaths(Database db) async {
+    final paths = <String>{};
+    for (final table in const ['exercise_media', 'shared_media']) {
+      final rows = await db.query(
+        table,
+        columns: ['local_cache_path', 'local_thumbnail_path'],
+      );
+      for (final row in rows) {
+        for (final column in const [
+          'local_cache_path',
+          'local_thumbnail_path',
+        ]) {
+          final value = row[column] as String?;
+          if (value != null && value.isNotEmpty) paths.add(value);
+        }
+      }
+    }
+    return paths;
+  }
+
+  static Future<Map<String, Object?>?> _existingMediaRow(
     DatabaseExecutor db,
     ExerciseMediaItem item,
   ) async {
     final rows = await db.query(
       'exercise_media',
-      columns: ['id'],
+      columns: [
+        'id',
+        'remote_url',
+        'thumbnail_url',
+        'bytes',
+        'sha256',
+        'local_cache_path',
+        'local_thumbnail_path',
+        'downloaded_at',
+        'last_accessed_at',
+        'created_at',
+      ],
       where:
           item.assetId != null && item.assetId!.isNotEmpty
               ? 'asset_id = ?'
@@ -413,17 +477,28 @@ class ContentDao {
       limit: 1,
     );
     if (rows.isEmpty) return null;
-    return rows.first['id'] as int;
+    return rows.first;
   }
 
-  static Future<int?> _existingSharedMediaId(
+  static Future<Map<String, Object?>?> _existingSharedMediaRow(
     DatabaseExecutor db,
     SharedMediaItem item,
   ) async {
     final usesAssetId = item.assetId?.isNotEmpty == true;
     final rows = await db.query(
       'shared_media',
-      columns: ['id'],
+      columns: [
+        'id',
+        'remote_url',
+        'thumbnail_url',
+        'bytes',
+        'sha256',
+        'local_cache_path',
+        'local_thumbnail_path',
+        'downloaded_at',
+        'last_accessed_at',
+        'created_at',
+      ],
       where:
           usesAssetId
               ? 'asset_id = ?'
@@ -439,7 +514,31 @@ class ContentDao {
       limit: 1,
     );
     if (rows.isEmpty) return null;
-    return rows.first['id'] as int;
+    return rows.first;
+  }
+
+  static bool _cacheMetadataMatches(
+    Map<String, Object?>? existing,
+    ExerciseMediaItem asset,
+  ) {
+    if (existing == null) return false;
+    return existing['remote_url'] == asset.remoteUrl &&
+        existing['thumbnail_url'] == asset.thumbnailUrl &&
+        existing['bytes'] == asset.bytes &&
+        (existing['sha256'] as String?)?.toLowerCase() ==
+            asset.sha256?.toLowerCase();
+  }
+
+  static bool _sharedCacheMetadataMatches(
+    Map<String, Object?>? existing,
+    SharedMediaItem asset,
+  ) {
+    if (existing == null) return false;
+    return existing['remote_url'] == asset.remoteUrl &&
+        existing['thumbnail_url'] == asset.thumbnailUrl &&
+        existing['bytes'] == asset.bytes &&
+        (existing['sha256'] as String?)?.toLowerCase() ==
+            asset.sha256?.toLowerCase();
   }
 
   static Future<int?> _resolveSharedEntityId(

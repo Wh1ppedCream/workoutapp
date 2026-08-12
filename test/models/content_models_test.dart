@@ -49,6 +49,7 @@ void main() {
                 'bytes': 12000,
                 'width': 512,
                 'height': 512,
+                'sha256': List.filled(64, 'a').join(),
               },
               {'assetId': 'invalid'},
             ],

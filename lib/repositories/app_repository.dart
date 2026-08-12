@@ -477,6 +477,9 @@ class AppRepository {
   Future<void> ensureSharedMediaManifestReady() =>
       content.ensureSharedMediaManifestReady();
 
+  Future<void> refreshSelectedContentEnvironment() =>
+      content.refreshSelectedEnvironment();
+
   Future<ContentEnvironmentConfig> loadContentEnvironments() =>
       content.loadContentEnvironments();
 

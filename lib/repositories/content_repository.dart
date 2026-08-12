@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:sqflite/sqflite.dart';
+
 import '../db/content_dao.dart';
 import '../db/database_helper.dart';
 import '../models/models.dart';
@@ -23,7 +25,7 @@ class ContentRepository {
     DiagnosticsService? diagnostics,
   }) : _db = db ?? DatabaseHelper(),
        _manifestService = manifestService ?? const ContentManifestService(),
-       _cacheService = cacheService ?? const MediaCacheService(),
+       _cacheService = cacheService ?? MediaCacheService(),
        _downloadPolicy = downloadPolicy ?? MediaDownloadPolicy(),
        _environmentPreferences =
            environmentPreferences ?? const ContentEnvironmentPreferences(),
@@ -80,22 +82,22 @@ class ContentRepository {
     return manifest;
   }
 
-  Future<ContentManifest> syncRemoteExerciseMediaManifest(
-    Uri manifestUri,
-  ) => _recordManifestSync<ContentManifest>(
-    operation: 'exercise_media',
-    source: 'remote',
-    action: () async {
-      final manifest = await _manifestService.fetchExerciseMediaManifest(
-        manifestUri,
+  Future<ContentManifest> syncRemoteExerciseMediaManifest(Uri manifestUri) =>
+      _recordManifestSync<ContentManifest>(
+        operation: 'exercise_media',
+        source: 'remote',
+        action: () async {
+          final manifest = await _manifestService.fetchExerciseMediaManifest(
+            manifestUri,
+          );
+          final db = await _db.database;
+          await ContentDao.upsertExerciseMediaManifest(db, manifest);
+          await _pruneCacheAgainstDatabase(db);
+          return manifest;
+        },
+        versionOf: (manifest) => manifest.version,
+        itemCountOf: (manifest) => manifest.exerciseMedia.length,
       );
-      final db = await _db.database;
-      await ContentDao.upsertExerciseMediaManifest(db, manifest);
-      return manifest;
-    },
-    versionOf: (manifest) => manifest.version,
-    itemCountOf: (manifest) => manifest.exerciseMedia.length,
-  );
 
   Future<SharedMediaManifest> syncBundledSharedMediaManifest() async {
     final inFlight = _bundledSharedMediaManifestSync;
@@ -131,22 +133,22 @@ class ContentRepository {
     return manifest;
   }
 
-  Future<SharedMediaManifest> syncRemoteSharedMediaManifest(
-    Uri manifestUri,
-  ) => _recordManifestSync<SharedMediaManifest>(
-    operation: 'shared_media',
-    source: 'remote',
-    action: () async {
-      final manifest = await _manifestService.fetchSharedMediaManifest(
-        manifestUri,
+  Future<SharedMediaManifest> syncRemoteSharedMediaManifest(Uri manifestUri) =>
+      _recordManifestSync<SharedMediaManifest>(
+        operation: 'shared_media',
+        source: 'remote',
+        action: () async {
+          final manifest = await _manifestService.fetchSharedMediaManifest(
+            manifestUri,
+          );
+          final db = await _db.database;
+          await ContentDao.upsertSharedMediaManifest(db, manifest);
+          await _pruneCacheAgainstDatabase(db);
+          return manifest;
+        },
+        versionOf: (manifest) => manifest.version,
+        itemCountOf: (manifest) => manifest.entities.length,
       );
-      final db = await _db.database;
-      await ContentDao.upsertSharedMediaManifest(db, manifest);
-      return manifest;
-    },
-    versionOf: (manifest) => manifest.version,
-    itemCountOf: (manifest) => manifest.entities.length,
-  );
 
   Future<T> _recordManifestSync<T>({
     required String operation,
@@ -213,6 +215,15 @@ class ContentRepository {
     return sync;
   }
 
+  Future<void> refreshSelectedEnvironment() async {
+    _exerciseMediaBootstrapSync = null;
+    _sharedMediaBootstrapSync = null;
+    await Future.wait([
+      _bootstrapExerciseMediaManifest(),
+      _bootstrapSharedMediaManifest(),
+    ]);
+  }
+
   Future<void> _bootstrapSharedMediaManifest() async {
     if (await _trySyncConfiguredRemoteSharedMediaManifest()) return;
 
@@ -232,9 +243,7 @@ class ContentRepository {
           )).trim();
       final uri = Uri.tryParse(manifestUrl);
       final validRemoteUri =
-          uri != null &&
-          (uri.scheme == 'https' || uri.scheme == 'http') &&
-          uri.host.isNotEmpty;
+          uri != null && uri.scheme == 'https' && uri.host.isNotEmpty;
       if (!validRemoteUri) return false;
 
       await syncRemoteExerciseMediaManifest(uri);
@@ -253,9 +262,7 @@ class ContentRepository {
           )).trim();
       final uri = Uri.tryParse(manifestUrl);
       final validRemoteUri =
-          uri != null &&
-          (uri.scheme == 'https' || uri.scheme == 'http') &&
-          uri.host.isNotEmpty;
+          uri != null && uri.scheme == 'https' && uri.host.isNotEmpty;
       if (!validRemoteUri) return false;
 
       await syncRemoteSharedMediaManifest(uri);
@@ -319,6 +326,7 @@ class ContentRepository {
       thumbnail: thumbnail,
       localPath: file.path,
     );
+    await _pruneCacheAgainstDatabase(db);
     return file;
   }
 
@@ -348,6 +356,7 @@ class ContentRepository {
       thumbnail: thumbnail,
       localPath: file.path,
     );
+    await _pruneCacheAgainstDatabase(db);
     return file;
   }
 
@@ -369,6 +378,11 @@ class ContentRepository {
   }
 
   Future<void> clearCache() => _cacheService.clearCache();
+
+  Future<void> _pruneCacheAgainstDatabase(Database db) async {
+    final referencedPaths = await ContentDao.getReferencedCachePaths(db);
+    await _cacheService.pruneUnreferencedFiles(referencedPaths);
+  }
 
   Future<bool> isWifiOnlyMediaDownloadEnabled() {
     return _downloadPolicy.isWifiOnlyEnabled();

@@ -8,6 +8,8 @@ screen name:
   traversal, and concurrency behavior.
 - `test/providers` verifies SharedPreferences-backed app configuration.
 - `test/services` verifies content configuration and platform-download policy.
+- Cloud-content boundary tests also cover HTTPS/redirect policy, integrity
+  metadata, corrupt and interrupted streams, orphan pruning, and LRU limits.
 - `test/db` runs selected DAO contracts against in-memory SQLite.
 - `test/widgets` smoke-tests reusable user-interface components and their
   accessibility actions.
