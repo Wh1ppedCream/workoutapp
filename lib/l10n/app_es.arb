@@ -1783,5 +1783,8 @@
   "diagnosticsDeleteShared": "Eliminar diagnósticos compartidos",
   "diagnosticsDeleteSharedBody": "Solicita eliminar los informes que esta instalación puede demostrar que envió. El historial de recuperación del proveedor puede conservar filas eliminadas hasta 30 días.",
   "diagnosticsSharedDeleted": "Se solicitó eliminar los diagnósticos compartidos.",
-  "diagnosticsSharedDeletionPending": "Algunas solicitudes de eliminación se reintentarán cuando la aplicación se abra con conexión."
+  "diagnosticsSharedDeletionPending": "Algunas solicitudes de eliminación se reintentarán cuando la aplicación se abra con conexión.",
+  "workoutDurabilityRestoreWarning": "Tonos no pudo comprobar si hay un entrenamiento guardado. Reinténtalo antes de iniciar otro entrenamiento.",
+  "workoutDurabilityDraftSaveWarning": "La copia de seguridad del entrenamiento no está actualizada. Mantén Tonos abierto y reinténtalo para poder reanudarlo de forma segura.",
+  "workoutDurabilityProgressionWarning": "El entrenamiento está guardado, pero la progresión del plan sigue pendiente. Reinténtalo cuando el almacenamiento esté disponible."
 }

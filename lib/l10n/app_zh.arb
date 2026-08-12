@@ -1724,5 +1724,8 @@
   "diagnosticsDeleteShared": "删除已共享的诊断信息",
   "diagnosticsDeleteSharedBody": "请求删除此安装可证明已发送的报告。提供商的恢复历史可能会将已删除行保留最多 30 天。",
   "diagnosticsSharedDeleted": "已请求删除已共享的诊断信息。",
-  "diagnosticsSharedDeletionPending": "部分删除请求会在应用连接网络后再次打开时重试。"
+  "diagnosticsSharedDeletionPending": "部分删除请求会在应用连接网络后再次打开时重试。",
+  "workoutDurabilityRestoreWarning": "Tonos 无法检查是否有已保存的训练。请重试后再开始新的训练。",
+  "workoutDurabilityDraftSaveWarning": "训练备份尚未更新。请保持 Tonos 打开并重试，以便安全恢复本次训练。",
+  "workoutDurabilityProgressionWarning": "训练已保存，但计划进度更新仍在等待中。存储可用后请重试。"
 }

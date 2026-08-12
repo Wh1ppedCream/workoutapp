@@ -6211,4 +6211,13 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get diagnosticsSharedDeletionPending => 'সংযোগ থাকলে অ্যাপ খোলার সময় কিছু মুছে ফেলার অনুরোধ আবার চেষ্টা করা হবে।';
+
+  @override
+  String get workoutDurabilityRestoreWarning => 'Tonos কোনো সংরক্ষিত ওয়ার্কআউট আছে কি না পরীক্ষা করতে পারেনি। নতুন ওয়ার্কআউট শুরুর আগে আবার চেষ্টা করুন।';
+
+  @override
+  String get workoutDurabilityDraftSaveWarning => 'আপনার ওয়ার্কআউটের ব্যাকআপ হালনাগাদ নয়। নিরাপদে আবার শুরু করতে Tonos খোলা রাখুন এবং আবার চেষ্টা করুন।';
+
+  @override
+  String get workoutDurabilityProgressionWarning => 'আপনার ওয়ার্কআউট সংরক্ষিত হয়েছে, তবে পরিকল্পনার অগ্রগতি এখনো অপেক্ষমাণ। স্টোরেজ পাওয়া গেলে আবার চেষ্টা করুন।';
 }

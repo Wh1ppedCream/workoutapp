@@ -2431,5 +2431,8 @@
   "diagnosticsDeleteShared": "Supprimer les diagnostics partagés",
   "diagnosticsDeleteSharedBody": "Demande la suppression des rapports que cette installation peut prouver avoir envoyés. L’historique de récupération du fournisseur peut conserver des lignes supprimées jusqu’à 30 jours.",
   "diagnosticsSharedDeleted": "La suppression des diagnostics partagés a été demandée.",
-  "diagnosticsSharedDeletionPending": "Certaines demandes de suppression seront réessayées lorsque l’application s’ouvrira avec une connexion."
+  "diagnosticsSharedDeletionPending": "Certaines demandes de suppression seront réessayées lorsque l’application s’ouvrira avec une connexion.",
+  "workoutDurabilityRestoreWarning": "Tonos n’a pas pu vérifier s’il existe un entraînement sauvegardé. Réessayez avant d’en commencer un autre.",
+  "workoutDurabilityDraftSaveWarning": "La sauvegarde de votre entraînement n’est pas à jour. Gardez Tonos ouvert et réessayez pour pouvoir reprendre cet entraînement en toute sécurité.",
+  "workoutDurabilityProgressionWarning": "Votre entraînement est sauvegardé, mais la progression du plan est toujours en attente. Réessayez lorsque le stockage est disponible."
 }

@@ -75,6 +75,10 @@ class _CatalogRepository extends AppRepository {
   Future<Map<String, dynamic>?> loadActiveWorkoutDraft() async => null;
 
   @override
+  Future<List<Map<String, dynamic>>> loadPendingWorkoutProgressions() async =>
+      const [];
+
+  @override
   Future<List<Map<String, dynamic>>> fetchMostUsedExerciseDefinitionsRaw({
     int limit = 5,
   }) async => const [];

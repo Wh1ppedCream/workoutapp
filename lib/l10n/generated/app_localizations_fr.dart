@@ -6230,6 +6230,15 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get diagnosticsSharedDeletionPending => 'Certaines demandes de suppression seront réessayées lorsque l’application s’ouvrira avec une connexion.';
+
+  @override
+  String get workoutDurabilityRestoreWarning => 'Tonos n’a pas pu vérifier s’il existe un entraînement sauvegardé. Réessayez avant d’en commencer un autre.';
+
+  @override
+  String get workoutDurabilityDraftSaveWarning => 'La sauvegarde de votre entraînement n’est pas à jour. Gardez Tonos ouvert et réessayez pour pouvoir reprendre cet entraînement en toute sécurité.';
+
+  @override
+  String get workoutDurabilityProgressionWarning => 'Votre entraînement est sauvegardé, mais la progression du plan est toujours en attente. Réessayez lorsque le stockage est disponible.';
 }
 
 /// The translations for French, as used in Canada (`fr_CA`).
@@ -12452,4 +12461,13 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
 
   @override
   String get diagnosticsSharedDeletionPending => 'Certaines demandes de suppression seront réessayées lorsque l’application s’ouvrira avec une connexion.';
+
+  @override
+  String get workoutDurabilityRestoreWarning => 'Tonos n’a pas pu vérifier s’il existe un entraînement sauvegardé. Réessayez avant d’en commencer un autre.';
+
+  @override
+  String get workoutDurabilityDraftSaveWarning => 'La sauvegarde de votre entraînement n’est pas à jour. Gardez Tonos ouvert et réessayez pour pouvoir reprendre cet entraînement en toute sécurité.';
+
+  @override
+  String get workoutDurabilityProgressionWarning => 'Votre entraînement est sauvegardé, mais la progression du plan est toujours en attente. Réessayez lorsque le stockage est disponible.';
 }

@@ -159,7 +159,8 @@ class _WorkoutDashboardState extends State<WorkoutDashboard>
                 final session = context.read<ActiveSession>();
                 final navigator = Navigator.of(context);
                 if (!hasActiveWorkout) {
-                  await session.start();
+                  final started = await session.start();
+                  if (!started) return;
                 }
                 if (!mounted) return;
                 await navigator.push(

@@ -36,6 +36,7 @@ import 'database_maintenance.dart';
 import 'db_query_utils.dart';
 import 'active_plan_dao.dart';
 import 'active_workout_dao.dart';
+import 'pending_workout_progression_dao.dart';
 import 'preset_transaction_dao.dart';
 import 'profile_transaction_dao.dart';
 import 'progression_rule_propagation_dao.dart';
@@ -49,7 +50,7 @@ import 'package:flutter/foundation.dart' show debugPrint;
 
 /// Singleton helper for managing the SQLite database.
 class DatabaseHelper {
-  static const int _kDbVersion = 57;
+  static const int _kDbVersion = 58;
   static const bool _kIntegrationTestMode = bool.fromEnvironment(
     'TONOS_INTEGRATION_TEST',
   );
@@ -163,6 +164,7 @@ class DatabaseHelper {
         await Schema.migrateV55(db);
         await Schema.migrateV56(db);
         await Schema.migrateV57(db);
+        await Schema.migrateV58(db);
         await _resetDbTriggers(db); // <—
         await _maybeCompactLegacyFoodCatalog(db);
         await _removeEmptyStarterPlans(db);
@@ -1824,6 +1826,7 @@ class DatabaseHelper {
     required DateTime completedAt,
     required int durationSeconds,
     required List<WorkoutExerciseWrite> exercises,
+    int? autoPresetId,
   }) async {
     final db = await database;
     return WorkoutTransactionDao.completeWorkout(
@@ -1831,6 +1834,7 @@ class DatabaseHelper {
       completedAt: completedAt,
       durationSeconds: durationSeconds,
       exercises: exercises,
+      autoPresetId: autoPresetId,
     );
   }
 
@@ -4648,6 +4652,28 @@ class DatabaseHelper {
   ) async {
     final db = await database;
     await PresetProgressionDao.apply(db, progression);
+  }
+
+  Future<List<Map<String, dynamic>>> loadPendingWorkoutProgressions() async {
+    final db = await database;
+    return PendingWorkoutProgressionDao.loadAll(db);
+  }
+
+  Future<void> recordPendingWorkoutProgressionFailure(int sessionId) async {
+    final db = await database;
+    await PendingWorkoutProgressionDao.recordFailedAttempt(db, sessionId);
+  }
+
+  Future<void> completePendingWorkoutProgression({
+    required int sessionId,
+    required PresetProgressionBatch progression,
+  }) async {
+    final db = await database;
+    await PendingWorkoutProgressionDao.applyAndDelete(
+      db,
+      sessionId: sessionId,
+      progression: progression,
+    );
   }
 
   Future<bool> getUseManualBodyparts(int defId) async {

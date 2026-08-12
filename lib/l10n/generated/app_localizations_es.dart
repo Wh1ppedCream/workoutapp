@@ -6230,4 +6230,13 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get diagnosticsSharedDeletionPending => 'Algunas solicitudes de eliminación se reintentarán cuando la aplicación se abra con conexión.';
+
+  @override
+  String get workoutDurabilityRestoreWarning => 'Tonos no pudo comprobar si hay un entrenamiento guardado. Reinténtalo antes de iniciar otro entrenamiento.';
+
+  @override
+  String get workoutDurabilityDraftSaveWarning => 'La copia de seguridad del entrenamiento no está actualizada. Mantén Tonos abierto y reinténtalo para poder reanudarlo de forma segura.';
+
+  @override
+  String get workoutDurabilityProgressionWarning => 'El entrenamiento está guardado, pero la progresión del plan sigue pendiente. Reinténtalo cuando el almacenamiento esté disponible.';
 }

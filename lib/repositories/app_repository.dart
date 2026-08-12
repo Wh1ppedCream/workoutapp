@@ -100,10 +100,12 @@ class AppRepository {
     required DateTime completedAt,
     required int durationSeconds,
     required List<WorkoutExerciseWrite> exercises,
+    int? autoPresetId,
   }) => _dbHelper.completeWorkoutAtomic(
     completedAt: completedAt,
     durationSeconds: durationSeconds,
     exercises: exercises,
+    autoPresetId: autoPresetId,
   );
 
   Future<void> replaceSessionExercisesAtomic({
@@ -1312,6 +1314,20 @@ class AppRepository {
   Future<void> applyPresetProgressionBatch(
     PresetProgressionBatch progression,
   ) => _dbHelper.applyPresetProgressionBatch(progression);
+
+  Future<List<Map<String, dynamic>>> loadPendingWorkoutProgressions() =>
+      _dbHelper.loadPendingWorkoutProgressions();
+
+  Future<void> recordPendingWorkoutProgressionFailure(int sessionId) =>
+      _dbHelper.recordPendingWorkoutProgressionFailure(sessionId);
+
+  Future<void> completePendingWorkoutProgression({
+    required int sessionId,
+    required PresetProgressionBatch progression,
+  }) => _dbHelper.completePendingWorkoutProgression(
+    sessionId: sessionId,
+    progression: progression,
+  );
 
   /// Flow‐chart JSON for a preset.
   Future<FlowDefinition> fetchFlowDefinition(int presetId) async {

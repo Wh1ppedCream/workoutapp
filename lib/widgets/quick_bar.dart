@@ -96,7 +96,8 @@ class QuickBar extends StatelessWidget {
               fontSize: 14 * scale,
               onTap: () async {
                 final session = context.read<ActiveSession>();
-                await session.start();
+                final started = await session.start();
+                if (!started && !session.isActive) return;
                 if (!context.mounted) return;
                 Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const SessionScreen()),

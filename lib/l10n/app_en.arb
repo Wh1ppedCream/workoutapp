@@ -2504,5 +2504,8 @@
   "diagnosticsDeleteShared": "Delete shared diagnostics",
   "diagnosticsDeleteSharedBody": "Requests deletion of reports this app can prove it sent. Provider recovery history may retain deleted rows for up to 30 days.",
   "diagnosticsSharedDeleted": "Shared diagnostics deletion requested.",
-  "diagnosticsSharedDeletionPending": "Some deletion requests will retry when the app opens with a connection."
+  "diagnosticsSharedDeletionPending": "Some deletion requests will retry when the app opens with a connection.",
+  "workoutDurabilityRestoreWarning": "Tonos could not check for a saved workout. Retry before starting another workout.",
+  "workoutDurabilityDraftSaveWarning": "Your workout backup is not up to date. Keep Tonos open and retry so this workout can be resumed safely.",
+  "workoutDurabilityProgressionWarning": "Your workout is saved, but plan progression is still pending. Retry when storage is available."
 }

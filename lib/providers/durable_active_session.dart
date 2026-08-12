@@ -8,23 +8,70 @@ import '../repositories/app_repository.dart';
 import '../services/auto_increment_service.dart';
 import '../widgets/exercise_card.dart';
 
+enum ActiveSessionDurabilityIssue { restore, draftSave, progression }
+
+typedef ActiveSessionRetryDelay = Future<void> Function(Duration duration);
+typedef PendingProgressionRunner =
+    Future<void> Function(int sessionId, int presetId);
+
+class _RestoredWorkoutDraft {
+  const _RestoredWorkoutDraft({
+    required this.exercises,
+    required this.cardTypes,
+    required this.autoPresetId,
+    required this.startedAt,
+  });
+
+  final List<WorkoutExercise> exercises;
+  final List<CardType> cardTypes;
+  final int? autoPresetId;
+  final DateTime startedAt;
+}
+
 /// Owns the durable state of the workout currently in progress.
 class ActiveSession extends ChangeNotifier with WidgetsBindingObserver {
+  static const int _maxDurabilityAttempts = 3;
+  static const List<Duration> _retryDelays = [
+    Duration(milliseconds: 40),
+    Duration(milliseconds: 160),
+  ];
+
+  static Future<void> _defaultRetryDelay(Duration duration) =>
+      Future<void>.delayed(duration);
+
   final AppRepository _repo;
+  final ActiveSessionRetryDelay _retryDelay;
+  final PendingProgressionRunner _progressionRunner;
   late final Future<void> _restoreFuture;
 
   int? _autoPresetId;
   DateTime? _startedAt;
   Timer? _timer;
   Timer? _draftSaveTimer;
+  Future<void>? _draftSaveInFlight;
+  bool _draftSaveRequested = false;
   int _elapsedSeconds = 0;
   int _completedSessionVersion = 0;
   bool _isRestoring = true;
   bool _isFinishing = false;
+  bool _isRetryingDurability = false;
+  bool _restoreFailed = false;
+  bool _draftSaveFailed = false;
+  bool _progressionFailed = false;
 
-  ActiveSession({required AppRepository repository}) : _repo = repository {
+  ActiveSession({
+    required AppRepository repository,
+    ActiveSessionRetryDelay? retryDelay,
+    PendingProgressionRunner? progressionRunner,
+  }) : _repo = repository,
+       _retryDelay = retryDelay ?? _defaultRetryDelay,
+       _progressionRunner =
+           progressionRunner ??
+           ((sessionId, presetId) => AutoIncrementService(
+             repository,
+           ).applyPending(sessionId: sessionId, presetId: presetId)) {
     WidgetsBinding.instance.addObserver(this);
-    _restoreFuture = _restoreDraft();
+    _restoreFuture = _initializeDurability();
   }
 
   final ValueNotifier<int> elapsedSecondsListenable = ValueNotifier<int>(0);
@@ -33,6 +80,14 @@ class ActiveSession extends ChangeNotifier with WidgetsBindingObserver {
   bool get isActive => _timer != null || _isRestoring;
   bool get isRestoring => _isRestoring;
   bool get isFinishing => _isFinishing;
+  bool get isRetryingDurability => _isRetryingDurability;
+  ActiveSessionDurabilityIssue? get durabilityIssue {
+    if (_restoreFailed) return ActiveSessionDurabilityIssue.restore;
+    if (_draftSaveFailed) return ActiveSessionDurabilityIssue.draftSave;
+    if (_progressionFailed) return ActiveSessionDurabilityIssue.progression;
+    return null;
+  }
+
   int get elapsedSeconds => _elapsedSeconds;
   int get completedSessionVersion => _completedSessionVersion;
   int get completedSetCount {
@@ -62,7 +117,7 @@ class ActiveSession extends ChangeNotifier with WidgetsBindingObserver {
   /// Returns false rather than replacing an existing workout.
   Future<bool> start({int? presetId}) async {
     await _restoreFuture;
-    if (_timer != null || _isFinishing) return false;
+    if (_restoreFailed || _timer != null || _isFinishing) return false;
     _beginWorkout(presetId: presetId);
     await _persistDraft();
     return true;
@@ -78,7 +133,7 @@ class ActiveSession extends ChangeNotifier with WidgetsBindingObserver {
       throw ArgumentError('Exercise and card-type counts must match.');
     }
     await _restoreFuture;
-    if (_timer != null || _isFinishing) return false;
+    if (_restoreFailed || _timer != null || _isFinishing) return false;
     exercises
       ..clear()
       ..addAll(workoutExercises);
@@ -127,7 +182,12 @@ class ActiveSession extends ChangeNotifier with WidgetsBindingObserver {
     if (completedExercises.isEmpty) return null;
     _syncElapsed();
     _isFinishing = true;
+    _draftSaveTimer?.cancel();
+    _draftSaveTimer = null;
     notifyListeners();
+
+    final inFlightSave = _draftSaveInFlight;
+    if (inFlightSave != null) await inFlightSave;
 
     final autoPresetId = _autoPresetId;
     try {
@@ -135,19 +195,11 @@ class ActiveSession extends ChangeNotifier with WidgetsBindingObserver {
         completedAt: DateTime.now(),
         durationSeconds: _elapsedSeconds,
         exercises: completedExercises,
+        autoPresetId: autoPresetId,
       );
-      if (autoPresetId != null) {
-        try {
-          await AutoIncrementService(
-            _repo,
-          ).apply(sessionId: sessionId, presetId: autoPresetId);
-        } catch (error, stackTrace) {
-          debugPrint('Automatic plan progression failed: $error');
-          debugPrintStack(stackTrace: stackTrace);
-        }
-      }
       _resetActiveState();
       markHistoryChanged();
+      if (autoPresetId != null) await _resumePendingProgressions();
       return sessionId;
     } catch (_) {
       _isFinishing = false;
@@ -161,9 +213,21 @@ class ActiveSession extends ChangeNotifier with WidgetsBindingObserver {
   Future<void> discard() async {
     await _restoreFuture;
     if (_isFinishing) return;
-    await _repo.clearActiveWorkoutDraft();
-    _resetActiveState();
+    _isFinishing = true;
+    _draftSaveTimer?.cancel();
+    _draftSaveTimer = null;
     notifyListeners();
+    final inFlightSave = _draftSaveInFlight;
+    if (inFlightSave != null) await inFlightSave;
+    try {
+      await _withRetries(_repo.clearActiveWorkoutDraft);
+      _resetActiveState();
+      notifyListeners();
+    } catch (_) {
+      _isFinishing = false;
+      notifyListeners();
+      rethrow;
+    }
   }
 
   /// Invalidates every screen whose contents derive from workout history.
@@ -255,35 +319,133 @@ class ActiveSession extends ChangeNotifier with WidgetsBindingObserver {
     return writes;
   }
 
+  Future<void> _initializeDurability() async {
+    await _restoreDraft();
+    if (!_restoreFailed) await _resumePendingProgressions();
+  }
+
   Future<void> _restoreDraft() async {
     try {
-      final row = await _repo.loadActiveWorkoutDraft();
-      if (row == null) return;
-      final payload =
-          jsonDecode(row['payload_json'] as String) as Map<String, dynamic>;
-      final rawExercises = payload['exercises'] as List? ?? const [];
-      exercises.clear();
-      cardTypes.clear();
-      for (final raw in rawExercises.whereType<Map>()) {
-        final map = Map<String, dynamic>.from(raw);
-        final type = CardType.values.firstWhere(
-          (candidate) => candidate.name == map['type'],
-          orElse: () => CardType.weight,
-        );
-        exercises.add(_exerciseFromJson(map, type));
-        cardTypes.add(type);
-      }
-      _autoPresetId = row['auto_preset_id'] as int?;
-      _startedAt = DateTime.parse(row['started_at'] as String).toLocal();
+      final restored = await _withRetries(_loadRestoredDraft);
+      // A successful read is enough to clear a prior restore warning, even
+      // when there was no active workout to restore.
+      _restoreFailed = false;
+      if (restored == null) return;
+      exercises
+        ..clear()
+        ..addAll(restored.exercises);
+      cardTypes
+        ..clear()
+        ..addAll(restored.cardTypes);
+      _autoPresetId = restored.autoPresetId;
+      _startedAt = restored.startedAt;
       _syncElapsed();
       _startTimer();
     } catch (error, stackTrace) {
-      debugPrint('Could not restore active workout: $error');
+      _restoreFailed = true;
+      debugPrint('Could not restore active workout (${error.runtimeType}).');
       debugPrintStack(stackTrace: stackTrace);
     } finally {
       _isRestoring = false;
       notifyListeners();
     }
+  }
+
+  Future<_RestoredWorkoutDraft?> _loadRestoredDraft() async {
+    final row = await _repo.loadActiveWorkoutDraft();
+    if (row == null) return null;
+    final payload =
+        jsonDecode(row['payload_json'] as String) as Map<String, dynamic>;
+    final rawExercises = payload['exercises'] as List? ?? const [];
+    final restoredExercises = <WorkoutExercise>[];
+    final restoredCardTypes = <CardType>[];
+    for (final raw in rawExercises.whereType<Map>()) {
+      final map = Map<String, dynamic>.from(raw);
+      final type = CardType.values.firstWhere(
+        (candidate) => candidate.name == map['type'],
+        orElse: () => CardType.weight,
+      );
+      restoredExercises.add(_exerciseFromJson(map, type));
+      restoredCardTypes.add(type);
+    }
+    return _RestoredWorkoutDraft(
+      exercises: restoredExercises,
+      cardTypes: restoredCardTypes,
+      autoPresetId: row['auto_preset_id'] as int?,
+      startedAt: DateTime.parse(row['started_at'] as String).toLocal(),
+    );
+  }
+
+  Future<void> retryDurability() async {
+    if (_isRetryingDurability) return;
+    _isRetryingDurability = true;
+    notifyListeners();
+    try {
+      if (_restoreFailed) {
+        _isRestoring = true;
+        await _restoreDraft();
+      }
+      if (_draftSaveFailed && _startedAt != null) await _persistDraft();
+      if (_progressionFailed || !_restoreFailed) {
+        await _resumePendingProgressions();
+      }
+    } finally {
+      _isRetryingDurability = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> _resumePendingProgressions() async {
+    var failed = false;
+    try {
+      final jobs = await _withRetries(_repo.loadPendingWorkoutProgressions);
+      for (final job in jobs) {
+        final sessionId = (job['session_id'] as num).toInt();
+        final presetId = (job['preset_id'] as num).toInt();
+        try {
+          await _withRetries(() => _progressionRunner(sessionId, presetId));
+        } catch (error, stackTrace) {
+          failed = true;
+          debugPrint(
+            'Automatic plan progression remains pending '
+            '(${error.runtimeType}).',
+          );
+          debugPrintStack(stackTrace: stackTrace);
+          try {
+            await _repo.recordPendingWorkoutProgressionFailure(sessionId);
+          } catch (_) {
+            // The job itself remains durable even if attempt metadata fails.
+          }
+        }
+      }
+    } catch (error, stackTrace) {
+      failed = true;
+      debugPrint(
+        'Could not load pending plan progression (${error.runtimeType}).',
+      );
+      debugPrintStack(stackTrace: stackTrace);
+    }
+    if (_progressionFailed != failed) {
+      _progressionFailed = failed;
+      notifyListeners();
+    }
+  }
+
+  Future<T> _withRetries<T>(Future<T> Function() operation) async {
+    Object? lastError;
+    StackTrace? lastStackTrace;
+    for (var attempt = 0; attempt < _maxDurabilityAttempts; attempt++) {
+      try {
+        return await operation();
+      } catch (error, stackTrace) {
+        lastError = error;
+        lastStackTrace = stackTrace;
+        if (attempt < _retryDelays.length) {
+          await _retryDelay(_retryDelays[attempt]);
+        }
+      }
+    }
+    Error.throwWithStackTrace(lastError!, lastStackTrace!);
   }
 
   void _startTimer() {
@@ -311,24 +473,60 @@ class ActiveSession extends ChangeNotifier with WidgetsBindingObserver {
     });
   }
 
-  Future<void> _persistDraft() async {
+  Future<void> _persistDraft() {
+    final inFlight = _draftSaveInFlight;
+    if (inFlight != null) {
+      _draftSaveRequested = true;
+      return inFlight;
+    }
+    late final Future<void> trackedSave;
+    trackedSave = _drainDraftSaves().whenComplete(() {
+      if (identical(_draftSaveInFlight, trackedSave)) {
+        _draftSaveInFlight = null;
+      }
+    });
+    _draftSaveInFlight = trackedSave;
+    return trackedSave;
+  }
+
+  Future<void> _drainDraftSaves() async {
+    do {
+      _draftSaveRequested = false;
+      await _persistDraftOnce();
+    } while (_draftSaveRequested && _startedAt != null && !_isFinishing);
+  }
+
+  Future<void> _persistDraftOnce() async {
     final startedAt = _startedAt;
     if (startedAt == null || _isFinishing) return;
     try {
-      await _repo.saveActiveWorkoutDraft(
-        startedAt: startedAt,
-        autoPresetId: _autoPresetId,
-        payloadJson: jsonEncode({
-          'version': 1,
-          'exercises': [
-            for (var index = 0; index < exercises.length; index++)
-              _exerciseToJson(exercises[index], cardTypes[index]),
-          ],
-        }),
-      );
+      final autoPresetId = _autoPresetId;
+      final payloadJson = jsonEncode({
+        'version': 1,
+        'exercises': [
+          for (var index = 0; index < exercises.length; index++)
+            _exerciseToJson(exercises[index], cardTypes[index]),
+        ],
+      });
+      await _withRetries(() async {
+        if (_isFinishing || _startedAt != startedAt) return;
+        await _repo.saveActiveWorkoutDraft(
+          startedAt: startedAt,
+          autoPresetId: autoPresetId,
+          payloadJson: payloadJson,
+        );
+      });
+      if (_draftSaveFailed) {
+        _draftSaveFailed = false;
+        notifyListeners();
+      }
     } catch (error, stackTrace) {
-      debugPrint('Could not persist active workout draft: $error');
+      _draftSaveFailed = true;
+      debugPrint(
+        'Could not persist active workout draft (${error.runtimeType}).',
+      );
       debugPrintStack(stackTrace: stackTrace);
+      notifyListeners();
     }
   }
 
@@ -489,6 +687,7 @@ class ActiveSession extends ChangeNotifier with WidgetsBindingObserver {
     _startedAt = null;
     _elapsedSeconds = 0;
     _isFinishing = false;
+    _draftSaveFailed = false;
     exercises.clear();
     cardTypes.clear();
     elapsedSecondsListenable.value = 0;

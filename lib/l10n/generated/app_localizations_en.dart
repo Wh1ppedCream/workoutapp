@@ -6230,4 +6230,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get diagnosticsSharedDeletionPending => 'Some deletion requests will retry when the app opens with a connection.';
+
+  @override
+  String get workoutDurabilityRestoreWarning => 'Tonos could not check for a saved workout. Retry before starting another workout.';
+
+  @override
+  String get workoutDurabilityDraftSaveWarning => 'Your workout backup is not up to date. Keep Tonos open and retry so this workout can be resumed safely.';
+
+  @override
+  String get workoutDurabilityProgressionWarning => 'Your workout is saved, but plan progression is still pending. Retry when storage is available.';
 }

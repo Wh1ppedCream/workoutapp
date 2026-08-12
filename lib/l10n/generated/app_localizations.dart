@@ -11455,6 +11455,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Some deletion requests will retry when the app opens with a connection.'**
   String get diagnosticsSharedDeletionPending;
+
+  /// No description provided for @workoutDurabilityRestoreWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Tonos could not check for a saved workout. Retry before starting another workout.'**
+  String get workoutDurabilityRestoreWarning;
+
+  /// No description provided for @workoutDurabilityDraftSaveWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Your workout backup is not up to date. Keep Tonos open and retry so this workout can be resumed safely.'**
+  String get workoutDurabilityDraftSaveWarning;
+
+  /// No description provided for @workoutDurabilityProgressionWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Your workout is saved, but plan progression is still pending. Retry when storage is available.'**
+  String get workoutDurabilityProgressionWarning;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

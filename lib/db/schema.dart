@@ -161,6 +161,7 @@ class Schema {
     await migrateV55(db);
     await migrateV56(db);
     await migrateV57(db);
+    await migrateV58(db);
   }
 
   /// Handler for onUpgrade callback.
@@ -225,6 +226,7 @@ class Schema {
     if (oldVersion < 55) await migrateV55(db);
     if (oldVersion < 56) await migrateV56(db);
     if (oldVersion < 57) await migrateV57(db);
+    if (oldVersion < 58) await migrateV58(db);
   }
 
   /// Migration to version 3: adds rating, equipment/muscle tables.
@@ -3277,6 +3279,24 @@ WHERE source_id IS NULL
     await db.execute('''
       CREATE INDEX IF NOT EXISTS idx_workout_set_record_events_set
       ON workout_set_record_events(set_id)
+    ''');
+  }
+
+  /// v58 - durable, idempotent handoff for post-workout plan progression.
+  static Future<void> migrateV58(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS pending_workout_progression (
+        session_id INTEGER PRIMARY KEY,
+        preset_id INTEGER NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        attempt_count INTEGER NOT NULL DEFAULT 0 CHECK(attempt_count >= 0),
+        FOREIGN KEY(session_id) REFERENCES sessions(id) ON DELETE CASCADE
+      )
+    ''');
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_pending_progression_created
+      ON pending_workout_progression(created_at, session_id)
     ''');
   }
 

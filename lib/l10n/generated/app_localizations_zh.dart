@@ -6205,4 +6205,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get diagnosticsSharedDeletionPending => '部分删除请求会在应用连接网络后再次打开时重试。';
+
+  @override
+  String get workoutDurabilityRestoreWarning => 'Tonos 无法检查是否有已保存的训练。请重试后再开始新的训练。';
+
+  @override
+  String get workoutDurabilityDraftSaveWarning => '训练备份尚未更新。请保持 Tonos 打开并重试，以便安全恢复本次训练。';
+
+  @override
+  String get workoutDurabilityProgressionWarning => '训练已保存，但计划进度更新仍在等待中。存储可用后请重试。';
 }

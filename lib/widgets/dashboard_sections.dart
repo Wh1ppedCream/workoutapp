@@ -165,7 +165,8 @@ class DashboardQuickActions extends StatelessWidget {
                   color: const Color(0xFF81C784),
                   onPressed: () async {
                     if (!workoutActive) {
-                      await activeSession.start();
+                      final started = await activeSession.start();
+                      if (!started) return;
                     }
                     if (!context.mounted) return;
                     await Navigator.of(context).push(

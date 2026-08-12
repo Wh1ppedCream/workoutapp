@@ -7,6 +7,9 @@ screen name:
 - `test/utils` verifies unit conversion, generated-weight helpers, flow
   traversal, and concurrency behavior.
 - `test/providers` verifies SharedPreferences-backed app configuration.
+- `test/providers/durable_active_session_test.dart` covers workout-draft
+  restoration and bounded save retries, including progression recovery after a
+  completed session survives a storage failure.
 - `test/services` verifies content configuration and platform-download policy.
 - Cloud-content boundary tests also cover HTTPS/redirect policy, integrity
   metadata, corrupt and interrupted streams, orphan pruning, and LRU limits.

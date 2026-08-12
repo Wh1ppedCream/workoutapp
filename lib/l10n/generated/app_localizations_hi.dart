@@ -6205,4 +6205,13 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get diagnosticsSharedDeletionPending => 'कुछ हटाने के अनुरोध कनेक्शन के साथ ऐप खुलने पर फिर से आज़माए जाएंगे।';
+
+  @override
+  String get workoutDurabilityRestoreWarning => 'Tonos सहेजे गए वर्कआउट की जाँच नहीं कर सका। नया वर्कआउट शुरू करने से पहले पुनः प्रयास करें।';
+
+  @override
+  String get workoutDurabilityDraftSaveWarning => 'आपके वर्कआउट का बैकअप अद्यतित नहीं है। Tonos खुला रखें और पुनः प्रयास करें ताकि यह वर्कआउट सुरक्षित रूप से फिर से शुरू हो सके।';
+
+  @override
+  String get workoutDurabilityProgressionWarning => 'आपका वर्कआउट सहेजा गया है, लेकिन प्लान की प्रगति अभी लंबित है। स्टोरेज उपलब्ध होने पर पुनः प्रयास करें।';
 }
