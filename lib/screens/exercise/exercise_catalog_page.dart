@@ -10,6 +10,7 @@ import '../../providers/selected_profile.dart';
 import '../../repositories/app_repository.dart';
 import '../../services/exercise_equipment_compatibility.dart';
 import '../../services/tutorial_state_store.dart';
+import '../../utils/localized_body_part_name.dart';
 import '../../utils/tutorial_launcher.dart';
 import '../../widgets/exercise_detail_sheet.dart';
 import '../../widgets/exercise_media_thumbnail.dart';
@@ -408,7 +409,10 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                                       child: Text(
                                         name == _allFilter
                                             ? strings.commonAll
-                                            : name,
+                                            : localizedBodyPartName(
+                                              context,
+                                              name,
+                                            ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),

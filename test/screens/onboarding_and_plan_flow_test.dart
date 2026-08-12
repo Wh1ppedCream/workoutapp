@@ -71,6 +71,84 @@ void main() {
     expect(find.text('Renseignements'), findsOneWidget);
   });
 
+  testWidgets('onboarding welcome reflows new locales at large text sizes', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(360, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    for (final preference in const [
+      AppLanguagePreference.canadianFrench,
+      AppLanguagePreference.bengaliBangladesh,
+      AppLanguagePreference.simplifiedChinese,
+      AppLanguagePreference.hindi,
+      AppLanguagePreference.spanish,
+    ]) {
+      SharedPreferences.setMockInitialValues({
+        LocalePreferenceProvider.preferenceKey: preference.name,
+        'guided_tutorial_completed.plan_detail_v1': true,
+        'guided_tutorial_completed.onboarding_manual_plan_v1': true,
+      });
+      final localePreferences = LocalePreferenceProvider();
+      final unitPreferences = UnitPreferenceProvider();
+      await Future.wait([localePreferences.ready, unitPreferences.ready]);
+      final locale = localePreferences.locale!;
+      final strings = await AppLocalizations.delegate.load(locale);
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            Provider<AppRepository>.value(value: _OnboardingRepository()),
+            ChangeNotifierProvider<UnitPreferenceProvider>.value(
+              value: unitPreferences,
+            ),
+            ChangeNotifierProvider<LocalePreferenceProvider>.value(
+              value: localePreferences,
+            ),
+          ],
+          child: MaterialApp(
+            locale: locale,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            builder:
+                (context, child) => MediaQuery(
+                  data: MediaQuery.of(
+                    context,
+                  ).copyWith(textScaler: const TextScaler.linear(1.3)),
+                  child: child!,
+                ),
+            home: const OnboardingFlow(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text(strings.onboardingWelcomeTitle), findsOneWidget);
+      expect(
+        find.text(strings.onboardingLanguageSelectionTitle),
+        findsOneWidget,
+      );
+      expect(
+        find.byType(DropdownButtonFormField<AppLanguagePreference>),
+        findsOneWidget,
+      );
+      final skipLabel = find.text(strings.onboardingSkip);
+      expect(skipLabel, findsOneWidget);
+      expect(tester.getSize(skipLabel).height, lessThanOrEqualTo(32));
+      expect(
+        tester
+            .getSize(find.widgetWithText(TextButton, strings.onboardingSkip))
+            .width,
+        104,
+      );
+      expect(
+        tester.getCenter(find.text(strings.onboardingPageWelcome)).dx,
+        closeTo(180, 1),
+      );
+      expect(tester.takeException(), isNull);
+    }
+  });
+
   testWidgets('onboarding converts an entered weight when units change', (
     tester,
   ) async {

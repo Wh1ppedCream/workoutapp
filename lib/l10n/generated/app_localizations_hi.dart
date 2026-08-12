@@ -32,6 +32,48 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String get focusedSetsTitle => 'लक्षित सेट';
+
+  @override
+  String get bodyPartNeck => 'गर्दन';
+
+  @override
+  String get bodyPartShoulders => 'कंधे';
+
+  @override
+  String get bodyPartChest => 'छाती';
+
+  @override
+  String get bodyPartCore => 'कोर';
+
+  @override
+  String get bodyPartUpperBack => 'ऊपरी पीठ';
+
+  @override
+  String get bodyPartLowerBack => 'निचली पीठ';
+
+  @override
+  String get bodyPartBiceps => 'बाइसेप्स';
+
+  @override
+  String get bodyPartTriceps => 'ट्राइसेप्स';
+
+  @override
+  String get bodyPartForearms => 'अग्रबाहु';
+
+  @override
+  String get bodyPartHips => 'कूल्हे';
+
+  @override
+  String get bodyPartHamstrings => 'हैमस्ट्रिंग';
+
+  @override
+  String get bodyPartQuads => 'क्वाड्रिसेप्स';
+
+  @override
+  String get bodyPartCalves => 'पिंडलियां';
+
+  @override
   String databaseSaveFile(String filename) {
     return '$filename सहेजें';
   }

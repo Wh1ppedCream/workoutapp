@@ -32,6 +32,48 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get focusedSetsTitle => '重点组';
+
+  @override
+  String get bodyPartNeck => '颈部';
+
+  @override
+  String get bodyPartShoulders => '肩部';
+
+  @override
+  String get bodyPartChest => '胸部';
+
+  @override
+  String get bodyPartCore => '核心';
+
+  @override
+  String get bodyPartUpperBack => '上背部';
+
+  @override
+  String get bodyPartLowerBack => '下背部';
+
+  @override
+  String get bodyPartBiceps => '肱二头肌';
+
+  @override
+  String get bodyPartTriceps => '肱三头肌';
+
+  @override
+  String get bodyPartForearms => '前臂';
+
+  @override
+  String get bodyPartHips => '髋部';
+
+  @override
+  String get bodyPartHamstrings => '腘绳肌';
+
+  @override
+  String get bodyPartQuads => '股四头肌';
+
+  @override
+  String get bodyPartCalves => '小腿';
+
+  @override
   String databaseSaveFile(String filename) {
     return '保存 $filename';
   }

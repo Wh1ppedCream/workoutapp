@@ -21,6 +21,8 @@ import '../screens/exercise/session_detail_screen.dart';
 import '../screens/exercise/session_screen.dart';
 import '../screens/new_measurement_item_page.dart';
 import '../services/active_plan_store.dart';
+import '../utils/localized_body_part_name.dart';
+import '../utils/localized_digit_formatter.dart';
 import 'exercise_media_thumbnail.dart';
 import 'presets_loaded.dart';
 import 'seven_day_focus_card.dart';
@@ -285,19 +287,21 @@ class _DashboardRecentWorkoutsCardState
   }
 
   String _dateLabel(BuildContext context, DateTime date) {
+    final locale = Localizations.localeOf(context);
     final now = DateTime.now();
     final isToday =
         now.year == date.year && now.month == date.month && now.day == date.day;
     return isToday
         ? AppLocalizations.of(context).dashboardTodayAt(
-          DateFormat.jm(
-            Localizations.localeOf(context).toLanguageTag(),
-          ).format(date),
+          preserveWesternDigits(
+            DateFormat.jm(locale.toLanguageTag()).format(date),
+            locale,
+          ),
         )
-        : DateFormat(
-          'EEE, MMM d',
-          Localizations.localeOf(context).toLanguageTag(),
-        ).format(date);
+        : preserveWesternDigits(
+          DateFormat('EEE, MMM d', locale.toLanguageTag()).format(date),
+          locale,
+        );
   }
 
   String _durationLabel(BuildContext context, int seconds) {
@@ -1050,6 +1054,7 @@ class _DashboardTargetAnatomyCardState
                                 AppLocalizations.of(context).dashboardBodyparts,
                             items: usage?.bodyParts ?? const [],
                             emptyText: 'No bodypart history yet.',
+                            localizeBuiltInBodyPartNames: true,
                             onTap:
                                 () => Navigator.of(context).push(
                                   MaterialPageRoute(
@@ -1068,6 +1073,7 @@ class _DashboardTargetAnatomyCardState
                                 AppLocalizations.of(context).dashboardMuscles,
                             items: usage?.muscles ?? const [],
                             emptyText: 'No muscle history yet.',
+                            localizeBuiltInBodyPartNames: false,
                             onTap:
                                 () => Navigator.of(context).push(
                                   MaterialPageRoute(
@@ -1190,12 +1196,14 @@ class _DashboardFocusPane extends StatelessWidget {
   final List<_DashboardFocusUsage> items;
   final String emptyText;
   final VoidCallback onTap;
+  final bool localizeBuiltInBodyPartNames;
 
   const _DashboardFocusPane({
     required this.title,
     required this.items,
     required this.emptyText,
     required this.onTap,
+    required this.localizeBuiltInBodyPartNames,
   });
 
   @override
@@ -1232,7 +1240,9 @@ class _DashboardFocusPane extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          item.name,
+                          localizeBuiltInBodyPartNames
+                              ? localizedBodyPartName(context, item.name)
+                              : item.name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.bodySmall,

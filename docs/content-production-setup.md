@@ -35,10 +35,15 @@ https://pub-3e431bbfeef5400c9ccbea926ea9904f.r2.dev/manifests/exercise_media_man
 ```
 
 The production bucket was seeded for pipeline validation, but it is not yet the
-current release source. The canonical development source is version 9 with 127
-of 313 exercises covered (40.6%) across batches 001 through 007. Promote the
-same complete canonical asset set and manifest to production before calling the
-production environment release-ready.
+current release source. A 2026-08-10 remote audit found production manifest
+version 5 with 62 assets; the canonical development source is version 9 with
+127 of 313 exercises covered (40.6%) across batches 001 through 007. Production
+therefore needs 65 additional canonical assets. Every existing production asset
+and every pending development asset passed a public URL check. Promote the same
+complete canonical asset set and manifest before calling the production
+environment release-ready. The 65 pending object paths are not already present
+in the production bucket, so the release requires asset uploads before the
+canonical manifest can be published.
 
 ## Current Environment Decision
 
@@ -47,14 +52,15 @@ production environment release-ready.
 
 Development is still the safest default while cloud content is expanding and
 while production uses a temporary `r2.dev` public URL instead of a custom domain.
-The production environment is configured and release-checked, so it can be used
-for validation, internal tests, or manual app-side sync checks.
+Cloudflare reserves `r2.dev` public URLs for development and applies variable
+rate limits, so a stable custom domain is required before a broad production
+release. The production environment is configured and can be used for
+validation, internal tests, or manual app-side sync checks.
 
 TODO before broad release:
 
-1. Buy/connect a stable content domain, for example `content.tonos.app`, or
-   explicitly decide that the temporary R2 public URL should be used for the
-   current release.
+1. Buy/connect a stable content domain, for example `content.tonos.app`, to
+   the `tonos-public-content-prod` bucket.
 2. Complete development spot checks for batches 004 through 007 and an
    uncovered-exercise heatmap fallback.
 3. Upload all current canonical media assets to the production bucket.

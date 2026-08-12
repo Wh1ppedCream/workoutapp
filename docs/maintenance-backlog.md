@@ -1,6 +1,6 @@
 # Maintenance Backlog
 
-Last updated: 2026-08-10.
+Last updated: 2026-08-11.
 
 This is Tonos's maintained, prioritized engineering backlog. Historical
 roadmap snapshots live in `docs/archive/roadmaps/`; do not use them to plan new
@@ -25,25 +25,26 @@ work. Cloud-media publishing state and commands live in
    job, privacy documentation, and regression tests are present. Distributed
    builds remain relay-disabled unless a future release explicitly supplies an
    approved relay URL.
+4. Production media readiness is audited. Development manifest version 9 has
+   127 assets; production version 5 has 62. All 62 production and 65 pending
+   development URLs are reachable, but production has no custom domain and
+   needs 65 asset uploads before its canonical manifest can be promoted.
+5. Device visual QA is complete for Bangla, Chinese, Hindi, and Spanish across
+   onboarding, training, session completion, records, reports, catalog and
+   anatomy surfaces, diagnostics, settings, and representative long-copy
+   layouts. The pass added localized anatomy labels, locale-aware dates and
+   digits, responsive layout fixes, and regression coverage. Analyzer and all
+   182 Flutter tests passed after the final Spanish review.
 
 ## Active Priorities
 
-1. **Hide unimplemented navigation.** Remove Nutrition Log, Combined History,
-   and Form and Posing from selectable navigation until their flows are usable.
-2. **Finalize the production media environment.** Validate development batches
-   004 through 007, promote the current canonical manifest and assets, choose
-   the permanent content host, perform a clean-install sync test, then switch
-   the app default deliberately.
-3. **Run visual locale QA.** Test Bangla, Chinese, Hindi, and Spanish on a
-   device across onboarding, Train, plans, sessions, records, reports,
-   tutorials, diagnostics, settings, and enlarged text.
-4. **Retire the alternative Train hub.** Migrate any remaining unique behavior
+1. **Retire the alternative Train hub.** Migrate any remaining unique behavior
    from `Train2Page`, migrate saved navigation settings, remove `TabItem.train2`,
    then delete the duplicate route and UI.
-5. **Rework the Exercise Editor.** Decide the final creator/editor flow,
+2. **Rework the Exercise Editor.** Decide the final creator/editor flow,
    expose starter-load controls where they belong, remove legacy form state,
    and split the screen into focused sections.
-6. **Improve starter-weight calibration.** Add a first-set feedback loop for
+3. **Improve starter-weight calibration.** Add a first-set feedback loop for
    too easy, appropriate, and too hard recommendations, with conservative
    persisted adjustments and clear user-facing explanations.
 
@@ -54,11 +55,20 @@ work. Cloud-media publishing state and commands live in
 2. **Continue exercise and anatomy media.** The current development canonical
    source covers 127 of 313 exercises (40.6%). Continue thumbnail batches, then
    establish the bodypart and muscle illustration or heatmap direction.
-3. **Restore cardio and stretch as a complete vertical feature.** Reintroduce
+3. **Finish production media when a custom domain is ready.** Keep development
+   as the default until then. After connecting the domain, visually validate
+   batches 004 through 007, upload the 65 missing assets, publish the
+   127-asset canonical manifest, perform a clean-install sync, and switch the
+   default deliberately.
+4. **Restore cardio and stretch as a complete vertical feature.** Reintroduce
    creation, plans, sessions, completion, repeat, history, and Save as plan
    together rather than as isolated screens.
-4. **Complete nutrition as its own product stream.** Replace fake-data and
+5. **Complete nutrition as its own product stream.** Replace fake-data and
    placeholder surfaces before adding the intended media and logging workflows.
+6. **Review visible incomplete navigation and plan implementation.** Keep
+   Nutrition Log, Combined History, and Form and Posing selectable for now;
+   define each tab's complete user flow, data prerequisites, scope, and
+   acceptance criteria before prioritizing implementation.
 
 ## Reliability And Cleanup
 
@@ -78,7 +88,12 @@ work. Cloud-media publishing state and commands live in
    release-candidate gates before configuring any production relay URL.
 5. Run a responsive and screen-reader regression pass whenever core layout,
    localization, navigation, or diagnostics UI changes.
-6. Keep any internal Dart package rename (`env_test`) as a dedicated all-import
+6. **Perform a controlled Flutter SDK upgrade.** Move beyond Flutter 3.29.3 to
+   pick up the upstream Android pointer-ID fix, then rerun localization
+   generation, analyzer, the full test suite, release builds, and the Pixel 7
+   device suite. The current `MouseTracker` assertion is debug-only and does
+   not block app feature work or release builds.
+7. Keep any internal Dart package rename (`env_test`) as a dedicated all-import
    migration; platform release identities already use `Tonos` and `com.tonos`.
 
 ## Documentation Rules

@@ -12,6 +12,7 @@ import '../providers/preset_session.dart';
 import '../providers/selected_profile.dart';
 import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
+import '../utils/localized_digit_formatter.dart';
 import '../utils/weight_unit_formatter.dart';
 import '../widgets/body_heatmap.dart';
 import '../widgets/preset_bar.dart';
@@ -1734,11 +1735,17 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   }
 
   String _formatDate(DateTime date) {
-    return MaterialLocalizations.of(context).formatMediumDate(date);
+    return preserveWesternDigits(
+      MaterialLocalizations.of(context).formatMediumDate(date),
+      Localizations.localeOf(context),
+    );
   }
 
   String _shortDate(DateTime date) {
-    return MaterialLocalizations.of(context).formatMediumDate(date);
+    return preserveWesternDigits(
+      MaterialLocalizations.of(context).formatMediumDate(date),
+      Localizations.localeOf(context),
+    );
   }
 }
 
@@ -1776,15 +1783,18 @@ class _OnboardingHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 SizedBox(
-                  width: 48,
+                  width: 104,
                   child:
                       onBack == null
                           ? null
-                          : IconButton(
-                            onPressed: onBack,
-                            tooltip: strings.onboardingPreviousStepTooltip,
-                            padding: EdgeInsets.zero,
-                            icon: const Icon(Icons.chevron_left, size: 26),
+                          : Align(
+                            alignment: Alignment.centerLeft,
+                            child: IconButton(
+                              onPressed: onBack,
+                              tooltip: strings.onboardingPreviousStepTooltip,
+                              padding: EdgeInsets.zero,
+                              icon: const Icon(Icons.chevron_left, size: 26),
+                            ),
                           ),
                 ),
                 Expanded(
@@ -1798,8 +1808,14 @@ class _OnboardingHeader extends StatelessWidget {
                   ),
                 ),
                 SizedBox(
-                  width: 72,
-                  child: TextButton(onPressed: onSkip, child: Text(skipLabel)),
+                  width: 104,
+                  child: TextButton(
+                    onPressed: onSkip,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(skipLabel, maxLines: 1),
+                    ),
+                  ),
                 ),
               ],
             )

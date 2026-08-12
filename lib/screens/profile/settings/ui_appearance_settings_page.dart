@@ -118,7 +118,7 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
                 title: strings.weightUnitsTitle,
                 subtitle: strings.weightUnitsSubtitle(weightUnit.shortLabel),
                 trailing: Text(
-                  weightUnit.label,
+                  _weightUnitLabel(strings, weightUnit),
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
                     color: Theme.of(context).colorScheme.primary,
                     fontWeight: FontWeight.w900,
@@ -186,7 +186,7 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
                 RadioListTile<WeightUnit>(
                   value: unit,
                   groupValue: selectedUnit,
-                  title: Text(unit.label),
+                  title: Text(_weightUnitLabel(strings, unit)),
                   subtitle: Text(unit.shortLabel),
                   onChanged: (value) => Navigator.of(dialogContext).pop(value),
                 ),
@@ -197,6 +197,13 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
     );
     if (nextUnit == null || !context.mounted) return;
     await context.read<UnitPreferenceProvider>().setWeightUnit(nextUnit);
+  }
+
+  String _weightUnitLabel(AppLocalizations strings, WeightUnit unit) {
+    if (!strings.localeName.startsWith('es')) return unit.label;
+    return unit == WeightUnit.pounds
+        ? strings.onboardingPounds
+        : strings.onboardingKilograms;
   }
 
   String _languageLabel(

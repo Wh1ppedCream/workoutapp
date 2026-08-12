@@ -8,6 +8,7 @@ import '../models/models.dart';
 import '../providers/active_session.dart';
 import '../repositories/app_repository.dart';
 import '../services/tutorial_state_store.dart';
+import '../utils/localized_body_part_name.dart';
 import '../widgets/body_heatmap.dart';
 import '../widgets/exercise_media_thumbnail.dart';
 import '../widgets/guided_tutorial_overlay.dart';
@@ -352,6 +353,7 @@ class _TargetAnatomyCard extends StatelessWidget {
                       items: bodyParts,
                       emptyText: strings.catalogNoBodypartHistory,
                       onTap: onBodyPartsTap,
+                      localizeBuiltInBodyPartNames: true,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -367,6 +369,7 @@ class _TargetAnatomyCard extends StatelessWidget {
                       items: muscles,
                       emptyText: strings.catalogNoMuscleHistory,
                       onTap: onMusclesTap,
+                      localizeBuiltInBodyPartNames: false,
                     ),
                   ),
                 ],
@@ -482,6 +485,7 @@ class _FocusSummaryPane extends StatelessWidget {
   final List<_FocusUsageSummary> items;
   final String emptyText;
   final VoidCallback onTap;
+  final bool localizeBuiltInBodyPartNames;
 
   const _FocusSummaryPane({
     required this.title,
@@ -489,11 +493,13 @@ class _FocusSummaryPane extends StatelessWidget {
     required this.items,
     required this.emptyText,
     required this.onTap,
+    required this.localizeBuiltInBodyPartNames,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isSpanish = Localizations.localeOf(context).languageCode == 'es';
     return InkWell(
       borderRadius: BorderRadius.circular(16),
       onTap: onTap,
@@ -509,11 +515,12 @@ class _FocusSummaryPane extends StatelessWidget {
                 Expanded(
                   child: Text(
                     title,
-                    maxLines: 1,
+                    maxLines: isSpanish ? 2 : 1,
                     overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                    style: (isSpanish
+                            ? theme.textTheme.titleSmall
+                            : theme.textTheme.titleMedium)
+                        ?.copyWith(fontWeight: FontWeight.w800),
                   ),
                 ),
               ],
@@ -527,7 +534,11 @@ class _FocusSummaryPane extends StatelessWidget {
                 ),
               )
             else
-              for (final item in items.take(4)) _FocusUsageRow(summary: item),
+              for (final item in items.take(4))
+                _FocusUsageRow(
+                  summary: item,
+                  localizeBuiltInBodyPartNames: localizeBuiltInBodyPartNames,
+                ),
           ],
         ),
       ),
@@ -537,24 +548,44 @@ class _FocusSummaryPane extends StatelessWidget {
 
 class _FocusUsageRow extends StatelessWidget {
   final _FocusUsageSummary summary;
+  final bool localizeBuiltInBodyPartNames;
 
-  const _FocusUsageRow({required this.summary});
+  const _FocusUsageRow({
+    required this.summary,
+    required this.localizeBuiltInBodyPartNames,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final strings = AppLocalizations.of(context);
+    final isSpanish = Localizations.localeOf(context).languageCode == 'es';
+    final displayName =
+        localizeBuiltInBodyPartNames
+            ? localizedBodyPartName(context, summary.name)
+            : summary.name;
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         children: [
           Expanded(
-            child: Text(
-              summary.name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodyMedium,
-            ),
+            child:
+                isSpanish && localizeBuiltInBodyPartNames
+                    ? FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        displayName,
+                        maxLines: 1,
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                    )
+                    : Text(
+                      displayName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodyMedium,
+                    ),
           ),
           const SizedBox(width: 8),
           Text(

@@ -33,6 +33,41 @@ Run a focused test file while developing a feature:
 flutter test test\services\flow_executor_test.dart
 ```
 
+## Locale visual QA
+
+Automated localization tests prove that messages resolve and that selected
+high-risk layouts can reflow. They cannot judge readability, clipping within
+real scrolling screens, font rendering, or visual hierarchy on a device. Run
+this manual pass before calling a new locale release-ready.
+
+Use a physical Android device at its normal display size, then repeat the
+high-risk screens with Android font size increased to the largest practical
+setting. Start the app with:
+
+```powershell
+flutter run -d <android-device-id>
+```
+
+Select each language from **Profile > UI & appearance > Language**. For the
+onboarding check, enable **Replay onboarding** in the same settings page,
+return to the app root, and restart the app. Test Bangla (Bangladesh),
+Simplified Chinese, Hindi, and Spanish individually. After each language, use
+English briefly as a visual baseline: localization must not change the
+established English layout or interaction behavior.
+
+| Surface | Verify |
+| --- | --- |
+| Onboarding | Welcome-language dropdown, personal information fields, gym/equipment choices, plan overview, and summary remain readable, scroll correctly, and keep the primary action reachable. |
+| Train and plans | Overview/Plans tabs, generated-plan cards, plan editor, and long exercise names have no overlap, clipped controls, or inaccessible actions. |
+| Session and completion | Set inputs, exercise thumbnails, record badges, completion sheet, and Save as plan show complete labels and values. |
+| Logbook, records, and reports | Newest-first session list, historical record badges, workout-detail rows, charts, and range controls remain legible and tappable. |
+| Profile and settings | Profile sections, UI & appearance language dialog, tutorials, database settings, and Diagnostics & privacy retain hierarchy and allow scrolling to every action. |
+| Accessibility | At enlarged text size, no essential control is hidden, labels are not unintentionally truncated, and TalkBack names still describe icon-only actions. |
+
+Record the locale, device model, Android version, font-size setting, affected
+screen, and a screenshot for every issue. A locale passes when the normal and
+enlarged-text checks complete without visual defects or functional regressions.
+
 Run the Android core-flow suite on a connected device:
 
 ```powershell
@@ -78,10 +113,11 @@ device or emulator where resetting Tonos settings is acceptable.
 
 ## Continuous integration
 
-`.github/workflows/ci.yml` runs for pull requests, pushes to `local-db`, and
-manual dispatches. It installs the pinned Flutter SDK, regenerates localization
-sources, fails if the tracked generated files change, analyzes application and
-test code, runs the complete unit/widget suite, and builds a release APK.
+`.github/workflows/ci.yml` runs for pull requests, pushes to `master` and
+`local-db`, and manual dispatches. It installs the pinned Flutter SDK,
+regenerates localization sources, fails if the tracked generated files change,
+analyzes application and test code, runs the complete unit/widget suite, and
+builds a release APK.
 
 The CI release APK is signed with a disposable key generated during the job. It
 proves that the release variant compiles, but it is not a production-signed or

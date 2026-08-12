@@ -9,6 +9,7 @@ import '../models/models.dart';
 import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
 import '../theme/theme_extensions.dart';
+import '../utils/localized_digit_formatter.dart';
 import '../utils/weight_unit_formatter.dart';
 import '../utils/app_test_keys.dart';
 import 'body_heatmap.dart';
@@ -275,12 +276,15 @@ class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
   }
 
   String _selectedPeriodTitle() {
+    final locale = Localizations.localeOf(context);
     switch (_mode) {
       case _CalendarRangeMode.month:
-        return DateFormat(
-          'EEE, MMM d',
-          Localizations.localeOf(context).toLanguageTag(),
-        ).format(_selectedDay);
+        final pattern =
+            locale.languageCode == 'es' ? 'EEE, d MMM' : 'EEE, MMM d';
+        return preserveWesternDigits(
+          DateFormat(pattern, locale.toLanguageTag()).format(_selectedDay),
+          locale,
+        );
       case _CalendarRangeMode.threeMonth:
         final end = _monthWeekEndExclusive(
           _selectedWeekStart,
@@ -288,12 +292,13 @@ class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
         return _formatDateRange(
           _selectedWeekStart,
           end,
-          Localizations.localeOf(context).toLanguageTag(),
+          locale.toLanguageTag(),
         );
       case _CalendarRangeMode.year:
-        return DateFormat.yMMMM(
-          Localizations.localeOf(context).toLanguageTag(),
-        ).format(_selectedMonth);
+        return preserveWesternDigits(
+          DateFormat.yMMMM(locale.toLanguageTag()).format(_selectedMonth),
+          locale,
+        );
       case _CalendarRangeMode.fourYear:
         return _selectedYear.toString();
     }
@@ -438,7 +443,10 @@ String _formatDateRange(DateTime start, DateTime end, String localeName) {
           ? DateFormat.MMMd(localeName)
           : DateFormat.yMMMd(localeName);
   final endFormat = DateFormat.yMMMd(localeName);
-  return '${startFormat.format(start)} - ${endFormat.format(end)}';
+  return preserveWesternDigitsForLocale(
+    '${startFormat.format(start)} - ${endFormat.format(end)}',
+    localeName,
+  );
 }
 
 String _formatMonthRangeTitle(
@@ -450,9 +458,12 @@ String _formatMonthRangeTitle(
       startMonth.year == endMonth.year
           ? DateFormat.MMM(localeName)
           : DateFormat.yMMM(localeName);
-  return '${startFormat.format(startMonth)} - '
-          '${DateFormat.yMMM(localeName).format(endMonth)}'
-      .toUpperCase();
+  return preserveWesternDigitsForLocale(
+    '${startFormat.format(startMonth)} - '
+            '${DateFormat.yMMM(localeName).format(endMonth)}'
+        .toUpperCase(),
+    localeName,
+  );
 }
 
 int _sessionCountInRange(
@@ -482,6 +493,7 @@ class _CalendarModeTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isSpanish = Localizations.localeOf(context).languageCode == 'es';
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
@@ -492,8 +504,12 @@ class _CalendarModeTabs extends StatelessWidget {
         children: [
           _buildButton(context, _CalendarRangeMode.month, 'M'),
           _buildButton(context, _CalendarRangeMode.threeMonth, '3M'),
-          _buildButton(context, _CalendarRangeMode.year, 'Y'),
-          _buildButton(context, _CalendarRangeMode.fourYear, '4Y'),
+          _buildButton(context, _CalendarRangeMode.year, isSpanish ? 'A' : 'Y'),
+          _buildButton(
+            context,
+            _CalendarRangeMode.fourYear,
+            isSpanish ? '4A' : '4Y',
+          ),
         ],
       ),
     );
@@ -1048,13 +1064,18 @@ class _CalendarHeader extends StatelessWidget {
 class _WeekdayRow extends StatelessWidget {
   const _WeekdayRow();
 
-  static const _labels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+  static const _defaultLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+  static const _spanishLabels = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
 
   @override
   Widget build(BuildContext context) {
+    final labels =
+        Localizations.localeOf(context).languageCode == 'es'
+            ? _spanishLabels
+            : _defaultLabels;
     return Row(
       children:
-          _labels
+          labels
               .map(
                 (label) => Expanded(
                   child: Center(

@@ -9,6 +9,7 @@ import '../../l10n/generated/app_localizations.dart';
 import '../../models/models.dart';
 import '../../repositories/app_repository.dart';
 import '../../services/tutorial_state_store.dart';
+import '../../utils/localized_body_part_name.dart';
 import '../../utils/tutorial_launcher.dart';
 import '../../widgets/body_heatmap.dart';
 import '../../widgets/exercise_definition_info_tile.dart';
@@ -135,7 +136,9 @@ class _DefinitionsByBodyPartPageState extends State<DefinitionsByBodyPartPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          strings.anatomyTargetExercises(widget.bodyPart.name),
+          strings.anatomyTargetExercises(
+            localizedBodyPartName(context, widget.bodyPart.name),
+          ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
@@ -195,7 +198,7 @@ class _DefinitionsByBodyPartPageState extends State<DefinitionsByBodyPartPage> {
   Future<void> _editRecommendedSets(_BodyPartPageData data) async {
     final updatedBounds = await showRecommendedSetsEditorDialog(
       context,
-      targetName: widget.bodyPart.name,
+      targetName: localizedBodyPartName(context, widget.bodyPart.name),
       targetId: widget.bodyPart.id,
       currentBounds: data.volumeBounds,
     );
@@ -211,9 +214,9 @@ class _DefinitionsByBodyPartPageState extends State<DefinitionsByBodyPartPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            AppLocalizations.of(
-              context,
-            ).anatomyRecommendedSetsUpdated(widget.bodyPart.name),
+            AppLocalizations.of(context).anatomyRecommendedSetsUpdated(
+              localizedBodyPartName(context, widget.bodyPart.name),
+            ),
           ),
         ),
       );
@@ -254,7 +257,7 @@ class _BodyPartHeader extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    bodyPart.name,
+                    localizedBodyPartName(context, bodyPart.name),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.titleLarge,
@@ -363,7 +366,9 @@ class _BodyPartHeader extends StatelessWidget {
           if (data.definitions.isEmpty) ...[
             const SizedBox(height: 12),
             Text(
-              AppLocalizations.of(context).anatomyNoExercisesFor(bodyPart.name),
+              AppLocalizations.of(context).anatomyNoExercisesFor(
+                localizedBodyPartName(context, bodyPart.name),
+              ),
             ),
           ],
         ],

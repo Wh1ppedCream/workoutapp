@@ -12,6 +12,7 @@ import '../../providers/unit_preference_provider.dart';
 import '../../repositories/app_repository.dart';
 import '../../services/tutorial_state_store.dart';
 import '../../theme/theme_extensions.dart';
+import '../../utils/localized_body_part_name.dart';
 import '../../utils/tutorial_launcher.dart';
 import '../../utils/weight_unit_formatter.dart';
 import '../../widgets/body_heatmap.dart';
@@ -410,7 +411,7 @@ class _BodyPartSetList extends StatelessWidget {
       itemBuilder: (context, index) {
         final item = items[index];
         return _SetOverviewRow(
-          title: item.bodyPart.name,
+          title: localizedBodyPartName(context, item.bodyPart.name),
           count: item.count,
           bounds: item.bounds,
           leading: SingleBodyPartHeatmap(

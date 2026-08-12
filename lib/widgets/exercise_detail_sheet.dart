@@ -15,7 +15,9 @@ import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
 import '../screens/exercise/session_detail_screen.dart';
 import '../services/tutorial_state_store.dart';
+import '../utils/localized_body_part_name.dart';
 import '../theme/theme_extensions.dart';
+import '../utils/localized_digit_formatter.dart';
 import '../utils/tutorial_launcher.dart';
 import '../utils/weight_unit_formatter.dart';
 import 'body_heatmap.dart';
@@ -514,7 +516,10 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
   }) {
     final theme = Theme.of(context);
     final strings = _strings;
-    final bodyParts = definition.bodyParts.map((item) => item.name).toList();
+    final bodyParts =
+        definition.bodyParts
+            .map((item) => localizedBodyPartName(context, item.name))
+            .toList();
     final muscles = definition.muscles.map((item) => item.muscle.name).toList();
 
     return _buildDetailCard(
@@ -2185,7 +2190,11 @@ class _ExerciseRecordTrendChart extends StatelessWidget {
                       distanceFromEdge: 4,
                     ),
                     child: Text(
-                      _recordAxisLabel(points[index].date, showTimes),
+                      _recordAxisLabel(
+                        points[index].date,
+                        showTimes,
+                        Localizations.localeOf(context),
+                      ),
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: scheme.onSurfaceVariant,
                         fontWeight: FontWeight.w700,
@@ -2339,10 +2348,13 @@ bool _shouldUseTimeLabels(List<_ExerciseRecordPoint> points) {
   return days.length == 1;
 }
 
-String _recordAxisLabel(DateTime date, bool showTime) {
-  return showTime
-      ? DateFormat('h:mm a').format(date)
-      : DateFormat.MMMd().format(date);
+String _recordAxisLabel(DateTime date, bool showTime, Locale locale) {
+  return preserveWesternDigits(
+    showTime
+        ? DateFormat('h:mm a', locale.toLanguageTag()).format(date)
+        : DateFormat.MMMd(locale.toLanguageTag()).format(date),
+    locale,
+  );
 }
 
 double _estimatedOneRm(ExerciseSet set) {

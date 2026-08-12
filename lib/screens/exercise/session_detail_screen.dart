@@ -15,6 +15,7 @@ import '../../repositories/app_repository.dart';
 import '../../services/tutorial_state_store.dart';
 import '../../theme/theme_extensions.dart';
 import '../../utils/async_pool.dart';
+import '../../utils/localized_digit_formatter.dart';
 import '../../utils/tutorial_launcher.dart';
 import '../../utils/weight_unit_formatter.dart';
 import '../../utils/app_test_keys.dart';
@@ -616,10 +617,12 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
             .map((hit) => hit.bodyPart.name)
             .toList();
     if (focusNames.isNotEmpty) return focusNames.join(', ');
+    final locale = Localizations.localeOf(context);
     return AppLocalizations.of(context).workoutDetailDefaultPlanName(
-      DateFormat.MMM(
-        Localizations.localeOf(context).toLanguageTag(),
-      ).format(widget.session.date),
+      preserveWesternDigits(
+        DateFormat.MMM(locale.toLanguageTag()).format(widget.session.date),
+        locale,
+      ),
     );
   }
 
@@ -669,6 +672,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
+    final isSpanish = Localizations.localeOf(context).languageCode == 'es';
     return PopScope<Object?>(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
@@ -679,7 +683,14 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(strings.workoutDetailTitle),
+          title:
+              isSpanish
+                  ? FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(strings.workoutDetailTitle),
+                  )
+                  : Text(strings.workoutDetailTitle),
           actions: [
             IconButton(
               tooltip:
@@ -732,9 +743,12 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
           child: _SessionSummaryCard(
             session: widget.session,
             summary: _summary!,
-            dateText: DateFormat.yMMMd(
-              Localizations.localeOf(context).toLanguageTag(),
-            ).add_jm().format(widget.session.date),
+            dateText: preserveWesternDigits(
+              DateFormat.yMMMd(
+                Localizations.localeOf(context).toLanguageTag(),
+              ).add_jm().format(widget.session.date),
+              Localizations.localeOf(context),
+            ),
           ),
         ),
         const SizedBox(height: 12),

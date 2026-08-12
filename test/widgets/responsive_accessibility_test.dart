@@ -35,6 +35,96 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets(
+    'new locales keep privacy settings copy readable at large text sizes',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(320, 640));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      for (final locale in const [
+        Locale('bn'),
+        Locale('zh'),
+        Locale('hi'),
+        Locale('es'),
+      ]) {
+        final strings = await AppLocalizations.delegate.load(locale);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            locale: locale,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: MediaQuery(
+              data: const MediaQueryData(textScaler: TextScaler.linear(1.6)),
+              child: Scaffold(
+                body: SettingsHeroCard(
+                  title: strings.profileDiagnosticsTitle,
+                  subtitle: strings.diagnosticsPrivacyPromiseBody,
+                  icon: Icons.shield_outlined,
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text(strings.profileDiagnosticsTitle), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      }
+    },
+  );
+
+  testWidgets('Spanish settings hero allows a third subtitle line', (
+    tester,
+  ) async {
+    final strings = await AppLocalizations.delegate.load(const Locale('es'));
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('es'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: SettingsHeroCard(
+            title: strings.uiAppearanceTitle,
+            subtitle: strings.uiAppearanceSubtitle,
+            icon: Icons.palette_outlined,
+          ),
+        ),
+      ),
+    );
+
+    final subtitle = tester.widget<Text>(
+      find.text(strings.uiAppearanceSubtitle),
+    );
+    expect(subtitle.maxLines, 3);
+    expect(tester.takeException(), isNull);
+
+    final frenchStrings = await AppLocalizations.delegate.load(
+      const Locale('fr'),
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('fr'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: SettingsHeroCard(
+            title: frenchStrings.uiAppearanceTitle,
+            subtitle: frenchStrings.uiAppearanceSubtitle,
+            icon: Icons.palette_outlined,
+          ),
+        ),
+      ),
+    );
+
+    final frenchSubtitle = tester.widget<Text>(
+      find.text(frenchStrings.uiAppearanceSubtitle),
+    );
+    expect(frenchSubtitle.maxLines, 2);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('add exercise button exposes a localized accessible label', (
     tester,
   ) async {

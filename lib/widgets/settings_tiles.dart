@@ -95,8 +95,9 @@ class SettingsHeroCard extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final accent = accentColor ?? scheme.primary;
-    final usesLocalizedLayout =
-        Localizations.localeOf(context).languageCode != 'en';
+    final languageCode = Localizations.localeOf(context).languageCode;
+    final usesLocalizedLayout = languageCode != 'en';
+    final isSpanish = languageCode == 'es';
 
     return Container(
       padding: const EdgeInsets.all(18),
@@ -164,7 +165,7 @@ class SettingsHeroCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     subtitle!,
-                    maxLines: 2,
+                    maxLines: isSpanish ? 3 : 2,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: scheme.onSurfaceVariant,

@@ -32,6 +32,48 @@ class AppLocalizationsBn extends AppLocalizations {
   }
 
   @override
+  String get focusedSetsTitle => 'লক্ষ্যভিত্তিক সেট';
+
+  @override
+  String get bodyPartNeck => 'ঘাড়';
+
+  @override
+  String get bodyPartShoulders => 'কাঁধ';
+
+  @override
+  String get bodyPartChest => 'বুক';
+
+  @override
+  String get bodyPartCore => 'কোর';
+
+  @override
+  String get bodyPartUpperBack => 'উপরের পিঠ';
+
+  @override
+  String get bodyPartLowerBack => 'নিচের পিঠ';
+
+  @override
+  String get bodyPartBiceps => 'বাইসেপস';
+
+  @override
+  String get bodyPartTriceps => 'ট্রাইসেপস';
+
+  @override
+  String get bodyPartForearms => 'অগ্রবাহু';
+
+  @override
+  String get bodyPartHips => 'নিতম্ব';
+
+  @override
+  String get bodyPartHamstrings => 'হ্যামস্ট্রিং';
+
+  @override
+  String get bodyPartQuads => 'কোয়াড্রিসেপস';
+
+  @override
+  String get bodyPartCalves => 'পিণ্ডলি';
+
+  @override
   String databaseSaveFile(String filename) {
     return '$filename সংরক্ষণ করুন';
   }
@@ -5741,7 +5783,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get onboardingWeightHistorySubtitle => 'কয়েকটি তথ্য পুষ্টির লক্ষ্য আরও যুক্তিসঙ্গতভাবে অনুমান করতে সাহায্য করে।';
 
   @override
-  String get onboardingPreviouslyHeavier => 'আপনার বর্তমান ওজনের চেয়ে আগে কি ১০+ পাউন্ড বেশি ওজন ছিল?';
+  String get onboardingPreviouslyHeavier => 'আপনার বর্তমান ওজনের চেয়ে আগে কি 10+ পাউন্ড বেশি ওজন ছিল?';
 
   @override
   String get onboardingWeightTrendTitle => 'বর্তমান ওজনের প্রবণতা';
@@ -5867,7 +5909,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get healthChange => 'পরিবর্তন';
 
   @override
-  String get healthNeedTwoEntries => '২টি এন্ট্রি প্রয়োজন';
+  String get healthNeedTwoEntries => '2টি এন্ট্রি প্রয়োজন';
 
   @override
   String get healthVersusPrevious => 'আগেরটির তুলনায়';
@@ -5945,7 +5987,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get dashboardNoSavedPlans => 'এই জিম প্রোফাইলে কোনো প্ল্যান সংরক্ষিত নেই।';
 
   @override
-  String get exerciseProgressOneRepMax => '১ রিপ সর্বোচ্চ';
+  String get exerciseProgressOneRepMax => '1 রিপ সর্বোচ্চ';
 
   @override
   String get exerciseProgressEstimatedOneRepMax => 'আনুমানিক 1RM';
@@ -6083,7 +6125,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get diagnosticsSyncSection => 'কনটেন্ট সিঙ্ক ইতিহাস';
 
   @override
-  String get diagnosticsSyncSectionSubtitle => 'সর্বশেষ ৩০টি মিডিয়া ম্যানিফেস্ট ফলাফল শুধু এই ডিভাইসে রাখা হয়।';
+  String get diagnosticsSyncSectionSubtitle => 'সর্বশেষ 30টি মিডিয়া ম্যানিফেস্ট ফলাফল শুধু এই ডিভাইসে রাখা হয়।';
 
   @override
   String get diagnosticsNoSyncEvents => 'এখনও কোনো সিঙ্ক ডায়াগনস্টিক নেই';
@@ -6162,7 +6204,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get diagnosticsDeleteShared => 'শেয়ার করা ডায়াগনস্টিকস মুছুন';
 
   @override
-  String get diagnosticsDeleteSharedBody => 'এই ইনস্টলেশন থেকে পাঠানো প্রমাণযোগ্য রিপোর্ট মুছে ফেলার অনুরোধ করে। সরবরাহকারীর পুনরুদ্ধার ইতিহাসে মুছে ফেলা সারি ৩০ দিন পর্যন্ত থাকতে পারে।';
+  String get diagnosticsDeleteSharedBody => 'এই ইনস্টলেশন থেকে পাঠানো প্রমাণযোগ্য রিপোর্ট মুছে ফেলার অনুরোধ করে। সরবরাহকারীর পুনরুদ্ধার ইতিহাসে মুছে ফেলা সারি 30 দিন পর্যন্ত থাকতে পারে।';
 
   @override
   String get diagnosticsSharedDeleted => 'শেয়ার করা ডায়াগনস্টিকস মুছে ফেলার অনুরোধ করা হয়েছে।';

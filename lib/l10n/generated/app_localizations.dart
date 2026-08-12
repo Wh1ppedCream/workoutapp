@@ -134,6 +134,90 @@ abstract class AppLocalizations {
   /// **'{bodyPart} body heatmap'**
   String bodyHeatmapSemantics(String bodyPart);
 
+  /// No description provided for @focusedSetsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Focused Sets'**
+  String get focusedSetsTitle;
+
+  /// No description provided for @bodyPartNeck.
+  ///
+  /// In en, this message translates to:
+  /// **'Neck'**
+  String get bodyPartNeck;
+
+  /// No description provided for @bodyPartShoulders.
+  ///
+  /// In en, this message translates to:
+  /// **'Shoulders'**
+  String get bodyPartShoulders;
+
+  /// No description provided for @bodyPartChest.
+  ///
+  /// In en, this message translates to:
+  /// **'Chest'**
+  String get bodyPartChest;
+
+  /// No description provided for @bodyPartCore.
+  ///
+  /// In en, this message translates to:
+  /// **'Core'**
+  String get bodyPartCore;
+
+  /// No description provided for @bodyPartUpperBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Upper Back'**
+  String get bodyPartUpperBack;
+
+  /// No description provided for @bodyPartLowerBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Lower Back'**
+  String get bodyPartLowerBack;
+
+  /// No description provided for @bodyPartBiceps.
+  ///
+  /// In en, this message translates to:
+  /// **'Biceps'**
+  String get bodyPartBiceps;
+
+  /// No description provided for @bodyPartTriceps.
+  ///
+  /// In en, this message translates to:
+  /// **'Triceps'**
+  String get bodyPartTriceps;
+
+  /// No description provided for @bodyPartForearms.
+  ///
+  /// In en, this message translates to:
+  /// **'Forearms'**
+  String get bodyPartForearms;
+
+  /// No description provided for @bodyPartHips.
+  ///
+  /// In en, this message translates to:
+  /// **'Hips'**
+  String get bodyPartHips;
+
+  /// No description provided for @bodyPartHamstrings.
+  ///
+  /// In en, this message translates to:
+  /// **'Hamstrings'**
+  String get bodyPartHamstrings;
+
+  /// No description provided for @bodyPartQuads.
+  ///
+  /// In en, this message translates to:
+  /// **'Quads'**
+  String get bodyPartQuads;
+
+  /// No description provided for @bodyPartCalves.
+  ///
+  /// In en, this message translates to:
+  /// **'Calves'**
+  String get bodyPartCalves;
+
   /// No description provided for @databaseSaveFile.
   ///
   /// In en, this message translates to:

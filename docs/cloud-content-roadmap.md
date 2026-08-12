@@ -16,6 +16,22 @@ public URL are configured, but the current 127-asset canonical manifest has not
 been promoted and validated there. Do not describe production as current until
 that promotion and a clean-install sync check are complete.
 
+### Production Audit - 2026-08-10
+
+The production bucket is publicly reachable through its temporary `r2.dev`
+address, has read-only `GET`/`HEAD` CORS, and has no custom domain. Its live
+manifest is version 5 with 62 assets. The version-9 development canonical
+manifest has 127 assets, so production is missing 65 assets and has no
+production-only assets. A remote `HEAD` audit passed for all 62 existing
+production asset URLs and all 65 pending development asset URLs. The matching
+65 production object paths are absent, so this promotion requires both asset
+uploads and a manifest update.
+
+The remaining promotion gates are a custom production domain, visual
+development QA for batches 004 through 007, canonical production-manifest
+generation, asset-first upload, clean-install production sync, and an explicit
+default-environment change.
+
 ## Phase 1 - Architecture Baseline
 
 - [x] Decide on public cloud-hosted shared content instead of bundling all media
@@ -123,9 +139,8 @@ Outside-code dependencies:
   production after development validation.
 - [ ] Verify remote production URLs and a clean-install production sync before
   changing the app default.
-- [ ] Switch the app default environment to production after a custom production
-  domain is connected, or after deciding the temporary R2 URL should be used for
-  app builds before a custom domain exists.
+- [ ] Connect a stable custom production domain before switching the app default;
+  the temporary `r2.dev` URL remains for internal validation only.
 
 ## Phase 10 - App UX And Resilience
 

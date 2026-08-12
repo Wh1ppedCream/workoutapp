@@ -38,6 +38,48 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get focusedSetsTitle => 'Focused Sets';
+
+  @override
+  String get bodyPartNeck => 'Neck';
+
+  @override
+  String get bodyPartShoulders => 'Shoulders';
+
+  @override
+  String get bodyPartChest => 'Chest';
+
+  @override
+  String get bodyPartCore => 'Core';
+
+  @override
+  String get bodyPartUpperBack => 'Upper Back';
+
+  @override
+  String get bodyPartLowerBack => 'Lower Back';
+
+  @override
+  String get bodyPartBiceps => 'Biceps';
+
+  @override
+  String get bodyPartTriceps => 'Triceps';
+
+  @override
+  String get bodyPartForearms => 'Forearms';
+
+  @override
+  String get bodyPartHips => 'Hips';
+
+  @override
+  String get bodyPartHamstrings => 'Hamstrings';
+
+  @override
+  String get bodyPartQuads => 'Quads';
+
+  @override
+  String get bodyPartCalves => 'Calves';
+
+  @override
   String databaseSaveFile(String filename) {
     return 'Save $filename';
   }

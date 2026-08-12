@@ -38,6 +38,48 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get focusedSetsTitle => 'Series enfocadas';
+
+  @override
+  String get bodyPartNeck => 'Cuello';
+
+  @override
+  String get bodyPartShoulders => 'Hombros';
+
+  @override
+  String get bodyPartChest => 'Pecho';
+
+  @override
+  String get bodyPartCore => 'Zona media';
+
+  @override
+  String get bodyPartUpperBack => 'Espalda alta';
+
+  @override
+  String get bodyPartLowerBack => 'Espalda baja';
+
+  @override
+  String get bodyPartBiceps => 'Bíceps';
+
+  @override
+  String get bodyPartTriceps => 'Tríceps';
+
+  @override
+  String get bodyPartForearms => 'Antebrazos';
+
+  @override
+  String get bodyPartHips => 'Caderas';
+
+  @override
+  String get bodyPartHamstrings => 'Isquiotibiales';
+
+  @override
+  String get bodyPartQuads => 'Cuádriceps';
+
+  @override
+  String get bodyPartCalves => 'Pantorrillas';
+
+  @override
   String databaseSaveFile(String filename) {
     return 'Guardar $filename';
   }
@@ -679,10 +721,10 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get tabTrain => 'Entrenamiento';
+  String get tabTrain => 'Entrenar';
 
   @override
-  String get tabTrainSecondary => 'Entrenamiento2';
+  String get tabTrainSecondary => 'Entrenar 2';
 
   @override
   String get tabCatalog => 'Catálogo';

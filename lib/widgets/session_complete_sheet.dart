@@ -420,12 +420,12 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
             crossAxisCount: columns,
             crossAxisSpacing: 6,
             mainAxisSpacing: 6,
-            childAspectRatio:
+            mainAxisExtent:
                 columns == 4
-                    ? 1.28
+                    ? 78
                     : textScale > 1.5
-                    ? 1.6
-                    : 2.2,
+                    ? 98
+                    : 82,
           ),
           itemBuilder: (context, index) {
             final metric = metrics[index];
@@ -451,6 +451,7 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final accentColor = _exerciseAccentColor(ex.name, colorScheme);
+    final isSpanish = Localizations.localeOf(context).languageCode == 'es';
     final rows = <Widget>[
       Padding(
         padding: const EdgeInsets.only(bottom: 3),
@@ -490,90 +491,158 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
       rows.add(
         Padding(
           padding: EdgeInsets.only(top: i == 0 ? 6 : 7),
-          child: Row(
-            children: [
-              Container(
-                width: 22,
-                height: 22,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: accentColor.withValues(alpha: 0.20),
-                  shape: BoxShape.circle,
-                ),
-                child: Text(
-                  '${i + 1}',
-                  maxLines: 1,
-                  overflow: TextOverflow.fade,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: accentColor,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              if (setBadges.isEmpty)
-                Expanded(
-                  child: Text(
-                    setText,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                )
-              else ...[
-                Expanded(
-                  flex: 2,
-                  child: Text(
-                    setText,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Expanded(
-                  flex: 3,
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerLeft,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
+          child:
+              isSpanish
+                  ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
                         children: [
-                          for (
-                            var badgeIndex = 0;
-                            badgeIndex < setBadges.length;
-                            badgeIndex++
-                          ) ...[
-                            if (badgeIndex > 0) const SizedBox(width: 4),
-                            WorkoutRecordBadgeChip(
-                              badge: setBadges[badgeIndex],
+                          Container(
+                            width: 22,
+                            height: 22,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: accentColor.withValues(alpha: 0.20),
+                              shape: BoxShape.circle,
                             ),
-                          ],
+                            child: Text(
+                              '${i + 1}',
+                              maxLines: 1,
+                              overflow: TextOverflow.fade,
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: accentColor,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              setText,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          SizedBox(
+                            width: 88,
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerRight,
+                              child: Text(
+                                ermText,
+                                maxLines: 1,
+                                textAlign: TextAlign.right,
+                                style: const TextStyle(
+                                  fontStyle: FontStyle.italic,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ),
                         ],
                       ),
-                    ),
+                      if (setBadges.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 30, top: 4),
+                          child: Wrap(
+                            spacing: 4,
+                            runSpacing: 4,
+                            alignment: WrapAlignment.start,
+                            children: [
+                              for (final badge in setBadges)
+                                WorkoutRecordBadgeChip(badge: badge),
+                            ],
+                          ),
+                        ),
+                    ],
+                  )
+                  : Row(
+                    children: [
+                      Container(
+                        width: 22,
+                        height: 22,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: accentColor.withValues(alpha: 0.20),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          '${i + 1}',
+                          maxLines: 1,
+                          overflow: TextOverflow.fade,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: accentColor,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      if (setBadges.isEmpty)
+                        Expanded(
+                          child: Text(
+                            setText,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        )
+                      else ...[
+                        Expanded(
+                          flex: 2,
+                          child: Text(
+                            setText,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          flex: 3,
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  for (
+                                    var badgeIndex = 0;
+                                    badgeIndex < setBadges.length;
+                                    badgeIndex++
+                                  ) ...[
+                                    if (badgeIndex > 0)
+                                      const SizedBox(width: 4),
+                                    WorkoutRecordBadgeChip(
+                                      badge: setBadges[badgeIndex],
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                      const SizedBox(width: 8),
+                      SizedBox(
+                        width: 88,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            ermText,
+                            maxLines: 1,
+                            textAlign: TextAlign.right,
+                            style: const TextStyle(
+                              fontStyle: FontStyle.italic,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-              const SizedBox(width: 8),
-              SizedBox(
-                width: 88,
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    ermText,
-                    maxLines: 1,
-                    textAlign: TextAlign.right,
-                    style: const TextStyle(
-                      fontStyle: FontStyle.italic,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
         ),
       );
     }

@@ -10,6 +10,7 @@ import '../models/models.dart';
 import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
 import '../theme/theme_extensions.dart';
+import '../utils/localized_digit_formatter.dart';
 import '../utils/weight_unit_formatter.dart';
 
 enum WorkoutReportRange {
@@ -937,6 +938,7 @@ class _InteractiveWorkoutLineChartState
             showValueLabels: widget.showValueLabels,
             selectedIndex: _selectedIndex,
             weightUnit: widget.weightUnit,
+            locale: Localizations.localeOf(context),
           ),
         );
 
@@ -1157,13 +1159,15 @@ class _ReportInsightGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final usesLocalizedLayout =
+        Localizations.localeOf(context).languageCode != 'en';
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: insights.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        mainAxisExtent: 68,
+        mainAxisExtent: usesLocalizedLayout ? 88 : 68,
         mainAxisSpacing: 8,
         crossAxisSpacing: 8,
       ),
@@ -1182,6 +1186,8 @@ class _ReportInsightTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = context.cs;
+    final usesLocalizedLayout =
+        Localizations.localeOf(context).languageCode != 'en';
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
@@ -1200,39 +1206,60 @@ class _ReportInsightTile extends StatelessWidget {
               children: [
                 Text(
                   insight.label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  maxLines: usesLocalizedLayout ? 2 : 1,
+                  overflow:
+                      usesLocalizedLayout
+                          ? TextOverflow.visible
+                          : TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
                     color: cs.onSurfaceVariant,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 const SizedBox(height: 2),
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        insight.value,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w900,
+                usesLocalizedLayout
+                    ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          insight.value,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.titleSmall
+                              ?.copyWith(fontWeight: FontWeight.w900),
                         ),
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Flexible(
-                      child: Text(
-                        insight.detail,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: cs.onSurfaceVariant,
+                        Text(
+                          insight.detail,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(color: cs.onSurfaceVariant),
                         ),
-                      ),
+                      ],
+                    )
+                    : Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            insight.value,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.titleSmall
+                                ?.copyWith(fontWeight: FontWeight.w900),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            insight.detail,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(color: cs.onSurfaceVariant),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
               ],
             ),
           ),
@@ -1303,6 +1330,7 @@ class _WorkoutLineChartPainter extends CustomPainter {
   final bool showValueLabels;
   final int? selectedIndex;
   final WeightUnit weightUnit;
+  final Locale locale;
 
   const _WorkoutLineChartPainter({
     required this.buckets,
@@ -1317,6 +1345,7 @@ class _WorkoutLineChartPainter extends CustomPainter {
     this.showValueLabels = false,
     this.selectedIndex,
     required this.weightUnit,
+    required this.locale,
   });
 
   @override
@@ -1365,8 +1394,8 @@ class _WorkoutLineChartPainter extends CustomPainter {
     final labelEvery = math.max(1, (pointCount / 4).ceil());
     final dateFormat =
         interval == _ReportBucketInterval.month
-            ? DateFormat.MMM()
-            : DateFormat('d MMM');
+            ? DateFormat.MMM(locale.toLanguageTag())
+            : DateFormat('d MMM', locale.toLanguageTag());
     final points = geometry.points;
 
     final fillPath =
@@ -1431,7 +1460,7 @@ class _WorkoutLineChartPainter extends CustomPainter {
       if (i % labelEvery == 0 || i == buckets.length - 1) {
         _drawText(
           canvas,
-          _chartDateLabel(dateFormat, buckets[i], interval),
+          _chartDateLabel(dateFormat, buckets[i], interval, locale),
           Offset(point.dx - 28, plotRect.bottom + 8),
           labelStyle.copyWith(fontSize: 10),
           maxWidth: 56,
@@ -1537,7 +1566,8 @@ class _WorkoutLineChartPainter extends CustomPainter {
         oldDelegate.tooltipTextColor != tooltipTextColor ||
         oldDelegate.showValueLabels != showValueLabels ||
         oldDelegate.selectedIndex != selectedIndex ||
-        oldDelegate.weightUnit != weightUnit;
+        oldDelegate.weightUnit != weightUnit ||
+        oldDelegate.locale != locale;
   }
 
   static double _niceMax(WorkoutReportMetric metric, double value) {
@@ -1563,8 +1593,13 @@ class _WorkoutLineChartPainter extends CustomPainter {
     DateFormat dateFormat,
     WorkoutReportBucket bucket,
     _ReportBucketInterval interval,
+    Locale locale,
   ) {
-    final label = dateFormat.format(bucket.start).toUpperCase();
+    final label =
+        preserveWesternDigits(
+          dateFormat.format(bucket.start),
+          locale,
+        ).toUpperCase();
     if (interval == _ReportBucketInterval.month) return label;
     return label.replaceAll(' ', '\n');
   }
@@ -1642,17 +1677,20 @@ String _bucketTooltipLabel(
   _ReportBucketInterval interval,
   String localeName,
 ) {
-  switch (interval) {
-    case _ReportBucketInterval.day:
-      return DateFormat.yMMMd(localeName).format(bucket.start);
-    case _ReportBucketInterval.week:
-      final sameDay = DateUtils.isSameDay(bucket.start, bucket.end);
-      if (sameDay) return DateFormat.yMMMd(localeName).format(bucket.start);
-      return '${DateFormat.MMMd(localeName).format(bucket.start)} - '
-          '${DateFormat.yMMMd(localeName).format(bucket.end)}';
-    case _ReportBucketInterval.month:
-      return DateFormat.yMMMM(localeName).format(bucket.start);
-  }
+  final label = switch (interval) {
+    _ReportBucketInterval.day => DateFormat.yMMMd(
+      localeName,
+    ).format(bucket.start),
+    _ReportBucketInterval.week =>
+      DateUtils.isSameDay(bucket.start, bucket.end)
+          ? DateFormat.yMMMd(localeName).format(bucket.start)
+          : '${DateFormat.MMMd(localeName).format(bucket.start)} - '
+              '${DateFormat.yMMMd(localeName).format(bucket.end)}',
+    _ReportBucketInterval.month => DateFormat.yMMMM(
+      localeName,
+    ).format(bucket.start),
+  };
+  return preserveWesternDigitsForLocale(label, localeName);
 }
 
 String _metricTooltipValue(
@@ -1877,7 +1915,10 @@ _BestVolumeDay _bestVolumeDay(
     value: WeightUnitFormatter.formatCompactVolumeValue(best.value, weightUnit),
     detail: strings.workoutReportUnitOnDate(
       weightUnit.shortLabel,
-      DateFormat.MMMd(strings.localeName).format(best.key),
+      preserveWesternDigitsForLocale(
+        DateFormat.MMMd(strings.localeName).format(best.key),
+        strings.localeName,
+      ),
     ),
   );
 }

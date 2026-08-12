@@ -9,6 +9,7 @@ import '../../l10n/generated/app_localizations.dart';
 import '../../models/models.dart';
 import '../../repositories/app_repository.dart';
 import '../../services/tutorial_state_store.dart';
+import '../../utils/localized_body_part_name.dart';
 import '../../utils/tutorial_launcher.dart';
 import '../../widgets/exercise_definition_info_tile.dart';
 import '../../widgets/guided_tutorial_overlay.dart';
@@ -308,9 +309,9 @@ class _MuscleHeader extends StatelessWidget {
                   if (sourceBodyPart != null) ...[
                     const SizedBox(height: 10),
                     Text(
-                      AppLocalizations.of(
-                        context,
-                      ).anatomyOpenedFrom(sourceBodyPart!.name),
+                      AppLocalizations.of(context).anatomyOpenedFrom(
+                        localizedBodyPartName(context, sourceBodyPart!.name),
+                      ),
                       style: theme.textTheme.bodySmall,
                     ),
                   ],
@@ -361,7 +362,9 @@ class _MuscleHeader extends StatelessWidget {
                   data.bodyParts
                       .map(
                         (bodyPart) => ActionChip(
-                          label: Text(bodyPart.name),
+                          label: Text(
+                            localizedBodyPartName(context, bodyPart.name),
+                          ),
                           avatar: const Icon(Icons.accessibility_new, size: 18),
                           onPressed: () => onBodyPartTap(bodyPart),
                         ),
@@ -441,7 +444,11 @@ class _ExerciseMetadata extends StatelessWidget {
     final bodyParts =
         definition.bodyParts.isEmpty
             ? AppLocalizations.of(context).anatomyNoBodyPartsListed
-            : definition.bodyParts.map((bodyPart) => bodyPart.name).join(', ');
+            : definition.bodyParts
+                .map(
+                  (bodyPart) => localizedBodyPartName(context, bodyPart.name),
+                )
+                .join(', ');
 
     return Padding(
       padding: const EdgeInsets.only(top: 4),

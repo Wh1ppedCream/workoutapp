@@ -38,6 +38,48 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get focusedSetsTitle => 'Séries ciblées';
+
+  @override
+  String get bodyPartNeck => 'Cou';
+
+  @override
+  String get bodyPartShoulders => 'Épaules';
+
+  @override
+  String get bodyPartChest => 'Poitrine';
+
+  @override
+  String get bodyPartCore => 'Tronc';
+
+  @override
+  String get bodyPartUpperBack => 'Haut du dos';
+
+  @override
+  String get bodyPartLowerBack => 'Bas du dos';
+
+  @override
+  String get bodyPartBiceps => 'Biceps';
+
+  @override
+  String get bodyPartTriceps => 'Triceps';
+
+  @override
+  String get bodyPartForearms => 'Avant-bras';
+
+  @override
+  String get bodyPartHips => 'Hanches';
+
+  @override
+  String get bodyPartHamstrings => 'Ischio-jambiers';
+
+  @override
+  String get bodyPartQuads => 'Quadriceps';
+
+  @override
+  String get bodyPartCalves => 'Mollets';
+
+  @override
   String databaseSaveFile(String filename) {
     return 'Enregistrer $filename';
   }
@@ -6222,6 +6264,48 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String bodyHeatmapSemantics(String bodyPart) {
     return 'Carte thermique du corps pour $bodyPart';
   }
+
+  @override
+  String get focusedSetsTitle => 'Séries ciblées';
+
+  @override
+  String get bodyPartNeck => 'Cou';
+
+  @override
+  String get bodyPartShoulders => 'Épaules';
+
+  @override
+  String get bodyPartChest => 'Poitrine';
+
+  @override
+  String get bodyPartCore => 'Tronc';
+
+  @override
+  String get bodyPartUpperBack => 'Haut du dos';
+
+  @override
+  String get bodyPartLowerBack => 'Bas du dos';
+
+  @override
+  String get bodyPartBiceps => 'Biceps';
+
+  @override
+  String get bodyPartTriceps => 'Triceps';
+
+  @override
+  String get bodyPartForearms => 'Avant-bras';
+
+  @override
+  String get bodyPartHips => 'Hanches';
+
+  @override
+  String get bodyPartHamstrings => 'Ischio-jambiers';
+
+  @override
+  String get bodyPartQuads => 'Quadriceps';
+
+  @override
+  String get bodyPartCalves => 'Mollets';
 
   @override
   String databaseSaveFile(String filename) {

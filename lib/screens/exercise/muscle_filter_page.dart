@@ -9,6 +9,7 @@ import '../../l10n/generated/app_localizations.dart';
 import '../../models/models.dart';
 import '../../repositories/app_repository.dart';
 import '../../services/tutorial_state_store.dart';
+import '../../utils/localized_body_part_name.dart';
 import '../../utils/tutorial_launcher.dart';
 import '../../widgets/body_heatmap.dart';
 import '../../widgets/guided_tutorial_overlay.dart';
@@ -112,12 +113,20 @@ class _MuscleFilterPageState extends State<MuscleFilterPage> {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
+    final isSpanish = Localizations.localeOf(context).languageCode == 'es';
     return DefaultTabController(
       length: 2,
       initialIndex: widget.initialTabIndex <= 0 ? 0 : 1,
       child: Scaffold(
         appBar: AppBar(
-          title: Text(strings.anatomyLibraryTitle),
+          title:
+              isSpanish
+                  ? FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(strings.anatomyLibraryTitle),
+                  )
+                  : Text(strings.anatomyLibraryTitle),
           bottom: TabBar(
             tabs: [
               Tab(text: strings.anatomyBodyParts),
@@ -142,7 +151,11 @@ class _MuscleFilterPageState extends State<MuscleFilterPage> {
                     .where(
                       (part) =>
                           query.isEmpty ||
-                          part.name.toLowerCase().contains(query),
+                          part.name.toLowerCase().contains(query) ||
+                          localizedBodyPartName(
+                            context,
+                            part.name,
+                          ).toLowerCase().contains(query),
                     )
                     .toList();
             final muscles =
@@ -166,7 +179,16 @@ class _MuscleFilterPageState extends State<MuscleFilterPage> {
                     key: _searchTutorialKey,
                     child: TextField(
                       decoration: InputDecoration(
-                        labelText: strings.anatomySearchLabel,
+                        labelText:
+                            isSpanish ? null : strings.anatomySearchLabel,
+                        label:
+                            isSpanish
+                                ? FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(strings.anatomySearchLabel),
+                                )
+                                : null,
                         prefixIcon: const Icon(Icons.search),
                         border: const OutlineInputBorder(),
                       ),
@@ -182,7 +204,9 @@ class _MuscleFilterPageState extends State<MuscleFilterPage> {
                         _FocusList<BodyPart>(
                           emptyText: strings.anatomyNoBodyParts,
                           items: bodyParts,
-                          titleFor: (part) => part.name,
+                          titleFor:
+                              (part) =>
+                                  localizedBodyPartName(context, part.name),
                           subtitleFor: (part) {
                             final count =
                                 data.bodyPartExerciseCounts[part.id] ?? 0;
