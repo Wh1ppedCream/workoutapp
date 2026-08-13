@@ -1786,5 +1786,12 @@
   "diagnosticsSharedDeletionPending": "Algunas solicitudes de eliminación se reintentarán cuando la aplicación se abra con conexión.",
   "workoutDurabilityRestoreWarning": "Tonos no pudo comprobar si hay un entrenamiento guardado. Reinténtalo antes de iniciar otro entrenamiento.",
   "workoutDurabilityDraftSaveWarning": "La copia de seguridad del entrenamiento no está actualizada. Mantén Tonos abierto y reinténtalo para poder reanudarlo de forma segura.",
-  "workoutDurabilityProgressionWarning": "El entrenamiento está guardado, pero la progresión del plan sigue pendiente. Reinténtalo cuando el almacenamiento esté disponible."
+  "workoutDurabilityProgressionWarning": "El entrenamiento está guardado, pero la progresión del plan sigue pendiente. Reinténtalo cuando el almacenamiento esté disponible.",
+  "databaseConfirmExportTitle": "¿Exportar datos privados?",
+  "databaseConfirmExportBody": "Esta copia es un archivo JSON sin cifrar que puede contener tus entrenamientos, nutrición, medidas corporales, perfil y preferencias. Guárdala solo en un lugar de confianza.",
+  "databaseContinueExport": "Exportar de todos modos",
+  "databaseExportFailedSafe": "No se pudo crear la exportación. Tus datos de la aplicación no cambiaron.",
+  "databaseImportFileTooLarge": "Esta importación es demasiado grande. Elige una copia de seguridad de menos de 25 MB.",
+  "databaseImportBlockedSafe": "No se pudo importar esta copia de seguridad. Tus datos actuales no cambiaron.",
+  "databaseImportFailedSafe": "La importación no terminó. Tus datos actuales se mantuvieron seguros."
 }

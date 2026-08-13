@@ -2507,5 +2507,12 @@
   "diagnosticsSharedDeletionPending": "Some deletion requests will retry when the app opens with a connection.",
   "workoutDurabilityRestoreWarning": "Tonos could not check for a saved workout. Retry before starting another workout.",
   "workoutDurabilityDraftSaveWarning": "Your workout backup is not up to date. Keep Tonos open and retry so this workout can be resumed safely.",
-  "workoutDurabilityProgressionWarning": "Your workout is saved, but plan progression is still pending. Retry when storage is available."
+  "workoutDurabilityProgressionWarning": "Your workout is saved, but plan progression is still pending. Retry when storage is available.",
+  "databaseConfirmExportTitle": "Export private data?",
+  "databaseConfirmExportBody": "This backup is an unencrypted JSON file that can contain your workouts, nutrition, body metrics, profile, and preferences. Save it only to a location you trust.",
+  "databaseContinueExport": "Export anyway",
+  "databaseExportFailedSafe": "The database export could not be created. Your app data is unchanged.",
+  "databaseImportFileTooLarge": "This import is too large. Choose a database backup smaller than 25 MB.",
+  "databaseImportBlockedSafe": "This database backup could not be imported. Your current app data is unchanged.",
+  "databaseImportFailedSafe": "The database import did not finish. Your current app data was kept safe."
 }

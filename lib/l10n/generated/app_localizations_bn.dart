@@ -6220,4 +6220,25 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get workoutDurabilityProgressionWarning => 'আপনার ওয়ার্কআউট সংরক্ষিত হয়েছে, তবে পরিকল্পনার অগ্রগতি এখনো অপেক্ষমাণ। স্টোরেজ পাওয়া গেলে আবার চেষ্টা করুন।';
+
+  @override
+  String get databaseConfirmExportTitle => 'ব্যক্তিগত ডেটা রপ্তানি করবেন?';
+
+  @override
+  String get databaseConfirmExportBody => 'এই ব্যাকআপটি এনক্রিপ্ট করা নয় এমন একটি JSON ফাইল, যাতে আপনার ওয়ার্কআউট, পুষ্টি, শারীরিক পরিমাপ, প্রোফাইল ও পছন্দ থাকতে পারে। এটি কেবল বিশ্বস্ত স্থানে সংরক্ষণ করুন।';
+
+  @override
+  String get databaseContinueExport => 'তবুও রপ্তানি করুন';
+
+  @override
+  String get databaseExportFailedSafe => 'ডেটাবেস রপ্তানি তৈরি করা যায়নি। আপনার অ্যাপের ডেটা অপরিবর্তিত আছে।';
+
+  @override
+  String get databaseImportFileTooLarge => 'এই আমদানিটি খুব বড়। 25 MB-এর চেয়ে ছোট ডেটাবেস ব্যাকআপ বেছে নিন।';
+
+  @override
+  String get databaseImportBlockedSafe => 'এই ডেটাবেস ব্যাকআপ আমদানি করা যায়নি। আপনার বর্তমান অ্যাপ ডেটা অপরিবর্তিত আছে।';
+
+  @override
+  String get databaseImportFailedSafe => 'ডেটাবেস আমদানি সম্পন্ন হয়নি। আপনার বর্তমান অ্যাপ ডেটা নিরাপদ রাখা হয়েছে।';
 }

@@ -11473,6 +11473,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your workout is saved, but plan progression is still pending. Retry when storage is available.'**
   String get workoutDurabilityProgressionWarning;
+
+  /// No description provided for @databaseConfirmExportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Export private data?'**
+  String get databaseConfirmExportTitle;
+
+  /// No description provided for @databaseConfirmExportBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This backup is an unencrypted JSON file that can contain your workouts, nutrition, body metrics, profile, and preferences. Save it only to a location you trust.'**
+  String get databaseConfirmExportBody;
+
+  /// No description provided for @databaseContinueExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Export anyway'**
+  String get databaseContinueExport;
+
+  /// No description provided for @databaseExportFailedSafe.
+  ///
+  /// In en, this message translates to:
+  /// **'The database export could not be created. Your app data is unchanged.'**
+  String get databaseExportFailedSafe;
+
+  /// No description provided for @databaseImportFileTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'This import is too large. Choose a database backup smaller than 25 MB.'**
+  String get databaseImportFileTooLarge;
+
+  /// No description provided for @databaseImportBlockedSafe.
+  ///
+  /// In en, this message translates to:
+  /// **'This database backup could not be imported. Your current app data is unchanged.'**
+  String get databaseImportBlockedSafe;
+
+  /// No description provided for @databaseImportFailedSafe.
+  ///
+  /// In en, this message translates to:
+  /// **'The database import did not finish. Your current app data was kept safe.'**
+  String get databaseImportFailedSafe;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

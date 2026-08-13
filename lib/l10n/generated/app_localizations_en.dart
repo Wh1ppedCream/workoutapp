@@ -6239,4 +6239,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get workoutDurabilityProgressionWarning => 'Your workout is saved, but plan progression is still pending. Retry when storage is available.';
+
+  @override
+  String get databaseConfirmExportTitle => 'Export private data?';
+
+  @override
+  String get databaseConfirmExportBody => 'This backup is an unencrypted JSON file that can contain your workouts, nutrition, body metrics, profile, and preferences. Save it only to a location you trust.';
+
+  @override
+  String get databaseContinueExport => 'Export anyway';
+
+  @override
+  String get databaseExportFailedSafe => 'The database export could not be created. Your app data is unchanged.';
+
+  @override
+  String get databaseImportFileTooLarge => 'This import is too large. Choose a database backup smaller than 25 MB.';
+
+  @override
+  String get databaseImportBlockedSafe => 'This database backup could not be imported. Your current app data is unchanged.';
+
+  @override
+  String get databaseImportFailedSafe => 'The database import did not finish. Your current app data was kept safe.';
 }

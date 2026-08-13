@@ -209,8 +209,14 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
     if (result == null || result.files.isEmpty) return null;
 
     final picked = result.files.single;
+    if (picked.size > kDatabaseImportMaxBytes) {
+      throw const FormatException('database_import_file_too_large');
+    }
     if (picked.path != null && picked.path!.isNotEmpty) {
       final file = File(picked.path!);
+      if (await file.length() > kDatabaseImportMaxBytes) {
+        throw const FormatException('database_import_file_too_large');
+      }
       return (name: picked.name, contents: await file.readAsString());
     }
     if (picked.bytes != null) {
@@ -224,6 +230,8 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
 
   Future<void> _exportDatabase() async {
     try {
+      final confirmed = await _confirmPlaintextExport();
+      if (confirmed != true) return;
       final jsonStr = await _repo.exportDatabase();
       final location = await _saveJsonFileWithPicker(
         filename: 'fitness_tracker_database_export.json',
@@ -235,10 +243,10 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
         title: _strings.databaseExportSavedTitle,
         message: _strings.databaseExportSavedBody,
       );
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_strings.databaseExportFailed(e.toString()))),
+        SnackBar(content: Text(_strings.databaseExportFailedSafe)),
       );
     }
   }
@@ -252,9 +260,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
       if (!preview.canImport) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(_strings.databaseImportBlocked(preview.message)),
-          ),
+          SnackBar(content: Text(_strings.databaseImportBlockedSafe)),
         );
         return;
       }
@@ -283,12 +289,42 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
         title: _strings.databaseImportSucceededTitle,
         message: _strings.databaseImportSucceededBody(picked.name),
       );
-    } catch (e) {
+    } on FormatException catch (error) {
+      if (!mounted) return;
+      final message =
+          error.message == 'database_import_file_too_large'
+              ? _strings.databaseImportFileTooLarge
+              : _strings.databaseImportBlockedSafe;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_strings.databaseImportFailed(e.toString()))),
+        SnackBar(content: Text(_strings.databaseImportFailedSafe)),
       );
     }
+  }
+
+  Future<bool?> _confirmPlaintextExport() {
+    return showDialog<bool>(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            title: Text(_strings.databaseConfirmExportTitle),
+            content: Text(_strings.databaseConfirmExportBody),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(false),
+                child: Text(_strings.commonCancel),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(ctx).pop(true),
+                child: Text(_strings.databaseContinueExport),
+              ),
+            ],
+          ),
+    );
   }
 
   Future<bool?> _confirmImport(

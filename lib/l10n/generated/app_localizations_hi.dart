@@ -6214,4 +6214,25 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get workoutDurabilityProgressionWarning => 'आपका वर्कआउट सहेजा गया है, लेकिन प्लान की प्रगति अभी लंबित है। स्टोरेज उपलब्ध होने पर पुनः प्रयास करें।';
+
+  @override
+  String get databaseConfirmExportTitle => 'निजी डेटा निर्यात करें?';
+
+  @override
+  String get databaseConfirmExportBody => 'यह बैकअप बिना एन्क्रिप्शन की JSON फ़ाइल है जिसमें आपके वर्कआउट, पोषण, शारीरिक माप, प्रोफ़ाइल और प्राथमिकताएँ हो सकती हैं। इसे केवल किसी भरोसेमंद स्थान पर सहेजें।';
+
+  @override
+  String get databaseContinueExport => 'फिर भी निर्यात करें';
+
+  @override
+  String get databaseExportFailedSafe => 'डेटाबेस निर्यात नहीं बनाया जा सका। आपके ऐप डेटा में कोई बदलाव नहीं हुआ।';
+
+  @override
+  String get databaseImportFileTooLarge => 'यह आयात बहुत बड़ा है। 25 MB से छोटा डेटाबेस बैकअप चुनें।';
+
+  @override
+  String get databaseImportBlockedSafe => 'यह डेटाबेस बैकअप आयात नहीं किया जा सका। आपका वर्तमान ऐप डेटा नहीं बदला।';
+
+  @override
+  String get databaseImportFailedSafe => 'डेटाबेस आयात पूरा नहीं हुआ। आपका वर्तमान ऐप डेटा सुरक्षित रखा गया।';
 }

@@ -2434,5 +2434,12 @@
   "diagnosticsSharedDeletionPending": "Certaines demandes de suppression seront réessayées lorsque l’application s’ouvrira avec une connexion.",
   "workoutDurabilityRestoreWarning": "Tonos n’a pas pu vérifier s’il existe un entraînement sauvegardé. Réessayez avant d’en commencer un autre.",
   "workoutDurabilityDraftSaveWarning": "La sauvegarde de votre entraînement n’est pas à jour. Gardez Tonos ouvert et réessayez pour pouvoir reprendre cet entraînement en toute sécurité.",
-  "workoutDurabilityProgressionWarning": "Votre entraînement est sauvegardé, mais la progression du plan est toujours en attente. Réessayez lorsque le stockage est disponible."
+  "workoutDurabilityProgressionWarning": "Votre entraînement est sauvegardé, mais la progression du plan est toujours en attente. Réessayez lorsque le stockage est disponible.",
+  "databaseConfirmExportTitle": "Exporter des données privées ?",
+  "databaseConfirmExportBody": "Cette sauvegarde est un fichier JSON non chiffré qui peut contenir vos entraînements, votre nutrition, vos mesures corporelles, votre profil et vos préférences. Enregistrez-le uniquement dans un emplacement de confiance.",
+  "databaseContinueExport": "Exporter quand même",
+  "databaseExportFailedSafe": "L'exportation n'a pas pu être créée. Les données de l'application n'ont pas été modifiées.",
+  "databaseImportFileTooLarge": "Cette importation est trop volumineuse. Choisissez une sauvegarde de moins de 25 Mo.",
+  "databaseImportBlockedSafe": "Cette sauvegarde n'a pas pu être importée. Vos données actuelles n'ont pas été modifiées.",
+  "databaseImportFailedSafe": "L'importation n'a pas abouti. Vos données actuelles ont été conservées en sécurité."
 }

@@ -76,6 +76,50 @@ void main() {
       expect(preview.invalidTables, contains('sessions'));
     });
 
+    test(
+      'rejects unknown tables and unsafe or oversized input before import',
+      () {
+        final unknown = inspectDatabaseImport(
+          jsonEncode({'sessions': const [], 'unexpected_table': const []}),
+          currentSchemaVersion: 49,
+        );
+        expect(unknown.canImport, isFalse);
+        expect(unknown.unknownTables, contains('unexpected_table'));
+
+        final nestedValue = inspectDatabaseImport(
+          jsonEncode({
+            'sessions': [
+              {
+                'id': 1,
+                'metadata': {'unexpected': true},
+              },
+            ],
+          }),
+          currentSchemaVersion: 49,
+        );
+        expect(nestedValue.canImport, isFalse);
+        expect(nestedValue.invalidTables, contains('sessions'));
+
+        final oversizedField = inspectDatabaseImport(
+          jsonEncode({
+            'sessions': [
+              {'id': 1, 'notes': 'x' * (kDatabaseImportMaxTextFieldLength + 1)},
+            ],
+          }),
+          currentSchemaVersion: 49,
+        );
+        expect(oversizedField.canImport, isFalse);
+        expect(oversizedField.invalidTables, contains('sessions'));
+
+        final oversized = inspectDatabaseImport(
+          'x' * (kDatabaseImportMaxBytes + 1),
+          currentSchemaVersion: 49,
+        );
+        expect(oversized.canImport, isFalse);
+        expect(oversized.message, contains('exceeds'));
+      },
+    );
+
     test('export table allow-list has no duplicates', () {
       expect(
         kDatabaseExportTableNames.toSet().length,
@@ -112,6 +156,35 @@ void main() {
       expect(clearIndex, greaterThan(dropIndex));
       expect(rebuildIndex, greaterThan(clearIndex));
       expect(restoreIndex, greaterThan(rebuildIndex));
+    });
+
+    test('validates before replacement and keeps destructive work atomic', () {
+      final helper = File('lib/db/database_helper.dart').readAsStringSync();
+      final importStart = helper.indexOf('Future<void> importDatabase');
+      final importEnd = helper.indexOf('// equipment.json', importStart);
+      final importBody = helper.substring(importStart, importEnd);
+
+      final previewIndex = importBody.indexOf(
+        'final preview = previewDatabaseImport',
+      );
+      final transactionIndex = importBody.indexOf('await db.transaction');
+      final clearIndex = importBody.indexOf(
+        'final tablesToClear = kDatabaseExportTableNames.reversed;',
+      );
+      final normalizedIndex = importBody.indexOf(
+        'await _backfillNormalizedFoodKeysTx(txn);',
+      );
+      final energyIndex = importBody.indexOf(
+        'await _backfillEnergyKcalFromMacros(txn);',
+      );
+      final foreignKeyIndex = importBody.indexOf('PRAGMA foreign_key_check');
+
+      expect(previewIndex, isNot(-1));
+      expect(transactionIndex, greaterThan(previewIndex));
+      expect(clearIndex, greaterThan(transactionIndex));
+      expect(normalizedIndex, greaterThan(clearIndex));
+      expect(energyIndex, greaterThan(normalizedIndex));
+      expect(foreignKeyIndex, greaterThan(energyIndex));
     });
   });
 }

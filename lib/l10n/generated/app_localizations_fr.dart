@@ -6239,6 +6239,27 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get workoutDurabilityProgressionWarning => 'Votre entraînement est sauvegardé, mais la progression du plan est toujours en attente. Réessayez lorsque le stockage est disponible.';
+
+  @override
+  String get databaseConfirmExportTitle => 'Exporter des données privées ?';
+
+  @override
+  String get databaseConfirmExportBody => 'Cette sauvegarde est un fichier JSON non chiffré qui peut contenir vos entraînements, votre nutrition, vos mesures corporelles, votre profil et vos préférences. Enregistrez-le uniquement dans un emplacement de confiance.';
+
+  @override
+  String get databaseContinueExport => 'Exporter quand même';
+
+  @override
+  String get databaseExportFailedSafe => 'L\'exportation n\'a pas pu être créée. Les données de l\'application n\'ont pas été modifiées.';
+
+  @override
+  String get databaseImportFileTooLarge => 'Cette importation est trop volumineuse. Choisissez une sauvegarde de moins de 25 Mo.';
+
+  @override
+  String get databaseImportBlockedSafe => 'Cette sauvegarde n\'a pas pu être importée. Vos données actuelles n\'ont pas été modifiées.';
+
+  @override
+  String get databaseImportFailedSafe => 'L\'importation n\'a pas abouti. Vos données actuelles ont été conservées en sécurité.';
 }
 
 /// The translations for French, as used in Canada (`fr_CA`).
@@ -12470,4 +12491,25 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
 
   @override
   String get workoutDurabilityProgressionWarning => 'Votre entraînement est sauvegardé, mais la progression du plan est toujours en attente. Réessayez lorsque le stockage est disponible.';
+
+  @override
+  String get databaseConfirmExportTitle => 'Exporter des données privées?';
+
+  @override
+  String get databaseConfirmExportBody => 'Cette sauvegarde est un fichier JSON non chiffré qui peut contenir vos entraînements, votre nutrition, vos mesures corporelles, votre profil et vos préférences. Enregistrez-le seulement dans un emplacement de confiance.';
+
+  @override
+  String get databaseContinueExport => 'Exporter quand même';
+
+  @override
+  String get databaseExportFailedSafe => 'L\'exportation n\'a pas pu être créée. Les données de l\'application n\'ont pas été modifiées.';
+
+  @override
+  String get databaseImportFileTooLarge => 'Cette importation est trop volumineuse. Choisissez une sauvegarde de moins de 25 Mo.';
+
+  @override
+  String get databaseImportBlockedSafe => 'Cette sauvegarde n\'a pas pu être importée. Vos données actuelles n\'ont pas été modifiées.';
+
+  @override
+  String get databaseImportFailedSafe => 'L\'importation n\'a pas abouti. Vos données actuelles ont été conservées en sécurité.';
 }

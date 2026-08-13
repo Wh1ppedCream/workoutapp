@@ -6214,4 +6214,25 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get workoutDurabilityProgressionWarning => '训练已保存，但计划进度更新仍在等待中。存储可用后请重试。';
+
+  @override
+  String get databaseConfirmExportTitle => '导出私人数据？';
+
+  @override
+  String get databaseConfirmExportBody => '此备份是未加密的 JSON 文件，可能包含你的训练、营养、身体测量、个人资料和偏好设置。请只将其保存到可信的位置。';
+
+  @override
+  String get databaseContinueExport => '仍要导出';
+
+  @override
+  String get databaseExportFailedSafe => '无法创建数据库导出文件。你的应用数据未发生更改。';
+
+  @override
+  String get databaseImportFileTooLarge => '此导入文件过大。请选择小于 25 MB 的数据库备份。';
+
+  @override
+  String get databaseImportBlockedSafe => '无法导入此数据库备份。你当前的应用数据未发生更改。';
+
+  @override
+  String get databaseImportFailedSafe => '数据库导入未完成。你当前的应用数据已安全保留。';
 }

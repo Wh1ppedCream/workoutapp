@@ -2,6 +2,10 @@ import 'dart:convert';
 
 const String kDatabaseExportFormat = 'env_test.database_export';
 const int kDatabaseExportFormatVersion = 2;
+const int kDatabaseImportMaxBytes = 25 * 1024 * 1024;
+const int kDatabaseImportMaxRows = 250000;
+const int kDatabaseImportMaxRowsPerTable = 100000;
+const int kDatabaseImportMaxTextFieldLength = 100000;
 
 const List<String> kDatabaseExportTableNames = [
   'sessions',
@@ -157,6 +161,7 @@ class DatabaseImportPreview {
       valid &&
       !schemaVersionTooNew &&
       importableTables.isNotEmpty &&
+      unknownTables.isEmpty &&
       invalidTables.isEmpty;
 
   int get totalRows =>
@@ -203,6 +208,12 @@ DatabaseImportPreview inspectDatabaseImport(
 }) {
   final supported = supportedTables.toSet();
 
+  if (utf8.encode(jsonStr).length > kDatabaseImportMaxBytes) {
+    return _invalidPreview(
+      'Database import exceeds the ${kDatabaseImportMaxBytes ~/ (1024 * 1024)} MB limit.',
+    );
+  }
+
   try {
     final decoded = jsonDecode(jsonStr);
     if (decoded is! Map<String, dynamic>) {
@@ -235,6 +246,7 @@ DatabaseImportPreview inspectDatabaseImport(
     final invalidTables = <String>[];
     final warnings = <String>[];
     final rowCounts = <String, int>{};
+    var totalRows = 0;
 
     for (final entry in tablesRaw.entries) {
       final table = entry.key;
@@ -248,9 +260,23 @@ DatabaseImportPreview inspectDatabaseImport(
         invalidTables.add(table);
         continue;
       }
+      if (rows.length > kDatabaseImportMaxRowsPerTable ||
+          rows.any((row) => !_isSafeImportRow(row as Map))) {
+        invalidTables.add(table);
+        continue;
+      }
 
       importableTables.add(table);
       rowCounts[table] = rows.length;
+      totalRows += rows.length;
+    }
+
+    if (totalRows > kDatabaseImportMaxRows) {
+      return _invalidPreview(
+        'Database import exceeds the $kDatabaseImportMaxRows row limit.',
+        schemaVersion: schemaVersion,
+        formatVersion: formatVersion,
+      );
     }
 
     final schemaVersionTooNew =
@@ -267,7 +293,9 @@ DatabaseImportPreview inspectDatabaseImport(
       );
     }
     if (unknownTables.isNotEmpty) {
-      warnings.add('${unknownTables.length} unknown table(s) will be skipped.');
+      warnings.add(
+        '${unknownTables.length} unknown table(s) are not supported.',
+      );
     }
 
     final message =
@@ -275,6 +303,8 @@ DatabaseImportPreview inspectDatabaseImport(
             ? 'Export schema v$schemaVersion is newer than app schema v$currentSchemaVersion.'
             : invalidTables.isNotEmpty
             ? '${invalidTables.length} table(s) have invalid row data.'
+            : unknownTables.isNotEmpty
+            ? '${unknownTables.length} table(s) are not supported.'
             : 'Found ${importableTables.length} importable table(s).';
 
     return DatabaseImportPreview(
@@ -295,6 +325,21 @@ DatabaseImportPreview inspectDatabaseImport(
   } catch (e) {
     return _invalidPreview('Could not read database import: $e');
   }
+}
+
+bool _isSafeImportRow(Map row) {
+  if (row.keys.any((key) => key is! String)) return false;
+
+  for (final value in row.values) {
+    if (value is String && value.length > kDatabaseImportMaxTextFieldLength) {
+      return false;
+    }
+    if (value is Map || value is List) return false;
+    if (value != null && value is! num && value is! bool && value is! String) {
+      return false;
+    }
+  }
+  return true;
 }
 
 DatabaseImportPreview _invalidPreview(

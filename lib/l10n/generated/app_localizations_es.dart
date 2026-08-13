@@ -6239,4 +6239,25 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get workoutDurabilityProgressionWarning => 'El entrenamiento está guardado, pero la progresión del plan sigue pendiente. Reinténtalo cuando el almacenamiento esté disponible.';
+
+  @override
+  String get databaseConfirmExportTitle => '¿Exportar datos privados?';
+
+  @override
+  String get databaseConfirmExportBody => 'Esta copia es un archivo JSON sin cifrar que puede contener tus entrenamientos, nutrición, medidas corporales, perfil y preferencias. Guárdala solo en un lugar de confianza.';
+
+  @override
+  String get databaseContinueExport => 'Exportar de todos modos';
+
+  @override
+  String get databaseExportFailedSafe => 'No se pudo crear la exportación. Tus datos de la aplicación no cambiaron.';
+
+  @override
+  String get databaseImportFileTooLarge => 'Esta importación es demasiado grande. Elige una copia de seguridad de menos de 25 MB.';
+
+  @override
+  String get databaseImportBlockedSafe => 'No se pudo importar esta copia de seguridad. Tus datos actuales no cambiaron.';
+
+  @override
+  String get databaseImportFailedSafe => 'La importación no terminó. Tus datos actuales se mantuvieron seguros.';
 }

@@ -3177,6 +3177,20 @@ class DatabaseHelper {
             }
           }
 
+          // Keep every authoritative data mutation inside this transaction so
+          // a malformed import or storage failure cannot replace only part of
+          // the person's existing database.
+          await _backfillNormalizedFoodKeysTx(txn);
+          await _backfillEnergyKcalFromMacros(txn);
+
+          if (!data.keys.contains('day_totals_cache') &&
+              existingTables.contains('day_totals_cache')) {
+            // Rebuild this derived cache lazily from the imported source data.
+            await txn.delete('day_totals_cache');
+          }
+
+          await _bumpAutoincrement(txn);
+
           final foreignKeyViolations = await txn.rawQuery(
             'PRAGMA foreign_key_check',
           );
@@ -3192,33 +3206,34 @@ class DatabaseHelper {
           await db.execute('PRAGMA foreign_keys = ON;');
         }
       }
-      // Post-import normalization & maintenance
-      await _backfillNormalizedFoodKeys(db);
-      await _backfillEnergyKcalFromMacros(db);
-      await _rebuildFoodFtsIfExists(db);
-      await _ensureAppMetaTable(db);
-      await Schema.migrateV49(db);
-      await _ensureIndexes(
-        db,
-      ); // ← ensure you have all new indexes on imported DBs
+      // Search and schema maintenance are derived from the committed import.
+      try {
+        await _rebuildFoodFtsIfExists(db);
+        await _ensureAppMetaTable(db);
+        await Schema.migrateV49(db);
+        await _ensureIndexes(db);
+      } catch (_) {
+        // The next open or maintenance pass can safely retry derived work.
+      }
 
       // If recipe nutrients weren’t imported, rebuild them from ingredients.
       if (!data.keys.contains('recipe_nutrients') &&
           await _tableExists(db, 'recipes')) {
-        await _rebuildAllRecipeCaches(db);
+        try {
+          await _rebuildAllRecipeCaches(db);
+        } catch (_) {
+          // Nutrient caches are derived and can rebuild on a later pass.
+        }
       }
 
       // If day_totals_cache wasn’t imported but table exists, clear it so reads rebuild on demand.
-      if (!data.keys.contains('day_totals_cache') &&
-          await _tableExists(db, 'day_totals_cache')) {
-        await db.delete('day_totals_cache');
-      }
-
-      // NEW: keep AUTOINCREMENT sequences aligned with current max(id)
-      await _bumpAutoincrement(db);
     } finally {
       if (suspendFoodFtsTriggers) {
-        await _ensureFoodFtsTriggers(db);
+        try {
+          await _ensureFoodFtsTriggers(db);
+        } catch (_) {
+          // Search falls back safely until maintenance can recreate triggers.
+        }
       }
     }
   }
@@ -5376,7 +5391,7 @@ class DatabaseHelper {
 
   /// Ensures KCAL exists per_100g for foods that have P/C/F but no KCAL yet.
   /// Also mirrors into legacy food_nutrients for back-compat reads.
-  Future<void> _backfillEnergyKcalFromMacros(Database db) async {
+  Future<void> _backfillEnergyKcalFromMacros(DatabaseExecutor db) async {
     // Find IDs for KCAL/PROTEIN_G/CARB_G/FAT_G
     final ids = await db.query(
       'nutrients',
@@ -5533,7 +5548,7 @@ class DatabaseHelper {
     _fts4Available = null;
   }
 
-  Future<void> _bumpAutoincrement(Database db) async {
+  Future<void> _bumpAutoincrement(DatabaseExecutor db) async {
     // sqlite_sequence only exists if at least one table was created with AUTOINCREMENT
     if (!await _tableExists(db, 'sqlite_sequence')) return;
 
