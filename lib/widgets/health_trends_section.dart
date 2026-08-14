@@ -16,8 +16,15 @@ import 'guided_tutorial_overlay.dart';
 
 class HealthTrendsSection extends StatefulWidget {
   final int refreshToken;
+  final VoidCallback? onChanged;
+  final bool fullPage;
 
-  const HealthTrendsSection({super.key, this.refreshToken = 0});
+  const HealthTrendsSection({
+    super.key,
+    this.refreshToken = 0,
+    this.onChanged,
+    this.fullPage = false,
+  });
 
   @override
   State<HealthTrendsSection> createState() => HealthTrendsSectionState();
@@ -49,6 +56,8 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
       _trendsFuture = _loadTrends();
     });
   }
+
+  void _notifyChanged() => widget.onChanged?.call();
 
   Future<List<_MeasurementTrend>> _loadTrends() async {
     await _repo.ensureDefaultMeasurementDefinitions();
@@ -88,6 +97,7 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
     );
     if (changed == true && mounted) {
       _reload();
+      _notifyChanged();
     }
   }
 
@@ -115,7 +125,10 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
       input.unit,
       input.note,
     );
-    if (mounted) _reload();
+    if (mounted) {
+      _reload();
+      _notifyChanged();
+    }
   }
 
   Future<void> _createCustomMetric() async {
@@ -138,7 +151,10 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
         input.note,
       );
     }
-    if (mounted) _reload();
+    if (mounted) {
+      _reload();
+      _notifyChanged();
+    }
   }
 
   @override
@@ -150,79 +166,120 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
     final theme = Theme.of(context);
     final strings = AppLocalizations.of(context);
 
+    final header = Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              strings.healthTrendsTitle,
+              style: theme.textTheme.titleLarge,
+            ),
+          ),
+          TextButton.icon(
+            onPressed: _createCustomMetric,
+            icon: const Icon(Icons.add, size: 18),
+            label: Text(strings.healthMetric),
+          ),
+        ],
+      ),
+    );
+
+    if (widget.fullPage) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [header, Expanded(child: _buildTrends(strings))],
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  strings.healthTrendsTitle,
-                  style: theme.textTheme.titleLarge,
-                ),
-              ),
-              TextButton.icon(
-                onPressed: _createCustomMetric,
-                icon: const Icon(Icons.add, size: 18),
-                label: Text(strings.healthMetric),
-              ),
-            ],
+      children: [header, _buildTrends(strings)],
+    );
+  }
+
+  Widget _buildTrends(AppLocalizations strings) {
+    return FutureBuilder<List<_MeasurementTrend>>(
+      future: _trendsFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          if (widget.fullPage) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          return const SizedBox(
+            height: 162,
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return _HealthTrendMessageCard(
+            icon: Icons.error_outline,
+            title: strings.healthUnableToLoad,
+            message: snapshot.error.toString(),
+          );
+        }
+
+        final trends = snapshot.data ?? const <_MeasurementTrend>[];
+        if (trends.isEmpty) {
+          return _HealthTrendMessageCard(
+            icon: Icons.straighten,
+            title: strings.healthNoMeasurements,
+            message: strings.healthNoMeasurementsBody,
+            actionLabel: strings.healthCreateMetric,
+            onAction: _createCustomMetric,
+          );
+        }
+
+        if (widget.fullPage) {
+          return GridView.builder(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 0.88,
+            ),
+            itemBuilder: (context, index) {
+              if (index == trends.length) {
+                return _AddTrendTile(
+                  onTap: _createCustomMetric,
+                  fillCell: true,
+                );
+              }
+              final trend = trends[index];
+              return _TrendTile(
+                trend: trend,
+                onTap: () => _openTrend(trend),
+                onAdd: () => _logEntry(trend),
+                fillCell: true,
+              );
+            },
+            itemCount: trends.length + 1,
+          );
+        }
+
+        return SizedBox(
+          height: 162,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemBuilder: (context, index) {
+              if (index == trends.length) {
+                return _AddTrendTile(onTap: _createCustomMetric);
+              }
+              final trend = trends[index];
+              return _TrendTile(
+                trend: trend,
+                onTap: () => _openTrend(trend),
+                onAdd: () => _logEntry(trend),
+              );
+            },
+            separatorBuilder: (_, _) => const SizedBox(width: 10),
+            itemCount: trends.length + 1,
           ),
-        ),
-        FutureBuilder<List<_MeasurementTrend>>(
-          future: _trendsFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState != ConnectionState.done) {
-              return const SizedBox(
-                height: 162,
-                child: Center(child: CircularProgressIndicator()),
-              );
-            }
-
-            if (snapshot.hasError) {
-              return _HealthTrendMessageCard(
-                icon: Icons.error_outline,
-                title: strings.healthUnableToLoad,
-                message: snapshot.error.toString(),
-              );
-            }
-
-            final trends = snapshot.data ?? const <_MeasurementTrend>[];
-            if (trends.isEmpty) {
-              return _HealthTrendMessageCard(
-                icon: Icons.straighten,
-                title: strings.healthNoMeasurements,
-                message: strings.healthNoMeasurementsBody,
-                actionLabel: strings.healthCreateMetric,
-                onAction: _createCustomMetric,
-              );
-            }
-
-            return SizedBox(
-              height: 162,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemBuilder: (context, index) {
-                  if (index == trends.length) {
-                    return _AddTrendTile(onTap: _createCustomMetric);
-                  }
-                  final trend = trends[index];
-                  return _TrendTile(
-                    trend: trend,
-                    onTap: () => _openTrend(trend),
-                    onAdd: () => _logEntry(trend),
-                  );
-                },
-                separatorBuilder: (_, _) => const SizedBox(width: 10),
-                itemCount: trends.length + 1,
-              ),
-            );
-          },
-        ),
-      ],
+        );
+      },
     );
   }
 }
@@ -529,11 +586,13 @@ class _TrendTile extends StatelessWidget {
   final _MeasurementTrend trend;
   final VoidCallback onTap;
   final VoidCallback onAdd;
+  final bool fillCell;
 
   const _TrendTile({
     required this.trend,
     required this.onTap,
     required this.onAdd,
+    this.fillCell = false,
   });
 
   @override
@@ -551,7 +610,8 @@ class _TrendTile extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: Container(
-          width: 154,
+          key: ValueKey('measurement-trend-${trend.definition.id}'),
+          width: fillCell ? double.infinity : 154,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             border: Border.all(
@@ -621,8 +681,9 @@ class _TrendTile extends StatelessWidget {
 
 class _AddTrendTile extends StatelessWidget {
   final VoidCallback onTap;
+  final bool fillCell;
 
-  const _AddTrendTile({required this.onTap});
+  const _AddTrendTile({required this.onTap, this.fillCell = false});
 
   @override
   Widget build(BuildContext context) {
@@ -636,7 +697,7 @@ class _AddTrendTile extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: Container(
-          width: 132,
+          width: fillCell ? double.infinity : 132,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             border: Border.all(
@@ -1080,26 +1141,56 @@ class _MeasurementEntryDialog extends StatefulWidget {
 class _MeasurementEntryDialogState extends State<_MeasurementEntryDialog> {
   late DateTime _timestamp;
   late final TextEditingController _valueController;
+  late final TextEditingController _heightInchesController;
   late final TextEditingController _unitController;
   late final TextEditingController _noteController;
+  bool _heightUsesFeetAndInches = false;
+  String? _bodyWeightVariation;
+  bool _withPump = false;
+
+  bool get _isHeight => widget.definition.type == MeasurementType.Height;
+  bool get _isBodyWeight =>
+      widget.definition.type == MeasurementType.BodyWeight;
+  bool get _isBodyPart =>
+      !_isHeight &&
+      !_isBodyWeight &&
+      widget.definition.type != MeasurementType.Custom;
 
   @override
   void initState() {
     super.initState();
     final entry = widget.entry;
+    final unit = entry?.unit ?? widget.defaultUnit;
+    final note = entry?.note ?? '';
     _timestamp = entry?.timestamp ?? DateTime.now();
-    _valueController = TextEditingController(
-      text: entry == null ? '' : _cleanNumber(entry.value),
+    _heightUsesFeetAndInches = _isHeight && unit == 'in';
+    if (_heightUsesFeetAndInches && entry != null) {
+      final totalInches = entry.value.round();
+      _valueController = TextEditingController(
+        text: (totalInches ~/ 12).toString(),
+      );
+      _heightInchesController = TextEditingController(
+        text: (totalInches % 12).toString(),
+      );
+    } else {
+      _valueController = TextEditingController(
+        text: entry == null ? '' : _cleanNumber(entry.value),
+      );
+      _heightInchesController = TextEditingController();
+    }
+    _unitController = TextEditingController(text: unit);
+    _bodyWeightVariation =
+        _isBodyWeight && _isKnownBodyWeightVariation(note) ? note : null;
+    _withPump = _isBodyPart && note == 'With pump';
+    _noteController = TextEditingController(
+      text: _usesPresetNote(note) ? '' : note,
     );
-    _unitController = TextEditingController(
-      text: entry?.unit ?? widget.defaultUnit,
-    );
-    _noteController = TextEditingController(text: entry?.note ?? '');
   }
 
   @override
   void dispose() {
     _valueController.dispose();
+    _heightInchesController.dispose();
     _unitController.dispose();
     _noteController.dispose();
     super.dispose();
@@ -1130,8 +1221,11 @@ class _MeasurementEntryDialogState extends State<_MeasurementEntryDialog> {
   }
 
   void _save() {
-    final value = double.tryParse(_valueController.text.trim());
-    final unit = _unitController.text.trim();
+    final value =
+        _heightUsesFeetAndInches
+            ? _heightInchesValue()
+            : double.tryParse(_valueController.text.trim());
+    final unit = _heightUsesFeetAndInches ? 'in' : _unitController.text.trim();
     if (value == null || unit.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -1147,45 +1241,174 @@ class _MeasurementEntryDialogState extends State<_MeasurementEntryDialog> {
         timestamp: _timestamp,
         value: value,
         unit: unit,
-        note:
-            _noteController.text.trim().isEmpty
-                ? null
-                : _noteController.text.trim(),
+        note: _resolvedNote(),
       ),
     );
   }
 
+  double? _heightInchesValue() {
+    final feet = int.tryParse(_valueController.text.trim());
+    final inches = int.tryParse(_heightInchesController.text.trim());
+    if (feet == null || inches == null || inches < 0 || inches >= 12) {
+      return null;
+    }
+    return (feet * 12 + inches).toDouble();
+  }
+
+  String? _resolvedNote() {
+    final typedNote = _noteController.text.trim();
+    if (typedNote.isNotEmpty) return typedNote;
+    if (_isBodyWeight && _bodyWeightVariation != null) {
+      return _bodyWeightVariation;
+    }
+    if (_isBodyPart) return _withPump ? 'With pump' : 'Without pump';
+    return null;
+  }
+
+  bool _usesPresetNote(String note) {
+    return _isKnownBodyWeightVariation(note) ||
+        (_isBodyPart && (note == 'With pump' || note == 'Without pump'));
+  }
+
+  bool _isKnownBodyWeightVariation(String note) {
+    return note == 'WakeUp' || note == 'BedTime' || note == 'Overall';
+  }
+
+  void _setHeightUnit(bool useFeetAndInches) {
+    if (_heightUsesFeetAndInches == useFeetAndInches) return;
+
+    if (useFeetAndInches) {
+      final centimeters = double.tryParse(_valueController.text.trim());
+      if (centimeters == null) {
+        _valueController.clear();
+        _heightInchesController.clear();
+      } else {
+        final totalInches = (centimeters / 2.54).round();
+        _valueController.text = (totalInches ~/ 12).toString();
+        _heightInchesController.text = (totalInches % 12).toString();
+      }
+    } else {
+      final totalInches = _heightInchesValue();
+      _valueController.text =
+          totalInches == null ? '' : _cleanNumber(totalInches * 2.54);
+    }
+    setState(() {
+      _heightUsesFeetAndInches = useFeetAndInches;
+      _unitController.text = useFeetAndInches ? 'in' : 'cm';
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     return AlertDialog(
       title: Text(widget.title),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(
-              controller: _valueController,
-              autofocus: true,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
+            if (_isHeight) ...[
+              Wrap(
+                spacing: 8,
+                children: [
+                  ChoiceChip(
+                    label: Text(
+                      '${strings.measurementFeet}/${strings.measurementInches}',
+                    ),
+                    selected: _heightUsesFeetAndInches,
+                    onSelected: (_) => _setHeightUnit(true),
+                  ),
+                  ChoiceChip(
+                    label: Text(strings.measurementCentimeters),
+                    selected: !_heightUsesFeetAndInches,
+                    onSelected: (_) => _setHeightUnit(false),
+                  ),
+                ],
               ),
-              decoration: InputDecoration(
-                labelText: _measurementTitle(widget.definition),
+              const SizedBox(height: 10),
+            ],
+            if (_heightUsesFeetAndInches)
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _valueController,
+                      autofocus: true,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: strings.measurementFeet,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: TextField(
+                      controller: _heightInchesController,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: strings.measurementInches,
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            else
+              TextField(
+                controller: _valueController,
+                autofocus: true,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                decoration: InputDecoration(
+                  labelText: _measurementTitle(widget.definition),
+                ),
               ),
-            ),
             const SizedBox(height: 10),
-            TextField(
-              controller: _unitController,
-              decoration: InputDecoration(
-                labelText: AppLocalizations.of(context).healthUnit,
+            if (!_heightUsesFeetAndInches)
+              TextField(
+                controller: _unitController,
+                decoration: InputDecoration(labelText: strings.healthUnit),
               ),
-            ),
-            const SizedBox(height: 10),
+            if (!_heightUsesFeetAndInches) const SizedBox(height: 10),
+            if (_isBodyWeight) ...[
+              DropdownButtonFormField<String>(
+                value: _bodyWeightVariation,
+                decoration: InputDecoration(
+                  labelText: strings.measurementVariation,
+                ),
+                items: [
+                  DropdownMenuItem(
+                    value: 'WakeUp',
+                    child: Text(strings.measurementWakeUp),
+                  ),
+                  DropdownMenuItem(
+                    value: 'BedTime',
+                    child: Text(strings.measurementBedtime),
+                  ),
+                  DropdownMenuItem(
+                    value: 'Overall',
+                    child: Text(strings.measurementOverall),
+                  ),
+                ],
+                onChanged: (value) {
+                  setState(() => _bodyWeightVariation = value);
+                },
+              ),
+              const SizedBox(height: 10),
+            ],
+            if (_isBodyPart)
+              CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                value: _withPump,
+                onChanged:
+                    (value) => setState(() => _withPump = value ?? false),
+                title: Text(strings.measurementWithPump),
+              ),
             TextField(
               controller: _noteController,
               decoration: InputDecoration(
-                labelText: AppLocalizations.of(context).healthNote,
-                hintText: AppLocalizations.of(context).healthOptional,
+                labelText: strings.healthNote,
+                hintText: strings.healthOptional,
               ),
             ),
             const SizedBox(height: 12),

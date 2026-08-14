@@ -1,6 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 
 import '../models/preset_models.dart';
+import '../services/preset_progression_batch_validator.dart';
 
 /// Commits all plan mutations produced by one progression evaluation.
 class PresetProgressionDao {
@@ -18,6 +19,7 @@ class PresetProgressionDao {
     DatabaseExecutor db,
     PresetProgressionBatch progression,
   ) async {
+    PresetProgressionBatchValidator.validateOrThrow(progression);
     for (final setId in progression.deletedSetIds) {
       await db.delete('preset_sets', where: 'id = ?', whereArgs: [setId]);
     }

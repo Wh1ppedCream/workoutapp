@@ -3,11 +3,9 @@
 
 import 'package:flutter/material.dart';
 import '../screens/nutrition/food_logging_page.dart';
-import '../screens/new_measurement_item_page.dart';
+import '../screens/nutrition/measured_items_page.dart';
 
-/// A toggleable FAB that expands into two actions:
-/// • Log Food → FoodLoggingPage
-/// • Log Measurement → NewMeasurementItemPage
+/// A toggleable FAB that expands into food and measurement actions.
 ///
 /// Pass [onFoodLogged] / [onMeasurementLogged] to react after a successful log.
 class SpeedDialFab extends StatefulWidget {
@@ -56,9 +54,7 @@ class _SpeedDialFabState extends State<SpeedDialFab> {
               onPressed: () async {
                 _toggle();
                 final changed = await Navigator.of(context).push<bool>(
-                  MaterialPageRoute(
-                    builder: (_) => const NewMeasurementItemPage(),
-                  ),
+                  MaterialPageRoute(builder: (_) => const MeasuredItemsPage()),
                 );
                 if (!mounted) return;
                 if (changed == true) {

@@ -61,6 +61,7 @@ class NutritionProfile extends ChangeNotifier {
   // Convenience
   int? get profileId => current?.id;
   bool get isToday => day.isAtSameMomentAs(_dayOnly(DateTime.now()));
+  int get reloadSequence => _reloadSeq;
 
   @override
   void dispose() {

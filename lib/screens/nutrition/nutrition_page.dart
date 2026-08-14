@@ -11,7 +11,6 @@ import '../../widgets/data_records_section.dart';
 import '../../widgets/current_metrics_section.dart';
 import '../../widgets/drawers.dart';
 import '../profile/settings/diet_nutrition_settings_page.dart';
-import '../new_measurement_item_page.dart';
 import 'food_logging_page.dart';
 import 'log_entry_page.dart';
 import 'measured_items_page.dart';
@@ -70,9 +69,14 @@ class NutritionPage extends StatelessWidget {
                   ),
                 ),
                 const Divider(height: 25),
-                const HealthTrendsSection(),
+                HealthTrendsSection(
+                  refreshToken: p.reloadSequence,
+                  onChanged: () {
+                    p.reloadDay();
+                  },
+                ),
                 const DataRecordsSection(),
-                CurrentMetricsSection(),
+                CurrentMetricsSection(refreshToken: p.reloadSequence),
               ],
             ),
           );
@@ -142,7 +146,7 @@ class NutritionPage extends StatelessWidget {
     navigator.pop();
 
     final changed = await navigator.push<bool>(
-      MaterialPageRoute(builder: (_) => const NewMeasurementItemPage()),
+      MaterialPageRoute(builder: (_) => const MeasuredItemsPage()),
     );
     if (changed == true) {
       await profile.reloadDay();

@@ -4,15 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/active_session.dart';
 import '../providers/nutrition_profile.dart';
-import '../screens/new_measurement_item_page.dart';
+import '../screens/nutrition/measured_items_page.dart';
 import '../screens/nutrition/food_logging_page.dart';
 import '../screens/exercise/session_screen.dart';
 import '../theme/app_colors.dart';
 
-/// A three-section quick-action bar:
-/// 1️⃣ +Measurement (navigates to NewMeasurementItemPage)
-/// 2️⃣ +Food        (navigates to FoodLoggingPage)
-/// 3️⃣ +Workout     (starts a new session and navigates to SessionScreen)
+/// A three-section quick-action bar for measurements, food, and workouts.
 ///
 /// Each segment picks its color based on the current theme's AppColors override
 /// or falls back to the original light-mode values.
@@ -56,9 +53,7 @@ class QuickBar extends StatelessWidget {
               fontSize: 12 * scale,
               onTap: () async {
                 final changed = await Navigator.of(context).push<bool>(
-                  MaterialPageRoute(
-                    builder: (_) => const NewMeasurementItemPage(),
-                  ),
+                  MaterialPageRoute(builder: (_) => const MeasuredItemsPage()),
                 );
                 if (changed == true && context.mounted) {
                   await context.read<NutritionProfile>().reloadDay();

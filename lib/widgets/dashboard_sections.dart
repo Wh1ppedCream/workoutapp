@@ -19,7 +19,7 @@ import '../screens/exercise/preset_detail_screen.dart';
 import '../screens/exercise/preset_generation_qa.dart';
 import '../screens/exercise/session_detail_screen.dart';
 import '../screens/exercise/session_screen.dart';
-import '../screens/new_measurement_item_page.dart';
+import '../screens/nutrition/measured_items_page.dart';
 import '../services/active_plan_store.dart';
 import '../utils/localized_body_part_name.dart';
 import '../utils/completed_workout_duration_formatter.dart';
@@ -145,7 +145,7 @@ class DashboardQuickActions extends StatelessWidget {
                   onPressed: () async {
                     final changed = await Navigator.of(context).push<bool>(
                       MaterialPageRoute(
-                        builder: (_) => const NewMeasurementItemPage(),
+                        builder: (_) => const MeasuredItemsPage(),
                       ),
                     );
                     if (changed == true) onChanged();
