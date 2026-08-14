@@ -2451,8 +2451,8 @@ class AppLocalizationsBn extends AppLocalizations {
   String get fullHistoryEmpty => 'কোনো সেশন সংরক্ষিত নেই।';
 
   @override
-  String fullHistorySessionSummary(String date, int minutes) {
-    return '$date - $minutes মিনিট';
+  String fullHistorySessionSummary(String date, String duration) {
+    return '$date - $duration';
   }
 
   @override
@@ -2691,7 +2691,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get logbookViewAllSessions => 'সব সেশন দেখুন';
 
   @override
-  String logbookSessionSummary(int minutes, int exercises, int sets, String volume) {
+  String logbookSessionSummary(String duration, int exercises, int sets, String volume) {
     String _temp0 = intl.Intl.pluralLogic(
       exercises,
       locale: localeName,
@@ -2704,7 +2704,7 @@ class AppLocalizationsBn extends AppLocalizations {
       other: '$sets সেট',
       one: '1 সেট',
     );
-    return '$minutes মিনিট - $_temp0 - $_temp1 - $volume';
+    return '$duration - $_temp0 - $_temp1 - $volume';
   }
 
   @override
@@ -4926,8 +4926,8 @@ class AppLocalizationsBn extends AppLocalizations {
   String get pastSessionsEmpty => 'এখনও কোনো সেশন নেই।';
 
   @override
-  String pastSessionsItem(String date, int minutes) {
-    return '$date - $minutes মিনিট';
+  String pastSessionsItem(String date, String duration) {
+    return '$date - $duration';
   }
 
   @override

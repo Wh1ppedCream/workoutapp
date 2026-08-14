@@ -8,6 +8,7 @@ import '../l10n/generated/app_localizations.dart';
 import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
 import '../theme/theme_extensions.dart';
+import '../utils/completed_workout_duration_formatter.dart';
 import '../utils/weight_unit_formatter.dart';
 import 'body_heatmap.dart';
 
@@ -322,7 +323,10 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
                           AppLocalizations.of(context).historySummaryWorkouts,
                     ),
                     InfoCard(
-                      value: _durationLabel(data.totalDurationSeconds),
+                      value: formatCompletedWorkoutDuration(
+                        AppLocalizations.of(context),
+                        data.totalDurationSeconds,
+                      ),
                       label:
                           AppLocalizations.of(context).historySummaryTotalTime,
                     ),
@@ -360,11 +364,5 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
       );
     }
     return BorderRadius.zero;
-  }
-
-  String _durationLabel(int totalSeconds) {
-    final hours = totalSeconds ~/ 3600;
-    final mins = (totalSeconds % 3600) ~/ 60;
-    return AppLocalizations.of(context).historySummaryDuration(hours, mins);
   }
 }

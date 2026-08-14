@@ -2457,8 +2457,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get fullHistoryEmpty => '尚未保存训练记录。';
 
   @override
-  String fullHistorySessionSummary(String date, int minutes) {
-    return '$date - $minutes 分钟';
+  String fullHistorySessionSummary(String date, String duration) {
+    return '$date - $duration';
   }
 
   @override
@@ -2697,8 +2697,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get logbookViewAllSessions => '查看所有训练';
 
   @override
-  String logbookSessionSummary(int minutes, int exercises, int sets, String volume) {
-    return '$minutes 分 - $exercises 个动作 - $sets 组 - $volume';
+  String logbookSessionSummary(String duration, int exercises, int sets, String volume) {
+    return '$duration - $exercises 个动作 - $sets 组 - $volume';
   }
 
   @override
@@ -4920,8 +4920,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pastSessionsEmpty => '尚无训练记录。';
 
   @override
-  String pastSessionsItem(String date, int minutes) {
-    return '$date - $minutes 分钟';
+  String pastSessionsItem(String date, String duration) {
+    return '$date - $duration';
   }
 
   @override

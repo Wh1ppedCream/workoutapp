@@ -1071,11 +1071,11 @@
   "fullHistoryTitle": "Toutes les s\u00e9ances",
   "fullHistoryLoadError": "Impossible de charger les s\u00e9ances enregistr\u00e9es.",
   "fullHistoryEmpty": "Aucune s\u00e9ance enregistr\u00e9e.",
-  "fullHistorySessionSummary": "{date} - {minutes} min",
+  "fullHistorySessionSummary": "{date} - {duration}",
   "@fullHistorySessionSummary": {
     "placeholders": {
       "date": {"type": "String"},
-      "minutes": {"type": "int"}
+      "duration": {"type": "String"}
     }
   },
   "weeklySetsTitle": "Aper\u00e7u hebdomadaire des s\u00e9ries",
@@ -1190,10 +1190,10 @@
   "logbookTotalTime": "Dur\u00e9e totale",
   "logbookTotalVolume": "Volume total",
   "logbookViewAllSessions": "Voir toutes les s\u00e9ances",
-  "logbookSessionSummary": "{minutes} min - {exercises, plural, =1{1 exercice} other{{exercises} exercices}} - {sets, plural, =1{1 s\u00e9rie} other{{sets} s\u00e9ries}} - {volume}",
+  "logbookSessionSummary": "{duration} - {exercises, plural, =1{1 exercice} other{{exercises} exercices}} - {sets, plural, =1{1 s\u00e9rie} other{{sets} s\u00e9ries}} - {volume}",
   "@logbookSessionSummary": {
     "placeholders": {
-      "minutes": {"type": "int"},
+      "duration": {"type": "String"},
       "exercises": {"type": "int"},
       "sets": {"type": "int"},
       "volume": {"type": "String"}
@@ -2038,8 +2038,8 @@
   "pastSessionsError": "Erreur : {error}",
   "@pastSessionsError": {"placeholders": {"error": {"type": "String"}}},
   "pastSessionsEmpty": "Aucune seance pour le moment.",
-  "pastSessionsItem": "{date} - {minutes} min",
-  "@pastSessionsItem": {"placeholders": {"date": {"type": "String"}, "minutes": {"type": "int"}}},
+  "pastSessionsItem": "{date} - {duration}",
+  "@pastSessionsItem": {"placeholders": {"date": {"type": "String"}, "duration": {"type": "String"}}},
   "historySummaryLoadFailed": "Erreur lors du chargement de l'historique",
   "historySummaryWorkouts": "Seances",
   "historySummaryTotalTime": "Temps total",

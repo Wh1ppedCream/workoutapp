@@ -8,6 +8,7 @@ import '../models/models.dart';
 import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
 import '../utils/async_pool.dart';
+import '../utils/completed_workout_duration_formatter.dart';
 import '../utils/weight_unit_formatter.dart';
 import '../utils/app_test_keys.dart';
 import 'workout_record_badges.dart';
@@ -154,7 +155,10 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
         (setBadges) => setBadges.isNotEmpty,
       ),
     );
-    final durationText = _formatDuration(Duration(seconds: session.duration));
+    final durationText = formatCompletedWorkoutDuration(
+      AppLocalizations.of(context),
+      session.duration,
+    );
 
     final volumeText = WeightUnitFormatter.formatVolume(totalVol, weightUnit);
 
@@ -673,14 +677,5 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
       (value, codeUnit) => value + codeUnit,
     );
     return palette[hash % palette.length];
-  }
-
-  String _formatDuration(Duration duration) {
-    final strings = AppLocalizations.of(context);
-    final hours = duration.inHours;
-    final minutes = duration.inMinutes.remainder(60);
-    if (hours == 0) return strings.durationMinutesCompact(minutes);
-    if (minutes == 0) return strings.durationHoursCompact(hours);
-    return strings.durationHoursMinutesCompact(hours, minutes);
   }
 }

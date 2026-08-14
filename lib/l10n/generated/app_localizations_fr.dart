@@ -2470,8 +2470,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get fullHistoryEmpty => 'Aucune séance enregistrée.';
 
   @override
-  String fullHistorySessionSummary(String date, int minutes) {
-    return '$date - $minutes min';
+  String fullHistorySessionSummary(String date, String duration) {
+    return '$date - $duration';
   }
 
   @override
@@ -2710,7 +2710,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get logbookViewAllSessions => 'Voir toutes les séances';
 
   @override
-  String logbookSessionSummary(int minutes, int exercises, int sets, String volume) {
+  String logbookSessionSummary(String duration, int exercises, int sets, String volume) {
     String _temp0 = intl.Intl.pluralLogic(
       exercises,
       locale: localeName,
@@ -2723,7 +2723,7 @@ class AppLocalizationsFr extends AppLocalizations {
       other: '$sets séries',
       one: '1 série',
     );
-    return '$minutes min - $_temp0 - $_temp1 - $volume';
+    return '$duration - $_temp0 - $_temp1 - $volume';
   }
 
   @override
@@ -4945,8 +4945,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get pastSessionsEmpty => 'Aucune seance pour le moment.';
 
   @override
-  String pastSessionsItem(String date, int minutes) {
-    return '$date - $minutes min';
+  String pastSessionsItem(String date, String duration) {
+    return '$date - $duration';
   }
 
   @override
@@ -8740,8 +8740,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get fullHistoryEmpty => 'Aucune séance enregistrée.';
 
   @override
-  String fullHistorySessionSummary(String date, int minutes) {
-    return '$date - $minutes min';
+  String fullHistorySessionSummary(String date, String duration) {
+    return '$date - $duration';
   }
 
   @override
@@ -8974,7 +8974,7 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get logbookViewAllSessions => 'Voir toutes les séances';
 
   @override
-  String logbookSessionSummary(int minutes, int exercises, int sets, String volume) {
+  String logbookSessionSummary(String duration, int exercises, int sets, String volume) {
     String _temp0 = intl.Intl.pluralLogic(
       exercises,
       locale: localeName,
@@ -8987,7 +8987,7 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
       other: '$sets séries',
       one: '1 série',
     );
-    return '$minutes min - $_temp0 - $_temp1 - $volume';
+    return '$duration - $_temp0 - $_temp1 - $volume';
   }
 
   @override
@@ -11197,8 +11197,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get pastSessionsEmpty => 'Aucune séance pour le moment.';
 
   @override
-  String pastSessionsItem(String date, int minutes) {
-    return '$date - $minutes min';
+  String pastSessionsItem(String date, String duration) {
+    return '$date - $duration';
   }
 
   @override

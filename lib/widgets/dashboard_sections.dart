@@ -22,6 +22,7 @@ import '../screens/exercise/session_screen.dart';
 import '../screens/new_measurement_item_page.dart';
 import '../services/active_plan_store.dart';
 import '../utils/localized_body_part_name.dart';
+import '../utils/completed_workout_duration_formatter.dart';
 import '../utils/localized_digit_formatter.dart';
 import 'exercise_media_thumbnail.dart';
 import 'presets_loaded.dart';
@@ -306,13 +307,10 @@ class _DashboardRecentWorkoutsCardState
   }
 
   String _durationLabel(BuildContext context, int seconds) {
-    final minutes = seconds ~/ 60;
-    if (minutes < 60) {
-      return AppLocalizations.of(context).durationMinutes(minutes);
-    }
-    return AppLocalizations.of(
-      context,
-    ).durationHoursMinutes(minutes ~/ 60, minutes % 60);
+    return formatCompletedWorkoutDuration(
+      AppLocalizations.of(context),
+      seconds,
+    );
   }
 
   @override

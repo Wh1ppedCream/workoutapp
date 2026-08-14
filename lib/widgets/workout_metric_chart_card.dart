@@ -10,6 +10,7 @@ import '../models/models.dart';
 import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
 import '../theme/theme_extensions.dart';
+import '../utils/completed_workout_duration_formatter.dart';
 import '../utils/localized_digit_formatter.dart';
 import '../utils/weight_unit_formatter.dart';
 
@@ -202,9 +203,9 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
         }
 
         final totalWorkouts = sessions.length;
-        final totalMinutes = sessions.fold<int>(
+        final totalDurationSeconds = sessions.fold<int>(
           0,
-          (sum, session) => sum + session.durationMinutes,
+          (sum, session) => sum + session.durationSeconds,
         );
         final totalVolume = sessions.fold<double>(
           0,
@@ -238,8 +239,11 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
           ),
           _ReportStat(
             label: strings.workoutReportTime,
-            value: _formatDurationValue(totalMinutes),
-            unit: _formatDurationUnit(totalMinutes, strings),
+            value: formatCompletedWorkoutDuration(
+              strings,
+              totalDurationSeconds,
+            ),
+            unit: null,
             trend: _metricTrend(
               buckets,
               WorkoutReportMetric.minutes,
@@ -698,7 +702,7 @@ class _MetricTrend {
 class _ReportStat extends StatelessWidget {
   final String label;
   final String value;
-  final String unit;
+  final String? unit;
   final _MetricTrend trend;
   final bool selected;
   final VoidCallback onTap;
@@ -773,16 +777,18 @@ class _ReportStat extends StatelessWidget {
                             fontWeight: FontWeight.w900,
                           ),
                         ),
-                        const SizedBox(width: 4),
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 3),
-                          child: Text(
-                            unit,
-                            maxLines: 1,
-                            style: Theme.of(context).textTheme.labelSmall
-                                ?.copyWith(color: cs.onSurfaceVariant),
+                        if (unit != null) ...[
+                          const SizedBox(width: 4),
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 3),
+                            child: Text(
+                              unit!,
+                              maxLines: 1,
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(color: cs.onSurfaceVariant),
+                            ),
                           ),
-                        ),
+                        ],
                       ],
                     ),
                   ),
@@ -1703,14 +1709,7 @@ String _metricTooltipValue(
     case WorkoutReportMetric.workouts:
       return strings.workoutReportWorkoutCount(value.round());
     case WorkoutReportMetric.minutes:
-      final minutes = value.round();
-      if (minutes < 60) return strings.workoutReportMinutesCount(minutes);
-      final hours = minutes ~/ 60;
-      final remainingMinutes = minutes % 60;
-      if (remainingMinutes == 0) {
-        return strings.workoutReportHoursCount(hours);
-      }
-      return strings.workoutReportHoursMinutes(hours, remainingMinutes);
+      return formatCompletedWorkoutDuration(strings, (value * 60).round());
     case WorkoutReportMetric.volume:
       return WeightUnitFormatter.formatVolume(value, weightUnit);
   }
@@ -1783,23 +1782,10 @@ String _formatTrendAmount(
     case WorkoutReportMetric.workouts:
       return strings.workoutReportWorkoutCount(value.round());
     case WorkoutReportMetric.minutes:
-      return strings.workoutReportMinutesCount(value.round());
+      return formatCompletedWorkoutDuration(strings, (value * 60).round());
     case WorkoutReportMetric.volume:
       return '${WeightUnitFormatter.formatCompactVolumeValue(value, weightUnit)} ${weightUnit.shortLabel}';
   }
-}
-
-String _formatDurationValue(int minutes) {
-  if (minutes < 60) return minutes.toString();
-  final hours = minutes ~/ 60;
-  final remainingMinutes = minutes % 60;
-  if (remainingMinutes == 0) return hours.toString();
-  return '$hours:${remainingMinutes.toString().padLeft(2, '0')}';
-}
-
-String _formatDurationUnit(int minutes, AppLocalizations strings) {
-  if (minutes < 60) return strings.workoutReportMinuteShort;
-  return strings.workoutReportHourShort;
 }
 
 IconData _emptyMetricIcon(WorkoutReportMetric metric) {

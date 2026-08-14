@@ -15,6 +15,7 @@ import '../../repositories/app_repository.dart';
 import '../../services/tutorial_state_store.dart';
 import '../../theme/theme_extensions.dart';
 import '../../utils/async_pool.dart';
+import '../../utils/completed_workout_duration_formatter.dart';
 import '../../utils/localized_digit_formatter.dart';
 import '../../utils/tutorial_launcher.dart';
 import '../../utils/weight_unit_formatter.dart';
@@ -911,9 +912,9 @@ class _SessionSummaryCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = context.colors;
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
-    final durationText = _formatDuration(
+    final durationText = formatCompletedWorkoutDuration(
       AppLocalizations.of(context),
-      Duration(seconds: session.duration),
+      session.duration,
     );
 
     return Card(
@@ -1455,17 +1456,4 @@ String _typeName(CardType type) {
 
 double _epley(ExerciseSet set) {
   return set.weight * (1 + 0.0333 * set.reps);
-}
-
-String _formatDuration(AppLocalizations strings, Duration duration) {
-  final hours = duration.inHours;
-  final minutes = duration.inMinutes.remainder(60);
-  final seconds = duration.inSeconds.remainder(60);
-  if (hours > 0) {
-    return strings.durationHoursMinutes(hours, minutes);
-  }
-  if (minutes > 0) {
-    return strings.durationMinutesSeconds(minutes, seconds);
-  }
-  return strings.durationSeconds(seconds);
 }

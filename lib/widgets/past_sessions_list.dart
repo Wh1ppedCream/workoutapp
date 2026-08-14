@@ -10,6 +10,7 @@ import '../repositories/app_repository.dart';
 import '../screens/exercise/full_history_screen.dart';
 import '../screens/exercise/session_detail_screen.dart';
 import '../theme/theme_extensions.dart';
+import '../utils/completed_workout_duration_formatter.dart';
 
 /// A scrollable, filterable list of past workout sessions.
 class PastSessionsList extends StatefulWidget {
@@ -181,7 +182,10 @@ class _PastSessionsListState extends State<PastSessionsList>
                         final dateStr = DateFormat.yMMMd(
                           Localizations.localeOf(context).toString(),
                         ).format(ses.date);
-                        final durationMin = (ses.duration / 60).ceil();
+                        final duration = formatCompletedWorkoutDuration(
+                          strings,
+                          ses.duration,
+                        );
 
                         return Card(
                           margin: const EdgeInsets.symmetric(
@@ -190,7 +194,7 @@ class _PastSessionsListState extends State<PastSessionsList>
                           ),
                           child: ListTile(
                             title: Text(
-                              strings.pastSessionsItem(dateStr, durationMin),
+                              strings.pastSessionsItem(dateStr, duration),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),

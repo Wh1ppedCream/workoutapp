@@ -13,6 +13,7 @@ import '../../repositories/app_repository.dart';
 import '../../services/tutorial_state_store.dart';
 import '../../theme/theme_extensions.dart';
 import '../../utils/localized_body_part_name.dart';
+import '../../utils/completed_workout_duration_formatter.dart';
 import '../../utils/tutorial_launcher.dart';
 import '../../utils/weight_unit_formatter.dart';
 import '../../widgets/body_heatmap.dart';
@@ -581,14 +582,7 @@ String _setUnitsLabel(AppLocalizations strings, double count) {
 }
 
 String _durationLabel(AppLocalizations strings, int seconds) {
-  final duration = Duration(seconds: seconds);
-  final hours = duration.inHours;
-  final minutes = duration.inMinutes.remainder(60);
-  if (hours > 0 && minutes > 0) {
-    return strings.durationHoursMinutes(hours, minutes);
-  }
-  if (hours > 0) return strings.durationHours(hours);
-  return strings.durationMinutes(duration.inMinutes);
+  return formatCompletedWorkoutDuration(strings, seconds);
 }
 
 const _emptyWeeklyData = _WeeklySetOverviewData(

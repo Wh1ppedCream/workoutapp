@@ -4523,8 +4523,8 @@ abstract class AppLocalizations {
   /// No description provided for @fullHistorySessionSummary.
   ///
   /// In en, this message translates to:
-  /// **'{date} - {minutes} min'**
-  String fullHistorySessionSummary(String date, int minutes);
+  /// **'{date} - {duration}'**
+  String fullHistorySessionSummary(String date, String duration);
 
   /// No description provided for @weeklySetsTitle.
   ///
@@ -4955,8 +4955,8 @@ abstract class AppLocalizations {
   /// No description provided for @logbookSessionSummary.
   ///
   /// In en, this message translates to:
-  /// **'{minutes} min - {exercises, plural, =1{1 exercise} other{{exercises} exercises}} - {sets, plural, =1{1 set} other{{sets} sets}} - {volume}'**
-  String logbookSessionSummary(int minutes, int exercises, int sets, String volume);
+  /// **'{duration} - {exercises, plural, =1{1 exercise} other{{exercises} exercises}} - {sets, plural, =1{1 set} other{{sets} sets}} - {volume}'**
+  String logbookSessionSummary(String duration, int exercises, int sets, String volume);
 
   /// No description provided for @durationHours.
   ///
@@ -9101,8 +9101,8 @@ abstract class AppLocalizations {
   /// No description provided for @pastSessionsItem.
   ///
   /// In en, this message translates to:
-  /// **'{date} - {minutes} min'**
-  String pastSessionsItem(String date, int minutes);
+  /// **'{date} - {duration}'**
+  String pastSessionsItem(String date, String duration);
 
   /// No description provided for @historySummaryLoadFailed.
   ///

@@ -10,6 +10,7 @@ import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
 import '../theme/theme_extensions.dart';
 import '../utils/localized_digit_formatter.dart';
+import '../utils/completed_workout_duration_formatter.dart';
 import '../utils/weight_unit_formatter.dart';
 import '../utils/app_test_keys.dart';
 import 'body_heatmap.dart';
@@ -1359,7 +1360,7 @@ class _SelectedPeriodHeatmapSummary extends StatelessWidget {
                         SizedBox(height: metricGap),
                         Expanded(
                           child: _CalendarMetricCard(
-                            value: _durationLabel(
+                            value: formatCompletedWorkoutDuration(
                               AppLocalizations.of(context),
                               totalDurationSeconds,
                             ),
@@ -1564,7 +1565,10 @@ class _SessionRow extends StatelessWidget {
       ),
       subtitle: Text(
         AppLocalizations.of(context).logbookSessionSummary(
-          session.durationMinutes,
+          formatCompletedWorkoutDuration(
+            AppLocalizations.of(context),
+            session.durationSeconds,
+          ),
           session.exerciseCount,
           session.setCount,
           WeightUnitFormatter.formatVolume(session.totalVolume, weightUnit),
@@ -1575,10 +1579,4 @@ class _SessionRow extends StatelessWidget {
       trailing: onTap == null ? null : const Icon(Icons.chevron_right),
     );
   }
-}
-
-String _durationLabel(AppLocalizations strings, int totalSeconds) {
-  final hours = totalSeconds ~/ 3600;
-  final mins = (totalSeconds % 3600) ~/ 60;
-  return strings.durationHoursMinutes(hours, mins);
 }

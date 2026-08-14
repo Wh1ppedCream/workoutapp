@@ -1080,11 +1080,11 @@
   "fullHistoryTitle": "All sessions",
   "fullHistoryLoadError": "Unable to load saved sessions.",
   "fullHistoryEmpty": "No sessions saved.",
-  "fullHistorySessionSummary": "{date} - {minutes} min",
+  "fullHistorySessionSummary": "{date} - {duration}",
   "@fullHistorySessionSummary": {
     "placeholders": {
       "date": {"type": "String"},
-      "minutes": {"type": "int"}
+      "duration": {"type": "String"}
     }
   },
   "weeklySetsTitle": "Weekly sets overview",
@@ -1199,10 +1199,10 @@
   "logbookTotalTime": "Total time",
   "logbookTotalVolume": "Total volume",
   "logbookViewAllSessions": "View all sessions",
-  "logbookSessionSummary": "{minutes} min - {exercises, plural, =1{1 exercise} other{{exercises} exercises}} - {sets, plural, =1{1 set} other{{sets} sets}} - {volume}",
+  "logbookSessionSummary": "{duration} - {exercises, plural, =1{1 exercise} other{{exercises} exercises}} - {sets, plural, =1{1 set} other{{sets} sets}} - {volume}",
   "@logbookSessionSummary": {
     "placeholders": {
-      "minutes": {"type": "int"},
+      "duration": {"type": "String"},
       "exercises": {"type": "int"},
       "sets": {"type": "int"},
       "volume": {"type": "String"}
@@ -2047,8 +2047,8 @@
   "pastSessionsError": "Error: {error}",
   "@pastSessionsError": {"placeholders": {"error": {"type": "String"}}},
   "pastSessionsEmpty": "No sessions yet.",
-  "pastSessionsItem": "{date} - {minutes} min",
-  "@pastSessionsItem": {"placeholders": {"date": {"type": "String"}, "minutes": {"type": "int"}}},
+  "pastSessionsItem": "{date} - {duration}",
+  "@pastSessionsItem": {"placeholders": {"date": {"type": "String"}, "duration": {"type": "String"}}},
   "historySummaryLoadFailed": "Error loading history",
   "historySummaryWorkouts": "Workouts",
   "historySummaryTotalTime": "Total Time",

@@ -921,11 +921,11 @@
   "fullHistoryTitle": "সব সেশন",
   "fullHistoryLoadError": "সংরক্ষিত সেশন লোড করা যায়নি।",
   "fullHistoryEmpty": "কোনো সেশন সংরক্ষিত নেই।",
-  "fullHistorySessionSummary": "{date} - {minutes} মিনিট",
+  "fullHistorySessionSummary": "{date} - {duration}",
   "@fullHistorySessionSummary": {
     "placeholders": {
       "date": {"type": "String"},
-      "minutes": {"type": "int"}
+      "duration": {"type": "String"}
     }
   },
   "weeklySetsTitle": "সাপ্তাহিক সেটের সংক্ষিপ্তসার",
@@ -1040,10 +1040,10 @@
   "logbookTotalTime": "মোট সময়",
   "logbookTotalVolume": "মোট ভলিউম",
   "logbookViewAllSessions": "সব সেশন দেখুন",
-  "logbookSessionSummary": "{minutes} মিনিট - {exercises, plural, =1{1টি ব্যায়াম} other{{exercises}টি ব্যায়াম}} - {sets, plural, =1{1 সেট} other{{sets} সেট}} - {volume}",
+  "logbookSessionSummary": "{duration} - {exercises, plural, =1{1টি ব্যায়াম} other{{exercises}টি ব্যায়াম}} - {sets, plural, =1{1 সেট} other{{sets} সেট}} - {volume}",
   "@logbookSessionSummary": {
     "placeholders": {
-      "minutes": {"type": "int"},
+      "duration": {"type": "String"},
       "exercises": {"type": "int"},
       "sets": {"type": "int"},
       "volume": {"type": "String"}
@@ -2290,11 +2290,11 @@
     }
   },
   "pastSessionsFullscreen": "পূর্ণ পর্দা",
-  "pastSessionsItem": "{date} - {minutes} মিনিট",
+  "pastSessionsItem": "{date} - {duration}",
   "@pastSessionsItem": {
     "placeholders": {
       "date": {"type": "String"},
-      "minutes": {"type": "int"}
+      "duration": {"type": "String"}
     }
   },
   "pastSessionsMonth": "মাস",

@@ -16,8 +16,6 @@ class WorkoutReportSession {
     required this.exerciseCount,
     this.setCount = 0,
   });
-
-  int get durationMinutes => (durationSeconds / 60).ceil();
 }
 
 class WorkoutReportBucket {

@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../models/models.dart';
 import '../../repositories/app_repository.dart';
+import '../../utils/completed_workout_duration_formatter.dart';
 import 'session_detail_screen.dart';
 
 /// Shows every workout session in a simple scrollable list.
@@ -59,12 +60,15 @@ class _FullHistoryScreenState extends State<FullHistoryScreen> {
               final dateStr = DateFormat.yMMMd(
                 Localizations.localeOf(context).toLanguageTag(),
               ).format(s.date);
-              final durationMin = (s.duration / 60).ceil();
+              final duration = formatCompletedWorkoutDuration(
+                strings,
+                s.duration,
+              );
               return Card(
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: ListTile(
                   title: Text(
-                    strings.fullHistorySessionSummary(dateStr, durationMin),
+                    strings.fullHistorySessionSummary(dateStr, duration),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
