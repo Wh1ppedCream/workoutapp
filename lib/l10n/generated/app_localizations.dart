@@ -11515,6 +11515,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The database import did not finish. Your current app data was kept safe.'**
   String get databaseImportFailedSafe;
+
+  /// No description provided for @speedDialLogFood.
+  ///
+  /// In en, this message translates to:
+  /// **'Log food'**
+  String get speedDialLogFood;
+
+  /// No description provided for @speedDialLogMeasurement.
+  ///
+  /// In en, this message translates to:
+  /// **'Log measurement'**
+  String get speedDialLogMeasurement;
+
+  /// No description provided for @healthTapToLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap + to log'**
+  String get healthTapToLog;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

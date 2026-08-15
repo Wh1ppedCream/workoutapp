@@ -2514,5 +2514,8 @@
   "databaseExportFailedSafe": "The database export could not be created. Your app data is unchanged.",
   "databaseImportFileTooLarge": "This import is too large. Choose a database backup smaller than 25 MB.",
   "databaseImportBlockedSafe": "This database backup could not be imported. Your current app data is unchanged.",
-  "databaseImportFailedSafe": "The database import did not finish. Your current app data was kept safe."
+  "databaseImportFailedSafe": "The database import did not finish. Your current app data was kept safe.",
+  "speedDialLogFood": "Log food",
+  "speedDialLogMeasurement": "Log measurement",
+  "healthTapToLog": "Tap + to log"
 }

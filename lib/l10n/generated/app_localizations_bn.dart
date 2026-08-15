@@ -6241,4 +6241,13 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get databaseImportFailedSafe => 'ডেটাবেস আমদানি সম্পন্ন হয়নি। আপনার বর্তমান অ্যাপ ডেটা নিরাপদ রাখা হয়েছে।';
+
+  @override
+  String get speedDialLogFood => 'খাবার লগ করুন';
+
+  @override
+  String get speedDialLogMeasurement => 'পরিমাপ লগ করুন';
+
+  @override
+  String get healthTapToLog => '+ ট্যাপ করে লগ করুন';
 }

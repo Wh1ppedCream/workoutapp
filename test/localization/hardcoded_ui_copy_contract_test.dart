@@ -13,19 +13,12 @@ void main() {
         final path = entity.path.replaceAll('\\', '/');
         if (_isDeferredSurface(path)) continue;
 
-        final source = entity.readAsStringSync();
-        for (final pattern in _userFacingLiteralPatterns) {
-          for (final match in pattern.allMatches(source)) {
-            final copy = match.namedGroup('copy')?.trim() ?? '';
-            if (!_looksLikeUserFacingEnglish(copy) ||
-                _allowedTokens.contains(copy)) {
-              continue;
-            }
-            final line =
-                '\n'.allMatches(source.substring(0, match.start)).length + 1;
-            violations.add('$path:$line: "$copy"');
-          }
-        }
+        violations.addAll(
+          _findUserFacingLiteralViolations(
+            source: entity.readAsStringSync(),
+            path: path,
+          ),
+        );
       }
     }
 
@@ -52,15 +45,70 @@ void main() {
       isFalse,
     );
   });
+
+  test(
+    'literal contract detects conditional, semantic, and empty-state copy',
+    () {
+      final violations = _findUserFacingLiteralViolations(
+        path: 'test_fixture.dart',
+        source: '''
+        Text(isReady ? 'Ready to train' : 'Still loading');
+        SelectableText('More details');
+        Tooltip(message: isSaved ? 'Saved workout' : 'Save workout');
+        Semantics(semanticLabel: isOpen ? 'Close panel' : 'Open panel');
+        EmptyState(emptyMessage: 'No workouts yet');
+      ''',
+      );
+
+      expect(violations, hasLength(8));
+      expect(violations.join('\n'), contains('Ready to train'));
+      expect(violations.join('\n'), contains('Still loading'));
+      expect(violations.join('\n'), contains('No workouts yet'));
+    },
+  );
+}
+
+List<String> _findUserFacingLiteralViolations({
+  required String source,
+  required String path,
+}) {
+  final violations = <String>[];
+  for (final pattern in _userFacingLiteralPatterns) {
+    for (final match in pattern.allMatches(source)) {
+      final copy = match.namedGroup('copy')?.trim() ?? '';
+      if (!_looksLikeUserFacingEnglish(copy) || _allowedTokens.contains(copy)) {
+        continue;
+      }
+      final line = '\n'.allMatches(source.substring(0, match.start)).length + 1;
+      violations.add('$path:$line: "$copy"');
+    }
+  }
+  return violations;
 }
 
 final _userFacingLiteralPatterns = <RegExp>[
   RegExp(
-    r'''Text\(\s*(?:const\s+)?['"](?<copy>[A-Za-z\$][^'"\r\n]*)['"]''',
+    r'''(?:Text|SelectableText)\(\s*(?:const\s+)?['"](?<copy>[A-Za-z\$][^'"\r\n]*)['"]''',
     multiLine: true,
   ),
   RegExp(
-    r'''(?:title|subtitle|label|labelText|emptyMessage|hintText|helperText|tooltip|semanticLabel|message)\s*:\s*['"](?<copy>[A-Za-z\$][^'"\r\n]*)['"]''',
+    r'''(?:title|subtitle|label|labelText|emptyMessage|hintText|helperText|tooltip|semanticLabel|message|description|body|primaryLabel|secondaryLabel)\s*:\s*['"](?<copy>[A-Za-z\$][^'"\r\n]*)['"]''',
+    multiLine: true,
+  ),
+  RegExp(
+    r'''(?:Text|SelectableText)\(\s*[^'"\r\n]*?\?\s*['"](?<copy>[A-Za-z\$][^'"\r\n]*)['"]''',
+    multiLine: true,
+  ),
+  RegExp(
+    r'''(?:Text|SelectableText)\(\s*[^'"\r\n]*?\?\s*['"][^'"\r\n]*['"]\s*:\s*['"](?<copy>[A-Za-z\$][^'"\r\n]*)['"]''',
+    multiLine: true,
+  ),
+  RegExp(
+    r'''(?:title|subtitle|label|labelText|emptyMessage|hintText|helperText|tooltip|semanticLabel|message|description|body|primaryLabel|secondaryLabel)\s*:\s*[^'"\r\n]*?\?\s*['"](?<copy>[A-Za-z\$][^'"\r\n]*)['"]''',
+    multiLine: true,
+  ),
+  RegExp(
+    r'''(?:title|subtitle|label|labelText|emptyMessage|hintText|helperText|tooltip|semanticLabel|message|description|body|primaryLabel|secondaryLabel)\s*:\s*[^'"\r\n]*?\?\s*['"][^'"\r\n]*['"]\s*:\s*['"](?<copy>[A-Za-z\$][^'"\r\n]*)['"]''',
     multiLine: true,
   ),
 ];
@@ -100,7 +148,6 @@ bool _isDeferredSurface(String path) {
     '/stretch_',
     '/meal_plan_',
     '/nutrition_',
-    '/speed_dial_fab.dart',
     '/combined_history_page.dart',
     '/form_posing_page.dart',
     '/train2_page.dart',

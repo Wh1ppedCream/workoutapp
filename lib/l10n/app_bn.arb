@@ -2803,5 +2803,8 @@
   "databaseExportFailedSafe": "ডেটাবেস রপ্তানি তৈরি করা যায়নি। আপনার অ্যাপের ডেটা অপরিবর্তিত আছে।",
   "databaseImportFileTooLarge": "এই আমদানিটি খুব বড়। 25 MB-এর চেয়ে ছোট ডেটাবেস ব্যাকআপ বেছে নিন।",
   "databaseImportBlockedSafe": "এই ডেটাবেস ব্যাকআপ আমদানি করা যায়নি। আপনার বর্তমান অ্যাপ ডেটা অপরিবর্তিত আছে।",
-  "databaseImportFailedSafe": "ডেটাবেস আমদানি সম্পন্ন হয়নি। আপনার বর্তমান অ্যাপ ডেটা নিরাপদ রাখা হয়েছে।"
+  "databaseImportFailedSafe": "ডেটাবেস আমদানি সম্পন্ন হয়নি। আপনার বর্তমান অ্যাপ ডেটা নিরাপদ রাখা হয়েছে।",
+  "speedDialLogFood": "খাবার লগ করুন",
+  "speedDialLogMeasurement": "পরিমাপ লগ করুন",
+  "healthTapToLog": "+ ট্যাপ করে লগ করুন"
 }

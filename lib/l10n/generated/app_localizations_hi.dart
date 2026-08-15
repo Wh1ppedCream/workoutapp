@@ -6235,4 +6235,13 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get databaseImportFailedSafe => 'डेटाबेस आयात पूरा नहीं हुआ। आपका वर्तमान ऐप डेटा सुरक्षित रखा गया।';
+
+  @override
+  String get speedDialLogFood => 'भोजन लॉग करें';
+
+  @override
+  String get speedDialLogMeasurement => 'माप दर्ज करें';
+
+  @override
+  String get healthTapToLog => '+ टैप करके लॉग करें';
 }

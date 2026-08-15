@@ -1793,5 +1793,8 @@
   "databaseExportFailedSafe": "No se pudo crear la exportación. Tus datos de la aplicación no cambiaron.",
   "databaseImportFileTooLarge": "Esta importación es demasiado grande. Elige una copia de seguridad de menos de 25 MB.",
   "databaseImportBlockedSafe": "No se pudo importar esta copia de seguridad. Tus datos actuales no cambiaron.",
-  "databaseImportFailedSafe": "La importación no terminó. Tus datos actuales se mantuvieron seguros."
+  "databaseImportFailedSafe": "La importación no terminó. Tus datos actuales se mantuvieron seguros.",
+  "speedDialLogFood": "Registrar alimento",
+  "speedDialLogMeasurement": "Registrar medición",
+  "healthTapToLog": "Toca + para registrar"
 }

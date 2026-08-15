@@ -2,6 +2,7 @@
 // for logging food intake and measurements
 
 import 'package:flutter/material.dart';
+import '../l10n/generated/app_localizations.dart';
 import '../screens/nutrition/food_logging_page.dart';
 import '../screens/nutrition/measured_items_page.dart';
 
@@ -24,6 +25,8 @@ class _SpeedDialFabState extends State<SpeedDialFab> {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
+
     return SizedBox(
       width: 160,
       child: Column(
@@ -34,7 +37,7 @@ class _SpeedDialFabState extends State<SpeedDialFab> {
             FloatingActionButton.extended(
               heroTag: 'log_food',
               icon: const Icon(Icons.restaurant),
-              label: const Text('Log Food'),
+              label: Text(strings.speedDialLogFood),
               onPressed: () async {
                 _toggle();
                 final changed = await Navigator.of(context).push<bool>(
@@ -50,7 +53,7 @@ class _SpeedDialFabState extends State<SpeedDialFab> {
             FloatingActionButton.extended(
               heroTag: 'log_measurement',
               icon: const Icon(Icons.straighten),
-              label: const Text('Log Measurement'),
+              label: Text(strings.speedDialLogMeasurement),
               onPressed: () async {
                 _toggle();
                 final changed = await Navigator.of(context).push<bool>(

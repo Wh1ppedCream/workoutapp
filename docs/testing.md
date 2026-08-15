@@ -145,6 +145,19 @@ assets, SharedPreferences mocks, in-memory SQLite, or a mocked platform channel.
 The profile-mode release-networking verification above is the intentional
 exception and uses the configured development content environment.
 
+## Localization review
+
+The literal-copy contract test covers active screens and shared widgets,
+including direct and conditional text, dialogs, empty states, tooltips, and
+semantic labels. Incomplete product surfaces remain narrowly excluded until
+they are ready for localization as a complete feature: nutrition, cardio,
+stretch, the alternate Train hub, combined history, and form/posing.
+
+Automated checks and visual QA do not constitute linguistic approval. Follow
+the native-speaker scope, acceptance criteria, and review log in
+`docs/localization-review.md` before describing a non-English locale as
+release-ready.
+
 ## Release diagnostics verification
 
 Production builds intentionally do not configure direct remote crash reporting.

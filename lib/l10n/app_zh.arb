@@ -1734,5 +1734,8 @@
   "databaseExportFailedSafe": "无法创建数据库导出文件。你的应用数据未发生更改。",
   "databaseImportFileTooLarge": "此导入文件过大。请选择小于 25 MB 的数据库备份。",
   "databaseImportBlockedSafe": "无法导入此数据库备份。你当前的应用数据未发生更改。",
-  "databaseImportFailedSafe": "数据库导入未完成。你当前的应用数据已安全保留。"
+  "databaseImportFailedSafe": "数据库导入未完成。你当前的应用数据已安全保留。",
+  "speedDialLogFood": "记录食物",
+  "speedDialLogMeasurement": "记录测量",
+  "healthTapToLog": "点击 + 以记录"
 }

@@ -6260,4 +6260,13 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get databaseImportFailedSafe => 'La importación no terminó. Tus datos actuales se mantuvieron seguros.';
+
+  @override
+  String get speedDialLogFood => 'Registrar alimento';
+
+  @override
+  String get speedDialLogMeasurement => 'Registrar medición';
+
+  @override
+  String get healthTapToLog => 'Toca + para registrar';
 }

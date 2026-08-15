@@ -6260,4 +6260,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get databaseImportFailedSafe => 'The database import did not finish. Your current app data was kept safe.';
+
+  @override
+  String get speedDialLogFood => 'Log food';
+
+  @override
+  String get speedDialLogMeasurement => 'Log measurement';
+
+  @override
+  String get healthTapToLog => 'Tap + to log';
 }

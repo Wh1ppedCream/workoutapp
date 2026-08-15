@@ -10,11 +10,11 @@ work. Cloud-media publishing state and commands live in
 
 ## Current Status
 
-The latest committed work is `bc88032` on `origin/updates/backlog`, based on
-`f14eee0` from `origin/master`. The uncommitted measurement-hub consolidation
-passes analyzer, focused tests, and the full suite of 211 Flutter tests. Cloud
-media and active-workout durability are complete; production media and the
-diagnostics relay remain intentionally disabled.
+The current `updates/backlog` work builds on `e361e0c`, which is based on
+`f14eee0` from `origin/master`. Analyzer, focused tests, and the full suite of
+218 Flutter tests passed. Cloud media and active-workout durability are
+complete; production media and the diagnostics relay remain intentionally
+disabled.
 Development media remains at 127 of 313 exercise thumbnails (40.6%); production
 remains at 62 and waits for a custom domain.
 
@@ -79,6 +79,11 @@ remains at 62 and waits for a custom domain.
    feet/inches or centimeters, and body-part pump context, and presents its
    trend cards as a two-column grid while the Nutrition dashboard retains its
    compact horizontal layout.
+10. Localization enforcement now covers direct and conditional text,
+    `SelectableText`, dialog fields, empty states, tooltips, and semantic
+    labels across active screens and shared widgets. The active quick-action
+    labels and remaining empty-state copy now use ARB resources. The review
+    process and native-speaker sign-off log live in `localization-review.md`.
 
 ## Ranked Backlog
 
@@ -118,13 +123,14 @@ remains at 62 and waits for a custom domain.
     fallback. Store structured measurement qualifiers instead of English notes
     such as `With pump`, `Overall`, and `Onboarding`.
 
-7. **Strengthen localization enforcement and language review.**
-    The literal-copy contract catches only a narrow set of widget arguments and
-    excludes all nutrition, cardio/stretch, placeholder, and Train2 paths.
-    Expand it to cover dialogs, conditional strings, empty states, semantics,
-    and deferred surfaces as they become active. Remove remaining English
-    fallbacks and raw exception text, then complete native-speaker linguistic,
-    pluralization, terminology, and tone review for every locale.
+7. **Complete native-speaker localization review.**
+   The active-surface literal-copy contract now guards direct and conditional
+   text, dialogs, empty states, tooltips, and semantics. Have qualified native
+   speakers review French, Canadian French, Bangla, Simplified Chinese, Hindi,
+   and Spanish for wording, pluralization, terminology, regional usage, and
+   tone; record approval or accepted findings in `localization-review.md`.
+   Localize each deferred surface before making it a complete selectable
+   feature.
 
 8. **Strengthen body-measurement validation and lifecycle.**
    The Measurements hub, real Current Metrics values, core entry conveniences,

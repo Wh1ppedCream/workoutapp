@@ -6235,4 +6235,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get databaseImportFailedSafe => '数据库导入未完成。你当前的应用数据已安全保留。';
+
+  @override
+  String get speedDialLogFood => '记录食物';
+
+  @override
+  String get speedDialLogMeasurement => '记录测量';
+
+  @override
+  String get healthTapToLog => '点击 + 以记录';
 }

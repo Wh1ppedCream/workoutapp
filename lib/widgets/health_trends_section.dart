@@ -599,6 +599,7 @@ class _TrendTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = context.colors;
+    final strings = AppLocalizations.of(context);
     final latest = trend.latest;
     final delta = trend.delta;
     final deltaColor = _deltaColor(context, delta);
@@ -657,7 +658,9 @@ class _TrendTile extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                latest == null ? 'No entries' : _formatMeasurement(latest),
+                latest == null
+                    ? strings.healthNoEntries
+                    : _formatMeasurement(latest),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.titleMedium?.copyWith(
@@ -666,7 +669,7 @@ class _TrendTile extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                latest == null ? 'Tap + to log' : _formatDelta(delta),
+                latest == null ? strings.healthTapToLog : _formatDelta(delta),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodySmall?.copyWith(color: deltaColor),

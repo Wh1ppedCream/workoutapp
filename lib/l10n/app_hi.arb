@@ -1793,5 +1793,8 @@
   "databaseExportFailedSafe": "डेटाबेस निर्यात नहीं बनाया जा सका। आपके ऐप डेटा में कोई बदलाव नहीं हुआ।",
   "databaseImportFileTooLarge": "यह आयात बहुत बड़ा है। 25 MB से छोटा डेटाबेस बैकअप चुनें।",
   "databaseImportBlockedSafe": "यह डेटाबेस बैकअप आयात नहीं किया जा सका। आपका वर्तमान ऐप डेटा नहीं बदला।",
-  "databaseImportFailedSafe": "डेटाबेस आयात पूरा नहीं हुआ। आपका वर्तमान ऐप डेटा सुरक्षित रखा गया।"
+  "databaseImportFailedSafe": "डेटाबेस आयात पूरा नहीं हुआ। आपका वर्तमान ऐप डेटा सुरक्षित रखा गया।",
+  "speedDialLogFood": "भोजन लॉग करें",
+  "speedDialLogMeasurement": "माप दर्ज करें",
+  "healthTapToLog": "+ टैप करके लॉग करें"
 }

@@ -6260,6 +6260,15 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get databaseImportFailedSafe => 'L\'importation n\'a pas abouti. Vos données actuelles ont été conservées en sécurité.';
+
+  @override
+  String get speedDialLogFood => 'Consigner un aliment';
+
+  @override
+  String get speedDialLogMeasurement => 'Consigner une mesure';
+
+  @override
+  String get healthTapToLog => 'Touchez + pour consigner';
 }
 
 /// The translations for French, as used in Canada (`fr_CA`).
@@ -12512,4 +12521,13 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
 
   @override
   String get databaseImportFailedSafe => 'L\'importation n\'a pas abouti. Vos données actuelles ont été conservées en sécurité.';
+
+  @override
+  String get speedDialLogFood => 'Enregistrer un aliment';
+
+  @override
+  String get speedDialLogMeasurement => 'Enregistrer une mesure';
+
+  @override
+  String get healthTapToLog => 'Touchez + pour enregistrer';
 }
