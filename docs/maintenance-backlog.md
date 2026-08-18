@@ -10,11 +10,11 @@ work. Cloud-media publishing state and commands live in
 
 ## Current Status
 
-The current `updates/backlog` work builds on `5fa5560`, which is based on
-`f14eee0` from `origin/master`. The current uncommitted body-measurement,
-media-recovery, and device-coverage work passed analyzer, focused tests, all
-231 Flutter tests, and a cleared-cache Pixel 7 validation. Production media
-and the diagnostics relay remain intentionally disabled.
+`updates/backlog` is at `e406b3a`, which builds on `5fa5560` and ultimately
+`f14eee0` from `origin/master`. The body-measurement, media-recovery, and
+device-coverage batch passed analyzer, focused tests, all 231 Flutter tests,
+and a cleared-cache Pixel 7 validation. Production media and the diagnostics
+relay remain intentionally disabled.
 Development media remains at 127 of 313 exercise thumbnails (40.6%); production
 remains at 62 and waits for a custom domain.
 
