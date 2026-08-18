@@ -1,6 +1,6 @@
 {
   "namespace": "exercise_media",
-  "version": 9,
+  "version": 10,
   "baseUrl": "https://pub-7eb72a1a315f4da3b30100ff6e694651.r2.dev",
   "exercises": [
     {
@@ -2029,6 +2029,438 @@
           "type": "thumbnail",
           "path": "exercises/pec_deck_fly/v1/thumb.webp",
           "title": "Pec Deck Fly thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 167,
+      "exerciseName": "Pendlay Row - Barbell",
+      "slug": "pendlay_row_barbell",
+      "assets": [
+        {
+          "assetId": "pendlay_row_barbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/pendlay_row_barbell/v1/thumb.webp",
+          "title": "Pendlay Row - Barbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 168,
+      "exerciseName": "Pike Push-up",
+      "slug": "pike_push_up",
+      "assets": [
+        {
+          "assetId": "pike_push_up_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/pike_push_up/v1/thumb.webp",
+          "title": "Pike Push-up thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 169,
+      "exerciseName": "Pistol Squat",
+      "slug": "pistol_squat",
+      "assets": [
+        {
+          "assetId": "pistol_squat_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/pistol_squat/v1/thumb.webp",
+          "title": "Pistol Squat thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 170,
+      "exerciseName": "Plank",
+      "slug": "plank",
+      "assets": [
+        {
+          "assetId": "plank_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/plank/v1/thumb.webp",
+          "title": "Plank thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 171,
+      "exerciseName": "Power Clean - Barbell",
+      "slug": "power_clean_barbell",
+      "assets": [
+        {
+          "assetId": "power_clean_barbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/power_clean_barbell/v1/thumb.webp",
+          "title": "Power Clean - Barbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 172,
+      "exerciseName": "Power Snatch - Barbell",
+      "slug": "power_snatch_barbell",
+      "assets": [
+        {
+          "assetId": "power_snatch_barbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/power_snatch_barbell/v1/thumb.webp",
+          "title": "Power Snatch - Barbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 173,
+      "exerciseName": "Preacher Curl - Cable Machine",
+      "slug": "preacher_curl_cable_machine",
+      "assets": [
+        {
+          "assetId": "preacher_curl_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/preacher_curl_cable_machine/v1/thumb.webp",
+          "title": "Preacher Curl - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 174,
+      "exerciseName": "Preacher Curl - Barbell",
+      "slug": "preacher_curl_barbell",
+      "assets": [
+        {
+          "assetId": "preacher_curl_barbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/preacher_curl_barbell/v1/thumb.webp",
+          "title": "Preacher Curl - Barbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 175,
+      "exerciseName": "Preacher Curl - Dumbbell",
+      "slug": "preacher_curl_dumbbell",
+      "assets": [
+        {
+          "assetId": "preacher_curl_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/preacher_curl_dumbbell/v1/thumb.webp",
+          "title": "Preacher Curl - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 177,
+      "exerciseName": "Pull Apart",
+      "slug": "pull_apart",
+      "assets": [
+        {
+          "assetId": "pull_apart_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/pull_apart/v1/thumb.webp",
+          "title": "Pull Apart thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 178,
+      "exerciseName": "Pull Through - Resistance Band",
+      "slug": "pull_through_resistance_band",
+      "assets": [
+        {
+          "assetId": "pull_through_resistance_band_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/pull_through_resistance_band/v1/thumb.webp",
+          "title": "Pull Through - Resistance Band thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 179,
+      "exerciseName": "Pull Through - Cable Machine",
+      "slug": "pull_through_cable_machine",
+      "assets": [
+        {
+          "assetId": "pull_through_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/pull_through_cable_machine/v1/thumb.webp",
+          "title": "Pull Through - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 180,
+      "exerciseName": "Pull Up",
+      "slug": "pull_up",
+      "assets": [
+        {
+          "assetId": "pull_up_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/pull_up/v1/thumb.webp",
+          "title": "Pull Up thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 186,
+      "exerciseName": "Pullover - Barbell",
+      "slug": "pullover_barbell",
+      "assets": [
+        {
+          "assetId": "pullover_barbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/pullover_barbell/v1/thumb.webp",
+          "title": "Pullover - Barbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 190,
+      "exerciseName": "Push Press - Barbell",
+      "slug": "push_press_barbell",
+      "assets": [
+        {
+          "assetId": "push_press_barbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/push_press_barbell/v1/thumb.webp",
+          "title": "Push Press - Barbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 191,
+      "exerciseName": "Push Press - Dumbbell",
+      "slug": "push_press_dumbbell",
+      "assets": [
+        {
+          "assetId": "push_press_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/push_press_dumbbell/v1/thumb.webp",
+          "title": "Push Press - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 192,
+      "exerciseName": "Push-up",
+      "slug": "push_up",
+      "assets": [
+        {
+          "assetId": "push_up_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/push_up/v1/thumb.webp",
+          "title": "Push-up thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 195,
+      "exerciseName": "Rack Pull - Barbell",
+      "slug": "rack_pull_barbell",
+      "assets": [
+        {
+          "assetId": "rack_pull_barbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/rack_pull_barbell/v1/thumb.webp",
+          "title": "Rack Pull - Barbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 196,
+      "exerciseName": "Renegade Row - Dumbbell",
+      "slug": "renegade_row_dumbbell",
+      "assets": [
+        {
+          "assetId": "renegade_row_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/renegade_row_dumbbell/v1/thumb.webp",
+          "title": "Renegade Row - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 197,
+      "exerciseName": "Reverse Fly - Cable Machine",
+      "slug": "reverse_fly_cable_machine",
+      "assets": [
+        {
+          "assetId": "reverse_fly_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/reverse_fly_cable_machine/v1/thumb.webp",
+          "title": "Reverse Fly - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 198,
+      "exerciseName": "Reverse Fly - Dumbbell (Bent Over)",
+      "slug": "reverse_fly_dumbbell_bent_over",
+      "assets": [
+        {
+          "assetId": "reverse_fly_dumbbell_bent_over_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/reverse_fly_dumbbell_bent_over/v1/thumb.webp",
+          "title": "Reverse Fly - Dumbbell (Bent Over) thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 202,
+      "exerciseName": "Reverse Crunch",
+      "slug": "reverse_crunch",
+      "assets": [
+        {
+          "assetId": "reverse_crunch_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/reverse_crunch/v1/thumb.webp",
+          "title": "Reverse Crunch thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 204,
+      "exerciseName": "Reverse Curl - Cable Machine",
+      "slug": "reverse_curl_cable_machine",
+      "assets": [
+        {
+          "assetId": "reverse_curl_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/reverse_curl_cable_machine/v1/thumb.webp",
+          "title": "Reverse Curl - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 205,
+      "exerciseName": "Reverse Curl - Barbell",
+      "slug": "reverse_curl_barbell",
+      "assets": [
+        {
+          "assetId": "reverse_curl_barbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/reverse_curl_barbell/v1/thumb.webp",
+          "title": "Reverse Curl - Barbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 206,
+      "exerciseName": "Reverse Curl - Dumbbell",
+      "slug": "reverse_curl_dumbbell",
+      "assets": [
+        {
+          "assetId": "reverse_curl_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/reverse_curl_dumbbell/v1/thumb.webp",
+          "title": "Reverse Curl - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 215,
+      "exerciseName": "Romanian Deadlift - Barbell",
+      "slug": "romanian_deadlift_barbell",
+      "assets": [
+        {
+          "assetId": "romanian_deadlift_barbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/romanian_deadlift_barbell/v1/thumb.webp",
+          "title": "Romanian Deadlift - Barbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 221,
+      "exerciseName": "Row - Barbell",
+      "slug": "row_barbell",
+      "assets": [
+        {
+          "assetId": "row_barbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/row_barbell/v1/thumb.webp",
+          "title": "Row - Barbell thumbnail",
           "sortOrder": 0,
           "version": 1,
           "licenseId": "tonos_owned"

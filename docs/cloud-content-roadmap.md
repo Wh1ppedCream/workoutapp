@@ -5,10 +5,10 @@ future nutrition content.
 
 ## Current Development Snapshot
 
-As of 2026-08-08, the canonical development source is
-`tools/content_pipeline/exercise_media_source.example.json` version 9. It
-contains thumbnails for 127 of 313 exercises (40.6%); 186 exercises still use
-the heatmap fallback. Batches 001 through 007 are merged into this source and
+As of 2026-08-18, the canonical development source is
+`tools/content_pipeline/exercise_media_source.example.json` version 10. It
+contains thumbnails for 154 of 313 exercises (49.2%); 159 exercises still use
+the heatmap fallback. Batches 001 through 008 are merged into this source and
 the current canonical manifest is live in the development bucket.
 
 `development` remains the app default. The production bucket and temporary
@@ -58,7 +58,7 @@ default-environment change.
 
 Outside-code dependencies:
 
-- [ ] Continue uploading real media files as they are produced; 186 exercise
+- [ ] Continue uploading real media files as they are produced; 159 exercise
   thumbnails remain uncovered.
 
 ## Phase 4 - Local Pipeline
@@ -108,7 +108,7 @@ Outside-code dependencies:
 - [x] Sync in-app and spot-check new media plus missing-media fallbacks.
 - [x] Create, validate, merge, and publish development batches 002 through
   007.
-- [ ] Complete a fresh development spot-check for batches 004 through 007 and
+- [ ] Complete a fresh development spot-check for batches 004 through 008 and
   uncovered-exercise fallbacks before production promotion.
 
 ## Phase 8 - Media Quality
@@ -135,7 +135,7 @@ Outside-code dependencies:
   validation.
 - [x] Update `assets/content/content_environments.json` with the production
   URL.
-- [ ] Promote the current 127-exercise canonical assets and manifest to
+- [ ] Promote the current 154-exercise canonical assets and manifest to
   production after development validation.
 - [ ] Verify remote production URLs and a clean-install production sync before
   changing the app default.

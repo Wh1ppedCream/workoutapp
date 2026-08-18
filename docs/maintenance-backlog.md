@@ -10,12 +10,12 @@ work. Cloud-media publishing state and commands live in
 
 ## Current Status
 
-`updates/backlog` is at `e406b3a`, which builds on `5fa5560` and ultimately
+`updates/backlog` is at `ba86cd8`, which builds on `5fa5560` and ultimately
 `f14eee0` from `origin/master`. The body-measurement, media-recovery, and
 device-coverage batch passed analyzer, focused tests, all 231 Flutter tests,
 and a cleared-cache Pixel 7 validation. Production media and the diagnostics
 relay remain intentionally disabled.
-Development media remains at 127 of 313 exercise thumbnails (40.6%); production
+Development media remains at 154 of 313 exercise thumbnails (49.2%); production
 remains at 62 and waits for a custom domain.
 
 ## Recently Completed
@@ -67,10 +67,10 @@ remains at 62 and waits for a custom domain.
    job, privacy documentation, and regression tests are present. Distributed
    builds remain relay-disabled unless a future release explicitly supplies an
    approved relay URL.
-8. Production media readiness is audited. Development manifest version 9 has
-   127 assets; production version 5 has 62. All 62 production and 65 pending
-   development URLs are reachable, but production has no custom domain and
-   needs 65 asset uploads before its canonical manifest can be promoted.
+8. Production media readiness is audited. Development manifest version 10 has
+   154 assets; production version 5 has 62. Production has no custom domain,
+   and its promotion scope must be recalculated against the latest development
+   manifest before it becomes the app default.
 9. Fabricated health data is removed from selectable UI. Current Metrics now
    reads the latest persisted measurements or presents an honest empty state;
    it no longer invents body-fat, waist, hip, or placeholder metric values.
@@ -143,15 +143,15 @@ remains at 62 and waits for a custom domain.
    feature.
 
 8. **Continue exercise and anatomy media.**
-    Development covers 127 of 313 exercise thumbnails (40.6%). Continue
+    Development covers 154 of 313 exercise thumbnails (49.2%). Continue
     reviewed thumbnail batches, finish equipment coverage, and establish one
     bodypart and muscle illustration or heatmap system with documented source,
     license, cropping, accessibility, and versioning rules.
 
 9. **Finish production media when a custom domain is ready.**
     Keep development as the default until then. After connecting the domain,
-    visually validate batches 004 through 007, upload the 65 missing assets,
-    publish the 127-asset canonical manifest, perform clean-install and offline
+    visually validate batches 004 through 008, upload the outstanding assets,
+    publish the latest canonical manifest, perform clean-install and offline
     recovery tests against a release build, then switch the default deliberately.
 
 10. **Expand device, visual-regression, and accessibility coverage.**
