@@ -10,8 +10,10 @@ import '../models/models.dart';
 import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
 import '../services/tutorial_state_store.dart';
+import '../services/measurement_validation.dart';
 import '../theme/theme_extensions.dart';
 import '../utils/tutorial_launcher.dart';
+import '../utils/app_test_keys.dart';
 import 'guided_tutorial_overlay.dart';
 
 class HealthTrendsSection extends StatefulWidget {
@@ -124,6 +126,7 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
       input.value,
       input.unit,
       input.note,
+      input.context,
     );
     if (mounted) {
       _reload();
@@ -138,18 +141,30 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
     );
     if (input == null) return;
 
-    final defId = await _repo.insertMeasurementDefinition(
-      name: input.name,
-      type: MeasurementType.Custom,
-    );
-    if (input.initialValue != null) {
-      await _repo.insertMeasurement(
-        defId,
-        DateTime.now(),
-        input.initialValue!,
-        input.unit,
-        input.note,
+    try {
+      final defId = await _repo.insertMeasurementDefinition(
+        name: input.name,
+        type: MeasurementType.Custom,
       );
+      if (input.initialValue != null) {
+        await _repo.insertMeasurement(
+          defId,
+          DateTime.now(),
+          input.initialValue!,
+          input.unit,
+          input.note,
+          null,
+        );
+      }
+    } on MeasurementValidationException catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_measurementValidationMessage(_strings, error)),
+          ),
+        );
+      }
+      return;
     }
     if (mounted) {
       _reload();
@@ -402,6 +417,7 @@ class _MeasurementTrendDetailPageState
       input.value,
       input.unit,
       input.note,
+      input.context,
     );
     if (mounted) _reload();
   }
@@ -427,6 +443,7 @@ class _MeasurementTrendDetailPageState
       value: input.value,
       unit: input.unit,
       note: input.note,
+      context: input.context,
     );
     if (mounted) _reload();
   }
@@ -611,7 +628,7 @@ class _TrendTile extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: Container(
-          key: ValueKey('measurement-trend-${trend.definition.id}'),
+          key: AppTestKeys.measurementTrend(trend.definition.id),
           width: fillCell ? double.infinity : 154,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
@@ -637,6 +654,7 @@ class _TrendTile extends StatelessWidget {
                     ),
                   ),
                   InkResponse(
+                    key: AppTestKeys.measurementTrendAdd(trend.definition.id),
                     onTap: onAdd,
                     radius: 18,
                     child: Icon(
@@ -1165,6 +1183,12 @@ class _MeasurementEntryDialogState extends State<_MeasurementEntryDialog> {
     final entry = widget.entry;
     final unit = entry?.unit ?? widget.defaultUnit;
     final note = entry?.note ?? '';
+    final measurementContext =
+        entry?.context ??
+        MeasurementValidation.legacyContextFor(
+          type: widget.definition.type,
+          note: entry?.note,
+        );
     _timestamp = entry?.timestamp ?? DateTime.now();
     _heightUsesFeetAndInches = _isHeight && unit == 'in';
     if (_heightUsesFeetAndInches && entry != null) {
@@ -1182,9 +1206,15 @@ class _MeasurementEntryDialogState extends State<_MeasurementEntryDialog> {
       _heightInchesController = TextEditingController();
     }
     _unitController = TextEditingController(text: unit);
-    _bodyWeightVariation =
-        _isBodyWeight && _isKnownBodyWeightVariation(note) ? note : null;
-    _withPump = _isBodyPart && note == 'With pump';
+    _bodyWeightVariation = switch (measurementContext) {
+      MeasurementContext.wakeUp => 'WakeUp',
+      MeasurementContext.bedtime => 'BedTime',
+      MeasurementContext.overall => 'Overall',
+      _ => _isBodyWeight && _isKnownBodyWeightVariation(note) ? note : null,
+    };
+    _withPump =
+        measurementContext == MeasurementContext.withPump ||
+        (_isBodyPart && note == 'With pump');
     _noteController = TextEditingController(
       text: _usesPresetNote(note) ? '' : note,
     );
@@ -1239,12 +1269,30 @@ class _MeasurementEntryDialogState extends State<_MeasurementEntryDialog> {
       );
       return;
     }
+    try {
+      MeasurementValidation.validateEntry(
+        type: widget.definition.type,
+        value: value,
+        unit: unit,
+        context: _resolvedContext(),
+      );
+    } on MeasurementValidationException catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _measurementValidationMessage(AppLocalizations.of(context), error),
+          ),
+        ),
+      );
+      return;
+    }
     Navigator.of(context).pop(
       _MeasurementEntryInput(
         timestamp: _timestamp,
         value: value,
         unit: unit,
         note: _resolvedNote(),
+        context: _resolvedContext(),
       ),
     );
   }
@@ -1261,10 +1309,23 @@ class _MeasurementEntryDialogState extends State<_MeasurementEntryDialog> {
   String? _resolvedNote() {
     final typedNote = _noteController.text.trim();
     if (typedNote.isNotEmpty) return typedNote;
-    if (_isBodyWeight && _bodyWeightVariation != null) {
-      return _bodyWeightVariation;
+    return null;
+  }
+
+  MeasurementContext? _resolvedContext() {
+    if (_isBodyWeight) {
+      return switch (_bodyWeightVariation) {
+        'WakeUp' => MeasurementContext.wakeUp,
+        'BedTime' => MeasurementContext.bedtime,
+        'Overall' => MeasurementContext.overall,
+        _ => null,
+      };
     }
-    if (_isBodyPart) return _withPump ? 'With pump' : 'Without pump';
+    if (_isBodyPart) {
+      return _withPump
+          ? MeasurementContext.withPump
+          : MeasurementContext.withoutPump;
+    }
     return null;
   }
 
@@ -1357,6 +1418,7 @@ class _MeasurementEntryDialogState extends State<_MeasurementEntryDialog> {
               )
             else
               TextField(
+                key: AppTestKeys.measurementEntryValue,
                 controller: _valueController,
                 autofocus: true,
                 keyboardType: const TextInputType.numberWithOptions(
@@ -1369,6 +1431,7 @@ class _MeasurementEntryDialogState extends State<_MeasurementEntryDialog> {
             const SizedBox(height: 10),
             if (!_heightUsesFeetAndInches)
               TextField(
+                key: AppTestKeys.measurementEntryUnit,
                 controller: _unitController,
                 decoration: InputDecoration(labelText: strings.healthUnit),
               ),
@@ -1429,6 +1492,7 @@ class _MeasurementEntryDialogState extends State<_MeasurementEntryDialog> {
           child: Text(AppLocalizations.of(context).commonCancel),
         ),
         FilledButton(
+          key: AppTestKeys.measurementEntrySave,
           onPressed: _save,
           child: Text(AppLocalizations.of(context).commonSave),
         ),
@@ -1475,6 +1539,25 @@ class _MeasurementDefinitionDialogState
         SnackBar(
           content: Text(
             AppLocalizations.of(context).healthDefinitionFieldsRequired,
+          ),
+        ),
+      );
+      return;
+    }
+    try {
+      MeasurementValidation.validateDefinition(name: name, unit: unit);
+      if (initialValue != null) {
+        MeasurementValidation.validateEntry(
+          type: MeasurementType.Custom,
+          value: initialValue,
+          unit: unit,
+        );
+      }
+    } on MeasurementValidationException catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _measurementValidationMessage(AppLocalizations.of(context), error),
           ),
         ),
       );
@@ -1582,13 +1665,32 @@ class _MeasurementEntryInput {
   final double value;
   final String unit;
   final String? note;
+  final MeasurementContext? context;
 
   const _MeasurementEntryInput({
     required this.timestamp,
     required this.value,
     required this.unit,
     this.note,
+    this.context,
   });
+}
+
+String _measurementValidationMessage(
+  AppLocalizations strings,
+  MeasurementValidationException error,
+) {
+  return switch (error.error) {
+    MeasurementValidationError.missingName ||
+    MeasurementValidationError.invalidName ||
+    MeasurementValidationError.duplicateName ||
+    MeasurementValidationError.invalidUnit => strings.healthMetricInvalid,
+    MeasurementValidationError.unsupportedUnit ||
+    MeasurementValidationError.invalidValue ||
+    MeasurementValidationError.implausibleValue ||
+    MeasurementValidationError
+        .invalidContext => strings.healthMeasurementEntryInvalid,
+  };
 }
 
 class _MeasurementDefinitionInput {

@@ -15,7 +15,9 @@ screen name:
   metadata, corrupt and interrupted streams, orphan pruning, and LRU limits.
 - `test/db` runs selected DAO contracts against in-memory SQLite.
 - `test/widgets` smoke-tests reusable user-interface components and their
-  accessibility actions.
+  accessibility actions. `visual_layout_contract_test.dart` exercises the
+  release layout matrix across representative phone/tablet, locale, and
+  enlarged-text configurations.
 - `test/localization/hardcoded_ui_copy_contract_test.dart` rejects direct
   user-facing English literals in active screens and widgets. Deliberately
   deferred nutrition, cardio/stretch, and placeholder surfaces are narrowly
@@ -37,6 +39,14 @@ Run a focused test file while developing a feature:
 ```powershell
 flutter test test\services\flow_executor_test.dart
 ```
+
+## Device, visual, and accessibility QA
+
+Use [device-visual-accessibility-qa.md](device-visual-accessibility-qa.md) for
+the automated layout matrix, TalkBack/device release checklist, and the
+reviewed process for introducing stable pixel baselines. The first layer uses
+layout and semantic contracts rather than screenshot comparisons so ordinary
+design work does not cause device-specific golden churn.
 
 ## Locale visual QA
 

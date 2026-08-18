@@ -6244,4 +6244,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get healthTapToLog => '点击 + 以记录';
+
+  @override
+  String get healthMetricInvalid => '请使用唯一的指标名称和不含空格的简短单位。';
+
+  @override
+  String get healthMeasurementEntryInvalid => '请使用受支持的单位输入合理的正数值。';
 }

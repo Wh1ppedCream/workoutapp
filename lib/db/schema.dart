@@ -96,6 +96,7 @@ class Schema {
           value     REAL    NOT NULL,
           unit      TEXT    NOT NULL,
           note      TEXT,
+          context   TEXT,
           FOREIGN KEY(def_id) REFERENCES measurement_definitions(id) ON DELETE CASCADE
         );
       ''');
@@ -162,6 +163,7 @@ class Schema {
     await migrateV56(db);
     await migrateV57(db);
     await migrateV58(db);
+    await migrateV59(db);
   }
 
   /// Handler for onUpgrade callback.
@@ -227,6 +229,7 @@ class Schema {
     if (oldVersion < 56) await migrateV56(db);
     if (oldVersion < 57) await migrateV57(db);
     if (oldVersion < 58) await migrateV58(db);
+    if (oldVersion < 59) await migrateV59(db);
   }
 
   /// Migration to version 3: adds rating, equipment/muscle tables.
@@ -3297,6 +3300,34 @@ WHERE source_id IS NULL
     await db.execute('''
       CREATE INDEX IF NOT EXISTS idx_pending_progression_created
       ON pending_workout_progression(created_at, session_id)
+    ''');
+  }
+
+  /// Migration to version 59: stores measurement context as structured data.
+  static Future<void> migrateV59(Database db) async {
+    final columns = await db.rawQuery("PRAGMA table_info('measurements')");
+    if (!columns.any((column) => column['name'] == 'context')) {
+      await db.execute('ALTER TABLE measurements ADD COLUMN context TEXT;');
+    }
+
+    await db.execute('''
+      UPDATE measurements
+         SET context = CASE
+           WHEN note = 'WakeUp' AND def_id IN (SELECT id FROM measurement_definitions WHERE type = 'BodyWeight') THEN 'wakeUp'
+           WHEN note = 'BedTime' AND def_id IN (SELECT id FROM measurement_definitions WHERE type = 'BodyWeight') THEN 'bedtime'
+           WHEN note = 'Overall' AND def_id IN (SELECT id FROM measurement_definitions WHERE type = 'BodyWeight') THEN 'overall'
+           WHEN note = 'With pump' AND def_id IN (SELECT id FROM measurement_definitions WHERE type NOT IN ('BodyWeight', 'Height', 'Custom')) THEN 'withPump'
+           WHEN note = 'Without pump' AND def_id IN (SELECT id FROM measurement_definitions WHERE type NOT IN ('BodyWeight', 'Height', 'Custom')) THEN 'withoutPump'
+         END,
+             note = CASE
+           WHEN note IN ('WakeUp', 'BedTime', 'Overall')
+             AND def_id IN (SELECT id FROM measurement_definitions WHERE type = 'BodyWeight') THEN NULL
+           WHEN note IN ('With pump', 'Without pump')
+             AND def_id IN (SELECT id FROM measurement_definitions WHERE type NOT IN ('BodyWeight', 'Height', 'Custom')) THEN NULL
+           ELSE note
+         END
+       WHERE context IS NULL
+         AND note IN ('WakeUp', 'BedTime', 'Overall', 'With pump', 'Without pump');
     ''');
   }
 

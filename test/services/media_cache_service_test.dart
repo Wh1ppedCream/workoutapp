@@ -33,6 +33,9 @@ void main() {
     await keep.writeAsBytes([1, 2, 3]);
     await orphan.writeAsBytes([4, 5, 6]);
     await interrupted.writeAsBytes([7]);
+    await interrupted.setLastModified(
+      DateTime.now().toUtc().subtract(const Duration(hours: 2)),
+    );
 
     final service = MediaCacheService(
       cacheDirectoryProvider: () async => cacheDirectory,
@@ -43,6 +46,25 @@ void main() {
     expect(await orphan.exists(), isFalse);
     expect(await interrupted.exists(), isFalse);
   });
+
+  test(
+    'does not delete an active temporary download during cache cleanup',
+    () async {
+      final activeDownload = File(
+        '${cacheDirectory.path}${Platform.pathSeparator}active.download',
+      );
+      await activeDownload.writeAsBytes([1, 2, 3]);
+
+      final service = MediaCacheService(
+        cacheDirectoryProvider: () async => cacheDirectory,
+        maxCacheBytes: 1,
+        maxCacheFiles: 1,
+      );
+      await service.enforceCacheBounds();
+
+      expect(await activeDownload.exists(), isTrue);
+    },
+  );
 
   test('bounded cache evicts the least recently used verified file', () async {
     final older = File('${cacheDirectory.path}${Platform.pathSeparator}older');
@@ -89,6 +111,34 @@ void main() {
     expect(await service.cachedFileFor(item, thumbnail: false), isNull);
     expect(await file.exists(), isFalse);
   });
+
+  test(
+    'treats a cache file removed during validation as a cache miss',
+    () async {
+      final bytes = [1, 2, 3];
+      final digest = sha256.convert(bytes).toString();
+      final file = File(
+        '${cacheDirectory.path}${Platform.pathSeparator}'
+        'asset.media.${digest.substring(0, 16)}.webp',
+      );
+      await file.writeAsBytes(bytes);
+      final item = ExerciseMediaItem(
+        exerciseDefId: 1,
+        mediaType: 'image',
+        remoteUrl: 'https://content.example/asset.webp',
+        localCachePath: file.path,
+        bytes: bytes.length,
+        sha256: digest,
+      );
+      final service = MediaCacheService(
+        cacheDirectoryProvider: () async => cacheDirectory,
+      );
+
+      await file.delete();
+
+      expect(await service.cachedFileFor(item, thumbnail: false), isNull);
+    },
+  );
 
   test('rejects a cached path outside the managed cache root', () async {
     final bytes = [1, 2, 3];

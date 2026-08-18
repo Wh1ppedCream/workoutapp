@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../utils/app_test_keys.dart';
 import '../../../widgets/settings_tiles.dart';
 import '../../nutrition/measured_items_page.dart';
 
@@ -23,17 +24,20 @@ class MeasurementsTrendsSettingsPage extends StatelessWidget {
           subtitle: strings.progressMeasurementsSubtitle,
           accentColor: SettingsAccent.progress,
           children: [
-            SettingsActionTile(
-              icon: Icons.straighten,
-              iconColor: SettingsAccent.progress,
-              title: strings.progressMeasurementLibrary,
-              subtitle: strings.progressMeasurementLibrarySubtitle,
-              onTap:
-                  () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const MeasuredItemsPage(),
+            KeyedSubtree(
+              key: AppTestKeys.progressMeasurementLibrary,
+              child: SettingsActionTile(
+                icon: Icons.straighten,
+                iconColor: SettingsAccent.progress,
+                title: strings.progressMeasurementLibrary,
+                subtitle: strings.progressMeasurementLibrarySubtitle,
+                onTap:
+                    () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const MeasuredItemsPage(),
+                      ),
                     ),
-                  ),
+              ),
             ),
           ],
         ),

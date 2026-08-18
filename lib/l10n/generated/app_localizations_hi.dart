@@ -6244,4 +6244,10 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get healthTapToLog => '+ टैप करके लॉग करें';
+
+  @override
+  String get healthMetricInvalid => 'एक अद्वितीय माप नाम और बिना रिक्त स्थान वाली छोटी इकाई का उपयोग करें।';
+
+  @override
+  String get healthMeasurementEntryInvalid => 'समर्थित इकाई के साथ एक उचित धनात्मक मान दर्ज करें।';
 }

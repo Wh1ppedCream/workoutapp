@@ -1,11 +1,14 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/generated/app_localizations.dart';
 import '../models/models.dart';
 import '../repositories/app_repository.dart';
+import '../repositories/content_repository.dart';
 import '../services/media_download_preferences.dart';
 import '../theme/theme_extensions.dart';
 import 'body_heatmap.dart';
@@ -37,17 +40,36 @@ class ExerciseMediaThumbnail extends StatefulWidget {
 class _ExerciseMediaThumbnailState extends State<ExerciseMediaThumbnail> {
   AppRepository get _repo => context.read<AppRepository>();
   late Future<_ThumbnailData?> _thumbnailFuture;
+  late final StreamSubscription<ContentMediaCacheChange> _cacheChanges;
+  bool _hasRetriedMissingFile = false;
 
   @override
   void initState() {
     super.initState();
     _thumbnailFuture = _loadThumbnail();
+    _cacheChanges = _repo.mediaCacheChanges.listen((change) {
+      if (!change.matchesExercise(widget.definition.id, thumbnail: true) ||
+          !mounted) {
+        return;
+      }
+      setState(() {
+        _hasRetriedMissingFile = false;
+        _thumbnailFuture = _loadThumbnail();
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _cacheChanges.cancel();
+    super.dispose();
   }
 
   @override
   void didUpdateWidget(covariant ExerciseMediaThumbnail oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.definition.id != widget.definition.id) {
+      _hasRetriedMissingFile = false;
       _thumbnailFuture = _loadThumbnail();
     }
   }
@@ -77,9 +99,29 @@ class _ExerciseMediaThumbnailState extends State<ExerciseMediaThumbnail> {
       return _ThumbnailData(item: item, file: downloaded);
     } on MediaDownloadBlockedException {
       return _ThumbnailData(item: item, wifiOnlyBlocked: true);
-    } catch (_) {
+    } catch (error) {
+      _debugReportDownloadFailure(error);
       return _ThumbnailData(item: item, failed: true);
     }
+  }
+
+  void _debugReportDownloadFailure(Object error) {
+    if (!kDebugMode) return;
+    debugPrint(
+      '[media] exercise-thumbnail-download-failed '
+      'id=${widget.definition.id} failure=${_failureKind(error)}',
+    );
+  }
+
+  String _failureKind(Object error) {
+    return switch (error) {
+      HttpException() => 'http:${error.message}',
+      FormatException() => 'format:${error.message}',
+      SocketException() => 'socket',
+      TimeoutException() => 'timeout',
+      FileSystemException() => 'filesystem',
+      _ => error.runtimeType.toString(),
+    };
   }
 
   Future<void> _recordMediaAccess(ExerciseMediaItem item) async {
@@ -92,7 +134,17 @@ class _ExerciseMediaThumbnailState extends State<ExerciseMediaThumbnail> {
 
   void _retryThumbnail() {
     setState(() {
+      _hasRetriedMissingFile = false;
       _thumbnailFuture = _loadThumbnail();
+    });
+  }
+
+  void _recoverFromMissingFile() {
+    if (_hasRetriedMissingFile) return;
+    _hasRetriedMissingFile = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      setState(() => _thumbnailFuture = _loadThumbnail());
     });
   }
 
@@ -127,7 +179,14 @@ class _ExerciseMediaThumbnailState extends State<ExerciseMediaThumbnail> {
           if (data?.file != null) {
             return ClipRRect(
               borderRadius: widget.borderRadius,
-              child: Image.file(data!.file!, fit: BoxFit.cover),
+              child: Image.file(
+                data!.file!,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) {
+                  _recoverFromMissingFile();
+                  return _buildHeatmapFallback(context);
+                },
+              ),
             );
           }
 
@@ -196,21 +255,25 @@ class _ExerciseMediaThumbnailState extends State<ExerciseMediaThumbnail> {
     final theme = Theme.of(context);
     return Align(
       alignment: Alignment.bottomRight,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: _retryThumbnail,
-        child: Container(
-          width: widget.size * 0.32,
-          height: widget.size * 0.32,
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surface.withValues(alpha: 0.86),
-            shape: BoxShape.circle,
-            border: Border.all(color: theme.colorScheme.outlineVariant),
-          ),
-          child: Icon(
-            Icons.refresh,
-            size: widget.size * 0.2,
-            color: theme.colorScheme.primary,
+      child: Semantics(
+        button: true,
+        label: AppLocalizations.of(context).commonRetry,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: _retryThumbnail,
+          child: Container(
+            width: widget.size * 0.32,
+            height: widget.size * 0.32,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surface.withValues(alpha: 0.86),
+              shape: BoxShape.circle,
+              border: Border.all(color: theme.colorScheme.outlineVariant),
+            ),
+            child: Icon(
+              Icons.refresh,
+              size: widget.size * 0.2,
+              color: theme.colorScheme.primary,
+            ),
           ),
         ),
       ),

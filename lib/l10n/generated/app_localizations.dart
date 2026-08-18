@@ -11533,6 +11533,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tap + to log'**
   String get healthTapToLog;
+
+  /// No description provided for @healthMetricInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a unique metric name and a short unit without spaces.'**
+  String get healthMetricInvalid;
+
+  /// No description provided for @healthMeasurementEntryInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a plausible positive value using a supported unit.'**
+  String get healthMeasurementEntryInvalid;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

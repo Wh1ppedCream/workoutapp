@@ -1796,5 +1796,7 @@
   "databaseImportFailedSafe": "La importación no terminó. Tus datos actuales se mantuvieron seguros.",
   "speedDialLogFood": "Registrar alimento",
   "speedDialLogMeasurement": "Registrar medición",
-  "healthTapToLog": "Toca + para registrar"
+  "healthTapToLog": "Toca + para registrar",
+  "healthMetricInvalid": "Usa un nombre de métrica único y una unidad corta sin espacios.",
+  "healthMeasurementEntryInvalid": "Introduce un valor positivo razonable con una unidad compatible."
 }

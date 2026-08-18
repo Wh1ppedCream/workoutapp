@@ -1796,5 +1796,7 @@
   "databaseImportFailedSafe": "डेटाबेस आयात पूरा नहीं हुआ। आपका वर्तमान ऐप डेटा सुरक्षित रखा गया।",
   "speedDialLogFood": "भोजन लॉग करें",
   "speedDialLogMeasurement": "माप दर्ज करें",
-  "healthTapToLog": "+ टैप करके लॉग करें"
+  "healthTapToLog": "+ टैप करके लॉग करें",
+  "healthMetricInvalid": "एक अद्वितीय माप नाम और बिना रिक्त स्थान वाली छोटी इकाई का उपयोग करें।",
+  "healthMeasurementEntryInvalid": "समर्थित इकाई के साथ एक उचित धनात्मक मान दर्ज करें।"
 }

@@ -2517,5 +2517,7 @@
   "databaseImportFailedSafe": "The database import did not finish. Your current app data was kept safe.",
   "speedDialLogFood": "Log food",
   "speedDialLogMeasurement": "Log measurement",
-  "healthTapToLog": "Tap + to log"
+  "healthTapToLog": "Tap + to log",
+  "healthMetricInvalid": "Use a unique metric name and a short unit without spaces.",
+  "healthMeasurementEntryInvalid": "Enter a plausible positive value using a supported unit."
 }

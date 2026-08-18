@@ -1904,5 +1904,7 @@
   "databaseImportFailedSafe": "L'importation n'a pas abouti. Vos données actuelles ont été conservées en sécurité.",
   "speedDialLogFood": "Enregistrer un aliment",
   "speedDialLogMeasurement": "Enregistrer une mesure",
-  "healthTapToLog": "Touchez + pour enregistrer"
+  "healthTapToLog": "Touchez + pour enregistrer",
+  "healthMetricInvalid": "Utilisez un nom de mesure unique et une unité courte sans espaces.",
+  "healthMeasurementEntryInvalid": "Saisissez une valeur positive plausible avec une unité prise en charge."
 }

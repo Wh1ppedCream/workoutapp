@@ -61,11 +61,13 @@ class _ExerciseMediaPreviewCard extends StatelessWidget {
   final File previewFile;
   final Widget? heatmapOverlay;
   final VoidCallback onImageTap;
+  final VoidCallback onImageLoadFailed;
 
   const _ExerciseMediaPreviewCard({
     required this.previewFile,
     required this.heatmapOverlay,
     required this.onImageTap,
+    required this.onImageLoadFailed,
   });
 
   @override
@@ -93,7 +95,14 @@ class _ExerciseMediaPreviewCard extends StatelessWidget {
                 onTap: onImageTap,
                 child: ColoredBox(
                   color: theme.colorScheme.surface,
-                  child: Image.file(previewFile, fit: BoxFit.cover),
+                  child: Image.file(
+                    previewFile,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, _, _) {
+                      onImageLoadFailed();
+                      return heatmapOverlay ?? const SizedBox.shrink();
+                    },
+                  ),
                 ),
               ),
             ),
@@ -154,6 +163,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
   final Map<String, Future<List<RepMaxRow>>> _repMaxFutures = {};
   final Map<String, Future<double?>> _volumeMaxFutures = {};
   final Map<String, Future<File?>> _mediaPreviewFutures = {};
+  bool _hasRetriedMissingPreview = false;
   final List<HistoryRecord> _olderHistory = [];
   final _headerTutorialKey = GlobalKey(debugLabel: 'exercise_detail_header');
   final _tabsTutorialKey = GlobalKey(debugLabel: 'exercise_detail_tabs');
@@ -198,6 +208,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
       _repMaxFutures.clear();
       _volumeMaxFutures.clear();
       _mediaPreviewFutures.clear();
+      _hasRetriedMissingPreview = false;
       _historyRequestGeneration++;
       _olderHistory.clear();
       _isLoadingMoreHistory = false;
@@ -459,6 +470,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                       loadedMedia.previewFile,
                       definition: def,
                     ),
+                onImageLoadFailed: _recoverFromMissingPreview,
               );
             },
           ),
@@ -471,6 +483,18 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
         ],
       ),
     );
+  }
+
+  void _recoverFromMissingPreview() {
+    if (_hasRetriedMissingPreview) return;
+    _hasRetriedMissingPreview = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      setState(() {
+        _mediaPreviewFutures.clear();
+        _primaryMediaFuture = _loadPrimaryMedia();
+      });
+    });
   }
 
   Widget _buildEquipmentCard(ExerciseDefinition definition) {

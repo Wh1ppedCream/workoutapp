@@ -50,7 +50,7 @@ import 'package:flutter/foundation.dart' show debugPrint;
 
 /// Singleton helper for managing the SQLite database.
 class DatabaseHelper {
-  static const int _kDbVersion = 58;
+  static const int _kDbVersion = 59;
   static const bool _kIntegrationTestMode = bool.fromEnvironment(
     'TONOS_INTEGRATION_TEST',
   );
@@ -2760,9 +2760,18 @@ class DatabaseHelper {
     double value,
     String unit,
     String? note,
+    MeasurementContext? context,
   ) async {
     final db = await database;
-    return LookupDao.insertMeasurement(db, defId, timestamp, value, unit, note);
+    return LookupDao.insertMeasurement(
+      db,
+      defId,
+      timestamp,
+      value,
+      unit,
+      note,
+      context,
+    );
   }
 
   /// Fetch all measurements for a definition.
@@ -2784,6 +2793,7 @@ class DatabaseHelper {
             value: (r['value'] as num).toDouble(),
             unit: r['unit'] as String,
             note: r['note'] as String?,
+            context: _measurementContextFromValue(r['context'] as String?),
           ),
         )
         .toList();
@@ -2863,6 +2873,7 @@ class DatabaseHelper {
     required double value,
     required String unit,
     String? note,
+    MeasurementContext? context,
   }) async {
     final db = await database;
     await LookupDao.updateMeasurement(
@@ -2872,7 +2883,15 @@ class DatabaseHelper {
       value: value,
       unit: unit,
       note: note,
+      context: context,
     );
+  }
+
+  MeasurementContext? _measurementContextFromValue(String? value) {
+    for (final context in MeasurementContext.values) {
+      if (context.name == value) return context;
+    }
+    return null;
   }
 
   Future<void> deleteMeasurement(int measurementId) async {

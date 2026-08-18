@@ -1,5 +1,6 @@
 // File: lib/repositories/app_repository.dart
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -501,8 +502,13 @@ class AppRepository {
     required bool thumbnail,
   }) => content.cacheMedia(item, thumbnail: thumbnail);
 
+  Stream<ContentMediaCacheChange> get mediaCacheChanges =>
+      content.mediaCacheChanges;
+
   Future<void> markExerciseMediaAccessed(ExerciseMediaItem item) =>
       content.markMediaAccessed(item);
+
+  Future<void> reconcileMediaCache() => content.reconcileMediaCache();
 
   Future<SharedMediaItem?> fetchPrimarySharedMedia(
     SharedMediaEntityType entityType,
@@ -572,7 +578,9 @@ class AppRepository {
     double value,
     String unit,
     String? note,
-  ) => _dbHelper.insertMeasurement(defId, timestamp, value, unit, note);
+    MeasurementContext? context,
+  ) =>
+      _dbHelper.insertMeasurement(defId, timestamp, value, unit, note, context);
 
   Future<List<Map<String, dynamic>>> fetchMeasurementsForDefinition(
     int defId,
@@ -599,12 +607,14 @@ class AppRepository {
     required double value,
     required String unit,
     String? note,
+    MeasurementContext? context,
   }) => _dbHelper.updateMeasurement(
     measurementId: measurementId,
     timestamp: timestamp,
     value: value,
     unit: unit,
     note: note,
+    context: context,
   );
 
   Future<void> deleteMeasurement(int measurementId) =>
@@ -1918,6 +1928,7 @@ class AppRepository {
       ensureExerciseMediaManifestReady(),
       ensureSharedMediaManifestReady(),
     ]);
+    await reconcileMediaCache();
     if (!verify) return true;
     try {
       await db.rawQuery('PRAGMA quick_check');

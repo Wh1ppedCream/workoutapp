@@ -6269,4 +6269,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get healthTapToLog => 'Tap + to log';
+
+  @override
+  String get healthMetricInvalid => 'Use a unique metric name and a short unit without spaces.';
+
+  @override
+  String get healthMeasurementEntryInvalid => 'Enter a plausible positive value using a supported unit.';
 }

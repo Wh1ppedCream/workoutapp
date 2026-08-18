@@ -11,9 +11,12 @@ typedef MediaCacheDirectoryProvider = Future<Directory> Function();
 typedef MediaHttpClientFactory = HttpClient Function();
 
 class MediaCacheService {
+  // TODO(media-library): Replace this temporary-cache implementation with the
+  // durable, coordinated media library in docs/media-library-architecture-plan.md.
   static const String _cacheFolder = 'tonos_content_cache';
   static const Duration _connectionTimeout = Duration(seconds: 15);
   static const Duration _downloadTimeout = Duration(seconds: 45);
+  static const Duration _staleDownloadAge = Duration(hours: 1);
 
   MediaCacheService({
     this.cacheDirectoryProvider,
@@ -102,7 +105,13 @@ class MediaCacheService {
       _verifiedFiles.remove(normalizedPath);
       return null;
     }
-    final stat = await file.stat();
+    FileStat stat;
+    try {
+      stat = await file.stat();
+    } on FileSystemException {
+      _verifiedFiles.remove(normalizedPath);
+      return null;
+    }
     if (stat.size != byteCount) {
       await _deleteCachedFile(file);
       return null;
@@ -113,7 +122,13 @@ class MediaCacheService {
         verified.bytes != stat.size ||
         verified.modified != stat.modified ||
         verified.sha256 != digest) {
-      final actualDigest = await sha256.bind(file.openRead()).first;
+      Digest actualDigest;
+      try {
+        actualDigest = await sha256.bind(file.openRead()).first;
+      } on FileSystemException {
+        _verifiedFiles.remove(normalizedPath);
+        return null;
+      }
       if (actualDigest.toString() != digest) {
         await _deleteCachedFile(file);
         return null;
@@ -201,11 +216,22 @@ class MediaCacheService {
     String expectedSha256,
   ) async {
     if (!await file.exists()) return null;
-    if (await file.length() != expectedBytes) {
+    int actualBytes;
+    try {
+      actualBytes = await file.length();
+    } on FileSystemException {
+      return null;
+    }
+    if (actualBytes != expectedBytes) {
       await _deleteCachedFile(file);
       return null;
     }
-    final digest = await sha256.bind(file.openRead()).first;
+    Digest digest;
+    try {
+      digest = await sha256.bind(file.openRead()).first;
+    } on FileSystemException {
+      return null;
+    }
     if (digest.toString() != expectedSha256) {
       await _deleteCachedFile(file);
       return null;
@@ -288,12 +314,26 @@ class MediaCacheService {
     await for (final entity in dir.list(recursive: true, followLinks: false)) {
       if (entity is! File) continue;
       if (entity.path.endsWith('.download')) {
-        if (cleanTemporaryFiles) await _deleteCachedFile(entity);
+        if (cleanTemporaryFiles && await _isStaleTemporaryFile(entity)) {
+          await _deleteCachedFile(entity);
+        }
         continue;
       }
       files.add(entity);
     }
     return files;
+  }
+
+  Future<bool> _isStaleTemporaryFile(File file) async {
+    try {
+      final modified = (await file.stat()).modified.toUtc();
+      final cutoff = DateTime.now().toUtc().subtract(_staleDownloadAge);
+      return modified.isBefore(cutoff);
+    } on FileSystemException {
+      // A writer may have already finished or removed this file. Treat that as
+      // a non-cache entry rather than interrupting a separate transfer.
+      return false;
+    }
   }
 
   Future<void> _deleteEmptyDirectories() async {

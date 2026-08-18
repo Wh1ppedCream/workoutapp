@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:sqflite/sqflite.dart';
@@ -9,6 +10,7 @@ import '../services/content_environment_preferences.dart';
 import '../services/diagnostics_service.dart';
 import '../services/content_manifest_service.dart';
 import '../services/media_cache_service.dart';
+import '../services/media_download_coordinator.dart';
 import '../services/media_download_preferences.dart';
 
 /// Repository boundary for public cloud-hosted Tonos content.
@@ -37,11 +39,20 @@ class ContentRepository {
   final MediaDownloadPolicy _downloadPolicy;
   final ContentEnvironmentPreferences _environmentPreferences;
   final DiagnosticsService _diagnostics;
+  final StreamController<ContentMediaCacheChange> _mediaCacheChanges =
+      StreamController<ContentMediaCacheChange>.broadcast();
+
+  /// Emits after a verified asset has been written and its database path is
+  /// durable, allowing already-visible fallbacks to refresh themselves.
+  Stream<ContentMediaCacheChange> get mediaCacheChanges =>
+      _mediaCacheChanges.stream;
   static Future<ContentManifest>? _bundledExerciseManifestSync;
   static Future<SharedMediaManifest>? _bundledSharedMediaManifestSync;
   static Future<ContentEnvironmentConfig>? _bundledContentEnvironments;
   static Future<void>? _exerciseMediaBootstrapSync;
   static Future<void>? _sharedMediaBootstrapSync;
+  static final MediaDownloadCoordinator _mediaDownloads =
+      MediaDownloadCoordinator();
 
   Future<ContentEnvironmentConfig> loadContentEnvironments() {
     return _bundledContentEnvironments ??=
@@ -318,7 +329,10 @@ class ContentRepository {
       throw const MediaDownloadBlockedException();
     }
 
-    final file = await _cacheService.downloadMedia(item, thumbnail: thumbnail);
+    final file = await _mediaDownloads.schedule(
+      _exerciseDownloadKey(item, thumbnail: thumbnail),
+      () => _cacheService.downloadMedia(item, thumbnail: thumbnail),
+    );
     final db = await _db.database;
     await ContentDao.updateCachedMediaPath(
       db,
@@ -326,7 +340,12 @@ class ContentRepository {
       thumbnail: thumbnail,
       localPath: file.path,
     );
-    await _pruneCacheAgainstDatabase(db);
+    _mediaCacheChanges.add(
+      ContentMediaCacheChange.exercise(
+        exerciseDefId: item.exerciseDefId,
+        thumbnail: thumbnail,
+      ),
+    );
     return file;
   }
 
@@ -345,9 +364,9 @@ class ContentRepository {
       throw const MediaDownloadBlockedException();
     }
 
-    final file = await _cacheService.downloadSharedMedia(
-      item,
-      thumbnail: thumbnail,
+    final file = await _mediaDownloads.schedule(
+      _sharedDownloadKey(item, thumbnail: thumbnail),
+      () => _cacheService.downloadSharedMedia(item, thumbnail: thumbnail),
     );
     final db = await _db.database;
     await ContentDao.updateCachedSharedMediaPath(
@@ -356,7 +375,13 @@ class ContentRepository {
       thumbnail: thumbnail,
       localPath: file.path,
     );
-    await _pruneCacheAgainstDatabase(db);
+    _mediaCacheChanges.add(
+      ContentMediaCacheChange.shared(
+        entityType: item.entityType,
+        entityId: item.entityId,
+        thumbnail: thumbnail,
+      ),
+    );
     return file;
   }
 
@@ -379,9 +404,30 @@ class ContentRepository {
 
   Future<void> clearCache() => _cacheService.clearCache();
 
+  /// Reconciles stale files after startup or a manifest refresh, before media
+  /// widgets begin their independent visible-row downloads.
+  Future<void> reconcileMediaCache() async {
+    final db = await _db.database;
+    await _pruneCacheAgainstDatabase(db);
+    await _cacheService.enforceCacheBounds();
+  }
+
   Future<void> _pruneCacheAgainstDatabase(Database db) async {
     final referencedPaths = await ContentDao.getReferencedCachePaths(db);
     await _cacheService.pruneUnreferencedFiles(referencedPaths);
+  }
+
+  String _exerciseDownloadKey(
+    ExerciseMediaItem item, {
+    required bool thumbnail,
+  }) {
+    return 'exercise:${item.exerciseDefId}:${item.assetId ?? item.remoteUrl}:'
+        '${thumbnail ? 'thumbnail' : 'full'}';
+  }
+
+  String _sharedDownloadKey(SharedMediaItem item, {required bool thumbnail}) {
+    return 'shared:${item.entityType.name}:${item.entityId}:'
+        '${item.assetId ?? item.remoteUrl}:${thumbnail ? 'thumbnail' : 'full'}';
   }
 
   Future<bool> isWifiOnlyMediaDownloadEnabled() {
@@ -410,5 +456,39 @@ class ContentRepository {
         url.endsWith('.jpg') ||
         url.endsWith('.jpeg') ||
         url.endsWith('.webp');
+  }
+}
+
+/// Identifies the cached asset that became available to visible media widgets.
+class ContentMediaCacheChange {
+  const ContentMediaCacheChange.exercise({
+    required int this.exerciseDefId,
+    required this.thumbnail,
+  }) : entityType = null,
+       entityId = null;
+
+  const ContentMediaCacheChange.shared({
+    required this.entityType,
+    required int this.entityId,
+    required this.thumbnail,
+  }) : exerciseDefId = null;
+
+  final int? exerciseDefId;
+  final SharedMediaEntityType? entityType;
+  final int? entityId;
+  final bool thumbnail;
+
+  bool matchesExercise(int definitionId, {required bool thumbnail}) {
+    return exerciseDefId == definitionId && this.thumbnail == thumbnail;
+  }
+
+  bool matchesShared(
+    SharedMediaEntityType expectedEntityType,
+    int expectedEntityId, {
+    required bool thumbnail,
+  }) {
+    return entityType == expectedEntityType &&
+        entityId == expectedEntityId &&
+        this.thumbnail == thumbnail;
   }
 }

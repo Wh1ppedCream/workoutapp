@@ -3288,7 +3288,7 @@
     "tipsNotes": "Avoid kicking or craning your neck; use assistance or reduce reps if you cannot control the descent."
   },
   {
-    "name": "Pull Up â€“ Close Grip",
+    "name": "Pull Up - Close Grip",
     "rating": 23,
     "equipment": ["Bodyweight"],
     "bodyparts": ["Upper Back"],
@@ -3306,7 +3306,7 @@
     "tipsNotes": "Avoid kicking or craning your neck; use assistance or reduce reps if you cannot control the descent."
   },
   {
-    "name": "Pull Up â€“ Wide Grip",
+    "name": "Pull Up - Wide Grip",
     "rating": 23,
     "equipment": ["Bodyweight"],
     "bodyparts": ["Upper Back", "Shoulders"],
@@ -3324,7 +3324,7 @@
     "tipsNotes": "Avoid kicking or craning your neck; use assistance or reduce reps if you cannot control the descent."
   },
   {
-    "name": "Pull Up â€“ Reverse Grip",
+    "name": "Pull Up - Reverse Grip",
     "rating": 23,
     "equipment": ["Bodyweight"],
     "bodyparts": ["Upper Back"],

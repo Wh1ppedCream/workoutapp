@@ -6269,6 +6269,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get healthTapToLog => 'Touchez + pour consigner';
+
+  @override
+  String get healthMetricInvalid => 'Utilisez un nom de mesure unique et une unité courte sans espaces.';
+
+  @override
+  String get healthMeasurementEntryInvalid => 'Saisissez une valeur positive plausible avec une unité prise en charge.';
 }
 
 /// The translations for French, as used in Canada (`fr_CA`).
@@ -12530,4 +12536,10 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
 
   @override
   String get healthTapToLog => 'Touchez + pour enregistrer';
+
+  @override
+  String get healthMetricInvalid => 'Utilisez un nom de mesure unique et une unité courte sans espaces.';
+
+  @override
+  String get healthMeasurementEntryInvalid => 'Saisissez une valeur positive plausible avec une unité prise en charge.';
 }

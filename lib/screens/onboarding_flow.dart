@@ -465,20 +465,23 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       (_nutritionOnboardingEnabled && _useNutritionData) || _useExerciseData;
 
   Future<bool> _confirmSkipOnboarding() async {
+    // The confirmation route can outlive this page during an app teardown.
+    // Capture localized copy now instead of reading from a disposed context.
+    final strings = _strings;
     final result = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: Text(_strings.onboardingSkipSetupTitle),
-          content: Text(_strings.onboardingSkipSetupBody),
+          title: Text(strings.onboardingSkipSetupTitle),
+          content: Text(strings.onboardingSkipSetupBody),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: Text(_strings.onboardingCancel),
+              child: Text(strings.onboardingCancel),
             ),
             FilledButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: Text(_strings.onboardingConfirm),
+              child: Text(strings.onboardingConfirm),
             ),
           ],
         );

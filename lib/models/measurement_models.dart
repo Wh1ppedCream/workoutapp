@@ -22,6 +22,9 @@ enum MeasurementType {
   Custom,
 }
 
+/// Context selected alongside a measurement without storing display copy.
+enum MeasurementContext { wakeUp, bedtime, overall, withPump, withoutPump }
+
 /// Definition of a measurement kind, linking to [MeasurementType].
 class MeasurementDefinition {
   final int id;
@@ -44,6 +47,7 @@ class Measurement {
   final double value;
   final String unit;
   final String? note;
+  final MeasurementContext? context;
 
   /// Creates a [Measurement] record.
   Measurement({
@@ -53,5 +57,6 @@ class Measurement {
     required this.value,
     required this.unit,
     this.note,
+    this.context,
   });
 }

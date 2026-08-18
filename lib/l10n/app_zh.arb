@@ -1737,5 +1737,7 @@
   "databaseImportFailedSafe": "数据库导入未完成。你当前的应用数据已安全保留。",
   "speedDialLogFood": "记录食物",
   "speedDialLogMeasurement": "记录测量",
-  "healthTapToLog": "点击 + 以记录"
+  "healthTapToLog": "点击 + 以记录",
+  "healthMetricInvalid": "请使用唯一的指标名称和不含空格的简短单位。",
+  "healthMeasurementEntryInvalid": "请使用受支持的单位输入合理的正数值。"
 }

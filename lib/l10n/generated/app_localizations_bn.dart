@@ -6250,4 +6250,10 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get healthTapToLog => '+ ট্যাপ করে লগ করুন';
+
+  @override
+  String get healthMetricInvalid => 'একটি অনন্য মেট্রিক নাম এবং ফাঁকা জায়গাবিহীন ছোট একক ব্যবহার করুন।';
+
+  @override
+  String get healthMeasurementEntryInvalid => 'সমর্থিত একক ব্যবহার করে একটি যুক্তিসঙ্গত ধনাত্মক মান লিখুন।';
 }

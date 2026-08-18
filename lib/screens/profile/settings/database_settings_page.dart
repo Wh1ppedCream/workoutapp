@@ -319,6 +319,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
                 child: Text(_strings.commonCancel),
               ),
               ElevatedButton(
+                key: AppTestKeys.databaseConfirmExport,
                 onPressed: () => Navigator.of(ctx).pop(true),
                 child: Text(_strings.databaseContinueExport),
               ),

@@ -2444,5 +2444,7 @@
   "databaseImportFailedSafe": "L'importation n'a pas abouti. Vos données actuelles ont été conservées en sécurité.",
   "speedDialLogFood": "Consigner un aliment",
   "speedDialLogMeasurement": "Consigner une mesure",
-  "healthTapToLog": "Touchez + pour consigner"
+  "healthTapToLog": "Touchez + pour consigner",
+  "healthMetricInvalid": "Utilisez un nom de mesure unique et une unité courte sans espaces.",
+  "healthMeasurementEntryInvalid": "Saisissez une valeur positive plausible avec une unité prise en charge."
 }

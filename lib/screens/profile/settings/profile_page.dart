@@ -128,12 +128,15 @@ class _ProfilePageState extends State<ProfilePage> {
                 onTap:
                     () => _open(context, const UserInformationSettingsPage()),
               ),
-              SettingsActionTile(
-                icon: Icons.palette_outlined,
-                iconColor: SettingsAccent.appearance,
-                title: strings.profileUiAppearanceTitle,
-                subtitle: strings.profileUiAppearanceSubtitle,
-                onTap: () => _open(context, const UIAppearanceSettingsPage()),
+              KeyedSubtree(
+                key: AppTestKeys.profileUiAppearance,
+                child: SettingsActionTile(
+                  icon: Icons.palette_outlined,
+                  iconColor: SettingsAccent.appearance,
+                  title: strings.profileUiAppearanceTitle,
+                  subtitle: strings.profileUiAppearanceSubtitle,
+                  onTap: () => _open(context, const UIAppearanceSettingsPage()),
+                ),
               ),
               SettingsActionTile(
                 icon: Icons.school_outlined,
@@ -159,14 +162,19 @@ class _ProfilePageState extends State<ProfilePage> {
                 subtitle: strings.profileGymWorkoutSettingsSubtitle,
                 onTap: () => _open(context, const GymExerciseSettingsPage()),
               ),
-              SettingsActionTile(
-                icon: Icons.monitor_outlined,
-                iconColor: SettingsAccent.progress,
-                title: strings.profileProgressSettingsTitle,
-                subtitle: strings.profileProgressSettingsSubtitle,
-                onTap:
-                    () =>
-                        _open(context, const MeasurementsTrendsSettingsPage()),
+              KeyedSubtree(
+                key: AppTestKeys.profileProgressSettings,
+                child: SettingsActionTile(
+                  icon: Icons.monitor_outlined,
+                  iconColor: SettingsAccent.progress,
+                  title: strings.profileProgressSettingsTitle,
+                  subtitle: strings.profileProgressSettingsSubtitle,
+                  onTap:
+                      () => _open(
+                        context,
+                        const MeasurementsTrendsSettingsPage(),
+                      ),
+                ),
               ),
             ]),
           ),

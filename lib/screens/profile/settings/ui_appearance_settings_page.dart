@@ -12,6 +12,7 @@ import '../../../providers/onboarding_provider.dart';
 import '../../../providers/theme_provider.dart';
 import '../../../providers/unit_preference_provider.dart';
 import '../../../services/tutorial_state_store.dart';
+import '../../../utils/app_test_keys.dart';
 import '../../../utils/tutorial_launcher.dart';
 import '../../../widgets/guided_tutorial_overlay.dart';
 import '../../../widgets/settings_tiles.dart';
@@ -126,19 +127,22 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
                 ),
                 onTap: () => _showWeightUnitDialog(context, weightUnit),
               ),
-              SettingsActionTile(
-                icon: Icons.language_outlined,
-                iconColor: SettingsAccent.appearance,
-                title: strings.languageTitle,
-                subtitle: strings.languageSubtitle,
-                trailing: Text(
-                  _languageLabel(strings, language),
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.w900,
+              KeyedSubtree(
+                key: AppTestKeys.uiAppearanceLanguage,
+                child: SettingsActionTile(
+                  icon: Icons.language_outlined,
+                  iconColor: SettingsAccent.appearance,
+                  title: strings.languageTitle,
+                  subtitle: strings.languageSubtitle,
+                  trailing: Text(
+                    _languageLabel(strings, language),
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
+                  onTap: () => _showLanguageDialog(context, language),
                 ),
-                onTap: () => _showLanguageDialog(context, language),
               ),
             ]),
           ),
@@ -150,17 +154,20 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
             subtitle: strings.navigationSettingsSubtitle,
             accentColor: SettingsAccent.data,
             children: [
-              SettingsActionTile(
-                icon: Icons.space_dashboard_outlined,
-                iconColor: SettingsAccent.data,
-                title: strings.editBottomTabsTitle,
-                subtitle: strings.editBottomTabsSubtitle,
-                onTap:
-                    () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const NavBarSettingsPage(),
+              KeyedSubtree(
+                key: AppTestKeys.uiAppearanceNavigation,
+                child: SettingsActionTile(
+                  icon: Icons.space_dashboard_outlined,
+                  iconColor: SettingsAccent.data,
+                  title: strings.editBottomTabsTitle,
+                  subtitle: strings.editBottomTabsSubtitle,
+                  onTap:
+                      () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const NavBarSettingsPage(),
+                        ),
                       ),
-                    ),
+                ),
               ),
             ],
           ),
