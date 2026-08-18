@@ -1,6 +1,6 @@
 # Maintenance Backlog
 
-Last updated: 2026-08-17.
+Last updated: 2026-08-18.
 
 This is Tonos's maintained, prioritized engineering backlog. Historical
 roadmap snapshots live in `docs/archive/roadmaps/`; do not use them to plan new
