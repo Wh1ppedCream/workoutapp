@@ -391,6 +391,7 @@ Future<void> _scaffoldExerciseMediaSource(_CliOptions options) async {
           }
 
           return {
+            'exerciseCatalogId': exercise.catalogId,
             'exerciseId': exercise.id,
             'exerciseName': exercise.name,
             'slug': slug,
@@ -623,6 +624,8 @@ Map<String, dynamic> _copySourceExercise(
   required bool stripLocalFiles,
 }) {
   final output = <String, dynamic>{
+    if (exercise.stringValue('exerciseCatalogId') != null)
+      'exerciseCatalogId': exercise.stringValue('exerciseCatalogId'),
     'exerciseId': exercise.intValue('exerciseId'),
     if (exercise.stringValue('exerciseName') != null)
       'exerciseName': exercise.stringValue('exerciseName'),
@@ -1077,6 +1080,7 @@ class _ExerciseMediaManifestBuilder {
 
       assetCount += assets.length;
       outputExercises.add({
+        'exerciseCatalogId': resolved.catalogId,
         'exerciseId': resolved.id,
         'slug': exercise.stringValue('slug') ?? _slugify(resolved.name),
         'assets': assets,
@@ -1102,15 +1106,20 @@ class _ExerciseMediaManifestBuilder {
 
   _ResolvedExercise? _resolveExercise(Map<String, dynamic> exercise) {
     final id = exercise.intValue('exerciseId');
+    final catalogId = exercise.stringValue('exerciseCatalogId');
     final name =
         exercise.stringValue('exerciseName') ?? exercise.stringValue('name');
 
-    if (id == null && name == null) {
-      _error('Exercise entry needs exerciseId or exerciseName.');
+    if (id == null && catalogId == null && name == null) {
+      _error(
+        'Exercise entry needs exerciseCatalogId, exerciseId, or exerciseName.',
+      );
       return null;
     }
 
     final byId = id == null ? null : exerciseIndex.byId(id);
+    final byCatalogId =
+        catalogId == null ? null : exerciseIndex.byCatalogId(catalogId);
     final byName = name == null ? null : exerciseIndex.byName(name);
 
     if (id != null && byId == null) {
@@ -1121,19 +1130,24 @@ class _ExerciseMediaManifestBuilder {
       _error('Unknown exerciseName "$name".');
       return null;
     }
-    if (byId != null && byName != null && byId.id != byName.id) {
+    if (catalogId != null && byCatalogId == null) {
+      _error('Unknown exerciseCatalogId "$catalogId".');
+      return null;
+    }
+    final resolvedCandidates =
+        [byId, byCatalogId, byName].whereType<_ResolvedExercise>().toSet();
+    if (resolvedCandidates.length > 1) {
       _error(
-        'Exercise mismatch: id ${byId.id} is "${byId.name}" but name "$name" '
-        'resolves to id ${byName.id}.',
+        'Exercise identity mismatch between catalog ID, legacy ID, or name.',
       );
       return null;
     }
 
-    final resolved = byId ?? byName;
+    final resolved = byCatalogId ?? byId ?? byName;
     if (resolved == null) return null;
     if (name != null && resolved.name != name) {
       _warning(
-        'Exercise name casing differs for id ${resolved.id}: source "$name", '
+        'Exercise name casing differs for ${resolved.catalogId}: source "$name", '
         'definitions "${resolved.name}".',
       );
     }
@@ -1674,31 +1688,50 @@ class _ExerciseMediaCoverage {
 
 class _ExerciseIndex {
   final Map<int, _ResolvedExercise> _byId;
+  final Map<String, _ResolvedExercise> _byCatalogId;
   final Map<String, _ResolvedExercise> _byName;
 
-  const _ExerciseIndex(this._byId, this._byName);
+  const _ExerciseIndex(this._byId, this._byCatalogId, this._byName);
 
   static Future<_ExerciseIndex> load(String path) async {
     final raw = await File(path).readAsString();
     final decoded = jsonDecode(raw);
-    if (decoded is! List) {
-      _fail('Expected a JSON list in $path.');
+    if (decoded is! Map || decoded['exercises'] is! List) {
+      _fail('Expected a catalog object with an exercises list in $path.');
     }
+    final exercises = decoded['exercises'] as List;
 
     final byId = <int, _ResolvedExercise>{};
+    final byCatalogId = <String, _ResolvedExercise>{};
     final byName = <String, _ResolvedExercise>{};
 
-    for (var i = 0; i < decoded.length; i++) {
-      final item = decoded[i];
+    for (final item in exercises) {
       if (item is! Map) continue;
-      final name = Map<String, dynamic>.from(item).stringValue('name');
-      if (name == null) continue;
-      final exercise = _ResolvedExercise(id: i + 1, name: name);
+      final map = Map<String, dynamic>.from(item);
+      final name = map.stringValue('name');
+      final catalogId = map.stringValue('catalogId');
+      final legacyMediaId = map.intValue('legacyMediaId');
+      if (name == null || catalogId == null || legacyMediaId == null) {
+        _fail(
+          'Every exercise in $path needs name, catalogId, and legacyMediaId.',
+        );
+      }
+      final exercise = _ResolvedExercise(
+        id: legacyMediaId,
+        catalogId: catalogId,
+        name: name,
+      );
+      if (byId.containsKey(exercise.id) ||
+          byCatalogId.containsKey(exercise.catalogId) ||
+          byName.containsKey(_normalizeName(exercise.name))) {
+        _fail('Duplicate exercise identity in $path: ${exercise.name}.');
+      }
       byId[exercise.id] = exercise;
+      byCatalogId[exercise.catalogId] = exercise;
       byName[_normalizeName(name)] = exercise;
     }
 
-    return _ExerciseIndex(byId, byName);
+    return _ExerciseIndex(byId, byCatalogId, byName);
   }
 
   List<_ResolvedExercise> get all =>
@@ -1706,14 +1739,21 @@ class _ExerciseIndex {
 
   _ResolvedExercise? byId(int id) => _byId[id];
 
+  _ResolvedExercise? byCatalogId(String catalogId) => _byCatalogId[catalogId];
+
   _ResolvedExercise? byName(String name) => _byName[_normalizeName(name)];
 }
 
 class _ResolvedExercise {
   final int id;
+  final String catalogId;
   final String name;
 
-  const _ResolvedExercise({required this.id, required this.name});
+  const _ResolvedExercise({
+    required this.id,
+    required this.catalogId,
+    required this.name,
+  });
 }
 
 class _BuildResult {

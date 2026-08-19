@@ -57,9 +57,11 @@ dart run tools/content_pipeline.dart build-exercise-media `
   --check-remote
 ```
 
-The source file validates exercise IDs against `assets/exercises.json`. Because
-exercise IDs are assigned from the JSON list order during seeding, each entry
-should include both `exerciseId` and `exerciseName` so reorders are caught.
+The source file validates exercise identities against `assets/exercises.json`.
+The pipeline emits the stable `exerciseCatalogId` and retains `exerciseId` as a
+legacy manifest fallback, so catalog display order is safe to change. Follow
+[exercise-catalog.md](exercise-catalog.md) when adding, renaming, retiring, or
+reordering shipped exercises.
 
 ## Generate An Upload Script
 

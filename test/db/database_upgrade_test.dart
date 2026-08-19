@@ -43,6 +43,7 @@ void main() {
     54,
     55,
     56,
+    59,
   ]) {
     test(
       'upgrades a populated v$historicalVersion database and preserves data',
@@ -79,6 +80,24 @@ void main() {
           db,
           fixture,
           historicalVersion,
+        );
+        final definitionColumns = await db.rawQuery(
+          "PRAGMA table_info('exercise_definitions')",
+        );
+        final definitionColumnNames =
+            definitionColumns.map((column) => column['name']).toSet();
+        expect(
+          definitionColumnNames,
+          containsAll(<String>{
+            'catalog_id',
+            'legacy_media_id',
+            'catalog_status',
+          }),
+        );
+        expect(
+          await db.query('exercise_catalog_state'),
+          isEmpty,
+          reason: 'Schema migration must not fabricate catalog sync state.',
         );
         expect(await db.getVersion(), DatabaseHelper.currentSchemaVersion);
         expect(
@@ -223,6 +242,7 @@ Future<void> _createSchemaThroughVersion(Database db, int version) async {
     57: Schema.migrateV57,
     58: Schema.migrateV58,
     59: Schema.migrateV59,
+    60: Schema.migrateV60,
   };
   for (final entry in migrations.entries) {
     if (entry.key > version) break;

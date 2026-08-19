@@ -6,7 +6,18 @@ import 'package:flutter/services.dart'; // For rootBundle.loadString
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:sqflite/sqflite.dart';
 
+import 'exercise_catalog.dart';
+
 typedef SeedProgress = void Function(int inserted);
+
+List<dynamic> _exerciseListFromJson(String sourceJson) {
+  final decoded = json.decode(sourceJson);
+  if (decoded is List) return decoded;
+  if (decoded is Map && decoded['exercises'] is List) {
+    return decoded['exercises'] as List;
+  }
+  throw const FormatException('Invalid exercises.json catalog shape.');
+}
 
 /// Legacy → canonical code hints (UPPERCASE keys).
 /// Also includes a few common external tags (USDA-like) for convenience.
@@ -184,7 +195,7 @@ class Seed {
   /// automatic, and personal user overrides are stored separately.
   static Future<void> syncCreatorExerciseAllocationDefaults(Database db) async {
     final exJson = await rootBundle.loadString('assets/exercises.json');
-    final List exercises = json.decode(exJson) as List;
+    final List exercises = _exerciseListFromJson(exJson);
     if (exercises.isEmpty) return;
 
     await db.transaction((txn) async {
@@ -295,7 +306,7 @@ class Seed {
     final List mList = json.decode(mJson);
 
     final exJson = await rootBundle.loadString('assets/exercises.json');
-    final List exList = json.decode(exJson);
+    final List exList = _exerciseListFromJson(exJson);
 
     await db.transaction((txn) async {
       Future<Map<String, int>> loadIdMap(String table) async {
@@ -476,6 +487,14 @@ class Seed {
       }
       await relationBatch.commit(noResult: true);
     });
+
+    await syncExerciseCatalogIfNeeded(db);
+  }
+
+  /// Applies a newer shipped catalog revision while preserving local IDs.
+  static Future<void> syncExerciseCatalogIfNeeded(Database db) async {
+    final source = await rootBundle.loadString('assets/exercises.json');
+    await ExerciseCatalog.synchronize(db, sourceJson: source);
   }
 
   /// Seeds stretch definitions and their body part associations.

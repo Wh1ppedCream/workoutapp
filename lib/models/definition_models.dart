@@ -106,6 +106,7 @@ class StarterLoadProfile {
 class ExerciseDefinition {
   final int id;
   final String name;
+  final String catalogStatus;
   final int? equipmentId;
   final int rating;
   final List<Equipment> equipmentList;
@@ -122,6 +123,7 @@ class ExerciseDefinition {
   ExerciseDefinition({
     required this.id,
     required this.name,
+    this.catalogStatus = 'active',
     this.equipmentId,
     this.rating = 0,
     this.equipmentList = const [],
@@ -134,6 +136,10 @@ class ExerciseDefinition {
     required this.multiplyByRating,
     this.starterLoadProfile,
   });
+
+  /// Retired shipped definitions stay available to historic workouts, but are
+  /// not offered as new catalog selections.
+  bool get isRetiredCatalogEntry => catalogStatus == 'retired';
 }
 
 class ExerciseMediaItem {

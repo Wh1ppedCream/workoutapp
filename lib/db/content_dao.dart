@@ -169,9 +169,19 @@ class ContentDao {
       }, conflictAlgorithm: ConflictAlgorithm.replace);
 
       for (final entry in manifest.exerciseMedia) {
+        final localExerciseDefId = await _resolveExerciseDefinitionId(
+          txn,
+          entry,
+        );
+        if (localExerciseDefId == null) {
+          throw FormatException(
+            'Exercise media manifest entry cannot be mapped to a local '
+            'exercise definition: ${entry.exerciseCatalogId ?? entry.exerciseId}.',
+          );
+        }
         for (var i = 0; i < entry.assets.length; i++) {
           final asset = entry.assets[i].copyWith(
-            exerciseDefId: entry.exerciseId,
+            exerciseDefId: localExerciseDefId,
             sortOrder: i,
           );
           if (asset.assetId?.isNotEmpty == true) {
@@ -478,6 +488,52 @@ class ContentDao {
     );
     if (rows.isEmpty) return null;
     return rows.first;
+  }
+
+  static Future<int?> _resolveExerciseDefinitionId(
+    DatabaseExecutor db,
+    ExerciseMediaManifestEntry entry,
+  ) async {
+    final catalogId = entry.exerciseCatalogId;
+    if (catalogId != null && catalogId.isNotEmpty) {
+      final rows = await db.query(
+        'exercise_definitions',
+        columns: ['id'],
+        where: 'catalog_id = ?',
+        whereArgs: [catalogId],
+        limit: 1,
+      );
+      if (rows.isNotEmpty) return rows.single['id'] as int;
+
+      // A manifest that names a stable catalog ID must never attach its media
+      // through an unrelated legacy integer. That would silently show the
+      // wrong exercise image after a malformed or mixed-version publish.
+      return null;
+    }
+
+    // Published manifests before catalog IDs used the original JSON position.
+    // Resolve that durable transition value first, then retain the row-ID
+    // fallback only for databases from before the v60 catalog migration.
+    if (entry.exerciseId > 0) {
+      var rows = await db.query(
+        'exercise_definitions',
+        columns: ['id'],
+        where: 'legacy_media_id = ?',
+        whereArgs: [entry.exerciseId],
+        limit: 1,
+      );
+      if (rows.isEmpty) {
+        rows = await db.query(
+          'exercise_definitions',
+          columns: ['id'],
+          where: 'id = ?',
+          whereArgs: [entry.exerciseId],
+          limit: 1,
+        );
+      }
+      if (rows.isNotEmpty) return rows.single['id'] as int;
+    }
+    return null;
   }
 
   static Future<Map<String, Object?>?> _existingSharedMediaRow(

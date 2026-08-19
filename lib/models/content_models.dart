@@ -415,11 +415,16 @@ class ContentManifest {
 
 /// Media assets attached to one stable local exercise definition.
 class ExerciseMediaManifestEntry {
+  /// Stable shipped-catalog identity. New manifests must provide this value.
+  final String? exerciseCatalogId;
+
+  /// Legacy source ID retained while older published manifests remain readable.
   final int exerciseId;
   final String slug;
   final List<ExerciseMediaItem> assets;
 
   const ExerciseMediaManifestEntry({
+    this.exerciseCatalogId,
     required this.exerciseId,
     required this.slug,
     required this.assets,
@@ -452,6 +457,7 @@ class ExerciseMediaManifestEntry {
             .toList();
 
     return ExerciseMediaManifestEntry(
+      exerciseCatalogId: (json['exerciseCatalogId'] as String?)?.trim(),
       exerciseId: exerciseId,
       slug: (json['slug'] as String?) ?? '',
       assets: assets,

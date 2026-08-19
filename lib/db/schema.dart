@@ -164,6 +164,7 @@ class Schema {
     await migrateV57(db);
     await migrateV58(db);
     await migrateV59(db);
+    await migrateV60(db);
   }
 
   /// Handler for onUpgrade callback.
@@ -230,6 +231,7 @@ class Schema {
     if (oldVersion < 57) await migrateV57(db);
     if (oldVersion < 58) await migrateV58(db);
     if (oldVersion < 59) await migrateV59(db);
+    if (oldVersion < 60) await migrateV60(db);
   }
 
   /// Migration to version 3: adds rating, equipment/muscle tables.
@@ -3328,6 +3330,63 @@ WHERE source_id IS NULL
          END
        WHERE context IS NULL
          AND note IN ('WakeUp', 'BedTime', 'Overall', 'With pump', 'Without pump');
+    ''');
+  }
+
+  /// v60 - separates stable shipped-catalog identity from local row identity.
+  ///
+  /// `exercise_definitions.id` is referenced by workouts, plans, records, and
+  /// media. It must therefore never depend on the order of exercises.json.
+  static Future<void> migrateV60(Database db) async {
+    final columns = await db.rawQuery(
+      "PRAGMA table_info('exercise_definitions')",
+    );
+    final columnNames =
+        columns.map((column) => column['name'] as String).toSet();
+    if (!columnNames.contains('catalog_id')) {
+      await db.execute(
+        'ALTER TABLE exercise_definitions ADD COLUMN catalog_id TEXT;',
+      );
+    }
+    if (!columnNames.contains('legacy_media_id')) {
+      await db.execute(
+        'ALTER TABLE exercise_definitions ADD COLUMN legacy_media_id INTEGER;',
+      );
+    }
+    if (!columnNames.contains('catalog_status')) {
+      await db.execute(
+        "ALTER TABLE exercise_definitions ADD COLUMN catalog_status TEXT NOT NULL DEFAULT 'active';",
+      );
+    }
+
+    await db.execute(
+      'CREATE UNIQUE INDEX IF NOT EXISTS idx_exercise_definitions_catalog_id '
+      'ON exercise_definitions(catalog_id) WHERE catalog_id IS NOT NULL',
+    );
+    await db.execute(
+      'CREATE UNIQUE INDEX IF NOT EXISTS idx_exercise_definitions_legacy_media_id '
+      'ON exercise_definitions(legacy_media_id) '
+      'WHERE legacy_media_id IS NOT NULL',
+    );
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS exercise_definition_aliases (
+        exercise_def_id INTEGER NOT NULL,
+        alias TEXT NOT NULL COLLATE NOCASE,
+        PRIMARY KEY(exercise_def_id, alias),
+        FOREIGN KEY(exercise_def_id)
+          REFERENCES exercise_definitions(id) ON DELETE CASCADE
+      )
+    ''');
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_exercise_definition_aliases_alias '
+      'ON exercise_definition_aliases(alias)',
+    );
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS exercise_catalog_state (
+        singleton INTEGER PRIMARY KEY CHECK(singleton = 1),
+        revision INTEGER NOT NULL,
+        synced_at TEXT NOT NULL
+      )
     ''');
   }
 

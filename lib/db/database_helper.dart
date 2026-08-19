@@ -50,7 +50,7 @@ import 'package:flutter/foundation.dart' show debugPrint;
 
 /// Singleton helper for managing the SQLite database.
 class DatabaseHelper {
-  static const int _kDbVersion = 59;
+  static const int _kDbVersion = 60;
   static const bool _kIntegrationTestMode = bool.fromEnvironment(
     'TONOS_INTEGRATION_TEST',
   );
@@ -130,6 +130,7 @@ class DatabaseHelper {
           db,
           onFoodProgress: (c) => _logProgress('foods', c),
         );
+        await Seed.syncExerciseCatalogIfNeeded(db);
         await Seed.syncCreatorExerciseAllocationDefaults(db);
         await _backfillNormalizedFoodKeys(db);
         await _backfillEnergyKcalFromMacros(db);
@@ -165,6 +166,9 @@ class DatabaseHelper {
         await Schema.migrateV56(db);
         await Schema.migrateV57(db);
         await Schema.migrateV58(db);
+        await Schema.migrateV59(db);
+        await Schema.migrateV60(db);
+        await Seed.syncExerciseCatalogIfNeeded(db);
         await _resetDbTriggers(db); // <—
         await _maybeCompactLegacyFoodCatalog(db);
         await _removeEmptyStarterPlans(db);
@@ -2438,7 +2442,9 @@ class DatabaseHelper {
   /// Fetch every definition with its full equipmentList, bodyParts, and muscles.
   Future<List<ExerciseDefinition>> lookupDefsDetailed() async {
     final db = await database;
-    return DefinitionDao.getAllExerciseDefinitionsDetailedBatched(db);
+    final definitions =
+        await DefinitionDao.getAllExerciseDefinitionsDetailedBatched(db);
+    return DefinitionDao.selectableCatalogDefinitions(definitions);
   }
 
   /// Fetch a selected subset of definitions with their full join data.

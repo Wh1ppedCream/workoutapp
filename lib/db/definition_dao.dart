@@ -9,6 +9,16 @@ import 'db_query_utils.dart';
 /// Provides query methods to fetch, filter, search, create, update, and delete
 /// records in the `exercise_definitions` table and its join relationships.
 class DefinitionDao {
+  /// Removes retired shipped entries from catalog selection without hiding
+  /// historical or user-created definitions from ID-based lookups.
+  static List<ExerciseDefinition> selectableCatalogDefinitions(
+    Iterable<ExerciseDefinition> definitions,
+  ) {
+    return definitions
+        .where((definition) => !definition.isRetiredCatalogEntry)
+        .toList(growable: false);
+  }
+
   /// Fetches exercise definition IDs, names, and equipment IDs for definitions
   /// associated with a specific body part.
   ///
@@ -185,6 +195,7 @@ class DefinitionDao {
     return ExerciseDefinition(
       id: row['id'] as int,
       name: row['name'] as String,
+      catalogStatus: (row['catalog_status'] as String?) ?? 'active',
       equipmentId: primaryEquipmentId,
       rating: (row['rating'] as num?)?.toInt() ?? 0,
       equipmentList: resolvedEquipmentList,
@@ -630,7 +641,7 @@ class DefinitionDao {
     );
   }
 
-  /// Performs case-insensitive name search on definitions.
+  /// Performs case-insensitive search on active definition names and aliases.
   ///
   /// - [db]: Open database instance.
   /// - [query]: Substring to search in lower-case.
@@ -640,11 +651,18 @@ class DefinitionDao {
     Database db,
     String query,
   ) async {
-    final rows = await db.query(
-      'exercise_definitions',
-      where: 'LOWER(name) LIKE ?',
-      whereArgs: ['%${query.toLowerCase()}%'],
-      orderBy: 'name',
+    final normalizedQuery = '%${query.toLowerCase()}%';
+    final rows = await db.rawQuery(
+      '''
+      SELECT DISTINCT ed.*
+      FROM exercise_definitions ed
+      LEFT JOIN exercise_definition_aliases eda
+        ON eda.exercise_def_id = ed.id
+      WHERE ed.catalog_status <> 'retired'
+        AND (LOWER(ed.name) LIKE ? OR LOWER(eda.alias) LIKE ?)
+      ORDER BY ed.name
+      ''',
+      [normalizedQuery, normalizedQuery],
     );
     return _shallowDefinitions(rows);
   }

@@ -30,6 +30,14 @@ void main() {
       )
     ''');
     await db.execute('''
+      CREATE TABLE exercise_definitions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        catalog_id TEXT,
+        legacy_media_id INTEGER
+      )
+    ''');
+    await db.execute('''
       CREATE TABLE exercise_media (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         exercise_def_id INTEGER NOT NULL,
@@ -45,6 +53,11 @@ void main() {
       )
     ''');
     await db.insert('equipment', {'id': 4, 'name': 'Barbell'});
+    await db.insert('exercise_definitions', {
+      'id': 12,
+      'name': 'Bench Press',
+      'legacy_media_id': 12,
+    });
     await ContentDao.ensureTables(db);
   });
 
@@ -108,6 +121,84 @@ void main() {
         await ContentDao.getManifestStatus(db, 'exercise_media'),
         isNotNull,
       );
+    },
+  );
+
+  test('maps stable catalog media IDs to the local definition row', () async {
+    await db.delete('exercise_definitions');
+    await db.insert('exercise_definitions', {
+      'id': 91,
+      'name': 'Renamed bench press',
+      'catalog_id': 'tonos.exercise.0012',
+      'legacy_media_id': 12,
+    });
+
+    final stableManifest = ContentManifest.fromJson({
+      'namespace': 'exercise_media',
+      'version': 1,
+      'exercises': [
+        {
+          'exerciseCatalogId': 'tonos.exercise.0012',
+          'exerciseId': 12,
+          'slug': 'bench_press',
+          'assets': [asset('bench_v1', 'https://cdn.example/bench.webp')],
+        },
+      ],
+    });
+
+    await ContentDao.upsertExerciseMediaManifest(db, stableManifest);
+
+    final row = (await db.query('exercise_media')).single;
+    expect(row['exercise_def_id'], 91);
+  });
+
+  test(
+    'rejects media that cannot be mapped to a local catalog definition',
+    () async {
+      final unknownManifest = ContentManifest.fromJson({
+        'namespace': 'exercise_media',
+        'version': 1,
+        'exercises': [
+          {
+            'exerciseCatalogId': 'tonos.exercise.9999',
+            'exerciseId': 9999,
+            'slug': 'unknown',
+            'assets': [asset('unknown_v1', 'https://cdn.example/unknown.webp')],
+          },
+        ],
+      });
+
+      await expectLater(
+        ContentDao.upsertExerciseMediaManifest(db, unknownManifest),
+        throwsA(isA<FormatException>()),
+      );
+      expect(await db.query('exercise_media'), isEmpty);
+    },
+  );
+
+  test(
+    'does not fall back to a legacy ID when a stable catalog ID is wrong',
+    () async {
+      final mismatchedManifest = ContentManifest.fromJson({
+        'namespace': 'exercise_media',
+        'version': 1,
+        'exercises': [
+          {
+            'exerciseCatalogId': 'tonos.exercise.9999',
+            'exerciseId': 12,
+            'slug': 'mismatched',
+            'assets': [
+              asset('mismatch_v1', 'https://cdn.example/mismatch.webp'),
+            ],
+          },
+        ],
+      });
+
+      await expectLater(
+        ContentDao.upsertExerciseMediaManifest(db, mismatchedManifest),
+        throwsA(isA<FormatException>()),
+      );
+      expect(await db.query('exercise_media'), isEmpty);
     },
   );
 
