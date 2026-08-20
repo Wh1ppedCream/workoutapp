@@ -135,11 +135,18 @@ device or emulator where resetting Tonos settings is acceptable.
 
 ## Continuous integration
 
-`.github/workflows/ci.yml` runs for pull requests, pushes to `master` and
-`local-db`, and manual dispatches. It installs the pinned Flutter SDK,
-regenerates localization sources, fails if the tracked generated files change,
-analyzes application and test code, runs the complete unit/widget suite, and
-builds a release APK.
+`.github/workflows/ci.yml` runs for pull requests targeting `master`, pushes to
+`master` and the approved feature-branch prefixes, and manual dispatches. It
+installs the pinned Flutter SDK, regenerates localization sources, fails if the
+tracked generated files change, analyzes application and test code, analyzes
+the content pipeline and nested catalog builder, validates catalog and media
+fixtures, runs the complete unit/widget suite, and builds a release APK.
+
+External Actions are pinned to immutable commit SHAs, checkout credentials are
+not retained, and Dependabot reviews Action pins weekly. The stable checks
+required before merging are `Localization, analyzer, and tests` and `Release
+APK`. See [branch-and-ci.md](branch-and-ci.md) for branch naming, the pull
+request workflow, and the exact `master` ruleset.
 
 The CI release APK is signed with a disposable key generated during the job. It
 proves that the release variant compiles, but it is not a production-signed or

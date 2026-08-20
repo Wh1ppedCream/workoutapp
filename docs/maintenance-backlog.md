@@ -178,10 +178,11 @@ diagnostics relay remain intentionally disabled. Production was last audited at
     TalkBack and VoiceOver passes across long locales and large text.
 
 13. **Align CI, tooling checks, and branch protection with feature branches.**
-    Remove the stale `local-db` push trigger, protect `master`, and make required
-    PR checks explicit. Analyze and test repository tools and the nested catalog
-    builder, validate catalog/media fixtures in CI, and pin or regularly review
-    third-party Actions and dependency security.
+    Local enforcement is implemented: approved feature prefixes receive push
+    CI, `local-db` is removed, tools and fixtures are checked, Actions are pinned
+    to immutable SHAs, and Dependabot reviews Actions and Dart dependencies.
+    After these changes pass on a pull request, activate the documented
+    `Protect master` ruleset with the two stable required checks.
 
 14. **Establish release versioning and store-delivery governance.**
     Replace the static `1.0.1+5` habit with a version/build policy, release tags,
