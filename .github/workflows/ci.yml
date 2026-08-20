@@ -55,6 +55,9 @@ jobs:
       - name: Generate localization sources
         run: flutter gen-l10n
 
+      - name: Normalize generated localization formatting
+        run: dart format lib/l10n/generated
+
       - name: Verify generated localization sources are committed
         shell: bash
         run: |

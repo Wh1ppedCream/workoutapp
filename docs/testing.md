@@ -138,7 +138,7 @@ device or emulator where resetting Tonos settings is acceptable.
 `.github/workflows/ci.yml` runs for pull requests targeting `master`, pushes to
 `master` and the approved feature-branch prefixes, and manual dispatches. It
 installs the pinned Flutter SDK, regenerates localization sources, fails if the
-tracked generated files change, analyzes application and test code, analyzes
+tracked generated files change after canonical Dart formatting, analyzes application and test code, analyzes
 the content pipeline and nested catalog builder, validates catalog and media
 fixtures, runs the complete unit/widget suite, and builds a release APK.
 

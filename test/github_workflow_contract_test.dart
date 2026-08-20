@@ -73,6 +73,7 @@ void main() {
     expect(workflow, isNot(contains('local-db')));
     expect(workflow, contains('name: Localization, analyzer, and tests'));
     expect(workflow, contains('name: Release APK'));
+    expect(workflow, contains('dart format lib/l10n/generated'));
     expect(workflow, contains('dart analyze tools/content_pipeline.dart'));
     expect(workflow, contains('working-directory: tools/catalog_builder'));
     expect(workflow, contains('dart analyze bin tool'));
