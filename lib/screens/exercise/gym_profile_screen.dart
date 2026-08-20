@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../l10n/generated/app_localizations.dart';
+import '../../l10n/safe_failure_localizations.dart';
 import '../../models/content_models.dart';
 import '../../models/gym_models.dart';
 import '../../providers/selected_profile.dart';
@@ -365,7 +366,11 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
       if (!mounted) return false;
       setState(() => _isSaving = false);
       messenger.showSnackBar(
-        SnackBar(content: Text(strings.gymProfileSaveFailed(error.toString()))),
+        SnackBar(
+          content: Text(
+            strings.gymProfileSaveFailed(safeFailureMessage(strings, error)),
+          ),
+        ),
       );
       return false;
     }

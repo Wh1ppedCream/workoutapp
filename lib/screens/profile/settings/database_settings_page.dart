@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 
 import '../../../db/database_maintenance.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../l10n/safe_failure_localizations.dart';
 import '../../../models/models.dart';
 import '../../../repositories/app_repository.dart';
 import '../../../services/content_environment_preferences.dart';
@@ -403,7 +404,9 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(_strings.databaseMaintenanceFailed(e.toString())),
+          content: Text(
+            _strings.databaseMaintenanceFailed(safeFailureMessage(_strings, e)),
+          ),
         ),
       );
     } finally {
@@ -565,7 +568,9 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(_strings.databaseContentSyncFailed(e.toString())),
+          content: Text(
+            _strings.databaseContentSyncFailed(safeFailureMessage(_strings, e)),
+          ),
         ),
       );
     } finally {
@@ -594,7 +599,9 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            _strings.databaseBundledContentSyncFailed(e.toString()),
+            _strings.databaseBundledContentSyncFailed(
+              safeFailureMessage(_strings, e),
+            ),
           ),
         ),
       );
@@ -639,7 +646,9 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            _strings.databaseSharedContentSyncFailed(error.toString()),
+            _strings.databaseSharedContentSyncFailed(
+              safeFailureMessage(_strings, error),
+            ),
           ),
         ),
       );
@@ -683,7 +692,11 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(strings.databaseClearCacheFailed(e.toString()))),
+        SnackBar(
+          content: Text(
+            strings.databaseClearCacheFailed(safeFailureMessage(strings, e)),
+          ),
+        ),
       );
     } finally {
       if (mounted) {
@@ -892,7 +905,10 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            _strings.databaseDefinitionExportFailed(filename, e.toString()),
+            _strings.databaseDefinitionExportFailed(
+              filename,
+              safeFailureMessage(_strings, e),
+            ),
           ),
         ),
       );
@@ -974,7 +990,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
                 icon: Icons.error_outline,
                 iconColor: Theme.of(context).colorScheme.error,
                 title: strings.databaseHealthFailed,
-                subtitle: '${snapshot.error}',
+                subtitle: safeFailureMessage(strings, snapshot.error!),
                 trailing: IconButton(
                   tooltip: _strings.commonRetry,
                   icon: const Icon(Icons.refresh),

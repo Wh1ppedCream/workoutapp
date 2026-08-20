@@ -5,9 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../l10n/safe_failure_localizations.dart';
 import '../../../models/models.dart';
 import '../../../repositories/app_repository.dart';
+import '../../../services/safe_failure.dart';
 import '../../../widgets/settings_tiles.dart';
+import '../../../widgets/safe_error_view.dart';
 import '../../exercise/exercise_catalog_page.dart';
 import 'exercise_analytics_screen.dart';
 
@@ -46,7 +49,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
   int _definitionLoadRequest = 0;
   bool _isLoadingDefinitions = true;
   bool _isLoadingDetails = false;
-  String? _loadError;
+  SafeFailure? _loadFailure;
   bool _hasPendingChanges = false;
 
   // Tab data
@@ -108,7 +111,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
   Future<void> _loadExerciseList() async {
     setState(() {
       _isLoadingDefinitions = true;
-      _loadError = null;
+      _loadFailure = null;
     });
     try {
       final defsFuture = _repo.lookupDefsDetailed();
@@ -127,7 +130,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
       if (!mounted) return;
       setState(() {
         _isLoadingDefinitions = false;
-        _loadError = error.toString();
+        _loadFailure = SafeFailure.classify(error);
       });
     }
   }
@@ -244,7 +247,13 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
         return;
       }
       setState(() => _isLoadingDetails = false);
-      _showMessage('Could not load this exercise definition. $error');
+      ScaffoldMessenger.of(context).showSnackBar(
+        safeFailureSnackBar(
+          context,
+          error: error,
+          summary: _strings.exerciseEditorLoadFailed,
+        ),
+      );
     }
   }
 
@@ -356,8 +365,12 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
       if (mounted) _showMessage('Exercise definition saved.');
     } catch (error) {
       if (mounted) {
-        _showMessage(
-          'Could not save exercise. No changes were applied. $error',
+        ScaffoldMessenger.of(context).showSnackBar(
+          safeFailureSnackBar(
+            context,
+            error: error,
+            summary: _strings.safeFailureSaveTitle,
+          ),
         );
       }
     } finally {
@@ -623,25 +636,12 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
     if (_isLoadingDefinitions) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
-    if (_loadError != null) {
+    if (_loadFailure != null) {
       return Scaffold(
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.error_outline, size: 40),
-                const SizedBox(height: 12),
-                Text(_strings.exerciseEditorLoadFailed),
-                const SizedBox(height: 12),
-                FilledButton(
-                  onPressed: _loadExerciseList,
-                  child: Text(_strings.commonRetry),
-                ),
-              ],
-            ),
-          ),
+        body: SafeErrorView(
+          title: _strings.exerciseEditorLoadFailed,
+          failure: _loadFailure!,
+          onRetry: _loadExerciseList,
         ),
       );
     }
@@ -906,7 +906,11 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
       });
       _showMessage(_strings.exerciseEditorOpenedMessage);
     } catch (error) {
-      _showMessage(_strings.exerciseEditorCreateFailed(error.toString()));
+      _showMessage(
+        _strings.exerciseEditorCreateFailed(
+          safeFailureMessage(_strings, error),
+        ),
+      );
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }

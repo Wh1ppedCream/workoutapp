@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../../data/premade_training_plans.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../../l10n/safe_failure_localizations.dart';
 import '../../models/models.dart';
 import '../../repositories/app_repository.dart';
 import '../../services/active_plan_store.dart';
@@ -165,7 +166,10 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            _strings.premadePlanAddFailed(plan.name, error.toString()),
+            _strings.premadePlanAddFailed(
+              plan.name,
+              safeFailureMessage(_strings, error),
+            ),
           ),
         ),
       );
@@ -509,7 +513,9 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(_strings.premadeDiscardFailed(error.toString())),
+          content: Text(
+            _strings.premadeDiscardFailed(safeFailureMessage(_strings, error)),
+          ),
         ),
       );
       setState(() => _isDiscardingOnboardingPlans = false);

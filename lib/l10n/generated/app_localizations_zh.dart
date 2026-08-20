@@ -500,7 +500,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onboardingReviewWorkoutSpaceTitle => '检查您的训练地点';
 
   @override
-  String get onboardingReviewWorkoutSpaceSubtitle => '在 Tonos 创建资料前，重命名资料或调整其器械。';
+  String get onboardingReviewWorkoutSpaceSubtitle =>
+      '在 Tonos 创建资料前，重命名资料或调整其器械。';
 
   @override
   String get onboardingProfileNameLabel => '资料名称';
@@ -530,7 +531,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onboardingWorkoutPlanTitle => '设置训练计划';
 
   @override
-  String get onboardingWorkoutPlanSubtitle => '选择 Tonos 应如何准备您的首批计划。之后可以随时添加、归档或编辑计划。';
+  String get onboardingWorkoutPlanSubtitle =>
+      '选择 Tonos 应如何准备您的首批计划。之后可以随时添加、归档或编辑计划。';
 
   @override
   String get onboardingManualPlanTitle => '手动创建自己的计划';
@@ -571,7 +573,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onboardingReviewPlansTitle => '检查您的计划';
 
   @override
-  String get onboardingReviewPlansSubtitle => '这些计划已添加到您的活跃计划。继续前，可打开任意计划查看或调整。';
+  String get onboardingReviewPlansSubtitle =>
+      '这些计划已添加到您的活跃计划。继续前，可打开任意计划查看或调整。';
 
   @override
   String onboardingPlansReady(int count) {
@@ -807,7 +810,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get profileAccountTutorialTitle => '账户设置';
 
   @override
-  String get profileAccountTutorialBody => '您可以在这里更新个人信息、显示偏好、重量单位、引导、底部标签和引导教程。';
+  String get profileAccountTutorialBody =>
+      '您可以在这里更新个人信息、显示偏好、重量单位、引导、底部标签和引导教程。';
 
   @override
   String get profileTrainingTutorialTitle => '训练设置';
@@ -857,13 +861,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get catalogExerciseTutorialTitle => '训练动作目录';
 
   @override
-  String get catalogExerciseTutorialBody => '您最常做的动作会首先显示在这里。点击卡片可打开完整目录、搜索动作并查看动作详情。';
+  String get catalogExerciseTutorialBody =>
+      '您最常做的动作会首先显示在这里。点击卡片可打开完整目录、搜索动作并查看动作详情。';
 
   @override
   String get catalogAnatomyTutorialTitle => '目标解剖部位';
 
   @override
-  String get catalogAnatomyTutorialBody => '这里汇总您训练最多的身体部位和肌肉。点击任一侧可打开解剖目录，查看针对性的动作列表。';
+  String get catalogAnatomyTutorialBody =>
+      '这里汇总您训练最多的身体部位和肌肉。点击任一侧可打开解剖目录，查看针对性的动作列表。';
 
   @override
   String catalogTimesUsed(int count) {
@@ -936,19 +942,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String get trainTutorialWeeklyTitle => '每周概览';
 
   @override
-  String get trainTutorialWeeklyBody => '这里显示您最近训练过的身体部位。点击重点训练组列表可打开完整的每周训练组明细。';
+  String get trainTutorialWeeklyBody =>
+      '这里显示您最近训练过的身体部位。点击重点训练组列表可打开完整的每周训练组明细。';
 
   @override
   String get trainTutorialActivePlansTitle => '活跃计划';
 
   @override
-  String get trainTutorialActivePlansBody => '活跃计划是您想随时使用的训练例程。使用编辑图标选择哪些计划会保留在概览标签上。';
+  String get trainTutorialActivePlansBody =>
+      '活跃计划是您想随时使用的训练例程。使用编辑图标选择哪些计划会保留在概览标签上。';
 
   @override
   String get trainTutorialStartTitle => '开始或优化';
 
   @override
-  String get trainTutorialStartBody => '开始训练会创建空白训练。优化会根据您的历史、资料器械、重点和恢复规则创建训练。';
+  String get trainTutorialStartBody =>
+      '开始训练会创建空白训练。优化会根据您的历史、资料器械、重点和恢复规则创建训练。';
 
   @override
   String get trainTutorialProfilesTitle => '健身房资料';
@@ -1105,13 +1114,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get planManagementActiveTutorialTitle => '活跃计划';
 
   @override
-  String get planManagementActiveTutorialBody => '这些计划会保持显示在训练概览中。想隐藏某个计划但不删除时，请使用归档。';
+  String get planManagementActiveTutorialBody =>
+      '这些计划会保持显示在训练概览中。想隐藏某个计划但不删除时，请使用归档。';
 
   @override
   String get planManagementArchivedTutorialTitle => '已归档计划';
 
   @override
-  String get planManagementArchivedTutorialBody => '归档计划仍会保存。想让计划重新出现在概览中时，可在此启用它。';
+  String get planManagementArchivedTutorialBody =>
+      '归档计划仍会保存。想让计划重新出现在概览中时，可在此启用它。';
 
   @override
   String planManagementUpdateFailed(String plan, String error) {
@@ -1242,7 +1253,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get optimizedTutorialActionsTitle => '保存或开始';
 
   @override
-  String get optimizedTutorialActionsBody => '“立即开始”会一次性使用当前屏幕上的数值。“保存”会为以后的优化训练保留这些设置。';
+  String get optimizedTutorialActionsBody =>
+      '“立即开始”会一次性使用当前屏幕上的数值。“保存”会为以后的优化训练保留这些设置。';
 
   @override
   String optimizedValidationError(int maxSets) {
@@ -1271,7 +1283,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get optimizedRepsWeightsTitle => '重复次数和重量';
 
   @override
-  String get optimizedRepsWeightsDescription => '可用时会使用基于历史记录的力量估算；“轻松”和“中等”比“困难”降低得更多。新动作会使用保守的起始估算。';
+  String get optimizedRepsWeightsDescription =>
+      '可用时会使用基于历史记录的力量估算；“轻松”和“中等”比“困难”降低得更多。新动作会使用保守的起始估算。';
 
   @override
   String get optimizedRepPattern => '重复次数模式';
@@ -1307,7 +1320,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get optimizedBodypartFocusTitle => '身体部位重点';
 
   @override
-  String get optimizedBodypartFocusDescription => '这些选择只适用于您下一次开始的优化训练。点按一次表示优先，两次表示避免，再次点按可清除。';
+  String get optimizedBodypartFocusDescription =>
+      '这些选择只适用于您下一次开始的优化训练。点按一次表示优先，两次表示避免，再次点按可清除。';
 
   @override
   String get optimizedBodypartsUnavailable => '无法加载身体部位。';
@@ -1334,7 +1348,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get generateTrainingFocusTitle => '训练重点';
 
   @override
-  String get generateTutorialFocusBody => '在此处优先或避免身体部位。仅当您希望考虑近期训练时，7 天历史开关才会影响生成。';
+  String get generateTutorialFocusBody =>
+      '在此处优先或避免身体部位。仅当您希望考虑近期训练时，7 天历史开关才会影响生成。';
 
   @override
   String get generateRepsWeightsTitle => '重复次数和重量';
@@ -1724,13 +1739,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get planTutorialExerciseCardsTitle => '动作卡';
 
   @override
-  String get planTutorialExerciseCardsBody => '打开动作卡以查看计划训练组。在编辑模式下，可使用菜单替换或移除动作。';
+  String get planTutorialExerciseCardsBody =>
+      '打开动作卡以查看计划训练组。在编辑模式下，可使用菜单替换或移除动作。';
 
   @override
   String get planTutorialStartOrSaveTitle => '开始或保存';
 
   @override
-  String get planTutorialStartOrSaveBody => '“开始训练”会将此计划作为一次训练开始。在编辑模式下，它会变为“保存预设”，以保存您的更改。';
+  String get planTutorialStartOrSaveBody =>
+      '“开始训练”会将此计划作为一次训练开始。在编辑模式下，它会变为“保存预设”，以保存您的更改。';
 
   @override
   String get planGuideNameTitle => '命名计划';
@@ -2002,7 +2019,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get rulesHowDefaultsTitle => '默认规则如何工作';
 
   @override
-  String get rulesHowDefaultsBody => '应用默认规则会复制到新健身房资料。资料默认规则会复制到新计划，因此之后的编辑不会意外改写现有计划。';
+  String get rulesHowDefaultsBody =>
+      '应用默认规则会复制到新健身房资料。资料默认规则会复制到新计划，因此之后的编辑不会意外改写现有计划。';
 
   @override
   String get rulesAppDefaultsTitle => '全应用默认规则';
@@ -2076,6 +2094,44 @@ class AppLocalizationsZh extends AppLocalizations {
   String get commonRetry => '重试';
 
   @override
+  String get safeFailureLoadTitle => '无法加载';
+
+  @override
+  String get safeFailureSaveTitle => '无法保存更改';
+
+  @override
+  String get safeFailureActionTitle => '无法完成该操作';
+
+  @override
+  String get safeFailureValidation => '请检查信息后重试。';
+
+  @override
+  String get safeFailureOffline => '当前无网络连接。请重新连接后重试。';
+
+  @override
+  String get safeFailurePermission => 'Tonos 没有完成此操作的权限。请检查设备设置。';
+
+  @override
+  String get safeFailureStorage => 'Tonos 无法访问设备存储空间。请检查可用空间后重试。';
+
+  @override
+  String get safeFailureInvalidData => '无法安全读取数据。请选择其他文件或重试。';
+
+  @override
+  String get safeFailureNotFound => '请求的数据已不可用。请刷新后重试。';
+
+  @override
+  String get safeFailureTemporary => '此内容暂时不可用。请重试。';
+
+  @override
+  String get safeFailureUnknown => '出现问题。请重试。';
+
+  @override
+  String safeFailureWithGuidance(String summary, String guidance) {
+    return '$summary $guidance';
+  }
+
+  @override
   String get flowPageTitle => '训练进阶流程';
 
   @override
@@ -2085,7 +2141,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get flowHowCopiedTitle => '流程如何复制';
 
   @override
-  String get flowHowCopiedBody => '应用流程会成为新健身房档案的起点。健身房流程会成为新计划的起点。之后的编辑仅影响您在此处打开的流程。';
+  String get flowHowCopiedBody =>
+      '应用流程会成为新健身房档案的起点。健身房流程会成为新计划的起点。之后的编辑仅影响您在此处打开的流程。';
 
   @override
   String get flowLoadError => '无法加载训练进阶流程。';
@@ -2256,7 +2313,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get exerciseDetailContextTutorialTitle => '动作背景';
 
   @override
-  String get exerciseDetailContextTutorialBody => '详情标签页会显示该动作的器械、训练的身体部位、肌肉和动作提示。';
+  String get exerciseDetailContextTutorialBody =>
+      '详情标签页会显示该动作的器械、训练的身体部位、肌肉和动作提示。';
 
   @override
   String get exerciseDetailSessionOpenFailed => '无法打开训练记录。';
@@ -2445,7 +2503,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get logbookTutorialCalendarTitle => '日志日历';
 
   @override
-  String get logbookTutorialCalendarBody => '使用 M、3M、Y 和 4Y 浏览训练历史。选择一天、一周、一个月或一年，可查看该范围内的训练和摘要统计。';
+  String get logbookTutorialCalendarBody =>
+      '使用 M、3M、Y 和 4Y 浏览训练历史。选择一天、一周、一个月或一年，可查看该范围内的训练和摘要统计。';
 
   @override
   String get fullHistoryTitle => '所有训练记录';
@@ -2509,19 +2568,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String get weeklySetsTutorialStatusTitle => '训练组状态';
 
   @override
-  String get weeklySetsTutorialStatusBody => '每一行的颜色取决于近期训练量是低于、处于还是高于建议范围。点按一行可查看关联动作。';
+  String get weeklySetsTutorialStatusBody =>
+      '每一行的颜色取决于近期训练量是低于、处于还是高于建议范围。点按一行可查看关联动作。';
 
   @override
   String get workoutDetailTutorialSummaryTitle => '训练概览';
 
   @override
-  String get workoutDetailTutorialSummaryBody => '查看总训练组数、训练容量、时长、动作数量以及此次训练覆盖的身体部位。';
+  String get workoutDetailTutorialSummaryBody =>
+      '查看总训练组数、训练容量、时长、动作数量以及此次训练覆盖的身体部位。';
 
   @override
   String get workoutDetailTutorialExercisesTitle => '动作记录';
 
   @override
-  String get workoutDetailTutorialExercisesBody => '每个动作都会显示该次训练中完成的训练组。点按详情可查看动作。';
+  String get workoutDetailTutorialExercisesBody =>
+      '每个动作都会显示该次训练中完成的训练组。点按详情可查看动作。';
 
   @override
   String get workoutDetailTutorialEditTitle => '编辑训练记录';
@@ -2697,7 +2759,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get logbookViewAllSessions => '查看所有训练';
 
   @override
-  String logbookSessionSummary(String duration, int exercises, int sets, String volume) {
+  String logbookSessionSummary(
+    String duration,
+    int exercises,
+    int sets,
+    String volume,
+  ) {
     return '$duration - $exercises 个动作 - $sets 组 - $volume';
   }
 
@@ -3192,7 +3259,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get anatomyTutorialListsTitle => '身体部位和肌肉';
 
   @override
-  String get anatomyTutorialListsBody => '切换标签页，然后点按任一行以查看关联动作、近期训练组总数和建议训练组边界。';
+  String get anatomyTutorialListsBody =>
+      '切换标签页，然后点按任一行以查看关联动作、近期训练组总数和建议训练组边界。';
 
   @override
   String anatomyTargetExercises(String name) {
@@ -3289,7 +3357,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get anatomyTutorialDetailTitle => '解剖部位详情';
 
   @override
-  String get anatomyTutorialBodypartDetailBody => '标题区域会显示近期训练组、建议训练组边界和相关解剖部位链接。';
+  String get anatomyTutorialBodypartDetailBody =>
+      '标题区域会显示近期训练组、建议训练组边界和相关解剖部位链接。';
 
   @override
   String get anatomyTutorialMuscleDetailTitle => '肌肉详情';
@@ -3301,10 +3370,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get anatomyTutorialLinkedExercisesTitle => '关联动作';
 
   @override
-  String get anatomyTutorialBodypartExercisesBody => '这些是与该目标关联的动作。点按任一动作可打开完整详情。';
+  String get anatomyTutorialBodypartExercisesBody =>
+      '这些是与该目标关联的动作。点按任一动作可打开完整详情。';
 
   @override
-  String get anatomyTutorialMuscleExercisesBody => '动作会按其训练此肌肉的直接程度排序。点按任一动作可查看完整详情。';
+  String get anatomyTutorialMuscleExercisesBody =>
+      '动作会按其训练此肌肉的直接程度排序。点按任一动作可查看完整详情。';
 
   @override
   String get settingsWorkoutTitle => '训练设置';
@@ -3422,7 +3493,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get nutritionGoalsSaved => '目标已保存';
 
   @override
-  String nutritionGoalSummary(String calories, String protein, String carbs, String fat, String fiber, String sugar, String satFat, String sodium) {
+  String nutritionGoalSummary(
+    String calories,
+    String protein,
+    String carbs,
+    String fat,
+    String fiber,
+    String sugar,
+    String satFat,
+    String sodium,
+  ) {
     return '热量：$calories ／蛋白质：$protein ／碳水：$carbs ／脂肪：$fat ／纤维：$fiber ／糖：$sugar ／饱和脂肪：$satFat ／钠：$sodium';
   }
 
@@ -3699,13 +3779,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get progressTutorialWorkoutReportTitle => '训练报告';
 
   @override
-  String get progressTutorialWorkoutReportBody => '追踪不同时段的训练次数、训练时间和训练量。点击指标可更改图表显示内容。';
+  String get progressTutorialWorkoutReportBody =>
+      '追踪不同时段的训练次数、训练时间和训练量。点击指标可更改图表显示内容。';
 
   @override
   String get progressTutorialExerciseProgressTitle => '动作进度';
 
   @override
-  String get progressTutorialExerciseProgressBody => '追踪所选动作的力量趋势。使用编辑卡片添加或移除仪表盘动作。';
+  String get progressTutorialExerciseProgressBody =>
+      '追踪所选动作的力量趋势。使用编辑卡片添加或移除仪表盘动作。';
 
   @override
   String get progressTutorialHealthTrendsTitle => '健康趋势';
@@ -3886,7 +3968,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get gymProfileTutorialAvailableTitle => '可用器械';
 
   @override
-  String get gymProfileTutorialAvailableBody => '选择此训练地点拥有的器械。生成的计划和替换会借此避开不可用动作。';
+  String get gymProfileTutorialAvailableBody =>
+      '选择此训练地点拥有的器械。生成的计划和替换会借此避开不可用动作。';
 
   @override
   String get gymProfileTutorialSaveTitle => '保存资料';
@@ -4149,7 +4232,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get tutorialSkipAllTitle => '跳过所有教程？';
 
   @override
-  String get tutorialSkipAllBody => '这会隐藏所有引导教程。您随时可以在“设置 > 引导教程”中使用“重置所有教程”重新启用它们。';
+  String get tutorialSkipAllBody =>
+      '这会隐藏所有引导教程。您随时可以在“设置 > 引导教程”中使用“重置所有教程”重新启用它们。';
 
   @override
   String get tutorialKeep => '保留教程';
@@ -4266,7 +4350,12 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String automaticChildSetLabel(int parent, int child, String weight, int reps) {
+  String automaticChildSetLabel(
+    int parent,
+    int child,
+    String weight,
+    int reps,
+  ) {
     return '训练组 $parent.$child：$weight × $reps';
   }
 
@@ -4435,19 +4524,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String get premadeTutorialLengthTitle => '计划时长';
 
   @override
-  String get premadeTutorialLengthBody => '在 1 小时和 2 小时版本之间切换。更长的版本包含更多动作和总训练组数。';
+  String get premadeTutorialLengthBody =>
+      '在 1 小时和 2 小时版本之间切换。更长的版本包含更多动作和总训练组数。';
 
   @override
   String get premadeTutorialEquipmentTitle => '档案器械';
 
   @override
-  String get premadeTutorialEquipmentBody => '开启后，Tonos 会将不可用动作替换为当前健身房档案可执行的类似选项。';
+  String get premadeTutorialEquipmentBody =>
+      '开启后，Tonos 会将不可用动作替换为当前健身房档案可执行的类似选项。';
 
   @override
   String get premadeTutorialLibraryTitle => '计划资料库';
 
   @override
-  String get premadeTutorialLibraryBody => '打开一个训练分化，预览计划，然后将其添加到活跃计划，以便它显示在“训练”中。';
+  String get premadeTutorialLibraryBody =>
+      '打开一个训练分化，预览计划，然后将其添加到活跃计划，以便它显示在“训练”中。';
 
   @override
   String get premadeSelectProfile => '请先选择健身房档案。';
@@ -4463,7 +4555,8 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get premadeDescription => '将教练、健身达人和应用精选的训练方案复制到您自己的计划中。添加后，您可以像编辑其他计划一样编辑它们。';
+  String get premadeDescription =>
+      '将教练、健身达人和应用精选的训练方案复制到您自己的计划中。添加后，您可以像编辑其他计划一样编辑它们。';
 
   @override
   String get premadeDiscarding => '正在放弃……';
@@ -4499,7 +4592,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get allocationHowTitle => '训练组计入值的工作方式';
 
   @override
-  String get allocationHowBody => '一个主要肌肉通常会从一个已完成训练组获得 1.00 计入值。辅助肌肉获得较少计入值。这会指导解剖部位摘要和建议，但绝不会更改您记录的训练组。';
+  String get allocationHowBody =>
+      '一个主要肌肉通常会从一个已完成训练组获得 1.00 计入值。辅助肌肉获得较少计入值。这会指导解剖部位摘要和建议，但绝不会更改您记录的训练组。';
 
   @override
   String allocationLoadFailed(String error) {
@@ -4540,7 +4634,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get allocationNoBodypartMappingBody => '此动作尚无身体部位映射数据。';
 
   @override
-  String get allocationBodypartCreditBody => '自动数值来自肌肉和解剖部位映射。编辑其中一项会创建直接的个人身体部位分配。';
+  String get allocationBodypartCreditBody =>
+      '自动数值来自肌肉和解剖部位映射。编辑其中一项会创建直接的个人身体部位分配。';
 
   @override
   String get healthTrendsTitle => '健康趋势';
@@ -4807,7 +4902,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get exerciseProgressTrendTitle => '1RM 趋势';
 
   @override
-  String get exerciseProgressTrendBody => '此图表会随时间比较实际记录的 1RM 与估算 1RM。点按数据点可查看精确数值。';
+  String get exerciseProgressTrendBody =>
+      '此图表会随时间比较实际记录的 1RM 与估算 1RM。点按数据点可查看精确数值。';
 
   @override
   String get exerciseProgressRecordings => '记录';
@@ -4946,7 +5042,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get trainOptimizedSettingsTitle => '优化训练设置';
 
   @override
-  String get trainOptimizedSettingsBudgetBody => '用于为每组分配 3 分钟，并为每个动作开始分配 5 分钟。';
+  String get trainOptimizedSettingsBudgetBody =>
+      '用于为每组分配 3 分钟，并为每个动作开始分配 5 分钟。';
 
   @override
   String get trainOptimizedSettingsFocusBody => '身体部位选择只适用于您接下来开始的优化训练。';
@@ -5052,7 +5149,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get foodCustomizationDensity => '密度（克／毫升）';
 
   @override
-  String get foodCustomizationDensityHelp => '用于将以毫升为单位的份量（杯、汤匙）转换为克，以便计算宏量营养素。';
+  String get foodCustomizationDensityHelp =>
+      '用于将以毫升为单位的份量（杯、汤匙）转换为克，以便计算宏量营养素。';
 
   @override
   String get foodCustomizationCalories => '热量（kcal）';
@@ -5361,7 +5459,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get databaseTutorialMaintenanceTitle => '维护工具';
 
   @override
-  String get databaseTutorialMaintenanceBody => '需要时可使用这些操作进行完整性检查、优化、WAL 检查点或清理。';
+  String get databaseTutorialMaintenanceBody =>
+      '需要时可使用这些操作进行完整性检查、优化、WAL 检查点或清理。';
 
   @override
   String get databaseExportSavedTitle => '数据库导出已保存';
@@ -5445,13 +5544,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get exerciseEditorMuscleOrderTitle => '目标肌肉顺序';
 
   @override
-  String get exerciseEditorMuscleOrderBody => '按动作对肌肉的训练强度排序。这可帮助 Tonos 估算解剖重点并提供更好的动作建议。';
+  String get exerciseEditorMuscleOrderBody =>
+      '按动作对肌肉的训练强度排序。这可帮助 Tonos 估算解剖重点并提供更好的动作建议。';
 
   @override
   String get exerciseEditorExactSetCredit => '精确训练组计入值';
 
   @override
-  String get exerciseEditorExactSetCreditBody => '在动作训练组分配中更改一个训练组对每块肌肉或身体部位贡献的精确计入值。';
+  String get exerciseEditorExactSetCreditBody =>
+      '在动作训练组分配中更改一个训练组对每块肌肉或身体部位贡献的精确计入值。';
 
   @override
   String get exerciseEditorSetCreditScaling => '训练组计入值缩放';
@@ -5498,13 +5599,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get exerciseEditorAssociatedBodyparts => '关联身体部位';
 
   @override
-  String get exerciseEditorAssociatedBodypartsBody => '这些大范围区域会用于身体热力图、每周覆盖情况和器械感知训练建议。';
+  String get exerciseEditorAssociatedBodypartsBody =>
+      '这些大范围区域会用于身体热力图、每周覆盖情况和器械感知训练建议。';
 
   @override
   String get exerciseEditorExactBodypartCredit => '精确身体部位计入值';
 
   @override
-  String get exerciseEditorExactBodypartCreditBody => '当一个训练组应按特定比例计入某个身体部位时，请使用动作训练组分配。';
+  String get exerciseEditorExactBodypartCreditBody =>
+      '当一个训练组应按特定比例计入某个身体部位时，请使用动作训练组分配。';
 
   @override
   String get exerciseEditorBodypartsHint => '添加此动作训练到的每个大范围身体区域。';
@@ -5533,7 +5636,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get exerciseEditorAvailableEquipment => '可用器械';
 
   @override
-  String get exerciseEditorAvailableEquipmentBody => '关联器械决定哪些档案可使用此动作，以及 Tonos 可推荐哪些替代动作。';
+  String get exerciseEditorAvailableEquipmentBody =>
+      '关联器械决定哪些档案可使用此动作，以及 Tonos 可推荐哪些替代动作。';
 
   @override
   String get exerciseEditorEquipmentHint => '添加完成此动作所需的每件器械。';
@@ -5639,7 +5743,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get exerciseEditorWhatChangesTitle => '此处可更改的内容';
 
   @override
-  String get exerciseEditorWhatChangesBody => '使用此高级编辑器可更新动作名称、目标解剖部位、器械、动作指导、评分和参考媒体。每组的精确计入值单独管理，以保持整个应用的一致性。';
+  String get exerciseEditorWhatChangesBody =>
+      '使用此高级编辑器可更新动作名称、目标解剖部位、器械、动作指导、评分和参考媒体。每组的精确计入值单独管理，以保持整个应用的一致性。';
 
   @override
   String get exerciseEditorChooseCatalog => '从目录中选择一个动作';
@@ -5695,7 +5800,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get exerciseEditorFormGuide => '动作指南';
 
   @override
-  String get exerciseEditorFormGuideBody => '这些说明会显示在动作详情面板中，帮助用户安全地准备、执行和理解该动作。';
+  String get exerciseEditorFormGuideBody =>
+      '这些说明会显示在动作详情面板中，帮助用户安全地准备、执行和理解该动作。';
 
   @override
   String get exerciseEditorGuidance => '指导说明';
@@ -5728,7 +5834,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get exerciseEditorReferenceMedia => '参考媒体';
 
   @override
-  String get exerciseEditorReferenceMediaBody => '使用媒体链接保存私人参考资料。由内容同步流程管理的目录媒体可随时刷新。';
+  String get exerciseEditorReferenceMediaBody =>
+      '使用媒体链接保存私人参考资料。由内容同步流程管理的目录媒体可随时刷新。';
 
   @override
   String get exerciseEditorMediaLinks => '媒体链接';
@@ -6113,7 +6220,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get diagnosticsPrivacyPromiseTitle => '隐私保护设计';
 
   @override
-  String get diagnosticsPrivacyPromiseBody => '报告仅包含应用版本、构建号、平台、批准的类别、结果和粗略区间。绝不包含错误消息、堆栈跟踪、姓名、健康数据、数据库内容、屏幕截图、网络地址、跟踪信息或分析数据。';
+  String get diagnosticsPrivacyPromiseBody =>
+      '报告仅包含应用版本、构建号、平台、批准的类别、结果和粗略区间。绝不包含错误消息、堆栈跟踪、姓名、健康数据、数据库内容、屏幕截图、网络地址、跟踪信息或分析数据。';
 
   @override
   String get diagnosticsSyncSection => '内容同步历史';
@@ -6160,7 +6268,13 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String diagnosticsSyncEventDetails(String source, String timestamp, int duration, String version, String items) {
+  String diagnosticsSyncEventDetails(
+    String source,
+    String timestamp,
+    int duration,
+    String version,
+    String items,
+  ) {
     return '$source • $timestamp • $duration 毫秒 • 清单 $version • $items 项';
   }
 
@@ -6174,13 +6288,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get diagnosticsLocalDataTitle => '健身数据保留在本地';
 
   @override
-  String get diagnosticsLocalDataBody => '除非您自行导出备份，否则训练、营养、身体指标和个人资料记录只保存在此设备的应用数据库中。';
+  String get diagnosticsLocalDataBody =>
+      '除非您自行导出备份，否则训练、营养、身体指标和个人资料记录只保存在此设备的应用数据库中。';
 
   @override
   String get diagnosticsDeletionTitle => '删除诊断和应用数据';
 
   @override
-  String get diagnosticsDeletionBody => '清除上方同步历史并关闭匿名诊断，以请求删除此安装发送的报告。在设备设置中清除 Tonos 存储或卸载 Tonos，即可删除本地数据库和缓存。';
+  String get diagnosticsDeletionBody =>
+      '清除上方同步历史并关闭匿名诊断，以请求删除此安装发送的报告。在设备设置中清除 Tonos 存储或卸载 Tonos，即可删除本地数据库和缓存。';
 
   @override
   String get diagnosticsSendTestReport => '发送受控诊断事件';
@@ -6198,7 +6314,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get diagnosticsDeleteShared => '删除已共享的诊断信息';
 
   @override
-  String get diagnosticsDeleteSharedBody => '请求删除此安装可证明已发送的报告。提供商的恢复历史可能会将已删除行保留最多 30 天。';
+  String get diagnosticsDeleteSharedBody =>
+      '请求删除此安装可证明已发送的报告。提供商的恢复历史可能会将已删除行保留最多 30 天。';
 
   @override
   String get diagnosticsSharedDeleted => '已请求删除已共享的诊断信息。';
@@ -6207,19 +6324,23 @@ class AppLocalizationsZh extends AppLocalizations {
   String get diagnosticsSharedDeletionPending => '部分删除请求会在应用连接网络后再次打开时重试。';
 
   @override
-  String get workoutDurabilityRestoreWarning => 'Tonos 无法检查是否有已保存的训练。请重试后再开始新的训练。';
+  String get workoutDurabilityRestoreWarning =>
+      'Tonos 无法检查是否有已保存的训练。请重试后再开始新的训练。';
 
   @override
-  String get workoutDurabilityDraftSaveWarning => '训练备份尚未更新。请保持 Tonos 打开并重试，以便安全恢复本次训练。';
+  String get workoutDurabilityDraftSaveWarning =>
+      '训练备份尚未更新。请保持 Tonos 打开并重试，以便安全恢复本次训练。';
 
   @override
-  String get workoutDurabilityProgressionWarning => '训练已保存，但计划进度更新仍在等待中。存储可用后请重试。';
+  String get workoutDurabilityProgressionWarning =>
+      '训练已保存，但计划进度更新仍在等待中。存储可用后请重试。';
 
   @override
   String get databaseConfirmExportTitle => '导出私人数据？';
 
   @override
-  String get databaseConfirmExportBody => '此备份是未加密的 JSON 文件，可能包含你的训练、营养、身体测量、个人资料和偏好设置。请只将其保存到可信的位置。';
+  String get databaseConfirmExportBody =>
+      '此备份是未加密的 JSON 文件，可能包含你的训练、营养、身体测量、个人资料和偏好设置。请只将其保存到可信的位置。';
 
   @override
   String get databaseContinueExport => '仍要导出';

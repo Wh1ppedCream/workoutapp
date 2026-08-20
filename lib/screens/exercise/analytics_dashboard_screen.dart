@@ -11,6 +11,7 @@ import '../../models/models.dart';
 import '../../providers/unit_preference_provider.dart';
 import '../../repositories/app_repository.dart';
 import '../../services/tutorial_state_store.dart';
+import '../../services/safe_failure.dart';
 import '../../theme/theme_extensions.dart';
 import '../../utils/localized_body_part_name.dart';
 import '../../utils/completed_workout_duration_formatter.dart';
@@ -18,6 +19,7 @@ import '../../utils/tutorial_launcher.dart';
 import '../../utils/weight_unit_formatter.dart';
 import '../../widgets/body_heatmap.dart';
 import '../../widgets/guided_tutorial_overlay.dart';
+import '../../widgets/safe_error_view.dart';
 import 'definitions_by_bodypart_page.dart';
 import 'definitions_by_muscle_page.dart';
 
@@ -39,7 +41,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
   final _listTutorialKey = GlobalKey(debugLabel: 'weekly_sets_list');
 
   bool _isLoading = true;
-  String? _error;
+  SafeFailure? _failure;
   _WeeklySetOverviewData? _data;
   bool _tutorialQueued = false;
 
@@ -59,7 +61,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
   Future<void> _loadData() async {
     setState(() {
       _isLoading = true;
-      _error = null;
+      _failure = null;
     });
 
     try {
@@ -152,7 +154,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = e.toString();
+        _failure = SafeFailure.classify(e);
         _isLoading = false;
       });
     }
@@ -230,8 +232,12 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
       body:
           _isLoading && data == null
               ? const Center(child: CircularProgressIndicator())
-              : _error != null && data == null
-              ? Center(child: Text(strings.weeklySetsLoadError))
+              : _failure != null && data == null
+              ? SafeErrorView(
+                title: strings.weeklySetsLoadError,
+                failure: _failure!,
+                onRetry: _loadData,
+              )
               : Column(
                 children: [
                   KeyedSubtree(

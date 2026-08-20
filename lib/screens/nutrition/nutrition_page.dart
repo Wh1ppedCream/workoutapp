@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../l10n/generated/app_localizations.dart';
 import '../../providers/nutrition_profile.dart';
+import '../../widgets/safe_error_view.dart';
 import '../../widgets/speed_dial_fab.dart';
 import '../../widgets/nutrition_dash.dart';
 import '../../widgets/health_trends_section.dart';
@@ -33,8 +34,12 @@ class NutritionPage extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
           if (p.error != null) {
-            return Center(
-              child: Text(strings.nutritionDashboardError(p.error!)),
+            return SafeErrorView(
+              title: strings.safeFailureLoadTitle,
+              failure: p.error!,
+              onRetry: () {
+                p.reloadDay();
+              },
             );
           }
 

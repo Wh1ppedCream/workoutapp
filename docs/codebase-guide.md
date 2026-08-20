@@ -13,6 +13,8 @@ where the important logic lives and how the major workout features fit together.
   to read or update.
 - `lib/services/` contains feature logic that is bigger than one page, such as
   preset generation and automatic progression.
+- UI failure paths use `SafeFailure` and `SafeErrorView`; follow
+  `docs/error-handling.md` rather than retaining or rendering raw exceptions.
 - `lib/repositories/app_repository.dart` is the main app-facing data facade.
   Screens, providers, and services generally call the repository instead of
   individual DAOs directly.

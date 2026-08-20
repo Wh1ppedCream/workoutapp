@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../l10n/generated/app_localizations.dart';
+import '../../l10n/safe_failure_localizations.dart';
 import '../../models/nutrition_models.dart';
 import '../../repositories/app_repository.dart';
 import '../../providers/nutrition_profile.dart';
@@ -1117,11 +1118,19 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
           SnackBar(content: Text(strings.foodBarcodeLogged)),
         );
       } on StateError catch (e) {
-        if (mounted) messenger.showSnackBar(SnackBar(content: Text(e.message)));
+        if (mounted) {
+          messenger.showSnackBar(
+            SnackBar(
+              content: Text(strings.foodFailed(safeFailureMessage(strings, e))),
+            ),
+          );
+        }
       } catch (e) {
         if (mounted) {
           messenger.showSnackBar(
-            SnackBar(content: Text(strings.foodFailed(e.toString()))),
+            SnackBar(
+              content: Text(strings.foodFailed(safeFailureMessage(strings, e))),
+            ),
           );
         }
       }
@@ -1160,7 +1169,9 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
     } catch (e) {
       if (mounted) {
         messenger.showSnackBar(
-          SnackBar(content: Text(strings.foodFailed(e.toString()))),
+          SnackBar(
+            content: Text(strings.foodFailed(safeFailureMessage(strings, e))),
+          ),
         );
       }
     }
@@ -1811,11 +1822,12 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
 
     final navigator = Navigator.of(context);
     final messenger = ScaffoldMessenger.of(context);
+    final strings = AppLocalizations.of(context);
     final prof = context.read<NutritionProfile>();
     final pid = prof.profileId;
     if (pid == null) {
       messenger.showSnackBar(
-        const SnackBar(content: Text('Profile not ready yet.')),
+        SnackBar(content: Text(strings.foodProfileNotReady)),
       );
       if (mounted) setState(() => _logBusy = false);
       return;
@@ -1861,15 +1873,17 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
       // Refresh if we're on today (cheap, provider-coalesced)
       await prof.reloadIfToday();
 
-      messenger.showSnackBar(
-        const SnackBar(content: Text('Items logged to diary')),
-      );
+      messenger.showSnackBar(SnackBar(content: Text(strings.foodItemsLogged)));
 
       if (closeDrawerToo) navigator.pop(); // close endDrawer
       if (popPageAfter) navigator.pop(true); // optionally leave page
     } catch (e) {
       if (!mounted) return;
-      messenger.showSnackBar(SnackBar(content: Text('Failed to log: $e')));
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(strings.foodLogFailed(safeFailureMessage(strings, e))),
+        ),
+      );
     } finally {
       if (mounted) setState(() => _logBusy = false);
     }

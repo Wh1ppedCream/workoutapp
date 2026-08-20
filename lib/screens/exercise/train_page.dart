@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/premade_training_plans.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../../l10n/safe_failure_localizations.dart';
 import '../../models/models.dart';
 import '../../providers/active_session.dart';
 import '../../providers/preset_session.dart';
@@ -544,7 +545,9 @@ class _TrainPageState extends State<TrainPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            AppLocalizations.of(context).trainOptimizedStartFailed('$e'),
+            AppLocalizations.of(context).trainOptimizedStartFailed(
+              safeFailureMessage(AppLocalizations.of(context), e),
+            ),
           ),
         ),
       );

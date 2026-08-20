@@ -186,19 +186,24 @@ class AppLocalizationsFr extends AppLocalizations {
   String get workoutReportNoWorkoutsYet => 'Aucun entraînement pour le moment';
 
   @override
-  String get workoutReportNoTrainingTimeYet => 'Aucun temps d’entraînement pour le moment';
+  String get workoutReportNoTrainingTimeYet =>
+      'Aucun temps d’entraînement pour le moment';
 
   @override
-  String get workoutReportNoVolumeYet => 'Aucun volume enregistré pour le moment';
+  String get workoutReportNoVolumeYet =>
+      'Aucun volume enregistré pour le moment';
 
   @override
-  String get workoutReportNoWorkoutsBody => 'Terminez un entraînement pour commencer à créer ce rapport.';
+  String get workoutReportNoWorkoutsBody =>
+      'Terminez un entraînement pour commencer à créer ce rapport.';
 
   @override
-  String get workoutReportNoTrainingTimeBody => 'Les séances terminées ajouteront automatiquement des minutes ici.';
+  String get workoutReportNoTrainingTimeBody =>
+      'Les séances terminées ajouteront automatiquement des minutes ici.';
 
   @override
-  String get workoutReportNoVolumeBody => 'Enregistrez les poids des séries terminées pour créer des tendances de volume.';
+  String get workoutReportNoVolumeBody =>
+      'Enregistrez les poids des séries terminées pour créer des tendances de volume.';
 
   @override
   String get appTitle => 'Tonos';
@@ -207,7 +212,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get uiAppearanceTitle => 'Interface et apparence';
 
   @override
-  String get uiAppearanceSubtitle => 'Contrôlez l’apparence de Tonos et le fonctionnement des onglets de navigation.';
+  String get uiAppearanceSubtitle =>
+      'Contrôlez l’apparence de Tonos et le fonctionnement des onglets de navigation.';
 
   @override
   String get displaySettingsTitle => 'Affichage';
@@ -225,7 +231,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get replayOnboardingTitle => 'Revoir la configuration initiale';
 
   @override
-  String get replayOnboardingSubtitle => 'Activez cette option pour recommencer la configuration. Elle se désactive une fois la configuration terminée.';
+  String get replayOnboardingSubtitle =>
+      'Activez cette option pour recommencer la configuration. Elle se désactive une fois la configuration terminée.';
 
   @override
   String get weightUnitsTitle => 'Unités de poids';
@@ -254,25 +261,29 @@ class AppLocalizationsFr extends AppLocalizations {
   String get navigationSettingsTitle => 'Navigation';
 
   @override
-  String get navigationSettingsSubtitle => 'Choisissez les onglets de navigation affichés et leur ordre.';
+  String get navigationSettingsSubtitle =>
+      'Choisissez les onglets de navigation affichés et leur ordre.';
 
   @override
   String get editBottomTabsTitle => 'Modifier les onglets de navigation';
 
   @override
-  String get editBottomTabsSubtitle => 'Réorganisez les onglets actifs ou masquez ceux que vous n’utilisez pas.';
+  String get editBottomTabsSubtitle =>
+      'Réorganisez les onglets actifs ou masquez ceux que vous n’utilisez pas.';
 
   @override
   String get displaySettingsTutorialTitle => 'Paramètres d’affichage';
 
   @override
-  String get displaySettingsTutorialBody => 'Contrôlez le mode sombre, la langue et les unités de poids, ou recommencez la configuration initiale.';
+  String get displaySettingsTutorialBody =>
+      'Contrôlez le mode sombre, la langue et les unités de poids, ou recommencez la configuration initiale.';
 
   @override
   String get bottomTabsTutorialTitle => 'Onglets de navigation';
 
   @override
-  String get bottomTabsTutorialBody => 'Choisissez les onglets de navigation affichés et modifiez leur ordre.';
+  String get bottomTabsTutorialBody =>
+      'Choisissez les onglets de navigation affichés et modifiez leur ordre.';
 
   @override
   String get onboardingPageWelcome => 'Bienvenue';
@@ -325,7 +336,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get onboardingSkipSetupTitle => 'Passer la configuration?';
 
   @override
-  String get onboardingSkipSetupBody => 'Vous pouvez accéder à l’accueil de l’application maintenant et terminer la configuration plus tard. Vous pouvez aussi relancer la configuration initiale à partir des paramètres.';
+  String get onboardingSkipSetupBody =>
+      'Vous pouvez accéder à l’accueil de l’application maintenant et terminer la configuration plus tard. Vous pouvez aussi relancer la configuration initiale à partir des paramètres.';
 
   @override
   String get onboardingCancel => 'Annuler';
@@ -342,37 +354,44 @@ class AppLocalizationsFr extends AppLocalizations {
   String get onboardingWelcomeTitle => 'Bienvenue dans Tonos';
 
   @override
-  String get onboardingWelcomeSubtitle => 'Une courte configuration permet de personnaliser les entraînements, la nutrition et le suivi des progrès.';
+  String get onboardingWelcomeSubtitle =>
+      'Une courte configuration permet de personnaliser les entraînements, la nutrition et le suivi des progrès.';
 
   @override
   String get onboardingLanguageSelectionTitle => 'Choisissez votre langue';
 
   @override
-  String get onboardingLanguageSelectionHelp => 'La configuration se met à jour immédiatement. Vous pourrez modifier ce choix plus tard dans les paramètres.';
+  String get onboardingLanguageSelectionHelp =>
+      'La configuration se met à jour immédiatement. Vous pourrez modifier ce choix plus tard dans les paramètres.';
 
   @override
   String get onboardingTrainFeatureTitle => 'Entraînez-vous selon votre profil';
 
   @override
-  String get onboardingTrainFeatureBody => 'Utilisez vos préférences et votre historique pour personnaliser les suggestions d’entraînement.';
+  String get onboardingTrainFeatureBody =>
+      'Utilisez vos préférences et votre historique pour personnaliser les suggestions d’entraînement.';
 
   @override
-  String get onboardingNutritionFeatureTitle => 'Soutenez vos objectifs nutritionnels';
+  String get onboardingNutritionFeatureTitle =>
+      'Soutenez vos objectifs nutritionnels';
 
   @override
-  String get onboardingNutritionFeatureBody => 'Choisissez le niveau d’accompagnement nutritionnel que vous souhaitez recevoir.';
+  String get onboardingNutritionFeatureBody =>
+      'Choisissez le niveau d’accompagnement nutritionnel que vous souhaitez recevoir.';
 
   @override
   String get onboardingProgressFeatureTitle => 'Suivez vos progrès';
 
   @override
-  String get onboardingProgressFeatureBody => 'Conservez vos données d’entraînement et de nutrition au même endroit au fil du temps.';
+  String get onboardingProgressFeatureBody =>
+      'Conservez vos données d’entraînement et de nutrition au même endroit au fil du temps.';
 
   @override
   String get onboardingBasicsTitle => 'Parlez-nous de vous';
 
   @override
-  String get onboardingBasicsSubtitle => 'Ces renseignements sont facultatifs, mais ils améliorent les calculs futurs.';
+  String get onboardingBasicsSubtitle =>
+      'Ces renseignements sont facultatifs, mais ils améliorent les calculs futurs.';
 
   @override
   String get onboardingNameLabel => 'Nom';
@@ -429,13 +448,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get onboardingFocusTitle => 'Que doit personnaliser Tonos?';
 
   @override
-  String get onboardingFocusSubtitle => 'Choisissez ce que vous souhaitez configurer maintenant. Vous pourrez modifier ces choix plus tard.';
+  String get onboardingFocusSubtitle =>
+      'Choisissez ce que vous souhaitez configurer maintenant. Vous pourrez modifier ces choix plus tard.';
 
   @override
   String get onboardingNutritionDataTitle => 'Données nutritionnelles';
 
   @override
-  String get onboardingNutritionDataPausedBody => 'La configuration nutritionnelle est en pause pendant la refonte de cette section.';
+  String get onboardingNutritionDataPausedBody =>
+      'La configuration nutritionnelle est en pause pendant la refonte de cette section.';
 
   @override
   String get onboardingLater => 'Plus tard';
@@ -444,16 +465,19 @@ class AppLocalizationsFr extends AppLocalizations {
   String get onboardingExerciseDataTitle => 'Données d’entraînement';
 
   @override
-  String get onboardingExerciseDataBody => 'Configurez votre profil d’entraînement et vos premiers plans.';
+  String get onboardingExerciseDataBody =>
+      'Configurez votre profil d’entraînement et vos premiers plans.';
 
   @override
   String get onboardingGymSpaceTitle => 'Où vous entraînez-vous?';
 
   @override
-  String get onboardingGymSpaceSubtitle => 'Choisissez un espace de départ. Son équipement orientera les suggestions d’exercices et les entraînements générés.';
+  String get onboardingGymSpaceSubtitle =>
+      'Choisissez un espace de départ. Son équipement orientera les suggestions d’exercices et les entraînements générés.';
 
   @override
-  String get onboardingEquipmentLoadError => 'Impossible de charger l’équipement.';
+  String get onboardingEquipmentLoadError =>
+      'Impossible de charger l’équipement.';
 
   @override
   String get onboardingTryAgain => 'Réessayer';
@@ -462,7 +486,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get onboardingGymCustomTitle => 'Espace personnalisé';
 
   @override
-  String get onboardingGymCustomSubtitle => 'Créez votre propre profil en choisissant chaque équipement disponible.';
+  String get onboardingGymCustomSubtitle =>
+      'Créez votre propre profil en choisissant chaque équipement disponible.';
 
   @override
   String get onboardingGymCustomDefaultName => 'Espace personnalisé';
@@ -471,7 +496,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get onboardingGymSkipTitle => 'Passer cette étape';
 
   @override
-  String get onboardingGymSkipSubtitle => 'Conservez le profil Général et choisissez votre équipement plus tard.';
+  String get onboardingGymSkipSubtitle =>
+      'Conservez le profil Général et choisissez votre équipement plus tard.';
 
   @override
   String get onboardingGymGeneralName => 'Général';
@@ -480,7 +506,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get onboardingGymCommercialTitle => 'Centre d’entraînement';
 
   @override
-  String get onboardingGymCommercialSubtitle => 'Commencez avec tout l’équipement disponible, puis retirez ce que votre centre ne possède pas.';
+  String get onboardingGymCommercialSubtitle =>
+      'Commencez avec tout l’équipement disponible, puis retirez ce que votre centre ne possède pas.';
 
   @override
   String get onboardingGymCommercialDefaultName => 'Centre d’entraînement';
@@ -489,7 +516,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get onboardingGymHomeTitle => 'Salle d’entraînement maison';
 
   @override
-  String get onboardingGymHomeSubtitle => 'Un espace maison pratique avec des poids libres, des bandes, un banc et de l’équipement au poids du corps.';
+  String get onboardingGymHomeSubtitle =>
+      'Un espace maison pratique avec des poids libres, des bandes, un banc et de l’équipement au poids du corps.';
 
   @override
   String get onboardingGymHomeDefaultName => 'Salle d’entraînement maison';
@@ -498,7 +526,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get onboardingGymCalisthenicsTitle => 'Callisthénie';
 
   @override
-  String get onboardingGymCalisthenicsSubtitle => 'De l’équipement axé sur le poids du corps, notamment des barres, des anneaux, des bandes et des accessoires de base.';
+  String get onboardingGymCalisthenicsSubtitle =>
+      'De l’équipement axé sur le poids du corps, notamment des barres, des anneaux, des bandes et des accessoires de base.';
 
   @override
   String get onboardingGymCalisthenicsDefaultName => 'Callisthénie';
@@ -507,7 +536,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get onboardingGymPowerliftingTitle => 'Force athlétique';
 
   @override
-  String get onboardingGymPowerliftingSubtitle => 'Un espace axé sur la barre avec des plaques, une cage de puissance et un banc.';
+  String get onboardingGymPowerliftingSubtitle =>
+      'Un espace axé sur la barre avec des plaques, une cage de puissance et un banc.';
 
   @override
   String get onboardingGymPowerliftingDefaultName => 'Force athlétique';
@@ -516,16 +546,19 @@ class AppLocalizationsFr extends AppLocalizations {
   String get onboardingGymFreeWeightsTitle => 'Poids libres';
 
   @override
-  String get onboardingGymFreeWeightsSubtitle => 'Des haltères, des kettlebells, des plaques, un banc et des mouvements au poids du corps.';
+  String get onboardingGymFreeWeightsSubtitle =>
+      'Des haltères, des kettlebells, des plaques, un banc et des mouvements au poids du corps.';
 
   @override
   String get onboardingGymFreeWeightsDefaultName => 'Poids libres';
 
   @override
-  String get onboardingReviewWorkoutSpaceTitle => 'Vérifiez votre espace d’entraînement';
+  String get onboardingReviewWorkoutSpaceTitle =>
+      'Vérifiez votre espace d’entraînement';
 
   @override
-  String get onboardingReviewWorkoutSpaceSubtitle => 'Renommez le profil ou modifiez son équipement avant que Tonos le crée.';
+  String get onboardingReviewWorkoutSpaceSubtitle =>
+      'Renommez le profil ou modifiez son équipement avant que Tonos le crée.';
 
   @override
   String get onboardingProfileNameLabel => 'Nom du profil';
@@ -534,7 +567,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get onboardingIncludedEquipmentTitle => 'Équipement inclus';
 
   @override
-  String get onboardingIncludedEquipmentBody => 'Seuls les exercices compatibles avec cet équipement seront suggérés lorsque ce profil est actif.';
+  String get onboardingIncludedEquipmentBody =>
+      'Seuls les exercices compatibles avec cet équipement seront suggérés lorsque ce profil est actif.';
 
   @override
   String get onboardingNoEquipmentSelected => 'Aucun équipement sélectionné.';
@@ -546,40 +580,50 @@ class AppLocalizationsFr extends AppLocalizations {
   String get onboardingEditProfile => 'Modifier le profil';
 
   @override
-  String get onboardingEditWorkoutSpaceTitle => 'Modifier l’espace d’entraînement';
+  String get onboardingEditWorkoutSpaceTitle =>
+      'Modifier l’espace d’entraînement';
 
   @override
-  String get onboardingSelectEquipmentError => 'Sélectionnez au moins un équipement.';
+  String get onboardingSelectEquipmentError =>
+      'Sélectionnez au moins un équipement.';
 
   @override
-  String get onboardingWorkoutPlanTitle => 'Configurez votre plan d’entraînement';
+  String get onboardingWorkoutPlanTitle =>
+      'Configurez votre plan d’entraînement';
 
   @override
-  String get onboardingWorkoutPlanSubtitle => 'Choisissez comment Tonos doit préparer vos premiers plans. Vous pourrez toujours ajouter, archiver ou modifier des plans plus tard.';
+  String get onboardingWorkoutPlanSubtitle =>
+      'Choisissez comment Tonos doit préparer vos premiers plans. Vous pourrez toujours ajouter, archiver ou modifier des plans plus tard.';
 
   @override
-  String get onboardingManualPlanTitle => 'Créer vos propres plans manuellement';
+  String get onboardingManualPlanTitle =>
+      'Créer vos propres plans manuellement';
 
   @override
-  String get onboardingManualPlanSubtitle => 'Commencez avec un plan vide, puis ajoutez vous-même les exercices et les séries.';
+  String get onboardingManualPlanSubtitle =>
+      'Commencez avec un plan vide, puis ajoutez vous-même les exercices et les séries.';
 
   @override
-  String get onboardingPremadePlanTitle => 'Utiliser des plans d’entraînement prédéfinis';
+  String get onboardingPremadePlanTitle =>
+      'Utiliser des plans d’entraînement prédéfinis';
 
   @override
-  String get onboardingPremadePlanSubtitle => 'Parcourez les plans intégrés pour le corps entier, le haut et le bas du corps, la séquence pousser-tirer-jambes et les divisions par partie du corps.';
+  String get onboardingPremadePlanSubtitle =>
+      'Parcourez les plans intégrés pour le corps entier, le haut et le bas du corps, la séquence pousser-tirer-jambes et les divisions par partie du corps.';
 
   @override
   String get onboardingGeneratePlanTitle => 'Générer des plans d’entraînement';
 
   @override
-  String get onboardingGeneratePlanSubtitle => 'Répondez à quelques questions et laissez Tonos générer un plan personnalisé pour votre profil.';
+  String get onboardingGeneratePlanSubtitle =>
+      'Répondez à quelques questions et laissez Tonos générer un plan personnalisé pour votre profil.';
 
   @override
   String get onboardingSkipPlanTitle => 'Passer cette étape';
 
   @override
-  String get onboardingSkipPlanSubtitle => 'Commencez sans ajouter de plans. Vous pourrez les configurer plus tard dans Entraînement.';
+  String get onboardingSkipPlanSubtitle =>
+      'Commencez sans ajouter de plans. Vous pourrez les configurer plus tard dans Entraînement.';
 
   @override
   String onboardingPlansAdded(int count) {
@@ -596,7 +640,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get onboardingReviewPlansTitle => 'Vérifiez vos plans';
 
   @override
-  String get onboardingReviewPlansSubtitle => 'Ces plans ont été ajoutés à vos plans actifs. Ouvrez un plan pour le consulter ou le modifier avant de continuer.';
+  String get onboardingReviewPlansSubtitle =>
+      'Ces plans ont été ajoutés à vos plans actifs. Ouvrez un plan pour le consulter ou le modifier avant de continuer.';
 
   @override
   String onboardingPlansReady(int count) {
@@ -610,16 +655,19 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get onboardingPlanOverviewLoadError => 'Impossible de charger l’aperçu des plans pour le moment.';
+  String get onboardingPlanOverviewLoadError =>
+      'Impossible de charger l’aperçu des plans pour le moment.';
 
   @override
-  String get onboardingNoAddedPlans => 'Aucun plan ajouté n’a été trouvé. Revenez en arrière pour ajouter des plans ou passez cette étape.';
+  String get onboardingNoAddedPlans =>
+      'Aucun plan ajouté n’a été trouvé. Revenez en arrière pour ajouter des plans ou passez cette étape.';
 
   @override
   String get onboardingReadyTitle => 'Prêt à commencer';
 
   @override
-  String get onboardingReadySubtitle => 'Vérifiez votre configuration, puis terminez pour accéder à Tonos.';
+  String get onboardingReadySubtitle =>
+      'Vérifiez votre configuration, puis terminez pour accéder à Tonos.';
 
   @override
   String get onboardingSummaryName => 'Nom';
@@ -655,7 +703,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get onboardingSummaryProfileSection => 'Profil';
 
   @override
-  String get onboardingSummaryTrainingSection => 'Configuration de l’entraînement';
+  String get onboardingSummaryTrainingSection =>
+      'Configuration de l’entraînement';
 
   @override
   String get onboardingSummaryNutritionSection => 'Préférences nutritionnelles';
@@ -757,73 +806,87 @@ class AppLocalizationsFr extends AppLocalizations {
   String get profileTitle => 'Profil';
 
   @override
-  String get profileSubtitle => 'Personnalisez Tonos, gérez les réglages d’entraînement et gardez vos données en bon état.';
+  String get profileSubtitle =>
+      'Personnalisez Tonos, gérez les réglages d’entraînement et gardez vos données en bon état.';
 
   @override
   String get profileAccountSectionTitle => 'Compte';
 
   @override
-  String get profileAccountSectionSubtitle => 'Votre identité et l’apparence générale de l’application.';
+  String get profileAccountSectionSubtitle =>
+      'Votre identité et l’apparence générale de l’application.';
 
   @override
   String get profileUserInformationTitle => 'Renseignements personnels';
 
   @override
-  String get profileUserInformationSubtitle => 'Nom, données corporelles et profil d’activité.';
+  String get profileUserInformationSubtitle =>
+      'Nom, données corporelles et profil d’activité.';
 
   @override
   String get profileUiAppearanceTitle => 'Interface et apparence';
 
   @override
-  String get profileUiAppearanceSubtitle => 'Thème, configuration initiale et onglets de navigation.';
+  String get profileUiAppearanceSubtitle =>
+      'Thème, configuration initiale et onglets de navigation.';
 
   @override
   String get profileGuidedTutorialsTitle => 'Tutoriels guidés';
 
   @override
-  String get profileGuidedTutorialsSubtitle => 'Rejouez les visites guidées et réinitialisez l’aide.';
+  String get profileGuidedTutorialsSubtitle =>
+      'Rejouez les visites guidées et réinitialisez l’aide.';
 
   @override
   String get profileTrainingSectionTitle => 'Entraînement';
 
   @override
-  String get profileTrainingSectionSubtitle => 'Valeurs par défaut des exercices et réglages liés aux progrès.';
+  String get profileTrainingSectionSubtitle =>
+      'Valeurs par défaut des exercices et réglages liés aux progrès.';
 
   @override
-  String get profileGymWorkoutSettingsTitle => 'Réglages du gym et des entraînements';
+  String get profileGymWorkoutSettingsTitle =>
+      'Réglages du gym et des entraînements';
 
   @override
-  String get profileGymWorkoutSettingsSubtitle => 'Génération d’entraînements, classements, flux et logique d’équipement.';
+  String get profileGymWorkoutSettingsSubtitle =>
+      'Génération d’entraînements, classements, flux et logique d’équipement.';
 
   @override
   String get profileProgressSettingsTitle => 'Réglages des progrès';
 
   @override
-  String get profileProgressSettingsSubtitle => 'Configuration du suivi des mesures et des tendances.';
+  String get profileProgressSettingsSubtitle =>
+      'Configuration du suivi des mesures et des tendances.';
 
   @override
   String get profileDataSectionTitle => 'Données';
 
   @override
-  String get profileDataSectionSubtitle => 'Outils de base de données, exportations, importations et entretien.';
+  String get profileDataSectionSubtitle =>
+      'Outils de base de données, exportations, importations et entretien.';
 
   @override
   String get profileDatabaseSettingsTitle => 'Réglages de la base de données';
 
   @override
-  String get profileDatabaseSettingsSubtitle => 'Importation, exportation, vérifications et outils d’entretien.';
+  String get profileDatabaseSettingsSubtitle =>
+      'Importation, exportation, vérifications et outils d’entretien.';
 
   @override
   String get profileNutritionSectionTitle => 'Nutrition';
 
   @override
-  String get profileNutritionSectionSubtitle => 'Les réglages nutritionnels sont en pause pendant la refonte de cette section.';
+  String get profileNutritionSectionSubtitle =>
+      'Les réglages nutritionnels sont en pause pendant la refonte de cette section.';
 
   @override
-  String get profileDietNutritionSettingsTitle => 'Réglages de l’alimentation et de la nutrition';
+  String get profileDietNutritionSettingsTitle =>
+      'Réglages de l’alimentation et de la nutrition';
 
   @override
-  String get profileDietNutritionSettingsSubtitle => 'Les objectifs et préférences nutritionnels reviendront plus tard.';
+  String get profileDietNutritionSettingsSubtitle =>
+      'Les objectifs et préférences nutritionnels reviendront plus tard.';
 
   @override
   String get profileLater => 'Plus tard';
@@ -832,19 +895,22 @@ class AppLocalizationsFr extends AppLocalizations {
   String get profileAccountTutorialTitle => 'Réglages du compte';
 
   @override
-  String get profileAccountTutorialBody => 'Modifiez vos renseignements personnels, vos préférences d’affichage, vos unités de poids, la configuration initiale, les onglets de navigation et les tutoriels guidés.';
+  String get profileAccountTutorialBody =>
+      'Modifiez vos renseignements personnels, vos préférences d’affichage, vos unités de poids, la configuration initiale, les onglets de navigation et les tutoriels guidés.';
 
   @override
   String get profileTrainingTutorialTitle => 'Réglages d’entraînement';
 
   @override
-  String get profileTrainingTutorialBody => 'Gérez les profils de gym, les règles de génération, les classements des parties du corps, les réglages de progression et les autres valeurs d’entraînement par défaut.';
+  String get profileTrainingTutorialBody =>
+      'Gérez les profils de gym, les règles de génération, les classements des parties du corps, les réglages de progression et les autres valeurs d’entraînement par défaut.';
 
   @override
   String get profileDataTutorialTitle => 'Outils de données';
 
   @override
-  String get profileDataTutorialBody => 'Les réglages de la base de données permettent d’exporter, d’importer, de vérifier et d’entretenir vos données d’entraînement locales.';
+  String get profileDataTutorialBody =>
+      'Les réglages de la base de données permettent d’exporter, d’importer, de vérifier et d’entretenir vos données d’entraînement locales.';
 
   @override
   String catalogLoadError(String error) {
@@ -861,7 +927,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get catalogMostUsedExercises => 'Exercices les plus utilisés';
 
   @override
-  String get catalogNoExerciseHistory => 'Terminez des entraînements pour voir vos exercices les plus fréquents ici.';
+  String get catalogNoExerciseHistory =>
+      'Terminez des entraînements pour voir vos exercices les plus fréquents ici.';
 
   @override
   String get catalogTargetAnatomyTitle => 'Anatomie ciblée';
@@ -873,7 +940,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get catalogMuscles => 'Muscles';
 
   @override
-  String get catalogNoBodypartHistory => 'Aucun historique de parties du corps.';
+  String get catalogNoBodypartHistory =>
+      'Aucun historique de parties du corps.';
 
   @override
   String get catalogNoMuscleHistory => 'Aucun historique musculaire.';
@@ -882,13 +950,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get catalogExerciseTutorialTitle => 'Catalogue d’exercices';
 
   @override
-  String get catalogExerciseTutorialBody => 'Vos exercices les plus utilisés apparaissent ici en premier. Touchez la carte pour ouvrir le catalogue complet, rechercher des mouvements et consulter les détails des exercices.';
+  String get catalogExerciseTutorialBody =>
+      'Vos exercices les plus utilisés apparaissent ici en premier. Touchez la carte pour ouvrir le catalogue complet, rechercher des mouvements et consulter les détails des exercices.';
 
   @override
   String get catalogAnatomyTutorialTitle => 'Anatomie ciblée';
 
   @override
-  String get catalogAnatomyTutorialBody => 'Ce résumé présente les parties du corps et les muscles que vous entraînez le plus. Touchez un côté pour ouvrir la bibliothèque anatomique et voir des listes d’exercices ciblées.';
+  String get catalogAnatomyTutorialBody =>
+      'Ce résumé présente les parties du corps et les muscles que vous entraînez le plus. Touchez un côté pour ouvrir la bibliothèque anatomique et voir des listes d’exercices ciblées.';
 
   @override
   String catalogTimesUsed(int count) {
@@ -913,7 +983,8 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get navEditorMinimumTabsError => 'Conservez au moins deux onglets actifs.';
+  String get navEditorMinimumTabsError =>
+      'Conservez au moins deux onglets actifs.';
 
   @override
   String get navEditorSavedMessage => 'Onglets de navigation enregistrés';
@@ -922,7 +993,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get navEditorTitle => 'Modifier les onglets de navigation';
 
   @override
-  String get navEditorSubtitle => 'Choisissez ce qui apparaît dans la barre inférieure et réorganisez les onglets actifs.';
+  String get navEditorSubtitle =>
+      'Choisissez ce qui apparaît dans la barre inférieure et réorganisez les onglets actifs.';
 
   @override
   String get navEditorSave => 'Enregistrer les onglets';
@@ -931,13 +1003,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get navEditorActiveTitle => 'Onglets actifs';
 
   @override
-  String get navEditorActiveSubtitle => 'Faites glisser les onglets pour les réorganiser. Le profil demeure accessible.';
+  String get navEditorActiveSubtitle =>
+      'Faites glisser les onglets pour les réorganiser. Le profil demeure accessible.';
 
   @override
   String get navEditorInactiveTitle => 'Onglets inactifs';
 
   @override
-  String get navEditorInactiveSubtitle => 'Réactivez ces onglets lorsque vous souhaitez les retrouver.';
+  String get navEditorInactiveSubtitle =>
+      'Réactivez ces onglets lorsque vous souhaitez les retrouver.';
 
   @override
   String get navEditorNoInactiveTabs => 'Aucun onglet inactif.';
@@ -955,34 +1029,40 @@ class AppLocalizationsFr extends AppLocalizations {
   String get trainTutorialSpacesTitle => 'Deux espaces d’entraînement';
 
   @override
-  String get trainTutorialSpacesBody => 'L’aperçu garde les commandes d’entraînement prêtes à utiliser au premier plan. La section Plans permet de parcourir, générer et gérer vos plans enregistrés.';
+  String get trainTutorialSpacesBody =>
+      'L’aperçu garde les commandes d’entraînement prêtes à utiliser au premier plan. La section Plans permet de parcourir, générer et gérer vos plans enregistrés.';
 
   @override
   String get trainTutorialWeeklyTitle => 'Aperçu hebdomadaire';
 
   @override
-  String get trainTutorialWeeklyBody => 'Voyez les parties du corps entraînées récemment. Touchez la liste des séries ciblées pour ouvrir le bilan hebdomadaire complet.';
+  String get trainTutorialWeeklyBody =>
+      'Voyez les parties du corps entraînées récemment. Touchez la liste des séries ciblées pour ouvrir le bilan hebdomadaire complet.';
 
   @override
   String get trainTutorialActivePlansTitle => 'Plans actifs';
 
   @override
-  String get trainTutorialActivePlansBody => 'Les plans actifs sont les routines que vous souhaitez garder à portée de main. Utilisez le crayon pour choisir les plans affichés dans l’aperçu.';
+  String get trainTutorialActivePlansBody =>
+      'Les plans actifs sont les routines que vous souhaitez garder à portée de main. Utilisez le crayon pour choisir les plans affichés dans l’aperçu.';
 
   @override
   String get trainTutorialStartTitle => 'Commencer ou optimiser';
 
   @override
-  String get trainTutorialStartBody => 'Commencer l’entraînement lance une séance vide. Optimiser crée une séance selon votre historique, l’équipement du profil, vos priorités et vos règles de récupération.';
+  String get trainTutorialStartBody =>
+      'Commencer l’entraînement lance une séance vide. Optimiser crée une séance selon votre historique, l’équipement du profil, vos priorités et vos règles de récupération.';
 
   @override
   String get trainTutorialProfilesTitle => 'Profils de gym';
 
   @override
-  String get trainTutorialProfilesBody => 'Changez de profil lorsque vous vous entraînez ailleurs afin que les séances générées et les substitutions utilisent seulement l’équipement disponible.';
+  String get trainTutorialProfilesBody =>
+      'Changez de profil lorsque vous vous entraînez ailleurs afin que les séances générées et les substitutions utilisent seulement l’équipement disponible.';
 
   @override
-  String get trainSelectProfileFirst => 'Veuillez d\'abord choisir un profil d\'entrainement.';
+  String get trainSelectProfileFirst =>
+      'Veuillez d\'abord choisir un profil d\'entrainement.';
 
   @override
   String trainGeneratedPlans(int count) {
@@ -1015,16 +1095,19 @@ class AppLocalizationsFr extends AppLocalizations {
   String get trainRestTitle => 'Prenez le temps de recuperer';
 
   @override
-  String get trainRestBody => 'Votre entrainement recent atteint deja plusieurs limites de parties du corps; un entrainement optimise pourrait trop reduire la recuperation.';
+  String get trainRestBody =>
+      'Votre entrainement recent atteint deja plusieurs limites de parties du corps; un entrainement optimise pourrait trop reduire la recuperation.';
 
   @override
   String get commonOkay => 'OK';
 
   @override
-  String get trainNoEligibleExercises => 'Aucun exercice compatible n\'a ete trouve pour ce profil.';
+  String get trainNoEligibleExercises =>
+      'Aucun exercice compatible n\'a ete trouve pour ce profil.';
 
   @override
-  String get trainAnotherWorkoutActive => 'Un autre entraînement est déjà en cours; il a été conservé sans modification.';
+  String get trainAnotherWorkoutActive =>
+      'Un autre entraînement est déjà en cours; il a été conservé sans modification.';
 
   @override
   String trainOptimizedStartFailed(String error) {
@@ -1057,19 +1140,23 @@ class AppLocalizationsFr extends AppLocalizations {
   String get trainEditActivePlans => 'Modifier les plans actifs';
 
   @override
-  String get trainSelectProfileForPlans => 'Sélectionnez un profil de gym pour choisir les plans actifs.';
+  String get trainSelectProfileForPlans =>
+      'Sélectionnez un profil de gym pour choisir les plans actifs.';
 
   @override
-  String get trainChooseActivePlans => 'Touchez le crayon pour choisir les plans affichés ici.';
+  String get trainChooseActivePlans =>
+      'Touchez le crayon pour choisir les plans affichés ici.';
 
   @override
-  String get trainSelectedPlansMissing => 'Les plans sélectionnés ne sont plus disponibles. Touchez le crayon pour les mettre à jour.';
+  String get trainSelectedPlansMissing =>
+      'Les plans sélectionnés ne sont plus disponibles. Touchez le crayon pour les mettre à jour.';
 
   @override
   String get trainArchivedPlans => 'Plans archivés';
 
   @override
-  String get trainNoActivePlans => 'Aucun plan actif. Utilisez le crayon de la carte Plans actifs dans l’aperçu pour choisir les plans à garder à portée de main.';
+  String get trainNoActivePlans =>
+      'Aucun plan actif. Utilisez le crayon de la carte Plans actifs dans l’aperçu pour choisir les plans à garder à portée de main.';
 
   @override
   String get trainNoArchivedPlans => 'Aucun plan archivé.';
@@ -1085,7 +1172,8 @@ class AppLocalizationsFr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count routines sélectionnées peuvent être copiées dans vos plans.',
+      other:
+          '$count routines sélectionnées peuvent être copiées dans vos plans.',
       one: 'Une routine sélectionnée peut être copiée dans vos plans.',
     );
     return '$_temp0';
@@ -1118,13 +1206,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get planManagementActiveTutorialTitle => 'Plans actifs';
 
   @override
-  String get planManagementActiveTutorialBody => 'Ces plans restent visibles dans l’aperçu Entraînement. Utilisez Archiver pour masquer un plan sans le supprimer.';
+  String get planManagementActiveTutorialBody =>
+      'Ces plans restent visibles dans l’aperçu Entraînement. Utilisez Archiver pour masquer un plan sans le supprimer.';
 
   @override
   String get planManagementArchivedTutorialTitle => 'Plans archivés';
 
   @override
-  String get planManagementArchivedTutorialBody => 'Les plans archivés restent enregistrés. Réactivez un plan ici pour le retrouver dans l’aperçu.';
+  String get planManagementArchivedTutorialBody =>
+      'Les plans archivés restent enregistrés. Réactivez un plan ici pour le retrouver dans l’aperçu.';
 
   @override
   String planManagementUpdateFailed(String plan, String error) {
@@ -1141,19 +1231,23 @@ class AppLocalizationsFr extends AppLocalizations {
   String get commonTryAgain => 'Réessayer';
 
   @override
-  String get planManagementIntro => 'Choisissez les plans à garder à portée de main dans l’aperçu Entraînement. Les plans archivés restent enregistrés et peuvent être réactivés en tout temps.';
+  String get planManagementIntro =>
+      'Choisissez les plans à garder à portée de main dans l’aperçu Entraînement. Les plans archivés restent enregistrés et peuvent être réactivés en tout temps.';
 
   @override
-  String get planManagementActiveSubtitle => 'Affichés dans l’aperçu Entraînement.';
+  String get planManagementActiveSubtitle =>
+      'Affichés dans l’aperçu Entraînement.';
 
   @override
-  String get planManagementNoActive => 'Aucun plan actif. Activez un plan ci-dessous pour l’épingler dans l’aperçu.';
+  String get planManagementNoActive =>
+      'Aucun plan actif. Activez un plan ci-dessous pour l’épingler dans l’aperçu.';
 
   @override
   String get planManagementArchive => 'Archiver';
 
   @override
-  String get planManagementArchivedSubtitle => 'Plans enregistrés qui restent hors de l’aperçu.';
+  String get planManagementArchivedSubtitle =>
+      'Plans enregistrés qui restent hors de l’aperçu.';
 
   @override
   String get planManagementNoArchived => 'Aucun plan archivé.';
@@ -1216,7 +1310,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get planDeleteTitle => 'Supprimer le plan';
 
   @override
-  String get planDeleteConfirmation => 'Voulez-vous vraiment supprimer ce plan?';
+  String get planDeleteConfirmation =>
+      'Voulez-vous vraiment supprimer ce plan?';
 
   @override
   String get commonCancel => 'Annuler';
@@ -1231,31 +1326,36 @@ class AppLocalizationsFr extends AppLocalizations {
   String get optimizedTutorialBudgetTitle => 'Durée et volume de la séance';
 
   @override
-  String get optimizedTutorialBudgetBody => 'Définissez la durée de l’entraînement optimisé et le nombre de séries pouvant être attribué à chaque exercice.';
+  String get optimizedTutorialBudgetBody =>
+      'Définissez la durée de l’entraînement optimisé et le nombre de séries pouvant être attribué à chaque exercice.';
 
   @override
   String get optimizedTutorialRepsTitle => 'Répétitions et poids';
 
   @override
-  String get optimizedTutorialRepsBody => 'Ces choix déterminent la structure des séries, la cible de répétitions et la prudence des poids générés.';
+  String get optimizedTutorialRepsBody =>
+      'Ces choix déterminent la structure des séries, la cible de répétitions et la prudence des poids générés.';
 
   @override
   String get optimizedTutorialFocusTitle => 'Priorités par partie du corps';
 
   @override
-  String get optimizedTutorialFocusBody => 'Privilégiez ou évitez des parties du corps pour le prochain entraînement optimisé sans modifier vos classements enregistrés.';
+  String get optimizedTutorialFocusBody =>
+      'Privilégiez ou évitez des parties du corps pour le prochain entraînement optimisé sans modifier vos classements enregistrés.';
 
   @override
   String get commonReset => 'Réinitialiser';
 
   @override
-  String get optimizedTutorialResetBody => 'La réinitialisation restaure les valeurs par défaut de Tonos si la configuration actuelle ne vous convient plus.';
+  String get optimizedTutorialResetBody =>
+      'La réinitialisation restaure les valeurs par défaut de Tonos si la configuration actuelle ne vous convient plus.';
 
   @override
   String get optimizedTutorialActionsTitle => 'Enregistrer ou commencer';
 
   @override
-  String get optimizedTutorialActionsBody => 'Commencer maintenant utilise les valeurs affichées une seule fois. Enregistrer les conserve pour les prochains entraînements optimisés.';
+  String get optimizedTutorialActionsBody =>
+      'Commencer maintenant utilise les valeurs affichées une seule fois. Enregistrer les conserve pour les prochains entraînements optimisés.';
 
   @override
   String optimizedValidationError(int maxSets) {
@@ -1263,7 +1363,8 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get optimizedBudgetDescription => 'Le calcul prévoit 3 minutes par série et 5 minutes pour commencer chaque exercice.';
+  String get optimizedBudgetDescription =>
+      'Le calcul prévoit 3 minutes par série et 5 minutes pour commencer chaque exercice.';
 
   @override
   String get optimizedWorkoutDuration => 'Durée de l’entraînement';
@@ -1284,7 +1385,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get optimizedRepsWeightsTitle => 'Répétitions et poids';
 
   @override
-  String get optimizedRepsWeightsDescription => 'Utilise les estimations de force tirées de l’historique lorsqu’elles sont disponibles. Facile et Moyen sont plus prudents que Difficile. Les nouveaux exercices utilisent des estimations de départ conservatrices.';
+  String get optimizedRepsWeightsDescription =>
+      'Utilise les estimations de force tirées de l’historique lorsqu’elles sont disponibles. Facile et Moyen sont plus prudents que Difficile. Les nouveaux exercices utilisent des estimations de départ conservatrices.';
 
   @override
   String get optimizedRepPattern => 'Structure des répétitions';
@@ -1320,10 +1422,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get optimizedBodypartFocusTitle => 'Priorités par partie du corps';
 
   @override
-  String get optimizedBodypartFocusDescription => 'Ces choix s’appliquent seulement au prochain entraînement optimisé. Touchez une fois pour privilégier, deux fois pour éviter, puis de nouveau pour effacer.';
+  String get optimizedBodypartFocusDescription =>
+      'Ces choix s’appliquent seulement au prochain entraînement optimisé. Touchez une fois pour privilégier, deux fois pour éviter, puis de nouveau pour effacer.';
 
   @override
-  String get optimizedBodypartsUnavailable => 'Impossible de charger les parties du corps.';
+  String get optimizedBodypartsUnavailable =>
+      'Impossible de charger les parties du corps.';
 
   @override
   String get commonStartNow => 'Commencer maintenant';
@@ -1335,43 +1439,51 @@ class AppLocalizationsFr extends AppLocalizations {
   String get generateTutorialIntroTitle => 'Créer des plans';
 
   @override
-  String get generateTutorialIntroBody => 'Cette page peut créer un plan ou un ensemble hebdomadaire équilibré selon votre profil de gym et vos préférences d’entraînement.';
+  String get generateTutorialIntroBody =>
+      'Cette page peut créer un plan ou un ensemble hebdomadaire équilibré selon votre profil de gym et vos préférences d’entraînement.';
 
   @override
   String get generateWorkoutSetupTitle => 'Configuration de l’entraînement';
 
   @override
-  String get generateTutorialSetupBody => 'Définissez la durée des séances, le nombre de plans à créer et le nombre maximal de séries par exercice.';
+  String get generateTutorialSetupBody =>
+      'Définissez la durée des séances, le nombre de plans à créer et le nombre maximal de séries par exercice.';
 
   @override
   String get generateTrainingFocusTitle => 'Priorités d’entraînement';
 
   @override
-  String get generateTutorialFocusBody => 'Privilégiez ou évitez des parties du corps. L’historique de 7 jours influence la génération seulement lorsque vous l’activez.';
+  String get generateTutorialFocusBody =>
+      'Privilégiez ou évitez des parties du corps. L’historique de 7 jours influence la génération seulement lorsque vous l’activez.';
 
   @override
   String get generateRepsWeightsTitle => 'Répétitions et poids';
 
   @override
-  String get generateTutorialRepsBody => 'Choisissez une structure pyramidale, mixte ou constante, les répétitions cibles et l’intensité des poids de départ.';
+  String get generateTutorialRepsBody =>
+      'Choisissez une structure pyramidale, mixte ou constante, les répétitions cibles et l’intensité des poids de départ.';
 
   @override
   String get generateSetAllocationTitle => 'Répartition des séries';
 
   @override
-  String get generateTutorialAllocationBody => 'Choisissez si les séries sont réparties uniformément ou selon vos classements de parties du corps ou de muscles.';
+  String get generateTutorialAllocationBody =>
+      'Choisissez si les séries sont réparties uniformément ou selon vos classements de parties du corps ou de muscles.';
 
   @override
   String get generateTutorialGenerateTitle => 'Générer';
 
   @override
-  String get generateTutorialGenerateBody => 'Lorsque tout vous convient, générez le plan ou l’ensemble de plans. Vous pourrez ensuite les examiner et les modifier.';
+  String get generateTutorialGenerateBody =>
+      'Lorsque tout vous convient, générez le plan ou l’ensemble de plans. Vous pourrez ensuite les examiner et les modifier.';
 
   @override
-  String get generateValidationError => 'Entrez une durée, un nombre de plans, une limite de séries et une cible de répétitions valides.';
+  String get generateValidationError =>
+      'Entrez une durée, un nombre de plans, une limite de séries et une cible de répétitions valides.';
 
   @override
-  String get generateNoViablePlans => 'Aucun plan viable n’a pu être généré avec les réglages actuels.';
+  String get generateNoViablePlans =>
+      'Aucun plan viable n’a pu être généré avec les réglages actuels.';
 
   @override
   String generateFailed(String error) {
@@ -1387,7 +1499,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get generateIntroTitle => 'Créez votre semaine de plans';
 
   @override
-  String get generateIntroBody => 'Créez un plan ou un ensemble équilibré selon votre profil, vos priorités et vos limites.';
+  String get generateIntroBody =>
+      'Créez un plan ou un ensemble équilibré selon votre profil, vos priorités et vos limites.';
 
   @override
   String generatePlanCountPill(int count) {
@@ -1419,7 +1532,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get generateSessionLength => 'Durée de la séance';
 
   @override
-  String get generateSessionLengthHelp => 'Estimation : 3 min/série + 5 min/exercice.';
+  String get generateSessionLengthHelp =>
+      'Estimation : 3 min/série + 5 min/exercice.';
 
   @override
   String get generatePlansToCreate => 'Plans à créer';
@@ -1455,10 +1569,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get generateUseRecentTraining => 'Utiliser l’entraînement récent';
 
   @override
-  String get generateUseRecentTrainingBody => 'Favorise les zones moins entraînées au cours des 7 derniers jours.';
+  String get generateUseRecentTrainingBody =>
+      'Favorise les zones moins entraînées au cours des 7 derniers jours.';
 
   @override
-  String get generateBodypartFocusInstruction => 'Touchez une fois pour privilégier, deux fois pour éviter, puis une troisième fois pour effacer.';
+  String get generateBodypartFocusInstruction =>
+      'Touchez une fois pour privilégier, deux fois pour éviter, puis une troisième fois pour effacer.';
 
   @override
   String generateRepsSummary(String mode, String reps, String intensity) {
@@ -1466,25 +1582,32 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get generateMixedBody => 'Pyramidal pour 3 séries ou plus; constant pour les exercices plus courts.';
+  String get generateMixedBody =>
+      'Pyramidal pour 3 séries ou plus; constant pour les exercices plus courts.';
 
   @override
-  String get generatePyramidBody => 'La série maximale utilise le poids de travail généré.';
+  String get generatePyramidBody =>
+      'La série maximale utilise le poids de travail généré.';
 
   @override
-  String get generateConsistentBody => 'Mêmes répétitions et poids suggéré pour chaque série.';
+  String get generateConsistentBody =>
+      'Mêmes répétitions et poids suggéré pour chaque série.';
 
   @override
-  String get generateTargetRepsHelp => 'Répétitions maximales en mode pyramidal; constantes autrement.';
+  String get generateTargetRepsHelp =>
+      'Répétitions maximales en mode pyramidal; constantes autrement.';
 
   @override
-  String get generateEasyBody => 'Recommandation la plus prudente selon l’historique ou les données de départ.';
+  String get generateEasyBody =>
+      'Recommandation la plus prudente selon l’historique ou les données de départ.';
 
   @override
-  String get generateMediumBody => 'Recommandation équilibrée de poids de travail.';
+  String get generateMediumBody =>
+      'Recommandation équilibrée de poids de travail.';
 
   @override
-  String get generateHardBody => 'Recommandation la plus lourde, toujours arrondie et adaptée à l’effort.';
+  String get generateHardBody =>
+      'Recommandation la plus lourde, toujours arrondie et adaptée à l’effort.';
 
   @override
   String get generateRequirementBodyparts => 'Classement des parties du corps';
@@ -1496,25 +1619,31 @@ class AppLocalizationsFr extends AppLocalizations {
   String get generateRequirementEven => 'Répartition uniforme';
 
   @override
-  String get generateEvenCoverageTitle => 'Couverture uniforme des parties du corps';
+  String get generateEvenCoverageTitle =>
+      'Couverture uniforme des parties du corps';
 
   @override
-  String get generateEvenCoverageBody => 'Répartit largement le travail entre les parties du corps disponibles.';
+  String get generateEvenCoverageBody =>
+      'Répartit largement le travail entre les parties du corps disponibles.';
 
   @override
-  String get generateBodypartRankingsTitle => 'Utiliser le classement des parties du corps';
+  String get generateBodypartRankingsTitle =>
+      'Utiliser le classement des parties du corps';
 
   @override
-  String get generateBodypartRankingsBody => 'Accorde plus de travail planifié aux parties du corps mieux classées.';
+  String get generateBodypartRankingsBody =>
+      'Accorde plus de travail planifié aux parties du corps mieux classées.';
 
   @override
   String get generateRankBodyparts => 'Classer les parties du corps';
 
   @override
-  String get generateMuscleRankingsTitle => 'Utiliser le classement des muscles';
+  String get generateMuscleRankingsTitle =>
+      'Utiliser le classement des muscles';
 
   @override
-  String get generateMuscleRankingsBody => 'Répartit le travail selon vos priorités musculaires classées.';
+  String get generateMuscleRankingsBody =>
+      'Répartit le travail selon vos priorités musculaires classées.';
 
   @override
   String get generateRankMuscles => 'Classer les muscles';
@@ -1543,7 +1672,8 @@ class AppLocalizationsFr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count plans ont été générés. Examinez-les lorsque vous êtes prêt.',
+      other:
+          '$count plans ont été générés. Examinez-les lorsque vous êtes prêt.',
       one: 'Le plan généré a été ajouté. Examinez-le lorsque vous êtes prêt.',
     );
     return '$_temp0';
@@ -1555,10 +1685,12 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get generateStarterEstimatedBody => 'Des poids de départ ont été estimés pour les nouveaux exercices. Ajustez-les au besoin après votre première série.';
+  String get generateStarterEstimatedBody =>
+      'Des poids de départ ont été estimés pour les nouveaux exercices. Ajustez-les au besoin après votre première série.';
 
   @override
-  String get generateStarterUnavailableBody => 'Certains exercices nécessitent encore des poids manuels, car aucune estimation de départ sûre n’est disponible.';
+  String get generateStarterUnavailableBody =>
+      'Certains exercices nécessitent encore des poids manuels, car aucune estimation de départ sûre n’est disponible.';
 
   @override
   String get generateStarterDialogTitle => 'Poids de départ ajoutés';
@@ -1576,19 +1708,22 @@ class AppLocalizationsFr extends AppLocalizations {
   String get sessionTutorialCardsTitle => 'Cartes d’exercices';
 
   @override
-  String get sessionTutorialCardsBody => 'Chaque carte contient un exercice. Ouvrez-la pour modifier les poids et les répétitions, puis cochez les séries à mesure que vous les terminez.';
+  String get sessionTutorialCardsBody =>
+      'Chaque carte contient un exercice. Ouvrez-la pour modifier les poids et les répétitions, puis cochez les séries à mesure que vous les terminez.';
 
   @override
   String get sessionTutorialAddTitle => 'Ajouter des exercices';
 
   @override
-  String get sessionTutorialAddBody => 'Utilisez ce bouton pour ajouter un exercice du catalogue pendant l’entraînement.';
+  String get sessionTutorialAddBody =>
+      'Utilisez ce bouton pour ajouter un exercice du catalogue pendant l’entraînement.';
 
   @override
   String get sessionTutorialFinishTitle => 'Terminer l’entraînement';
 
   @override
-  String get sessionTutorialFinishBody => 'Lorsque vous avez terminé, enregistrez la séance afin que Tonos mette à jour votre historique, vos analyses et vos widgets de progression.';
+  String get sessionTutorialFinishBody =>
+      'Lorsque vous avez terminé, enregistrez la séance afin que Tonos mette à jour votre historique, vos analyses et vos widgets de progression.';
 
   @override
   String get sessionTimerTitle => 'Chronomètre d’entraînement';
@@ -1600,7 +1735,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get sessionNoExercises => 'Aucun exercice ajouté.';
 
   @override
-  String get sessionNeedCompletedSet => 'Terminez au moins une série avant de terminer l’entraînement.';
+  String get sessionNeedCompletedSet =>
+      'Terminez au moins une série avant de terminer l’entraînement.';
 
   @override
   String sessionSaveFailed(String error) {
@@ -1617,7 +1753,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get sessionExit => 'Quitter';
 
   @override
-  String get sessionCompletedSaved => 'Le travail terminé a été enregistré dans le journal.';
+  String get sessionCompletedSaved =>
+      'Le travail terminé a été enregistré dans le journal.';
 
   @override
   String get sessionCancelled => 'Entraînement annulé.';
@@ -1631,7 +1768,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get sessionCancelQuestion => 'Annuler l’entraînement?';
 
   @override
-  String get sessionCancelBody => 'Cette action supprime l’entraînement en cours sans l’ajouter à votre historique.';
+  String get sessionCancelBody =>
+      'Cette action supprime l’entraînement en cours sans l’ajouter à votre historique.';
 
   @override
   String get sessionKeepWorkout => 'Garder l’entraînement';
@@ -1652,10 +1790,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get sessionRememberChoice => 'Mémoriser ce choix';
 
   @override
-  String get sessionRememberChoiceBody => 'Vous pourrez le modifier plus tard dans les réglages de gym et d’entraînement.';
+  String get sessionRememberChoiceBody =>
+      'Vous pourrez le modifier plus tard dans les réglages de gym et d’entraînement.';
 
   @override
-  String get sessionCompleteLoadError => 'Erreur lors du chargement de la séance';
+  String get sessionCompleteLoadError =>
+      'Erreur lors du chargement de la séance';
 
   @override
   String get sessionCompleteTitle => 'ENTRAÎNEMENT TERMINÉ';
@@ -1725,31 +1865,36 @@ class AppLocalizationsFr extends AppLocalizations {
   String get planTutorialEditTitle => 'Modifier le plan';
 
   @override
-  String get planTutorialEditBody => 'Utilisez cette option pour renommer le plan, réorganiser ou ajouter des exercices, remplacer des mouvements et modifier les séries.';
+  String get planTutorialEditBody =>
+      'Utilisez cette option pour renommer le plan, réorganiser ou ajouter des exercices, remplacer des mouvements et modifier les séries.';
 
   @override
   String get planTutorialSummaryTitle => 'Résumé du plan';
 
   @override
-  String get planTutorialSummaryBody => 'Affiche la durée et le volume estimés, ainsi que les principales parties du corps ciblées avant de commencer.';
+  String get planTutorialSummaryBody =>
+      'Affiche la durée et le volume estimés, ainsi que les principales parties du corps ciblées avant de commencer.';
 
   @override
   String get planTutorialExerciseCardsTitle => 'Cartes d’exercices';
 
   @override
-  String get planTutorialExerciseCardsBody => 'Ouvrez les cartes pour consulter les séries prévues. En mode modification, utilisez le menu pour remplacer ou supprimer des exercices.';
+  String get planTutorialExerciseCardsBody =>
+      'Ouvrez les cartes pour consulter les séries prévues. En mode modification, utilisez le menu pour remplacer ou supprimer des exercices.';
 
   @override
   String get planTutorialStartOrSaveTitle => 'Commencer ou enregistrer';
 
   @override
-  String get planTutorialStartOrSaveBody => 'Commencer la séance lance ce plan comme entraînement. En mode modification, le bouton enregistre vos changements.';
+  String get planTutorialStartOrSaveBody =>
+      'Commencer la séance lance ce plan comme entraînement. En mode modification, le bouton enregistre vos changements.';
 
   @override
   String get planGuideNameTitle => 'Nommez votre plan';
 
   @override
-  String get planGuideNameBody => 'Donnez à ce plan un nom que vous reconnaîtrez, comme Haut du corps ou Jour 1.';
+  String get planGuideNameBody =>
+      'Donnez à ce plan un nom que vous reconnaîtrez, comme Haut du corps ou Jour 1.';
 
   @override
   String get commonContinue => 'Continuer';
@@ -1758,13 +1903,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get planGuideBrowseTitle => 'Parcourir les exercices';
 
   @override
-  String get planGuideBrowseBody => 'Touchez le bouton + pour choisir le premier exercice de ce plan.';
+  String get planGuideBrowseBody =>
+      'Touchez le bouton + pour choisir le premier exercice de ce plan.';
 
   @override
   String get planGuideWeightTitle => 'Choisissez un poids';
 
   @override
-  String get planGuideWeightBody => 'Entrez un poids de départ pour la première série. Utilisez 0 pour un exercice au poids du corps.';
+  String get planGuideWeightBody =>
+      'Entrez un poids de départ pour la première série. Utilisez 0 pour un exercice au poids du corps.';
 
   @override
   String get planGuideWeightSet => 'Poids choisi';
@@ -1773,7 +1920,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get planGuideRepsTitle => 'Choisissez vos répétitions';
 
   @override
-  String get planGuideRepsBody => 'Entrez le nombre de répétitions prévu pour cette série.';
+  String get planGuideRepsBody =>
+      'Entrez le nombre de répétitions prévu pour cette série.';
 
   @override
   String get planGuideRepsSet => 'Répétitions choisies';
@@ -1782,13 +1930,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get planGuideAddSetTitle => 'Ajoutez des séries';
 
   @override
-  String get planGuideAddSetBody => 'Utilisez Ajouter une série lorsque vous en avez besoin d’une autre. Les nouvelles séries reprennent les valeurs de la série précédente.';
+  String get planGuideAddSetBody =>
+      'Utilisez Ajouter une série lorsque vous en avez besoin d’une autre. Les nouvelles séries reprennent les valeurs de la série précédente.';
 
   @override
   String get planGuideSaveTitle => 'Enregistrez votre plan';
 
   @override
-  String get planGuideSaveBody => 'Touchez Enregistrer le plan pour le conserver et revenir à l’aperçu de l’intégration.';
+  String get planGuideSaveBody =>
+      'Touchez Enregistrer le plan pour le conserver et revenir à l’aperçu de l’intégration.';
 
   @override
   String planSaveFailed(String error) {
@@ -1796,7 +1946,8 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get planOngoingWorkoutKept => 'Votre entraînement en cours a été conservé. Terminez-le ou annulez-le avant de commencer ce plan.';
+  String get planOngoingWorkoutKept =>
+      'Votre entraînement en cours a été conservé. Terminez-le ou annulez-le avant de commencer ce plan.';
 
   @override
   String get planDeleteBody => 'Voulez-vous vraiment supprimer ce plan?';
@@ -1847,13 +1998,16 @@ class AppLocalizationsFr extends AppLocalizations {
   String get flowAppDefaultTitle => 'Progression par défaut de l’application';
 
   @override
-  String get flowProfileDefaultTitle => 'Progression par défaut du profil de gym';
+  String get flowProfileDefaultTitle =>
+      'Progression par défaut du profil de gym';
 
   @override
-  String get flowPlanSubtitle => 'Définissez comment ce plan progresse après chaque entraînement.';
+  String get flowPlanSubtitle =>
+      'Définissez comment ce plan progresse après chaque entraînement.';
 
   @override
-  String get flowAppDefaultSubtitle => 'Définissez le flux de progression initial pour les nouveaux profils de gym.';
+  String get flowAppDefaultSubtitle =>
+      'Définissez le flux de progression initial pour les nouveaux profils de gym.';
 
   @override
   String flowProfileDefaultSubtitle(String profileName) {
@@ -1894,10 +2048,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get flowSetIndex => 'Indice de série (-1 = dernière)';
 
   @override
-  String get flowDeleteLastSetBody => 'Cette action supprimera la dernière série.';
+  String get flowDeleteLastSetBody =>
+      'Cette action supprimera la dernière série.';
 
   @override
-  String get flowMethodNameRequired => 'Le nom de l’action ne peut pas être vide';
+  String get flowMethodNameRequired =>
+      'Le nom de l’action ne peut pas être vide';
 
   @override
   String get flowManageActionsTooltip => 'Gérer les actions de progression';
@@ -1906,7 +2062,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get flowAddBranchTitle => 'Ajouter une branche';
 
   @override
-  String get flowAddBranchSubtitle => 'Choisissez où le prochain succès ou échec doit mener.';
+  String get flowAddBranchSubtitle =>
+      'Choisissez où le prochain succès ou échec doit mener.';
 
   @override
   String get flowBranchFrom => 'Bifurquer depuis';
@@ -1921,7 +2078,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get flowAttachActionTitle => 'Associer une action de progression';
 
   @override
-  String get flowAttachActionSubtitle => 'Appliquez un ajustement de chaque type à un nœud du flux.';
+  String get flowAttachActionSubtitle =>
+      'Appliquez un ajustement de chaque type à un nœud du flux.';
 
   @override
   String get flowApplyActionTo => 'Appliquer l’action à';
@@ -1942,13 +2100,16 @@ class AppLocalizationsFr extends AppLocalizations {
   String get commonEdit => 'Modifier';
 
   @override
-  String get rulesEditAppDefault => 'Modifier la règle par défaut de l’application';
+  String get rulesEditAppDefault =>
+      'Modifier la règle par défaut de l’application';
 
   @override
-  String get rulesEditProfileDefault => 'Modifier la règle par défaut du profil';
+  String get rulesEditProfileDefault =>
+      'Modifier la règle par défaut du profil';
 
   @override
-  String get rulesAddAppDefault => 'Ajouter une règle par défaut de l’application';
+  String get rulesAddAppDefault =>
+      'Ajouter une règle par défaut de l’application';
 
   @override
   String get rulesAddProfileDefault => 'Ajouter une règle par défaut du profil';
@@ -1960,7 +2121,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get rulesCopyIndex => 'Indice à copier';
 
   @override
-  String get rulesDeleteLastSetBody => 'Cette règle supprimera la dernière série.';
+  String get rulesDeleteLastSetBody =>
+      'Cette règle supprimera la dernière série.';
 
   @override
   String get rulesNameRequired => 'Le nom de la règle ne peut pas être vide';
@@ -2000,7 +2162,8 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get rulesPropagationFailed => 'Impossible d’ajouter la règle aux éléments existants.';
+  String get rulesPropagationFailed =>
+      'Impossible d’ajouter la règle aux éléments existants.';
 
   @override
   String get rulesOptionsTooltip => 'Options de la règle';
@@ -2009,22 +2172,26 @@ class AppLocalizationsFr extends AppLocalizations {
   String get rulesPageTitle => 'Règles de progression des entraînements';
 
   @override
-  String get rulesPageSubtitle => 'Créez des règles réutilisables pour modifier les poids, répétitions et séries après les tentatives d’entraînement.';
+  String get rulesPageSubtitle =>
+      'Créez des règles réutilisables pour modifier les poids, répétitions et séries après les tentatives d’entraînement.';
 
   @override
   String get rulesHowDefaultsTitle => 'Fonctionnement des valeurs par défaut';
 
   @override
-  String get rulesHowDefaultsBody => 'Les valeurs par défaut de l’application sont copiées dans les nouveaux profils de gym. Celles du profil sont copiées dans les nouveaux plans, afin que les modifications ultérieures ne changent pas les plans existants.';
+  String get rulesHowDefaultsBody =>
+      'Les valeurs par défaut de l’application sont copiées dans les nouveaux profils de gym. Celles du profil sont copiées dans les nouveaux plans, afin que les modifications ultérieures ne changent pas les plans existants.';
 
   @override
   String get rulesAppDefaultsTitle => 'Valeurs par défaut de l’application';
 
   @override
-  String get rulesAppDefaultsSubtitle => 'Les règles initiales des nouveaux profils de gym.';
+  String get rulesAppDefaultsSubtitle =>
+      'Les règles initiales des nouveaux profils de gym.';
 
   @override
-  String get rulesNoAppDefaults => 'Aucune règle générale n’a encore été créée.';
+  String get rulesNoAppDefaults =>
+      'Aucune règle générale n’a encore été créée.';
 
   @override
   String get rulesAddApp => 'Ajouter une règle générale';
@@ -2033,10 +2200,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get rulesGymProfilesTitle => 'Profils de gym';
 
   @override
-  String get rulesGymProfilesSubtitle => 'Chaque profil conserve ensemble ses valeurs par défaut et les règles de ses plans.';
+  String get rulesGymProfilesSubtitle =>
+      'Chaque profil conserve ensemble ses valeurs par défaut et les règles de ses plans.';
 
   @override
-  String get rulesNoProfiles => 'Créez un profil de gym pour ajouter des règles de profil et de plan.';
+  String get rulesNoProfiles =>
+      'Créez un profil de gym pour ajouter des règles de profil et de plan.';
 
   @override
   String rulesProfileSummary(int profileRules, int planRules) {
@@ -2047,7 +2216,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get rulesProfileDefaultsTitle => 'Valeurs par défaut du profil';
 
   @override
-  String get rulesProfileDefaultsSubtitle => 'Les règles initiales des nouveaux plans de ce profil.';
+  String get rulesProfileDefaultsSubtitle =>
+      'Les règles initiales des nouveaux plans de ce profil.';
 
   @override
   String get rulesNoProfileDefaults => 'Ce profil n’a aucune règle par défaut.';
@@ -2059,13 +2229,16 @@ class AppLocalizationsFr extends AppLocalizations {
   String get rulesPlansTitle => 'Plans';
 
   @override
-  String get rulesNoPlans => 'Aucun plan n’appartient encore à ce profil de gym.';
+  String get rulesNoPlans =>
+      'Aucun plan n’appartient encore à ce profil de gym.';
 
   @override
-  String get rulesPlanOnlySubtitle => 'Règles utilisées uniquement par ce plan.';
+  String get rulesPlanOnlySubtitle =>
+      'Règles utilisées uniquement par ce plan.';
 
   @override
-  String get rulesNoPlanRules => 'Ce plan n’a aucune règle de progression propre.';
+  String get rulesNoPlanRules =>
+      'Ce plan n’a aucune règle de progression propre.';
 
   @override
   String get rulesAddPlan => 'Ajouter une règle de plan';
@@ -2089,31 +2262,82 @@ class AppLocalizationsFr extends AppLocalizations {
   String get commonRetry => 'Réessayer';
 
   @override
+  String get safeFailureLoadTitle => 'Impossible de charger';
+
+  @override
+  String get safeFailureSaveTitle =>
+      'Impossible d’enregistrer les modifications';
+
+  @override
+  String get safeFailureActionTitle => 'Impossible de terminer cette action';
+
+  @override
+  String get safeFailureValidation => 'Vérifiez les informations et réessayez.';
+
+  @override
+  String get safeFailureOffline =>
+      'Aucune connexion. Reconnectez-vous et réessayez.';
+
+  @override
+  String get safeFailurePermission =>
+      'Tonos n’a pas l’autorisation d’effectuer cette action. Vérifiez les réglages de l’appareil.';
+
+  @override
+  String get safeFailureStorage =>
+      'Tonos n’a pas pu accéder au stockage de l’appareil. Vérifiez l’espace disponible et réessayez.';
+
+  @override
+  String get safeFailureInvalidData =>
+      'Les données n’ont pas pu être lues en toute sécurité. Choisissez un autre fichier ou réessayez.';
+
+  @override
+  String get safeFailureNotFound =>
+      'Les données demandées ne sont plus disponibles. Actualisez et réessayez.';
+
+  @override
+  String get safeFailureTemporary =>
+      'Ce contenu est temporairement indisponible. Réessayez.';
+
+  @override
+  String get safeFailureUnknown => 'Un problème est survenu. Réessayez.';
+
+  @override
+  String safeFailureWithGuidance(String summary, String guidance) {
+    return '$summary $guidance';
+  }
+
+  @override
   String get flowPageTitle => 'Flux de progression des entraînements';
 
   @override
-  String get flowPageSubtitle => 'Définissez les chemins qui déterminent comment les actions de progression sont appliquées après les résultats d’entraînement.';
+  String get flowPageSubtitle =>
+      'Définissez les chemins qui déterminent comment les actions de progression sont appliquées après les résultats d’entraînement.';
 
   @override
   String get flowHowCopiedTitle => 'Copie des flux';
 
   @override
-  String get flowHowCopiedBody => 'Les flux de l’application deviennent le point de départ des nouveaux profils de gym. Les flux du gym deviennent le point de départ des nouveaux plans. Les modifications ultérieures restent limitées au flux ouvert ici.';
+  String get flowHowCopiedBody =>
+      'Les flux de l’application deviennent le point de départ des nouveaux profils de gym. Les flux du gym deviennent le point de départ des nouveaux plans. Les modifications ultérieures restent limitées au flux ouvert ici.';
 
   @override
-  String get flowLoadError => 'Impossible de charger les flux de progression des entraînements.';
+  String get flowLoadError =>
+      'Impossible de charger les flux de progression des entraînements.';
 
   @override
-  String get flowAppDefaultsSubtitle => 'Le flux initial des nouveaux profils de gym.';
+  String get flowAppDefaultsSubtitle =>
+      'Le flux initial des nouveaux profils de gym.';
 
   @override
   String get flowAppDefaultEntry => 'Flux par défaut de l’application';
 
   @override
-  String get flowGymProfilesSubtitle => 'Chaque profil possède ses valeurs par défaut et ses propres flux de plan.';
+  String get flowGymProfilesSubtitle =>
+      'Chaque profil possède ses valeurs par défaut et ses propres flux de plan.';
 
   @override
-  String get flowNoProfiles => 'Créez un profil de gym pour définir des flux de profil et de plan.';
+  String get flowNoProfiles =>
+      'Créez un profil de gym pour définir des flux de profil et de plan.';
 
   @override
   String get flowNoSavedYet => 'Aucun flux enregistré';
@@ -2135,19 +2359,22 @@ class AppLocalizationsFr extends AppLocalizations {
   String get gymSettingsTitle => 'Réglages de gym et d’entraînement';
 
   @override
-  String get gymSettingsSubtitle => 'Ajustez la génération d’entraînements, les analyses et le comportement des flux d’entraînement.';
+  String get gymSettingsSubtitle =>
+      'Ajustez la génération d’entraînements, les analyses et le comportement des flux d’entraînement.';
 
   @override
   String get gymSettingsLogicTitle => 'Logique d’entraînement';
 
   @override
-  String get gymSettingsLogicSubtitle => 'Réglages qui influencent les plans et les entraînements générés.';
+  String get gymSettingsLogicSubtitle =>
+      'Réglages qui influencent les plans et les entraînements générés.';
 
   @override
   String get gymSettingsWorkoutTitle => 'Réglages d’entraînement';
 
   @override
-  String get gymSettingsWorkoutSubtitle => 'Limites de volume, valeurs d’analyse par défaut et contrôles d’entraînement.';
+  String get gymSettingsWorkoutSubtitle =>
+      'Limites de volume, valeurs d’analyse par défaut et contrôles d’entraînement.';
 
   @override
   String get gymSettingsExitTitle => 'Quitter l’entraînement en cours';
@@ -2156,13 +2383,16 @@ class AppLocalizationsFr extends AppLocalizations {
   String get gymSettingsFlowToolsTitle => 'Outils de flux';
 
   @override
-  String get gymSettingsFlowToolsSubtitle => 'Gérez les chemins et les actions de progression enregistrés.';
+  String get gymSettingsFlowToolsSubtitle =>
+      'Gérez les chemins et les actions de progression enregistrés.';
 
   @override
-  String get gymSettingsFlowsSubtitle => 'Modifiez les flux de progression de l’application, des gyms et des plans.';
+  String get gymSettingsFlowsSubtitle =>
+      'Modifiez les flux de progression de l’application, des gyms et des plans.';
 
   @override
-  String get gymSettingsRulesSubtitle => 'Gérez les règles de progression des poids, répétitions et séries.';
+  String get gymSettingsRulesSubtitle =>
+      'Gérez les règles de progression des poids, répétitions et séries.';
 
   @override
   String get gymExitAsk => 'Demander à chaque fois';
@@ -2174,13 +2404,16 @@ class AppLocalizationsFr extends AppLocalizations {
   String get gymExitSave => 'Terminer et enregistrer';
 
   @override
-  String get gymExitAskBody => 'Demander avant de terminer le travail effectué.';
+  String get gymExitAskBody =>
+      'Demander avant de terminer le travail effectué.';
 
   @override
-  String get gymExitDiscardBody => 'Annuler sans enregistrer le travail effectué.';
+  String get gymExitDiscardBody =>
+      'Annuler sans enregistrer le travail effectué.';
 
   @override
-  String get gymExitSaveBody => 'Enregistrer le travail effectué dans le journal.';
+  String get gymExitSaveBody =>
+      'Enregistrer le travail effectué dans le journal.';
 
   @override
   String get commonAll => 'Tous';
@@ -2189,7 +2422,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get catalogGuideChooseTitle => 'Choisissez un exercice';
 
   @override
-  String get catalogGuideChooseBody => 'Touchez une ligne d’exercice pour la sélectionner. La recherche et les filtres peuvent vous aider à trouver le bon mouvement.';
+  String get catalogGuideChooseBody =>
+      'Touchez une ligne d’exercice pour la sélectionner. La recherche et les filtres peuvent vous aider à trouver le bon mouvement.';
 
   @override
   String get catalogGuideAddTitle => 'Ajoutez-le à votre plan';
@@ -2203,19 +2437,22 @@ class AppLocalizationsFr extends AppLocalizations {
   String get catalogGuideSearchTitle => 'Rechercher des exercices';
 
   @override
-  String get catalogGuideSearchBody => 'Recherchez par nom lorsque vous savez déjà quel mouvement vous voulez.';
+  String get catalogGuideSearchBody =>
+      'Recherchez par nom lorsque vous savez déjà quel mouvement vous voulez.';
 
   @override
   String get catalogFilters => 'Filtres';
 
   @override
-  String get catalogGuideFiltersBody => 'Filtrez par profil de gym, équipement, partie du corps ou muscle pour restreindre rapidement le catalogue.';
+  String get catalogGuideFiltersBody =>
+      'Filtrez par profil de gym, équipement, partie du corps ou muscle pour restreindre rapidement le catalogue.';
 
   @override
   String get catalogGuideRowsTitle => 'Lignes d’exercices';
 
   @override
-  String get catalogGuideRowsBody => 'Chaque ligne affiche l’équipement et une carte corporelle. Touchez-la pour les détails ou sélectionnez la ligne pour choisir l’exercice.';
+  String get catalogGuideRowsBody =>
+      'Chaque ligne affiche l’équipement et une carte corporelle. Touchez-la pour les détails ou sélectionnez la ligne pour choisir l’exercice.';
 
   @override
   String get catalogSelectedFilters => 'Filtres sélectionnés';
@@ -2245,7 +2482,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get catalogNoMatches => 'Aucun exercice ne correspond aux filtres.';
 
   @override
-  String get catalogOpenExerciseInfo => 'Ouvrir les informations sur l’exercice';
+  String get catalogOpenExerciseInfo =>
+      'Ouvrir les informations sur l’exercice';
 
   @override
   String get commonClose => 'Fermer';
@@ -2257,28 +2495,34 @@ class AppLocalizationsFr extends AppLocalizations {
   String get exerciseDetailTutorialTitle => 'Détails de l’exercice';
 
   @override
-  String get exerciseDetailTutorialBody => 'Le titre de la fiche correspond à l’exercice ouvert. Fermez-la ici lorsque vous avez terminé.';
+  String get exerciseDetailTutorialBody =>
+      'Le titre de la fiche correspond à l’exercice ouvert. Fermez-la ici lorsque vous avez terminé.';
 
   @override
   String get exerciseDetailTabsTutorialTitle => 'Détails, mesures, historique';
 
   @override
-  String get exerciseDetailTabsTutorialBody => 'Utilisez ces onglets pour passer des instructions aux meilleures charges et aux séances récentes.';
+  String get exerciseDetailTabsTutorialBody =>
+      'Utilisez ces onglets pour passer des instructions aux meilleures charges et aux séances récentes.';
 
   @override
   String get exerciseDetailContextTutorialTitle => 'Contexte de l’exercice';
 
   @override
-  String get exerciseDetailContextTutorialBody => 'L’onglet Détails présente l’équipement, les parties du corps et les muscles travaillés, ainsi que les notes de forme.';
+  String get exerciseDetailContextTutorialBody =>
+      'L’onglet Détails présente l’équipement, les parties du corps et les muscles travaillés, ainsi que les notes de forme.';
 
   @override
-  String get exerciseDetailSessionOpenFailed => 'Impossible d’ouvrir la séance d’entraînement.';
+  String get exerciseDetailSessionOpenFailed =>
+      'Impossible d’ouvrir la séance d’entraînement.';
 
   @override
-  String get exerciseDetailSessionNotFound => 'La séance d’entraînement est introuvable.';
+  String get exerciseDetailSessionNotFound =>
+      'La séance d’entraînement est introuvable.';
 
   @override
-  String get exerciseDetailNoEquipment => 'Aucun équipement n’est indiqué pour cet exercice.';
+  String get exerciseDetailNoEquipment =>
+      'Aucun équipement n’est indiqué pour cet exercice.';
 
   @override
   String get exerciseDetailTargetAnatomy => 'Anatomie ciblée';
@@ -2287,7 +2531,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get exerciseDetailBodyParts => 'Parties du corps';
 
   @override
-  String get exerciseDetailNoBodyParts => 'Aucune partie du corps n’est indiquée.';
+  String get exerciseDetailNoBodyParts =>
+      'Aucune partie du corps n’est indiquée.';
 
   @override
   String get exerciseDetailMuscles => 'Muscles';
@@ -2299,13 +2544,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get exerciseDetailSetup => 'Mise en place';
 
   @override
-  String get exerciseDetailNoSetup => 'Aucune instruction de mise en place n’est fournie.';
+  String get exerciseDetailNoSetup =>
+      'Aucune instruction de mise en place n’est fournie.';
 
   @override
   String get exerciseDetailExecution => 'Exécution';
 
   @override
-  String get exerciseDetailNoExecution => 'Aucune note d’exécution n’est fournie.';
+  String get exerciseDetailNoExecution =>
+      'Aucune note d’exécution n’est fournie.';
 
   @override
   String get exerciseDetailTips => 'Conseils';
@@ -2320,28 +2567,33 @@ class AppLocalizationsFr extends AppLocalizations {
   String get exerciseDetailOpenHeatmap => 'Ouvrir la carte corporelle ciblée';
 
   @override
-  String get exerciseDetailNoHeatmap => 'Aucune zone corporelle ciblée n’est disponible';
+  String get exerciseDetailNoHeatmap =>
+      'Aucune zone corporelle ciblée n’est disponible';
 
   @override
   String get exerciseDetailZoomHint => 'Pincez ou faites glisser pour zoomer';
 
   @override
-  String get exerciseDetailLoadingBestLifts => 'Chargement des meilleures performances';
+  String get exerciseDetailLoadingBestLifts =>
+      'Chargement des meilleures performances';
 
   @override
-  String get exerciseDetailLoadingBestLiftsBody => 'Vos records de séries terminées sont en cours de calcul.';
+  String get exerciseDetailLoadingBestLiftsBody =>
+      'Vos records de séries terminées sont en cours de calcul.';
 
   @override
   String get exerciseDetailMetricsUnavailable => 'Mesures indisponibles';
 
   @override
-  String get exerciseDetailMetricsUnavailableBody => 'Rouvrez cet exercice pour charger les records de séries terminées.';
+  String get exerciseDetailMetricsUnavailableBody =>
+      'Rouvrez cet exercice pour charger les records de séries terminées.';
 
   @override
   String get exerciseDetailNoBestLifts => 'Aucune meilleure performance';
 
   @override
-  String get exerciseDetailNoBestLiftsBody => 'Terminez une série avec charge pour commencer à suivre les meilleurs résultats par répétition.';
+  String get exerciseDetailNoBestLiftsBody =>
+      'Terminez une série avec charge pour commencer à suivre les meilleurs résultats par répétition.';
 
   @override
   String get exerciseDetailWeek => 'Semaine';
@@ -2367,7 +2619,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get exerciseDetailRepBests => 'Meilleurs résultats par répétition';
 
   @override
-  String get exerciseDetailRepBestsBody => 'Meilleure charge terminée pour chaque nombre de répétitions';
+  String get exerciseDetailRepBestsBody =>
+      'Meilleure charge terminée pour chaque nombre de répétitions';
 
   @override
   String exerciseDetailRanges(int count) {
@@ -2375,7 +2628,8 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get exerciseDetailHistoryLoadFailed => 'Impossible de charger l’historique de l’exercice.';
+  String get exerciseDetailHistoryLoadFailed =>
+      'Impossible de charger l’historique de l’exercice.';
 
   @override
   String get exerciseDetailNoHistory => 'Aucun historique pour cet exercice.';
@@ -2396,10 +2650,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get exerciseDetailLoadMoreSessions => 'Charger 10 séances de plus';
 
   @override
-  String get exerciseDetailResizeLabel => 'Redimensionner les détails de l’exercice';
+  String get exerciseDetailResizeLabel =>
+      'Redimensionner les détails de l’exercice';
 
   @override
-  String get exerciseDetailResizeHint => 'Faites glisser vers le haut ou le bas pour redimensionner la fiche';
+  String get exerciseDetailResizeHint =>
+      'Faites glisser vers le haut ou le bas pour redimensionner la fiche';
 
   @override
   String get exerciseDetailTabDetails => 'Détails';
@@ -2438,7 +2694,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get exerciseDetailSetVolume => 'Volume de la série';
 
   @override
-  String get exerciseDetailNoChartData => 'Aucun record de série terminée à afficher pour le moment.';
+  String get exerciseDetailNoChartData =>
+      'Aucun record de série terminée à afficher pour le moment.';
 
   @override
   String get exerciseDetailWeightAbbreviation => 'Pds';
@@ -2458,13 +2715,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get logbookTutorialCalendarTitle => 'Calendrier du journal';
 
   @override
-  String get logbookTutorialCalendarBody => 'Utilisez M, 3M, A et 4A pour parcourir votre historique d\'entraînements. Sélectionnez un jour, une semaine, un mois ou une année pour voir les séances et les statistiques de cette période.';
+  String get logbookTutorialCalendarBody =>
+      'Utilisez M, 3M, A et 4A pour parcourir votre historique d\'entraînements. Sélectionnez un jour, une semaine, un mois ou une année pour voir les séances et les statistiques de cette période.';
 
   @override
   String get fullHistoryTitle => 'Toutes les séances';
 
   @override
-  String get fullHistoryLoadError => 'Impossible de charger les séances enregistrées.';
+  String get fullHistoryLoadError =>
+      'Impossible de charger les séances enregistrées.';
 
   @override
   String get fullHistoryEmpty => 'Aucune séance enregistrée.';
@@ -2478,7 +2737,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get weeklySetsTitle => 'Aperçu hebdomadaire des séries';
 
   @override
-  String get weeklySetsLoadError => 'Impossible de charger votre aperçu hebdomadaire d\'entraînement.';
+  String get weeklySetsLoadError =>
+      'Impossible de charger votre aperçu hebdomadaire d\'entraînement.';
 
   @override
   String get weeklySetsBodyParts => 'Parties du corps';
@@ -2496,7 +2756,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get weeklySetsVolume => 'Volume';
 
   @override
-  String get weeklySetsNoBodyParts => 'Aucune série de parties du corps pour le moment.';
+  String get weeklySetsNoBodyParts =>
+      'Aucune série de parties du corps pour le moment.';
 
   @override
   String get weeklySetsNoMuscles => 'Aucune série de muscles pour le moment.';
@@ -2510,67 +2771,80 @@ class AppLocalizationsFr extends AppLocalizations {
   String get weeklySetsTutorialOverviewTitle => 'Aperçu hebdomadaire';
 
   @override
-  String get weeklySetsTutorialOverviewBody => 'Résume les sept derniers jours avec une carte corporelle, le total de séries, la durée et le volume.';
+  String get weeklySetsTutorialOverviewBody =>
+      'Résume les sept derniers jours avec une carte corporelle, le total de séries, la durée et le volume.';
 
   @override
   String get weeklySetsTutorialAnatomyTitle => 'Parties du corps ou muscles';
 
   @override
-  String get weeklySetsTutorialAnatomyBody => 'Passez des unités de séries par partie du corps aux unités par muscle.';
+  String get weeklySetsTutorialAnatomyBody =>
+      'Passez des unités de séries par partie du corps aux unités par muscle.';
 
   @override
   String get weeklySetsTutorialStatusTitle => 'État des séries';
 
   @override
-  String get weeklySetsTutorialStatusBody => 'Chaque ligne est teintée selon que votre travail récent est sous, dans ou au-dessus de sa plage recommandée. Touchez une ligne pour voir les exercices associés.';
+  String get weeklySetsTutorialStatusBody =>
+      'Chaque ligne est teintée selon que votre travail récent est sous, dans ou au-dessus de sa plage recommandée. Touchez une ligne pour voir les exercices associés.';
 
   @override
   String get workoutDetailTutorialSummaryTitle => 'Résumé de l\'entraînement';
 
   @override
-  String get workoutDetailTutorialSummaryBody => 'Consultez le total de séries, le volume, la durée, le nombre d\'exercices et les parties du corps travaillées.';
+  String get workoutDetailTutorialSummaryBody =>
+      'Consultez le total de séries, le volume, la durée, le nombre d\'exercices et les parties du corps travaillées.';
 
   @override
   String get workoutDetailTutorialExercisesTitle => 'Historique des exercices';
 
   @override
-  String get workoutDetailTutorialExercisesBody => 'Chaque exercice affiche les séries terminées durant cette séance. Touchez les détails pour l\'inspecter.';
+  String get workoutDetailTutorialExercisesBody =>
+      'Chaque exercice affiche les séries terminées durant cette séance. Touchez les détails pour l\'inspecter.';
 
   @override
   String get workoutDetailTutorialEditTitle => 'Modifier la séance';
 
   @override
-  String get workoutDetailTutorialEditBody => 'Utilisez le mode de modification pour corriger les séries, les répétitions ou les exercices après l\'entraînement.';
+  String get workoutDetailTutorialEditBody =>
+      'Utilisez le mode de modification pour corriger les séries, les répétitions ou les exercices après l\'entraînement.';
 
   @override
   String get workoutDetailTutorialReuseTitle => 'Réutiliser cet entraînement';
 
   @override
-  String get workoutDetailTutorialReuseBody => 'Refaites l\'entraînement ou enregistrez la séance terminée comme plan réutilisable.';
+  String get workoutDetailTutorialReuseBody =>
+      'Refaites l\'entraînement ou enregistrez la séance terminée comme plan réutilisable.';
 
   @override
   String get workoutDetailDeleteTitle => 'Supprimer la séance';
 
   @override
-  String get workoutDetailDeleteBody => 'Voulez-vous vraiment supprimer cette séance?';
+  String get workoutDetailDeleteBody =>
+      'Voulez-vous vraiment supprimer cette séance?';
 
   @override
-  String get workoutDetailDeleteFailed => 'Impossible de supprimer cette séance.';
+  String get workoutDetailDeleteFailed =>
+      'Impossible de supprimer cette séance.';
 
   @override
   String get workoutDetailChangesSaved => 'Modifications enregistrées.';
 
   @override
-  String get workoutDetailSaveFailed => 'Impossible d\'enregistrer les modifications. La séance précédente reste inchangée.';
+  String get workoutDetailSaveFailed =>
+      'Impossible d\'enregistrer les modifications. La séance précédente reste inchangée.';
 
   @override
-  String get workoutDetailFinishCurrentFirst => 'Terminez votre entraînement en cours avant de refaire celui-ci.';
+  String get workoutDetailFinishCurrentFirst =>
+      'Terminez votre entraînement en cours avant de refaire celui-ci.';
 
   @override
-  String get workoutDetailOngoingWorkoutKept => 'Votre entraînement en cours a été conservé. Terminez-le ou annulez-le avant de refaire cet entraînement.';
+  String get workoutDetailOngoingWorkoutKept =>
+      'Votre entraînement en cours a été conservé. Terminez-le ou annulez-le avant de refaire cet entraînement.';
 
   @override
-  String get workoutDetailRepeatFailed => 'Impossible de refaire cet entraînement.';
+  String get workoutDetailRepeatFailed =>
+      'Impossible de refaire cet entraînement.';
 
   @override
   String get workoutDetailSaveAsPlan => 'Enregistrer comme plan';
@@ -2584,7 +2858,8 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get workoutDetailPlanSaveFailed => 'Impossible d\'enregistrer le plan.';
+  String get workoutDetailPlanSaveFailed =>
+      'Impossible d\'enregistrer le plan.';
 
   @override
   String workoutDetailDefaultPlanName(String date) {
@@ -2595,7 +2870,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get workoutDetailUnsavedTitle => 'Modifications non enregistrées';
 
   @override
-  String get workoutDetailUnsavedBody => 'Vous avez des modifications non enregistrées. Voulez-vous les abandonner et quitter?';
+  String get workoutDetailUnsavedBody =>
+      'Vous avez des modifications non enregistrées. Voulez-vous les abandonner et quitter?';
 
   @override
   String get workoutDetailDiscard => 'Abandonner';
@@ -2653,7 +2929,8 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get logbookCalendarLoadFailed => 'Impossible de charger le calendrier des entraînements.';
+  String get logbookCalendarLoadFailed =>
+      'Impossible de charger le calendrier des entraînements.';
 
   @override
   String get logbookNoWorkouts => 'Aucun entraînement consigné';
@@ -2710,7 +2987,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get logbookViewAllSessions => 'Voir toutes les séances';
 
   @override
-  String logbookSessionSummary(String duration, int exercises, int sets, String volume) {
+  String logbookSessionSummary(
+    String duration,
+    int exercises,
+    int sets,
+    String volume,
+  ) {
     String _temp0 = intl.Intl.pluralLogic(
       exercises,
       locale: localeName,
@@ -2772,7 +3054,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get dashboardEmptyTitle => 'Votre tableau de bord est vide';
 
   @override
-  String get dashboardEmptyBody => 'Vous pourrez ajouter de nouveau n\'importe quelle section quand vous le souhaitez.';
+  String get dashboardEmptyBody =>
+      'Vous pourrez ajouter de nouveau n\'importe quelle section quand vous le souhaitez.';
 
   @override
   String get dashboardCustomize => 'Personnaliser le tableau de bord';
@@ -2781,97 +3064,113 @@ class AppLocalizationsFr extends AppLocalizations {
   String get dashboardSectionQuickActionsTitle => 'Actions rapides';
 
   @override
-  String get dashboardSectionQuickActionsBody => 'Consignez une mesure ou commencez un entraînement.';
+  String get dashboardSectionQuickActionsBody =>
+      'Consignez une mesure ou commencez un entraînement.';
 
   @override
   String get dashboardSectionTrainingTitle => 'Prêt à vous entraîner';
 
   @override
-  String get dashboardSectionTrainingBody => 'Sélectionnez votre profil de gym, vos plans et commencez une séance.';
+  String get dashboardSectionTrainingBody =>
+      'Sélectionnez votre profil de gym, vos plans et commencez une séance.';
 
   @override
   String get dashboardSectionNutritionTitle => 'Tableau de bord nutrition';
 
   @override
-  String get dashboardSectionNutritionBody => 'Consultez les cibles actuelles de calories et de macronutriments.';
+  String get dashboardSectionNutritionBody =>
+      'Consultez les cibles actuelles de calories et de macronutriments.';
 
   @override
   String get dashboardSectionDataRecordsTitle => 'Données et relevés';
 
   @override
-  String get dashboardSectionDataRecordsBody => 'Consultez et ajoutez les entrées quotidiennes de nutrition.';
+  String get dashboardSectionDataRecordsBody =>
+      'Consultez et ajoutez les entrées quotidiennes de nutrition.';
 
   @override
   String get dashboardSectionWeeklyFocusTitle => 'Focus hebdomadaire';
 
   @override
-  String get dashboardSectionWeeklyFocusBody => 'Consultez le travail des parties du corps et des muscles des 7 derniers jours.';
+  String get dashboardSectionWeeklyFocusBody =>
+      'Consultez le travail des parties du corps et des muscles des 7 derniers jours.';
 
   @override
   String get dashboardSectionWorkoutReportTitle => 'Rapport d\'entraînement';
 
   @override
-  String get dashboardSectionWorkoutReportBody => 'Comparez au fil du temps le nombre d\'entraînements, la durée et le volume.';
+  String get dashboardSectionWorkoutReportBody =>
+      'Comparez au fil du temps le nombre d\'entraînements, la durée et le volume.';
 
   @override
   String get dashboardSectionExerciseProgressTitle => 'Progrès des exercices';
 
   @override
-  String get dashboardSectionExerciseProgressBody => 'Suivez les tendances de force pour les exercices sélectionnés.';
+  String get dashboardSectionExerciseProgressBody =>
+      'Suivez les tendances de force pour les exercices sélectionnés.';
 
   @override
   String get dashboardSectionHistoryTitle => 'Historique d\'entraînement';
 
   @override
-  String get dashboardSectionHistoryBody => 'Comparez les totaux et le focus des entraînements selon différentes périodes.';
+  String get dashboardSectionHistoryBody =>
+      'Comparez les totaux et le focus des entraînements selon différentes périodes.';
 
   @override
   String get dashboardSectionHealthTrendsTitle => 'Tendances de santé';
 
   @override
-  String get dashboardSectionHealthTrendsBody => 'Suivez des mesures comme le poids et les mensurations.';
+  String get dashboardSectionHealthTrendsBody =>
+      'Suivez des mesures comme le poids et les mensurations.';
 
   @override
   String get dashboardSectionRecentWorkoutsTitle => 'Entraînements récents';
 
   @override
-  String get dashboardSectionRecentWorkoutsBody => 'Ouvrez vos dernières séances terminées.';
+  String get dashboardSectionRecentWorkoutsBody =>
+      'Ouvrez vos dernières séances terminées.';
 
   @override
   String get dashboardSectionActivePlansTitle => 'Plans actifs';
 
   @override
-  String get dashboardSectionActivePlansBody => 'Gardez vos plans les plus utilisés à portée de main.';
+  String get dashboardSectionActivePlansBody =>
+      'Gardez vos plans les plus utilisés à portée de main.';
 
   @override
   String get dashboardSectionArchivedPlansTitle => 'Plans archivés';
 
   @override
-  String get dashboardSectionArchivedPlansBody => 'Parcourez les plans qui ne sont pas actifs actuellement.';
+  String get dashboardSectionArchivedPlansBody =>
+      'Parcourez les plans qui ne sont pas actifs actuellement.';
 
   @override
   String get dashboardSectionPremadePlansTitle => 'Plans préfabriqués';
 
   @override
-  String get dashboardSectionPremadePlansBody => 'Parcourez les routines pouvant être ajoutées à ce profil.';
+  String get dashboardSectionPremadePlansBody =>
+      'Parcourez les routines pouvant être ajoutées à ce profil.';
 
   @override
   String get dashboardSectionPlanToolsTitle => 'Outils de planification';
 
   @override
-  String get dashboardSectionPlanToolsBody => 'Générez un plan équilibré ou créez-en un manuellement.';
+  String get dashboardSectionPlanToolsBody =>
+      'Générez un plan équilibré ou créez-en un manuellement.';
 
   @override
   String get dashboardSectionCatalogTitle => 'Catalogue d\'exercices';
 
   @override
-  String get dashboardSectionCatalogBody => 'Ouvrez vos exercices les plus utilisés et le catalogue complet.';
+  String get dashboardSectionCatalogBody =>
+      'Ouvrez vos exercices les plus utilisés et le catalogue complet.';
 
   @override
   String get dashboardSectionAnatomyTitle => 'Anatomie ciblée';
 
   @override
-  String get dashboardSectionAnatomyBody => 'Consultez les parties du corps et les muscles que vous entraînez le plus.';
+  String get dashboardSectionAnatomyBody =>
+      'Consultez les parties du corps et les muscles que vous entraînez le plus.';
 
   @override
   String get dashboardSectionFallbackTitle => 'Section du tableau de bord';
@@ -2909,10 +3208,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get dashboardViewAll => 'Voir tout';
 
   @override
-  String get dashboardRecentWorkoutsFailed => 'Impossible de charger les entraînements récents.';
+  String get dashboardRecentWorkoutsFailed =>
+      'Impossible de charger les entraînements récents.';
 
   @override
-  String get dashboardRecentWorkoutsEmpty => 'Terminez un entraînement et il apparaîtra ici.';
+  String get dashboardRecentWorkoutsEmpty =>
+      'Terminez un entraînement et il apparaîtra ici.';
 
   @override
   String get userInfoProfileUpdateNote => 'Mise à jour du profil';
@@ -2921,13 +3222,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get userInfoChangesSaved => 'Modifications enregistrées';
 
   @override
-  String get userInfoSaveFailed => 'Impossible d\'enregistrer vos modifications.';
+  String get userInfoSaveFailed =>
+      'Impossible d\'enregistrer vos modifications.';
 
   @override
   String get userInfoTitle => 'Informations utilisateur';
 
   @override
-  String get userInfoSubtitle => 'Conservez les renseignements de base du profil pour les calculs de l\'application.';
+  String get userInfoSubtitle =>
+      'Conservez les renseignements de base du profil pour les calculs de l\'application.';
 
   @override
   String get userInfoIdentityTitle => 'Identité';
@@ -2954,7 +3257,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get userInfoBodyMetricsTitle => 'Mesures corporelles';
 
   @override
-  String get userInfoBodyMetricsSubtitle => 'Détails facultatifs utilisés pour les estimations de progrès et de nutrition.';
+  String get userInfoBodyMetricsSubtitle =>
+      'Détails facultatifs utilisés pour les estimations de progrès et de nutrition.';
 
   @override
   String get userInfoHeight => 'Taille';
@@ -2978,7 +3282,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get userInfoActivityTitle => 'Contexte d\'activité';
 
   @override
-  String get userInfoActivitySubtitle => 'Utilisé plus tard pour les recommandations et les estimations de santé.';
+  String get userInfoActivitySubtitle =>
+      'Utilisé plus tard pour les recommandations et les estimations de santé.';
 
   @override
   String get userInfoWeightTrend => 'Tendance du poids';
@@ -3026,61 +3331,71 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tutorialsSettingsTitle => 'Tutoriels guidés';
 
   @override
-  String get tutorialsSettingsSubtitle => 'Rejouez une visite guidée lorsque vous souhaitez un rappel rapide.';
+  String get tutorialsSettingsSubtitle =>
+      'Rejouez une visite guidée lorsque vous souhaitez un rappel rapide.';
 
   @override
   String get tutorialsControlsTitle => 'Contrôles des tutoriels';
 
   @override
-  String get tutorialsControlsSubtitle => 'Vous faites des tests ou recommencez?';
+  String get tutorialsControlsSubtitle =>
+      'Vous faites des tests ou recommencez?';
 
   @override
   String get tutorialsResetAllTitle => 'Réinitialiser tous les tutoriels';
 
   @override
-  String get tutorialsResetAllSubtitle => 'Rend tous les tutoriels guidés accessibles de nouveau.';
+  String get tutorialsResetAllSubtitle =>
+      'Rend tous les tutoriels guidés accessibles de nouveau.';
 
   @override
   String get tutorialsResetAll => 'Tout réinitialiser';
 
   @override
-  String get tutorialsResetAllMessage => 'Tous les tutoriels ont été réinitialisés.';
+  String get tutorialsResetAllMessage =>
+      'Tous les tutoriels ont été réinitialisés.';
 
   @override
   String get tutorialsHowItWorksTitle => 'Fonctionnement des tutoriels';
 
   @override
-  String get tutorialsHowItWorksBody => 'Les tutoriels apparaissent une fois, puis ne vous encombrent plus. Développez un groupe pour réinitialiser une visite précise.';
+  String get tutorialsHowItWorksBody =>
+      'Les tutoriels apparaissent une fois, puis ne vous encombrent plus. Développez un groupe pour réinitialiser une visite précise.';
 
   @override
   String get tutorialsMainTabsTitle => 'Onglets principaux';
 
   @override
-  String get tutorialsMainTabsSubtitle => 'Rejouez les visites guidées de chaque zone principale.';
+  String get tutorialsMainTabsSubtitle =>
+      'Rejouez les visites guidées de chaque zone principale.';
 
   @override
   String get tutorialsWorkoutTitle => 'Entraînement';
 
   @override
-  String get tutorialsWorkoutSubtitle => 'Aide pour consigner votre première séance.';
+  String get tutorialsWorkoutSubtitle =>
+      'Aide pour consigner votre première séance.';
 
   @override
   String get tutorialsPlansTitle => 'Plans et entraînements';
 
   @override
-  String get tutorialsPlansSubtitle => 'Rejouez l\'aide pour créer, modifier et consulter les entraînements.';
+  String get tutorialsPlansSubtitle =>
+      'Rejouez l\'aide pour créer, modifier et consulter les entraînements.';
 
   @override
   String get tutorialsCatalogTitle => 'Catalogue et anatomie';
 
   @override
-  String get tutorialsCatalogSubtitle => 'Rejouez l\'aide sur les exercices et l\'anatomie ciblée.';
+  String get tutorialsCatalogSubtitle =>
+      'Rejouez l\'aide sur les exercices et l\'anatomie ciblée.';
 
   @override
   String get tutorialsProgressTitle => 'Progrès et réglages';
 
   @override
-  String get tutorialsProgressSubtitle => 'Rejouez l\'aide sur les détails de progrès et les pages de réglages.';
+  String get tutorialsProgressSubtitle =>
+      'Rejouez l\'aide sur les détails de progrès et les pages de réglages.';
 
   @override
   String tutorialsReplayTitle(String topic) {
@@ -3122,7 +3437,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tutorialsTopicGeneratePlans => 'Générer des plans';
 
   @override
-  String get tutorialsTopicOptimizedSettings => 'réglages d\'entraînement optimisé';
+  String get tutorialsTopicOptimizedSettings =>
+      'réglages d\'entraînement optimisé';
 
   @override
   String get tutorialsTopicPremadePlans => 'Plans préfabriqués';
@@ -3185,16 +3501,20 @@ class AppLocalizationsFr extends AppLocalizations {
   String get anatomyMuscles => 'Muscles';
 
   @override
-  String get anatomyLoadFailed => 'Impossible de charger les filtres anatomiques.';
+  String get anatomyLoadFailed =>
+      'Impossible de charger les filtres anatomiques.';
 
   @override
-  String get anatomySearchLabel => 'Rechercher des parties du corps ou des muscles';
+  String get anatomySearchLabel =>
+      'Rechercher des parties du corps ou des muscles';
 
   @override
-  String get anatomyNoBodyParts => 'Aucune partie du corps ne correspond à votre recherche.';
+  String get anatomyNoBodyParts =>
+      'Aucune partie du corps ne correspond à votre recherche.';
 
   @override
-  String get anatomyNoMuscles => 'Aucun muscle ne correspond à votre recherche.';
+  String get anatomyNoMuscles =>
+      'Aucun muscle ne correspond à votre recherche.';
 
   @override
   String anatomyExerciseCount(int count) {
@@ -3211,13 +3531,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get anatomyTutorialSearchTitle => 'Rechercher l\'anatomie';
 
   @override
-  String get anatomyTutorialSearchBody => 'Recherchez une partie du corps ou un muscle précis lorsque vous souhaitez des options d\'exercice ciblées.';
+  String get anatomyTutorialSearchBody =>
+      'Recherchez une partie du corps ou un muscle précis lorsque vous souhaitez des options d\'exercice ciblées.';
 
   @override
   String get anatomyTutorialListsTitle => 'Parties du corps et muscles';
 
   @override
-  String get anatomyTutorialListsBody => 'Changez d\'onglet, puis touchez une ligne pour voir les exercices associés, les totaux récents et les limites de séries recommandées.';
+  String get anatomyTutorialListsBody =>
+      'Changez d\'onglet, puis touchez une ligne pour voir les exercices associés, les totaux récents et les limites de séries recommandées.';
 
   @override
   String anatomyTargetExercises(String name) {
@@ -3225,7 +3547,8 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get anatomyBodypartLoadFailed => 'Impossible de charger cette partie du corps.';
+  String get anatomyBodypartLoadFailed =>
+      'Impossible de charger cette partie du corps.';
 
   @override
   String get anatomyMuscleLoadFailed => 'Impossible de charger ce muscle.';
@@ -3236,7 +3559,8 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get anatomySaveFailed => 'Impossible d\'enregistrer les modifications.';
+  String get anatomySaveFailed =>
+      'Impossible d\'enregistrer les modifications.';
 
   @override
   String anatomyLinkedExerciseCount(int count) {
@@ -3278,10 +3602,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get anatomyRelatedBodyParts => 'Parties du corps associées';
 
   @override
-  String get anatomyNoMuscleLinks => 'Aucun muscle n\'est encore associé à cette partie du corps.';
+  String get anatomyNoMuscleLinks =>
+      'Aucun muscle n\'est encore associé à cette partie du corps.';
 
   @override
-  String get anatomyNoBodyPartLinks => 'Aucune partie du corps n\'est encore associée à ce muscle.';
+  String get anatomyNoBodyPartLinks =>
+      'Aucune partie du corps n\'est encore associée à ce muscle.';
 
   @override
   String get anatomyExercises => 'Exercices';
@@ -3314,76 +3640,90 @@ class AppLocalizationsFr extends AppLocalizations {
   String get anatomyTutorialDetailTitle => 'Détails anatomiques';
 
   @override
-  String get anatomyTutorialBodypartDetailBody => 'L\'en-tête présente les séries récentes, les limites recommandées et les liens anatomiques associés.';
+  String get anatomyTutorialBodypartDetailBody =>
+      'L\'en-tête présente les séries récentes, les limites recommandées et les liens anatomiques associés.';
 
   @override
   String get anatomyTutorialMuscleDetailTitle => 'Détails du muscle';
 
   @override
-  String get anatomyTutorialMuscleDetailBody => 'L\'en-tête présente les séries récentes, les limites recommandées et les parties du corps associées.';
+  String get anatomyTutorialMuscleDetailBody =>
+      'L\'en-tête présente les séries récentes, les limites recommandées et les parties du corps associées.';
 
   @override
   String get anatomyTutorialLinkedExercisesTitle => 'Exercices associés';
 
   @override
-  String get anatomyTutorialBodypartExercisesBody => 'Voici les exercices liés à cette cible. Touchez-en un pour ouvrir tous ses détails.';
+  String get anatomyTutorialBodypartExercisesBody =>
+      'Voici les exercices liés à cette cible. Touchez-en un pour ouvrir tous ses détails.';
 
   @override
-  String get anatomyTutorialMuscleExercisesBody => 'Les exercices sont classés selon la façon dont ils travaillent directement ce muscle. Touchez-en un pour voir tous les détails.';
+  String get anatomyTutorialMuscleExercisesBody =>
+      'Les exercices sont classés selon la façon dont ils travaillent directement ce muscle. Touchez-en un pour voir tous les détails.';
 
   @override
   String get settingsWorkoutTitle => 'Réglages d\'entraînement';
 
   @override
-  String get settingsWorkoutSubtitle => 'Ajustez la façon dont l\'application interprète l\'anatomie, les priorités et les objectifs de volume.';
+  String get settingsWorkoutSubtitle =>
+      'Ajustez la façon dont l\'application interprète l\'anatomie, les priorités et les objectifs de volume.';
 
   @override
   String get settingsTrainingBiasTitle => 'Priorités d\'entraînement';
 
   @override
-  String get settingsTrainingBiasSubtitle => 'Contrôles utilisés par les plans générés et les séances optimisées.';
+  String get settingsTrainingBiasSubtitle =>
+      'Contrôles utilisés par les plans générés et les séances optimisées.';
 
   @override
   String get settingsBodyPartRankings => 'Classement des parties du corps';
 
   @override
-  String get settingsBodyPartRankingsSubtitle => 'Priorisez les parties du corps qui devraient recevoir plus de travail.';
+  String get settingsBodyPartRankingsSubtitle =>
+      'Priorisez les parties du corps qui devraient recevoir plus de travail.';
 
   @override
   String get settingsMuscleRankings => 'Classement des muscles';
 
   @override
-  String get settingsMuscleRankingsSubtitle => 'Priorisez les muscles précis du modèle anatomique.';
+  String get settingsMuscleRankingsSubtitle =>
+      'Priorisez les muscles précis du modèle anatomique.';
 
   @override
   String get settingsVolumeBoundaries => 'Limites de volume';
 
   @override
-  String get settingsVolumeBoundariesSubtitle => 'Définissez les plages hebdomadaires recommandées pour les parties du corps et les muscles.';
+  String get settingsVolumeBoundariesSubtitle =>
+      'Définissez les plages hebdomadaires recommandées pour les parties du corps et les muscles.';
 
   @override
   String get settingsExerciseDefinitionsTitle => 'Définitions des exercices';
 
   @override
-  String get settingsExerciseDefinitionsSubtitle => 'Gérez les données d\'anatomie et d\'exercices utilisées par l\'application.';
+  String get settingsExerciseDefinitionsSubtitle =>
+      'Gérez les données d\'anatomie et d\'exercices utilisées par l\'application.';
 
   @override
   String get settingsAnatomyMapping => 'Association parties du corps / muscles';
 
   @override
-  String get settingsAnatomyMappingSubtitle => 'Choisissez les muscles associés à chaque partie du corps.';
+  String get settingsAnatomyMappingSubtitle =>
+      'Choisissez les muscles associés à chaque partie du corps.';
 
   @override
-  String get settingsExerciseSetAllocation => 'Répartition des séries par exercice';
+  String get settingsExerciseSetAllocation =>
+      'Répartition des séries par exercice';
 
   @override
-  String get settingsExerciseSetAllocationSubtitle => 'Examinez la contribution de chaque exercice aux muscles et aux parties du corps.';
+  String get settingsExerciseSetAllocationSubtitle =>
+      'Examinez la contribution de chaque exercice aux muscles et aux parties du corps.';
 
   @override
   String get settingsExerciseEditor => 'Éditeur d\'exercices';
 
   @override
-  String get settingsExerciseEditorSubtitle => 'Modifiez les noms, détails, équipements et associations des exercices.';
+  String get settingsExerciseEditorSubtitle =>
+      'Modifiez les noms, détails, équipements et associations des exercices.';
 
   @override
   String get commonCopy => 'Copier';
@@ -3423,10 +3763,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsTitle => 'Réglages';
 
   @override
-  String get nutritionSettingsTitle => 'Réglages de l\'alimentation et de la nutrition';
+  String get nutritionSettingsTitle =>
+      'Réglages de l\'alimentation et de la nutrition';
 
   @override
-  String get nutritionSettingsSubtitle => 'Configurez les objectifs nutritionnels et les préférences alimentaires.';
+  String get nutritionSettingsSubtitle =>
+      'Configurez les objectifs nutritionnels et les préférences alimentaires.';
 
   @override
   String get nutritionCurrentGoals => 'Objectifs actuels';
@@ -3435,19 +3777,31 @@ class AppLocalizationsFr extends AppLocalizations {
   String get nutritionGoals => 'Objectifs';
 
   @override
-  String get nutritionGoalsSubtitle => 'Définissez les cibles utilisées par le suivi nutritionnel.';
+  String get nutritionGoalsSubtitle =>
+      'Définissez les cibles utilisées par le suivi nutritionnel.';
 
   @override
-  String get nutritionManualGoals => 'Définir manuellement les objectifs nutritionnels';
+  String get nutritionManualGoals =>
+      'Définir manuellement les objectifs nutritionnels';
 
   @override
-  String get nutritionManualGoalsSubtitle => 'Saisissez vous-même les calories, macronutriments et nutriments clés.';
+  String get nutritionManualGoalsSubtitle =>
+      'Saisissez vous-même les calories, macronutriments et nutriments clés.';
 
   @override
   String get nutritionGoalsSaved => 'Objectifs enregistrés';
 
   @override
-  String nutritionGoalSummary(String calories, String protein, String carbs, String fat, String fiber, String sugar, String satFat, String sodium) {
+  String nutritionGoalSummary(
+    String calories,
+    String protein,
+    String carbs,
+    String fat,
+    String fiber,
+    String sugar,
+    String satFat,
+    String sodium,
+  ) {
     return 'Calories : $calories / Protéines : $protein / Glucides : $carbs / Lipides : $fat / Fibres : $fiber / Sucre : $sugar / Gras sat. : $satFat / Sodium : $sodium';
   }
 
@@ -3455,25 +3809,29 @@ class AppLocalizationsFr extends AppLocalizations {
   String get progressSettingsTitle => 'Réglages de progression';
 
   @override
-  String get progressSettingsSubtitle => 'Gérez les mesures corporelles et le suivi des tendances.';
+  String get progressSettingsSubtitle =>
+      'Gérez les mesures corporelles et le suivi des tendances.';
 
   @override
   String get progressMeasurements => 'Mesures';
 
   @override
-  String get progressMeasurementsSubtitle => 'Configurez les mesures corporelles que vous souhaitez suivre au fil du temps.';
+  String get progressMeasurementsSubtitle =>
+      'Configurez les mesures corporelles que vous souhaitez suivre au fil du temps.';
 
   @override
   String get progressMeasurementLibrary => 'Bibliothèque de mesures';
 
   @override
-  String get progressMeasurementLibrarySubtitle => 'Gérez le poids, la taille, les mensurations et les mesures personnalisées.';
+  String get progressMeasurementLibrarySubtitle =>
+      'Gérez le poids, la taille, les mensurations et les mesures personnalisées.';
 
   @override
   String get nutritionManualGoalsTitle => 'Objectifs nutritionnels manuels';
 
   @override
-  String get nutritionManualGoalsPageSubtitle => 'Définissez manuellement les cibles de calories, macronutriments et nutriments.';
+  String get nutritionManualGoalsPageSubtitle =>
+      'Définissez manuellement les cibles de calories, macronutriments et nutriments.';
 
   @override
   String get nutritionSaveGoals => 'Enregistrer les objectifs';
@@ -3521,7 +3879,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get nutritionEnterNumber => 'Saisissez un nombre';
 
   @override
-  String get nutritionNumberAtLeastZero => 'La valeur doit être supérieure ou égale à 0';
+  String get nutritionNumberAtLeastZero =>
+      'La valeur doit être supérieure ou égale à 0';
 
   @override
   String rankingsSaved(String target) {
@@ -3564,7 +3923,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get mappingTitle => 'Association anatomique';
 
   @override
-  String get mappingHero => 'Associez les muscles aux parties du corps pour que les cartes thermiques, les analyses et les entraînements générés soient cohérents.';
+  String get mappingHero =>
+      'Associez les muscles aux parties du corps pour que les cartes thermiques, les analyses et les entraînements générés soient cohérents.';
 
   @override
   String get mappingSaved => 'Associations enregistrées';
@@ -3587,7 +3947,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get mappingLinkedMuscles => 'Muscles associés';
 
   @override
-  String get mappingChooseLinkedSubtitle => 'Sélectionnez chaque muscle appartenant à cette partie du corps.';
+  String get mappingChooseLinkedSubtitle =>
+      'Sélectionnez chaque muscle appartenant à cette partie du corps.';
 
   @override
   String mappingLinkedCount(int count) {
@@ -3598,7 +3959,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get mappingNoMuscles => 'Aucun muscle défini.';
 
   @override
-  String get mappingNoLinkedMuscles => 'Aucun muscle associé pour le moment. Touchez Modifier pour en ajouter.';
+  String get mappingNoLinkedMuscles =>
+      'Aucun muscle associé pour le moment. Touchez Modifier pour en ajouter.';
 
   @override
   String get volumeMaintenance => 'Entretien';
@@ -3623,7 +3985,8 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get volumeBodyPartSaved => 'Limites de la partie du corps enregistrées';
+  String get volumeBodyPartSaved =>
+      'Limites de la partie du corps enregistrées';
 
   @override
   String get volumeMuscleSaved => 'Limites du muscle enregistrées';
@@ -3641,13 +4004,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get volumeBodyPartTitle => 'Volume par partie du corps';
 
   @override
-  String get volumeBodyPartSubtitle => 'Définissez les plages hebdomadaires utilisées par les analyses et la génération d\'entraînements.';
+  String get volumeBodyPartSubtitle =>
+      'Définissez les plages hebdomadaires utilisées par les analyses et la génération d\'entraînements.';
 
   @override
   String get volumeMuscleTitle => 'Volume par muscle';
 
   @override
-  String get volumeMuscleSubtitle => 'Affinez les plages hebdomadaires pour chaque muscle.';
+  String get volumeMuscleSubtitle =>
+      'Affinez les plages hebdomadaires pour chaque muscle.';
 
   @override
   String get volumeSelection => 'Sélection';
@@ -3656,7 +4021,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get volumeRecommendedRange => 'Plage recommandée';
 
   @override
-  String get volumeRecommendedRangeSubtitle => 'Les nombres sont des unités de séries par semaine.';
+  String get volumeRecommendedRangeSubtitle =>
+      'Les nombres sont des unités de séries par semaine.';
 
   @override
   String get volumeSaveBoundaries => 'Enregistrer les limites';
@@ -3715,7 +4081,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get barcodeTorchOff => 'Éteindre la lampe';
 
   @override
-  String get barcodeTorchUnavailable => 'La lampe n\'est pas disponible sur cet appareil';
+  String get barcodeTorchUnavailable =>
+      'La lampe n\'est pas disponible sur cet appareil';
 
   @override
   String get barcodeAlignHint => 'Alignez le code-barres dans le cadre';
@@ -3724,19 +4091,23 @@ class AppLocalizationsFr extends AppLocalizations {
   String get progressTutorialWorkoutReportTitle => 'Rapport d\'entraînement';
 
   @override
-  String get progressTutorialWorkoutReportBody => 'Ce rapport suit le nombre d\'entraînements, le temps d\'entraînement et le volume sur différentes périodes. Touchez une mesure pour modifier le graphique.';
+  String get progressTutorialWorkoutReportBody =>
+      'Ce rapport suit le nombre d\'entraînements, le temps d\'entraînement et le volume sur différentes périodes. Touchez une mesure pour modifier le graphique.';
 
   @override
-  String get progressTutorialExerciseProgressTitle => 'Progression des exercices';
+  String get progressTutorialExerciseProgressTitle =>
+      'Progression des exercices';
 
   @override
-  String get progressTutorialExerciseProgressBody => 'Suivez les tendances de force des exercices sélectionnés. Utilisez la tuile Modifier pour ajouter ou retirer des exercices de ce tableau de bord.';
+  String get progressTutorialExerciseProgressBody =>
+      'Suivez les tendances de force des exercices sélectionnés. Utilisez la tuile Modifier pour ajouter ou retirer des exercices de ce tableau de bord.';
 
   @override
   String get progressTutorialHealthTrendsTitle => 'Tendances de santé';
 
   @override
-  String get progressTutorialHealthTrendsBody => 'Consignez le poids corporel et les mesures personnalisées ici, puis observez leur évolution au fil du temps.';
+  String get progressTutorialHealthTrendsBody =>
+      'Consignez le poids corporel et les mesures personnalisées ici, puis observez leur évolution au fil du temps.';
 
   @override
   String get measurementNewTitle => 'Nouvelle mesure';
@@ -3787,7 +4158,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get measurementName => 'Nom de la mesure';
 
   @override
-  String get measurementNameHint => 'Tour de poitrine, fréquence cardiaque au repos...';
+  String get measurementNameHint =>
+      'Tour de poitrine, fréquence cardiaque au repos...';
 
   @override
   String get measurementValue => 'Valeur';
@@ -3805,7 +4177,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get measurementSaveNew => 'Enregistrer la nouvelle mesure';
 
   @override
-  String get measurementCustomRequired => 'Saisissez un nom, une valeur et une unité personnalisés';
+  String get measurementCustomRequired =>
+      'Saisissez un nom, une valeur et une unité personnalisés';
 
   @override
   String measurementDefinitionNotFound(String name) {
@@ -3837,31 +4210,39 @@ class AppLocalizationsFr extends AppLocalizations {
   String get measurementThigh => 'Cuisse';
 
   @override
-  String get measurementInstructionsForearm => 'Mesurez autour de la partie la plus large de votre avant-bras.';
+  String get measurementInstructionsForearm =>
+      'Mesurez autour de la partie la plus large de votre avant-bras.';
 
   @override
-  String get measurementInstructionsArm => 'Mesurez autour de la partie la plus large de votre biceps.';
+  String get measurementInstructionsArm =>
+      'Mesurez autour de la partie la plus large de votre biceps.';
 
   @override
-  String get measurementInstructionsNeck => 'Mesurez à l\'endroit où le ruban repose droit autour de votre cou.';
+  String get measurementInstructionsNeck =>
+      'Mesurez à l\'endroit où le ruban repose droit autour de votre cou.';
 
   @override
-  String get measurementInstructionsShoulder => 'Gardez le ruban droit autour des deltoïdes latéraux.';
+  String get measurementInstructionsShoulder =>
+      'Gardez le ruban droit autour des deltoïdes latéraux.';
 
   @override
-  String get measurementInstructionsChest => 'Mesurez sous les aisselles et au-dessus de la ligne des mamelons.';
+  String get measurementInstructionsChest =>
+      'Mesurez sous les aisselles et au-dessus de la ligne des mamelons.';
 
   @override
   String get measurementInstructionsWaist => 'Mesurez autour de votre nombril.';
 
   @override
-  String get measurementInstructionsHip => 'Mesurez autour de la partie la plus large de vos fessiers.';
+  String get measurementInstructionsHip =>
+      'Mesurez autour de la partie la plus large de vos fessiers.';
 
   @override
-  String get measurementInstructionsThigh => 'Mesurez autour de la partie la plus large de votre cuisse.';
+  String get measurementInstructionsThigh =>
+      'Mesurez autour de la partie la plus large de votre cuisse.';
 
   @override
-  String get measurementInstructionsCalf => 'Mesurez autour de la partie la plus large de votre mollet.';
+  String get measurementInstructionsCalf =>
+      'Mesurez autour de la partie la plus large de votre mollet.';
 
   @override
   String get nutritionCaloriesLabel => 'Calories';
@@ -3884,7 +4265,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get nutritionEditEntry => 'Modifier l\'entrée';
 
   @override
-  String get nutritionEditNotAvailable => 'La modification des entrées n\'est pas encore disponible';
+  String get nutritionEditNotAvailable =>
+      'La modification des entrées n\'est pas encore disponible';
 
   @override
   String get nutritionEntryDeleted => 'Entrée supprimée';
@@ -3899,31 +4281,36 @@ class AppLocalizationsFr extends AppLocalizations {
   String get gymProfileTutorialSpaceTitle => 'Espace d\'entraînement';
 
   @override
-  String get gymProfileTutorialSpaceBody => 'Nommez ce profil selon l\'endroit où vous vous entraînez, comme Gym à domicile, Gym commercial ou Installation de voyage.';
+  String get gymProfileTutorialSpaceBody =>
+      'Nommez ce profil selon l\'endroit où vous vous entraînez, comme Gym à domicile, Gym commercial ou Installation de voyage.';
 
   @override
   String get gymProfileTutorialFindTitle => 'Trouver de l\'équipement';
 
   @override
-  String get gymProfileTutorialFindBody => 'Utilisez la recherche lorsque la liste est longue pour accéder rapidement à un article.';
+  String get gymProfileTutorialFindBody =>
+      'Utilisez la recherche lorsque la liste est longue pour accéder rapidement à un article.';
 
   @override
   String get gymProfileTutorialAvailableTitle => 'Équipement disponible';
 
   @override
-  String get gymProfileTutorialAvailableBody => 'Sélectionnez l\'équipement de cet espace. Les plans générés et les remplacements l\'utilisent pour éviter les exercices indisponibles.';
+  String get gymProfileTutorialAvailableBody =>
+      'Sélectionnez l\'équipement de cet espace. Les plans générés et les remplacements l\'utilisent pour éviter les exercices indisponibles.';
 
   @override
   String get gymProfileTutorialSaveTitle => 'Enregistrer le profil';
 
   @override
-  String get gymProfileTutorialSaveBody => 'Enregistrer sauvegarde le profil et l\'équipement. Annuler demande avant d\'ignorer les modifications.';
+  String get gymProfileTutorialSaveBody =>
+      'Enregistrer sauvegarde le profil et l\'équipement. Annuler demande avant d\'ignorer les modifications.';
 
   @override
   String get gymProfileSaveChangesTitle => 'Enregistrer les modifications?';
 
   @override
-  String get gymProfileSaveChangesBody => 'Ce profil de gym contient des modifications non enregistrées. Les enregistrer avant de quitter?';
+  String get gymProfileSaveChangesBody =>
+      'Ce profil de gym contient des modifications non enregistrées. Les enregistrer avant de quitter?';
 
   @override
   String get gymProfileKeepEditing => 'Continuer la modification';
@@ -3932,7 +4319,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get gymProfileDiscard => 'Ignorer';
 
   @override
-  String get gymProfileSelectEquipment => 'Sélectionnez au moins un article d\'équipement.';
+  String get gymProfileSelectEquipment =>
+      'Sélectionnez au moins un article d\'équipement.';
 
   @override
   String gymProfileSaveFailed(String error) {
@@ -3940,7 +4328,8 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get gymProfileEquipmentHint => 'Indiquez l\'équipement de ce gym pour que les plans générés n\'utilisent que des exercices disponibles.';
+  String get gymProfileEquipmentHint =>
+      'Indiquez l\'équipement de ce gym pour que les plans générés n\'utilisent que des exercices disponibles.';
 
   @override
   String get gymProfileSpace => 'Espace d\'entraînement';
@@ -3954,7 +4343,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get gymProfileName => 'Nom du profil';
 
   @override
-  String get gymProfileNameHint => 'Gym à domicile, gym commercial, installation de voyage...';
+  String get gymProfileNameHint =>
+      'Gym à domicile, gym commercial, installation de voyage...';
 
   @override
   String get gymProfileNameRequired => 'Le nom est requis';
@@ -4009,7 +4399,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get equipmentNoRequirement => 'Aucun équipement requis';
 
   @override
-  String get equipmentBodyweightSupport => 'Support pour exercices au poids du corps';
+  String get equipmentBodyweightSupport =>
+      'Support pour exercices au poids du corps';
 
   @override
   String get equipmentMachineBased => 'Mouvement sur machine';
@@ -4077,10 +4468,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get foodNoFoodsFound => 'Aucun aliment trouvé.';
 
   @override
-  String get foodInstantLogAfterScan => 'Consigner immédiatement après numérisation';
+  String get foodInstantLogAfterScan =>
+      'Consigner immédiatement après numérisation';
 
   @override
-  String get foodInstantLogAfterScanSubtitle => 'Ajoutez immédiatement l\'article numérisé au repas sélectionné.';
+  String get foodInstantLogAfterScanSubtitle =>
+      'Ajoutez immédiatement l\'article numérisé au repas sélectionné.';
 
   @override
   String get foodOpenCameraScanner => 'Ouvrir le numériseur photo';
@@ -4106,7 +4499,8 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get foodCustomSavedBarcode => 'Aliment personnalisé enregistré et code-barres associé';
+  String get foodCustomSavedBarcode =>
+      'Aliment personnalisé enregistré et code-barres associé';
 
   @override
   String get foodFavorites => 'Favoris';
@@ -4115,7 +4509,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get foodRecentFoods => 'Aliments récents';
 
   @override
-  String get foodStartSearching => 'Commencez une recherche pour trouver des aliments.';
+  String get foodStartSearching =>
+      'Commencez une recherche pour trouver des aliments.';
 
   @override
   String get foodFavorite => 'Ajouter aux favoris';
@@ -4142,7 +4537,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get foodNoteOptional => 'Note (facultatif)';
 
   @override
-  String get foodTagsHint => 'Balises (séparées par des virgules, p. ex. après l\'entraînement, riche en protéines)';
+  String get foodTagsHint =>
+      'Balises (séparées par des virgules, p. ex. après l\'entraînement, riche en protéines)';
 
   @override
   String get foodAddToPlate => 'Ajouter à l\'assiette';
@@ -4174,7 +4570,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tutorialSkipAllTitle => 'Passer tous les tutoriels?';
 
   @override
-  String get tutorialSkipAllBody => 'Cette action masque tous les tutoriels guides. Vous pouvez les reactiver a tout moment dans Parametres > Tutoriels guides en utilisant Reinitialiser tous les tutoriels.';
+  String get tutorialSkipAllBody =>
+      'Cette action masque tous les tutoriels guides. Vous pouvez les reactiver a tout moment dans Parametres > Tutoriels guides en utilisant Reinitialiser tous les tutoriels.';
 
   @override
   String get tutorialKeep => 'Garder les tutoriels';
@@ -4291,7 +4688,12 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String automaticChildSetLabel(int parent, int child, String weight, int reps) {
+  String automaticChildSetLabel(
+    int parent,
+    int child,
+    String weight,
+    int reps,
+  ) {
     return 'Serie $parent.$child: $weight x $reps';
   }
 
@@ -4307,13 +4709,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get automaticWeightTarget => 'Poids effectue >= poids cible';
 
   @override
-  String get automaticRepsTarget => 'Repetitions effectuees >= repetitions cibles';
+  String get automaticRepsTarget =>
+      'Repetitions effectuees >= repetitions cibles';
 
   @override
   String get automaticVolumeTarget => 'Volume effectue >= volume cible';
 
   @override
-  String get automaticScopeLabel => 'Les reussites, echecs et ajustements sont comptes par :';
+  String get automaticScopeLabel =>
+      'Les reussites, echecs et ajustements sont comptes par :';
 
   @override
   String get automaticWorkoutSession => 'Seance d\'entrainement';
@@ -4346,7 +4750,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get weightRemoveExerciseTitle => 'Retirer l\'exercice';
 
   @override
-  String get weightRemoveExerciseBody => 'Voulez-vous vraiment retirer cet exercice?';
+  String get weightRemoveExerciseBody =>
+      'Voulez-vous vraiment retirer cet exercice?';
 
   @override
   String get weightSwapExercise => 'Remplacer l\'exercice';
@@ -4387,7 +4792,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get weightRemoveChangeSetTitle => 'Retirer la serie modifiee';
 
   @override
-  String get weightRemoveChangeSetBody => 'Voulez-vous vraiment retirer cette serie modifiee?';
+  String get weightRemoveChangeSetBody =>
+      'Voulez-vous vraiment retirer cette serie modifiee?';
 
   @override
   String get weightAddChangeSet => 'Ajouter une serie modifiee';
@@ -4399,7 +4805,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get swapAlreadySelected => 'Cet exercice est deja selectionne.';
 
   @override
-  String get swapNeedsProfileEquipment => 'Cet exercice exige de l\'equipement absent de ce profil.';
+  String get swapNeedsProfileEquipment =>
+      'Cet exercice exige de l\'equipement absent de ce profil.';
 
   @override
   String swapLoadFailed(Object error) {
@@ -4431,13 +4838,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get swapTitle => 'Remplacer l\'exercice';
 
   @override
-  String get swapFindingMatches => 'Recherche de correspondances pour les muscles et parties du corps...';
+  String get swapFindingMatches =>
+      'Recherche de correspondances pour les muscles et parties du corps...';
 
   @override
   String get swapChooseReplacement => 'Choisissez un remplacement similaire.';
 
   @override
-  String get swapFilterProfileEquipment => 'Filtrer selon l\'equipement du profil';
+  String get swapFilterProfileEquipment =>
+      'Filtrer selon l\'equipement du profil';
 
   @override
   String get swapBodypartsHit => 'Parties du corps sollicitees';
@@ -4451,7 +4860,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get swapNoReplacements => 'Aucun remplacement similaire trouve.';
 
   @override
-  String get swapNoReplacementsBody => 'Cet exercice pourrait avoir besoin de davantage de donnees sur les muscles ou les parties du corps pour etre bien remplace.';
+  String get swapNoReplacementsBody =>
+      'Cet exercice pourrait avoir besoin de davantage de donnees sur les muscles ou les parties du corps pour etre bien remplace.';
 
   @override
   String get premadePlansTitle => 'Plans predefinis';
@@ -4460,22 +4870,26 @@ class AppLocalizationsFr extends AppLocalizations {
   String get premadeTutorialLengthTitle => 'Duree du plan';
 
   @override
-  String get premadeTutorialLengthBody => 'Passez entre les versions de 1 heure et de 2 heures. Les versions plus longues comportent plus d\'exercices et de series.';
+  String get premadeTutorialLengthBody =>
+      'Passez entre les versions de 1 heure et de 2 heures. Les versions plus longues comportent plus d\'exercices et de series.';
 
   @override
   String get premadeTutorialEquipmentTitle => 'Equipement du profil';
 
   @override
-  String get premadeTutorialEquipmentBody => 'Lorsque cette option est activee, Tonos remplace les exercices non disponibles par des options similaires compatibles avec votre profil d\'entrainement.';
+  String get premadeTutorialEquipmentBody =>
+      'Lorsque cette option est activee, Tonos remplace les exercices non disponibles par des options similaires compatibles avec votre profil d\'entrainement.';
 
   @override
   String get premadeTutorialLibraryTitle => 'Bibliotheque de plans';
 
   @override
-  String get premadeTutorialLibraryBody => 'Ouvrez une repartition, previsualisez un plan, puis ajoutez-le a vos plans actifs pour le retrouver dans Entrainement.';
+  String get premadeTutorialLibraryBody =>
+      'Ouvrez une repartition, previsualisez un plan, puis ajoutez-le a vos plans actifs pour le retrouver dans Entrainement.';
 
   @override
-  String get premadeSelectProfile => 'Veuillez d\'abord choisir un profil d\'entrainement.';
+  String get premadeSelectProfile =>
+      'Veuillez d\'abord choisir un profil d\'entrainement.';
 
   @override
   String premadePlanAdded(String name) {
@@ -4488,7 +4902,8 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get premadeDescription => 'Copiez des routines creees par des entraineurs, des influenceurs ou Tonos dans vos propres plans. Une fois ajoutees, vous pouvez les modifier comme tout autre plan.';
+  String get premadeDescription =>
+      'Copiez des routines creees par des entraineurs, des influenceurs ou Tonos dans vos propres plans. Une fois ajoutees, vous pouvez les modifier comme tout autre plan.';
 
   @override
   String get premadeDiscarding => 'Suppression...';
@@ -4503,28 +4918,33 @@ class AppLocalizationsFr extends AppLocalizations {
   String get allocationSaving => 'Enregistrement';
 
   @override
-  String get allocationInvalidCredit => 'Saisissez un nombre positif ou nul pour chaque credit.';
+  String get allocationInvalidCredit =>
+      'Saisissez un nombre positif ou nul pour chaque credit.';
 
   @override
   String get allocationSaved => 'Repartition de l\'exercice enregistree.';
 
   @override
-  String get allocationSaveFailed => 'Impossible d\'enregistrer la repartition de l\'exercice. Reessayez.';
+  String get allocationSaveFailed =>
+      'Impossible d\'enregistrer la repartition de l\'exercice. Reessayez.';
 
   @override
-  String get allocationSaveOrDiscard => 'Enregistrez ou abandonnez vos modifications avant de reinitialiser.';
+  String get allocationSaveOrDiscard =>
+      'Enregistrez ou abandonnez vos modifications avant de reinitialiser.';
 
   @override
   String get allocationTitle => 'Repartition des series par exercice';
 
   @override
-  String get allocationSubtitle => 'Examinez comment les series terminees contribuent aux muscles et aux parties du corps cibles.';
+  String get allocationSubtitle =>
+      'Examinez comment les series terminees contribuent aux muscles et aux parties du corps cibles.';
 
   @override
   String get allocationHowTitle => 'Fonctionnement du credit de serie';
 
   @override
-  String get allocationHowBody => 'Un muscle principal recoit habituellement 1,00 credit pour une serie terminee. Les muscles de soutien recoivent moins de credit. Cela guide les resumes anatomiques et les recommandations sans jamais modifier les series que vous consignez.';
+  String get allocationHowBody =>
+      'Un muscle principal recoit habituellement 1,00 credit pour une serie terminee. Les muscles de soutien recoivent moins de credit. Cela guide les resumes anatomiques et les recommandations sans jamais modifier les series que vous consignez.';
 
   @override
   String allocationLoadFailed(String error) {
@@ -4532,7 +4952,8 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get allocationNoExercises => 'Aucun exercice n\'est encore disponible.';
+  String get allocationNoExercises =>
+      'Aucun exercice n\'est encore disponible.';
 
   @override
   String get allocationSelectedExercise => 'Exercice selectionne';
@@ -4547,7 +4968,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get allocationNoTargetMuscles => 'Aucun muscle cible';
 
   @override
-  String get allocationNoBodypartMapping => 'Aucune correspondance de partie du corps';
+  String get allocationNoBodypartMapping =>
+      'Aucune correspondance de partie du corps';
 
   @override
   String get allocationReset => 'Reinitialiser';
@@ -4556,16 +4978,20 @@ class AppLocalizationsFr extends AppLocalizations {
   String get allocationCredit => 'Credit';
 
   @override
-  String get allocationNoTargetMusclesBody => 'Cet exercice ne contient pas encore de donnees sur les muscles cibles.';
+  String get allocationNoTargetMusclesBody =>
+      'Cet exercice ne contient pas encore de donnees sur les muscles cibles.';
 
   @override
-  String get allocationMuscleCreditBody => 'Modifiez une valeur pour creer une repartition personnelle. Elle sert aux resumes musculaires et a la repartition des parties du corps qui en decoule.';
+  String get allocationMuscleCreditBody =>
+      'Modifiez une valeur pour creer une repartition personnelle. Elle sert aux resumes musculaires et a la repartition des parties du corps qui en decoule.';
 
   @override
-  String get allocationNoBodypartMappingBody => 'Cet exercice ne contient pas encore de correspondance pour les parties du corps.';
+  String get allocationNoBodypartMappingBody =>
+      'Cet exercice ne contient pas encore de correspondance pour les parties du corps.';
 
   @override
-  String get allocationBodypartCreditBody => 'Les valeurs automatiques sont derivees des muscles et de la correspondance anatomique. En modifier une cree une repartition personnelle directe par partie du corps.';
+  String get allocationBodypartCreditBody =>
+      'Les valeurs automatiques sont derivees des muscles et de la correspondance anatomique. En modifier une cree une repartition personnelle directe par partie du corps.';
 
   @override
   String get healthTrendsTitle => 'Tendances de sante';
@@ -4580,7 +5006,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get healthNoMeasurements => 'Aucune mesure pour le moment';
 
   @override
-  String get healthNoMeasurementsBody => 'Creez un indicateur pour commencer a suivre vos progres.';
+  String get healthNoMeasurementsBody =>
+      'Creez un indicateur pour commencer a suivre vos progres.';
 
   @override
   String get healthCreateMetric => 'Creer un indicateur';
@@ -4599,25 +5026,29 @@ class AppLocalizationsFr extends AppLocalizations {
   String get healthTutorialSummaryTitle => 'Resume de la mesure';
 
   @override
-  String get healthTutorialSummaryBody => 'Consultez la derniere valeur, le changement depuis l\'entree precedente et le nombre de releves.';
+  String get healthTutorialSummaryBody =>
+      'Consultez la derniere valeur, le changement depuis l\'entree precedente et le nombre de releves.';
 
   @override
   String get healthTutorialChartTitle => 'Graphique des tendances';
 
   @override
-  String get healthTutorialChartBody => 'Le graphique montre comment cette mesure evolue a mesure que vous ajoutez des entrees.';
+  String get healthTutorialChartBody =>
+      'Le graphique montre comment cette mesure evolue a mesure que vous ajoutez des entrees.';
 
   @override
   String get healthTutorialEntriesTitle => 'Entrees';
 
   @override
-  String get healthTutorialEntriesBody => 'Touchez une entree pour la modifier ou retirez celles qui ont ete ajoutees par erreur.';
+  String get healthTutorialEntriesBody =>
+      'Touchez une entree pour la modifier ou retirez celles qui ont ete ajoutees par erreur.';
 
   @override
   String get healthTutorialLogTitle => 'Consigner une entree';
 
   @override
-  String get healthTutorialLogBody => 'Utilisez ce bouton pour ajouter une nouvelle mesure.';
+  String get healthTutorialLogBody =>
+      'Utilisez ce bouton pour ajouter une nouvelle mesure.';
 
   @override
   String get healthDeleteEntryTitle => 'Supprimer l\'entree?';
@@ -4647,7 +5078,8 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get workoutReportLoadFailed => 'Impossible de charger le rapport d\'entrainement.';
+  String get workoutReportLoadFailed =>
+      'Impossible de charger le rapport d\'entrainement.';
 
   @override
   String get workoutReportTitle => 'Rapport d\'entrainement';
@@ -4668,13 +5100,16 @@ class AppLocalizationsFr extends AppLocalizations {
   String get recommendedSetsMaximum => 'Maximum de séries recommandées';
 
   @override
-  String get recommendedSetsValidNumbers => 'Entrez des nombres de séries valides.';
+  String get recommendedSetsValidNumbers =>
+      'Entrez des nombres de séries valides.';
 
   @override
-  String get recommendedSetsNonNegative => 'Le nombre de séries ne peut pas être négatif.';
+  String get recommendedSetsNonNegative =>
+      'Le nombre de séries ne peut pas être négatif.';
 
   @override
-  String get recommendedSetsRange => 'Le maximum doit être au moins égal au minimum.';
+  String get recommendedSetsRange =>
+      'Le maximum doit être au moins égal au minimum.';
 
   @override
   String get workoutReportWorkouts => 'Seances';
@@ -4695,43 +5130,52 @@ class AppLocalizationsFr extends AppLocalizations {
   String get databaseSettingsTitle => 'Reglages de la base de donnees';
 
   @override
-  String get databaseSettingsSubtitle => 'Sauvegardes, medias infonuagiques, verifications de sante et exports de developpement.';
+  String get databaseSettingsSubtitle =>
+      'Sauvegardes, medias infonuagiques, verifications de sante et exports de developpement.';
 
   @override
   String get databaseBackupRestore => 'Sauvegarde et restauration';
 
   @override
-  String get databaseBackupRestoreSubtitle => 'Importez ou exportez vos donnees Tonos locales de facon securitaire.';
+  String get databaseBackupRestoreSubtitle =>
+      'Importez ou exportez vos donnees Tonos locales de facon securitaire.';
 
   @override
-  String get databaseExportBackup => 'Exporter la sauvegarde de la base de donnees';
+  String get databaseExportBackup =>
+      'Exporter la sauvegarde de la base de donnees';
 
   @override
-  String get databaseImportBackup => 'Importer une sauvegarde de base de donnees';
+  String get databaseImportBackup =>
+      'Importer une sauvegarde de base de donnees';
 
   @override
-  String get databaseImportBackupSubtitle => 'Remplace les donnees locales a partir d\'un fichier exporte enregistre.';
+  String get databaseImportBackupSubtitle =>
+      'Remplace les donnees locales a partir d\'un fichier exporte enregistre.';
 
   @override
   String get databaseHealth => 'Sante';
 
   @override
-  String get databaseHealthSubtitle => 'Un apercu de la taille de la base, du schema et de l\'index de recherche.';
+  String get databaseHealthSubtitle =>
+      'Un apercu de la taille de la base, du schema et de l\'index de recherche.';
 
   @override
   String get databaseCheckingHealth => 'Verification de la sante de la base...';
 
   @override
-  String get databaseCheckingHealthSubtitle => 'Lecture du schema, de la taille, des tables et des index.';
+  String get databaseCheckingHealthSubtitle =>
+      'Lecture du schema, de la taille, des tables et des index.';
 
   @override
-  String get databaseHealthFailed => 'Echec de la verification de la base de donnees';
+  String get databaseHealthFailed =>
+      'Echec de la verification de la base de donnees';
 
   @override
   String get databaseMaintenance => 'Entretien';
 
   @override
-  String get databaseMaintenanceSubtitle => 'Outils securitaires de verification, d\'optimisation et de nettoyage du stockage.';
+  String get databaseMaintenanceSubtitle =>
+      'Outils securitaires de verification, d\'optimisation et de nettoyage du stockage.';
 
   @override
   String get databaseRefreshHealth => 'Actualiser la sante';
@@ -4740,7 +5184,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get databaseIntegrityCheck => 'Executer la verification d\'integrite';
 
   @override
-  String get databaseIntegrityCheckSubtitle => 'Demander a SQLite de verifier le fichier de base de donnees local.';
+  String get databaseIntegrityCheckSubtitle =>
+      'Demander a SQLite de verifier le fichier de base de donnees local.';
 
   @override
   String get databaseOptimize => 'Optimiser la base de donnees';
@@ -4749,52 +5194,62 @@ class AppLocalizationsFr extends AppLocalizations {
   String get databaseCheckpointWal => 'Point de controle WAL';
 
   @override
-  String get databaseCheckpointWalSubtitle => 'Ecrit le journal anticipe dans le fichier de base de donnees.';
+  String get databaseCheckpointWalSubtitle =>
+      'Ecrit le journal anticipe dans le fichier de base de donnees.';
 
   @override
   String get databaseVacuum => 'Compacter la base de donnees';
 
   @override
-  String get databaseVacuumSubtitle => 'Recupere l\'espace libre apres des suppressions ou importations importantes.';
+  String get databaseVacuumSubtitle =>
+      'Recupere l\'espace libre apres des suppressions ou importations importantes.';
 
   @override
   String get databaseCloudContent => 'Contenu infonuagique';
 
   @override
-  String get databaseCloudContentSubtitle => 'Gerez le stockage des medias d\'exercices, d\'equipement et d\'anatomie.';
+  String get databaseCloudContentSubtitle =>
+      'Gerez le stockage des medias d\'exercices, d\'equipement et d\'anatomie.';
 
   @override
   String get databaseWifiOnly => 'Telechargements en Wi-Fi seulement';
 
   @override
-  String get databaseWifiOnlySubtitle => 'Les nouvelles miniatures et videos se telechargent uniquement en Wi-Fi. Les medias en cache restent accessibles hors ligne.';
+  String get databaseWifiOnlySubtitle =>
+      'Les nouvelles miniatures et videos se telechargent uniquement en Wi-Fi. Les medias en cache restent accessibles hors ligne.';
 
   @override
-  String get databaseSyncExerciseMedia => 'Synchroniser les medias d\'exercices distants';
+  String get databaseSyncExerciseMedia =>
+      'Synchroniser les medias d\'exercices distants';
 
   @override
-  String get databaseSyncSharedMedia => 'Synchroniser les medias du catalogue partage';
+  String get databaseSyncSharedMedia =>
+      'Synchroniser les medias du catalogue partage';
 
   @override
-  String get databaseSyncSharedMediaSubtitle => 'Illustrations d\'equipement, de parties du corps et de muscles.';
+  String get databaseSyncSharedMediaSubtitle =>
+      'Illustrations d\'equipement, de parties du corps et de muscles.';
 
   @override
   String get databaseClearMediaCache => 'Vider le cache des medias telecharges';
 
   @override
-  String get databaseClearMediaCacheSubtitle => 'Retire de cet appareil les fichiers medias distants mis en cache.';
+  String get databaseClearMediaCacheSubtitle =>
+      'Retire de cet appareil les fichiers medias distants mis en cache.';
 
   @override
   String get databaseDefinitionExports => 'Exports de definitions';
 
   @override
-  String get databaseDefinitionExportsSubtitle => 'Exportez les fichiers de definition de l\'application pour inspection ou outils.';
+  String get databaseDefinitionExportsSubtitle =>
+      'Exportez les fichiers de definition de l\'application pour inspection ou outils.';
 
   @override
   String get exerciseEditorTitle => 'Editeur d\'exercices';
 
   @override
-  String get exerciseEditorLoadFailed => 'Impossible de charger les definitions d\'exercices.';
+  String get exerciseEditorLoadFailed =>
+      'Impossible de charger les definitions d\'exercices.';
 
   @override
   String get exerciseEditorChoose => 'Choisir un exercice';
@@ -4832,19 +5287,22 @@ class AppLocalizationsFr extends AppLocalizations {
   String get exerciseProgressTrendTitle => 'Tendance du 1RM';
 
   @override
-  String get exerciseProgressTrendBody => 'Ce graphique compare le 1RM reel enregistre et le 1RM estime au fil du temps. Touchez les points pour les valeurs exactes.';
+  String get exerciseProgressTrendBody =>
+      'Ce graphique compare le 1RM reel enregistre et le 1RM estime au fil du temps. Touchez les points pour les valeurs exactes.';
 
   @override
   String get exerciseProgressRecordings => 'Releves';
 
   @override
-  String get exerciseProgressRecordingsBody => 'Chaque releve ouvre l\'entrainement ou ce mouvement a ete effectue afin que vous puissiez consulter le contexte complet.';
+  String get exerciseProgressRecordingsBody =>
+      'Chaque releve ouvre l\'entrainement ou ce mouvement a ete effectue afin que vous puissiez consulter le contexte complet.';
 
   @override
   String get exerciseProgressTitle => 'Progres du 1RM';
 
   @override
-  String get exerciseProgressEmpty => 'Terminez cet exercice pour commencer a construire son historique de progres.';
+  String get exerciseProgressEmpty =>
+      'Terminez cet exercice pour commencer a construire son historique de progres.';
 
   @override
   String get exerciseProgressActual => '1RM reel';
@@ -4853,10 +5311,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get exerciseProgressEstimated => '1RM estime';
 
   @override
-  String get exerciseProgressSessionOpenFailed => 'Impossible d\'ouvrir la seance d\'entrainement.';
+  String get exerciseProgressSessionOpenFailed =>
+      'Impossible d\'ouvrir la seance d\'entrainement.';
 
   @override
-  String get exerciseProgressSessionMissing => 'Seance d\'entrainement introuvable.';
+  String get exerciseProgressSessionMissing =>
+      'Seance d\'entrainement introuvable.';
 
   @override
   String exerciseProgressEstimatedValue(String value) {
@@ -4910,10 +5370,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get sevenDayFocusTitle => 'Apercu hebdomadaire';
 
   @override
-  String get sevenDayFocusLoadFailed => 'Impossible de charger l\'activite des 7 derniers jours';
+  String get sevenDayFocusLoadFailed =>
+      'Impossible de charger l\'activite des 7 derniers jours';
 
   @override
-  String get sevenDayFocusEmpty => 'Aucune unite de serie terminee par partie du corps au cours des 7 derniers jours.';
+  String get sevenDayFocusEmpty =>
+      'Aucune unite de serie terminee par partie du corps au cours des 7 derniers jours.';
 
   @override
   String get sevenDayFocusMore => 'plus';
@@ -4950,7 +5412,8 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get historySummaryLoadFailed => 'Erreur lors du chargement de l\'historique';
+  String get historySummaryLoadFailed =>
+      'Erreur lors du chargement de l\'historique';
 
   @override
   String get historySummaryWorkouts => 'Seances';
@@ -4968,13 +5431,16 @@ class AppLocalizationsFr extends AppLocalizations {
   String get planCoachContinue => 'Continuer';
 
   @override
-  String get trainOptimizedSettingsTitle => 'Reglages de l\'entrainement optimise';
+  String get trainOptimizedSettingsTitle =>
+      'Reglages de l\'entrainement optimise';
 
   @override
-  String get trainOptimizedSettingsBudgetBody => 'Utilise 3 minutes par serie et 5 minutes pour commencer chaque exercice.';
+  String get trainOptimizedSettingsBudgetBody =>
+      'Utilise 3 minutes par serie et 5 minutes pour commencer chaque exercice.';
 
   @override
-  String get trainOptimizedSettingsFocusBody => 'Les choix de parties du corps s\'appliquent seulement au prochain entrainement optimise.';
+  String get trainOptimizedSettingsFocusBody =>
+      'Les choix de parties du corps s\'appliquent seulement au prochain entrainement optimise.';
 
   @override
   String get trainWorkoutDuration => 'Duree de l\'entrainement';
@@ -4992,10 +5458,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get trainBodypartFocus => 'Cible de parties du corps';
 
   @override
-  String get trainBodypartFocusHelp => 'Touchez une fois pour preferer une partie du corps, deux fois pour l\'eviter et trois fois pour effacer le choix.';
+  String get trainBodypartFocusHelp =>
+      'Touchez une fois pour preferer une partie du corps, deux fois pour l\'eviter et trois fois pour effacer le choix.';
 
   @override
-  String get trainBodypartsLoadFailed => 'Impossible de charger les parties du corps.';
+  String get trainBodypartsLoadFailed =>
+      'Impossible de charger les parties du corps.';
 
   @override
   String get trainPlanGenerated => 'Plan genere. Ouverture en cours.';
@@ -5006,7 +5474,8 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get trainActiveWorkoutKept => 'Un autre entrainement est deja en cours; il est reste inchange.';
+  String get trainActiveWorkoutKept =>
+      'Un autre entrainement est deja en cours; il est reste inchange.';
 
   @override
   String get trainMenuTitle => 'Menu entrainement';
@@ -5044,7 +5513,8 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get trainBuildingOptimized => 'Creation de l\'entrainement optimise...';
+  String get trainBuildingOptimized =>
+      'Creation de l\'entrainement optimise...';
 
   @override
   String get trainStartOptimized => 'Demarrer l\'entrainement optimise';
@@ -5077,7 +5547,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get foodCustomizationDensity => 'Densite (g/mL)';
 
   @override
-  String get foodCustomizationDensityHelp => 'Sert a convertir les portions en mL (tasses, c. a soupe) en grammes pour le calcul des macros.';
+  String get foodCustomizationDensityHelp =>
+      'Sert a convertir les portions en mL (tasses, c. a soupe) en grammes pour le calcul des macros.';
 
   @override
   String get foodCustomizationCalories => 'Calories (kcal)';
@@ -5089,13 +5560,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get foodCustomizationMicronutrients => 'Micronutriments';
 
   @override
-  String get foodCustomizationAdditionalComponents => 'Composants supplementaires';
+  String get foodCustomizationAdditionalComponents =>
+      'Composants supplementaires';
 
   @override
   String get foodCustomizationPortionInfo => 'Information sur les portions';
 
   @override
-  String get foodCustomizationBasisPortion => 'Base des valeurs nutritionnelles';
+  String get foodCustomizationBasisPortion =>
+      'Base des valeurs nutritionnelles';
 
   @override
   String get foodCustomizationUsualPortion => 'Portion habituelle consommee';
@@ -5125,13 +5598,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get dashboardManagePlans => 'Gerer les plans';
 
   @override
-  String get dashboardSelectProfilePlans => 'Choisissez un profil d\'entrainement pour voir ses plans.';
+  String get dashboardSelectProfilePlans =>
+      'Choisissez un profil d\'entrainement pour voir ses plans.';
 
   @override
   String get dashboardNoArchivedPlans => 'Aucun plan archive pour ce profil.';
 
   @override
-  String get dashboardNoActivePlans => 'Aucun plan actif. Utilisez le crayon pour choisir des plans.';
+  String get dashboardNoActivePlans =>
+      'Aucun plan actif. Utilisez le crayon pour choisir des plans.';
 
   @override
   String dashboardPremadeCount(int count) {
@@ -5153,7 +5628,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get dashboardPlanTools => 'Outils de plan';
 
   @override
-  String get dashboardPlanToolsBody => 'Creez un plan selon vos preferences d\'entrainement ou commencez-en un vide.';
+  String get dashboardPlanToolsBody =>
+      'Creez un plan selon vos preferences d\'entrainement ou commencez-en un vide.';
 
   @override
   String get dashboardManual => 'Manuel';
@@ -5165,7 +5641,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get dashboardMostUsedExercises => 'Exercices les plus pratiques';
 
   @override
-  String get dashboardMostUsedExercisesEmpty => 'Terminez des entrainements pour voir ici vos exercices les plus frequents.';
+  String get dashboardMostUsedExercisesEmpty =>
+      'Terminez des entrainements pour voir ici vos exercices les plus frequents.';
 
   @override
   String premadeDiscardFailed(String error) {
@@ -5173,16 +5650,20 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get premadeEquipmentSelectProfile => 'Choisissez un profil d\'entrainement pour adapter les plans a l\'equipement disponible.';
+  String get premadeEquipmentSelectProfile =>
+      'Choisissez un profil d\'entrainement pour adapter les plans a l\'equipement disponible.';
 
   @override
-  String get premadeEquipmentExact => 'Les plans predefinis sont affiches tels quels.';
+  String get premadeEquipmentExact =>
+      'Les plans predefinis sont affiches tels quels.';
 
   @override
-  String get premadeEquipmentChecking => 'Verification des exercices du plan avec votre profil...';
+  String get premadeEquipmentChecking =>
+      'Verification des exercices du plan avec votre profil...';
 
   @override
-  String get premadeEquipmentMissing => 'Aucun equipement n\'a ete trouve pour le profil; les plans restent inchanges.';
+  String get premadeEquipmentMissing =>
+      'Aucun equipement n\'a ete trouve pour le profil; les plans restent inchanges.';
 
   @override
   String premadeEquipmentReplacements(int count) {
@@ -5190,7 +5671,8 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get premadeEquipmentFits => 'Les plans conviennent deja a l\'equipement du profil actuel.';
+  String get premadeEquipmentFits =>
+      'Les plans conviennent deja a l\'equipement du profil actuel.';
 
   @override
   String get premadeOneHour => '1 h';
@@ -5212,7 +5694,8 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get premadeTemplatesLater => 'Des modeles pour cette repartition pourront etre ajoutes ici plus tard.';
+  String get premadeTemplatesLater =>
+      'Des modeles pour cette repartition pourront etre ajoutes ici plus tard.';
 
   @override
   String premadeExerciseCount(int count) {
@@ -5239,10 +5722,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get premadeProfileSwap => 'remplacement du profil';
 
   @override
-  String get healthEntryValueUnitRequired => 'Saisissez d\'abord une valeur et une unite.';
+  String get healthEntryValueUnitRequired =>
+      'Saisissez d\'abord une valeur et une unite.';
 
   @override
-  String get healthDefinitionFieldsRequired => 'Saisissez un nom, une unite et une valeur valide.';
+  String get healthDefinitionFieldsRequired =>
+      'Saisissez un nom, une unite et une valeur valide.';
 
   @override
   String get healthUnit => 'Unite';
@@ -5257,7 +5742,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get healthMetricName => 'Nom de l\'indicateur';
 
   @override
-  String get healthMetricNameHint => 'Tour de bras, frequence cardiaque au repos...';
+  String get healthMetricNameHint =>
+      'Tour de bras, frequence cardiaque au repos...';
 
   @override
   String healthUnitHint(String weightUnit) {
@@ -5271,13 +5757,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get healthCreate => 'Creer';
 
   @override
-  String get exerciseProgressNoRecordings => 'Aucun enregistrement pour le moment';
+  String get exerciseProgressNoRecordings =>
+      'Aucun enregistrement pour le moment';
 
   @override
   String get exerciseEditorDiscardTitle => 'Abandonner les modifications?';
 
   @override
-  String get exerciseEditorDiscardBody => 'Vos modifications ne sont pas encore enregistrees. Vous pouvez continuer a modifier ou les abandonner.';
+  String get exerciseEditorDiscardBody =>
+      'Vos modifications ne sont pas encore enregistrees. Vous pouvez continuer a modifier ou les abandonner.';
 
   @override
   String get exerciseEditorKeepEditing => 'Continuer la modification';
@@ -5286,7 +5774,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get exerciseEditorDiscard => 'Abandonner';
 
   @override
-  String get exerciseEditorAddBodyparts => 'Ajouter des parties du corps associees';
+  String get exerciseEditorAddBodyparts =>
+      'Ajouter des parties du corps associees';
 
   @override
   String get exerciseEditorAddMuscles => 'Ajouter des muscles associes';
@@ -5298,13 +5787,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get databaseClearMediaTitle => 'Effacer les medias telecharges?';
 
   @override
-  String get databaseClearMediaBody => 'Cette action retire les medias d\'exercices, d\'equipement et d\'anatomie en cache. L\'application pourra les telecharger de nouveau au besoin.';
+  String get databaseClearMediaBody =>
+      'Cette action retire les medias d\'exercices, d\'equipement et d\'anatomie en cache. L\'application pourra les telecharger de nouveau au besoin.';
 
   @override
   String get databaseClearCache => 'Effacer le cache';
 
   @override
-  String get databaseCacheCleared => 'Le cache des medias telecharges a ete efface.';
+  String get databaseCacheCleared =>
+      'Le cache des medias telecharges a ete efface.';
 
   @override
   String databaseClearCacheFailed(String error) {
@@ -5321,10 +5812,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get databaseChangeEnvironment => 'Changer d\'environnement';
 
   @override
-  String get databaseExerciseManifestUrl => 'URL du manifeste des medias d\'exercices';
+  String get databaseExerciseManifestUrl =>
+      'URL du manifeste des medias d\'exercices';
 
   @override
-  String get databaseNoExerciseManifestUrl => 'Aucune URL de manifeste distant n\'est definie pour cet environnement.';
+  String get databaseNoExerciseManifestUrl =>
+      'Aucune URL de manifeste distant n\'est definie pour cet environnement.';
 
   @override
   String get databaseOverrideUrl => 'Remplacer l\'URL';
@@ -5346,7 +5839,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get databaseSharedCatalogMedia => 'Medias partages du catalogue';
 
   @override
-  String get databaseSharedMediaNotSynced => 'Pas encore synchronise. Equipement, parties du corps et muscles.';
+  String get databaseSharedMediaNotSynced =>
+      'Pas encore synchronise. Equipement, parties du corps et muscles.';
 
   @override
   String databaseManifestLastChecked(int version, String date) {
@@ -5354,10 +5848,12 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get databaseSharedManifestUrl => 'URL du manifeste des medias partages';
+  String get databaseSharedManifestUrl =>
+      'URL du manifeste des medias partages';
 
   @override
-  String get databaseNoSharedManifestUrl => 'Aucune URL de medias partages distants n\'est definie pour cet environnement.';
+  String get databaseNoSharedManifestUrl =>
+      'Aucune URL de medias partages distants n\'est definie pour cet environnement.';
 
   @override
   String get databaseDownloadedMediaCache => 'Cache des medias telecharges';
@@ -5374,25 +5870,29 @@ class AppLocalizationsFr extends AppLocalizations {
   String get databaseTutorialFilesTitle => 'Fichiers de base de donnees';
 
   @override
-  String get databaseTutorialFilesBody => 'Exportez une sauvegarde ou importez un fichier de base de donnees. Les imports exigent d\'abord une sauvegarde.';
+  String get databaseTutorialFilesBody =>
+      'Exportez une sauvegarde ou importez un fichier de base de donnees. Les imports exigent d\'abord une sauvegarde.';
 
   @override
   String get databaseTutorialHealthTitle => 'Sante de la base de donnees';
 
   @override
-  String get databaseTutorialHealthBody => 'Cette carte indique la version du schema, la taille de la base, le nombre de tables et l\'etat de l\'index de recherche.';
+  String get databaseTutorialHealthBody =>
+      'Cette carte indique la version du schema, la taille de la base, le nombre de tables et l\'etat de l\'index de recherche.';
 
   @override
   String get databaseTutorialMaintenanceTitle => 'Outils d\'entretien';
 
   @override
-  String get databaseTutorialMaintenanceBody => 'Utilisez ces actions pour les verifications d\'integrite, l\'optimisation, le point de controle WAL ou le nettoyage lorsque necessaire.';
+  String get databaseTutorialMaintenanceBody =>
+      'Utilisez ces actions pour les verifications d\'integrite, l\'optimisation, le point de controle WAL ou le nettoyage lorsque necessaire.';
 
   @override
   String get databaseExportSavedTitle => 'Export de la base enregistre';
 
   @override
-  String get databaseExportSavedBody => 'L\'export de la base de donnees a ete enregistre a l\'emplacement choisi.';
+  String get databaseExportSavedBody =>
+      'L\'export de la base de donnees a ete enregistre a l\'emplacement choisi.';
 
   @override
   String databaseImportBlocked(String message) {
@@ -5400,7 +5900,8 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get databaseImportBackupCanceled => 'Import annule : la sauvegarde n\'a pas ete enregistree.';
+  String get databaseImportBackupCanceled =>
+      'Import annule : la sauvegarde n\'a pas ete enregistree.';
 
   @override
   String get databaseImportSucceededTitle => 'Import reussi';
@@ -5414,7 +5915,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get databaseConfirmImportTitle => 'Confirmer l\'import';
 
   @override
-  String get databaseConfirmImportBody => 'Cette action remplace la base de donnees locale. Une sauvegarde de la base actuelle sera d\'abord creee.';
+  String get databaseConfirmImportBody =>
+      'Cette action remplace la base de donnees locale. Une sauvegarde de la base actuelle sera d\'abord creee.';
 
   @override
   String databaseImportFile(String name) {
@@ -5437,7 +5939,8 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get databaseImportLegacyFormat => 'Format : table de correspondance hereditee';
+  String get databaseImportLegacyFormat =>
+      'Format : table de correspondance hereditee';
 
   @override
   String get databaseImportWarnings => 'Avertissements :';
@@ -5451,7 +5954,8 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get exerciseEditorSaveBeforeAllocation => 'Enregistrez ou annulez les modifications avant de modifier le credit par serie.';
+  String get exerciseEditorSaveBeforeAllocation =>
+      'Enregistrez ou annulez les modifications avant de modifier le credit par serie.';
 
   @override
   String exerciseEditorRemoveItemTitle(String type) {
@@ -5470,31 +5974,38 @@ class AppLocalizationsFr extends AppLocalizations {
   String get exerciseEditorMuscleOrderTitle => 'Ordre des muscles cibles';
 
   @override
-  String get exerciseEditorMuscleOrderBody => 'Classez les muscles selon la force avec laquelle l\'exercice les cible. Cela aide Tonos a estimer le focus anatomique et a proposer de meilleurs exercices.';
+  String get exerciseEditorMuscleOrderBody =>
+      'Classez les muscles selon la force avec laquelle l\'exercice les cible. Cela aide Tonos a estimer le focus anatomique et a proposer de meilleurs exercices.';
 
   @override
   String get exerciseEditorExactSetCredit => 'Credit exact par serie';
 
   @override
-  String get exerciseEditorExactSetCreditBody => 'Modifiez le credit precis qu\'une serie attribue a chaque muscle ou partie du corps dans Repartition des series par exercice.';
+  String get exerciseEditorExactSetCreditBody =>
+      'Modifiez le credit precis qu\'une serie attribue a chaque muscle ou partie du corps dans Repartition des series par exercice.';
 
   @override
-  String get exerciseEditorSetCreditScaling => 'Mise a l\'echelle du credit par serie';
+  String get exerciseEditorSetCreditScaling =>
+      'Mise a l\'echelle du credit par serie';
 
   @override
-  String get exerciseEditorSetCreditScalingBody => 'Choisissez si la note de cet exercice doit ajuster le credit par serie.';
+  String get exerciseEditorSetCreditScalingBody =>
+      'Choisissez si la note de cet exercice doit ajuster le credit par serie.';
 
   @override
-  String get exerciseEditorScaleCreditByRating => 'Ajuster le credit selon la note';
+  String get exerciseEditorScaleCreditByRating =>
+      'Ajuster le credit selon la note';
 
   @override
-  String get exerciseEditorScaleCreditByRatingBody => 'Applique la note de l\'exercice aux totaux analytiques des series.';
+  String get exerciseEditorScaleCreditByRatingBody =>
+      'Applique la note de l\'exercice aux totaux analytiques des series.';
 
   @override
   String get exerciseEditorTargetMuscles => 'Muscles cibles';
 
   @override
-  String get exerciseEditorOrderMusclesHint => 'Utilisez les fleches pour classer les muscles selon leur importance.';
+  String get exerciseEditorOrderMusclesHint =>
+      'Utilisez les fleches pour classer les muscles selon leur importance.';
 
   @override
   String exerciseEditorMusclesAssociated(int count) {
@@ -5502,7 +6013,8 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get exerciseEditorNoTargetMuscles => 'Aucun muscle cible n\'est encore associe.';
+  String get exerciseEditorNoTargetMuscles =>
+      'Aucun muscle cible n\'est encore associe.';
 
   @override
   String get exerciseEditorAddTargetMuscles => 'Ajouter des muscles cibles';
@@ -5523,16 +6035,20 @@ class AppLocalizationsFr extends AppLocalizations {
   String get exerciseEditorAssociatedBodyparts => 'Parties du corps associees';
 
   @override
-  String get exerciseEditorAssociatedBodypartsBody => 'Ces zones generales alimentent les cartes corporelles, la couverture hebdomadaire et les recommandations adaptees a l\'equipement.';
+  String get exerciseEditorAssociatedBodypartsBody =>
+      'Ces zones generales alimentent les cartes corporelles, la couverture hebdomadaire et les recommandations adaptees a l\'equipement.';
 
   @override
-  String get exerciseEditorExactBodypartCredit => 'Credit exact par partie du corps';
+  String get exerciseEditorExactBodypartCredit =>
+      'Credit exact par partie du corps';
 
   @override
-  String get exerciseEditorExactBodypartCreditBody => 'Utilisez Repartition des series par exercice lorsqu\'une serie doit compter comme une quantite partielle precise pour une partie du corps.';
+  String get exerciseEditorExactBodypartCreditBody =>
+      'Utilisez Repartition des series par exercice lorsqu\'une serie doit compter comme une quantite partielle precise pour une partie du corps.';
 
   @override
-  String get exerciseEditorBodypartsHint => 'Ajoutez toutes les zones generales sollicitees par cet exercice.';
+  String get exerciseEditorBodypartsHint =>
+      'Ajoutez toutes les zones generales sollicitees par cet exercice.';
 
   @override
   String exerciseEditorBodypartsAssociated(int count) {
@@ -5540,13 +6056,15 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get exerciseEditorNoBodyparts => 'Aucune partie du corps n\'est encore associee.';
+  String get exerciseEditorNoBodyparts =>
+      'Aucune partie du corps n\'est encore associee.';
 
   @override
   String get exerciseEditorAutomaticPreview => 'Apercu automatique';
 
   @override
-  String get exerciseEditorAutomaticPreviewBody => 'Focus actuel derive de la structure des muscles cibles.';
+  String get exerciseEditorAutomaticPreviewBody =>
+      'Focus actuel derive de la structure des muscles cibles.';
 
   @override
   String get exerciseEditorRemoveBodypart => 'Retirer la partie du corps';
@@ -5558,10 +6076,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get exerciseEditorAvailableEquipment => 'Equipement disponible';
 
   @override
-  String get exerciseEditorAvailableEquipmentBody => 'L\'equipement associe determine quels profils peuvent utiliser cet exercice et quels remplacements Tonos peut recommander.';
+  String get exerciseEditorAvailableEquipmentBody =>
+      'L\'equipement associe determine quels profils peuvent utiliser cet exercice et quels remplacements Tonos peut recommander.';
 
   @override
-  String get exerciseEditorEquipmentHint => 'Ajoutez chaque element necessaire pour effectuer cet exercice.';
+  String get exerciseEditorEquipmentHint =>
+      'Ajoutez chaque element necessaire pour effectuer cet exercice.';
 
   @override
   String exerciseEditorEquipmentAssociated(int count) {
@@ -5569,7 +6089,8 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get exerciseEditorNoEquipment => 'Aucun equipement n\'est encore associe.';
+  String get exerciseEditorNoEquipment =>
+      'Aucun equipement n\'est encore associe.';
 
   @override
   String get exerciseEditorRemoveEquipment => 'Retirer l\'equipement';
@@ -5591,7 +6112,8 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get databaseManifestUrlRequired => 'Ajoutez d\'abord une URL de manifeste de medias d\'exercices valide.';
+  String get databaseManifestUrlRequired =>
+      'Ajoutez d\'abord une URL de manifeste de medias d\'exercices valide.';
 
   @override
   String databaseContentSyncFailed(String error) {
@@ -5604,7 +6126,8 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get databaseSharedMediaUrlMissing => 'Cet environnement de contenu ne contient aucune URL de medias partages.';
+  String get databaseSharedMediaUrlMissing =>
+      'Cet environnement de contenu ne contient aucune URL de medias partages.';
 
   @override
   String databaseSharedContentSyncFailed(String error) {
@@ -5617,7 +6140,8 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get databaseExerciseManifestDialogTitle => 'Manifeste des medias d\'exercices';
+  String get databaseExerciseManifestDialogTitle =>
+      'Manifeste des medias d\'exercices';
 
   @override
   String get databaseManifestUrl => 'URL du manifeste';
@@ -5626,7 +6150,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get databaseClear => 'Effacer';
 
   @override
-  String get databaseNoManifestConfigured => 'Aucune URL de manifeste n\'est encore configuree.';
+  String get databaseNoManifestConfigured =>
+      'Aucune URL de manifeste n\'est encore configuree.';
 
   @override
   String get databaseUseEnvironment => 'Utiliser l\'environnement';
@@ -5641,10 +6166,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get dashboardMuscles => 'Muscles';
 
   @override
-  String get exerciseEditorCreateCustomTitle => 'Creer un exercice personnalise';
+  String get exerciseEditorCreateCustomTitle =>
+      'Creer un exercice personnalise';
 
   @override
-  String get exerciseEditorCreateCustomBody => 'Creez une definition personnalisee du catalogue, puis ajoutez son anatomie ciblee et ses conseils avant de l\'enregistrer.';
+  String get exerciseEditorCreateCustomBody =>
+      'Creez une definition personnalisee du catalogue, puis ajoutez son anatomie ciblee et ses conseils avant de l\'enregistrer.';
 
   @override
   String get exerciseEditorExerciseName => 'Nom de l\'exercice';
@@ -5653,7 +6180,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get exerciseEditorNoEquipmentChoice => 'Aucun equipement';
 
   @override
-  String get exerciseEditorOpenedMessage => 'Exercice ouvert. Ajoutez son anatomie ciblee, puis enregistrez.';
+  String get exerciseEditorOpenedMessage =>
+      'Exercice ouvert. Ajoutez son anatomie ciblee, puis enregistrez.';
 
   @override
   String exerciseEditorCreateFailed(String error) {
@@ -5664,7 +6192,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get exerciseEditorWhatChangesTitle => 'Ce que cela modifie';
 
   @override
-  String get exerciseEditorWhatChangesBody => 'Utilisez cet editeur avance pour modifier le nom d\'un exercice, son anatomie ciblee, son equipement, ses conseils de forme, sa note et ses medias de reference. Le credit exact par serie est gere separement pour rester coherent dans l\'application.';
+  String get exerciseEditorWhatChangesBody =>
+      'Utilisez cet editeur avance pour modifier le nom d\'un exercice, son anatomie ciblee, son equipement, ses conseils de forme, sa note et ses medias de reference. Le credit exact par serie est gere separement pour rester coherent dans l\'application.';
 
   @override
   String get exerciseEditorChooseCatalog => 'Choisir un exercice du catalogue';
@@ -5711,55 +6240,65 @@ class AppLocalizationsFr extends AppLocalizations {
   String get exerciseEditorMediaThumbnailUrl => 'URL de la vignette';
 
   @override
-  String get exerciseEditorMediaThumbnailHint => 'URL facultative de l\'aperçu d\'image';
+  String get exerciseEditorMediaThumbnailHint =>
+      'URL facultative de l\'aperçu d\'image';
 
   @override
-  String get exerciseEditorSelectBeforeMedia => 'Sélectionnez un exercice existant avant d\'y joindre un média.';
+  String get exerciseEditorSelectBeforeMedia =>
+      'Sélectionnez un exercice existant avant d\'y joindre un média.';
 
   @override
   String get exerciseEditorFormGuide => 'Guide d\'exécution';
 
   @override
-  String get exerciseEditorFormGuideBody => 'Ces notes apparaissent dans la fiche de l\'exercice pour aider à l\'installer, l\'exécuter et comprendre le mouvement en toute sécurité.';
+  String get exerciseEditorFormGuideBody =>
+      'Ces notes apparaissent dans la fiche de l\'exercice pour aider à l\'installer, l\'exécuter et comprendre le mouvement en toute sécurité.';
 
   @override
   String get exerciseEditorGuidance => 'Conseils';
 
   @override
-  String get exerciseEditorGuidanceEditing => 'Rédigez des repères clairs et pratiques. Les modifications sont préparées jusqu\'à l\'enregistrement.';
+  String get exerciseEditorGuidanceEditing =>
+      'Rédigez des repères clairs et pratiques. Les modifications sont préparées jusqu\'à l\'enregistrement.';
 
   @override
-  String get exerciseEditorGuidanceReadOnly => 'Les consignes et repères actuels de l\'exercice.';
+  String get exerciseEditorGuidanceReadOnly =>
+      'Les consignes et repères actuels de l\'exercice.';
 
   @override
   String get exerciseEditorSetUp => 'Installation';
 
   @override
-  String get exerciseEditorSetUpHint => 'Position de départ, installation de l\'équipement et notes de sécurité.';
+  String get exerciseEditorSetUpHint =>
+      'Position de départ, installation de l\'équipement et notes de sécurité.';
 
   @override
   String get exerciseEditorHowToPerform => 'Exécution';
 
   @override
-  String get exerciseEditorHowToPerformHint => 'Les étapes essentielles du mouvement et son amplitude.';
+  String get exerciseEditorHowToPerformHint =>
+      'Les étapes essentielles du mouvement et son amplitude.';
 
   @override
   String get exerciseEditorCoachingTips => 'Conseils d\'entraînement';
 
   @override
-  String get exerciseEditorCoachingTipsHint => 'Repères utiles, erreurs courantes et variantes.';
+  String get exerciseEditorCoachingTipsHint =>
+      'Repères utiles, erreurs courantes et variantes.';
 
   @override
   String get exerciseEditorReferenceMedia => 'Médias de référence';
 
   @override
-  String get exerciseEditorReferenceMediaBody => 'Utilisez des liens médias pour vos documents de référence privés. Les médias du catalogue géré peuvent être actualisés par la synchronisation de contenu.';
+  String get exerciseEditorReferenceMediaBody =>
+      'Utilisez des liens médias pour vos documents de référence privés. Les médias du catalogue géré peuvent être actualisés par la synchronisation de contenu.';
 
   @override
   String get exerciseEditorMediaLinks => 'Liens médias';
 
   @override
-  String get exerciseEditorMediaLinksEditing => 'Ajoutez ou mettez à jour une image distante, une vidéo ou un lien de référence.';
+  String get exerciseEditorMediaLinksEditing =>
+      'Ajoutez ou mettez à jour une image distante, une vidéo ou un lien de référence.';
 
   @override
   String exerciseEditorMediaLinksCount(int count) {
@@ -5767,7 +6306,8 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get exerciseEditorNoReferenceMedia => 'Aucun média de référence n\'est encore lié.';
+  String get exerciseEditorNoReferenceMedia =>
+      'Aucun média de référence n\'est encore lié.';
 
   @override
   String get exerciseEditorAddMediaLink => 'Ajouter un lien média';
@@ -5799,10 +6339,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get onboardingWeightHistoryTitle => 'Historique du poids';
 
   @override
-  String get onboardingWeightHistorySubtitle => 'Quelques détails permettent d’estimer les objectifs nutritionnels plus judicieusement.';
+  String get onboardingWeightHistorySubtitle =>
+      'Quelques détails permettent d’estimer les objectifs nutritionnels plus judicieusement.';
 
   @override
-  String get onboardingPreviouslyHeavier => 'Avez-vous déjà pesé au moins 10 lb de plus que votre poids actuel?';
+  String get onboardingPreviouslyHeavier =>
+      'Avez-vous déjà pesé au moins 10 lb de plus que votre poids actuel?';
 
   @override
   String get onboardingWeightTrendTitle => 'Tendance actuelle du poids';
@@ -5823,13 +6365,16 @@ class AppLocalizationsFr extends AppLocalizations {
   String get onboardingBodyFatEstimateTitle => 'Estimation du taux de graisse';
 
   @override
-  String get onboardingBodyFatEstimateSubtitle => 'Choisissez l’estimation visuelle la plus proche. Une grande précision n’est pas nécessaire.';
+  String get onboardingBodyFatEstimateSubtitle =>
+      'Choisissez l’estimation visuelle la plus proche. Une grande précision n’est pas nécessaire.';
 
   @override
-  String get onboardingNutritionPreferencesTitle => 'Préférences nutritionnelles';
+  String get onboardingNutritionPreferencesTitle =>
+      'Préférences nutritionnelles';
 
   @override
-  String get onboardingNutritionPreferencesSubtitle => 'Ces préférences orientent les suggestions nutritionnelles après la configuration.';
+  String get onboardingNutritionPreferencesSubtitle =>
+      'Ces préférences orientent les suggestions nutritionnelles après la configuration.';
 
   @override
   String get onboardingPreferredDiet => 'Régime préféré';
@@ -5853,7 +6398,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get onboardingCalorieFloorHint => 'Minimum quotidien en kcal';
 
   @override
-  String get onboardingTrainingDuringProgram => 'Entraînement pendant le programme';
+  String get onboardingTrainingDuringProgram =>
+      'Entraînement pendant le programme';
 
   @override
   String get onboardingTrainingNone => 'Aucun';
@@ -5886,7 +6432,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get onboardingGoalPaceTitle => 'Rythme de l’objectif';
 
   @override
-  String get onboardingGoalPaceSubtitle => 'Prévisualisez un poids cible et un rythme hebdomadaire.';
+  String get onboardingGoalPaceSubtitle =>
+      'Prévisualisez un poids cible et un rythme hebdomadaire.';
 
   @override
   String get onboardingInitialDailyBudget => 'Budget quotidien initial';
@@ -5910,7 +6457,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get exerciseProgressTrackExercise => 'Suivre un exercice';
 
   @override
-  String get exerciseProgressTrackExerciseBody => 'Choisissez un exercice pour suivre ici la tendance de son 1RM.';
+  String get exerciseProgressTrackExerciseBody =>
+      'Choisissez un exercice pour suivre ici la tendance de son 1RM.';
 
   @override
   String get healthCustomMetric => 'Mesure personnalisée';
@@ -5943,10 +6491,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get presetNoFocusData => 'Aucune donnée de ciblage.';
 
   @override
-  String get presetFocusPreviewHelp => 'Ajoutez des exercices de musculation avec des données anatomiques pour prévisualiser le ciblage du plan.';
+  String get presetFocusPreviewHelp =>
+      'Ajoutez des exercices de musculation avec des données anatomiques pour prévisualiser le ciblage du plan.';
 
   @override
-  String get dashboardReorderHelp => 'Faites glisser les sections dans l’ordre qui vous convient.';
+  String get dashboardReorderHelp =>
+      'Faites glisser les sections dans l’ordre qui vous convient.';
 
   @override
   String get exerciseEditorCachedLocally => 'En cache local';
@@ -6003,7 +6553,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get dashboardWorkoutInProgress => 'Entraînement en cours';
 
   @override
-  String get dashboardNoSavedPlans => 'Aucun plan enregistré pour ce profil de salle.';
+  String get dashboardNoSavedPlans =>
+      'Aucun plan enregistré pour ce profil de salle.';
 
   @override
   String get exerciseProgressOneRepMax => 'Maximum sur 1 répétition';
@@ -6093,19 +6644,22 @@ class AppLocalizationsFr extends AppLocalizations {
   String get profileDiagnosticsTitle => 'Diagnostic et confidentialité';
 
   @override
-  String get profileDiagnosticsSubtitle => 'Version, consentement aux rapports, historique de synchronisation et suppression des données.';
+  String get profileDiagnosticsSubtitle =>
+      'Version, consentement aux rapports, historique de synchronisation et suppression des données.';
 
   @override
   String get diagnosticsTitle => 'Diagnostic et confidentialité';
 
   @override
-  String get diagnosticsSubtitle => 'Comprenez et contrôlez les diagnostics de production.';
+  String get diagnosticsSubtitle =>
+      'Comprenez et contrôlez les diagnostics de production.';
 
   @override
   String get diagnosticsAppSection => 'Informations sur l’application';
 
   @override
-  String get diagnosticsAppSectionSubtitle => 'Utiles pour signaler un problème.';
+  String get diagnosticsAppSectionSubtitle =>
+      'Utiles pour signaler un problème.';
 
   @override
   String get diagnosticsVersion => 'Version et build';
@@ -6120,43 +6674,51 @@ class AppLocalizationsFr extends AppLocalizations {
   String get diagnosticsCrashSection => 'Diagnostics anonymes';
 
   @override
-  String get diagnosticsCrashSectionSubtitle => 'Rapports facultatifs et catégoriels sur les défaillances de l’application et la synchronisation des médias.';
+  String get diagnosticsCrashSectionSubtitle =>
+      'Rapports facultatifs et catégoriels sur les défaillances de l’application et la synchronisation des médias.';
 
   @override
   String get diagnosticsCrashReporting => 'Partager des diagnostics anonymes';
 
   @override
-  String get diagnosticsCrashUnavailable => 'Non configuré dans cette version. Aucun diagnostic anonyme ne peut être partagé.';
+  String get diagnosticsCrashUnavailable =>
+      'Non configuré dans cette version. Aucun diagnostic anonyme ne peut être partagé.';
 
   @override
-  String get diagnosticsCrashEnabledBody => 'Activé avec votre consentement. Le désactiver demande la suppression des rapports conservés par Tonos.';
+  String get diagnosticsCrashEnabledBody =>
+      'Activé avec votre consentement. Le désactiver demande la suppression des rapports conservés par Tonos.';
 
   @override
-  String get diagnosticsCrashDisabledBody => 'Désactivé par défaut. Activez-le seulement pour aider à diagnostiquer des problèmes de version.';
+  String get diagnosticsCrashDisabledBody =>
+      'Désactivé par défaut. Activez-le seulement pour aider à diagnostiquer des problèmes de version.';
 
   @override
   String get diagnosticsPrivacyPromiseTitle => 'Confidentialité intégrée';
 
   @override
-  String get diagnosticsPrivacyPromiseBody => 'Les rapports contiennent uniquement la version et le numéro de build de l’application, la plateforme, une catégorie approuvée, le résultat et des tranches générales. Ils n’incluent jamais messages d’erreur, piles d’appels, noms, données de santé, contenu de base de données, captures, adresses réseau, traces ou analyses.';
+  String get diagnosticsPrivacyPromiseBody =>
+      'Les rapports contiennent uniquement la version et le numéro de build de l’application, la plateforme, une catégorie approuvée, le résultat et des tranches générales. Ils n’incluent jamais messages d’erreur, piles d’appels, noms, données de santé, contenu de base de données, captures, adresses réseau, traces ou analyses.';
 
   @override
   String get diagnosticsSyncSection => 'Historique de synchronisation';
 
   @override
-  String get diagnosticsSyncSectionSubtitle => 'Les 30 derniers résultats des manifestes multimédias restent uniquement sur cet appareil.';
+  String get diagnosticsSyncSectionSubtitle =>
+      'Les 30 derniers résultats des manifestes multimédias restent uniquement sur cet appareil.';
 
   @override
   String get diagnosticsNoSyncEvents => 'Aucun diagnostic de synchronisation';
 
   @override
-  String get diagnosticsNoSyncEventsBody => 'Les résultats apparaîtront ici sans URL ni données personnelles.';
+  String get diagnosticsNoSyncEventsBody =>
+      'Les résultats apparaîtront ici sans URL ni données personnelles.';
 
   @override
   String get diagnosticsClearHistory => 'Effacer l’historique';
 
   @override
-  String get diagnosticsClearHistoryBody => 'Supprimer tous les diagnostics de synchronisation locaux.';
+  String get diagnosticsClearHistoryBody =>
+      'Supprimer tous les diagnostics de synchronisation locaux.';
 
   @override
   String get diagnosticsHistoryCleared => 'Historique des diagnostics effacé.';
@@ -6185,7 +6747,13 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String diagnosticsSyncEventDetails(String source, String timestamp, int duration, String version, String items) {
+  String diagnosticsSyncEventDetails(
+    String source,
+    String timestamp,
+    int duration,
+    String version,
+    String items,
+  ) {
     return '$source • $timestamp • $duration ms • manifeste $version • $items éléments';
   }
 
@@ -6193,73 +6761,93 @@ class AppLocalizationsFr extends AppLocalizations {
   String get diagnosticsPrivacySection => 'Vos données';
 
   @override
-  String get diagnosticsPrivacySectionSubtitle => 'Stockage local, conservation et suppression.';
+  String get diagnosticsPrivacySectionSubtitle =>
+      'Stockage local, conservation et suppression.';
 
   @override
-  String get diagnosticsLocalDataTitle => 'Les données de forme restent locales';
+  String get diagnosticsLocalDataTitle =>
+      'Les données de forme restent locales';
 
   @override
-  String get diagnosticsLocalDataBody => 'Les entraînements, données nutritionnelles, mesures corporelles et profils restent dans la base de données de cet appareil, sauf si vous exportez vous-même une sauvegarde.';
+  String get diagnosticsLocalDataBody =>
+      'Les entraînements, données nutritionnelles, mesures corporelles et profils restent dans la base de données de cet appareil, sauf si vous exportez vous-même une sauvegarde.';
 
   @override
-  String get diagnosticsDeletionTitle => 'Supprimer les diagnostics et les données';
+  String get diagnosticsDeletionTitle =>
+      'Supprimer les diagnostics et les données';
 
   @override
-  String get diagnosticsDeletionBody => 'Effacez l’historique ci-dessus et désactivez les rapports. Effacez le stockage de Tonos dans les réglages de l’appareil ou désinstallez l’application pour supprimer la base locale et les caches. Pour supprimer un rapport déjà envoyé, contactez le développeur avec les détails de l’événement dont vous disposez.';
+  String get diagnosticsDeletionBody =>
+      'Effacez l’historique ci-dessus et désactivez les rapports. Effacez le stockage de Tonos dans les réglages de l’appareil ou désinstallez l’application pour supprimer la base locale et les caches. Pour supprimer un rapport déjà envoyé, contactez le développeur avec les détails de l’événement dont vous disposez.';
 
   @override
-  String get diagnosticsSendTestReport => 'Envoyer un événement de diagnostic contrôlé';
+  String get diagnosticsSendTestReport =>
+      'Envoyer un événement de diagnostic contrôlé';
 
   @override
-  String get diagnosticsSendTestReportBody => 'Disponible uniquement dans une version explicitement activée pour les tests. Envoie un événement fixe autorisé.';
+  String get diagnosticsSendTestReportBody =>
+      'Disponible uniquement dans une version explicitement activée pour les tests. Envoie un événement fixe autorisé.';
 
   @override
-  String get diagnosticsTestReportSent => 'Événement de diagnostic contrôlé envoyé.';
+  String get diagnosticsTestReportSent =>
+      'Événement de diagnostic contrôlé envoyé.';
 
   @override
-  String get diagnosticsTestReportFailed => 'L’événement de diagnostic n’a pas pu être envoyé. Vérifiez la configuration du build et la connexion.';
+  String get diagnosticsTestReportFailed =>
+      'L’événement de diagnostic n’a pas pu être envoyé. Vérifiez la configuration du build et la connexion.';
 
   @override
   String get diagnosticsDeleteShared => 'Supprimer les diagnostics partagés';
 
   @override
-  String get diagnosticsDeleteSharedBody => 'Demande la suppression des rapports que cette installation peut prouver avoir envoyés. L’historique de récupération du fournisseur peut conserver des lignes supprimées jusqu’à 30 jours.';
+  String get diagnosticsDeleteSharedBody =>
+      'Demande la suppression des rapports que cette installation peut prouver avoir envoyés. L’historique de récupération du fournisseur peut conserver des lignes supprimées jusqu’à 30 jours.';
 
   @override
-  String get diagnosticsSharedDeleted => 'La suppression des diagnostics partagés a été demandée.';
+  String get diagnosticsSharedDeleted =>
+      'La suppression des diagnostics partagés a été demandée.';
 
   @override
-  String get diagnosticsSharedDeletionPending => 'Certaines demandes de suppression seront réessayées lorsque l’application s’ouvrira avec une connexion.';
+  String get diagnosticsSharedDeletionPending =>
+      'Certaines demandes de suppression seront réessayées lorsque l’application s’ouvrira avec une connexion.';
 
   @override
-  String get workoutDurabilityRestoreWarning => 'Tonos n’a pas pu vérifier s’il existe un entraînement sauvegardé. Réessayez avant d’en commencer un autre.';
+  String get workoutDurabilityRestoreWarning =>
+      'Tonos n’a pas pu vérifier s’il existe un entraînement sauvegardé. Réessayez avant d’en commencer un autre.';
 
   @override
-  String get workoutDurabilityDraftSaveWarning => 'La sauvegarde de votre entraînement n’est pas à jour. Gardez Tonos ouvert et réessayez pour pouvoir reprendre cet entraînement en toute sécurité.';
+  String get workoutDurabilityDraftSaveWarning =>
+      'La sauvegarde de votre entraînement n’est pas à jour. Gardez Tonos ouvert et réessayez pour pouvoir reprendre cet entraînement en toute sécurité.';
 
   @override
-  String get workoutDurabilityProgressionWarning => 'Votre entraînement est sauvegardé, mais la progression du plan est toujours en attente. Réessayez lorsque le stockage est disponible.';
+  String get workoutDurabilityProgressionWarning =>
+      'Votre entraînement est sauvegardé, mais la progression du plan est toujours en attente. Réessayez lorsque le stockage est disponible.';
 
   @override
   String get databaseConfirmExportTitle => 'Exporter des données privées ?';
 
   @override
-  String get databaseConfirmExportBody => 'Cette sauvegarde est un fichier JSON non chiffré qui peut contenir vos entraînements, votre nutrition, vos mesures corporelles, votre profil et vos préférences. Enregistrez-le uniquement dans un emplacement de confiance.';
+  String get databaseConfirmExportBody =>
+      'Cette sauvegarde est un fichier JSON non chiffré qui peut contenir vos entraînements, votre nutrition, vos mesures corporelles, votre profil et vos préférences. Enregistrez-le uniquement dans un emplacement de confiance.';
 
   @override
   String get databaseContinueExport => 'Exporter quand même';
 
   @override
-  String get databaseExportFailedSafe => 'L\'exportation n\'a pas pu être créée. Les données de l\'application n\'ont pas été modifiées.';
+  String get databaseExportFailedSafe =>
+      'L\'exportation n\'a pas pu être créée. Les données de l\'application n\'ont pas été modifiées.';
 
   @override
-  String get databaseImportFileTooLarge => 'Cette importation est trop volumineuse. Choisissez une sauvegarde de moins de 25 Mo.';
+  String get databaseImportFileTooLarge =>
+      'Cette importation est trop volumineuse. Choisissez une sauvegarde de moins de 25 Mo.';
 
   @override
-  String get databaseImportBlockedSafe => 'Cette sauvegarde n\'a pas pu être importée. Vos données actuelles n\'ont pas été modifiées.';
+  String get databaseImportBlockedSafe =>
+      'Cette sauvegarde n\'a pas pu être importée. Vos données actuelles n\'ont pas été modifiées.';
 
   @override
-  String get databaseImportFailedSafe => 'L\'importation n\'a pas abouti. Vos données actuelles ont été conservées en sécurité.';
+  String get databaseImportFailedSafe =>
+      'L\'importation n\'a pas abouti. Vos données actuelles ont été conservées en sécurité.';
 
   @override
   String get speedDialLogFood => 'Consigner un aliment';
@@ -6271,15 +6859,17 @@ class AppLocalizationsFr extends AppLocalizations {
   String get healthTapToLog => 'Touchez + pour consigner';
 
   @override
-  String get healthMetricInvalid => 'Utilisez un nom de mesure unique et une unité courte sans espaces.';
+  String get healthMetricInvalid =>
+      'Utilisez un nom de mesure unique et une unité courte sans espaces.';
 
   @override
-  String get healthMeasurementEntryInvalid => 'Saisissez une valeur positive plausible avec une unité prise en charge.';
+  String get healthMeasurementEntryInvalid =>
+      'Saisissez une valeur positive plausible avec une unité prise en charge.';
 }
 
 /// The translations for French, as used in Canada (`fr_CA`).
 class AppLocalizationsFrCa extends AppLocalizationsFr {
-  AppLocalizationsFrCa(): super('fr_CA');
+  AppLocalizationsFrCa() : super('fr_CA');
 
   @override
   String onboardingBodyWeightPerWeek(String percent) {
@@ -6459,19 +7049,24 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get workoutReportNoWorkoutsYet => 'Aucun entraînement pour le moment';
 
   @override
-  String get workoutReportNoTrainingTimeYet => 'Aucun temps d’entraînement pour le moment';
+  String get workoutReportNoTrainingTimeYet =>
+      'Aucun temps d’entraînement pour le moment';
 
   @override
-  String get workoutReportNoVolumeYet => 'Aucun volume enregistré pour le moment';
+  String get workoutReportNoVolumeYet =>
+      'Aucun volume enregistré pour le moment';
 
   @override
-  String get workoutReportNoWorkoutsBody => 'Terminez un entraînement pour commencer à créer ce rapport.';
+  String get workoutReportNoWorkoutsBody =>
+      'Terminez un entraînement pour commencer à créer ce rapport.';
 
   @override
-  String get workoutReportNoTrainingTimeBody => 'Les séances terminées ajouteront automatiquement des minutes ici.';
+  String get workoutReportNoTrainingTimeBody =>
+      'Les séances terminées ajouteront automatiquement des minutes ici.';
 
   @override
-  String get workoutReportNoVolumeBody => 'Enregistrez les poids des séries terminées pour créer des tendances de volume.';
+  String get workoutReportNoVolumeBody =>
+      'Enregistrez les poids des séries terminées pour créer des tendances de volume.';
 
   @override
   String get appTitle => 'Tonos';
@@ -6480,7 +7075,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get uiAppearanceTitle => 'Interface et apparence';
 
   @override
-  String get uiAppearanceSubtitle => 'Contrôlez l’apparence de Tonos et le comportement des onglets inférieurs.';
+  String get uiAppearanceSubtitle =>
+      'Contrôlez l’apparence de Tonos et le comportement des onglets inférieurs.';
 
   @override
   String get displaySettingsTitle => 'Affichage';
@@ -6498,7 +7094,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get replayOnboardingTitle => 'Rejouer la configuration';
 
   @override
-  String get replayOnboardingSubtitle => 'Activez cette option pour refaire la configuration. Elle se désactive une fois terminée.';
+  String get replayOnboardingSubtitle =>
+      'Activez cette option pour refaire la configuration. Elle se désactive une fois terminée.';
 
   @override
   String get weightUnitsTitle => 'Unités de poids';
@@ -6527,25 +7124,29 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get navigationSettingsTitle => 'Navigation';
 
   @override
-  String get navigationSettingsSubtitle => 'Choisissez les onglets affichés au bas de l\'écran et leur ordre.';
+  String get navigationSettingsSubtitle =>
+      'Choisissez les onglets affichés au bas de l\'écran et leur ordre.';
 
   @override
   String get editBottomTabsTitle => 'Modifier les onglets du bas';
 
   @override
-  String get editBottomTabsSubtitle => 'Réorganisez les onglets actifs ou masquez ceux que vous n\'utilisez pas.';
+  String get editBottomTabsSubtitle =>
+      'Réorganisez les onglets actifs ou masquez ceux que vous n\'utilisez pas.';
 
   @override
   String get displaySettingsTutorialTitle => 'Paramètres d\'affichage';
 
   @override
-  String get displaySettingsTutorialBody => 'Contrôlez le mode sombre, la langue, la reprise de la configuration, ainsi que les livres et les kilogrammes.';
+  String get displaySettingsTutorialBody =>
+      'Contrôlez le mode sombre, la langue, la reprise de la configuration, ainsi que les livres et les kilogrammes.';
 
   @override
   String get bottomTabsTutorialTitle => 'Onglets du bas';
 
   @override
-  String get bottomTabsTutorialBody => 'Modifiez les onglets affichés et leur ordre.';
+  String get bottomTabsTutorialBody =>
+      'Modifiez les onglets affichés et leur ordre.';
 
   @override
   String get onboardingPageWelcome => 'Bienvenue';
@@ -6598,7 +7199,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get onboardingSkipSetupTitle => 'Passer la configuration?';
 
   @override
-  String get onboardingSkipSetupBody => 'Vous pouvez accéder à l\'accueil maintenant et terminer la configuration plus tard. Vous pourrez aussi rouvrir la configuration dans les paramètres.';
+  String get onboardingSkipSetupBody =>
+      'Vous pouvez accéder à l\'accueil maintenant et terminer la configuration plus tard. Vous pourrez aussi rouvrir la configuration dans les paramètres.';
 
   @override
   String get onboardingCancel => 'Annuler';
@@ -6615,37 +7217,44 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get onboardingWelcomeTitle => 'Bienvenue dans Tonos';
 
   @override
-  String get onboardingWelcomeSubtitle => 'Une courte configuration aide à personnaliser vos entraînements, le suivi nutritionnel et vos progrès.';
+  String get onboardingWelcomeSubtitle =>
+      'Une courte configuration aide à personnaliser vos entraînements, le suivi nutritionnel et vos progrès.';
 
   @override
   String get onboardingLanguageSelectionTitle => 'Choisissez votre langue';
 
   @override
-  String get onboardingLanguageSelectionHelp => 'La configuration se met à jour immédiatement. Vous pourrez modifier ce choix plus tard dans les paramètres.';
+  String get onboardingLanguageSelectionHelp =>
+      'La configuration se met à jour immédiatement. Vous pourrez modifier ce choix plus tard dans les paramètres.';
 
   @override
   String get onboardingTrainFeatureTitle => 'Entraînez-vous avec contexte';
 
   @override
-  String get onboardingTrainFeatureBody => 'Utilisez vos préférences et votre historique pour orienter les suggestions d\'entraînement.';
+  String get onboardingTrainFeatureBody =>
+      'Utilisez vos préférences et votre historique pour orienter les suggestions d\'entraînement.';
 
   @override
-  String get onboardingNutritionFeatureTitle => 'Soutenir les objectifs nutritionnels';
+  String get onboardingNutritionFeatureTitle =>
+      'Soutenir les objectifs nutritionnels';
 
   @override
-  String get onboardingNutritionFeatureBody => 'Choisissez le niveau d\'accompagnement nutritionnel voulu dans l\'application.';
+  String get onboardingNutritionFeatureBody =>
+      'Choisissez le niveau d\'accompagnement nutritionnel voulu dans l\'application.';
 
   @override
   String get onboardingProgressFeatureTitle => 'Suivre vos progrès';
 
   @override
-  String get onboardingProgressFeatureBody => 'Gardez vos données d\'entraînement et de nutrition liées au fil du temps.';
+  String get onboardingProgressFeatureBody =>
+      'Gardez vos données d\'entraînement et de nutrition liées au fil du temps.';
 
   @override
   String get onboardingBasicsTitle => 'Parlez-nous de vous';
 
   @override
-  String get onboardingBasicsSubtitle => 'Ces renseignements sont facultatifs, mais ils aideront les futurs calculs.';
+  String get onboardingBasicsSubtitle =>
+      'Ces renseignements sont facultatifs, mais ils aideront les futurs calculs.';
 
   @override
   String get onboardingNameLabel => 'Nom';
@@ -6702,13 +7311,15 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get onboardingFocusTitle => 'Que devrait personnaliser Tonos?';
 
   @override
-  String get onboardingFocusSubtitle => 'Choisissez les éléments à configurer maintenant. Vous pourrez les modifier plus tard.';
+  String get onboardingFocusSubtitle =>
+      'Choisissez les éléments à configurer maintenant. Vous pourrez les modifier plus tard.';
 
   @override
   String get onboardingNutritionDataTitle => 'Données nutritionnelles';
 
   @override
-  String get onboardingNutritionDataPausedBody => 'La configuration nutritionnelle est suspendue pendant la reconstruction de cette section.';
+  String get onboardingNutritionDataPausedBody =>
+      'La configuration nutritionnelle est suspendue pendant la reconstruction de cette section.';
 
   @override
   String get onboardingLater => 'Plus tard';
@@ -6717,16 +7328,19 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get onboardingExerciseDataTitle => 'Données d\'exercice';
 
   @override
-  String get onboardingExerciseDataBody => 'Configurez votre profil de gym et vos premiers plans d\'entraînement.';
+  String get onboardingExerciseDataBody =>
+      'Configurez votre profil de gym et vos premiers plans d\'entraînement.';
 
   @override
   String get onboardingGymSpaceTitle => 'Où vous entraînez-vous?';
 
   @override
-  String get onboardingGymSpaceSubtitle => 'Choisissez un lieu de départ. Son équipement orientera les suggestions d\'exercices et les entraînements générés.';
+  String get onboardingGymSpaceSubtitle =>
+      'Choisissez un lieu de départ. Son équipement orientera les suggestions d\'exercices et les entraînements générés.';
 
   @override
-  String get onboardingEquipmentLoadError => 'Impossible de charger l\'équipement.';
+  String get onboardingEquipmentLoadError =>
+      'Impossible de charger l\'équipement.';
 
   @override
   String get onboardingTryAgain => 'Réessayer';
@@ -6735,7 +7349,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get onboardingGymCustomTitle => 'Espace personnalisé';
 
   @override
-  String get onboardingGymCustomSubtitle => 'Créez votre propre profil en choisissant chaque élément disponible.';
+  String get onboardingGymCustomSubtitle =>
+      'Créez votre propre profil en choisissant chaque élément disponible.';
 
   @override
   String get onboardingGymCustomDefaultName => 'Espace personnalisé';
@@ -6744,7 +7359,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get onboardingGymSkipTitle => 'Passer cette étape';
 
   @override
-  String get onboardingGymSkipSubtitle => 'Conservez le profil général et choisissez votre équipement plus tard.';
+  String get onboardingGymSkipSubtitle =>
+      'Conservez le profil général et choisissez votre équipement plus tard.';
 
   @override
   String get onboardingGymGeneralName => 'Général';
@@ -6753,7 +7369,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get onboardingGymCommercialTitle => 'Gym commercial';
 
   @override
-  String get onboardingGymCommercialSubtitle => 'Commencez avec toutes les options d\'équipement, puis retirez celles que votre gym n\'a pas.';
+  String get onboardingGymCommercialSubtitle =>
+      'Commencez avec toutes les options d\'équipement, puis retirez celles que votre gym n\'a pas.';
 
   @override
   String get onboardingGymCommercialDefaultName => 'Gym commercial';
@@ -6762,7 +7379,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get onboardingGymHomeTitle => 'Gym à domicile';
 
   @override
-  String get onboardingGymHomeSubtitle => 'Une installation pratique avec poids libres, bandes, banc et équipement de poids corporel.';
+  String get onboardingGymHomeSubtitle =>
+      'Une installation pratique avec poids libres, bandes, banc et équipement de poids corporel.';
 
   @override
   String get onboardingGymHomeDefaultName => 'Gym à domicile';
@@ -6771,7 +7389,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get onboardingGymCalisthenicsTitle => 'Calisthénie';
 
   @override
-  String get onboardingGymCalisthenicsSubtitle => 'Équipement centré sur le poids corporel, y compris barres, anneaux, bandes et accessoires de base.';
+  String get onboardingGymCalisthenicsSubtitle =>
+      'Équipement centré sur le poids corporel, y compris barres, anneaux, bandes et accessoires de base.';
 
   @override
   String get onboardingGymCalisthenicsDefaultName => 'Calisthénie';
@@ -6780,7 +7399,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get onboardingGymPowerliftingTitle => 'Powerlifting';
 
   @override
-  String get onboardingGymPowerliftingSubtitle => 'Un espace axé sur la barre avec disques, cage à squat et banc.';
+  String get onboardingGymPowerliftingSubtitle =>
+      'Un espace axé sur la barre avec disques, cage à squat et banc.';
 
   @override
   String get onboardingGymPowerliftingDefaultName => 'Powerlifting';
@@ -6789,16 +7409,19 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get onboardingGymFreeWeightsTitle => 'Poids libres';
 
   @override
-  String get onboardingGymFreeWeightsSubtitle => 'Haltères, kettlebells, disques, banc et mouvements au poids du corps.';
+  String get onboardingGymFreeWeightsSubtitle =>
+      'Haltères, kettlebells, disques, banc et mouvements au poids du corps.';
 
   @override
   String get onboardingGymFreeWeightsDefaultName => 'Poids libres';
 
   @override
-  String get onboardingReviewWorkoutSpaceTitle => 'Vérifiez votre espace d\'entraînement';
+  String get onboardingReviewWorkoutSpaceTitle =>
+      'Vérifiez votre espace d\'entraînement';
 
   @override
-  String get onboardingReviewWorkoutSpaceSubtitle => 'Renommez le profil ou ajustez son équipement avant que Tonos le crée.';
+  String get onboardingReviewWorkoutSpaceSubtitle =>
+      'Renommez le profil ou ajustez son équipement avant que Tonos le crée.';
 
   @override
   String get onboardingProfileNameLabel => 'Nom du profil';
@@ -6807,10 +7430,12 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get onboardingIncludedEquipmentTitle => 'Équipement inclus';
 
   @override
-  String get onboardingIncludedEquipmentBody => 'Seuls les exercices pris en charge par cet équipement seront suggérés lorsque ce profil est actif.';
+  String get onboardingIncludedEquipmentBody =>
+      'Seuls les exercices pris en charge par cet équipement seront suggérés lorsque ce profil est actif.';
 
   @override
-  String get onboardingNoEquipmentSelected => 'Aucun équipement n\'est sélectionné pour le moment.';
+  String get onboardingNoEquipmentSelected =>
+      'Aucun équipement n\'est sélectionné pour le moment.';
 
   @override
   String get onboardingReset => 'Réinitialiser';
@@ -6819,40 +7444,50 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get onboardingEditProfile => 'Modifier le profil';
 
   @override
-  String get onboardingEditWorkoutSpaceTitle => 'Modifier l\'espace d\'entraînement';
+  String get onboardingEditWorkoutSpaceTitle =>
+      'Modifier l\'espace d\'entraînement';
 
   @override
-  String get onboardingSelectEquipmentError => 'Sélectionnez au moins une option d\'équipement.';
+  String get onboardingSelectEquipmentError =>
+      'Sélectionnez au moins une option d\'équipement.';
 
   @override
-  String get onboardingWorkoutPlanTitle => 'Configurez votre plan d\'entraînement';
+  String get onboardingWorkoutPlanTitle =>
+      'Configurez votre plan d\'entraînement';
 
   @override
-  String get onboardingWorkoutPlanSubtitle => 'Choisissez comment Tonos doit préparer vos premiers plans. Vous pourrez toujours ajouter, archiver ou modifier des plans plus tard.';
+  String get onboardingWorkoutPlanSubtitle =>
+      'Choisissez comment Tonos doit préparer vos premiers plans. Vous pourrez toujours ajouter, archiver ou modifier des plans plus tard.';
 
   @override
-  String get onboardingManualPlanTitle => 'Créer vos propres plans manuellement';
+  String get onboardingManualPlanTitle =>
+      'Créer vos propres plans manuellement';
 
   @override
-  String get onboardingManualPlanSubtitle => 'Commencez avec un plan vide, puis ajoutez vous-même les exercices et les séries.';
+  String get onboardingManualPlanSubtitle =>
+      'Commencez avec un plan vide, puis ajoutez vous-même les exercices et les séries.';
 
   @override
-  String get onboardingPremadePlanTitle => 'Utiliser des plans d\'exercices prédéfinis';
+  String get onboardingPremadePlanTitle =>
+      'Utiliser des plans d\'exercices prédéfinis';
 
   @override
-  String get onboardingPremadePlanSubtitle => 'Parcourez les plans intégrés corps entier, haut/bas, pousser-tirer-jambes et les divisions par groupe musculaire.';
+  String get onboardingPremadePlanSubtitle =>
+      'Parcourez les plans intégrés corps entier, haut/bas, pousser-tirer-jambes et les divisions par groupe musculaire.';
 
   @override
   String get onboardingGeneratePlanTitle => 'Générer des plans d\'exercices';
 
   @override
-  String get onboardingGeneratePlanSubtitle => 'Répondez à quelques questions et laissez Tonos créer un plan personnalisé pour votre profil.';
+  String get onboardingGeneratePlanSubtitle =>
+      'Répondez à quelques questions et laissez Tonos créer un plan personnalisé pour votre profil.';
 
   @override
   String get onboardingSkipPlanTitle => 'Passer cette étape';
 
   @override
-  String get onboardingSkipPlanSubtitle => 'Commencez sans plan. Vous pourrez les configurer plus tard depuis Entraînement.';
+  String get onboardingSkipPlanSubtitle =>
+      'Commencez sans plan. Vous pourrez les configurer plus tard depuis Entraînement.';
 
   @override
   String onboardingPlansAdded(int count) {
@@ -6869,7 +7504,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get onboardingReviewPlansTitle => 'Vérifiez vos plans';
 
   @override
-  String get onboardingReviewPlansSubtitle => 'Ces plans ont été ajoutés à vos plans actifs. Ouvrez un plan pour l\'examiner ou l\'ajuster avant de continuer.';
+  String get onboardingReviewPlansSubtitle =>
+      'Ces plans ont été ajoutés à vos plans actifs. Ouvrez un plan pour l\'examiner ou l\'ajuster avant de continuer.';
 
   @override
   String onboardingPlansReady(int count) {
@@ -6883,16 +7519,19 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   }
 
   @override
-  String get onboardingPlanOverviewLoadError => 'Impossible de charger l\'aperçu des plans pour le moment.';
+  String get onboardingPlanOverviewLoadError =>
+      'Impossible de charger l\'aperçu des plans pour le moment.';
 
   @override
-  String get onboardingNoAddedPlans => 'Aucun plan ajouté n\'a été trouvé. Retournez ajouter des plans ou passez cette étape.';
+  String get onboardingNoAddedPlans =>
+      'Aucun plan ajouté n\'a été trouvé. Retournez ajouter des plans ou passez cette étape.';
 
   @override
   String get onboardingReadyTitle => 'Prêt à commencer';
 
   @override
-  String get onboardingReadySubtitle => 'Vérifiez votre configuration, puis terminez pour entrer dans Tonos.';
+  String get onboardingReadySubtitle =>
+      'Vérifiez votre configuration, puis terminez pour entrer dans Tonos.';
 
   @override
   String get onboardingSummaryName => 'Nom';
@@ -6928,7 +7567,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get onboardingSummaryProfileSection => 'Profil';
 
   @override
-  String get onboardingSummaryTrainingSection => 'Configuration de l\'entraînement';
+  String get onboardingSummaryTrainingSection =>
+      'Configuration de l\'entraînement';
 
   @override
   String get onboardingSummaryNutritionSection => 'Préférences nutritionnelles';
@@ -7030,73 +7670,87 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get profileTitle => 'Profil';
 
   @override
-  String get profileSubtitle => 'Personnalisez Tonos, gérez vos valeurs d’entraînement et gardez vos données en bon état.';
+  String get profileSubtitle =>
+      'Personnalisez Tonos, gérez vos valeurs d’entraînement et gardez vos données en bon état.';
 
   @override
   String get profileAccountSectionTitle => 'Compte';
 
   @override
-  String get profileAccountSectionSubtitle => 'Votre identité et l’apparence générale de l’application.';
+  String get profileAccountSectionSubtitle =>
+      'Votre identité et l’apparence générale de l’application.';
 
   @override
   String get profileUserInformationTitle => 'Renseignements personnels';
 
   @override
-  String get profileUserInformationSubtitle => 'Nom, données corporelles et profil d’activité.';
+  String get profileUserInformationSubtitle =>
+      'Nom, données corporelles et profil d’activité.';
 
   @override
   String get profileUiAppearanceTitle => 'Interface et apparence';
 
   @override
-  String get profileUiAppearanceSubtitle => 'Thème, configuration initiale et onglets inférieurs.';
+  String get profileUiAppearanceSubtitle =>
+      'Thème, configuration initiale et onglets inférieurs.';
 
   @override
   String get profileGuidedTutorialsTitle => 'Tutoriels guidés';
 
   @override
-  String get profileGuidedTutorialsSubtitle => 'Rejouez les guides et réinitialisez l’aide guidée.';
+  String get profileGuidedTutorialsSubtitle =>
+      'Rejouez les guides et réinitialisez l’aide guidée.';
 
   @override
   String get profileTrainingSectionTitle => 'Entraînement';
 
   @override
-  String get profileTrainingSectionSubtitle => 'Valeurs par défaut des exercices et contrôles liés aux progrès.';
+  String get profileTrainingSectionSubtitle =>
+      'Valeurs par défaut des exercices et contrôles liés aux progrès.';
 
   @override
-  String get profileGymWorkoutSettingsTitle => 'Réglages de gym et d’entraînement';
+  String get profileGymWorkoutSettingsTitle =>
+      'Réglages de gym et d’entraînement';
 
   @override
-  String get profileGymWorkoutSettingsSubtitle => 'Génération d’entraînements, classements, flux et logique d’équipement.';
+  String get profileGymWorkoutSettingsSubtitle =>
+      'Génération d’entraînements, classements, flux et logique d’équipement.';
 
   @override
   String get profileProgressSettingsTitle => 'Réglages des progrès';
 
   @override
-  String get profileProgressSettingsSubtitle => 'Configuration des mesures et du suivi des tendances.';
+  String get profileProgressSettingsSubtitle =>
+      'Configuration des mesures et du suivi des tendances.';
 
   @override
   String get profileDataSectionTitle => 'Données';
 
   @override
-  String get profileDataSectionSubtitle => 'Outils de base de données, exportations, importations et entretien.';
+  String get profileDataSectionSubtitle =>
+      'Outils de base de données, exportations, importations et entretien.';
 
   @override
   String get profileDatabaseSettingsTitle => 'Réglages de la base de données';
 
   @override
-  String get profileDatabaseSettingsSubtitle => 'Importation, exportation, vérifications et outils d’entretien.';
+  String get profileDatabaseSettingsSubtitle =>
+      'Importation, exportation, vérifications et outils d’entretien.';
 
   @override
   String get profileNutritionSectionTitle => 'Nutrition';
 
   @override
-  String get profileNutritionSectionSubtitle => 'Les réglages de nutrition sont suspendus pendant la reconstruction de cette section.';
+  String get profileNutritionSectionSubtitle =>
+      'Les réglages de nutrition sont suspendus pendant la reconstruction de cette section.';
 
   @override
-  String get profileDietNutritionSettingsTitle => 'Réglages de l’alimentation et de la nutrition';
+  String get profileDietNutritionSettingsTitle =>
+      'Réglages de l’alimentation et de la nutrition';
 
   @override
-  String get profileDietNutritionSettingsSubtitle => 'Les objectifs et préférences nutritionnels reviendront plus tard.';
+  String get profileDietNutritionSettingsSubtitle =>
+      'Les objectifs et préférences nutritionnels reviendront plus tard.';
 
   @override
   String get profileLater => 'Plus tard';
@@ -7105,19 +7759,22 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get profileAccountTutorialTitle => 'Réglages du compte';
 
   @override
-  String get profileAccountTutorialBody => 'Mettez à jour vos renseignements personnels, préférences d’affichage, unités de poids, configuration initiale, onglets inférieurs et tutoriels guidés ici.';
+  String get profileAccountTutorialBody =>
+      'Mettez à jour vos renseignements personnels, préférences d’affichage, unités de poids, configuration initiale, onglets inférieurs et tutoriels guidés ici.';
 
   @override
   String get profileTrainingTutorialTitle => 'Réglages d’entraînement';
 
   @override
-  String get profileTrainingTutorialBody => 'Contrôlez les profils de salle, les règles de génération, les classements des parties du corps, les réglages de progrès et les autres valeurs d’entraînement.';
+  String get profileTrainingTutorialBody =>
+      'Contrôlez les profils de salle, les règles de génération, les classements des parties du corps, les réglages de progrès et les autres valeurs d’entraînement.';
 
   @override
   String get profileDataTutorialTitle => 'Outils de données';
 
   @override
-  String get profileDataTutorialBody => 'Les réglages de la base de données permettent d’exporter, importer, vérifier et entretenir vos données locales d’entraînement.';
+  String get profileDataTutorialBody =>
+      'Les réglages de la base de données permettent d’exporter, importer, vérifier et entretenir vos données locales d’entraînement.';
 
   @override
   String catalogLoadError(String error) {
@@ -7125,7 +7782,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   }
 
   @override
-  String get catalogNoData => 'Aucune donnée de catalogue n\'est encore disponible.';
+  String get catalogNoData =>
+      'Aucune donnée de catalogue n\'est encore disponible.';
 
   @override
   String get catalogExerciseTitle => 'Catalogue d’exercices';
@@ -7134,7 +7792,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get catalogMostUsedExercises => 'Exercices les plus utilisés';
 
   @override
-  String get catalogNoExerciseHistory => 'Terminez des entraînements pour voir ici vos exercices les plus fréquents.';
+  String get catalogNoExerciseHistory =>
+      'Terminez des entraînements pour voir ici vos exercices les plus fréquents.';
 
   @override
   String get catalogTargetAnatomyTitle => 'Anatomie ciblée';
@@ -7146,22 +7805,26 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get catalogMuscles => 'Muscles';
 
   @override
-  String get catalogNoBodypartHistory => 'Aucun historique de partie du corps pour le moment.';
+  String get catalogNoBodypartHistory =>
+      'Aucun historique de partie du corps pour le moment.';
 
   @override
-  String get catalogNoMuscleHistory => 'Aucun historique musculaire pour le moment.';
+  String get catalogNoMuscleHistory =>
+      'Aucun historique musculaire pour le moment.';
 
   @override
   String get catalogExerciseTutorialTitle => 'Catalogue d\'exercices';
 
   @override
-  String get catalogExerciseTutorialBody => 'Vos exercices les plus utilisés s\'affichent d\'abord ici. Touchez la carte pour ouvrir le catalogue complet, chercher des mouvements et consulter les détails.';
+  String get catalogExerciseTutorialBody =>
+      'Vos exercices les plus utilisés s\'affichent d\'abord ici. Touchez la carte pour ouvrir le catalogue complet, chercher des mouvements et consulter les détails.';
 
   @override
   String get catalogAnatomyTutorialTitle => 'Anatomie ciblée';
 
   @override
-  String get catalogAnatomyTutorialBody => 'Ce résumé présente vos parties du corps et vos muscles les plus entraînés. Touchez l\'un ou l\'autre pour ouvrir la bibliothèque anatomique et voir des listes ciblées.';
+  String get catalogAnatomyTutorialBody =>
+      'Ce résumé présente vos parties du corps et vos muscles les plus entraînés. Touchez l\'un ou l\'autre pour ouvrir la bibliothèque anatomique et voir des listes ciblées.';
 
   @override
   String catalogTimesUsed(int count) {
@@ -7186,16 +7849,19 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   }
 
   @override
-  String get navEditorMinimumTabsError => 'Veuillez conserver au moins deux onglets actifs.';
+  String get navEditorMinimumTabsError =>
+      'Veuillez conserver au moins deux onglets actifs.';
 
   @override
-  String get navEditorSavedMessage => 'Configuration de navigation enregistrée.';
+  String get navEditorSavedMessage =>
+      'Configuration de navigation enregistrée.';
 
   @override
   String get navEditorTitle => 'Personnaliser les onglets';
 
   @override
-  String get navEditorSubtitle => 'Choisissez les zones principales affichées dans la barre de navigation inférieure.';
+  String get navEditorSubtitle =>
+      'Choisissez les zones principales affichées dans la barre de navigation inférieure.';
 
   @override
   String get navEditorSave => 'Enregistrer les onglets';
@@ -7204,13 +7870,15 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get navEditorActiveTitle => 'Onglets visibles';
 
   @override
-  String get navEditorActiveSubtitle => 'Ces onglets s’affichent dans votre navigation inférieure.';
+  String get navEditorActiveSubtitle =>
+      'Ces onglets s’affichent dans votre navigation inférieure.';
 
   @override
   String get navEditorInactiveTitle => 'Onglets masqués';
 
   @override
-  String get navEditorInactiveSubtitle => 'Vous pouvez les afficher de nouveau en tout temps.';
+  String get navEditorInactiveSubtitle =>
+      'Vous pouvez les afficher de nouveau en tout temps.';
 
   @override
   String get navEditorNoInactiveTabs => 'Aucun onglet masqué.';
@@ -7228,34 +7896,40 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get trainTutorialSpacesTitle => 'Entraînement comporte deux espaces';
 
   @override
-  String get trainTutorialSpacesBody => 'Aperçu garde vos commandes d\'entraînement prêtes à utiliser à portée de main. Plans vous permet de parcourir, générer et gérer vos plans enregistrés.';
+  String get trainTutorialSpacesBody =>
+      'Aperçu garde vos commandes d\'entraînement prêtes à utiliser à portée de main. Plans vous permet de parcourir, générer et gérer vos plans enregistrés.';
 
   @override
   String get trainTutorialWeeklyTitle => 'Aperçu hebdomadaire';
 
   @override
-  String get trainTutorialWeeklyBody => 'Cette section montre les parties du corps entraînées récemment. Touchez la liste des séries ciblées pour ouvrir le détail hebdomadaire.';
+  String get trainTutorialWeeklyBody =>
+      'Cette section montre les parties du corps entraînées récemment. Touchez la liste des séries ciblées pour ouvrir le détail hebdomadaire.';
 
   @override
   String get trainTutorialActivePlansTitle => 'Plans actifs';
 
   @override
-  String get trainTutorialActivePlansBody => 'Les plans actifs sont les routines à garder près de vous. Utilisez le crayon pour choisir les plans qui restent prêts dans l\'onglet Aperçu.';
+  String get trainTutorialActivePlansBody =>
+      'Les plans actifs sont les routines à garder près de vous. Utilisez le crayon pour choisir les plans qui restent prêts dans l\'onglet Aperçu.';
 
   @override
   String get trainTutorialStartTitle => 'Commencer ou optimiser';
 
   @override
-  String get trainTutorialStartBody => 'Commencer un entraînement lance une séance vide. Optimiser crée une séance selon votre historique, l\'équipement du profil, vos priorités et vos règles de récupération.';
+  String get trainTutorialStartBody =>
+      'Commencer un entraînement lance une séance vide. Optimiser crée une séance selon votre historique, l\'équipement du profil, vos priorités et vos règles de récupération.';
 
   @override
   String get trainTutorialProfilesTitle => 'Profils de gym';
 
   @override
-  String get trainTutorialProfilesBody => 'Changez de profil lorsque vous vous entraînez ailleurs afin que les entraînements générés et les remplacements n\'utilisent que l\'équipement disponible.';
+  String get trainTutorialProfilesBody =>
+      'Changez de profil lorsque vous vous entraînez ailleurs afin que les entraînements générés et les remplacements n\'utilisent que l\'équipement disponible.';
 
   @override
-  String get trainSelectProfileFirst => 'Sélectionnez d\'abord un profil de gym.';
+  String get trainSelectProfileFirst =>
+      'Sélectionnez d\'abord un profil de gym.';
 
   @override
   String trainGeneratedPlans(int count) {
@@ -7288,16 +7962,19 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get trainRestTitle => 'Prenez le temps de récupérer';
 
   @override
-  String get trainRestBody => 'Votre entraînement récent atteint déjà plusieurs limites de parties du corps; un entraînement optimisé nuirait trop à votre récupération.';
+  String get trainRestBody =>
+      'Votre entraînement récent atteint déjà plusieurs limites de parties du corps; un entraînement optimisé nuirait trop à votre récupération.';
 
   @override
   String get commonOkay => 'OK';
 
   @override
-  String get trainNoEligibleExercises => 'Aucun exercice admissible n\'a été trouvé pour ce profil.';
+  String get trainNoEligibleExercises =>
+      'Aucun exercice admissible n\'a été trouvé pour ce profil.';
 
   @override
-  String get trainAnotherWorkoutActive => 'Un autre entraînement est déjà en cours; il a été conservé tel quel.';
+  String get trainAnotherWorkoutActive =>
+      'Un autre entraînement est déjà en cours; il a été conservé tel quel.';
 
   @override
   String trainOptimizedStartFailed(String error) {
@@ -7309,8 +7986,10 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'L\'entraînement optimisé a commencé. $count exercices nécessitent encore des poids manuels.',
-      one: 'L\'entraînement optimisé a commencé. 1 exercice nécessite encore un poids manuel.',
+      other:
+          'L\'entraînement optimisé a commencé. $count exercices nécessitent encore des poids manuels.',
+      one:
+          'L\'entraînement optimisé a commencé. 1 exercice nécessite encore un poids manuel.',
     );
     return '$_temp0';
   }
@@ -7320,8 +7999,10 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'L\'entraînement optimisé a commencé avec des poids de départ pour $count nouveaux exercices.',
-      one: 'L\'entraînement optimisé a commencé avec un poids de départ pour 1 nouvel exercice.',
+      other:
+          'L\'entraînement optimisé a commencé avec des poids de départ pour $count nouveaux exercices.',
+      one:
+          'L\'entraînement optimisé a commencé avec un poids de départ pour 1 nouvel exercice.',
     );
     return '$_temp0';
   }
@@ -7342,19 +8023,23 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get trainEditActivePlans => 'Modifier les plans actifs';
 
   @override
-  String get trainSelectProfileForPlans => 'Sélectionnez un profil de gym pour choisir les plans actifs.';
+  String get trainSelectProfileForPlans =>
+      'Sélectionnez un profil de gym pour choisir les plans actifs.';
 
   @override
-  String get trainChooseActivePlans => 'Touchez le crayon pour choisir les plans affichés ici.';
+  String get trainChooseActivePlans =>
+      'Touchez le crayon pour choisir les plans affichés ici.';
 
   @override
-  String get trainSelectedPlansMissing => 'Les plans sélectionnés ne sont plus disponibles. Touchez le crayon pour les mettre à jour.';
+  String get trainSelectedPlansMissing =>
+      'Les plans sélectionnés ne sont plus disponibles. Touchez le crayon pour les mettre à jour.';
 
   @override
   String get trainArchivedPlans => 'Plans archivés';
 
   @override
-  String get trainNoActivePlans => 'Aucun plan actif pour le moment. Utilisez le crayon sur la carte Plans actifs de l\'aperçu pour choisir ce qui reste prêt.';
+  String get trainNoActivePlans =>
+      'Aucun plan actif pour le moment. Utilisez le crayon sur la carte Plans actifs de l\'aperçu pour choisir ce qui reste prêt.';
 
   @override
   String get trainNoArchivedPlans => 'Aucun plan archivé.';
@@ -7370,7 +8055,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count routines sélectionnées sont disponibles à copier dans vos plans.',
+      other:
+          '$count routines sélectionnées sont disponibles à copier dans vos plans.',
       one: '1 routine sélectionnée est disponible à copier dans vos plans.',
     );
     return '$_temp0';
@@ -7403,13 +8089,15 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get planManagementActiveTutorialTitle => 'Plans actifs';
 
   @override
-  String get planManagementActiveTutorialBody => 'Ces plans restent visibles dans l’aperçu Entraînement. Archivez-en un pour le masquer sans le supprimer.';
+  String get planManagementActiveTutorialBody =>
+      'Ces plans restent visibles dans l’aperçu Entraînement. Archivez-en un pour le masquer sans le supprimer.';
 
   @override
   String get planManagementArchivedTutorialTitle => 'Plans archivés';
 
   @override
-  String get planManagementArchivedTutorialBody => 'Les plans archivés restent enregistrés. Activez n’importe quel plan ici pour le remettre dans l’aperçu.';
+  String get planManagementArchivedTutorialBody =>
+      'Les plans archivés restent enregistrés. Activez n’importe quel plan ici pour le remettre dans l’aperçu.';
 
   @override
   String planManagementUpdateFailed(String plan, String error) {
@@ -7426,19 +8114,23 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get commonTryAgain => 'Réessayer';
 
   @override
-  String get planManagementIntro => 'Choisissez les plans prêts dans votre aperçu Entraînement. Les plans archivés restent enregistrés et peuvent être activés en tout temps.';
+  String get planManagementIntro =>
+      'Choisissez les plans prêts dans votre aperçu Entraînement. Les plans archivés restent enregistrés et peuvent être activés en tout temps.';
 
   @override
-  String get planManagementActiveSubtitle => 'Affichés dans l\'aperçu Entraînement.';
+  String get planManagementActiveSubtitle =>
+      'Affichés dans l\'aperçu Entraînement.';
 
   @override
-  String get planManagementNoActive => 'Aucun plan actif pour le moment. Activez un plan ci-dessous pour l\'épingler à l\'aperçu.';
+  String get planManagementNoActive =>
+      'Aucun plan actif pour le moment. Activez un plan ci-dessous pour l\'épingler à l\'aperçu.';
 
   @override
   String get planManagementArchive => 'Archiver';
 
   @override
-  String get planManagementArchivedSubtitle => 'Plans enregistrés qui ne figurent pas dans l\'aperçu.';
+  String get planManagementArchivedSubtitle =>
+      'Plans enregistrés qui ne figurent pas dans l\'aperçu.';
 
   @override
   String get planManagementNoArchived => 'Aucun plan archivé.';
@@ -7459,7 +8151,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get presetsNoPlans => 'Aucun plan pour le moment.';
 
   @override
-  String get presetsNoProfile => 'Sélectionnez un profil de salle pour voir les plans.';
+  String get presetsNoProfile =>
+      'Sélectionnez un profil de salle pour voir les plans.';
 
   @override
   String get presetsLoadError => 'Impossible de charger les plans.';
@@ -7501,7 +8194,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get planDeleteTitle => 'Supprimer le plan';
 
   @override
-  String get planDeleteConfirmation => 'Voulez-vous vraiment supprimer ce plan?';
+  String get planDeleteConfirmation =>
+      'Voulez-vous vraiment supprimer ce plan?';
 
   @override
   String get commonCancel => 'Annuler';
@@ -7516,31 +8210,36 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get optimizedTutorialBudgetTitle => 'Budget de séance';
 
   @override
-  String get optimizedTutorialBudgetBody => 'Définissez la durée de l’entraînement optimisé et le nombre de séries que chaque exercice peut recevoir.';
+  String get optimizedTutorialBudgetBody =>
+      'Définissez la durée de l’entraînement optimisé et le nombre de séries que chaque exercice peut recevoir.';
 
   @override
   String get optimizedTutorialRepsTitle => 'Répétitions et poids';
 
   @override
-  String get optimizedTutorialRepsBody => 'Ces choix contrôlent le modèle de séries, les répétitions cibles et le caractère prudent des poids générés.';
+  String get optimizedTutorialRepsBody =>
+      'Ces choix contrôlent le modèle de séries, les répétitions cibles et le caractère prudent des poids générés.';
 
   @override
   String get optimizedTutorialFocusTitle => 'Priorité des parties du corps';
 
   @override
-  String get optimizedTutorialFocusBody => 'Préférez ou évitez des parties du corps pour le prochain entraînement optimisé sans modifier vos classements enregistrés.';
+  String get optimizedTutorialFocusBody =>
+      'Préférez ou évitez des parties du corps pour le prochain entraînement optimisé sans modifier vos classements enregistrés.';
 
   @override
   String get commonReset => 'Réinitialiser';
 
   @override
-  String get optimizedTutorialResetBody => 'Réinitialiser ramène cette page aux valeurs par défaut de Tonos si la configuration actuelle ne convient plus.';
+  String get optimizedTutorialResetBody =>
+      'Réinitialiser ramène cette page aux valeurs par défaut de Tonos si la configuration actuelle ne convient plus.';
 
   @override
   String get optimizedTutorialActionsTitle => 'Enregistrer ou commencer';
 
   @override
-  String get optimizedTutorialActionsBody => 'Commencer maintenant utilise une fois les valeurs affichées. Enregistrer conserve les réglages pour les futurs entraînements optimisés.';
+  String get optimizedTutorialActionsBody =>
+      'Commencer maintenant utilise une fois les valeurs affichées. Enregistrer conserve les réglages pour les futurs entraînements optimisés.';
 
   @override
   String optimizedValidationError(int maxSets) {
@@ -7548,7 +8247,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   }
 
   @override
-  String get optimizedBudgetDescription => 'Utilise un budget de 3 minutes par série, plus 5 minutes pour commencer chaque exercice.';
+  String get optimizedBudgetDescription =>
+      'Utilise un budget de 3 minutes par série, plus 5 minutes pour commencer chaque exercice.';
 
   @override
   String get optimizedWorkoutDuration => 'Durée de l’entraînement';
@@ -7569,7 +8269,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get optimizedRepsWeightsTitle => 'Répétitions et poids';
 
   @override
-  String get optimizedRepsWeightsDescription => 'Utilise des estimations de force fondées sur l’historique lorsqu’elles sont disponibles. Facile et Moyen réduisent davantage les charges que Difficile. Les nouveaux exercices utilisent des estimations prudentes.';
+  String get optimizedRepsWeightsDescription =>
+      'Utilise des estimations de force fondées sur l’historique lorsqu’elles sont disponibles. Facile et Moyen réduisent davantage les charges que Difficile. Les nouveaux exercices utilisent des estimations prudentes.';
 
   @override
   String get optimizedRepPattern => 'Modèle de répétitions';
@@ -7605,10 +8306,12 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get optimizedBodypartFocusTitle => 'Priorité des parties du corps';
 
   @override
-  String get optimizedBodypartFocusDescription => 'Ces choix s’appliquent seulement au prochain entraînement optimisé lancé. Touchez une fois pour préférer, deux fois pour éviter, puis encore une fois pour effacer.';
+  String get optimizedBodypartFocusDescription =>
+      'Ces choix s’appliquent seulement au prochain entraînement optimisé lancé. Touchez une fois pour préférer, deux fois pour éviter, puis encore une fois pour effacer.';
 
   @override
-  String get optimizedBodypartsUnavailable => 'Impossible de charger les parties du corps.';
+  String get optimizedBodypartsUnavailable =>
+      'Impossible de charger les parties du corps.';
 
   @override
   String get commonStartNow => 'Commencer maintenant';
@@ -7620,43 +8323,51 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get generateTutorialIntroTitle => 'Créer des plans';
 
   @override
-  String get generateTutorialIntroBody => 'Cette page peut créer un plan ou un ensemble hebdomadaire équilibré selon votre profil de salle et vos préférences d’entraînement.';
+  String get generateTutorialIntroBody =>
+      'Cette page peut créer un plan ou un ensemble hebdomadaire équilibré selon votre profil de salle et vos préférences d’entraînement.';
 
   @override
   String get generateWorkoutSetupTitle => 'Configuration de l’entraînement';
 
   @override
-  String get generateTutorialSetupBody => 'Définissez la durée de séance, le nombre de plans à créer et le maximum de séries autorisées pour chaque exercice.';
+  String get generateTutorialSetupBody =>
+      'Définissez la durée de séance, le nombre de plans à créer et le maximum de séries autorisées pour chaque exercice.';
 
   @override
   String get generateTrainingFocusTitle => 'Priorité d’entraînement';
 
   @override
-  String get generateTutorialFocusBody => 'Préférez ou évitez des parties du corps ici. L’option d’historique de 7 jours influence la génération seulement si vous voulez tenir compte du travail récent.';
+  String get generateTutorialFocusBody =>
+      'Préférez ou évitez des parties du corps ici. L’option d’historique de 7 jours influence la génération seulement si vous voulez tenir compte du travail récent.';
 
   @override
   String get generateRepsWeightsTitle => 'Répétitions et poids';
 
   @override
-  String get generateTutorialRepsBody => 'Choisissez des modèles de séries pyramidal, mixte ou constant, les répétitions cibles et l’intensité du poids de départ.';
+  String get generateTutorialRepsBody =>
+      'Choisissez des modèles de séries pyramidal, mixte ou constant, les répétitions cibles et l’intensité du poids de départ.';
 
   @override
   String get generateSetAllocationTitle => 'Répartition des séries';
 
   @override
-  String get generateTutorialAllocationBody => 'Choisissez si les séries sont réparties uniformément ou favorisent vos classements de parties du corps ou de muscles.';
+  String get generateTutorialAllocationBody =>
+      'Choisissez si les séries sont réparties uniformément ou favorisent vos classements de parties du corps ou de muscles.';
 
   @override
   String get generateTutorialGenerateTitle => 'Générer';
 
   @override
-  String get generateTutorialGenerateBody => 'Lorsque tout est prêt, générez le plan ou l’ensemble de plans. Les nouveaux plans peuvent être examinés et modifiés par la suite.';
+  String get generateTutorialGenerateBody =>
+      'Lorsque tout est prêt, générez le plan ou l’ensemble de plans. Les nouveaux plans peuvent être examinés et modifiés par la suite.';
 
   @override
-  String get generateValidationError => 'Entrez une durée, un nombre de plans, une limite de séries et des valeurs de répétitions valides.';
+  String get generateValidationError =>
+      'Entrez une durée, un nombre de plans, une limite de séries et des valeurs de répétitions valides.';
 
   @override
-  String get generateNoViablePlans => 'Aucun plan viable n’a pu être généré avec les réglages actuels.';
+  String get generateNoViablePlans =>
+      'Aucun plan viable n’a pu être généré avec les réglages actuels.';
 
   @override
   String generateFailed(String error) {
@@ -7672,7 +8383,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get generateIntroTitle => 'Créez votre semaine de plans';
 
   @override
-  String get generateIntroBody => 'Créez un plan ou un ensemble équilibré selon votre profil, vos priorités et vos limites.';
+  String get generateIntroBody =>
+      'Créez un plan ou un ensemble équilibré selon votre profil, vos priorités et vos limites.';
 
   @override
   String generatePlanCountPill(int count) {
@@ -7704,7 +8416,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get generateSessionLength => 'Durée de séance';
 
   @override
-  String get generateSessionLengthHelp => 'Estimation : 3 min/série + 5 min/exercice.';
+  String get generateSessionLengthHelp =>
+      'Estimation : 3 min/série + 5 min/exercice.';
 
   @override
   String get generatePlansToCreate => 'Plans à créer';
@@ -7740,10 +8453,12 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get generateUseRecentTraining => 'Utiliser l’entraînement récent';
 
   @override
-  String get generateUseRecentTrainingBody => 'Favorise les zones peu entraînées au cours des 7 derniers jours.';
+  String get generateUseRecentTrainingBody =>
+      'Favorise les zones peu entraînées au cours des 7 derniers jours.';
 
   @override
-  String get generateBodypartFocusInstruction => 'Touchez une fois pour préférer, deux fois pour éviter, trois fois pour effacer.';
+  String get generateBodypartFocusInstruction =>
+      'Touchez une fois pour préférer, deux fois pour éviter, trois fois pour effacer.';
 
   @override
   String generateRepsSummary(String mode, String reps, String intensity) {
@@ -7751,25 +8466,32 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   }
 
   @override
-  String get generateMixedBody => 'Pyramidal pour 3 séries ou plus; constant pour un travail plus court.';
+  String get generateMixedBody =>
+      'Pyramidal pour 3 séries ou plus; constant pour un travail plus court.';
 
   @override
-  String get generatePyramidBody => 'La série de pointe utilise le poids de travail généré.';
+  String get generatePyramidBody =>
+      'La série de pointe utilise le poids de travail généré.';
 
   @override
-  String get generateConsistentBody => 'Même nombre de répétitions et poids suggéré à chaque série.';
+  String get generateConsistentBody =>
+      'Même nombre de répétitions et poids suggéré à chaque série.';
 
   @override
-  String get generateTargetRepsHelp => 'Répétitions de pointe pour Pyramidal; répétitions constantes sinon.';
+  String get generateTargetRepsHelp =>
+      'Répétitions de pointe pour Pyramidal; répétitions constantes sinon.';
 
   @override
-  String get generateEasyBody => 'Recommandation la plus prudente fondée sur l’historique ou le poids de départ.';
+  String get generateEasyBody =>
+      'Recommandation la plus prudente fondée sur l’historique ou le poids de départ.';
 
   @override
-  String get generateMediumBody => 'Recommandation de poids de travail équilibrée.';
+  String get generateMediumBody =>
+      'Recommandation de poids de travail équilibrée.';
 
   @override
-  String get generateHardBody => 'Recommandation la plus lourde, toujours arrondie et tenant compte de l’effort.';
+  String get generateHardBody =>
+      'Recommandation la plus lourde, toujours arrondie et tenant compte de l’effort.';
 
   @override
   String get generateRequirementBodyparts => 'Classements des parties du corps';
@@ -7781,25 +8503,31 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get generateRequirementEven => 'Couverture uniforme';
 
   @override
-  String get generateEvenCoverageTitle => 'Couverture uniforme des parties du corps';
+  String get generateEvenCoverageTitle =>
+      'Couverture uniforme des parties du corps';
 
   @override
-  String get generateEvenCoverageBody => 'Répartissez largement le travail entre les parties du corps disponibles.';
+  String get generateEvenCoverageBody =>
+      'Répartissez largement le travail entre les parties du corps disponibles.';
 
   @override
-  String get generateBodypartRankingsTitle => 'Utiliser les classements des parties du corps';
+  String get generateBodypartRankingsTitle =>
+      'Utiliser les classements des parties du corps';
 
   @override
-  String get generateBodypartRankingsBody => 'Donnez plus de travail planifié aux parties du corps mieux classées.';
+  String get generateBodypartRankingsBody =>
+      'Donnez plus de travail planifié aux parties du corps mieux classées.';
 
   @override
   String get generateRankBodyparts => 'Classer les parties du corps';
 
   @override
-  String get generateMuscleRankingsTitle => 'Utiliser les classements des muscles';
+  String get generateMuscleRankingsTitle =>
+      'Utiliser les classements des muscles';
 
   @override
-  String get generateMuscleRankingsBody => 'Répartissez le travail selon vos priorités musculaires classées.';
+  String get generateMuscleRankingsBody =>
+      'Répartissez le travail selon vos priorités musculaires classées.';
 
   @override
   String get generateRankMuscles => 'Classer les muscles';
@@ -7828,7 +8556,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count plans ont été générés. Examinez-les lorsque vous serez prêt.',
+      other:
+          '$count plans ont été générés. Examinez-les lorsque vous serez prêt.',
       one: 'Le plan généré a été ajouté. Examinez-le lorsque vous serez prêt.',
     );
     return '$_temp0';
@@ -7840,10 +8569,12 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   }
 
   @override
-  String get generateStarterEstimatedBody => 'Des poids de départ ont été estimés pour les nouveaux exercices. Ajustez-les au besoin après votre première série.';
+  String get generateStarterEstimatedBody =>
+      'Des poids de départ ont été estimés pour les nouveaux exercices. Ajustez-les au besoin après votre première série.';
 
   @override
-  String get generateStarterUnavailableBody => 'Certains exercices nécessitent encore des poids manuels, car aucune estimation de départ sûre n’est disponible.';
+  String get generateStarterUnavailableBody =>
+      'Certains exercices nécessitent encore des poids manuels, car aucune estimation de départ sûre n’est disponible.';
 
   @override
   String get generateStarterDialogTitle => 'Poids de départ ajoutés';
@@ -7861,19 +8592,22 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get sessionTutorialCardsTitle => 'Cartes d\'exercice';
 
   @override
-  String get sessionTutorialCardsBody => 'Chaque carte représente un exercice. Ouvrez-la pour modifier les poids et les répétitions, puis cochez les séries à mesure que vous les terminez.';
+  String get sessionTutorialCardsBody =>
+      'Chaque carte représente un exercice. Ouvrez-la pour modifier les poids et les répétitions, puis cochez les séries à mesure que vous les terminez.';
 
   @override
   String get sessionTutorialAddTitle => 'Ajouter des exercices';
 
   @override
-  String get sessionTutorialAddBody => 'Utilisez ce bouton pour ajouter un exercice du catalogue pendant l\'entraînement.';
+  String get sessionTutorialAddBody =>
+      'Utilisez ce bouton pour ajouter un exercice du catalogue pendant l\'entraînement.';
 
   @override
   String get sessionTutorialFinishTitle => 'Terminer l\'entraînement';
 
   @override
-  String get sessionTutorialFinishBody => 'Lorsque vous avez terminé, finalisez la séance afin que Tonos enregistre l\'entraînement et mette à jour votre historique, vos analyses et vos widgets de progrès.';
+  String get sessionTutorialFinishBody =>
+      'Lorsque vous avez terminé, finalisez la séance afin que Tonos enregistre l\'entraînement et mette à jour votre historique, vos analyses et vos widgets de progrès.';
 
   @override
   String get sessionTimerTitle => 'Minuteur d\'entraînement';
@@ -7885,7 +8619,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get sessionNoExercises => 'Aucun exercice ajouté.';
 
   @override
-  String get sessionNeedCompletedSet => 'Terminez au moins une série avant de finir l\'entraînement.';
+  String get sessionNeedCompletedSet =>
+      'Terminez au moins une série avant de finir l\'entraînement.';
 
   @override
   String sessionSaveFailed(String error) {
@@ -7902,7 +8637,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get sessionExit => 'Quitter';
 
   @override
-  String get sessionCompletedSaved => 'Le travail terminé a été enregistré dans le Journal.';
+  String get sessionCompletedSaved =>
+      'Le travail terminé a été enregistré dans le Journal.';
 
   @override
   String get sessionCancelled => 'Entraînement annulé.';
@@ -7916,7 +8652,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get sessionCancelQuestion => 'Annuler l\'entraînement?';
 
   @override
-  String get sessionCancelBody => 'Cette action supprime l\'entraînement en cours sans l\'ajouter à votre historique.';
+  String get sessionCancelBody =>
+      'Cette action supprime l\'entraînement en cours sans l\'ajouter à votre historique.';
 
   @override
   String get sessionKeepWorkout => 'Conserver l\'entraînement';
@@ -7937,10 +8674,12 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get sessionRememberChoice => 'Mémoriser ce choix';
 
   @override
-  String get sessionRememberChoiceBody => 'Vous pourrez modifier ce choix plus tard dans les réglages de gym et d\'entraînement.';
+  String get sessionRememberChoiceBody =>
+      'Vous pourrez modifier ce choix plus tard dans les réglages de gym et d\'entraînement.';
 
   @override
-  String get sessionCompleteLoadError => 'Impossible de charger le résumé de l’entraînement terminé.';
+  String get sessionCompleteLoadError =>
+      'Impossible de charger le résumé de l’entraînement terminé.';
 
   @override
   String get sessionCompleteTitle => 'ENTRAÎNEMENT TERMINÉ';
@@ -8010,31 +8749,36 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get planTutorialEditTitle => 'Modifier votre plan';
 
   @override
-  String get planTutorialEditBody => 'Passez en mode modification pour changer le nom, les exercices, les séries ou les réglages du plan.';
+  String get planTutorialEditBody =>
+      'Passez en mode modification pour changer le nom, les exercices, les séries ou les réglages du plan.';
 
   @override
   String get planTutorialSummaryTitle => 'Résumé du plan';
 
   @override
-  String get planTutorialSummaryBody => 'Cette zone présente les exercices et les séries prévus. Utilisez-la pour vérifier votre plan avant de commencer.';
+  String get planTutorialSummaryBody =>
+      'Cette zone présente les exercices et les séries prévus. Utilisez-la pour vérifier votre plan avant de commencer.';
 
   @override
   String get planTutorialExerciseCardsTitle => 'Cartes d’exercices';
 
   @override
-  String get planTutorialExerciseCardsBody => 'Chaque carte contient les séries, les répétitions et les poids du plan. Ouvrez-la pour la modifier.';
+  String get planTutorialExerciseCardsBody =>
+      'Chaque carte contient les séries, les répétitions et les poids du plan. Ouvrez-la pour la modifier.';
 
   @override
   String get planTutorialStartOrSaveTitle => 'Commencer ou enregistrer';
 
   @override
-  String get planTutorialStartOrSaveBody => 'Commencez une séance avec ce plan ou enregistrez vos modifications pour les utiliser plus tard.';
+  String get planTutorialStartOrSaveBody =>
+      'Commencez une séance avec ce plan ou enregistrez vos modifications pour les utiliser plus tard.';
 
   @override
   String get planGuideNameTitle => 'Nommez votre plan';
 
   @override
-  String get planGuideNameBody => 'Donnez un nom à votre plan pour le reconnaître facilement dans Entraînement.';
+  String get planGuideNameBody =>
+      'Donnez un nom à votre plan pour le reconnaître facilement dans Entraînement.';
 
   @override
   String get commonContinue => 'Continuer';
@@ -8043,13 +8787,15 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get planGuideBrowseTitle => 'Parcourir les exercices';
 
   @override
-  String get planGuideBrowseBody => 'Ouvrez le catalogue pour sélectionner le premier exercice de votre plan.';
+  String get planGuideBrowseBody =>
+      'Ouvrez le catalogue pour sélectionner le premier exercice de votre plan.';
 
   @override
   String get planGuideWeightTitle => 'Ajoutez un poids';
 
   @override
-  String get planGuideWeightBody => 'Entrez un poids de départ que vous pourrez ajuster à mesure que vous vous entraînez.';
+  String get planGuideWeightBody =>
+      'Entrez un poids de départ que vous pourrez ajuster à mesure que vous vous entraînez.';
 
   @override
   String get planGuideWeightSet => 'Poids de la série';
@@ -8058,7 +8804,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get planGuideRepsTitle => 'Ajoutez des répétitions';
 
   @override
-  String get planGuideRepsBody => 'Entrez le nombre de répétitions visé pour cette série.';
+  String get planGuideRepsBody =>
+      'Entrez le nombre de répétitions visé pour cette série.';
 
   @override
   String get planGuideRepsSet => 'Répétitions de la série';
@@ -8067,13 +8814,15 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get planGuideAddSetTitle => 'Ajoutez une autre série';
 
   @override
-  String get planGuideAddSetBody => 'Ajoutez des séries pour créer votre entraînement. Vous pourrez les modifier ou les supprimer plus tard.';
+  String get planGuideAddSetBody =>
+      'Ajoutez des séries pour créer votre entraînement. Vous pourrez les modifier ou les supprimer plus tard.';
 
   @override
   String get planGuideSaveTitle => 'Enregistrez votre plan';
 
   @override
-  String get planGuideSaveBody => 'Enregistrez le plan pour qu’il soit prêt dans votre aperçu Entraînement.';
+  String get planGuideSaveBody =>
+      'Enregistrez le plan pour qu’il soit prêt dans votre aperçu Entraînement.';
 
   @override
   String planSaveFailed(String error) {
@@ -8081,10 +8830,12 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   }
 
   @override
-  String get planOngoingWorkoutKept => 'Votre entraînement en cours a été conservé. Terminez-le ou annulez-le avant de commencer ce plan.';
+  String get planOngoingWorkoutKept =>
+      'Votre entraînement en cours a été conservé. Terminez-le ou annulez-le avant de commencer ce plan.';
 
   @override
-  String get planDeleteBody => 'Voulez-vous vraiment supprimer ce plan? Cette action est irréversible.';
+  String get planDeleteBody =>
+      'Voulez-vous vraiment supprimer ce plan? Cette action est irréversible.';
 
   @override
   String get planDeletePreset => 'Supprimer le plan';
@@ -8135,10 +8886,12 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get flowProfileDefaultTitle => 'Progression par défaut de la salle';
 
   @override
-  String get flowPlanSubtitle => 'Définissez comment ce plan progresse après chaque entraînement.';
+  String get flowPlanSubtitle =>
+      'Définissez comment ce plan progresse après chaque entraînement.';
 
   @override
-  String get flowAppDefaultSubtitle => 'Définissez le flux de progression initial pour les nouveaux profils de salle.';
+  String get flowAppDefaultSubtitle =>
+      'Définissez le flux de progression initial pour les nouveaux profils de salle.';
 
   @override
   String flowProfileDefaultSubtitle(String profileName) {
@@ -8179,10 +8932,12 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get flowSetIndex => 'Indice de série (-1 = dernière)';
 
   @override
-  String get flowDeleteLastSetBody => 'Cette action supprimera la dernière série.';
+  String get flowDeleteLastSetBody =>
+      'Cette action supprimera la dernière série.';
 
   @override
-  String get flowMethodNameRequired => 'Le nom de l’action ne peut pas être vide';
+  String get flowMethodNameRequired =>
+      'Le nom de l’action ne peut pas être vide';
 
   @override
   String get flowManageActionsTooltip => 'Gérer les actions de progression';
@@ -8191,7 +8946,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get flowAddBranchTitle => 'Ajouter une branche';
 
   @override
-  String get flowAddBranchSubtitle => 'Choisissez où la prochaine réussite ou le prochain échec mène.';
+  String get flowAddBranchSubtitle =>
+      'Choisissez où la prochaine réussite ou le prochain échec mène.';
 
   @override
   String get flowBranchFrom => 'Créer une branche depuis';
@@ -8206,7 +8962,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get flowAttachActionTitle => 'Associer une action de progression';
 
   @override
-  String get flowAttachActionSubtitle => 'Appliquez un ajustement de chaque type à un nœud du flux.';
+  String get flowAttachActionSubtitle =>
+      'Appliquez un ajustement de chaque type à un nœud du flux.';
 
   @override
   String get flowApplyActionTo => 'Appliquer l’action à';
@@ -8227,13 +8984,16 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get commonEdit => 'Modifier';
 
   @override
-  String get rulesEditAppDefault => 'Modifier la règle par défaut de l’application';
+  String get rulesEditAppDefault =>
+      'Modifier la règle par défaut de l’application';
 
   @override
-  String get rulesEditProfileDefault => 'Modifier la règle par défaut du profil';
+  String get rulesEditProfileDefault =>
+      'Modifier la règle par défaut du profil';
 
   @override
-  String get rulesAddAppDefault => 'Ajouter une règle par défaut de l’application';
+  String get rulesAddAppDefault =>
+      'Ajouter une règle par défaut de l’application';
 
   @override
   String get rulesAddProfileDefault => 'Ajouter une règle par défaut du profil';
@@ -8245,7 +9005,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get rulesCopyIndex => 'Indice de copie';
 
   @override
-  String get rulesDeleteLastSetBody => 'Cette action supprimera la dernière série.';
+  String get rulesDeleteLastSetBody =>
+      'Cette action supprimera la dernière série.';
 
   @override
   String get rulesNameRequired => 'Le nom de la règle ne peut pas être vide';
@@ -8285,7 +9046,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   }
 
   @override
-  String get rulesPropagationFailed => 'Impossible d’ajouter la règle aux éléments existants.';
+  String get rulesPropagationFailed =>
+      'Impossible d’ajouter la règle aux éléments existants.';
 
   @override
   String get rulesOptionsTooltip => 'Options de règle';
@@ -8294,22 +9056,26 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get rulesPageTitle => 'Règles de progression d’entraînement';
 
   @override
-  String get rulesPageSubtitle => 'Créez des règles réutilisables pour modifier le poids, les répétitions et les séries après les tentatives d’entraînement.';
+  String get rulesPageSubtitle =>
+      'Créez des règles réutilisables pour modifier le poids, les répétitions et les séries après les tentatives d’entraînement.';
 
   @override
   String get rulesHowDefaultsTitle => 'Fonctionnement des valeurs par défaut';
 
   @override
-  String get rulesHowDefaultsBody => 'Les valeurs par défaut de l’application sont copiées dans les nouveaux profils de salle. Les valeurs par défaut du profil sont copiées dans les nouveaux plans; les modifications ultérieures ne réécrivent donc pas les plans existants.';
+  String get rulesHowDefaultsBody =>
+      'Les valeurs par défaut de l’application sont copiées dans les nouveaux profils de salle. Les valeurs par défaut du profil sont copiées dans les nouveaux plans; les modifications ultérieures ne réécrivent donc pas les plans existants.';
 
   @override
   String get rulesAppDefaultsTitle => 'Valeurs par défaut de l’application';
 
   @override
-  String get rulesAppDefaultsSubtitle => 'Les règles de départ pour les nouveaux profils de salle.';
+  String get rulesAppDefaultsSubtitle =>
+      'Les règles de départ pour les nouveaux profils de salle.';
 
   @override
-  String get rulesNoAppDefaults => 'Aucune règle à l’échelle de l’application n’a encore été créée.';
+  String get rulesNoAppDefaults =>
+      'Aucune règle à l’échelle de l’application n’a encore été créée.';
 
   @override
   String get rulesAddApp => 'Ajouter une règle d’application';
@@ -8318,10 +9084,12 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get rulesGymProfilesTitle => 'Profils de salle';
 
   @override
-  String get rulesGymProfilesSubtitle => 'Chaque profil conserve ensemble ses valeurs par défaut et ses règles de plan.';
+  String get rulesGymProfilesSubtitle =>
+      'Chaque profil conserve ensemble ses valeurs par défaut et ses règles de plan.';
 
   @override
-  String get rulesNoProfiles => 'Créez un profil de salle pour ajouter des règles de profil et de plan.';
+  String get rulesNoProfiles =>
+      'Créez un profil de salle pour ajouter des règles de profil et de plan.';
 
   @override
   String rulesProfileSummary(int profileRules, int planRules) {
@@ -8332,7 +9100,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get rulesProfileDefaultsTitle => 'Valeurs par défaut du profil';
 
   @override
-  String get rulesProfileDefaultsSubtitle => 'Règles de départ pour les nouveaux plans de ce profil.';
+  String get rulesProfileDefaultsSubtitle =>
+      'Règles de départ pour les nouveaux plans de ce profil.';
 
   @override
   String get rulesNoProfileDefaults => 'Ce profil n’a aucune règle par défaut.';
@@ -8344,13 +9113,16 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get rulesPlansTitle => 'Plans';
 
   @override
-  String get rulesNoPlans => 'Aucun plan n’appartient encore à ce profil de salle.';
+  String get rulesNoPlans =>
+      'Aucun plan n’appartient encore à ce profil de salle.';
 
   @override
-  String get rulesPlanOnlySubtitle => 'Règles utilisées uniquement par ce plan.';
+  String get rulesPlanOnlySubtitle =>
+      'Règles utilisées uniquement par ce plan.';
 
   @override
-  String get rulesNoPlanRules => 'Ce plan n’a aucune règle de progression spécifique.';
+  String get rulesNoPlanRules =>
+      'Ce plan n’a aucune règle de progression spécifique.';
 
   @override
   String get rulesAddPlan => 'Ajouter une règle de plan';
@@ -8374,31 +9146,83 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get commonRetry => 'Réessayer';
 
   @override
+  String get safeFailureLoadTitle => 'Impossible de charger';
+
+  @override
+  String get safeFailureSaveTitle =>
+      'Impossible d’enregistrer les modifications';
+
+  @override
+  String get safeFailureActionTitle => 'Impossible de terminer cette action';
+
+  @override
+  String get safeFailureValidation =>
+      'Vérifiez les renseignements et réessayez.';
+
+  @override
+  String get safeFailureOffline =>
+      'Aucune connexion. Reconnectez-vous et réessayez.';
+
+  @override
+  String get safeFailurePermission =>
+      'Tonos n’a pas l’autorisation d’effectuer cette action. Vérifiez les réglages de l’appareil.';
+
+  @override
+  String get safeFailureStorage =>
+      'Tonos n’a pas pu accéder au stockage de l’appareil. Vérifiez l’espace disponible et réessayez.';
+
+  @override
+  String get safeFailureInvalidData =>
+      'Les données n’ont pas pu être lues de façon sécuritaire. Choisissez un autre fichier ou réessayez.';
+
+  @override
+  String get safeFailureNotFound =>
+      'Les données demandées ne sont plus disponibles. Actualisez et réessayez.';
+
+  @override
+  String get safeFailureTemporary =>
+      'Ce contenu est temporairement indisponible. Réessayez.';
+
+  @override
+  String get safeFailureUnknown => 'Un problème est survenu. Réessayez.';
+
+  @override
+  String safeFailureWithGuidance(String summary, String guidance) {
+    return '$summary $guidance';
+  }
+
+  @override
   String get flowPageTitle => 'Flux de progression d’entraînement';
 
   @override
-  String get flowPageSubtitle => 'Définissez les parcours qui déterminent comment les actions de progression s’appliquent après les résultats d’un entraînement.';
+  String get flowPageSubtitle =>
+      'Définissez les parcours qui déterminent comment les actions de progression s’appliquent après les résultats d’un entraînement.';
 
   @override
   String get flowHowCopiedTitle => 'Copie des flux';
 
   @override
-  String get flowHowCopiedBody => 'Les flux de l’application deviennent le point de départ des nouveaux profils de salle. Les flux de salle deviennent le point de départ des nouveaux plans. Les modifications ultérieures restent limitées au flux ouvert ici.';
+  String get flowHowCopiedBody =>
+      'Les flux de l’application deviennent le point de départ des nouveaux profils de salle. Les flux de salle deviennent le point de départ des nouveaux plans. Les modifications ultérieures restent limitées au flux ouvert ici.';
 
   @override
-  String get flowLoadError => 'Impossible de charger les flux de progression d’entraînement.';
+  String get flowLoadError =>
+      'Impossible de charger les flux de progression d’entraînement.';
 
   @override
-  String get flowAppDefaultsSubtitle => 'Le flux de départ pour les nouveaux profils de salle.';
+  String get flowAppDefaultsSubtitle =>
+      'Le flux de départ pour les nouveaux profils de salle.';
 
   @override
   String get flowAppDefaultEntry => 'Flux par défaut de l’application';
 
   @override
-  String get flowGymProfilesSubtitle => 'Chaque profil possède des valeurs par défaut et ses propres flux de plan.';
+  String get flowGymProfilesSubtitle =>
+      'Chaque profil possède des valeurs par défaut et ses propres flux de plan.';
 
   @override
-  String get flowNoProfiles => 'Créez un profil de salle pour définir les flux de profil et de plan.';
+  String get flowNoProfiles =>
+      'Créez un profil de salle pour définir les flux de profil et de plan.';
 
   @override
   String get flowNoSavedYet => 'Aucun flux enregistré';
@@ -8420,19 +9244,22 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get gymSettingsTitle => 'Réglages de gym et d’entraînement';
 
   @override
-  String get gymSettingsSubtitle => 'Ajustez la génération d’entraînements, les analyses et le comportement des flux.';
+  String get gymSettingsSubtitle =>
+      'Ajustez la génération d’entraînements, les analyses et le comportement des flux.';
 
   @override
   String get gymSettingsLogicTitle => 'Logique d’entraînement';
 
   @override
-  String get gymSettingsLogicSubtitle => 'Réglages qui influencent la planification et les entraînements générés.';
+  String get gymSettingsLogicSubtitle =>
+      'Réglages qui influencent la planification et les entraînements générés.';
 
   @override
   String get gymSettingsWorkoutTitle => 'Réglages d’entraînement';
 
   @override
-  String get gymSettingsWorkoutSubtitle => 'Limites de volume, valeurs par défaut d’analyse et contrôles d’entraînement.';
+  String get gymSettingsWorkoutSubtitle =>
+      'Limites de volume, valeurs par défaut d’analyse et contrôles d’entraînement.';
 
   @override
   String get gymSettingsExitTitle => 'Quitter un entraînement en cours';
@@ -8441,13 +9268,16 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get gymSettingsFlowToolsTitle => 'Outils de flux';
 
   @override
-  String get gymSettingsFlowToolsSubtitle => 'Gérez les parcours et actions de progression enregistrés.';
+  String get gymSettingsFlowToolsSubtitle =>
+      'Gérez les parcours et actions de progression enregistrés.';
 
   @override
-  String get gymSettingsFlowsSubtitle => 'Modifiez les flux de progression pour l’application, les salles et les plans.';
+  String get gymSettingsFlowsSubtitle =>
+      'Modifiez les flux de progression pour l’application, les salles et les plans.';
 
   @override
-  String get gymSettingsRulesSubtitle => 'Gérez les règles de progression du poids, des répétitions et des séries.';
+  String get gymSettingsRulesSubtitle =>
+      'Gérez les règles de progression du poids, des répétitions et des séries.';
 
   @override
   String get gymExitAsk => 'Demander à chaque fois';
@@ -8459,13 +9289,16 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get gymExitSave => 'Terminer et enregistrer';
 
   @override
-  String get gymExitAskBody => 'Affiche un choix lorsque vous quittez un entraînement en cours.';
+  String get gymExitAskBody =>
+      'Affiche un choix lorsque vous quittez un entraînement en cours.';
 
   @override
-  String get gymExitDiscardBody => 'Annule toujours l’entraînement en cours et ne l’enregistre pas dans l’historique.';
+  String get gymExitDiscardBody =>
+      'Annule toujours l’entraînement en cours et ne l’enregistre pas dans l’historique.';
 
   @override
-  String get gymExitSaveBody => 'Termine toujours l’entraînement et enregistre les séries terminées dans l’historique.';
+  String get gymExitSaveBody =>
+      'Termine toujours l’entraînement et enregistre les séries terminées dans l’historique.';
 
   @override
   String get commonAll => 'Tout';
@@ -8474,7 +9307,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get catalogGuideChooseTitle => 'Choisir un exercice';
 
   @override
-  String get catalogGuideChooseBody => 'Touchez une ligne d’exercice pour la sélectionner. La recherche ou les filtres peuvent vous aider à trouver le bon mouvement.';
+  String get catalogGuideChooseBody =>
+      'Touchez une ligne d’exercice pour la sélectionner. La recherche ou les filtres peuvent vous aider à trouver le bon mouvement.';
 
   @override
   String get catalogGuideAddTitle => 'L’ajouter à votre plan';
@@ -8488,19 +9322,22 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get catalogGuideSearchTitle => 'Rechercher des exercices';
 
   @override
-  String get catalogGuideSearchBody => 'Recherchez par nom d’exercice lorsque vous connaissez déjà le mouvement voulu.';
+  String get catalogGuideSearchBody =>
+      'Recherchez par nom d’exercice lorsque vous connaissez déjà le mouvement voulu.';
 
   @override
   String get catalogFilters => 'Filtres';
 
   @override
-  String get catalogGuideFiltersBody => 'Filtrez par profil de salle, équipement, partie du corps ou muscle pour réduire rapidement le catalogue.';
+  String get catalogGuideFiltersBody =>
+      'Filtrez par profil de salle, équipement, partie du corps ou muscle pour réduire rapidement le catalogue.';
 
   @override
   String get catalogGuideRowsTitle => 'Lignes d’exercices';
 
   @override
-  String get catalogGuideRowsBody => 'Chaque ligne montre l’équipement et une carte thermique. Touchez la carte thermique pour les détails, ou sélectionnez la ligne lorsque vous choisissez un exercice.';
+  String get catalogGuideRowsBody =>
+      'Chaque ligne montre l’équipement et une carte thermique. Touchez la carte thermique pour les détails, ou sélectionnez la ligne lorsque vous choisissez un exercice.';
 
   @override
   String get catalogSelectedFilters => 'Filtres sélectionnés';
@@ -8530,7 +9367,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get catalogNoMatches => 'Aucun exercice ne correspond aux filtres.';
 
   @override
-  String get catalogOpenExerciseInfo => 'Ouvrir les informations sur l’exercice';
+  String get catalogOpenExerciseInfo =>
+      'Ouvrir les informations sur l’exercice';
 
   @override
   String get commonClose => 'Fermer';
@@ -8542,28 +9380,34 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get exerciseDetailTutorialTitle => 'Détails de l’exercice';
 
   @override
-  String get exerciseDetailTutorialBody => 'Le titre de la fiche correspond à l’exercice ouvert. Fermez-la ici lorsque vous avez terminé.';
+  String get exerciseDetailTutorialBody =>
+      'Le titre de la fiche correspond à l’exercice ouvert. Fermez-la ici lorsque vous avez terminé.';
 
   @override
   String get exerciseDetailTabsTutorialTitle => 'Détails, mesures, records';
 
   @override
-  String get exerciseDetailTabsTutorialBody => 'Utilisez ces onglets pour passer des consignes aux meilleures levées et aux dossiers d’entraînement récents.';
+  String get exerciseDetailTabsTutorialBody =>
+      'Utilisez ces onglets pour passer des consignes aux meilleures levées et aux dossiers d’entraînement récents.';
 
   @override
   String get exerciseDetailContextTutorialTitle => 'Contexte de l’exercice';
 
   @override
-  String get exerciseDetailContextTutorialBody => 'L’onglet Détails montre l’équipement, les parties du corps, les muscles et les notes de forme de l’exercice.';
+  String get exerciseDetailContextTutorialBody =>
+      'L’onglet Détails montre l’équipement, les parties du corps, les muscles et les notes de forme de l’exercice.';
 
   @override
-  String get exerciseDetailSessionOpenFailed => 'Impossible d’ouvrir la séance d’entraînement.';
+  String get exerciseDetailSessionOpenFailed =>
+      'Impossible d’ouvrir la séance d’entraînement.';
 
   @override
-  String get exerciseDetailSessionNotFound => 'Séance d’entraînement introuvable.';
+  String get exerciseDetailSessionNotFound =>
+      'Séance d’entraînement introuvable.';
 
   @override
-  String get exerciseDetailNoEquipment => 'Aucun équipement indiqué pour cet exercice.';
+  String get exerciseDetailNoEquipment =>
+      'Aucun équipement indiqué pour cet exercice.';
 
   @override
   String get exerciseDetailTargetAnatomy => 'Anatomie ciblée';
@@ -8584,7 +9428,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get exerciseDetailSetup => 'Mise en place';
 
   @override
-  String get exerciseDetailNoSetup => 'Aucune instruction de mise en place fournie.';
+  String get exerciseDetailNoSetup =>
+      'Aucune instruction de mise en place fournie.';
 
   @override
   String get exerciseDetailExecution => 'Exécution';
@@ -8602,31 +9447,38 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get exerciseDetailFormGuide => 'Guide de forme';
 
   @override
-  String get exerciseDetailOpenHeatmap => 'Ouvrir la carte thermique du corps ciblé';
+  String get exerciseDetailOpenHeatmap =>
+      'Ouvrir la carte thermique du corps ciblé';
 
   @override
-  String get exerciseDetailNoHeatmap => 'Aucune zone corporelle ciblée disponible';
+  String get exerciseDetailNoHeatmap =>
+      'Aucune zone corporelle ciblée disponible';
 
   @override
   String get exerciseDetailZoomHint => 'Pincez ou faites glisser pour zoomer';
 
   @override
-  String get exerciseDetailLoadingBestLifts => 'Chargement des meilleures levées';
+  String get exerciseDetailLoadingBestLifts =>
+      'Chargement des meilleures levées';
 
   @override
-  String get exerciseDetailLoadingBestLiftsBody => 'Vos records de séries terminées sont en cours de calcul.';
+  String get exerciseDetailLoadingBestLiftsBody =>
+      'Vos records de séries terminées sont en cours de calcul.';
 
   @override
   String get exerciseDetailMetricsUnavailable => 'Mesures indisponibles';
 
   @override
-  String get exerciseDetailMetricsUnavailableBody => 'Rouvrez cet exercice pour charger ses records de séries terminées.';
+  String get exerciseDetailMetricsUnavailableBody =>
+      'Rouvrez cet exercice pour charger ses records de séries terminées.';
 
   @override
-  String get exerciseDetailNoBestLifts => 'Aucune meilleure levée pour le moment';
+  String get exerciseDetailNoBestLifts =>
+      'Aucune meilleure levée pour le moment';
 
   @override
-  String get exerciseDetailNoBestLiftsBody => 'Terminez une série avec charge pour cet exercice afin de commencer le suivi des records par répétition.';
+  String get exerciseDetailNoBestLiftsBody =>
+      'Terminez une série avec charge pour cet exercice afin de commencer le suivi des records par répétition.';
 
   @override
   String get exerciseDetailWeek => 'Semaine';
@@ -8652,7 +9504,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get exerciseDetailRepBests => 'Records par répétition';
 
   @override
-  String get exerciseDetailRepBestsBody => 'Meilleur poids terminé pour chaque nombre de répétitions';
+  String get exerciseDetailRepBestsBody =>
+      'Meilleur poids terminé pour chaque nombre de répétitions';
 
   @override
   String exerciseDetailRanges(int count) {
@@ -8660,7 +9513,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   }
 
   @override
-  String get exerciseDetailHistoryLoadFailed => 'Impossible de charger l’historique de l’exercice.';
+  String get exerciseDetailHistoryLoadFailed =>
+      'Impossible de charger l’historique de l’exercice.';
 
   @override
   String get exerciseDetailNoHistory => 'Aucun historique pour cet exercice.';
@@ -8681,10 +9535,12 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get exerciseDetailLoadMoreSessions => 'Charger 10 séances de plus';
 
   @override
-  String get exerciseDetailResizeLabel => 'Redimensionner les détails de l’exercice';
+  String get exerciseDetailResizeLabel =>
+      'Redimensionner les détails de l’exercice';
 
   @override
-  String get exerciseDetailResizeHint => 'Faites glisser vers le haut ou le bas pour redimensionner la fiche';
+  String get exerciseDetailResizeHint =>
+      'Faites glisser vers le haut ou le bas pour redimensionner la fiche';
 
   @override
   String get exerciseDetailTabDetails => 'Détails';
@@ -8723,7 +9579,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get exerciseDetailSetVolume => 'Volume de la série';
 
   @override
-  String get exerciseDetailNoChartData => 'Aucun record de série terminée à afficher dans le graphique.';
+  String get exerciseDetailNoChartData =>
+      'Aucun record de série terminée à afficher dans le graphique.';
 
   @override
   String get exerciseDetailWeightAbbreviation => 'Poids';
@@ -8743,13 +9600,15 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get logbookTutorialCalendarTitle => 'Calendrier d’entraînement';
 
   @override
-  String get logbookTutorialCalendarBody => 'Consultez votre activité d’entraînement par jour et utilisez les contrôles de période pour explorer l’historique.';
+  String get logbookTutorialCalendarBody =>
+      'Consultez votre activité d’entraînement par jour et utilisez les contrôles de période pour explorer l’historique.';
 
   @override
   String get fullHistoryTitle => 'Toutes les séances';
 
   @override
-  String get fullHistoryLoadError => 'Impossible de charger les séances enregistrées.';
+  String get fullHistoryLoadError =>
+      'Impossible de charger les séances enregistrées.';
 
   @override
   String get fullHistoryEmpty => 'Aucune séance enregistrée.';
@@ -8763,7 +9622,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get weeklySetsTitle => 'Aperçu des séries hebdomadaires';
 
   @override
-  String get weeklySetsLoadError => 'Impossible de charger votre aperçu d’entraînement hebdomadaire.';
+  String get weeklySetsLoadError =>
+      'Impossible de charger votre aperçu d’entraînement hebdomadaire.';
 
   @override
   String get weeklySetsBodyParts => 'Parties du corps';
@@ -8781,7 +9641,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get weeklySetsVolume => 'Volume';
 
   @override
-  String get weeklySetsNoBodyParts => 'Aucune partie du corps travaillée cette semaine.';
+  String get weeklySetsNoBodyParts =>
+      'Aucune partie du corps travaillée cette semaine.';
 
   @override
   String get weeklySetsNoMuscles => 'Aucun muscle travaillé cette semaine.';
@@ -8795,67 +9656,80 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get weeklySetsTutorialOverviewTitle => 'Aperçu hebdomadaire';
 
   @override
-  String get weeklySetsTutorialOverviewBody => 'Consultez les séries, le temps et le volume accumulés au cours des 7 derniers jours.';
+  String get weeklySetsTutorialOverviewBody =>
+      'Consultez les séries, le temps et le volume accumulés au cours des 7 derniers jours.';
 
   @override
   String get weeklySetsTutorialAnatomyTitle => 'Travail anatomique';
 
   @override
-  String get weeklySetsTutorialAnatomyBody => 'Passez des parties du corps aux muscles pour voir où votre travail s’est concentré.';
+  String get weeklySetsTutorialAnatomyBody =>
+      'Passez des parties du corps aux muscles pour voir où votre travail s’est concentré.';
 
   @override
   String get weeklySetsTutorialStatusTitle => 'État des objectifs';
 
   @override
-  String get weeklySetsTutorialStatusBody => 'Les indicateurs montrent comment votre travail récent se compare aux plages de volume recommandées.';
+  String get weeklySetsTutorialStatusBody =>
+      'Les indicateurs montrent comment votre travail récent se compare aux plages de volume recommandées.';
 
   @override
   String get workoutDetailTutorialSummaryTitle => 'Résumé de l’entraînement';
 
   @override
-  String get workoutDetailTutorialSummaryBody => 'Consultez le total de séries, le volume, la durée, le nombre d’exercices et les parties du corps travaillées.';
+  String get workoutDetailTutorialSummaryBody =>
+      'Consultez le total de séries, le volume, la durée, le nombre d’exercices et les parties du corps travaillées.';
 
   @override
   String get workoutDetailTutorialExercisesTitle => 'Records d’exercice';
 
   @override
-  String get workoutDetailTutorialExercisesBody => 'Chaque exercice présente les séries terminées de cette séance. Touchez les détails pour examiner l’exercice.';
+  String get workoutDetailTutorialExercisesBody =>
+      'Chaque exercice présente les séries terminées de cette séance. Touchez les détails pour examiner l’exercice.';
 
   @override
   String get workoutDetailTutorialEditTitle => 'Modifier la séance';
 
   @override
-  String get workoutDetailTutorialEditBody => 'Utilisez le mode modification pour corriger les séries, les répétitions ou les exercices après l’entraînement.';
+  String get workoutDetailTutorialEditBody =>
+      'Utilisez le mode modification pour corriger les séries, les répétitions ou les exercices après l’entraînement.';
 
   @override
   String get workoutDetailTutorialReuseTitle => 'Réutiliser cet entraînement';
 
   @override
-  String get workoutDetailTutorialReuseBody => 'Refaites l’entraînement ou enregistrez la séance terminée comme plan réutilisable.';
+  String get workoutDetailTutorialReuseBody =>
+      'Refaites l’entraînement ou enregistrez la séance terminée comme plan réutilisable.';
 
   @override
   String get workoutDetailDeleteTitle => 'Supprimer la séance';
 
   @override
-  String get workoutDetailDeleteBody => 'Voulez-vous vraiment supprimer cette séance?';
+  String get workoutDetailDeleteBody =>
+      'Voulez-vous vraiment supprimer cette séance?';
 
   @override
-  String get workoutDetailDeleteFailed => 'Impossible de supprimer cette séance.';
+  String get workoutDetailDeleteFailed =>
+      'Impossible de supprimer cette séance.';
 
   @override
   String get workoutDetailChangesSaved => 'Modifications enregistrées.';
 
   @override
-  String get workoutDetailSaveFailed => 'Impossible d’enregistrer les modifications. La séance précédente reste inchangée.';
+  String get workoutDetailSaveFailed =>
+      'Impossible d’enregistrer les modifications. La séance précédente reste inchangée.';
 
   @override
-  String get workoutDetailFinishCurrentFirst => 'Terminez votre entraînement en cours avant de refaire celui-ci.';
+  String get workoutDetailFinishCurrentFirst =>
+      'Terminez votre entraînement en cours avant de refaire celui-ci.';
 
   @override
-  String get workoutDetailOngoingWorkoutKept => 'Votre entraînement en cours a été conservé. Terminez-le ou annulez-le avant de refaire cet entraînement.';
+  String get workoutDetailOngoingWorkoutKept =>
+      'Votre entraînement en cours a été conservé. Terminez-le ou annulez-le avant de refaire cet entraînement.';
 
   @override
-  String get workoutDetailRepeatFailed => 'Impossible de refaire cet entraînement.';
+  String get workoutDetailRepeatFailed =>
+      'Impossible de refaire cet entraînement.';
 
   @override
   String get workoutDetailSaveAsPlan => 'Enregistrer comme plan';
@@ -8880,7 +9754,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get workoutDetailUnsavedTitle => 'Modifications non enregistrées';
 
   @override
-  String get workoutDetailUnsavedBody => 'Vous avez des modifications non enregistrées. Voulez-vous les ignorer et quitter?';
+  String get workoutDetailUnsavedBody =>
+      'Vous avez des modifications non enregistrées. Voulez-vous les ignorer et quitter?';
 
   @override
   String get workoutDetailDiscard => 'Ignorer';
@@ -8938,7 +9813,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   }
 
   @override
-  String get logbookCalendarLoadFailed => 'Impossible de charger le calendrier d’entraînement.';
+  String get logbookCalendarLoadFailed =>
+      'Impossible de charger le calendrier d’entraînement.';
 
   @override
   String get logbookNoWorkouts => 'Aucun entraînement enregistré.';
@@ -8989,7 +9865,12 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get logbookViewAllSessions => 'Voir toutes les séances';
 
   @override
-  String logbookSessionSummary(String duration, int exercises, int sets, String volume) {
+  String logbookSessionSummary(
+    String duration,
+    int exercises,
+    int sets,
+    String volume,
+  ) {
     String _temp0 = intl.Intl.pluralLogic(
       exercises,
       locale: localeName,
@@ -9051,7 +9932,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get dashboardEmptyTitle => 'Votre tableau de bord est vide';
 
   @override
-  String get dashboardEmptyBody => 'Ajoutez de nouveau une section lorsque vous serez prêt.';
+  String get dashboardEmptyBody =>
+      'Ajoutez de nouveau une section lorsque vous serez prêt.';
 
   @override
   String get dashboardCustomize => 'Personnaliser le tableau de bord';
@@ -9060,97 +9942,113 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get dashboardSectionQuickActionsTitle => 'Actions rapides';
 
   @override
-  String get dashboardSectionQuickActionsBody => 'Enregistrez une mesure ou commencez un entraînement.';
+  String get dashboardSectionQuickActionsBody =>
+      'Enregistrez une mesure ou commencez un entraînement.';
 
   @override
   String get dashboardSectionTrainingTitle => 'Prêt à vous entraîner';
 
   @override
-  String get dashboardSectionTrainingBody => 'Sélectionnez votre profil de salle, vos plans et commencez une séance.';
+  String get dashboardSectionTrainingBody =>
+      'Sélectionnez votre profil de salle, vos plans et commencez une séance.';
 
   @override
   String get dashboardSectionNutritionTitle => 'Tableau de bord nutritionnel';
 
   @override
-  String get dashboardSectionNutritionBody => 'Consultez vos objectifs actuels de calories et de macronutriments.';
+  String get dashboardSectionNutritionBody =>
+      'Consultez vos objectifs actuels de calories et de macronutriments.';
 
   @override
   String get dashboardSectionDataRecordsTitle => 'Données et records';
 
   @override
-  String get dashboardSectionDataRecordsBody => 'Consultez et ajoutez des entrées nutritionnelles quotidiennes.';
+  String get dashboardSectionDataRecordsBody =>
+      'Consultez et ajoutez des entrées nutritionnelles quotidiennes.';
 
   @override
   String get dashboardSectionWeeklyFocusTitle => 'Priorité hebdomadaire';
 
   @override
-  String get dashboardSectionWeeklyFocusBody => 'Consultez le travail par partie du corps et muscle des 7 derniers jours.';
+  String get dashboardSectionWeeklyFocusBody =>
+      'Consultez le travail par partie du corps et muscle des 7 derniers jours.';
 
   @override
   String get dashboardSectionWorkoutReportTitle => 'Rapport d’entraînement';
 
   @override
-  String get dashboardSectionWorkoutReportBody => 'Comparez le nombre, le temps et le volume des entraînements au fil du temps.';
+  String get dashboardSectionWorkoutReportBody =>
+      'Comparez le nombre, le temps et le volume des entraînements au fil du temps.';
 
   @override
   String get dashboardSectionExerciseProgressTitle => 'Progrès des exercices';
 
   @override
-  String get dashboardSectionExerciseProgressBody => 'Suivez les tendances de force de vos exercices sélectionnés.';
+  String get dashboardSectionExerciseProgressBody =>
+      'Suivez les tendances de force de vos exercices sélectionnés.';
 
   @override
   String get dashboardSectionHistoryTitle => 'Historique d’entraînement';
 
   @override
-  String get dashboardSectionHistoryBody => 'Comparez les totaux et le travail ciblé selon différentes périodes.';
+  String get dashboardSectionHistoryBody =>
+      'Comparez les totaux et le travail ciblé selon différentes périodes.';
 
   @override
   String get dashboardSectionHealthTrendsTitle => 'Tendances santé';
 
   @override
-  String get dashboardSectionHealthTrendsBody => 'Suivez les mesures comme le poids corporel et les mensurations.';
+  String get dashboardSectionHealthTrendsBody =>
+      'Suivez les mesures comme le poids corporel et les mensurations.';
 
   @override
   String get dashboardSectionRecentWorkoutsTitle => 'Entraînements récents';
 
   @override
-  String get dashboardSectionRecentWorkoutsBody => 'Ouvrez vos dernières séances d’entraînement terminées.';
+  String get dashboardSectionRecentWorkoutsBody =>
+      'Ouvrez vos dernières séances d’entraînement terminées.';
 
   @override
   String get dashboardSectionActivePlansTitle => 'Plans actifs';
 
   @override
-  String get dashboardSectionActivePlansBody => 'Gardez vos plans les plus utilisés à portée de main.';
+  String get dashboardSectionActivePlansBody =>
+      'Gardez vos plans les plus utilisés à portée de main.';
 
   @override
   String get dashboardSectionArchivedPlansTitle => 'Plans archivés';
 
   @override
-  String get dashboardSectionArchivedPlansBody => 'Parcourez les plans qui ne sont pas actifs actuellement.';
+  String get dashboardSectionArchivedPlansBody =>
+      'Parcourez les plans qui ne sont pas actifs actuellement.';
 
   @override
   String get dashboardSectionPremadePlansTitle => 'Plans prédéfinis';
 
   @override
-  String get dashboardSectionPremadePlansBody => 'Parcourez les routines qui peuvent être ajoutées à ce profil.';
+  String get dashboardSectionPremadePlansBody =>
+      'Parcourez les routines qui peuvent être ajoutées à ce profil.';
 
   @override
   String get dashboardSectionPlanToolsTitle => 'Outils de planification';
 
   @override
-  String get dashboardSectionPlanToolsBody => 'Générez un plan équilibré ou créez-en un manuellement.';
+  String get dashboardSectionPlanToolsBody =>
+      'Générez un plan équilibré ou créez-en un manuellement.';
 
   @override
   String get dashboardSectionCatalogTitle => 'Catalogue d’exercices';
 
   @override
-  String get dashboardSectionCatalogBody => 'Ouvrez vos exercices les plus utilisés et le catalogue complet.';
+  String get dashboardSectionCatalogBody =>
+      'Ouvrez vos exercices les plus utilisés et le catalogue complet.';
 
   @override
   String get dashboardSectionAnatomyTitle => 'Anatomie ciblée';
 
   @override
-  String get dashboardSectionAnatomyBody => 'Consultez les parties du corps et les muscles que vous entraînez le plus.';
+  String get dashboardSectionAnatomyBody =>
+      'Consultez les parties du corps et les muscles que vous entraînez le plus.';
 
   @override
   String get dashboardSectionFallbackTitle => 'Section du tableau de bord';
@@ -9188,31 +10086,37 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get dashboardViewAll => 'Tout afficher';
 
   @override
-  String get dashboardRecentWorkoutsFailed => 'Impossible de charger les entraînements récents.';
+  String get dashboardRecentWorkoutsFailed =>
+      'Impossible de charger les entraînements récents.';
 
   @override
-  String get dashboardRecentWorkoutsEmpty => 'Terminez un entraînement et il apparaîtra ici.';
+  String get dashboardRecentWorkoutsEmpty =>
+      'Terminez un entraînement et il apparaîtra ici.';
 
   @override
-  String get userInfoProfileUpdateNote => 'Ces renseignements sont utilisés pour personnaliser les calculs et recommandations de l’application.';
+  String get userInfoProfileUpdateNote =>
+      'Ces renseignements sont utilisés pour personnaliser les calculs et recommandations de l’application.';
 
   @override
   String get userInfoChangesSaved => 'Modifications enregistrées.';
 
   @override
-  String get userInfoSaveFailed => 'Impossible d’enregistrer vos modifications.';
+  String get userInfoSaveFailed =>
+      'Impossible d’enregistrer vos modifications.';
 
   @override
   String get userInfoTitle => 'Renseignements personnels';
 
   @override
-  String get userInfoSubtitle => 'Gérez vos détails personnels, vos mesures corporelles et votre profil d’activité.';
+  String get userInfoSubtitle =>
+      'Gérez vos détails personnels, vos mesures corporelles et votre profil d’activité.';
 
   @override
   String get userInfoIdentityTitle => 'Identité';
 
   @override
-  String get userInfoIdentitySubtitle => 'Informations utilisées pour personnaliser votre expérience.';
+  String get userInfoIdentitySubtitle =>
+      'Informations utilisées pour personnaliser votre expérience.';
 
   @override
   String get userInfoName => 'Nom';
@@ -9233,7 +10137,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get userInfoBodyMetricsTitle => 'Mesures corporelles';
 
   @override
-  String get userInfoBodyMetricsSubtitle => 'Informations utilisées par les calculs de santé et d’entraînement.';
+  String get userInfoBodyMetricsSubtitle =>
+      'Informations utilisées par les calculs de santé et d’entraînement.';
 
   @override
   String get userInfoHeight => 'Taille';
@@ -9257,7 +10162,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get userInfoActivityTitle => 'Activité';
 
   @override
-  String get userInfoActivitySubtitle => 'Préférences qui aident à estimer les besoins d’activité et de récupération.';
+  String get userInfoActivitySubtitle =>
+      'Préférences qui aident à estimer les besoins d’activité et de récupération.';
 
   @override
   String get userInfoWeightTrend => 'Tendance du poids';
@@ -9305,61 +10211,71 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get tutorialsSettingsTitle => 'Tutoriels guidés';
 
   @override
-  String get tutorialsSettingsSubtitle => 'Rejouez un guide lorsque vous avez besoin d’un rappel rapide.';
+  String get tutorialsSettingsSubtitle =>
+      'Rejouez un guide lorsque vous avez besoin d’un rappel rapide.';
 
   @override
   String get tutorialsControlsTitle => 'Contrôles des tutoriels';
 
   @override
-  String get tutorialsControlsSubtitle => 'Vous testez ou voulez repartir de zéro?';
+  String get tutorialsControlsSubtitle =>
+      'Vous testez ou voulez repartir de zéro?';
 
   @override
   String get tutorialsResetAllTitle => 'Réinitialiser tous les tutoriels';
 
   @override
-  String get tutorialsResetAllSubtitle => 'Rend chaque tutoriel guidé disponible de nouveau.';
+  String get tutorialsResetAllSubtitle =>
+      'Rend chaque tutoriel guidé disponible de nouveau.';
 
   @override
   String get tutorialsResetAll => 'Tout réinitialiser';
 
   @override
-  String get tutorialsResetAllMessage => 'Tous les tutoriels ont été réinitialisés.';
+  String get tutorialsResetAllMessage =>
+      'Tous les tutoriels ont été réinitialisés.';
 
   @override
   String get tutorialsHowItWorksTitle => 'Fonctionnement des tutoriels';
 
   @override
-  String get tutorialsHowItWorksBody => 'Les tutoriels s’affichent une fois, puis restent discrets. Développez un groupe pour réinitialiser un guide précis.';
+  String get tutorialsHowItWorksBody =>
+      'Les tutoriels s’affichent une fois, puis restent discrets. Développez un groupe pour réinitialiser un guide précis.';
 
   @override
   String get tutorialsMainTabsTitle => 'Onglets principaux';
 
   @override
-  String get tutorialsMainTabsSubtitle => 'Rejouez les guides de chaque zone principale.';
+  String get tutorialsMainTabsSubtitle =>
+      'Rejouez les guides de chaque zone principale.';
 
   @override
   String get tutorialsWorkoutTitle => 'Entraînement';
 
   @override
-  String get tutorialsWorkoutSubtitle => 'Aide pour enregistrer votre première séance.';
+  String get tutorialsWorkoutSubtitle =>
+      'Aide pour enregistrer votre première séance.';
 
   @override
   String get tutorialsPlansTitle => 'Plans et entraînements';
 
   @override
-  String get tutorialsPlansSubtitle => 'Rejouez l’aide pour créer et modifier des plans, ainsi que les détails d’entraînement.';
+  String get tutorialsPlansSubtitle =>
+      'Rejouez l’aide pour créer et modifier des plans, ainsi que les détails d’entraînement.';
 
   @override
   String get tutorialsCatalogTitle => 'Catalogue et anatomie';
 
   @override
-  String get tutorialsCatalogSubtitle => 'Rejouez les guides des exercices et de l’anatomie ciblée.';
+  String get tutorialsCatalogSubtitle =>
+      'Rejouez les guides des exercices et de l’anatomie ciblée.';
 
   @override
   String get tutorialsProgressTitle => 'Progrès et réglages';
 
   @override
-  String get tutorialsProgressSubtitle => 'Rejouez l’aide des détails de progrès et des pages de réglages.';
+  String get tutorialsProgressSubtitle =>
+      'Rejouez l’aide des détails de progrès et des pages de réglages.';
 
   @override
   String tutorialsReplayTitle(String topic) {
@@ -9401,7 +10317,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get tutorialsTopicGeneratePlans => 'Générer des plans';
 
   @override
-  String get tutorialsTopicOptimizedSettings => 'réglages d’entraînement optimisé';
+  String get tutorialsTopicOptimizedSettings =>
+      'réglages d’entraînement optimisé';
 
   @override
   String get tutorialsTopicPremadePlans => 'plans prédéfinis';
@@ -9464,10 +10381,12 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get anatomyMuscles => 'Muscles';
 
   @override
-  String get anatomyLoadFailed => 'Impossible de charger les filtres d’anatomie.';
+  String get anatomyLoadFailed =>
+      'Impossible de charger les filtres d’anatomie.';
 
   @override
-  String get anatomySearchLabel => 'Rechercher des parties du corps ou des muscles';
+  String get anatomySearchLabel =>
+      'Rechercher des parties du corps ou des muscles';
 
   @override
   String get anatomyNoBodyParts => 'Aucune partie du corps trouvée.';
@@ -9484,13 +10403,15 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get anatomyTutorialSearchTitle => 'Rechercher dans l’anatomie';
 
   @override
-  String get anatomyTutorialSearchBody => 'Recherchez une partie du corps ou un muscle pour ouvrir rapidement ses exercices et données associées.';
+  String get anatomyTutorialSearchBody =>
+      'Recherchez une partie du corps ou un muscle pour ouvrir rapidement ses exercices et données associées.';
 
   @override
   String get anatomyTutorialListsTitle => 'Listes d’anatomie';
 
   @override
-  String get anatomyTutorialListsBody => 'Basculez entre les parties du corps et les muscles pour explorer les zones que vos exercices ciblent.';
+  String get anatomyTutorialListsBody =>
+      'Basculez entre les parties du corps et les muscles pour explorer les zones que vos exercices ciblent.';
 
   @override
   String anatomyTargetExercises(String name) {
@@ -9498,10 +10419,12 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   }
 
   @override
-  String get anatomyBodypartLoadFailed => 'Impossible de charger les détails de la partie du corps.';
+  String get anatomyBodypartLoadFailed =>
+      'Impossible de charger les détails de la partie du corps.';
 
   @override
-  String get anatomyMuscleLoadFailed => 'Impossible de charger les détails du muscle.';
+  String get anatomyMuscleLoadFailed =>
+      'Impossible de charger les détails du muscle.';
 
   @override
   String anatomyRecommendedSetsUpdated(String name) {
@@ -9581,76 +10504,91 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get anatomyTutorialDetailTitle => 'Détails d’anatomie';
 
   @override
-  String get anatomyTutorialBodypartDetailBody => 'Voyez le travail récent, la plage de séries recommandée, les muscles associés et les exercices de cette partie du corps.';
+  String get anatomyTutorialBodypartDetailBody =>
+      'Voyez le travail récent, la plage de séries recommandée, les muscles associés et les exercices de cette partie du corps.';
 
   @override
   String get anatomyTutorialMuscleDetailTitle => 'Détails du muscle';
 
   @override
-  String get anatomyTutorialMuscleDetailBody => 'Voyez le travail récent, la plage de séries recommandée, les parties du corps liées et les exercices de ce muscle.';
+  String get anatomyTutorialMuscleDetailBody =>
+      'Voyez le travail récent, la plage de séries recommandée, les parties du corps liées et les exercices de ce muscle.';
 
   @override
   String get anatomyTutorialLinkedExercisesTitle => 'Exercices associés';
 
   @override
-  String get anatomyTutorialBodypartExercisesBody => 'Ouvrez un exercice pour voir comment il contribue à cette partie du corps.';
+  String get anatomyTutorialBodypartExercisesBody =>
+      'Ouvrez un exercice pour voir comment il contribue à cette partie du corps.';
 
   @override
-  String get anatomyTutorialMuscleExercisesBody => 'Ouvrez un exercice pour voir comment il contribue à ce muscle.';
+  String get anatomyTutorialMuscleExercisesBody =>
+      'Ouvrez un exercice pour voir comment il contribue à ce muscle.';
 
   @override
   String get settingsWorkoutTitle => 'Réglages d’entraînement';
 
   @override
-  String get settingsWorkoutSubtitle => 'Ajustez la façon dont l’application comprend l’anatomie, la priorité d’entraînement et les cibles de volume.';
+  String get settingsWorkoutSubtitle =>
+      'Ajustez la façon dont l’application comprend l’anatomie, la priorité d’entraînement et les cibles de volume.';
 
   @override
   String get settingsTrainingBiasTitle => 'Priorité d’entraînement';
 
   @override
-  String get settingsTrainingBiasSubtitle => 'Contrôles utilisés par les plans générés et les entraînements optimisés.';
+  String get settingsTrainingBiasSubtitle =>
+      'Contrôles utilisés par les plans générés et les entraînements optimisés.';
 
   @override
   String get settingsBodyPartRankings => 'Classement des parties du corps';
 
   @override
-  String get settingsBodyPartRankingsSubtitle => 'Priorisez les parties du corps qui devraient recevoir plus de travail.';
+  String get settingsBodyPartRankingsSubtitle =>
+      'Priorisez les parties du corps qui devraient recevoir plus de travail.';
 
   @override
   String get settingsMuscleRankings => 'Classement des muscles';
 
   @override
-  String get settingsMuscleRankingsSubtitle => 'Priorisez des muscles précis dans le modèle anatomique.';
+  String get settingsMuscleRankingsSubtitle =>
+      'Priorisez des muscles précis dans le modèle anatomique.';
 
   @override
   String get settingsVolumeBoundaries => 'Limites de volume';
 
   @override
-  String get settingsVolumeBoundariesSubtitle => 'Définissez les plages hebdomadaires recommandées pour les parties du corps et les muscles.';
+  String get settingsVolumeBoundariesSubtitle =>
+      'Définissez les plages hebdomadaires recommandées pour les parties du corps et les muscles.';
 
   @override
   String get settingsExerciseDefinitionsTitle => 'Définitions d’exercices';
 
   @override
-  String get settingsExerciseDefinitionsSubtitle => 'Entretenez les données anatomiques et d’exercices utilisées par l’application.';
+  String get settingsExerciseDefinitionsSubtitle =>
+      'Entretenez les données anatomiques et d’exercices utilisées par l’application.';
 
   @override
-  String get settingsAnatomyMapping => 'Correspondance partie du corps / muscle';
+  String get settingsAnatomyMapping =>
+      'Correspondance partie du corps / muscle';
 
   @override
-  String get settingsAnatomyMappingSubtitle => 'Choisissez les muscles associés à chaque partie du corps.';
+  String get settingsAnatomyMappingSubtitle =>
+      'Choisissez les muscles associés à chaque partie du corps.';
 
   @override
-  String get settingsExerciseSetAllocation => 'Répartition des séries par exercice';
+  String get settingsExerciseSetAllocation =>
+      'Répartition des séries par exercice';
 
   @override
-  String get settingsExerciseSetAllocationSubtitle => 'Consultez la contribution de chaque exercice aux muscles et parties du corps.';
+  String get settingsExerciseSetAllocationSubtitle =>
+      'Consultez la contribution de chaque exercice aux muscles et parties du corps.';
 
   @override
   String get settingsExerciseEditor => 'Éditeur d’exercices';
 
   @override
-  String get settingsExerciseEditorSubtitle => 'Mettez à jour les noms, détails, équipements et associations des exercices.';
+  String get settingsExerciseEditorSubtitle =>
+      'Mettez à jour les noms, détails, équipements et associations des exercices.';
 
   @override
   String get commonCopy => 'Copier';
@@ -9690,10 +10628,12 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get settingsTitle => 'Réglages';
 
   @override
-  String get nutritionSettingsTitle => 'Réglages de l’alimentation et de la nutrition';
+  String get nutritionSettingsTitle =>
+      'Réglages de l’alimentation et de la nutrition';
 
   @override
-  String get nutritionSettingsSubtitle => 'Configurez les cibles nutritionnelles et les préférences liées aux aliments.';
+  String get nutritionSettingsSubtitle =>
+      'Configurez les cibles nutritionnelles et les préférences liées aux aliments.';
 
   @override
   String get nutritionCurrentGoals => 'Objectifs actuels';
@@ -9702,19 +10642,31 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get nutritionGoals => 'Objectifs';
 
   @override
-  String get nutritionGoalsSubtitle => 'Définissez les cibles utilisées par le suivi nutritionnel.';
+  String get nutritionGoalsSubtitle =>
+      'Définissez les cibles utilisées par le suivi nutritionnel.';
 
   @override
-  String get nutritionManualGoals => 'Définir les objectifs nutritionnels manuellement';
+  String get nutritionManualGoals =>
+      'Définir les objectifs nutritionnels manuellement';
 
   @override
-  String get nutritionManualGoalsSubtitle => 'Entrez vous-même les calories, macronutriments et nutriments clés.';
+  String get nutritionManualGoalsSubtitle =>
+      'Entrez vous-même les calories, macronutriments et nutriments clés.';
 
   @override
   String get nutritionGoalsSaved => 'Objectifs enregistrés';
 
   @override
-  String nutritionGoalSummary(String calories, String protein, String carbs, String fat, String fiber, String sugar, String satFat, String sodium) {
+  String nutritionGoalSummary(
+    String calories,
+    String protein,
+    String carbs,
+    String fat,
+    String fiber,
+    String sugar,
+    String satFat,
+    String sodium,
+  ) {
     return 'Calories : $calories / Protéines : $protein / Glucides : $carbs / Lipides : $fat / Fibres : $fiber / Sucre : $sugar / Gras sat. : $satFat / Sodium : $sodium';
   }
 
@@ -9722,25 +10674,29 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get progressSettingsTitle => 'Réglages des progrès';
 
   @override
-  String get progressSettingsSubtitle => 'Configurez les mesures, les tendances et les préférences de suivi.';
+  String get progressSettingsSubtitle =>
+      'Configurez les mesures, les tendances et les préférences de suivi.';
 
   @override
   String get progressMeasurements => 'Mesures';
 
   @override
-  String get progressMeasurementsSubtitle => 'Enregistrez les données corporelles et de santé au fil du temps.';
+  String get progressMeasurementsSubtitle =>
+      'Enregistrez les données corporelles et de santé au fil du temps.';
 
   @override
   String get progressMeasurementLibrary => 'Bibliothèque de mesures';
 
   @override
-  String get progressMeasurementLibrarySubtitle => 'Créez et gérez les mesures que vous souhaitez suivre.';
+  String get progressMeasurementLibrarySubtitle =>
+      'Créez et gérez les mesures que vous souhaitez suivre.';
 
   @override
   String get nutritionManualGoalsTitle => 'Objectifs nutritionnels manuels';
 
   @override
-  String get nutritionManualGoalsPageSubtitle => 'Définissez manuellement les cibles de calories, macronutriments et nutriments.';
+  String get nutritionManualGoalsPageSubtitle =>
+      'Définissez manuellement les cibles de calories, macronutriments et nutriments.';
 
   @override
   String get nutritionSaveGoals => 'Enregistrer les objectifs';
@@ -9831,7 +10787,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get mappingTitle => 'Correspondance parties du corps et muscles';
 
   @override
-  String get mappingHero => 'Définissez quels muscles appartiennent à chaque partie du corps afin que les analyses et recommandations anatomiques restent cohérentes.';
+  String get mappingHero =>
+      'Définissez quels muscles appartiennent à chaque partie du corps afin que les analyses et recommandations anatomiques restent cohérentes.';
 
   @override
   String get mappingSaved => 'Correspondances enregistrées.';
@@ -9854,7 +10811,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get mappingLinkedMuscles => 'Muscles associés';
 
   @override
-  String get mappingChooseLinkedSubtitle => 'Sélectionnez tous les muscles qui appartiennent à cette partie du corps.';
+  String get mappingChooseLinkedSubtitle =>
+      'Sélectionnez tous les muscles qui appartiennent à cette partie du corps.';
 
   @override
   String mappingLinkedCount(int count) {
@@ -9908,13 +10866,15 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get volumeBodyPartTitle => 'Volume par partie du corps';
 
   @override
-  String get volumeBodyPartSubtitle => 'Définissez les plages hebdomadaires utilisées par les analyses et la génération d’entraînements.';
+  String get volumeBodyPartSubtitle =>
+      'Définissez les plages hebdomadaires utilisées par les analyses et la génération d’entraînements.';
 
   @override
   String get volumeMuscleTitle => 'Volume musculaire';
 
   @override
-  String get volumeMuscleSubtitle => 'Ajustez précisément les plages hebdomadaires pour chaque muscle.';
+  String get volumeMuscleSubtitle =>
+      'Ajustez précisément les plages hebdomadaires pour chaque muscle.';
 
   @override
   String get volumeSelection => 'Sélection';
@@ -9923,7 +10883,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get volumeRecommendedRange => 'Plage recommandée';
 
   @override
-  String get volumeRecommendedRangeSubtitle => 'Les nombres représentent des unités de séries par semaine.';
+  String get volumeRecommendedRangeSubtitle =>
+      'Les nombres représentent des unités de séries par semaine.';
 
   @override
   String get volumeSaveBoundaries => 'Enregistrer les limites';
@@ -9982,7 +10943,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get barcodeTorchOff => 'Lampe désactivée';
 
   @override
-  String get barcodeTorchUnavailable => 'La lampe n’est pas disponible sur cet appareil';
+  String get barcodeTorchUnavailable =>
+      'La lampe n’est pas disponible sur cet appareil';
 
   @override
   String get barcodeAlignHint => 'Alignez le code-barres dans le cadre';
@@ -9991,19 +10953,22 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get progressTutorialWorkoutReportTitle => 'Rapport d’entraînement';
 
   @override
-  String get progressTutorialWorkoutReportBody => 'Suivez le nombre d’entraînements, le temps d’entraînement et le volume selon différentes périodes. Touchez une mesure pour modifier le graphique.';
+  String get progressTutorialWorkoutReportBody =>
+      'Suivez le nombre d’entraînements, le temps d’entraînement et le volume selon différentes périodes. Touchez une mesure pour modifier le graphique.';
 
   @override
   String get progressTutorialExerciseProgressTitle => 'Progrès des exercices';
 
   @override
-  String get progressTutorialExerciseProgressBody => 'Suivez les tendances de force des exercices sélectionnés. Utilisez la tuile de modification pour ajouter ou retirer des exercices de ce tableau de bord.';
+  String get progressTutorialExerciseProgressBody =>
+      'Suivez les tendances de force des exercices sélectionnés. Utilisez la tuile de modification pour ajouter ou retirer des exercices de ce tableau de bord.';
 
   @override
   String get progressTutorialHealthTrendsTitle => 'Tendances santé';
 
   @override
-  String get progressTutorialHealthTrendsBody => 'Enregistrez ici votre poids corporel et vos mesures personnalisées, puis observez leur évolution au fil du temps.';
+  String get progressTutorialHealthTrendsBody =>
+      'Enregistrez ici votre poids corporel et vos mesures personnalisées, puis observez leur évolution au fil du temps.';
 
   @override
   String get measurementNewTitle => 'Nouvelle mesure';
@@ -10054,7 +11019,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get measurementName => 'Nom de la mesure';
 
   @override
-  String get measurementNameHint => 'Tour de poitrine, fréquence cardiaque au repos...';
+  String get measurementNameHint =>
+      'Tour de poitrine, fréquence cardiaque au repos...';
 
   @override
   String get measurementValue => 'Valeur';
@@ -10072,7 +11038,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get measurementSaveNew => 'Enregistrer la nouvelle mesure';
 
   @override
-  String get measurementCustomRequired => 'Entrez un nom personnalisé, une valeur et une unité';
+  String get measurementCustomRequired =>
+      'Entrez un nom personnalisé, une valeur et une unité';
 
   @override
   String measurementDefinitionNotFound(String name) {
@@ -10104,31 +11071,40 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get measurementThigh => 'Cuisse';
 
   @override
-  String get measurementInstructionsForearm => 'Mesurez le tour de la partie la plus large de votre avant-bras.';
+  String get measurementInstructionsForearm =>
+      'Mesurez le tour de la partie la plus large de votre avant-bras.';
 
   @override
-  String get measurementInstructionsArm => 'Mesurez le tour de la partie la plus large de votre biceps.';
+  String get measurementInstructionsArm =>
+      'Mesurez le tour de la partie la plus large de votre biceps.';
 
   @override
-  String get measurementInstructionsNeck => 'Mesurez là où le ruban repose droit autour de votre cou.';
+  String get measurementInstructionsNeck =>
+      'Mesurez là où le ruban repose droit autour de votre cou.';
 
   @override
-  String get measurementInstructionsShoulder => 'Gardez le ruban droit autour des deltoïdes latéraux.';
+  String get measurementInstructionsShoulder =>
+      'Gardez le ruban droit autour des deltoïdes latéraux.';
 
   @override
-  String get measurementInstructionsChest => 'Mesurez sous les aisselles et au-dessus de la ligne des mamelons.';
+  String get measurementInstructionsChest =>
+      'Mesurez sous les aisselles et au-dessus de la ligne des mamelons.';
 
   @override
-  String get measurementInstructionsWaist => 'Mesurez le tour de votre nombril.';
+  String get measurementInstructionsWaist =>
+      'Mesurez le tour de votre nombril.';
 
   @override
-  String get measurementInstructionsHip => 'Mesurez le tour de la partie la plus large de vos fessiers.';
+  String get measurementInstructionsHip =>
+      'Mesurez le tour de la partie la plus large de vos fessiers.';
 
   @override
-  String get measurementInstructionsThigh => 'Mesurez le tour de la partie la plus large de votre cuisse.';
+  String get measurementInstructionsThigh =>
+      'Mesurez le tour de la partie la plus large de votre cuisse.';
 
   @override
-  String get measurementInstructionsCalf => 'Mesurez le tour de la partie la plus large de votre mollet.';
+  String get measurementInstructionsCalf =>
+      'Mesurez le tour de la partie la plus large de votre mollet.';
 
   @override
   String get nutritionCaloriesLabel => 'Calories';
@@ -10151,7 +11127,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get nutritionEditEntry => 'Modifier l’entrée';
 
   @override
-  String get nutritionEditNotAvailable => 'La modification des entrées n’est pas encore disponible';
+  String get nutritionEditNotAvailable =>
+      'La modification des entrées n’est pas encore disponible';
 
   @override
   String get nutritionEntryDeleted => 'Entrée supprimée';
@@ -10166,31 +11143,36 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get gymProfileTutorialSpaceTitle => 'Espace d’entraînement';
 
   @override
-  String get gymProfileTutorialSpaceBody => 'Nommez ce profil selon l’endroit où vous vous entraînez, par exemple Gym à domicile, Gym commercial ou Installation de voyage.';
+  String get gymProfileTutorialSpaceBody =>
+      'Nommez ce profil selon l’endroit où vous vous entraînez, par exemple Gym à domicile, Gym commercial ou Installation de voyage.';
 
   @override
   String get gymProfileTutorialFindTitle => 'Trouver de l’équipement';
 
   @override
-  String get gymProfileTutorialFindBody => 'Utilisez la recherche lorsque la liste d’équipement devient longue et que vous voulez accéder rapidement à un élément.';
+  String get gymProfileTutorialFindBody =>
+      'Utilisez la recherche lorsque la liste d’équipement devient longue et que vous voulez accéder rapidement à un élément.';
 
   @override
   String get gymProfileTutorialAvailableTitle => 'Équipement disponible';
 
   @override
-  String get gymProfileTutorialAvailableBody => 'Sélectionnez ce que possède cet espace d’entraînement. Les plans générés et les remplacements s’en servent pour éviter les exercices indisponibles.';
+  String get gymProfileTutorialAvailableBody =>
+      'Sélectionnez ce que possède cet espace d’entraînement. Les plans générés et les remplacements s’en servent pour éviter les exercices indisponibles.';
 
   @override
   String get gymProfileTutorialSaveTitle => 'Enregistrer le profil';
 
   @override
-  String get gymProfileTutorialSaveBody => 'Enregistrer conserve le profil et l’équipement. Annuler demande une confirmation avant d’ignorer les modifications non enregistrées.';
+  String get gymProfileTutorialSaveBody =>
+      'Enregistrer conserve le profil et l’équipement. Annuler demande une confirmation avant d’ignorer les modifications non enregistrées.';
 
   @override
   String get gymProfileSaveChangesTitle => 'Enregistrer les modifications?';
 
   @override
-  String get gymProfileSaveChangesBody => 'Vous avez des modifications non enregistrées au profil de salle. Les enregistrer avant de quitter?';
+  String get gymProfileSaveChangesBody =>
+      'Vous avez des modifications non enregistrées au profil de salle. Les enregistrer avant de quitter?';
 
   @override
   String get gymProfileKeepEditing => 'Continuer la modification';
@@ -10199,7 +11181,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get gymProfileDiscard => 'Ignorer';
 
   @override
-  String get gymProfileSelectEquipment => 'Sélectionnez au moins un élément d’équipement.';
+  String get gymProfileSelectEquipment =>
+      'Sélectionnez au moins un élément d’équipement.';
 
   @override
   String gymProfileSaveFailed(String error) {
@@ -10207,7 +11190,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   }
 
   @override
-  String get gymProfileEquipmentHint => 'Choisissez ce que possède cette salle afin que les plans générés utilisent seulement l’équipement disponible.';
+  String get gymProfileEquipmentHint =>
+      'Choisissez ce que possède cette salle afin que les plans générés utilisent seulement l’équipement disponible.';
 
   @override
   String get gymProfileSpace => 'Espace d’entraînement';
@@ -10221,7 +11205,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get gymProfileName => 'Nom du profil';
 
   @override
-  String get gymProfileNameHint => 'Gym à domicile, gym commercial, installation de voyage...';
+  String get gymProfileNameHint =>
+      'Gym à domicile, gym commercial, installation de voyage...';
 
   @override
   String get gymProfileNameRequired => 'Le nom est requis';
@@ -10276,7 +11261,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get equipmentNoRequirement => 'Aucun équipement requis';
 
   @override
-  String get equipmentBodyweightSupport => 'Soutien pour exercices au poids du corps';
+  String get equipmentBodyweightSupport =>
+      'Soutien pour exercices au poids du corps';
 
   @override
   String get equipmentMachineBased => 'Mouvement sur machine';
@@ -10344,10 +11330,12 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get foodNoFoodsFound => 'Aucun aliment trouvé.';
 
   @override
-  String get foodInstantLogAfterScan => 'Enregistrer immédiatement après le balayage';
+  String get foodInstantLogAfterScan =>
+      'Enregistrer immédiatement après le balayage';
 
   @override
-  String get foodInstantLogAfterScanSubtitle => 'Ajoutez immédiatement l’élément balayé au repas sélectionné.';
+  String get foodInstantLogAfterScanSubtitle =>
+      'Ajoutez immédiatement l’élément balayé au repas sélectionné.';
 
   @override
   String get foodOpenCameraScanner => 'Ouvrir le lecteur de caméra';
@@ -10373,7 +11361,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   }
 
   @override
-  String get foodCustomSavedBarcode => 'Aliment personnalisé enregistré et code-barres associé';
+  String get foodCustomSavedBarcode =>
+      'Aliment personnalisé enregistré et code-barres associé';
 
   @override
   String get foodFavorites => 'Favoris';
@@ -10382,7 +11371,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get foodRecentFoods => 'Aliments récents';
 
   @override
-  String get foodStartSearching => 'Commencez une recherche pour trouver des aliments.';
+  String get foodStartSearching =>
+      'Commencez une recherche pour trouver des aliments.';
 
   @override
   String get foodFavorite => 'Ajouter aux favoris';
@@ -10409,7 +11399,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get foodNoteOptional => 'Note (facultative)';
 
   @override
-  String get foodTagsHint => 'Étiquettes (séparées par des virgules, p. ex. après entraînement, riche en protéines)';
+  String get foodTagsHint =>
+      'Étiquettes (séparées par des virgules, p. ex. après entraînement, riche en protéines)';
 
   @override
   String get foodAddToPlate => 'Ajouter à l’assiette';
@@ -10441,7 +11432,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get tutorialSkipAllTitle => 'Passer tous les tutoriels?';
 
   @override
-  String get tutorialSkipAllBody => 'Cette action masque tous les tutoriels guidés. Vous pourrez les réactiver en tout temps dans Paramètres > Tutoriels guidés en utilisant Réinitialiser tous les tutoriels.';
+  String get tutorialSkipAllBody =>
+      'Cette action masque tous les tutoriels guidés. Vous pourrez les réactiver en tout temps dans Paramètres > Tutoriels guidés en utilisant Réinitialiser tous les tutoriels.';
 
   @override
   String get tutorialKeep => 'Conserver les tutoriels';
@@ -10558,7 +11550,12 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   }
 
   @override
-  String automaticChildSetLabel(int parent, int child, String weight, int reps) {
+  String automaticChildSetLabel(
+    int parent,
+    int child,
+    String weight,
+    int reps,
+  ) {
     return 'Série $parent.$child : $weight x $reps';
   }
 
@@ -10574,13 +11571,15 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get automaticWeightTarget => 'Poids terminé >= poids cible';
 
   @override
-  String get automaticRepsTarget => 'Répétitions terminées >= répétitions cibles';
+  String get automaticRepsTarget =>
+      'Répétitions terminées >= répétitions cibles';
 
   @override
   String get automaticVolumeTarget => 'Volume terminé >= volume cible';
 
   @override
-  String get automaticScopeLabel => 'Les réussites, échecs et ajustements sont comptés par :';
+  String get automaticScopeLabel =>
+      'Les réussites, échecs et ajustements sont comptés par :';
 
   @override
   String get automaticWorkoutSession => 'Séance d’entraînement';
@@ -10613,7 +11612,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get weightRemoveExerciseTitle => 'Retirer l’exercice';
 
   @override
-  String get weightRemoveExerciseBody => 'Voulez-vous vraiment retirer cet exercice?';
+  String get weightRemoveExerciseBody =>
+      'Voulez-vous vraiment retirer cet exercice?';
 
   @override
   String get weightSwapExercise => 'Remplacer l’exercice';
@@ -10654,7 +11654,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get weightRemoveChangeSetTitle => 'Retirer la série modifiée';
 
   @override
-  String get weightRemoveChangeSetBody => 'Voulez-vous vraiment retirer cette série modifiée?';
+  String get weightRemoveChangeSetBody =>
+      'Voulez-vous vraiment retirer cette série modifiée?';
 
   @override
   String get weightAddChangeSet => 'Ajouter une série modifiée';
@@ -10666,7 +11667,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get swapAlreadySelected => 'Cet exercice est déjà sélectionné.';
 
   @override
-  String get swapNeedsProfileEquipment => 'Cet exercice nécessite de l’équipement qui ne figure pas dans ce profil.';
+  String get swapNeedsProfileEquipment =>
+      'Cet exercice nécessite de l’équipement qui ne figure pas dans ce profil.';
 
   @override
   String swapLoadFailed(Object error) {
@@ -10698,13 +11700,15 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get swapTitle => 'Remplacer l’exercice';
 
   @override
-  String get swapFindingMatches => 'Recherche de correspondances similaires de parties du corps et de muscles...';
+  String get swapFindingMatches =>
+      'Recherche de correspondances similaires de parties du corps et de muscles...';
 
   @override
   String get swapChooseReplacement => 'Choisissez un remplacement similaire.';
 
   @override
-  String get swapFilterProfileEquipment => 'Filtrer selon l’équipement du profil';
+  String get swapFilterProfileEquipment =>
+      'Filtrer selon l’équipement du profil';
 
   @override
   String get swapBodypartsHit => 'Parties du corps travaillées';
@@ -10715,10 +11719,12 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   }
 
   @override
-  String get swapNoReplacements => 'Aucun remplacement similaire trouvé pour le moment.';
+  String get swapNoReplacements =>
+      'Aucun remplacement similaire trouvé pour le moment.';
 
   @override
-  String get swapNoReplacementsBody => 'Cet exercice peut nécessiter plus de métadonnées musculaires ou de parties du corps avant de pouvoir être bien remplacé.';
+  String get swapNoReplacementsBody =>
+      'Cet exercice peut nécessiter plus de métadonnées musculaires ou de parties du corps avant de pouvoir être bien remplacé.';
 
   @override
   String get premadePlansTitle => 'Plans prédéfinis';
@@ -10727,19 +11733,22 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get premadeTutorialLengthTitle => 'Durée du plan';
 
   @override
-  String get premadeTutorialLengthBody => 'Passez entre les versions de 1 heure et de 2 heures. Les versions plus longues comprennent plus d’exercices et de séries au total.';
+  String get premadeTutorialLengthBody =>
+      'Passez entre les versions de 1 heure et de 2 heures. Les versions plus longues comprennent plus d’exercices et de séries au total.';
 
   @override
   String get premadeTutorialEquipmentTitle => 'Équipement du profil';
 
   @override
-  String get premadeTutorialEquipmentBody => 'Lorsque cette option est activée, Tonos remplace les exercices indisponibles par des options similaires réalisables avec votre profil de salle actuel.';
+  String get premadeTutorialEquipmentBody =>
+      'Lorsque cette option est activée, Tonos remplace les exercices indisponibles par des options similaires réalisables avec votre profil de salle actuel.';
 
   @override
   String get premadeTutorialLibraryTitle => 'Bibliothèque de plans';
 
   @override
-  String get premadeTutorialLibraryBody => 'Ouvrez une répartition, prévisualisez un plan, puis ajoutez-le à vos plans actifs pour le voir dans Entraînement.';
+  String get premadeTutorialLibraryBody =>
+      'Ouvrez une répartition, prévisualisez un plan, puis ajoutez-le à vos plans actifs pour le voir dans Entraînement.';
 
   @override
   String get premadeSelectProfile => 'Sélectionnez d’abord un profil de salle.';
@@ -10755,7 +11764,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   }
 
   @override
-  String get premadeDescription => 'Copiez des routines de coachs, d’influenceurs et sélectionnées par l’application dans vos propres plans. Une fois ajoutées, vous pouvez les modifier comme n’importe quel autre plan.';
+  String get premadeDescription =>
+      'Copiez des routines de coachs, d’influenceurs et sélectionnées par l’application dans vos propres plans. Une fois ajoutées, vous pouvez les modifier comme n’importe quel autre plan.';
 
   @override
   String get premadeDiscarding => 'Annulation...';
@@ -10770,28 +11780,33 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get allocationSaving => 'Enregistrement';
 
   @override
-  String get allocationInvalidCredit => 'Entrez zéro ou un nombre positif pour chaque crédit.';
+  String get allocationInvalidCredit =>
+      'Entrez zéro ou un nombre positif pour chaque crédit.';
 
   @override
   String get allocationSaved => 'Répartition de l’exercice enregistrée.';
 
   @override
-  String get allocationSaveFailed => 'Impossible d’enregistrer la répartition de l’exercice. Réessayez.';
+  String get allocationSaveFailed =>
+      'Impossible d’enregistrer la répartition de l’exercice. Réessayez.';
 
   @override
-  String get allocationSaveOrDiscard => 'Enregistrez ou ignorez vos modifications avant de réinitialiser.';
+  String get allocationSaveOrDiscard =>
+      'Enregistrez ou ignorez vos modifications avant de réinitialiser.';
 
   @override
   String get allocationTitle => 'Répartition des séries par exercice';
 
   @override
-  String get allocationSubtitle => 'Consultez la contribution des séries terminées aux muscles et parties du corps ciblés.';
+  String get allocationSubtitle =>
+      'Consultez la contribution des séries terminées aux muscles et parties du corps ciblés.';
 
   @override
   String get allocationHowTitle => 'Fonctionnement du crédit par série';
 
   @override
-  String get allocationHowBody => 'Un muscle principal reçoit habituellement un crédit de 1,00 pour une série terminée. Les muscles de soutien reçoivent moins de crédit. Cela oriente les résumés anatomiques et les recommandations, sans jamais modifier les séries enregistrées.';
+  String get allocationHowBody =>
+      'Un muscle principal reçoit habituellement un crédit de 1,00 pour une série terminée. Les muscles de soutien reçoivent moins de crédit. Cela oriente les résumés anatomiques et les recommandations, sans jamais modifier les séries enregistrées.';
 
   @override
   String allocationLoadFailed(String error) {
@@ -10814,7 +11829,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get allocationNoTargetMuscles => 'Aucun muscle ciblé';
 
   @override
-  String get allocationNoBodypartMapping => 'Aucune correspondance de partie du corps';
+  String get allocationNoBodypartMapping =>
+      'Aucune correspondance de partie du corps';
 
   @override
   String get allocationReset => 'Réinitialiser';
@@ -10823,16 +11839,20 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get allocationCredit => 'Crédit';
 
   @override
-  String get allocationNoTargetMusclesBody => 'Cet exercice n’a pas encore de données de muscles ciblés.';
+  String get allocationNoTargetMusclesBody =>
+      'Cet exercice n’a pas encore de données de muscles ciblés.';
 
   @override
-  String get allocationMuscleCreditBody => 'Modifiez une valeur pour créer une répartition personnelle. Elle est utilisée pour les résumés musculaires et le travail dérivé des parties du corps.';
+  String get allocationMuscleCreditBody =>
+      'Modifiez une valeur pour créer une répartition personnelle. Elle est utilisée pour les résumés musculaires et le travail dérivé des parties du corps.';
 
   @override
-  String get allocationNoBodypartMappingBody => 'Cet exercice n’a pas encore de données de correspondance de partie du corps.';
+  String get allocationNoBodypartMappingBody =>
+      'Cet exercice n’a pas encore de données de correspondance de partie du corps.';
 
   @override
-  String get allocationBodypartCreditBody => 'Les valeurs automatiques sont dérivées des muscles et de la correspondance anatomique. En modifier une crée une répartition personnelle directe par partie du corps.';
+  String get allocationBodypartCreditBody =>
+      'Les valeurs automatiques sont dérivées des muscles et de la correspondance anatomique. En modifier une crée une répartition personnelle directe par partie du corps.';
 
   @override
   String get healthTrendsTitle => 'Tendances santé';
@@ -10847,7 +11867,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get healthNoMeasurements => 'Aucune mesure pour le moment';
 
   @override
-  String get healthNoMeasurementsBody => 'Créez une mesure pour commencer à suivre vos progrès.';
+  String get healthNoMeasurementsBody =>
+      'Créez une mesure pour commencer à suivre vos progrès.';
 
   @override
   String get healthCreateMetric => 'Créer une mesure';
@@ -10866,25 +11887,29 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get healthTutorialSummaryTitle => 'Résumé de la mesure';
 
   @override
-  String get healthTutorialSummaryBody => 'Voyez la dernière valeur, l’écart depuis l’entrée précédente et le nombre de relevés existants.';
+  String get healthTutorialSummaryBody =>
+      'Voyez la dernière valeur, l’écart depuis l’entrée précédente et le nombre de relevés existants.';
 
   @override
   String get healthTutorialChartTitle => 'Graphique de tendance';
 
   @override
-  String get healthTutorialChartBody => 'Le graphique montre l’évolution de cette mesure à mesure que vous ajoutez des entrées.';
+  String get healthTutorialChartBody =>
+      'Le graphique montre l’évolution de cette mesure à mesure que vous ajoutez des entrées.';
 
   @override
   String get healthTutorialEntriesTitle => 'Entrées';
 
   @override
-  String get healthTutorialEntriesBody => 'Touchez une entrée pour la modifier ou supprimez celles ajoutées par erreur.';
+  String get healthTutorialEntriesBody =>
+      'Touchez une entrée pour la modifier ou supprimez celles ajoutées par erreur.';
 
   @override
   String get healthTutorialLogTitle => 'Ajouter une entrée';
 
   @override
-  String get healthTutorialLogBody => 'Utilisez ce bouton lorsque vous voulez ajouter un nouveau relevé.';
+  String get healthTutorialLogBody =>
+      'Utilisez ce bouton lorsque vous voulez ajouter un nouveau relevé.';
 
   @override
   String get healthDeleteEntryTitle => 'Supprimer l’entrée?';
@@ -10914,7 +11939,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   }
 
   @override
-  String get workoutReportLoadFailed => 'Impossible de charger le rapport d’entraînement.';
+  String get workoutReportLoadFailed =>
+      'Impossible de charger le rapport d’entraînement.';
 
   @override
   String get workoutReportTitle => 'Rapport d’entraînement';
@@ -10935,13 +11961,16 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get recommendedSetsMaximum => 'Maximum de séries recommandées';
 
   @override
-  String get recommendedSetsValidNumbers => 'Entrez des nombres de séries valides.';
+  String get recommendedSetsValidNumbers =>
+      'Entrez des nombres de séries valides.';
 
   @override
-  String get recommendedSetsNonNegative => 'Le nombre de séries ne peut pas être négatif.';
+  String get recommendedSetsNonNegative =>
+      'Le nombre de séries ne peut pas être négatif.';
 
   @override
-  String get recommendedSetsRange => 'Le maximum doit être au moins égal au minimum.';
+  String get recommendedSetsRange =>
+      'Le maximum doit être au moins égal au minimum.';
 
   @override
   String get workoutReportWorkouts => 'Entraînements';
@@ -10962,43 +11991,53 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get databaseSettingsTitle => 'Réglages de la base de données';
 
   @override
-  String get databaseSettingsSubtitle => 'Sauvegardes, médias infonuagiques, vérifications et exportations pour développeurs.';
+  String get databaseSettingsSubtitle =>
+      'Sauvegardes, médias infonuagiques, vérifications et exportations pour développeurs.';
 
   @override
   String get databaseBackupRestore => 'Sauvegarde et restauration';
 
   @override
-  String get databaseBackupRestoreSubtitle => 'Importez ou exportez vos données Tonos locales en toute sécurité.';
+  String get databaseBackupRestoreSubtitle =>
+      'Importez ou exportez vos données Tonos locales en toute sécurité.';
 
   @override
-  String get databaseExportBackup => 'Exporter une sauvegarde de la base de données';
+  String get databaseExportBackup =>
+      'Exporter une sauvegarde de la base de données';
 
   @override
-  String get databaseImportBackup => 'Importer une sauvegarde de la base de données';
+  String get databaseImportBackup =>
+      'Importer une sauvegarde de la base de données';
 
   @override
-  String get databaseImportBackupSubtitle => 'Remplacez les données locales à partir d’un fichier d’exportation enregistré.';
+  String get databaseImportBackupSubtitle =>
+      'Remplacez les données locales à partir d’un fichier d’exportation enregistré.';
 
   @override
   String get databaseHealth => 'État de santé';
 
   @override
-  String get databaseHealthSubtitle => 'Un aperçu rapide de la taille, du schéma et de l’index de recherche.';
+  String get databaseHealthSubtitle =>
+      'Un aperçu rapide de la taille, du schéma et de l’index de recherche.';
 
   @override
-  String get databaseCheckingHealth => 'Vérification de l’état de la base de données...';
+  String get databaseCheckingHealth =>
+      'Vérification de l’état de la base de données...';
 
   @override
-  String get databaseCheckingHealthSubtitle => 'Lecture du schéma, de la taille, des tables et des index.';
+  String get databaseCheckingHealthSubtitle =>
+      'Lecture du schéma, de la taille, des tables et des index.';
 
   @override
-  String get databaseHealthFailed => 'Échec de la vérification de la base de données';
+  String get databaseHealthFailed =>
+      'Échec de la vérification de la base de données';
 
   @override
   String get databaseMaintenance => 'Entretien';
 
   @override
-  String get databaseMaintenanceSubtitle => 'Outils sécuritaires de vérification, d’optimisation et de nettoyage du stockage.';
+  String get databaseMaintenanceSubtitle =>
+      'Outils sécuritaires de vérification, d’optimisation et de nettoyage du stockage.';
 
   @override
   String get databaseRefreshHealth => 'Actualiser l’état';
@@ -11007,7 +12046,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get databaseIntegrityCheck => 'Exécuter la vérification d’intégrité';
 
   @override
-  String get databaseIntegrityCheckSubtitle => 'Demandez à SQLite de vérifier le fichier de base de données local.';
+  String get databaseIntegrityCheckSubtitle =>
+      'Demandez à SQLite de vérifier le fichier de base de données local.';
 
   @override
   String get databaseOptimize => 'Optimiser la base de données';
@@ -11016,52 +12056,63 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get databaseCheckpointWal => 'Point de contrôle WAL';
 
   @override
-  String get databaseCheckpointWalSubtitle => 'Transfère le journal d’écriture anticipée dans le fichier de base de données.';
+  String get databaseCheckpointWalSubtitle =>
+      'Transfère le journal d’écriture anticipée dans le fichier de base de données.';
 
   @override
   String get databaseVacuum => 'Compacter la base de données';
 
   @override
-  String get databaseVacuumSubtitle => 'Récupère l’espace libre après des suppressions ou importations importantes.';
+  String get databaseVacuumSubtitle =>
+      'Récupère l’espace libre après des suppressions ou importations importantes.';
 
   @override
   String get databaseCloudContent => 'Contenu infonuagique';
 
   @override
-  String get databaseCloudContentSubtitle => 'Gérez le stockage des médias d’exercices, d’équipements et d’anatomie.';
+  String get databaseCloudContentSubtitle =>
+      'Gérez le stockage des médias d’exercices, d’équipements et d’anatomie.';
 
   @override
   String get databaseWifiOnly => 'Téléchargements par Wi-Fi seulement';
 
   @override
-  String get databaseWifiOnlySubtitle => 'Les nouvelles miniatures et vidéos se téléchargent seulement par Wi-Fi. Les médias en cache fonctionnent toujours hors ligne.';
+  String get databaseWifiOnlySubtitle =>
+      'Les nouvelles miniatures et vidéos se téléchargent seulement par Wi-Fi. Les médias en cache fonctionnent toujours hors ligne.';
 
   @override
-  String get databaseSyncExerciseMedia => 'Synchroniser les médias d’exercices distants';
+  String get databaseSyncExerciseMedia =>
+      'Synchroniser les médias d’exercices distants';
 
   @override
-  String get databaseSyncSharedMedia => 'Synchroniser les médias du catalogue partagé';
+  String get databaseSyncSharedMedia =>
+      'Synchroniser les médias du catalogue partagé';
 
   @override
-  String get databaseSyncSharedMediaSubtitle => 'Illustrations d’équipement, de parties du corps et de muscles.';
+  String get databaseSyncSharedMediaSubtitle =>
+      'Illustrations d’équipement, de parties du corps et de muscles.';
 
   @override
-  String get databaseClearMediaCache => 'Effacer le cache des médias téléchargés';
+  String get databaseClearMediaCache =>
+      'Effacer le cache des médias téléchargés';
 
   @override
-  String get databaseClearMediaCacheSubtitle => 'Supprime les fichiers média distants mis en cache sur cet appareil.';
+  String get databaseClearMediaCacheSubtitle =>
+      'Supprime les fichiers média distants mis en cache sur cet appareil.';
 
   @override
   String get databaseDefinitionExports => 'Exportations de définitions';
 
   @override
-  String get databaseDefinitionExportsSubtitle => 'Exportez les fichiers de définition de l’application pour inspection ou outils.';
+  String get databaseDefinitionExportsSubtitle =>
+      'Exportez les fichiers de définition de l’application pour inspection ou outils.';
 
   @override
   String get exerciseEditorTitle => 'Éditeur d’exercices';
 
   @override
-  String get exerciseEditorLoadFailed => 'Impossible de charger les définitions d’exercices.';
+  String get exerciseEditorLoadFailed =>
+      'Impossible de charger les définitions d’exercices.';
 
   @override
   String get exerciseEditorChoose => 'Choisir un exercice';
@@ -11099,19 +12150,22 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get exerciseProgressTrendTitle => 'Tendance du 1RM';
 
   @override
-  String get exerciseProgressTrendBody => 'Ce graphique compare le 1RM réellement enregistré et le 1RM estimé au fil du temps. Touchez les points pour les valeurs exactes.';
+  String get exerciseProgressTrendBody =>
+      'Ce graphique compare le 1RM réellement enregistré et le 1RM estimé au fil du temps. Touchez les points pour les valeurs exactes.';
 
   @override
   String get exerciseProgressRecordings => 'Enregistrements';
 
   @override
-  String get exerciseProgressRecordingsBody => 'Chaque enregistrement ouvre l’entraînement où cette levée a eu lieu afin que vous puissiez consulter le contexte complet.';
+  String get exerciseProgressRecordingsBody =>
+      'Chaque enregistrement ouvre l’entraînement où cette levée a eu lieu afin que vous puissiez consulter le contexte complet.';
 
   @override
   String get exerciseProgressTitle => 'Progrès du 1RM';
 
   @override
-  String get exerciseProgressEmpty => 'Terminez cet exercice pour commencer à créer un historique de progrès.';
+  String get exerciseProgressEmpty =>
+      'Terminez cet exercice pour commencer à créer un historique de progrès.';
 
   @override
   String get exerciseProgressActual => '1RM réel';
@@ -11120,10 +12174,12 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get exerciseProgressEstimated => '1RM estimé';
 
   @override
-  String get exerciseProgressSessionOpenFailed => 'Impossible d’ouvrir la séance d’entraînement.';
+  String get exerciseProgressSessionOpenFailed =>
+      'Impossible d’ouvrir la séance d’entraînement.';
 
   @override
-  String get exerciseProgressSessionMissing => 'Séance d’entraînement introuvable.';
+  String get exerciseProgressSessionMissing =>
+      'Séance d’entraînement introuvable.';
 
   @override
   String exerciseProgressEstimatedValue(String value) {
@@ -11177,10 +12233,12 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get sevenDayFocusTitle => 'Aperçu hebdomadaire';
 
   @override
-  String get sevenDayFocusLoadFailed => 'Impossible de charger le travail des 7 derniers jours';
+  String get sevenDayFocusLoadFailed =>
+      'Impossible de charger le travail des 7 derniers jours';
 
   @override
-  String get sevenDayFocusEmpty => 'Aucune unité de série terminée par partie du corps au cours des 7 derniers jours.';
+  String get sevenDayFocusEmpty =>
+      'Aucune unité de série terminée par partie du corps au cours des 7 derniers jours.';
 
   @override
   String get sevenDayFocusMore => 'de plus';
@@ -11217,7 +12275,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   }
 
   @override
-  String get historySummaryLoadFailed => 'Erreur lors du chargement de l’historique';
+  String get historySummaryLoadFailed =>
+      'Erreur lors du chargement de l’historique';
 
   @override
   String get historySummaryWorkouts => 'Entraînements';
@@ -11238,10 +12297,12 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get trainOptimizedSettingsTitle => 'Réglages d’entraînement optimisé';
 
   @override
-  String get trainOptimizedSettingsBudgetBody => 'Utilise un budget de 3 minutes par série, plus 5 minutes pour commencer chaque exercice.';
+  String get trainOptimizedSettingsBudgetBody =>
+      'Utilise un budget de 3 minutes par série, plus 5 minutes pour commencer chaque exercice.';
 
   @override
-  String get trainOptimizedSettingsFocusBody => 'Les choix de parties du corps s’appliquent seulement au prochain entraînement optimisé lancé.';
+  String get trainOptimizedSettingsFocusBody =>
+      'Les choix de parties du corps s’appliquent seulement au prochain entraînement optimisé lancé.';
 
   @override
   String get trainWorkoutDuration => 'Durée de l’entraînement';
@@ -11259,10 +12320,12 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get trainBodypartFocus => 'Priorité des parties du corps';
 
   @override
-  String get trainBodypartFocusHelp => 'Touchez une fois pour préférer une partie du corps, encore une fois pour l’éviter, puis une troisième fois pour effacer.';
+  String get trainBodypartFocusHelp =>
+      'Touchez une fois pour préférer une partie du corps, encore une fois pour l’éviter, puis une troisième fois pour effacer.';
 
   @override
-  String get trainBodypartsLoadFailed => 'Impossible de charger les parties du corps.';
+  String get trainBodypartsLoadFailed =>
+      'Impossible de charger les parties du corps.';
 
   @override
   String get trainPlanGenerated => 'Plan généré. Ouverture en cours.';
@@ -11273,7 +12336,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   }
 
   @override
-  String get trainActiveWorkoutKept => 'Un autre entraînement est déjà actif; il a donc été conservé sans modification.';
+  String get trainActiveWorkoutKept =>
+      'Un autre entraînement est déjà actif; il a donc été conservé sans modification.';
 
   @override
   String get trainMenuTitle => 'Menu d’entraînement';
@@ -11344,7 +12408,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get foodCustomizationDensity => 'Densité (g/mL)';
 
   @override
-  String get foodCustomizationDensityHelp => 'Utilisée pour convertir les portions en mL (tasses, c. à soupe) en grammes pour les calculs de macronutriments.';
+  String get foodCustomizationDensityHelp =>
+      'Utilisée pour convertir les portions en mL (tasses, c. à soupe) en grammes pour les calculs de macronutriments.';
 
   @override
   String get foodCustomizationCalories => 'Calories (kcal)';
@@ -11356,16 +12421,19 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get foodCustomizationMicronutrients => 'Micronutriments';
 
   @override
-  String get foodCustomizationAdditionalComponents => 'Composants supplémentaires';
+  String get foodCustomizationAdditionalComponents =>
+      'Composants supplémentaires';
 
   @override
   String get foodCustomizationPortionInfo => 'Informations sur la portion';
 
   @override
-  String get foodCustomizationBasisPortion => 'Base de portion pour les valeurs nutritionnelles';
+  String get foodCustomizationBasisPortion =>
+      'Base de portion pour les valeurs nutritionnelles';
 
   @override
-  String get foodCustomizationUsualPortion => 'Portion habituelle consommée par l’utilisateur';
+  String get foodCustomizationUsualPortion =>
+      'Portion habituelle consommée par l’utilisateur';
 
   @override
   String get foodCustomizationAddPortion => 'Ajouter une portion';
@@ -11392,13 +12460,15 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get dashboardManagePlans => 'Gérer les plans';
 
   @override
-  String get dashboardSelectProfilePlans => 'Sélectionnez un profil de salle pour voir ses plans.';
+  String get dashboardSelectProfilePlans =>
+      'Sélectionnez un profil de salle pour voir ses plans.';
 
   @override
   String get dashboardNoArchivedPlans => 'Aucun plan archivé pour ce profil.';
 
   @override
-  String get dashboardNoActivePlans => 'Aucun plan actif pour le moment. Utilisez le crayon pour choisir des plans.';
+  String get dashboardNoActivePlans =>
+      'Aucun plan actif pour le moment. Utilisez le crayon pour choisir des plans.';
 
   @override
   String dashboardPremadeCount(int count) {
@@ -11420,7 +12490,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get dashboardPlanTools => 'Outils de planification';
 
   @override
-  String get dashboardPlanToolsBody => 'Créez un plan à partir de vos préférences d’entraînement ou commencez-en un vide.';
+  String get dashboardPlanToolsBody =>
+      'Créez un plan à partir de vos préférences d’entraînement ou commencez-en un vide.';
 
   @override
   String get dashboardManual => 'Manuel';
@@ -11432,7 +12503,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get dashboardMostUsedExercises => 'Exercices les plus utilisés';
 
   @override
-  String get dashboardMostUsedExercisesEmpty => 'Terminez des entraînements pour voir ici vos exercices les plus fréquents.';
+  String get dashboardMostUsedExercisesEmpty =>
+      'Terminez des entraînements pour voir ici vos exercices les plus fréquents.';
 
   @override
   String premadeDiscardFailed(String error) {
@@ -11440,16 +12512,20 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   }
 
   @override
-  String get premadeEquipmentSelectProfile => 'Sélectionnez un profil de salle pour adapter les plans à l’équipement disponible.';
+  String get premadeEquipmentSelectProfile =>
+      'Sélectionnez un profil de salle pour adapter les plans à l’équipement disponible.';
 
   @override
-  String get premadeEquipmentExact => 'Les plans prédéfinis sont affichés exactement tels qu’ils ont été écrits.';
+  String get premadeEquipmentExact =>
+      'Les plans prédéfinis sont affichés exactement tels qu’ils ont été écrits.';
 
   @override
-  String get premadeEquipmentChecking => 'Vérification des exercices du plan avec votre profil...';
+  String get premadeEquipmentChecking =>
+      'Vérification des exercices du plan avec votre profil...';
 
   @override
-  String get premadeEquipmentMissing => 'Aucun équipement de profil n’a été trouvé; les plans prédéfinis restent donc inchangés.';
+  String get premadeEquipmentMissing =>
+      'Aucun équipement de profil n’a été trouvé; les plans prédéfinis restent donc inchangés.';
 
   @override
   String premadeEquipmentReplacements(int count) {
@@ -11457,7 +12533,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   }
 
   @override
-  String get premadeEquipmentFits => 'Les plans conviennent déjà à l’équipement du profil actuel.';
+  String get premadeEquipmentFits =>
+      'Les plans conviennent déjà à l’équipement du profil actuel.';
 
   @override
   String get premadeOneHour => '1 h';
@@ -11479,7 +12556,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   }
 
   @override
-  String get premadeTemplatesLater => 'Des modèles pour cette répartition pourront être ajoutés ici plus tard.';
+  String get premadeTemplatesLater =>
+      'Des modèles pour cette répartition pourront être ajoutés ici plus tard.';
 
   @override
   String premadeExerciseCount(int count) {
@@ -11506,10 +12584,12 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get premadeProfileSwap => 'remplacement selon le profil';
 
   @override
-  String get healthEntryValueUnitRequired => 'Entrez d’abord une valeur et une unité.';
+  String get healthEntryValueUnitRequired =>
+      'Entrez d’abord une valeur et une unité.';
 
   @override
-  String get healthDefinitionFieldsRequired => 'Entrez un nom, une unité et une valeur valide.';
+  String get healthDefinitionFieldsRequired =>
+      'Entrez un nom, une unité et une valeur valide.';
 
   @override
   String get healthUnit => 'Unité';
@@ -11524,7 +12604,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get healthMetricName => 'Nom de la mesure';
 
   @override
-  String get healthMetricNameHint => 'Tour de bras, fréquence cardiaque au repos...';
+  String get healthMetricNameHint =>
+      'Tour de bras, fréquence cardiaque au repos...';
 
   @override
   String healthUnitHint(String weightUnit) {
@@ -11538,13 +12619,15 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get healthCreate => 'Créer';
 
   @override
-  String get exerciseProgressNoRecordings => 'Aucun enregistrement pour le moment';
+  String get exerciseProgressNoRecordings =>
+      'Aucun enregistrement pour le moment';
 
   @override
   String get exerciseEditorDiscardTitle => 'Ignorer les modifications?';
 
   @override
-  String get exerciseEditorDiscardBody => 'Vos modifications ne sont pas encore enregistrées. Vous pouvez continuer ou les ignorer.';
+  String get exerciseEditorDiscardBody =>
+      'Vos modifications ne sont pas encore enregistrées. Vous pouvez continuer ou les ignorer.';
 
   @override
   String get exerciseEditorKeepEditing => 'Continuer la modification';
@@ -11553,7 +12636,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get exerciseEditorDiscard => 'Ignorer';
 
   @override
-  String get exerciseEditorAddBodyparts => 'Ajouter des parties du corps associées';
+  String get exerciseEditorAddBodyparts =>
+      'Ajouter des parties du corps associées';
 
   @override
   String get exerciseEditorAddMuscles => 'Ajouter des muscles associés';
@@ -11565,13 +12649,15 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get databaseClearMediaTitle => 'Effacer les médias téléchargés?';
 
   @override
-  String get databaseClearMediaBody => 'Cette action supprime les médias d’exercices, d’équipements et d’anatomie mis en cache. L’application pourra les télécharger de nouveau au besoin.';
+  String get databaseClearMediaBody =>
+      'Cette action supprime les médias d’exercices, d’équipements et d’anatomie mis en cache. L’application pourra les télécharger de nouveau au besoin.';
 
   @override
   String get databaseClearCache => 'Effacer le cache';
 
   @override
-  String get databaseCacheCleared => 'Le cache des médias téléchargés a été effacé.';
+  String get databaseCacheCleared =>
+      'Le cache des médias téléchargés a été effacé.';
 
   @override
   String databaseClearCacheFailed(String error) {
@@ -11588,10 +12674,12 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get databaseChangeEnvironment => 'Changer d’environnement';
 
   @override
-  String get databaseExerciseManifestUrl => 'URL du manifeste de médias d’exercices';
+  String get databaseExerciseManifestUrl =>
+      'URL du manifeste de médias d’exercices';
 
   @override
-  String get databaseNoExerciseManifestUrl => 'Aucune URL de manifeste distant n’est définie pour cet environnement.';
+  String get databaseNoExerciseManifestUrl =>
+      'Aucune URL de manifeste distant n’est définie pour cet environnement.';
 
   @override
   String get databaseOverrideUrl => 'URL de remplacement';
@@ -11613,7 +12701,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get databaseSharedCatalogMedia => 'Médias du catalogue partagé';
 
   @override
-  String get databaseSharedMediaNotSynced => 'Pas encore synchronisé. Équipement, parties du corps et muscles.';
+  String get databaseSharedMediaNotSynced =>
+      'Pas encore synchronisé. Équipement, parties du corps et muscles.';
 
   @override
   String databaseManifestLastChecked(int version, String date) {
@@ -11624,7 +12713,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get databaseSharedManifestUrl => 'URL du manifeste de médias partagés';
 
   @override
-  String get databaseNoSharedManifestUrl => 'Aucune URL de médias partagés distants n’est définie pour cet environnement.';
+  String get databaseNoSharedManifestUrl =>
+      'Aucune URL de médias partagés distants n’est définie pour cet environnement.';
 
   @override
   String get databaseDownloadedMediaCache => 'Cache des médias téléchargés';
@@ -11641,25 +12731,30 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get databaseTutorialFilesTitle => 'Fichiers de base de données';
 
   @override
-  String get databaseTutorialFilesBody => 'Exportez une sauvegarde ou importez un fichier de base de données enregistré. Les importations exigent d’abord une sauvegarde.';
+  String get databaseTutorialFilesBody =>
+      'Exportez une sauvegarde ou importez un fichier de base de données enregistré. Les importations exigent d’abord une sauvegarde.';
 
   @override
   String get databaseTutorialHealthTitle => 'État de la base de données';
 
   @override
-  String get databaseTutorialHealthBody => 'Cette carte montre la version du schéma, la taille de la base de données, le nombre de tables et l’état de l’index de recherche.';
+  String get databaseTutorialHealthBody =>
+      'Cette carte montre la version du schéma, la taille de la base de données, le nombre de tables et l’état de l’index de recherche.';
 
   @override
   String get databaseTutorialMaintenanceTitle => 'Outils d’entretien';
 
   @override
-  String get databaseTutorialMaintenanceBody => 'Utilisez ces actions pour les vérifications d’intégrité, l’optimisation, le point de contrôle WAL ou le compactage au besoin.';
+  String get databaseTutorialMaintenanceBody =>
+      'Utilisez ces actions pour les vérifications d’intégrité, l’optimisation, le point de contrôle WAL ou le compactage au besoin.';
 
   @override
-  String get databaseExportSavedTitle => 'Exportation de la base de données enregistrée';
+  String get databaseExportSavedTitle =>
+      'Exportation de la base de données enregistrée';
 
   @override
-  String get databaseExportSavedBody => 'L’exportation de la base de données a été enregistrée à l’emplacement sélectionné.';
+  String get databaseExportSavedBody =>
+      'L’exportation de la base de données a été enregistrée à l’emplacement sélectionné.';
 
   @override
   String databaseImportBlocked(String message) {
@@ -11667,7 +12762,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   }
 
   @override
-  String get databaseImportBackupCanceled => 'Importation annulée : la sauvegarde n’a pas été enregistrée.';
+  String get databaseImportBackupCanceled =>
+      'Importation annulée : la sauvegarde n’a pas été enregistrée.';
 
   @override
   String get databaseImportSucceededTitle => 'Importation réussie';
@@ -11681,7 +12777,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get databaseConfirmImportTitle => 'Confirmer l’importation';
 
   @override
-  String get databaseConfirmImportBody => 'Cette action remplace la base de données locale. Une sauvegarde de la base de données actuelle sera créée d’abord.';
+  String get databaseConfirmImportBody =>
+      'Cette action remplace la base de données locale. Une sauvegarde de la base de données actuelle sera créée d’abord.';
 
   @override
   String databaseImportFile(String name) {
@@ -11704,7 +12801,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   }
 
   @override
-  String get databaseImportLegacyFormat => 'Format : ancienne table de correspondance';
+  String get databaseImportLegacyFormat =>
+      'Format : ancienne table de correspondance';
 
   @override
   String get databaseImportWarnings => 'Avertissements :';
@@ -11718,7 +12816,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   }
 
   @override
-  String get exerciseEditorSaveBeforeAllocation => 'Enregistrez ou annulez les modifications de définition avant de modifier le crédit par série.';
+  String get exerciseEditorSaveBeforeAllocation =>
+      'Enregistrez ou annulez les modifications de définition avant de modifier le crédit par série.';
 
   @override
   String exerciseEditorRemoveItemTitle(String type) {
@@ -11737,31 +12836,38 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get exerciseEditorMuscleOrderTitle => 'Ordre des muscles ciblés';
 
   @override
-  String get exerciseEditorMuscleOrderBody => 'Classez les muscles selon l’intensité avec laquelle l’exercice les cible. Cela aide Tonos à estimer le travail anatomique et à recommander de meilleurs exercices.';
+  String get exerciseEditorMuscleOrderBody =>
+      'Classez les muscles selon l’intensité avec laquelle l’exercice les cible. Cela aide Tonos à estimer le travail anatomique et à recommander de meilleurs exercices.';
 
   @override
   String get exerciseEditorExactSetCredit => 'Crédit exact par série';
 
   @override
-  String get exerciseEditorExactSetCreditBody => 'Modifiez le crédit précis qu’une série accorde à chaque muscle ou partie du corps dans Répartition des séries par exercice.';
+  String get exerciseEditorExactSetCreditBody =>
+      'Modifiez le crédit précis qu’une série accorde à chaque muscle ou partie du corps dans Répartition des séries par exercice.';
 
   @override
-  String get exerciseEditorSetCreditScaling => 'Mise à l’échelle du crédit par série';
+  String get exerciseEditorSetCreditScaling =>
+      'Mise à l’échelle du crédit par série';
 
   @override
-  String get exerciseEditorSetCreditScalingBody => 'Choisissez si la note de cet exercice doit mettre à l’échelle le crédit par série.';
+  String get exerciseEditorSetCreditScalingBody =>
+      'Choisissez si la note de cet exercice doit mettre à l’échelle le crédit par série.';
 
   @override
-  String get exerciseEditorScaleCreditByRating => 'Mettre le crédit à l’échelle selon la note';
+  String get exerciseEditorScaleCreditByRating =>
+      'Mettre le crédit à l’échelle selon la note';
 
   @override
-  String get exerciseEditorScaleCreditByRatingBody => 'Applique la note de l’exercice aux totaux de séries analytiques.';
+  String get exerciseEditorScaleCreditByRatingBody =>
+      'Applique la note de l’exercice aux totaux de séries analytiques.';
 
   @override
   String get exerciseEditorTargetMuscles => 'Muscles ciblés';
 
   @override
-  String get exerciseEditorOrderMusclesHint => 'Utilisez les flèches pour ordonner les muscles selon l’accent ciblé.';
+  String get exerciseEditorOrderMusclesHint =>
+      'Utilisez les flèches pour ordonner les muscles selon l’accent ciblé.';
 
   @override
   String exerciseEditorMusclesAssociated(int count) {
@@ -11769,7 +12875,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   }
 
   @override
-  String get exerciseEditorNoTargetMuscles => 'Aucun muscle ciblé n’est encore associé.';
+  String get exerciseEditorNoTargetMuscles =>
+      'Aucun muscle ciblé n’est encore associé.';
 
   @override
   String get exerciseEditorAddTargetMuscles => 'Ajouter des muscles ciblés';
@@ -11790,16 +12897,20 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get exerciseEditorAssociatedBodyparts => 'Parties du corps associées';
 
   @override
-  String get exerciseEditorAssociatedBodypartsBody => 'Ces zones générales servent aux cartes thermiques, à la couverture hebdomadaire et aux recommandations d’entraînement tenant compte de l’équipement.';
+  String get exerciseEditorAssociatedBodypartsBody =>
+      'Ces zones générales servent aux cartes thermiques, à la couverture hebdomadaire et aux recommandations d’entraînement tenant compte de l’équipement.';
 
   @override
-  String get exerciseEditorExactBodypartCredit => 'Crédit exact par partie du corps';
+  String get exerciseEditorExactBodypartCredit =>
+      'Crédit exact par partie du corps';
 
   @override
-  String get exerciseEditorExactBodypartCreditBody => 'Utilisez Répartition des séries par exercice lorsqu’une série doit compter comme une portion précise pour une partie du corps.';
+  String get exerciseEditorExactBodypartCreditBody =>
+      'Utilisez Répartition des séries par exercice lorsqu’une série doit compter comme une portion précise pour une partie du corps.';
 
   @override
-  String get exerciseEditorBodypartsHint => 'Ajoutez chaque zone corporelle générale travaillée par cet exercice.';
+  String get exerciseEditorBodypartsHint =>
+      'Ajoutez chaque zone corporelle générale travaillée par cet exercice.';
 
   @override
   String exerciseEditorBodypartsAssociated(int count) {
@@ -11807,13 +12918,15 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   }
 
   @override
-  String get exerciseEditorNoBodyparts => 'Aucune partie du corps n’est encore associée.';
+  String get exerciseEditorNoBodyparts =>
+      'Aucune partie du corps n’est encore associée.';
 
   @override
   String get exerciseEditorAutomaticPreview => 'Aperçu automatique';
 
   @override
-  String get exerciseEditorAutomaticPreviewBody => 'Travail actuel dérivé de la structure des muscles ciblés.';
+  String get exerciseEditorAutomaticPreviewBody =>
+      'Travail actuel dérivé de la structure des muscles ciblés.';
 
   @override
   String get exerciseEditorRemoveBodypart => 'Retirer la partie du corps';
@@ -11825,10 +12938,12 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get exerciseEditorAvailableEquipment => 'Équipement disponible';
 
   @override
-  String get exerciseEditorAvailableEquipmentBody => 'L’équipement associé détermine quels profils peuvent utiliser cet exercice et quels remplacements Tonos peut recommander.';
+  String get exerciseEditorAvailableEquipmentBody =>
+      'L’équipement associé détermine quels profils peuvent utiliser cet exercice et quels remplacements Tonos peut recommander.';
 
   @override
-  String get exerciseEditorEquipmentHint => 'Ajoutez chaque élément nécessaire pour exécuter cet exercice.';
+  String get exerciseEditorEquipmentHint =>
+      'Ajoutez chaque élément nécessaire pour exécuter cet exercice.';
 
   @override
   String exerciseEditorEquipmentAssociated(int count) {
@@ -11836,7 +12951,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   }
 
   @override
-  String get exerciseEditorNoEquipment => 'Aucun équipement n’est encore associé.';
+  String get exerciseEditorNoEquipment =>
+      'Aucun équipement n’est encore associé.';
 
   @override
   String get exerciseEditorRemoveEquipment => 'Retirer l’équipement';
@@ -11858,7 +12974,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   }
 
   @override
-  String get databaseManifestUrlRequired => 'Ajoutez d’abord une URL de manifeste de médias d’exercices valide.';
+  String get databaseManifestUrlRequired =>
+      'Ajoutez d’abord une URL de manifeste de médias d’exercices valide.';
 
   @override
   String databaseContentSyncFailed(String error) {
@@ -11871,7 +12988,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   }
 
   @override
-  String get databaseSharedMediaUrlMissing => 'Cet environnement de contenu n’a aucune URL de médias partagés.';
+  String get databaseSharedMediaUrlMissing =>
+      'Cet environnement de contenu n’a aucune URL de médias partagés.';
 
   @override
   String databaseSharedContentSyncFailed(String error) {
@@ -11884,7 +13002,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   }
 
   @override
-  String get databaseExerciseManifestDialogTitle => 'Manifeste de médias d’exercices';
+  String get databaseExerciseManifestDialogTitle =>
+      'Manifeste de médias d’exercices';
 
   @override
   String get databaseManifestUrl => 'URL du manifeste';
@@ -11893,7 +13012,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get databaseClear => 'Effacer';
 
   @override
-  String get databaseNoManifestConfigured => 'Aucune URL de manifeste n’est encore configurée.';
+  String get databaseNoManifestConfigured =>
+      'Aucune URL de manifeste n’est encore configurée.';
 
   @override
   String get databaseUseEnvironment => 'Utiliser l’environnement';
@@ -11908,10 +13028,12 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get dashboardMuscles => 'Muscles';
 
   @override
-  String get exerciseEditorCreateCustomTitle => 'Créer un exercice personnalisé';
+  String get exerciseEditorCreateCustomTitle =>
+      'Créer un exercice personnalisé';
 
   @override
-  String get exerciseEditorCreateCustomBody => 'Créez une définition de catalogue personnalisée, puis ajoutez son anatomie ciblée et ses consignes avant d’enregistrer.';
+  String get exerciseEditorCreateCustomBody =>
+      'Créez une définition de catalogue personnalisée, puis ajoutez son anatomie ciblée et ses consignes avant d’enregistrer.';
 
   @override
   String get exerciseEditorExerciseName => 'Nom de l’exercice';
@@ -11920,7 +13042,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get exerciseEditorNoEquipmentChoice => 'Aucun équipement';
 
   @override
-  String get exerciseEditorOpenedMessage => 'Exercice ouvert. Ajoutez son anatomie ciblée, puis enregistrez.';
+  String get exerciseEditorOpenedMessage =>
+      'Exercice ouvert. Ajoutez son anatomie ciblée, puis enregistrez.';
 
   @override
   String exerciseEditorCreateFailed(String error) {
@@ -11931,10 +13054,12 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get exerciseEditorWhatChangesTitle => 'Ce qui change';
 
   @override
-  String get exerciseEditorWhatChangesBody => 'Utilisez cet éditeur avancé pour modifier le nom d’un exercice, son anatomie ciblée, son équipement, ses consignes de forme, sa note et ses médias de référence. Le crédit exact par série est géré séparément pour rester cohérent dans toute l’application.';
+  String get exerciseEditorWhatChangesBody =>
+      'Utilisez cet éditeur avancé pour modifier le nom d’un exercice, son anatomie ciblée, son équipement, ses consignes de forme, sa note et ses médias de référence. Le crédit exact par série est géré séparément pour rester cohérent dans toute l’application.';
 
   @override
-  String get exerciseEditorChooseCatalog => 'Choisir un exercice dans le catalogue';
+  String get exerciseEditorChooseCatalog =>
+      'Choisir un exercice dans le catalogue';
 
   @override
   String get exerciseEditorRating => 'Note';
@@ -11978,55 +13103,65 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get exerciseEditorMediaThumbnailUrl => 'URL de miniature';
 
   @override
-  String get exerciseEditorMediaThumbnailHint => 'URL facultative d’aperçu d’image';
+  String get exerciseEditorMediaThumbnailHint =>
+      'URL facultative d’aperçu d’image';
 
   @override
-  String get exerciseEditorSelectBeforeMedia => 'Sélectionnez un exercice existant avant d’y associer un média.';
+  String get exerciseEditorSelectBeforeMedia =>
+      'Sélectionnez un exercice existant avant d’y associer un média.';
 
   @override
   String get exerciseEditorFormGuide => 'Guide de forme';
 
   @override
-  String get exerciseEditorFormGuideBody => 'Ces notes apparaissent dans la fiche de détails de l’exercice pour aider les utilisateurs à s’installer, effectuer et comprendre le mouvement en sécurité.';
+  String get exerciseEditorFormGuideBody =>
+      'Ces notes apparaissent dans la fiche de détails de l’exercice pour aider les utilisateurs à s’installer, effectuer et comprendre le mouvement en sécurité.';
 
   @override
   String get exerciseEditorGuidance => 'Consignes';
 
   @override
-  String get exerciseEditorGuidanceEditing => 'Rédigez des indications claires et pratiques. Les modifications restent en attente jusqu’à leur enregistrement.';
+  String get exerciseEditorGuidanceEditing =>
+      'Rédigez des indications claires et pratiques. Les modifications restent en attente jusqu’à leur enregistrement.';
 
   @override
-  String get exerciseEditorGuidanceReadOnly => 'Les instructions et indications actuelles de l’exercice.';
+  String get exerciseEditorGuidanceReadOnly =>
+      'Les instructions et indications actuelles de l’exercice.';
 
   @override
   String get exerciseEditorSetUp => 'Mise en place';
 
   @override
-  String get exerciseEditorSetUpHint => 'Position de départ, installation de l’équipement et notes de sécurité.';
+  String get exerciseEditorSetUpHint =>
+      'Position de départ, installation de l’équipement et notes de sécurité.';
 
   @override
   String get exerciseEditorHowToPerform => 'Comment effectuer';
 
   @override
-  String get exerciseEditorHowToPerformHint => 'Les étapes clés du mouvement et l’amplitude.';
+  String get exerciseEditorHowToPerformHint =>
+      'Les étapes clés du mouvement et l’amplitude.';
 
   @override
   String get exerciseEditorCoachingTips => 'Conseils d’entraînement';
 
   @override
-  String get exerciseEditorCoachingTipsHint => 'Indications utiles, erreurs fréquentes et variantes.';
+  String get exerciseEditorCoachingTipsHint =>
+      'Indications utiles, erreurs fréquentes et variantes.';
 
   @override
   String get exerciseEditorReferenceMedia => 'Médias de référence';
 
   @override
-  String get exerciseEditorReferenceMediaBody => 'Utilisez les liens média pour du matériel de référence privé. Les médias du catalogue géré peuvent être actualisés par le pipeline de synchronisation de contenu.';
+  String get exerciseEditorReferenceMediaBody =>
+      'Utilisez les liens média pour du matériel de référence privé. Les médias du catalogue géré peuvent être actualisés par le pipeline de synchronisation de contenu.';
 
   @override
   String get exerciseEditorMediaLinks => 'Liens média';
 
   @override
-  String get exerciseEditorMediaLinksEditing => 'Ajoutez ou mettez à jour une image, une vidéo ou un lien de référence distant.';
+  String get exerciseEditorMediaLinksEditing =>
+      'Ajoutez ou mettez à jour une image, une vidéo ou un lien de référence distant.';
 
   @override
   String exerciseEditorMediaLinksCount(int count) {
@@ -12034,7 +13169,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   }
 
   @override
-  String get exerciseEditorNoReferenceMedia => 'Aucun média de référence n’est encore associé.';
+  String get exerciseEditorNoReferenceMedia =>
+      'Aucun média de référence n’est encore associé.';
 
   @override
   String get exerciseEditorAddMediaLink => 'Ajouter un lien média';
@@ -12066,10 +13202,12 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get onboardingWeightHistoryTitle => 'Historique du poids';
 
   @override
-  String get onboardingWeightHistorySubtitle => 'Quelques détails permettent d’estimer les objectifs nutritionnels plus judicieusement.';
+  String get onboardingWeightHistorySubtitle =>
+      'Quelques détails permettent d’estimer les objectifs nutritionnels plus judicieusement.';
 
   @override
-  String get onboardingPreviouslyHeavier => 'Avez-vous déjà pesé au moins 10 lb de plus que votre poids actuel?';
+  String get onboardingPreviouslyHeavier =>
+      'Avez-vous déjà pesé au moins 10 lb de plus que votre poids actuel?';
 
   @override
   String get onboardingWeightTrendTitle => 'Tendance actuelle du poids';
@@ -12090,13 +13228,16 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get onboardingBodyFatEstimateTitle => 'Estimation du taux de graisse';
 
   @override
-  String get onboardingBodyFatEstimateSubtitle => 'Choisissez l’estimation visuelle la plus proche. Une grande précision n’est pas nécessaire.';
+  String get onboardingBodyFatEstimateSubtitle =>
+      'Choisissez l’estimation visuelle la plus proche. Une grande précision n’est pas nécessaire.';
 
   @override
-  String get onboardingNutritionPreferencesTitle => 'Préférences nutritionnelles';
+  String get onboardingNutritionPreferencesTitle =>
+      'Préférences nutritionnelles';
 
   @override
-  String get onboardingNutritionPreferencesSubtitle => 'Ces préférences orientent les suggestions nutritionnelles après la configuration.';
+  String get onboardingNutritionPreferencesSubtitle =>
+      'Ces préférences orientent les suggestions nutritionnelles après la configuration.';
 
   @override
   String get onboardingPreferredDiet => 'Régime préféré';
@@ -12120,7 +13261,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get onboardingCalorieFloorHint => 'Minimum quotidien en kcal';
 
   @override
-  String get onboardingTrainingDuringProgram => 'Entraînement pendant le programme';
+  String get onboardingTrainingDuringProgram =>
+      'Entraînement pendant le programme';
 
   @override
   String get onboardingTrainingNone => 'Aucun';
@@ -12153,7 +13295,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get onboardingGoalPaceTitle => 'Rythme de l’objectif';
 
   @override
-  String get onboardingGoalPaceSubtitle => 'Prévisualisez un poids cible et un rythme hebdomadaire.';
+  String get onboardingGoalPaceSubtitle =>
+      'Prévisualisez un poids cible et un rythme hebdomadaire.';
 
   @override
   String get onboardingInitialDailyBudget => 'Budget quotidien initial';
@@ -12177,7 +13320,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get exerciseProgressTrackExercise => 'Suivre un exercice';
 
   @override
-  String get exerciseProgressTrackExerciseBody => 'Choisissez un exercice pour suivre ici la tendance de son 1RM.';
+  String get exerciseProgressTrackExerciseBody =>
+      'Choisissez un exercice pour suivre ici la tendance de son 1RM.';
 
   @override
   String get healthCustomMetric => 'Mesure personnalisée';
@@ -12210,10 +13354,12 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get presetNoFocusData => 'Aucune donnée de ciblage.';
 
   @override
-  String get presetFocusPreviewHelp => 'Ajoutez des exercices de musculation avec des données anatomiques pour prévisualiser le ciblage du plan.';
+  String get presetFocusPreviewHelp =>
+      'Ajoutez des exercices de musculation avec des données anatomiques pour prévisualiser le ciblage du plan.';
 
   @override
-  String get dashboardReorderHelp => 'Faites glisser les sections dans l’ordre qui vous convient.';
+  String get dashboardReorderHelp =>
+      'Faites glisser les sections dans l’ordre qui vous convient.';
 
   @override
   String get exerciseEditorCachedLocally => 'En cache local';
@@ -12270,7 +13416,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get dashboardWorkoutInProgress => 'Entraînement en cours';
 
   @override
-  String get dashboardNoSavedPlans => 'Aucun plan enregistré pour ce profil de salle.';
+  String get dashboardNoSavedPlans =>
+      'Aucun plan enregistré pour ce profil de salle.';
 
   @override
   String get exerciseProgressOneRepMax => 'Maximum sur 1 répétition';
@@ -12360,19 +13507,22 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get profileDiagnosticsTitle => 'Diagnostics et confidentialité';
 
   @override
-  String get profileDiagnosticsSubtitle => 'Version, consentement aux rapports, historique de synchronisation et suppression des données.';
+  String get profileDiagnosticsSubtitle =>
+      'Version, consentement aux rapports, historique de synchronisation et suppression des données.';
 
   @override
   String get diagnosticsTitle => 'Diagnostics et confidentialité';
 
   @override
-  String get diagnosticsSubtitle => 'Comprenez et contrôlez les diagnostics de production.';
+  String get diagnosticsSubtitle =>
+      'Comprenez et contrôlez les diagnostics de production.';
 
   @override
   String get diagnosticsAppSection => 'Informations sur l’application';
 
   @override
-  String get diagnosticsAppSectionSubtitle => 'Utiles lorsque vous signalez un problème.';
+  String get diagnosticsAppSectionSubtitle =>
+      'Utiles lorsque vous signalez un problème.';
 
   @override
   String get diagnosticsVersion => 'Version et build';
@@ -12387,43 +13537,52 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get diagnosticsCrashSection => 'Diagnostics anonymes';
 
   @override
-  String get diagnosticsCrashSectionSubtitle => 'Rapports facultatifs et catégoriels sur les défaillances de l’application et la synchronisation des médias.';
+  String get diagnosticsCrashSectionSubtitle =>
+      'Rapports facultatifs et catégoriels sur les défaillances de l’application et la synchronisation des médias.';
 
   @override
   String get diagnosticsCrashReporting => 'Partager des diagnostics anonymes';
 
   @override
-  String get diagnosticsCrashUnavailable => 'Non configuré dans cette version. Aucun diagnostic anonyme ne peut être partagé.';
+  String get diagnosticsCrashUnavailable =>
+      'Non configuré dans cette version. Aucun diagnostic anonyme ne peut être partagé.';
 
   @override
-  String get diagnosticsCrashEnabledBody => 'Activé avec votre consentement. Le désactiver demande la suppression des rapports conservés par Tonos.';
+  String get diagnosticsCrashEnabledBody =>
+      'Activé avec votre consentement. Le désactiver demande la suppression des rapports conservés par Tonos.';
 
   @override
-  String get diagnosticsCrashDisabledBody => 'Désactivé par défaut. Activez-le seulement pour aider à diagnostiquer des problèmes de version.';
+  String get diagnosticsCrashDisabledBody =>
+      'Désactivé par défaut. Activez-le seulement pour aider à diagnostiquer des problèmes de version.';
 
   @override
-  String get diagnosticsPrivacyPromiseTitle => 'Confidentialité dès la conception';
+  String get diagnosticsPrivacyPromiseTitle =>
+      'Confidentialité dès la conception';
 
   @override
-  String get diagnosticsPrivacyPromiseBody => 'Les rapports contiennent uniquement la version et le numéro de build de l’application, la plateforme, une catégorie approuvée, le résultat et des tranches générales. Ils n’incluent jamais messages d’erreur, piles d’appels, noms, données de santé, contenu de base de données, captures, adresses réseau, traces ou analyses.';
+  String get diagnosticsPrivacyPromiseBody =>
+      'Les rapports contiennent uniquement la version et le numéro de build de l’application, la plateforme, une catégorie approuvée, le résultat et des tranches générales. Ils n’incluent jamais messages d’erreur, piles d’appels, noms, données de santé, contenu de base de données, captures, adresses réseau, traces ou analyses.';
 
   @override
   String get diagnosticsSyncSection => 'Historique de synchronisation';
 
   @override
-  String get diagnosticsSyncSectionSubtitle => 'Les 30 derniers résultats des manifestes multimédias restent uniquement sur cet appareil.';
+  String get diagnosticsSyncSectionSubtitle =>
+      'Les 30 derniers résultats des manifestes multimédias restent uniquement sur cet appareil.';
 
   @override
   String get diagnosticsNoSyncEvents => 'Aucun diagnostic de synchronisation';
 
   @override
-  String get diagnosticsNoSyncEventsBody => 'Les résultats apparaîtront ici sans URL ni données personnelles.';
+  String get diagnosticsNoSyncEventsBody =>
+      'Les résultats apparaîtront ici sans URL ni données personnelles.';
 
   @override
   String get diagnosticsClearHistory => 'Effacer l’historique';
 
   @override
-  String get diagnosticsClearHistoryBody => 'Supprimer tous les diagnostics de synchronisation locaux.';
+  String get diagnosticsClearHistoryBody =>
+      'Supprimer tous les diagnostics de synchronisation locaux.';
 
   @override
   String get diagnosticsHistoryCleared => 'Historique des diagnostics effacé.';
@@ -12452,7 +13611,13 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   }
 
   @override
-  String diagnosticsSyncEventDetails(String source, String timestamp, int duration, String version, String items) {
+  String diagnosticsSyncEventDetails(
+    String source,
+    String timestamp,
+    int duration,
+    String version,
+    String items,
+  ) {
     return '$source • $timestamp • $duration ms • manifeste $version • $items éléments';
   }
 
@@ -12460,73 +13625,93 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get diagnosticsPrivacySection => 'Vos données';
 
   @override
-  String get diagnosticsPrivacySectionSubtitle => 'Stockage local, conservation et suppression.';
+  String get diagnosticsPrivacySectionSubtitle =>
+      'Stockage local, conservation et suppression.';
 
   @override
-  String get diagnosticsLocalDataTitle => 'Les données de mise en forme restent locales';
+  String get diagnosticsLocalDataTitle =>
+      'Les données de mise en forme restent locales';
 
   @override
-  String get diagnosticsLocalDataBody => 'Les entraînements, données nutritionnelles, mesures corporelles et profils restent dans la base de données de cet appareil, sauf si vous exportez vous-même une sauvegarde.';
+  String get diagnosticsLocalDataBody =>
+      'Les entraînements, données nutritionnelles, mesures corporelles et profils restent dans la base de données de cet appareil, sauf si vous exportez vous-même une sauvegarde.';
 
   @override
-  String get diagnosticsDeletionTitle => 'Supprimer les diagnostics et les données';
+  String get diagnosticsDeletionTitle =>
+      'Supprimer les diagnostics et les données';
 
   @override
-  String get diagnosticsDeletionBody => 'Effacez l’historique ci-dessus et désactivez les rapports. Effacez le stockage de Tonos dans les réglages de l’appareil ou désinstallez l’application pour supprimer la base locale et les caches. Pour supprimer un rapport déjà envoyé, communiquez avec le développeur en fournissant les détails de l’événement dont vous disposez.';
+  String get diagnosticsDeletionBody =>
+      'Effacez l’historique ci-dessus et désactivez les rapports. Effacez le stockage de Tonos dans les réglages de l’appareil ou désinstallez l’application pour supprimer la base locale et les caches. Pour supprimer un rapport déjà envoyé, communiquez avec le développeur en fournissant les détails de l’événement dont vous disposez.';
 
   @override
-  String get diagnosticsSendTestReport => 'Envoyer un événement de diagnostic contrôlé';
+  String get diagnosticsSendTestReport =>
+      'Envoyer un événement de diagnostic contrôlé';
 
   @override
-  String get diagnosticsSendTestReportBody => 'Disponible uniquement dans une version explicitement activée pour les tests. Envoie un événement fixe autorisé.';
+  String get diagnosticsSendTestReportBody =>
+      'Disponible uniquement dans une version explicitement activée pour les tests. Envoie un événement fixe autorisé.';
 
   @override
-  String get diagnosticsTestReportSent => 'Événement de diagnostic contrôlé envoyé.';
+  String get diagnosticsTestReportSent =>
+      'Événement de diagnostic contrôlé envoyé.';
 
   @override
-  String get diagnosticsTestReportFailed => 'L’événement de diagnostic n’a pas pu être envoyé. Vérifiez la configuration du build et la connexion.';
+  String get diagnosticsTestReportFailed =>
+      'L’événement de diagnostic n’a pas pu être envoyé. Vérifiez la configuration du build et la connexion.';
 
   @override
   String get diagnosticsDeleteShared => 'Supprimer les diagnostics partagés';
 
   @override
-  String get diagnosticsDeleteSharedBody => 'Demande la suppression des rapports que cette installation peut prouver avoir envoyés. L’historique de récupération du fournisseur peut conserver des lignes supprimées jusqu’à 30 jours.';
+  String get diagnosticsDeleteSharedBody =>
+      'Demande la suppression des rapports que cette installation peut prouver avoir envoyés. L’historique de récupération du fournisseur peut conserver des lignes supprimées jusqu’à 30 jours.';
 
   @override
-  String get diagnosticsSharedDeleted => 'La suppression des diagnostics partagés a été demandée.';
+  String get diagnosticsSharedDeleted =>
+      'La suppression des diagnostics partagés a été demandée.';
 
   @override
-  String get diagnosticsSharedDeletionPending => 'Certaines demandes de suppression seront réessayées lorsque l’application s’ouvrira avec une connexion.';
+  String get diagnosticsSharedDeletionPending =>
+      'Certaines demandes de suppression seront réessayées lorsque l’application s’ouvrira avec une connexion.';
 
   @override
-  String get workoutDurabilityRestoreWarning => 'Tonos n’a pas pu vérifier s’il existe un entraînement sauvegardé. Réessayez avant d’en commencer un autre.';
+  String get workoutDurabilityRestoreWarning =>
+      'Tonos n’a pas pu vérifier s’il existe un entraînement sauvegardé. Réessayez avant d’en commencer un autre.';
 
   @override
-  String get workoutDurabilityDraftSaveWarning => 'La sauvegarde de votre entraînement n’est pas à jour. Gardez Tonos ouvert et réessayez pour pouvoir reprendre cet entraînement en toute sécurité.';
+  String get workoutDurabilityDraftSaveWarning =>
+      'La sauvegarde de votre entraînement n’est pas à jour. Gardez Tonos ouvert et réessayez pour pouvoir reprendre cet entraînement en toute sécurité.';
 
   @override
-  String get workoutDurabilityProgressionWarning => 'Votre entraînement est sauvegardé, mais la progression du plan est toujours en attente. Réessayez lorsque le stockage est disponible.';
+  String get workoutDurabilityProgressionWarning =>
+      'Votre entraînement est sauvegardé, mais la progression du plan est toujours en attente. Réessayez lorsque le stockage est disponible.';
 
   @override
   String get databaseConfirmExportTitle => 'Exporter des données privées?';
 
   @override
-  String get databaseConfirmExportBody => 'Cette sauvegarde est un fichier JSON non chiffré qui peut contenir vos entraînements, votre nutrition, vos mesures corporelles, votre profil et vos préférences. Enregistrez-le seulement dans un emplacement de confiance.';
+  String get databaseConfirmExportBody =>
+      'Cette sauvegarde est un fichier JSON non chiffré qui peut contenir vos entraînements, votre nutrition, vos mesures corporelles, votre profil et vos préférences. Enregistrez-le seulement dans un emplacement de confiance.';
 
   @override
   String get databaseContinueExport => 'Exporter quand même';
 
   @override
-  String get databaseExportFailedSafe => 'L\'exportation n\'a pas pu être créée. Les données de l\'application n\'ont pas été modifiées.';
+  String get databaseExportFailedSafe =>
+      'L\'exportation n\'a pas pu être créée. Les données de l\'application n\'ont pas été modifiées.';
 
   @override
-  String get databaseImportFileTooLarge => 'Cette importation est trop volumineuse. Choisissez une sauvegarde de moins de 25 Mo.';
+  String get databaseImportFileTooLarge =>
+      'Cette importation est trop volumineuse. Choisissez une sauvegarde de moins de 25 Mo.';
 
   @override
-  String get databaseImportBlockedSafe => 'Cette sauvegarde n\'a pas pu être importée. Vos données actuelles n\'ont pas été modifiées.';
+  String get databaseImportBlockedSafe =>
+      'Cette sauvegarde n\'a pas pu être importée. Vos données actuelles n\'ont pas été modifiées.';
 
   @override
-  String get databaseImportFailedSafe => 'L\'importation n\'a pas abouti. Vos données actuelles ont été conservées en sécurité.';
+  String get databaseImportFailedSafe =>
+      'L\'importation n\'a pas abouti. Vos données actuelles ont été conservées en sécurité.';
 
   @override
   String get speedDialLogFood => 'Enregistrer un aliment';
@@ -12538,8 +13723,10 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get healthTapToLog => 'Touchez + pour enregistrer';
 
   @override
-  String get healthMetricInvalid => 'Utilisez un nom de mesure unique et une unité courte sans espaces.';
+  String get healthMetricInvalid =>
+      'Utilisez un nom de mesure unique et une unité courte sans espaces.';
 
   @override
-  String get healthMeasurementEntryInvalid => 'Saisissez une valeur positive plausible avec une unité prise en charge.';
+  String get healthMeasurementEntryInvalid =>
+      'Saisissez une valeur positive plausible avec une unité prise en charge.';
 }

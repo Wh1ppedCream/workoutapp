@@ -12,6 +12,7 @@ import '../../providers/active_session.dart';
 import '../../providers/selected_profile.dart';
 import '../../providers/unit_preference_provider.dart';
 import '../../repositories/app_repository.dart';
+import '../../services/safe_failure.dart';
 import '../../services/tutorial_state_store.dart';
 import '../../theme/theme_extensions.dart';
 import '../../utils/async_pool.dart';
@@ -26,6 +27,7 @@ import '../../widgets/exercise_detail_sheet.dart';
 import '../../widgets/exercise_media_thumbnail.dart';
 import '../../widgets/focused_sets_list.dart';
 import '../../widgets/guided_tutorial_overlay.dart';
+import '../../widgets/safe_error_view.dart';
 import '../../widgets/workout_record_badges.dart';
 import 'session_screen.dart';
 
@@ -59,7 +61,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
   Map<int, WorkoutExerciseRecordBadges> _badgesByExercise =
       const <int, WorkoutExerciseRecordBadges>{};
   _SessionSummary? _summary;
-  Object? _loadError;
+  SafeFailure? _loadFailure;
   bool _isLoading = true;
   bool _hasChanges = false;
   bool _isEditing = false;
@@ -80,7 +82,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
   Future<void> _loadExercises() async {
     setState(() {
       _isLoading = true;
-      _loadError = null;
+      _loadFailure = null;
     });
 
     try {
@@ -104,7 +106,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     } catch (error) {
       if (!mounted) return;
       setState(() {
-        _loadError = error;
+        _loadFailure = SafeFailure.classify(error);
         _isLoading = false;
       });
     }
@@ -724,9 +726,12 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
-    if (_loadError != null) {
-      return Center(
-        child: Text(AppLocalizations.of(context).workoutDetailLoadFailed),
+    final loadFailure = _loadFailure;
+    if (loadFailure != null) {
+      return SafeErrorView(
+        title: AppLocalizations.of(context).workoutDetailLoadFailed,
+        failure: loadFailure,
+        onRetry: _loadExercises,
       );
     }
     if (_exerciseDetails.isEmpty) {
@@ -815,7 +820,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
   }
 
   Widget? _buildBottomBar(BuildContext context) {
-    if (_isLoading || _loadError != null) {
+    if (_isLoading || _loadFailure != null) {
       return null;
     }
 

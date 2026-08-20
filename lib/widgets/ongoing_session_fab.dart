@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../l10n/generated/app_localizations.dart';
+import '../l10n/safe_failure_localizations.dart';
 import '../providers/active_session.dart';
 import '../screens/exercise/session_screen.dart'; // adjust path if needed
 import '../services/workout_exit_preferences.dart';
@@ -106,7 +107,9 @@ class _OngoingSessionFabState extends State<OngoingSessionFab> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            AppLocalizations.of(context).sessionEndFailed('$error'),
+            AppLocalizations.of(context).sessionEndFailed(
+              safeFailureMessage(AppLocalizations.of(context), error),
+            ),
           ),
         ),
       );

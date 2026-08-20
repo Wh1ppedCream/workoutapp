@@ -11,6 +11,8 @@ import '../screens/exercise/full_history_screen.dart';
 import '../screens/exercise/session_detail_screen.dart';
 import '../theme/theme_extensions.dart';
 import '../utils/completed_workout_duration_formatter.dart';
+import '../services/safe_failure.dart';
+import 'safe_error_view.dart';
 
 /// A scrollable, filterable list of past workout sessions.
 class PastSessionsList extends StatefulWidget {
@@ -153,10 +155,11 @@ class _PastSessionsListState extends State<PastSessionsList>
                       );
                     }
                     if (snap.hasError && !snap.hasData) {
-                      return Center(
-                        child: Text(
-                          strings.pastSessionsError(snap.error.toString()),
-                        ),
+                      return SafeErrorView(
+                        title: strings.safeFailureLoadTitle,
+                        failure: SafeFailure.classify(snap.error!),
+                        onRetry: _reloadSessions,
+                        compact: true,
                       );
                     }
 

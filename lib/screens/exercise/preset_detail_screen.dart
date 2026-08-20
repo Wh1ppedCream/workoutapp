@@ -7,6 +7,7 @@ import 'package:env_test/providers/active_session.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../../l10n/safe_failure_localizations.dart';
 import '../../models/models.dart';
 import '../../providers/selected_profile.dart';
 import '../../repositories/app_repository.dart';
@@ -389,7 +390,11 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
       if (!context.mounted) return;
       final strings = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(strings.planSaveFailed(error.toString()))),
+        SnackBar(
+          content: Text(
+            strings.planSaveFailed(safeFailureMessage(strings, error)),
+          ),
+        ),
       );
     }
   }

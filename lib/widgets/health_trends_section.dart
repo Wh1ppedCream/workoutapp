@@ -11,10 +11,12 @@ import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
 import '../services/tutorial_state_store.dart';
 import '../services/measurement_validation.dart';
+import '../services/safe_failure.dart';
 import '../theme/theme_extensions.dart';
 import '../utils/tutorial_launcher.dart';
 import '../utils/app_test_keys.dart';
 import 'guided_tutorial_overlay.dart';
+import 'safe_error_view.dart';
 
 class HealthTrendsSection extends StatefulWidget {
   final int refreshToken;
@@ -228,10 +230,11 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
         }
 
         if (snapshot.hasError) {
-          return _HealthTrendMessageCard(
-            icon: Icons.error_outline,
-            title: strings.healthUnableToLoad,
-            message: snapshot.error.toString(),
+          return SafeErrorView(
+            title: strings.safeFailureLoadTitle,
+            failure: SafeFailure.classify(snapshot.error!),
+            onRetry: _reload,
+            compact: !widget.fullPage,
           );
         }
 
@@ -514,10 +517,10 @@ class _MeasurementTrendDetailPageState
               return const Center(child: CircularProgressIndicator());
             }
             if (snapshot.hasError) {
-              return Center(
-                child: Text(
-                  strings.healthLoadFailed(snapshot.error.toString()),
-                ),
+              return SafeErrorView(
+                title: strings.safeFailureLoadTitle,
+                failure: SafeFailure.classify(snapshot.error!),
+                onRetry: _reload,
               );
             }
 

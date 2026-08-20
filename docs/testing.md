@@ -11,6 +11,8 @@ screen name:
   restoration and bounded save retries, including progression recovery after a
   completed session survives a storage failure.
 - `test/services` verifies content configuration and platform-download policy.
+- `test/services/safe_failure_test.dart` verifies privacy-safe failure
+  classification and retryability without retaining exception details.
 - Cloud-content boundary tests also cover HTTPS/redirect policy, integrity
   metadata, corrupt and interrupted streams, orphan pruning, and LRU limits.
 - `test/db` runs selected DAO contracts against in-memory SQLite.
@@ -18,10 +20,15 @@ screen name:
   accessibility actions. `visual_layout_contract_test.dart` exercises the
   release layout matrix across representative phone/tablet, locale, and
   enlarged-text configurations.
+- `test/widgets/safe_error_view_test.dart` verifies localized recovery copy,
+  semantic retry actions, non-retryable states, and redacted action snackbars.
 - `test/localization/hardcoded_ui_copy_contract_test.dart` rejects direct
   user-facing English literals in active screens and widgets. Deliberately
   deferred nutrition, cardio/stretch, and placeholder surfaces are narrowly
   excluded until those product areas are rebuilt.
+- `test/localization/safe_error_handling_contract_test.dart` rejects raw
+  exception interpolation, `toString()` rendering, and raw load/save error
+  state in active UI code.
 - `integration_test` runs device-level core flows against an isolated database.
   Its core suite drives plan creation, workout start/resume/exit/completion,
   record presentation, Save as plan, profile editing, and database

@@ -4,8 +4,10 @@ import 'package:provider/provider.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../models/models.dart';
 import '../../../repositories/app_repository.dart';
+import '../../../services/safe_failure.dart';
 import '../../exercise/exercise_catalog_page.dart';
 import '../../../widgets/settings_tiles.dart';
+import '../../../widgets/safe_error_view.dart';
 
 class ExerciseAnalyticsScreen extends StatefulWidget {
   final ExerciseDefinition? initialDefinition;
@@ -25,7 +27,7 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
   // --- Definitions ---
   ExerciseDefinition? _sel;
   bool _isLoadingDefs = true;
-  String? _defsError;
+  SafeFailure? _definitionsFailure;
 
   // --- Muscles tab ---
   List<ExerciseMusclePercent> _muscleEntries = [];
@@ -83,6 +85,12 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
   }
 
   Future<void> _loadDefinitions() async {
+    if (mounted) {
+      setState(() {
+        _isLoadingDefs = true;
+        _definitionsFailure = null;
+      });
+    }
     try {
       final defs = await _repo.lookupDefsDetailed();
       if (!mounted) return;
@@ -98,7 +106,7 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
       }
       setState(() {
         _sel = initialMatch ?? (defs.isNotEmpty ? defs.first : null);
-        _defsError = null;
+        _definitionsFailure = null;
       });
       if (_sel != null) {
         await Future.wait([_loadMuscleEntries(_sel!), _loadBodyEntries(_sel!)]);
@@ -106,7 +114,7 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _defsError = e.toString();
+        _definitionsFailure = SafeFailure.classify(e);
       });
     } finally {
       if (mounted) {
@@ -350,7 +358,9 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
                     ),
                   ),
                 ),
-                if (!_isLoadingDefs && _defsError == null && _sel != null) ...[
+                if (!_isLoadingDefs &&
+                    _definitionsFailure == null &&
+                    _sel != null) ...[
                   const SliverToBoxAdapter(child: SizedBox(height: 12)),
                   SliverToBoxAdapter(
                     child: Padding(
@@ -391,12 +401,11 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (_defsError != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Text(_strings.allocationLoadFailed(_defsError!)),
-        ),
+    if (_definitionsFailure != null) {
+      return SafeErrorView(
+        title: _strings.safeFailureLoadTitle,
+        failure: _definitionsFailure!,
+        onRetry: _loadDefinitions,
       );
     }
 

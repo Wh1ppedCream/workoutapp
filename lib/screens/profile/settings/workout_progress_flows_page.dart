@@ -5,6 +5,8 @@ import '../../../l10n/generated/app_localizations.dart';
 import '../../../models/gym_models.dart';
 import '../../../models/preset_models.dart';
 import '../../../repositories/app_repository.dart';
+import '../../../services/safe_failure.dart';
+import '../../../widgets/safe_error_view.dart';
 import '../../../widgets/settings_tiles.dart';
 import '../../exercise/auto_preset_flow_screen.dart';
 
@@ -23,7 +25,7 @@ class _WorkoutProgressFlowsPageState extends State<WorkoutProgressFlowsPage> {
   AppRepository get _repository => context.read<AppRepository>();
 
   bool _isLoading = true;
-  String? _loadError;
+  SafeFailure? _loadFailure;
   int _loadRequest = 0;
   _FlowSummary _appSummary = const _FlowSummary.empty();
   List<_ProfileFlowGroup> _profiles = const [];
@@ -39,7 +41,7 @@ class _WorkoutProgressFlowsPageState extends State<WorkoutProgressFlowsPage> {
     if (mounted) {
       setState(() {
         _isLoading = true;
-        _loadError = null;
+        _loadFailure = null;
       });
     }
 
@@ -61,11 +63,11 @@ class _WorkoutProgressFlowsPageState extends State<WorkoutProgressFlowsPage> {
         _profiles = groups;
         _isLoading = false;
       });
-    } catch (_) {
+    } catch (error) {
       if (!mounted || request != _loadRequest) return;
       setState(() {
         _isLoading = false;
-        _loadError = 'load_failed';
+        _loadFailure = SafeFailure.classify(error);
       });
     }
   }
@@ -136,8 +138,13 @@ class _WorkoutProgressFlowsPageState extends State<WorkoutProgressFlowsPage> {
             padding: EdgeInsets.symmetric(vertical: 52),
             child: Center(child: CircularProgressIndicator()),
           )
-        else if (_loadError != null)
-          _FlowLoadError(message: strings.flowLoadError, onRetry: _loadFlows)
+        else if (_loadFailure != null)
+          SafeErrorView(
+            title: strings.flowLoadError,
+            failure: _loadFailure!,
+            onRetry: _loadFlows,
+            compact: true,
+          )
         else ...[
           _FlowScopeCard(
             color: appColor,
@@ -593,37 +600,6 @@ class _EmptyFlowsCard extends StatelessWidget {
                 context,
               ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FlowLoadError extends StatelessWidget {
-  final String message;
-  final VoidCallback onRetry;
-
-  const _FlowLoadError({required this.message, required this.onRetry});
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: scheme.errorContainer.withValues(alpha: .32),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: scheme.error.withValues(alpha: .38)),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.error_outline, color: scheme.error),
-          const SizedBox(width: 10),
-          Expanded(child: Text(message)),
-          TextButton(
-            onPressed: onRetry,
-            child: Text(AppLocalizations.of(context).commonRetry),
           ),
         ],
       ),

@@ -8,10 +8,12 @@ import '../models/models.dart';
 import '../providers/active_session.dart';
 import '../repositories/app_repository.dart';
 import '../services/tutorial_state_store.dart';
+import '../services/safe_failure.dart';
 import '../utils/localized_body_part_name.dart';
 import '../widgets/body_heatmap.dart';
 import '../widgets/exercise_media_thumbnail.dart';
 import '../widgets/guided_tutorial_overlay.dart';
+import '../widgets/safe_error_view.dart';
 import 'exercise/exercise_catalog_page.dart';
 import 'exercise/muscle_filter_page.dart';
 
@@ -203,11 +205,12 @@ class _CatalogPageState extends State<CatalogPage> {
               return const Center(child: CircularProgressIndicator());
             }
             if (data == null && snapshot.hasError) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Text(strings.catalogLoadError('${snapshot.error}')),
-                ),
+              return SafeErrorView(
+                title: strings.safeFailureLoadTitle,
+                failure: SafeFailure.classify(snapshot.error!),
+                onRetry: () {
+                  _refreshOverview();
+                },
               );
             }
 
