@@ -1797,14 +1797,14 @@
     },
     {
       "exerciseId": 150,
-      "exerciseName": "Lying Leg Curl - Leg Curl Machine (lying)",
+      "exerciseName": "Lying Leg Curl - Leg Curl Machine",
       "slug": "lying_leg_curl_leg_curl_machine_lying",
       "assets": [
         {
           "assetId": "lying_leg_curl_leg_curl_machine_lying_thumb_v1",
           "type": "thumbnail",
           "path": "exercises/lying_leg_curl_leg_curl_machine_lying/v1/thumb.webp",
-          "title": "Lying Leg Curl - Leg Curl Machine (lying) thumbnail",
+          "title": "Lying Leg Curl - Leg Curl Machine thumbnail",
           "sortOrder": 0,
           "version": 1,
           "licenseId": "tonos_owned"

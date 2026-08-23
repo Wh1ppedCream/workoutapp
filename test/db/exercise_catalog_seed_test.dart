@@ -31,7 +31,7 @@ void main() {
         reason:
             'Alphabetical display order must not become the durable media ID.',
       );
-      expect((await db.query('exercise_catalog_state')).single['revision'], 1);
+      expect((await db.query('exercise_catalog_state')).single['revision'], 2);
     },
   );
 }

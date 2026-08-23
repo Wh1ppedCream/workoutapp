@@ -5,9 +5,9 @@ future nutrition content.
 
 ## Current Development Snapshot
 
-As of 2026-08-18, the canonical development source is
+As of 2026-08-23, the canonical development source is
 `tools/content_pipeline/exercise_media_source.example.json` version 10. It
-contains thumbnails for 154 of 313 exercises (49.2%); 159 exercises still use
+contains thumbnails for 154 of 310 exercises (49.7%); 156 exercises still use
 the heatmap fallback. Batches 001 through 008 are merged into this source and
 the current canonical manifest is live in the development bucket.
 
@@ -58,7 +58,7 @@ default-environment change.
 
 Outside-code dependencies:
 
-- [ ] Continue uploading real media files as they are produced; 159 exercise
+- [ ] Continue uploading real media files as they are produced; 156 exercise
   thumbnails remain uncovered.
 
 ## Phase 4 - Local Pipeline

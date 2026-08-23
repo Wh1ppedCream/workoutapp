@@ -322,7 +322,7 @@ const _authoredPremadeTrainingPlans = <PremadeTrainingPlan>[
         reps: 12,
       ),
       PremadeTrainingExercise(
-        name: 'Lying Leg Curl - Leg Curl Machine (lying)',
+        name: 'Lying Leg Curl - Leg Curl Machine',
         equipment: 'Leg Curl Machine (lying)',
         sets: 3,
         reps: 15,
@@ -588,7 +588,7 @@ const _authoredPremadeTrainingPlans = <PremadeTrainingPlan>[
         reps: 10,
       ),
       PremadeTrainingExercise(
-        name: 'Lying Leg Curl - Leg Curl Machine (lying)',
+        name: 'Lying Leg Curl - Leg Curl Machine',
         equipment: 'Leg Curl Machine (lying)',
         sets: 3,
         reps: 12,
@@ -760,7 +760,7 @@ const _authoredPremadeTrainingPlans = <PremadeTrainingPlan>[
         reps: 12,
       ),
       PremadeTrainingExercise(
-        name: 'Lying Leg Curl - Leg Curl Machine (lying)',
+        name: 'Lying Leg Curl - Leg Curl Machine',
         equipment: 'Leg Curl Machine (lying)',
         sets: 3,
         reps: 15,
@@ -894,7 +894,7 @@ const _twoHourPlanCounterparts = <PremadeTrainingPlan>[
         reps: 12,
       ),
       PremadeTrainingExercise(
-        name: 'Lying Leg Curl - Leg Curl Machine (lying)',
+        name: 'Lying Leg Curl - Leg Curl Machine',
         equipment: 'Leg Curl Machine (lying)',
         sets: 3,
         reps: 15,
@@ -980,7 +980,7 @@ const _twoHourPlanCounterparts = <PremadeTrainingPlan>[
         reps: 10,
       ),
       PremadeTrainingExercise(
-        name: 'Lying Leg Curl - Leg Curl Machine (lying)',
+        name: 'Lying Leg Curl - Leg Curl Machine',
         equipment: 'Leg Curl Machine (lying)',
         sets: 3,
         reps: 12,
