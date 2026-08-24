@@ -31,12 +31,17 @@ void main() {
         environment.sharedMediaManifestUrl,
       ]) {
         if (value.isEmpty) continue;
+        final uri = Uri.parse(value);
         expect(
           () => TrustedContentPolicy.requireHttps(
-            Uri.parse(value),
+            uri,
             description: 'Bundled content environment',
           ),
           returnsNormally,
+        );
+        expect(
+          environment.allowedManifestHosts,
+          contains(uri.host.toLowerCase()),
         );
       }
     }

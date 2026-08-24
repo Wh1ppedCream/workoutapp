@@ -81,6 +81,9 @@ jobs:
       - name: Generate localization sources
         run: flutter gen-l10n
 
+      - name: Normalize generated localization formatting
+        run: dart format lib/l10n/generated
+
       - name: Verify generated localization sources are committed
         shell: bash
         run: |
@@ -93,7 +96,18 @@ jobs:
         run: dart analyze lib test integration_test test_driver
 
       - name: Analyze content-pipeline tools
-        run: dart analyze tools/content_pipeline.dart tools/shared_media_pipeline.dart
+        run: >-
+          dart analyze
+          tools/content_environment_check.dart
+          tools/content_pipeline.dart
+          tools/shared_media_pipeline.dart
+
+      - name: Validate locked production content environment
+        run: >-
+          dart run tools/content_environment_check.dart
+          --source assets/content/content_environments.json
+          --target production
+          --locked
 
       - name: Install catalog-builder dependencies
         working-directory: tools/catalog_builder
@@ -103,18 +117,29 @@ jobs:
         working-directory: tools/catalog_builder
         run: dart analyze bin tool
 
+      - name: Verify locked production build policy
+        run: >-
+          flutter test
+          test/services/content_environment_compile_time_test.dart
+          --dart-define=TONOS_CONTENT_ENVIRONMENT=production
+          --dart-define=TONOS_CONTENT_ALLOW_OVERRIDES=false
+          --dart-define=TONOS_EXPECTED_CONTENT_ENVIRONMENT=production
+          --dart-define=TONOS_EXPECTED_CONTENT_OVERRIDES=false
+
       - name: Run unit and widget tests
         run: flutter test
 
       - name: Build signed production APK
         run: >-
           flutter build apk --release
-          --dart-define=TONOS_ENVIRONMENT=production
+          --dart-define=TONOS_CONTENT_ENVIRONMENT=production
+          --dart-define=TONOS_CONTENT_ALLOW_OVERRIDES=false
 
       - name: Build signed production app bundle
         run: >-
           flutter build appbundle --release
-          --dart-define=TONOS_ENVIRONMENT=production
+          --dart-define=TONOS_CONTENT_ENVIRONMENT=production
+          --dart-define=TONOS_CONTENT_ALLOW_OVERRIDES=false
 
       - name: Upload production APK
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

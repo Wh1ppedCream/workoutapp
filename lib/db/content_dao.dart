@@ -256,6 +256,20 @@ class ContentDao {
     return ContentManifestStatus.fromMap(rows.first);
   }
 
+  /// Clears metadata tied to a content environment without touching licenses
+  /// or any user-owned workout, nutrition, or profile data.
+  static Future<void> clearEnvironmentScopedContent(Database db) async {
+    await db.transaction((txn) async {
+      await txn.delete('exercise_media');
+      await txn.delete('shared_media');
+      await txn.delete(
+        'content_manifest',
+        where: 'namespace IN (?, ?)',
+        whereArgs: const ['exercise_media', 'shared_media'],
+      );
+    });
+  }
+
   static Future<void> markMediaAccessed(
     Database db,
     ExerciseMediaItem item,

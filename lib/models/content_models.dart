@@ -28,20 +28,34 @@ class ContentEnvironmentConfig {
   }
 
   factory ContentEnvironmentConfig.fromJson(Map<String, dynamic> json) {
+    final rawDefaultEnvironment = json['defaultEnvironment'];
+    if (rawDefaultEnvironment is! String ||
+        rawDefaultEnvironment.trim().isEmpty) {
+      throw const FormatException(
+        'Content environments require an explicit defaultEnvironment.',
+      );
+    }
+    final rawEnvironments = json['environments'];
+    if (rawEnvironments is! List ||
+        rawEnvironments.any((entry) => entry is! Map)) {
+      throw const FormatException(
+        'Content environments must be a list of objects.',
+      );
+    }
     final environments =
-        (json['environments'] as List? ?? const [])
-            .whereType<Map>()
+        rawEnvironments
+            .cast<Map>()
             .map(
               (entry) =>
                   ContentEnvironment.fromJson(Map<String, dynamic>.from(entry)),
             )
-            .where((environment) => environment.id.isNotEmpty)
             .toList();
+    if (environments.any((environment) => environment.id.isEmpty)) {
+      throw const FormatException('Content environment IDs must be non-empty.');
+    }
 
     return ContentEnvironmentConfig(
-      defaultEnvironmentId:
-          (json['defaultEnvironment'] as String?) ??
-          (environments.isEmpty ? '' : environments.first.id),
+      defaultEnvironmentId: rawDefaultEnvironment.trim(),
       environments: environments,
     );
   }
@@ -59,6 +73,7 @@ class ContentEnvironment {
   final String label;
   final String exerciseMediaManifestUrl;
   final String sharedMediaManifestUrl;
+  final List<String> allowedManifestHosts;
   final String description;
   final bool isProduction;
 
@@ -67,6 +82,7 @@ class ContentEnvironment {
     required this.label,
     required this.exerciseMediaManifestUrl,
     this.sharedMediaManifestUrl = '',
+    this.allowedManifestHosts = const [],
     this.description = '',
     this.isProduction = false,
   });
@@ -85,10 +101,23 @@ class ContentEnvironment {
           (json['exerciseMediaManifestUrl'] as String?)?.trim() ?? '',
       sharedMediaManifestUrl:
           (json['sharedMediaManifestUrl'] as String?)?.trim() ?? '',
+      allowedManifestHosts: _contentEnvironmentHostsFromJson(
+        json['allowedManifestHosts'],
+      ),
       description: (json['description'] as String?)?.trim() ?? '',
       isProduction: json['isProduction'] == true,
     );
   }
+}
+
+List<String> _contentEnvironmentHostsFromJson(Object? value) {
+  if (value == null) return const [];
+  if (value is! List || value.any((host) => host is! String)) {
+    throw const FormatException(
+      'allowedManifestHosts must contain only strings.',
+    );
+  }
+  return List<String>.unmodifiable(value.cast<String>());
 }
 
 /// Stable types of shared catalog entities that can receive optional cloud

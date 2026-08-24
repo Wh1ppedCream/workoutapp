@@ -72,7 +72,17 @@ jobs:
         run: dart analyze lib test integration_test test_driver
 
       - name: Analyze content-pipeline tools
-        run: dart analyze tools/content_pipeline.dart tools/shared_media_pipeline.dart
+        run: >-
+          dart analyze
+          tools/content_environment_check.dart
+          tools/content_pipeline.dart
+          tools/shared_media_pipeline.dart
+
+      - name: Validate development content environment
+        run: >-
+          dart run tools/content_environment_check.dart
+          --source assets/content/content_environments.json
+          --target development
 
       - name: Install catalog-builder dependencies
         working-directory: tools/catalog_builder
@@ -87,6 +97,15 @@ jobs:
           flutter test
           test/catalog_contract_test.dart
           test/tooling_fixture_contract_test.dart
+
+      - name: Verify locked development build policy
+        run: >-
+          flutter test
+          test/services/content_environment_compile_time_test.dart
+          --dart-define=TONOS_CONTENT_ENVIRONMENT=development
+          --dart-define=TONOS_CONTENT_ALLOW_OVERRIDES=false
+          --dart-define=TONOS_EXPECTED_CONTENT_ENVIRONMENT=development
+          --dart-define=TONOS_EXPECTED_CONTENT_OVERRIDES=false
 
       - name: Run unit and widget tests
         run: flutter test
@@ -144,7 +163,10 @@ jobs:
           EOF
 
       - name: Build release APK
-        run: flutter build apk --release
+        run: >-
+          flutter build apk --release
+          --dart-define=TONOS_CONTENT_ENVIRONMENT=development
+          --dart-define=TONOS_CONTENT_ALLOW_OVERRIDES=false
 
       - name: Upload release APK
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

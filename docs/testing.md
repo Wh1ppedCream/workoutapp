@@ -107,7 +107,9 @@ networking with two complementary checks instead:
 1. Build the release APK and inspect its packaged permissions:
 
 ```powershell
-flutter build apk --release
+flutter build apk --release `
+  --dart-define=TONOS_CONTENT_ENVIRONMENT=development `
+  --dart-define=TONOS_CONTENT_ALLOW_OVERRIDES=false
 
 $apkanalyzer = "E:\Android\Sdk\cmdline-tools\latest\bin\apkanalyzer.bat"
 & $apkanalyzer manifest permissions `
@@ -127,11 +129,51 @@ flutter drive `
   -d <android-device-id> `
   --profile `
   --dart-define=TONOS_INTEGRATION_TEST=true `
-  --dart-define=TONOS_DATABASE_NAME=tonos_integration_test.db
+  --dart-define=TONOS_DATABASE_NAME=tonos_integration_test.db `
+  --dart-define=TONOS_CONTENT_ENVIRONMENT=development `
+  --dart-define=TONOS_CONTENT_ALLOW_OVERRIDES=false
 ```
 
 The integration setup clears app SharedPreferences, so run it on a development
 device or emulator where resetting Tonos settings is acceptable.
+
+## Content environment verification
+
+The bundled configuration and build target are separate contracts. Validate the
+configuration directly before building:
+
+```powershell
+dart run tools/content_environment_check.dart `
+  --source assets/content/content_environments.json `
+  --target development
+
+dart run tools/content_environment_check.dart `
+  --source assets/content/content_environments.json `
+  --target production `
+  --locked
+```
+
+The focused compile-time test is run once for locked development and once for
+locked production. It proves saved/custom preferences cannot redirect a release
+artifact:
+
+```powershell
+flutter test test/services/content_environment_compile_time_test.dart `
+  --dart-define=TONOS_CONTENT_ENVIRONMENT=development `
+  --dart-define=TONOS_CONTENT_ALLOW_OVERRIDES=false `
+  --dart-define=TONOS_EXPECTED_CONTENT_ENVIRONMENT=development `
+  --dart-define=TONOS_EXPECTED_CONTENT_OVERRIDES=false
+
+flutter test test/services/content_environment_compile_time_test.dart `
+  --dart-define=TONOS_CONTENT_ENVIRONMENT=production `
+  --dart-define=TONOS_CONTENT_ALLOW_OVERRIDES=false `
+  --dart-define=TONOS_EXPECTED_CONTENT_ENVIRONMENT=production `
+  --dart-define=TONOS_EXPECTED_CONTENT_OVERRIDES=false
+```
+
+Ordinary debug tests intentionally retain runtime overrides so developer UX does
+not change. CI builds its disposable release APK against locked development;
+the protected production workflow preflights and builds locked production.
 
 ## Continuous integration
 
@@ -140,7 +182,9 @@ device or emulator where resetting Tonos settings is acceptable.
 installs the pinned Flutter SDK, regenerates localization sources, fails if the
 tracked generated files change after canonical Dart formatting, analyzes application and test code, analyzes
 the content pipeline and nested catalog builder, validates catalog and media
-fixtures, runs the complete unit/widget suite, and builds a release APK.
+fixtures, preflights the development content target, runs the complete
+unit/widget suite, verifies the locked compile-time policy, and builds an
+explicitly locked development release APK.
 
 External Actions are pinned to immutable commit SHAs, checkout credentials are
 not retained, and Dependabot reviews Action pins weekly. The stable checks

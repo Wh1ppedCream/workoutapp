@@ -12,11 +12,13 @@ void main() {
             'label': 'Development',
             'exerciseMediaManifestUrl': 'https://dev.example/manifest.json',
             'sharedMediaManifestUrl': 'https://dev.example/shared-media.json',
+            'allowedManifestHosts': ['dev.example'],
           },
           {
             'id': 'production',
             'label': 'Production',
             'exerciseMediaManifestUrl': 'https://prod.example/manifest.json',
+            'allowedManifestHosts': ['prod.example'],
             'isProduction': true,
           },
         ],
@@ -29,6 +31,67 @@ void main() {
         isTrue,
       );
       expect(config.environmentById('missing'), isNull);
+      expect(config.environmentById('development')?.allowedManifestHosts, [
+        'dev.example',
+      ]);
+    });
+
+    test('preserves host entries for policy validation', () {
+      final environment = ContentEnvironment.fromJson({
+        'id': 'development',
+        'label': 'Development',
+        'exerciseMediaManifestUrl': 'https://dev.example/manifest.json',
+        'allowedManifestHosts': [' DEV.EXAMPLE '],
+      });
+
+      expect(environment.allowedManifestHosts, [' DEV.EXAMPLE ']);
+      expect(
+        () => ContentEnvironment.fromJson({
+          'id': 'development',
+          'label': 'Development',
+          'exerciseMediaManifestUrl': 'https://dev.example/manifest.json',
+          'allowedManifestHosts': ['dev.example', 7],
+        }),
+        throwsFormatException,
+      );
+    });
+
+    test('rejects implicit defaults and malformed environment entries', () {
+      expect(
+        () => ContentEnvironmentConfig.fromJson({
+          'environments': const <Object>[],
+        }),
+        throwsFormatException,
+      );
+      expect(
+        () => ContentEnvironmentConfig.fromJson({
+          'defaultEnvironment': 'development',
+          'environments': [
+            {
+              'id': 'development',
+              'label': 'Development',
+              'exerciseMediaManifestUrl': 'https://dev.example/manifest.json',
+              'allowedManifestHosts': ['dev.example'],
+            },
+            'not-an-environment',
+          ],
+        }),
+        throwsFormatException,
+      );
+      expect(
+        () => ContentEnvironmentConfig.fromJson({
+          'defaultEnvironment': 'development',
+          'environments': [
+            {
+              'id': '',
+              'label': 'Invalid',
+              'exerciseMediaManifestUrl': 'https://dev.example/manifest.json',
+              'allowedManifestHosts': ['dev.example'],
+            },
+          ],
+        }),
+        throwsFormatException,
+      );
     });
 
     test('parses usable exercise assets and drops entries without URLs', () {

@@ -386,4 +386,47 @@ void main() {
       expect((await db.query('shared_media')), hasLength(1));
     },
   );
+
+  test('clears only environment-scoped cloud content', () async {
+    await db.insert('content_license', {
+      'license_id': 'license-1',
+      'source_name': 'Test source',
+      'license_name': 'Test license',
+    });
+    for (final namespace in [
+      'exercise_media',
+      'shared_media',
+      'nutrition_catalog',
+    ]) {
+      await db.insert('content_manifest', {
+        'namespace': namespace,
+        'version': 1,
+      });
+    }
+    await db.insert('exercise_media', {
+      'exercise_def_id': 12,
+      'asset_id': 'bench_v1',
+      'media_type': 'image',
+      'remote_url': 'https://dev.example/bench.webp',
+      'sort_order': 0,
+    });
+    await db.insert('shared_media', {
+      'entity_type': 'equipment',
+      'entity_id': 4,
+      'asset_id': 'barbell_v1',
+      'media_type': 'thumbnail',
+      'remote_url': 'https://dev.example/barbell.webp',
+      'sort_order': 0,
+    });
+
+    await ContentDao.clearEnvironmentScopedContent(db);
+
+    expect(await db.query('exercise_media'), isEmpty);
+    expect(await db.query('shared_media'), isEmpty);
+    expect(await db.query('content_manifest', columns: ['namespace']), [
+      {'namespace': 'nutrition_catalog'},
+    ]);
+    expect(await db.query('content_license'), hasLength(1));
+    expect(await db.query('exercise_definitions'), hasLength(1));
+  });
 }

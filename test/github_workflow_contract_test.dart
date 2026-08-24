@@ -74,7 +74,10 @@ void main() {
     expect(workflow, contains('name: Localization, analyzer, and tests'));
     expect(workflow, contains('name: Release APK'));
     expect(workflow, contains('dart format lib/l10n/generated'));
-    expect(workflow, contains('dart analyze tools/content_pipeline.dart'));
+    expect(workflow, contains('tools/content_environment_check.dart'));
+    expect(workflow, contains('--target development'));
+    expect(workflow, contains('TONOS_CONTENT_ENVIRONMENT=development'));
+    expect(workflow, contains('TONOS_CONTENT_ALLOW_OVERRIDES=false'));
     expect(workflow, contains('working-directory: tools/catalog_builder'));
     expect(workflow, contains('dart analyze bin tool'));
     expect(workflow, contains('test/tooling_fixture_contract_test.dart'));

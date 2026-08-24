@@ -11,26 +11,26 @@ contains thumbnails for 154 of 310 exercises (49.7%); 156 exercises still use
 the heatmap fallback. Batches 001 through 008 are merged into this source and
 the current canonical manifest is live in the development bucket.
 
-`development` remains the app default. The production bucket and temporary
-public URL are configured, but the current 127-asset canonical manifest has not
-been promoted and validated there. Do not describe production as current until
-that promotion and a clean-install sync check are complete.
+`development` remains the safe no-define fallback. Official builds now select
+an allowlisted content target explicitly and lock release artifacts against
+saved/custom overrides. The production bucket and temporary public URL are
+configured, but the current 154-asset canonical manifest has not been promoted
+and validated there. Do not describe production as current until that promotion
+and a clean-install sync check are complete.
 
 ### Production Audit - 2026-08-10
 
 The production bucket is publicly reachable through its temporary `r2.dev`
 address, has read-only `GET`/`HEAD` CORS, and has no custom domain. Its live
-manifest is version 5 with 62 assets. The version-9 development canonical
-manifest has 127 assets, so production is missing 65 assets and has no
-production-only assets. A remote `HEAD` audit passed for all 62 existing
-production asset URLs and all 65 pending development asset URLs. The matching
-65 production object paths are absent, so this promotion requires both asset
-uploads and a manifest update.
+manifest was version 5 with 62 assets at the audit. The then-current version-9
+development manifest had 127 assets, so the recorded 65-asset delta is historical
+and must not be used for the current promotion. A remote `HEAD` audit passed for
+all URLs in that historical scope.
 
 The remaining promotion gates are a custom production domain, visual
-development QA for batches 004 through 007, canonical production-manifest
-generation, asset-first upload, clean-install production sync, and an explicit
-default-environment change.
+development QA for batches 004 through 008, current canonical
+production-manifest generation, asset-first upload, clean-install production
+sync, and explicit approval of the locked production release target.
 
 ## Phase 1 - Architecture Baseline
 
@@ -81,9 +81,10 @@ Outside-code dependencies:
 
 - [x] Configure production public access with temporary R2 public URL.
 - [x] Update production manifest URL once the temporary public URL exists.
-- [ ] Switch the app default to production after a custom production domain is
-  connected, or after deciding the temporary R2 URL should be used for app
-  builds before a custom domain exists.
+- [x] Add explicit allowlisted build-time environment selection and lock
+  release artifacts against saved or custom overrides.
+- [ ] Approve the production release target after a stable production domain is
+  connected, or after explicitly accepting the temporary R2 URL for a release.
 
 ## Phase 6 - Coverage Workflow
 
@@ -107,7 +108,7 @@ Outside-code dependencies:
 - [x] Upload the expanded development manifest.
 - [x] Sync in-app and spot-check new media plus missing-media fallbacks.
 - [x] Create, validate, merge, and publish development batches 002 through
-  007.
+  008.
 - [ ] Complete a fresh development spot-check for batches 004 through 008 and
   uncovered-exercise fallbacks before production promotion.
 
@@ -138,9 +139,9 @@ Outside-code dependencies:
 - [ ] Promote the current 154-exercise canonical assets and manifest to
   production after development validation.
 - [ ] Verify remote production URLs and a clean-install production sync before
-  changing the app default.
-- [ ] Connect a stable custom production domain before switching the app default;
-  the temporary `r2.dev` URL remains for internal validation only.
+  approving the explicit production release target.
+- [ ] Connect a stable custom production domain before broad distribution; the
+  temporary `r2.dev` URL remains for internal validation only.
 
 ## Phase 10 - App UX And Resilience
 

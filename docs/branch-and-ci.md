@@ -27,9 +27,12 @@ The following GitHub Actions checks are stable branch-protection contracts:
 
 The quality check regenerates localization files, rejects stale generated
 output, analyzes the app and repository tools, analyzes the nested catalog
-builder, validates catalog and media fixtures, runs all Flutter tests, and runs
-the diagnostics-relay schema tests. The release check builds a disposable,
-non-production APK only after quality succeeds.
+builder, validates catalog and media fixtures, preflights the development
+content environment, verifies the locked compile-time policy, runs all Flutter
+tests, and runs the diagnostics-relay schema tests. The release check builds a
+disposable APK explicitly locked to development only after quality succeeds.
+The protected production workflow separately preflights and builds the locked
+production target.
 
 ## Master Ruleset
 

@@ -86,7 +86,9 @@ void main() {
 
     expect(release, contains('environment: production'));
     expect(release, isNot(contains('TONOS_SENTRY_DSN')));
-    expect(release, contains('TONOS_ENVIRONMENT=production'));
+    expect(release, contains('TONOS_CONTENT_ENVIRONMENT=production'));
+    expect(release, contains('TONOS_CONTENT_ALLOW_OVERRIDES=false'));
+    expect(release, isNot(contains('TONOS_ENVIRONMENT=')));
     expect(release, contains('Build signed production APK'));
     expect(release, contains('tonos-production-apk-'));
     expect(
