@@ -10,9 +10,11 @@ work. Cloud-media publishing state and commands live in
 
 ## Current Status
 
-`updates/backlog` contains the active release-preparation work and is 16 commits
-ahead of `origin/master`. The latest reported verification passed analyzer and all
-260 Flutter tests. Stable exercise-catalog identities and standardized safe
+`updates/backlog` contains the active release-preparation work and is 17 commits
+ahead of `origin/master` at `f7a78ca`. The latest reported verification passed
+analyzer and all 282 Flutter tests, plus locked development and production
+content-target tests and a locked-development release APK build. Stable
+exercise-catalog identities and standardized safe
 error recovery are implemented, and development media manifest version 10
 contains 154 of 310 exercise thumbnails (49.7%). Production media and the
 diagnostics relay remain intentionally disabled. Production was last audited at
@@ -349,7 +351,7 @@ verified locally and ready to merge.
     whether coordinated history cleanup is worth the disruption.
 
 35. **Prune branches after preserving unique work.**
-    `updates/backlog` is the active branch and is 16 commits ahead of `master`.
+    `updates/backlog` is the active branch and is 17 commits ahead of `master`.
     Archive or delete fully merged maintenance branches, but inspect the unique
     commits on `feature/ui-redesign` and `plugin_ver` before removing them.
     Document branch ownership and the merge/release flow.
