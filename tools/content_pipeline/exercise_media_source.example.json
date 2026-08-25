@@ -1573,14 +1573,14 @@
     },
     {
       "exerciseId": 123,
-      "exerciseName": "Knee Raise Twist (Hanging)",
+      "exerciseName": "Knee Raise Twist",
       "slug": "knee_raise_twist_hanging",
       "assets": [
         {
           "assetId": "knee_raise_twist_hanging_thumb_v1",
           "type": "thumbnail",
           "path": "exercises/knee_raise_twist_hanging/v1/thumb.webp",
-          "title": "Knee Raise Twist (Hanging) thumbnail",
+          "title": "Knee Raise Twist thumbnail",
           "sortOrder": 0,
           "version": 1,
           "licenseId": "tonos_owned"
@@ -1765,14 +1765,14 @@
     },
     {
       "exerciseId": 143,
-      "exerciseName": "Leg Raise",
+      "exerciseName": "Lying Leg Raise",
       "slug": "leg_raise",
       "assets": [
         {
           "assetId": "leg_raise_thumb_v1",
           "type": "thumbnail",
           "path": "exercises/leg_raise/v1/thumb.webp",
-          "title": "Leg Raise thumbnail",
+          "title": "Lying Leg Raise thumbnail",
           "sortOrder": 0,
           "version": 1,
           "licenseId": "tonos_owned"
@@ -1781,14 +1781,14 @@
     },
     {
       "exerciseId": 144,
-      "exerciseName": "Leg Raise (Hanging)",
+      "exerciseName": "Hanging Leg Raise",
       "slug": "leg_raise_hanging",
       "assets": [
         {
           "assetId": "leg_raise_hanging_thumb_v1",
           "type": "thumbnail",
           "path": "exercises/leg_raise_hanging/v1/thumb.webp",
-          "title": "Leg Raise (Hanging) thumbnail",
+          "title": "Hanging Leg Raise thumbnail",
           "sortOrder": 0,
           "version": 1,
           "licenseId": "tonos_owned"

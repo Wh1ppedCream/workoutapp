@@ -126,7 +126,7 @@ const _authoredPremadeTrainingPlans = <PremadeTrainingPlan>[
         reps: 10,
       ),
       PremadeTrainingExercise(
-        name: 'Leg Press',
+        name: 'Seated Leg Press',
         equipment: 'Leg Press Machine',
         sets: 3,
         reps: 12,
@@ -316,7 +316,7 @@ const _authoredPremadeTrainingPlans = <PremadeTrainingPlan>[
         reps: 10,
       ),
       PremadeTrainingExercise(
-        name: 'Leg Press',
+        name: 'Seated Leg Press',
         equipment: 'Leg Press Machine',
         sets: 3,
         reps: 12,
@@ -582,7 +582,7 @@ const _authoredPremadeTrainingPlans = <PremadeTrainingPlan>[
         reps: 5,
       ),
       PremadeTrainingExercise(
-        name: 'Leg Press',
+        name: 'Seated Leg Press',
         equipment: 'Leg Press Machine',
         sets: 3,
         reps: 10,
@@ -754,7 +754,7 @@ const _authoredPremadeTrainingPlans = <PremadeTrainingPlan>[
         reps: 10,
       ),
       PremadeTrainingExercise(
-        name: 'Leg Press',
+        name: 'Seated Leg Press',
         equipment: 'Leg Press Machine',
         sets: 3,
         reps: 12,
@@ -900,7 +900,7 @@ const _twoHourPlanCounterparts = <PremadeTrainingPlan>[
         reps: 15,
       ),
       PremadeTrainingExercise(
-        name: 'Leg Press',
+        name: 'Seated Leg Press',
         equipment: 'Leg Press Machine',
         sets: 3,
         reps: 12,
@@ -974,7 +974,7 @@ const _twoHourPlanCounterparts = <PremadeTrainingPlan>[
         reps: 5,
       ),
       PremadeTrainingExercise(
-        name: 'Leg Press',
+        name: 'Seated Leg Press',
         equipment: 'Leg Press Machine',
         sets: 3,
         reps: 10,

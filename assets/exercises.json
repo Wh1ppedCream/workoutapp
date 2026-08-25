@@ -847,26 +847,6 @@
       "legacyMediaId": 42
     },
     {
-      "name": "Crunch - Dumbbell (Lying)",
-      "rating": 55,
-      "equipment": ["Dumbbell"],
-      "bodyparts": ["Core"],
-      "muscles": [
-        {"name":"Rectus Abdominis","rank":1},
-        {"name":"Transverse Abdominis","rank":2},
-        {"name":"Obliques","rank":3},
-        {"name":"Iliopsoas","rank":4},
-        {"name":"Rectus Femoris","rank":5},
-        {"name":"Quadratus Lumborum","rank":6},
-        {"name":"Multifidus","rank":7}
-      ],
-      "setupNotes": "Set your spine and pelvis in a comfortable position, brace your abs, and keep your neck relaxed. Choose matching dumbbells and set your stance or bench position before picking them up.",
-      "executionNotes": "Move through the core without yanking the neck or swinging the legs, then return slowly to the start.",
-      "tipsNotes": "Exhale during the hardest part of the rep and stop before your lower back takes over.",
-      "catalogId": "tonos.exercise.0043",
-      "legacyMediaId": 43
-    },
-    {
       "name": "Crunch - Dumbbell (Seated)",
       "rating": 65,
       "equipment": ["Dumbbell"],
@@ -1710,6 +1690,26 @@
       "legacyMediaId": 84
     },
     {
+      "name": "Hanging Leg Raise",
+      "rating": 55,
+      "equipment": ["Bodyweight"],
+      "bodyparts": ["Hips"],
+      "muscles": [
+        {"name":"Iliopsoas","rank":1},
+        {"name":"Rectus Femoris","rank":2},
+        {"name":"Rectus Abdominis","rank":3},
+        {"name":"Transverse Abdominis","rank":4},
+        {"name":"Obliques","rank":5},
+        {"name":"Quadratus Lumborum","rank":6},
+        {"name":"Multifidus","rank":7}
+      ],
+      "setupNotes": "Set your spine and pelvis in a comfortable position, brace your abs, and keep your neck relaxed. Use a stable body position, brace your trunk, and line up the working joints before the first rep.",
+      "executionNotes": "Move through the core without yanking the neck or swinging the legs, then return slowly to the start.",
+      "tipsNotes": "Exhale during the hardest part of the rep and stop before your lower back takes over.",
+      "catalogId": "tonos.exercise.0144",
+      "legacyMediaId": 144
+    },
+    {
       "name": "Heel Touch",
       "rating": 23,
       "equipment": ["Bodyweight"],
@@ -2450,27 +2450,7 @@
     },
     {
       "name": "Knee Raise Twist",
-      "rating": 23,
-      "equipment": ["Bodyweight"],
-      "bodyparts": ["Core","Hips"],
-      "muscles": [
-        {"name":"Obliques","rank":1},
-        {"name":"Iliopsoas","rank":2},
-        {"name":"Rectus Abdominis","rank":3},
-        {"name":"Transverse Abdominis","rank":4},
-        {"name":"Rectus Femoris","rank":5},
-        {"name":"Quadratus Lumborum","rank":6},
-        {"name":"Multifidus","rank":7}
-      ],
-      "setupNotes": "Set your spine and pelvis in a comfortable position, brace your abs, and keep your neck relaxed. Use a stable body position, brace your trunk, and line up the working joints before the first rep.",
-      "executionNotes": "Move through the core without yanking the neck or swinging the legs, then return slowly to the start.",
-      "tipsNotes": "Exhale during the hardest part of the rep and stop before your lower back takes over.",
-      "catalogId": "tonos.exercise.0122",
-      "legacyMediaId": 122
-    },
-    {
-      "name": "Knee Raise Twist (Hanging)",
-      "rating": 23,
+      "rating": 50,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Core","Hips"],
       "muscles": [
@@ -2830,108 +2810,8 @@
       "legacyMediaId": 142
     },
     {
-      "name": "Leg Press",
-      "rating": 23,
-      "equipment": ["Leg Press Machine","Weight Plates"],
-      "bodyparts": ["Quads","Hips","Hamstrings"],
-      "muscles": [
-        {"name":"Vastus Lateralis","rank":1},
-        {"name":"Vastus Medialis","rank":2},
-        {"name":"Rectus Femoris","rank":3},
-        {"name":"Gluteus Maximus","rank":4},
-        {"name":"Biceps Femoris","rank":5},
-        {"name":"Adductor Magnus","rank":6},
-        {"name":"Gastrocnemius","rank":7}
-      ],
-      "setupNotes": "Set your feet firmly, brace your core, and keep knees tracking in line with your toes. Adjust the seat, pads, and handles so the machine lines up with your joints before selecting weight.",
-      "executionNotes": "Descend under control, keep pressure through the whole foot, then drive up without letting knees cave inward.",
-      "tipsNotes": "Use the deepest range you can control while keeping heels down and torso stable.",
-      "catalogId": "tonos.exercise.0149",
-      "legacyMediaId": 149
-    },
-    {
-      "name": "Leg Raise",
-      "rating": 23,
-      "equipment": ["Bodyweight"],
-      "bodyparts": ["Hips"],
-      "muscles": [
-        {"name":"Iliopsoas","rank":1},
-        {"name":"Rectus Femoris","rank":2},
-        {"name":"Rectus Abdominis","rank":3},
-        {"name":"Transverse Abdominis","rank":4},
-        {"name":"Obliques","rank":5},
-        {"name":"Quadratus Lumborum","rank":6},
-        {"name":"Multifidus","rank":7}
-      ],
-      "setupNotes": "Set your spine and pelvis in a comfortable position, brace your abs, and keep your neck relaxed. Use a stable body position, brace your trunk, and line up the working joints before the first rep.",
-      "executionNotes": "Move through the core without yanking the neck or swinging the legs, then return slowly to the start.",
-      "tipsNotes": "Exhale during the hardest part of the rep and stop before your lower back takes over.",
-      "catalogId": "tonos.exercise.0143",
-      "legacyMediaId": 143
-    },
-    {
-      "name": "Leg Raise (Hanging)",
-      "rating": 23,
-      "equipment": ["Bodyweight"],
-      "bodyparts": ["Hips"],
-      "muscles": [
-        {"name":"Iliopsoas","rank":1},
-        {"name":"Rectus Femoris","rank":2},
-        {"name":"Rectus Abdominis","rank":3},
-        {"name":"Transverse Abdominis","rank":4},
-        {"name":"Obliques","rank":5},
-        {"name":"Quadratus Lumborum","rank":6},
-        {"name":"Multifidus","rank":7}
-      ],
-      "setupNotes": "Set your spine and pelvis in a comfortable position, brace your abs, and keep your neck relaxed. Use a stable body position, brace your trunk, and line up the working joints before the first rep.",
-      "executionNotes": "Move through the core without yanking the neck or swinging the legs, then return slowly to the start.",
-      "tipsNotes": "Exhale during the hardest part of the rep and stop before your lower back takes over.",
-      "catalogId": "tonos.exercise.0144",
-      "legacyMediaId": 144
-    },
-    {
-      "name": "Leg Raise (Lying)",
-      "rating": 23,
-      "equipment": ["Bodyweight"],
-      "bodyparts": ["Hips"],
-      "muscles": [
-        {"name":"Iliopsoas","rank":1},
-        {"name":"Rectus Femoris","rank":2},
-        {"name":"Rectus Abdominis","rank":3},
-        {"name":"Transverse Abdominis","rank":4},
-        {"name":"Obliques","rank":5},
-        {"name":"Quadratus Lumborum","rank":6},
-        {"name":"Multifidus","rank":7}
-      ],
-      "setupNotes": "Set your spine and pelvis in a comfortable position, brace your abs, and keep your neck relaxed. Use a stable body position, brace your trunk, and line up the working joints before the first rep.",
-      "executionNotes": "Move through the core without yanking the neck or swinging the legs, then return slowly to the start.",
-      "tipsNotes": "Exhale during the hardest part of the rep and stop before your lower back takes over.",
-      "catalogId": "tonos.exercise.0145",
-      "legacyMediaId": 145
-    },
-    {
-      "name": "Leg Raise Twist",
-      "rating": 23,
-      "equipment": ["Bodyweight"],
-      "bodyparts": ["Core","Hips"],
-      "muscles": [
-        {"name":"Obliques","rank":1},
-        {"name":"Iliopsoas","rank":2},
-        {"name":"Rectus Abdominis","rank":3},
-        {"name":"Transverse Abdominis","rank":4},
-        {"name":"Rectus Femoris","rank":5},
-        {"name":"Quadratus Lumborum","rank":6},
-        {"name":"Multifidus","rank":7}
-      ],
-      "setupNotes": "Set your spine and pelvis in a comfortable position, brace your abs, and keep your neck relaxed. Use a stable body position, brace your trunk, and line up the working joints before the first rep.",
-      "executionNotes": "Move through the core without yanking the neck or swinging the legs, then return slowly to the start.",
-      "tipsNotes": "Exhale during the hardest part of the rep and stop before your lower back takes over.",
-      "catalogId": "tonos.exercise.0146",
-      "legacyMediaId": 146
-    },
-    {
       "name": "Leg Raise Twist (Hanging)",
-      "rating": 23,
+      "rating": 45,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Core","Hips"],
       "muscles": [
@@ -2951,7 +2831,7 @@
     },
     {
       "name": "Leg Raise Twist (Lying)",
-      "rating": 23,
+      "rating": 40,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Core","Hips"],
       "muscles": [
@@ -3089,6 +2969,26 @@
       "tipsNotes": "Keep your hips and torso against the pad, avoid bouncing out of the bottom, and use a range you can control without knee discomfort.",
       "catalogId": "tonos.exercise.0150",
       "legacyMediaId": 150
+    },
+    {
+      "name": "Lying Leg Raise",
+      "rating": 45,
+      "equipment": ["Bodyweight"],
+      "bodyparts": ["Hips"],
+      "muscles": [
+        {"name":"Iliopsoas","rank":1},
+        {"name":"Rectus Femoris","rank":2},
+        {"name":"Rectus Abdominis","rank":3},
+        {"name":"Transverse Abdominis","rank":4},
+        {"name":"Obliques","rank":5},
+        {"name":"Quadratus Lumborum","rank":6},
+        {"name":"Multifidus","rank":7}
+      ],
+      "setupNotes": "Set your spine and pelvis in a comfortable position, brace your abs, and keep your neck relaxed. Use a stable body position, brace your trunk, and line up the working joints before the first rep.",
+      "executionNotes": "Move through the core without yanking the neck or swinging the legs, then return slowly to the start.",
+      "tipsNotes": "Exhale during the hardest part of the rep and stop before your lower back takes over.",
+      "catalogId": "tonos.exercise.0143",
+      "legacyMediaId": 143
     },
     {
       "name": "Mountain Climber",
@@ -4032,7 +3932,7 @@
     },
     {
       "name": "Reverse Fly - Dumbbell (Bent Over)",
-      "rating": 23,
+      "rating": 60,
       "equipment": ["Dumbbell"],
       "bodyparts": ["Upper Back","Shoulders"],
       "muscles": [
@@ -4089,26 +3989,6 @@
       "tipsNotes": "Keep the motion wide and smooth; if it becomes a press, reduce the weight.",
       "catalogId": "tonos.exercise.0199",
       "legacyMediaId": 199
-    },
-    {
-      "name": "Reverse Fly - Dumbbell (Standing)",
-      "rating": 23,
-      "equipment": ["Dumbbell"],
-      "bodyparts": ["Upper Back","Shoulders"],
-      "muscles": [
-        {"name":"Posterior Deltoid","rank":1},
-        {"name":"Rhomboids","rank":2},
-        {"name":"Trapezius (Middle)","rank":3},
-        {"name":"Infraspinatus","rank":4},
-        {"name":"Teres Minor","rank":5},
-        {"name":"Supraspinatus","rank":6},
-        {"name":"Erector Spinae","rank":7}
-      ],
-      "setupNotes": "Set a slight bend in your elbows, open your chest, and choose a load you can control through the full arc. Choose matching dumbbells and set your stance or bench position before picking them up.",
-      "executionNotes": "Open the arms until you feel a chest or rear-shoulder stretch, then sweep them back together without bending more at the elbows.",
-      "tipsNotes": "Keep the motion wide and smooth; if it becomes a press, reduce the weight.",
-      "catalogId": "tonos.exercise.0200",
-      "legacyMediaId": 200
     },
     {
       "name": "Reverse Lunge",
@@ -4573,7 +4453,7 @@
     },
     {
       "name": "Seated Leg Press",
-      "rating": 23,
+      "rating": 75,
       "equipment": ["Leg Press Machine","Weight Plates"],
       "bodyparts": ["Quads","Hips","Hamstrings"],
       "muscles": [
@@ -6048,8 +5928,8 @@
       "legacyMediaId": 302
     },
     {
-      "name": "Windmill Wipers",
-      "rating": 23,
+      "name": "Windshield Wipers",
+      "rating": 45,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Core","Hamstrings"],
       "muscles": [
@@ -6061,35 +5941,15 @@
         {"name":"Quadratus Lumborum","rank":6},
         {"name":"Multifidus","rank":7}
       ],
-      "setupNotes": "Set your spine and pelvis in a comfortable position, brace your abs, and keep your neck relaxed. Use a stable body position, brace your trunk, and line up the working joints before the first rep.",
+      "setupNotes": "Bent Knees. Set your spine and pelvis in a comfortable position, brace your abs, and keep your neck relaxed. Use a stable body position, brace your trunk, and line up the working joints before the first rep.",
       "executionNotes": "Move through the core without yanking the neck or swinging the legs, then return slowly to the start.",
       "tipsNotes": "Exhale during the hardest part of the rep and stop before your lower back takes over.",
       "catalogId": "tonos.exercise.0305",
       "legacyMediaId": 305
     },
     {
-      "name": "Windmill Wipers (Bent Knees)",
-      "rating": 23,
-      "equipment": ["Bodyweight"],
-      "bodyparts": ["Core"],
-      "muscles": [
-        {"name":"Obliques","rank":1},
-        {"name":"Transverse Abdominis","rank":2},
-        {"name":"Rectus Abdominis","rank":3},
-        {"name":"Multifidus","rank":4},
-        {"name":"Quadratus Lumborum","rank":5},
-        {"name":"Biceps Femoris","rank":6},
-        {"name":"Erector Spinae","rank":7}
-      ],
-      "setupNotes": "Set your spine and pelvis in a comfortable position, brace your abs, and keep your neck relaxed. Use a stable body position, brace your trunk, and line up the working joints before the first rep.",
-      "executionNotes": "Move through the core without yanking the neck or swinging the legs, then return slowly to the start.",
-      "tipsNotes": "Exhale during the hardest part of the rep and stop before your lower back takes over.",
-      "catalogId": "tonos.exercise.0307",
-      "legacyMediaId": 307
-    },
-    {
-      "name": "Windmill Wipers (Straight Knees)",
-      "rating": 23,
+      "name": "Windshield Wipers (Straight Knees)",
+      "rating": 55,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Core","Hamstrings"],
       "muscles": [
