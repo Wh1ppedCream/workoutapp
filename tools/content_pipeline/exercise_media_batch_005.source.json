@@ -73,7 +73,7 @@
     },
     {
       "exerciseId": 123,
-      "exerciseName": "Knee Raise Twist (Hanging)",
+      "exerciseName": "Knee Raise Twist",
       "slug": "knee_raise_twist_hanging",
       "assets": [
         {
@@ -81,7 +81,7 @@
           "type": "thumbnail",
           "path": "exercises/knee_raise_twist_hanging/v1/thumb.webp",
           "localFile": "build\\content\\exercise_media_batch_005\\exercises\\knee_raise_twist_hanging\\v1\\thumb.webp",
-          "title": "Knee Raise Twist (Hanging) thumbnail",
+          "title": "Knee Raise Twist thumbnail",
           "sortOrder": 0,
           "version": 1,
           "licenseId": "tonos_owned"
@@ -175,7 +175,7 @@
     },
     {
       "exerciseId": 150,
-      "exerciseName": "Lying Leg Curl - Leg Curl Machine (lying)",
+      "exerciseName": "Lying Leg Curl - Leg Curl Machine",
       "slug": "lying_leg_curl_leg_curl_machine_lying",
       "assets": [
         {
@@ -183,7 +183,7 @@
           "type": "thumbnail",
           "path": "exercises/lying_leg_curl_leg_curl_machine_lying/v1/thumb.webp",
           "localFile": "build\\content\\exercise_media_batch_005\\exercises\\lying_leg_curl_leg_curl_machine_lying\\v1\\thumb.webp",
-          "title": "Lying Leg Curl - Leg Curl Machine (lying) thumbnail",
+          "title": "Lying Leg Curl - Leg Curl Machine thumbnail",
           "sortOrder": 0,
           "version": 1,
           "licenseId": "tonos_owned"

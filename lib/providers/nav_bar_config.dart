@@ -1,5 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+const String _compileTimeExperimentalTabs = String.fromEnvironment(
+  'TONOS_ENABLE_EXPERIMENTAL_TABS',
+);
 
 enum TabItem {
   train,
@@ -16,6 +21,14 @@ enum TabItem {
 }
 
 extension TabItemExtension on TabItem {
+  /// Tabs whose product workflows are still under construction.
+  bool get isExperimental => switch (this) {
+    TabItem.nutritionLog ||
+    TabItem.combinedHistory ||
+    TabItem.formAndPosing => true,
+    _ => false,
+  };
+
   /// Full page titles and settings-page labels.
   String get title {
     switch (this) {
@@ -75,6 +88,66 @@ extension TabItemExtension on TabItem {
   }
 }
 
+class NavigationBuildPolicyException implements Exception {
+  const NavigationBuildPolicyException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => 'NavigationBuildPolicyException: $message';
+}
+
+/// Controls whether unfinished tab destinations can be exposed by this build.
+///
+/// Public release builds always deny experimental tabs. Debug builds keep them
+/// available for development, while profile builds require an explicit define.
+class NavigationBuildPolicy {
+  const NavigationBuildPolicy({
+    required this.experimentalTabsEnabled,
+    required this.isReleaseMode,
+  });
+
+  final bool experimentalTabsEnabled;
+  final bool isReleaseMode;
+
+  factory NavigationBuildPolicy.fromCompileTime({
+    bool? releaseMode,
+    bool? debugMode,
+  }) {
+    final effectiveReleaseMode = releaseMode ?? kReleaseMode;
+    final effectiveDebugMode = debugMode ?? kDebugMode;
+
+    return NavigationBuildPolicy(
+      experimentalTabsEnabled: _parseExperimentalTabsSetting(
+        _compileTimeExperimentalTabs,
+        fallback: effectiveDebugMode,
+      ),
+      isReleaseMode: effectiveReleaseMode,
+    );
+  }
+
+  bool allows(TabItem tab) =>
+      !tab.isExperimental || (!isReleaseMode && experimentalTabsEnabled);
+
+  static bool _parseExperimentalTabsSetting(
+    String value, {
+    required bool fallback,
+  }) {
+    switch (value.trim().toLowerCase()) {
+      case '':
+        return fallback;
+      case 'true':
+        return true;
+      case 'false':
+        return false;
+      default:
+        throw const NavigationBuildPolicyException(
+          'TONOS_ENABLE_EXPERIMENTAL_TABS must be true or false.',
+        );
+    }
+  }
+}
+
 class NavBarConfig extends ChangeNotifier {
   static const _keyOrder = 'navBarOrder';
   static const _keyEnabled = 'navBarEnabled';
@@ -109,17 +182,21 @@ class NavBarConfig extends ChangeNotifier {
 
   bool _loaded = false;
 
-  List<TabItem> get order => List.unmodifiable(_order);
-  Set<TabItem> get enabledTabs => Set.unmodifiable(_enabled);
+  NavBarConfig({NavigationBuildPolicy? buildPolicy})
+    : _buildPolicy = buildPolicy ?? NavigationBuildPolicy.fromCompileTime() {
+    _load();
+  }
+
+  final NavigationBuildPolicy _buildPolicy;
+
+  List<TabItem> get order => List.unmodifiable(_availableTabs(_order));
+  Set<TabItem> get enabledTabs =>
+      Set.unmodifiable(_enabled.where(_buildPolicy.allows).toSet());
   bool get loaded => _loaded;
 
   /// Tabs to display in the bottom bar.
   List<TabItem> get items =>
-      _order.where((tab) => _enabled.contains(tab)).toList();
-
-  NavBarConfig() {
-    _load();
-  }
+      _availableTabs(_order).where(_enabled.contains).toList();
 
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
@@ -156,9 +233,11 @@ class NavBarConfig extends ChangeNotifier {
     required List<TabItem> newOrder,
     required Set<TabItem> newEnabled,
   }) async {
-    newEnabled.add(TabItem.profile);
-    _order = newOrder;
-    _enabled = newEnabled;
+    final availableOrder = _availableTabs(newOrder);
+    final unavailableOrder = _order.where((tab) => !_buildPolicy.allows(tab));
+    _order = _completeOrder([...availableOrder, ...unavailableOrder]);
+    _enabled =
+        newEnabled.where(_buildPolicy.allows).toSet()..add(TabItem.profile);
     notifyListeners();
 
     final prefs = await SharedPreferences.getInstance();
@@ -170,5 +249,18 @@ class NavBarConfig extends ChangeNotifier {
       _keyEnabled,
       _enabled.map((e) => e.toString()).toList(),
     );
+  }
+
+  List<TabItem> _availableTabs(Iterable<TabItem> tabs) =>
+      tabs.where(_buildPolicy.allows).toList();
+
+  List<TabItem> _completeOrder(Iterable<TabItem> tabs) {
+    final complete = <TabItem>[];
+    for (final tab in [...tabs, ..._defaultOrder]) {
+      if (!complete.contains(tab)) {
+        complete.add(tab);
+      }
+    }
+    return complete;
   }
 }

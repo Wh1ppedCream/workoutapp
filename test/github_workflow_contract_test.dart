@@ -78,6 +78,7 @@ void main() {
     expect(workflow, contains('--target development'));
     expect(workflow, contains('TONOS_CONTENT_ENVIRONMENT=development'));
     expect(workflow, contains('TONOS_CONTENT_ALLOW_OVERRIDES=false'));
+    expect(workflow, contains('TONOS_ENABLE_EXPERIMENTAL_TABS=false'));
     expect(workflow, contains('working-directory: tools/catalog_builder'));
     expect(workflow, contains('dart analyze bin tool'));
     expect(workflow, contains('test/tooling_fixture_contract_test.dart'));

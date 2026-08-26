@@ -47,6 +47,21 @@ Run a focused test file while developing a feature:
 flutter test test\services\flow_executor_test.dart
 ```
 
+## Experimental navigation
+
+`Nutrition Log`, `Combined History`, and `Form and Posing` remain available
+for development, but cannot appear in a release build. Debug builds expose
+them through **Profile > UI & appearance > Edit bottom tabs**. Profile builds
+start with them hidden unless explicitly enabled:
+
+```powershell
+flutter run --profile `
+  --dart-define=TONOS_ENABLE_EXPERIMENTAL_TABS=true
+```
+
+Release builds always exclude those tabs, even if that define is passed. This
+protects restored navigation preferences as well as the visible bottom bar.
+
 ## Device, visual, and accessibility QA
 
 Use [device-visual-accessibility-qa.md](device-visual-accessibility-qa.md) for

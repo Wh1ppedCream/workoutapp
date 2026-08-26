@@ -1,6 +1,6 @@
 # Maintenance Backlog
 
-Last updated: 2026-08-23.
+Last updated: 2026-08-25.
 
 This is Tonos's maintained, prioritized engineering backlog. Historical
 roadmap snapshots live in `docs/archive/roadmaps/`; do not use them to plan new
@@ -10,10 +10,12 @@ work. Cloud-media publishing state and commands live in
 
 ## Current Status
 
-`updates/backlog` contains the active release-preparation work and is 17 commits
-ahead of `origin/master` at `f7a78ca`. The latest reported verification passed
-analyzer and all 282 Flutter tests, plus locked development and production
-content-target tests and a locked-development release APK build. Stable
+`updates/backlog` contains the active release-preparation work, based on
+`f7a78ca` from `origin/master`. The latest reported verification passed
+analyzer and all 285 Flutter tests, plus locked development and production
+content-target tests and release APK builds. Experimental navigation is now
+explicitly excluded from release artifacts while remaining available to
+development builds for future product work. Stable
 exercise-catalog identities and standardized safe
 error recovery are implemented, and development media manifest version 10
 contains 154 of 310 exercise thumbnails (49.7%). Production media and the
@@ -121,7 +123,13 @@ verified locally and ready to merge.
     release override locking, manifest-host allowlists, environment-scoped cloud
     metadata/cache resets, read-only release settings, a pure-Dart preflight,
     and development/production workflow contracts are implemented without
-    changing ordinary debug behavior or deleting user-owned data.
+   changing ordinary debug behavior or deleting user-owned data.
+18. Experimental navigation is build-gated. Nutrition Log, Combined History,
+    and Form and Posing remain available for development work, while release
+    builds exclude them from saved navigation, bottom navigation, and tab
+    editing even if a build define is misconfigured. CI and production-release
+    workflows explicitly disable the gate, and policy/workflow contracts cover
+    the fail-closed behavior.
 
 ## Findings Added By The August 23 Audit
 
@@ -152,11 +160,12 @@ verified locally and ready to merge.
 
 ## Ranked Backlog
 
-1. **Resolve the visible unfinished release surfaces.**
-   Keep Nutrition Log, Combined History, and Form and Posing selectable as
-   requested, but replace their literal placeholder pages with approved product
-   plans and honest designed states. Decide whether Nutrition Log should route
-   into the existing nutrition flow instead of remaining a duplicate entry.
+1. **Perform the final release-navigation smoke test.**
+   Install a signed release APK and confirm Nutrition Log, Combined History,
+   and Form and Posing are absent from bottom navigation and Edit bottom tabs.
+   When that passes, close the release-visibility gate; keep the three tabs
+   available only in debug or explicitly enabled profile builds until their
+   separate product plans are approved.
 
 2. **Audit the exercise catalog for safety, encoding, and content quality.**
    Review all 310 definitions for unsafe or misleading guidance, duplicates,
@@ -392,8 +401,9 @@ verified locally and ready to merge.
 
 ## Working Rules
 
-1. Keep Nutrition Log, Combined History, and Form and Posing selectable until
-   their implementation plans are approved; do not silently hide them.
+1. Keep Nutrition Log, Combined History, and Form and Posing available for
+   development only. Release builds must exclude them until their implementation
+   plans are approved and their complete product flows are ready.
 2. Keep production media and the diagnostics relay disabled until their listed
    release gates are complete.
 3. Every active user-facing feature change must include localization,
