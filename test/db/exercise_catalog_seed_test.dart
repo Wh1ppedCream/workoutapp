@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:env_test/db/schema.dart';
 import 'package:env_test/db/seed.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -13,6 +16,9 @@ void main() {
       final db = await databaseFactoryFfi.openDatabase(inMemoryDatabasePath);
       addTearDown(db.close);
       await Schema.createTables(db);
+      final catalog =
+          jsonDecode(await File('assets/exercises.json').readAsString())
+              as Map<String, dynamic>;
 
       await Seed.seedLookupsAndExercises(db);
 
@@ -31,7 +37,10 @@ void main() {
         reason:
             'Alphabetical display order must not become the durable media ID.',
       );
-      expect((await db.query('exercise_catalog_state')).single['revision'], 2);
+      expect(
+        (await db.query('exercise_catalog_state')).single['revision'],
+        catalog['revision'],
+      );
     },
   );
 }

@@ -31,6 +31,47 @@ void main() {
       expect(names, hasLength(exercises.length));
       final aliases = <String>{};
       for (final exercise in exercises) {
+        final setupNotes = (exercise['setupNotes'] as String).split('\n');
+        final executionNotes = (exercise['executionNotes'] as String).split(
+          '\n',
+        );
+        final tipsNotes = (exercise['tipsNotes'] as String).split('\n');
+        expect(
+          setupNotes.length,
+          greaterThanOrEqualTo(2),
+          reason: '${exercise['name']} needs numbered setup instructions.',
+        );
+        expect(
+          executionNotes.length,
+          greaterThanOrEqualTo(2),
+          reason: '${exercise['name']} needs numbered execution instructions.',
+        );
+        expect(
+          tipsNotes.length,
+          greaterThanOrEqualTo(2),
+          reason: '${exercise['name']} needs bullet-point tips.',
+        );
+        for (var index = 0; index < setupNotes.length; index++) {
+          expect(
+            setupNotes[index],
+            matches(RegExp('^${index + 1}\\.\\s+.+\$')),
+            reason: '${exercise['name']} has invalid setup note numbering.',
+          );
+        }
+        for (var index = 0; index < executionNotes.length; index++) {
+          expect(
+            executionNotes[index],
+            matches(RegExp('^${index + 1}\\.\\s+.+\$')),
+            reason: '${exercise['name']} has invalid execution note numbering.',
+          );
+        }
+        for (final tip in tipsNotes) {
+          expect(
+            tip,
+            matches(RegExp(r'^-\s+.+$')),
+            reason: '${exercise['name']} has an invalid tip format.',
+          );
+        }
         expect(
           (exercise['equipment'] as List? ?? const []).every(
             (value) => value is String && value.trim().isNotEmpty,
