@@ -1,6 +1,6 @@
 # Maintenance Backlog
 
-Last updated: 2026-08-25.
+Last updated: 2026-08-29.
 
 This is Tonos's maintained, prioritized engineering backlog. Historical
 roadmap snapshots live in `docs/archive/roadmaps/`; do not use them to plan new
@@ -10,19 +10,19 @@ work. Cloud-media publishing state and commands live in
 
 ## Current Status
 
-`updates/backlog` contains the active release-preparation work, based on
-`f7a78ca` from `origin/master`. The latest reported verification passed
-analyzer and all 285 Flutter tests, plus locked development and production
+`updates/backlog` contains the active release-preparation work at `fd84094`,
+21 commits ahead of `origin/master` at `f14eee0`. The latest reported
+verification passed analyzer and all 288 Flutter tests, plus locked development and production
 content-target tests and release APK builds. Experimental navigation is now
 explicitly excluded from release artifacts while remaining available to
 development builds for future product work. Stable
 exercise-catalog identities and standardized safe
 error recovery are implemented, and development media manifest version 10
-contains 154 of 310 exercise thumbnails (49.7%). Production media and the
+contains 154 of 301 exercise thumbnails (51.2%). Production media and the
 diagnostics relay remain intentionally disabled. Production was last audited at
-62 thumbnails and must be re-audited before promotion. Catalog revision 2 and
-its premade-plan, alias-migration, media-source, and quality contracts are
-verified locally and ready to merge.
+62 thumbnails and must be re-audited before promotion. Catalog revision 5,
+its concise instruction format, premade-plan, alias-migration, media-source,
+and quality contracts are verified locally with project-owner audit sign-off.
 
 ## Recently Completed
 
@@ -130,6 +130,19 @@ verified locally and ready to merge.
     editing even if a build define is misconfigured. CI and production-release
     workflows explicitly disable the gate, and policy/workflow contracts cover
     the fail-closed behavior.
+19. The final release-navigation smoke test passed on a clean signed APK
+    install. Nutrition Log, Combined History, and Form and Posing were absent
+    from both bottom navigation and Edit bottom tabs after restart.
+20. Every catalog exercise now has concise, consistent instruction content:
+   three numbered setup steps, three numbered execution steps, and three
+   short safety or technique tips. Catalog revision 5 is seeded dynamically
+   from the bundled source rather than through a stale test fixture, and a
+   contract rejects future entries that do not retain the structured format.
+21. The exercise-catalog safety, encoding, and quality audit is complete for
+   the 301 active entries. Stable identities, aliases, retirement, ordering,
+   lookup references, instruction structure, text encoding, and 154 thumbnail
+   mappings are covered by contracts; the revision 5 baseline has project-owner
+   approval recorded in `exercise-catalog-audit.md`.
 
 ## Findings Added By The August 23 Audit
 
@@ -160,95 +173,82 @@ verified locally and ready to merge.
 
 ## Ranked Backlog
 
-1. **Perform the final release-navigation smoke test.**
-   Install a signed release APK and confirm Nutrition Log, Combined History,
-   and Form and Posing are absent from bottom navigation and Edit bottom tabs.
-   When that passes, close the release-visibility gate; keep the three tabs
-   available only in debug or explicitly enabled profile builds until their
-   separate product plans are approved.
-
-2. **Audit the exercise catalog for safety, encoding, and content quality.**
-   Review all 310 definitions for unsafe or misleading guidance, duplicates,
-   equipment compatibility, ranking quality, starter metadata, and terminology.
-   Fix the confirmed mojibake in the Ab Wheel notes and add Unicode, schema,
-   identity, alias, retirement, ordering, and semantic content contracts.
-
-3. **Retire the alternative Train hub.**
+1. **Retire the alternative Train hub.**
    Compare `Train2Page` with the primary Train experience, preserve wanted
    behavior, migrate saved navigation preferences to versioned stable codes,
    remove `TabItem.train2`, then delete the duplicate route and screen.
 
-4. **Rework the Exercise Editor.**
+2. **Rework the Exercise Editor.**
    Finalize the creator/editor workflow, expose starter-load controls where
    appropriate, validate destructive edits and identity changes, remove legacy
    form state, and split the roughly 2,000-line screen into testable sections.
 
-5. **Improve starter-weight calibration.**
+3. **Improve starter-weight calibration.**
    Add first-working-set feedback for too easy, appropriate, and too hard.
    Persist conservative per-exercise adjustments, respect equipment increments
    and safety bounds, explain recommendations, and allow reset or correction.
 
-6. **Validate generated plans and automatic progression as a product system.**
+4. **Validate generated plans and automatic progression as a product system.**
    Keep the internal deterministic rules already added, then review each
    user-visible policy separately. Cover sparse history, bodyweight movements,
    limited equipment, substitutions, failed sets, repeated sessions, deloads,
    recovery from pending progression, and explanations for every fallback.
 
-7. **Define backup scope and prove restore equivalence.**
+5. **Define backup scope and prove restore equivalence.**
    Classify every schema table as user-owned, app-owned, derived, cache, or
    transient. Export all user-owned state, deliberately rebuild or discard
    derived rows, migrate old envelopes, and fail tests whenever a schema change
    lacks an export-policy decision. Verify restore preserves allocation
    overrides, record badges, active work, plans, nutrition, and measurements.
 
-8. **Normalize timestamp and local-calendar semantics.**
+6. **Normalize timestamp and local-calendar semantics.**
    Persist instants in one UTC representation, model date-only values
    separately, and convert to local time only at display and calendar grouping
    boundaries. Migrate legacy local ISO rows and test DST transitions, travel,
    midnight boundaries, range queries, imports, and old workout history.
 
-9. **Complete health-product legal and store-readiness review.**
+7. **Complete health-product legal and store-readiness review.**
    Add approved fitness and injury disclaimers, decide age/eligibility rules,
    publish Terms of Use, review health claims, and complete Google Play Data
    Safety and Health Apps declarations. Document camera/barcode use, local
    health data, plaintext exports, privacy URLs, and deletion behavior.
 
-10. **Finish production media when a custom domain is ready.**
+8. **Finish production media when a custom domain is ready.**
    Re-audit production against development manifest v10, visually validate
    batches 004 through 008, upload every missing asset, publish the canonical
    manifest, run clean-install/offline/recovery release checks, and only then
    approve the explicit production release target. Do not rely on stale
    65-asset counts.
 
-11. **Complete native-speaker localization review.**
+9. **Complete native-speaker localization review.**
    Qualified reviewers should approve French, Canadian French, Bangla,
    Simplified Chinese, Hindi, and Spanish terminology, pluralization, tone, and
    regional usage. Record findings and approval in `localization-review.md`.
 
-12. **Close localization boundaries outside widget literals.**
+10. **Close localization boundaries outside widget literals.**
     Replace file-picker dialog titles, maintenance result prose, import warning
     strings, domain exceptions, and other platform/plugin-facing text with typed
     codes rendered through ARB messages. Extend contracts to named plugin
     arguments and dynamic result types without exposing internal exceptions.
 
-13. **Localize catalog entities using stable codes.**
+11. **Localize catalog entities using stable codes.**
     Exercise identity is now stable, but equipment, muscles, bodyparts,
     stretches, instructions, and built-in plans remain English-backed. Add
     language-neutral codes and localized display metadata with English fallback
     without changing history, media slugs, or user-created content.
 
-14. **Decide the offline-first media experience.**
+12. **Decide the offline-first media experience.**
     Choose whether release builds accept anatomy fallbacks on a first offline
     launch or bundle a small core thumbnail set. Define first-sync messaging,
     data and battery behavior, retry policy, and low-storage behavior.
 
-15. **Expand device, visual-regression, and accessibility coverage.**
+13. **Expand device, visual-regression, and accessibility coverage.**
     Split the single stateful core integration test into isolated scenarios with
     reusable fixtures. Add stable-screen goldens, navigation migration and
     release-upgrade tests, more failure/offline coverage, and recorded manual
     TalkBack and VoiceOver passes across long locales and large text.
 
-16. **Align CI, tooling checks, and branch protection with feature branches.**
+14. **Align CI, tooling checks, and branch protection with feature branches.**
     Local enforcement is implemented: approved feature prefixes receive push
     CI, `local-db` is removed, tools and fixtures are checked, Actions are pinned
     to immutable SHAs, and Dependabot reviews Actions and Dart dependencies.
@@ -256,143 +256,143 @@ verified locally and ready to merge.
     documented `Protect master` ruleset with the two stable required checks
     after the pull request is green.
 
-17. **Establish release versioning and store-delivery governance.**
+15. **Establish release versioning and store-delivery governance.**
     Replace the static `1.0.1+5` habit with a version/build policy, release tags,
     changelog, approved-commit gate, hashes or provenance, signing-key recovery,
     and staged internal testing. A manually selected ref must not silently
     become an unlabeled production release.
 
-18. **Version and migrate the preference schema.**
+16. **Version and migrate the preference schema.**
     Inventory every SharedPreferences key, replace enum `toString()` persistence
     with stable codes, add a preference schema version, and centralize migrations
     for tabs, dashboard layout, locale, units, theme, tutorials, workout exit,
     diagnostics, and content settings. Test corrupt, removed, and future values.
 
-19. **Make optional hardware and platform permissions explicit.**
+17. **Make optional hardware and platform permissions explicit.**
     Android currently declares camera permission without declaring camera
     hardware optional. Add the appropriate optional feature declaration and
     test installation on no-camera devices. Review permission timing and repeat
     permission, entitlement, and privacy checks for every supported platform.
 
-20. **Create a complete licensing, attribution, and data-provenance inventory.**
+18. **Create a complete licensing, attribution, and data-provenance inventory.**
     Record licenses and sources for exercise guidance, thumbnails, anatomy art,
     food catalogs, fonts, packages, and generated datasets. Add in-app or
     published notices where required and make CI reject unlicensed media rows.
 
-21. **Complete the local-data reset and retention lifecycle.**
+19. **Complete the local-data reset and retention lifecycle.**
     Decide whether to add an in-app Delete All Local Data action. If approved,
     require typed confirmation and atomically clear the database, preferences,
     active drafts, media/cache files, local diagnostics, and relay receipts while
     explaining that user-exported files must be deleted separately. Test restart,
     partial failure, and operating-system clear-data behavior.
 
-22. **Decide the local sensitive-data security model.**
+20. **Decide the local sensitive-data security model.**
     The database is app-private, excluded from Android backup, and exports are
     explicitly plaintext. Before release, document the threat model and decide
     whether device protection is sufficient or whether database encryption,
     encrypted exports, app lock, or additional deletion controls are needed.
 
-23. **Choose and wire the production food-catalog strategy.**
+21. **Choose and wire the production food-catalog strategy.**
     The app installs four starter foods while larger generated catalogs remain
     unused. Choose authoritative licensed sources, update cadence, barcode and
     locale coverage, offline size, and duplicate policy, then integrate one
     production path with startup, migration, and search-performance tests.
 
-24. **Complete nutrition as a coherent product stream.**
+22. **Complete nutrition as a coherent product stream.**
     Finish logging and goal behavior, real dashboard data, custom-food photos
     and files, label/barcode flows, density and portion conversion, recipes,
     favorites, failure states, integrity tests, and all deferred localization.
 
-25. **Restore cardio and stretch as complete vertical features.**
+23. **Restore cardio and stretch as complete vertical features.**
     Implement creation, plans, sessions, completion, repeat, history, analytics,
     records, and Save as plan together. Unify their taxonomy and duration rules
     with strength training and cover migrations, localization, and devices.
 
-26. **Continue exercise and anatomy media.**
-    Development covers 154 of 310 exercise thumbnails. Continue reviewed
+24. **Continue exercise and anatomy media.**
+   Development covers 154 of 301 exercise thumbnails. Continue reviewed
     batches and establish one licensed, accessible, versioned illustration or
     heatmap direction for equipment, bodypart, and muscle media.
 
-27. **Remove obsolete, fabricated, and unreachable implementations.**
+25. **Remove obsolete, fabricated, and unreachable implementations.**
     Delete or rebuild the unreferenced sample-data `DefaultTrendPage`, preserve
     useful assertions before removing the obsolete badge DAO, and reduce
     `active_session.dart` to the durable provider export by deleting its large
     commented legacy implementation.
 
-28. **Continue focused database decomposition alongside related work.**
+26. **Continue focused database decomposition alongside related work.**
     `DatabaseHelper` remains over 5,000 lines. Extract backup/import, migration
     repair, food seeding/search, and maintenance only when focused tests can
     establish ownership. Remove duplicate schema ownership between helper and
     `Schema`, and keep transactions and upgrades explicit.
 
-29. **Decompose other oversized feature files alongside feature work.**
+27. **Decompose other oversized feature files alongside feature work.**
     Onboarding, exercise detail, preset generation, nutrition DAO/logging,
     analytics, and chart widgets remain 1,400-3,200 lines. Extract cohesive
     controllers, query models, formatters, and sections rather than mechanically
     splitting files.
 
-30. **Define privacy-safe release logging.**
+28. **Define privacy-safe release logging.**
     Replace raw exception and stack-trace `debugPrint` calls with a build-aware,
     allowlisted logger or suppress them outside development. Ensure logs never
     contain user-entered food, profile, health, file-path, URL, or database data,
     and add a source contract for release-sensitive paths.
 
-31. **Create performance, battery, and storage baselines.**
+29. **Create performance, battery, and storage baselines.**
     Measure release startup, database creation/upgrades, catalog seeding, plan
     generation, large lists and reports, image decoding, sync bandwidth, cache
     growth, memory, and battery on low- and mid-range Android devices. Establish
     budgets before larger food, image, or video catalogs ship.
 
-32. **Perform a controlled Flutter and dependency upgrade.**
+30. **Perform a controlled Flutter and dependency upgrade.**
     Move beyond Flutter 3.29.3, revisit pinned chart/scanner dependencies, and
     run localization generation, analyzer, tests, release builds, and physical
     and hosted device suites. Add recurring dependency and vulnerability review.
 
-33. **Define and enforce the supported-platform matrix.**
+31. **Define and enforce the supported-platform matrix.**
     Android is the only verified runtime. Do not advertise web, desktop, or iOS
     until database, file, networking, permission, media, privacy, signing, store,
     and real-device behavior are implemented and tested for that platform.
 
-34. **Remove tracked artifacts and repair repository hygiene.**
+32. **Remove tracked artifacts and repair repository hygiene.**
     Move four tracked APKs (about 130 MB) to GitHub releases/artifacts, remove or
     regenerate tracked catalog-builder databases, review the 38 MB seed SQL and
     stale root notes, and fix the malformed APK ignore entry. Decide separately
     whether coordinated history cleanup is worth the disruption.
 
-35. **Prune branches after preserving unique work.**
-    `updates/backlog` is the active branch and is 17 commits ahead of `master`.
+33. **Prune branches after preserving unique work.**
+    `updates/backlog` is the active branch and is 21 commits ahead of `master`.
     Archive or delete fully merged maintenance branches, but inspect the unique
     commits on `feature/ui-redesign` and `plugin_ver` before removing them.
     Document branch ownership and the merge/release flow.
 
-36. **Make content status documentation generated or mechanically verified.**
+34. **Make content status documentation generated or mechanically verified.**
     Historical production audit/changelog entries retain v9/127/65 figures while the
     development source is v10/154. Generate coverage and promotion scope from
     canonical manifests so roadmap, setup, changelog, and release reports cannot
     silently disagree.
 
-37. **Rehearse release-candidate installation, upgrade, and rollback.**
+35. **Rehearse release-candidate installation, upgrade, and rollback.**
     Install a signed clean build and upgrade from the last approved build using
     realistic data, active drafts, preferences, media cache, and imports. Verify
     schema migrations, catalog aliases/retirements, data preservation, downgrade
     policy, backup recovery, and store-delivered artifact identity.
 
-38. **Define user support and feedback without remote diagnostics.**
+36. **Define user support and feedback without remote diagnostics.**
     Provide an intentional support path, version/build and privacy-safe export
     instructions, response ownership, and a way to report sync/import failures
     while the diagnostics relay remains disabled.
 
-39. **Provision the diagnostics relay only when remote diagnostics are needed.**
+37. **Provision the diagnostics relay only when remote diagnostics are needed.**
     When justified, create isolated staging Worker/D1 resources and validate
     consent, schema, receipt deletion, retention, abuse controls, no-egress, and
     no-logging behavior before any production relay URL is configured.
 
-40. **Rename the internal Dart package only as a dedicated migration.**
+38. **Rename the internal Dart package only as a dedicated migration.**
     Platform identities use Tonos, but package imports still use `env_test`.
     Rename them together only when the churn is worthwhile and verify every
     tool, test, generated source, and platform integration in one change.
 
-41. **Implement the planned durable media library when scale requires it.**
+39. **Implement the planned durable media library when scale requires it.**
     Keep the verified temporary-cache recovery for current thumbnails. Before
     food images or exercise videos expand materially, follow
     `media-library-architecture-plan.md`: content-addressed no-backup storage,
@@ -416,5 +416,5 @@ verified locally and ready to merge.
 ## Recommended Sequence
 
 The strongest near-term sequence is: **define backup scope -> normalize
-timestamps -> audit catalog safety -> retire Train2 -> rework the Exercise
+timestamps -> retire Train2 -> rework the Exercise
 Editor -> implement starter feedback -> validate generated plans**.

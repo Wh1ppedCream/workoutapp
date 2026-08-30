@@ -1,5 +1,5 @@
 ﻿{
-  "revision": 3,
+  "revision": 5,
   "exercises": [
     {
       "name": "Ab Wheel",
@@ -1591,7 +1591,7 @@
     },
     {
       "name": "Hammer Curl - Cable Machine",
-      "rating": 23,
+      "rating": 75,
       "equipment": ["Cable Machine","Cable Handle Attachment"],
       "bodyparts": ["Biceps","Forearms"],
       "muscles": [
@@ -1611,7 +1611,7 @@
     },
     {
       "name": "Hammer Curl - Dumbbell",
-      "rating": 23,
+      "rating": 80,
       "equipment": ["Dumbbell"],
       "bodyparts": ["Biceps","Forearms"],
       "muscles": [
@@ -1631,7 +1631,7 @@
     },
     {
       "name": "Hammer Curl - Dumbbell (Crossbody)",
-      "rating": 23,
+      "rating": 80,
       "equipment": ["Dumbbell"],
       "bodyparts": ["Biceps","Forearms"],
       "muscles": [
@@ -1651,7 +1651,7 @@
     },
     {
       "name": "Hang Clean - Barbell",
-      "rating": 23,
+      "rating": 65,
       "equipment": ["Barbell","Weight Plates"],
       "bodyparts": ["Upper Back","Shoulders"],
       "muscles": [
@@ -1671,7 +1671,7 @@
     },
     {
       "name": "Hang Snatch - Barbell",
-      "rating": 23,
+      "rating": 70,
       "equipment": ["Barbell","Weight Plates"],
       "bodyparts": ["Upper Back","Shoulders"],
       "muscles": [
@@ -1711,7 +1711,7 @@
     },
     {
       "name": "Heel Touch",
-      "rating": 23,
+      "rating": 35,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Core"],
       "muscles": [
@@ -1731,7 +1731,7 @@
     },
     {
       "name": "High Pull - Barbell",
-      "rating": 23,
+      "rating": 60,
       "equipment": ["Barbell","Weight Plates"],
       "bodyparts": ["Upper Back","Shoulders"],
       "muscles": [
@@ -1751,7 +1751,7 @@
     },
     {
       "name": "High Pull - Dumbbell",
-      "rating": 23,
+      "rating": 60,
       "equipment": ["Dumbbell"],
       "bodyparts": ["Upper Back","Shoulders"],
       "muscles": [
@@ -1771,7 +1771,7 @@
     },
     {
       "name": "Hip Abductor - Cable Machine",
-      "rating": 23,
+      "rating": 70,
       "equipment": ["Cable Machine","Cable Ankle Cuff Attachment"],
       "bodyparts": ["Hips"],
       "muscles": [
@@ -1791,7 +1791,7 @@
     },
     {
       "name": "Hip Adductor - Cable Machine",
-      "rating": 23,
+      "rating": 70,
       "equipment": ["Cable Machine","Cable Ankle Cuff Attachment"],
       "bodyparts": ["Hips"],
       "muscles": [
@@ -1811,7 +1811,7 @@
     },
     {
       "name": "Hip Extension",
-      "rating": 23,
+      "rating": 35,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Hips","Hamstrings"],
       "muscles": [
@@ -1831,7 +1831,7 @@
     },
     {
       "name": "Hip Flexion",
-      "rating": 23,
+      "rating": 20,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Hips","Core"],
       "muscles": [
@@ -1851,7 +1851,7 @@
     },
     {
       "name": "Hip Frog Extension",
-      "rating": 23,
+      "rating": 40,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Hips"],
       "muscles": [
@@ -1871,7 +1871,7 @@
     },
     {
       "name": "Hip Raise",
-      "rating": 23,
+      "rating": 50,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Hips","Hamstrings","Core"],
       "muscles": [
@@ -1891,7 +1891,7 @@
     },
     {
       "name": "Hip Thrust - Barbell",
-      "rating": 23,
+      "rating": 75,
       "equipment": ["Barbell","Weight Plates"],
       "bodyparts": ["Hips","Hamstrings","Core"],
       "muscles": [
@@ -1911,7 +1911,7 @@
     },
     {
       "name": "Hip Thrust - Cable Machine",
-      "rating": 23,
+      "rating": 75,
       "equipment": ["Cable Machine","Cable Ankle Cuff Attachment"],
       "bodyparts": ["Hips","Hamstrings","Core"],
       "muscles": [
@@ -1931,7 +1931,7 @@
     },
     {
       "name": "Hip Thrust - Hip Thrust Machine",
-      "rating": 23,
+      "rating": 85,
       "equipment": ["Hip Thrust Machine"],
       "bodyparts": ["Hips","Hamstrings","Core"],
       "muscles": [
@@ -1951,7 +1951,7 @@
     },
     {
       "name": "In-And-Out",
-      "rating": 23,
+      "rating": 45,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Hips"],
       "muscles": [
@@ -1971,7 +1971,7 @@
     },
     {
       "name": "In-And-Out - Dumbbell",
-      "rating": 23,
+      "rating": 40,
       "equipment": ["Dumbbell"],
       "bodyparts": ["Hips"],
       "muscles": [
@@ -1991,7 +1991,7 @@
     },
     {
       "name": "Incline Around the World - Dumbbell",
-      "rating": 23,
+      "rating": 45,
       "equipment": ["Dumbbell","Adjustable Bench"],
       "bodyparts": ["Shoulders","Chest"],
       "muscles": [
@@ -2011,7 +2011,7 @@
     },
     {
       "name": "Incline Bench Fly - Cable Machine",
-      "rating": 23,
+      "rating": 65,
       "equipment": ["Cable Machine","Adjustable Bench"],
       "bodyparts": ["Chest","Shoulders"],
       "muscles": [
@@ -2031,7 +2031,7 @@
     },
     {
       "name": "Incline Bench Fly - Dumbbell",
-      "rating": 23,
+      "rating": 70,
       "equipment": ["Dumbbell","Adjustable Bench"],
       "bodyparts": ["Chest","Shoulders"],
       "muscles": [
@@ -2111,7 +2111,7 @@
     },
     {
       "name": "Incline Bicep Curl - Dumbbell",
-      "rating": 23,
+      "rating": 85,
       "equipment": ["Dumbbell","Adjustable Bench"],
       "bodyparts": ["Biceps"],
       "muscles": [
@@ -2131,7 +2131,7 @@
     },
     {
       "name": "Incline Chest Press - Barbell",
-      "rating": 23,
+      "rating": 90,
       "equipment": ["Barbell","Adjustable Bench","Weight Plates"],
       "bodyparts": ["Chest","Shoulders","Triceps"],
       "muscles": [
@@ -2151,7 +2151,7 @@
     },
     {
       "name": "Incline Chest Press - Dumbbell",
-      "rating": 23,
+      "rating": 80,
       "equipment": ["Dumbbell","Adjustable Bench"],
       "bodyparts": ["Chest","Shoulders","Triceps"],
       "muscles": [
@@ -2171,7 +2171,7 @@
     },
     {
       "name": "Incline Leg Press",
-      "rating": 23,
+      "rating": 85,
       "equipment": ["Incline Leg Press Machine","Weight Plates"],
       "bodyparts": ["Quads","Hips","Hamstrings"],
       "muscles": [
@@ -2191,7 +2191,7 @@
     },
     {
       "name": "Incline Push-Up",
-      "rating": 23,
+      "rating": 50,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Chest","Shoulders","Triceps"],
       "muscles": [
@@ -2211,7 +2211,7 @@
     },
     {
       "name": "Incline Reverse Fly - Dumbbell",
-      "rating": 23,
+      "rating": 50,
       "equipment": ["Dumbbell","Adjustable Bench"],
       "bodyparts": ["Upper Back","Shoulders"],
       "muscles": [
@@ -2231,7 +2231,7 @@
     },
     {
       "name": "Incline Row - Cable Machine",
-      "rating": 23,
+      "rating": 65,
       "equipment": ["Cable Machine","Cable Handle Attachment","Adjustable Bench"],
       "bodyparts": ["Upper Back"],
       "muscles": [
@@ -2251,7 +2251,7 @@
     },
     {
       "name": "Incline Row - Dumbbell",
-      "rating": 23,
+      "rating": 70,
       "equipment": ["Dumbbell","Adjustable Bench"],
       "bodyparts": ["Upper Back"],
       "muscles": [
@@ -2271,7 +2271,7 @@
     },
     {
       "name": "Internal Rotation - Cable Machine",
-      "rating": 23,
+      "rating": 60,
       "equipment": ["Cable Machine","Cable Handle Attachment"],
       "bodyparts": ["Shoulders"],
       "muscles": [
@@ -2290,7 +2290,7 @@
     },
     {
       "name": "Inverted Row",
-      "rating": 23,
+      "rating": 70,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Upper Back"],
       "muscles": [
@@ -2310,7 +2310,7 @@
     },
     {
       "name": "Inverted Row (Reverse Grip)",
-      "rating": 23,
+      "rating": 65,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Upper Back"],
       "muscles": [
@@ -2330,7 +2330,7 @@
     },
     {
       "name": "Jump Squat",
-      "rating": 23,
+      "rating": 55,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Quads","Hips","Calves"],
       "muscles": [
@@ -2350,7 +2350,7 @@
     },
     {
       "name": "Jump Squat - Dumbbell",
-      "rating": 23,
+      "rating": 50,
       "equipment": ["Dumbbell"],
       "bodyparts": ["Quads","Hips","Calves"],
       "muscles": [
@@ -2370,7 +2370,7 @@
     },
     {
       "name": "Kettlebell Swings",
-      "rating": 23,
+      "rating": 40,
       "equipment": ["Kettlebell"],
       "bodyparts": ["Upper Back","Hips","Core"],
       "muscles": [
@@ -2390,7 +2390,7 @@
     },
     {
       "name": "Knee Push-Up",
-      "rating": 23,
+      "rating": 40,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Chest","Triceps","Shoulders"],
       "muscles": [
@@ -2470,7 +2470,7 @@
     },
     {
       "name": "Kneeling Crunch - Cable Machine",
-      "rating": 23,
+      "rating": 45,
       "equipment": ["Cable Machine","Cable Rope Attachment"],
       "bodyparts": ["Core"],
       "muscles": [
@@ -2490,7 +2490,7 @@
     },
     {
       "name": "Kneeling Plank",
-      "rating": 23,
+      "rating": 30,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Shoulders","Core"],
       "muscles": [
@@ -2510,7 +2510,7 @@
     },
     {
       "name": "Kneeling Pull-down",
-      "rating": 23,
+      "rating": 65,
       "equipment": ["Cable Machine","Cable Straight Bar Attachment"],
       "bodyparts": ["Upper Back"],
       "muscles": [
@@ -2530,7 +2530,7 @@
     },
     {
       "name": "Kneeling Tricep Extension",
-      "rating": 23,
+      "rating": 65,
       "equipment": ["Cable Machine","Cable Rope Attachment"],
       "bodyparts": ["Triceps","Core"],
       "muscles": [
@@ -2550,7 +2550,7 @@
     },
     {
       "name": "Landmine Press - Landmine Attachment",
-      "rating": 23,
+      "rating": 70,
       "equipment": ["Landmine Attachment","Barbell","Weight Plates"],
       "bodyparts": ["Shoulders","Chest","Triceps"],
       "muscles": [
@@ -2570,7 +2570,7 @@
     },
     {
       "name": "Landmine Thruster - Landmine Attachment",
-      "rating": 23,
+      "rating": 70,
       "equipment": ["Landmine Attachment","Barbell","Weight Plates"],
       "bodyparts": ["Shoulders"],
       "muscles": [
@@ -2590,7 +2590,7 @@
     },
     {
       "name": "Lat Pulldown - Cable Machine",
-      "rating": 23,
+      "rating": 90,
       "equipment": ["Cable Machine","Cable Straight Bar Attachment"],
       "bodyparts": ["Upper Back"],
       "muscles": [
@@ -2610,7 +2610,7 @@
     },
     {
       "name": "Lat Pulldown - Cable Machine (Close Grip)",
-      "rating": 23,
+      "rating": 85,
       "equipment": ["Cable Machine","Cable Straight Bar Attachment"],
       "bodyparts": ["Upper Back"],
       "muscles": [
@@ -2630,7 +2630,7 @@
     },
     {
       "name": "Lat Pulldown - Cable Machine (Reverse Grip)",
-      "rating": 23,
+      "rating": 85,
       "equipment": ["Cable Machine","Cable Straight Bar Attachment"],
       "bodyparts": ["Upper Back"],
       "muscles": [
@@ -2650,7 +2650,7 @@
     },
     {
       "name": "Lat Pulldown - Cable Machine (Wide Grip)",
-      "rating": 23,
+      "rating": 85,
       "equipment": ["Cable Machine","Cable Straight Bar Attachment"],
       "bodyparts": ["Upper Back","Shoulders"],
       "muscles": [
@@ -2670,7 +2670,7 @@
     },
     {
       "name": "Lat Pulldown - Lat Pulldown Machine",
-      "rating": 23,
+      "rating": 95,
       "equipment": ["Lat Pulldown Machine"],
       "bodyparts": ["Upper Back"],
       "muscles": [
@@ -2690,7 +2690,7 @@
     },
     {
       "name": "Lateral Raise - Cable Machine",
-      "rating": 23,
+      "rating": 85,
       "equipment": ["Cable Machine","Cable Handle Attachment"],
       "bodyparts": ["Shoulders"],
       "muscles": [
@@ -2710,7 +2710,7 @@
     },
     {
       "name": "Lateral Raise - Dumbbell (Bent Arm)",
-      "rating": 23,
+      "rating": 80,
       "equipment": ["Dumbbell"],
       "bodyparts": ["Shoulders"],
       "muscles": [
@@ -2730,7 +2730,7 @@
     },
     {
       "name": "Lateral Raise - Dumbbell (Straight Arm)",
-      "rating": 23,
+      "rating": 80,
       "equipment": ["Dumbbell"],
       "bodyparts": ["Shoulders"],
       "muscles": [
@@ -2750,7 +2750,7 @@
     },
     {
       "name": "Lateral Raise - Lateral raise Machine",
-      "rating": 23,
+      "rating": 85,
       "equipment": ["Lat Raise Machine"],
       "bodyparts": ["Shoulders"],
       "muscles": [
@@ -2770,7 +2770,7 @@
     },
     {
       "name": "Leg Curl - Cable Machine (Standing)",
-      "rating": 23,
+      "rating": 70,
       "equipment": ["Cable Machine","Cable Ankle Cuff Attachment"],
       "bodyparts": ["Hamstrings"],
       "muscles": [
@@ -2791,7 +2791,7 @@
 
     {
       "name": "Leg Extension - Leg Extension Machine",
-      "rating": 23,
+      "rating": 80,
       "equipment": ["Leg Extension Machine"],
       "bodyparts": ["Quads"],
       "muscles": [
@@ -2811,7 +2811,7 @@
     },
     {
       "name": "Leg Raise Twist (Hanging)",
-      "rating": 45,
+      "rating": 65,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Core","Hips"],
       "muscles": [
@@ -2851,7 +2851,7 @@
     },
     {
       "name": "Lunge",
-      "rating": 23,
+      "rating": 40,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Quads","Hips","Hamstrings"],
       "muscles": [
@@ -2871,7 +2871,7 @@
     },
     {
       "name": "Lunge - Barbell",
-      "rating": 23,
+      "rating": 65,
       "equipment": ["Barbell","Weight Plates","Squat Rack"],
       "bodyparts": ["Quads","Hips","Hamstrings"],
       "muscles": [
@@ -2891,7 +2891,7 @@
     },
     {
       "name": "Lunge - Cable Machine",
-      "rating": 23,
+      "rating": 50,
       "equipment": ["Cable Machine","Cable Ankle Cuff Attachment"],
       "bodyparts": ["Quads","Hips","Hamstrings"],
       "muscles": [
@@ -2911,7 +2911,7 @@
     },
     {
       "name": "Lunge - Dumbbell",
-      "rating": 23,
+      "rating": 70,
       "equipment": ["Dumbbell"],
       "bodyparts": ["Quads","Hips","Hamstrings"],
       "muscles": [
@@ -2931,7 +2931,7 @@
     },
     {
       "name": "Lying Leg Curl - Dumbbell",
-      "rating": 23,
+      "rating": 50,
       "equipment": ["Dumbbell"],
       "bodyparts": ["Hamstrings"],
       "muscles": [
@@ -2992,7 +2992,7 @@
     },
     {
       "name": "Mountain Climber",
-      "rating": 23,
+      "rating": 45,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Hips","Shoulders"],
       "muscles": [
@@ -3012,7 +3012,7 @@
     },
     {
       "name": "Mountain Climber (Crossbody)",
-      "rating": 23,
+      "rating": 45,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Core","Hips"],
       "muscles": [
@@ -3032,7 +3032,7 @@
     },
     {
       "name": "Muscle Up",
-      "rating": 23,
+      "rating": 70,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Upper Back","Chest","Biceps","Triceps","Shoulders"],
       "muscles": [
@@ -3052,7 +3052,7 @@
     },
     {
       "name": "Oblique Crunch",
-      "rating": 23,
+      "rating": 40,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Core"],
       "muscles": [
@@ -3072,7 +3072,7 @@
     },
     {
       "name": "Oblique V-Up",
-      "rating": 23,
+      "rating": 50,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Core"],
       "muscles": [
@@ -3092,7 +3092,7 @@
     },
     {
       "name": "Overhead Press - Barbell",
-      "rating": 23,
+      "rating": 75,
       "equipment": ["Barbell","Weight Plates","Squat Rack"],
       "bodyparts": ["Shoulders","Triceps"],
       "muscles": [
@@ -3112,7 +3112,7 @@
     },
     {
       "name": "Overhead Press - Cable Machine",
-      "rating": 23,
+      "rating": 75,
       "equipment": ["Cable Machine"],
       "bodyparts": ["Shoulders","Triceps"],
       "muscles": [
@@ -3132,7 +3132,7 @@
     },
     {
       "name": "Overhead Press - Dumbbell",
-      "rating": 23,
+      "rating": 80,
       "equipment": ["Dumbbell"],
       "bodyparts": ["Shoulders","Triceps"],
       "muscles": [
@@ -3152,7 +3152,7 @@
     },
     {
       "name": "Overhead Squat - Barbell",
-      "rating": 23,
+      "rating": 65,
       "equipment": ["Barbell","Weight Plates","Squat Rack"],
       "bodyparts": ["Quads","Shoulders"],
       "muscles": [
@@ -3172,7 +3172,7 @@
     },
     {
       "name": "Overhead Squat - Dumbbell",
-      "rating": 23,
+      "rating": 55,
       "equipment": ["Dumbbell"],
       "bodyparts": ["Quads","Shoulders"],
       "muscles": [
@@ -3191,8 +3191,71 @@
       "legacyMediaId": 165
     },
     {
+      "name": "Overhead Tricep Extension - Barbell",
+      "rating": 65,
+      "equipment": ["Barbell","Weight Plates"],
+      "bodyparts": ["Triceps"],
+      "muscles": [
+        {"name":"Triceps Brachii","rank":1},
+        {"name":"Anconeus","rank":2},
+        {"name":"Wrist Extensors","rank":3},
+        {"name":"Transverse Abdominis","rank":4},
+        {"name":"Rectus Abdominis","rank":5},
+        {"name":"Serratus Anterior","rank":6},
+        {"name":"Latissimus Dorsi","rank":7}
+      ],
+      "setupNotes": "1. Stand, sit, or lie in a stable position.\n2. Set the bar and plates safely before starting.\n3. Keep your upper arms still and brace your stomach.",
+      "executionNotes": "1. Bend your elbows to lower the weight.\n2. Straighten your arms without swinging.\n3. Return slowly and repeat.",
+      "tipsNotes": "- Keep your elbows close to the chosen position.\n- Use a lighter weight if your shoulders move.\n- Stop if your elbows or shoulders hurt.",
+      "aliases": ["Tricep Extension - Barbell (Standing)"],
+      "catalogId": "tonos.exercise.0289",
+      "legacyMediaId": 289
+    },
+    {
+      "name": "Overhead Tricep Extension - Cable Machine",
+      "rating": 80,
+      "equipment": ["Cable Machine","Cable Rope Attachment"],
+      "bodyparts": ["Triceps"],
+      "muscles": [
+        {"name":"Triceps Brachii","rank":1},
+        {"name":"Anconeus","rank":2},
+        {"name":"Wrist Extensors","rank":3},
+        {"name":"Transverse Abdominis","rank":4},
+        {"name":"Rectus Abdominis","rank":5},
+        {"name":"Serratus Anterior","rank":6},
+        {"name":"Latissimus Dorsi","rank":7}
+      ],
+      "setupNotes": "1. Stand, sit, or lie in a stable position.\n2. Set the cable and attachment at a comfortable height.\n3. Keep your upper arms still and brace your stomach.",
+      "executionNotes": "1. Bend your elbows to lower the weight.\n2. Straighten your arms without swinging.\n3. Return slowly and repeat.",
+      "tipsNotes": "- Keep your elbows close to the chosen position.\n- Use a lighter weight if your shoulders move.\n- Stop if your elbows or shoulders hurt.",
+      "aliases": ["Tricep Extension - Cable Machine"],
+      "catalogId": "tonos.exercise.0287",
+      "legacyMediaId": 287
+    },
+    {
+      "name": "Overhead Tricep Extension - Dumbbell",
+      "rating": 70,
+      "equipment": ["Dumbbell"],
+      "bodyparts": ["Triceps"],
+      "muscles": [
+        {"name":"Triceps Brachii","rank":1},
+        {"name":"Anconeus","rank":2},
+        {"name":"Wrist Extensors","rank":3},
+        {"name":"Transverse Abdominis","rank":4},
+        {"name":"Rectus Abdominis","rank":5},
+        {"name":"Serratus Anterior","rank":6},
+        {"name":"Latissimus Dorsi","rank":7}
+      ],
+      "setupNotes": "1. Stand, sit, or lie in a stable position.\n2. Choose a weight you can control.\n3. Keep your upper arms still and brace your stomach.",
+      "executionNotes": "1. Bend your elbows to lower the weight.\n2. Straighten your arms without swinging.\n3. Return slowly and repeat.",
+      "tipsNotes": "- Keep your elbows close to the chosen position.\n- Use a lighter weight if your shoulders move.\n- Stop if your elbows or shoulders hurt.",
+      "aliases": ["Tricep Extension - Dumbbell"],
+      "catalogId": "tonos.exercise.0288",
+      "legacyMediaId": 288
+    },
+    {
       "name": "Pec Deck Fly",
-      "rating": 23,
+      "rating": 85,
       "equipment": ["Pec Deck Machine"],
       "bodyparts": ["Chest","Shoulders"],
       "muscles": [
@@ -3212,7 +3275,7 @@
     },
     {
       "name": "Pendlay Row - Barbell",
-      "rating": 23,
+      "rating": 80,
       "equipment": ["Barbell","Weight Plates"],
       "bodyparts": ["Upper Back"],
       "muscles": [
@@ -3232,7 +3295,7 @@
     },
     {
       "name": "Pike Push-up",
-      "rating": 23,
+      "rating": 45,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Shoulders","Triceps","Chest"],
       "muscles": [
@@ -3252,7 +3315,7 @@
     },
     {
       "name": "Pistol Squat",
-      "rating": 23,
+      "rating": 60,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Quads","Hips","Hamstrings"],
       "muscles": [
@@ -3272,7 +3335,7 @@
     },
     {
       "name": "Plank",
-      "rating": 23,
+      "rating": 55,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Shoulders","Lower Back"],
       "muscles": [
@@ -3292,7 +3355,7 @@
     },
     {
       "name": "Power Clean - Barbell",
-      "rating": 23,
+      "rating": 75,
       "equipment": ["Barbell","Weight Plates"],
       "bodyparts": ["Upper Back","Shoulders"],
       "muscles": [
@@ -3312,7 +3375,7 @@
     },
     {
       "name": "Power Snatch - Barbell",
-      "rating": 23,
+      "rating": 70,
       "equipment": ["Barbell","Weight Plates"],
       "bodyparts": ["Upper Back","Shoulders"],
       "muscles": [
@@ -3332,7 +3395,7 @@
     },
     {
       "name": "Preacher Curl - Barbell",
-      "rating": 23,
+      "rating": 80,
       "equipment": ["Barbell"],
       "bodyparts": ["Biceps","Forearms"],
       "muscles": [
@@ -3352,7 +3415,7 @@
     },
     {
       "name": "Preacher Curl - Barbell (with Preacher Bench)",
-      "rating": 23,
+      "rating": 85,
       "equipment": ["Barbell","Preacher Bench"],
       "bodyparts": ["Biceps","Forearms"],
       "muscles": [
@@ -3372,7 +3435,7 @@
     },
     {
       "name": "Preacher Curl - Cable Machine",
-      "rating": 23,
+      "rating": 75,
       "equipment": ["Cable Machine","Cable Straight Bar Attachment"],
       "bodyparts": ["Biceps","Forearms"],
       "muscles": [
@@ -3392,7 +3455,7 @@
     },
     {
       "name": "Preacher Curl - Dumbbell",
-      "rating": 23,
+      "rating": 80,
       "equipment": ["Dumbbell","Preacher Bench"],
       "bodyparts": ["Biceps","Forearms"],
       "muscles": [
@@ -3412,7 +3475,7 @@
     },
     {
       "name": "Pull Apart",
-      "rating": 23,
+      "rating": 65,
       "equipment": ["Resistance Band"],
       "bodyparts": ["Upper Back","Shoulders"],
       "muscles": [
@@ -3432,7 +3495,7 @@
     },
     {
       "name": "Pull Through - Cable Machine",
-      "rating": 23,
+      "rating": 55,
       "equipment": ["Cable Machine","Cable Rope Attachment"],
       "bodyparts": ["Hips","Hamstrings","Core"],
       "muscles": [
@@ -3452,7 +3515,7 @@
     },
     {
       "name": "Pull Through - Resistance Band",
-      "rating": 23,
+      "rating": 40,
       "equipment": ["Resistance Band"],
       "bodyparts": ["Hips","Hamstrings","Core"],
       "muscles": [
@@ -3472,7 +3535,7 @@
     },
     {
       "name": "Pull Up",
-      "rating": 23,
+      "rating": 90,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Upper Back","Shoulders"],
       "muscles": [
@@ -3492,7 +3555,7 @@
     },
     {
       "name": "Pull Up - Assisted Dip/Pull-Up Machine",
-      "rating": 23,
+      "rating": 95,
       "equipment": ["Assisted Dip/Pull-Up Machine"],
       "bodyparts": ["Upper Back","Shoulders"],
       "muscles": [
@@ -3512,7 +3575,7 @@
     },
     {
       "name": "Pull Up - Close Grip",
-      "rating": 23,
+      "rating": 90,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Upper Back"],
       "muscles": [
@@ -3532,7 +3595,7 @@
     },
     {
       "name": "Pull Up - Reverse Grip",
-      "rating": 23,
+      "rating": 85,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Upper Back"],
       "muscles": [
@@ -3552,7 +3615,7 @@
     },
     {
       "name": "Pull Up - Wide Grip",
-      "rating": 23,
+      "rating": 80,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Upper Back","Shoulders"],
       "muscles": [
@@ -3572,7 +3635,7 @@
     },
     {
       "name": "Pullover - Barbell",
-      "rating": 23,
+      "rating": 65,
       "equipment": ["Barbell","Weight Plates"],
       "bodyparts": ["Chest","Upper Back","Core"],
       "muscles": [
@@ -3592,7 +3655,7 @@
     },
     {
       "name": "Pullover - Cable Machine",
-      "rating": 23,
+      "rating": 75,
       "equipment": ["Cable Machine","Cable Straight Bar Attachment"],
       "bodyparts": ["Chest","Upper Back","Core"],
       "muscles": [
@@ -3612,7 +3675,7 @@
     },
     {
       "name": "Pullover - Dumbbell (Bent Arm)",
-      "rating": 23,
+      "rating": 55,
       "equipment": ["Dumbbell"],
       "bodyparts": ["Chest","Upper Back","Core"],
       "muscles": [
@@ -3632,7 +3695,7 @@
     },
     {
       "name": "Pullover - Dumbbell (Straight Arm)",
-      "rating": 23,
+      "rating": 55,
       "equipment": ["Dumbbell"],
       "bodyparts": ["Chest","Upper Back","Core"],
       "muscles": [
@@ -3652,7 +3715,7 @@
     },
     {
       "name": "Push Away",
-      "rating": 23,
+      "rating": 45,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Chest","Shoulders","Triceps","Core"],
       "muscles": [
@@ -3672,7 +3735,7 @@
     },
     {
       "name": "Push Press - Barbell",
-      "rating": 23,
+      "rating": 75,
       "equipment": ["Barbell","Weight Plates","Squat Rack"],
       "bodyparts": ["Shoulders","Triceps","Core"],
       "muscles": [
@@ -3692,7 +3755,7 @@
     },
     {
       "name": "Push Press - Dumbbell",
-      "rating": 23,
+      "rating": 70,
       "equipment": ["Dumbbell"],
       "bodyparts": ["Shoulders","Triceps","Core"],
       "muscles": [
@@ -3712,7 +3775,7 @@
     },
     {
       "name": "Push-up",
-      "rating": 23,
+      "rating": 70,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Chest","Triceps","Shoulders"],
       "muscles": [
@@ -3732,7 +3795,7 @@
     },
     {
       "name": "Push-up (Close Grip)",
-      "rating": 23,
+      "rating": 65,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Triceps","Chest","Shoulders"],
       "muscles": [
@@ -3752,7 +3815,7 @@
     },
     {
       "name": "Push-up (Wide Grip)",
-      "rating": 23,
+      "rating": 65,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Chest","Shoulders","Triceps"],
       "muscles": [
@@ -3772,7 +3835,7 @@
     },
     {
       "name": "Rack Pull - Barbell",
-      "rating": 23,
+      "rating": 65,
       "equipment": ["Barbell","Weight Plates","Power Rack"],
       "bodyparts": ["Lower Back","Hamstrings","Hips"],
       "muscles": [
@@ -3792,7 +3855,7 @@
     },
     {
       "name": "Renegade Row - Dumbbell",
-      "rating": 23,
+      "rating": 55,
       "equipment": ["Dumbbell"],
       "bodyparts": ["Upper Back","Biceps"],
       "muscles": [
@@ -3812,7 +3875,7 @@
     },
     {
       "name": "Reverse Crunch",
-      "rating": 23,
+      "rating": 40,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Core"],
       "muscles": [
@@ -3832,7 +3895,7 @@
     },
     {
       "name": "Reverse Crunch - Cable Machine",
-      "rating": 23,
+      "rating": 45,
       "equipment": ["Cable Machine","Cable Ankle Cuff Attachment"],
       "bodyparts": ["Core"],
       "muscles": [
@@ -3852,7 +3915,7 @@
     },
     {
       "name": "Reverse Curl - Barbell",
-      "rating": 23,
+      "rating": 70,
       "equipment": ["Barbell","Weight Plates"],
       "bodyparts": ["Forearms"],
       "muscles": [
@@ -3872,7 +3935,7 @@
     },
     {
       "name": "Reverse Curl - Cable Machine",
-      "rating": 23,
+      "rating": 75,
       "equipment": ["Cable Machine","Cable Straight Bar Attachment"],
       "bodyparts": ["Forearms"],
       "muscles": [
@@ -3892,7 +3955,7 @@
     },
     {
       "name": "Reverse Curl - Dumbbell",
-      "rating": 23,
+      "rating": 70,
       "equipment": ["Dumbbell"],
       "bodyparts": ["Forearms"],
       "muscles": [
@@ -3912,7 +3975,7 @@
     },
     {
       "name": "Reverse Fly - Cable Machine",
-      "rating": 23,
+      "rating": 80,
       "equipment": ["Cable Machine"],
       "bodyparts": ["Upper Back","Shoulders"],
       "muscles": [
@@ -3952,7 +4015,7 @@
     },
     {
       "name": "Reverse Fly - Dumbbell (Lying)",
-      "rating": 23,
+      "rating": 60,
       "equipment": ["Dumbbell","Adjustable Bench"],
       "bodyparts": ["Upper Back","Shoulders"],
       "muscles": [
@@ -3972,7 +4035,7 @@
     },
     {
       "name": "Reverse Fly - Dumbbell (Seated)",
-      "rating": 23,
+      "rating": 30,
       "equipment": ["Dumbbell","Adjustable Bench"],
       "bodyparts": ["Upper Back","Shoulders"],
       "muscles": [
@@ -3992,7 +4055,7 @@
     },
     {
       "name": "Reverse Lunge",
-      "rating": 23,
+      "rating": 45,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Quads","Hips","Hamstrings"],
       "muscles": [
@@ -4012,7 +4075,7 @@
     },
     {
       "name": "Reverse Lunge - Barbell",
-      "rating": 23,
+      "rating": 55,
       "equipment": ["Barbell","Weight Plates","Squat Rack"],
       "bodyparts": ["Quads","Hips","Hamstrings"],
       "muscles": [
@@ -4032,7 +4095,7 @@
     },
     {
       "name": "Reverse Lunge - Cable Machine",
-      "rating": 23,
+      "rating": 45,
       "equipment": ["Cable Machine","Cable Ankle Cuff Attachment"],
       "bodyparts": ["Quads","Hips","Hamstrings"],
       "muscles": [
@@ -4052,7 +4115,7 @@
     },
     {
       "name": "Reverse Lunge - Dumbbell",
-      "rating": 23,
+      "rating": 70,
       "equipment": ["Dumbbell"],
       "bodyparts": ["Quads","Hips","Hamstrings"],
       "muscles": [
@@ -4072,7 +4135,7 @@
     },
     {
       "name": "Reverse Lunge - Kettlebell",
-      "rating": 23,
+      "rating": 65,
       "equipment": ["Kettlebell"],
       "bodyparts": ["Quads","Hips","Hamstrings"],
       "muscles": [
@@ -4092,7 +4155,7 @@
     },
     {
       "name": "Reverse Lunge - Landmine Attachment",
-      "rating": 23,
+      "rating": 55,
       "equipment": ["Landmine Attachment","Barbell"],
       "bodyparts": ["Quads","Hips","Hamstrings"],
       "muscles": [
@@ -4112,7 +4175,7 @@
     },
     {
       "name": "Reverse Lunge - Smith Machine",
-      "rating": 23,
+      "rating": 55,
       "equipment": ["Smith Machine"],
       "bodyparts": ["Quads","Hips","Hamstrings"],
       "muscles": [
@@ -4132,7 +4195,7 @@
     },
     {
       "name": "Reverse Plank",
-      "rating": 23,
+      "rating": 35,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Hips","Shoulders","Lower Back"],
       "muscles": [
@@ -4152,7 +4215,7 @@
     },
     {
       "name": "Romanian Deadlift - Barbell",
-      "rating": 23,
+      "rating": 60,
       "equipment": ["Barbell","Weight Plates"],
       "bodyparts": ["Hamstrings","Hips","Lower Back"],
       "muscles": [
@@ -4172,7 +4235,7 @@
     },
     {
       "name": "Row - Barbell",
-      "rating": 23,
+      "rating": 80,
       "equipment": ["Barbell","Weight Plates"],
       "bodyparts": ["Upper Back"],
       "muscles": [
@@ -4192,7 +4255,7 @@
     },
     {
       "name": "Row - Cable Machine",
-      "rating": 23,
+      "rating": 75,
       "equipment": ["Cable Machine","Cable Handle Attachment"],
       "bodyparts": ["Upper Back"],
       "muscles": [
@@ -4233,7 +4296,7 @@
 
     {
       "name": "Row - Dumbbell (Kneeling)",
-      "rating": 23,
+      "rating": 75,
       "equipment": ["Dumbbell","Adjustable Bench"],
       "bodyparts": ["Upper Back"],
       "muscles": [
@@ -4253,7 +4316,7 @@
     },
     {
       "name": "Row - Dumbbell (Reverse Grip)",
-      "rating": 23,
+      "rating": 55,
       "equipment": ["Dumbbell"],
       "bodyparts": ["Upper Back"],
       "muscles": [
@@ -4273,7 +4336,7 @@
     },
     {
       "name": "Row - Dumbbell (Seated)",
-      "rating": 23,
+      "rating": 70,
       "equipment": ["Dumbbell","Adjustable Bench"],
       "bodyparts": ["Upper Back"],
       "muscles": [
@@ -4293,7 +4356,7 @@
     },
     {
       "name": "Row - Kettlebell",
-      "rating": 23,
+      "rating": 70,
       "equipment": ["Kettlebell"],
       "bodyparts": ["Upper Back"],
       "muscles": [
@@ -4313,7 +4376,7 @@
     },
     {
       "name": "Row - Landmine Attachment",
-      "rating": 23,
+      "rating": 65,
       "equipment": ["Landmine Attachment","Barbell"],
       "bodyparts": ["Upper Back"],
       "muscles": [
@@ -4333,7 +4396,7 @@
     },
     {
       "name": "Row - Resistance Band",
-      "rating": 23,
+      "rating": 55,
       "equipment": ["Resistance Band"],
       "bodyparts": ["Upper Back"],
       "muscles": [
@@ -4353,7 +4416,7 @@
     },
     {
       "name": "Row - Smith Machine",
-      "rating": 23,
+      "rating": 75,
       "equipment": ["Smith Machine"],
       "bodyparts": ["Upper Back"],
       "muscles": [
@@ -4373,7 +4436,7 @@
     },
     {
       "name": "Russian Twist",
-      "rating": 23,
+      "rating": 35,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Core"],
       "muscles": [
@@ -4393,7 +4456,7 @@
     },
     {
       "name": "Russian Twist - Dumbbell",
-      "rating": 23,
+      "rating": 45,
       "equipment": ["Dumbbell"],
       "bodyparts": ["Core"],
       "muscles": [
@@ -4413,7 +4476,7 @@
     },
     {
       "name": "Seated Chest Press",
-      "rating": 23,
+      "rating": 85,
       "equipment": ["Chest Press Machine"],
       "bodyparts": ["Chest","Triceps","Shoulders"],
       "muscles": [
@@ -4473,7 +4536,7 @@
     },
     {
       "name": "Shrug - Barbell",
-      "rating": 23,
+      "rating": 70,
       "equipment": ["Barbell","Weight Plates"],
       "bodyparts": ["Upper Back","Neck"],
       "muscles": [
@@ -4493,7 +4556,7 @@
     },
     {
       "name": "Shrug - Cable Machine",
-      "rating": 23,
+      "rating": 65,
       "equipment": ["Cable Machine","Cable Straight Bar Attachment"],
       "bodyparts": ["Upper Back","Shoulders"],
       "muscles": [
@@ -4513,7 +4576,7 @@
     },
     {
       "name": "Shrug - Dumbbell",
-      "rating": 23,
+      "rating": 75,
       "equipment": ["Dumbbell"],
       "bodyparts": ["Upper Back","Neck"],
       "muscles": [
@@ -4533,7 +4596,7 @@
     },
     {
       "name": "Side Bend - Cable Machine",
-      "rating": 23,
+      "rating": 55,
       "equipment": ["Cable Machine","Cable Handle Attachment"],
       "bodyparts": ["Core"],
       "muscles": [
@@ -4553,7 +4616,7 @@
     },
     {
       "name": "Side Bend - Dumbbell",
-      "rating": 23,
+      "rating": 60,
       "equipment": ["Dumbbell"],
       "bodyparts": ["Core"],
       "muscles": [
@@ -4573,7 +4636,7 @@
     },
     {
       "name": "Side Bridge",
-      "rating": 23,
+      "rating": 55,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Core","Shoulders"],
       "muscles": [
@@ -4593,7 +4656,7 @@
     },
     {
       "name": "Side Bridge - Dumbbell",
-      "rating": 23,
+      "rating": 60,
       "equipment": ["Dumbbell"],
       "bodyparts": ["Core","Shoulders"],
       "muscles": [
@@ -4613,9 +4676,9 @@
     },
     {
       "name": "Side Lunge",
-      "rating": 23,
+      "rating": 65,
       "equipment": ["Bodyweight"],
-      "bodyparts": ["Hips","Quads","Hips"],
+      "bodyparts": ["Hips","Quads"],
       "muscles": [
         {"name":"Adductor Magnus","rank":1},
         {"name":"Gluteus Maximus","rank":2},
@@ -4633,9 +4696,9 @@
     },
     {
       "name": "Side Lunge - Cable Machine",
-      "rating": 23,
+      "rating": 65,
       "equipment": ["Cable Machine","Cable Ankle Cuff Attachment"],
-      "bodyparts": ["Hips","Quads","Hips"],
+      "bodyparts": ["Hips","Quads"],
       "muscles": [
         {"name":"Adductor Magnus","rank":1},
         {"name":"Gluteus Maximus","rank":2},
@@ -4653,9 +4716,9 @@
     },
     {
       "name": "Side Lunge - Dumbbell",
-      "rating": 23,
+      "rating": 75,
       "equipment": ["Dumbbell"],
-      "bodyparts": ["Hips","Quads","Hips"],
+      "bodyparts": ["Hips","Quads"],
       "muscles": [
         {"name":"Adductor Magnus","rank":1},
         {"name":"Gluteus Maximus","rank":2},
@@ -4673,7 +4736,7 @@
     },
     {
       "name": "Side Plank",
-      "rating": 23,
+      "rating": 45,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Core","Shoulders"],
       "muscles": [
@@ -4693,7 +4756,7 @@
     },
     {
       "name": "Side Plank (Bent Knees)",
-      "rating": 23,
+      "rating": 40,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Core"],
       "muscles": [
@@ -4712,28 +4775,8 @@
       "legacyMediaId": 244
     },
     {
-      "name": "Side Plank (Straight Knees)",
-      "rating": 23,
-      "equipment": ["Bodyweight"],
-      "bodyparts": ["Core","Shoulders"],
-      "muscles": [
-        {"name":"Obliques","rank":1},
-        {"name":"Transverse Abdominis","rank":2},
-        {"name":"Rectus Abdominis","rank":3},
-        {"name":"Gluteus Medius","rank":4},
-        {"name":"Lateral Deltoid","rank":5},
-        {"name":"Erector Spinae","rank":6},
-        {"name":"Serratus Anterior","rank":7}
-      ],
-      "setupNotes": "1. Lie on your side with your elbow under your shoulder.\n2. Stack or bend your legs for the version you choose.\n3. Brace your stomach before lifting.",
-      "executionNotes": "1. Lift your hips until your body is in a straight line.\n2. Hold the position while breathing normally.\n3. Lower slowly and switch sides.",
-      "tipsNotes": "- Use bent knees to make it easier.\n- Keep your hips from rolling forward or back.\n- Stop if your shoulder becomes painful.",
-      "catalogId": "tonos.exercise.0243",
-      "legacyMediaId": 243
-    },
-    {
       "name": "Single Arm Lat Pull-down - Cable Machine",
-      "rating": 23,
+      "rating": 75,
       "equipment": ["Cable Machine","Cable Handle Attachment"],
       "bodyparts": ["Upper Back"],
       "muscles": [
@@ -4753,7 +4796,7 @@
     },
     {
       "name": "Single Arm Lat Pull-down - Lat Pulldown Machine",
-      "rating": 23,
+      "rating": 85,
       "equipment": ["Lat Pulldown Machine"],
       "bodyparts": ["Upper Back"],
       "muscles": [
@@ -4773,7 +4816,7 @@
     },
     {
       "name": "Single Arm Lat Raise - Cable Machine",
-      "rating": 23,
+      "rating": 80,
       "equipment": ["Cable Machine","Cable Handle Attachment"],
       "bodyparts": ["Shoulders"],
       "muscles": [
@@ -4793,7 +4836,7 @@
     },
     {
       "name": "Single Arm Lat Raise - Dumbbell",
-      "rating": 23,
+      "rating": 80,
       "equipment": ["Dumbbell"],
       "bodyparts": ["Shoulders"],
       "muscles": [
@@ -4813,7 +4856,7 @@
     },
     {
       "name": "Single Arm Row - Cable Machine",
-      "rating": 23,
+      "rating": 75,
       "equipment": ["Cable Machine","Cable Handle Attachment"],
       "bodyparts": ["Upper Back"],
       "muscles": [
@@ -4833,7 +4876,7 @@
     },
     {
       "name": "Single Arm Row - Dumbbell (Kneeling)",
-      "rating": 23,
+      "rating": 80,
       "equipment": ["Dumbbell","Adjustable Bench"],
       "bodyparts": ["Upper Back"],
       "muscles": [
@@ -4853,7 +4896,7 @@
     },
     {
       "name": "Single Arm Row - Dumbbell (Seated)",
-      "rating": 23,
+      "rating": 70,
       "equipment": ["Dumbbell","Adjustable Bench"],
       "bodyparts": ["Upper Back"],
       "muscles": [
@@ -4873,7 +4916,7 @@
     },
     {
       "name": "Single Arm Row - Landmine Attachment",
-      "rating": 23,
+      "rating": 70,
       "equipment": ["Landmine Attachment","Barbell"],
       "bodyparts": ["Upper Back"],
       "muscles": [
@@ -4893,7 +4936,7 @@
     },
     {
       "name": "Single Leg Deadlift - Barbell",
-      "rating": 23,
+      "rating": 60,
       "equipment": ["Barbell","Weight Plates"],
       "bodyparts": ["Hamstrings","Hips","Lower Back"],
       "muscles": [
@@ -4913,7 +4956,7 @@
     },
     {
       "name": "Single Leg Deadlift - Dumbbell",
-      "rating": 23,
+      "rating": 65,
       "equipment": ["Dumbbell"],
       "bodyparts": ["Hamstrings","Hips","Lower Back"],
       "muscles": [
@@ -4933,7 +4976,7 @@
     },
     {
       "name": "Single Leg Hip Thrust - Barbell",
-      "rating": 23,
+      "rating": 55,
       "equipment": ["Barbell","Weight Plates","Adjustable Bench"],
       "bodyparts": ["Hips","Hamstrings","Core"],
       "muscles": [
@@ -4953,7 +4996,7 @@
     },
     {
       "name": "Single Leg Hip Thrust - Dumbbell",
-      "rating": 23,
+      "rating": 60,
       "equipment": ["Dumbbell","Adjustable Bench"],
       "bodyparts": ["Hips","Hamstrings","Core"],
       "muscles": [
@@ -4973,7 +5016,7 @@
     },
     {
       "name": "Sit-Up",
-      "rating": 23,
+      "rating": 45,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Core"],
       "muscles": [
@@ -4993,7 +5036,7 @@
     },
     {
       "name": "Sit-Up - Dumbbell",
-      "rating": 23,
+      "rating": 45,
       "equipment": ["Dumbbell"],
       "bodyparts": ["Core"],
       "muscles": [
@@ -5013,7 +5056,7 @@
     },
     {
       "name": "Skull Crusher - Barbell",
-      "rating": 23,
+      "rating": 65,
       "equipment": ["Barbell","Weight Plates"],
       "bodyparts": ["Triceps"],
       "muscles": [
@@ -5033,7 +5076,7 @@
     },
     {
       "name": "Skull Crusher - Cable Machine",
-      "rating": 23,
+      "rating": 65,
       "equipment": ["Cable Machine","Cable Rope Attachment"],
       "bodyparts": ["Triceps"],
       "muscles": [
@@ -5053,7 +5096,7 @@
     },
     {
       "name": "Skull Crusher - Dumbbell",
-      "rating": 23,
+      "rating": 55,
       "equipment": ["Dumbbell"],
       "bodyparts": ["Triceps"],
       "muscles": [
@@ -5073,16 +5116,16 @@
     },
     {
       "name": "Sled Calf Press",
-      "rating": 23,
+      "rating": 65,
       "equipment": ["Incline Leg Press Machine","Weight Plates"],
       "bodyparts": ["Calves"],
       "muscles": [
         {"name":"Gastrocnemius","rank":1},
         {"name":"Soleus","rank":2},
         {"name":"Tibialis Anterior","rank":3},
-        {"name":"Rectus Femoris","rank":5},
-        {"name":"Vastus Lateralis","rank":6},
-        {"name":"Gluteus Maximus","rank":7}
+        {"name":"Rectus Femoris","rank":4},
+        {"name":"Vastus Lateralis","rank":5},
+        {"name":"Gluteus Maximus","rank":6}
       ],
       "setupNotes": "1. Sit in the leg press and place the balls of your feet on the platform.\n2. Keep your legs nearly straight and unlock the safety stops.\n3. Use a light load and keep your feet about hip-width apart.",
       "executionNotes": "1. Raise your heels as high as you can.\n2. Pause briefly at the top.\n3. Lower slowly without bouncing and repeat.",
@@ -5092,7 +5135,7 @@
     },
     {
       "name": "Sled Pull",
-      "rating": 23,
+      "rating": 80,
       "equipment": ["Sled"],
       "bodyparts": ["Lower Back","Core"],
       "muscles": [
@@ -5112,7 +5155,7 @@
     },
     {
       "name": "Sled Push",
-      "rating": 23,
+      "rating": 80,
       "equipment": ["Sled"],
       "bodyparts": ["Chest"],
       "muscles": [
@@ -5132,7 +5175,7 @@
     },
     {
       "name": "Snatch",
-      "rating": 23,
+      "rating": 65,
       "equipment": ["Barbell","Weight Plates"],
       "bodyparts": ["Upper Back","Shoulders"],
       "muscles": [
@@ -5152,7 +5195,7 @@
     },
     {
       "name": "Split Jerk",
-      "rating": 23,
+      "rating": 60,
       "equipment": ["Barbell","Weight Plates","Squat Rack"],
       "bodyparts": ["Shoulders","Triceps"],
       "muscles": [
@@ -5172,7 +5215,7 @@
     },
     {
       "name": "Split Squat",
-      "rating": 23,
+      "rating": 60,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Quads","Hips","Hamstrings"],
       "muscles": [
@@ -5192,7 +5235,7 @@
     },
     {
       "name": "Split Squat - Barbell",
-      "rating": 23,
+      "rating": 65,
       "equipment": ["Barbell","Weight Plates","Squat Rack"],
       "bodyparts": ["Quads","Hips","Hamstrings"],
       "muscles": [
@@ -5212,7 +5255,7 @@
     },
     {
       "name": "Split Squat - Dumbbell",
-      "rating": 23,
+      "rating": 75,
       "equipment": ["Dumbbell"],
       "bodyparts": ["Quads","Hips","Hamstrings"],
       "muscles": [
@@ -5232,7 +5275,7 @@
     },
     {
       "name": "Squat",
-      "rating": 23,
+      "rating": 65,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Quads","Hips","Hamstrings","Core"],
       "muscles": [
@@ -5252,7 +5295,7 @@
     },
     {
       "name": "Squat - Barbell",
-      "rating": 23,
+      "rating": 80,
       "equipment": ["Barbell","Weight Plates","Squat Rack"],
       "bodyparts": ["Quads","Hips","Hamstrings","Core"],
       "muscles": [
@@ -5272,7 +5315,7 @@
     },
     {
       "name": "Squat - Dumbbell",
-      "rating": 23,
+      "rating": 70,
       "equipment": ["Dumbbell"],
       "bodyparts": ["Quads","Hips","Hamstrings","Core"],
       "muscles": [
@@ -5292,7 +5335,7 @@
     },
     {
       "name": "Squat - Landmine Attachment",
-      "rating": 23,
+      "rating": 65,
       "equipment": ["Landmine Attachment","Barbell","Weight Plates"],
       "bodyparts": ["Quads","Hips","Hamstrings","Core"],
       "muscles": [
@@ -5312,7 +5355,7 @@
     },
     {
       "name": "Squat Calf Press",
-      "rating": 23,
+      "rating": 55,
       "equipment": ["Leg Press Machine","Weight Plates"],
       "bodyparts": ["Quads","Calves"],
       "muscles": [
@@ -5332,7 +5375,7 @@
     },
     {
       "name": "Step-Up",
-      "rating": 23,
+      "rating": 65,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Quads","Hips","Hamstrings"],
       "muscles": [
@@ -5352,7 +5395,7 @@
     },
     {
       "name": "Step-Up - Barbell",
-      "rating": 23,
+      "rating": 60,
       "equipment": ["Barbell","Weight Plates"],
       "bodyparts": ["Quads","Hips","Hamstrings"],
       "muscles": [
@@ -5372,7 +5415,7 @@
     },
     {
       "name": "Step-Up - Dumbbell",
-      "rating": 23,
+      "rating": 65,
       "equipment": ["Dumbbell"],
       "bodyparts": ["Quads","Hips","Hamstrings"],
       "muscles": [
@@ -5389,7 +5432,7 @@
     },
     {
       "name": "Stiff Leg Deadlift - Barbell",
-      "rating": 23,
+      "rating": 85,
       "equipment": ["Barbell","Weight Plates"],
       "bodyparts": ["Hamstrings","Lower Back","Hips"],
       "muscles": [
@@ -5409,7 +5452,7 @@
     },
     {
       "name": "Straight Arm Lat Pull-down - Cable Machine",
-      "rating": 23,
+      "rating": 70,
       "equipment": ["Cable Machine","Cable Straight Bar Attachment"],
       "bodyparts": ["Upper Back","Shoulders"],
       "muscles": [
@@ -5429,7 +5472,7 @@
     },
     {
       "name": "Straight Arm Lat Pull-down - Lat Pulldown Machine",
-      "rating": 23,
+      "rating": 70,
       "equipment": ["Lat Pulldown Machine"],
       "bodyparts": ["Upper Back","Shoulders"],
       "muscles": [
@@ -5449,7 +5492,7 @@
     },
     {
       "name": "Swings - Dumbbell",
-      "rating": 23,
+      "rating": 45,
       "equipment": ["Dumbbell"],
       "bodyparts": ["Upper Back","Hips","Core"],
       "muscles": [
@@ -5469,7 +5512,7 @@
     },
     {
       "name": "Thruster - Barbell",
-      "rating": 23,
+      "rating": 55,
       "equipment": ["Barbell","Weight Plates","Squat Rack"],
       "bodyparts": ["Shoulders","Core"],
       "muscles": [
@@ -5489,7 +5532,7 @@
     },
     {
       "name": "Thruster - Dumbbell",
-      "rating": 23,
+      "rating": 45,
       "equipment": ["Dumbbell"],
       "bodyparts": ["Shoulders","Core"],
       "muscles": [
@@ -5509,7 +5552,7 @@
     },
     {
       "name": "Toes To Bar",
-      "rating": 23,
+      "rating": 45,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Hips","Shoulders"],
       "muscles": [
@@ -5529,7 +5572,7 @@
     },
     {
       "name": "Tricep Dip",
-      "rating": 23,
+      "rating": 70,
       "equipment": ["Dip Bars"],
       "bodyparts": ["Triceps","Chest","Shoulders"],
       "muscles": [
@@ -5549,7 +5592,7 @@
     },
     {
       "name": "Tricep Dip - Assisted Dip/Pull-Up Machine",
-      "rating": 23,
+      "rating": 80,
       "equipment": ["Assisted Dip/Pull-Up Machine"],
       "bodyparts": ["Triceps","Chest","Shoulders"],
       "muscles": [
@@ -5568,88 +5611,8 @@
       "legacyMediaId": 286
     },
     {
-      "name": "Tricep Extension - Barbell (Bent Over)",
-      "rating": 23,
-      "equipment": ["Barbell","Weight Plates"],
-      "bodyparts": ["Triceps","Upper Back"],
-      "muscles": [
-        {"name":"Triceps Brachii","rank":1},
-        {"name":"Anconeus","rank":2},
-        {"name":"Posterior Deltoid","rank":3},
-        {"name":"Trapezius (Middle)","rank":4},
-        {"name":"Rhomboids","rank":5},
-        {"name":"Erector Spinae","rank":6},
-        {"name":"Latissimus Dorsi","rank":7}
-      ],
-      "setupNotes": "1. Stand, sit, or lie in a stable position.\n2. Set the bar and plates safely before starting.\n3. Keep your upper arms still and brace your stomach.",
-      "executionNotes": "1. Bend your elbows to lower the weight.\n2. Straighten your arms without swinging.\n3. Return slowly and repeat.",
-      "tipsNotes": "- Keep your elbows close to the chosen position.\n- Use a lighter weight if your shoulders move.\n- Stop if your elbows or shoulders hurt.",
-      "catalogId": "tonos.exercise.0290",
-      "legacyMediaId": 290
-    },
-    {
-      "name": "Tricep Extension - Barbell (Standing)",
-      "rating": 23,
-      "equipment": ["Barbell","Weight Plates"],
-      "bodyparts": ["Triceps"],
-      "muscles": [
-        {"name":"Triceps Brachii","rank":1},
-        {"name":"Anconeus","rank":2},
-        {"name":"Wrist Extensors","rank":3},
-        {"name":"Transverse Abdominis","rank":4},
-        {"name":"Rectus Abdominis","rank":5},
-        {"name":"Serratus Anterior","rank":6},
-        {"name":"Latissimus Dorsi","rank":7}
-      ],
-      "setupNotes": "1. Stand, sit, or lie in a stable position.\n2. Set the bar and plates safely before starting.\n3. Keep your upper arms still and brace your stomach.",
-      "executionNotes": "1. Bend your elbows to lower the weight.\n2. Straighten your arms without swinging.\n3. Return slowly and repeat.",
-      "tipsNotes": "- Keep your elbows close to the chosen position.\n- Use a lighter weight if your shoulders move.\n- Stop if your elbows or shoulders hurt.",
-      "catalogId": "tonos.exercise.0289",
-      "legacyMediaId": 289
-    },
-    {
-      "name": "Tricep Extension - Cable Machine",
-      "rating": 23,
-      "equipment": ["Cable Machine","Cable Rope Attachment"],
-      "bodyparts": ["Triceps"],
-      "muscles": [
-        {"name":"Triceps Brachii","rank":1},
-        {"name":"Anconeus","rank":2},
-        {"name":"Wrist Extensors","rank":3},
-        {"name":"Transverse Abdominis","rank":4},
-        {"name":"Rectus Abdominis","rank":5},
-        {"name":"Serratus Anterior","rank":6},
-        {"name":"Latissimus Dorsi","rank":7}
-      ],
-      "setupNotes": "1. Stand, sit, or lie in a stable position.\n2. Set the cable and attachment at a comfortable height.\n3. Keep your upper arms still and brace your stomach.",
-      "executionNotes": "1. Bend your elbows to lower the weight.\n2. Straighten your arms without swinging.\n3. Return slowly and repeat.",
-      "tipsNotes": "- Keep your elbows close to the chosen position.\n- Use a lighter weight if your shoulders move.\n- Stop if your elbows or shoulders hurt.",
-      "catalogId": "tonos.exercise.0287",
-      "legacyMediaId": 287
-    },
-    {
-      "name": "Tricep Extension - Dumbbell",
-      "rating": 23,
-      "equipment": ["Dumbbell"],
-      "bodyparts": ["Triceps"],
-      "muscles": [
-        {"name":"Triceps Brachii","rank":1},
-        {"name":"Anconeus","rank":2},
-        {"name":"Wrist Extensors","rank":3},
-        {"name":"Transverse Abdominis","rank":4},
-        {"name":"Rectus Abdominis","rank":5},
-        {"name":"Serratus Anterior","rank":6},
-        {"name":"Latissimus Dorsi","rank":7}
-      ],
-      "setupNotes": "1. Stand, sit, or lie in a stable position.\n2. Choose a weight you can control.\n3. Keep your upper arms still and brace your stomach.",
-      "executionNotes": "1. Bend your elbows to lower the weight.\n2. Straighten your arms without swinging.\n3. Return slowly and repeat.",
-      "tipsNotes": "- Keep your elbows close to the chosen position.\n- Use a lighter weight if your shoulders move.\n- Stop if your elbows or shoulders hurt.",
-      "catalogId": "tonos.exercise.0288",
-      "legacyMediaId": 288
-    },
-    {
       "name": "Tricep Kickback - Cable Machine",
-      "rating": 23,
+      "rating": 50,
       "equipment": ["Cable Machine","Cable Handle Attachment"],
       "bodyparts": ["Triceps"],
       "muscles": [
@@ -5669,7 +5632,7 @@
     },
     {
       "name": "Tricep Kickback - Dumbbell",
-      "rating": 23,
+      "rating": 55,
       "equipment": ["Dumbbell"],
       "bodyparts": ["Triceps"],
       "muscles": [
@@ -5689,7 +5652,7 @@
     },
     {
       "name": "Tricep Pushdown - Cable Machine",
-      "rating": 23,
+      "rating": 75,
       "equipment": ["Cable Machine","Cable Straight Bar Attachment"],
       "bodyparts": ["Triceps"],
       "muscles": [
@@ -5709,7 +5672,7 @@
     },
     {
       "name": "Tuck Crunch",
-      "rating": 23,
+      "rating": 55,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Core"],
       "muscles": [
@@ -5729,7 +5692,7 @@
     },
     {
       "name": "Tuck Crunch - Dumbbell",
-      "rating": 23,
+      "rating": 50,
       "equipment": ["Dumbbell"],
       "bodyparts": ["Core"],
       "muscles": [
@@ -5749,7 +5712,7 @@
     },
     {
       "name": "Turkish Get Up",
-      "rating": 23,
+      "rating": 60,
       "equipment": ["Kettlebell"],
       "bodyparts": ["Shoulders","Hips"],
       "muscles": [
@@ -5769,7 +5732,7 @@
     },
     {
       "name": "Up-Down Twist - Cable Machine",
-      "rating": 23,
+      "rating": 55,
       "equipment": ["Cable Machine","Cable Handle Attachment"],
       "bodyparts": ["Core","Shoulders"],
       "muscles": [
@@ -5789,7 +5752,7 @@
     },
     {
       "name": "Upright Row - Barbell",
-      "rating": 23,
+      "rating": 70,
       "equipment": ["Barbell","Weight Plates"],
       "bodyparts": ["Shoulders","Upper Back"],
       "muscles": [
@@ -5809,7 +5772,7 @@
     },
     {
       "name": "Upright Row - Cable Machine",
-      "rating": 23,
+      "rating": 70,
       "equipment": ["Cable Machine","Cable Straight Bar Attachment"],
       "bodyparts": ["Shoulders","Upper Back"],
       "muscles": [
@@ -5829,7 +5792,7 @@
     },
     {
       "name": "Upright Row - Dumbbell",
-      "rating": 23,
+      "rating": 60,
       "equipment": ["Dumbbell"],
       "bodyparts": ["Shoulders","Upper Back"],
       "muscles": [
@@ -5849,7 +5812,7 @@
     },
     {
       "name": "V Up",
-      "rating": 23,
+      "rating": 40,
       "equipment": ["Bodyweight"],
       "bodyparts": ["Hips"],
       "muscles": [
@@ -5869,7 +5832,7 @@
     },
     {
       "name": "V Up - Cable Machine",
-      "rating": 23,
+      "rating": 40,
       "equipment": ["Cable Machine","Cable Ankle Cuff Attachment"],
       "bodyparts": ["Hips"],
       "muscles": [
@@ -5889,7 +5852,7 @@
     },
     {
       "name": "V Up - Dumbbell",
-      "rating": 23,
+      "rating": 45,
       "equipment": ["Dumbbell"],
       "bodyparts": ["Hips"],
       "muscles": [
@@ -5909,7 +5872,7 @@
     },
     {
       "name": "V Up - Resistance Band",
-      "rating": 23,
+      "rating": 40,
       "equipment": ["Resistance Band"],
       "bodyparts": ["Hips"],
       "muscles": [
@@ -5969,7 +5932,7 @@
     },
     {
       "name": "Wrist Curl - Barbell",
-      "rating": 23,
+      "rating": 55,
       "equipment": ["Barbell"],
       "bodyparts": ["Forearms"],
       "muscles": [
@@ -5977,7 +5940,7 @@
         {"name":"Brachioradialis","rank":2},
         {"name":"Brachialis","rank":3},
         {"name":"Pronator Teres","rank":4},
-        {"name":"Wrist Extensors","rank":6}
+        {"name":"Wrist Extensors","rank":5}
       ],
       "setupNotes": "1. Sit with your forearms supported and your hands over the edge.\n2. Set the bar and plates safely before starting.\n3. Keep your wrists straight at the start.",
       "executionNotes": "1. Curl your hands up slowly.\n2. Pause briefly at the top.\n3. Lower your hands under control and repeat.",
@@ -5987,7 +5950,7 @@
     },
     {
       "name": "Wrist Curl - Cable Machine",
-      "rating": 23,
+      "rating": 55,
       "equipment": ["Cable Machine","Cable Straight Bar Attachment"],
       "bodyparts": ["Forearms"],
       "muscles": [
@@ -5995,7 +5958,7 @@
         {"name":"Brachioradialis","rank":2},
         {"name":"Brachialis","rank":3},
         {"name":"Pronator Teres","rank":4},
-        {"name":"Wrist Extensors","rank":6}
+        {"name":"Wrist Extensors","rank":5}
       ],
       "setupNotes": "1. Sit with your forearms supported and your hands over the edge.\n2. Set the cable and attachment at a comfortable height.\n3. Keep your wrists straight at the start.",
       "executionNotes": "1. Curl your hands up slowly.\n2. Pause briefly at the top.\n3. Lower your hands under control and repeat.",
@@ -6005,7 +5968,7 @@
     },
     {
       "name": "Wrist Curl - Dumbbell",
-      "rating": 23,
+      "rating": 60,
       "equipment": ["Dumbbell"],
       "bodyparts": ["Forearms"],
       "muscles": [
@@ -6013,7 +5976,7 @@
         {"name":"Brachioradialis","rank":2},
         {"name":"Brachialis","rank":3},
         {"name":"Pronator Teres","rank":4},
-        {"name":"Wrist Extensors","rank":6}
+        {"name":"Wrist Extensors","rank":5}
       ],
       "setupNotes": "1. Sit with your forearms supported and your hands over the edge.\n2. Choose a weight you can control.\n3. Keep your wrists straight at the start.",
       "executionNotes": "1. Curl your hands up slowly.\n2. Pause briefly at the top.\n3. Lower your hands under control and repeat.",
@@ -6023,7 +5986,7 @@
     },
     {
       "name": "Wrist Curl - Dumbbell (Reverse Grip)",
-      "rating": 23,
+      "rating": 60,
       "equipment": ["Dumbbell"],
       "bodyparts": ["Forearms"],
       "muscles": [
@@ -6031,7 +5994,7 @@
         {"name":"Brachioradialis","rank":2},
         {"name":"Brachialis","rank":3},
         {"name":"Pronator Teres","rank":4},
-        {"name":"Wrist Flexors","rank":6}
+        {"name":"Wrist Flexors","rank":5}
       ],
       "setupNotes": "1. Sit with your forearms supported and your hands over the edge.\n2. Choose a weight you can control.\n3. Keep your wrists straight at the start.",
       "executionNotes": "1. Curl your hands up slowly.\n2. Pause briefly at the top.\n3. Lower your hands under control and repeat.",
@@ -6041,7 +6004,7 @@
     },
     {
       "name": "Zercher Carry - Barbell",
-      "rating": 23,
+      "rating": 55,
       "equipment": ["Barbell","Weight Plates"],
       "bodyparts": ["Shoulders","Biceps","Hips"],
       "muscles": [
@@ -6061,7 +6024,7 @@
     },
     {
       "name": "Zercher Squat - Barbell",
-      "rating": 23,
+      "rating": 65,
       "equipment": ["Barbell","Weight Plates","Squat Rack"],
       "bodyparts": ["Hips"],
       "muscles": [

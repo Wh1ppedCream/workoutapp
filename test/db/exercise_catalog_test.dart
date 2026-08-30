@@ -351,6 +351,34 @@ void main() {
       expect(await db.query('exercise_definitions'), isEmpty);
     },
   );
+
+  test(
+    'rejects non-contiguous muscle ranks before writing definitions',
+    () async {
+      await expectLater(
+        ExerciseCatalog.synchronize(
+          db,
+          sourceJson: _catalogJson(
+            revision: 1,
+            exercises: [
+              _exercise(
+                catalogId: 'tonos.exercise.0001',
+                legacyMediaId: 1,
+                name: 'Alpha',
+                muscles: [
+                  {'name': 'Rectus Abdominis', 'rank': 1},
+                  {'name': 'Transverse Abdominis', 'rank': 3},
+                ],
+              ),
+            ],
+          ),
+        ),
+        throwsA(isA<FormatException>()),
+      );
+      expect(await db.query('exercise_definitions'), isEmpty);
+      expect(await db.query('exercise_catalog_state'), isEmpty);
+    },
+  );
 }
 
 String _catalogJson({

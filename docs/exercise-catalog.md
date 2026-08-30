@@ -55,8 +55,9 @@ unit. Do not hand-edit generated manifests.
 
 ## Checks before commit
 
-Run the catalog contract and the database/media migration tests after editing.
-The full command block is provided with the change that introduced this
-document. The contract checks identifier uniqueness and alphabetical order;
-the migration tests check rename, retirement, database preservation, and
-stable media attachment.
+Run the catalog, audit, and database/media migration tests after editing.
+The full command block and human review checklist live in
+`exercise-catalog-audit.md`. The contracts check identifier uniqueness,
+alphabetical order, reference integrity, text encoding, structured guidance,
+starter metadata, media attachment, rename, retirement, and database
+preservation.

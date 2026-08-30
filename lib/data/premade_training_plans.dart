@@ -138,7 +138,7 @@ const _authoredPremadeTrainingPlans = <PremadeTrainingPlan>[
         reps: 15,
       ),
       PremadeTrainingExercise(
-        name: 'Tricep Extension - Cable Machine',
+        name: 'Overhead Tricep Extension - Cable Machine',
         equipment: 'Cable Machine',
         sets: 3,
         reps: 12,
@@ -236,7 +236,7 @@ const _authoredPremadeTrainingPlans = <PremadeTrainingPlan>[
         reps: 15,
       ),
       PremadeTrainingExercise(
-        name: 'Tricep Extension - Cable Machine',
+        name: 'Overhead Tricep Extension - Cable Machine',
         equipment: 'Cable Machine',
         sets: 3,
         reps: 12,
@@ -726,7 +726,7 @@ const _authoredPremadeTrainingPlans = <PremadeTrainingPlan>[
         reps: 10,
       ),
       PremadeTrainingExercise(
-        name: 'Tricep Extension - Cable Machine',
+        name: 'Overhead Tricep Extension - Cable Machine',
         equipment: 'Cable Machine',
         sets: 3,
         reps: 12,

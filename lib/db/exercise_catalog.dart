@@ -365,6 +365,14 @@ class _CatalogExercise {
         'Exercise ${requiredText('name')} repeats a muscle rank.',
       );
     }
+    for (var expectedRank = 1; expectedRank <= muscles.length; expectedRank++) {
+      if (!ranks.contains(expectedRank)) {
+        throw FormatException(
+          'Exercise ${requiredText('name')} must use consecutive muscle '
+          'ranks starting at 1.',
+        );
+      }
+    }
     final muscleNames =
         muscles.map((muscle) => muscle.name.toLowerCase()).toSet();
     if (muscleNames.length != muscles.length) {
