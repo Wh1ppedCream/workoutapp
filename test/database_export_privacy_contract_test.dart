@@ -44,6 +44,6 @@ void main() {
     );
     expect(privacy, contains('unencrypted JSON files'));
     expect(deletion, contains('unencrypted JSON files'));
-    expect(deletion, contains('backup and device transfer exclude'));
+    expect(deletion, contains('automatic backup and device transfer exclude'));
   });
 }

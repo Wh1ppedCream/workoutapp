@@ -1,22 +1,21 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:env_test/db/database_backup_policy.dart';
 import 'package:env_test/db/database_maintenance.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('database import contract', () {
     test('accepts versioned export envelopes', () {
+      final tables = <String, dynamic>{
+        for (final table in kDatabaseExportTableNames) table: <Object?>[],
+      };
+      tables['sessions'] = [
+        {'id': 1, 'date': '2026-04-26T12:00:00.000', 'duration': 45},
+      ];
       final jsonStr = jsonEncode(
-        buildDatabaseExportEnvelope(
-          schemaVersion: 49,
-          tables: {
-            'sessions': [
-              {'id': 1, 'date': '2026-04-26T12:00:00.000', 'duration': 45},
-            ],
-            'foods': const [],
-          },
-        ),
+        buildDatabaseExportEnvelope(schemaVersion: 49, tables: tables),
       );
 
       final preview = inspectDatabaseImport(jsonStr, currentSchemaVersion: 49);
@@ -25,6 +24,8 @@ void main() {
       expect(preview.isLegacyFormat, isFalse);
       expect(preview.schemaVersion, 49);
       expect(preview.rowCounts['sessions'], 1);
+      expect(preview.isCompleteSnapshot, isTrue);
+      expect(preview.canReplace, isTrue);
       expect(decodeDatabaseExportTables(jsonStr), contains('sessions'));
     });
 
@@ -39,6 +40,7 @@ void main() {
 
       expect(preview.canImport, isTrue);
       expect(preview.isLegacyFormat, isTrue);
+      expect(preview.canReplace, isFalse);
       expect(
         preview.warnings,
         contains('Legacy export has no schema version metadata.'),
@@ -63,6 +65,7 @@ void main() {
               },
             ],
           },
+          formatVersion: 2,
         ),
       );
 
@@ -75,6 +78,43 @@ void main() {
       );
       expect(preview.rowCounts['sessions'], 1);
       expect(preview.rowCounts['measurements'], 1);
+      expect(preview.canReplace, isFalse);
+    });
+
+    test('blocks incomplete current snapshots before replacement', () {
+      final jsonStr = jsonEncode(
+        buildDatabaseExportEnvelope(
+          schemaVersion: 61,
+          tables: {'sessions': const []},
+        ),
+      );
+
+      final preview = inspectDatabaseImport(jsonStr, currentSchemaVersion: 61);
+
+      expect(preview.canImport, isFalse);
+      expect(preview.canReplace, isFalse);
+      expect(preview.missingRequiredTables, isNotEmpty);
+      expect(preview.invalidTables, contains('exercises'));
+    });
+
+    test('requires current snapshot scope and policy metadata', () {
+      final tables = <String, dynamic>{
+        for (final table in kDatabaseExportTableNames) table: const [],
+      };
+      final envelope =
+          buildDatabaseExportEnvelope(schemaVersion: 61, tables: tables)
+            ..remove('backupScope')
+            ..['backupPolicyVersion'] = -1;
+      final preview = inspectDatabaseImport(
+        jsonEncode(envelope),
+        currentSchemaVersion: 61,
+      );
+
+      expect(preview.canImport, isFalse);
+      expect(
+        preview.invalidTables,
+        containsAll(['backup_scope_metadata', 'backup_policy_metadata']),
+      );
     });
 
     test('blocks exports from newer schemas before destructive import', () {
@@ -159,6 +199,74 @@ void main() {
       );
     });
 
+    test('every durable schema table has an explicit backup policy', () {
+      final schemaSources = [
+        File('lib/db/schema.dart').readAsStringSync(),
+        File('lib/db/content_dao.dart').readAsStringSync(),
+      ];
+      final tablePattern = RegExp(
+        r'CREATE\s+(?:VIRTUAL\s+)?TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?([A-Za-z_][A-Za-z0-9_]*)',
+        caseSensitive: false,
+      );
+      const temporaryOrDynamicNames = {
+        'favorite_foods_new',
+        'food_barcodes_new',
+        'for',
+        'temp',
+      };
+      final schemaTables = <String>{
+        for (final source in schemaSources)
+          for (final match in tablePattern.allMatches(source))
+            match.group(1)!.toLowerCase(),
+      }..removeAll(temporaryOrDynamicNames);
+
+      expect(
+        kDatabaseBackupPolicyByName.keys.toSet(),
+        containsAll(schemaTables),
+      );
+      expect(
+        kDatabaseBackupPolicyByName.length,
+        kDatabaseBackupTablePolicies.length,
+      );
+    });
+
+    test('personal allocation overrides are part of complete snapshots', () {
+      expect(
+        kDatabaseExportTableNames,
+        containsAll([
+          'exercise_allocation_source',
+          'exercise_allocation_user_override',
+          'active_workout_draft',
+          'pending_workout_progression',
+        ]),
+      );
+      expect(kDatabaseExportTableNames, isNot(contains('day_totals_cache')));
+      expect(
+        kDatabaseExportTableNames,
+        isNot(contains('workout_set_record_events')),
+      );
+    });
+
+    test('exports every required table in one database transaction', () {
+      final helper = File('lib/db/database_helper.dart').readAsStringSync();
+      final exportStart = helper.indexOf('Future<String> exportDatabase()');
+      final exportEnd = helper.indexOf(
+        'Future<void> importDatabase',
+        exportStart,
+      );
+      expect(exportStart, isNot(-1));
+      expect(exportEnd, greaterThan(exportStart));
+
+      final exportBody = helper.substring(exportStart, exportEnd);
+      final transactionIndex = exportBody.indexOf('await db.transaction');
+      final queryIndex = exportBody.indexOf('await txn.query(table)');
+      final envelopeIndex = exportBody.indexOf('buildDatabaseExportEnvelope');
+
+      expect(transactionIndex, isNot(-1));
+      expect(queryIndex, greaterThan(transactionIndex));
+      expect(envelopeIndex, greaterThan(queryIndex));
+    });
+
     test('full imports suspend food FTS triggers during rebuild', () {
       final helper = File('lib/db/database_helper.dart').readAsStringSync();
 
@@ -177,6 +285,9 @@ void main() {
       final clearIndex = importBody.indexOf(
         'final tablesToClear = kDatabaseExportTableNames.reversed;',
       );
+      final fullSnapshotGuardIndex = importBody.indexOf(
+        'if (replaceSnapshot) {',
+      );
       final rebuildIndex = importBody.indexOf(
         'await _rebuildFoodFtsIfExists(db);',
       );
@@ -185,6 +296,7 @@ void main() {
       );
 
       expect(dropIndex, isNot(-1));
+      expect(fullSnapshotGuardIndex, greaterThan(dropIndex));
       expect(clearIndex, greaterThan(dropIndex));
       expect(rebuildIndex, greaterThan(clearIndex));
       expect(restoreIndex, greaterThan(rebuildIndex));
@@ -203,6 +315,9 @@ void main() {
       final clearIndex = importBody.indexOf(
         'final tablesToClear = kDatabaseExportTableNames.reversed;',
       );
+      final replaceDecisionIndex = importBody.indexOf(
+        'final replaceSnapshot = clearFirst && preview.canReplace;',
+      );
       final normalizedIndex = importBody.indexOf(
         'await _backfillNormalizedFoodKeysTx(txn);',
       );
@@ -219,6 +334,7 @@ void main() {
 
       expect(previewIndex, isNot(-1));
       expect(transactionIndex, greaterThan(previewIndex));
+      expect(replaceDecisionIndex, greaterThan(previewIndex));
       expect(clearIndex, greaterThan(transactionIndex));
       expect(normalizedIndex, greaterThan(clearIndex));
       expect(energyIndex, greaterThan(normalizedIndex));

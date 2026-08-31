@@ -1,81 +1,14 @@
 import 'dart:convert';
 
+import 'database_backup_policy.dart';
+
 const String kDatabaseExportFormat = 'env_test.database_export';
-const int kDatabaseExportFormatVersion = 2;
+const int kDatabaseExportFormatVersion = 3;
+const Set<int> kSupportedDatabaseExportFormatVersions = {2, 3};
 const int kDatabaseImportMaxBytes = 25 * 1024 * 1024;
 const int kDatabaseImportMaxRows = 250000;
 const int kDatabaseImportMaxRowsPerTable = 100000;
 const int kDatabaseImportMaxTextFieldLength = 100000;
-
-const List<String> kDatabaseExportTableNames = [
-  'sessions',
-  'exercises',
-  'sets',
-  'cardio_details',
-  'stretch_instances',
-  'stretch_instance_items',
-  'measurement_definitions',
-  'measurements',
-  'equipment',
-  'bodypart',
-  'muscles',
-  'exercise_definitions',
-  'exercise_equipment',
-  'exercise_bodypart',
-  'exercise_muscle',
-  'stretch_definitions',
-  'stretch_bodypart',
-  'muscle_bodypart',
-  'bodypart_ranking',
-  'muscle_ranking',
-  'exercise_muscle_percent',
-  'bodypart_muscle_rankings',
-  'muscle_volume_boundaries',
-  'bodypart_volume_boundaries',
-  'preset_definitions',
-  'preset_exercises',
-  'preset_sets',
-  'preset_cardio_details',
-  'preset_stretch_items',
-  'gym_profiles',
-  'profile_equipment',
-  'exercise_rep_max',
-  'exercise_volume_max',
-  'nutrients',
-  'nutrient_aliases',
-  'nutrient_groups',
-  'nutrient_group_members',
-  'foods',
-  'food_portions',
-  'food_barcodes',
-  'food_nutrients',
-  'food_nutrient_values',
-  'recipes',
-  'recipe_ingredients',
-  'recipe_nutrients',
-  'diary_entries',
-  'day_totals_cache',
-  'nutrition_goals',
-  'brands',
-  'sources',
-  'categories',
-  'food_usage_stats',
-  'favorite_foods',
-  'diary_entry_tags',
-  'diary_entry_audit',
-  'personal_info',
-  'flow_defaults',
-  'flow_default_methods',
-  'preset_flow_methods',
-  'formula_settings',
-  'exercise_bodypart_percent',
-  'preset_auto_settings',
-  'preset_exercise_auto',
-  'preset_set_auto',
-  'active_plans',
-  'active_workout_draft',
-  'pending_workout_progression',
-];
 
 class DatabaseHealthSnapshot {
   const DatabaseHealthSnapshot({
@@ -140,9 +73,11 @@ class DatabaseImportPreview {
     required this.invalidTables,
     required this.warnings,
     required this.rowCounts,
+    required this.missingRequiredTables,
     this.schemaVersion,
     this.formatVersion,
     this.schemaVersionTooNew = false,
+    this.isCompleteSnapshot = false,
   });
 
   final bool valid;
@@ -156,6 +91,8 @@ class DatabaseImportPreview {
   final List<String> invalidTables;
   final List<String> warnings;
   final Map<String, int> rowCounts;
+  final List<String> missingRequiredTables;
+  final bool isCompleteSnapshot;
 
   bool get canImport =>
       valid &&
@@ -164,6 +101,10 @@ class DatabaseImportPreview {
       unknownTables.isEmpty &&
       invalidTables.isEmpty;
 
+  /// Only a current, complete snapshot may replace existing database data.
+  /// Older backups can merge their available rows without first clearing data.
+  bool get canReplace => canImport && isCompleteSnapshot;
+
   int get totalRows =>
       rowCounts.values.fold<int>(0, (sum, count) => sum + count);
 }
@@ -171,14 +112,23 @@ class DatabaseImportPreview {
 Map<String, dynamic> buildDatabaseExportEnvelope({
   required int schemaVersion,
   required Map<String, dynamic> tables,
+  int formatVersion = kDatabaseExportFormatVersion,
 }) {
-  return {
+  final envelope = <String, dynamic>{
     'format': kDatabaseExportFormat,
-    'formatVersion': kDatabaseExportFormatVersion,
+    'formatVersion': formatVersion,
     'schemaVersion': schemaVersion,
     'exportedAt': DateTime.now().toUtc().toIso8601String(),
     'tables': tables,
   };
+  if (formatVersion >= kDatabaseExportFormatVersion) {
+    envelope.addAll({
+      'backupScope': 'database',
+      'backupPolicyVersion': kDatabaseBackupPolicyVersion,
+      'isCompleteSnapshot': true,
+    });
+  }
+  return envelope;
 }
 
 Map<String, dynamic> decodeDatabaseExportTables(String jsonStr) {
@@ -204,9 +154,10 @@ Map<String, dynamic> decodeDatabaseExportTables(String jsonStr) {
 DatabaseImportPreview inspectDatabaseImport(
   String jsonStr, {
   required int currentSchemaVersion,
-  Iterable<String> supportedTables = kDatabaseExportTableNames,
+  Iterable<String>? supportedTables,
 }) {
-  final supported = supportedTables.toSet();
+  final supported =
+      (supportedTables ?? kDatabaseBackupPolicyByName.keys).toSet();
 
   if (utf8.encode(jsonStr).length > kDatabaseImportMaxBytes) {
     return _invalidPreview(
@@ -225,7 +176,9 @@ DatabaseImportPreview inspectDatabaseImport(
     final schemaVersion = _readInt(decoded['schemaVersion']);
     final formatVersion = _readInt(decoded['formatVersion']);
 
-    if (isEnvelope && formatVersion != kDatabaseExportFormatVersion) {
+    if (isEnvelope &&
+        (formatVersion == null ||
+            !kSupportedDatabaseExportFormatVersions.contains(formatVersion))) {
       return _invalidPreview(
         'Unsupported database export format version: $formatVersion.',
         schemaVersion: schemaVersion,
@@ -279,6 +232,32 @@ DatabaseImportPreview inspectDatabaseImport(
       );
     }
 
+    final requiredTables = kDatabaseExportTableNames.toSet();
+    final presentTables = importableTables.toSet();
+    final missingRequiredTables =
+        requiredTables.difference(presentTables).toList()..sort();
+    final isCurrentFormat =
+        isEnvelope && formatVersion == kDatabaseExportFormatVersion;
+    final declaresCompleteSnapshot = decoded['isCompleteSnapshot'] == true;
+    final isCompleteSnapshot =
+        isCurrentFormat &&
+        declaresCompleteSnapshot &&
+        missingRequiredTables.isEmpty;
+
+    if (isCurrentFormat && !declaresCompleteSnapshot) {
+      invalidTables.add('backup_snapshot_metadata');
+    }
+    if (isCurrentFormat && decoded['backupScope'] != 'database') {
+      invalidTables.add('backup_scope_metadata');
+    }
+    if (isCurrentFormat && missingRequiredTables.isNotEmpty) {
+      invalidTables.addAll(missingRequiredTables);
+    } else if (!isCompleteSnapshot && missingRequiredTables.isNotEmpty) {
+      warnings.add(
+        'Legacy or partial import will merge available data and cannot replace the current database.',
+      );
+    }
+
     final schemaVersionTooNew =
         schemaVersion != null && schemaVersion > currentSchemaVersion;
     if (schemaVersion == null) {
@@ -297,6 +276,10 @@ DatabaseImportPreview inspectDatabaseImport(
         '${unknownTables.length} unknown table(s) are not supported.',
       );
     }
+    if (isCurrentFormat &&
+        decoded['backupPolicyVersion'] != kDatabaseBackupPolicyVersion) {
+      invalidTables.add('backup_policy_metadata');
+    }
 
     final message =
         schemaVersionTooNew
@@ -305,6 +288,8 @@ DatabaseImportPreview inspectDatabaseImport(
             ? '${invalidTables.length} table(s) have invalid row data.'
             : unknownTables.isNotEmpty
             ? '${unknownTables.length} table(s) are not supported.'
+            : isCurrentFormat && missingRequiredTables.isNotEmpty
+            ? 'Database backup is missing ${missingRequiredTables.length} required table(s).'
             : 'Found ${importableTables.length} importable table(s).';
 
     return DatabaseImportPreview(
@@ -319,6 +304,8 @@ DatabaseImportPreview inspectDatabaseImport(
       invalidTables: invalidTables..sort(),
       warnings: warnings,
       rowCounts: rowCounts,
+      missingRequiredTables: missingRequiredTables,
+      isCompleteSnapshot: isCompleteSnapshot,
     );
   } on FormatException catch (e) {
     return _invalidPreview(e.message);
@@ -358,6 +345,7 @@ DatabaseImportPreview _invalidPreview(
     invalidTables: const [],
     warnings: const [],
     rowCounts: const {},
+    missingRequiredTables: const [],
   );
 }
 

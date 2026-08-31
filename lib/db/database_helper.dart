@@ -32,6 +32,7 @@ import 'personal_info_transaction_dao.dart';
 import 'nutrition_dao.dart';
 import 'content_dao.dart';
 import 'database_connection.dart';
+import 'database_backup_policy.dart';
 import 'database_maintenance.dart';
 import 'db_query_utils.dart';
 import 'active_plan_dao.dart';
@@ -3176,22 +3177,30 @@ class DatabaseHelper {
     final db = await database;
     final tables = kDatabaseExportTableNames;
     final existingTables = await _tableNames(db);
+    final missingRequiredTables =
+        tables.where((table) => !existingTables.contains(table)).toList();
+    if (missingRequiredTables.isNotEmpty) {
+      throw StateError(
+        'Database backup cannot be created because required tables are missing.',
+      );
+    }
 
     final Map<String, dynamic> data = {};
-    for (final table in tables) {
-      if (existingTables.contains(table)) {
-        // ← guard
-        data[table] = await db.query(table);
+    await db.transaction((txn) async {
+      for (final table in tables) {
+        data[table] = await txn.query(table);
       }
-    }
+    });
     return jsonEncode(
       buildDatabaseExportEnvelope(schemaVersion: _kDbVersion, tables: data),
     );
   }
 
-  /// Import the database from a JSON string.
-  /// If [clearFirst] is true, app-managed import/export tables are cleared first.
-  /// Also re-creates indexes and refreshes caches/FTS afterward.
+  /// Imports a database backup from JSON.
+  ///
+  /// Full v3 snapshots replace authoritative rows atomically. Older or partial
+  /// exports are merged without clearing existing rows first, so they cannot
+  /// erase unrelated current data that the old format did not contain.
   Future<void> importDatabase(String jsonStr, {bool clearFirst = true}) async {
     final db = await database;
     final preview = previewDatabaseImport(jsonStr);
@@ -3199,6 +3208,9 @@ class DatabaseHelper {
       throw FormatException(preview.message);
     }
     final data = decodeDatabaseExportTables(jsonStr);
+    final tablesToRestore =
+        kDatabaseExportTableNames.where(data.containsKey).toList();
+    final replaceSnapshot = clearFirst && preview.canReplace;
 
     final suspendFoodFtsTriggers = await _hasFoodFtsTable(db);
     if (suspendFoodFtsTriggers) {
@@ -3212,8 +3224,20 @@ class DatabaseHelper {
       try {
         await db.transaction((txn) async {
           final existingTables = await _tableNames(txn);
-          if (clearFirst) {
-            // Clear app-managed import/export tables only.
+          if (replaceSnapshot) {
+            final missingLocalTables =
+                kDatabaseExportTableNames
+                    .where((table) => !existingTables.contains(table))
+                    .toList();
+            if (missingLocalTables.isNotEmpty) {
+              throw StateError(
+                'Current database cannot accept a complete backup because required tables are missing.',
+              );
+            }
+          }
+          if (replaceSnapshot) {
+            // Remove snapshot rows in reverse dependency order. Tables omitted
+            // from the backup contract are either rebuilt or discarded below.
             final tablesToClear = kDatabaseExportTableNames.reversed;
             for (final table in tablesToClear) {
               if (existingTables.contains(table)) {
@@ -3222,9 +3246,17 @@ class DatabaseHelper {
             }
           }
 
-          // Insert rows for tables present in the JSON.
-          for (final table in data.keys) {
-            if (!kDatabaseExportTableNames.contains(table)) continue;
+          // Derived/cache/app-owned rows must never survive a full replacement
+          // if they point at the prior snapshot's local IDs.
+          for (final table in kDatabaseDerivedOrDiscardedTableNames) {
+            if (existingTables.contains(table)) {
+              await txn.delete(table);
+            }
+          }
+
+          // Restore only authoritative snapshot rows. Legacy exports may carry
+          // cache rows; their policy intentionally ignores them.
+          for (final table in tablesToRestore) {
             if (!existingTables.contains(table)) continue; // skip unknown
             final rows = List<Map<String, dynamic>>.from(data[table] as List);
             for (final row in rows) {
@@ -3244,12 +3276,6 @@ class DatabaseHelper {
           // the person's existing database.
           await _backfillNormalizedFoodKeysTx(txn);
           await _backfillEnergyKcalFromMacros(txn);
-
-          if (!data.keys.contains('day_totals_cache') &&
-              existingTables.contains('day_totals_cache')) {
-            // Rebuild this derived cache lazily from the imported source data.
-            await txn.delete('day_totals_cache');
-          }
 
           await _bumpAutoincrement(txn);
 
@@ -3272,28 +3298,24 @@ class DatabaseHelper {
       // observe it. Derived search/index maintenance remains best-effort.
       await Schema.migrateV61(db);
 
-      // Search and schema maintenance are derived from the committed import.
-      try {
-        await _rebuildFoodFtsIfExists(db);
-        await _ensureAppMetaTable(db);
-        await Schema.migrateV49(db);
-        await WorkoutRecordEventsDao.rebuildAll(db);
-        await _ensureIndexes(db);
-      } catch (_) {
-        // The next open or maintenance pass can safely retry derived work.
+      // Re-seed current app-owned catalog rows after a full snapshot. The
+      // policy clears catalog state, so stable catalog IDs reconcile instead
+      // of leaving the backup's bundled revision in control.
+      await _ensureAppMetaTable(db);
+      if (replaceSnapshot) {
+        await Seed.syncExerciseCatalogIfNeeded(db);
+        await Seed.syncCreatorExerciseAllocationDefaults(db);
       }
 
-      // If recipe nutrients weren’t imported, rebuild them from ingredients.
-      if (!data.keys.contains('recipe_nutrients') &&
-          await _tableExists(db, 'recipes')) {
-        try {
-          await _rebuildAllRecipeCaches(db);
-        } catch (_) {
-          // Nutrient caches are derived and can rebuild on a later pass.
-        }
+      // Rebuild derived results from restored authoritative data. These are
+      // intentionally not serialized as backup payload.
+      if (await _tableExists(db, 'recipes')) {
+        await _rebuildAllRecipeCaches(db);
       }
-
-      // If day_totals_cache wasn’t imported but table exists, clear it so reads rebuild on demand.
+      await WorkoutRecordEventsDao.rebuildAll(db);
+      await _rebuildFoodFtsIfExists(db);
+      await Schema.migrateV49(db);
+      await _ensureIndexes(db);
     } finally {
       if (suspendFoodFtsTriggers) {
         try {
