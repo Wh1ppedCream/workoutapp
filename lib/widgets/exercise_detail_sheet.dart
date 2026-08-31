@@ -27,20 +27,24 @@ import 'workout_record_badges.dart';
 /// Simple record model for history tab
 class HistoryRecord {
   final DateTime date;
+  final LocalCalendarDay calendarDay;
   final int sessionId;
   final int exerciseId;
-  final String sessionDateValue;
+  final int sessionCompletedAtMilliseconds;
   final List<ExerciseSet> sets;
   final WorkoutExerciseRecordBadges badges;
 
   HistoryRecord({
     required this.date,
+    required this.calendarDay,
     required this.sessionId,
     required this.exerciseId,
-    required this.sessionDateValue,
+    required this.sessionCompletedAtMilliseconds,
     required this.sets,
     required this.badges,
   });
+
+  DateTime get displayDateTime => calendarDay.atLocalTime(date);
 }
 
 class _ExerciseHistoryPage {
@@ -283,7 +287,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
   Future<_ExerciseHistoryPage> _loadHistoryPage({HistoryRecord? before}) async {
     final historyRows = await _repo.fetchRecentWeightExerciseHistoryRows(
       definitionId: widget.defId,
-      beforeSessionDate: before?.sessionDateValue,
+      beforeCompletedAtMilliseconds: before?.sessionCompletedAtMilliseconds,
       beforeExerciseId: before?.exerciseId,
       // Fetch one additional row to know whether the next page exists.
       limit: _historyPageSize + 1,
@@ -302,13 +306,20 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
       final exercise = exercises[i];
       if (exercise is! WeightExercise) continue;
       final row = pageRows[i];
-      final sessionDateValue = row['session_date'] as String;
       records.add(
         HistoryRecord(
-          date: DateTime.parse(sessionDateValue),
+          date: TemporalSemantics.readLocalDateTime(
+            epochMilliseconds: row['session_completed_at_ms'],
+            legacyIso: row['session_date'],
+          ),
+          calendarDay: TemporalSemantics.readCalendarDay(
+            calendarDay: row['session_training_day'],
+            legacyIso: row['session_date'],
+            epochMilliseconds: row['session_completed_at_ms'],
+          ),
           sessionId: row['session_id'] as int,
           exerciseId: row['exercise_id'] as int,
-          sessionDateValue: sessionDateValue,
+          sessionCompletedAtMilliseconds: row['session_completed_at_ms'] as int,
           sets: exercise.sets,
           badges:
               badgesByExercise[row['exercise_id'] as int] ??
@@ -1508,7 +1519,9 @@ class _ExerciseHistorySessionCard extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final strings = AppLocalizations.of(context);
-    final dateLabel = DateFormat.yMMMd().add_jm().format(record.date);
+    final dateLabel = DateFormat.yMMMd().add_jm().format(
+      record.displayDateTime,
+    );
     final setCount = record.sets.length;
 
     return Container(
@@ -2013,17 +2026,21 @@ List<_ExerciseRecordPoint> _buildRecordTrendPoints(
 }
 
 class _ExerciseRecordPoint {
-  final DateTime date;
+  final DateTime completedAt;
+  final LocalCalendarDay calendarDay;
   final double bestWeight;
   final double bestEstimatedOneRm;
   final ExerciseSet bestSet;
 
   const _ExerciseRecordPoint({
-    required this.date,
+    required this.completedAt,
+    required this.calendarDay,
     required this.bestWeight,
     required this.bestEstimatedOneRm,
     required this.bestSet,
   });
+
+  DateTime get displayDateTime => calendarDay.atLocalTime(completedAt);
 
   factory _ExerciseRecordPoint.from(HistoryRecord record) {
     var bestSet = record.sets.first;
@@ -2043,7 +2060,8 @@ class _ExerciseRecordPoint {
     );
 
     return _ExerciseRecordPoint(
-      date: record.date,
+      completedAt: record.date,
+      calendarDay: record.calendarDay,
       bestWeight: bestWeight,
       bestEstimatedOneRm: bestEstimatedOneRm,
       bestSet: bestSet,
@@ -2141,7 +2159,7 @@ class _ExerciseRecordTrendChart extends StatelessWidget {
                     );
                 return [
                   LineTooltipItem(
-                    '${DateFormat.yMMMd(Localizations.localeOf(context).toLanguageTag()).add_jm().format(point.date)}\n'
+                    '${DateFormat.yMMMd(Localizations.localeOf(context).toLanguageTag()).add_jm().format(point.displayDateTime)}\n'
                     '${strings.exerciseDetailWeightAbbreviation} ${WeightUnitFormatter.formatWeight(point.bestWeight, weightUnit)} | '
                     '${strings.exerciseDetailEstimatedAbbreviation} ${WeightUnitFormatter.formatWeight(point.bestEstimatedOneRm, weightUnit)} | '
                     '${strings.exerciseDetailTopAbbreviation} ${_formatSet(point.bestSet, weightUnit)}',
@@ -2215,7 +2233,7 @@ class _ExerciseRecordTrendChart extends StatelessWidget {
                     ),
                     child: Text(
                       _recordAxisLabel(
-                        points[index].date,
+                        points[index],
                         showTimes,
                         Localizations.localeOf(context),
                       ),
@@ -2365,18 +2383,21 @@ Set<int> _recordDateLabelIndexes(int length) {
 }
 
 bool _shouldUseTimeLabels(List<_ExerciseRecordPoint> points) {
-  final days = {
-    for (final point in points)
-      DateUtils.dateOnly(point.date).toIso8601String(),
-  };
+  final days = {for (final point in points) point.calendarDay.storageKey};
   return days.length == 1;
 }
 
-String _recordAxisLabel(DateTime date, bool showTime, Locale locale) {
+String _recordAxisLabel(
+  _ExerciseRecordPoint point,
+  bool showTime,
+  Locale locale,
+) {
   return preserveWesternDigits(
     showTime
-        ? DateFormat('h:mm a', locale.toLanguageTag()).format(date)
-        : DateFormat.MMMd(locale.toLanguageTag()).format(date),
+        ? DateFormat('h:mm a', locale.toLanguageTag()).format(point.completedAt)
+        : DateFormat.MMMd(
+          locale.toLanguageTag(),
+        ).format(point.calendarDay.toLocalDateTime()),
     locale,
   );
 }

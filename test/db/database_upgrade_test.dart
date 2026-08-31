@@ -44,6 +44,7 @@ void main() {
     55,
     56,
     59,
+    60,
   ]) {
     test(
       'upgrades a populated v$historicalVersion database and preserves data',
@@ -93,6 +94,20 @@ void main() {
             'legacy_media_id',
             'catalog_status',
           }),
+        );
+        final sessionColumns = await db.rawQuery(
+          "PRAGMA table_info('sessions')",
+        );
+        final measurementColumns = await db.rawQuery(
+          "PRAGMA table_info('measurements')",
+        );
+        expect(
+          sessionColumns.map((column) => column['name']).toSet(),
+          containsAll(<String>{'completed_at_ms', 'training_day'}),
+        );
+        expect(
+          measurementColumns.map((column) => column['name']).toSet(),
+          containsAll(<String>{'measured_at_ms', 'measured_on'}),
         );
         expect(
           await db.query('exercise_catalog_state'),
@@ -411,21 +426,35 @@ Future<void> _expectHistoricalDataPreserved(
   Database db,
   _HistoricalFixture fixture,
 ) async {
+  final session =
+      (await db.query(
+        'sessions',
+        where: 'id = ?',
+        whereArgs: [fixture.sessionId],
+      )).single;
+  expect(session['duration'], 37);
   expect(
-    (await db.query(
-      'sessions',
-      where: 'id = ?',
-      whereArgs: [fixture.sessionId],
-    )).single['duration'],
-    37,
+    session['completed_at_ms'],
+    DateTime.parse(session['date'] as String).toUtc().millisecondsSinceEpoch,
+  );
+  expect(session['training_day'], (session['date'] as String).substring(0, 10));
+
+  final measurement =
+      (await db.query(
+        'measurements',
+        where: 'note = ?',
+        whereArgs: [fixture.marker],
+      )).single;
+  expect(measurement['value'], 70.0);
+  expect(
+    measurement['measured_at_ms'],
+    DateTime.parse(
+      measurement['timestamp'] as String,
+    ).toUtc().millisecondsSinceEpoch,
   );
   expect(
-    (await db.query(
-      'measurements',
-      where: 'note = ?',
-      whereArgs: [fixture.marker],
-    )).single['value'],
-    70.0,
+    measurement['measured_on'],
+    (measurement['timestamp'] as String).substring(0, 10),
   );
   if (fixture.presetId != null) {
     final preset =

@@ -36,6 +36,8 @@ void main() {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         def_id INTEGER NOT NULL,
         timestamp TEXT NOT NULL,
+        measured_at_ms INTEGER,
+        measured_on TEXT,
         value REAL NOT NULL,
         unit TEXT NOT NULL,
         note TEXT

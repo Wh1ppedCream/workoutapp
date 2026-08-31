@@ -1,7 +1,9 @@
 // File: lib/db/nutrition_dao.dart
 
 import 'package:sqflite/sqflite.dart';
+
 import '../models/nutrition_models.dart';
+import '../models/temporal_semantics.dart';
 import 'dart:convert';
 import 'db_query_utils.dart';
 
@@ -12,12 +14,7 @@ class DiaryEntryRow {
   DiaryEntryRow({required this.entry, required this.displayTitle});
 }
 
-String _toYMD(DateTime d) {
-  final y = d.year.toString().padLeft(4, '0');
-  final m = d.month.toString().padLeft(2, '0');
-  final da = d.day.toString().padLeft(2, '0');
-  return '$y-$m-$da';
-}
+String _toYMD(DateTime d) => LocalCalendarDay.fromDateTime(d).storageKey;
 
 // Treat these labels as kilojoules and convert to kcal.
 
@@ -916,7 +913,7 @@ Future<bool> _foodExists(int foodId) async {
     return rows.map((m) => DiaryEntryWithItem.fromJoinedMap(m)).toList();
   }
 
-  /// Chronological range query by precise timestamps.
+  /// Chronological precise-instant query over [start, end).
   Future<List<DiaryEntry>> getDiaryEntriesBetween(
     int profileId,
     DateTime start,
@@ -925,12 +922,12 @@ Future<bool> _foodExists(int foodId) async {
     int limit = 1000,
   }) async {
     final where = StringBuffer(
-      'profile_id = ? AND is_deleted = 0 AND logged_at IS NOT NULL AND logged_at BETWEEN ? AND ?',
+      'profile_id = ? AND is_deleted = 0 AND logged_at IS NOT NULL AND logged_at >= ? AND logged_at < ?',
     );
     final args = <Object?>[
       profileId,
-      start.toUtc().millisecondsSinceEpoch,
-      end.toUtc().millisecondsSinceEpoch,
+      TemporalSemantics.utcEpochMilliseconds(start),
+      TemporalSemantics.utcEpochMilliseconds(end),
     ];
     if (mealType != null) {
       where.write(' AND meal_type = ?');
@@ -2121,12 +2118,7 @@ Future<bool> _foodExists(int foodId) async {
     }
   }
 
-  DateTime _parseYMD(String s) {
-    // Stored as 'YYYY-MM-DD' (local-date semantics)
-    final p = s.split('-');
-    if (p.length != 3) throw FormatException('Bad YMD: $s');
-    return DateTime(int.parse(p[0]), int.parse(p[1]), int.parse(p[2]));
-  }
+  DateTime _parseYMD(String s) => LocalCalendarDay.parse(s).toLocalDateTime();
 
   // ───────────────────────────────────────────────────────────────────────────
   // TAGS (CRUD + filter)
@@ -2162,7 +2154,7 @@ Future<bool> _foodExists(int foodId) async {
     return rows.map((r) => r['tag'] as String).toList();
   }
 
-  /// Optional: fetch entries by tag (time window inclusive if provided).
+  /// Optional: fetch entries by tag in a precise [start, end) window.
   Future<List<DiaryEntry>> getEntriesByTag({
     required int profileId,
     required String tag,
@@ -2178,11 +2170,11 @@ Future<bool> _foodExists(int foodId) async {
 
     if (start != null) {
       where.write(' AND (e.logged_at IS NOT NULL AND e.logged_at >= ?)');
-      args.add(start.toUtc().millisecondsSinceEpoch);
+      args.add(TemporalSemantics.utcEpochMilliseconds(start));
     }
     if (end != null) {
-      where.write(' AND (e.logged_at IS NOT NULL AND e.logged_at <= ?)');
-      args.add(end.toUtc().millisecondsSinceEpoch);
+      where.write(' AND (e.logged_at IS NOT NULL AND e.logged_at < ?)');
+      args.add(TemporalSemantics.utcEpochMilliseconds(end));
     }
 
     final rows = await db.rawQuery(

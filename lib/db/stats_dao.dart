@@ -1,6 +1,8 @@
 // File: lib/db/stats_dao.dart
 
 import 'package:sqflite/sqflite.dart';
+
+import '../models/temporal_semantics.dart';
 import 'db_query_utils.dart';
 
 /// DAO for rep-max and volume-max stats.
@@ -87,9 +89,11 @@ class StatsDao {
     String timeframe,
   ) async {
     final cutoff = _cutoffForTimeframe(timeframe);
-    final dateClause = cutoff == null ? '' : 'AND sess.date >= ?';
+    final dateClause = cutoff == null ? '' : 'AND sess.completed_at_ms >= ?';
     final args = <Object?>[defId];
-    if (cutoff != null) args.add(cutoff.toIso8601String());
+    if (cutoff != null) {
+      args.add(TemporalSemantics.utcEpochMilliseconds(cutoff));
+    }
 
     final rows = await db.rawQuery(
       '''
@@ -129,9 +133,11 @@ class StatsDao {
     String timeframe,
   ) async {
     final cutoff = _cutoffForTimeframe(timeframe);
-    final dateClause = cutoff == null ? '' : 'AND sess.date >= ?';
+    final dateClause = cutoff == null ? '' : 'AND sess.completed_at_ms >= ?';
     final args = <Object?>[defId];
-    if (cutoff != null) args.add(cutoff.toIso8601String());
+    if (cutoff != null) {
+      args.add(TemporalSemantics.utcEpochMilliseconds(cutoff));
+    }
 
     final rows = await db.rawQuery('''
       SELECT MAX(exercise_volume) AS vm_value

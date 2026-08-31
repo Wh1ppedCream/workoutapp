@@ -369,9 +369,11 @@ class PresetGenerationService {
     Map<String, dynamic>? latestSession;
     DateTime? latestDate;
     for (final session in sessions) {
-      final rawDate = session['date'];
-      if (rawDate is! String) continue;
-      final date = DateTime.tryParse(rawDate);
+      final date =
+          TemporalSemantics.tryReadUtcInstant(session['completed_at_ms']) ??
+          (session['date'] is String
+              ? DateTime.tryParse(session['date'] as String)
+              : null);
       if (date == null || date.isAfter(spec.now)) continue;
       if (latestDate == null || date.isAfter(latestDate)) {
         latestDate = date;

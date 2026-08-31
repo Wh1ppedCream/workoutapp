@@ -205,9 +205,9 @@ class CurrentMetricsSectionState extends State<CurrentMetricsSection>
                           color: _metricColor(metric.definition.type),
                           label: _metricLabel(metric.definition, strings),
                           value: _formatMeasurement(metric.measurement),
-                          recordedOn: DateFormat.Md(
-                            strings.localeName,
-                          ).format(metric.measurement.timestamp),
+                          recordedOn: DateFormat.Md(strings.localeName).format(
+                            metric.measurement.calendarDay.toLocalDateTime(),
+                          ),
                         ),
                       ),
                   ],

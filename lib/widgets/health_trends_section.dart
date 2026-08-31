@@ -460,7 +460,7 @@ class _MeasurementTrendDetailPageState
             content: Text(
               _strings.healthDeleteEntryBody(
                 _formatMeasurement(entry),
-                _formatDateTime(entry.timestamp),
+                _formatDateTime(entry.displayDateTime),
               ),
             ),
             actions: [
@@ -837,7 +837,7 @@ class _MeasurementSummaryCard extends StatelessWidget {
               detail:
                   latest == null
                       ? strings.healthNotTrackedYet
-                      : _formatDate(latest.timestamp),
+                      : _formatDate(latest.calendarDay.toLocalDateTime()),
             ),
           ),
           const SizedBox(width: 10),
@@ -993,7 +993,9 @@ class _MeasurementChartCard extends StatelessWidget {
                             return const SizedBox.shrink();
                           }
                           return Text(
-                            _shortDate(entries[index].timestamp),
+                            _shortDate(
+                              entries[index].calendarDay.toLocalDateTime(),
+                            ),
                             style: theme.textTheme.labelSmall,
                           );
                         },
@@ -1012,7 +1014,7 @@ class _MeasurementChartCard extends StatelessWidget {
                                         .toInt();
                                 final entry = entries[index];
                                 return LineTooltipItem(
-                                  '${_formatDateTime(entry.timestamp)}\n${_formatMeasurement(entry)}',
+                                  '${_formatDateTime(entry.displayDateTime)}\n${_formatMeasurement(entry)}',
                                   theme.textTheme.labelSmall?.copyWith(
                                         color: theme.colorScheme.onSurface,
                                       ) ??
@@ -1065,7 +1067,7 @@ class _MeasurementEntryTile extends StatelessWidget {
         onTap: onTap,
         title: Text(_formatMeasurement(entry)),
         subtitle: Text(
-          '${_formatDateTime(entry.timestamp)}${entry.note == null || entry.note!.trim().isEmpty ? '' : ' - ${entry.note}'}',
+          '${_formatDateTime(entry.displayDateTime)}${entry.note == null || entry.note!.trim().isEmpty ? '' : ' - ${entry.note}'}',
         ),
         trailing: PopupMenuButton<String>(
           onSelected: (value) {

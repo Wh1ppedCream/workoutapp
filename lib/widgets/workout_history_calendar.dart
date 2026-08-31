@@ -314,7 +314,7 @@ class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
     final endDay = DateUtils.dateOnly(endExclusive);
     final periodSessions =
         sessions.where((session) {
-          final day = DateUtils.dateOnly(session.date);
+          final day = session.calendarDay.toLocalDateTime();
           return !day.isBefore(startDay) && day.isBefore(endDay);
         }).toList();
     periodSessions.sort((a, b) => b.date.compareTo(a.date));
@@ -382,7 +382,7 @@ class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
   ) {
     final grouped = <DateTime, List<WorkoutReportSession>>{};
     for (final session in sessions) {
-      final day = DateUtils.dateOnly(session.date);
+      final day = session.calendarDay.toLocalDateTime();
       grouped.putIfAbsent(day, () => <WorkoutReportSession>[]).add(session);
     }
     for (final daySessions in grouped.values) {
@@ -1558,7 +1558,7 @@ class _SessionRow extends StatelessWidget {
       title: Text(
         DateFormat.jm(
           Localizations.localeOf(context).toLanguageTag(),
-        ).format(session.date),
+        ).format(session.displayDateTime),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: const TextStyle(fontWeight: FontWeight.w800),

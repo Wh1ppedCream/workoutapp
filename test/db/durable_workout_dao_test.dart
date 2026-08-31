@@ -18,6 +18,8 @@ void main() {
       CREATE TABLE sessions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         date TEXT NOT NULL,
+        completed_at_ms INTEGER,
+        training_day TEXT,
         duration INTEGER NOT NULL
       )
     ''');

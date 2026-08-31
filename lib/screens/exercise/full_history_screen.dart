@@ -59,7 +59,7 @@ class _FullHistoryScreenState extends State<FullHistoryScreen> {
               final s = sessions[i];
               final dateStr = DateFormat.yMMMd(
                 Localizations.localeOf(context).toLanguageTag(),
-              ).format(s.date);
+              ).format(s.calendarDay.toLocalDateTime());
               final duration = formatCompletedWorkoutDuration(
                 strings,
                 s.duration,

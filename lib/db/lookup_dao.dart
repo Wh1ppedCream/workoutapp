@@ -139,7 +139,10 @@ class LookupDao {
     );
     return db.insert('measurements', {
       'def_id': defId,
-      'timestamp': ts.toIso8601String(),
+      // Retained for backwards-compatible JSON exports and older app builds.
+      'timestamp': TemporalSemantics.legacyUtcIso8601(ts),
+      'measured_at_ms': TemporalSemantics.utcEpochMilliseconds(ts),
+      'measured_on': LocalCalendarDay.fromDateTime(ts.toLocal()).storageKey,
       'value': value,
       'unit': unit,
       'note': note,
@@ -161,7 +164,7 @@ class LookupDao {
       'measurements',
       where: 'def_id = ?',
       whereArgs: [defId],
-      orderBy: 'timestamp DESC',
+      orderBy: 'measured_at_ms DESC, id DESC',
     );
   }
 
@@ -382,7 +385,10 @@ class LookupDao {
     return db.update(
       'measurements',
       {
-        'timestamp': timestamp.toIso8601String(),
+        'timestamp': TemporalSemantics.legacyUtcIso8601(timestamp),
+        'measured_at_ms': TemporalSemantics.utcEpochMilliseconds(timestamp),
+        'measured_on':
+            LocalCalendarDay.fromDateTime(timestamp.toLocal()).storageKey,
         'value': value,
         'unit': unit,
         'note': note,

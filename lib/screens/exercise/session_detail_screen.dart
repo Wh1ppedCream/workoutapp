@@ -623,7 +623,9 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     final locale = Localizations.localeOf(context);
     return AppLocalizations.of(context).workoutDetailDefaultPlanName(
       preserveWesternDigits(
-        DateFormat.MMM(locale.toLanguageTag()).format(widget.session.date),
+        DateFormat.MMM(
+          locale.toLanguageTag(),
+        ).format(widget.session.calendarDay.toLocalDateTime()),
         locale,
       ),
     );
@@ -752,7 +754,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
             dateText: preserveWesternDigits(
               DateFormat.yMMMd(
                 Localizations.localeOf(context).toLanguageTag(),
-              ).add_jm().format(widget.session.date),
+              ).add_jm().format(widget.session.displayDateTime),
               Localizations.localeOf(context),
             ),
           ),

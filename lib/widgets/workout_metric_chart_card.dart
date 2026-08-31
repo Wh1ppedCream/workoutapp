@@ -373,7 +373,7 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
         sessions.isEmpty
             ? null
             : sessions
-                .map((session) => session.date)
+                .map((session) => session.calendarDay.toLocalDateTime())
                 .reduce((a, b) => a.isBefore(b) ? a : b);
     final rawStart =
         _rangeStart ??
@@ -447,7 +447,7 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
     }
 
     for (final session in sessions) {
-      final sessionDay = DateUtils.dateOnly(session.date);
+      final sessionDay = session.calendarDay.toLocalDateTime();
       if (sessionDay.isBefore(normalizedStart) ||
           sessionDay.isAfter(normalizedEnd)) {
         continue;
@@ -489,7 +489,7 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
     }
 
     for (final session in sessions) {
-      final sessionDay = DateUtils.dateOnly(session.date);
+      final sessionDay = session.calendarDay.toLocalDateTime();
       if (sessionDay.isBefore(normalizedRangeStart) ||
           sessionDay.isAfter(normalizedRangeEnd)) {
         continue;
@@ -534,7 +534,7 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
     }
 
     for (final session in sessions) {
-      final sessionDay = DateUtils.dateOnly(session.date);
+      final sessionDay = session.calendarDay.toLocalDateTime();
       if (sessionDay.isBefore(normalizedRangeStart) ||
           sessionDay.isAfter(normalizedRangeEnd)) {
         continue;
@@ -1828,7 +1828,7 @@ int _longestWorkoutDayStreak(List<WorkoutReportSession> sessions) {
   if (sessions.isEmpty) return 0;
   final days =
       sessions
-          .map((session) => DateUtils.dateOnly(session.date))
+          .map((session) => session.calendarDay.toLocalDateTime())
           .toSet()
           .toList()
         ..sort();
@@ -1855,7 +1855,7 @@ String _mostActiveWeekday(
   final counts = <int, int>{};
   for (final session in sessions) {
     counts.update(
-      session.date.weekday,
+      session.calendarDay.toLocalDateTime().weekday,
       (count) => count + 1,
       ifAbsent: () => 1,
     );
@@ -1880,7 +1880,7 @@ _BestVolumeDay _bestVolumeDay(
 
   final totalsByDay = <DateTime, double>{};
   for (final session in sessions) {
-    final day = DateUtils.dateOnly(session.date);
+    final day = session.calendarDay.toLocalDateTime();
     totalsByDay.update(
       day,
       (volume) => volume + session.totalVolume,

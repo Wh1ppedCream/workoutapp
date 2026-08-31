@@ -45,6 +45,38 @@ void main() {
       );
     });
 
+    test('accepts pre-v61 workout and measurement rows for migration', () {
+      final jsonStr = jsonEncode(
+        buildDatabaseExportEnvelope(
+          schemaVersion: 60,
+          tables: {
+            'sessions': [
+              {'id': 1, 'date': '2026-03-08T00:30:00-05:00', 'duration': 45},
+            ],
+            'measurements': [
+              {
+                'id': 1,
+                'def_id': 1,
+                'timestamp': '2026-03-08T00:30:00-05:00',
+                'value': 70.0,
+                'unit': 'kg',
+              },
+            ],
+          },
+        ),
+      );
+
+      final preview = inspectDatabaseImport(jsonStr, currentSchemaVersion: 61);
+
+      expect(preview.canImport, isTrue);
+      expect(
+        preview.warnings,
+        contains('Export schema v60 is older than app schema v61.'),
+      );
+      expect(preview.rowCounts['sessions'], 1);
+      expect(preview.rowCounts['measurements'], 1);
+    });
+
     test('blocks exports from newer schemas before destructive import', () {
       final jsonStr = jsonEncode(
         buildDatabaseExportEnvelope(
@@ -178,6 +210,12 @@ void main() {
         'await _backfillEnergyKcalFromMacros(txn);',
       );
       final foreignKeyIndex = importBody.indexOf('PRAGMA foreign_key_check');
+      final canonicalizationIndex = importBody.indexOf(
+        'await Schema.migrateV61(db);',
+      );
+      final recordsRebuildIndex = importBody.indexOf(
+        'await WorkoutRecordEventsDao.rebuildAll(db);',
+      );
 
       expect(previewIndex, isNot(-1));
       expect(transactionIndex, greaterThan(previewIndex));
@@ -185,6 +223,8 @@ void main() {
       expect(normalizedIndex, greaterThan(clearIndex));
       expect(energyIndex, greaterThan(normalizedIndex));
       expect(foreignKeyIndex, greaterThan(energyIndex));
+      expect(canonicalizationIndex, greaterThan(foreignKeyIndex));
+      expect(recordsRebuildIndex, greaterThan(canonicalizationIndex));
     });
   });
 }

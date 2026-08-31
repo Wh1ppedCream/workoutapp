@@ -184,7 +184,7 @@ class _PastSessionsListState extends State<PastSessionsList>
                         final ses = sessions[i];
                         final dateStr = DateFormat.yMMMd(
                           Localizations.localeOf(context).toString(),
-                        ).format(ses.date);
+                        ).format(ses.calendarDay.toLocalDateTime());
                         final duration = formatCompletedWorkoutDuration(
                           strings,
                           ses.duration,

@@ -1,8 +1,11 @@
+import 'temporal_semantics.dart';
+
 enum WorkoutReportMetric { workouts, minutes, volume }
 
 class WorkoutReportSession {
   final int id;
   final DateTime date;
+  final String? calendarDayKey;
   final int durationSeconds;
   final double totalVolume;
   final int exerciseCount;
@@ -11,11 +14,20 @@ class WorkoutReportSession {
   const WorkoutReportSession({
     required this.id,
     required this.date,
+    this.calendarDayKey,
     required this.durationSeconds,
     required this.totalVolume,
     required this.exerciseCount,
     this.setCount = 0,
   });
+
+  LocalCalendarDay get calendarDay => TemporalSemantics.readCalendarDay(
+    calendarDay: calendarDayKey,
+    epochMilliseconds: TemporalSemantics.utcEpochMilliseconds(date),
+  );
+
+  /// Date and time for labels: persisted calendar day plus the completion time.
+  DateTime get displayDateTime => calendarDay.atLocalTime(date);
 }
 
 class WorkoutReportBucket {

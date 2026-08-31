@@ -45,6 +45,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   WorkoutSession(
                     id: reportSession.id,
                     date: reportSession.date,
+                    calendarDayKey: reportSession.calendarDayKey,
                     duration: reportSession.durationSeconds,
                   ),
                 ),

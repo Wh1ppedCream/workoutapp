@@ -50,7 +50,7 @@ import 'package:flutter/foundation.dart' show debugPrint;
 
 /// Singleton helper for managing the SQLite database.
 class DatabaseHelper {
-  static const int _kDbVersion = 60;
+  static const int _kDbVersion = 61;
   static const bool _kIntegrationTestMode = bool.fromEnvironment(
     'TONOS_INTEGRATION_TEST',
   );
@@ -140,7 +140,7 @@ class DatabaseHelper {
         await _resetDbTriggers(db);
         await _rebuildFoodFtsIfExists(db);
         await _ensureIndexes(db);
-        if (oldVersion < 57) {
+        if (oldVersion < 61) {
           await WorkoutRecordEventsDao.rebuildAll(db);
         }
 
@@ -168,6 +168,7 @@ class DatabaseHelper {
         await Schema.migrateV58(db);
         await Schema.migrateV59(db);
         await Schema.migrateV60(db);
+        await Schema.migrateV61(db);
         await Seed.syncExerciseCatalogIfNeeded(db);
         await _resetDbTriggers(db); // <—
         await _maybeCompactLegacyFoodCatalog(db);
@@ -1232,7 +1233,12 @@ class DatabaseHelper {
     // ── Workout sessions & exercise logs ─────────────────────────────────────
     if (await _tableExists(db, 'sessions')) {
       await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_sessions_date ON sessions(date)',
+        'CREATE INDEX IF NOT EXISTS idx_sessions_completed_at_ms '
+        'ON sessions(completed_at_ms, id)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_sessions_training_day '
+        'ON sessions(training_day, completed_at_ms, id)',
       );
     }
     if (await _tableExists(db, 'exercises')) {
@@ -1769,9 +1775,13 @@ class DatabaseHelper {
 
   //session_dao
 
-  Future<int> createSession(String date, int duration) async {
+  Future<int> createSession(DateTime completedAt, int duration) async {
     final db = await database;
-    return SessionDao.insertSession(db, date, duration);
+    return SessionDao.insertSession(
+      db,
+      completedAt: completedAt,
+      duration: duration,
+    );
   }
 
   Future<List<Map<String, dynamic>>> getAllSessionsRaw() async {
@@ -1788,12 +1798,12 @@ class DatabaseHelper {
     final args = <Object?>[];
 
     if (start != null) {
-      whereClauses.add('sess.date >= ?');
-      args.add(start.toIso8601String());
+      whereClauses.add('sess.completed_at_ms >= ?');
+      args.add(TemporalSemantics.utcEpochMilliseconds(start));
     }
     if (end != null) {
-      whereClauses.add('sess.date <= ?');
-      args.add(end.toIso8601String());
+      whereClauses.add('sess.completed_at_ms <= ?');
+      args.add(TemporalSemantics.utcEpochMilliseconds(end));
     }
 
     final whereSql =
@@ -1803,6 +1813,8 @@ class DatabaseHelper {
       SELECT
         sess.id AS session_id,
         sess.date AS date,
+        sess.completed_at_ms AS completed_at_ms,
+        sess.training_day AS training_day,
         sess.duration AS duration,
         COUNT(DISTINCT e.id) AS exercise_count,
         COUNT(st.id) AS set_count,
@@ -1817,7 +1829,7 @@ class DatabaseHelper {
       LEFT JOIN sets st ON st.exercise_id = e.id
       $whereSql
       GROUP BY sess.id
-      ORDER BY sess.date ASC
+      ORDER BY sess.completed_at_ms ASC, sess.id ASC
       ''', args);
   }
 
@@ -1884,7 +1896,16 @@ class DatabaseHelper {
     if (row == null) return null;
     return WorkoutSession(
       id: row['id'] as int,
-      date: DateTime.parse(row['date'] as String),
+      date: TemporalSemantics.readLocalDateTime(
+        epochMilliseconds: row['completed_at_ms'],
+        legacyIso: row['date'],
+      ),
+      calendarDayKey:
+          TemporalSemantics.readCalendarDay(
+            calendarDay: row['training_day'],
+            legacyIso: row['date'],
+            epochMilliseconds: row['completed_at_ms'],
+          ).storageKey,
       duration: row['duration'] as int,
     );
   }
@@ -1902,11 +1923,11 @@ class DatabaseHelper {
       ''',
         [id],
       );
-      await txn.update(
-        'sessions',
-        {'date': newDate.toIso8601String(), 'duration': newDuration},
-        where: 'id = ?',
-        whereArgs: [id],
+      await SessionDao.updateSession(
+        txn,
+        id,
+        completedAt: newDate,
+        duration: newDuration,
       );
       await WorkoutRecordEventsDao.rebuildForDefinitions(
         txn,
@@ -1915,22 +1936,27 @@ class DatabaseHelper {
     });
   }
 
-  // Fetch range + map
+  // Fetch an inclusive exact-instant range and map it to sessions.
   Future<List<WorkoutSession>> fetchSessionsInRange(
     DateTime start,
     DateTime end,
   ) async {
     final db = await database;
-    final rows = await SessionDao.getSessionsInRange(
-      db,
-      start.toIso8601String(),
-      end.toIso8601String(),
-    );
+    final rows = await SessionDao.getSessionsForInstantRange(db, start, end);
     return rows
         .map(
           (row) => WorkoutSession(
             id: row['id'] as int,
-            date: DateTime.parse(row['date'] as String),
+            date: TemporalSemantics.readLocalDateTime(
+              epochMilliseconds: row['completed_at_ms'],
+              legacyIso: row['date'],
+            ),
+            calendarDayKey:
+                TemporalSemantics.readCalendarDay(
+                  calendarDay: row['training_day'],
+                  legacyIso: row['date'],
+                  epochMilliseconds: row['completed_at_ms'],
+                ).storageKey,
             duration: row['duration'] as int,
           ),
         )
@@ -1977,7 +2003,7 @@ class DatabaseHelper {
 
   Future<List<Map<String, dynamic>>> fetchRecentWeightExerciseHistoryRows({
     required int definitionId,
-    String? beforeSessionDate,
+    int? beforeCompletedAtMilliseconds,
     int? beforeExerciseId,
     int limit = 10,
   }) async {
@@ -1985,7 +2011,7 @@ class DatabaseHelper {
     return ExerciseHistoryDao.fetchWeightExerciseRows(
       db,
       definitionId: definitionId,
-      beforeSessionDate: beforeSessionDate,
+      beforeCompletedAtMilliseconds: beforeCompletedAtMilliseconds,
       beforeExerciseId: beforeExerciseId,
       limit: limit,
     );
@@ -2005,6 +2031,8 @@ class DatabaseHelper {
         SELECT
           sess.id AS session_id,
           sess.date AS session_date,
+          sess.completed_at_ms AS completed_at_ms,
+          sess.training_day AS training_day,
           MAX(CASE WHEN st.reps = 1 THEN st.weight ELSE NULL END)
             AS actual_one_rm,
           MAX(
@@ -2020,10 +2048,10 @@ class DatabaseHelper {
           AND e.exercise_def_id = ?
           AND st.parent_set_id IS NULL
         GROUP BY sess.id
-        ORDER BY sess.date DESC
+        ORDER BY sess.completed_at_ms DESC, sess.id DESC
         LIMIT ?
       )
-      ORDER BY session_date ASC
+      ORDER BY completed_at_ms ASC, session_id ASC
       ''',
       [definitionId, limit],
     );
@@ -2464,7 +2492,7 @@ class DatabaseHelper {
       SELECT
         e.exercise_def_id AS definition_id,
         COUNT(e.id) AS use_count,
-        MAX(sess.date) AS last_done
+        MAX(sess.completed_at_ms) AS last_done
       FROM exercises e
       INNER JOIN sessions sess ON sess.id = e.session_id
       WHERE e.type = 'weight'
@@ -2795,7 +2823,16 @@ class DatabaseHelper {
           (r) => Measurement(
             id: r['id'] as int,
             defId: r['def_id'] as int,
-            timestamp: DateTime.parse(r['timestamp'] as String),
+            timestamp: TemporalSemantics.readLocalDateTime(
+              epochMilliseconds: r['measured_at_ms'],
+              legacyIso: r['timestamp'],
+            ),
+            calendarDayKey:
+                TemporalSemantics.readCalendarDay(
+                  calendarDay: r['measured_on'],
+                  legacyIso: r['timestamp'],
+                  epochMilliseconds: r['measured_at_ms'],
+                ).storageKey,
             value: (r['value'] as num).toDouble(),
             unit: r['unit'] as String,
             note: r['note'] as String?,
@@ -2813,7 +2850,7 @@ class DatabaseHelper {
         FROM measurements m
         JOIN measurement_definitions md ON md.id = m.def_id
        WHERE md.type = ?
-       ORDER BY m.timestamp DESC, m.id DESC
+       ORDER BY m.measured_at_ms DESC, m.id DESC
        LIMIT 1
     ''',
       [MeasurementType.BodyWeight.name],
@@ -3231,11 +3268,16 @@ class DatabaseHelper {
           await db.execute('PRAGMA foreign_keys = ON;');
         }
       }
+      // The imported history must be canonical before any following reader can
+      // observe it. Derived search/index maintenance remains best-effort.
+      await Schema.migrateV61(db);
+
       // Search and schema maintenance are derived from the committed import.
       try {
         await _rebuildFoodFtsIfExists(db);
         await _ensureAppMetaTable(db);
         await Schema.migrateV49(db);
+        await WorkoutRecordEventsDao.rebuildAll(db);
         await _ensureIndexes(db);
       } catch (_) {
         // The next open or maintenance pass can safely retry derived work.
@@ -3891,7 +3933,10 @@ class DatabaseHelper {
     int? defId,
   }) async {
     final db = await database;
-    final args = <Object?>[start.toIso8601String(), end.toIso8601String()];
+    final args = <Object?>[
+      TemporalSemantics.utcEpochMilliseconds(start),
+      TemporalSemantics.utcEpochMilliseconds(end),
+    ];
     final defFilter = defId == null ? '' : 'AND e.exercise_def_id = ?';
     if (defId != null) args.add(defId);
 
@@ -3902,7 +3947,7 @@ class DatabaseHelper {
       INNER JOIN sessions sess ON sess.id = e.session_id
       WHERE e.type = 'weight'
         AND e.exercise_def_id IS NOT NULL
-        AND sess.date BETWEEN ? AND ?
+        AND sess.completed_at_ms >= ? AND sess.completed_at_ms <= ?
         $defFilter
       GROUP BY e.exercise_def_id
       ''', args);
@@ -4214,7 +4259,16 @@ class DatabaseHelper {
         .map(
           (row) => WorkoutSession(
             id: row['id'] as int,
-            date: DateTime.parse(row['date'] as String),
+            date: TemporalSemantics.readLocalDateTime(
+              epochMilliseconds: row['completed_at_ms'],
+              legacyIso: row['date'],
+            ),
+            calendarDayKey:
+                TemporalSemantics.readCalendarDay(
+                  calendarDay: row['training_day'],
+                  legacyIso: row['date'],
+                  epochMilliseconds: row['completed_at_ms'],
+                ).storageKey,
             duration: row['duration'] as int,
           ),
         )

@@ -66,9 +66,9 @@ class AppRepository {
 
   /// Creates a new workout session using DateTime for safety.
   Future<int> createSessionAt(DateTime date, int duration) =>
-      _dbHelper.createSession(date.toIso8601String(), duration);
+      _dbHelper.createSession(date, duration);
 
-  /// Fetches all sessions as raw maps ordered by date descending.
+  /// Fetches all sessions as raw maps ordered by completion instant descending.
   Future<List<Map<String, dynamic>>> fetchAllSessions() =>
       _dbHelper.getAllSessionsRaw();
 
@@ -84,7 +84,16 @@ class AppRepository {
         .map(
           (row) => WorkoutReportSession(
             id: row['session_id'] as int,
-            date: DateTime.parse(row['date'] as String),
+            date: TemporalSemantics.readLocalDateTime(
+              epochMilliseconds: row['completed_at_ms'],
+              legacyIso: row['date'],
+            ),
+            calendarDayKey:
+                TemporalSemantics.readCalendarDay(
+                  calendarDay: row['training_day'],
+                  legacyIso: row['date'],
+                  epochMilliseconds: row['completed_at_ms'],
+                ).storageKey,
             durationSeconds: (row['duration'] as num).toInt(),
             totalVolume: ((row['total_volume'] as num?) ?? 0).toDouble(),
             exerciseCount: ((row['exercise_count'] as num?) ?? 0).toInt(),
@@ -136,11 +145,11 @@ class AppRepository {
   Future<WorkoutSession?> fetchSessionById(int id) =>
       _dbHelper.fetchSessionById(id);
 
-  /// Updates an existing session's date/duration.
+  /// Updates an existing session's completion instant and duration.
   Future<void> updateSession(int id, DateTime d, int dur) =>
       _dbHelper.updateSession(id, d, dur);
 
-  /// Retrieves sessions between [start] and [end] dates.
+  /// Retrieves sessions in the inclusive exact-instant range [start, end].
   Future<List<WorkoutSession>> fetchSessionsInRange(DateTime s, DateTime e) =>
       _dbHelper.fetchSessionsInRange(s, e);
 
@@ -171,12 +180,12 @@ class AppRepository {
 
   Future<List<Map<String, dynamic>>> fetchRecentWeightExerciseHistoryRows({
     required int definitionId,
-    String? beforeSessionDate,
+    int? beforeCompletedAtMilliseconds,
     int? beforeExerciseId,
     int limit = 10,
   }) => _dbHelper.fetchRecentWeightExerciseHistoryRows(
     definitionId: definitionId,
-    beforeSessionDate: beforeSessionDate,
+    beforeCompletedAtMilliseconds: beforeCompletedAtMilliseconds,
     beforeExerciseId: beforeExerciseId,
     limit: limit,
   );
@@ -740,7 +749,7 @@ class AppRepository {
   Future<List<ExerciseDefinition>> fuzzsearchExercises(String term) =>
       _dbHelper.fuzzsearchExercises(term);
 
-  /// Returns all sessions as WorkoutSession objects, sorted by date desc.
+  /// Returns all sessions as WorkoutSession objects, newest first.
   Future<List<WorkoutSession>> fetchWorkoutSessions() =>
       _dbHelper.fetchWorkoutSessions();
 

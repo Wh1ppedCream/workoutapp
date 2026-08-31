@@ -2,6 +2,7 @@
 
 import 'package:sqflite/sqflite.dart';
 
+import '../models/temporal_semantics.dart';
 import 'content_dao.dart';
 
 /// Database schema manager for fresh installs and every historical migration.
@@ -165,6 +166,7 @@ class Schema {
     await migrateV58(db);
     await migrateV59(db);
     await migrateV60(db);
+    await migrateV61(db);
   }
 
   /// Handler for onUpgrade callback.
@@ -232,6 +234,7 @@ class Schema {
     if (oldVersion < 58) await migrateV58(db);
     if (oldVersion < 59) await migrateV59(db);
     if (oldVersion < 60) await migrateV60(db);
+    if (oldVersion < 61) await migrateV61(db);
   }
 
   /// Migration to version 3: adds rating, equipment/muscle tables.
@@ -3388,6 +3391,178 @@ WHERE source_id IS NULL
         synced_at TEXT NOT NULL
       )
     ''');
+  }
+
+  /// v61 - separates exact event instants from stable local calendar days.
+  ///
+  /// The original text columns remain for legacy export compatibility. New
+  /// reads and writes use epoch milliseconds plus explicit YYYY-MM-DD values.
+  static Future<void> migrateV61(Database db) async {
+    await db.transaction((txn) async {
+      if (await _schemaTableExists(txn, 'sessions')) {
+        final sessionColumns = await _schemaColumnNames(txn, 'sessions');
+        if (!sessionColumns.contains('completed_at_ms')) {
+          await txn.execute(
+            'ALTER TABLE sessions ADD COLUMN completed_at_ms INTEGER;',
+          );
+        }
+        if (!sessionColumns.contains('training_day')) {
+          await txn.execute(
+            'ALTER TABLE sessions ADD COLUMN training_day TEXT;',
+          );
+        }
+        await _backfillSessionTemporalColumns(txn);
+        // Text ordering is no longer a supported query path.
+        await txn.execute('DROP INDEX IF EXISTS idx_sessions_date');
+        await txn.execute('''
+          CREATE INDEX IF NOT EXISTS idx_sessions_completed_at_ms
+          ON sessions(completed_at_ms, id)
+        ''');
+        await txn.execute('''
+          CREATE INDEX IF NOT EXISTS idx_sessions_training_day
+          ON sessions(training_day, completed_at_ms, id)
+        ''');
+      }
+
+      if (await _schemaTableExists(txn, 'measurements')) {
+        final measurementColumns = await _schemaColumnNames(
+          txn,
+          'measurements',
+        );
+        if (!measurementColumns.contains('measured_at_ms')) {
+          await txn.execute(
+            'ALTER TABLE measurements ADD COLUMN measured_at_ms INTEGER;',
+          );
+        }
+        if (!measurementColumns.contains('measured_on')) {
+          await txn.execute(
+            'ALTER TABLE measurements ADD COLUMN measured_on TEXT;',
+          );
+        }
+        await _backfillMeasurementTemporalColumns(txn);
+        await txn.execute('''
+          CREATE INDEX IF NOT EXISTS idx_measurements_definition_instant
+          ON measurements(def_id, measured_at_ms, id)
+        ''');
+        await txn.execute('''
+          CREATE INDEX IF NOT EXISTS idx_measurements_definition_day
+          ON measurements(def_id, measured_on, measured_at_ms, id)
+        ''');
+      }
+    });
+  }
+
+  static Future<bool> _schemaTableExists(
+    DatabaseExecutor db,
+    String table,
+  ) async {
+    final rows = await db.rawQuery(
+      "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ? LIMIT 1",
+      [table],
+    );
+    return rows.isNotEmpty;
+  }
+
+  static Future<Set<String>> _schemaColumnNames(
+    DatabaseExecutor db,
+    String table,
+  ) async {
+    final rows = await db.rawQuery("PRAGMA table_info('$table')");
+    return rows.map((row) => row['name'] as String).toSet();
+  }
+
+  static Future<void> _backfillSessionTemporalColumns(
+    DatabaseExecutor db,
+  ) async {
+    final rows = await db.query(
+      'sessions',
+      columns: const ['id', 'date', 'completed_at_ms', 'training_day'],
+      where:
+          'completed_at_ms IS NULL OR training_day IS NULL OR trim(training_day) = ?',
+      whereArgs: const [''],
+    );
+    for (final row in rows) {
+      final legacy = TemporalSemantics.tryParseLegacyTimestamp(row['date']);
+      final existingEpoch = TemporalSemantics.tryReadEpochMilliseconds(
+        row['completed_at_ms'],
+      );
+      final existingDay = LocalCalendarDay.tryParse(row['training_day']);
+      final epoch = existingEpoch ?? legacy?.utcEpochMilliseconds;
+      final day =
+          existingDay ??
+          legacy?.calendarDay ??
+          (epoch == null
+              ? null
+              : LocalCalendarDay.fromDateTime(
+                DateTime.fromMillisecondsSinceEpoch(
+                  epoch,
+                  isUtc: true,
+                ).toLocal(),
+              ));
+      final values = <String, Object?>{};
+      if (existingEpoch == null && epoch != null) {
+        values['completed_at_ms'] = epoch;
+      }
+      if (existingDay == null && day != null) {
+        values['training_day'] = day.storageKey;
+      }
+      if (values.isNotEmpty) {
+        await db.update(
+          'sessions',
+          values,
+          where: 'id = ?',
+          whereArgs: [row['id']],
+        );
+      }
+    }
+  }
+
+  static Future<void> _backfillMeasurementTemporalColumns(
+    DatabaseExecutor db,
+  ) async {
+    final rows = await db.query(
+      'measurements',
+      columns: const ['id', 'timestamp', 'measured_at_ms', 'measured_on'],
+      where:
+          'measured_at_ms IS NULL OR measured_on IS NULL OR trim(measured_on) = ?',
+      whereArgs: const [''],
+    );
+    for (final row in rows) {
+      final legacy = TemporalSemantics.tryParseLegacyTimestamp(
+        row['timestamp'],
+      );
+      final existingEpoch = TemporalSemantics.tryReadEpochMilliseconds(
+        row['measured_at_ms'],
+      );
+      final existingDay = LocalCalendarDay.tryParse(row['measured_on']);
+      final epoch = existingEpoch ?? legacy?.utcEpochMilliseconds;
+      final day =
+          existingDay ??
+          legacy?.calendarDay ??
+          (epoch == null
+              ? null
+              : LocalCalendarDay.fromDateTime(
+                DateTime.fromMillisecondsSinceEpoch(
+                  epoch,
+                  isUtc: true,
+                ).toLocal(),
+              ));
+      final values = <String, Object?>{};
+      if (existingEpoch == null && epoch != null) {
+        values['measured_at_ms'] = epoch;
+      }
+      if (existingDay == null && day != null) {
+        values['measured_on'] = day.storageKey;
+      }
+      if (values.isNotEmpty) {
+        await db.update(
+          'measurements',
+          values,
+          where: 'id = ?',
+          whereArgs: [row['id']],
+        );
+      }
+    }
   }
 
   /// Keeps the external-content FTS4 index synchronized with `foods`.

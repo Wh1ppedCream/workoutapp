@@ -458,21 +458,33 @@ class _ExerciseTrendTile {
 
 class _ExerciseProgressPoint {
   final int sessionId;
-  final DateTime date;
+  final DateTime completedAt;
+  final LocalCalendarDay calendarDay;
   final double? actualOneRm;
   final double estimatedOneRm;
 
   const _ExerciseProgressPoint({
     required this.sessionId,
-    required this.date,
+    required this.completedAt,
+    required this.calendarDay,
     required this.actualOneRm,
     required this.estimatedOneRm,
   });
 
+  DateTime get displayDateTime => calendarDay.atLocalTime(completedAt);
+
   factory _ExerciseProgressPoint.fromRow(Map<String, dynamic> row) {
     return _ExerciseProgressPoint(
       sessionId: row['session_id'] as int,
-      date: DateTime.parse(row['session_date'] as String),
+      completedAt: TemporalSemantics.readLocalDateTime(
+        epochMilliseconds: row['completed_at_ms'],
+        legacyIso: row['session_date'],
+      ),
+      calendarDay: TemporalSemantics.readCalendarDay(
+        calendarDay: row['training_day'],
+        legacyIso: row['session_date'],
+        epochMilliseconds: row['completed_at_ms'],
+      ),
       actualOneRm: (row['actual_one_rm'] as num?)?.toDouble(),
       estimatedOneRm: ((row['estimated_one_rm'] as num?) ?? 0).toDouble(),
     );
@@ -1345,7 +1357,7 @@ class _ExerciseProgressRecordingRow extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  DateFormat.yMMMd().add_jm().format(point.date),
+                  DateFormat.yMMMd().add_jm().format(point.displayDateTime),
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w800,
                   ),
@@ -1611,7 +1623,9 @@ class _ExerciseProgressChartPainter extends CustomPainter {
       fontWeight: FontWeight.w700,
     );
     for (final index in scale.dateTickIndexes) {
-      final label = DateFormat.MMMd().format(points[index].date);
+      final label = DateFormat.MMMd().format(
+        points[index].calendarDay.toLocalDateTime(),
+      );
       final painter = TextPainter(
         text: TextSpan(text: label, style: dateStyle),
         textDirection: ui.TextDirection.ltr,
@@ -1687,7 +1701,7 @@ class _ExerciseProgressChartPainter extends CustomPainter {
       fontWeight: FontWeight.w700,
     );
     final lines = [
-      (DateFormat.yMMMd().add_jm().format(point.date), titleStyle),
+      (DateFormat.yMMMd().add_jm().format(point.displayDateTime), titleStyle),
       ('Est. ${_formatWeight(point.estimatedOneRm, weightUnit)}', bodyStyle),
       (
         point.actualOneRm == null

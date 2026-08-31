@@ -288,11 +288,11 @@ class _DashboardRecentWorkoutsCardState
     }
   }
 
-  String _dateLabel(BuildContext context, DateTime date) {
+  String _dateLabel(BuildContext context, WorkoutSession session) {
     final locale = Localizations.localeOf(context);
-    final now = DateTime.now();
+    final date = session.displayDateTime;
     final isToday =
-        now.year == date.year && now.month == date.month && now.day == date.day;
+        session.calendarDay == LocalCalendarDay.fromDateTime(DateTime.now());
     return isToday
         ? AppLocalizations.of(context).dashboardTodayAt(
           preserveWesternDigits(
@@ -385,7 +385,7 @@ class _DashboardRecentWorkoutsCardState
                 children: [
                   for (var index = 0; index < sessions.length; index++) ...[
                     _DashboardWorkoutRow(
-                      dateLabel: _dateLabel(context, sessions[index].date),
+                      dateLabel: _dateLabel(context, sessions[index]),
                       durationLabel: _durationLabel(
                         context,
                         sessions[index].duration,
