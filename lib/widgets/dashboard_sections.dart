@@ -25,6 +25,7 @@ import '../utils/localized_body_part_name.dart';
 import '../utils/completed_workout_duration_formatter.dart';
 import '../utils/localized_digit_formatter.dart';
 import 'exercise_media_thumbnail.dart';
+import 'localized_exercise_name.dart';
 import 'presets_loaded.dart';
 import 'seven_day_focus_card.dart';
 
@@ -1152,8 +1153,8 @@ class _DashboardExerciseUsageRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  usage.definition.name,
+                LocalizedExerciseName(
+                  definition: usage.definition,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodyMedium?.copyWith(

@@ -93,6 +93,7 @@ flutter:
   #   - images/a_dot_ham.jpeg
   assets:
     - assets/exercises.json
+    - assets/exercise_content_localizations.json
     - assets/equipment.json
     - assets/bodyparts.json
     - assets/muscles.json

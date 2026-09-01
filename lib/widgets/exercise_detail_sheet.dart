@@ -14,6 +14,7 @@ import '../models/models.dart';
 import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
 import '../screens/exercise/session_detail_screen.dart';
+import '../services/exercise_content_localizer.dart';
 import '../services/tutorial_state_store.dart';
 import '../utils/localized_body_part_name.dart';
 import '../theme/theme_extensions.dart';
@@ -22,6 +23,7 @@ import '../utils/tutorial_launcher.dart';
 import '../utils/weight_unit_formatter.dart';
 import 'body_heatmap.dart';
 import 'guided_tutorial_overlay.dart';
+import 'localized_exercise_name.dart';
 import 'workout_record_badges.dart';
 
 /// Simple record model for history tab
@@ -167,6 +169,8 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
   final Map<String, Future<List<RepMaxRow>>> _repMaxFutures = {};
   final Map<String, Future<double?>> _volumeMaxFutures = {};
   final Map<String, Future<File?>> _mediaPreviewFutures = {};
+  final Map<String, Future<ExerciseInstructionContent>>
+  _localizedInstructionFutures = {};
   bool _hasRetriedMissingPreview = false;
   final List<HistoryRecord> _olderHistory = [];
   final _headerTutorialKey = GlobalKey(debugLabel: 'exercise_detail_header');
@@ -208,10 +212,14 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
   @override
   void didUpdateWidget(covariant ExerciseDetailSheet oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.definition != widget.definition) {
+      _localizedInstructionFutures.clear();
+    }
     if (oldWidget.defId != widget.defId) {
       _repMaxFutures.clear();
       _volumeMaxFutures.clear();
       _mediaPreviewFutures.clear();
+      _localizedInstructionFutures.clear();
       _hasRetriedMissingPreview = false;
       _historyRequestGeneration++;
       _olderHistory.clear();
@@ -280,6 +288,19 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     return _volumeMaxFutures.putIfAbsent(
       timeframe,
       () => _repo.fetchVolumeMax(widget.defId, timeframe),
+    );
+  }
+
+  Future<ExerciseInstructionContent> _localizedInstructionsFor(
+    ExerciseDefinition definition,
+  ) {
+    final locale = Localizations.localeOf(context);
+    final localeKey = '${locale.languageCode}_${locale.countryCode ?? ''}';
+    final cacheKey =
+        '${definition.id}|${definition.catalogId ?? ''}|$localeKey';
+    return _localizedInstructionFutures.putIfAbsent(
+      cacheKey,
+      () => ExerciseContentLocalizer.instance.resolve(definition, locale),
     );
   }
 
@@ -628,6 +649,22 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     ExerciseDefinition definition, {
     bool expandable = true,
   }) {
+    final fallback = ExerciseInstructionContent.fromDefinition(definition);
+    return FutureBuilder<ExerciseInstructionContent>(
+      future: _localizedInstructionsFor(definition),
+      initialData: fallback,
+      builder:
+          (context, snapshot) => _buildLocalizedFormGuideCard(
+            snapshot.data ?? fallback,
+            expandable: expandable,
+          ),
+    );
+  }
+
+  Widget _buildLocalizedFormGuideCard(
+    ExerciseInstructionContent instructions, {
+    required bool expandable,
+  }) {
     final theme = Theme.of(context);
     final strings = _strings;
     final guideEntries = [
@@ -635,24 +672,24 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
         icon: Icons.self_improvement_outlined,
         title: strings.exerciseDetailSetup,
         body:
-            definition.setupNotes.isNotEmpty
-                ? definition.setupNotes
+            instructions.setupNotes.isNotEmpty
+                ? instructions.setupNotes
                 : strings.exerciseDetailNoSetup,
       ),
       (
         icon: Icons.directions_run_outlined,
         title: strings.exerciseDetailExecution,
         body:
-            definition.executionNotes.isNotEmpty
-                ? definition.executionNotes
+            instructions.executionNotes.isNotEmpty
+                ? instructions.executionNotes
                 : strings.exerciseDetailNoExecution,
       ),
       (
         icon: Icons.lightbulb_outline,
         title: strings.exerciseDetailTips,
         body:
-            definition.tipsNotes.isNotEmpty
-                ? definition.tipsNotes
+            instructions.tipsNotes.isNotEmpty
+                ? instructions.tipsNotes
                 : strings.exerciseDetailNoTips,
       ),
     ];
@@ -1450,8 +1487,8 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                           Expanded(
                             child: FittedBox(
                               fit: BoxFit.scaleDown,
-                              child: Text(
-                                widget.definition.name,
+                              child: LocalizedExerciseName(
+                                definition: widget.definition,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 textAlign: TextAlign.center,

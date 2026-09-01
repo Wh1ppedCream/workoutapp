@@ -135,14 +135,15 @@ and quality contracts are verified locally with project-owner audit sign-off.
     from both bottom navigation and Edit bottom tabs after restart.
 20. Every catalog exercise now has concise, consistent instruction content:
    three numbered setup steps, three numbered execution steps, and three
-   short safety or technique tips. Catalog revision 5 is seeded dynamically
+   short safety or technique tips. Catalog revision 7 is seeded dynamically
    from the bundled source rather than through a stale test fixture, and a
    contract rejects future entries that do not retain the structured format.
-21. The exercise-catalog safety, encoding, and quality audit is complete for
-   the 301 active entries. Stable identities, aliases, retirement, ordering,
+21. The exercise-catalog safety, encoding, and quality audit covers the 300
+   active entries. Stable identities, aliases, retirement, ordering,
    lookup references, instruction structure, text encoding, and 154 thumbnail
-   mappings are covered by contracts; the revision 5 baseline has project-owner
-   approval recorded in `exercise-catalog-audit.md`.
+   mappings are covered by contracts. Revisions 6 and 7 correct copied guidance
+   for reviewed equipment variants, retire one unsupported duplicate, and
+   record their final in-app content review in `exercise-catalog-audit.md`.
 22. Timestamp and local-calendar semantics are normalized. Database version 61
    stores workout and measurement instants as UTC epoch milliseconds while
    preserving separate stable local-day keys for history and calendar grouping.
@@ -238,10 +239,12 @@ and quality contracts are verified locally with project-owner audit sign-off.
     arguments and dynamic result types without exposing internal exceptions.
 
 9. **Localize catalog entities using stable codes.**
-    Exercise identity is now stable, but equipment, muscles, bodyparts,
-    stretches, instructions, and built-in plans remain English-backed. Add
-    language-neutral codes and localized display metadata with English fallback
-    without changing history, media slugs, or user-created content.
+    Exercise identity is stable and form guidance is complete for all supported
+    base locales, and all five supported non-English base locales now have all
+    300 exercise display names. Canadian French inherits the French map. Next,
+    cover equipment, muscles, stretches, and built-in plans with stable codes
+    and English fallback. Do not change history, media slugs, or user-created
+    content.
 
 10. **Decide the offline-first media experience.**
     Choose whether release builds accept anatomy fallbacks on a first offline

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/models.dart';
 import 'exercise_detail_sheet.dart';
+import 'localized_exercise_name.dart';
 
 class ExerciseDefinitionInfoTile extends StatelessWidget {
   final ExerciseDefinition definition;
@@ -19,8 +20,8 @@ class ExerciseDefinitionInfoTile extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: ListTile(
         isThreeLine: true,
-        title: Text(
-          definition.name,
+        title: LocalizedExerciseName(
+          definition: definition,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: const TextStyle(fontWeight: FontWeight.w700),

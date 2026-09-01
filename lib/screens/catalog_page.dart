@@ -13,6 +13,7 @@ import '../utils/localized_body_part_name.dart';
 import '../widgets/body_heatmap.dart';
 import '../widgets/exercise_media_thumbnail.dart';
 import '../widgets/guided_tutorial_overlay.dart';
+import '../widgets/localized_exercise_name.dart';
 import '../widgets/safe_error_view.dart';
 import 'exercise/exercise_catalog_page.dart';
 import 'exercise/muscle_filter_page.dart';
@@ -445,8 +446,8 @@ class _ExerciseUsageBar extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  summary.definition.name,
+                LocalizedExerciseName(
+                  definition: summary.definition,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodyMedium?.copyWith(

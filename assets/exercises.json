@@ -1,5 +1,5 @@
 ﻿{
-  "revision": 5,
+  "revision": 7,
   "exercises": [
     {
       "name": "Ab Wheel",
@@ -118,9 +118,9 @@
         {"name":"Erector Spinae","rank":6},
         {"name":"Transverse Abdominis","rank":7}
       ],
-      "setupNotes": "1. Stand with your feet about shoulder-width apart.\n2. Set the bar and plates safely before starting.\n3. Brace your stomach and keep your feet flat.",
+      "setupNotes": "1. Set the bar in a rack and place it across your upper back.\n2. Step back and place your feet about shoulder-width apart.\n3. Keep your chest up and brace your stomach.",
       "executionNotes": "1. Bend your hips and knees to lower your body.\n2. Keep your knees pointed toward your toes.\n3. Push through the floor to stand tall.",
-      "tipsNotes": "- Squat only as low as you can control.\n- Keep your heels down.\n- Lower the weight if your form changes.",
+      "tipsNotes": "- Squat only as low as you can control.\n- Keep your heels down.\n- Use the rack safeties and a load you can control.",
       "starterLoadProfile": {"type":"bodyweightMultiplier","easy":0.3,"medium":0.45,"hard":0.6,"minimumWeight":45,"roundingIncrement":5,"unitMode":"total","confidence":"medium","note":"Conservative squat starter estimate."},
       "catalogId": "tonos.exercise.0006",
       "legacyMediaId": 6
@@ -420,9 +420,9 @@
         {"name":"Gastrocnemius","rank":6},
         {"name":"Erector Spinae","rank":7}
       ],
-      "setupNotes": "1. Stand with your feet about shoulder-width apart.\n2. Set the bar and plates safely before starting.\n3. Brace your stomach and keep your feet flat.",
-      "executionNotes": "1. Bend your hips and knees to lower your body.\n2. Keep your knees pointed toward your toes.\n3. Push through the floor to stand tall.",
-      "tipsNotes": "- Squat only as low as you can control.\n- Keep your heels down.\n- Lower the weight if your form changes.",
+      "setupNotes": "1. Set the bar in a rack and place it across your upper back.\n2. Stand a step in front of a bench and place one foot behind you on it.\n3. Keep your chest up and brace your stomach.",
+      "executionNotes": "1. Bend both knees to lower your body slowly.\n2. Keep your front knee pointed toward your toes.\n3. Push through your front foot to stand tall, then switch sides.",
+      "tipsNotes": "- Practice the movement without weight first.\n- Keep your front heel down.\n- Use a rack and a light load until your balance is steady.",
       "catalogId": "tonos.exercise.0021",
       "legacyMediaId": 21
     },
@@ -560,9 +560,9 @@
         {"name":"Rhomboids","rank":6},
         {"name":"Latissimus Dorsi","rank":7}
       ],
-      "setupNotes": "1. Grip the parallel bars and support yourself with straight arms.\n2. Adjust the seat and pads to fit you.\n3. Lean slightly forward and brace your stomach.",
-      "executionNotes": "1. Bend your elbows and lower yourself slowly.\n2. Stop at a comfortable depth.\n3. Press through the bars to return to the top.",
-      "tipsNotes": "- Use an assisted dip machine while learning.\n- Do not bounce at the bottom.\n- Stop if your shoulders hurt.",
+      "setupNotes": "1. Set enough assistance to control the movement.\n2. Hold the parallel bars and place your knees or feet on the support.\n3. Start with straight arms and lean slightly forward.",
+      "executionNotes": "1. Bend your elbows and lower your body slowly.\n2. Stop at a comfortable depth.\n3. Press through the bars to return to the top.",
+      "tipsNotes": "- Use more assistance if you cannot press up smoothly.\n- Do not bounce at the bottom.\n- Step off the moving support carefully when finished.",
       "catalogId": "tonos.exercise.0029",
       "legacyMediaId": 29
     },
@@ -680,9 +680,9 @@
         {"name":"Trapezius (Middle)","rank":6},
         {"name":"Posterior Deltoid","rank":7}
       ],
-      "setupNotes": "1. Grip the parallel bars and support yourself with straight arms.\n2. Adjust the seat and pads to fit you.\n3. Lean slightly forward and brace your stomach.",
-      "executionNotes": "1. Bend your elbows and lower yourself slowly.\n2. Stop at a comfortable depth.\n3. Press through the bars to return to the top.",
-      "tipsNotes": "- Use an assisted dip machine while learning.\n- Do not bounce at the bottom.\n- Stop if your shoulders hurt.",
+      "setupNotes": "1. Set enough assistance to control the movement.\n2. Hold the pull-up handles with your palms facing you.\n3. Place your knees or feet on the support and start with straight arms.",
+      "executionNotes": "1. Pull your chest toward the handles.\n2. Pause near the top without swinging.\n3. Lower slowly until your arms are straight.",
+      "tipsNotes": "- Use more assistance if you cannot lower slowly.\n- Keep your body steady.\n- Step off the moving support carefully when finished.",
       "catalogId": "tonos.exercise.0034",
       "legacyMediaId": 34
     },
@@ -1070,26 +1070,6 @@
       "legacyMediaId": 53
     },
     {
-      "name": "Donkey Kick - Leg Extension Machine",
-      "rating": 35,
-      "equipment": ["Leg Extension Machine"],
-      "bodyparts": ["Hips","Hamstrings"],
-      "muscles": [
-        {"name":"Gluteus Maximus","rank":1},
-        {"name":"Gluteus Medius","rank":2},
-        {"name":"Biceps Femoris","rank":3},
-        {"name":"Erector Spinae","rank":4},
-        {"name":"Quadratus Lumborum","rank":5},
-        {"name":"Multifidus","rank":6},
-        {"name":"Transverse Abdominis","rank":7}
-      ],
-      "setupNotes": "1. Adjust the seat so your knees line up with the machine pivot.\n2. Place the pad above your ankles and hold the handles.\n3. Choose a light weight to start.",
-      "executionNotes": "1. Straighten your legs slowly.\n2. Pause briefly at the top.\n3. Lower the pad under control and repeat.",
-      "tipsNotes": "- Keep your back against the pad.\n- Do not kick or swing the weight.\n- Use a shorter range if your knees are uncomfortable.",
-      "catalogId": "tonos.exercise.0054",
-      "legacyMediaId": 54
-    },
-    {
       "name": "Down-Up Twist - Cable Machine",
       "rating": 65,
       "equipment": ["Cable Machine","Cable Handle Attachment"],
@@ -1103,9 +1083,9 @@
         {"name":"Multifidus","rank":6},
         {"name":"Quadratus Lumborum","rank":7}
       ],
-      "setupNotes": "1. Set up on the floor or at the bar or cable station.\n2. Set the cable and attachment at a comfortable height.\n3. Brace your stomach and start with a small range.",
-      "executionNotes": "1. Raise or move your legs while keeping your upper body steady.\n2. Turn slowly toward one side.\n3. Return to the middle and switch sides.",
-      "tipsNotes": "- Use a smaller range while learning.\n- Do not swing or twist quickly.\n- Stop if your back or shoulders lose control.",
+      "setupNotes": "1. Set the cable low and hold the handle with both hands.\n2. Stand sideways to the machine with your feet planted.\n3. Start with the handle beside the hip nearest the cable.",
+      "executionNotes": "1. Pull the handle diagonally across your body and upward.\n2. Turn your torso slowly while keeping your feet in place.\n3. Return to the start under control, then switch sides.",
+      "tipsNotes": "- Use a light weight while learning the path.\n- Keep your arms relaxed and let your torso turn.\n- Do not jerk the cable or twist beyond a comfortable range.",
       "catalogId": "tonos.exercise.0055",
       "legacyMediaId": 55
     },
@@ -1283,9 +1263,9 @@
         {"name":"Latissimus Dorsi","rank":6},
         {"name":"Trapezius (Upper)","rank":7}
       ],
-      "setupNotes": "1. Sit or stand tall with the weight at shoulder or chest height.\n2. Set the bar and plates safely before starting.\n3. Brace your stomach and keep your feet planted.",
-      "executionNotes": "1. Press the weight up along a comfortable path.\n2. Stop when your arms are straight without shrugging.\n3. Lower slowly to the start and repeat.",
-      "tipsNotes": "- Use a weight you can control.\n- Do not arch your back to finish a rep.\n- Lower the weight if your path changes.",
+      "setupNotes": "1. Lie under a bar set in a low rack with your knees bent.\n2. Grip the bar slightly wider than your shoulders.\n3. Unrack the bar and hold it over your chest with straight arms.",
+      "executionNotes": "1. Lower the bar until your upper arms rest lightly on the floor.\n2. Pause without letting your elbows bounce.\n3. Press the bar back over your chest and repeat.",
+      "tipsNotes": "- Use a rack with safety supports or ask for help unracking.\n- Keep your wrists above your elbows.\n- Lower the weight if you cannot pause under control.",
       "catalogId": "tonos.exercise.0065",
       "legacyMediaId": 65
     },
@@ -1303,9 +1283,9 @@
         {"name":"Latissimus Dorsi","rank":6},
         {"name":"Trapezius (Upper)","rank":7}
       ],
-      "setupNotes": "1. Sit or stand tall with the weight at shoulder or chest height.\n2. Choose a weight you can control.\n3. Brace your stomach and keep your feet planted.",
-      "executionNotes": "1. Press the weight up along a comfortable path.\n2. Stop when your arms are straight without shrugging.\n3. Lower slowly to the start and repeat.",
-      "tipsNotes": "- Use a weight you can control.\n- Do not arch your back to finish a rep.\n- Lower the weight if your path changes.",
+      "setupNotes": "1. Sit on the floor with a dumbbell on each thigh.\n2. Lie back, bend your knees, and hold the dumbbells over your chest.\n3. Keep your wrists straight and your upper arms just above the floor.",
+      "executionNotes": "1. Lower the dumbbells until your upper arms rest lightly on the floor.\n2. Pause without letting your elbows bounce.\n3. Press the dumbbells over your chest and repeat.",
+      "tipsNotes": "- Use a weight you can move safely into position.\n- Keep your wrists above your elbows.\n- Lower the weight if you cannot pause under control.",
       "catalogId": "tonos.exercise.0064",
       "legacyMediaId": 64
     },
@@ -1403,9 +1383,9 @@
         {"name":"Transverse Abdominis","rank":6},
         {"name":"Adductor Magnus","rank":7}
       ],
-      "setupNotes": "1. Set the bar in a rack at a safe height.\n2. Rest it across the front of your shoulders and grip it securely.\n3. Step back, set your feet, and brace your stomach.",
+      "setupNotes": "1. Set the cable low and hold the rope close to your chest.\n2. Step back and place your feet about shoulder-width apart.\n3. Keep your chest up and brace your stomach.",
       "executionNotes": "1. Bend your hips and knees to lower your body.\n2. Keep your chest tall and your feet flat.\n3. Push through the floor to stand tall.",
-      "tipsNotes": "- Use a light weight while learning the bar position.\n- Keep your knees pointed toward your toes.\n- Lower the weight if your chest drops.",
+      "tipsNotes": "- Use a light weight while learning.\n- Keep your knees pointed toward your toes.\n- Lower the weight if the cable pulls you forward.",
       "catalogId": "tonos.exercise.0069",
       "legacyMediaId": 69
     },
@@ -1423,9 +1403,9 @@
         {"name":"Transverse Abdominis","rank":6},
         {"name":"Adductor Magnus","rank":7}
       ],
-      "setupNotes": "1. Set the bar in a rack at a safe height.\n2. Rest it across the front of your shoulders and grip it securely.\n3. Step back, set your feet, and brace your stomach.",
+      "setupNotes": "1. Hold one dumbbell at your chest or two at your shoulders.\n2. Place your feet about shoulder-width apart.\n3. Keep your chest up and brace your stomach.",
       "executionNotes": "1. Bend your hips and knees to lower your body.\n2. Keep your chest tall and your feet flat.\n3. Push through the floor to stand tall.",
-      "tipsNotes": "- Use a light weight while learning the bar position.\n- Keep your knees pointed toward your toes.\n- Lower the weight if your chest drops.",
+      "tipsNotes": "- Start with a light weight.\n- Keep your knees pointed toward your toes.\n- Lower the weight if your chest drops.",
       "catalogId": "tonos.exercise.0070",
       "legacyMediaId": 70
     },
@@ -1783,9 +1763,9 @@
         {"name":"Multifidus","rank":6},
         {"name":"Gluteus Maximus","rank":7}
       ],
-      "setupNotes": "1. Adjust the seat and pads so your back is supported.\n2. Place your legs against the pads and hold the handles.\n3. Choose a light weight to start.",
-      "executionNotes": "1. Push your knees apart slowly.\n2. Pause briefly at the end of the movement.\n3. Return to the start under control and repeat.",
-      "tipsNotes": "- Keep your back against the pad.\n- Do not bounce against the pads.\n- Use a lighter weight if you need to twist or lean.",
+      "setupNotes": "1. Attach a low cable to the ankle farthest from the machine.\n2. Stand sideways and hold the machine for balance.\n3. Keep your hips facing forward and start with both feet together.",
+      "executionNotes": "1. Move the cuffed leg away from the machine slowly.\n2. Pause without leaning or turning your hips.\n3. Return under control, then switch sides.",
+      "tipsNotes": "- Keep your foot pointing forward.\n- Use a small range and a light weight.\n- Do not swing your leg or lean sideways.",
       "catalogId": "tonos.exercise.0088",
       "legacyMediaId": 88
     },
@@ -1803,9 +1783,9 @@
         {"name":"Quadratus Lumborum","rank":6},
         {"name":"Multifidus","rank":7}
       ],
-      "setupNotes": "1. Adjust the seat and pads so your back is supported.\n2. Place your legs against the pads and hold the handles.\n3. Choose a light weight to start.",
-      "executionNotes": "1. Bring your knees together slowly.\n2. Pause briefly at the end of the movement.\n3. Return to the start under control and repeat.",
-      "tipsNotes": "- Keep your back against the pad.\n- Do not bounce against the pads.\n- Use a lighter weight if you need to twist or lean.",
+      "setupNotes": "1. Attach a low cable to the ankle nearest the machine.\n2. Stand sideways and hold the machine for balance.\n3. Move the cuffed foot slightly toward the machine to start.",
+      "executionNotes": "1. Pull the cuffed leg across the front of your body slowly.\n2. Pause without leaning or turning your hips.\n3. Return under control, then switch sides.",
+      "tipsNotes": "- Keep your foot pointing forward.\n- Use a small range and a light weight.\n- Do not swing your leg or lean sideways.",
       "catalogId": "tonos.exercise.0089",
       "legacyMediaId": 89
     },
@@ -2003,9 +1983,9 @@
         {"name":"Teres Minor","rank":6},
         {"name":"Pectoralis Major","rank":7}
       ],
-      "setupNotes": "1. Stand or sit tall with the weight at your sides.\n2. Choose a weight you can control.\n3. Keep your knees soft and your stomach tight.",
-      "executionNotes": "1. Raise the weight along a comfortable path.\n2. Stop around shoulder height or sooner if needed.\n3. Lower slowly and repeat.",
-      "tipsNotes": "- Use a light weight.\n- Do not swing or shrug.\n- Stop if your shoulders hurt.",
+      "setupNotes": "1. Lie on an incline bench with a light dumbbell in each hand.\n2. Start with your palms up and the dumbbells beside your hips.\n3. Keep a small bend in your elbows.",
+      "executionNotes": "1. Sweep both dumbbells out and upward in a wide arc.\n2. Bring them close together above your head without forcing the range.\n3. Follow the same arc back to your hips and repeat.",
+      "tipsNotes": "- Use very light weights.\n- Keep the same bend in your elbows.\n- Stop before your shoulders become uncomfortable.",
       "catalogId": "tonos.exercise.0099",
       "legacyMediaId": 99
     },
@@ -2203,9 +2183,9 @@
         {"name":"Transverse Abdominis","rank":6},
         {"name":"Multifidus","rank":7}
       ],
-      "setupNotes": "1. Start with your hands on the floor about shoulder-width apart.\n2. Keep your body straight, or use your knees or an incline.\n3. Brace your stomach before lowering.",
-      "executionNotes": "1. Bend your elbows and lower your chest slowly.\n2. Push the floor away to return to the top.\n3. Repeat without letting your hips sag.",
-      "tipsNotes": "- Use an incline or your knees to make it easier.\n- Keep your elbows at a comfortable angle.\n- Stop if your wrists or shoulders hurt.",
+      "setupNotes": "1. Place your hands on a stable bench or raised surface.\n2. Walk your feet back until your body forms a straight line.\n3. Brace your stomach before lowering.",
+      "executionNotes": "1. Bend your elbows and lower your chest toward the surface.\n2. Push through your hands to return to the top.\n3. Repeat without letting your hips sag.",
+      "tipsNotes": "- Use a higher surface to make the exercise easier.\n- Keep your elbows at a comfortable angle.\n- Make sure the surface cannot move.",
       "catalogId": "tonos.exercise.0109",
       "legacyMediaId": 109
     },
@@ -2522,9 +2502,9 @@
         {"name":"Posterior Deltoid","rank":6},
         {"name":"Erector Spinae","rank":7}
       ],
-      "setupNotes": "1. Sit with your thighs secured under the pad.\n2. Use a stable position and choose a load you can control.\n3. Grip the bar or handle and sit tall.",
+      "setupNotes": "1. Kneel in front of a high cable and hold the bar with straight arms.\n2. Keep your torso upright and your knees firmly planted.\n3. Brace your stomach before pulling.",
       "executionNotes": "1. Pull the bar or handle toward your upper chest.\n2. Pause briefly without leaning far back.\n3. Let your arms straighten slowly and repeat.",
-      "tipsNotes": "- Keep your shoulders down.\n- Do not pull behind your neck.\n- Use a lighter weight if you need to swing.",
+      "tipsNotes": "- Keep your shoulders down.\n- Do not lean back to move the weight.\n- Use a lighter weight if you need to swing.",
       "catalogId": "tonos.exercise.0126",
       "legacyMediaId": 126
     },
@@ -2542,9 +2522,9 @@
         {"name":"Serratus Anterior","rank":6},
         {"name":"Latissimus Dorsi","rank":7}
       ],
-      "setupNotes": "1. Stand, sit, or lie in a stable position.\n2. Use a stable position and choose a load you can control.\n3. Keep your upper arms still and brace your stomach.",
-      "executionNotes": "1. Bend your elbows to lower the weight.\n2. Straighten your arms without swinging.\n3. Return slowly and repeat.",
-      "tipsNotes": "- Keep your elbows close to the chosen position.\n- Use a lighter weight if your shoulders move.\n- Stop if your elbows or shoulders hurt.",
+      "setupNotes": "1. Kneel facing away from a high cable.\n2. Hold the rope behind your head with your elbows pointing forward.\n3. Brace your stomach and keep your upper arms still.",
+      "executionNotes": "1. Straighten your elbows to move the rope forward.\n2. Pause with your arms straight.\n3. Bend your elbows slowly and repeat.",
+      "tipsNotes": "- Keep your upper arms still.\n- Do not arch your back.\n- Use a lighter weight if your elbows move.",
       "catalogId": "tonos.exercise.0127",
       "legacyMediaId": 127
     },
@@ -2782,9 +2762,9 @@
         {"name":"Gastrocnemius","rank":6},
         {"name":"Multifidus","rank":7}
       ],
-      "setupNotes": "1. Adjust the machine so your knees line up with its pivot.\n2. Place the pad above your heels and hold the handles.\n3. Choose a light weight to start.",
-      "executionNotes": "1. Bend your knees and pull the pad toward you.\n2. Pause briefly at the end.\n3. Return the pad slowly and repeat.",
-      "tipsNotes": "- Keep your hips against the pad.\n- Do not lift your hips or swing the weight.\n- Use a shorter range if your knees are uncomfortable.",
+      "setupNotes": "1. Attach a low cable cuff to one ankle.\n2. Stand facing the machine and hold it for balance.\n3. Keep your thighs together and start with your leg straight.",
+      "executionNotes": "1. Bend your knee and bring your heel behind you.\n2. Pause without moving your hip.\n3. Straighten your leg slowly, then switch sides.",
+      "tipsNotes": "- Keep your knee pointing toward the floor.\n- Use a light weight.\n- Do not swing your leg.",
       "catalogId": "tonos.exercise.0139",
       "legacyMediaId": 139
     },
@@ -2943,9 +2923,9 @@
         {"name":"Gastrocnemius","rank":6},
         {"name":"Multifidus","rank":7}
       ],
-      "setupNotes": "1. Adjust the machine so your knees line up with its pivot.\n2. Place the pad above your heels and hold the handles.\n3. Choose a light weight to start.",
-      "executionNotes": "1. Bend your knees and pull the pad toward you.\n2. Pause briefly at the end.\n3. Return the pad slowly and repeat.",
-      "tipsNotes": "- Keep your hips against the pad.\n- Do not lift your hips or swing the weight.\n- Use a shorter range if your knees are uncomfortable.",
+      "setupNotes": "1. Lie face down with a light dumbbell held securely between your feet.\n2. Start with your legs straight and your hips against the bench or floor.\n3. Hold a stable support with your hands.",
+      "executionNotes": "1. Bend your knees and bring your heels behind you.\n2. Pause without letting the dumbbell shift.\n3. Lower your legs slowly and repeat.",
+      "tipsNotes": "- Start with a very light dumbbell.\n- Keep your hips down.\n- Stop if you cannot hold the dumbbell securely.",
       "catalogId": "tonos.exercise.0151",
       "legacyMediaId": 151
     },

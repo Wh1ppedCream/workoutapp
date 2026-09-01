@@ -310,6 +310,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
         ExerciseDefinitionWrite(
           definition: ExerciseDefinition(
             id: def.id,
+            catalogId: def.catalogId,
             name: name,
             equipmentId: _primaryEquipmentId,
             rating: rating,

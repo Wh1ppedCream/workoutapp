@@ -13,11 +13,13 @@ import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
 import '../screens/exercise/exercise_catalog_page.dart';
 import '../screens/exercise/session_detail_screen.dart';
+import '../services/exercise_content_localizer.dart';
 import '../services/tutorial_state_store.dart';
 import '../theme/theme_extensions.dart';
 import '../utils/tutorial_launcher.dart';
 import '../utils/weight_unit_formatter.dart';
 import 'guided_tutorial_overlay.dart';
+import 'localized_exercise_name.dart';
 
 const _exerciseProgressTileIdsKey = 'exercise_progress_tile_ids_v1';
 const _exerciseProgressHiddenAutoIdsKey =
@@ -137,10 +139,14 @@ class _ExerciseProgressSectionState extends State<ExerciseProgressSection>
 
   Future<void> _addExerciseTile(ExerciseDefinition definition) async {
     if (_visibleDefinitionIds.contains(definition.id)) {
+      final displayName = await ExerciseContentLocalizer.instance.resolveName(
+        definition,
+        Localizations.localeOf(context),
+      );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(_strings.exerciseProgressAlreadyShown(definition.name)),
+          content: Text(_strings.exerciseProgressAlreadyShown(displayName)),
         ),
       );
       return;
@@ -603,8 +609,8 @@ class _ExerciseProgressHeroChart extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: Text(
-                tile.definition.name,
+              child: LocalizedExerciseName(
+                definition: tile.definition,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.titleMedium?.copyWith(
@@ -814,8 +820,8 @@ class _ExerciseProgressSelectorTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    tile.definition.name,
+                  LocalizedExerciseName(
+                    definition: tile.definition,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.labelLarge?.copyWith(
@@ -1208,7 +1214,7 @@ class _ExerciseProgressDetailPageState
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.tile.definition.name),
+        title: LocalizedExerciseName(definition: widget.tile.definition),
         centerTitle: true,
       ),
       body: ListView(

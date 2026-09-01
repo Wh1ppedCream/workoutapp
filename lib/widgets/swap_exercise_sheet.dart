@@ -10,6 +10,7 @@ import '../services/exercise_equipment_compatibility.dart';
 import '../theme/theme_extensions.dart';
 import '../utils/async_pool.dart';
 import 'body_heatmap.dart';
+import 'localized_exercise_name.dart';
 
 /// Bottom sheet that helps replace the current exercise with a similar one.
 ///
@@ -225,6 +226,7 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
 
     return ExerciseDefinition(
       id: hydrated.id,
+      catalogId: hydrated.catalogId,
       name: hydrated.name,
       equipmentId: hydrated.equipmentId,
       rating: hydrated.rating,
@@ -675,24 +677,30 @@ class _ExerciseSwapBox extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(text: entry.definition.name),
-                  TextSpan(
-                    text: '  •  ${entry.equipmentText}',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.textTheme.bodySmall?.color?.withAlpha(184),
-                      fontWeight: FontWeight.w500,
+            LocalizedExerciseNameBuilder(
+              definition: entry.definition,
+              builder:
+                  (context, name) => Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(text: name),
+                        TextSpan(
+                          text: '  •  ${entry.equipmentText}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.textTheme.bodySmall?.color?.withAlpha(
+                              184,
+                            ),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
-                ],
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
             ),
             const SizedBox(height: 16),
             LayoutBuilder(

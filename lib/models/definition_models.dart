@@ -105,6 +105,7 @@ class StarterLoadProfile {
 /// rating, ranking of targeted muscles, and optional starter-load metadata.
 class ExerciseDefinition {
   final int id;
+  final String? catalogId;
   final String name;
   final String catalogStatus;
   final int? equipmentId;
@@ -122,6 +123,7 @@ class ExerciseDefinition {
   /// Creates an [ExerciseDefinition].
   ExerciseDefinition({
     required this.id,
+    this.catalogId,
     required this.name,
     this.catalogStatus = 'active',
     this.equipmentId,

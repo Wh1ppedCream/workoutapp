@@ -194,6 +194,7 @@ class DefinitionDao {
 
     return ExerciseDefinition(
       id: row['id'] as int,
+      catalogId: row['catalog_id'] as String?,
       name: row['name'] as String,
       catalogStatus: (row['catalog_status'] as String?) ?? 'active',
       equipmentId: primaryEquipmentId,

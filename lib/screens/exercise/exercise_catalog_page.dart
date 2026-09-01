@@ -8,6 +8,7 @@ import '../../l10n/generated/app_localizations.dart';
 import '../../models/models.dart';
 import '../../providers/selected_profile.dart';
 import '../../repositories/app_repository.dart';
+import '../../services/exercise_content_localizer.dart';
 import '../../services/exercise_equipment_compatibility.dart';
 import '../../services/tutorial_state_store.dart';
 import '../../utils/localized_body_part_name.dart';
@@ -15,6 +16,7 @@ import '../../utils/tutorial_launcher.dart';
 import '../../widgets/exercise_detail_sheet.dart';
 import '../../widgets/exercise_media_thumbnail.dart';
 import '../../widgets/guided_tutorial_overlay.dart';
+import '../../widgets/localized_exercise_name.dart';
 import '../../widgets/onboarding_plan_builder_coach.dart';
 
 /// Catalog of exercise definitions with profile-aware equipment filtering.
@@ -81,6 +83,7 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
   final Map<int, List<String>> _equipmentNamesByProfileId = {};
 
   ExerciseDefinition? _selectedDef;
+  String? _selectedDisplayName;
   bool _tutorialQueued = false;
   bool _planBuilderGuideSkipped = false;
 
@@ -175,7 +178,7 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
       title: AppLocalizations.of(context).catalogGuideAddTitle,
       body: AppLocalizations.of(
         context,
-      ).catalogGuideAddBody(_selectedDef!.name),
+      ).catalogGuideAddBody(_selectedDisplayName ?? _selectedDef!.name),
     );
   }
 
@@ -559,10 +562,31 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                                   onTap:
                                       widget.onExercisePicked == null
                                           ? null
-                                          : () {
-                                            setState(() => _selectedDef = def);
+                                          : () async {
+                                            setState(() {
+                                              _selectedDef = def;
+                                              _selectedDisplayName = def.name;
+                                            });
                                             widget.onPlanBuilderSelectionChanged
                                                 ?.call(true);
+                                            final displayName =
+                                                await ExerciseContentLocalizer
+                                                    .instance
+                                                    .resolveName(
+                                                      def,
+                                                      Localizations.localeOf(
+                                                        context,
+                                                      ),
+                                                    );
+                                            if (!mounted ||
+                                                _selectedDef != def) {
+                                              return;
+                                            }
+                                            setState(
+                                              () =>
+                                                  _selectedDisplayName =
+                                                      displayName,
+                                            );
                                           },
                                   onHeatmapTap: () => _openExerciseDetails(def),
                                 );
@@ -644,8 +668,8 @@ class _ExerciseCatalogBar extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      definition.name,
+                    LocalizedExerciseName(
+                      definition: definition,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.titleMedium?.copyWith(

@@ -132,6 +132,115 @@ void main() {
   );
 
   test(
+    'reviewed exercise variants retain movement-specific guidance',
+    () async {
+      final catalog = await _readObject('assets/exercises.json');
+      final exercises = _objectList(catalog['exercises'], 'catalog exercises');
+      final byCatalogId = <String, Map<String, dynamic>>{
+        for (final exercise in exercises)
+          exercise['catalogId'] as String: exercise,
+      };
+
+      expect(
+        byCatalogId,
+        isNot(contains('tonos.exercise.0054')),
+        reason:
+            'The unsupported donkey-kick/leg-extension duplicate must stay '
+            'retired.',
+      );
+
+      const requiredGuidance = <String, List<String>>{
+        'tonos.exercise.0006': ['bar', 'shoulder-width', 'rack safeties'],
+        'tonos.exercise.0021': ['bar', 'bench', 'front foot'],
+        'tonos.exercise.0029': ['assistance', 'parallel bars', 'press through'],
+        'tonos.exercise.0034': [
+          'assistance',
+          'pull-up handles',
+          'pull your chest',
+        ],
+        'tonos.exercise.0055': ['cable', 'diagonally', 'switch sides'],
+        'tonos.exercise.0064': ['floor', 'dumbbell', 'upper arms'],
+        'tonos.exercise.0065': ['floor', 'bar', 'safety supports'],
+        'tonos.exercise.0069': ['cable', 'rope', 'pulls you forward'],
+        'tonos.exercise.0070': ['dumbbell', 'shoulder-width', 'chest drops'],
+        'tonos.exercise.0088': [
+          'ankle',
+          'away from the machine',
+          'switch sides',
+        ],
+        'tonos.exercise.0089': ['ankle', 'across the front', 'switch sides'],
+        'tonos.exercise.0099': ['incline bench', 'wide arc', 'very light'],
+        'tonos.exercise.0109': [
+          'raised surface',
+          'straight line',
+          'cannot move',
+        ],
+        'tonos.exercise.0126': ['kneel', 'high cable', 'torso upright'],
+        'tonos.exercise.0127': [
+          'kneel',
+          'rope behind your head',
+          'upper arms still',
+        ],
+        'tonos.exercise.0139': [
+          'cable cuff',
+          'heel behind you',
+          'switch sides',
+        ],
+        'tonos.exercise.0151': [
+          'dumbbell',
+          'between your feet',
+          'hold the dumbbell securely',
+        ],
+      };
+      const forbiddenGuidance = <String, List<String>>{
+        'tonos.exercise.0006': ['bench', 'front foot'],
+        'tonos.exercise.0029': ['pull-up handles', 'pull your chest'],
+        'tonos.exercise.0034': ['parallel bars', 'assisted dip'],
+        'tonos.exercise.0069': ['bar in a rack'],
+        'tonos.exercise.0070': ['bar in a rack'],
+        'tonos.exercise.0088': ['seat and pads', 'push your knees apart'],
+        'tonos.exercise.0089': ['seat and pads', 'bring your knees together'],
+        'tonos.exercise.0109': ['hands on the floor'],
+        'tonos.exercise.0126': ['thighs secured', 'sit tall'],
+        'tonos.exercise.0127': ['stand, sit, or lie'],
+        'tonos.exercise.0139': ['machine pivot', 'pull the pad'],
+        'tonos.exercise.0151': ['machine pivot', 'pull the pad'],
+      };
+
+      for (final expectation in requiredGuidance.entries) {
+        final exercise = byCatalogId[expectation.key];
+        expect(
+          exercise,
+          isNotNull,
+          reason: '${expectation.key} is a reviewed catalog identity.',
+        );
+        final guidance =
+            [
+              exercise!['setupNotes'],
+              exercise['executionNotes'],
+              exercise['tipsNotes'],
+            ].join('\n').toLowerCase();
+
+        for (final phrase in expectation.value) {
+          expect(
+            guidance,
+            contains(phrase),
+            reason: '${exercise['name']} must retain "$phrase" guidance.',
+          );
+        }
+        for (final phrase
+            in forbiddenGuidance[expectation.key] ?? const <String>[]) {
+          expect(
+            guidance,
+            isNot(contains(phrase)),
+            reason: '${exercise['name']} contains copied "$phrase" guidance.',
+          );
+        }
+      }
+    },
+  );
+
+  test(
     'exercise media source maps only to current catalog identities',
     () async {
       final catalog = await _readObject('assets/exercises.json');

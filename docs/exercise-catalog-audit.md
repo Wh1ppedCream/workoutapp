@@ -85,11 +85,11 @@ For each changed or added exercise, confirm:
 - Any thumbnail depicts the exact movement and matches the stable catalog ID.
 - Renames preserve history through aliases; removals are deliberate retirements.
 
-## Current Baseline: Revision 5
+## Current Baseline: Revision 7
 
-Date: 2026-08-29
+Date: 2026-08-31
 
-- 301 active catalog exercises.
+- 300 active catalog exercises.
 - 154 current development thumbnail mappings, all resolving to a current name
   or declared alias.
 - All catalog equipment, body parts, and muscles resolve to their canonical
@@ -97,11 +97,20 @@ Date: 2026-08-29
 - Three duplicate `Hips` relationships were removed from the Side Lunge
   variants.
 - All instructions use the compact three-step and three-tip format.
+- Seventeen exercise variants have movement- and equipment-specific guidance guarded
+  by semantic regression checks.
+- The unsupported `Donkey Kick - Leg Extension Machine` entry was retired. It
+  had no media or plan references and duplicated the existing leg-extension
+  instructions despite declaring glute-focused metadata.
 
 ### Review Record
 
-- The project owner reviewed and approved the current 301-entry baseline on
+- The project owner reviewed and approved the revision 5, 301-entry baseline on
   2026-08-29.
+- Revision 6 corrects confirmed copied-template guidance and retires one invalid
+  duplicate. Final release review should include these changed entries.
+- Revision 7 corrects five additional equipment-specific guidance mismatches
+  discovered during localization review.
 - This records product-owner approval only; it does not claim independent
   trainer or medical certification.
 
@@ -113,3 +122,5 @@ Add a new entry for each release candidate:
 | --- | --- | --- | --- | --- | --- |
 | 4 | Superseded | 2026-08-29 | `tonos.exercise.0262`, `tonos.exercise.0308`-`0311` | Included in revision 5 review | N/A |
 | 5 | Project owner | 2026-08-29 | All 301 active entries; `tonos.exercise.0243`, `tonos.exercise.0287`-`0290` | None recorded | Yes |
+| 6 | Pending final review | 2026-08-31 | `tonos.exercise.0006`, `0021`, `0029`, `0034`, `0054`-`0055`, `0064`-`0065`, `0069`-`0070`, `0088`-`0089`, `0099` | Review corrected guidance in the app | Pending |
+| 7 | Pending final review | 2026-08-31 | `tonos.exercise.0109`, `0126`-`0127`, `0139`, `0151` | Review corrected guidance in the app | Pending |
