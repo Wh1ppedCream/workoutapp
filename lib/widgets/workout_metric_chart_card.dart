@@ -2,7 +2,6 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/generated/app_localizations.dart';
@@ -10,6 +9,8 @@ import '../models/models.dart';
 import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
 import '../theme/theme_extensions.dart';
+import '../utils/completed_workout_duration_formatter.dart';
+import '../utils/localized_formatters.dart';
 import '../utils/weight_unit_formatter.dart';
 
 enum WorkoutReportRange {
@@ -201,9 +202,9 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
         }
 
         final totalWorkouts = sessions.length;
-        final totalMinutes = sessions.fold<int>(
+        final totalDurationSeconds = sessions.fold<int>(
           0,
-          (sum, session) => sum + session.durationMinutes,
+          (sum, session) => sum + session.durationSeconds,
         );
         final totalVolume = sessions.fold<double>(
           0,
@@ -216,11 +217,15 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
           interval: bucketSet.interval,
           weightUnit: weightUnit,
           strings: strings,
+          locale: Localizations.localeOf(context),
         );
         final reportStats = <Widget>[
           _ReportStat(
             label: strings.workoutReportWorkouts,
-            value: _formatCompact(totalWorkouts.toDouble()),
+            value: _formatCompact(
+              totalWorkouts.toDouble(),
+              Localizations.localeOf(context),
+            ),
             unit:
                 totalWorkouts == 1
                     ? strings.workoutReportWorkout
@@ -230,6 +235,7 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
               WorkoutReportMetric.workouts,
               weightUnit,
               strings,
+              Localizations.localeOf(context),
             ),
             selected:
                 _metrics[_selectedMetricIndex] == WorkoutReportMetric.workouts,
@@ -237,13 +243,17 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
           ),
           _ReportStat(
             label: strings.workoutReportTime,
-            value: _formatDurationValue(totalMinutes),
-            unit: _formatDurationUnit(totalMinutes, strings),
+            value: formatCompletedWorkoutDuration(
+              strings,
+              totalDurationSeconds,
+            ),
+            unit: null,
             trend: _metricTrend(
               buckets,
               WorkoutReportMetric.minutes,
               weightUnit,
               strings,
+              Localizations.localeOf(context),
             ),
             selected:
                 _metrics[_selectedMetricIndex] == WorkoutReportMetric.minutes,
@@ -254,6 +264,7 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
             value: WeightUnitFormatter.formatCompactVolumeValue(
               totalVolume,
               weightUnit,
+              locale: Localizations.localeOf(context),
             ),
             unit: weightUnit.shortLabel,
             trend: _metricTrend(
@@ -261,6 +272,7 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
               WorkoutReportMetric.volume,
               weightUnit,
               strings,
+              Localizations.localeOf(context),
             ),
             selected:
                 _metrics[_selectedMetricIndex] == WorkoutReportMetric.volume,
@@ -368,7 +380,7 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
         sessions.isEmpty
             ? null
             : sessions
-                .map((session) => session.date)
+                .map((session) => session.calendarDay.toLocalDateTime())
                 .reduce((a, b) => a.isBefore(b) ? a : b);
     final rawStart =
         _rangeStart ??
@@ -442,7 +454,7 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
     }
 
     for (final session in sessions) {
-      final sessionDay = DateUtils.dateOnly(session.date);
+      final sessionDay = session.calendarDay.toLocalDateTime();
       if (sessionDay.isBefore(normalizedStart) ||
           sessionDay.isAfter(normalizedEnd)) {
         continue;
@@ -484,7 +496,7 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
     }
 
     for (final session in sessions) {
-      final sessionDay = DateUtils.dateOnly(session.date);
+      final sessionDay = session.calendarDay.toLocalDateTime();
       if (sessionDay.isBefore(normalizedRangeStart) ||
           sessionDay.isAfter(normalizedRangeEnd)) {
         continue;
@@ -529,7 +541,7 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
     }
 
     for (final session in sessions) {
-      final sessionDay = DateUtils.dateOnly(session.date);
+      final sessionDay = session.calendarDay.toLocalDateTime();
       if (sessionDay.isBefore(normalizedRangeStart) ||
           sessionDay.isAfter(normalizedRangeEnd)) {
         continue;
@@ -618,26 +630,37 @@ class _ReportInsightSummary {
     required _ReportBucketInterval interval,
     required WeightUnit weightUnit,
     required AppLocalizations strings,
+    required Locale locale,
   }) {
     final workoutCount = sessions.length;
     final activeBucketCount = buckets.isEmpty ? 1 : buckets.length;
     final avgWorkouts = workoutCount / activeBucketCount;
     final bucketLabel = _bucketNoun(interval, strings);
     final longestStreak = _longestWorkoutDayStreak(sessions);
-    final activeDay = _mostActiveWeekday(sessions, strings.localeName);
-    final bestVolume = _bestVolumeDay(sessions, weightUnit, strings);
+    final activeDay = _mostActiveWeekday(sessions, locale);
+    final bestVolume = _bestVolumeDay(sessions, weightUnit, strings, locale);
+    final averageFractionDigits = avgWorkouts >= 10 ? 0 : 1;
 
     return _ReportInsightSummary(
       insights: [
         _ReportInsight(
           label: strings.workoutReportAveragePer(bucketLabel),
-          value: avgWorkouts.toStringAsFixed(avgWorkouts >= 10 ? 0 : 1),
+          value: LocalizedFormatters.number(
+            avgWorkouts,
+            locale,
+            minimumFractionDigits: averageFractionDigits,
+            maximumFractionDigits: averageFractionDigits,
+          ),
           detail: strings.workoutReportWorkoutsLowercase,
           icon: Icons.trending_up,
         ),
         _ReportInsight(
           label: strings.workoutReportLongestStreak,
-          value: longestStreak.toString(),
+          value: LocalizedFormatters.number(
+            longestStreak,
+            locale,
+            maximumFractionDigits: 0,
+          ),
           detail:
               longestStreak == 1
                   ? strings.workoutReportDay
@@ -697,7 +720,7 @@ class _MetricTrend {
 class _ReportStat extends StatelessWidget {
   final String label;
   final String value;
-  final String unit;
+  final String? unit;
   final _MetricTrend trend;
   final bool selected;
   final VoidCallback onTap;
@@ -772,16 +795,18 @@ class _ReportStat extends StatelessWidget {
                             fontWeight: FontWeight.w900,
                           ),
                         ),
-                        const SizedBox(width: 4),
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 3),
-                          child: Text(
-                            unit,
-                            maxLines: 1,
-                            style: Theme.of(context).textTheme.labelSmall
-                                ?.copyWith(color: cs.onSurfaceVariant),
+                        if (unit != null) ...[
+                          const SizedBox(width: 4),
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 3),
+                            child: Text(
+                              unit!,
+                              maxLines: 1,
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(color: cs.onSurfaceVariant),
+                            ),
                           ),
-                        ),
+                        ],
                       ],
                     ),
                   ),
@@ -937,6 +962,7 @@ class _InteractiveWorkoutLineChartState
             showValueLabels: widget.showValueLabels,
             selectedIndex: _selectedIndex,
             weightUnit: widget.weightUnit,
+            locale: Localizations.localeOf(context),
           ),
         );
 
@@ -1157,13 +1183,15 @@ class _ReportInsightGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final usesLocalizedLayout =
+        Localizations.localeOf(context).languageCode != 'en';
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: insights.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        mainAxisExtent: 68,
+        mainAxisExtent: usesLocalizedLayout ? 88 : 68,
         mainAxisSpacing: 8,
         crossAxisSpacing: 8,
       ),
@@ -1182,6 +1210,8 @@ class _ReportInsightTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = context.cs;
+    final usesLocalizedLayout =
+        Localizations.localeOf(context).languageCode != 'en';
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
@@ -1200,39 +1230,60 @@ class _ReportInsightTile extends StatelessWidget {
               children: [
                 Text(
                   insight.label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  maxLines: usesLocalizedLayout ? 2 : 1,
+                  overflow:
+                      usesLocalizedLayout
+                          ? TextOverflow.visible
+                          : TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
                     color: cs.onSurfaceVariant,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 const SizedBox(height: 2),
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        insight.value,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w900,
+                usesLocalizedLayout
+                    ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          insight.value,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.titleSmall
+                              ?.copyWith(fontWeight: FontWeight.w900),
                         ),
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Flexible(
-                      child: Text(
-                        insight.detail,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: cs.onSurfaceVariant,
+                        Text(
+                          insight.detail,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(color: cs.onSurfaceVariant),
                         ),
-                      ),
+                      ],
+                    )
+                    : Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            insight.value,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.titleSmall
+                                ?.copyWith(fontWeight: FontWeight.w900),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            insight.detail,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(color: cs.onSurfaceVariant),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
               ],
             ),
           ),
@@ -1303,6 +1354,7 @@ class _WorkoutLineChartPainter extends CustomPainter {
   final bool showValueLabels;
   final int? selectedIndex;
   final WeightUnit weightUnit;
+  final Locale locale;
 
   const _WorkoutLineChartPainter({
     required this.buckets,
@@ -1317,6 +1369,7 @@ class _WorkoutLineChartPainter extends CustomPainter {
     this.showValueLabels = false,
     this.selectedIndex,
     required this.weightUnit,
+    required this.locale,
   });
 
   @override
@@ -1351,7 +1404,7 @@ class _WorkoutLineChartPainter extends CustomPainter {
       );
       _drawText(
         canvas,
-        _formatAxis(value, metric, weightUnit),
+        _formatAxis(value, metric, weightUnit, locale),
         Offset(0, y - 8),
         labelStyle,
         maxWidth: _WorkoutLineChartGeometry.left - 8,
@@ -1363,10 +1416,6 @@ class _WorkoutLineChartPainter extends CustomPainter {
 
     final pointCount = buckets.length;
     final labelEvery = math.max(1, (pointCount / 4).ceil());
-    final dateFormat =
-        interval == _ReportBucketInterval.month
-            ? DateFormat.MMM()
-            : DateFormat('d MMM');
     final points = geometry.points;
 
     final fillPath =
@@ -1416,7 +1465,7 @@ class _WorkoutLineChartPainter extends CustomPainter {
       if (showValueLabels && value > 0) {
         _drawText(
           canvas,
-          _formatAxis(value, metric, weightUnit),
+          _formatAxis(value, metric, weightUnit, locale),
           Offset(point.dx - 18, math.max(0, point.dy - 20)),
           labelStyle.copyWith(
             color: labelColor.withValues(alpha: 0.95),
@@ -1431,7 +1480,7 @@ class _WorkoutLineChartPainter extends CustomPainter {
       if (i % labelEvery == 0 || i == buckets.length - 1) {
         _drawText(
           canvas,
-          _chartDateLabel(dateFormat, buckets[i], interval),
+          _chartDateLabel(buckets[i], interval, locale),
           Offset(point.dx - 28, plotRect.bottom + 8),
           labelStyle.copyWith(fontSize: 10),
           maxWidth: 56,
@@ -1484,8 +1533,11 @@ class _WorkoutLineChartPainter extends CustomPainter {
       fontWeight: FontWeight.w800,
     );
     final tooltipLines = [
-      (_bucketTooltipLabel(bucket, interval, strings.localeName), titleStyle),
-      (_metricTooltipValue(value, metric, weightUnit, strings), bodyStyle),
+      (_bucketTooltipLabel(bucket, interval, locale), titleStyle),
+      (
+        _metricTooltipValue(value, metric, weightUnit, strings, locale),
+        bodyStyle,
+      ),
     ];
     final painters =
         tooltipLines
@@ -1537,7 +1589,8 @@ class _WorkoutLineChartPainter extends CustomPainter {
         oldDelegate.tooltipTextColor != tooltipTextColor ||
         oldDelegate.showValueLabels != showValueLabels ||
         oldDelegate.selectedIndex != selectedIndex ||
-        oldDelegate.weightUnit != weightUnit;
+        oldDelegate.weightUnit != weightUnit ||
+        oldDelegate.locale != locale;
   }
 
   static double _niceMax(WorkoutReportMetric metric, double value) {
@@ -1560,11 +1613,14 @@ class _WorkoutLineChartPainter extends CustomPainter {
   }
 
   static String _chartDateLabel(
-    DateFormat dateFormat,
     WorkoutReportBucket bucket,
     _ReportBucketInterval interval,
+    Locale locale,
   ) {
-    final label = dateFormat.format(bucket.start).toUpperCase();
+    final label = (interval == _ReportBucketInterval.month
+            ? LocalizedFormatters.monthShort(bucket.start, locale)
+            : LocalizedFormatters.dayMonth(bucket.start, locale))
+        .toUpperCase();
     if (interval == _ReportBucketInterval.month) return label;
     return label.replaceAll(' ', '\n');
   }
@@ -1640,19 +1696,20 @@ String _chartTitle(
 String _bucketTooltipLabel(
   WorkoutReportBucket bucket,
   _ReportBucketInterval interval,
-  String localeName,
+  Locale locale,
 ) {
-  switch (interval) {
-    case _ReportBucketInterval.day:
-      return DateFormat.yMMMd(localeName).format(bucket.start);
-    case _ReportBucketInterval.week:
-      final sameDay = DateUtils.isSameDay(bucket.start, bucket.end);
-      if (sameDay) return DateFormat.yMMMd(localeName).format(bucket.start);
-      return '${DateFormat.MMMd(localeName).format(bucket.start)} - '
-          '${DateFormat.yMMMd(localeName).format(bucket.end)}';
-    case _ReportBucketInterval.month:
-      return DateFormat.yMMMM(localeName).format(bucket.start);
-  }
+  final label = switch (interval) {
+    _ReportBucketInterval.day => LocalizedFormatters.date(bucket.start, locale),
+    _ReportBucketInterval.week =>
+      DateUtils.isSameDay(bucket.start, bucket.end)
+          ? LocalizedFormatters.date(bucket.start, locale)
+          : LocalizedFormatters.dateRange(bucket.start, bucket.end, locale),
+    _ReportBucketInterval.month => LocalizedFormatters.monthYear(
+      bucket.start,
+      locale,
+    ),
+  };
+  return label;
 }
 
 String _metricTooltipValue(
@@ -1660,21 +1717,19 @@ String _metricTooltipValue(
   WorkoutReportMetric metric,
   WeightUnit weightUnit,
   AppLocalizations strings,
+  Locale locale,
 ) {
   switch (metric) {
     case WorkoutReportMetric.workouts:
       return strings.workoutReportWorkoutCount(value.round());
     case WorkoutReportMetric.minutes:
-      final minutes = value.round();
-      if (minutes < 60) return strings.workoutReportMinutesCount(minutes);
-      final hours = minutes ~/ 60;
-      final remainingMinutes = minutes % 60;
-      if (remainingMinutes == 0) {
-        return strings.workoutReportHoursCount(hours);
-      }
-      return strings.workoutReportHoursMinutes(hours, remainingMinutes);
+      return formatCompletedWorkoutDuration(strings, (value * 60).round());
     case WorkoutReportMetric.volume:
-      return WeightUnitFormatter.formatVolume(value, weightUnit);
+      return WeightUnitFormatter.formatVolume(
+        value,
+        weightUnit,
+        locale: locale,
+      );
   }
 }
 
@@ -1700,26 +1755,29 @@ _MetricTrend _metricTrend(
   WorkoutReportMetric metric,
   WeightUnit weightUnit,
   AppLocalizations strings,
+  Locale locale,
 ) {
-  if (buckets.isEmpty) return _flatMetricTrend(metric, weightUnit, strings);
+  if (buckets.isEmpty) {
+    return _flatMetricTrend(metric, weightUnit, strings, locale);
+  }
 
   final current = buckets.last.valueFor(metric);
   final previous =
       buckets.length > 1 ? buckets[buckets.length - 2].valueFor(metric) : 0.0;
   if (current <= 0 && previous <= 0) {
-    return _flatMetricTrend(metric, weightUnit, strings);
+    return _flatMetricTrend(metric, weightUnit, strings, locale);
   }
 
   final diff = current - previous;
   if (diff.abs() < 0.001) {
-    return _flatMetricTrend(metric, weightUnit, strings);
+    return _flatMetricTrend(metric, weightUnit, strings, locale);
   }
 
   final isUp = diff > 0;
   final arrow = isUp ? '↑' : '↓';
   return _MetricTrend(
     label:
-        '$arrow ${_formatTrendAmount(diff.abs(), metric, weightUnit, strings)}',
+        '$arrow ${_formatTrendAmount(diff.abs(), metric, weightUnit, strings, locale)}',
     direction: isUp ? _MetricTrendDirection.up : _MetricTrendDirection.down,
   );
 }
@@ -1728,9 +1786,10 @@ _MetricTrend _flatMetricTrend(
   WorkoutReportMetric metric,
   WeightUnit weightUnit,
   AppLocalizations strings,
+  Locale locale,
 ) {
   return _MetricTrend(
-    label: _formatTrendAmount(0, metric, weightUnit, strings),
+    label: _formatTrendAmount(0, metric, weightUnit, strings, locale),
     direction: _MetricTrendDirection.flat,
   );
 }
@@ -1740,28 +1799,16 @@ String _formatTrendAmount(
   WorkoutReportMetric metric,
   WeightUnit weightUnit,
   AppLocalizations strings,
+  Locale locale,
 ) {
   switch (metric) {
     case WorkoutReportMetric.workouts:
       return strings.workoutReportWorkoutCount(value.round());
     case WorkoutReportMetric.minutes:
-      return strings.workoutReportMinutesCount(value.round());
+      return formatCompletedWorkoutDuration(strings, (value * 60).round());
     case WorkoutReportMetric.volume:
-      return '${WeightUnitFormatter.formatCompactVolumeValue(value, weightUnit)} ${weightUnit.shortLabel}';
+      return '${WeightUnitFormatter.formatCompactVolumeValue(value, weightUnit, locale: locale)} ${weightUnit.shortLabel}';
   }
-}
-
-String _formatDurationValue(int minutes) {
-  if (minutes < 60) return minutes.toString();
-  final hours = minutes ~/ 60;
-  final remainingMinutes = minutes % 60;
-  if (remainingMinutes == 0) return hours.toString();
-  return '$hours:${remainingMinutes.toString().padLeft(2, '0')}';
-}
-
-String _formatDurationUnit(int minutes, AppLocalizations strings) {
-  if (minutes < 60) return strings.workoutReportMinuteShort;
-  return strings.workoutReportHourShort;
 }
 
 IconData _emptyMetricIcon(WorkoutReportMetric metric) {
@@ -1804,7 +1851,7 @@ int _longestWorkoutDayStreak(List<WorkoutReportSession> sessions) {
   if (sessions.isEmpty) return 0;
   final days =
       sessions
-          .map((session) => DateUtils.dateOnly(session.date))
+          .map((session) => session.calendarDay.toLocalDateTime())
           .toSet()
           .toList()
         ..sort();
@@ -1825,13 +1872,13 @@ int _longestWorkoutDayStreak(List<WorkoutReportSession> sessions) {
 
 String _mostActiveWeekday(
   List<WorkoutReportSession> sessions,
-  String localeName,
+  Locale locale,
 ) {
   if (sessions.isEmpty) return '-';
   final counts = <int, int>{};
   for (final session in sessions) {
     counts.update(
-      session.date.weekday,
+      session.calendarDay.toLocalDateTime().weekday,
       (count) => count + 1,
       ifAbsent: () => 1,
     );
@@ -1840,15 +1887,17 @@ String _mostActiveWeekday(
     (best, entry) => entry.value > best.value ? entry : best,
   );
   final monday = DateTime(2026, 1, 5);
-  return DateFormat.E(
-    localeName,
-  ).format(monday.add(Duration(days: bestWeekday.key - DateTime.monday)));
+  return LocalizedFormatters.weekdayShort(
+    monday.add(Duration(days: bestWeekday.key - DateTime.monday)),
+    locale,
+  );
 }
 
 _BestVolumeDay _bestVolumeDay(
   List<WorkoutReportSession> sessions,
   WeightUnit weightUnit,
   AppLocalizations strings,
+  Locale locale,
 ) {
   if (sessions.isEmpty) {
     return _BestVolumeDay(value: '-', detail: strings.workoutReportNoSessions);
@@ -1856,7 +1905,7 @@ _BestVolumeDay _bestVolumeDay(
 
   final totalsByDay = <DateTime, double>{};
   for (final session in sessions) {
-    final day = DateUtils.dateOnly(session.date);
+    final day = session.calendarDay.toLocalDateTime();
     totalsByDay.update(
       day,
       (volume) => volume + session.totalVolume,
@@ -1874,10 +1923,14 @@ _BestVolumeDay _bestVolumeDay(
     );
   }
   return _BestVolumeDay(
-    value: WeightUnitFormatter.formatCompactVolumeValue(best.value, weightUnit),
+    value: WeightUnitFormatter.formatCompactVolumeValue(
+      best.value,
+      weightUnit,
+      locale: locale,
+    ),
     detail: strings.workoutReportUnitOnDate(
       weightUnit.shortLabel,
-      DateFormat.MMMd(strings.localeName).format(best.key),
+      LocalizedFormatters.shortDate(best.key, locale),
     ),
   );
 }
@@ -1886,24 +1939,51 @@ String _formatAxis(
   double value,
   WorkoutReportMetric metric, [
   WeightUnit weightUnit = WeightUnit.pounds,
+  Locale? locale,
 ]) {
   if (metric == WorkoutReportMetric.workouts) {
-    return value.round().toString();
+    final rounded = value.round();
+    return locale == null
+        ? rounded.toString()
+        : LocalizedFormatters.number(rounded, locale, maximumFractionDigits: 0);
   }
   if (metric == WorkoutReportMetric.volume) {
-    return WeightUnitFormatter.formatCompactVolumeValue(value, weightUnit);
+    return WeightUnitFormatter.formatCompactVolumeValue(
+      value,
+      weightUnit,
+      locale: locale,
+    );
   }
-  return _formatCompact(value);
+  return _formatCompact(value, locale);
 }
 
-String _formatCompact(double value) {
+String _formatCompact(double value, [Locale? locale]) {
   final abs = value.abs();
   if (abs >= 1000000) {
-    return '${(value / 1000000).toStringAsFixed(1)}M';
+    final text = locale == null
+        ? (value / 1000000).toStringAsFixed(1)
+        : LocalizedFormatters.number(
+          value / 1000000,
+          locale,
+          minimumFractionDigits: 1,
+          maximumFractionDigits: 1,
+        );
+    return '${text}M';
   }
   if (abs >= 1000) {
     final digits = abs >= 10000 ? 0 : 1;
-    return '${(value / 1000).toStringAsFixed(digits)}k';
+    final text = locale == null
+        ? (value / 1000).toStringAsFixed(digits)
+        : LocalizedFormatters.number(
+          value / 1000,
+          locale,
+          minimumFractionDigits: digits,
+          maximumFractionDigits: digits,
+        );
+    return '${text}k';
   }
-  return value.round().toString();
+  final rounded = value.round();
+  return locale == null
+      ? rounded.toString()
+      : LocalizedFormatters.number(rounded, locale, maximumFractionDigits: 0);
 }

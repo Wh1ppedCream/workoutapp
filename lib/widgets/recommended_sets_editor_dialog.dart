@@ -16,9 +16,9 @@ class RecommendedSetsEditButton extends StatelessWidget {
     );
     return Semantics(
       button: true,
-      // Keep this shared control usable in lightweight widget hosts that do
-      // not install the app localization delegate.
-      label: strings?.recommendedSetsEdit ?? 'Edit recommended sets',
+      // Lightweight widget hosts may omit localization; avoid leaking an
+      // English fallback into the accessibility tree in that case.
+      label: strings?.recommendedSetsEdit ?? '',
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: onPressed,

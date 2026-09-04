@@ -1,5 +1,7 @@
 import 'package:env_test/l10n/app_localization_extensions.dart';
 import 'package:env_test/l10n/generated/app_localizations.dart';
+import 'package:env_test/models/exercise_allocation_models.dart';
+import 'package:env_test/models/unit_preference.dart';
 import 'package:env_test/providers/nav_bar_config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -73,6 +75,82 @@ void main() {
     expect(strings.nutritionDashboardTitle, 'Panel de nutrición');
     expect(strings.spanishLanguage, 'Español');
   });
+
+  test(
+    'stable active copy is translated across supported non-English locales',
+    () async {
+      const locales = [
+        Locale('es'),
+        Locale('fr'),
+        Locale('fr', 'CA'),
+        Locale('bn'),
+        Locale('zh'),
+        Locale('hi'),
+      ];
+
+      for (final locale in locales) {
+        final strings = await AppLocalizations.delegate.load(locale);
+
+        expect(strings.quickActionMeasurement, isNot('+ Measurement'));
+        expect(strings.quickActionFood, isNot('+ Food'));
+        expect(strings.quickActionWorkout, isNot('+ Workout'));
+        expect(
+          strings.allocationSourceAutomatic,
+          isNot('Automatic calculation'),
+        );
+        expect(
+          strings.healthTrendNeedEntries,
+          isNot('Log entries to build a trend.'),
+        );
+        expect(
+          strings.healthTrendNeedOneMore,
+          isNot('Log one more entry to draw a trend.'),
+        );
+        expect(strings.healthNoChange, isNot('No change yet'));
+        expect(strings.healthEntryActions, isNot('Entry actions'));
+        expect(
+          ExerciseAllocationSource.personalOverride.localizedLabel(strings),
+          isNot('Your custom allocation'),
+        );
+        expect(WeightUnit.pounds.localizedLabel(strings), isNot('Pounds'));
+      }
+    },
+  );
+
+  test(
+    'active navigation labels stay translated across supported locales',
+    () async {
+      const locales = [
+        Locale('es'),
+        Locale('fr'),
+        Locale('fr', 'CA'),
+        Locale('bn'),
+        Locale('zh'),
+        Locale('hi'),
+      ];
+      const activeTabs = <TabItem, String>{
+        TabItem.train: 'Train',
+        TabItem.catalog: 'Catalog',
+        TabItem.history: 'Logbook',
+        TabItem.measurementsTrends: 'Progress',
+        TabItem.profile: 'Profile',
+      };
+
+      for (final locale in locales) {
+        final strings = await AppLocalizations.delegate.load(locale);
+        for (final entry in activeTabs.entries) {
+          final label = entry.key.localizedTitle(strings);
+          expect(label.trim(), isNotEmpty);
+          expect(
+            label,
+            isNot(entry.value),
+            reason:
+                '${locale.toLanguageTag()} still uses English navigation copy.',
+          );
+        }
+      }
+    },
+  );
 
   testWidgets('English localization delegates resolve app strings', (
     tester,

@@ -146,6 +146,124 @@ void main() {
       },
     );
 
+    test(
+      'release builds hide experimental tabs from stored navigation',
+      () async {
+        SharedPreferences.setMockInitialValues({
+          'navBarOrder': [
+            'TabItem.nutritionLog',
+            'TabItem.train',
+            'TabItem.combinedHistory',
+            'TabItem.formAndPosing',
+          ],
+          'navBarEnabled': [
+            'TabItem.nutritionLog',
+            'TabItem.train',
+            'TabItem.combinedHistory',
+            'TabItem.formAndPosing',
+          ],
+        });
+        final config = NavBarConfig(
+          buildPolicy: const NavigationBuildPolicy(
+            experimentalTabsEnabled: true,
+            isReleaseMode: true,
+          ),
+        );
+        await settlePreferenceReads();
+
+        expect(config.order, isNot(contains(TabItem.nutritionLog)));
+        expect(config.order, isNot(contains(TabItem.combinedHistory)));
+        expect(config.order, isNot(contains(TabItem.formAndPosing)));
+        expect(config.items, <TabItem>[TabItem.train, TabItem.profile]);
+
+        await config.update(
+          newOrder: [TabItem.nutritionLog, TabItem.train],
+          newEnabled: {TabItem.nutritionLog, TabItem.train},
+        );
+        final prefs = await SharedPreferences.getInstance();
+        expect(
+          prefs.getStringList('navBarEnabled'),
+          isNot(contains('TabItem.nutritionLog')),
+        );
+      },
+    );
+
+    test(
+      'development builds retain experimental tabs for implementation',
+      () async {
+        SharedPreferences.setMockInitialValues({
+          'navBarOrder': ['TabItem.train', 'TabItem.nutritionLog'],
+          'navBarEnabled': ['TabItem.train', 'TabItem.nutritionLog'],
+        });
+        final config = NavBarConfig(
+          buildPolicy: const NavigationBuildPolicy(
+            experimentalTabsEnabled: true,
+            isReleaseMode: false,
+          ),
+        );
+        await settlePreferenceReads();
+
+        expect(config.order, contains(TabItem.nutritionLog));
+        expect(config.items, contains(TabItem.nutritionLog));
+      },
+    );
+
+    test(
+      'tab preferences use stable IDs while reading legacy enum values',
+      () async {
+        SharedPreferences.setMockInitialValues({
+          'navBarOrder': ['TabItem.train', 'TabItem.profile'],
+          'navBarEnabled': ['TabItem.train', 'TabItem.profile'],
+        });
+        final config = NavBarConfig(
+          buildPolicy: const NavigationBuildPolicy(
+            experimentalTabsEnabled: true,
+            isReleaseMode: false,
+          ),
+        );
+        await settlePreferenceReads();
+
+        expect(config.order, contains(TabItem.train));
+        expect(config.enabledTabs, contains(TabItem.profile));
+
+        await config.update(
+          newOrder: [TabItem.profile, TabItem.train],
+          newEnabled: {TabItem.profile, TabItem.train},
+        );
+        final prefs = await SharedPreferences.getInstance();
+
+        expect(prefs.getStringList('navBarOrder'), contains('profile'));
+        expect(
+          prefs.getStringList('navBarOrder'),
+          isNot(contains('TabItem.profile')),
+        );
+        expect(
+          prefs.getStringList('navBarEnabled'),
+          unorderedEquals(['profile', 'train']),
+        );
+      },
+    );
+
+    test('tab storage IDs are unique and independent of display labels', () {
+      final storageKeys = TabItem.values.map((tab) => tab.storageKey).toList();
+
+      expect(storageKeys.toSet(), hasLength(TabItem.values.length));
+      expect(TabItem.measurementsTrends.storageKey, 'progress');
+      expect(TabItem.nutritionLog.storageKey, 'nutrition_log');
+    });
+
+    test('release policy cannot enable experimental tabs', () {
+      const policy = NavigationBuildPolicy(
+        experimentalTabsEnabled: true,
+        isReleaseMode: true,
+      );
+
+      expect(policy.allows(TabItem.train), isTrue);
+      expect(policy.allows(TabItem.nutritionLog), isFalse);
+      expect(policy.allows(TabItem.combinedHistory), isFalse);
+      expect(policy.allows(TabItem.formAndPosing), isFalse);
+    });
+
     test('dashboard keeps defaults when a saved layout is malformed', () async {
       SharedPreferences.setMockInitialValues({
         'dashboard_config': 'not valid JSON',

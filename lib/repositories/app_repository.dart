@@ -1,5 +1,6 @@
 // File: lib/repositories/app_repository.dart
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -65,9 +66,9 @@ class AppRepository {
 
   /// Creates a new workout session using DateTime for safety.
   Future<int> createSessionAt(DateTime date, int duration) =>
-      _dbHelper.createSession(date.toIso8601String(), duration);
+      _dbHelper.createSession(date, duration);
 
-  /// Fetches all sessions as raw maps ordered by date descending.
+  /// Fetches all sessions as raw maps ordered by completion instant descending.
   Future<List<Map<String, dynamic>>> fetchAllSessions() =>
       _dbHelper.getAllSessionsRaw();
 
@@ -83,7 +84,16 @@ class AppRepository {
         .map(
           (row) => WorkoutReportSession(
             id: row['session_id'] as int,
-            date: DateTime.parse(row['date'] as String),
+            date: TemporalSemantics.readLocalDateTime(
+              epochMilliseconds: row['completed_at_ms'],
+              legacyIso: row['date'],
+            ),
+            calendarDayKey:
+                TemporalSemantics.readCalendarDay(
+                  calendarDay: row['training_day'],
+                  legacyIso: row['date'],
+                  epochMilliseconds: row['completed_at_ms'],
+                ).storageKey,
             durationSeconds: (row['duration'] as num).toInt(),
             totalVolume: ((row['total_volume'] as num?) ?? 0).toDouble(),
             exerciseCount: ((row['exercise_count'] as num?) ?? 0).toInt(),
@@ -100,10 +110,12 @@ class AppRepository {
     required DateTime completedAt,
     required int durationSeconds,
     required List<WorkoutExerciseWrite> exercises,
+    int? autoPresetId,
   }) => _dbHelper.completeWorkoutAtomic(
     completedAt: completedAt,
     durationSeconds: durationSeconds,
     exercises: exercises,
+    autoPresetId: autoPresetId,
   );
 
   Future<void> replaceSessionExercisesAtomic({
@@ -133,11 +145,11 @@ class AppRepository {
   Future<WorkoutSession?> fetchSessionById(int id) =>
       _dbHelper.fetchSessionById(id);
 
-  /// Updates an existing session's date/duration.
+  /// Updates an existing session's completion instant and duration.
   Future<void> updateSession(int id, DateTime d, int dur) =>
       _dbHelper.updateSession(id, d, dur);
 
-  /// Retrieves sessions between [start] and [end] dates.
+  /// Retrieves sessions in the inclusive exact-instant range [start, end].
   Future<List<WorkoutSession>> fetchSessionsInRange(DateTime s, DateTime e) =>
       _dbHelper.fetchSessionsInRange(s, e);
 
@@ -168,12 +180,12 @@ class AppRepository {
 
   Future<List<Map<String, dynamic>>> fetchRecentWeightExerciseHistoryRows({
     required int definitionId,
-    String? beforeSessionDate,
+    int? beforeCompletedAtMilliseconds,
     int? beforeExerciseId,
     int limit = 10,
   }) => _dbHelper.fetchRecentWeightExerciseHistoryRows(
     definitionId: definitionId,
-    beforeSessionDate: beforeSessionDate,
+    beforeCompletedAtMilliseconds: beforeCompletedAtMilliseconds,
     beforeExerciseId: beforeExerciseId,
     limit: limit,
   );
@@ -477,6 +489,9 @@ class AppRepository {
   Future<void> ensureSharedMediaManifestReady() =>
       content.ensureSharedMediaManifestReady();
 
+  Future<void> refreshSelectedContentEnvironment() =>
+      content.refreshSelectedEnvironment();
+
   Future<ContentEnvironmentConfig> loadContentEnvironments() =>
       content.loadContentEnvironments();
 
@@ -496,8 +511,13 @@ class AppRepository {
     required bool thumbnail,
   }) => content.cacheMedia(item, thumbnail: thumbnail);
 
+  Stream<ContentMediaCacheChange> get mediaCacheChanges =>
+      content.mediaCacheChanges;
+
   Future<void> markExerciseMediaAccessed(ExerciseMediaItem item) =>
       content.markMediaAccessed(item);
+
+  Future<void> reconcileMediaCache() => content.reconcileMediaCache();
 
   Future<SharedMediaItem?> fetchPrimarySharedMedia(
     SharedMediaEntityType entityType,
@@ -567,7 +587,9 @@ class AppRepository {
     double value,
     String unit,
     String? note,
-  ) => _dbHelper.insertMeasurement(defId, timestamp, value, unit, note);
+    MeasurementContext? context,
+  ) =>
+      _dbHelper.insertMeasurement(defId, timestamp, value, unit, note, context);
 
   Future<List<Map<String, dynamic>>> fetchMeasurementsForDefinition(
     int defId,
@@ -594,12 +616,14 @@ class AppRepository {
     required double value,
     required String unit,
     String? note,
+    MeasurementContext? context,
   }) => _dbHelper.updateMeasurement(
     measurementId: measurementId,
     timestamp: timestamp,
     value: value,
     unit: unit,
     note: note,
+    context: context,
   );
 
   Future<void> deleteMeasurement(int measurementId) =>
@@ -725,7 +749,7 @@ class AppRepository {
   Future<List<ExerciseDefinition>> fuzzsearchExercises(String term) =>
       _dbHelper.fuzzsearchExercises(term);
 
-  /// Returns all sessions as WorkoutSession objects, sorted by date desc.
+  /// Returns all sessions as WorkoutSession objects, newest first.
   Future<List<WorkoutSession>> fetchWorkoutSessions() =>
       _dbHelper.fetchWorkoutSessions();
 
@@ -1309,6 +1333,20 @@ class AppRepository {
   Future<void> applyPresetProgressionBatch(
     PresetProgressionBatch progression,
   ) => _dbHelper.applyPresetProgressionBatch(progression);
+
+  Future<List<Map<String, dynamic>>> loadPendingWorkoutProgressions() =>
+      _dbHelper.loadPendingWorkoutProgressions();
+
+  Future<void> recordPendingWorkoutProgressionFailure(int sessionId) =>
+      _dbHelper.recordPendingWorkoutProgressionFailure(sessionId);
+
+  Future<void> completePendingWorkoutProgression({
+    required int sessionId,
+    required PresetProgressionBatch progression,
+  }) => _dbHelper.completePendingWorkoutProgression(
+    sessionId: sessionId,
+    progression: progression,
+  );
 
   /// Flow‐chart JSON for a preset.
   Future<FlowDefinition> fetchFlowDefinition(int presetId) async {
@@ -1899,6 +1937,7 @@ class AppRepository {
       ensureExerciseMediaManifestReady(),
       ensureSharedMediaManifestReady(),
     ]);
+    await reconcileMediaCache();
     if (!verify) return true;
     try {
       await db.rawQuery('PRAGMA quick_check');

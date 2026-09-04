@@ -23,6 +23,22 @@ The app-ready manifest lives at:
 manifests/exercise_media_manifest.json
 ```
 
+## Runtime trust boundary
+
+Remote manifests and media are fail-closed inputs. The app requires absolute
+HTTPS URLs without embedded credentials and permits at most two redirects on
+the same HTTPS host and port. Manifest responses must be JSON and no larger
+than 2 MiB. Every remote media entry must include a positive `bytes` value no
+larger than 64 MiB and a 64-character SHA-256 digest.
+
+Downloads are streamed to uniquely named `.download` files, bounded while
+streaming, checked for an allowed media content type, exact byte count, and
+SHA-256, then atomically renamed. Corrupt and interrupted temporary files are
+discarded. The cache is bounded to 256 MiB and 1,000 files using file access
+time, and files no longer referenced after a manifest replacement are pruned.
+Distinct `thumbnailUrl` objects are not accepted until the manifest schema can
+carry independent byte counts and digests for them.
+
 ## Build The Exercise Media Manifest
 
 The pipeline uses `package:crypto` for SHA-256 hashes. If this is the first
@@ -41,9 +57,11 @@ dart run tools/content_pipeline.dart build-exercise-media `
   --check-remote
 ```
 
-The source file validates exercise IDs against `assets/exercises.json`. Because
-exercise IDs are assigned from the JSON list order during seeding, each entry
-should include both `exerciseId` and `exerciseName` so reorders are caught.
+The source file validates exercise identities against `assets/exercises.json`.
+The pipeline emits the stable `exerciseCatalogId` and retains `exerciseId` as a
+legacy manifest fallback, so catalog display order is safe to change. Follow
+[exercise-catalog.md](exercise-catalog.md) when adding, renaming, retiring, or
+reordering shipped exercises.
 
 ## Generate An Upload Script
 

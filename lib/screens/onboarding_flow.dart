@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/generated/app_localizations.dart';
+import '../l10n/safe_failure_localizations.dart';
 import '../models/models.dart';
 import '../providers/active_session.dart';
 import '../providers/locale_preference_provider.dart';
@@ -12,8 +13,12 @@ import '../providers/preset_session.dart';
 import '../providers/selected_profile.dart';
 import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
+import '../services/catalog_entity_localizer.dart';
+import '../utils/localized_digit_formatter.dart';
+import '../utils/localized_formatters.dart';
 import '../utils/weight_unit_formatter.dart';
 import '../widgets/body_heatmap.dart';
+import '../widgets/localized_catalog_entity_name.dart';
 import '../widgets/preset_bar.dart';
 import 'exercise/gym_profile_screen.dart';
 import 'exercise/premade_plans_page.dart';
@@ -283,7 +288,11 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       if (!mounted) return;
       setState(() => _isFinishing = false);
       messenger.showSnackBar(
-        SnackBar(content: Text(_strings.onboardingFinishError('$error'))),
+        SnackBar(
+          content: Text(
+            _strings.onboardingFinishError(safeFailureMessage(_strings, error)),
+          ),
+        ),
       );
     }
   }
@@ -464,20 +473,23 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       (_nutritionOnboardingEnabled && _useNutritionData) || _useExerciseData;
 
   Future<bool> _confirmSkipOnboarding() async {
+    // The confirmation route can outlive this page during an app teardown.
+    // Capture localized copy now instead of reading from a disposed context.
+    final strings = _strings;
     final result = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: Text(_strings.onboardingSkipSetupTitle),
-          content: Text(_strings.onboardingSkipSetupBody),
+          title: Text(strings.onboardingSkipSetupTitle),
+          content: Text(strings.onboardingSkipSetupBody),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: Text(_strings.onboardingCancel),
+              child: Text(strings.onboardingCancel),
             ),
             FilledButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: Text(_strings.onboardingConfirm),
+              child: Text(strings.onboardingConfirm),
             ),
           ],
         );
@@ -1185,6 +1197,36 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
 
   Widget _buildNutritionGoalPage() {
     final strings = _strings;
+    final locale = Localizations.localeOf(context);
+    final goalWeight = LocalizedFormatters.number(
+      _goalWeightValue.round(),
+      locale,
+      maximumFractionDigits: 0,
+    );
+    final weeklyRatePct = LocalizedFormatters.number(
+      _weeklyRatePct,
+      locale,
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    );
+    final weeklyRateLbs = LocalizedFormatters.number(
+      _weeklyRateLbs,
+      locale,
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    );
+    final monthlyRatePct = LocalizedFormatters.number(
+      _monthlyRatePct,
+      locale,
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    );
+    final monthlyRateLbs = LocalizedFormatters.number(
+      _monthlyRateLbs,
+      locale,
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    );
     return _OnboardingCard(
       icon: Icons.flag_outlined,
       title: strings.onboardingGoalPaceTitle,
@@ -1212,30 +1254,26 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         const SizedBox(height: 22),
         _SliderPanel(
           title: strings.onboardingTargetWeight,
-          valueLabel: '${_goalWeightValue.round()} lbs',
+          valueLabel: '$goalWeight lbs',
           child: Slider(
             value: _goalWeightValue,
             min: 100,
             max: 250,
             divisions: 150,
-            label: '${_goalWeightValue.round()}',
+            label: goalWeight,
             onChanged: (value) => setState(() => _goalWeightValue = value),
           ),
         ),
         const SizedBox(height: 16),
         _SliderPanel(
           title: strings.onboardingTargetGoalRate,
-          valueLabel: strings.onboardingBodyWeightPerWeek(
-            _weeklyRatePct.toStringAsFixed(1),
-          ),
+          valueLabel: strings.onboardingBodyWeightPerWeek(weeklyRatePct),
           child: Slider(
             value: _weeklyRatePct,
             min: 0.1,
             max: 1.0,
             divisions: 9,
-            label: strings.onboardingBodyWeightPerWeek(
-              _weeklyRatePct.toStringAsFixed(1),
-            ),
+            label: strings.onboardingBodyWeightPerWeek(weeklyRatePct),
             onChanged:
                 (value) => setState(() {
                   _weeklyRatePct = value;
@@ -1251,16 +1289,14 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
             Expanded(
               child: _MiniStat(
                 label: strings.onboardingPerWeek,
-                value:
-                    '-${_weeklyRateLbs.toStringAsFixed(1)} lbs / ${_weeklyRatePct.toStringAsFixed(1)}%',
+                value: '-$weeklyRateLbs lbs / $weeklyRatePct%',
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: _MiniStat(
                 label: strings.onboardingPerMonth,
-                value:
-                    '-${_monthlyRateLbs.toStringAsFixed(1)} lbs / ${_monthlyRatePct.toStringAsFixed(1)}%',
+                value: '-$monthlyRateLbs lbs / $monthlyRatePct%',
               ),
             ),
           ],
@@ -1362,7 +1398,11 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                     ),
                   ),
                   Text(
-                    '${selectedEquipment.length}',
+                    LocalizedFormatters.number(
+                      selectedEquipment.length,
+                      Localizations.localeOf(context),
+                      maximumFractionDigits: 0,
+                    ),
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       color: Theme.of(context).colorScheme.primary,
                       fontWeight: FontWeight.w900,
@@ -1396,7 +1436,12 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                             _onboardingEquipmentIcon(equipment.name),
                             size: 17,
                           ),
-                          label: Text(equipment.name),
+                          label: LocalizedCatalogEntityName(
+                            entity: CatalogEntityDisplayName(
+                              catalogId: equipment.catalogId,
+                              canonicalName: equipment.name,
+                            ),
+                          ),
                           visualDensity: VisualDensity.compact,
                         );
                       }).toList(),
@@ -1734,11 +1779,17 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   }
 
   String _formatDate(DateTime date) {
-    return MaterialLocalizations.of(context).formatMediumDate(date);
+    return preserveWesternDigits(
+      MaterialLocalizations.of(context).formatMediumDate(date),
+      Localizations.localeOf(context),
+    );
   }
 
   String _shortDate(DateTime date) {
-    return MaterialLocalizations.of(context).formatMediumDate(date);
+    return preserveWesternDigits(
+      MaterialLocalizations.of(context).formatMediumDate(date),
+      Localizations.localeOf(context),
+    );
   }
 }
 
@@ -1776,15 +1827,18 @@ class _OnboardingHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 SizedBox(
-                  width: 48,
+                  width: 104,
                   child:
                       onBack == null
                           ? null
-                          : IconButton(
-                            onPressed: onBack,
-                            tooltip: strings.onboardingPreviousStepTooltip,
-                            padding: EdgeInsets.zero,
-                            icon: const Icon(Icons.chevron_left, size: 26),
+                          : Align(
+                            alignment: Alignment.centerLeft,
+                            child: IconButton(
+                              onPressed: onBack,
+                              tooltip: strings.onboardingPreviousStepTooltip,
+                              padding: EdgeInsets.zero,
+                              icon: const Icon(Icons.chevron_left, size: 26),
+                            ),
                           ),
                 ),
                 Expanded(
@@ -1798,8 +1852,14 @@ class _OnboardingHeader extends StatelessWidget {
                   ),
                 ),
                 SizedBox(
-                  width: 72,
-                  child: TextButton(onPressed: onSkip, child: Text(skipLabel)),
+                  width: 104,
+                  child: TextButton(
+                    onPressed: onSkip,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(skipLabel, maxLines: 1),
+                    ),
+                  ),
                 ),
               ],
             )

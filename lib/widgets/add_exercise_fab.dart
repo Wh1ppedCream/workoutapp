@@ -32,13 +32,21 @@ class AddExerciseFab extends StatelessWidget {
     final extras = theme.extension<AppColors>();
     final fabBg = extras?.addExerciseFabBg ?? cs.primary;
     final fabFg = extras?.addExerciseFabIcon ?? cs.onPrimary;
+    final strings = AppLocalizations.of(context);
 
-    return FloatingActionButton(
-      tooltip: AppLocalizations.of(context).commonAdd,
-      backgroundColor: fabBg,
-      foregroundColor: fabFg,
-      onPressed: () => _openExerciseCatalog(context),
-      child: const Icon(Icons.add),
+    return Semantics(
+      button: true,
+      label: strings.commonAdd,
+      onTap: () => _openExerciseCatalog(context),
+      child: ExcludeSemantics(
+        child: FloatingActionButton(
+          tooltip: strings.commonAdd,
+          backgroundColor: fabBg,
+          foregroundColor: fabFg,
+          onPressed: () => _openExerciseCatalog(context),
+          child: const Icon(Icons.add),
+        ),
+      ),
     );
   }
 

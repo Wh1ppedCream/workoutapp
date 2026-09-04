@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/definition_models.dart';
+import '../utils/localized_body_part_name.dart';
 
 /// Immutable selection state returned by [BodypartFocusChips].
 class BodypartFocusSelection {
@@ -56,7 +57,7 @@ class BodypartFocusChips extends StatelessWidget {
                     : null;
 
             return RawChip(
-              label: Text(bodyPart.name),
+              label: Text(localizedBodyPartName(context, bodyPart.name)),
               selected: isSelected,
               selectedColor: color?.withAlpha(61),
               side: BorderSide(color: color ?? Theme.of(context).dividerColor),

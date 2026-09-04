@@ -10,12 +10,19 @@ import '../../l10n/generated/app_localizations.dart';
 import '../../models/models.dart';
 import '../../providers/unit_preference_provider.dart';
 import '../../repositories/app_repository.dart';
+import '../../services/catalog_entity_localizer.dart';
 import '../../services/tutorial_state_store.dart';
+import '../../services/safe_failure.dart';
 import '../../theme/theme_extensions.dart';
+import '../../utils/localized_body_part_name.dart';
+import '../../utils/completed_workout_duration_formatter.dart';
+import '../../utils/localized_formatters.dart';
 import '../../utils/tutorial_launcher.dart';
 import '../../utils/weight_unit_formatter.dart';
 import '../../widgets/body_heatmap.dart';
 import '../../widgets/guided_tutorial_overlay.dart';
+import '../../widgets/localized_catalog_entity_name.dart';
+import '../../widgets/safe_error_view.dart';
 import 'definitions_by_bodypart_page.dart';
 import 'definitions_by_muscle_page.dart';
 
@@ -37,7 +44,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
   final _listTutorialKey = GlobalKey(debugLabel: 'weekly_sets_list');
 
   bool _isLoading = true;
-  String? _error;
+  SafeFailure? _failure;
   _WeeklySetOverviewData? _data;
   bool _tutorialQueued = false;
 
@@ -57,7 +64,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
   Future<void> _loadData() async {
     setState(() {
       _isLoading = true;
-      _error = null;
+      _failure = null;
     });
 
     try {
@@ -150,7 +157,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = e.toString();
+        _failure = SafeFailure.classify(e);
         _isLoading = false;
       });
     }
@@ -228,8 +235,12 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
       body:
           _isLoading && data == null
               ? const Center(child: CircularProgressIndicator())
-              : _error != null && data == null
-              ? Center(child: Text(strings.weeklySetsLoadError))
+              : _failure != null && data == null
+              ? SafeErrorView(
+                title: strings.weeklySetsLoadError,
+                failure: _failure!,
+                onRetry: _loadData,
+              )
               : Column(
                 children: [
                   KeyedSubtree(
@@ -316,7 +327,11 @@ class _WeeklyOverviewHeader extends StatelessWidget {
                       children: [
                         _SummaryStatBox(
                           label: AppLocalizations.of(context).weeklySetsTotal,
-                          value: data.totalSets.toString(),
+                          value: LocalizedFormatters.number(
+                            data.totalSets,
+                            Localizations.localeOf(context),
+                            maximumFractionDigits: 0,
+                          ),
                         ),
                         const SizedBox(height: 8),
                         _SummaryStatBox(
@@ -332,6 +347,7 @@ class _WeeklyOverviewHeader extends StatelessWidget {
                           value: WeightUnitFormatter.formatVolume(
                             data.totalVolume,
                             weightUnit,
+                            locale: Localizations.localeOf(context),
                           ),
                         ),
                       ],
@@ -410,7 +426,7 @@ class _BodyPartSetList extends StatelessWidget {
       itemBuilder: (context, index) {
         final item = items[index];
         return _SetOverviewRow(
-          title: item.bodyPart.name,
+          title: localizedBodyPartName(context, item.bodyPart.name),
           count: item.count,
           bounds: item.bounds,
           leading: SingleBodyPartHeatmap(
@@ -446,6 +462,10 @@ class _MuscleSetList extends StatelessWidget {
         final item = items[index];
         return _SetOverviewRow(
           title: item.muscle.name,
+          entity: CatalogEntityDisplayName(
+            catalogId: item.muscle.catalogId,
+            canonicalName: item.muscle.name,
+          ),
           count: item.count,
           bounds: item.bounds,
           leading: const _MuscleLeadingIcon(),
@@ -458,6 +478,7 @@ class _MuscleSetList extends StatelessWidget {
 
 class _SetOverviewRow extends StatelessWidget {
   final String title;
+  final CatalogEntityDisplayName? entity;
   final double count;
   final VolumeBoundaries? bounds;
   final Widget leading;
@@ -465,6 +486,7 @@ class _SetOverviewRow extends StatelessWidget {
 
   const _SetOverviewRow({
     required this.title,
+    this.entity,
     required this.count,
     required this.bounds,
     required this.leading,
@@ -493,18 +515,32 @@ class _SetOverviewRow extends StatelessWidget {
               leading,
               const SizedBox(width: 12),
               Expanded(
-                child: Text(
-                  title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
+                child:
+                    entity == null
+                        ? Text(
+                          title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
+                        )
+                        : LocalizedCatalogEntityName(
+                          entity: entity!,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
               ),
               const SizedBox(width: 12),
               Text(
-                _setUnitsLabel(AppLocalizations.of(context), count),
+                _setUnitsLabel(
+                  AppLocalizations.of(context),
+                  count,
+                  Localizations.localeOf(context),
+                ),
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w900,
                 ),
@@ -570,24 +606,20 @@ _StatusTint _tintForBoundaryStatus(ThemeData theme, _BoundaryStatus status) {
   );
 }
 
-String _setUnitsLabel(AppLocalizations strings, double count) {
+String _setUnitsLabel(AppLocalizations strings, double count, Locale locale) {
   final rounded = count.roundToDouble();
-  final value =
-      (count - rounded).abs() < 0.05
-          ? rounded.toInt().toString()
-          : count.toStringAsFixed(1);
+  final fractionDigits = (count - rounded).abs() < 0.05 ? 0 : 1;
+  final value = LocalizedFormatters.number(
+    count,
+    locale,
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: fractionDigits,
+  );
   return strings.weeklySetsCount(value);
 }
 
 String _durationLabel(AppLocalizations strings, int seconds) {
-  final duration = Duration(seconds: seconds);
-  final hours = duration.inHours;
-  final minutes = duration.inMinutes.remainder(60);
-  if (hours > 0 && minutes > 0) {
-    return strings.durationHoursMinutes(hours, minutes);
-  }
-  if (hours > 0) return strings.durationHours(hours);
-  return strings.durationMinutes(duration.inMinutes);
+  return formatCompletedWorkoutDuration(strings, seconds);
 }
 
 const _emptyWeeklyData = _WeeklySetOverviewData(

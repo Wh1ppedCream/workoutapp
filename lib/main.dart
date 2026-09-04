@@ -33,6 +33,7 @@ import 'screens/form_posing_page.dart';
 
 import 'widgets/ongoing_session_fab.dart';
 import 'widgets/body_heatmap.dart';
+import 'widgets/active_session_durability_banner.dart';
 
 import '../theme/app_colors.dart';
 
@@ -499,6 +500,10 @@ class MyApp extends StatelessWidget {
           theme: lightTheme,
           darkTheme: darkTheme,
           themeMode: themeProv.mode,
+          builder:
+              (context, child) => ActiveSessionDurabilityBanner(
+                child: child ?? const SizedBox.shrink(),
+              ),
 
           home:
               !onboardingConf.initialized
@@ -607,7 +612,7 @@ class _MainScreenState extends State<MainScreen> {
         for (final tab in tabs)
           BottomNavigationBarItem(
             icon: KeyedSubtree(
-              key: AppTestKeys.mainTab(tab.name),
+              key: AppTestKeys.mainTab(tab.storageKey),
               child: Icon(tab.icon),
             ),
             label: tab.localizedTitle(strings),

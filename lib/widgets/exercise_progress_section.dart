@@ -3,7 +3,6 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -13,11 +12,14 @@ import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
 import '../screens/exercise/exercise_catalog_page.dart';
 import '../screens/exercise/session_detail_screen.dart';
+import '../services/exercise_content_localizer.dart';
 import '../services/tutorial_state_store.dart';
 import '../theme/theme_extensions.dart';
+import '../utils/localized_formatters.dart';
 import '../utils/tutorial_launcher.dart';
 import '../utils/weight_unit_formatter.dart';
 import 'guided_tutorial_overlay.dart';
+import 'localized_exercise_name.dart';
 
 const _exerciseProgressTileIdsKey = 'exercise_progress_tile_ids_v1';
 const _exerciseProgressHiddenAutoIdsKey =
@@ -137,10 +139,14 @@ class _ExerciseProgressSectionState extends State<ExerciseProgressSection>
 
   Future<void> _addExerciseTile(ExerciseDefinition definition) async {
     if (_visibleDefinitionIds.contains(definition.id)) {
+      final displayName = await ExerciseContentLocalizer.instance.resolveName(
+        definition,
+        Localizations.localeOf(context),
+      );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(_strings.exerciseProgressAlreadyShown(definition.name)),
+          content: Text(_strings.exerciseProgressAlreadyShown(displayName)),
         ),
       );
       return;
@@ -458,21 +464,33 @@ class _ExerciseTrendTile {
 
 class _ExerciseProgressPoint {
   final int sessionId;
-  final DateTime date;
+  final DateTime completedAt;
+  final LocalCalendarDay calendarDay;
   final double? actualOneRm;
   final double estimatedOneRm;
 
   const _ExerciseProgressPoint({
     required this.sessionId,
-    required this.date,
+    required this.completedAt,
+    required this.calendarDay,
     required this.actualOneRm,
     required this.estimatedOneRm,
   });
 
+  DateTime get displayDateTime => calendarDay.atLocalTime(completedAt);
+
   factory _ExerciseProgressPoint.fromRow(Map<String, dynamic> row) {
     return _ExerciseProgressPoint(
       sessionId: row['session_id'] as int,
-      date: DateTime.parse(row['session_date'] as String),
+      completedAt: TemporalSemantics.readLocalDateTime(
+        epochMilliseconds: row['completed_at_ms'],
+        legacyIso: row['session_date'],
+      ),
+      calendarDay: TemporalSemantics.readCalendarDay(
+        calendarDay: row['training_day'],
+        legacyIso: row['session_date'],
+        epochMilliseconds: row['completed_at_ms'],
+      ),
       actualOneRm: (row['actual_one_rm'] as num?)?.toDouble(),
       estimatedOneRm: ((row['estimated_one_rm'] as num?) ?? 0).toDouble(),
     );
@@ -591,8 +609,8 @@ class _ExerciseProgressHeroChart extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: Text(
-                tile.definition.name,
+              child: LocalizedExerciseName(
+                definition: tile.definition,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.titleMedium?.copyWith(
@@ -635,6 +653,7 @@ class _ExerciseProgressStatsColumn extends StatelessWidget {
   Widget build(BuildContext context) {
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     final strings = AppLocalizations.of(context);
+    final locale = Localizations.localeOf(context);
     final latest = tile.latestPoint;
     final actualOneRm = latest?.actualOneRm;
     final actualDelta = _deltaFromPrevious(
@@ -654,7 +673,7 @@ class _ExerciseProgressStatsColumn extends StatelessWidget {
           value:
               actualOneRm == null
                   ? '--'
-                  : _formatWeight(actualOneRm, weightUnit),
+                  : _formatWeight(actualOneRm, weightUnit, locale: locale),
           delta: actualDelta,
           layout: layout,
         ),
@@ -663,7 +682,11 @@ class _ExerciseProgressStatsColumn extends StatelessWidget {
           value:
               latest == null
                   ? '--'
-                  : _formatWeight(latest.estimatedOneRm, weightUnit),
+                  : _formatWeight(
+                    latest.estimatedOneRm,
+                    weightUnit,
+                    locale: locale,
+                  ),
           delta: estimatedDelta,
           layout: layout,
         ),
@@ -736,7 +759,11 @@ class _ExerciseProgressStatBox extends StatelessWidget {
                     SizedBox(width: layout.statIconGap),
                   ],
                   Text(
-                    _formatDeltaWeight(delta, weightUnit),
+                    _formatDeltaWeight(
+                      delta,
+                      weightUnit,
+                      locale: Localizations.localeOf(context),
+                    ),
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: deltaColor,
                       fontWeight: FontWeight.w800,
@@ -802,8 +829,8 @@ class _ExerciseProgressSelectorTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    tile.definition.name,
+                  LocalizedExerciseName(
+                    definition: tile.definition,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.labelLarge?.copyWith(
@@ -828,6 +855,7 @@ class _ExerciseProgressSelectorTile extends StatelessWidget {
                               : _formatWeight(
                                 latest.estimatedOneRm,
                                 weightUnit,
+                                locale: Localizations.localeOf(context),
                               ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -932,7 +960,11 @@ class _CompactDelta extends StatelessWidget {
         ],
         Expanded(
           child: Text(
-            _formatDeltaWeight(delta, weightUnit),
+            _formatDeltaWeight(
+              delta,
+              weightUnit,
+              locale: Localizations.localeOf(context),
+            ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -972,12 +1004,24 @@ List<_ExerciseProgressPoint> _validPoints(
   ];
 }
 
-String _formatDeltaWeight(double? delta, WeightUnit unit) {
+String _formatDeltaWeight(
+  double? delta,
+  WeightUnit unit, {
+  Locale? locale,
+}) {
   if (delta == null) return '--';
   final value = WeightUnitFormatter.fromPounds(delta, unit);
   final rounded = value.round();
+  final number =
+      locale == null
+          ? rounded.abs().toString()
+          : LocalizedFormatters.number(
+            rounded.abs(),
+            locale,
+            maximumFractionDigits: 0,
+          );
   if (rounded == 0) return '0 ${unit.shortLabel}';
-  return '${rounded > 0 ? '+' : ''}$rounded ${unit.shortLabel}';
+  return '${rounded > 0 ? '+' : '-'}$number ${unit.shortLabel}';
 }
 
 Color _deltaColor(BuildContext context, double? delta) {
@@ -1196,7 +1240,7 @@ class _ExerciseProgressDetailPageState
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.tile.definition.name),
+        title: LocalizedExerciseName(definition: widget.tile.definition),
         centerTitle: true,
       ),
       body: ListView(
@@ -1334,6 +1378,7 @@ class _ExerciseProgressRecordingRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
+    final locale = Localizations.localeOf(context);
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       clipBehavior: Clip.antiAlias,
@@ -1345,7 +1390,10 @@ class _ExerciseProgressRecordingRow extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  DateFormat.yMMMd().add_jm().format(point.date),
+                  LocalizedFormatters.dateTime(
+                    point.displayDateTime,
+                    Localizations.localeOf(context),
+                  ),
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w800,
                   ),
@@ -1357,7 +1405,11 @@ class _ExerciseProgressRecordingRow extends StatelessWidget {
                 children: [
                   Text(
                     AppLocalizations.of(context).exerciseProgressEstimatedValue(
-                      _formatWeight(point.estimatedOneRm, weightUnit),
+                      _formatWeight(
+                        point.estimatedOneRm,
+                        weightUnit,
+                        locale: locale,
+                      ),
                     ),
                     style: theme.textTheme.bodyMedium,
                   ),
@@ -1367,7 +1419,11 @@ class _ExerciseProgressRecordingRow extends StatelessWidget {
                         : AppLocalizations.of(
                           context,
                         ).exerciseProgressActualValue(
-                          _formatWeight(point.actualOneRm!, weightUnit),
+                          _formatWeight(
+                            point.actualOneRm!,
+                            weightUnit,
+                            locale: locale,
+                          ),
                         ),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
@@ -1449,6 +1505,8 @@ class _ExerciseProgressChartState extends State<_ExerciseProgressChart> {
 
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
+    final strings = AppLocalizations.of(context);
+    final locale = Localizations.localeOf(context);
     return LayoutBuilder(
       builder: (context, constraints) {
         final size = Size(constraints.maxWidth, constraints.maxHeight);
@@ -1465,6 +1523,10 @@ class _ExerciseProgressChartState extends State<_ExerciseProgressChart> {
             showAxes: widget.showAxes,
             selectedIndex: _selectedIndex,
             weightUnit: widget.weightUnit,
+            locale: locale,
+            estimatedValueLabel: strings.exerciseProgressEstimatedValue,
+            actualValueLabel: strings.exerciseProgressActualValue,
+            noActualLabel: strings.exerciseProgressNoActual,
           ),
         );
 
@@ -1518,6 +1580,10 @@ class _ExerciseProgressChartPainter extends CustomPainter {
   final bool showAxes;
   final int? selectedIndex;
   final WeightUnit weightUnit;
+  final Locale locale;
+  final String Function(String value) estimatedValueLabel;
+  final String Function(String value) actualValueLabel;
+  final String noActualLabel;
 
   const _ExerciseProgressChartPainter({
     required this.points,
@@ -1530,6 +1596,10 @@ class _ExerciseProgressChartPainter extends CustomPainter {
     required this.showAxes,
     required this.selectedIndex,
     required this.weightUnit,
+    required this.locale,
+    required this.estimatedValueLabel,
+    required this.actualValueLabel,
+    required this.noActualLabel,
   });
 
   @override
@@ -1555,7 +1625,7 @@ class _ExerciseProgressChartPainter extends CustomPainter {
       if (showAxes) {
         _drawText(
           canvas,
-          _formatAxisWeight(tick, weightUnit),
+          _formatAxisWeight(tick, weightUnit, locale),
           Offset(0, y - 7),
           TextStyle(
             color: axisLabelColor,
@@ -1611,7 +1681,10 @@ class _ExerciseProgressChartPainter extends CustomPainter {
       fontWeight: FontWeight.w700,
     );
     for (final index in scale.dateTickIndexes) {
-      final label = DateFormat.MMMd().format(points[index].date);
+      final label = LocalizedFormatters.shortDate(
+        points[index].calendarDay.toLocalDateTime(),
+        locale,
+      );
       final painter = TextPainter(
         text: TextSpan(text: label, style: dateStyle),
         textDirection: ui.TextDirection.ltr,
@@ -1687,12 +1760,19 @@ class _ExerciseProgressChartPainter extends CustomPainter {
       fontWeight: FontWeight.w700,
     );
     final lines = [
-      (DateFormat.yMMMd().add_jm().format(point.date), titleStyle),
-      ('Est. ${_formatWeight(point.estimatedOneRm, weightUnit)}', bodyStyle),
+      (LocalizedFormatters.dateTime(point.displayDateTime, locale), titleStyle),
+      (
+        estimatedValueLabel(
+          _formatWeight(point.estimatedOneRm, weightUnit, locale: locale),
+        ),
+        bodyStyle,
+      ),
       (
         point.actualOneRm == null
-            ? 'No actual 1RM'
-            : 'Actual ${_formatWeight(point.actualOneRm!, weightUnit)}',
+            ? noActualLabel
+            : actualValueLabel(
+              _formatWeight(point.actualOneRm!, weightUnit, locale: locale),
+            ),
         bodyStyle,
       ),
     ];
@@ -1795,7 +1875,9 @@ class _ExerciseProgressChartPainter extends CustomPainter {
         oldDelegate.tooltipTextColor != tooltipTextColor ||
         oldDelegate.showAxes != showAxes ||
         oldDelegate.selectedIndex != selectedIndex ||
-        oldDelegate.weightUnit != weightUnit;
+        oldDelegate.weightUnit != weightUnit ||
+        oldDelegate.locale != locale ||
+        oldDelegate.noActualLabel != noActualLabel;
   }
 }
 
@@ -1935,16 +2017,28 @@ class _LegendLinePainter extends CustomPainter {
   }
 }
 
-String _formatWeight(double value, WeightUnit unit) {
-  return WeightUnitFormatter.formatWeight(value, unit);
+String _formatWeight(double value, WeightUnit unit, {Locale? locale}) {
+  return WeightUnitFormatter.formatWeight(value, unit, locale: locale);
 }
 
-String _formatAxisWeight(double value, WeightUnit unit) {
+String _formatAxisWeight(double value, WeightUnit unit, [Locale? locale]) {
   final displayValue = WeightUnitFormatter.fromPounds(value, unit);
   final rounded = displayValue.round();
   if (rounded >= 1000) {
     final compact = rounded / 1000;
-    return '${compact.toStringAsFixed(compact >= 10 ? 0 : 1)}k';
+    final digits = compact >= 10 ? 0 : 1;
+    final text =
+        locale == null
+            ? compact.toStringAsFixed(digits)
+            : LocalizedFormatters.number(
+              compact,
+              locale,
+              minimumFractionDigits: digits,
+              maximumFractionDigits: digits,
+            );
+    return '${text}k';
   }
-  return '$rounded';
+  return locale == null
+      ? '$rounded'
+      : LocalizedFormatters.number(rounded, locale, maximumFractionDigits: 0);
 }

@@ -4,9 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../l10n/safe_failure_localizations.dart';
 import '../../../models/models.dart';
 import '../../../repositories/app_repository.dart';
+import '../../../services/safe_failure.dart';
 import '../../../widgets/settings_tiles.dart';
+import '../../../widgets/safe_error_view.dart';
 
 class BodyPartRankingScreen extends StatefulWidget {
   const BodyPartRankingScreen({super.key});
@@ -22,7 +25,7 @@ class _BodyPartRankingScreenState extends State<BodyPartRankingScreen> {
   bool _isLoading = true;
   bool _isSaving = false;
   bool _dirty = false;
-  String? _error;
+  SafeFailure? _failure;
 
   @override
   void initState() {
@@ -31,6 +34,12 @@ class _BodyPartRankingScreenState extends State<BodyPartRankingScreen> {
   }
 
   Future<void> _load() async {
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+        _failure = null;
+      });
+    }
     try {
       final parts = await _repo.fetchAllBodyPartsFull();
       final rows = await _repo.getAllBodyPartRanks();
@@ -41,12 +50,12 @@ class _BodyPartRankingScreenState extends State<BodyPartRankingScreen> {
         _sortByRank();
         _isLoading = false;
         _dirty = false;
-        _error = null;
+        _failure = null;
       });
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = e.toString();
+        _failure = SafeFailure.classify(e);
         _isLoading = false;
       });
     }
@@ -98,7 +107,9 @@ class _BodyPartRankingScreenState extends State<BodyPartRankingScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            AppLocalizations.of(context).rankingsSaveError(e.toString()),
+            AppLocalizations.of(context).rankingsSaveError(
+              safeFailureMessage(AppLocalizations.of(context), e),
+            ),
           ),
         ),
       );
@@ -144,11 +155,11 @@ class _BodyPartRankingScreenState extends State<BodyPartRankingScreen> {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
-    if (_error != null) {
-      return Center(
-        child: Text(
-          strings.rankingsLoadError(strings.anatomyBodyParts, _error!),
-        ),
+    if (_failure != null) {
+      return SafeErrorView(
+        title: strings.safeFailureLoadTitle,
+        failure: _failure!,
+        onRetry: _load,
       );
     }
     if (_parts.isEmpty) {

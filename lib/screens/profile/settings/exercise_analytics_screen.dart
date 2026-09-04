@@ -2,10 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../l10n/app_localization_extensions.dart';
 import '../../../models/models.dart';
 import '../../../repositories/app_repository.dart';
+import '../../../services/catalog_entity_localizer.dart';
+import '../../../services/safe_failure.dart';
 import '../../exercise/exercise_catalog_page.dart';
+import '../../../widgets/localized_catalog_entity_name.dart';
 import '../../../widgets/settings_tiles.dart';
+import '../../../widgets/safe_error_view.dart';
+import '../../../utils/localized_body_part_name.dart';
 
 class ExerciseAnalyticsScreen extends StatefulWidget {
   final ExerciseDefinition? initialDefinition;
@@ -25,7 +31,7 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
   // --- Definitions ---
   ExerciseDefinition? _sel;
   bool _isLoadingDefs = true;
-  String? _defsError;
+  SafeFailure? _definitionsFailure;
 
   // --- Muscles tab ---
   List<ExerciseMusclePercent> _muscleEntries = [];
@@ -83,6 +89,12 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
   }
 
   Future<void> _loadDefinitions() async {
+    if (mounted) {
+      setState(() {
+        _isLoadingDefs = true;
+        _definitionsFailure = null;
+      });
+    }
     try {
       final defs = await _repo.lookupDefsDetailed();
       if (!mounted) return;
@@ -98,7 +110,7 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
       }
       setState(() {
         _sel = initialMatch ?? (defs.isNotEmpty ? defs.first : null);
-        _defsError = null;
+        _definitionsFailure = null;
       });
       if (_sel != null) {
         await Future.wait([_loadMuscleEntries(_sel!), _loadBodyEntries(_sel!)]);
@@ -106,7 +118,7 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _defsError = e.toString();
+        _definitionsFailure = SafeFailure.classify(e);
       });
     } finally {
       if (mounted) {
@@ -350,7 +362,9 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
                     ),
                   ),
                 ),
-                if (!_isLoadingDefs && _defsError == null && _sel != null) ...[
+                if (!_isLoadingDefs &&
+                    _definitionsFailure == null &&
+                    _sel != null) ...[
                   const SliverToBoxAdapter(child: SizedBox(height: 12)),
                   SliverToBoxAdapter(
                     child: Padding(
@@ -391,12 +405,11 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (_defsError != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Text(_strings.allocationLoadFailed(_defsError!)),
-        ),
+    if (_definitionsFailure != null) {
+      return SafeErrorView(
+        title: _strings.safeFailureLoadTitle,
+        failure: _definitionsFailure!,
+        onRetry: _loadDefinitions,
       );
     }
 
@@ -534,13 +547,12 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
         }
 
         final entry = _muscleEntries[index - 1];
-        final muscleName =
+        final muscle =
             _sel!.muscles
                 .firstWhere((ranked) => ranked.muscle.id == entry.muscleId)
-                .muscle
-                .name;
+                .muscle;
         return _MuscleCreditCard(
-          muscleName: muscleName,
+          muscle: muscle,
           source: _muscleSource,
           controller: _muscleCreditControllers[entry.muscleId]!,
           onChanged:
@@ -684,7 +696,7 @@ class _AllocationSectionHeader extends StatelessWidget {
               borderRadius: BorderRadius.circular(99),
             ),
             child: Text(
-              source.label,
+              source.localizedLabel(AppLocalizations.of(context)),
               style: theme.textTheme.labelSmall?.copyWith(
                 color: _sourceColor(source),
                 fontWeight: FontWeight.w800,
@@ -712,14 +724,14 @@ Color _sourceColor(ExerciseAllocationSource source) => switch (source) {
 };
 
 class _MuscleCreditCard extends StatelessWidget {
-  final String muscleName;
+  final Muscle muscle;
   final ExerciseAllocationSource source;
   final TextEditingController controller;
   final VoidCallback onChanged;
   final Future<void> Function() onSubmitted;
 
   const _MuscleCreditCard({
-    required this.muscleName,
+    required this.muscle,
     required this.source,
     required this.controller,
     required this.onChanged,
@@ -768,8 +780,11 @@ class _MuscleCreditCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  muscleName,
+                LocalizedCatalogEntityName(
+                  entity: CatalogEntityDisplayName(
+                    catalogId: muscle.catalogId,
+                    canonicalName: muscle.name,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.titleSmall?.copyWith(
@@ -778,7 +793,7 @@ class _MuscleCreditCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  source.label,
+                  source.localizedLabel(AppLocalizations.of(context)),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color:
                         source == ExerciseAllocationSource.personalOverride
@@ -857,7 +872,7 @@ class _BodyPartCreditCard extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              bodyPart.name,
+              localizedBodyPartName(context, bodyPart.name),
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w800,
               ),

@@ -9,6 +9,16 @@ import 'db_query_utils.dart';
 /// Provides query methods to fetch, filter, search, create, update, and delete
 /// records in the `exercise_definitions` table and its join relationships.
 class DefinitionDao {
+  /// Removes retired shipped entries from catalog selection without hiding
+  /// historical or user-created definitions from ID-based lookups.
+  static List<ExerciseDefinition> selectableCatalogDefinitions(
+    Iterable<ExerciseDefinition> definitions,
+  ) {
+    return definitions
+        .where((definition) => !definition.isRetiredCatalogEntry)
+        .toList(growable: false);
+  }
+
   /// Fetches exercise definition IDs, names, and equipment IDs for definitions
   /// associated with a specific body part.
   ///
@@ -51,7 +61,10 @@ class DefinitionDao {
   static Future<List<ExerciseDefinition>>
   getAllExerciseDefinitionsDetailedBatched(Database db) async {
     final defRows = await db.rawQuery('''
-      SELECT ed.*, primary_equipment.name AS equipment_name
+      SELECT
+        ed.*,
+        primary_equipment.catalog_id AS equipment_catalog_id,
+        primary_equipment.name AS equipment_name
       FROM exercise_definitions ed
       LEFT JOIN equipment primary_equipment
         ON primary_equipment.id = ed.equipment_id
@@ -63,6 +76,7 @@ class DefinitionDao {
       SELECT
         ee.exercise_id AS exercise_id,
         e.id AS equipment_id,
+        e.catalog_id AS equipment_catalog_id,
         e.name AS equipment_name
       FROM exercise_equipment ee
       JOIN equipment e ON e.id = ee.equipment_id
@@ -81,6 +95,7 @@ class DefinitionDao {
       SELECT
         em.exercise_id AS exercise_id,
         m.id AS muscle_id,
+        m.catalog_id AS muscle_catalog_id,
         m.name AS muscle_name,
         em.rank AS rank
       FROM exercise_muscle em
@@ -115,6 +130,7 @@ class DefinitionDao {
             Equipment(
               row['equipment_id'] as int,
               row['equipment_name'] as String,
+              row['equipment_catalog_id'] as String?,
             ),
           );
     }
@@ -139,6 +155,7 @@ class DefinitionDao {
               muscle: Muscle(
                 id: row['muscle_id'] as int,
                 name: row['muscle_name'] as String,
+                catalogId: row['muscle_catalog_id'] as String?,
               ),
               rank: (row['rank'] as num).toInt(),
             ),
@@ -168,6 +185,7 @@ class DefinitionDao {
   }) {
     final primaryEquipmentId = row['equipment_id'] as int?;
     final primaryEquipmentName = row['equipment_name'] as String?;
+    final primaryEquipmentCatalogId = row['equipment_catalog_id'] as String?;
     final resolvedEquipmentList = List<Equipment>.from(equipmentList);
     if (primaryEquipmentId != null &&
         primaryEquipmentName != null &&
@@ -178,13 +196,19 @@ class DefinitionDao {
       // join-table row. Keep it a required item while loading the definition.
       resolvedEquipmentList.insert(
         0,
-        Equipment(primaryEquipmentId, primaryEquipmentName),
+        Equipment(
+          primaryEquipmentId,
+          primaryEquipmentName,
+          primaryEquipmentCatalogId,
+        ),
       );
     }
 
     return ExerciseDefinition(
       id: row['id'] as int,
+      catalogId: row['catalog_id'] as String?,
       name: row['name'] as String,
+      catalogStatus: (row['catalog_status'] as String?) ?? 'active',
       equipmentId: primaryEquipmentId,
       rating: (row['rating'] as num?)?.toInt() ?? 0,
       equipmentList: resolvedEquipmentList,
@@ -258,7 +282,10 @@ class DefinitionDao {
       final placeholders = sqlitePlaceholders(chunk.length);
       defRows.addAll(
         await db.rawQuery('''
-            SELECT ed.*, primary_equipment.name AS equipment_name
+            SELECT
+              ed.*,
+              primary_equipment.catalog_id AS equipment_catalog_id,
+              primary_equipment.name AS equipment_name
             FROM exercise_definitions ed
             LEFT JOIN equipment primary_equipment
               ON primary_equipment.id = ed.equipment_id
@@ -283,6 +310,7 @@ class DefinitionDao {
         SELECT
           ee.exercise_id AS exercise_id,
           e.id AS equipment_id,
+          e.catalog_id AS equipment_catalog_id,
           e.name AS equipment_name
         FROM exercise_equipment ee
         JOIN equipment e ON e.id = ee.equipment_id
@@ -303,6 +331,7 @@ class DefinitionDao {
         SELECT
           em.exercise_id AS exercise_id,
           m.id AS muscle_id,
+          m.catalog_id AS muscle_catalog_id,
           m.name AS muscle_name,
           em.rank AS rank
         FROM exercise_muscle em
@@ -630,7 +659,7 @@ class DefinitionDao {
     );
   }
 
-  /// Performs case-insensitive name search on definitions.
+  /// Performs case-insensitive search on active definition names and aliases.
   ///
   /// - [db]: Open database instance.
   /// - [query]: Substring to search in lower-case.
@@ -640,11 +669,18 @@ class DefinitionDao {
     Database db,
     String query,
   ) async {
-    final rows = await db.query(
-      'exercise_definitions',
-      where: 'LOWER(name) LIKE ?',
-      whereArgs: ['%${query.toLowerCase()}%'],
-      orderBy: 'name',
+    final normalizedQuery = '%${query.toLowerCase()}%';
+    final rows = await db.rawQuery(
+      '''
+      SELECT DISTINCT ed.*
+      FROM exercise_definitions ed
+      LEFT JOIN exercise_definition_aliases eda
+        ON eda.exercise_def_id = ed.id
+      WHERE ed.catalog_status <> 'retired'
+        AND (LOWER(ed.name) LIKE ? OR LOWER(eda.alias) LIKE ?)
+      ORDER BY ed.name
+      ''',
+      [normalizedQuery, normalizedQuery],
     );
     return _shallowDefinitions(rows);
   }

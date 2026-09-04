@@ -1,0 +1,645 @@
+{
+  "version": 1,
+  "plans": {
+    "es": {
+      "tonos.plan.homemade_full_body_1": {
+        "sourceName": "Hecho en casa",
+        "groupName": "Cuerpo completo",
+        "name": "Cuerpo completo",
+        "description": "Sesión de cuerpo completo con sentadilla, press de banca, tirón vertical, bisagra de cadera, hombros, brazos y gemelos."
+      },
+      "tonos.plan.homemade_full_body_2": {
+        "sourceName": "Hecho en casa",
+        "groupName": "Cuerpo completo",
+        "name": "Cuerpo completo 2",
+        "description": "Día de cuerpo completo centrado en la cadena posterior, con press por encima de la cabeza, remos, cuádriceps, pecho, tríceps y deltoides posteriores."
+      },
+      "tonos.plan.homemade_full_body_3": {
+        "sourceName": "Hecho en casa",
+        "groupName": "Cuerpo completo",
+        "name": "Cuerpo completo 3",
+        "description": "Día de cuerpo completo con bisagra de cadera y press inclinado, remos en cable, trabajo unilateral de piernas, deltoides laterales, bíceps y tríceps."
+      },
+      "tonos.plan.homemade_ppl_push_1": {
+        "sourceName": "Hecho en casa",
+        "groupName": "Empuje, tirón y piernas",
+        "name": "Empuje",
+        "description": "Día de pecho, hombros y tríceps con presses planos, press de hombros, aperturas y trabajo directo de brazos."
+      },
+      "tonos.plan.homemade_ppl_pull_1": {
+        "sourceName": "Hecho en casa",
+        "groupName": "Empuje, tirón y piernas",
+        "name": "Tirón",
+        "description": "Día centrado en la cadena posterior y la espalda, con peso muerto, tirones verticales, remos, deltoides posteriores y curls."
+      },
+      "tonos.plan.homemade_ppl_legs_1": {
+        "sourceName": "Hecho en casa",
+        "groupName": "Empuje, tirón y piernas",
+        "name": "Piernas",
+        "description": "Día de piernas liderado por sentadillas, con trabajo de cuádriceps y glúteos, aislamiento de isquiotibiales y gemelos de pie."
+      },
+      "tonos.plan.homemade_ppl_push_2": {
+        "sourceName": "Hecho en casa",
+        "groupName": "Empuje, tirón y piernas",
+        "name": "Empuje 2",
+        "description": "Día de empuje con énfasis en la parte superior del pecho y los tríceps, presses inclinados, fuerza por encima de la cabeza y fondos."
+      },
+      "tonos.plan.homemade_ppl_pull_2": {
+        "sourceName": "Hecho en casa",
+        "groupName": "Empuje, tirón y piernas",
+        "name": "Tirón 2",
+        "description": "Día de tirón con muchos remos para la espalda, trabajo unilateral de dorsales, deltoides posteriores y bíceps."
+      },
+      "tonos.plan.homemade_ppl_legs_2": {
+        "sourceName": "Hecho en casa",
+        "groupName": "Empuje, tirón y piernas",
+        "name": "Piernas 2",
+        "description": "Día de piernas con énfasis en isquiotibiales, peso muerto rumano, trabajo unilateral de cuádriceps y glúteos y gemelos sentado."
+      },
+      "tonos.plan.homemade_upper_lower_upper_1": {
+        "sourceName": "Hecho en casa",
+        "groupName": "Tren superior e inferior",
+        "name": "Tren superior 1",
+        "description": "Día compacto de tren superior con press horizontal, remos y trabajo directo de deltoides laterales."
+      },
+      "tonos.plan.homemade_upper_lower_lower_1": {
+        "sourceName": "Hecho en casa",
+        "groupName": "Tren superior e inferior",
+        "name": "Tren inferior 1",
+        "description": "Día de tren inferior liderado por sentadillas, comenzando con gemelos y seguido de trabajo de cuádriceps, isquiotibiales y glúteos."
+      },
+      "tonos.plan.homemade_upper_lower_upper_2": {
+        "sourceName": "Hecho en casa",
+        "groupName": "Tren superior e inferior",
+        "name": "Tren superior 2",
+        "description": "Día vertical de tren superior con press por encima de la cabeza, dominadas y trabajo directo de deltoides laterales."
+      },
+      "tonos.plan.homemade_upper_lower_lower_2": {
+        "sourceName": "Hecho en casa",
+        "groupName": "Tren superior e inferior",
+        "name": "Tren inferior 2",
+        "description": "Día de tren inferior liderado por peso muerto, comenzando con gemelos y seguido de cadena posterior y prensa de piernas."
+      },
+      "tonos.plan.homemade_bro_chest_biceps": {
+        "sourceName": "Hecho en casa",
+        "groupName": "División por partes del cuerpo",
+        "name": "Pecho y bíceps",
+        "description": "Día centrado en el pecho, con fuerza en press plano, volumen inclinado, aislamiento en cable y tres ángulos para bíceps."
+      },
+      "tonos.plan.homemade_bro_back_rear_delts": {
+        "sourceName": "Hecho en casa",
+        "groupName": "División por partes del cuerpo",
+        "name": "Espalda y deltoides posteriores",
+        "description": "Día centrado en la espalda, con peso muerto, tirones verticales, remos, face pulls y aislamiento de deltoides posteriores."
+      },
+      "tonos.plan.homemade_bro_shoulders_triceps": {
+        "sourceName": "Hecho en casa",
+        "groupName": "División por partes del cuerpo",
+        "name": "Hombros y tríceps",
+        "description": "Día de potencia por encima de la cabeza con volumen de hombros, aislamiento de deltoides laterales y trabajo compuesto y aislado de tríceps."
+      },
+      "tonos.plan.homemade_bro_legs": {
+        "sourceName": "Hecho en casa",
+        "groupName": "División por partes del cuerpo",
+        "name": "Piernas",
+        "description": "Día de piernas con fuerza en sentadillas, peso muerto rumano, volumen de cuádriceps, aislamiento de isquiotibiales y dos ejercicios de gemelos."
+      },
+      "tonos.plan.homemade_upper_lower_upper_1_two_hour": {
+        "sourceName": "Hecho en casa",
+        "groupName": "Tren superior e inferior",
+        "name": "Tren superior 1",
+        "description": "Día de dos horas para el tren superior con presses, remos, tirones verticales, deltoides laterales, pecho y tríceps."
+      },
+      "tonos.plan.homemade_upper_lower_lower_1_two_hour": {
+        "sourceName": "Hecho en casa",
+        "groupName": "Tren superior e inferior",
+        "name": "Tren inferior 1",
+        "description": "Día de dos horas para el tren inferior con gemelos, volumen de cuádriceps, isquiotibiales y prensa de piernas."
+      },
+      "tonos.plan.homemade_upper_lower_upper_2_two_hour": {
+        "sourceName": "Hecho en casa",
+        "groupName": "Tren superior e inferior",
+        "name": "Tren superior 2",
+        "description": "Día vertical de dos horas para el tren superior con press por encima de la cabeza, dominadas, elevaciones, presses, remos y deltoides posteriores."
+      },
+      "tonos.plan.homemade_upper_lower_lower_2_two_hour": {
+        "sourceName": "Hecho en casa",
+        "groupName": "Tren superior e inferior",
+        "name": "Tren inferior 2",
+        "description": "Día de dos horas para el tren inferior con gemelos sentado, prensa, isquiotibiales, trabajo unilateral y aislamiento de cuádriceps."
+      }
+    },
+    "fr": {
+      "tonos.plan.homemade_full_body_1": {
+        "sourceName": "Créé à la maison",
+        "groupName": "Corps entier",
+        "name": "Corps entier",
+        "description": "Séance complète avec squat, développé couché, tirage vertical, charnière de hanche, épaules, bras et mollets."
+      },
+      "tonos.plan.homemade_full_body_2": {
+        "sourceName": "Créé à la maison",
+        "groupName": "Corps entier",
+        "name": "Corps entier 2",
+        "description": "Journée complète axée sur la chaîne postérieure, avec développé au-dessus de la tête, tirages, quadriceps, poitrine, triceps et deltoïdes postérieurs."
+      },
+      "tonos.plan.homemade_full_body_3": {
+        "sourceName": "Créé à la maison",
+        "groupName": "Corps entier",
+        "name": "Corps entier 3",
+        "description": "Journée complète avec charnière de hanche, développé incliné, tirages à la poulie, travail unilatéral des jambes, deltoïdes latéraux, biceps et triceps."
+      },
+      "tonos.plan.homemade_ppl_push_1": {
+        "sourceName": "Créé à la maison",
+        "groupName": "Poussée, tirage et jambes",
+        "name": "Poussée",
+        "description": "Journée poitrine, épaules et triceps avec développés à plat, développé épaules, écartés et travail direct des bras."
+      },
+      "tonos.plan.homemade_ppl_pull_1": {
+        "sourceName": "Créé à la maison",
+        "groupName": "Poussée, tirage et jambes",
+        "name": "Tirage",
+        "description": "Journée axée sur la chaîne postérieure et le dos, avec soulevé de terre, tirages verticaux, rowings, deltoïdes postérieurs et curls."
+      },
+      "tonos.plan.homemade_ppl_legs_1": {
+        "sourceName": "Créé à la maison",
+        "groupName": "Poussée, tirage et jambes",
+        "name": "Jambes",
+        "description": "Journée jambes dominée par les squats, avec travail des quadriceps et fessiers, isolation des ischio-jambiers et mollets debout."
+      },
+      "tonos.plan.homemade_ppl_push_2": {
+        "sourceName": "Créé à la maison",
+        "groupName": "Poussée, tirage et jambes",
+        "name": "Poussée 2",
+        "description": "Journée de poussée axée sur le haut de la poitrine et les triceps, avec développés inclinés, travail au-dessus de la tête et dips."
+      },
+      "tonos.plan.homemade_ppl_pull_2": {
+        "sourceName": "Créé à la maison",
+        "groupName": "Poussée, tirage et jambes",
+        "name": "Tirage 2",
+        "description": "Journée de tirage riche en rowings pour l'épaisseur du dos, avec travail unilatéral des dorsaux, deltoïdes postérieurs et biceps."
+      },
+      "tonos.plan.homemade_ppl_legs_2": {
+        "sourceName": "Créé à la maison",
+        "groupName": "Poussée, tirage et jambes",
+        "name": "Jambes 2",
+        "description": "Journée jambes axée sur les ischio-jambiers, avec soulevé de terre roumain, travail unilatéral des quadriceps et fessiers et mollets assis."
+      },
+      "tonos.plan.homemade_upper_lower_upper_1": {
+        "sourceName": "Créé à la maison",
+        "groupName": "Haut et bas du corps",
+        "name": "Haut du corps 1",
+        "description": "Journée compacte du haut du corps avec développé horizontal, rowings et travail direct des deltoïdes latéraux."
+      },
+      "tonos.plan.homemade_upper_lower_lower_1": {
+        "sourceName": "Créé à la maison",
+        "groupName": "Haut et bas du corps",
+        "name": "Bas du corps 1",
+        "description": "Journée bas du corps dominée par les squats, avec mollets en premier puis travail des quadriceps, ischio-jambiers et fessiers."
+      },
+      "tonos.plan.homemade_upper_lower_upper_2": {
+        "sourceName": "Créé à la maison",
+        "groupName": "Haut et bas du corps",
+        "name": "Haut du corps 2",
+        "description": "Journée verticale du haut du corps avec développé au-dessus de la tête, tractions et travail direct des deltoïdes latéraux."
+      },
+      "tonos.plan.homemade_upper_lower_lower_2": {
+        "sourceName": "Créé à la maison",
+        "groupName": "Haut et bas du corps",
+        "name": "Bas du corps 2",
+        "description": "Journée bas du corps dominée par le soulevé de terre, avec mollets en premier puis chaîne postérieure et presse à cuisses."
+      },
+      "tonos.plan.homemade_bro_chest_biceps": {
+        "sourceName": "Créé à la maison",
+        "groupName": "Répartition par groupe musculaire",
+        "name": "Poitrine et biceps",
+        "description": "Journée centrée sur la poitrine, avec puissance à plat, volume incliné, isolation à la poulie et trois angles pour les biceps."
+      },
+      "tonos.plan.homemade_bro_back_rear_delts": {
+        "sourceName": "Créé à la maison",
+        "groupName": "Répartition par groupe musculaire",
+        "name": "Dos et deltoïdes postérieurs",
+        "description": "Journée centrée sur le dos, avec soulevé de terre, tirages verticaux, rowings, face pulls et isolation des deltoïdes postérieurs."
+      },
+      "tonos.plan.homemade_bro_shoulders_triceps": {
+        "sourceName": "Créé à la maison",
+        "groupName": "Répartition par groupe musculaire",
+        "name": "Épaules et triceps",
+        "description": "Journée de puissance au-dessus de la tête avec volume d'épaules, isolation des deltoïdes latéraux et travail composé et isolé des triceps."
+      },
+      "tonos.plan.homemade_bro_legs": {
+        "sourceName": "Créé à la maison",
+        "groupName": "Répartition par groupe musculaire",
+        "name": "Jambes",
+        "description": "Journée jambes avec force au squat, soulevé de terre roumain, volume de quadriceps, isolation des ischio-jambiers et deux angles pour les mollets."
+      },
+      "tonos.plan.homemade_upper_lower_upper_1_two_hour": {
+        "sourceName": "Créé à la maison",
+        "groupName": "Haut et bas du corps",
+        "name": "Haut du corps 1",
+        "description": "Journée de deux heures pour le haut du corps avec développés, rowings, tirages verticaux, deltoïdes latéraux, poitrine et triceps."
+      },
+      "tonos.plan.homemade_upper_lower_lower_1_two_hour": {
+        "sourceName": "Créé à la maison",
+        "groupName": "Haut et bas du corps",
+        "name": "Bas du corps 1",
+        "description": "Journée de deux heures pour le bas du corps avec mollets, volume de quadriceps, ischio-jambiers et presse à cuisses."
+      },
+      "tonos.plan.homemade_upper_lower_upper_2_two_hour": {
+        "sourceName": "Créé à la maison",
+        "groupName": "Haut et bas du corps",
+        "name": "Haut du corps 2",
+        "description": "Journée verticale de deux heures pour le haut du corps avec développé au-dessus de la tête, tractions, élévations, développés, rowings et deltoïdes postérieurs."
+      },
+      "tonos.plan.homemade_upper_lower_lower_2_two_hour": {
+        "sourceName": "Créé à la maison",
+        "groupName": "Haut et bas du corps",
+        "name": "Bas du corps 2",
+        "description": "Journée de deux heures pour le bas du corps avec mollets assis, presse, ischio-jambiers, travail unilatéral et isolation des quadriceps."
+      }
+    },
+    "bn": {
+      "tonos.plan.homemade_full_body_1": {
+        "sourceName": "নিজস্বভাবে তৈরি",
+        "groupName": "পুরো শরীর",
+        "name": "পুরো শরীর",
+        "description": "স্কোয়াট, বেঞ্চ প্রেস, উল্লম্ব টান, হিপ হিঞ্জ, কাঁধ, বাহু ও কাফসহ পুরো শরীরের সেশন।"
+      },
+      "tonos.plan.homemade_full_body_2": {
+        "sourceName": "নিজস্বভাবে তৈরি",
+        "groupName": "পুরো শরীর",
+        "name": "পুরো শরীর ২",
+        "description": "পেছনের চেইনে জোর দেওয়া পুরো শরীরের দিন, যেখানে ওভারহেড প্রেস, রো, কোয়াড, বুক, ট্রাইসেপস ও পেছনের কাঁধ রয়েছে।"
+      },
+      "tonos.plan.homemade_full_body_3": {
+        "sourceName": "নিজস্বভাবে তৈরি",
+        "groupName": "পুরো শরীর",
+        "name": "পুরো শরীর ৩",
+        "description": "হিপ হিঞ্জ ও ইনক্লাইন প্রেসের সঙ্গে কেবল রো, এক পায়ের কাজ, পাশের কাঁধ, বাইসেপস ও ট্রাইসেপসের পুরো শরীরের দিন।"
+      },
+      "tonos.plan.homemade_ppl_push_1": {
+        "sourceName": "নিজস্বভাবে তৈরি",
+        "groupName": "পুশ, পুল ও পা",
+        "name": "পুশ",
+        "description": "ফ্ল্যাট প্রেস, শোল্ডার প্রেস, ফ্লাই ও সরাসরি বাহুর কাজসহ বুক, কাঁধ ও ট্রাইসেপসের দিন।"
+      },
+      "tonos.plan.homemade_ppl_pull_1": {
+        "sourceName": "নিজস্বভাবে তৈরি",
+        "groupName": "পুশ, পুল ও পা",
+        "name": "পুল",
+        "description": "ডেডলিফট, উল্লম্ব টান, রো, পেছনের কাঁধ ও কার্লসহ পেছনের চেইন ও পিঠকেন্দ্রিক দিন।"
+      },
+      "tonos.plan.homemade_ppl_legs_1": {
+        "sourceName": "নিজস্বভাবে তৈরি",
+        "groupName": "পুশ, পুল ও পা",
+        "name": "পা",
+        "description": "স্কোয়াটকে প্রধান রেখে কোয়াড ও গ্লুট, হ্যামস্ট্রিং আইসোলেশন এবং দাঁড়ানো কাফের কাজসহ পায়ের দিন।"
+      },
+      "tonos.plan.homemade_ppl_push_2": {
+        "sourceName": "নিজস্বভাবে তৈরি",
+        "groupName": "পুশ, পুল ও পা",
+        "name": "পুশ ২",
+        "description": "উপরের বুক ও ট্রাইসেপসে জোর দেওয়া পুশের দিন, যেখানে ইনক্লাইন প্রেস, ওভারহেড শক্তি ও ডিপস রয়েছে।"
+      },
+      "tonos.plan.homemade_ppl_pull_2": {
+        "sourceName": "নিজস্বভাবে তৈরি",
+        "groupName": "পুশ, পুল ও পা",
+        "name": "পুল ২",
+        "description": "পিঠের পুরুত্বের জন্য রো, এক হাতে ল্যাটের কাজ, পেছনের কাঁধ ও বাইসেপসসহ পুলের দিন।"
+      },
+      "tonos.plan.homemade_ppl_legs_2": {
+        "sourceName": "নিজস্বভাবে তৈরি",
+        "groupName": "পুশ, পুল ও পা",
+        "name": "পা ২",
+        "description": "হ্যামস্ট্রিংয়ে জোর দেওয়া পায়ের দিন, যেখানে রোমানিয়ান ডেডলিফট, এক পায়ের কোয়াড ও গ্লুটের কাজ এবং বসা কাফ রয়েছে।"
+      },
+      "tonos.plan.homemade_upper_lower_upper_1": {
+        "sourceName": "নিজস্বভাবে তৈরি",
+        "groupName": "উপরের ও নিচের শরীর",
+        "name": "উপরের শরীর ১",
+        "description": "হরাইজন্টাল প্রেস, রো ও পাশের কাঁধের সরাসরি কাজসহ সংক্ষিপ্ত উপরের শরীরের দিন।"
+      },
+      "tonos.plan.homemade_upper_lower_lower_1": {
+        "sourceName": "নিজস্বভাবে তৈরি",
+        "groupName": "উপরের ও নিচের শরীর",
+        "name": "নিচের শরীর ১",
+        "description": "স্কোয়াটকে প্রধান রেখে প্রথমে কাফ, তারপর কোয়াড, হ্যামস্ট্রিং ও গ্লুটের কাজসহ নিচের শরীরের দিন।"
+      },
+      "tonos.plan.homemade_upper_lower_upper_2": {
+        "sourceName": "নিজস্বভাবে তৈরি",
+        "groupName": "উপরের ও নিচের শরীর",
+        "name": "উপরের শরীর ২",
+        "description": "ওভারহেড প্রেস, পুল-আপ ও পাশের কাঁধের সরাসরি কাজসহ উল্লম্ব উপরের শরীরের দিন।"
+      },
+      "tonos.plan.homemade_upper_lower_lower_2": {
+        "sourceName": "নিজস্বভাবে তৈরি",
+        "groupName": "উপরের ও নিচের শরীর",
+        "name": "নিচের শরীর ২",
+        "description": "ডেডলিফটকে প্রধান রেখে প্রথমে কাফ, তারপর পেছনের চেইন ও লেগ প্রেসের কাজসহ নিচের শরীরের দিন।"
+      },
+      "tonos.plan.homemade_bro_chest_biceps": {
+        "sourceName": "নিজস্বভাবে তৈরি",
+        "groupName": "শরীরের অংশভিত্তিক বিভাজন",
+        "name": "বুক ও বাইসেপস",
+        "description": "ফ্ল্যাট শক্তি, ইনক্লাইন ভলিউম, কেবল আইসোলেশন ও বাইসেপসের তিনটি কোণের কাজসহ বুককেন্দ্রিক দিন।"
+      },
+      "tonos.plan.homemade_bro_back_rear_delts": {
+        "sourceName": "নিজস্বভাবে তৈরি",
+        "groupName": "শরীরের অংশভিত্তিক বিভাজন",
+        "name": "পিঠ ও পেছনের কাঁধ",
+        "description": "ডেডলিফট, উল্লম্ব টান, রো, ফেস পুল ও পেছনের কাঁধের আইসোলেশনসহ পিঠকেন্দ্রিক দিন।"
+      },
+      "tonos.plan.homemade_bro_shoulders_triceps": {
+        "sourceName": "নিজস্বভাবে তৈরি",
+        "groupName": "শরীরের অংশভিত্তিক বিভাজন",
+        "name": "কাঁধ ও ট্রাইসেপস",
+        "description": "ওভারহেড শক্তি, কাঁধের ভলিউম, পাশের কাঁধের আইসোলেশন এবং ট্রাইসেপসের যৌগিক ও আলাদা কাজসহ দিন।"
+      },
+      "tonos.plan.homemade_bro_legs": {
+        "sourceName": "নিজস্বভাবে তৈরি",
+        "groupName": "শরীরের অংশভিত্তিক বিভাজন",
+        "name": "পা",
+        "description": "স্কোয়াট শক্তি, রোমানিয়ান ডেডলিফট, কোয়াডের ভলিউম, হ্যামস্ট্রিং আইসোলেশন ও দুই ধরনের কাফের কাজসহ পায়ের দিন।"
+      },
+      "tonos.plan.homemade_upper_lower_upper_1_two_hour": {
+        "sourceName": "নিজস্বভাবে তৈরি",
+        "groupName": "উপরের ও নিচের শরীর",
+        "name": "উপরের শরীর ১",
+        "description": "দুই ঘণ্টার উপরের শরীরের দিন, যেখানে প্রেস, রো, উল্লম্ব টান, পাশের কাঁধ, বুক ও ট্রাইসেপস রয়েছে।"
+      },
+      "tonos.plan.homemade_upper_lower_lower_1_two_hour": {
+        "sourceName": "নিজস্বভাবে তৈরি",
+        "groupName": "উপরের ও নিচের শরীর",
+        "name": "নিচের শরীর ১",
+        "description": "দুই ঘণ্টার নিচের শরীরের দিন, যেখানে কাফ, কোয়াডের ভলিউম, হ্যামস্ট্রিং ও লেগ প্রেস রয়েছে।"
+      },
+      "tonos.plan.homemade_upper_lower_upper_2_two_hour": {
+        "sourceName": "নিজস্বভাবে তৈরি",
+        "groupName": "উপরের ও নিচের শরীর",
+        "name": "উপরের শরীর ২",
+        "description": "দুই ঘণ্টার উল্লম্ব উপরের শরীরের দিন, যেখানে ওভারহেড প্রেস, পুল-আপ, রেইজ, প্রেস, রো ও পেছনের কাঁধ রয়েছে।"
+      },
+      "tonos.plan.homemade_upper_lower_lower_2_two_hour": {
+        "sourceName": "নিজস্বভাবে তৈরি",
+        "groupName": "উপরের ও নিচের শরীর",
+        "name": "নিচের শরীর ২",
+        "description": "দুই ঘণ্টার নিচের শরীরের দিন, যেখানে বসা কাফ, লেগ প্রেস, হ্যামস্ট্রিং, এক পায়ের কাজ ও কোয়াড আইসোলেশন রয়েছে।"
+      }
+    },
+    "zh": {
+      "tonos.plan.homemade_full_body_1": {
+        "sourceName": "自制",
+        "groupName": "全身",
+        "name": "全身",
+        "description": "包含深蹲、卧推、垂直拉、髋部铰链、肩部、手臂和小腿训练的全身课程。"
+      },
+      "tonos.plan.homemade_full_body_2": {
+        "sourceName": "自制",
+        "groupName": "全身",
+        "name": "全身 2",
+        "description": "侧重后侧链的全身训练日，包含过顶推举、划船、股四头肌、胸部、肱三头肌和后束三角肌。"
+      },
+      "tonos.plan.homemade_full_body_3": {
+        "sourceName": "自制",
+        "groupName": "全身",
+        "name": "全身 3",
+        "description": "包含髋部铰链、上斜推举、绳索划船、单腿训练、侧束三角肌、肱二头肌和肱三头肌的全身日。"
+      },
+      "tonos.plan.homemade_ppl_push_1": {
+        "sourceName": "自制",
+        "groupName": "推、拉、腿",
+        "name": "推",
+        "description": "胸部、肩部和肱三头肌训练日，包含平板推举、肩推、飞鸟和手臂孤立训练。"
+      },
+      "tonos.plan.homemade_ppl_pull_1": {
+        "sourceName": "自制",
+        "groupName": "推、拉、腿",
+        "name": "拉",
+        "description": "侧重后侧链和背部的训练日，包含硬拉、垂直拉、划船、后束三角肌和弯举。"
+      },
+      "tonos.plan.homemade_ppl_legs_1": {
+        "sourceName": "自制",
+        "groupName": "推、拉、腿",
+        "name": "腿",
+        "description": "以深蹲为主的腿部训练日，包含股四头肌和臀部训练、腘绳肌孤立以及站姿小腿训练。"
+      },
+      "tonos.plan.homemade_ppl_push_2": {
+        "sourceName": "自制",
+        "groupName": "推、拉、腿",
+        "name": "推 2",
+        "description": "侧重上胸和肱三头肌的推训练日，包含上斜推举、过顶力量训练和双杠臂屈伸。"
+      },
+      "tonos.plan.homemade_ppl_pull_2": {
+        "sourceName": "自制",
+        "groupName": "推、拉、腿",
+        "name": "拉 2",
+        "description": "通过划船增加背部厚度，并包含单侧背阔肌、后束三角肌和肱二头肌训练的拉训练日。"
+      },
+      "tonos.plan.homemade_ppl_legs_2": {
+        "sourceName": "自制",
+        "groupName": "推、拉、腿",
+        "name": "腿 2",
+        "description": "侧重腘绳肌的腿部训练日，包含罗马尼亚硬拉、单腿股四头肌和臀部训练以及坐姿小腿训练。"
+      },
+      "tonos.plan.homemade_upper_lower_upper_1": {
+        "sourceName": "自制",
+        "groupName": "上肢和下肢",
+        "name": "上肢 1",
+        "description": "紧凑的上肢训练日，包含水平推举、划船和侧束三角肌训练。"
+      },
+      "tonos.plan.homemade_upper_lower_lower_1": {
+        "sourceName": "自制",
+        "groupName": "上肢和下肢",
+        "name": "下肢 1",
+        "description": "以深蹲为主的下肢训练日，先练小腿，再训练股四头肌、腘绳肌和臀部。"
+      },
+      "tonos.plan.homemade_upper_lower_upper_2": {
+        "sourceName": "自制",
+        "groupName": "上肢和下肢",
+        "name": "上肢 2",
+        "description": "垂直方向的上肢训练日，包含过顶推举、引体向上和侧束三角肌训练。"
+      },
+      "tonos.plan.homemade_upper_lower_lower_2": {
+        "sourceName": "自制",
+        "groupName": "上肢和下肢",
+        "name": "下肢 2",
+        "description": "以硬拉为主的下肢训练日，先练小腿，再训练后侧链和腿举。"
+      },
+      "tonos.plan.homemade_bro_chest_biceps": {
+        "sourceName": "自制",
+        "groupName": "按身体部位分化",
+        "name": "胸部和肱二头肌",
+        "description": "以胸部为中心的训练日，包含平板力量、上斜训练量、绳索孤立和三个角度的肱二头肌训练。"
+      },
+      "tonos.plan.homemade_bro_back_rear_delts": {
+        "sourceName": "自制",
+        "groupName": "按身体部位分化",
+        "name": "背部和后束三角肌",
+        "description": "以背部为中心的训练日，包含硬拉、垂直拉、划船、面拉和后束三角肌孤立。"
+      },
+      "tonos.plan.homemade_bro_shoulders_triceps": {
+        "sourceName": "自制",
+        "groupName": "按身体部位分化",
+        "name": "肩部和肱三头肌",
+        "description": "包含过顶力量、肩部训练量、侧束三角肌孤立以及肱三头肌复合和孤立训练的课程。"
+      },
+      "tonos.plan.homemade_bro_legs": {
+        "sourceName": "自制",
+        "groupName": "按身体部位分化",
+        "name": "腿部",
+        "description": "包含深蹲力量、罗马尼亚硬拉、股四头肌训练量、腘绳肌孤立和两种小腿训练的腿部日。"
+      },
+      "tonos.plan.homemade_upper_lower_upper_1_two_hour": {
+        "sourceName": "自制",
+        "groupName": "上肢和下肢",
+        "name": "上肢 1",
+        "description": "两小时上肢训练日，包含推举、划船、垂直拉、侧束三角肌、胸部和肱三头肌训练。"
+      },
+      "tonos.plan.homemade_upper_lower_lower_1_two_hour": {
+        "sourceName": "自制",
+        "groupName": "上肢和下肢",
+        "name": "下肢 1",
+        "description": "两小时下肢训练日，包含小腿、股四头肌训练量、腘绳肌和腿举训练。"
+      },
+      "tonos.plan.homemade_upper_lower_upper_2_two_hour": {
+        "sourceName": "自制",
+        "groupName": "上肢和下肢",
+        "name": "上肢 2",
+        "description": "两小时垂直上肢训练日，包含过顶推举、引体向上、抬举、推举、划船和后束三角肌训练。"
+      },
+      "tonos.plan.homemade_upper_lower_lower_2_two_hour": {
+        "sourceName": "自制",
+        "groupName": "上肢和下肢",
+        "name": "下肢 2",
+        "description": "两小时下肢训练日，包含坐姿小腿、腿举、腘绳肌、单腿训练和股四头肌孤立。"
+      }
+    },
+    "hi": {
+      "tonos.plan.homemade_full_body_1": {
+        "sourceName": "स्वनिर्मित",
+        "groupName": "पूरे शरीर",
+        "name": "पूरे शरीर",
+        "description": "स्क्वाट, बेंच प्रेस, वर्टिकल पुल, हिप हिंग, कंधों, बाजुओं और पिंडलियों वाला पूरे शरीर का सत्र।"
+      },
+      "tonos.plan.homemade_full_body_2": {
+        "sourceName": "स्वनिर्मित",
+        "groupName": "पूरे शरीर",
+        "name": "पूरे शरीर 2",
+        "description": "पीछे की मांसपेशियों पर केंद्रित पूरे शरीर का दिन, जिसमें ओवरहेड प्रेस, रो, क्वाड्स, छाती, ट्राइसेप्स और पीछे के कंधे शामिल हैं।"
+      },
+      "tonos.plan.homemade_full_body_3": {
+        "sourceName": "स्वनिर्मित",
+        "groupName": "पूरे शरीर",
+        "name": "पूरे शरीर 3",
+        "description": "हिप हिंग और इन्क्लाइन प्रेस के साथ केबल रो, एकतरफा पैर का काम, साइड डेल्ट्स, बाइसेप्स और ट्राइसेप्स वाला पूरे शरीर का दिन।"
+      },
+      "tonos.plan.homemade_ppl_push_1": {
+        "sourceName": "स्वनिर्मित",
+        "groupName": "पुश, पुल और पैर",
+        "name": "पुश",
+        "description": "फ्लैट प्रेस, शोल्डर प्रेस, फ्लाई और सीधे बाजुओं के काम वाला छाती, कंधों और ट्राइसेप्स का दिन।"
+      },
+      "tonos.plan.homemade_ppl_pull_1": {
+        "sourceName": "स्वनिर्मित",
+        "groupName": "पुश, पुल और पैर",
+        "name": "पुल",
+        "description": "डेडलिफ्ट, वर्टिकल पुल, रो, पीछे के कंधों और कर्ल वाला पीछे की मांसपेशियों और पीठ पर केंद्रित दिन।"
+      },
+      "tonos.plan.homemade_ppl_legs_1": {
+        "sourceName": "स्वनिर्मित",
+        "groupName": "पुश, पुल और पैर",
+        "name": "पैर",
+        "description": "स्क्वाट को मुख्य रखते हुए क्वाड्स और ग्लूट्स, हैमस्ट्रिंग आइसोलेशन और खड़े होकर पिंडलियों के काम वाला पैर का दिन।"
+      },
+      "tonos.plan.homemade_ppl_push_2": {
+        "sourceName": "स्वनिर्मित",
+        "groupName": "पुश, पुल और पैर",
+        "name": "पुश 2",
+        "description": "ऊपरी छाती और ट्राइसेप्स पर केंद्रित पुश दिन, जिसमें इन्क्लाइन प्रेस, ओवरहेड ताकत और डिप्स शामिल हैं।"
+      },
+      "tonos.plan.homemade_ppl_pull_2": {
+        "sourceName": "स्वनिर्मित",
+        "groupName": "पुश, पुल और पैर",
+        "name": "पुल 2",
+        "description": "पीठ की मोटाई के लिए रो, एकतरफा लैट्स, पीछे के कंधों और बाइसेप्स वाला पुल दिन।"
+      },
+      "tonos.plan.homemade_ppl_legs_2": {
+        "sourceName": "स्वनिर्मित",
+        "groupName": "पुश, पुल और पैर",
+        "name": "पैर 2",
+        "description": "हैमस्ट्रिंग पर केंद्रित पैर का दिन, जिसमें रोमानियन डेडलिफ्ट, एकतरफा क्वाड और ग्लूट्स का काम और बैठकर पिंडलियां शामिल हैं।"
+      },
+      "tonos.plan.homemade_upper_lower_upper_1": {
+        "sourceName": "स्वनिर्मित",
+        "groupName": "ऊपरी और निचला शरीर",
+        "name": "ऊपरी शरीर 1",
+        "description": "हॉरिजॉन्टल प्रेस, रो और साइड डेल्ट्स के सीधे काम वाला छोटा ऊपरी शरीर का दिन।"
+      },
+      "tonos.plan.homemade_upper_lower_lower_1": {
+        "sourceName": "स्वनिर्मित",
+        "groupName": "ऊपरी और निचला शरीर",
+        "name": "निचला शरीर 1",
+        "description": "स्क्वाट को मुख्य रखते हुए पहले पिंडलियों और फिर क्वाड्स, हैमस्ट्रिंग और ग्लूट्स के काम वाला निचले शरीर का दिन।"
+      },
+      "tonos.plan.homemade_upper_lower_upper_2": {
+        "sourceName": "स्वनिर्मित",
+        "groupName": "ऊपरी और निचला शरीर",
+        "name": "ऊपरी शरीर 2",
+        "description": "ओवरहेड प्रेस, पुल-अप और साइड डेल्ट्स के सीधे काम वाला वर्टिकल ऊपरी शरीर का दिन।"
+      },
+      "tonos.plan.homemade_upper_lower_lower_2": {
+        "sourceName": "स्वनिर्मित",
+        "groupName": "ऊपरी और निचला शरीर",
+        "name": "निचला शरीर 2",
+        "description": "डेडलिफ्ट को मुख्य रखते हुए पहले पिंडलियों और फिर पीछे की मांसपेशियों और लेग प्रेस के काम वाला निचले शरीर का दिन।"
+      },
+      "tonos.plan.homemade_bro_chest_biceps": {
+        "sourceName": "स्वनिर्मित",
+        "groupName": "शरीर के अंगों का विभाजन",
+        "name": "छाती और बाइसेप्स",
+        "description": "छाती पर केंद्रित दिन, जिसमें फ्लैट ताकत, इन्क्लाइन वॉल्यूम, केबल आइसोलेशन और बाइसेप्स के तीन कोण शामिल हैं।"
+      },
+      "tonos.plan.homemade_bro_back_rear_delts": {
+        "sourceName": "स्वनिर्मित",
+        "groupName": "शरीर के अंगों का विभाजन",
+        "name": "पीठ और पीछे के कंधे",
+        "description": "पीठ पर केंद्रित दिन, जिसमें डेडलिफ्ट, वर्टिकल पुल, रो, फेस पुल और पीछे के कंधों का आइसोलेशन शामिल है।"
+      },
+      "tonos.plan.homemade_bro_shoulders_triceps": {
+        "sourceName": "स्वनिर्मित",
+        "groupName": "शरीर के अंगों का विभाजन",
+        "name": "कंधे और ट्राइसेप्स",
+        "description": "ओवरहेड ताकत, कंधों का वॉल्यूम, साइड डेल्ट्स का आइसोलेशन और ट्राइसेप्स के मिश्रित और अलग अभ्यास वाला दिन।"
+      },
+      "tonos.plan.homemade_bro_legs": {
+        "sourceName": "स्वनिर्मित",
+        "groupName": "शरीर के अंगों का विभाजन",
+        "name": "पैर",
+        "description": "स्क्वाट ताकत, रोमानियन डेडलिफ्ट, क्वाड्स का वॉल्यूम, हैमस्ट्रिंग आइसोलेशन और पिंडलियों के दो कोण वाला पैर का दिन।"
+      },
+      "tonos.plan.homemade_upper_lower_upper_1_two_hour": {
+        "sourceName": "स्वनिर्मित",
+        "groupName": "ऊपरी और निचला शरीर",
+        "name": "ऊपरी शरीर 1",
+        "description": "दो घंटे का ऊपरी शरीर दिन, जिसमें प्रेस, रो, वर्टिकल पुल, साइड डेल्ट्स, छाती और ट्राइसेप्स शामिल हैं।"
+      },
+      "tonos.plan.homemade_upper_lower_lower_1_two_hour": {
+        "sourceName": "स्वनिर्मित",
+        "groupName": "ऊपरी और निचला शरीर",
+        "name": "निचला शरीर 1",
+        "description": "दो घंटे का निचला शरीर दिन, जिसमें पिंडलियां, क्वाड्स का वॉल्यूम, हैमस्ट्रिंग और लेग प्रेस शामिल हैं।"
+      },
+      "tonos.plan.homemade_upper_lower_upper_2_two_hour": {
+        "sourceName": "स्वनिर्मित",
+        "groupName": "ऊपरी और निचला शरीर",
+        "name": "ऊपरी शरीर 2",
+        "description": "दो घंटे का वर्टिकल ऊपरी शरीर दिन, जिसमें ओवरहेड प्रेस, पुल-अप, रेज़, प्रेस, रो और पीछे के कंधे शामिल हैं।"
+      },
+      "tonos.plan.homemade_upper_lower_lower_2_two_hour": {
+        "sourceName": "स्वनिर्मित",
+        "groupName": "ऊपरी और निचला शरीर",
+        "name": "निचला शरीर 2",
+        "description": "दो घंटे का निचला शरीर दिन, जिसमें बैठकर पिंडलियां, लेग प्रेस, हैमस्ट्रिंग, एकतरफा पैर का काम और क्वाड आइसोलेशन शामिल हैं।"
+      }
+    }
+  }
+}

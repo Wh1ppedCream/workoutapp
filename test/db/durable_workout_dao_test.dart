@@ -1,4 +1,5 @@
 import 'package:env_test/db/active_workout_dao.dart';
+import 'package:env_test/db/pending_workout_progression_dao.dart';
 import 'package:env_test/db/workout_record_events_dao.dart';
 import 'package:env_test/db/workout_transaction_dao.dart';
 import 'package:env_test/models/models.dart';
@@ -17,6 +18,8 @@ void main() {
       CREATE TABLE sessions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         date TEXT NOT NULL,
+        completed_at_ms INTEGER,
+        training_day TEXT,
         duration INTEGER NOT NULL
       )
     ''');
@@ -122,6 +125,39 @@ void main() {
         badge_tier TEXT NOT NULL,
         reps INTEGER,
         PRIMARY KEY(set_id, badge_type)
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE preset_definitions (
+        id INTEGER PRIMARY KEY,
+        name TEXT NOT NULL
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE preset_sets (
+        id INTEGER PRIMARY KEY,
+        preset_exercise_id INTEGER NOT NULL,
+        weight REAL NOT NULL CHECK(weight >= 0),
+        reps INTEGER NOT NULL,
+        order_index INTEGER NOT NULL,
+        parent_set_id INTEGER
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE preset_exercise_auto (
+        preset_exercise_id INTEGER PRIMARY KEY,
+        increment_amount REAL,
+        last_set_index INTEGER NOT NULL,
+        last_node TEXT
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE pending_workout_progression (
+        session_id INTEGER PRIMARY KEY,
+        preset_id INTEGER NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        attempt_count INTEGER NOT NULL DEFAULT 0
       )
     ''');
   });
@@ -247,5 +283,130 @@ void main() {
 
     expect(await db.query('sessions'), isEmpty);
     expect(await ActiveWorkoutDao.load(db), isNotNull);
+  });
+
+  test('completion queues automatic progression with saved history', () async {
+    await db.insert('preset_definitions', {'id': 7, 'name': 'Push'});
+    await ActiveWorkoutDao.save(
+      db,
+      startedAt: DateTime.utc(2026, 7, 13, 12),
+      autoPresetId: 7,
+      payloadJson: '{}',
+    );
+
+    final sessionId = await WorkoutTransactionDao.completeWorkout(
+      db,
+      completedAt: DateTime.utc(2026, 7, 13, 13),
+      durationSeconds: 3600,
+      exercises: [
+        WorkoutExerciseWrite(
+          exercise: WeightExercise(
+            name: 'Bench Press',
+            equipment: 'Barbell',
+            sets: [ExerciseSet(weight: 135, reps: 5)],
+          ),
+          type: 'weight',
+        ),
+      ],
+      autoPresetId: 7,
+    );
+
+    final job = (await PendingWorkoutProgressionDao.loadAll(db)).single;
+    expect(job['session_id'], sessionId);
+    expect(job['preset_id'], 7);
+    expect(await ActiveWorkoutDao.load(db), isNull);
+    expect(await db.query('sessions'), hasLength(1));
+  });
+
+  test('failed progression preserves both its job and preset state', () async {
+    await db.insert('pending_workout_progression', {
+      'session_id': 1,
+      'preset_id': 7,
+      'created_at': DateTime.utc(2026, 7, 13).toIso8601String(),
+      'updated_at': DateTime.utc(2026, 7, 13).toIso8601String(),
+      'attempt_count': 0,
+    });
+    await db.insert('preset_sets', {
+      'id': 4,
+      'preset_exercise_id': 2,
+      'weight': 100.0,
+      'reps': 5,
+      'order_index': 0,
+      'parent_set_id': null,
+    });
+
+    await expectLater(
+      PendingWorkoutProgressionDao.applyAndDelete(
+        db,
+        sessionId: 1,
+        progression: const PresetProgressionBatch(
+          updates: [
+            PresetSetProgressionUpdate(
+              setId: 4,
+              weight: -1,
+              reps: 5,
+              orderIndex: 0,
+            ),
+          ],
+        ),
+      ),
+      throwsA(anything),
+    );
+
+    expect(await PendingWorkoutProgressionDao.loadAll(db), hasLength(1));
+    expect((await db.query('preset_sets')).single['weight'], 100.0);
+  });
+
+  test('successful progression mutates the plan and removes its job', () async {
+    await db.insert('pending_workout_progression', {
+      'session_id': 1,
+      'preset_id': 7,
+      'created_at': DateTime.utc(2026, 7, 13).toIso8601String(),
+      'updated_at': DateTime.utc(2026, 7, 13).toIso8601String(),
+      'attempt_count': 0,
+    });
+    await db.insert('preset_sets', {
+      'id': 4,
+      'preset_exercise_id': 2,
+      'weight': 100.0,
+      'reps': 5,
+      'order_index': 0,
+      'parent_set_id': null,
+    });
+
+    await PendingWorkoutProgressionDao.applyAndDelete(
+      db,
+      sessionId: 1,
+      progression: const PresetProgressionBatch(
+        updates: [
+          PresetSetProgressionUpdate(
+            setId: 4,
+            weight: 105,
+            reps: 5,
+            orderIndex: 0,
+          ),
+        ],
+      ),
+    );
+
+    expect(await PendingWorkoutProgressionDao.loadAll(db), isEmpty);
+    expect((await db.query('preset_sets')).single['weight'], 105.0);
+
+    await PendingWorkoutProgressionDao.applyAndDelete(
+      db,
+      sessionId: 1,
+      progression: const PresetProgressionBatch(
+        updates: [
+          PresetSetProgressionUpdate(
+            setId: 4,
+            weight: 110,
+            reps: 5,
+            orderIndex: 0,
+          ),
+        ],
+      ),
+    );
+
+    expect((await db.query('preset_sets')).single['weight'], 105.0);
   });
 }

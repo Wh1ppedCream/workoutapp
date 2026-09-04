@@ -7,10 +7,16 @@ import '../l10n/generated/app_localizations.dart';
 import '../models/models.dart';
 import '../providers/active_session.dart';
 import '../repositories/app_repository.dart';
+import '../services/catalog_entity_localizer.dart';
+import '../services/safe_failure.dart';
 import '../services/tutorial_state_store.dart';
+import '../utils/localized_body_part_name.dart';
 import '../widgets/body_heatmap.dart';
 import '../widgets/exercise_media_thumbnail.dart';
 import '../widgets/guided_tutorial_overlay.dart';
+import '../widgets/localized_catalog_entity_name.dart';
+import '../widgets/localized_exercise_name.dart';
+import '../widgets/safe_error_view.dart';
 import 'exercise/exercise_catalog_page.dart';
 import 'exercise/muscle_filter_page.dart';
 
@@ -115,8 +121,14 @@ class _CatalogPageState extends State<CatalogPage> {
         muscleSets.entries
             .where((entry) => entry.value > 0 && muscleById[entry.key] != null)
             .map(
-              (entry) =>
-                  _FocusUsageSummary(muscleById[entry.key]!.name, entry.value),
+              (entry) => _FocusUsageSummary(
+                muscleById[entry.key]!.name,
+                entry.value,
+                entity: CatalogEntityDisplayName(
+                  catalogId: muscleById[entry.key]!.catalogId,
+                  canonicalName: muscleById[entry.key]!.name,
+                ),
+              ),
             )
             .toList()
           ..sort((a, b) => b.units.compareTo(a.units));
@@ -202,11 +214,12 @@ class _CatalogPageState extends State<CatalogPage> {
               return const Center(child: CircularProgressIndicator());
             }
             if (data == null && snapshot.hasError) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Text(strings.catalogLoadError('${snapshot.error}')),
-                ),
+              return SafeErrorView(
+                title: strings.safeFailureLoadTitle,
+                failure: SafeFailure.classify(snapshot.error!),
+                onRetry: () {
+                  _refreshOverview();
+                },
               );
             }
 
@@ -352,6 +365,7 @@ class _TargetAnatomyCard extends StatelessWidget {
                       items: bodyParts,
                       emptyText: strings.catalogNoBodypartHistory,
                       onTap: onBodyPartsTap,
+                      localizeBuiltInBodyPartNames: true,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -367,6 +381,7 @@ class _TargetAnatomyCard extends StatelessWidget {
                       items: muscles,
                       emptyText: strings.catalogNoMuscleHistory,
                       onTap: onMusclesTap,
+                      localizeBuiltInBodyPartNames: false,
                     ),
                   ),
                 ],
@@ -417,10 +432,15 @@ class _ExerciseUsageBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final strings = AppLocalizations.of(context);
-    final equipmentNames = summary.definition.equipmentList
-        .map((equipment) => equipment.name)
-        .where((name) => name.trim().isNotEmpty)
-        .join(', ');
+    final equipment = summary.definition.equipmentList
+        .where((item) => item.name.trim().isNotEmpty)
+        .map(
+          (item) => CatalogEntityDisplayName(
+            catalogId: item.catalogId,
+            canonicalName: item.name,
+          ),
+        )
+        .toList(growable: false);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -439,8 +459,8 @@ class _ExerciseUsageBar extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  summary.definition.name,
+                LocalizedExerciseName(
+                  definition: summary.definition,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodyMedium?.copyWith(
@@ -448,16 +468,20 @@ class _ExerciseUsageBar extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 3),
-                Text(
-                  [
-                    if (equipmentNames.isNotEmpty) equipmentNames,
-                    strings.catalogTimesUsed(summary.useCount),
-                  ].join(' - '),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
+                LocalizedCatalogEntityNamesBuilder(
+                  entities: equipment,
+                  builder:
+                      (context, names) => Text(
+                        [
+                          if (names.isNotEmpty) names.join(', '),
+                          strings.catalogTimesUsed(summary.useCount),
+                        ].join(' - '),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
                 ),
               ],
             ),
@@ -482,6 +506,7 @@ class _FocusSummaryPane extends StatelessWidget {
   final List<_FocusUsageSummary> items;
   final String emptyText;
   final VoidCallback onTap;
+  final bool localizeBuiltInBodyPartNames;
 
   const _FocusSummaryPane({
     required this.title,
@@ -489,11 +514,13 @@ class _FocusSummaryPane extends StatelessWidget {
     required this.items,
     required this.emptyText,
     required this.onTap,
+    required this.localizeBuiltInBodyPartNames,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isSpanish = Localizations.localeOf(context).languageCode == 'es';
     return InkWell(
       borderRadius: BorderRadius.circular(16),
       onTap: onTap,
@@ -509,11 +536,12 @@ class _FocusSummaryPane extends StatelessWidget {
                 Expanded(
                   child: Text(
                     title,
-                    maxLines: 1,
+                    maxLines: isSpanish ? 2 : 1,
                     overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                    style: (isSpanish
+                            ? theme.textTheme.titleSmall
+                            : theme.textTheme.titleMedium)
+                        ?.copyWith(fontWeight: FontWeight.w800),
                   ),
                 ),
               ],
@@ -527,7 +555,11 @@ class _FocusSummaryPane extends StatelessWidget {
                 ),
               )
             else
-              for (final item in items.take(4)) _FocusUsageRow(summary: item),
+              for (final item in items.take(4))
+                _FocusUsageRow(
+                  summary: item,
+                  localizeBuiltInBodyPartNames: localizeBuiltInBodyPartNames,
+                ),
           ],
         ),
       ),
@@ -537,24 +569,49 @@ class _FocusSummaryPane extends StatelessWidget {
 
 class _FocusUsageRow extends StatelessWidget {
   final _FocusUsageSummary summary;
+  final bool localizeBuiltInBodyPartNames;
 
-  const _FocusUsageRow({required this.summary});
+  const _FocusUsageRow({
+    required this.summary,
+    required this.localizeBuiltInBodyPartNames,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final strings = AppLocalizations.of(context);
+    final isSpanish = Localizations.localeOf(context).languageCode == 'es';
+    final displayName =
+        localizeBuiltInBodyPartNames
+            ? localizedBodyPartName(context, summary.name)
+            : summary.name;
+    final nameWidget =
+        summary.entity == null
+            ? Text(
+              displayName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodyMedium,
+            )
+            : LocalizedCatalogEntityName(
+              entity: summary.entity!,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodyMedium,
+            );
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         children: [
           Expanded(
-            child: Text(
-              summary.name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodyMedium,
-            ),
+            child:
+                isSpanish && localizeBuiltInBodyPartNames
+                    ? FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: nameWidget,
+                    )
+                    : nameWidget,
           ),
           const SizedBox(width: 8),
           Text(
@@ -595,6 +652,7 @@ class _ExerciseUsageSummary {
 class _FocusUsageSummary {
   final String name;
   final double units;
+  final CatalogEntityDisplayName? entity;
 
-  const _FocusUsageSummary(this.name, this.units);
+  const _FocusUsageSummary(this.name, this.units, {this.entity});
 }

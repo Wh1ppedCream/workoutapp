@@ -32,10 +32,12 @@ import 'personal_info_transaction_dao.dart';
 import 'nutrition_dao.dart';
 import 'content_dao.dart';
 import 'database_connection.dart';
+import 'database_backup_policy.dart';
 import 'database_maintenance.dart';
 import 'db_query_utils.dart';
 import 'active_plan_dao.dart';
 import 'active_workout_dao.dart';
+import 'pending_workout_progression_dao.dart';
 import 'preset_transaction_dao.dart';
 import 'profile_transaction_dao.dart';
 import 'progression_rule_propagation_dao.dart';
@@ -49,7 +51,7 @@ import 'package:flutter/foundation.dart' show debugPrint;
 
 /// Singleton helper for managing the SQLite database.
 class DatabaseHelper {
-  static const int _kDbVersion = 57;
+  static const int _kDbVersion = 62;
   static const bool _kIntegrationTestMode = bool.fromEnvironment(
     'TONOS_INTEGRATION_TEST',
   );
@@ -129,6 +131,7 @@ class DatabaseHelper {
           db,
           onFoodProgress: (c) => _logProgress('foods', c),
         );
+        await Seed.syncExerciseCatalogIfNeeded(db);
         await Seed.syncCreatorExerciseAllocationDefaults(db);
         await _backfillNormalizedFoodKeys(db);
         await _backfillEnergyKcalFromMacros(db);
@@ -138,7 +141,7 @@ class DatabaseHelper {
         await _resetDbTriggers(db);
         await _rebuildFoodFtsIfExists(db);
         await _ensureIndexes(db);
-        if (oldVersion < 57) {
+        if (oldVersion < 61) {
           await WorkoutRecordEventsDao.rebuildAll(db);
         }
 
@@ -163,6 +166,11 @@ class DatabaseHelper {
         await Schema.migrateV55(db);
         await Schema.migrateV56(db);
         await Schema.migrateV57(db);
+        await Schema.migrateV58(db);
+        await Schema.migrateV59(db);
+        await Schema.migrateV60(db);
+        await Schema.migrateV61(db);
+        await Seed.syncExerciseCatalogIfNeeded(db);
         await _resetDbTriggers(db); // <—
         await _maybeCompactLegacyFoodCatalog(db);
         await _removeEmptyStarterPlans(db);
@@ -1226,7 +1234,12 @@ class DatabaseHelper {
     // ── Workout sessions & exercise logs ─────────────────────────────────────
     if (await _tableExists(db, 'sessions')) {
       await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_sessions_date ON sessions(date)',
+        'CREATE INDEX IF NOT EXISTS idx_sessions_completed_at_ms '
+        'ON sessions(completed_at_ms, id)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_sessions_training_day '
+        'ON sessions(training_day, completed_at_ms, id)',
       );
     }
     if (await _tableExists(db, 'exercises')) {
@@ -1763,9 +1776,13 @@ class DatabaseHelper {
 
   //session_dao
 
-  Future<int> createSession(String date, int duration) async {
+  Future<int> createSession(DateTime completedAt, int duration) async {
     final db = await database;
-    return SessionDao.insertSession(db, date, duration);
+    return SessionDao.insertSession(
+      db,
+      completedAt: completedAt,
+      duration: duration,
+    );
   }
 
   Future<List<Map<String, dynamic>>> getAllSessionsRaw() async {
@@ -1782,12 +1799,12 @@ class DatabaseHelper {
     final args = <Object?>[];
 
     if (start != null) {
-      whereClauses.add('sess.date >= ?');
-      args.add(start.toIso8601String());
+      whereClauses.add('sess.completed_at_ms >= ?');
+      args.add(TemporalSemantics.utcEpochMilliseconds(start));
     }
     if (end != null) {
-      whereClauses.add('sess.date <= ?');
-      args.add(end.toIso8601String());
+      whereClauses.add('sess.completed_at_ms <= ?');
+      args.add(TemporalSemantics.utcEpochMilliseconds(end));
     }
 
     final whereSql =
@@ -1797,6 +1814,8 @@ class DatabaseHelper {
       SELECT
         sess.id AS session_id,
         sess.date AS date,
+        sess.completed_at_ms AS completed_at_ms,
+        sess.training_day AS training_day,
         sess.duration AS duration,
         COUNT(DISTINCT e.id) AS exercise_count,
         COUNT(st.id) AS set_count,
@@ -1811,7 +1830,7 @@ class DatabaseHelper {
       LEFT JOIN sets st ON st.exercise_id = e.id
       $whereSql
       GROUP BY sess.id
-      ORDER BY sess.date ASC
+      ORDER BY sess.completed_at_ms ASC, sess.id ASC
       ''', args);
   }
 
@@ -1824,6 +1843,7 @@ class DatabaseHelper {
     required DateTime completedAt,
     required int durationSeconds,
     required List<WorkoutExerciseWrite> exercises,
+    int? autoPresetId,
   }) async {
     final db = await database;
     return WorkoutTransactionDao.completeWorkout(
@@ -1831,6 +1851,7 @@ class DatabaseHelper {
       completedAt: completedAt,
       durationSeconds: durationSeconds,
       exercises: exercises,
+      autoPresetId: autoPresetId,
     );
   }
 
@@ -1876,7 +1897,16 @@ class DatabaseHelper {
     if (row == null) return null;
     return WorkoutSession(
       id: row['id'] as int,
-      date: DateTime.parse(row['date'] as String),
+      date: TemporalSemantics.readLocalDateTime(
+        epochMilliseconds: row['completed_at_ms'],
+        legacyIso: row['date'],
+      ),
+      calendarDayKey:
+          TemporalSemantics.readCalendarDay(
+            calendarDay: row['training_day'],
+            legacyIso: row['date'],
+            epochMilliseconds: row['completed_at_ms'],
+          ).storageKey,
       duration: row['duration'] as int,
     );
   }
@@ -1894,11 +1924,11 @@ class DatabaseHelper {
       ''',
         [id],
       );
-      await txn.update(
-        'sessions',
-        {'date': newDate.toIso8601String(), 'duration': newDuration},
-        where: 'id = ?',
-        whereArgs: [id],
+      await SessionDao.updateSession(
+        txn,
+        id,
+        completedAt: newDate,
+        duration: newDuration,
       );
       await WorkoutRecordEventsDao.rebuildForDefinitions(
         txn,
@@ -1907,22 +1937,27 @@ class DatabaseHelper {
     });
   }
 
-  // Fetch range + map
+  // Fetch an inclusive exact-instant range and map it to sessions.
   Future<List<WorkoutSession>> fetchSessionsInRange(
     DateTime start,
     DateTime end,
   ) async {
     final db = await database;
-    final rows = await SessionDao.getSessionsInRange(
-      db,
-      start.toIso8601String(),
-      end.toIso8601String(),
-    );
+    final rows = await SessionDao.getSessionsForInstantRange(db, start, end);
     return rows
         .map(
           (row) => WorkoutSession(
             id: row['id'] as int,
-            date: DateTime.parse(row['date'] as String),
+            date: TemporalSemantics.readLocalDateTime(
+              epochMilliseconds: row['completed_at_ms'],
+              legacyIso: row['date'],
+            ),
+            calendarDayKey:
+                TemporalSemantics.readCalendarDay(
+                  calendarDay: row['training_day'],
+                  legacyIso: row['date'],
+                  epochMilliseconds: row['completed_at_ms'],
+                ).storageKey,
             duration: row['duration'] as int,
           ),
         )
@@ -1969,7 +2004,7 @@ class DatabaseHelper {
 
   Future<List<Map<String, dynamic>>> fetchRecentWeightExerciseHistoryRows({
     required int definitionId,
-    String? beforeSessionDate,
+    int? beforeCompletedAtMilliseconds,
     int? beforeExerciseId,
     int limit = 10,
   }) async {
@@ -1977,7 +2012,7 @@ class DatabaseHelper {
     return ExerciseHistoryDao.fetchWeightExerciseRows(
       db,
       definitionId: definitionId,
-      beforeSessionDate: beforeSessionDate,
+      beforeCompletedAtMilliseconds: beforeCompletedAtMilliseconds,
       beforeExerciseId: beforeExerciseId,
       limit: limit,
     );
@@ -1997,6 +2032,8 @@ class DatabaseHelper {
         SELECT
           sess.id AS session_id,
           sess.date AS session_date,
+          sess.completed_at_ms AS completed_at_ms,
+          sess.training_day AS training_day,
           MAX(CASE WHEN st.reps = 1 THEN st.weight ELSE NULL END)
             AS actual_one_rm,
           MAX(
@@ -2012,10 +2049,10 @@ class DatabaseHelper {
           AND e.exercise_def_id = ?
           AND st.parent_set_id IS NULL
         GROUP BY sess.id
-        ORDER BY sess.date DESC
+        ORDER BY sess.completed_at_ms DESC, sess.id DESC
         LIMIT ?
       )
-      ORDER BY session_date ASC
+      ORDER BY completed_at_ms ASC, session_id ASC
       ''',
       [definitionId, limit],
     );
@@ -2434,7 +2471,9 @@ class DatabaseHelper {
   /// Fetch every definition with its full equipmentList, bodyParts, and muscles.
   Future<List<ExerciseDefinition>> lookupDefsDetailed() async {
     final db = await database;
-    return DefinitionDao.getAllExerciseDefinitionsDetailedBatched(db);
+    final definitions =
+        await DefinitionDao.getAllExerciseDefinitionsDetailedBatched(db);
+    return DefinitionDao.selectableCatalogDefinitions(definitions);
   }
 
   /// Fetch a selected subset of definitions with their full join data.
@@ -2454,7 +2493,7 @@ class DatabaseHelper {
       SELECT
         e.exercise_def_id AS definition_id,
         COUNT(e.id) AS use_count,
-        MAX(sess.date) AS last_done
+        MAX(sess.completed_at_ms) AS last_done
       FROM exercises e
       INNER JOIN sessions sess ON sess.id = e.session_id
       WHERE e.type = 'weight'
@@ -2756,9 +2795,18 @@ class DatabaseHelper {
     double value,
     String unit,
     String? note,
+    MeasurementContext? context,
   ) async {
     final db = await database;
-    return LookupDao.insertMeasurement(db, defId, timestamp, value, unit, note);
+    return LookupDao.insertMeasurement(
+      db,
+      defId,
+      timestamp,
+      value,
+      unit,
+      note,
+      context,
+    );
   }
 
   /// Fetch all measurements for a definition.
@@ -2776,10 +2824,20 @@ class DatabaseHelper {
           (r) => Measurement(
             id: r['id'] as int,
             defId: r['def_id'] as int,
-            timestamp: DateTime.parse(r['timestamp'] as String),
+            timestamp: TemporalSemantics.readLocalDateTime(
+              epochMilliseconds: r['measured_at_ms'],
+              legacyIso: r['timestamp'],
+            ),
+            calendarDayKey:
+                TemporalSemantics.readCalendarDay(
+                  calendarDay: r['measured_on'],
+                  legacyIso: r['timestamp'],
+                  epochMilliseconds: r['measured_at_ms'],
+                ).storageKey,
             value: (r['value'] as num).toDouble(),
             unit: r['unit'] as String,
             note: r['note'] as String?,
+            context: _measurementContextFromValue(r['context'] as String?),
           ),
         )
         .toList();
@@ -2793,7 +2851,7 @@ class DatabaseHelper {
         FROM measurements m
         JOIN measurement_definitions md ON md.id = m.def_id
        WHERE md.type = ?
-       ORDER BY m.timestamp DESC, m.id DESC
+       ORDER BY m.measured_at_ms DESC, m.id DESC
        LIMIT 1
     ''',
       [MeasurementType.BodyWeight.name],
@@ -2859,6 +2917,7 @@ class DatabaseHelper {
     required double value,
     required String unit,
     String? note,
+    MeasurementContext? context,
   }) async {
     final db = await database;
     await LookupDao.updateMeasurement(
@@ -2868,7 +2927,15 @@ class DatabaseHelper {
       value: value,
       unit: unit,
       note: note,
+      context: context,
     );
+  }
+
+  MeasurementContext? _measurementContextFromValue(String? value) {
+    for (final context in MeasurementContext.values) {
+      if (context.name == value) return context;
+    }
+    return null;
   }
 
   Future<void> deleteMeasurement(int measurementId) async {
@@ -3110,22 +3177,30 @@ class DatabaseHelper {
     final db = await database;
     final tables = kDatabaseExportTableNames;
     final existingTables = await _tableNames(db);
+    final missingRequiredTables =
+        tables.where((table) => !existingTables.contains(table)).toList();
+    if (missingRequiredTables.isNotEmpty) {
+      throw StateError(
+        'Database backup cannot be created because required tables are missing.',
+      );
+    }
 
     final Map<String, dynamic> data = {};
-    for (final table in tables) {
-      if (existingTables.contains(table)) {
-        // ← guard
-        data[table] = await db.query(table);
+    await db.transaction((txn) async {
+      for (final table in tables) {
+        data[table] = await txn.query(table);
       }
-    }
+    });
     return jsonEncode(
       buildDatabaseExportEnvelope(schemaVersion: _kDbVersion, tables: data),
     );
   }
 
-  /// Import the database from a JSON string.
-  /// If [clearFirst] is true, app-managed import/export tables are cleared first.
-  /// Also re-creates indexes and refreshes caches/FTS afterward.
+  /// Imports a database backup from JSON.
+  ///
+  /// Full v3 snapshots replace authoritative rows atomically. Older or partial
+  /// exports are merged without clearing existing rows first, so they cannot
+  /// erase unrelated current data that the old format did not contain.
   Future<void> importDatabase(String jsonStr, {bool clearFirst = true}) async {
     final db = await database;
     final preview = previewDatabaseImport(jsonStr);
@@ -3133,6 +3208,9 @@ class DatabaseHelper {
       throw FormatException(preview.message);
     }
     final data = decodeDatabaseExportTables(jsonStr);
+    final tablesToRestore =
+        kDatabaseExportTableNames.where(data.containsKey).toList();
+    final replaceSnapshot = clearFirst && preview.canReplace;
 
     final suspendFoodFtsTriggers = await _hasFoodFtsTable(db);
     if (suspendFoodFtsTriggers) {
@@ -3146,8 +3224,20 @@ class DatabaseHelper {
       try {
         await db.transaction((txn) async {
           final existingTables = await _tableNames(txn);
-          if (clearFirst) {
-            // Clear app-managed import/export tables only.
+          if (replaceSnapshot) {
+            final missingLocalTables =
+                kDatabaseExportTableNames
+                    .where((table) => !existingTables.contains(table))
+                    .toList();
+            if (missingLocalTables.isNotEmpty) {
+              throw StateError(
+                'Current database cannot accept a complete backup because required tables are missing.',
+              );
+            }
+          }
+          if (replaceSnapshot) {
+            // Remove snapshot rows in reverse dependency order. Tables omitted
+            // from the backup contract are either rebuilt or discarded below.
             final tablesToClear = kDatabaseExportTableNames.reversed;
             for (final table in tablesToClear) {
               if (existingTables.contains(table)) {
@@ -3156,9 +3246,17 @@ class DatabaseHelper {
             }
           }
 
-          // Insert rows for tables present in the JSON.
-          for (final table in data.keys) {
-            if (!kDatabaseExportTableNames.contains(table)) continue;
+          // Derived/cache/app-owned rows must never survive a full replacement
+          // if they point at the prior snapshot's local IDs.
+          for (final table in kDatabaseDerivedOrDiscardedTableNames) {
+            if (existingTables.contains(table)) {
+              await txn.delete(table);
+            }
+          }
+
+          // Restore only authoritative snapshot rows. Legacy exports may carry
+          // cache rows; their policy intentionally ignores them.
+          for (final table in tablesToRestore) {
             if (!existingTables.contains(table)) continue; // skip unknown
             final rows = List<Map<String, dynamic>>.from(data[table] as List);
             for (final row in rows) {
@@ -3172,6 +3270,14 @@ class DatabaseHelper {
               }
             }
           }
+
+          // Keep every authoritative data mutation inside this transaction so
+          // a malformed import or storage failure cannot replace only part of
+          // the person's existing database.
+          await _backfillNormalizedFoodKeysTx(txn);
+          await _backfillEnergyKcalFromMacros(txn);
+
+          await _bumpAutoincrement(txn);
 
           final foreignKeyViolations = await txn.rawQuery(
             'PRAGMA foreign_key_check',
@@ -3188,33 +3294,35 @@ class DatabaseHelper {
           await db.execute('PRAGMA foreign_keys = ON;');
         }
       }
-      // Post-import normalization & maintenance
-      await _backfillNormalizedFoodKeys(db);
-      await _backfillEnergyKcalFromMacros(db);
-      await _rebuildFoodFtsIfExists(db);
-      await _ensureAppMetaTable(db);
-      await Schema.migrateV49(db);
-      await _ensureIndexes(
-        db,
-      ); // ← ensure you have all new indexes on imported DBs
+      // The imported history must be canonical before any following reader can
+      // observe it. Derived search/index maintenance remains best-effort.
+      await Schema.migrateV61(db);
 
-      // If recipe nutrients weren’t imported, rebuild them from ingredients.
-      if (!data.keys.contains('recipe_nutrients') &&
-          await _tableExists(db, 'recipes')) {
+      // Re-seed current app-owned catalog rows after a full snapshot. The
+      // policy clears catalog state, so stable catalog IDs reconcile instead
+      // of leaving the backup's bundled revision in control.
+      await _ensureAppMetaTable(db);
+      if (replaceSnapshot) {
+        await Seed.syncExerciseCatalogIfNeeded(db);
+        await Seed.syncCreatorExerciseAllocationDefaults(db);
+      }
+
+      // Rebuild derived results from restored authoritative data. These are
+      // intentionally not serialized as backup payload.
+      if (await _tableExists(db, 'recipes')) {
         await _rebuildAllRecipeCaches(db);
       }
-
-      // If day_totals_cache wasn’t imported but table exists, clear it so reads rebuild on demand.
-      if (!data.keys.contains('day_totals_cache') &&
-          await _tableExists(db, 'day_totals_cache')) {
-        await db.delete('day_totals_cache');
-      }
-
-      // NEW: keep AUTOINCREMENT sequences aligned with current max(id)
-      await _bumpAutoincrement(db);
+      await WorkoutRecordEventsDao.rebuildAll(db);
+      await _rebuildFoodFtsIfExists(db);
+      await Schema.migrateV49(db);
+      await _ensureIndexes(db);
     } finally {
       if (suspendFoodFtsTriggers) {
-        await _ensureFoodFtsTriggers(db);
+        try {
+          await _ensureFoodFtsTriggers(db);
+        } catch (_) {
+          // Search falls back safely until maintenance can recreate triggers.
+        }
       }
     }
   }
@@ -3847,7 +3955,10 @@ class DatabaseHelper {
     int? defId,
   }) async {
     final db = await database;
-    final args = <Object?>[start.toIso8601String(), end.toIso8601String()];
+    final args = <Object?>[
+      TemporalSemantics.utcEpochMilliseconds(start),
+      TemporalSemantics.utcEpochMilliseconds(end),
+    ];
     final defFilter = defId == null ? '' : 'AND e.exercise_def_id = ?';
     if (defId != null) args.add(defId);
 
@@ -3858,7 +3969,7 @@ class DatabaseHelper {
       INNER JOIN sessions sess ON sess.id = e.session_id
       WHERE e.type = 'weight'
         AND e.exercise_def_id IS NOT NULL
-        AND sess.date BETWEEN ? AND ?
+        AND sess.completed_at_ms >= ? AND sess.completed_at_ms <= ?
         $defFilter
       GROUP BY e.exercise_def_id
       ''', args);
@@ -4170,7 +4281,16 @@ class DatabaseHelper {
         .map(
           (row) => WorkoutSession(
             id: row['id'] as int,
-            date: DateTime.parse(row['date'] as String),
+            date: TemporalSemantics.readLocalDateTime(
+              epochMilliseconds: row['completed_at_ms'],
+              legacyIso: row['date'],
+            ),
+            calendarDayKey:
+                TemporalSemantics.readCalendarDay(
+                  calendarDay: row['training_day'],
+                  legacyIso: row['date'],
+                  epochMilliseconds: row['completed_at_ms'],
+                ).storageKey,
             duration: row['duration'] as int,
           ),
         )
@@ -4648,6 +4768,28 @@ class DatabaseHelper {
   ) async {
     final db = await database;
     await PresetProgressionDao.apply(db, progression);
+  }
+
+  Future<List<Map<String, dynamic>>> loadPendingWorkoutProgressions() async {
+    final db = await database;
+    return PendingWorkoutProgressionDao.loadAll(db);
+  }
+
+  Future<void> recordPendingWorkoutProgressionFailure(int sessionId) async {
+    final db = await database;
+    await PendingWorkoutProgressionDao.recordFailedAttempt(db, sessionId);
+  }
+
+  Future<void> completePendingWorkoutProgression({
+    required int sessionId,
+    required PresetProgressionBatch progression,
+  }) async {
+    final db = await database;
+    await PendingWorkoutProgressionDao.applyAndDelete(
+      db,
+      sessionId: sessionId,
+      progression: progression,
+    );
   }
 
   Future<bool> getUseManualBodyparts(int defId) async {
@@ -5350,7 +5492,7 @@ class DatabaseHelper {
 
   /// Ensures KCAL exists per_100g for foods that have P/C/F but no KCAL yet.
   /// Also mirrors into legacy food_nutrients for back-compat reads.
-  Future<void> _backfillEnergyKcalFromMacros(Database db) async {
+  Future<void> _backfillEnergyKcalFromMacros(DatabaseExecutor db) async {
     // Find IDs for KCAL/PROTEIN_G/CARB_G/FAT_G
     final ids = await db.query(
       'nutrients',
@@ -5507,7 +5649,7 @@ class DatabaseHelper {
     _fts4Available = null;
   }
 
-  Future<void> _bumpAutoincrement(Database db) async {
+  Future<void> _bumpAutoincrement(DatabaseExecutor db) async {
     // sqlite_sequence only exists if at least one table was created with AUTOINCREMENT
     if (!await _tableExists(db, 'sqlite_sequence')) return;
 

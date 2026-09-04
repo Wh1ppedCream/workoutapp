@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../../repositories/app_repository.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../l10n/safe_failure_localizations.dart';
 
 class AppSettingsPage extends StatefulWidget {
   const AppSettingsPage({super.key}); // use_super_parameters
@@ -57,7 +58,9 @@ class _AppSettingsPageState extends State<AppSettingsPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            AppLocalizations.of(context).databaseExportFailed(e.toString()),
+            AppLocalizations.of(context).databaseExportFailed(
+              safeFailureMessage(AppLocalizations.of(context), e),
+            ),
           ),
         ),
       );
@@ -116,7 +119,9 @@ class _AppSettingsPageState extends State<AppSettingsPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            AppLocalizations.of(context).databaseImportFailed(e.toString()),
+            AppLocalizations.of(context).databaseImportFailed(
+              safeFailureMessage(AppLocalizations.of(context), e),
+            ),
           ),
         ),
       );

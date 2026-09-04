@@ -4,11 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../l10n/generated/app_localizations.dart';
+import '../../l10n/safe_failure_localizations.dart';
 import '../../repositories/app_repository.dart';
 import '../../services/active_plan_store.dart';
+import '../../services/safe_failure.dart';
 import '../../services/tutorial_state_store.dart';
+import '../../utils/localized_formatters.dart';
 import '../../utils/tutorial_launcher.dart';
 import '../../widgets/guided_tutorial_overlay.dart';
+import '../../widgets/safe_error_view.dart';
 
 class PlanManagementPage extends StatefulWidget {
   final int profileId;
@@ -28,7 +32,7 @@ class _PlanManagementPageState extends State<PlanManagementPage> {
   final _savingPlanIds = <int>{};
 
   var _isLoading = true;
-  String? _error;
+  SafeFailure? _failure;
   List<_ManagedPlan> _plans = const <_ManagedPlan>[];
   Set<int> _activePlanIds = const <int>{};
   bool _tutorialQueued = false;
@@ -48,7 +52,7 @@ class _PlanManagementPageState extends State<PlanManagementPage> {
     final strings = AppLocalizations.of(context);
     setState(() {
       _isLoading = true;
-      _error = null;
+      _failure = null;
     });
     try {
       final rows = await repository.fetchPresetSummariesRaw(
@@ -86,7 +90,7 @@ class _PlanManagementPageState extends State<PlanManagementPage> {
     } catch (error) {
       if (!mounted) return;
       setState(() {
-        _error = error.toString();
+        _failure = SafeFailure.classify(error);
         _isLoading = false;
       });
     }
@@ -150,9 +154,10 @@ class _PlanManagementPageState extends State<PlanManagementPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            AppLocalizations.of(
-              context,
-            ).planManagementUpdateFailed(plan.name, '$error'),
+            AppLocalizations.of(context).planManagementUpdateFailed(
+              plan.name,
+              safeFailureMessage(AppLocalizations.of(context), error),
+            ),
           ),
         ),
       );
@@ -181,13 +186,11 @@ class _PlanManagementPageState extends State<PlanManagementPage> {
       body:
           _isLoading
               ? const Center(child: CircularProgressIndicator())
-              : _error != null
-              ? _PlanManagementMessage(
-                icon: Icons.error_outline,
+              : _failure != null
+              ? SafeErrorView(
                 title: strings.planManagementLoadFailed,
-                message: _error!,
-                actionLabel: strings.commonTryAgain,
-                onAction: _loadPlans,
+                failure: _failure!,
+                onRetry: _loadPlans,
               )
               : RefreshIndicator(
                 onRefresh: _loadPlans,
@@ -423,6 +426,7 @@ class _PlanCountPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final locale = Localizations.localeOf(context);
     return DecoratedBox(
       decoration: BoxDecoration(
         color: colorScheme.primaryContainer,
@@ -431,62 +435,11 @@ class _PlanCountPill extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         child: Text(
-          '$count',
+          LocalizedFormatters.number(count, locale, maximumFractionDigits: 0),
           style: TextStyle(
             color: colorScheme.onPrimaryContainer,
             fontWeight: FontWeight.w900,
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _PlanManagementMessage extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String message;
-  final String actionLabel;
-  final VoidCallback onAction;
-
-  const _PlanManagementMessage({
-    required this.icon,
-    required this.title,
-    required this.message,
-    required this.actionLabel,
-    required this.onAction,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 42, color: colorScheme.primary),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 16),
-            FilledButton(onPressed: onAction, child: Text(actionLabel)),
-          ],
         ),
       ),
     );

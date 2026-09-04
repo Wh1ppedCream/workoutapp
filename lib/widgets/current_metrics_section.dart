@@ -1,66 +1,82 @@
 // File: lib/widgets/current_metrics_section.dart
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+
 import '../l10n/generated/app_localizations.dart';
-import '../theme/theme_extensions.dart';
+import '../models/models.dart';
+import '../repositories/app_repository.dart';
+import '../screens/nutrition/measured_items_page.dart';
+import '../utils/localized_formatters.dart';
 
-enum _MetricKind { visualBodyFat, waist, hips, custom }
+class _CurrentMetric {
+  const _CurrentMetric({required this.definition, required this.measurement});
 
-/// Data holder for a metric tile
-class _MetricData {
-  final Color color;
-  final _MetricKind kind;
-  final String value;
-
-  _MetricData({required this.color, required this.kind, required this.value});
+  final MeasurementDefinition definition;
+  final Measurement measurement;
 }
 
-/// A single dot + value + label
+/// A persisted measurement value and its most recent recording date.
 class MetricItem extends StatelessWidget {
   final Color color;
   final String label;
   final String value;
+  final String recordedOn;
 
   const MetricItem({
     super.key,
     required this.color,
     required this.label,
     required this.value,
+    required this.recordedOn,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
-      ],
+    return SizedBox(
+      width: 104,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const SizedBox(height: 2),
+          Text(
+            recordedOn,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
 
 /// Shows “Current Metrics” with a date, dynamic metric tiles, and add button
 class CurrentMetricsSection extends StatefulWidget {
-  const CurrentMetricsSection({super.key});
+  const CurrentMetricsSection({super.key, this.refreshToken = 0});
+
+  final int refreshToken;
 
   @override
   CurrentMetricsSectionState createState() => CurrentMetricsSectionState();
@@ -68,29 +84,58 @@ class CurrentMetricsSection extends StatefulWidget {
 
 class CurrentMetricsSectionState extends State<CurrentMetricsSection>
     with AutomaticKeepAliveClientMixin<CurrentMetricsSection> {
-  final DateTime _lastMeasured = DateTime.now();
-  final int _daysAgo = 0;
+  AppRepository get _repo => context.read<AppRepository>();
 
-  final List<_MetricData> _metrics = [
-    _MetricData(
-      color: Colors.green,
-      kind: _MetricKind.visualBodyFat,
-      value: '26.0 %',
-    ),
-    _MetricData(color: Colors.blue, kind: _MetricKind.waist, value: '27 in'),
-    _MetricData(color: Colors.purple, kind: _MetricKind.hips, value: '36 in'),
-  ];
+  late Future<List<_CurrentMetric>> _metricsFuture;
 
-  void _addMetric() {
+  @override
+  void initState() {
+    super.initState();
+    _metricsFuture = _loadMetrics();
+  }
+
+  @override
+  void didUpdateWidget(covariant CurrentMetricsSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.refreshToken != widget.refreshToken) _reload();
+  }
+
+  void _reload() {
     setState(() {
-      _metrics.add(
-        _MetricData(
-          color: Colors.orange,
-          kind: _MetricKind.custom,
-          value: '123 u',
-        ),
-      );
+      _metricsFuture = _loadMetrics();
     });
+  }
+
+  Future<List<_CurrentMetric>> _loadMetrics() async {
+    await _repo.ensureDefaultMeasurementDefinitions();
+    final definitions = await _repo.fetchClassMeasurementDefinitions();
+    final metrics = await Future.wait(
+      definitions.map((definition) async {
+        final entries = await _repo.fetchClassMeasurementsForDefinition(
+          definition.id,
+        );
+        if (entries.isEmpty) return null;
+
+        entries.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+        return _CurrentMetric(
+          definition: definition,
+          measurement: entries.first,
+        );
+      }),
+    );
+
+    final savedMetrics =
+        metrics.whereType<_CurrentMetric>().toList()..sort(
+          (a, b) => b.measurement.timestamp.compareTo(a.measurement.timestamp),
+        );
+    return savedMetrics;
+  }
+
+  Future<void> _openMeasurementLogger() async {
+    final changed = await Navigator.of(
+      context,
+    ).push<bool>(MaterialPageRoute(builder: (_) => const MeasuredItemsPage()));
+    if (changed == true && mounted) _reload();
   }
 
   @override
@@ -100,83 +145,172 @@ class CurrentMetricsSectionState extends State<CurrentMetricsSection>
   Widget build(BuildContext context) {
     super.build(context);
     final strings = AppLocalizations.of(context);
-    final fmtDate = DateFormat.Md(strings.localeName).format(_lastMeasured);
-    final colors = context.colors;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            strings.dashboardCurrentMetrics,
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: 4),
-          Text(fmtDate, style: Theme.of(context).textTheme.bodySmall),
-          const SizedBox(height: 12),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                ..._metrics.map(
-                  (m) => Padding(
-                    padding: const EdgeInsets.only(right: 16),
-                    child: MetricItem(
-                      color: m.color,
-                      label: _metricLabel(m.kind, strings),
-                      value: m.value,
-                    ),
-                  ),
-                ),
-                GestureDetector(
-                  onTap: _addMetric,
-                  child: Container(
-                    width: 60,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: colors.metricAddBorderColor!),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      Icons.add,
-                      size: 24,
-                      color: colors.metricAddIconColor!,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 12),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                strings.dashboardDaysAgo(_daysAgo),
-                style: Theme.of(context).textTheme.bodySmall,
+              Expanded(
+                child: Text(
+                  strings.dashboardCurrentMetrics,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
               ),
-              Icon(
-                Icons.chevron_right,
-                size: 16,
-                color: Theme.of(
-                  context,
-                ).iconTheme.color?.withValues(alpha: 0.45),
+              TextButton.icon(
+                onPressed: _openMeasurementLogger,
+                icon: const Icon(Icons.add, size: 18),
+                label: Text(strings.nutritionTrackMeasurement),
               ),
             ],
+          ),
+          const SizedBox(height: 8),
+          FutureBuilder<List<_CurrentMetric>>(
+            future: _metricsFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState != ConnectionState.done) {
+                return const SizedBox(
+                  height: 96,
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+              if (snapshot.hasError) {
+                return _MetricsMessage(
+                  title: strings.healthUnableToLoad,
+                  actionLabel: strings.commonRetry,
+                  onAction: _reload,
+                );
+              }
+
+              final metrics = snapshot.data ?? const <_CurrentMetric>[];
+              if (metrics.isEmpty) {
+                return _MetricsMessage(
+                  title: strings.healthNoMeasurements,
+                  body: strings.healthNoMeasurementsBody,
+                  actionLabel: strings.healthCreateMetric,
+                  onAction: _openMeasurementLogger,
+                );
+              }
+
+              return SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    for (final metric in metrics)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 16),
+                        child: MetricItem(
+                          color: _metricColor(metric.definition.type),
+                          label: _metricLabel(metric.definition, strings),
+                          value: _formatMeasurement(
+                            metric.measurement,
+                            Localizations.localeOf(context),
+                          ),
+                          recordedOn: LocalizedFormatters.monthDay(
+                            metric.measurement.calendarDay.toLocalDateTime(),
+                            Localizations.localeOf(context),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              );
+            },
           ),
           const Divider(height: 32),
         ],
       ),
     );
   }
+}
 
-  String _metricLabel(_MetricKind kind, AppLocalizations strings) {
-    return switch (kind) {
-      _MetricKind.visualBodyFat => strings.dashboardVisualBodyFat,
-      _MetricKind.waist => strings.measurementWaist,
-      _MetricKind.hips => strings.measurementHips,
-      _MetricKind.custom => strings.dashboardNewMetric,
-    };
+class _MetricsMessage extends StatelessWidget {
+  const _MetricsMessage({
+    required this.title,
+    required this.actionLabel,
+    required this.onAction,
+    this.body,
+  });
+
+  final String title;
+  final String? body;
+  final String actionLabel;
+  final VoidCallback onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: Theme.of(context).textTheme.titleSmall),
+          if (body != null) ...[
+            const SizedBox(height: 4),
+            Text(body!, style: Theme.of(context).textTheme.bodySmall),
+          ],
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: OutlinedButton(
+              onPressed: onAction,
+              child: Text(actionLabel),
+            ),
+          ),
+        ],
+      ),
+    );
   }
+}
+
+Color _metricColor(MeasurementType type) {
+  return switch (type) {
+    MeasurementType.BodyWeight => Colors.green,
+    MeasurementType.Height => Colors.blue,
+    MeasurementType.Waist || MeasurementType.Hip => Colors.purple,
+    MeasurementType.Chest ||
+    MeasurementType.Shoulder ||
+    MeasurementType.Arm => Colors.orange,
+    _ => Colors.teal,
+  };
+}
+
+String _metricLabel(
+  MeasurementDefinition definition,
+  AppLocalizations strings,
+) {
+  if (definition.type == MeasurementType.Custom) return definition.name;
+  return switch (definition.type) {
+    MeasurementType.BodyWeight => strings.measurementWeight,
+    MeasurementType.Height => strings.measurementHeight,
+    MeasurementType.Forearm => strings.measurementForearm,
+    MeasurementType.Arm => strings.measurementArm,
+    MeasurementType.Neck => strings.measurementNeck,
+    MeasurementType.Shoulder => strings.measurementShoulders,
+    MeasurementType.Chest => strings.measurementChest,
+    MeasurementType.Waist => strings.measurementWaist,
+    MeasurementType.Hip => strings.measurementHips,
+    MeasurementType.Thigh => strings.measurementThigh,
+    MeasurementType.Calf => strings.measurementCalves,
+    MeasurementType.Custom => definition.name,
+  };
+}
+
+String _formatMeasurement(Measurement measurement, Locale locale) {
+  final fractionDigits =
+      measurement.value == measurement.value.roundToDouble() ? 0 : 1;
+  final value = LocalizedFormatters.number(
+    measurement.value,
+    locale,
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: fractionDigits,
+  );
+  return '$value ${measurement.unit}'.trim();
 }

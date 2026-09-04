@@ -243,7 +243,10 @@ class _PresetInfoCardState extends State<PresetInfoCard>
                             Expanded(
                               child: _PresetMetricTile(
                                 icon: Icons.schedule,
-                                value: _formatMinutes(summary.estimatedMinutes),
+                                value: _formatMinutes(
+                                  summary.estimatedMinutes,
+                                  strings,
+                                ),
                                 label: strings.presetEstimatedTime,
                               ),
                             ),
@@ -254,6 +257,7 @@ class _PresetInfoCardState extends State<PresetInfoCard>
                                 value: WeightUnitFormatter.formatVolume(
                                   summary.totalVolume,
                                   weightUnit,
+                                  locale: Localizations.localeOf(context),
                                 ),
                                 label: strings.logbookTotalVolume,
                               ),
@@ -314,12 +318,12 @@ class _PresetInfoCardState extends State<PresetInfoCard>
     );
   }
 
-  static String _formatMinutes(int minutes) {
-    if (minutes < 60) return '${minutes}m';
+  static String _formatMinutes(int minutes, AppLocalizations strings) {
+    if (minutes < 60) return strings.durationMinutesCompact(minutes);
     final hours = minutes ~/ 60;
     final mins = minutes % 60;
-    if (mins == 0) return '${hours}h';
-    return '${hours}h ${mins}m';
+    if (mins == 0) return strings.durationHoursCompact(hours);
+    return strings.durationHoursMinutesCompact(hours, mins);
   }
 }
 

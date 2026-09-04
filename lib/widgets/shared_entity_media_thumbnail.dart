@@ -1,11 +1,14 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/generated/app_localizations.dart';
 import '../models/models.dart';
 import '../repositories/app_repository.dart';
+import '../repositories/content_repository.dart';
 import '../services/media_download_preferences.dart';
 
 /// Displays optional cloud media for a stable equipment, bodypart, or muscle
@@ -49,11 +52,33 @@ class _SharedEntityMediaThumbnailState
     extends State<SharedEntityMediaThumbnail> {
   AppRepository get _repo => context.read<AppRepository>();
   late Future<_SharedThumbnailData?> _thumbnailFuture;
+  late final StreamSubscription<ContentMediaCacheChange> _cacheChanges;
+  bool _hasRetriedMissingFile = false;
 
   @override
   void initState() {
     super.initState();
     _thumbnailFuture = _loadThumbnail();
+    _cacheChanges = _repo.mediaCacheChanges.listen((change) {
+      if (!change.matchesShared(
+            widget.entityType,
+            widget.entityId,
+            thumbnail: true,
+          ) ||
+          !mounted) {
+        return;
+      }
+      setState(() {
+        _hasRetriedMissingFile = false;
+        _thumbnailFuture = _loadThumbnail();
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _cacheChanges.cancel();
+    super.dispose();
   }
 
   @override
@@ -61,6 +86,7 @@ class _SharedEntityMediaThumbnailState
     super.didUpdateWidget(oldWidget);
     if (oldWidget.entityType != widget.entityType ||
         oldWidget.entityId != widget.entityId) {
+      _hasRetriedMissingFile = false;
       _thumbnailFuture = _loadThumbnail();
     }
   }
@@ -93,9 +119,30 @@ class _SharedEntityMediaThumbnailState
       return _SharedThumbnailData(item: item, file: downloaded);
     } on MediaDownloadBlockedException {
       return _SharedThumbnailData(item: item, wifiOnlyBlocked: true);
-    } catch (_) {
+    } catch (error) {
+      _debugReportDownloadFailure(error);
       return _SharedThumbnailData(item: item, failed: true);
     }
+  }
+
+  void _debugReportDownloadFailure(Object error) {
+    if (!kDebugMode) return;
+    debugPrint(
+      '[media] shared-thumbnail-download-failed '
+      'type=${widget.entityType.name} id=${widget.entityId} '
+      'failure=${_failureKind(error)}',
+    );
+  }
+
+  String _failureKind(Object error) {
+    return switch (error) {
+      HttpException() => 'http:${error.message}',
+      FormatException() => 'format:${error.message}',
+      SocketException() => 'socket',
+      TimeoutException() => 'timeout',
+      FileSystemException() => 'filesystem',
+      _ => error.runtimeType.toString(),
+    };
   }
 
   Future<void> _recordMediaAccess(SharedMediaItem item) async {
@@ -115,7 +162,19 @@ class _SharedEntityMediaThumbnailState
   }
 
   void _retry() {
-    setState(() => _thumbnailFuture = _loadThumbnail());
+    setState(() {
+      _hasRetriedMissingFile = false;
+      _thumbnailFuture = _loadThumbnail();
+    });
+  }
+
+  void _recoverFromMissingFile() {
+    if (_hasRetriedMissingFile) return;
+    _hasRetriedMissingFile = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      setState(() => _thumbnailFuture = _loadThumbnail());
+    });
   }
 
   @override
@@ -147,6 +206,10 @@ class _SharedEntityMediaThumbnailState
                 fit: widget.imageFit,
                 filterQuality: FilterQuality.medium,
                 gaplessPlayback: true,
+                errorBuilder: (_, _, _) {
+                  _recoverFromMissingFile();
+                  return widget.fallbackBuilder(context, contentSize);
+                },
               ),
             );
           }
@@ -174,27 +237,41 @@ class _SharedEntityMediaThumbnailState
   }
 
   Widget _loadingOverlay(BuildContext context) {
-    return Align(
-      alignment: Alignment.bottomRight,
-      child: SizedBox.square(
-        dimension: widget.size * 0.22,
-        child: CircularProgressIndicator(
-          strokeWidth: 1.5,
-          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.72),
+    return Semantics(
+      container: true,
+      label: AppLocalizations.of(context).diagnosticsLoading,
+      child: Align(
+        alignment: Alignment.bottomRight,
+        child: SizedBox.square(
+          dimension: widget.size * 0.22,
+          child: CircularProgressIndicator(
+            strokeWidth: 1.5,
+            color: Theme.of(
+              context,
+            ).colorScheme.primary.withValues(alpha: 0.72),
+          ),
         ),
       ),
     );
   }
 
   Widget _wifiOverlay(BuildContext context) {
-    return _statusCircle(context, Icons.wifi);
+    return Semantics(
+      container: true,
+      label: AppLocalizations.of(context).databaseWifiOnly,
+      child: _statusCircle(context, Icons.wifi),
+    );
   }
 
   Widget _retryOverlay(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: _retry,
-      child: _statusCircle(context, Icons.refresh),
+    return Semantics(
+      button: true,
+      label: AppLocalizations.of(context).commonRetry,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: _retry,
+        child: _statusCircle(context, Icons.refresh),
+      ),
     );
   }
 

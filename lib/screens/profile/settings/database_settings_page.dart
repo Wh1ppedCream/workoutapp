@@ -9,10 +9,13 @@ import 'package:provider/provider.dart';
 
 import '../../../db/database_maintenance.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../l10n/safe_failure_localizations.dart';
 import '../../../models/models.dart';
 import '../../../repositories/app_repository.dart';
+import '../../../services/content_environment_policy.dart';
 import '../../../services/content_environment_preferences.dart';
 import '../../../services/tutorial_state_store.dart';
+import '../../../utils/localized_formatters.dart';
 import '../../../utils/tutorial_launcher.dart';
 import '../../../utils/app_test_keys.dart';
 import '../../../widgets/guided_tutorial_overlay.dart';
@@ -27,14 +30,14 @@ class DatabaseSettingsPage extends StatefulWidget {
 
 class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
   late final AppRepository _repo;
-  final _contentEnvironmentPreferences = const ContentEnvironmentPreferences();
+  final _contentEnvironmentPreferences = ContentEnvironmentPreferences();
   late Future<DatabaseHealthSnapshot> _healthFuture;
   late Future<ContentCacheUsage> _contentCacheFuture;
   late Future<ContentManifestStatus?> _exerciseMediaManifestStatusFuture;
   late Future<ContentManifestStatus?> _sharedMediaManifestStatusFuture;
   late Future<String> _manifestUrlFuture;
   late Future<String> _sharedMediaManifestUrlFuture;
-  late Future<ContentEnvironment> _selectedContentEnvironmentFuture;
+  late Future<EffectiveContentEnvironment> _selectedContentEnvironmentFuture;
   late Future<bool> _wifiOnlyMediaDownloadsFuture;
   final _fileActionsTutorialKey = GlobalKey(
     debugLabel: 'database_file_actions',
@@ -204,13 +207,19 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
       type: FileType.custom,
       allowedExtensions: const ['json'],
       withData: true,
-      dialogTitle: 'Select a database export file',
+      dialogTitle: _strings.databaseImportBackup,
     );
     if (result == null || result.files.isEmpty) return null;
 
     final picked = result.files.single;
+    if (picked.size > kDatabaseImportMaxBytes) {
+      throw const FormatException('database_import_file_too_large');
+    }
     if (picked.path != null && picked.path!.isNotEmpty) {
       final file = File(picked.path!);
+      if (await file.length() > kDatabaseImportMaxBytes) {
+        throw const FormatException('database_import_file_too_large');
+      }
       return (name: picked.name, contents: await file.readAsString());
     }
     if (picked.bytes != null) {
@@ -224,21 +233,23 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
 
   Future<void> _exportDatabase() async {
     try {
+      final confirmed = await _confirmPlaintextExport();
+      if (confirmed != true) return;
       final jsonStr = await _repo.exportDatabase();
       final location = await _saveJsonFileWithPicker(
         filename: 'fitness_tracker_database_export.json',
         contents: jsonStr,
-        dialogTitle: 'Save database export',
+        dialogTitle: _strings.databaseExportBackup,
       );
       if (location == null) return;
       await _showSavedFileDialog(
         title: _strings.databaseExportSavedTitle,
         message: _strings.databaseExportSavedBody,
       );
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_strings.databaseExportFailed(e.toString()))),
+        SnackBar(content: Text(_strings.databaseExportFailedSafe)),
       );
     }
   }
@@ -252,9 +263,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
       if (!preview.canImport) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(_strings.databaseImportBlocked(preview.message)),
-          ),
+          SnackBar(content: Text(_strings.databaseImportBlockedSafe)),
         );
         return;
       }
@@ -266,7 +275,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
       final backupLocation = await _saveJsonFileWithPicker(
         filename: 'fitness_tracker_database_backup_before_import.json',
         contents: await _repo.exportDatabase(),
-        dialogTitle: 'Save backup before import',
+        dialogTitle: _strings.databaseExportBackup,
       );
       if (backupLocation == null) {
         if (!mounted) return;
@@ -283,12 +292,43 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
         title: _strings.databaseImportSucceededTitle,
         message: _strings.databaseImportSucceededBody(picked.name),
       );
-    } catch (e) {
+    } on FormatException catch (error) {
+      if (!mounted) return;
+      final message =
+          error.message == 'database_import_file_too_large'
+              ? _strings.databaseImportFileTooLarge
+              : _strings.databaseImportBlockedSafe;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_strings.databaseImportFailed(e.toString()))),
+        SnackBar(content: Text(_strings.databaseImportFailedSafe)),
       );
     }
+  }
+
+  Future<bool?> _confirmPlaintextExport() {
+    return showDialog<bool>(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            title: Text(_strings.databaseConfirmExportTitle),
+            content: Text(_strings.databaseConfirmExportBody),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(false),
+                child: Text(_strings.commonCancel),
+              ),
+              ElevatedButton(
+                key: AppTestKeys.databaseConfirmExport,
+                onPressed: () => Navigator.of(ctx).pop(true),
+                child: Text(_strings.databaseContinueExport),
+              ),
+            ],
+          ),
+    );
   }
 
   Future<bool?> _confirmImport(
@@ -366,7 +406,9 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(_strings.databaseMaintenanceFailed(e.toString())),
+          content: Text(
+            _strings.databaseMaintenanceFailed(safeFailureMessage(_strings, e)),
+          ),
         ),
       );
     } finally {
@@ -376,7 +418,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
     }
   }
 
-  String _formatBytes(int bytes) {
+  String _formatBytes(int bytes, Locale locale) {
     const units = ['B', 'KB', 'MB', 'GB'];
     var size = bytes.toDouble();
     var unit = 0;
@@ -385,23 +427,29 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
       unit++;
     }
     final decimals = unit == 0 || size >= 100 ? 0 : 1;
-    return '${size.toStringAsFixed(decimals)} ${units[unit]}';
+    return '${LocalizedFormatters.number(
+      size,
+      locale,
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    )} ${units[unit]}';
   }
 
   String _formatDateTime(DateTime? value) {
     if (value == null) return _strings.databaseNever;
-    final local = value.toLocal();
-    return '${local.year}-${_twoDigits(local.month)}-${_twoDigits(local.day)} '
-        '${_twoDigits(local.hour)}:${_twoDigits(local.minute)}';
+    return LocalizedFormatters.dateTime(
+      value.toLocal(),
+      Localizations.localeOf(context),
+    );
   }
 
   Future<String> _loadCustomManifestUrl() async {
     return _contentEnvironmentPreferences.loadCustomExerciseMediaManifestUrl();
   }
 
-  Future<ContentEnvironment> _loadSelectedContentEnvironment() async {
+  Future<EffectiveContentEnvironment> _loadSelectedContentEnvironment() async {
     final config = await _repo.loadContentEnvironments();
-    return _contentEnvironmentPreferences.loadSelectedEnvironment(config);
+    return _contentEnvironmentPreferences.loadEffectiveEnvironment(config);
   }
 
   Future<String> _loadManifestUrl() async {
@@ -415,9 +463,18 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
   }
 
   Future<void> _saveSelectedContentEnvironment(String environmentId) async {
-    await _contentEnvironmentPreferences.saveSelectedEnvironment(environmentId);
-    if (!mounted) return;
-    _refreshContentStatus();
+    if (_contentActionRunning) return;
+    setState(() => _contentActionRunning = true);
+    try {
+      await _contentEnvironmentPreferences.saveSelectedEnvironment(
+        environmentId,
+      );
+      await _repo.refreshSelectedContentEnvironment();
+      if (!mounted) return;
+      _refreshContentStatus();
+    } finally {
+      if (mounted) setState(() => _contentActionRunning = false);
+    }
   }
 
   Future<void> _editContentEnvironment() async {
@@ -430,20 +487,27 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
       builder:
           (_) => _ContentEnvironmentDialog(
             config: config,
-            selectedEnvironmentId: selected.id,
+            selectedEnvironmentId: selected.environment.id,
           ),
     );
 
-    if (result == null || result == selected.id) return;
+    if (result == null || result == selected.environment.id) return;
     await _saveSelectedContentEnvironment(result);
   }
 
   Future<void> _saveManifestUrl(String value) async {
-    await _contentEnvironmentPreferences.saveCustomExerciseMediaManifestUrl(
-      value,
-    );
-    if (!mounted) return;
-    _refreshContentStatus();
+    if (_contentActionRunning) return;
+    setState(() => _contentActionRunning = true);
+    try {
+      await _contentEnvironmentPreferences.saveCustomExerciseMediaManifestUrl(
+        value,
+      );
+      await _repo.refreshSelectedContentEnvironment();
+      if (!mounted) return;
+      _refreshContentStatus();
+    } finally {
+      if (mounted) setState(() => _contentActionRunning = false);
+    }
   }
 
   Future<void> _editManifestUrl() async {
@@ -483,9 +547,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
     final uri = Uri.tryParse(manifestUrl);
 
     final validRemoteUri =
-        uri != null &&
-        (uri.scheme == 'https' || uri.scheme == 'http') &&
-        uri.host.isNotEmpty;
+        uri != null && uri.scheme == 'https' && uri.host.isNotEmpty;
     if (manifestUrl.isEmpty || !validRemoteUri) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -514,7 +576,9 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(_strings.databaseContentSyncFailed(e.toString())),
+          content: Text(
+            _strings.databaseContentSyncFailed(safeFailureMessage(_strings, e)),
+          ),
         ),
       );
     } finally {
@@ -543,7 +607,9 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            _strings.databaseBundledContentSyncFailed(e.toString()),
+            _strings.databaseBundledContentSyncFailed(
+              safeFailureMessage(_strings, e),
+            ),
           ),
         ),
       );
@@ -559,9 +625,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
     final manifestUrl = (await _loadSharedMediaManifestUrl()).trim();
     final uri = Uri.tryParse(manifestUrl);
     final validRemoteUri =
-        uri != null &&
-        (uri.scheme == 'https' || uri.scheme == 'http') &&
-        uri.host.isNotEmpty;
+        uri != null && uri.scheme == 'https' && uri.host.isNotEmpty;
     if (!validRemoteUri) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -590,7 +654,9 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            _strings.databaseSharedContentSyncFailed(error.toString()),
+            _strings.databaseSharedContentSyncFailed(
+              safeFailureMessage(_strings, error),
+            ),
           ),
         ),
       );
@@ -634,7 +700,11 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(strings.databaseClearCacheFailed(e.toString()))),
+        SnackBar(
+          content: Text(
+            strings.databaseClearCacheFailed(safeFailureMessage(strings, e)),
+          ),
+        ),
       );
     } finally {
       if (mounted) {
@@ -652,48 +722,67 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
       subtitle: strings.databaseCloudContentSubtitle,
       accentColor: SettingsAccent.data,
       children: settingsTilesWithDividers(context, [
-        FutureBuilder<ContentEnvironment>(
+        FutureBuilder<EffectiveContentEnvironment>(
           future: _selectedContentEnvironmentFuture,
           builder: (context, snapshot) {
-            final environment = snapshot.data;
+            final selection = snapshot.data;
+            final environment = selection?.environment;
+            final canOverride =
+                selection?.allowRuntimeOverrides ??
+                _contentEnvironmentPreferences.allowsRuntimeOverrides;
+            final environmentLabel =
+                environment == null
+                    ? strings.databaseLoadingEnvironment
+                    : environment.isProduction
+                    ? strings.databaseProductionEnvironment(environment.label)
+                    : environment.label;
             return SettingsActionTile(
               icon: Icons.public_outlined,
               title: strings.databaseContentEnvironment,
               subtitle:
                   environment == null
-                      ? strings.databaseLoadingEnvironment
-                      : '${environment.label}${environment.isProduction ? ' (production)' : ''}'
-                          '${environment.description.isEmpty ? '' : '\n${environment.description}'}',
-              trailing: IconButton(
-                tooltip: strings.databaseChangeEnvironment,
-                icon: const Icon(Icons.swap_horiz),
-                color: theme.colorScheme.primary,
-                onPressed:
-                    _contentActionRunning ? null : _editContentEnvironment,
-              ),
-              onTap: _contentActionRunning ? null : _editContentEnvironment,
+                      ? environmentLabel
+                      : '$environmentLabel'
+                          '${!canOverride || environment.description.isEmpty ? '' : '\n${environment.description}'}',
+              trailing:
+                  canOverride
+                      ? IconButton(
+                        tooltip: strings.databaseChangeEnvironment,
+                        icon: const Icon(Icons.swap_horiz),
+                        color: theme.colorScheme.primary,
+                        onPressed:
+                            _contentActionRunning
+                                ? null
+                                : _editContentEnvironment,
+                      )
+                      : const Icon(Icons.lock_outline),
+              onTap:
+                  canOverride && !_contentActionRunning
+                      ? _editContentEnvironment
+                      : null,
             );
           },
         ),
-        FutureBuilder<String>(
-          future: _manifestUrlFuture,
-          builder: (context, snapshot) {
-            final url = snapshot.data ?? '';
-            return SettingsActionTile(
-              icon: Icons.cloud_outlined,
-              title: strings.databaseExerciseManifestUrl,
-              subtitle:
-                  url.isEmpty ? strings.databaseNoExerciseManifestUrl : url,
-              trailing: IconButton(
-                tooltip: strings.databaseOverrideUrl,
-                icon: const Icon(Icons.edit),
-                color: theme.colorScheme.primary,
-                onPressed: _contentActionRunning ? null : _editManifestUrl,
-              ),
-              onTap: _contentActionRunning ? null : _editManifestUrl,
-            );
-          },
-        ),
+        if (_contentEnvironmentPreferences.allowsRuntimeOverrides)
+          FutureBuilder<String>(
+            future: _manifestUrlFuture,
+            builder: (context, snapshot) {
+              final url = snapshot.data ?? '';
+              return SettingsActionTile(
+                icon: Icons.cloud_outlined,
+                title: strings.databaseExerciseManifestUrl,
+                subtitle:
+                    url.isEmpty ? strings.databaseNoExerciseManifestUrl : url,
+                trailing: IconButton(
+                  tooltip: strings.databaseOverrideUrl,
+                  icon: const Icon(Icons.edit),
+                  color: theme.colorScheme.primary,
+                  onPressed: _contentActionRunning ? null : _editManifestUrl,
+                ),
+                onTap: _contentActionRunning ? null : _editManifestUrl,
+              );
+            },
+          ),
         FutureBuilder<ContentManifestStatus?>(
           future: _exerciseMediaManifestStatusFuture,
           builder: (context, snapshot) {
@@ -729,18 +818,20 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
             );
           },
         ),
-        FutureBuilder<String>(
-          future: _sharedMediaManifestUrlFuture,
-          builder: (context, snapshot) {
-            final url = snapshot.data ?? '';
-            return SettingsActionTile(
-              icon: Icons.collections_outlined,
-              title: strings.databaseSharedManifestUrl,
-              subtitle: url.isEmpty ? strings.databaseNoSharedManifestUrl : url,
-              trailing: const SizedBox.shrink(),
-            );
-          },
-        ),
+        if (_contentEnvironmentPreferences.allowsRuntimeOverrides)
+          FutureBuilder<String>(
+            future: _sharedMediaManifestUrlFuture,
+            builder: (context, snapshot) {
+              final url = snapshot.data ?? '';
+              return SettingsActionTile(
+                icon: Icons.collections_outlined,
+                title: strings.databaseSharedManifestUrl,
+                subtitle:
+                    url.isEmpty ? strings.databaseNoSharedManifestUrl : url,
+                trailing: const SizedBox.shrink(),
+              );
+            },
+          ),
         FutureBuilder<ContentCacheUsage>(
           future: _contentCacheFuture,
           builder: (context, snapshot) {
@@ -752,7 +843,10 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
               title: strings.databaseDownloadedMediaCache,
               subtitle: strings.databaseCacheUsage(
                 usage.fileCount,
-                _formatBytes(usage.totalBytes),
+                _formatBytes(
+                  usage.totalBytes,
+                  Localizations.localeOf(context),
+                ),
               ),
               trailing: const SizedBox.shrink(),
             );
@@ -804,12 +898,15 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
                   : null,
           onTap: _contentActionRunning ? null : _syncRemoteSharedMediaManifest,
         ),
-        SettingsActionTile(
-          icon: Icons.inventory_2_outlined,
-          title: strings.databaseLoadBundledManifest,
-          onTap:
-              _contentActionRunning ? null : _syncBundledExerciseMediaManifest,
-        ),
+        if (_contentEnvironmentPreferences.allowsRuntimeOverrides)
+          SettingsActionTile(
+            icon: Icons.inventory_2_outlined,
+            title: strings.databaseLoadBundledManifest,
+            onTap:
+                _contentActionRunning
+                    ? null
+                    : _syncBundledExerciseMediaManifest,
+          ),
         SettingsActionTile(
           icon: Icons.cleaning_services_outlined,
           title: strings.databaseClearMediaCache,
@@ -843,7 +940,10 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            _strings.databaseDefinitionExportFailed(filename, e.toString()),
+            _strings.databaseDefinitionExportFailed(
+              filename,
+              safeFailureMessage(_strings, e),
+            ),
           ),
         ),
       );
@@ -925,7 +1025,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
                 icon: Icons.error_outline,
                 iconColor: Theme.of(context).colorScheme.error,
                 title: strings.databaseHealthFailed,
-                subtitle: '${snapshot.error}',
+                subtitle: safeFailureMessage(strings, snapshot.error!),
                 trailing: IconButton(
                   tooltip: _strings.commonRetry,
                   icon: const Icon(Icons.refresh),
@@ -937,7 +1037,10 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
 
             return _DatabaseHealthCard(
               health: snapshot.data!,
-              formatBytes: _formatBytes,
+              formatBytes: (bytes) => _formatBytes(
+                bytes,
+                Localizations.localeOf(context),
+              ),
             );
           },
         ),

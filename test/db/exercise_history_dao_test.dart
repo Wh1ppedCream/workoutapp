@@ -14,6 +14,8 @@ void main() {
       CREATE TABLE sessions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         date TEXT NOT NULL,
+        completed_at_ms INTEGER,
+        training_day TEXT,
         duration INTEGER NOT NULL
       )
     ''');
@@ -54,7 +56,7 @@ void main() {
       final secondPage = await ExerciseHistoryDao.fetchWeightExerciseRows(
         db,
         definitionId: 7,
-        beforeSessionDate: cursor['session_date'] as String,
+        beforeCompletedAtMilliseconds: cursor['session_completed_at_ms'] as int,
         beforeExerciseId: cursor['exercise_id'] as int,
         limit: 10,
       );
@@ -95,7 +97,8 @@ void main() {
       final sameDatePrevious = await ExerciseHistoryDao.fetchWeightExerciseRows(
         db,
         definitionId: 7,
-        beforeSessionDate: newest.single['session_date'] as String,
+        beforeCompletedAtMilliseconds:
+            newest.single['session_completed_at_ms'] as int,
         beforeExerciseId: newest.single['exercise_id'] as int,
         limit: 1,
       );
@@ -104,7 +107,8 @@ void main() {
       final olderPage = await ExerciseHistoryDao.fetchWeightExerciseRows(
         db,
         definitionId: 7,
-        beforeSessionDate: sameDatePrevious.single['session_date'] as String,
+        beforeCompletedAtMilliseconds:
+            sameDatePrevious.single['session_completed_at_ms'] as int,
         beforeExerciseId: sameDatePrevious.single['exercise_id'] as int,
         limit: 1,
       );
@@ -118,7 +122,13 @@ Future<int> _insertWeightExercise(
   required int definitionId,
   required String date,
 }) async {
-  final sessionId = await db.insert('sessions', {'date': date, 'duration': 0});
+  final parsed = DateTime.parse(date);
+  final sessionId = await db.insert('sessions', {
+    'date': parsed.toUtc().toIso8601String(),
+    'completed_at_ms': parsed.toUtc().millisecondsSinceEpoch,
+    'training_day': date.substring(0, 10),
+    'duration': 0,
+  });
   return db.insert('exercises', {
     'session_id': sessionId,
     'exercise_def_id': definitionId,

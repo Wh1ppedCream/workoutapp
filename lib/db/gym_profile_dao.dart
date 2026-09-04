@@ -56,14 +56,14 @@ class GymProfileDao {
     );
   }
 
-  /// Fetches equipment entries (id + name) for a profile.
+  /// Fetches equipment entries, including the stable catalog identity, for a profile.
   static Future<List<Map<String, dynamic>>> getEquipmentForProfile(
     Database db,
     int profileId,
   ) {
     return db.rawQuery(
       '''
-      SELECT e.id, e.name
+      SELECT e.id, e.name, e.catalog_id
       FROM equipment e
       JOIN profile_equipment pe ON e.id = pe.equipment_id
       WHERE pe.profile_id = ?

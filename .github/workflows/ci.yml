@@ -2,10 +2,17 @@ name: Flutter CI
 
 on:
   pull_request:
+    branches:
+      - master
   push:
     branches:
       - master
-      - local-db
+      - "feature/**"
+      - "fix/**"
+      - "updates/**"
+      - "dependency/**"
+      - "chore/**"
+      - "release/**"
   workflow_dispatch:
 
 permissions:
@@ -26,15 +33,17 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
 
       - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
@@ -46,6 +55,9 @@ jobs:
       - name: Generate localization sources
         run: flutter gen-l10n
 
+      - name: Normalize generated localization formatting
+        run: dart format lib/l10n/generated
+
       - name: Verify generated localization sources are committed
         shell: bash
         run: |
@@ -56,8 +68,54 @@ jobs:
             exit 1
           fi
 
+      - name: Run localization contract tests
+        run: >-
+          flutter test
+          test/localization/hardcoded_ui_copy_contract_test.dart
+          test/localization/reviewed_english_values_contract_test.dart
+          test/localization/arb_structure_contract_test.dart
+          test/localization/localization_smoke_test.dart
+          test/widgets/media_accessibility_contract_test.dart
+          test/widgets/workout_record_badges_test.dart
+
       - name: Analyze source and tests
         run: dart analyze lib test integration_test test_driver
+
+      - name: Analyze content-pipeline tools
+        run: >-
+          dart analyze
+          tools/content_environment_check.dart
+          tools/content_pipeline.dart
+          tools/shared_media_pipeline.dart
+
+      - name: Validate development content environment
+        run: >-
+          dart run tools/content_environment_check.dart
+          --source assets/content/content_environments.json
+          --target development
+
+      - name: Install catalog-builder dependencies
+        working-directory: tools/catalog_builder
+        run: dart pub get
+
+      - name: Analyze catalog-builder tools
+        working-directory: tools/catalog_builder
+        run: dart analyze bin tool
+
+      - name: Validate catalog and media fixtures
+        run: >-
+          flutter test
+          test/catalog_contract_test.dart
+          test/tooling_fixture_contract_test.dart
+
+      - name: Verify locked development build policy
+        run: >-
+          flutter test
+          test/services/content_environment_compile_time_test.dart
+          --dart-define=TONOS_CONTENT_ENVIRONMENT=development
+          --dart-define=TONOS_CONTENT_ALLOW_OVERRIDES=false
+          --dart-define=TONOS_EXPECTED_CONTENT_ENVIRONMENT=development
+          --dart-define=TONOS_EXPECTED_CONTENT_OVERRIDES=false
 
       - name: Run unit and widget tests
         run: flutter test
@@ -73,17 +131,19 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
 
       - name: Set up Java
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:
           distribution: temurin
           java-version: "17"
           cache: gradle
 
       - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
@@ -113,10 +173,14 @@ jobs:
           EOF
 
       - name: Build release APK
-        run: flutter build apk --release
+        run: >-
+          flutter build apk --release
+          --dart-define=TONOS_CONTENT_ENVIRONMENT=development
+          --dart-define=TONOS_CONTENT_ALLOW_OVERRIDES=false
+          --dart-define=TONOS_ENABLE_EXPERIMENTAL_TABS=false
 
       - name: Upload release APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: tonos-release-apk-${{ github.sha }}
           path: build/app/outputs/flutter-apk/app-release.apk

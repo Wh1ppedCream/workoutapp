@@ -95,8 +95,9 @@ class SettingsHeroCard extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final accent = accentColor ?? scheme.primary;
-    final usesLocalizedLayout =
-        Localizations.localeOf(context).languageCode != 'en';
+    final languageCode = Localizations.localeOf(context).languageCode;
+    final usesLocalizedLayout = languageCode != 'en';
+    final isSpanish = languageCode == 'es';
 
     return Container(
       padding: const EdgeInsets.all(18),
@@ -164,7 +165,7 @@ class SettingsHeroCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     subtitle!,
-                    maxLines: 2,
+                    maxLines: isSpanish ? 3 : 2,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: scheme.onSurfaceVariant,
@@ -276,6 +277,7 @@ class SettingsSection extends StatelessWidget {
 class SettingsActionTile extends StatelessWidget {
   final IconData icon;
   final String title;
+  final Widget? titleWidget;
   final String? subtitle;
   final VoidCallback? onTap;
   final Widget? trailing;
@@ -285,6 +287,7 @@ class SettingsActionTile extends StatelessWidget {
     super.key,
     required this.icon,
     required this.title,
+    this.titleWidget,
     this.subtitle,
     this.onTap,
     this.trailing,
@@ -310,14 +313,16 @@ class SettingsActionTile extends StatelessWidget {
         ),
         child: Icon(icon, color: resolvedIconColor, size: 22),
       ),
-      title: Text(
-        title,
-        maxLines: usesLocalizedLayout ? 2 : 1,
-        overflow: usesLocalizedLayout ? null : TextOverflow.ellipsis,
-        style: theme.textTheme.titleSmall?.copyWith(
-          fontWeight: FontWeight.w900,
-        ),
-      ),
+      title:
+          titleWidget ??
+          Text(
+            title,
+            maxLines: usesLocalizedLayout ? 2 : 1,
+            overflow: usesLocalizedLayout ? null : TextOverflow.ellipsis,
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w900,
+            ),
+          ),
       subtitle:
           subtitle == null
               ? null

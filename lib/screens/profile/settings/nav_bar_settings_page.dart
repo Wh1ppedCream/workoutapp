@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../l10n/app_localization_extensions.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../providers/nav_bar_config.dart';
+import '../../../utils/app_test_keys.dart';
 import '../../../widgets/settings_tiles.dart';
 
 class NavBarSettingsPage extends StatefulWidget {
@@ -89,6 +90,7 @@ class _NavBarSettingsPageState extends State<NavBarSettingsPage> {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
           child: FilledButton.icon(
+            key: AppTestKeys.navigationSave,
             onPressed: _save,
             icon: const Icon(Icons.save_outlined),
             label: Text(strings.navEditorSave),

@@ -6,6 +6,7 @@ import '../repositories/app_repository.dart';
 import '../repositories/food_catalog_repository.dart';
 import '../models/gym_models.dart';
 import '../models/nutrition_models.dart';
+import '../services/safe_failure.dart';
 
 class NutritionProfile extends ChangeNotifier {
   final AppRepository _repo;
@@ -31,7 +32,7 @@ class NutritionProfile extends ChangeNotifier {
   List<DiaryEntry> get meals => _meals.map((r) => r.entry).toList();
 
   bool isLoading = false;
-  String? error;
+  SafeFailure? error;
 
   // Prevents out-of-order updates when multiple reloads race.
   int _reloadSeq = 0;
@@ -61,6 +62,7 @@ class NutritionProfile extends ChangeNotifier {
   // Convenience
   int? get profileId => current?.id;
   bool get isToday => day.isAtSameMomentAs(_dayOnly(DateTime.now()));
+  int get reloadSequence => _reloadSeq;
 
   @override
   void dispose() {
@@ -84,7 +86,7 @@ class NutritionProfile extends ChangeNotifier {
       await reloadDay(); // loads totals/goal/meals for [day]
       _scheduleMidnightTick();
     } catch (e) {
-      error = e.toString();
+      error = SafeFailure.classify(e);
       _safeNotify();
     }
   }
@@ -221,7 +223,7 @@ class NutritionProfile extends ChangeNotifier {
       _safeNotify();
     } catch (e) {
       if (_disposed || seq != _reloadSeq) return;
-      error = e.toString();
+      error = SafeFailure.classify(e);
       _safeNotify();
     } finally {
       if (!_disposed && seq == _reloadSeq) {
@@ -248,7 +250,7 @@ class NutritionProfile extends ChangeNotifier {
       await action();
     } catch (e) {
       if (_disposed) return;
-      error = e.toString();
+      error = SafeFailure.classify(e);
       _safeNotify();
     } finally {
       if (!_disposed) {
@@ -531,7 +533,7 @@ class NutritionProfile extends ChangeNotifier {
       } else {
         favoriteFoodIds.remove(foodId);
       }
-      error = e.toString();
+      error = SafeFailure.classify(e);
       _safeNotify();
     } finally {
       _favoriteOpsInFlight.remove(foodId);

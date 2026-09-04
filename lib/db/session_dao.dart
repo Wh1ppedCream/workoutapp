@@ -1,6 +1,8 @@
 // File: lib/db/session_dao.dart
 
 import 'package:sqflite/sqflite.dart';
+
+import '../models/temporal_semantics.dart';
 import 'db_query_utils.dart';
 
 /// Data Access Object for workout sessions.
@@ -11,21 +13,37 @@ class SessionDao {
   /// Inserts a new session row.
   ///
   /// - [db]: Open SQLite database instance.
-  /// - [date]: ISO 8601 date string representing session date/time.
+  /// - [completedAt]: Exact instant when the session was completed.
+  /// - [trainingDay]: Stable local calendar day shown in history.
   /// - [duration]: Total session duration in seconds.
   ///
   /// Returns the new session row ID.
-  static Future<int> insertSession(Database db, String date, int duration) {
-    return db.insert('sessions', {'date': date, 'duration': duration});
+  static Future<int> insertSession(
+    DatabaseExecutor db, {
+    required DateTime completedAt,
+    required int duration,
+    LocalCalendarDay? trainingDay,
+  }) {
+    final day =
+        trainingDay ?? LocalCalendarDay.fromDateTime(completedAt.toLocal());
+    return db.insert('sessions', {
+      // Retained for backwards-compatible JSON exports and older app builds.
+      'date': TemporalSemantics.legacyUtcIso8601(completedAt),
+      'completed_at_ms': TemporalSemantics.utcEpochMilliseconds(completedAt),
+      'training_day': day.storageKey,
+      'duration': duration,
+    });
   }
 
-  /// Retrieves all sessions as raw maps, ordered by date descending.
+  /// Retrieves all sessions as raw maps, newest completion instant first.
   ///
   /// - [db]: Open SQLite database instance.
   ///
-  /// Returns a list of maps with keys: `id`, `date`, `duration`.
-  static Future<List<Map<String, dynamic>>> getAllSessionsRaw(Database db) {
-    return db.query('sessions', orderBy: 'date DESC');
+  /// Rows include canonical instant/day columns and legacy export text.
+  static Future<List<Map<String, dynamic>>> getAllSessionsRaw(
+    DatabaseExecutor db,
+  ) {
+    return db.query('sessions', orderBy: 'completed_at_ms DESC, id DESC');
   }
 
   /// Deletes the session with the given ID.
@@ -45,7 +63,7 @@ class SessionDao {
   ///
   /// Returns a map of column values or `null` if not found.
   static Future<Map<String, dynamic>?> getSessionById(
-    Database db,
+    DatabaseExecutor db,
     int sessionId,
   ) async {
     final rows = await db.query(
@@ -61,41 +79,70 @@ class SessionDao {
   ///
   /// - [db]: Open SQLite database instance.
   /// - [sessionId]: ID of the session to update.
-  /// - [date]: New ISO date string.
+  /// - [completedAt]: New exact completion instant.
+  /// - [trainingDay]: New stable local calendar day.
   /// - [duration]: New duration in seconds.
   ///
   /// Returns number of rows affected (0 or 1).
   static Future<int> updateSession(
-    Database db,
-    int sessionId,
-    String date,
-    int duration,
-  ) {
+    DatabaseExecutor db,
+    int sessionId, {
+    required DateTime completedAt,
+    required int duration,
+    LocalCalendarDay? trainingDay,
+  }) {
+    final day =
+        trainingDay ?? LocalCalendarDay.fromDateTime(completedAt.toLocal());
     return db.update(
       'sessions',
-      {'date': date, 'duration': duration},
+      {
+        'date': TemporalSemantics.legacyUtcIso8601(completedAt),
+        'completed_at_ms': TemporalSemantics.utcEpochMilliseconds(completedAt),
+        'training_day': day.storageKey,
+        'duration': duration,
+      },
       where: 'id = ?',
       whereArgs: [sessionId],
     );
   }
 
-  /// Retrieves sessions with dates between [start] and [end].
+  /// Retrieves sessions for exact instants between [start] and [end].
   ///
-  /// - [db]: Open SQLite database instance.
-  /// - [start]: ISO date string for start of range (inclusive).
-  /// - [end]: ISO date string for end of range (inclusive).
-  ///
-  /// Returns a list of session maps ordered by date descending.
-  static Future<List<Map<String, dynamic>>> getSessionsInRange(
-    Database db,
-    String start,
-    String end,
+  /// This intentionally keeps the historic inclusive range contract. Calendar
+  /// reporting should use [getSessionsForCalendarRange] instead.
+  static Future<List<Map<String, dynamic>>> getSessionsForInstantRange(
+    DatabaseExecutor db,
+    DateTime start,
+    DateTime end,
   ) {
     return db.query(
       'sessions',
-      where: 'date BETWEEN ? AND ?',
-      whereArgs: [start, end],
-      orderBy: 'date DESC',
+      where: 'completed_at_ms >= ? AND completed_at_ms <= ?',
+      whereArgs: [
+        TemporalSemantics.utcEpochMilliseconds(start),
+        TemporalSemantics.utcEpochMilliseconds(end),
+      ],
+      orderBy: 'completed_at_ms DESC, id DESC',
+    );
+  }
+
+  /// Retrieves sessions for calendar days between [startDay] and [endDay].
+  ///
+  /// - [db]: Open SQLite database instance.
+  /// - [startDay]: First local calendar day (inclusive).
+  /// - [endDay]: Last local calendar day (inclusive).
+  ///
+  /// Returns a list of session maps ordered by calendar day and instant.
+  static Future<List<Map<String, dynamic>>> getSessionsForCalendarRange(
+    DatabaseExecutor db,
+    LocalCalendarDay startDay,
+    LocalCalendarDay endDay,
+  ) {
+    return db.query(
+      'sessions',
+      where: 'training_day >= ? AND training_day <= ?',
+      whereArgs: [startDay.storageKey, endDay.storageKey],
+      orderBy: 'training_day DESC, completed_at_ms DESC, id DESC',
     );
   }
 }

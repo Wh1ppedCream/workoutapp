@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../services/diagnostics_service.dart';
+import '../../../utils/localized_formatters.dart';
 import '../../../widgets/settings_tiles.dart';
 
 class DiagnosticsSettingsPage extends StatefulWidget {
@@ -295,9 +295,10 @@ class _SyncEventTile extends StatelessWidget {
         succeeded
             ? strings.diagnosticsSyncSucceeded
             : strings.diagnosticsSyncFailed;
-    final timestamp = DateFormat.yMMMd(
-      Localizations.localeOf(context).toLanguageTag(),
-    ).add_jm().format(event.timestamp.toLocal());
+    final timestamp = LocalizedFormatters.dateTime(
+      event.timestamp.toLocal(),
+      Localizations.localeOf(context),
+    );
 
     return ListTile(
       leading: Icon(

@@ -134,6 +134,90 @@ abstract class AppLocalizations {
   /// **'{bodyPart} body heatmap'**
   String bodyHeatmapSemantics(String bodyPart);
 
+  /// No description provided for @focusedSetsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Focused Sets'**
+  String get focusedSetsTitle;
+
+  /// No description provided for @bodyPartNeck.
+  ///
+  /// In en, this message translates to:
+  /// **'Neck'**
+  String get bodyPartNeck;
+
+  /// No description provided for @bodyPartShoulders.
+  ///
+  /// In en, this message translates to:
+  /// **'Shoulders'**
+  String get bodyPartShoulders;
+
+  /// No description provided for @bodyPartChest.
+  ///
+  /// In en, this message translates to:
+  /// **'Chest'**
+  String get bodyPartChest;
+
+  /// No description provided for @bodyPartCore.
+  ///
+  /// In en, this message translates to:
+  /// **'Core'**
+  String get bodyPartCore;
+
+  /// No description provided for @bodyPartUpperBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Upper Back'**
+  String get bodyPartUpperBack;
+
+  /// No description provided for @bodyPartLowerBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Lower Back'**
+  String get bodyPartLowerBack;
+
+  /// No description provided for @bodyPartBiceps.
+  ///
+  /// In en, this message translates to:
+  /// **'Biceps'**
+  String get bodyPartBiceps;
+
+  /// No description provided for @bodyPartTriceps.
+  ///
+  /// In en, this message translates to:
+  /// **'Triceps'**
+  String get bodyPartTriceps;
+
+  /// No description provided for @bodyPartForearms.
+  ///
+  /// In en, this message translates to:
+  /// **'Forearms'**
+  String get bodyPartForearms;
+
+  /// No description provided for @bodyPartHips.
+  ///
+  /// In en, this message translates to:
+  /// **'Hips'**
+  String get bodyPartHips;
+
+  /// No description provided for @bodyPartHamstrings.
+  ///
+  /// In en, this message translates to:
+  /// **'Hamstrings'**
+  String get bodyPartHamstrings;
+
+  /// No description provided for @bodyPartQuads.
+  ///
+  /// In en, this message translates to:
+  /// **'Quads'**
+  String get bodyPartQuads;
+
+  /// No description provided for @bodyPartCalves.
+  ///
+  /// In en, this message translates to:
+  /// **'Calves'**
+  String get bodyPartCalves;
+
   /// No description provided for @databaseSaveFile.
   ///
   /// In en, this message translates to:
@@ -3722,6 +3806,78 @@ abstract class AppLocalizations {
   /// **'Retry'**
   String get commonRetry;
 
+  /// No description provided for @safeFailureLoadTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load'**
+  String get safeFailureLoadTitle;
+
+  /// No description provided for @safeFailureSaveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to save changes'**
+  String get safeFailureSaveTitle;
+
+  /// No description provided for @safeFailureActionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not complete that action'**
+  String get safeFailureActionTitle;
+
+  /// No description provided for @safeFailureValidation.
+  ///
+  /// In en, this message translates to:
+  /// **'Check the information and try again.'**
+  String get safeFailureValidation;
+
+  /// No description provided for @safeFailureOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'No connection. Reconnect and try again.'**
+  String get safeFailureOffline;
+
+  /// No description provided for @safeFailurePermission.
+  ///
+  /// In en, this message translates to:
+  /// **'Tonos does not have permission to complete this action. Check device settings.'**
+  String get safeFailurePermission;
+
+  /// No description provided for @safeFailureStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Tonos could not access device storage. Check available space and try again.'**
+  String get safeFailureStorage;
+
+  /// No description provided for @safeFailureInvalidData.
+  ///
+  /// In en, this message translates to:
+  /// **'The data could not be read safely. Choose another file or try again.'**
+  String get safeFailureInvalidData;
+
+  /// No description provided for @safeFailureNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'The requested data is no longer available. Refresh and try again.'**
+  String get safeFailureNotFound;
+
+  /// No description provided for @safeFailureTemporary.
+  ///
+  /// In en, this message translates to:
+  /// **'This is temporarily unavailable. Try again.'**
+  String get safeFailureTemporary;
+
+  /// No description provided for @safeFailureUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong. Try again.'**
+  String get safeFailureUnknown;
+
+  /// No description provided for @safeFailureWithGuidance.
+  ///
+  /// In en, this message translates to:
+  /// **'{summary} {guidance}'**
+  String safeFailureWithGuidance(String summary, String guidance);
+
   /// No description provided for @flowPageTitle.
   ///
   /// In en, this message translates to:
@@ -4439,8 +4595,8 @@ abstract class AppLocalizations {
   /// No description provided for @fullHistorySessionSummary.
   ///
   /// In en, this message translates to:
-  /// **'{date} - {minutes} min'**
-  String fullHistorySessionSummary(String date, int minutes);
+  /// **'{date} - {duration}'**
+  String fullHistorySessionSummary(String date, String duration);
 
   /// No description provided for @weeklySetsTitle.
   ///
@@ -4871,8 +5027,8 @@ abstract class AppLocalizations {
   /// No description provided for @logbookSessionSummary.
   ///
   /// In en, this message translates to:
-  /// **'{minutes} min - {exercises, plural, =1{1 exercise} other{{exercises} exercises}} - {sets, plural, =1{1 set} other{{sets} sets}} - {volume}'**
-  String logbookSessionSummary(int minutes, int exercises, int sets, String volume);
+  /// **'{duration} - {exercises, plural, =1{1 exercise} other{{exercises} exercises}} - {sets, plural, =1{1 set} other{{sets} sets}} - {volume}'**
+  String logbookSessionSummary(String duration, int exercises, int sets, String volume);
 
   /// No description provided for @durationHours.
   ///
@@ -9017,8 +9173,8 @@ abstract class AppLocalizations {
   /// No description provided for @pastSessionsItem.
   ///
   /// In en, this message translates to:
-  /// **'{date} - {minutes} min'**
-  String pastSessionsItem(String date, int minutes);
+  /// **'{date} - {duration}'**
+  String pastSessionsItem(String date, String duration);
 
   /// No description provided for @historySummaryLoadFailed.
   ///
@@ -11371,6 +11527,180 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Some deletion requests will retry when the app opens with a connection.'**
   String get diagnosticsSharedDeletionPending;
+
+  /// No description provided for @workoutDurabilityRestoreWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Tonos could not check for a saved workout. Retry before starting another workout.'**
+  String get workoutDurabilityRestoreWarning;
+
+  /// No description provided for @workoutDurabilityDraftSaveWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Your workout backup is not up to date. Keep Tonos open and retry so this workout can be resumed safely.'**
+  String get workoutDurabilityDraftSaveWarning;
+
+  /// No description provided for @workoutDurabilityProgressionWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Your workout is saved, but plan progression is still pending. Retry when storage is available.'**
+  String get workoutDurabilityProgressionWarning;
+
+  /// No description provided for @databaseConfirmExportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Export private data?'**
+  String get databaseConfirmExportTitle;
+
+  /// No description provided for @databaseConfirmExportBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This backup is an unencrypted JSON file that can contain your workouts, nutrition, body metrics, profile, and preferences. Save it only to a location you trust.'**
+  String get databaseConfirmExportBody;
+
+  /// No description provided for @databaseContinueExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Export anyway'**
+  String get databaseContinueExport;
+
+  /// No description provided for @databaseExportFailedSafe.
+  ///
+  /// In en, this message translates to:
+  /// **'The database export could not be created. Your app data is unchanged.'**
+  String get databaseExportFailedSafe;
+
+  /// No description provided for @databaseImportFileTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'This import is too large. Choose a database backup smaller than 25 MB.'**
+  String get databaseImportFileTooLarge;
+
+  /// No description provided for @databaseImportBlockedSafe.
+  ///
+  /// In en, this message translates to:
+  /// **'This database backup could not be imported. Your current app data is unchanged.'**
+  String get databaseImportBlockedSafe;
+
+  /// No description provided for @databaseImportFailedSafe.
+  ///
+  /// In en, this message translates to:
+  /// **'The database import did not finish. Your current app data was kept safe.'**
+  String get databaseImportFailedSafe;
+
+  /// No description provided for @speedDialLogFood.
+  ///
+  /// In en, this message translates to:
+  /// **'Log food'**
+  String get speedDialLogFood;
+
+  /// No description provided for @speedDialLogMeasurement.
+  ///
+  /// In en, this message translates to:
+  /// **'Log measurement'**
+  String get speedDialLogMeasurement;
+
+  /// No description provided for @healthTapToLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap + to log'**
+  String get healthTapToLog;
+
+  /// No description provided for @healthMetricInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a unique metric name and a short unit without spaces.'**
+  String get healthMetricInvalid;
+
+  /// No description provided for @healthMeasurementEntryInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a plausible positive value using a supported unit.'**
+  String get healthMeasurementEntryInvalid;
+
+  /// No description provided for @allocationSourceAutomatic.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic calculation'**
+  String get allocationSourceAutomatic;
+
+  /// No description provided for @allocationSourceCreatorDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Tonos default'**
+  String get allocationSourceCreatorDefault;
+
+  /// No description provided for @allocationSourcePersonalOverride.
+  ///
+  /// In en, this message translates to:
+  /// **'Your custom allocation'**
+  String get allocationSourcePersonalOverride;
+
+  /// No description provided for @allocationSourceLegacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Existing allocation'**
+  String get allocationSourceLegacy;
+
+  /// No description provided for @quickActionMeasurement.
+  ///
+  /// In en, this message translates to:
+  /// **'+ Measurement'**
+  String get quickActionMeasurement;
+
+  /// No description provided for @quickActionFood.
+  ///
+  /// In en, this message translates to:
+  /// **'+ Food'**
+  String get quickActionFood;
+
+  /// No description provided for @quickActionWorkout.
+  ///
+  /// In en, this message translates to:
+  /// **'+ Workout'**
+  String get quickActionWorkout;
+
+  /// No description provided for @healthTrendNeedEntries.
+  ///
+  /// In en, this message translates to:
+  /// **'Log entries to build a trend.'**
+  String get healthTrendNeedEntries;
+
+  /// No description provided for @healthTrendNeedOneMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Log one more entry to draw a trend.'**
+  String get healthTrendNeedOneMore;
+
+  /// No description provided for @healthNoChange.
+  ///
+  /// In en, this message translates to:
+  /// **'No change yet'**
+  String get healthNoChange;
+
+  /// No description provided for @healthChangeSinceLast.
+  ///
+  /// In en, this message translates to:
+  /// **'{delta} since last'**
+  String healthChangeSinceLast(String delta);
+
+  /// No description provided for @healthTrendChartSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} trend chart. {count, plural, =0{No entries yet.} =1{1 entry.} other{{count} entries.}} Latest value: {value}.'**
+  String healthTrendChartSemantics(String name, int count, String value);
+
+  /// No description provided for @healthEntryActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Entry actions'**
+  String get healthEntryActions;
+
+  /// No description provided for @premadeOneHourDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'{duration} version of {planName} using the main movements from the full template.'**
+  String premadeOneHourDescription(String duration, String planName);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

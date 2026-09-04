@@ -2,6 +2,7 @@
 
 import 'package:sqflite/sqflite.dart';
 
+import '../models/temporal_semantics.dart';
 import 'content_dao.dart';
 
 /// Database schema manager for fresh installs and every historical migration.
@@ -96,6 +97,7 @@ class Schema {
           value     REAL    NOT NULL,
           unit      TEXT    NOT NULL,
           note      TEXT,
+          context   TEXT,
           FOREIGN KEY(def_id) REFERENCES measurement_definitions(id) ON DELETE CASCADE
         );
       ''');
@@ -161,6 +163,11 @@ class Schema {
     await migrateV55(db);
     await migrateV56(db);
     await migrateV57(db);
+    await migrateV58(db);
+    await migrateV59(db);
+    await migrateV60(db);
+    await migrateV61(db);
+    await migrateV62(db);
   }
 
   /// Handler for onUpgrade callback.
@@ -225,6 +232,11 @@ class Schema {
     if (oldVersion < 55) await migrateV55(db);
     if (oldVersion < 56) await migrateV56(db);
     if (oldVersion < 57) await migrateV57(db);
+    if (oldVersion < 58) await migrateV58(db);
+    if (oldVersion < 59) await migrateV59(db);
+    if (oldVersion < 60) await migrateV60(db);
+    if (oldVersion < 61) await migrateV61(db);
+    if (oldVersion < 62) await migrateV62(db);
   }
 
   /// Migration to version 3: adds rating, equipment/muscle tables.
@@ -3278,6 +3290,306 @@ WHERE source_id IS NULL
       CREATE INDEX IF NOT EXISTS idx_workout_set_record_events_set
       ON workout_set_record_events(set_id)
     ''');
+  }
+
+  /// v58 - durable, idempotent handoff for post-workout plan progression.
+  static Future<void> migrateV58(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS pending_workout_progression (
+        session_id INTEGER PRIMARY KEY,
+        preset_id INTEGER NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        attempt_count INTEGER NOT NULL DEFAULT 0 CHECK(attempt_count >= 0),
+        FOREIGN KEY(session_id) REFERENCES sessions(id) ON DELETE CASCADE
+      )
+    ''');
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_pending_progression_created
+      ON pending_workout_progression(created_at, session_id)
+    ''');
+  }
+
+  /// Migration to version 59: stores measurement context as structured data.
+  static Future<void> migrateV59(Database db) async {
+    final columns = await db.rawQuery("PRAGMA table_info('measurements')");
+    if (!columns.any((column) => column['name'] == 'context')) {
+      await db.execute('ALTER TABLE measurements ADD COLUMN context TEXT;');
+    }
+
+    await db.execute('''
+      UPDATE measurements
+         SET context = CASE
+           WHEN note = 'WakeUp' AND def_id IN (SELECT id FROM measurement_definitions WHERE type = 'BodyWeight') THEN 'wakeUp'
+           WHEN note = 'BedTime' AND def_id IN (SELECT id FROM measurement_definitions WHERE type = 'BodyWeight') THEN 'bedtime'
+           WHEN note = 'Overall' AND def_id IN (SELECT id FROM measurement_definitions WHERE type = 'BodyWeight') THEN 'overall'
+           WHEN note = 'With pump' AND def_id IN (SELECT id FROM measurement_definitions WHERE type NOT IN ('BodyWeight', 'Height', 'Custom')) THEN 'withPump'
+           WHEN note = 'Without pump' AND def_id IN (SELECT id FROM measurement_definitions WHERE type NOT IN ('BodyWeight', 'Height', 'Custom')) THEN 'withoutPump'
+         END,
+             note = CASE
+           WHEN note IN ('WakeUp', 'BedTime', 'Overall')
+             AND def_id IN (SELECT id FROM measurement_definitions WHERE type = 'BodyWeight') THEN NULL
+           WHEN note IN ('With pump', 'Without pump')
+             AND def_id IN (SELECT id FROM measurement_definitions WHERE type NOT IN ('BodyWeight', 'Height', 'Custom')) THEN NULL
+           ELSE note
+         END
+       WHERE context IS NULL
+         AND note IN ('WakeUp', 'BedTime', 'Overall', 'With pump', 'Without pump');
+    ''');
+  }
+
+  /// v60 - separates stable shipped-catalog identity from local row identity.
+  ///
+  /// `exercise_definitions.id` is referenced by workouts, plans, records, and
+  /// media. It must therefore never depend on the order of exercises.json.
+  static Future<void> migrateV60(Database db) async {
+    final columns = await db.rawQuery(
+      "PRAGMA table_info('exercise_definitions')",
+    );
+    final columnNames =
+        columns.map((column) => column['name'] as String).toSet();
+    if (!columnNames.contains('catalog_id')) {
+      await db.execute(
+        'ALTER TABLE exercise_definitions ADD COLUMN catalog_id TEXT;',
+      );
+    }
+    if (!columnNames.contains('legacy_media_id')) {
+      await db.execute(
+        'ALTER TABLE exercise_definitions ADD COLUMN legacy_media_id INTEGER;',
+      );
+    }
+    if (!columnNames.contains('catalog_status')) {
+      await db.execute(
+        "ALTER TABLE exercise_definitions ADD COLUMN catalog_status TEXT NOT NULL DEFAULT 'active';",
+      );
+    }
+
+    await db.execute(
+      'CREATE UNIQUE INDEX IF NOT EXISTS idx_exercise_definitions_catalog_id '
+      'ON exercise_definitions(catalog_id) WHERE catalog_id IS NOT NULL',
+    );
+    await db.execute(
+      'CREATE UNIQUE INDEX IF NOT EXISTS idx_exercise_definitions_legacy_media_id '
+      'ON exercise_definitions(legacy_media_id) '
+      'WHERE legacy_media_id IS NOT NULL',
+    );
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS exercise_definition_aliases (
+        exercise_def_id INTEGER NOT NULL,
+        alias TEXT NOT NULL COLLATE NOCASE,
+        PRIMARY KEY(exercise_def_id, alias),
+        FOREIGN KEY(exercise_def_id)
+          REFERENCES exercise_definitions(id) ON DELETE CASCADE
+      )
+    ''');
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_exercise_definition_aliases_alias '
+      'ON exercise_definition_aliases(alias)',
+    );
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS exercise_catalog_state (
+        singleton INTEGER PRIMARY KEY CHECK(singleton = 1),
+        revision INTEGER NOT NULL,
+        synced_at TEXT NOT NULL
+      )
+    ''');
+  }
+
+  /// v61 - separates exact event instants from stable local calendar days.
+  ///
+  /// The original text columns remain for legacy export compatibility. New
+  /// reads and writes use epoch milliseconds plus explicit YYYY-MM-DD values.
+  static Future<void> migrateV61(Database db) async {
+    await db.transaction((txn) async {
+      if (await _schemaTableExists(txn, 'sessions')) {
+        final sessionColumns = await _schemaColumnNames(txn, 'sessions');
+        if (!sessionColumns.contains('completed_at_ms')) {
+          await txn.execute(
+            'ALTER TABLE sessions ADD COLUMN completed_at_ms INTEGER;',
+          );
+        }
+        if (!sessionColumns.contains('training_day')) {
+          await txn.execute(
+            'ALTER TABLE sessions ADD COLUMN training_day TEXT;',
+          );
+        }
+        await _backfillSessionTemporalColumns(txn);
+        // Text ordering is no longer a supported query path.
+        await txn.execute('DROP INDEX IF EXISTS idx_sessions_date');
+        await txn.execute('''
+          CREATE INDEX IF NOT EXISTS idx_sessions_completed_at_ms
+          ON sessions(completed_at_ms, id)
+        ''');
+        await txn.execute('''
+          CREATE INDEX IF NOT EXISTS idx_sessions_training_day
+          ON sessions(training_day, completed_at_ms, id)
+        ''');
+      }
+
+      if (await _schemaTableExists(txn, 'measurements')) {
+        final measurementColumns = await _schemaColumnNames(
+          txn,
+          'measurements',
+        );
+        if (!measurementColumns.contains('measured_at_ms')) {
+          await txn.execute(
+            'ALTER TABLE measurements ADD COLUMN measured_at_ms INTEGER;',
+          );
+        }
+        if (!measurementColumns.contains('measured_on')) {
+          await txn.execute(
+            'ALTER TABLE measurements ADD COLUMN measured_on TEXT;',
+          );
+        }
+        await _backfillMeasurementTemporalColumns(txn);
+        await txn.execute('''
+          CREATE INDEX IF NOT EXISTS idx_measurements_definition_instant
+          ON measurements(def_id, measured_at_ms, id)
+        ''');
+        await txn.execute('''
+          CREATE INDEX IF NOT EXISTS idx_measurements_definition_day
+          ON measurements(def_id, measured_on, measured_at_ms, id)
+        ''');
+      }
+    });
+  }
+
+  /// v62 - gives shipped lookup entities durable catalog identities.
+  ///
+  /// Names remain canonical database values for matching and legacy data. A
+  /// null ID deliberately identifies user-created lookup rows.
+  static Future<void> migrateV62(Database db) async {
+    await db.transaction((txn) async {
+      for (final table in const [
+        'equipment',
+        'muscles',
+        'stretch_definitions',
+      ]) {
+        if (!await _schemaTableExists(txn, table)) continue;
+        final columns = await _schemaColumnNames(txn, table);
+        if (!columns.contains('catalog_id')) {
+          await txn.execute('ALTER TABLE $table ADD COLUMN catalog_id TEXT;');
+        }
+        await txn.execute(
+          'CREATE UNIQUE INDEX IF NOT EXISTS '
+          'idx_${table}_catalog_id ON $table(catalog_id) '
+          'WHERE catalog_id IS NOT NULL',
+        );
+      }
+    });
+  }
+
+  static Future<bool> _schemaTableExists(
+    DatabaseExecutor db,
+    String table,
+  ) async {
+    final rows = await db.rawQuery(
+      "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ? LIMIT 1",
+      [table],
+    );
+    return rows.isNotEmpty;
+  }
+
+  static Future<Set<String>> _schemaColumnNames(
+    DatabaseExecutor db,
+    String table,
+  ) async {
+    final rows = await db.rawQuery("PRAGMA table_info('$table')");
+    return rows.map((row) => row['name'] as String).toSet();
+  }
+
+  static Future<void> _backfillSessionTemporalColumns(
+    DatabaseExecutor db,
+  ) async {
+    final rows = await db.query(
+      'sessions',
+      columns: const ['id', 'date', 'completed_at_ms', 'training_day'],
+      where:
+          'completed_at_ms IS NULL OR training_day IS NULL OR trim(training_day) = ?',
+      whereArgs: const [''],
+    );
+    for (final row in rows) {
+      final legacy = TemporalSemantics.tryParseLegacyTimestamp(row['date']);
+      final existingEpoch = TemporalSemantics.tryReadEpochMilliseconds(
+        row['completed_at_ms'],
+      );
+      final existingDay = LocalCalendarDay.tryParse(row['training_day']);
+      final epoch = existingEpoch ?? legacy?.utcEpochMilliseconds;
+      final day =
+          existingDay ??
+          legacy?.calendarDay ??
+          (epoch == null
+              ? null
+              : LocalCalendarDay.fromDateTime(
+                DateTime.fromMillisecondsSinceEpoch(
+                  epoch,
+                  isUtc: true,
+                ).toLocal(),
+              ));
+      final values = <String, Object?>{};
+      if (existingEpoch == null && epoch != null) {
+        values['completed_at_ms'] = epoch;
+      }
+      if (existingDay == null && day != null) {
+        values['training_day'] = day.storageKey;
+      }
+      if (values.isNotEmpty) {
+        await db.update(
+          'sessions',
+          values,
+          where: 'id = ?',
+          whereArgs: [row['id']],
+        );
+      }
+    }
+  }
+
+  static Future<void> _backfillMeasurementTemporalColumns(
+    DatabaseExecutor db,
+  ) async {
+    final rows = await db.query(
+      'measurements',
+      columns: const ['id', 'timestamp', 'measured_at_ms', 'measured_on'],
+      where:
+          'measured_at_ms IS NULL OR measured_on IS NULL OR trim(measured_on) = ?',
+      whereArgs: const [''],
+    );
+    for (final row in rows) {
+      final legacy = TemporalSemantics.tryParseLegacyTimestamp(
+        row['timestamp'],
+      );
+      final existingEpoch = TemporalSemantics.tryReadEpochMilliseconds(
+        row['measured_at_ms'],
+      );
+      final existingDay = LocalCalendarDay.tryParse(row['measured_on']);
+      final epoch = existingEpoch ?? legacy?.utcEpochMilliseconds;
+      final day =
+          existingDay ??
+          legacy?.calendarDay ??
+          (epoch == null
+              ? null
+              : LocalCalendarDay.fromDateTime(
+                DateTime.fromMillisecondsSinceEpoch(
+                  epoch,
+                  isUtc: true,
+                ).toLocal(),
+              ));
+      final values = <String, Object?>{};
+      if (existingEpoch == null && epoch != null) {
+        values['measured_at_ms'] = epoch;
+      }
+      if (existingDay == null && day != null) {
+        values['measured_on'] = day.storageKey;
+      }
+      if (values.isNotEmpty) {
+        await db.update(
+          'measurements',
+          values,
+          where: 'id = ?',
+          whereArgs: [row['id']],
+        );
+      }
+    }
   }
 
   /// Keeps the external-content FTS4 index synchronized with `foods`.

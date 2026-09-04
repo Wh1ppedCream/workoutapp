@@ -6,6 +6,7 @@ import '../models/models.dart';
 import '../repositories/app_repository.dart';
 import '../utils/async_pool.dart';
 import '../utils/generated_weight_rounding.dart';
+import 'generated_plan_validator.dart';
 import 'starter_weight_recommendation_service.dart';
 
 enum _GeneratedWeightHistoryScope { recent, allTime }
@@ -368,9 +369,11 @@ class PresetGenerationService {
     Map<String, dynamic>? latestSession;
     DateTime? latestDate;
     for (final session in sessions) {
-      final rawDate = session['date'];
-      if (rawDate is! String) continue;
-      final date = DateTime.tryParse(rawDate);
+      final date =
+          TemporalSemantics.tryReadUtcInstant(session['completed_at_ms']) ??
+          (session['date'] is String
+              ? DateTime.tryParse(session['date'] as String)
+              : null);
       if (date == null || date.isAfter(spec.now)) continue;
       if (latestDate == null || date.isAfter(latestDate)) {
         latestDate = date;
@@ -1353,6 +1356,7 @@ class PresetGenerationService {
         'No exercises matched the selected profile and generation settings.',
       );
     }
+    GeneratedPlanValidator.validateOrThrow(spec: spec, plans: selected);
     final name = await _pickUniquePresetName(spec, selected);
     final missingWeightHistoryNames = <String>{};
     final starterWeightEstimateNames = <String>{};

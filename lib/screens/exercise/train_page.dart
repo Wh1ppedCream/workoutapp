@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/premade_training_plans.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../../l10n/safe_failure_localizations.dart';
 import '../../models/models.dart';
 import '../../providers/active_session.dart';
 import '../../providers/preset_session.dart';
@@ -13,6 +14,8 @@ import '../../providers/selected_profile.dart';
 import '../../repositories/app_repository.dart';
 import '../../services/active_plan_store.dart';
 import '../../services/preset_generation_service.dart';
+import '../../services/tutorial_state_store.dart';
+import '../../utils/localized_formatters.dart';
 import '../../utils/workout_exercise_clone.dart';
 import '../../utils/app_test_keys.dart';
 import '../../widgets/drawers.dart';
@@ -21,7 +24,6 @@ import '../../widgets/generic_bar.dart';
 import '../../widgets/guided_tutorial_overlay.dart';
 import '../../widgets/presets_loaded.dart';
 import '../../widgets/seven_day_focus_card.dart';
-import '../../services/tutorial_state_store.dart';
 import 'analytics_dashboard_screen.dart';
 import 'gym_profile_screen.dart';
 import 'optimized_workout_settings_page.dart';
@@ -313,10 +315,9 @@ class _TrainPageState extends State<TrainPage> {
     Set<int>? blacklistedBodypartIds,
   }) {
     final now = DateTime.now();
-    final date =
-        '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-    final time =
-        '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+    final locale = Localizations.localeOf(context);
+    final date = LocalizedFormatters.date(now, locale);
+    final time = LocalizedFormatters.time(now, locale);
     final minSets = minSetsPerExercise ?? _optimizedMinSetsPerExercise;
     final strings = AppLocalizations.of(context);
     return SessionSpec(
@@ -544,7 +545,9 @@ class _TrainPageState extends State<TrainPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            AppLocalizations.of(context).trainOptimizedStartFailed('$e'),
+            AppLocalizations.of(context).trainOptimizedStartFailed(
+              safeFailureMessage(AppLocalizations.of(context), e),
+            ),
           ),
         ),
       );

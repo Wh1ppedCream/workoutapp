@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../../l10n/safe_failure_localizations.dart';
 import '../../models/models.dart';
 import '../../widgets/exercise_card.dart';
 import '../../providers/active_session.dart';
@@ -126,6 +127,7 @@ class _SessionScreenState extends State<SessionScreen> {
         leading: Builder(
           builder:
               (innerCtx) => IconButton(
+                tooltip: strings.sessionTimerTitle,
                 icon: const Icon(Icons.menu),
                 onPressed: () => Scaffold.of(innerCtx).openDrawer(),
               ),
@@ -250,7 +252,9 @@ class _SessionScreenState extends State<SessionScreen> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
-                                strings.sessionSaveFailed('$error'),
+                                strings.sessionSaveFailed(
+                                  safeFailureMessage(strings, error),
+                                ),
                               ),
                             ),
                           );

@@ -38,6 +38,48 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get focusedSetsTitle => 'Series enfocadas';
+
+  @override
+  String get bodyPartNeck => 'Cuello';
+
+  @override
+  String get bodyPartShoulders => 'Hombros';
+
+  @override
+  String get bodyPartChest => 'Pecho';
+
+  @override
+  String get bodyPartCore => 'Zona media';
+
+  @override
+  String get bodyPartUpperBack => 'Espalda alta';
+
+  @override
+  String get bodyPartLowerBack => 'Espalda baja';
+
+  @override
+  String get bodyPartBiceps => 'Bíceps';
+
+  @override
+  String get bodyPartTriceps => 'Tríceps';
+
+  @override
+  String get bodyPartForearms => 'Antebrazos';
+
+  @override
+  String get bodyPartHips => 'Caderas';
+
+  @override
+  String get bodyPartHamstrings => 'Isquiotibiales';
+
+  @override
+  String get bodyPartQuads => 'Cuádriceps';
+
+  @override
+  String get bodyPartCalves => 'Pantorrillas';
+
+  @override
   String databaseSaveFile(String filename) {
     return 'Guardar $filename';
   }
@@ -679,10 +721,10 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get tabTrain => 'Entrenamiento';
+  String get tabTrain => 'Entrenar';
 
   @override
-  String get tabTrainSecondary => 'Entrenamiento2';
+  String get tabTrainSecondary => 'Entrenar 2';
 
   @override
   String get tabCatalog => 'Catálogo';
@@ -2047,6 +2089,44 @@ class AppLocalizationsEs extends AppLocalizations {
   String get commonRetry => 'Reintentar';
 
   @override
+  String get safeFailureLoadTitle => 'No se pudo cargar';
+
+  @override
+  String get safeFailureSaveTitle => 'No se pudieron guardar los cambios';
+
+  @override
+  String get safeFailureActionTitle => 'No se pudo completar la acción';
+
+  @override
+  String get safeFailureValidation => 'Comprueba la información e inténtalo de nuevo.';
+
+  @override
+  String get safeFailureOffline => 'No hay conexión. Vuelve a conectarte e inténtalo de nuevo.';
+
+  @override
+  String get safeFailurePermission => 'Tonos no tiene permiso para completar esta acción. Comprueba los ajustes del dispositivo.';
+
+  @override
+  String get safeFailureStorage => 'Tonos no pudo acceder al almacenamiento del dispositivo. Comprueba el espacio disponible e inténtalo de nuevo.';
+
+  @override
+  String get safeFailureInvalidData => 'Los datos no se pudieron leer de forma segura. Elige otro archivo o inténtalo de nuevo.';
+
+  @override
+  String get safeFailureNotFound => 'Los datos solicitados ya no están disponibles. Actualiza e inténtalo de nuevo.';
+
+  @override
+  String get safeFailureTemporary => 'Esto no está disponible temporalmente. Inténtalo de nuevo.';
+
+  @override
+  String get safeFailureUnknown => 'Se produjo un problema. Inténtalo de nuevo.';
+
+  @override
+  String safeFailureWithGuidance(String summary, String guidance) {
+    return '$summary $guidance';
+  }
+
+  @override
   String get flowPageTitle => 'Flujos de progresión de entrenamiento';
 
   @override
@@ -2428,8 +2508,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get fullHistoryEmpty => 'No hay sesiones guardadas.';
 
   @override
-  String fullHistorySessionSummary(String date, int minutes) {
-    return '$date - $minutes min';
+  String fullHistorySessionSummary(String date, String duration) {
+    return '$date - $duration';
   }
 
   @override
@@ -2668,7 +2748,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get logbookViewAllSessions => 'Ver todas las sesiones';
 
   @override
-  String logbookSessionSummary(int minutes, int exercises, int sets, String volume) {
+  String logbookSessionSummary(String duration, int exercises, int sets, String volume) {
     String _temp0 = intl.Intl.pluralLogic(
       exercises,
       locale: localeName,
@@ -2681,7 +2761,7 @@ class AppLocalizationsEs extends AppLocalizations {
       other: '$sets series',
       one: '1 serie',
     );
-    return '$minutes min - $_temp0 - $_temp1 - $volume';
+    return '$duration - $_temp0 - $_temp1 - $volume';
   }
 
   @override
@@ -4903,8 +4983,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get pastSessionsEmpty => 'Aún no hay sesiones anteriores.';
 
   @override
-  String pastSessionsItem(String date, int minutes) {
-    return '$date - $minutes min';
+  String pastSessionsItem(String date, String duration) {
+    return '$date - $duration';
   }
 
   @override
@@ -6188,4 +6268,104 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get diagnosticsSharedDeletionPending => 'Algunas solicitudes de eliminación se reintentarán cuando la aplicación se abra con conexión.';
+
+  @override
+  String get workoutDurabilityRestoreWarning => 'Tonos no pudo comprobar si hay un entrenamiento guardado. Reinténtalo antes de iniciar otro entrenamiento.';
+
+  @override
+  String get workoutDurabilityDraftSaveWarning => 'La copia de seguridad del entrenamiento no está actualizada. Mantén Tonos abierto y reinténtalo para poder reanudarlo de forma segura.';
+
+  @override
+  String get workoutDurabilityProgressionWarning => 'El entrenamiento está guardado, pero la progresión del plan sigue pendiente. Reinténtalo cuando el almacenamiento esté disponible.';
+
+  @override
+  String get databaseConfirmExportTitle => '¿Exportar datos privados?';
+
+  @override
+  String get databaseConfirmExportBody => 'Esta copia es un archivo JSON sin cifrar que puede contener tus entrenamientos, nutrición, medidas corporales, perfil y preferencias. Guárdala solo en un lugar de confianza.';
+
+  @override
+  String get databaseContinueExport => 'Exportar de todos modos';
+
+  @override
+  String get databaseExportFailedSafe => 'No se pudo crear la exportación. Tus datos de la aplicación no cambiaron.';
+
+  @override
+  String get databaseImportFileTooLarge => 'Esta importación es demasiado grande. Elige una copia de seguridad de menos de 25 MB.';
+
+  @override
+  String get databaseImportBlockedSafe => 'No se pudo importar esta copia de seguridad. Tus datos actuales no cambiaron.';
+
+  @override
+  String get databaseImportFailedSafe => 'La importación no terminó. Tus datos actuales se mantuvieron seguros.';
+
+  @override
+  String get speedDialLogFood => 'Registrar alimento';
+
+  @override
+  String get speedDialLogMeasurement => 'Registrar medición';
+
+  @override
+  String get healthTapToLog => 'Toca + para registrar';
+
+  @override
+  String get healthMetricInvalid => 'Usa un nombre de métrica único y una unidad corta sin espacios.';
+
+  @override
+  String get healthMeasurementEntryInvalid => 'Introduce un valor positivo razonable con una unidad compatible.';
+
+  @override
+  String get allocationSourceAutomatic => 'Cálculo automático';
+
+  @override
+  String get allocationSourceCreatorDefault => 'Predeterminado de Tonos';
+
+  @override
+  String get allocationSourcePersonalOverride => 'Tu asignación personalizada';
+
+  @override
+  String get allocationSourceLegacy => 'Asignación existente';
+
+  @override
+  String get quickActionMeasurement => '+ Medición';
+
+  @override
+  String get quickActionFood => '+ Comida';
+
+  @override
+  String get quickActionWorkout => '+ Entrenamiento';
+
+  @override
+  String get healthTrendNeedEntries => 'Registra entradas para crear una tendencia.';
+
+  @override
+  String get healthTrendNeedOneMore => 'Registra una entrada más para dibujar una tendencia.';
+
+  @override
+  String get healthNoChange => 'Sin cambios todavía';
+
+  @override
+  String healthChangeSinceLast(String delta) {
+    return '$delta desde la última';
+  }
+
+  @override
+  String healthTrendChartSemantics(String name, int count, String value) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count entradas.',
+      one: '1 entrada.',
+      zero: 'Aún no hay entradas.',
+    );
+    return '$name. Gráfico de tendencia. $_temp0 Valor más reciente: $value.';
+  }
+
+  @override
+  String get healthEntryActions => 'Acciones de la entrada';
+
+  @override
+  String premadeOneHourDescription(String duration, String planName) {
+    return 'Versión de $duration de $planName con los movimientos principales de la plantilla completa.';
+  }
 }

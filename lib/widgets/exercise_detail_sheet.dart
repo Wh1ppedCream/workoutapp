@@ -6,7 +6,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:intl/intl.dart'; // for date formatting
 import 'package:provider/provider.dart';
 
 import '../l10n/generated/app_localizations.dart';
@@ -14,31 +13,41 @@ import '../models/models.dart';
 import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
 import '../screens/exercise/session_detail_screen.dart';
+import '../services/catalog_entity_localizer.dart';
+import '../services/exercise_content_localizer.dart';
 import '../services/tutorial_state_store.dart';
+import '../utils/localized_body_part_name.dart';
+import '../utils/localized_formatters.dart';
 import '../theme/theme_extensions.dart';
 import '../utils/tutorial_launcher.dart';
 import '../utils/weight_unit_formatter.dart';
 import 'body_heatmap.dart';
 import 'guided_tutorial_overlay.dart';
+import 'localized_catalog_entity_name.dart';
+import 'localized_exercise_name.dart';
 import 'workout_record_badges.dart';
 
 /// Simple record model for history tab
 class HistoryRecord {
   final DateTime date;
+  final LocalCalendarDay calendarDay;
   final int sessionId;
   final int exerciseId;
-  final String sessionDateValue;
+  final int sessionCompletedAtMilliseconds;
   final List<ExerciseSet> sets;
   final WorkoutExerciseRecordBadges badges;
 
   HistoryRecord({
     required this.date,
+    required this.calendarDay,
     required this.sessionId,
     required this.exerciseId,
-    required this.sessionDateValue,
+    required this.sessionCompletedAtMilliseconds,
     required this.sets,
     required this.badges,
   });
+
+  DateTime get displayDateTime => calendarDay.atLocalTime(date);
 }
 
 class _ExerciseHistoryPage {
@@ -59,11 +68,13 @@ class _ExerciseMediaPreviewCard extends StatelessWidget {
   final File previewFile;
   final Widget? heatmapOverlay;
   final VoidCallback onImageTap;
+  final VoidCallback onImageLoadFailed;
 
   const _ExerciseMediaPreviewCard({
     required this.previewFile,
     required this.heatmapOverlay,
     required this.onImageTap,
+    required this.onImageLoadFailed,
   });
 
   @override
@@ -91,7 +102,14 @@ class _ExerciseMediaPreviewCard extends StatelessWidget {
                 onTap: onImageTap,
                 child: ColoredBox(
                   color: theme.colorScheme.surface,
-                  child: Image.file(previewFile, fit: BoxFit.cover),
+                  child: Image.file(
+                    previewFile,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, _, _) {
+                      onImageLoadFailed();
+                      return heatmapOverlay ?? const SizedBox.shrink();
+                    },
+                  ),
                 ),
               ),
             ),
@@ -152,6 +170,9 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
   final Map<String, Future<List<RepMaxRow>>> _repMaxFutures = {};
   final Map<String, Future<double?>> _volumeMaxFutures = {};
   final Map<String, Future<File?>> _mediaPreviewFutures = {};
+  final Map<String, Future<ExerciseInstructionContent>>
+  _localizedInstructionFutures = {};
+  bool _hasRetriedMissingPreview = false;
   final List<HistoryRecord> _olderHistory = [];
   final _headerTutorialKey = GlobalKey(debugLabel: 'exercise_detail_header');
   final _tabsTutorialKey = GlobalKey(debugLabel: 'exercise_detail_tabs');
@@ -192,10 +213,15 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
   @override
   void didUpdateWidget(covariant ExerciseDetailSheet oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.definition != widget.definition) {
+      _localizedInstructionFutures.clear();
+    }
     if (oldWidget.defId != widget.defId) {
       _repMaxFutures.clear();
       _volumeMaxFutures.clear();
       _mediaPreviewFutures.clear();
+      _localizedInstructionFutures.clear();
+      _hasRetriedMissingPreview = false;
       _historyRequestGeneration++;
       _olderHistory.clear();
       _isLoadingMoreHistory = false;
@@ -266,11 +292,24 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     );
   }
 
+  Future<ExerciseInstructionContent> _localizedInstructionsFor(
+    ExerciseDefinition definition,
+  ) {
+    final locale = Localizations.localeOf(context);
+    final localeKey = '${locale.languageCode}_${locale.countryCode ?? ''}';
+    final cacheKey =
+        '${definition.id}|${definition.catalogId ?? ''}|$localeKey';
+    return _localizedInstructionFutures.putIfAbsent(
+      cacheKey,
+      () => ExerciseContentLocalizer.instance.resolve(definition, locale),
+    );
+  }
+
   /// Loads one cursor-based page of weight exercise history for this definition.
   Future<_ExerciseHistoryPage> _loadHistoryPage({HistoryRecord? before}) async {
     final historyRows = await _repo.fetchRecentWeightExerciseHistoryRows(
       definitionId: widget.defId,
-      beforeSessionDate: before?.sessionDateValue,
+      beforeCompletedAtMilliseconds: before?.sessionCompletedAtMilliseconds,
       beforeExerciseId: before?.exerciseId,
       // Fetch one additional row to know whether the next page exists.
       limit: _historyPageSize + 1,
@@ -289,13 +328,20 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
       final exercise = exercises[i];
       if (exercise is! WeightExercise) continue;
       final row = pageRows[i];
-      final sessionDateValue = row['session_date'] as String;
       records.add(
         HistoryRecord(
-          date: DateTime.parse(sessionDateValue),
+          date: TemporalSemantics.readLocalDateTime(
+            epochMilliseconds: row['session_completed_at_ms'],
+            legacyIso: row['session_date'],
+          ),
+          calendarDay: TemporalSemantics.readCalendarDay(
+            calendarDay: row['session_training_day'],
+            legacyIso: row['session_date'],
+            epochMilliseconds: row['session_completed_at_ms'],
+          ),
           sessionId: row['session_id'] as int,
           exerciseId: row['exercise_id'] as int,
-          sessionDateValue: sessionDateValue,
+          sessionCompletedAtMilliseconds: row['session_completed_at_ms'] as int,
           sets: exercise.sets,
           badges:
               badgesByExercise[row['exercise_id'] as int] ??
@@ -457,6 +503,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                       loadedMedia.previewFile,
                       definition: def,
                     ),
+                onImageLoadFailed: _recoverFromMissingPreview,
               );
             },
           ),
@@ -471,11 +518,29 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     );
   }
 
+  void _recoverFromMissingPreview() {
+    if (_hasRetriedMissingPreview) return;
+    _hasRetriedMissingPreview = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      setState(() {
+        _mediaPreviewFutures.clear();
+        _primaryMediaFuture = _loadPrimaryMedia();
+      });
+    });
+  }
+
   Widget _buildEquipmentCard(ExerciseDefinition definition) {
     final theme = Theme.of(context);
     final strings = _strings;
-    final equipment =
-        definition.equipmentList.map((item) => item.name).toList();
+    final equipment = definition.equipmentList
+        .map(
+          (item) => CatalogEntityDisplayName(
+            catalogId: item.catalogId,
+            canonicalName: item.name,
+          ),
+        )
+        .toList(growable: false);
 
     return _buildDetailCard(
       icon: Icons.fitness_center_outlined,
@@ -492,18 +557,22 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               )
-              : Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children:
-                    equipment
-                        .map(
-                          (item) => _buildDetailTag(
-                            item,
-                            color: theme.colorScheme.primary,
-                          ),
-                        )
-                        .toList(),
+              : LocalizedCatalogEntityNamesBuilder(
+                entities: equipment,
+                builder:
+                    (context, names) => Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children:
+                          names
+                              .map(
+                                (name) => _buildDetailTag(
+                                  name,
+                                  color: theme.colorScheme.primary,
+                                ),
+                              )
+                              .toList(),
+                    ),
               ),
     );
   }
@@ -514,8 +583,18 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
   }) {
     final theme = Theme.of(context);
     final strings = _strings;
-    final bodyParts = definition.bodyParts.map((item) => item.name).toList();
-    final muscles = definition.muscles.map((item) => item.muscle.name).toList();
+    final bodyParts =
+        definition.bodyParts
+            .map((item) => localizedBodyPartName(context, item.name))
+            .toList();
+    final muscles = definition.muscles
+        .map(
+          (item) => CatalogEntityDisplayName(
+            catalogId: item.muscle.catalogId,
+            canonicalName: item.muscle.name,
+          ),
+        )
+        .toList(growable: false);
 
     return _buildDetailCard(
       icon: Icons.accessibility_new,
@@ -566,18 +645,22 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
               ),
             )
           else
-            Wrap(
-              spacing: 7,
-              runSpacing: 7,
-              children:
-                  muscles
-                      .map(
-                        (item) => _buildDetailTag(
-                          item,
-                          color: theme.colorScheme.secondary,
-                        ),
-                      )
-                      .toList(),
+            LocalizedCatalogEntityNamesBuilder(
+              entities: muscles,
+              builder:
+                  (context, names) => Wrap(
+                    spacing: 7,
+                    runSpacing: 7,
+                    children:
+                        names
+                            .map(
+                              (name) => _buildDetailTag(
+                                name,
+                                color: theme.colorScheme.secondary,
+                              ),
+                            )
+                            .toList(),
+                  ),
             ),
         ],
       ),
@@ -588,6 +671,22 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     ExerciseDefinition definition, {
     bool expandable = true,
   }) {
+    final fallback = ExerciseInstructionContent.fromDefinition(definition);
+    return FutureBuilder<ExerciseInstructionContent>(
+      future: _localizedInstructionsFor(definition),
+      initialData: fallback,
+      builder:
+          (context, snapshot) => _buildLocalizedFormGuideCard(
+            snapshot.data ?? fallback,
+            expandable: expandable,
+          ),
+    );
+  }
+
+  Widget _buildLocalizedFormGuideCard(
+    ExerciseInstructionContent instructions, {
+    required bool expandable,
+  }) {
     final theme = Theme.of(context);
     final strings = _strings;
     final guideEntries = [
@@ -595,24 +694,24 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
         icon: Icons.self_improvement_outlined,
         title: strings.exerciseDetailSetup,
         body:
-            definition.setupNotes.isNotEmpty
-                ? definition.setupNotes
+            instructions.setupNotes.isNotEmpty
+                ? instructions.setupNotes
                 : strings.exerciseDetailNoSetup,
       ),
       (
         icon: Icons.directions_run_outlined,
         title: strings.exerciseDetailExecution,
         body:
-            definition.executionNotes.isNotEmpty
-                ? definition.executionNotes
+            instructions.executionNotes.isNotEmpty
+                ? instructions.executionNotes
                 : strings.exerciseDetailNoExecution,
       ),
       (
         icon: Icons.lightbulb_outline,
         title: strings.exerciseDetailTips,
         body:
-            definition.tipsNotes.isNotEmpty
-                ? definition.tipsNotes
+            instructions.tipsNotes.isNotEmpty
+                ? instructions.tipsNotes
                 : strings.exerciseDetailNoTips,
       ),
     ];
@@ -1139,7 +1238,11 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                     volumeSnapshot.hasError ||
                     volumeValue == null
                 ? '--'
-                : WeightUnitFormatter.formatVolume(volumeValue, weightUnit);
+                : WeightUnitFormatter.formatVolume(
+                  volumeValue,
+                  weightUnit,
+                  locale: Localizations.localeOf(context),
+                );
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1153,6 +1256,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                     value: WeightUnitFormatter.formatWeight(
                       highestEstimatedOneRm,
                       weightUnit,
+                      locale: Localizations.localeOf(context),
                     ),
                     color: theme.colorScheme.primary,
                   ),
@@ -1410,8 +1514,8 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                           Expanded(
                             child: FittedBox(
                               fit: BoxFit.scaleDown,
-                              child: Text(
-                                widget.definition.name,
+                              child: LocalizedExerciseName(
+                                definition: widget.definition,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 textAlign: TextAlign.center,
@@ -1420,6 +1524,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                             ),
                           ),
                           IconButton(
+                            tooltip: _strings.commonClose,
                             icon: const Icon(Icons.close),
                             onPressed: () => Navigator.of(context).pop(),
                           ),
@@ -1479,7 +1584,10 @@ class _ExerciseHistorySessionCard extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final strings = AppLocalizations.of(context);
-    final dateLabel = DateFormat.yMMMd().add_jm().format(record.date);
+    final dateLabel = LocalizedFormatters.dateTime(
+      record.displayDateTime,
+      Localizations.localeOf(context),
+    );
     final setCount = record.sets.length;
 
     return Container(
@@ -1611,7 +1719,11 @@ class _ExerciseHistorySetRow extends StatelessWidget {
               shape: BoxShape.circle,
             ),
             child: Text(
-              index.toString(),
+              LocalizedFormatters.number(
+                index,
+                Localizations.localeOf(context),
+                maximumFractionDigits: 0,
+              ),
               style: theme.textTheme.labelSmall?.copyWith(
                 color: scheme.primary,
                 fontWeight: FontWeight.w800,
@@ -1622,7 +1734,11 @@ class _ExerciseHistorySetRow extends StatelessWidget {
           if (badges.isEmpty)
             Expanded(
               child: Text(
-                _formatSet(set, weightUnit),
+                _formatSet(
+                  set,
+                  weightUnit,
+                  locale: Localizations.localeOf(context),
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodyMedium?.copyWith(
@@ -1634,7 +1750,11 @@ class _ExerciseHistorySetRow extends StatelessWidget {
             Expanded(
               flex: 2,
               child: Text(
-                _formatSet(set, weightUnit),
+                _formatSet(
+                  set,
+                  weightUnit,
+                  locale: Localizations.localeOf(context),
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodyMedium?.copyWith(
@@ -1676,6 +1796,7 @@ class _ExerciseHistorySetRow extends StatelessWidget {
                 WeightUnitFormatter.formatWeight(
                   _estimatedOneRm(set),
                   weightUnit,
+                  locale: Localizations.localeOf(context),
                 ),
               ),
               maxLines: 1,
@@ -1795,7 +1916,11 @@ class _RepBestMetricsList extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            row.repCount.toString(),
+                            LocalizedFormatters.number(
+                              row.repCount,
+                              Localizations.localeOf(context),
+                              maximumFractionDigits: 0,
+                            ),
                             style: theme.textTheme.titleSmall?.copyWith(
                               color: scheme.primary,
                               fontWeight: FontWeight.w900,
@@ -1822,6 +1947,7 @@ class _RepBestMetricsList extends StatelessWidget {
                         value: WeightUnitFormatter.formatWeight(
                           row.rmValue,
                           weightUnit,
+                          locale: Localizations.localeOf(context),
                         ),
                         color: scheme.onSurface,
                       ),
@@ -1836,6 +1962,7 @@ class _RepBestMetricsList extends StatelessWidget {
                         value: WeightUnitFormatter.formatVolume(
                           row.rmValue * row.repCount,
                           weightUnit,
+                          locale: Localizations.localeOf(context),
                         ),
                         color: scheme.tertiary,
                       ),
@@ -1984,17 +2111,21 @@ List<_ExerciseRecordPoint> _buildRecordTrendPoints(
 }
 
 class _ExerciseRecordPoint {
-  final DateTime date;
+  final DateTime completedAt;
+  final LocalCalendarDay calendarDay;
   final double bestWeight;
   final double bestEstimatedOneRm;
   final ExerciseSet bestSet;
 
   const _ExerciseRecordPoint({
-    required this.date,
+    required this.completedAt,
+    required this.calendarDay,
     required this.bestWeight,
     required this.bestEstimatedOneRm,
     required this.bestSet,
   });
+
+  DateTime get displayDateTime => calendarDay.atLocalTime(completedAt);
 
   factory _ExerciseRecordPoint.from(HistoryRecord record) {
     var bestSet = record.sets.first;
@@ -2014,7 +2145,8 @@ class _ExerciseRecordPoint {
     );
 
     return _ExerciseRecordPoint(
-      date: record.date,
+      completedAt: record.date,
+      calendarDay: record.calendarDay,
       bestWeight: bestWeight,
       bestEstimatedOneRm: bestEstimatedOneRm,
       bestSet: bestSet,
@@ -2112,10 +2244,10 @@ class _ExerciseRecordTrendChart extends StatelessWidget {
                     );
                 return [
                   LineTooltipItem(
-                    '${DateFormat.yMMMd(Localizations.localeOf(context).toLanguageTag()).add_jm().format(point.date)}\n'
-                    '${strings.exerciseDetailWeightAbbreviation} ${WeightUnitFormatter.formatWeight(point.bestWeight, weightUnit)} | '
-                    '${strings.exerciseDetailEstimatedAbbreviation} ${WeightUnitFormatter.formatWeight(point.bestEstimatedOneRm, weightUnit)} | '
-                    '${strings.exerciseDetailTopAbbreviation} ${_formatSet(point.bestSet, weightUnit)}',
+                    '${LocalizedFormatters.dateTime(point.displayDateTime, Localizations.localeOf(context))}\n'
+                    '${strings.exerciseDetailWeightAbbreviation} ${WeightUnitFormatter.formatWeight(point.bestWeight, weightUnit, locale: Localizations.localeOf(context))} | '
+                    '${strings.exerciseDetailEstimatedAbbreviation} ${WeightUnitFormatter.formatWeight(point.bestEstimatedOneRm, weightUnit, locale: Localizations.localeOf(context))} | '
+                    '${strings.exerciseDetailTopAbbreviation} ${_formatSet(point.bestSet, weightUnit, locale: Localizations.localeOf(context))}',
                     textStyle,
                   ),
                   for (var i = 1; i < touchedSpots.length; i++) null,
@@ -2154,7 +2286,11 @@ class _ExerciseRecordTrendChart extends StatelessWidget {
                       distanceFromEdge: 2,
                     ),
                     child: Text(
-                      _compactWeight(value, weightUnit),
+                      _compactWeight(
+                        value,
+                        weightUnit,
+                        Localizations.localeOf(context),
+                      ),
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: scheme.onSurfaceVariant,
                         fontWeight: FontWeight.w700,
@@ -2185,7 +2321,11 @@ class _ExerciseRecordTrendChart extends StatelessWidget {
                       distanceFromEdge: 4,
                     ),
                     child: Text(
-                      _recordAxisLabel(points[index].date, showTimes),
+                      _recordAxisLabel(
+                        points[index],
+                        showTimes,
+                        Localizations.localeOf(context),
+                      ),
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: scheme.onSurfaceVariant,
                         fontWeight: FontWeight.w700,
@@ -2332,17 +2472,21 @@ Set<int> _recordDateLabelIndexes(int length) {
 }
 
 bool _shouldUseTimeLabels(List<_ExerciseRecordPoint> points) {
-  final days = {
-    for (final point in points)
-      DateUtils.dateOnly(point.date).toIso8601String(),
-  };
+  final days = {for (final point in points) point.calendarDay.storageKey};
   return days.length == 1;
 }
 
-String _recordAxisLabel(DateTime date, bool showTime) {
+String _recordAxisLabel(
+  _ExerciseRecordPoint point,
+  bool showTime,
+  Locale locale,
+) {
   return showTime
-      ? DateFormat('h:mm a').format(date)
-      : DateFormat.MMMd().format(date);
+      ? LocalizedFormatters.time(point.completedAt, locale)
+      : LocalizedFormatters.shortDate(
+        point.calendarDay.toLocalDateTime(),
+        locale,
+      );
 }
 
 double _estimatedOneRm(ExerciseSet set) {
@@ -2350,19 +2494,43 @@ double _estimatedOneRm(ExerciseSet set) {
   return set.weight * (1 + 0.0333 * set.reps);
 }
 
-String _formatSet(ExerciseSet set, WeightUnit weightUnit) {
-  return '${WeightUnitFormatter.formatWeight(set.weight, weightUnit)} x ${set.reps}';
+String _formatSet(ExerciseSet set, WeightUnit weightUnit, {Locale? locale}) {
+  final reps =
+      locale == null
+          ? set.reps.toString()
+          : LocalizedFormatters.number(
+            set.reps,
+            locale,
+            maximumFractionDigits: 0,
+          );
+  return '${WeightUnitFormatter.formatWeight(set.weight, weightUnit, locale: locale)} x $reps';
 }
 
-String _compactWeight(double value, WeightUnit weightUnit) {
+String _compactWeight(double value, WeightUnit weightUnit, [Locale? locale]) {
   final displayValue = WeightUnitFormatter.fromPounds(value, weightUnit);
   if (displayValue.abs() >= 1000) {
-    return '${(displayValue / 1000).toStringAsFixed(displayValue.abs() >= 10000 ? 0 : 1)}k';
+    final digits = displayValue.abs() >= 10000 ? 0 : 1;
+    final text =
+        locale == null
+            ? (displayValue / 1000).toStringAsFixed(digits)
+            : LocalizedFormatters.number(
+              displayValue / 1000,
+              locale,
+              minimumFractionDigits: digits,
+              maximumFractionDigits: digits,
+            );
+    return '${text}k';
   }
-  return _cleanNumber(displayValue);
+  return _cleanNumber(displayValue, locale);
 }
 
-String _cleanNumber(double value) {
-  if (value == value.roundToDouble()) return value.toStringAsFixed(0);
-  return value.toStringAsFixed(1);
+String _cleanNumber(double value, [Locale? locale]) {
+  final fractionDigits = value == value.roundToDouble() ? 0 : 1;
+  if (locale == null) return value.toStringAsFixed(fractionDigits);
+  return LocalizedFormatters.number(
+    value,
+    locale,
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: fractionDigits,
+  );
 }

@@ -4,9 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../l10n/safe_failure_localizations.dart';
 import '../../../models/models.dart';
 import '../../../repositories/app_repository.dart';
+import '../../../services/catalog_entity_localizer.dart';
+import '../../../services/safe_failure.dart';
+import '../../../widgets/localized_catalog_entity_name.dart';
 import '../../../widgets/settings_tiles.dart';
+import '../../../widgets/safe_error_view.dart';
 
 class VolumeBoundariesScreen extends StatefulWidget {
   const VolumeBoundariesScreen({super.key});
@@ -23,7 +28,7 @@ class _VolumeBoundariesScreenState extends State<VolumeBoundariesScreen>
   List<BodyPart> _bodyParts = [];
   List<Muscle> _muscles = [];
   bool _isLoadingLookups = true;
-  String? _lookupError;
+  SafeFailure? _lookupFailure;
 
   BodyPart? _selectedBodyPart;
   Muscle? _selectedMuscle;
@@ -56,6 +61,12 @@ class _VolumeBoundariesScreenState extends State<VolumeBoundariesScreen>
   }
 
   Future<void> _loadLookups() async {
+    if (mounted) {
+      setState(() {
+        _isLoadingLookups = true;
+        _lookupFailure = null;
+      });
+    }
     try {
       final bodyParts = await _repo.fetchAllBodyPartsFull();
       final muscles = await _repo.fetchAllMusclesFull();
@@ -65,7 +76,7 @@ class _VolumeBoundariesScreenState extends State<VolumeBoundariesScreen>
         _muscles = muscles;
         _selectedBodyPart = bodyParts.isNotEmpty ? bodyParts.first : null;
         _selectedMuscle = muscles.isNotEmpty ? muscles.first : null;
-        _lookupError = null;
+        _lookupFailure = null;
       });
       if (_selectedBodyPart != null) {
         await _loadBodyPartBounds(_selectedBodyPart!.id);
@@ -76,7 +87,7 @@ class _VolumeBoundariesScreenState extends State<VolumeBoundariesScreen>
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _lookupError = e.toString();
+        _lookupFailure = SafeFailure.classify(e);
       });
     } finally {
       if (mounted) {
@@ -103,7 +114,9 @@ class _VolumeBoundariesScreenState extends State<VolumeBoundariesScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            AppLocalizations.of(context).volumeLoadBodyPartFailed(e.toString()),
+            AppLocalizations.of(context).volumeLoadBodyPartFailed(
+              safeFailureMessage(AppLocalizations.of(context), e),
+            ),
           ),
         ),
       );
@@ -132,7 +145,9 @@ class _VolumeBoundariesScreenState extends State<VolumeBoundariesScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            AppLocalizations.of(context).volumeLoadMuscleFailed(e.toString()),
+            AppLocalizations.of(context).volumeLoadMuscleFailed(
+              safeFailureMessage(AppLocalizations.of(context), e),
+            ),
           ),
         ),
       );
@@ -190,7 +205,9 @@ class _VolumeBoundariesScreenState extends State<VolumeBoundariesScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            AppLocalizations.of(context).rankingsSaveError(e.toString()),
+            AppLocalizations.of(context).rankingsSaveError(
+              safeFailureMessage(AppLocalizations.of(context), e),
+            ),
           ),
         ),
       );
@@ -228,7 +245,9 @@ class _VolumeBoundariesScreenState extends State<VolumeBoundariesScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            AppLocalizations.of(context).rankingsSaveError(e.toString()),
+            AppLocalizations.of(context).rankingsSaveError(
+              safeFailureMessage(AppLocalizations.of(context), e),
+            ),
           ),
         ),
       );
@@ -271,14 +290,11 @@ class _VolumeBoundariesScreenState extends State<VolumeBoundariesScreen>
     if (_isLoadingLookups) {
       return const Center(child: CircularProgressIndicator());
     }
-    if (_lookupError != null) {
-      return Center(
-        child: Text(
-          strings.rankingsLoadError(
-            strings.settingsVolumeBoundaries,
-            _lookupError!,
-          ),
-        ),
+    if (_lookupFailure != null) {
+      return SafeErrorView(
+        title: strings.safeFailureLoadTitle,
+        failure: _lookupFailure!,
+        onRetry: _loadLookups,
       );
     }
 
@@ -309,6 +325,15 @@ class _VolumeBoundariesScreenState extends State<VolumeBoundariesScreen>
           selected: _selectedMuscle,
           items: _muscles,
           itemName: (muscle) => muscle.name,
+          itemLabelFor:
+              (context, muscle) => LocalizedCatalogEntityName(
+                entity: CatalogEntityDisplayName(
+                  catalogId: muscle.catalogId,
+                  canonicalName: muscle.name,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
           onChanged: (muscle) {
             if (muscle == null) return;
             setState(() => _selectedMuscle = muscle);
@@ -331,6 +356,7 @@ class _BoundaryTab<T> extends StatelessWidget {
   final T? selected;
   final List<T> items;
   final String Function(T item) itemName;
+  final Widget Function(BuildContext context, T item)? itemLabelFor;
   final ValueChanged<T?> onChanged;
   final List<TextEditingController> controllers;
   final bool isLoading;
@@ -344,6 +370,7 @@ class _BoundaryTab<T> extends StatelessWidget {
     required this.selected,
     required this.items,
     required this.itemName,
+    this.itemLabelFor,
     required this.onChanged,
     required this.controllers,
     required this.isLoading,
@@ -385,7 +412,9 @@ class _BoundaryTab<T> extends StatelessWidget {
                         .map(
                           (item) => DropdownMenuItem(
                             value: item,
-                            child: Text(itemName(item)),
+                            child:
+                                itemLabelFor?.call(context, item) ??
+                                Text(itemName(item)),
                           ),
                         )
                         .toList(),

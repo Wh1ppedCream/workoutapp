@@ -5,6 +5,20 @@
   "dashboardExerciseUsage": "{equipment} - {count, plural, =1 {1 fois} other {{count} fois}}",
   "weightCardSetsDone": "{completed}/{total} terminées",
   "bodyHeatmapSemantics": "Carte thermique du corps pour {bodyPart}",
+  "focusedSetsTitle": "Séries ciblées",
+  "bodyPartNeck": "Cou",
+  "bodyPartShoulders": "Épaules",
+  "bodyPartChest": "Poitrine",
+  "bodyPartCore": "Tronc",
+  "bodyPartUpperBack": "Haut du dos",
+  "bodyPartLowerBack": "Bas du dos",
+  "bodyPartBiceps": "Biceps",
+  "bodyPartTriceps": "Triceps",
+  "bodyPartForearms": "Avant-bras",
+  "bodyPartHips": "Hanches",
+  "bodyPartHamstrings": "Ischio-jambiers",
+  "bodyPartQuads": "Quadriceps",
+  "bodyPartCalves": "Mollets",
   "databaseSaveFile": "Enregistrer {filename}",
   "databaseFileSaved": "{filename} a été enregistré à l’emplacement sélectionné.",
   "databaseProductionEnvironment": "{label} (production)",
@@ -891,6 +905,18 @@
   "rulesEditPlan": "Modifier la règle",
   "rulesAddPlanTitle": "Ajouter une règle",
   "commonRetry": "Réessayer",
+  "safeFailureLoadTitle": "Impossible de charger",
+  "safeFailureSaveTitle": "Impossible d’enregistrer les modifications",
+  "safeFailureActionTitle": "Impossible de terminer cette action",
+  "safeFailureValidation": "Vérifiez les informations et réessayez.",
+  "safeFailureOffline": "Aucune connexion. Reconnectez-vous et réessayez.",
+  "safeFailurePermission": "Tonos n’a pas l’autorisation d’effectuer cette action. Vérifiez les réglages de l’appareil.",
+  "safeFailureStorage": "Tonos n’a pas pu accéder au stockage de l’appareil. Vérifiez l’espace disponible et réessayez.",
+  "safeFailureInvalidData": "Les données n’ont pas pu être lues en toute sécurité. Choisissez un autre fichier ou réessayez.",
+  "safeFailureNotFound": "Les données demandées ne sont plus disponibles. Actualisez et réessayez.",
+  "safeFailureTemporary": "Ce contenu est temporairement indisponible. Réessayez.",
+  "safeFailureUnknown": "Un problème est survenu. Réessayez.",
+  "safeFailureWithGuidance": "{summary} {guidance}",
   "flowPageTitle": "Flux de progression des entraînements",
   "flowPageSubtitle": "Définissez les chemins qui déterminent comment les actions de progression sont appliquées après les résultats d’entraînement.",
   "flowHowCopiedTitle": "Copie des flux",
@@ -1057,11 +1083,11 @@
   "fullHistoryTitle": "Toutes les s\u00e9ances",
   "fullHistoryLoadError": "Impossible de charger les s\u00e9ances enregistr\u00e9es.",
   "fullHistoryEmpty": "Aucune s\u00e9ance enregistr\u00e9e.",
-  "fullHistorySessionSummary": "{date} - {minutes} min",
+  "fullHistorySessionSummary": "{date} - {duration}",
   "@fullHistorySessionSummary": {
     "placeholders": {
       "date": {"type": "String"},
-      "minutes": {"type": "int"}
+      "duration": {"type": "String"}
     }
   },
   "weeklySetsTitle": "Aper\u00e7u hebdomadaire des s\u00e9ries",
@@ -1176,10 +1202,10 @@
   "logbookTotalTime": "Dur\u00e9e totale",
   "logbookTotalVolume": "Volume total",
   "logbookViewAllSessions": "Voir toutes les s\u00e9ances",
-  "logbookSessionSummary": "{minutes} min - {exercises, plural, =1{1 exercice} other{{exercises} exercices}} - {sets, plural, =1{1 s\u00e9rie} other{{sets} s\u00e9ries}} - {volume}",
+  "logbookSessionSummary": "{duration} - {exercises, plural, =1{1 exercice} other{{exercises} exercices}} - {sets, plural, =1{1 s\u00e9rie} other{{sets} s\u00e9ries}} - {volume}",
   "@logbookSessionSummary": {
     "placeholders": {
-      "minutes": {"type": "int"},
+      "duration": {"type": "String"},
       "exercises": {"type": "int"},
       "sets": {"type": "int"},
       "volume": {"type": "String"}
@@ -2024,8 +2050,8 @@
   "pastSessionsError": "Erreur : {error}",
   "@pastSessionsError": {"placeholders": {"error": {"type": "String"}}},
   "pastSessionsEmpty": "Aucune seance pour le moment.",
-  "pastSessionsItem": "{date} - {minutes} min",
-  "@pastSessionsItem": {"placeholders": {"date": {"type": "String"}, "minutes": {"type": "int"}}},
+  "pastSessionsItem": "{date} - {duration}",
+  "@pastSessionsItem": {"placeholders": {"date": {"type": "String"}, "duration": {"type": "String"}}},
   "historySummaryLoadFailed": "Erreur lors du chargement de l'historique",
   "historySummaryWorkouts": "Seances",
   "historySummaryTotalTime": "Temps total",
@@ -2417,5 +2443,46 @@
   "diagnosticsDeleteShared": "Supprimer les diagnostics partagés",
   "diagnosticsDeleteSharedBody": "Demande la suppression des rapports que cette installation peut prouver avoir envoyés. L’historique de récupération du fournisseur peut conserver des lignes supprimées jusqu’à 30 jours.",
   "diagnosticsSharedDeleted": "La suppression des diagnostics partagés a été demandée.",
-  "diagnosticsSharedDeletionPending": "Certaines demandes de suppression seront réessayées lorsque l’application s’ouvrira avec une connexion."
+  "diagnosticsSharedDeletionPending": "Certaines demandes de suppression seront réessayées lorsque l’application s’ouvrira avec une connexion.",
+  "workoutDurabilityRestoreWarning": "Tonos n’a pas pu vérifier s’il existe un entraînement sauvegardé. Réessayez avant d’en commencer un autre.",
+  "workoutDurabilityDraftSaveWarning": "La sauvegarde de votre entraînement n’est pas à jour. Gardez Tonos ouvert et réessayez pour pouvoir reprendre cet entraînement en toute sécurité.",
+  "workoutDurabilityProgressionWarning": "Votre entraînement est sauvegardé, mais la progression du plan est toujours en attente. Réessayez lorsque le stockage est disponible.",
+  "databaseConfirmExportTitle": "Exporter des données privées ?",
+  "databaseConfirmExportBody": "Cette sauvegarde est un fichier JSON non chiffré qui peut contenir vos entraînements, votre nutrition, vos mesures corporelles, votre profil et vos préférences. Enregistrez-le uniquement dans un emplacement de confiance.",
+  "databaseContinueExport": "Exporter quand même",
+  "databaseExportFailedSafe": "L'exportation n'a pas pu être créée. Les données de l'application n'ont pas été modifiées.",
+  "databaseImportFileTooLarge": "Cette importation est trop volumineuse. Choisissez une sauvegarde de moins de 25 Mo.",
+  "databaseImportBlockedSafe": "Cette sauvegarde n'a pas pu être importée. Vos données actuelles n'ont pas été modifiées.",
+  "databaseImportFailedSafe": "L'importation n'a pas abouti. Vos données actuelles ont été conservées en sécurité.",
+  "speedDialLogFood": "Consigner un aliment",
+  "speedDialLogMeasurement": "Consigner une mesure",
+  "healthTapToLog": "Touchez + pour consigner",
+  "healthMetricInvalid": "Utilisez un nom de mesure unique et une unité courte sans espaces.",
+  "healthMeasurementEntryInvalid": "Saisissez une valeur positive plausible avec une unité prise en charge.",
+  "allocationSourceAutomatic": "Calcul automatique",
+  "allocationSourceCreatorDefault": "Valeur par défaut de Tonos",
+  "allocationSourcePersonalOverride": "Votre répartition personnalisée",
+  "allocationSourceLegacy": "Répartition existante",
+  "quickActionMeasurement": "+ Mesure",
+  "quickActionFood": "+ Aliments",
+  "quickActionWorkout": "+ Entraînement",
+  "healthTrendNeedEntries": "Consignez des entrées pour créer une tendance.",
+  "healthTrendNeedOneMore": "Consignez une entrée de plus pour tracer une tendance.",
+  "healthNoChange": "Aucun changement pour le moment",
+  "healthChangeSinceLast": "{delta} depuis la précédente",
+  "@healthChangeSinceLast": {
+    "placeholders": {
+      "delta": {"type": "String"}
+    }
+  },
+  "healthTrendChartSemantics": "{name}. Graphique de tendance. {count, plural, =0{Aucune entrée pour le moment.} =1{1 entrée.} other{{count} entrées.}} Dernière valeur : {value}.",
+  "@healthTrendChartSemantics": {
+    "placeholders": {
+      "name": {"type": "String"},
+      "count": {"type": "int"},
+      "value": {"type": "String"}
+    }
+  },
+  "healthEntryActions": "Actions de l’entrée",
+  "premadeOneHourDescription": "Version de {duration} de {planName} avec les mouvements principaux du modèle complet."
 }

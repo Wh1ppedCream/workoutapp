@@ -7,11 +7,13 @@ import 'package:provider/provider.dart';
 
 import '../../../models/models.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../l10n/app_localization_extensions.dart';
 import '../../../providers/locale_preference_provider.dart';
 import '../../../providers/onboarding_provider.dart';
 import '../../../providers/theme_provider.dart';
 import '../../../providers/unit_preference_provider.dart';
 import '../../../services/tutorial_state_store.dart';
+import '../../../utils/app_test_keys.dart';
 import '../../../utils/tutorial_launcher.dart';
 import '../../../widgets/guided_tutorial_overlay.dart';
 import '../../../widgets/settings_tiles.dart';
@@ -118,7 +120,7 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
                 title: strings.weightUnitsTitle,
                 subtitle: strings.weightUnitsSubtitle(weightUnit.shortLabel),
                 trailing: Text(
-                  weightUnit.label,
+                  _weightUnitLabel(strings, weightUnit),
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
                     color: Theme.of(context).colorScheme.primary,
                     fontWeight: FontWeight.w900,
@@ -126,19 +128,22 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
                 ),
                 onTap: () => _showWeightUnitDialog(context, weightUnit),
               ),
-              SettingsActionTile(
-                icon: Icons.language_outlined,
-                iconColor: SettingsAccent.appearance,
-                title: strings.languageTitle,
-                subtitle: strings.languageSubtitle,
-                trailing: Text(
-                  _languageLabel(strings, language),
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.w900,
+              KeyedSubtree(
+                key: AppTestKeys.uiAppearanceLanguage,
+                child: SettingsActionTile(
+                  icon: Icons.language_outlined,
+                  iconColor: SettingsAccent.appearance,
+                  title: strings.languageTitle,
+                  subtitle: strings.languageSubtitle,
+                  trailing: Text(
+                    _languageLabel(strings, language),
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
+                  onTap: () => _showLanguageDialog(context, language),
                 ),
-                onTap: () => _showLanguageDialog(context, language),
               ),
             ]),
           ),
@@ -150,17 +155,20 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
             subtitle: strings.navigationSettingsSubtitle,
             accentColor: SettingsAccent.data,
             children: [
-              SettingsActionTile(
-                icon: Icons.space_dashboard_outlined,
-                iconColor: SettingsAccent.data,
-                title: strings.editBottomTabsTitle,
-                subtitle: strings.editBottomTabsSubtitle,
-                onTap:
-                    () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const NavBarSettingsPage(),
+              KeyedSubtree(
+                key: AppTestKeys.uiAppearanceNavigation,
+                child: SettingsActionTile(
+                  icon: Icons.space_dashboard_outlined,
+                  iconColor: SettingsAccent.data,
+                  title: strings.editBottomTabsTitle,
+                  subtitle: strings.editBottomTabsSubtitle,
+                  onTap:
+                      () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const NavBarSettingsPage(),
+                        ),
                       ),
-                    ),
+                ),
               ),
             ],
           ),
@@ -186,7 +194,7 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
                 RadioListTile<WeightUnit>(
                   value: unit,
                   groupValue: selectedUnit,
-                  title: Text(unit.label),
+                  title: Text(_weightUnitLabel(strings, unit)),
                   subtitle: Text(unit.shortLabel),
                   onChanged: (value) => Navigator.of(dialogContext).pop(value),
                 ),
@@ -197,6 +205,10 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
     );
     if (nextUnit == null || !context.mounted) return;
     await context.read<UnitPreferenceProvider>().setWeightUnit(nextUnit);
+  }
+
+  String _weightUnitLabel(AppLocalizations strings, WeightUnit unit) {
+    return unit.localizedLabel(strings);
   }
 
   String _languageLabel(

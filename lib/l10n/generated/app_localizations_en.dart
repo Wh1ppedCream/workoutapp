@@ -38,6 +38,48 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get focusedSetsTitle => 'Focused Sets';
+
+  @override
+  String get bodyPartNeck => 'Neck';
+
+  @override
+  String get bodyPartShoulders => 'Shoulders';
+
+  @override
+  String get bodyPartChest => 'Chest';
+
+  @override
+  String get bodyPartCore => 'Core';
+
+  @override
+  String get bodyPartUpperBack => 'Upper Back';
+
+  @override
+  String get bodyPartLowerBack => 'Lower Back';
+
+  @override
+  String get bodyPartBiceps => 'Biceps';
+
+  @override
+  String get bodyPartTriceps => 'Triceps';
+
+  @override
+  String get bodyPartForearms => 'Forearms';
+
+  @override
+  String get bodyPartHips => 'Hips';
+
+  @override
+  String get bodyPartHamstrings => 'Hamstrings';
+
+  @override
+  String get bodyPartQuads => 'Quads';
+
+  @override
+  String get bodyPartCalves => 'Calves';
+
+  @override
   String databaseSaveFile(String filename) {
     return 'Save $filename';
   }
@@ -2047,6 +2089,44 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonRetry => 'Retry';
 
   @override
+  String get safeFailureLoadTitle => 'Unable to load';
+
+  @override
+  String get safeFailureSaveTitle => 'Unable to save changes';
+
+  @override
+  String get safeFailureActionTitle => 'Could not complete that action';
+
+  @override
+  String get safeFailureValidation => 'Check the information and try again.';
+
+  @override
+  String get safeFailureOffline => 'No connection. Reconnect and try again.';
+
+  @override
+  String get safeFailurePermission => 'Tonos does not have permission to complete this action. Check device settings.';
+
+  @override
+  String get safeFailureStorage => 'Tonos could not access device storage. Check available space and try again.';
+
+  @override
+  String get safeFailureInvalidData => 'The data could not be read safely. Choose another file or try again.';
+
+  @override
+  String get safeFailureNotFound => 'The requested data is no longer available. Refresh and try again.';
+
+  @override
+  String get safeFailureTemporary => 'This is temporarily unavailable. Try again.';
+
+  @override
+  String get safeFailureUnknown => 'Something went wrong. Try again.';
+
+  @override
+  String safeFailureWithGuidance(String summary, String guidance) {
+    return '$summary $guidance';
+  }
+
+  @override
   String get flowPageTitle => 'Workout Progress Flows';
 
   @override
@@ -2428,8 +2508,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fullHistoryEmpty => 'No sessions saved.';
 
   @override
-  String fullHistorySessionSummary(String date, int minutes) {
-    return '$date - $minutes min';
+  String fullHistorySessionSummary(String date, String duration) {
+    return '$date - $duration';
   }
 
   @override
@@ -2668,7 +2748,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get logbookViewAllSessions => 'View all sessions';
 
   @override
-  String logbookSessionSummary(int minutes, int exercises, int sets, String volume) {
+  String logbookSessionSummary(String duration, int exercises, int sets, String volume) {
     String _temp0 = intl.Intl.pluralLogic(
       exercises,
       locale: localeName,
@@ -2681,7 +2761,7 @@ class AppLocalizationsEn extends AppLocalizations {
       other: '$sets sets',
       one: '1 set',
     );
-    return '$minutes min - $_temp0 - $_temp1 - $volume';
+    return '$duration - $_temp0 - $_temp1 - $volume';
   }
 
   @override
@@ -4903,8 +4983,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pastSessionsEmpty => 'No sessions yet.';
 
   @override
-  String pastSessionsItem(String date, int minutes) {
-    return '$date - $minutes min';
+  String pastSessionsItem(String date, String duration) {
+    return '$date - $duration';
   }
 
   @override
@@ -6188,4 +6268,104 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get diagnosticsSharedDeletionPending => 'Some deletion requests will retry when the app opens with a connection.';
+
+  @override
+  String get workoutDurabilityRestoreWarning => 'Tonos could not check for a saved workout. Retry before starting another workout.';
+
+  @override
+  String get workoutDurabilityDraftSaveWarning => 'Your workout backup is not up to date. Keep Tonos open and retry so this workout can be resumed safely.';
+
+  @override
+  String get workoutDurabilityProgressionWarning => 'Your workout is saved, but plan progression is still pending. Retry when storage is available.';
+
+  @override
+  String get databaseConfirmExportTitle => 'Export private data?';
+
+  @override
+  String get databaseConfirmExportBody => 'This backup is an unencrypted JSON file that can contain your workouts, nutrition, body metrics, profile, and preferences. Save it only to a location you trust.';
+
+  @override
+  String get databaseContinueExport => 'Export anyway';
+
+  @override
+  String get databaseExportFailedSafe => 'The database export could not be created. Your app data is unchanged.';
+
+  @override
+  String get databaseImportFileTooLarge => 'This import is too large. Choose a database backup smaller than 25 MB.';
+
+  @override
+  String get databaseImportBlockedSafe => 'This database backup could not be imported. Your current app data is unchanged.';
+
+  @override
+  String get databaseImportFailedSafe => 'The database import did not finish. Your current app data was kept safe.';
+
+  @override
+  String get speedDialLogFood => 'Log food';
+
+  @override
+  String get speedDialLogMeasurement => 'Log measurement';
+
+  @override
+  String get healthTapToLog => 'Tap + to log';
+
+  @override
+  String get healthMetricInvalid => 'Use a unique metric name and a short unit without spaces.';
+
+  @override
+  String get healthMeasurementEntryInvalid => 'Enter a plausible positive value using a supported unit.';
+
+  @override
+  String get allocationSourceAutomatic => 'Automatic calculation';
+
+  @override
+  String get allocationSourceCreatorDefault => 'Tonos default';
+
+  @override
+  String get allocationSourcePersonalOverride => 'Your custom allocation';
+
+  @override
+  String get allocationSourceLegacy => 'Existing allocation';
+
+  @override
+  String get quickActionMeasurement => '+ Measurement';
+
+  @override
+  String get quickActionFood => '+ Food';
+
+  @override
+  String get quickActionWorkout => '+ Workout';
+
+  @override
+  String get healthTrendNeedEntries => 'Log entries to build a trend.';
+
+  @override
+  String get healthTrendNeedOneMore => 'Log one more entry to draw a trend.';
+
+  @override
+  String get healthNoChange => 'No change yet';
+
+  @override
+  String healthChangeSinceLast(String delta) {
+    return '$delta since last';
+  }
+
+  @override
+  String healthTrendChartSemantics(String name, int count, String value) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count entries.',
+      one: '1 entry.',
+      zero: 'No entries yet.',
+    );
+    return '$name trend chart. $_temp0 Latest value: $value.';
+  }
+
+  @override
+  String get healthEntryActions => 'Entry actions';
+
+  @override
+  String premadeOneHourDescription(String duration, String planName) {
+    return '$duration version of $planName using the main movements from the full template.';
+  }
 }

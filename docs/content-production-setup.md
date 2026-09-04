@@ -34,36 +34,80 @@ Current temporary production manifest:
 https://pub-3e431bbfeef5400c9ccbea926ea9904f.r2.dev/manifests/exercise_media_manifest.json
 ```
 
-The production bucket was seeded for pipeline validation, but it is not yet the
-current release source. The canonical development source is version 9 with 127
-of 313 exercises covered (40.6%) across batches 001 through 007. Promote the
-same complete canonical asset set and manifest to production before calling the
-production environment release-ready.
+The production bucket was seeded for pipeline validation, but it is not yet an
+approved release source. The canonical development source is manifest version
+10 with 154 of 310 exercises covered (49.7%) across batches 001 through 008.
+Production was last audited at version 5 with 62 assets. Recalculate the exact
+promotion delta from the current manifests before release instead of relying on
+the older 65-asset estimate. Promote the complete canonical asset set and
+manifest before approving production content for distribution.
+
+## Build Contract
+
+Release routing is selected at compile time rather than by editing the bundled
+default:
+
+- `TONOS_CONTENT_ENVIRONMENT` selects an environment ID from
+  `content_environments.json`.
+- `TONOS_CONTENT_ALLOW_OVERRIDES=false` locks release artifacts to that target.
+- `defaultEnvironment` remains the safe fallback for debug/internal builds that
+  omit an explicit target. It is not a production release switch.
+- Locked builds ignore saved environment choices and custom manifest URLs.
+- Unlocked development builds preserve the existing precedence: a valid HTTPS
+  custom exercise manifest, then a valid saved environment, then the build
+  target.
+- Every configured manifest host must be listed in that environment's
+  `allowedManifestHosts`; production and non-production hosts must be distinct.
+
+A content scope includes the selected environment and resolved manifest URLs.
+When that scope changes, Tonos clears only exercise/shared cloud metadata and
+prunes its media cache before resynchronizing. User workouts, plans, nutrition,
+measurements, preferences, and media licenses are not deleted.
+
+Run both preflights before approving a content configuration:
+
+```powershell
+dart run tools/content_environment_check.dart `
+  --source assets/content/content_environments.json `
+  --target development
+
+dart run tools/content_environment_check.dart `
+  --source assets/content/content_environments.json `
+  --target production `
+  --locked
+```
+
+Unknown targets, invalid HTTPS URLs, missing host allowlists, multiple production
+environments, or an unlocked production target fail before an artifact is
+built. Runtime policy applies the same fail-closed checks.
 
 ## Current Environment Decision
 
 `assets/content/content_environments.json` intentionally keeps
-`defaultEnvironment` set to `development` for now.
+`defaultEnvironment` set to `development`. This is now only the safe fallback
+for ordinary debug/internal builds; official artifacts select their target
+explicitly.
 
-Development is still the safest default while cloud content is expanding and
-while production uses a temporary `r2.dev` public URL instead of a custom domain.
-The production environment is configured and release-checked, so it can be used
-for validation, internal tests, or manual app-side sync checks.
+The production environment can be preflighted and used for controlled internal
+validation, but it is not approved for broad distribution while cloud content
+is incomplete and its host is a temporary `r2.dev` URL. Cloudflare reserves
+`r2.dev` public URLs for development and applies variable rate limits, so a
+stable custom domain is still preferred before a broad release.
 
 TODO before broad release:
 
-1. Buy/connect a stable content domain, for example `content.tonos.app`, or
-   explicitly decide that the temporary R2 public URL should be used for the
-   current release.
-2. Complete development spot checks for batches 004 through 007 and an
-   uncovered-exercise heatmap fallback.
+1. Buy/connect a stable content domain, for example `content.tonos.app`, to
+   the `tonos-public-content-prod` bucket.
+2. Complete development spot checks for batches 004 through 008 and uncovered
+   exercise fallbacks.
 3. Upload all current canonical media assets to the production bucket.
 4. Rebuild and upload the production manifest with the final production
    `--base-url`.
-5. Update the production `exerciseMediaManifestUrl` if the host changes.
-6. Run a clean-install production sync and thumbnail fallback check.
-7. Change `defaultEnvironment` from `development` to `production` only after
-   those checks pass.
+5. Update the production manifest URLs and `allowedManifestHosts` if the host
+   changes.
+6. Run a clean-install production sync, offline fallback, and recovery check.
+7. Run the locked production preflight and use the protected production release
+   workflow. Do not edit `defaultEnvironment` to route a release.
 
 ## Recommended Cloud Layout
 
@@ -227,16 +271,18 @@ waits for Wi-Fi or ethernet before downloading new remote thumbnails or videos.
 
 Before a Play Console release with production cloud content:
 
-1. Create or confirm the production bucket/domain.
-2. Upload the production media files.
+1. Create or confirm the production bucket and stable domain.
+2. Upload every canonical production media file before its manifest.
 3. Build and upload the production manifest using the production base URL.
-4. Update `assets/content/content_environments.json` with the production
-   `exerciseMediaManifestUrl`.
-5. Set `defaultEnvironment` to `production` when production content is ready for
-   real users. Keep it on `development` during active media iteration or while
-   production is only using a temporary R2 public URL.
-6. Run format/analyze.
-7. Build a release app bundle.
+4. Update the production URLs and `allowedManifestHosts` in
+   `assets/content/content_environments.json`.
+5. Run the locked production content preflight.
+6. Run the protected production workflow, which builds with
+   `TONOS_CONTENT_ENVIRONMENT=production` and
+   `TONOS_CONTENT_ALLOW_OVERRIDES=false`.
+7. Install the signed artifact and verify clean-install sync, cached media,
+   offline fallbacks, recovery, and that content controls are read-only.
 
-During development or internal testing, keep the default environment as
-`development` so the app points at the safe test bucket.
+Keep `defaultEnvironment` on `development` as the safe no-define fallback. A
+release target is approved through its explicit build contract, not by changing
+that fallback.

@@ -57,6 +57,7 @@ dependencies:
   # Pinned to the newest release compatible with the current Dart/Flutter SDK.
   package_info_plus: 8.3.1
   http: ^1.6.0
+  crypto: ^3.0.7
 
 
 dev_dependencies:
@@ -65,7 +66,6 @@ dev_dependencies:
   integration_test:
     sdk: flutter
 
-  crypto: ^3.0.7
   sqflite_common_ffi: ^2.3.6
 
   # The "flutter_lints" package below contains a set of recommended lints to
@@ -93,6 +93,10 @@ flutter:
   #   - images/a_dot_ham.jpeg
   assets:
     - assets/exercises.json
+    - assets/exercise_content_localizations.json
+    - assets/catalog_entity_localizations.json
+    - assets/premade_plan_localizations.json
+    - assets/catalog_entity_registry.json
     - assets/equipment.json
     - assets/bodyparts.json
     - assets/muscles.json

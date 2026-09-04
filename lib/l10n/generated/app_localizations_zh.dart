@@ -32,6 +32,48 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get focusedSetsTitle => '重点组';
+
+  @override
+  String get bodyPartNeck => '颈部';
+
+  @override
+  String get bodyPartShoulders => '肩部';
+
+  @override
+  String get bodyPartChest => '胸部';
+
+  @override
+  String get bodyPartCore => '核心';
+
+  @override
+  String get bodyPartUpperBack => '上背部';
+
+  @override
+  String get bodyPartLowerBack => '下背部';
+
+  @override
+  String get bodyPartBiceps => '肱二头肌';
+
+  @override
+  String get bodyPartTriceps => '肱三头肌';
+
+  @override
+  String get bodyPartForearms => '前臂';
+
+  @override
+  String get bodyPartHips => '髋部';
+
+  @override
+  String get bodyPartHamstrings => '腘绳肌';
+
+  @override
+  String get bodyPartQuads => '股四头肌';
+
+  @override
+  String get bodyPartCalves => '小腿';
+
+  @override
   String databaseSaveFile(String filename) {
     return '保存 $filename';
   }
@@ -2034,6 +2076,44 @@ class AppLocalizationsZh extends AppLocalizations {
   String get commonRetry => '重试';
 
   @override
+  String get safeFailureLoadTitle => '无法加载';
+
+  @override
+  String get safeFailureSaveTitle => '无法保存更改';
+
+  @override
+  String get safeFailureActionTitle => '无法完成该操作';
+
+  @override
+  String get safeFailureValidation => '请检查信息后重试。';
+
+  @override
+  String get safeFailureOffline => '当前无网络连接。请重新连接后重试。';
+
+  @override
+  String get safeFailurePermission => 'Tonos 没有完成此操作的权限。请检查设备设置。';
+
+  @override
+  String get safeFailureStorage => 'Tonos 无法访问设备存储空间。请检查可用空间后重试。';
+
+  @override
+  String get safeFailureInvalidData => '无法安全读取数据。请选择其他文件或重试。';
+
+  @override
+  String get safeFailureNotFound => '请求的数据已不可用。请刷新后重试。';
+
+  @override
+  String get safeFailureTemporary => '此内容暂时不可用。请重试。';
+
+  @override
+  String get safeFailureUnknown => '出现问题。请重试。';
+
+  @override
+  String safeFailureWithGuidance(String summary, String guidance) {
+    return '$summary $guidance';
+  }
+
+  @override
   String get flowPageTitle => '训练进阶流程';
 
   @override
@@ -2415,8 +2495,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get fullHistoryEmpty => '尚未保存训练记录。';
 
   @override
-  String fullHistorySessionSummary(String date, int minutes) {
-    return '$date - $minutes 分钟';
+  String fullHistorySessionSummary(String date, String duration) {
+    return '$date - $duration';
   }
 
   @override
@@ -2655,8 +2735,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get logbookViewAllSessions => '查看所有训练';
 
   @override
-  String logbookSessionSummary(int minutes, int exercises, int sets, String volume) {
-    return '$minutes 分 - $exercises 个动作 - $sets 组 - $volume';
+  String logbookSessionSummary(String duration, int exercises, int sets, String volume) {
+    return '$duration - $exercises 个动作 - $sets 组 - $volume';
   }
 
   @override
@@ -4878,8 +4958,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pastSessionsEmpty => '尚无训练记录。';
 
   @override
-  String pastSessionsItem(String date, int minutes) {
-    return '$date - $minutes 分钟';
+  String pastSessionsItem(String date, String duration) {
+    return '$date - $duration';
   }
 
   @override
@@ -6163,4 +6243,104 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get diagnosticsSharedDeletionPending => '部分删除请求会在应用连接网络后再次打开时重试。';
+
+  @override
+  String get workoutDurabilityRestoreWarning => 'Tonos 无法检查是否有已保存的训练。请重试后再开始新的训练。';
+
+  @override
+  String get workoutDurabilityDraftSaveWarning => '训练备份尚未更新。请保持 Tonos 打开并重试，以便安全恢复本次训练。';
+
+  @override
+  String get workoutDurabilityProgressionWarning => '训练已保存，但计划进度更新仍在等待中。存储可用后请重试。';
+
+  @override
+  String get databaseConfirmExportTitle => '导出私人数据？';
+
+  @override
+  String get databaseConfirmExportBody => '此备份是未加密的 JSON 文件，可能包含你的训练、营养、身体测量、个人资料和偏好设置。请只将其保存到可信的位置。';
+
+  @override
+  String get databaseContinueExport => '仍要导出';
+
+  @override
+  String get databaseExportFailedSafe => '无法创建数据库导出文件。你的应用数据未发生更改。';
+
+  @override
+  String get databaseImportFileTooLarge => '此导入文件过大。请选择小于 25 MB 的数据库备份。';
+
+  @override
+  String get databaseImportBlockedSafe => '无法导入此数据库备份。你当前的应用数据未发生更改。';
+
+  @override
+  String get databaseImportFailedSafe => '数据库导入未完成。你当前的应用数据已安全保留。';
+
+  @override
+  String get speedDialLogFood => '记录食物';
+
+  @override
+  String get speedDialLogMeasurement => '记录测量';
+
+  @override
+  String get healthTapToLog => '点击 + 以记录';
+
+  @override
+  String get healthMetricInvalid => '请使用唯一的指标名称和不含空格的简短单位。';
+
+  @override
+  String get healthMeasurementEntryInvalid => '请使用受支持的单位输入合理的正数值。';
+
+  @override
+  String get allocationSourceAutomatic => '自动计算';
+
+  @override
+  String get allocationSourceCreatorDefault => 'Tonos 默认值';
+
+  @override
+  String get allocationSourcePersonalOverride => '您的自定义分配';
+
+  @override
+  String get allocationSourceLegacy => '现有分配';
+
+  @override
+  String get quickActionMeasurement => '+ 测量';
+
+  @override
+  String get quickActionFood => '+ 食物';
+
+  @override
+  String get quickActionWorkout => '+ 训练';
+
+  @override
+  String get healthTrendNeedEntries => '记录条目以建立趋势。';
+
+  @override
+  String get healthTrendNeedOneMore => '再记录一条以绘制趋势。';
+
+  @override
+  String get healthNoChange => '暂无变化';
+
+  @override
+  String healthChangeSinceLast(String delta) {
+    return '$delta 与上一条相比';
+  }
+
+  @override
+  String healthTrendChartSemantics(String name, int count, String value) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 条记录。',
+      one: '1 条记录。',
+      zero: '暂无记录。',
+    );
+    return '$name趋势图。$_temp0 最新值：$value。';
+  }
+
+  @override
+  String get healthEntryActions => '记录操作';
+
+  @override
+  String premadeOneHourDescription(String duration, String planName) {
+    return '保留完整模板主要动作的$planName$duration版本。';
+  }
 }

@@ -43,7 +43,7 @@ class PersonalInfoTransactionDao {
         columns: ['value', 'unit'],
         where: 'def_id = ?',
         whereArgs: [definitionId],
-        orderBy: 'timestamp DESC, id DESC',
+        orderBy: 'measured_at_ms DESC, id DESC',
         limit: 1,
       );
       final bodyWeightLbs = WeightUnitFormatter.toPounds(
@@ -72,9 +72,13 @@ class PersonalInfoTransactionDao {
         }
       }
 
+      final recordedAt = measuredAt ?? DateTime.now();
       await txn.insert('measurements', {
         'def_id': definitionId,
-        'timestamp': (measuredAt ?? DateTime.now().toUtc()).toIso8601String(),
+        'timestamp': TemporalSemantics.legacyUtcIso8601(recordedAt),
+        'measured_at_ms': TemporalSemantics.utcEpochMilliseconds(recordedAt),
+        'measured_on':
+            LocalCalendarDay.fromDateTime(recordedAt.toLocal()).storageKey,
         'value': bodyWeightValue,
         'unit': bodyWeightUnit.shortLabel,
         'note': measurementNote,

@@ -8,6 +8,7 @@ import '../profile/settings/bodypart_ranking_screen.dart';
 import '../profile/settings/muscle_ranking_screen.dart';
 
 import '../../l10n/generated/app_localizations.dart';
+import '../../l10n/safe_failure_localizations.dart';
 import '../../models/definition_models.dart';
 import '../../repositories/app_repository.dart';
 import '../../services/active_plan_store.dart';
@@ -320,7 +321,11 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context).generateFailed('$e')),
+          content: Text(
+            AppLocalizations.of(context).generateFailed(
+              safeFailureMessage(AppLocalizations.of(context), e),
+            ),
+          ),
         ),
       );
     } finally {
@@ -347,7 +352,9 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            AppLocalizations.of(context).generateDiscardFailed('$error'),
+            AppLocalizations.of(context).generateDiscardFailed(
+              safeFailureMessage(AppLocalizations.of(context), error),
+            ),
           ),
         ),
       );

@@ -2,6 +2,7 @@
 
 import 'package:sqflite/sqflite.dart';
 import '../models/models.dart';
+import '../services/measurement_validation.dart';
 import 'db_query_utils.dart';
 
 /// Data Access Object for measurement records and lookup tables.
@@ -14,7 +15,11 @@ class LookupDao {
   static String _nameFromRow(Map<String, Object?> row) => row['name'] as String;
 
   static Equipment _equipmentFromRow(Map<String, Object?> row) {
-    return Equipment(row['id'] as int, row['name'] as String);
+    return Equipment(
+      row['id'] as int,
+      row['name'] as String,
+      row['catalog_id'] as String?,
+    );
   }
 
   static BodyPart _bodyPartFromRow(Map<String, Object?> row) {
@@ -22,7 +27,11 @@ class LookupDao {
   }
 
   static Muscle _muscleFromRow(Map<String, Object?> row) {
-    return Muscle(id: row['id'] as int, name: row['name'] as String);
+    return Muscle(
+      id: row['id'] as int,
+      name: row['name'] as String,
+      catalogId: row['catalog_id'] as String?,
+    );
   }
 
   static Future<List<String>> _getAllNames(Database db, String table) async {
@@ -89,9 +98,13 @@ class LookupDao {
     required String name,
     required MeasurementType type,
   }) async {
-    final trimmed = name.trim();
-    if (trimmed.isEmpty) {
-      throw ArgumentError.value(name, 'name', 'Measurement name is required');
+    final trimmed = MeasurementValidation.normalizeDefinitionName(name);
+    MeasurementValidation.validateDefinitionName(trimmed);
+    final existingId = await getMeasurementDefinitionId(db, trimmed);
+    if (existingId != null) {
+      throw const MeasurementValidationException(
+        MeasurementValidationError.duplicateName,
+      );
     }
 
     await db.insert('measurement_definitions', {
@@ -99,11 +112,11 @@ class LookupDao {
       'type': type.name,
     }, conflictAlgorithm: ConflictAlgorithm.ignore);
 
-    final existingId = await getMeasurementDefinitionId(db, trimmed);
-    if (existingId == null) {
+    final insertedId = await getMeasurementDefinitionId(db, trimmed);
+    if (insertedId == null) {
       throw StateError('Unable to create measurement definition "$trimmed"');
     }
-    return existingId;
+    return insertedId;
   }
 
   /// Inserts a new measurement record tied to a definition.
@@ -123,13 +136,25 @@ class LookupDao {
     double value,
     String unit,
     String? note,
-  ) {
+    MeasurementContext? context,
+  ) async {
+    await _validateEntryForDefinition(
+      db: db,
+      definitionId: defId,
+      value: value,
+      unit: unit,
+      context: context,
+    );
     return db.insert('measurements', {
       'def_id': defId,
-      'timestamp': ts.toIso8601String(),
+      // Retained for backwards-compatible JSON exports and older app builds.
+      'timestamp': TemporalSemantics.legacyUtcIso8601(ts),
+      'measured_at_ms': TemporalSemantics.utcEpochMilliseconds(ts),
+      'measured_on': LocalCalendarDay.fromDateTime(ts.toLocal()).storageKey,
       'value': value,
       'unit': unit,
       'note': note,
+      'context': context?.name,
     });
   }
 
@@ -147,7 +172,7 @@ class LookupDao {
       'measurements',
       where: 'def_id = ?',
       whereArgs: [defId],
-      orderBy: 'timestamp DESC',
+      orderBy: 'measured_at_ms DESC, id DESC',
     );
   }
 
@@ -201,7 +226,7 @@ class LookupDao {
             ? await db.query('stretch_definitions', orderBy: 'name')
             : await db.rawQuery(
               '''
-            SELECT sd.id, sd.name, sd.description
+            SELECT sd.id, sd.catalog_id, sd.name, sd.description
               FROM stretch_definitions sd
               JOIN stretch_bodypart sb ON sb.stretch_id = sd.id
              WHERE sb.bodypart_id = ?
@@ -236,6 +261,7 @@ class LookupDao {
       final id = row['id'] as int;
       return StretchDefinition(
         id: id,
+        catalogId: row['catalog_id'] as String?,
         name: row['name'] as String,
         description: (row['description'] as String?) ?? '',
         bodyParts: bodyPartsByStretchId[id] ?? const <BodyPart>[],
@@ -295,7 +321,7 @@ class LookupDao {
     final rows = await db.query(
       'measurement_definitions',
       columns: ['id'],
-      where: 'name = ?',
+      where: 'lower(trim(name)) = lower(trim(?))',
       whereArgs: [name],
       limit: 1,
     );
@@ -339,14 +365,43 @@ class LookupDao {
     required double value,
     required String unit,
     String? note,
-  }) {
+    MeasurementContext? context,
+  }) async {
+    final rows = await db.rawQuery(
+      '''
+      SELECT md.type
+        FROM measurements m
+        JOIN measurement_definitions md ON md.id = m.def_id
+       WHERE m.id = ?
+       LIMIT 1
+      ''',
+      [measurementId],
+    );
+    if (rows.isEmpty) {
+      throw ArgumentError.value(
+        measurementId,
+        'measurementId',
+        'Measurement not found',
+      );
+    }
+    final type = _measurementTypeFromName(rows.first['type'] as String?);
+    MeasurementValidation.validateEntry(
+      type: type,
+      value: value,
+      unit: unit,
+      context: context,
+    );
     return db.update(
       'measurements',
       {
-        'timestamp': timestamp.toIso8601String(),
+        'timestamp': TemporalSemantics.legacyUtcIso8601(timestamp),
+        'measured_at_ms': TemporalSemantics.utcEpochMilliseconds(timestamp),
+        'measured_on':
+            LocalCalendarDay.fromDateTime(timestamp.toLocal()).storageKey,
         'value': value,
         'unit': unit,
         'note': note,
+        'context': context?.name,
       },
       where: 'id = ?',
       whereArgs: [measurementId],
@@ -366,6 +421,41 @@ class LookupDao {
       whereArgs: [measurementId],
     );
   }
+
+  static Future<void> _validateEntryForDefinition({
+    required Database db,
+    required int definitionId,
+    required double value,
+    required String unit,
+    required MeasurementContext? context,
+  }) async {
+    final rows = await db.query(
+      'measurement_definitions',
+      columns: ['type'],
+      where: 'id = ?',
+      whereArgs: [definitionId],
+      limit: 1,
+    );
+    if (rows.isEmpty) {
+      throw ArgumentError.value(
+        definitionId,
+        'definitionId',
+        'Measurement definition not found',
+      );
+    }
+    MeasurementValidation.validateEntry(
+      type: _measurementTypeFromName(rows.first['type'] as String?),
+      value: value,
+      unit: unit,
+      context: context,
+    );
+  }
+
+  static MeasurementType _measurementTypeFromName(String? value) =>
+      MeasurementType.values.firstWhere(
+        (type) => type.name == value,
+        orElse: () => MeasurementType.Custom,
+      );
 
   /// Inserts a new equipment lookup entry.
   ///

@@ -4,9 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../l10n/safe_failure_localizations.dart';
 import '../../../models/models.dart';
 import '../../../repositories/app_repository.dart';
+import '../../../services/catalog_entity_localizer.dart';
+import '../../../services/safe_failure.dart';
+import '../../../widgets/localized_catalog_entity_name.dart';
 import '../../../widgets/settings_tiles.dart';
+import '../../../widgets/safe_error_view.dart';
 
 class MuscleRankingScreen extends StatefulWidget {
   const MuscleRankingScreen({super.key});
@@ -22,7 +27,7 @@ class _MuscleRankingScreenState extends State<MuscleRankingScreen> {
   bool _isLoading = true;
   bool _isSaving = false;
   bool _dirty = false;
-  String? _error;
+  SafeFailure? _failure;
 
   @override
   void initState() {
@@ -31,6 +36,12 @@ class _MuscleRankingScreenState extends State<MuscleRankingScreen> {
   }
 
   Future<void> _load() async {
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+        _failure = null;
+      });
+    }
     try {
       final muscles = await _repo.fetchAllMusclesFull();
       final rows = await _repo.getAllMuscleRanks();
@@ -41,12 +52,12 @@ class _MuscleRankingScreenState extends State<MuscleRankingScreen> {
         _sortByRank();
         _isLoading = false;
         _dirty = false;
-        _error = null;
+        _failure = null;
       });
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = e.toString();
+        _failure = SafeFailure.classify(e);
         _isLoading = false;
       });
     }
@@ -98,7 +109,9 @@ class _MuscleRankingScreenState extends State<MuscleRankingScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            AppLocalizations.of(context).rankingsSaveError(e.toString()),
+            AppLocalizations.of(context).rankingsSaveError(
+              safeFailureMessage(AppLocalizations.of(context), e),
+            ),
           ),
         ),
       );
@@ -144,9 +157,11 @@ class _MuscleRankingScreenState extends State<MuscleRankingScreen> {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
-    if (_error != null) {
-      return Center(
-        child: Text(strings.rankingsLoadError(strings.anatomyMuscles, _error!)),
+    if (_failure != null) {
+      return SafeErrorView(
+        title: strings.safeFailureLoadTitle,
+        failure: _failure!,
+        onRetry: _load,
       );
     }
     if (_muscles.isEmpty) {
@@ -176,7 +191,7 @@ class _MuscleRankingScreenState extends State<MuscleRankingScreen> {
               return _MuscleRankingTile(
                 key: ValueKey(muscle.id),
                 index: index,
-                name: muscle.name,
+                muscle: muscle,
                 rank: rank,
                 rankLabel: strings.rankingsRank,
                 onRankSubmitted: (value) {
@@ -197,7 +212,7 @@ class _MuscleRankingScreenState extends State<MuscleRankingScreen> {
 
 class _MuscleRankingTile extends StatelessWidget {
   final int index;
-  final String name;
+  final Muscle muscle;
   final int rank;
   final String rankLabel;
   final ValueChanged<String> onRankSubmitted;
@@ -205,7 +220,7 @@ class _MuscleRankingTile extends StatelessWidget {
   const _MuscleRankingTile({
     super.key,
     required this.index,
-    required this.name,
+    required this.muscle,
     required this.rank,
     required this.rankLabel,
     required this.onRankSubmitted,
@@ -240,8 +255,11 @@ class _MuscleRankingTile extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              name,
+            child: LocalizedCatalogEntityName(
+              entity: CatalogEntityDisplayName(
+                catalogId: muscle.catalogId,
+                canonicalName: muscle.name,
+              ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: theme.textTheme.titleSmall?.copyWith(

@@ -384,8 +384,14 @@ class _WeightCardState extends State<WeightCard> {
                     child: LayoutBuilder(
                       builder: (context, constraints) {
                         final compact = constraints.maxWidth < 330;
+                        final usesLocalizedLayout =
+                            Localizations.localeOf(context).languageCode !=
+                            'en';
                         final checkboxWidth = compact ? 34.0 : 40.0;
-                        final setLabelWidth = compact ? 48.0 : 58.0;
+                        final setLabelWidth =
+                            usesLocalizedLayout
+                                ? (compact ? 62.0 : 76.0)
+                                : (compact ? 48.0 : 58.0);
                         final removeWidth = compact ? 34.0 : 40.0;
                         final fieldGap = compact ? 10.0 : 14.0;
 
@@ -429,11 +435,21 @@ class _WeightCardState extends State<WeightCard> {
                             ),
                             SizedBox(
                               width: setLabelWidth,
-                              child: Text(
-                                strings.weightSetLabel(index + 1),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                              child:
+                                  usesLocalizedLayout
+                                      ? FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        alignment: Alignment.centerLeft,
+                                        child: Text(
+                                          strings.weightSetLabel(index + 1),
+                                          maxLines: 1,
+                                        ),
+                                      )
+                                      : Text(
+                                        strings.weightSetLabel(index + 1),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
                             ),
                             const SizedBox(width: 8),
                             Expanded(
@@ -676,6 +692,7 @@ class _WeightCardState extends State<WeightCard> {
                                 const Spacer(),
                                 IconButton(
                                   icon: const Icon(Icons.remove_circle_outline),
+                                  tooltip: strings.weightRemoveChangeSetTitle,
                                   onPressed: () async {
                                     final confirm = await showDialog<bool>(
                                       context: context,

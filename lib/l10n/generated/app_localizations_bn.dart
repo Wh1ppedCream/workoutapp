@@ -32,6 +32,48 @@ class AppLocalizationsBn extends AppLocalizations {
   }
 
   @override
+  String get focusedSetsTitle => 'লক্ষ্যভিত্তিক সেট';
+
+  @override
+  String get bodyPartNeck => 'ঘাড়';
+
+  @override
+  String get bodyPartShoulders => 'কাঁধ';
+
+  @override
+  String get bodyPartChest => 'বুক';
+
+  @override
+  String get bodyPartCore => 'কোর';
+
+  @override
+  String get bodyPartUpperBack => 'উপরের পিঠ';
+
+  @override
+  String get bodyPartLowerBack => 'নিচের পিঠ';
+
+  @override
+  String get bodyPartBiceps => 'বাইসেপস';
+
+  @override
+  String get bodyPartTriceps => 'ট্রাইসেপস';
+
+  @override
+  String get bodyPartForearms => 'অগ্রবাহু';
+
+  @override
+  String get bodyPartHips => 'নিতম্ব';
+
+  @override
+  String get bodyPartHamstrings => 'হ্যামস্ট্রিং';
+
+  @override
+  String get bodyPartQuads => 'কোয়াড্রিসেপস';
+
+  @override
+  String get bodyPartCalves => 'পিণ্ডলি';
+
+  @override
   String databaseSaveFile(String filename) {
     return '$filename সংরক্ষণ করুন';
   }
@@ -2028,6 +2070,44 @@ class AppLocalizationsBn extends AppLocalizations {
   String get commonRetry => 'আবার চেষ্টা করুন';
 
   @override
+  String get safeFailureLoadTitle => 'লোড করা যায়নি';
+
+  @override
+  String get safeFailureSaveTitle => 'পরিবর্তন সংরক্ষণ করা যায়নি';
+
+  @override
+  String get safeFailureActionTitle => 'কাজটি সম্পন্ন করা যায়নি';
+
+  @override
+  String get safeFailureValidation => 'তথ্য যাচাই করে আবার চেষ্টা করুন।';
+
+  @override
+  String get safeFailureOffline => 'ইন্টারনেট সংযোগ নেই। পুনরায় সংযোগ করে আবার চেষ্টা করুন।';
+
+  @override
+  String get safeFailurePermission => 'এই কাজটি করার অনুমতি Tonos-এর নেই। ডিভাইসের সেটিংস পরীক্ষা করুন।';
+
+  @override
+  String get safeFailureStorage => 'Tonos ডিভাইসের স্টোরেজ ব্যবহার করতে পারেনি। খালি জায়গা পরীক্ষা করে আবার চেষ্টা করুন।';
+
+  @override
+  String get safeFailureInvalidData => 'ডেটা নিরাপদভাবে পড়া যায়নি। অন্য ফাইল বেছে নিন বা আবার চেষ্টা করুন।';
+
+  @override
+  String get safeFailureNotFound => 'অনুরোধ করা ডেটা আর পাওয়া যাচ্ছে না। রিফ্রেশ করে আবার চেষ্টা করুন।';
+
+  @override
+  String get safeFailureTemporary => 'এটি সাময়িকভাবে পাওয়া যাচ্ছে না। আবার চেষ্টা করুন।';
+
+  @override
+  String get safeFailureUnknown => 'কিছু একটা সমস্যা হয়েছে। আবার চেষ্টা করুন।';
+
+  @override
+  String safeFailureWithGuidance(String summary, String guidance) {
+    return '$summary $guidance';
+  }
+
+  @override
   String get flowPageTitle => 'ওয়ার্কআউট অগ্রগতির ফ্লো';
 
   @override
@@ -2409,8 +2489,8 @@ class AppLocalizationsBn extends AppLocalizations {
   String get fullHistoryEmpty => 'কোনো সেশন সংরক্ষিত নেই।';
 
   @override
-  String fullHistorySessionSummary(String date, int minutes) {
-    return '$date - $minutes মিনিট';
+  String fullHistorySessionSummary(String date, String duration) {
+    return '$date - $duration';
   }
 
   @override
@@ -2649,7 +2729,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get logbookViewAllSessions => 'সব সেশন দেখুন';
 
   @override
-  String logbookSessionSummary(int minutes, int exercises, int sets, String volume) {
+  String logbookSessionSummary(String duration, int exercises, int sets, String volume) {
     String _temp0 = intl.Intl.pluralLogic(
       exercises,
       locale: localeName,
@@ -2662,7 +2742,7 @@ class AppLocalizationsBn extends AppLocalizations {
       other: '$sets সেট',
       one: '1 সেট',
     );
-    return '$minutes মিনিট - $_temp0 - $_temp1 - $volume';
+    return '$duration - $_temp0 - $_temp1 - $volume';
   }
 
   @override
@@ -4884,8 +4964,8 @@ class AppLocalizationsBn extends AppLocalizations {
   String get pastSessionsEmpty => 'এখনও কোনো সেশন নেই।';
 
   @override
-  String pastSessionsItem(String date, int minutes) {
-    return '$date - $minutes মিনিট';
+  String pastSessionsItem(String date, String duration) {
+    return '$date - $duration';
   }
 
   @override
@@ -5741,7 +5821,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get onboardingWeightHistorySubtitle => 'কয়েকটি তথ্য পুষ্টির লক্ষ্য আরও যুক্তিসঙ্গতভাবে অনুমান করতে সাহায্য করে।';
 
   @override
-  String get onboardingPreviouslyHeavier => 'আপনার বর্তমান ওজনের চেয়ে আগে কি ১০+ পাউন্ড বেশি ওজন ছিল?';
+  String get onboardingPreviouslyHeavier => 'আপনার বর্তমান ওজনের চেয়ে আগে কি 10+ পাউন্ড বেশি ওজন ছিল?';
 
   @override
   String get onboardingWeightTrendTitle => 'বর্তমান ওজনের প্রবণতা';
@@ -5867,7 +5947,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get healthChange => 'পরিবর্তন';
 
   @override
-  String get healthNeedTwoEntries => '২টি এন্ট্রি প্রয়োজন';
+  String get healthNeedTwoEntries => '2টি এন্ট্রি প্রয়োজন';
 
   @override
   String get healthVersusPrevious => 'আগেরটির তুলনায়';
@@ -5945,7 +6025,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get dashboardNoSavedPlans => 'এই জিম প্রোফাইলে কোনো প্ল্যান সংরক্ষিত নেই।';
 
   @override
-  String get exerciseProgressOneRepMax => '১ রিপ সর্বোচ্চ';
+  String get exerciseProgressOneRepMax => '1 রিপ সর্বোচ্চ';
 
   @override
   String get exerciseProgressEstimatedOneRepMax => 'আনুমানিক 1RM';
@@ -6083,7 +6163,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get diagnosticsSyncSection => 'কনটেন্ট সিঙ্ক ইতিহাস';
 
   @override
-  String get diagnosticsSyncSectionSubtitle => 'সর্বশেষ ৩০টি মিডিয়া ম্যানিফেস্ট ফলাফল শুধু এই ডিভাইসে রাখা হয়।';
+  String get diagnosticsSyncSectionSubtitle => 'সর্বশেষ 30টি মিডিয়া ম্যানিফেস্ট ফলাফল শুধু এই ডিভাইসে রাখা হয়।';
 
   @override
   String get diagnosticsNoSyncEvents => 'এখনও কোনো সিঙ্ক ডায়াগনস্টিক নেই';
@@ -6162,11 +6242,111 @@ class AppLocalizationsBn extends AppLocalizations {
   String get diagnosticsDeleteShared => 'শেয়ার করা ডায়াগনস্টিকস মুছুন';
 
   @override
-  String get diagnosticsDeleteSharedBody => 'এই ইনস্টলেশন থেকে পাঠানো প্রমাণযোগ্য রিপোর্ট মুছে ফেলার অনুরোধ করে। সরবরাহকারীর পুনরুদ্ধার ইতিহাসে মুছে ফেলা সারি ৩০ দিন পর্যন্ত থাকতে পারে।';
+  String get diagnosticsDeleteSharedBody => 'এই ইনস্টলেশন থেকে পাঠানো প্রমাণযোগ্য রিপোর্ট মুছে ফেলার অনুরোধ করে। সরবরাহকারীর পুনরুদ্ধার ইতিহাসে মুছে ফেলা সারি 30 দিন পর্যন্ত থাকতে পারে।';
 
   @override
   String get diagnosticsSharedDeleted => 'শেয়ার করা ডায়াগনস্টিকস মুছে ফেলার অনুরোধ করা হয়েছে।';
 
   @override
   String get diagnosticsSharedDeletionPending => 'সংযোগ থাকলে অ্যাপ খোলার সময় কিছু মুছে ফেলার অনুরোধ আবার চেষ্টা করা হবে।';
+
+  @override
+  String get workoutDurabilityRestoreWarning => 'Tonos কোনো সংরক্ষিত ওয়ার্কআউট আছে কি না পরীক্ষা করতে পারেনি। নতুন ওয়ার্কআউট শুরুর আগে আবার চেষ্টা করুন।';
+
+  @override
+  String get workoutDurabilityDraftSaveWarning => 'আপনার ওয়ার্কআউটের ব্যাকআপ হালনাগাদ নয়। নিরাপদে আবার শুরু করতে Tonos খোলা রাখুন এবং আবার চেষ্টা করুন।';
+
+  @override
+  String get workoutDurabilityProgressionWarning => 'আপনার ওয়ার্কআউট সংরক্ষিত হয়েছে, তবে পরিকল্পনার অগ্রগতি এখনো অপেক্ষমাণ। স্টোরেজ পাওয়া গেলে আবার চেষ্টা করুন।';
+
+  @override
+  String get databaseConfirmExportTitle => 'ব্যক্তিগত ডেটা রপ্তানি করবেন?';
+
+  @override
+  String get databaseConfirmExportBody => 'এই ব্যাকআপটি এনক্রিপ্ট করা নয় এমন একটি JSON ফাইল, যাতে আপনার ওয়ার্কআউট, পুষ্টি, শারীরিক পরিমাপ, প্রোফাইল ও পছন্দ থাকতে পারে। এটি কেবল বিশ্বস্ত স্থানে সংরক্ষণ করুন।';
+
+  @override
+  String get databaseContinueExport => 'তবুও রপ্তানি করুন';
+
+  @override
+  String get databaseExportFailedSafe => 'ডেটাবেস রপ্তানি তৈরি করা যায়নি। আপনার অ্যাপের ডেটা অপরিবর্তিত আছে।';
+
+  @override
+  String get databaseImportFileTooLarge => 'এই আমদানিটি খুব বড়। 25 MB-এর চেয়ে ছোট ডেটাবেস ব্যাকআপ বেছে নিন।';
+
+  @override
+  String get databaseImportBlockedSafe => 'এই ডেটাবেস ব্যাকআপ আমদানি করা যায়নি। আপনার বর্তমান অ্যাপ ডেটা অপরিবর্তিত আছে।';
+
+  @override
+  String get databaseImportFailedSafe => 'ডেটাবেস আমদানি সম্পন্ন হয়নি। আপনার বর্তমান অ্যাপ ডেটা নিরাপদ রাখা হয়েছে।';
+
+  @override
+  String get speedDialLogFood => 'খাবার লগ করুন';
+
+  @override
+  String get speedDialLogMeasurement => 'পরিমাপ লগ করুন';
+
+  @override
+  String get healthTapToLog => '+ ট্যাপ করে লগ করুন';
+
+  @override
+  String get healthMetricInvalid => 'একটি অনন্য মেট্রিক নাম এবং ফাঁকা জায়গাবিহীন ছোট একক ব্যবহার করুন।';
+
+  @override
+  String get healthMeasurementEntryInvalid => 'সমর্থিত একক ব্যবহার করে একটি যুক্তিসঙ্গত ধনাত্মক মান লিখুন।';
+
+  @override
+  String get allocationSourceAutomatic => 'স্বয়ংক্রিয় হিসাব';
+
+  @override
+  String get allocationSourceCreatorDefault => 'Tonos-এর ডিফল্ট';
+
+  @override
+  String get allocationSourcePersonalOverride => 'আপনার কাস্টম বরাদ্দ';
+
+  @override
+  String get allocationSourceLegacy => 'বিদ্যমান বরাদ্দ';
+
+  @override
+  String get quickActionMeasurement => '+ পরিমাপ';
+
+  @override
+  String get quickActionFood => '+ খাবার';
+
+  @override
+  String get quickActionWorkout => '+ ওয়ার্কআউট';
+
+  @override
+  String get healthTrendNeedEntries => 'ট্রেন্ড তৈরি করতে এন্ট্রি লগ করুন।';
+
+  @override
+  String get healthTrendNeedOneMore => 'ট্রেন্ড আঁকতে আরও একটি এন্ট্রি লগ করুন।';
+
+  @override
+  String get healthNoChange => 'এখনও কোনো পরিবর্তন নেই';
+
+  @override
+  String healthChangeSinceLast(String delta) {
+    return '$delta শেষ এন্ট্রির পর থেকে';
+  }
+
+  @override
+  String healthTrendChartSemantics(String name, int count, String value) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countটি এন্ট্রি।',
+      one: '1টি এন্ট্রি।',
+      zero: 'এখনও কোনো এন্ট্রি নেই।',
+    );
+    return '$name। ট্রেন্ড চার্ট। $_temp0 সর্বশেষ মান: $value।';
+  }
+
+  @override
+  String get healthEntryActions => 'এন্ট্রির কাজ';
+
+  @override
+  String premadeOneHourDescription(String duration, String planName) {
+    return 'সম্পূর্ণ টেমপ্লেটের প্রধান ব্যায়ামগুলোসহ $planName-এর $duration সংস্করণ।';
+  }
 }

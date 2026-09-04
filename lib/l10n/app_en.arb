@@ -9,6 +9,20 @@
   "@weightCardSetsDone": {"placeholders": {"completed": {"type": "int"}, "total": {"type": "int"}}},
   "bodyHeatmapSemantics": "{bodyPart} body heatmap",
   "@bodyHeatmapSemantics": {"placeholders": {"bodyPart": {"type": "String"}}},
+  "focusedSetsTitle": "Focused Sets",
+  "bodyPartNeck": "Neck",
+  "bodyPartShoulders": "Shoulders",
+  "bodyPartChest": "Chest",
+  "bodyPartCore": "Core",
+  "bodyPartUpperBack": "Upper Back",
+  "bodyPartLowerBack": "Lower Back",
+  "bodyPartBiceps": "Biceps",
+  "bodyPartTriceps": "Triceps",
+  "bodyPartForearms": "Forearms",
+  "bodyPartHips": "Hips",
+  "bodyPartHamstrings": "Hamstrings",
+  "bodyPartQuads": "Quads",
+  "bodyPartCalves": "Calves",
   "databaseSaveFile": "Save {filename}",
   "@databaseSaveFile": {"placeholders": {"filename": {"type": "String"}}},
   "databaseFileSaved": "{filename} was saved to your selected location.",
@@ -900,6 +914,19 @@
   "rulesEditPlan": "Edit Rule",
   "rulesAddPlanTitle": "Add Rule",
   "commonRetry": "Retry",
+  "safeFailureLoadTitle": "Unable to load",
+  "safeFailureSaveTitle": "Unable to save changes",
+  "safeFailureActionTitle": "Could not complete that action",
+  "safeFailureValidation": "Check the information and try again.",
+  "safeFailureOffline": "No connection. Reconnect and try again.",
+  "safeFailurePermission": "Tonos does not have permission to complete this action. Check device settings.",
+  "safeFailureStorage": "Tonos could not access device storage. Check available space and try again.",
+  "safeFailureInvalidData": "The data could not be read safely. Choose another file or try again.",
+  "safeFailureNotFound": "The requested data is no longer available. Refresh and try again.",
+  "safeFailureTemporary": "This is temporarily unavailable. Try again.",
+  "safeFailureUnknown": "Something went wrong. Try again.",
+  "safeFailureWithGuidance": "{summary} {guidance}",
+  "@safeFailureWithGuidance": {"placeholders": {"summary": {"type": "String"}, "guidance": {"type": "String"}}},
   "flowPageTitle": "Workout Progress Flows",
   "flowPageSubtitle": "Set the paths that decide how progression actions are applied after workout results.",
   "flowHowCopiedTitle": "How flows are copied",
@@ -1066,11 +1093,11 @@
   "fullHistoryTitle": "All sessions",
   "fullHistoryLoadError": "Unable to load saved sessions.",
   "fullHistoryEmpty": "No sessions saved.",
-  "fullHistorySessionSummary": "{date} - {minutes} min",
+  "fullHistorySessionSummary": "{date} - {duration}",
   "@fullHistorySessionSummary": {
     "placeholders": {
       "date": {"type": "String"},
-      "minutes": {"type": "int"}
+      "duration": {"type": "String"}
     }
   },
   "weeklySetsTitle": "Weekly sets overview",
@@ -1185,10 +1212,10 @@
   "logbookTotalTime": "Total time",
   "logbookTotalVolume": "Total volume",
   "logbookViewAllSessions": "View all sessions",
-  "logbookSessionSummary": "{minutes} min - {exercises, plural, =1{1 exercise} other{{exercises} exercises}} - {sets, plural, =1{1 set} other{{sets} sets}} - {volume}",
+  "logbookSessionSummary": "{duration} - {exercises, plural, =1{1 exercise} other{{exercises} exercises}} - {sets, plural, =1{1 set} other{{sets} sets}} - {volume}",
   "@logbookSessionSummary": {
     "placeholders": {
-      "minutes": {"type": "int"},
+      "duration": {"type": "String"},
       "exercises": {"type": "int"},
       "sets": {"type": "int"},
       "volume": {"type": "String"}
@@ -2033,8 +2060,8 @@
   "pastSessionsError": "Error: {error}",
   "@pastSessionsError": {"placeholders": {"error": {"type": "String"}}},
   "pastSessionsEmpty": "No sessions yet.",
-  "pastSessionsItem": "{date} - {minutes} min",
-  "@pastSessionsItem": {"placeholders": {"date": {"type": "String"}, "minutes": {"type": "int"}}},
+  "pastSessionsItem": "{date} - {duration}",
+  "@pastSessionsItem": {"placeholders": {"date": {"type": "String"}, "duration": {"type": "String"}}},
   "historySummaryLoadFailed": "Error loading history",
   "historySummaryWorkouts": "Workouts",
   "historySummaryTotalTime": "Total Time",
@@ -2490,5 +2517,52 @@
   "diagnosticsDeleteShared": "Delete shared diagnostics",
   "diagnosticsDeleteSharedBody": "Requests deletion of reports this app can prove it sent. Provider recovery history may retain deleted rows for up to 30 days.",
   "diagnosticsSharedDeleted": "Shared diagnostics deletion requested.",
-  "diagnosticsSharedDeletionPending": "Some deletion requests will retry when the app opens with a connection."
+  "diagnosticsSharedDeletionPending": "Some deletion requests will retry when the app opens with a connection.",
+  "workoutDurabilityRestoreWarning": "Tonos could not check for a saved workout. Retry before starting another workout.",
+  "workoutDurabilityDraftSaveWarning": "Your workout backup is not up to date. Keep Tonos open and retry so this workout can be resumed safely.",
+  "workoutDurabilityProgressionWarning": "Your workout is saved, but plan progression is still pending. Retry when storage is available.",
+  "databaseConfirmExportTitle": "Export private data?",
+  "databaseConfirmExportBody": "This backup is an unencrypted JSON file that can contain your workouts, nutrition, body metrics, profile, and preferences. Save it only to a location you trust.",
+  "databaseContinueExport": "Export anyway",
+  "databaseExportFailedSafe": "The database export could not be created. Your app data is unchanged.",
+  "databaseImportFileTooLarge": "This import is too large. Choose a database backup smaller than 25 MB.",
+  "databaseImportBlockedSafe": "This database backup could not be imported. Your current app data is unchanged.",
+  "databaseImportFailedSafe": "The database import did not finish. Your current app data was kept safe.",
+  "speedDialLogFood": "Log food",
+  "speedDialLogMeasurement": "Log measurement",
+  "healthTapToLog": "Tap + to log",
+  "healthMetricInvalid": "Use a unique metric name and a short unit without spaces.",
+  "healthMeasurementEntryInvalid": "Enter a plausible positive value using a supported unit.",
+  "allocationSourceAutomatic": "Automatic calculation",
+  "allocationSourceCreatorDefault": "Tonos default",
+  "allocationSourcePersonalOverride": "Your custom allocation",
+  "allocationSourceLegacy": "Existing allocation",
+  "quickActionMeasurement": "+ Measurement",
+  "quickActionFood": "+ Food",
+  "quickActionWorkout": "+ Workout",
+  "healthTrendNeedEntries": "Log entries to build a trend.",
+  "healthTrendNeedOneMore": "Log one more entry to draw a trend.",
+  "healthNoChange": "No change yet",
+  "healthChangeSinceLast": "{delta} since last",
+  "@healthChangeSinceLast": {
+    "placeholders": {
+      "delta": {"type": "String"}
+    }
+  },
+  "healthTrendChartSemantics": "{name} trend chart. {count, plural, =0{No entries yet.} =1{1 entry.} other{{count} entries.}} Latest value: {value}.",
+  "@healthTrendChartSemantics": {
+    "placeholders": {
+      "name": {"type": "String"},
+      "count": {"type": "int"},
+      "value": {"type": "String"}
+    }
+  },
+  "healthEntryActions": "Entry actions",
+  "premadeOneHourDescription": "{duration} version of {planName} using the main movements from the full template.",
+  "@premadeOneHourDescription": {
+    "placeholders": {
+      "duration": {"type": "String"},
+      "planName": {"type": "String"}
+    }
+  }
 }

@@ -5,16 +5,32 @@ future nutrition content.
 
 ## Current Development Snapshot
 
-As of 2026-08-08, the canonical development source is
-`tools/content_pipeline/exercise_media_source.example.json` version 9. It
-contains thumbnails for 127 of 313 exercises (40.6%); 186 exercises still use
-the heatmap fallback. Batches 001 through 007 are merged into this source and
+As of 2026-08-23, the canonical development source is
+`tools/content_pipeline/exercise_media_source.example.json` version 10. It
+contains thumbnails for 154 of 310 exercises (49.7%); 156 exercises still use
+the heatmap fallback. Batches 001 through 008 are merged into this source and
 the current canonical manifest is live in the development bucket.
 
-`development` remains the app default. The production bucket and temporary
-public URL are configured, but the current 127-asset canonical manifest has not
-been promoted and validated there. Do not describe production as current until
-that promotion and a clean-install sync check are complete.
+`development` remains the safe no-define fallback. Official builds now select
+an allowlisted content target explicitly and lock release artifacts against
+saved/custom overrides. The production bucket and temporary public URL are
+configured, but the current 154-asset canonical manifest has not been promoted
+and validated there. Do not describe production as current until that promotion
+and a clean-install sync check are complete.
+
+### Production Audit - 2026-08-10
+
+The production bucket is publicly reachable through its temporary `r2.dev`
+address, has read-only `GET`/`HEAD` CORS, and has no custom domain. Its live
+manifest was version 5 with 62 assets at the audit. The then-current version-9
+development manifest had 127 assets, so the recorded 65-asset delta is historical
+and must not be used for the current promotion. A remote `HEAD` audit passed for
+all URLs in that historical scope.
+
+The remaining promotion gates are a custom production domain, visual
+development QA for batches 004 through 008, current canonical
+production-manifest generation, asset-first upload, clean-install production
+sync, and explicit approval of the locked production release target.
 
 ## Phase 1 - Architecture Baseline
 
@@ -42,7 +58,7 @@ that promotion and a clean-install sync check are complete.
 
 Outside-code dependencies:
 
-- [ ] Continue uploading real media files as they are produced; 186 exercise
+- [ ] Continue uploading real media files as they are produced; 156 exercise
   thumbnails remain uncovered.
 
 ## Phase 4 - Local Pipeline
@@ -65,9 +81,10 @@ Outside-code dependencies:
 
 - [x] Configure production public access with temporary R2 public URL.
 - [x] Update production manifest URL once the temporary public URL exists.
-- [ ] Switch the app default to production after a custom production domain is
-  connected, or after deciding the temporary R2 URL should be used for app
-  builds before a custom domain exists.
+- [x] Add explicit allowlisted build-time environment selection and lock
+  release artifacts against saved or custom overrides.
+- [ ] Approve the production release target after a stable production domain is
+  connected, or after explicitly accepting the temporary R2 URL for a release.
 
 ## Phase 6 - Coverage Workflow
 
@@ -91,8 +108,8 @@ Outside-code dependencies:
 - [x] Upload the expanded development manifest.
 - [x] Sync in-app and spot-check new media plus missing-media fallbacks.
 - [x] Create, validate, merge, and publish development batches 002 through
-  007.
-- [ ] Complete a fresh development spot-check for batches 004 through 007 and
+  008.
+- [ ] Complete a fresh development spot-check for batches 004 through 008 and
   uncovered-exercise fallbacks before production promotion.
 
 ## Phase 8 - Media Quality
@@ -119,18 +136,20 @@ Outside-code dependencies:
   validation.
 - [x] Update `assets/content/content_environments.json` with the production
   URL.
-- [ ] Promote the current 127-exercise canonical assets and manifest to
+- [ ] Promote the current 154-exercise canonical assets and manifest to
   production after development validation.
 - [ ] Verify remote production URLs and a clean-install production sync before
-  changing the app default.
-- [ ] Switch the app default environment to production after a custom production
-  domain is connected, or after deciding the temporary R2 URL should be used for
-  app builds before a custom domain exists.
+  approving the explicit production release target.
+- [ ] Connect a stable custom production domain before broad distribution; the
+  temporary `r2.dev` URL remains for internal validation only.
 
 ## Phase 10 - App UX And Resilience
 
 - [x] Cache media locally.
 - [x] Clean abandoned temporary downloads.
+- [x] Require HTTPS manifests and assets, restrict redirects, enforce response
+  sizes and content types, verify exact bytes and SHA-256 before atomic cache
+  promotion, prune orphaned files, and bound the cache with LRU eviction.
 - [x] Avoid direct network-image fallback paths that bypass cache rules.
 - [x] Show subtle loading state while thumbnails resolve.
 - [x] Show retry affordance when a known media asset fails to cache.

@@ -6,6 +6,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import '../l10n/generated/app_localizations.dart';
 import '../theme/theme_extensions.dart';
+import '../utils/localized_body_part_name.dart';
 
 /// Maps database BodyPart.name values to the SVG path IDs that represent them.
 ///
@@ -104,7 +105,9 @@ class SingleBodyPartHeatmap extends StatelessWidget {
     final contentSize = size - (padding * 2);
 
     return Semantics(
-      label: AppLocalizations.of(context).bodyHeatmapSemantics(bodyPartName),
+      label: AppLocalizations.of(
+        context,
+      ).bodyHeatmapSemantics(localizedBodyPartName(context, bodyPartName)),
       child: Container(
         width: size,
         height: size,

@@ -5,6 +5,20 @@
   "dashboardExerciseUsage": "{equipment} - {count} বার",
   "weightCardSetsDone": "{completed}/{total} সম্পন্ন",
   "bodyHeatmapSemantics": "{bodyPart} শরীরের হিটম্যাপ",
+  "focusedSetsTitle": "লক্ষ্যভিত্তিক সেট",
+  "bodyPartNeck": "ঘাড়",
+  "bodyPartShoulders": "কাঁধ",
+  "bodyPartChest": "বুক",
+  "bodyPartCore": "কোর",
+  "bodyPartUpperBack": "উপরের পিঠ",
+  "bodyPartLowerBack": "নিচের পিঠ",
+  "bodyPartBiceps": "বাইসেপস",
+  "bodyPartTriceps": "ট্রাইসেপস",
+  "bodyPartForearms": "অগ্রবাহু",
+  "bodyPartHips": "নিতম্ব",
+  "bodyPartHamstrings": "হ্যামস্ট্রিং",
+  "bodyPartQuads": "কোয়াড্রিসেপস",
+  "bodyPartCalves": "পিণ্ডলি",
   "databaseSaveFile": "{filename} সংরক্ষণ করুন",
   "databaseFileSaved": "{filename} আপনার নির্বাচিত স্থানে সংরক্ষণ করা হয়েছে।",
   "databaseProductionEnvironment": "{label} (প্রোডাকশন)",
@@ -907,11 +921,11 @@
   "fullHistoryTitle": "সব সেশন",
   "fullHistoryLoadError": "সংরক্ষিত সেশন লোড করা যায়নি।",
   "fullHistoryEmpty": "কোনো সেশন সংরক্ষিত নেই।",
-  "fullHistorySessionSummary": "{date} - {minutes} মিনিট",
+  "fullHistorySessionSummary": "{date} - {duration}",
   "@fullHistorySessionSummary": {
     "placeholders": {
       "date": {"type": "String"},
-      "minutes": {"type": "int"}
+      "duration": {"type": "String"}
     }
   },
   "weeklySetsTitle": "সাপ্তাহিক সেটের সংক্ষিপ্তসার",
@@ -1026,10 +1040,10 @@
   "logbookTotalTime": "মোট সময়",
   "logbookTotalVolume": "মোট ভলিউম",
   "logbookViewAllSessions": "সব সেশন দেখুন",
-  "logbookSessionSummary": "{minutes} মিনিট - {exercises, plural, =1{1টি ব্যায়াম} other{{exercises}টি ব্যায়াম}} - {sets, plural, =1{1 সেট} other{{sets} সেট}} - {volume}",
+  "logbookSessionSummary": "{duration} - {exercises, plural, =1{1টি ব্যায়াম} other{{exercises}টি ব্যায়াম}} - {sets, plural, =1{1 সেট} other{{sets} সেট}} - {volume}",
   "@logbookSessionSummary": {
     "placeholders": {
-      "minutes": {"type": "int"},
+      "duration": {"type": "String"},
       "exercises": {"type": "int"},
       "sets": {"type": "int"},
       "volume": {"type": "String"}
@@ -1440,6 +1454,18 @@
   "rulesEditPlan": "নিয়ম সম্পাদনা করুন",
   "rulesAddPlanTitle": "নিয়ম যোগ করুন",
   "commonRetry": "আবার চেষ্টা করুন",
+  "safeFailureLoadTitle": "লোড করা যায়নি",
+  "safeFailureSaveTitle": "পরিবর্তন সংরক্ষণ করা যায়নি",
+  "safeFailureActionTitle": "কাজটি সম্পন্ন করা যায়নি",
+  "safeFailureValidation": "তথ্য যাচাই করে আবার চেষ্টা করুন।",
+  "safeFailureOffline": "ইন্টারনেট সংযোগ নেই। পুনরায় সংযোগ করে আবার চেষ্টা করুন।",
+  "safeFailurePermission": "এই কাজটি করার অনুমতি Tonos-এর নেই। ডিভাইসের সেটিংস পরীক্ষা করুন।",
+  "safeFailureStorage": "Tonos ডিভাইসের স্টোরেজ ব্যবহার করতে পারেনি। খালি জায়গা পরীক্ষা করে আবার চেষ্টা করুন।",
+  "safeFailureInvalidData": "ডেটা নিরাপদভাবে পড়া যায়নি। অন্য ফাইল বেছে নিন বা আবার চেষ্টা করুন।",
+  "safeFailureNotFound": "অনুরোধ করা ডেটা আর পাওয়া যাচ্ছে না। রিফ্রেশ করে আবার চেষ্টা করুন।",
+  "safeFailureTemporary": "এটি সাময়িকভাবে পাওয়া যাচ্ছে না। আবার চেষ্টা করুন।",
+  "safeFailureUnknown": "কিছু একটা সমস্যা হয়েছে। আবার চেষ্টা করুন।",
+  "safeFailureWithGuidance": "{summary} {guidance}",
   "flowPageTitle": "ওয়ার্কআউট অগ্রগতির ফ্লো",
   "flowPageSubtitle": "ওয়ার্কআউটের ফলাফলের পরে অগ্রগতির কাজ কীভাবে প্রয়োগ হবে তা নির্ধারণকারী পথ সেট করুন।",
   "flowHowCopiedTitle": "ফ্লো কীভাবে কপি হয়",
@@ -2276,11 +2302,11 @@
     }
   },
   "pastSessionsFullscreen": "পূর্ণ পর্দা",
-  "pastSessionsItem": "{date} - {minutes} মিনিট",
+  "pastSessionsItem": "{date} - {duration}",
   "@pastSessionsItem": {
     "placeholders": {
       "date": {"type": "String"},
-      "minutes": {"type": "int"}
+      "duration": {"type": "String"}
     }
   },
   "pastSessionsMonth": "মাস",
@@ -2696,7 +2722,7 @@
   "spanishLanguage": "স্প্যানিশ",
   "onboardingWeightHistoryTitle": "ওজনের ইতিহাস",
   "onboardingWeightHistorySubtitle": "কয়েকটি তথ্য পুষ্টির লক্ষ্য আরও যুক্তিসঙ্গতভাবে অনুমান করতে সাহায্য করে।",
-  "onboardingPreviouslyHeavier": "আপনার বর্তমান ওজনের চেয়ে আগে কি ১০+ পাউন্ড বেশি ওজন ছিল?",
+  "onboardingPreviouslyHeavier": "আপনার বর্তমান ওজনের চেয়ে আগে কি 10+ পাউন্ড বেশি ওজন ছিল?",
   "onboardingWeightTrendTitle": "বর্তমান ওজনের প্রবণতা",
   "onboardingWeightTrendGaining": "ওজন বাড়ছে",
   "onboardingWeightTrendLosing": "ওজন কমছে",
@@ -2738,7 +2764,7 @@
   "healthNoEntry": "কোনো এন্ট্রি নেই",
   "healthNotTrackedYet": "এখনও অনুসরণ করা হয়নি",
   "healthChange": "পরিবর্তন",
-  "healthNeedTwoEntries": "২টি এন্ট্রি প্রয়োজন",
+  "healthNeedTwoEntries": "2টি এন্ট্রি প্রয়োজন",
   "healthVersusPrevious": "আগেরটির তুলনায়",
   "healthRecords": "রেকর্ড",
   "presetEstimatedTime": "আনুমানিক সময়",
@@ -2760,7 +2786,7 @@
   "databaseHealthPath": "পথ",
   "dashboardWorkoutInProgress": "ওয়ার্কআউট চলছে",
   "dashboardNoSavedPlans": "এই জিম প্রোফাইলে কোনো প্ল্যান সংরক্ষিত নেই।",
-  "exerciseProgressOneRepMax": "১ রিপ সর্বোচ্চ",
+  "exerciseProgressOneRepMax": "1 রিপ সর্বোচ্চ",
   "exerciseProgressEstimatedOneRepMax": "আনুমানিক 1RM",
   "onboardingPageWeight": "ওজন",
   "onboardingPageBodyFat": "শরীরের চর্বি",
@@ -2772,12 +2798,53 @@
   "diagnosticsAppSection": "অ্যাপের তথ্য", "diagnosticsAppSectionSubtitle": "সমস্যা জানানোর সময় কাজে লাগে।", "diagnosticsVersion": "ভার্সন ও বিল্ড", "diagnosticsLoading": "লোড হচ্ছে...", "diagnosticsUnavailable": "পাওয়া যাচ্ছে না",
   "diagnosticsCrashSection": "বেনামী ডায়াগনস্টিকস", "diagnosticsCrashSectionSubtitle": "অ্যাপের ত্রুটি ও মিডিয়া সিঙ্কের জন্য ঐচ্ছিক বিভাগভিত্তিক রিপোর্ট।", "diagnosticsCrashReporting": "বেনামী ডায়াগনস্টিকস শেয়ার করুন", "diagnosticsCrashUnavailable": "এই বিল্ডে কনফিগার করা নেই। কোনো বেনামী ডায়াগনস্টিকস শেয়ার করা যাবে না।", "diagnosticsCrashEnabledBody": "আপনার সম্মতিতে চালু। বন্ধ করলে Tonos-এ রাখা রিপোর্ট মুছে ফেলার অনুরোধ করা হয়।", "diagnosticsCrashDisabledBody": "ডিফল্টভাবে বন্ধ। রিলিজ সমস্যার নির্ণয়ে সাহায্য করতে চাইলে চালু করুন।",
   "diagnosticsPrivacyPromiseTitle": "নকশাতেই গোপনীয়তা", "diagnosticsPrivacyPromiseBody": "রিপোর্টে শুধু অ্যাপের সংস্করণ, বিল্ড নম্বর, প্ল্যাটফর্ম, অনুমোদিত বিভাগ, ফলাফল ও আনুমানিক সীমা থাকে। ত্রুটির বার্তা, স্ট্যাক ট্রেস, নাম, স্বাস্থ্য ডেটা, ডেটাবেসের বিষয়বস্তু, স্ক্রিনশট, নেটওয়ার্ক ঠিকানা, ট্রেস বা অ্যানালিটিকস কখনও থাকে না।",
-  "diagnosticsSyncSection": "কনটেন্ট সিঙ্ক ইতিহাস", "diagnosticsSyncSectionSubtitle": "সর্বশেষ ৩০টি মিডিয়া ম্যানিফেস্ট ফলাফল শুধু এই ডিভাইসে রাখা হয়।", "diagnosticsNoSyncEvents": "এখনও কোনো সিঙ্ক ডায়াগনস্টিক নেই", "diagnosticsNoSyncEventsBody": "URL বা ব্যক্তিগত ডেটা ছাড়াই সিঙ্কের ফলাফল এখানে দেখা যাবে।", "diagnosticsClearHistory": "সিঙ্ক ইতিহাস মুছুন", "diagnosticsClearHistoryBody": "স্থানীয়ভাবে রাখা সব সিঙ্ক ডায়াগনস্টিক মুছে দিন।", "diagnosticsHistoryCleared": "সিঙ্ক ডায়াগনস্টিক ইতিহাস মুছে ফেলা হয়েছে।",
+  "diagnosticsSyncSection": "কনটেন্ট সিঙ্ক ইতিহাস", "diagnosticsSyncSectionSubtitle": "সর্বশেষ 30টি মিডিয়া ম্যানিফেস্ট ফলাফল শুধু এই ডিভাইসে রাখা হয়।", "diagnosticsNoSyncEvents": "এখনও কোনো সিঙ্ক ডায়াগনস্টিক নেই", "diagnosticsNoSyncEventsBody": "URL বা ব্যক্তিগত ডেটা ছাড়াই সিঙ্কের ফলাফল এখানে দেখা যাবে।", "diagnosticsClearHistory": "সিঙ্ক ইতিহাস মুছুন", "diagnosticsClearHistoryBody": "স্থানীয়ভাবে রাখা সব সিঙ্ক ডায়াগনস্টিক মুছে দিন।", "diagnosticsHistoryCleared": "সিঙ্ক ডায়াগনস্টিক ইতিহাস মুছে ফেলা হয়েছে।",
   "diagnosticsExerciseMedia": "ব্যায়ামের মিডিয়া", "diagnosticsSharedMedia": "শেয়ার করা মিডিয়া", "diagnosticsRemoteSource": "রিমোট", "diagnosticsBundledSource": "অন্তর্ভুক্ত", "diagnosticsSyncSucceeded": "সফল", "diagnosticsSyncFailed": "ব্যর্থ", "diagnosticsSyncEventTitle": "{operation}: {outcome}", "diagnosticsSyncEventDetails": "{source} • {timestamp} • {duration} মি.সে. • ম্যানিফেস্ট {version} • {items}টি আইটেম",
   "diagnosticsPrivacySection": "আপনার ডেটা", "diagnosticsPrivacySectionSubtitle": "স্থানীয় সংরক্ষণ, ধারণ ও মুছে ফেলা।", "diagnosticsLocalDataTitle": "ফিটনেস ডেটা স্থানীয় থাকে", "diagnosticsLocalDataBody": "আপনি নিজে ব্যাকআপ এক্সপোর্ট না করলে ওয়ার্কআউট, পুষ্টি, শরীরের মাপ ও প্রোফাইল এই ডিভাইসের অ্যাপ ডেটাবেসেই থাকে।", "diagnosticsDeletionTitle": "ডায়াগনস্টিক ও অ্যাপ ডেটা মুছুন", "diagnosticsDeletionBody": "উপরের সিঙ্ক ইতিহাস মুছুন এবং বেনামী ডায়াগনস্টিকস বন্ধ করে এই ইনস্টলেশন থেকে পাঠানো রিপোর্ট মুছে ফেলার অনুরোধ করুন। স্থানীয় ডেটাবেস ও ক্যাশ মুছতে ডিভাইস সেটিংসে Tonos-এর স্টোরেজ পরিষ্কার করুন বা অ্যাপ আনইনস্টল করুন।",
   "diagnosticsSendTestReport": "নিয়ন্ত্রিত ডায়াগনস্টিক ইভেন্ট পাঠান", "diagnosticsSendTestReportBody": "শুধু স্পষ্টভাবে পরীক্ষার জন্য সক্রিয় করা বিল্ডে উপলব্ধ। একটি নির্দিষ্ট অনুমোদিত ইভেন্ট পাঠায়।", "diagnosticsTestReportSent": "নিয়ন্ত্রিত ডায়াগনস্টিক ইভেন্ট পাঠানো হয়েছে।", "diagnosticsTestReportFailed": "ডায়াগনস্টিক ইভেন্ট পাঠানো যায়নি। বিল্ড কনফিগারেশন ও সংযোগ পরীক্ষা করুন।",
   "diagnosticsDeleteShared": "শেয়ার করা ডায়াগনস্টিকস মুছুন",
-  "diagnosticsDeleteSharedBody": "এই ইনস্টলেশন থেকে পাঠানো প্রমাণযোগ্য রিপোর্ট মুছে ফেলার অনুরোধ করে। সরবরাহকারীর পুনরুদ্ধার ইতিহাসে মুছে ফেলা সারি ৩০ দিন পর্যন্ত থাকতে পারে।",
+  "diagnosticsDeleteSharedBody": "এই ইনস্টলেশন থেকে পাঠানো প্রমাণযোগ্য রিপোর্ট মুছে ফেলার অনুরোধ করে। সরবরাহকারীর পুনরুদ্ধার ইতিহাসে মুছে ফেলা সারি 30 দিন পর্যন্ত থাকতে পারে।",
   "diagnosticsSharedDeleted": "শেয়ার করা ডায়াগনস্টিকস মুছে ফেলার অনুরোধ করা হয়েছে।",
-  "diagnosticsSharedDeletionPending": "সংযোগ থাকলে অ্যাপ খোলার সময় কিছু মুছে ফেলার অনুরোধ আবার চেষ্টা করা হবে।"
+  "diagnosticsSharedDeletionPending": "সংযোগ থাকলে অ্যাপ খোলার সময় কিছু মুছে ফেলার অনুরোধ আবার চেষ্টা করা হবে।",
+  "workoutDurabilityRestoreWarning": "Tonos কোনো সংরক্ষিত ওয়ার্কআউট আছে কি না পরীক্ষা করতে পারেনি। নতুন ওয়ার্কআউট শুরুর আগে আবার চেষ্টা করুন।",
+  "workoutDurabilityDraftSaveWarning": "আপনার ওয়ার্কআউটের ব্যাকআপ হালনাগাদ নয়। নিরাপদে আবার শুরু করতে Tonos খোলা রাখুন এবং আবার চেষ্টা করুন।",
+  "workoutDurabilityProgressionWarning": "আপনার ওয়ার্কআউট সংরক্ষিত হয়েছে, তবে পরিকল্পনার অগ্রগতি এখনো অপেক্ষমাণ। স্টোরেজ পাওয়া গেলে আবার চেষ্টা করুন।",
+  "databaseConfirmExportTitle": "ব্যক্তিগত ডেটা রপ্তানি করবেন?",
+  "databaseConfirmExportBody": "এই ব্যাকআপটি এনক্রিপ্ট করা নয় এমন একটি JSON ফাইল, যাতে আপনার ওয়ার্কআউট, পুষ্টি, শারীরিক পরিমাপ, প্রোফাইল ও পছন্দ থাকতে পারে। এটি কেবল বিশ্বস্ত স্থানে সংরক্ষণ করুন।",
+  "databaseContinueExport": "তবুও রপ্তানি করুন",
+  "databaseExportFailedSafe": "ডেটাবেস রপ্তানি তৈরি করা যায়নি। আপনার অ্যাপের ডেটা অপরিবর্তিত আছে।",
+  "databaseImportFileTooLarge": "এই আমদানিটি খুব বড়। 25 MB-এর চেয়ে ছোট ডেটাবেস ব্যাকআপ বেছে নিন।",
+  "databaseImportBlockedSafe": "এই ডেটাবেস ব্যাকআপ আমদানি করা যায়নি। আপনার বর্তমান অ্যাপ ডেটা অপরিবর্তিত আছে।",
+  "databaseImportFailedSafe": "ডেটাবেস আমদানি সম্পন্ন হয়নি। আপনার বর্তমান অ্যাপ ডেটা নিরাপদ রাখা হয়েছে।",
+  "speedDialLogFood": "খাবার লগ করুন",
+  "speedDialLogMeasurement": "পরিমাপ লগ করুন",
+  "healthTapToLog": "+ ট্যাপ করে লগ করুন",
+  "healthMetricInvalid": "একটি অনন্য মেট্রিক নাম এবং ফাঁকা জায়গাবিহীন ছোট একক ব্যবহার করুন।",
+  "healthMeasurementEntryInvalid": "সমর্থিত একক ব্যবহার করে একটি যুক্তিসঙ্গত ধনাত্মক মান লিখুন।",
+  "allocationSourceAutomatic": "স্বয়ংক্রিয় হিসাব",
+  "allocationSourceCreatorDefault": "Tonos-এর ডিফল্ট",
+  "allocationSourcePersonalOverride": "আপনার কাস্টম বরাদ্দ",
+  "allocationSourceLegacy": "বিদ্যমান বরাদ্দ",
+  "quickActionMeasurement": "+ পরিমাপ",
+  "quickActionFood": "+ খাবার",
+  "quickActionWorkout": "+ ওয়ার্কআউট",
+  "healthTrendNeedEntries": "ট্রেন্ড তৈরি করতে এন্ট্রি লগ করুন।",
+  "healthTrendNeedOneMore": "ট্রেন্ড আঁকতে আরও একটি এন্ট্রি লগ করুন।",
+  "healthNoChange": "এখনও কোনো পরিবর্তন নেই",
+  "healthChangeSinceLast": "{delta} শেষ এন্ট্রির পর থেকে",
+  "@healthChangeSinceLast": {
+    "placeholders": {
+      "delta": {"type": "String"}
+    }
+  },
+  "healthTrendChartSemantics": "{name}। ট্রেন্ড চার্ট। {count, plural, =0{এখনও কোনো এন্ট্রি নেই।} =1{1টি এন্ট্রি।} other{{count}টি এন্ট্রি।}} সর্বশেষ মান: {value}।",
+  "@healthTrendChartSemantics": {
+    "placeholders": {
+      "name": {"type": "String"},
+      "count": {"type": "int"},
+      "value": {"type": "String"}
+    }
+  },
+  "healthEntryActions": "এন্ট্রির কাজ",
+  "premadeOneHourDescription": "সম্পূর্ণ টেমপ্লেটের প্রধান ব্যায়ামগুলোসহ {planName}-এর {duration} সংস্করণ।"
 }

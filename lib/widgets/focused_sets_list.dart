@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/generated/app_localizations.dart';
 import '../models/models.dart';
+import '../utils/localized_body_part_name.dart';
+import '../utils/localized_formatters.dart';
 
 class FocusedSetHit {
   final BodyPart bodyPart;
@@ -12,7 +15,7 @@ class FocusedSetHit {
 class FocusedSetsList extends StatelessWidget {
   final List<FocusedSetHit> hits;
   final int maxVisible;
-  final String title;
+  final String? title;
   final String? emptyMessage;
   final FontWeight titleWeight;
 
@@ -20,7 +23,7 @@ class FocusedSetsList extends StatelessWidget {
     super.key,
     required this.hits,
     this.maxVisible = 6,
-    this.title = 'Focused Sets',
+    this.title,
     this.emptyMessage,
     this.titleWeight = FontWeight.w700,
   });
@@ -33,12 +36,13 @@ class FocusedSetsList extends StatelessWidget {
       (max, hit) => hit.units > max ? hit.units : max,
     );
     final visibleHits = hits.take(maxVisible).toList();
+    final strings = AppLocalizations.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          title,
+          title ?? strings.focusedSetsTitle,
           style: theme.textTheme.titleSmall?.copyWith(fontWeight: titleWeight),
         ),
         const SizedBox(height: 8),
@@ -73,13 +77,17 @@ class _FocusedSetRow extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                hit.bodyPart.name,
+                localizedBodyPartName(context, hit.bodyPart.name),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
             Text(
-              hit.units.floor().toString(),
+              LocalizedFormatters.number(
+                hit.units.floor(),
+                Localizations.localeOf(context),
+                maximumFractionDigits: 0,
+              ),
               style: theme.textTheme.bodySmall?.copyWith(
                 fontWeight: FontWeight.w800,
               ),
