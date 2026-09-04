@@ -7,12 +7,14 @@ import '../l10n/generated/app_localizations.dart';
 import '../models/models.dart';
 import '../providers/active_session.dart';
 import '../repositories/app_repository.dart';
-import '../services/tutorial_state_store.dart';
+import '../services/catalog_entity_localizer.dart';
 import '../services/safe_failure.dart';
+import '../services/tutorial_state_store.dart';
 import '../utils/localized_body_part_name.dart';
 import '../widgets/body_heatmap.dart';
 import '../widgets/exercise_media_thumbnail.dart';
 import '../widgets/guided_tutorial_overlay.dart';
+import '../widgets/localized_catalog_entity_name.dart';
 import '../widgets/localized_exercise_name.dart';
 import '../widgets/safe_error_view.dart';
 import 'exercise/exercise_catalog_page.dart';
@@ -119,8 +121,14 @@ class _CatalogPageState extends State<CatalogPage> {
         muscleSets.entries
             .where((entry) => entry.value > 0 && muscleById[entry.key] != null)
             .map(
-              (entry) =>
-                  _FocusUsageSummary(muscleById[entry.key]!.name, entry.value),
+              (entry) => _FocusUsageSummary(
+                muscleById[entry.key]!.name,
+                entry.value,
+                entity: CatalogEntityDisplayName(
+                  catalogId: muscleById[entry.key]!.catalogId,
+                  canonicalName: muscleById[entry.key]!.name,
+                ),
+              ),
             )
             .toList()
           ..sort((a, b) => b.units.compareTo(a.units));
@@ -424,10 +432,15 @@ class _ExerciseUsageBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final strings = AppLocalizations.of(context);
-    final equipmentNames = summary.definition.equipmentList
-        .map((equipment) => equipment.name)
-        .where((name) => name.trim().isNotEmpty)
-        .join(', ');
+    final equipment = summary.definition.equipmentList
+        .where((item) => item.name.trim().isNotEmpty)
+        .map(
+          (item) => CatalogEntityDisplayName(
+            catalogId: item.catalogId,
+            canonicalName: item.name,
+          ),
+        )
+        .toList(growable: false);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -455,16 +468,20 @@ class _ExerciseUsageBar extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 3),
-                Text(
-                  [
-                    if (equipmentNames.isNotEmpty) equipmentNames,
-                    strings.catalogTimesUsed(summary.useCount),
-                  ].join(' - '),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
+                LocalizedCatalogEntityNamesBuilder(
+                  entities: equipment,
+                  builder:
+                      (context, names) => Text(
+                        [
+                          if (names.isNotEmpty) names.join(', '),
+                          strings.catalogTimesUsed(summary.useCount),
+                        ].join(' - '),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
                 ),
               ],
             ),
@@ -568,6 +585,20 @@ class _FocusUsageRow extends StatelessWidget {
         localizeBuiltInBodyPartNames
             ? localizedBodyPartName(context, summary.name)
             : summary.name;
+    final nameWidget =
+        summary.entity == null
+            ? Text(
+              displayName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodyMedium,
+            )
+            : LocalizedCatalogEntityName(
+              entity: summary.entity!,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodyMedium,
+            );
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
@@ -578,18 +609,9 @@ class _FocusUsageRow extends StatelessWidget {
                     ? FittedBox(
                       fit: BoxFit.scaleDown,
                       alignment: Alignment.centerLeft,
-                      child: Text(
-                        displayName,
-                        maxLines: 1,
-                        style: theme.textTheme.bodyMedium,
-                      ),
+                      child: nameWidget,
                     )
-                    : Text(
-                      displayName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodyMedium,
-                    ),
+                    : nameWidget,
           ),
           const SizedBox(width: 8),
           Text(
@@ -630,6 +652,7 @@ class _ExerciseUsageSummary {
 class _FocusUsageSummary {
   final String name;
   final double units;
+  final CatalogEntityDisplayName? entity;
 
-  const _FocusUsageSummary(this.name, this.units);
+  const _FocusUsageSummary(this.name, this.units, {this.entity});
 }

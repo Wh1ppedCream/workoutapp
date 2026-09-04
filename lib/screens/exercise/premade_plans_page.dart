@@ -10,11 +10,16 @@ import '../../l10n/safe_failure_localizations.dart';
 import '../../models/models.dart';
 import '../../repositories/app_repository.dart';
 import '../../services/active_plan_store.dart';
+import '../../services/catalog_entity_localizer.dart';
 import '../../services/exercise_equipment_compatibility.dart';
+import '../../services/exercise_content_localizer.dart';
+import '../../services/premade_plan_localizer.dart';
 import '../../services/tutorial_state_store.dart';
 import '../../utils/async_pool.dart';
+import '../../utils/localized_formatters.dart';
 import '../../utils/tutorial_launcher.dart';
 import '../../widgets/guided_tutorial_overlay.dart';
+import '../../widgets/localized_catalog_entity_name.dart';
 
 class PremadePlansPage extends StatefulWidget {
   final int? profileId;
@@ -53,6 +58,8 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
   final _addingPlanIds = <String>{};
   final _onboardingCreatedPlanIds = <int>[];
   Future<_PremadePlanAdaptationData>? _adaptationFuture;
+  Future<Map<String, LocalizedPremadePlan>>? _localizedPlansFuture;
+  String? _localizedLocaleKey;
   int? _adaptationProfileId;
   int? _adaptationDurationMinutes;
   bool? _adaptationFilterValue;
@@ -70,6 +77,50 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
       _queueTutorial();
     });
   }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final locale = Localizations.localeOf(context);
+    final localeKey = _localeKeyFor(locale);
+    if (_localizedLocaleKey == localeKey && _localizedPlansFuture != null) {
+      return;
+    }
+    _localizedLocaleKey = localeKey;
+    _localizedPlansFuture = _loadLocalizedPlans(locale);
+  }
+
+  Future<Map<String, LocalizedPremadePlan>> _loadLocalizedPlans(
+    Locale locale,
+  ) async {
+    final strings = AppLocalizations.of(context);
+    final localizedPlans = await Future.wait(
+      premadeTrainingPlans.map(
+        (plan) => PremadePlanLocalizer.instance.resolve(
+          plan,
+          locale,
+          oneHourDurationLabel: strings.premadeOneHour,
+          oneHourDescriptionBuilder:
+              (duration, planName) =>
+                  strings.premadeOneHourDescription(duration, planName),
+        ),
+      ),
+    );
+    return {
+      for (var i = 0; i < premadeTrainingPlans.length; i++)
+        premadeTrainingPlans[i].id: localizedPlans[i],
+    };
+  }
+
+  Map<String, LocalizedPremadePlan> _canonicalLocalizedPlans() {
+    return {
+      for (final plan in premadeTrainingPlans)
+        plan.id: LocalizedPremadePlan.fromPlan(plan),
+    };
+  }
+
+  static String _localeKeyFor(Locale locale) =>
+      '${locale.languageCode}|${locale.scriptCode}|${locale.countryCode}';
 
   void _queueTutorial() {
     if (!mounted || _tutorialQueued) return;
@@ -339,6 +390,7 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
 
     return PremadeTrainingExercise(
       name: bestCandidate.definition.name,
+      catalogId: bestCandidate.definition.catalogId,
       equipment: equipment,
       sets: exercise.sets,
       reps: exercise.reps,
@@ -564,6 +616,10 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
         groupedPlans.remove(_homemadeSourceName) ??
         const <PremadeTrainingPlan>[];
     final adaptationFuture = _ensureAdaptationData();
+    final localizedPlansFuture =
+        _localizedPlansFuture ??= _loadLocalizedPlans(
+          Localizations.localeOf(context),
+        );
     final content = Scaffold(
       appBar: AppBar(title: Text(strings.premadePlansTitle)),
       bottomNavigationBar:
@@ -581,91 +637,101 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
       body: FutureBuilder<_PremadePlanAdaptationData>(
         future: adaptationFuture,
         builder: (context, snapshot) {
-          final loadedAdaptationData =
-              snapshot.data ?? _PremadePlanAdaptationData.empty;
-          final adaptationData =
-              _filterForProfileEquipment
-                  ? loadedAdaptationData
-                  : _PremadePlanAdaptationData(
-                    profileEquipmentNames:
-                        loadedAdaptationData.profileEquipmentNames,
-                    adaptations: const <String, _PremadePlanAdaptation>{},
-                  );
-          final isPreparingFilter =
-              _filterForProfileEquipment &&
-              snapshot.connectionState != ConnectionState.done;
-          return ListView(
-            padding: EdgeInsets.fromLTRB(
-              16,
-              16,
-              16,
-              widget.onboardingMode ? 112 : 24,
-            ),
-            children: [
-              KeyedSubtree(
-                key: _durationTutorialKey,
-                child: _PremadeDurationHeader(
-                  durationMinutes: _selectedDurationMinutes,
-                  onChanged: (durationMinutes) {
-                    setState(() {
-                      _selectedDurationMinutes = durationMinutes;
-                      _adaptationFuture = null;
-                    });
-                  },
-                  child: Text(
-                    strings.premadeDescription,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+          return FutureBuilder<Map<String, LocalizedPremadePlan>>(
+            key: ValueKey(_localizedLocaleKey),
+            future: localizedPlansFuture,
+            builder: (context, localizationSnapshot) {
+              final localizedPlans =
+                  localizationSnapshot.data ?? _canonicalLocalizedPlans();
+              final loadedAdaptationData =
+                  snapshot.data ?? _PremadePlanAdaptationData.empty;
+              final adaptationData =
+                  _filterForProfileEquipment
+                      ? loadedAdaptationData
+                      : _PremadePlanAdaptationData(
+                        profileEquipmentNames:
+                            loadedAdaptationData.profileEquipmentNames,
+                        adaptations: const <String, _PremadePlanAdaptation>{},
+                      );
+              final isPreparingFilter =
+                  _filterForProfileEquipment &&
+                  snapshot.connectionState != ConnectionState.done;
+              return ListView(
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  16,
+                  16,
+                  widget.onboardingMode ? 112 : 24,
+                ),
+                children: [
+                  KeyedSubtree(
+                    key: _durationTutorialKey,
+                    child: _PremadeDurationHeader(
+                      durationMinutes: _selectedDurationMinutes,
+                      onChanged: (durationMinutes) {
+                        setState(() {
+                          _selectedDurationMinutes = durationMinutes;
+                          _adaptationFuture = null;
+                        });
+                      },
+                      child: Text(
+                        strings.premadeDescription,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              KeyedSubtree(
-                key: _equipmentFilterTutorialKey,
-                child: _PremadeProfileEquipmentFilterCard(
-                  value: _filterForProfileEquipment,
-                  enabled: widget.profileId != null,
-                  isLoading: isPreparingFilter,
-                  hasProfileEquipment:
-                      adaptationData.profileEquipmentNames.isNotEmpty,
-                  replacementCount: adaptationData.totalReplacementCount,
-                  onChanged: (value) {
-                    setState(() {
-                      _filterForProfileEquipment = value;
-                      _adaptationFuture = null;
-                    });
-                  },
-                ),
-              ),
-              const SizedBox(height: 16),
-              KeyedSubtree(
-                key: _planListTutorialKey,
-                child: _PremadeSourceSection(
-                  sourceName: _homemadeSourceName,
-                  plans: homemadePlans,
-                  planGroupNames: _homemadePlanGroups,
-                  initiallyExpanded: true,
-                  addingPlanIds: _addingPlanIds,
-                  adaptationData: adaptationData,
-                  isPreparingFilter: isPreparingFilter,
-                  onAddPlan: _addPlan,
-                ),
-              ),
-              const SizedBox(height: 16),
-              for (final entry in groupedPlans.entries) ...[
-                _PremadeSourceSection(
-                  sourceName: entry.key,
-                  plans: entry.value,
-                  initiallyExpanded: false,
-                  addingPlanIds: _addingPlanIds,
-                  adaptationData: adaptationData,
-                  isPreparingFilter: isPreparingFilter,
-                  onAddPlan: _addPlan,
-                ),
-                const SizedBox(height: 16),
-              ],
-            ],
+                  const SizedBox(height: 12),
+                  KeyedSubtree(
+                    key: _equipmentFilterTutorialKey,
+                    child: _PremadeProfileEquipmentFilterCard(
+                      value: _filterForProfileEquipment,
+                      enabled: widget.profileId != null,
+                      isLoading: isPreparingFilter,
+                      hasProfileEquipment:
+                          adaptationData.profileEquipmentNames.isNotEmpty,
+                      replacementCount: adaptationData.totalReplacementCount,
+                      onChanged: (value) {
+                        setState(() {
+                          _filterForProfileEquipment = value;
+                          _adaptationFuture = null;
+                        });
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  KeyedSubtree(
+                    key: _planListTutorialKey,
+                    child: _PremadeSourceSection(
+                      sourceName: _homemadeSourceName,
+                      plans: homemadePlans,
+                      planGroupNames: _homemadePlanGroups,
+                      initiallyExpanded: true,
+                      addingPlanIds: _addingPlanIds,
+                      adaptationData: adaptationData,
+                      localizedPlans: localizedPlans,
+                      isPreparingFilter: isPreparingFilter,
+                      onAddPlan: _addPlan,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  for (final entry in groupedPlans.entries) ...[
+                    _PremadeSourceSection(
+                      sourceName: entry.key,
+                      plans: entry.value,
+                      initiallyExpanded: false,
+                      addingPlanIds: _addingPlanIds,
+                      adaptationData: adaptationData,
+                      localizedPlans: localizedPlans,
+                      isPreparingFilter: isPreparingFilter,
+                      onAddPlan: _addPlan,
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                ],
+              );
+            },
           );
         },
       ),
@@ -1015,6 +1081,7 @@ class _PremadeSourceSection extends StatelessWidget {
   final bool initiallyExpanded;
   final Set<String> addingPlanIds;
   final _PremadePlanAdaptationData adaptationData;
+  final Map<String, LocalizedPremadePlan> localizedPlans;
   final bool isPreparingFilter;
   final Future<void> Function(
     PremadeTrainingPlan plan,
@@ -1029,6 +1096,7 @@ class _PremadeSourceSection extends StatelessWidget {
     required this.initiallyExpanded,
     required this.addingPlanIds,
     required this.adaptationData,
+    required this.localizedPlans,
     required this.isPreparingFilter,
     required this.onAddPlan,
   });
@@ -1036,8 +1104,10 @@ class _PremadeSourceSection extends StatelessWidget {
   Map<String, List<PremadeTrainingPlan>> _plansByGroup() {
     final grouped = <String, List<PremadeTrainingPlan>>{};
     for (final plan in plans) {
+      final localizedPlan =
+          localizedPlans[plan.id] ?? LocalizedPremadePlan.fromPlan(plan);
       grouped
-          .putIfAbsent(plan.planGroupName, () => <PremadeTrainingPlan>[])
+          .putIfAbsent(localizedPlan.groupName, () => <PremadeTrainingPlan>[])
           .add(plan);
     }
     return grouped;
@@ -1046,13 +1116,34 @@ class _PremadeSourceSection extends StatelessWidget {
   List<String> _orderedGroupNames(
     Map<String, List<PremadeTrainingPlan>> grouped,
   ) {
-    final ordered = <String>[
-      ...planGroupNames,
-      for (final groupName in grouped.keys)
-        if (!planGroupNames.contains(groupName)) groupName,
-    ];
-    if (ordered.isNotEmpty) return ordered;
-    return grouped.keys.toList();
+    final ordered = <String>[];
+    for (final groupName in planGroupNames) {
+      final localizedGroupName = _localizedGroupName(groupName);
+      if (!ordered.contains(localizedGroupName)) {
+        ordered.add(localizedGroupName);
+      }
+    }
+    for (final groupName in grouped.keys) {
+      if (!ordered.contains(groupName)) ordered.add(groupName);
+    }
+    return ordered;
+  }
+
+  String _localizedGroupName(String canonicalGroupName) {
+    for (final plan in plans) {
+      if (plan.planGroupName != canonicalGroupName) continue;
+      return (localizedPlans[plan.id] ?? LocalizedPremadePlan.fromPlan(plan))
+          .groupName;
+    }
+    return canonicalGroupName;
+  }
+
+  String _localizedSourceName() {
+    if (plans.isEmpty) return sourceName;
+    final firstPlan = plans.first;
+    return (localizedPlans[firstPlan.id] ??
+            LocalizedPremadePlan.fromPlan(firstPlan))
+        .sourceName;
   }
 
   @override
@@ -1070,7 +1161,7 @@ class _PremadeSourceSection extends StatelessWidget {
         tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
         title: Text(
-          sourceName,
+          _localizedSourceName(),
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w900,
           ),
@@ -1088,6 +1179,7 @@ class _PremadeSourceSection extends StatelessWidget {
               plans: grouped[groupName] ?? const <PremadeTrainingPlan>[],
               addingPlanIds: addingPlanIds,
               adaptationData: adaptationData,
+              localizedPlans: localizedPlans,
               isPreparingFilter: isPreparingFilter,
               onAddPlan: onAddPlan,
             ),
@@ -1102,6 +1194,7 @@ class _PremadePlanGroupTile extends StatelessWidget {
   final List<PremadeTrainingPlan> plans;
   final Set<String> addingPlanIds;
   final _PremadePlanAdaptationData adaptationData;
+  final Map<String, LocalizedPremadePlan> localizedPlans;
   final bool isPreparingFilter;
   final Future<void> Function(
     PremadeTrainingPlan plan,
@@ -1114,6 +1207,7 @@ class _PremadePlanGroupTile extends StatelessWidget {
     required this.plans,
     required this.addingPlanIds,
     required this.adaptationData,
+    required this.localizedPlans,
     required this.isPreparingFilter,
     required this.onAddPlan,
   });
@@ -1163,6 +1257,9 @@ class _PremadePlanGroupTile extends StatelessWidget {
             for (final plan in plans) ...[
               _PremadePlanCard(
                 plan: plan,
+                localizedPlan:
+                    localizedPlans[plan.id] ??
+                    LocalizedPremadePlan.fromPlan(plan),
                 exercises: adaptationData.exercisesFor(plan),
                 replacementCount: adaptationData.replacementCountFor(plan),
                 isAdding: addingPlanIds.contains(plan.id),
@@ -1181,6 +1278,7 @@ class _PremadePlanGroupTile extends StatelessWidget {
 
 class _PremadePlanCard extends StatefulWidget {
   final PremadeTrainingPlan plan;
+  final LocalizedPremadePlan localizedPlan;
   final List<PremadeTrainingExercise> exercises;
   final int replacementCount;
   final bool isAdding;
@@ -1189,6 +1287,7 @@ class _PremadePlanCard extends StatefulWidget {
 
   const _PremadePlanCard({
     required this.plan,
+    required this.localizedPlan,
     required this.exercises,
     required this.replacementCount,
     required this.isAdding,
@@ -1220,7 +1319,6 @@ class _PremadePlanCardState extends State<_PremadePlanCard> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final strings = AppLocalizations.of(context);
-    final plan = widget.plan;
     final exercises = widget.exercises;
     final totalSets = exercises.fold<int>(
       0,
@@ -1231,7 +1329,7 @@ class _PremadePlanCardState extends State<_PremadePlanCard> {
       children: [
         const SizedBox(height: 8),
         Text(
-          plan.description,
+          widget.localizedPlan.description,
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
@@ -1248,7 +1346,7 @@ class _PremadePlanCardState extends State<_PremadePlanCard> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          plan.name,
+          widget.localizedPlan.name,
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w800,
           ),
@@ -1355,80 +1453,159 @@ class _PremadePlanCardState extends State<_PremadePlanCard> {
   }
 }
 
-class _PremadeExerciseRow extends StatelessWidget {
+class _PremadeExerciseRow extends StatefulWidget {
   final PremadeTrainingExercise exercise;
   final bool wasSwapped;
 
   const _PremadeExerciseRow({required this.exercise, required this.wasSwapped});
 
   @override
+  State<_PremadeExerciseRow> createState() => _PremadeExerciseRowState();
+}
+
+class _PremadeExerciseRowState extends State<_PremadeExerciseRow> {
+  Future<String>? _nameFuture;
+  String? _localeKey;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final locale = Localizations.localeOf(context);
+    final localeKey = _localeKeyFor(locale);
+    if (_localeKey == localeKey) return;
+    _localeKey = localeKey;
+    _nameFuture = ExerciseContentLocalizer.instance.resolveNameForCatalogId(
+      catalogId: widget.exercise.catalogId,
+      fallbackName: widget.exercise.name,
+      locale: locale,
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant _PremadeExerciseRow oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.exercise.catalogId != widget.exercise.catalogId ||
+        oldWidget.exercise.name != widget.exercise.name) {
+      final locale = Localizations.localeOf(context);
+      _localeKey = _localeKeyFor(locale);
+      _nameFuture = ExerciseContentLocalizer.instance.resolveNameForCatalogId(
+        catalogId: widget.exercise.catalogId,
+        fallbackName: widget.exercise.name,
+        locale: locale,
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final strings = AppLocalizations.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(
-            Icons.fitness_center,
-            size: 16,
-            color: theme.colorScheme.primary,
+    return FutureBuilder<String>(
+      key: ValueKey(_localeKey),
+      future: _nameFuture,
+      initialData: widget.exercise.name,
+      builder:
+          (context, snapshot) => _buildRow(
+            context,
+            theme,
+            strings,
+            snapshot.data ?? widget.exercise.name,
           ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Wrap(
-              spacing: 6,
-              runSpacing: 4,
-              crossAxisAlignment: WrapCrossAlignment.center,
+    );
+  }
+
+  Widget _buildRow(
+    BuildContext context,
+    ThemeData theme,
+    AppLocalizations strings,
+    String displayName,
+  ) {
+    final locale = Localizations.localeOf(context);
+    final equipment = <CatalogEntityDisplayName>[
+      if (widget.exercise.equipment.trim().isNotEmpty)
+        CatalogEntityDisplayName(
+          catalogId: widget.exercise.equipmentCatalogId,
+          canonicalName: widget.exercise.equipment,
+        ),
+    ];
+
+    return LocalizedCatalogEntityNamesBuilder(
+      entities: equipment,
+      builder:
+          (context, equipmentNames) => Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text.rich(
-                  TextSpan(
+                Icon(
+                  Icons.fitness_center,
+                  size: 16,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
-                      TextSpan(
-                        text: exercise.name,
-                        style: const TextStyle(fontWeight: FontWeight.w700),
-                      ),
-                      TextSpan(
-                        text: ' - ${exercise.equipment}',
-                        style: TextStyle(color: theme.colorScheme.primary),
-                      ),
-                      TextSpan(
-                        text: ' - ${exercise.sets} x ${exercise.reps}',
-                        style: TextStyle(
-                          color: theme.colorScheme.onSurfaceVariant,
+                      Text.rich(
+                        TextSpan(
+                          children: [
+                            TextSpan(
+                              text: displayName,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            if (equipmentNames.isNotEmpty)
+                              TextSpan(
+                                text: ' - ${equipmentNames.join(', ')}',
+                                style: TextStyle(
+                                  color: theme.colorScheme.primary,
+                                ),
+                              ),
+                            TextSpan(
+                              text:
+                                  ' - ${LocalizedFormatters.number(widget.exercise.sets, locale, maximumFractionDigits: 0)}'
+                                  ' x ${LocalizedFormatters.number(widget.exercise.reps, locale, maximumFractionDigits: 0)}',
+                              style: TextStyle(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
+                      if (widget.wasSwapped)
+                        DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primaryContainer
+                                .withValues(alpha: 0.55),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            child: Text(
+                              strings.premadeProfileSwap,
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: theme.colorScheme.onPrimaryContainer,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 ),
-                if (wasSwapped)
-                  DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primaryContainer.withValues(
-                        alpha: 0.55,
-                      ),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                      child: Text(
-                        strings.premadeProfileSwap,
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: theme.colorScheme.onPrimaryContainer,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
-                  ),
               ],
             ),
           ),
-        ],
-      ),
     );
   }
+
+  static String _localeKeyFor(Locale locale) =>
+      '${locale.languageCode}|${locale.scriptCode}|${locale.countryCode}';
 }

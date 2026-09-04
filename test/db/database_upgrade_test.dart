@@ -258,6 +258,8 @@ Future<void> _createSchemaThroughVersion(Database db, int version) async {
     58: Schema.migrateV58,
     59: Schema.migrateV59,
     60: Schema.migrateV60,
+    61: Schema.migrateV61,
+    62: Schema.migrateV62,
   };
   for (final entry in migrations.entries) {
     if (entry.key > version) break;

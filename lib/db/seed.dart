@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:sqflite/sqflite.dart';
 
 import 'exercise_catalog.dart';
+import '../services/catalog_entity_registry.dart';
 
 typedef SeedProgress = void Function(int inserted);
 
@@ -307,6 +308,7 @@ class Seed {
 
     final exJson = await rootBundle.loadString('assets/exercises.json');
     final List exList = _exerciseListFromJson(exJson);
+    final entityRegistry = await CatalogEntityRegistry.instance.load();
 
     await db.transaction((txn) async {
       Future<Map<String, int>> loadIdMap(String table) async {
@@ -321,8 +323,13 @@ class Seed {
 
       final lookupBatch = txn.batch();
       for (var item in eqList) {
+        final name = item['name'] as String;
         lookupBatch.insert('equipment', {
-          'name': item['name'],
+          'name': name,
+          'catalog_id': entityRegistry.catalogIdFor(
+            CatalogEntityKind.equipment,
+            name,
+          ),
         }, conflictAlgorithm: ConflictAlgorithm.ignore);
       }
 
@@ -333,11 +340,27 @@ class Seed {
       }
 
       for (var item in mList) {
+        final name = item['name'] as String;
         lookupBatch.insert('muscles', {
-          'name': item['name'],
+          'name': name,
+          'catalog_id': entityRegistry.catalogIdFor(
+            CatalogEntityKind.muscle,
+            name,
+          ),
         }, conflictAlgorithm: ConflictAlgorithm.ignore);
       }
       await lookupBatch.commit(noResult: true);
+
+      await _syncCatalogEntityIds(
+        txn,
+        table: 'equipment',
+        entries: entityRegistry.equipment,
+      );
+      await _syncCatalogEntityIds(
+        txn,
+        table: 'muscles',
+        entries: entityRegistry.muscles,
+      );
 
       final equipmentIds = await loadIdMap('equipment');
       final bodypartIds = await loadIdMap('bodypart');
@@ -497,10 +520,30 @@ class Seed {
     await ExerciseCatalog.synchronize(db, sourceJson: source);
   }
 
+  /// Adds stable IDs to shipped lookup rows without changing their canonical
+  /// names or claiming a user-created row that does not match the registry.
+  static Future<void> _syncCatalogEntityIds(
+    DatabaseExecutor db, {
+    required String table,
+    required Iterable<CatalogEntityEntry> entries,
+  }) async {
+    final batch = db.batch();
+    for (final entry in entries) {
+      batch.update(
+        table,
+        {'catalog_id': entry.catalogId},
+        where: 'name = ? AND catalog_id IS NULL',
+        whereArgs: [entry.canonicalName],
+      );
+    }
+    await batch.commit(noResult: true);
+  }
+
   /// Seeds stretch definitions and their body part associations.
   static Future<void> seedStretches(Database db) async {
     final stJson = await rootBundle.loadString('assets/stretches.json');
     final List stList = json.decode(stJson);
+    final entityRegistry = await CatalogEntityRegistry.instance.load();
 
     await db.transaction((txn) async {
       Future<Map<String, int>> loadIdMap(String table) async {
@@ -512,12 +555,23 @@ class Seed {
 
       final stretchBatch = txn.batch();
       for (var item in stList) {
+        final name = item['name'] as String;
         stretchBatch.insert('stretch_definitions', {
-          'name': item['name'],
+          'name': name,
+          'catalog_id': entityRegistry.catalogIdFor(
+            CatalogEntityKind.stretch,
+            name,
+          ),
           'description': item['description'] ?? '',
         }, conflictAlgorithm: ConflictAlgorithm.ignore);
       }
       await stretchBatch.commit(noResult: true);
+
+      await _syncCatalogEntityIds(
+        txn,
+        table: 'stretch_definitions',
+        entries: entityRegistry.stretches,
+      );
 
       final stretchIds = await loadIdMap('stretch_definitions');
       final bodypartIds = await loadIdMap('bodypart');

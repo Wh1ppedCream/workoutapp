@@ -19,6 +19,11 @@ The SQLite `exercise_definitions.id` is deliberately *not* a catalog ID. It
 is a local implementation detail and may differ between fresh installs and
 upgraded databases.
 
+Localized exercise names and guidance are presentation data keyed by
+`catalogId`; canonical English names remain the values used for matching,
+history, plans, imports, exports, and media. Changing a translation must not
+change a catalog identity or rewrite stored user data.
+
 ## Safe edits
 
 For every edit that changes shipped exercise content, increase the top-level

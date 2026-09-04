@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/generated/app_localizations.dart';
@@ -21,10 +20,12 @@ import '../screens/exercise/session_detail_screen.dart';
 import '../screens/exercise/session_screen.dart';
 import '../screens/nutrition/measured_items_page.dart';
 import '../services/active_plan_store.dart';
+import '../services/catalog_entity_localizer.dart';
 import '../utils/localized_body_part_name.dart';
 import '../utils/completed_workout_duration_formatter.dart';
-import '../utils/localized_digit_formatter.dart';
+import '../utils/localized_formatters.dart';
 import 'exercise_media_thumbnail.dart';
+import 'localized_catalog_entity_name.dart';
 import 'localized_exercise_name.dart';
 import 'presets_loaded.dart';
 import 'seven_day_focus_card.dart';
@@ -295,16 +296,10 @@ class _DashboardRecentWorkoutsCardState
     final isToday =
         session.calendarDay == LocalCalendarDay.fromDateTime(DateTime.now());
     return isToday
-        ? AppLocalizations.of(context).dashboardTodayAt(
-          preserveWesternDigits(
-            DateFormat.jm(locale.toLanguageTag()).format(date),
-            locale,
-          ),
-        )
-        : preserveWesternDigits(
-          DateFormat('EEE, MMM d', locale.toLanguageTag()).format(date),
-          locale,
-        );
+        ? AppLocalizations.of(
+          context,
+        ).dashboardTodayAt(LocalizedFormatters.time(date, locale))
+        : LocalizedFormatters.weekdayShortDate(date, locale);
   }
 
   String _durationLabel(BuildContext context, int seconds) {
@@ -1010,6 +1005,10 @@ class _DashboardTargetAnatomyCardState
               (entry) => _DashboardFocusUsage(
                 musclesById[entry.key]!.name,
                 entry.value,
+                entity: CatalogEntityDisplayName(
+                  catalogId: musclesById[entry.key]!.catalogId,
+                  canonicalName: musclesById[entry.key]!.name,
+                ),
               ),
             )
             .toList()
@@ -1137,9 +1136,14 @@ class _DashboardExerciseUsageRow extends StatelessWidget {
     final theme = Theme.of(context);
     final strings = AppLocalizations.of(context);
     final equipment = usage.definition.equipmentList
-        .map((item) => item.name)
-        .where((name) => name.trim().isNotEmpty)
-        .join(', ');
+        .where((item) => item.name.trim().isNotEmpty)
+        .map(
+          (item) => CatalogEntityDisplayName(
+            catalogId: item.catalogId,
+            canonicalName: item.name,
+          ),
+        )
+        .toList(growable: false);
     return Container(
       margin: const EdgeInsets.only(top: 8),
       padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
@@ -1162,18 +1166,22 @@ class _DashboardExerciseUsageRow extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 2),
-                Text(
-                  strings.dashboardExerciseUsage(
-                    equipment.isEmpty
-                        ? strings.dashboardExerciseFallback
-                        : equipment,
-                    usage.useCount,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
+                LocalizedCatalogEntityNamesBuilder(
+                  entities: equipment,
+                  builder:
+                      (context, names) => Text(
+                        strings.dashboardExerciseUsage(
+                          names.isEmpty
+                              ? strings.dashboardExerciseFallback
+                              : names.join(', '),
+                          usage.useCount,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
                 ),
               ],
             ),
@@ -1239,18 +1247,35 @@ class _DashboardFocusPane extends StatelessWidget {
                   child: Row(
                     children: [
                       Expanded(
-                        child: Text(
-                          localizeBuiltInBodyPartNames
-                              ? localizedBodyPartName(context, item.name)
-                              : item.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodySmall,
-                        ),
+                        child:
+                            item.entity == null
+                                ? Text(
+                                  localizeBuiltInBodyPartNames
+                                      ? localizedBodyPartName(
+                                        context,
+                                        item.name,
+                                      )
+                                      : item.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.bodySmall,
+                                )
+                                : LocalizedCatalogEntityName(
+                                  entity: item.entity!,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.bodySmall,
+                                ),
                       ),
                       const SizedBox(width: 5),
                       Text(
-                        strings.weeklySetsCount(item.units.round().toString()),
+                        strings.weeklySetsCount(
+                          LocalizedFormatters.number(
+                            item.units.round(),
+                            Localizations.localeOf(context),
+                            maximumFractionDigits: 0,
+                          ),
+                        ),
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: theme.colorScheme.primary,
                           fontWeight: FontWeight.w800,
@@ -1279,8 +1304,9 @@ class _DashboardExerciseUsage {
 class _DashboardFocusUsage {
   final String name;
   final double units;
+  final CatalogEntityDisplayName? entity;
 
-  const _DashboardFocusUsage(this.name, this.units);
+  const _DashboardFocusUsage(this.name, this.units, {this.entity});
 }
 
 class _DashboardAnatomyUsage {

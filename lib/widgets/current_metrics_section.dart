@@ -1,13 +1,13 @@
 // File: lib/widgets/current_metrics_section.dart
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/generated/app_localizations.dart';
 import '../models/models.dart';
 import '../repositories/app_repository.dart';
 import '../screens/nutrition/measured_items_page.dart';
+import '../utils/localized_formatters.dart';
 
 class _CurrentMetric {
   const _CurrentMetric({required this.definition, required this.measurement});
@@ -204,9 +204,13 @@ class CurrentMetricsSectionState extends State<CurrentMetricsSection>
                         child: MetricItem(
                           color: _metricColor(metric.definition.type),
                           label: _metricLabel(metric.definition, strings),
-                          value: _formatMeasurement(metric.measurement),
-                          recordedOn: DateFormat.Md(strings.localeName).format(
+                          value: _formatMeasurement(
+                            metric.measurement,
+                            Localizations.localeOf(context),
+                          ),
+                          recordedOn: LocalizedFormatters.monthDay(
                             metric.measurement.calendarDay.toLocalDateTime(),
+                            Localizations.localeOf(context),
                           ),
                         ),
                       ),
@@ -299,10 +303,14 @@ String _metricLabel(
   };
 }
 
-String _formatMeasurement(Measurement measurement) {
-  final value =
-      measurement.value == measurement.value.roundToDouble()
-          ? measurement.value.toStringAsFixed(0)
-          : measurement.value.toStringAsFixed(1);
+String _formatMeasurement(Measurement measurement, Locale locale) {
+  final fractionDigits =
+      measurement.value == measurement.value.roundToDouble() ? 0 : 1;
+  final value = LocalizedFormatters.number(
+    measurement.value,
+    locale,
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: fractionDigits,
+  );
   return '$value ${measurement.unit}'.trim();
 }

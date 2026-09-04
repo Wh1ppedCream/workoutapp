@@ -6294,4 +6294,59 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get healthMeasurementEntryInvalid => 'সমর্থিত একক ব্যবহার করে একটি যুক্তিসঙ্গত ধনাত্মক মান লিখুন।';
+
+  @override
+  String get allocationSourceAutomatic => 'স্বয়ংক্রিয় হিসাব';
+
+  @override
+  String get allocationSourceCreatorDefault => 'Tonos-এর ডিফল্ট';
+
+  @override
+  String get allocationSourcePersonalOverride => 'আপনার কাস্টম বরাদ্দ';
+
+  @override
+  String get allocationSourceLegacy => 'বিদ্যমান বরাদ্দ';
+
+  @override
+  String get quickActionMeasurement => '+ পরিমাপ';
+
+  @override
+  String get quickActionFood => '+ খাবার';
+
+  @override
+  String get quickActionWorkout => '+ ওয়ার্কআউট';
+
+  @override
+  String get healthTrendNeedEntries => 'ট্রেন্ড তৈরি করতে এন্ট্রি লগ করুন।';
+
+  @override
+  String get healthTrendNeedOneMore => 'ট্রেন্ড আঁকতে আরও একটি এন্ট্রি লগ করুন।';
+
+  @override
+  String get healthNoChange => 'এখনও কোনো পরিবর্তন নেই';
+
+  @override
+  String healthChangeSinceLast(String delta) {
+    return '$delta শেষ এন্ট্রির পর থেকে';
+  }
+
+  @override
+  String healthTrendChartSemantics(String name, int count, String value) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countটি এন্ট্রি।',
+      one: '1টি এন্ট্রি।',
+      zero: 'এখনও কোনো এন্ট্রি নেই।',
+    );
+    return '$name। ট্রেন্ড চার্ট। $_temp0 সর্বশেষ মান: $value।';
+  }
+
+  @override
+  String get healthEntryActions => 'এন্ট্রির কাজ';
+
+  @override
+  String premadeOneHourDescription(String duration, String planName) {
+    return 'সম্পূর্ণ টেমপ্লেটের প্রধান ব্যায়ামগুলোসহ $planName-এর $duration সংস্করণ।';
+  }
 }

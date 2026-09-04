@@ -6313,4 +6313,59 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get healthMeasurementEntryInvalid => 'Enter a plausible positive value using a supported unit.';
+
+  @override
+  String get allocationSourceAutomatic => 'Automatic calculation';
+
+  @override
+  String get allocationSourceCreatorDefault => 'Tonos default';
+
+  @override
+  String get allocationSourcePersonalOverride => 'Your custom allocation';
+
+  @override
+  String get allocationSourceLegacy => 'Existing allocation';
+
+  @override
+  String get quickActionMeasurement => '+ Measurement';
+
+  @override
+  String get quickActionFood => '+ Food';
+
+  @override
+  String get quickActionWorkout => '+ Workout';
+
+  @override
+  String get healthTrendNeedEntries => 'Log entries to build a trend.';
+
+  @override
+  String get healthTrendNeedOneMore => 'Log one more entry to draw a trend.';
+
+  @override
+  String get healthNoChange => 'No change yet';
+
+  @override
+  String healthChangeSinceLast(String delta) {
+    return '$delta since last';
+  }
+
+  @override
+  String healthTrendChartSemantics(String name, int count, String value) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count entries.',
+      one: '1 entry.',
+      zero: 'No entries yet.',
+    );
+    return '$name trend chart. $_temp0 Latest value: $value.';
+  }
+
+  @override
+  String get healthEntryActions => 'Entry actions';
+
+  @override
+  String premadeOneHourDescription(String duration, String planName) {
+    return '$duration version of $planName using the main movements from the full template.';
+  }
 }

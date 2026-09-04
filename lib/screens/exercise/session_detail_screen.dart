@@ -3,7 +3,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../l10n/generated/app_localizations.dart';
@@ -12,12 +11,13 @@ import '../../providers/active_session.dart';
 import '../../providers/selected_profile.dart';
 import '../../providers/unit_preference_provider.dart';
 import '../../repositories/app_repository.dart';
+import '../../services/catalog_entity_localizer.dart';
 import '../../services/safe_failure.dart';
 import '../../services/tutorial_state_store.dart';
 import '../../theme/theme_extensions.dart';
 import '../../utils/async_pool.dart';
 import '../../utils/completed_workout_duration_formatter.dart';
-import '../../utils/localized_digit_formatter.dart';
+import '../../utils/localized_formatters.dart';
 import '../../utils/tutorial_launcher.dart';
 import '../../utils/weight_unit_formatter.dart';
 import '../../utils/app_test_keys.dart';
@@ -27,6 +27,7 @@ import '../../widgets/exercise_detail_sheet.dart';
 import '../../widgets/exercise_media_thumbnail.dart';
 import '../../widgets/focused_sets_list.dart';
 import '../../widgets/guided_tutorial_overlay.dart';
+import '../../widgets/localized_catalog_entity_name.dart';
 import '../../widgets/safe_error_view.dart';
 import '../../widgets/workout_record_badges.dart';
 import 'session_screen.dart';
@@ -622,10 +623,8 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     if (focusNames.isNotEmpty) return focusNames.join(', ');
     final locale = Localizations.localeOf(context);
     return AppLocalizations.of(context).workoutDetailDefaultPlanName(
-      preserveWesternDigits(
-        DateFormat.MMM(
-          locale.toLanguageTag(),
-        ).format(widget.session.calendarDay.toLocalDateTime()),
+      LocalizedFormatters.monthShort(
+        widget.session.calendarDay.toLocalDateTime(),
         locale,
       ),
     );
@@ -751,10 +750,8 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
           child: _SessionSummaryCard(
             session: widget.session,
             summary: _summary!,
-            dateText: preserveWesternDigits(
-              DateFormat.yMMMd(
-                Localizations.localeOf(context).toLanguageTag(),
-              ).add_jm().format(widget.session.displayDateTime),
+            dateText: LocalizedFormatters.dateTime(
+              widget.session.displayDateTime,
               Localizations.localeOf(context),
             ),
           ),
@@ -961,6 +958,7 @@ class _SessionSummaryCard extends StatelessWidget {
                     value: WeightUnitFormatter.formatVolume(
                       summary.totalVolume,
                       weightUnit,
+                      locale: Localizations.localeOf(context),
                     ),
                   ),
                 ),
@@ -975,7 +973,11 @@ class _SessionSummaryCard extends StatelessWidget {
                 Expanded(
                   child: _SummaryMetricTile(
                     label: AppLocalizations.of(context).workoutDetailExercises,
-                    value: summary.exerciseCount.toString(),
+                    value: LocalizedFormatters.number(
+                      summary.exerciseCount,
+                      Localizations.localeOf(context),
+                      maximumFractionDigits: 0,
+                    ),
                   ),
                 ),
               ],
@@ -1111,6 +1113,17 @@ class _CompletedWeightCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final rows = _setRows(exercise);
+    final equipment = [
+      if (definition != null)
+        ...definition!.equipmentList
+            .where((item) => item.name.trim().isNotEmpty)
+            .map(
+              (item) => CatalogEntityDisplayName(
+                catalogId: item.catalogId,
+                canonicalName: item.name,
+              ),
+            ),
+    ];
 
     return Card(
       margin: const EdgeInsets.only(bottom: 14),
@@ -1136,18 +1149,40 @@ class _CompletedWeightCard extends StatelessWidget {
                       ),
                       if (exercise.equipment.trim().isNotEmpty) ...[
                         const SizedBox(height: 2),
-                        Text(
-                          exercise.equipment,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(
-                            context,
-                          ).textTheme.bodyMedium?.copyWith(
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
-                            fontStyle: FontStyle.italic,
+                        if (equipment.isEmpty)
+                          Text(
+                            exercise.equipment,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(
+                              context,
+                            ).textTheme.bodyMedium?.copyWith(
+                              color:
+                                  Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          )
+                        else
+                          LocalizedCatalogEntityNamesBuilder(
+                            entities: equipment,
+                            builder:
+                                (context, names) => Text(
+                                  names.join(', '),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.bodyMedium?.copyWith(
+                                    color:
+                                        Theme.of(
+                                          context,
+                                        ).colorScheme.onSurfaceVariant,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
                           ),
-                        ),
                       ],
                     ],
                   ),
@@ -1277,7 +1312,7 @@ class _CompletedSetRow extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              '${WeightUnitFormatter.formatWeight(row.set.weight, weightUnit)} x ${row.set.reps}',
+              '${WeightUnitFormatter.formatWeight(row.set.weight, weightUnit, locale: Localizations.localeOf(context))} x ${LocalizedFormatters.number(row.set.reps, Localizations.localeOf(context), maximumFractionDigits: 0)}',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: theme.textTheme.titleMedium,
@@ -1320,7 +1355,11 @@ class _CompletedSetRow extends StatelessWidget {
               alignment: Alignment.centerRight,
               child: Text(
                 AppLocalizations.of(context).workoutDetailEstimatedOneRm(
-                  WeightUnitFormatter.formatWeight(eRm, weightUnit),
+                  WeightUnitFormatter.formatWeight(
+                    eRm,
+                    weightUnit,
+                    locale: Localizations.localeOf(context),
+                  ),
                 ),
                 maxLines: 1,
                 textAlign: TextAlign.right,

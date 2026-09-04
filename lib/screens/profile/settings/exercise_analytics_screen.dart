@@ -2,12 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../l10n/app_localization_extensions.dart';
 import '../../../models/models.dart';
 import '../../../repositories/app_repository.dart';
+import '../../../services/catalog_entity_localizer.dart';
 import '../../../services/safe_failure.dart';
 import '../../exercise/exercise_catalog_page.dart';
+import '../../../widgets/localized_catalog_entity_name.dart';
 import '../../../widgets/settings_tiles.dart';
 import '../../../widgets/safe_error_view.dart';
+import '../../../utils/localized_body_part_name.dart';
 
 class ExerciseAnalyticsScreen extends StatefulWidget {
   final ExerciseDefinition? initialDefinition;
@@ -543,13 +547,12 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
         }
 
         final entry = _muscleEntries[index - 1];
-        final muscleName =
+        final muscle =
             _sel!.muscles
                 .firstWhere((ranked) => ranked.muscle.id == entry.muscleId)
-                .muscle
-                .name;
+                .muscle;
         return _MuscleCreditCard(
-          muscleName: muscleName,
+          muscle: muscle,
           source: _muscleSource,
           controller: _muscleCreditControllers[entry.muscleId]!,
           onChanged:
@@ -693,7 +696,7 @@ class _AllocationSectionHeader extends StatelessWidget {
               borderRadius: BorderRadius.circular(99),
             ),
             child: Text(
-              source.label,
+              source.localizedLabel(AppLocalizations.of(context)),
               style: theme.textTheme.labelSmall?.copyWith(
                 color: _sourceColor(source),
                 fontWeight: FontWeight.w800,
@@ -721,14 +724,14 @@ Color _sourceColor(ExerciseAllocationSource source) => switch (source) {
 };
 
 class _MuscleCreditCard extends StatelessWidget {
-  final String muscleName;
+  final Muscle muscle;
   final ExerciseAllocationSource source;
   final TextEditingController controller;
   final VoidCallback onChanged;
   final Future<void> Function() onSubmitted;
 
   const _MuscleCreditCard({
-    required this.muscleName,
+    required this.muscle,
     required this.source,
     required this.controller,
     required this.onChanged,
@@ -777,8 +780,11 @@ class _MuscleCreditCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  muscleName,
+                LocalizedCatalogEntityName(
+                  entity: CatalogEntityDisplayName(
+                    catalogId: muscle.catalogId,
+                    canonicalName: muscle.name,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.titleSmall?.copyWith(
@@ -787,7 +793,7 @@ class _MuscleCreditCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  source.label,
+                  source.localizedLabel(AppLocalizations.of(context)),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color:
                         source == ExerciseAllocationSource.personalOverride
@@ -866,7 +872,7 @@ class _BodyPartCreditCard extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              bodyPart.name,
+              localizedBodyPartName(context, bodyPart.name),
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w800,
               ),

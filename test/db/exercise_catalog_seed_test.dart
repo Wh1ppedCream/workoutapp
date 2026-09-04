@@ -41,6 +41,33 @@ void main() {
         (await db.query('exercise_catalog_state')).single['revision'],
         catalog['revision'],
       );
+
+      expect(
+        (await db.query(
+          'equipment',
+          where: 'name = ?',
+          whereArgs: ['Barbell'],
+        )).single['catalog_id'],
+        'tonos.equipment.0005',
+      );
+      expect(
+        (await db.query(
+          'muscles',
+          where: 'name = ?',
+          whereArgs: ['Biceps Brachii'],
+        )).single['catalog_id'],
+        'tonos.muscle.0006',
+      );
+
+      await Seed.seedStretches(db);
+      expect(
+        (await db.query(
+          'stretch_definitions',
+          where: 'name = ?',
+          whereArgs: ['Arm Circles'],
+        )).single['catalog_id'],
+        'tonos.stretch.0001',
+      );
     },
   );
 }

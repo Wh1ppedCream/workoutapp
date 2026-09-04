@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../l10n/generated/app_localizations.dart';
 import '../providers/active_session.dart';
 import '../providers/nutrition_profile.dart';
 import '../screens/nutrition/measured_items_page.dart';
@@ -20,6 +21,7 @@ class QuickBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = AppLocalizations.of(context);
     final cs = theme.colorScheme;
     final extras = theme.extension<AppColors>();
 
@@ -49,7 +51,8 @@ class QuickBar extends StatelessWidget {
               backgroundColor: measurementBg,
               textColor: measurementText,
               borderRadius: BorderRadius.horizontal(left: radii.topLeft),
-              label: '+ Measurement',
+              label: strings.quickActionMeasurement,
+              semanticLabel: strings.nutritionTrackMeasurement,
               fontSize: 12 * scale,
               onTap: () async {
                 final changed = await Navigator.of(context).push<bool>(
@@ -68,7 +71,8 @@ class QuickBar extends StatelessWidget {
               backgroundColor: foodBg,
               textColor: foodText,
               borderRadius: BorderRadius.zero,
-              label: '+ Food',
+              label: strings.quickActionFood,
+              semanticLabel: strings.nutritionLogFood,
               fontSize: 14 * scale,
               onTap: () async {
                 final changed = await Navigator.of(context).push<bool>(
@@ -87,7 +91,8 @@ class QuickBar extends StatelessWidget {
               backgroundColor: workoutBg,
               textColor: workoutText,
               borderRadius: BorderRadius.horizontal(right: radii.topLeft),
-              label: '+ Workout',
+              label: strings.quickActionWorkout,
+              semanticLabel: strings.dashboardStartWorkout,
               fontSize: 14 * scale,
               onTap: () async {
                 final session = context.read<ActiveSession>();
@@ -111,6 +116,7 @@ class QuickBar extends StatelessWidget {
     required Color textColor,
     required BorderRadius borderRadius,
     required String label,
+    required String semanticLabel,
     required double fontSize,
     required VoidCallback onTap,
   }) {
@@ -121,19 +127,26 @@ class QuickBar extends StatelessWidget {
       color: textColor,
     );
 
-    return Container(
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: borderRadius,
-      ),
-      child: InkWell(
-        borderRadius: borderRadius,
-        onTap: onTap,
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 12 * scale),
-          child: SizedBox(
-            height: 40 * scale,
-            child: Center(child: Text(label, style: textStyle)),
+    return Semantics(
+      button: true,
+      label: semanticLabel,
+      onTap: onTap,
+      child: ExcludeSemantics(
+        child: Container(
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            borderRadius: borderRadius,
+          ),
+          child: InkWell(
+            borderRadius: borderRadius,
+            onTap: onTap,
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 12 * scale),
+              child: SizedBox(
+                height: 40 * scale,
+                child: Center(child: Text(label, style: textStyle)),
+              ),
+            ),
           ),
         ),
       ),

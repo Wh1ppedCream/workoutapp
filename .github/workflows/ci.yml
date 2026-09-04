@@ -68,6 +68,16 @@ jobs:
             exit 1
           fi
 
+      - name: Run localization contract tests
+        run: >-
+          flutter test
+          test/localization/hardcoded_ui_copy_contract_test.dart
+          test/localization/reviewed_english_values_contract_test.dart
+          test/localization/arb_structure_contract_test.dart
+          test/localization/localization_smoke_test.dart
+          test/widgets/media_accessibility_contract_test.dart
+          test/widgets/workout_record_badges_test.dart
+
       - name: Analyze source and tests
         run: dart analyze lib test integration_test test_driver
 

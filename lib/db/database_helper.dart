@@ -51,7 +51,7 @@ import 'package:flutter/foundation.dart' show debugPrint;
 
 /// Singleton helper for managing the SQLite database.
 class DatabaseHelper {
-  static const int _kDbVersion = 61;
+  static const int _kDbVersion = 62;
   static const bool _kIntegrationTestMode = bool.fromEnvironment(
     'TONOS_INTEGRATION_TEST',
   );

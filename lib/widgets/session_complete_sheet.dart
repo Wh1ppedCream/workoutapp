@@ -9,6 +9,7 @@ import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
 import '../utils/async_pool.dart';
 import '../utils/completed_workout_duration_formatter.dart';
+import '../utils/localized_formatters.dart';
 import '../utils/weight_unit_formatter.dart';
 import '../utils/app_test_keys.dart';
 import 'workout_record_badges.dart';
@@ -160,7 +161,11 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
       session.duration,
     );
 
-    final volumeText = WeightUnitFormatter.formatVolume(totalVol, weightUnit);
+    final volumeText = WeightUnitFormatter.formatVolume(
+      totalVol,
+      weightUnit,
+      locale: Localizations.localeOf(context),
+    );
 
     return DraggableScrollableSheet(
       expand: false,
@@ -488,10 +493,16 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
       final setBadges = badges.forSet(i);
       final erm = s.weight * (1 + 0.0333 * s.reps);
       final setText =
-          '${WeightUnitFormatter.formatWeight(s.weight, weightUnit)} x ${s.reps}';
+          '${WeightUnitFormatter.formatWeight(s.weight, weightUnit, locale: Localizations.localeOf(context))} x ${LocalizedFormatters.number(s.reps, Localizations.localeOf(context), maximumFractionDigits: 0)}';
       final ermText = AppLocalizations.of(
         context,
-      ).sessionEstimatedMax(WeightUnitFormatter.formatWeight(erm, weightUnit));
+      ).sessionEstimatedMax(
+        WeightUnitFormatter.formatWeight(
+          erm,
+          weightUnit,
+          locale: Localizations.localeOf(context),
+        ),
+      );
       rows.add(
         Padding(
           padding: EdgeInsets.only(top: i == 0 ? 6 : 7),

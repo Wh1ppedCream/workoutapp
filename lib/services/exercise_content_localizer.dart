@@ -71,9 +71,22 @@ class ExerciseContentLocalizer {
     ExerciseDefinition definition,
     Locale locale,
   ) async {
-    final catalogId = definition.catalogId;
+    return resolveNameForCatalogId(
+      catalogId: definition.catalogId,
+      fallbackName: definition.name,
+      locale: locale,
+    );
+  }
+
+  /// Resolves a built-in name when the caller has catalog identity but not a
+  /// full [ExerciseDefinition], such as a premade-plan preview row.
+  Future<String> resolveNameForCatalogId({
+    required String? catalogId,
+    required String fallbackName,
+    required Locale locale,
+  }) async {
     if (catalogId == null || catalogId.isEmpty || locale.languageCode == 'en') {
-      return definition.name;
+      return fallbackName;
     }
 
     final bundle = await (_bundleFuture ??= _loadBundle());
@@ -81,7 +94,7 @@ class ExerciseContentLocalizer {
       final localized = bundle.nameFor(localeKey, catalogId);
       if (localized != null) return localized;
     }
-    return definition.name;
+    return fallbackName;
   }
 
   Future<_ExerciseContentBundle> _loadBundle() async {

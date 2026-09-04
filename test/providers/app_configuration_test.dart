@@ -208,6 +208,50 @@ void main() {
       },
     );
 
+    test(
+      'tab preferences use stable IDs while reading legacy enum values',
+      () async {
+        SharedPreferences.setMockInitialValues({
+          'navBarOrder': ['TabItem.train', 'TabItem.profile'],
+          'navBarEnabled': ['TabItem.train', 'TabItem.profile'],
+        });
+        final config = NavBarConfig(
+          buildPolicy: const NavigationBuildPolicy(
+            experimentalTabsEnabled: true,
+            isReleaseMode: false,
+          ),
+        );
+        await settlePreferenceReads();
+
+        expect(config.order, contains(TabItem.train));
+        expect(config.enabledTabs, contains(TabItem.profile));
+
+        await config.update(
+          newOrder: [TabItem.profile, TabItem.train],
+          newEnabled: {TabItem.profile, TabItem.train},
+        );
+        final prefs = await SharedPreferences.getInstance();
+
+        expect(prefs.getStringList('navBarOrder'), contains('profile'));
+        expect(
+          prefs.getStringList('navBarOrder'),
+          isNot(contains('TabItem.profile')),
+        );
+        expect(
+          prefs.getStringList('navBarEnabled'),
+          unorderedEquals(['profile', 'train']),
+        );
+      },
+    );
+
+    test('tab storage IDs are unique and independent of display labels', () {
+      final storageKeys = TabItem.values.map((tab) => tab.storageKey).toList();
+
+      expect(storageKeys.toSet(), hasLength(TabItem.values.length));
+      expect(TabItem.measurementsTrends.storageKey, 'progress');
+      expect(TabItem.nutritionLog.storageKey, 'nutrition_log');
+    });
+
     test('release policy cannot enable experimental tabs', () {
       const policy = NavigationBuildPolicy(
         experimentalTabsEnabled: true,

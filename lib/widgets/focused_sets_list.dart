@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../models/models.dart';
 import '../utils/localized_body_part_name.dart';
+import '../utils/localized_formatters.dart';
 
 class FocusedSetHit {
   final BodyPart bodyPart;
@@ -82,7 +83,11 @@ class _FocusedSetRow extends StatelessWidget {
               ),
             ),
             Text(
-              hit.units.floor().toString(),
+              LocalizedFormatters.number(
+                hit.units.floor(),
+                Localizations.localeOf(context),
+                maximumFractionDigits: 0,
+              ),
               style: theme.textTheme.bodySmall?.copyWith(
                 fontWeight: FontWeight.w800,
               ),

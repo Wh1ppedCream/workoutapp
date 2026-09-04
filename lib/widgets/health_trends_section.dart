@@ -15,6 +15,7 @@ import '../services/safe_failure.dart';
 import '../theme/theme_extensions.dart';
 import '../utils/tutorial_launcher.dart';
 import '../utils/app_test_keys.dart';
+import '../utils/localized_formatters.dart';
 import 'guided_tutorial_overlay.dart';
 import 'safe_error_view.dart';
 
@@ -85,9 +86,9 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
         a.definition,
       ).compareTo(_definitionOrder(b.definition));
       if (orderCompare != 0) return orderCompare;
-      return _measurementTitle(
+      return _measurementSortName(
         a.definition,
-      ).compareTo(_measurementTitle(b.definition));
+      ).compareTo(_measurementSortName(b.definition));
     });
     return trends;
   }
@@ -112,7 +113,7 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
       builder:
           (_) => _MeasurementEntryDialog(
             title: _strings.healthLogMeasurement(
-              _measurementTitle(trend.definition),
+              _measurementTitle(trend.definition, _strings),
             ),
             definition: trend.definition,
             defaultUnit:
@@ -403,7 +404,7 @@ class _MeasurementTrendDetailPageState
       builder:
           (_) => _MeasurementEntryDialog(
             title: _strings.healthLogMeasurement(
-              _measurementTitle(widget.definition),
+              _measurementTitle(widget.definition, _strings),
             ),
             definition: widget.definition,
             defaultUnit:
@@ -431,7 +432,7 @@ class _MeasurementTrendDetailPageState
       builder:
           (_) => _MeasurementEntryDialog(
             title: _strings.healthEditMeasurement(
-              _measurementTitle(widget.definition),
+              _measurementTitle(widget.definition, _strings),
             ),
             definition: widget.definition,
             defaultUnit: entry.unit,
@@ -459,8 +460,11 @@ class _MeasurementTrendDetailPageState
             title: Text(_strings.healthDeleteEntryTitle),
             content: Text(
               _strings.healthDeleteEntryBody(
-                _formatMeasurement(entry),
-                _formatDateTime(entry.displayDateTime),
+                _formatMeasurement(entry, Localizations.localeOf(context)),
+                _formatDateTime(
+                  entry.displayDateTime,
+                  Localizations.localeOf(context),
+                ),
               ),
             ),
             actions: [
@@ -483,8 +487,8 @@ class _MeasurementTrendDetailPageState
 
   @override
   Widget build(BuildContext context) {
-    final title = _measurementTitle(widget.definition);
     final strings = AppLocalizations.of(context);
+    final title = _measurementTitle(widget.definition, strings);
 
     return PopScope<bool>(
       canPop: false,
@@ -620,6 +624,8 @@ class _TrendTile extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = context.colors;
     final strings = AppLocalizations.of(context);
+    final locale = Localizations.localeOf(context);
+    final title = _measurementTitle(trend.definition, strings);
     final latest = trend.latest;
     final delta = trend.delta;
     final deltaColor = _deltaColor(context, delta);
@@ -648,7 +654,7 @@ class _TrendTile extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      _measurementTitle(trend.definition),
+                      title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.titleSmall?.copyWith(
@@ -656,15 +662,25 @@ class _TrendTile extends StatelessWidget {
                       ),
                     ),
                   ),
-                  InkResponse(
-                    key: AppTestKeys.measurementTrendAdd(trend.definition.id),
+                  Semantics(
+                    button: true,
+                    label: strings.healthLogMeasurement(title),
                     onTap: onAdd,
-                    radius: 18,
-                    child: Icon(
-                      Icons.add_circle_outline,
-                      size: 18,
-                      color:
-                          colors.healthTrendIcon ?? theme.colorScheme.primary,
+                    child: ExcludeSemantics(
+                      child: InkResponse(
+                        key: AppTestKeys.measurementTrendAdd(
+                          trend.definition.id,
+                        ),
+                        onTap: onAdd,
+                        radius: 18,
+                        child: Icon(
+                          Icons.add_circle_outline,
+                          size: 18,
+                          color:
+                              colors.healthTrendIcon ??
+                              theme.colorScheme.primary,
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -681,7 +697,7 @@ class _TrendTile extends StatelessWidget {
               Text(
                 latest == null
                     ? strings.healthNoEntries
-                    : _formatMeasurement(latest),
+                    : _formatMeasurement(latest, locale),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.titleMedium?.copyWith(
@@ -690,7 +706,9 @@ class _TrendTile extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                latest == null ? strings.healthTapToLog : _formatDelta(delta),
+                latest == null
+                    ? strings.healthTapToLog
+                    : _formatDelta(delta, strings, locale),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodySmall?.copyWith(color: deltaColor),
@@ -714,36 +732,43 @@ class _AddTrendTile extends StatelessWidget {
     final theme = Theme.of(context);
     final strings = AppLocalizations.of(context);
     final colors = context.colors;
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          width: fillCell ? double.infinity : 132,
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: colors.healthTrendBorder ?? theme.dividerColor,
-            ),
+    return Semantics(
+      button: true,
+      label: strings.healthCreateMetric,
+      onTap: onTap,
+      child: ExcludeSemantics(
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+          child: InkWell(
+            onTap: onTap,
             borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.add,
-                color: colors.healthTrendIcon ?? theme.colorScheme.primary,
-                size: 30,
+            child: Container(
+              width: fillCell ? double.infinity : 132,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: colors.healthTrendBorder ?? theme.dividerColor,
+                ),
+                borderRadius: BorderRadius.circular(16),
               ),
-              const SizedBox(height: 8),
-              Text(
-                strings.healthCustomMetric,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.labelLarge,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.add,
+                    color: colors.healthTrendIcon ?? theme.colorScheme.primary,
+                    size: 30,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    strings.healthCustomMetric,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.labelLarge,
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -811,6 +836,7 @@ class _MeasurementSummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final strings = AppLocalizations.of(context);
+    final locale = Localizations.localeOf(context);
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     final latest = entries.isEmpty ? null : entries.last;
     final previous = entries.length < 2 ? null : entries[entries.length - 2];
@@ -833,18 +859,24 @@ class _MeasurementSummaryCard extends StatelessWidget {
               value:
                   latest == null
                       ? strings.healthNoEntry
-                      : _formatMeasurement(latest),
+                      : _formatMeasurement(latest, locale),
               detail:
                   latest == null
                       ? strings.healthNotTrackedYet
-                      : _formatDate(latest.calendarDay.toLocalDateTime()),
+                      : LocalizedFormatters.date(
+                        latest.calendarDay.toLocalDateTime(),
+                        locale,
+                      ),
             ),
           ),
           const SizedBox(width: 10),
           Expanded(
             child: _SummaryStat(
               label: strings.healthChange,
-              value: delta == null ? '0' : _formatDelta(delta),
+              value:
+                  delta == null
+                      ? strings.healthNoChange
+                      : _formatDelta(delta, strings, locale),
               detail:
                   entries.length < 2
                       ? strings.healthNeedTwoEntries
@@ -856,7 +888,11 @@ class _MeasurementSummaryCard extends StatelessWidget {
           Expanded(
             child: _SummaryStat(
               label: strings.healthRecords,
-              value: '${entries.length}',
+              value: LocalizedFormatters.number(
+                entries.length,
+                locale,
+                maximumFractionDigits: 0,
+              ),
               detail: _defaultUnitFor(definition, weightUnit),
             ),
           ),
@@ -922,127 +958,147 @@ class _MeasurementChartCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = AppLocalizations.of(context);
+    final locale = Localizations.localeOf(context);
     final colors = context.colors;
     final spots = _spotsFor(entries);
     final bounds = _chartBounds(entries.map((m) => m.value).toList());
+    final title = _measurementTitle(definition, strings);
+    final latest =
+        entries.isEmpty
+            ? strings.healthNoEntry
+            : _formatMeasurement(entries.last, locale);
+    final chartSemantics = strings.healthTrendChartSemantics(
+      title,
+      entries.length,
+      latest,
+    );
 
-    return Container(
-      height: height,
-      padding: const EdgeInsets.fromLTRB(14, 16, 14, 12),
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child:
-          entries.length < 2
-              ? Center(
-                child: Text(
-                  entries.isEmpty
-                      ? 'Log entries to build a trend.'
-                      : 'Log one more entry to draw a trend.',
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.bodyMedium,
-                ),
-              )
-              : LineChart(
-                LineChartData(
-                  minX: spots.first.x,
-                  maxX: spots.last.x,
-                  minY: bounds.minY,
-                  maxY: bounds.maxY,
-                  gridData: FlGridData(
-                    drawVerticalLine: false,
-                    getDrawingHorizontalLine:
-                        (_) => FlLine(
-                          color: theme.dividerColor.withValues(alpha: 0.35),
-                          strokeWidth: 1,
+    return Semantics(
+      container: true,
+      label: chartSemantics,
+      child: ExcludeSemantics(
+        child: Container(
+          height: height,
+          padding: const EdgeInsets.fromLTRB(14, 16, 14, 12),
+          decoration: BoxDecoration(
+            color: theme.cardColor,
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child:
+              entries.length < 2
+                  ? Center(
+                    child: Text(
+                      entries.isEmpty
+                          ? strings.healthTrendNeedEntries
+                          : strings.healthTrendNeedOneMore,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                  )
+                  : LineChart(
+                    LineChartData(
+                      minX: spots.first.x,
+                      maxX: spots.last.x,
+                      minY: bounds.minY,
+                      maxY: bounds.maxY,
+                      gridData: FlGridData(
+                        drawVerticalLine: false,
+                        getDrawingHorizontalLine:
+                            (_) => FlLine(
+                              color: theme.dividerColor.withValues(alpha: 0.35),
+                              strokeWidth: 1,
+                            ),
+                      ),
+                      borderData: FlBorderData(show: false),
+                      titlesData: FlTitlesData(
+                        topTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
                         ),
-                  ),
-                  borderData: FlBorderData(show: false),
-                  titlesData: FlTitlesData(
-                    topTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    rightTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 42,
-                        interval: bounds.interval,
-                        getTitlesWidget:
-                            (value, _) => Text(
-                              _compactNumber(value),
-                              style: theme.textTheme.labelSmall,
-                            ),
+                        rightTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                        leftTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            reservedSize: 42,
+                            interval: bounds.interval,
+                            getTitlesWidget:
+                                (value, _) => Text(
+                                  _compactNumber(value, locale),
+                                  style: theme.textTheme.labelSmall,
+                                ),
+                          ),
+                        ),
+                        bottomTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            reservedSize: 28,
+                            interval: math.max(1.0, (spots.length - 1) / 2),
+                            getTitlesWidget: (value, _) {
+                              final index =
+                                  value
+                                      .round()
+                                      .clamp(0, entries.length - 1)
+                                      .toInt();
+                              if ((value - index).abs() > 0.2) {
+                                return const SizedBox.shrink();
+                              }
+                              return Text(
+                                _shortDate(
+                                  entries[index].calendarDay.toLocalDateTime(),
+                                  locale,
+                                ),
+                                style: theme.textTheme.labelSmall,
+                              );
+                            },
+                          ),
+                        ),
                       ),
-                    ),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 28,
-                        interval: math.max(1.0, (spots.length - 1) / 2),
-                        getTitlesWidget: (value, _) {
-                          final index =
-                              value
-                                  .round()
-                                  .clamp(0, entries.length - 1)
-                                  .toInt();
-                          if ((value - index).abs() > 0.2) {
-                            return const SizedBox.shrink();
-                          }
-                          return Text(
-                            _shortDate(
-                              entries[index].calendarDay.toLocalDateTime(),
-                            ),
-                            style: theme.textTheme.labelSmall,
-                          );
-                        },
+                      lineTouchData: LineTouchData(
+                        touchTooltipData: LineTouchTooltipData(
+                          getTooltipColor: (_) => theme.colorScheme.surface,
+                          getTooltipItems:
+                              (touchedSpots) =>
+                                  touchedSpots.map((spot) {
+                                    final index =
+                                        spot.spotIndex
+                                            .clamp(0, entries.length - 1)
+                                            .toInt();
+                                    final entry = entries[index];
+                                    return LineTooltipItem(
+                                      '${_formatDateTime(entry.displayDateTime, locale)}\n${_formatMeasurement(entry, locale)}',
+                                      theme.textTheme.labelSmall?.copyWith(
+                                            color: theme.colorScheme.onSurface,
+                                          ) ??
+                                          TextStyle(
+                                            color: theme.colorScheme.onSurface,
+                                          ),
+                                    );
+                                  }).toList(),
+                        ),
                       ),
+                      lineBarsData: [
+                        LineChartBarData(
+                          spots: spots,
+                          isCurved: true,
+                          color:
+                              colors.healthTrendLine ??
+                              theme.colorScheme.primary,
+                          barWidth: 3,
+                          dotData: FlDotData(show: true),
+                          belowBarData: BarAreaData(
+                            show: true,
+                            color: (colors.healthTrendLine ??
+                                    theme.colorScheme.primary)
+                                .withValues(alpha: 0.12),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  lineTouchData: LineTouchData(
-                    touchTooltipData: LineTouchTooltipData(
-                      getTooltipColor: (_) => theme.colorScheme.surface,
-                      getTooltipItems:
-                          (touchedSpots) =>
-                              touchedSpots.map((spot) {
-                                final index =
-                                    spot.spotIndex
-                                        .clamp(0, entries.length - 1)
-                                        .toInt();
-                                final entry = entries[index];
-                                return LineTooltipItem(
-                                  '${_formatDateTime(entry.displayDateTime)}\n${_formatMeasurement(entry)}',
-                                  theme.textTheme.labelSmall?.copyWith(
-                                        color: theme.colorScheme.onSurface,
-                                      ) ??
-                                      TextStyle(
-                                        color: theme.colorScheme.onSurface,
-                                      ),
-                                );
-                              }).toList(),
-                    ),
-                  ),
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: spots,
-                      isCurved: true,
-                      color:
-                          colors.healthTrendLine ?? theme.colorScheme.primary,
-                      barWidth: 3,
-                      dotData: FlDotData(show: true),
-                      belowBarData: BarAreaData(
-                        show: true,
-                        color: (colors.healthTrendLine ??
-                                theme.colorScheme.primary)
-                            .withValues(alpha: 0.12),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+        ),
+      ),
     );
   }
 }
@@ -1061,15 +1117,23 @@ class _MeasurementEntryTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = AppLocalizations.of(context);
+    final locale = Localizations.localeOf(context);
+    final contextLabel = _measurementContextLabel(entry, strings);
+    final note = _measurementNote(entry);
+    final details = <String>[
+      _formatDateTime(entry.displayDateTime, locale),
+      if (contextLabel != null) contextLabel,
+      if (note != null) note,
+    ].join(' - ');
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 5),
       child: ListTile(
         onTap: onTap,
-        title: Text(_formatMeasurement(entry)),
-        subtitle: Text(
-          '${_formatDateTime(entry.displayDateTime)}${entry.note == null || entry.note!.trim().isEmpty ? '' : ' - ${entry.note}'}',
-        ),
+        title: Text(_formatMeasurement(entry, locale)),
+        subtitle: Text(details),
         trailing: PopupMenuButton<String>(
+          tooltip: strings.healthEntryActions,
           onSelected: (value) {
             if (value == 'edit') onTap();
             if (value == 'delete') onDelete();
@@ -1430,7 +1494,7 @@ class _MeasurementEntryDialogState extends State<_MeasurementEntryDialog> {
                   decimal: true,
                 ),
                 decoration: InputDecoration(
-                  labelText: _measurementTitle(widget.definition),
+                  labelText: _measurementTitle(widget.definition, strings),
                 ),
               ),
             const SizedBox(height: 10),
@@ -1486,7 +1550,9 @@ class _MeasurementEntryDialogState extends State<_MeasurementEntryDialog> {
             OutlinedButton.icon(
               onPressed: _pickDate,
               icon: const Icon(Icons.calendar_today),
-              label: Text(_formatDateTime(_timestamp)),
+              label: Text(
+                _formatDateTime(_timestamp, Localizations.localeOf(context)),
+              ),
             ),
           ],
         ),
@@ -1765,7 +1831,28 @@ int _definitionOrder(MeasurementDefinition definition) {
   return order[definition.type] ?? 100;
 }
 
-String _measurementTitle(MeasurementDefinition definition) {
+String _measurementTitle(
+  MeasurementDefinition definition,
+  AppLocalizations strings,
+) {
+  if (definition.type == MeasurementType.Custom) return definition.name;
+  return switch (definition.type) {
+    MeasurementType.BodyWeight => strings.measurementWeight,
+    MeasurementType.Height => strings.measurementHeight,
+    MeasurementType.Forearm => strings.measurementForearm,
+    MeasurementType.Arm => strings.measurementArm,
+    MeasurementType.Neck => strings.measurementNeck,
+    MeasurementType.Shoulder => strings.measurementShoulders,
+    MeasurementType.Chest => strings.measurementChest,
+    MeasurementType.Waist => strings.measurementWaist,
+    MeasurementType.Hip => strings.measurementHips,
+    MeasurementType.Thigh => strings.measurementThigh,
+    MeasurementType.Calf => strings.measurementCalves,
+    MeasurementType.Custom => definition.name,
+  };
+}
+
+String _measurementSortName(MeasurementDefinition definition) {
   if (definition.type == MeasurementType.Custom) return definition.name;
   return switch (definition.type) {
     MeasurementType.BodyWeight => 'Weight',
@@ -1795,14 +1882,55 @@ String _defaultUnitFor(
   };
 }
 
-String _formatMeasurement(Measurement entry) {
-  return '${_cleanNumber(entry.value)} ${entry.unit}'.trim();
+String _formatMeasurement(Measurement entry, Locale locale) {
+  return '${_localizedNumber(entry.value, locale)} ${entry.unit}'.trim();
 }
 
-String _formatDelta(double? delta) {
-  if (delta == null || delta.abs() < 0.001) return 'No change yet';
+String _formatDelta(double? delta, AppLocalizations strings, Locale locale) {
+  if (delta == null || delta.abs() < 0.001) return strings.healthNoChange;
   final prefix = delta > 0 ? '+' : '';
-  return '$prefix${_cleanNumber(delta)} since last';
+  return strings.healthChangeSinceLast(
+    '$prefix${_localizedNumber(delta, locale)}',
+  );
+}
+
+String _localizedNumber(double value, Locale locale) {
+  final maximumFractionDigits =
+      value.abs() >= 1000 || value == value.roundToDouble() ? 0 : 1;
+  return LocalizedFormatters.number(
+    value,
+    locale,
+    maximumFractionDigits: maximumFractionDigits,
+  );
+}
+
+String? _measurementContextLabel(Measurement entry, AppLocalizations strings) {
+  final context = entry.context ?? _legacyMeasurementContext(entry.note);
+  return switch (context) {
+    MeasurementContext.wakeUp => strings.measurementWakeUp,
+    MeasurementContext.bedtime => strings.measurementBedtime,
+    MeasurementContext.overall => strings.measurementOverall,
+    MeasurementContext.withPump => strings.measurementWithPump,
+    MeasurementContext.withoutPump => strings.measurementWithoutPump,
+    null => null,
+  };
+}
+
+MeasurementContext? _legacyMeasurementContext(String? note) {
+  return switch (note?.trim()) {
+    'WakeUp' => MeasurementContext.wakeUp,
+    'BedTime' => MeasurementContext.bedtime,
+    'Overall' => MeasurementContext.overall,
+    'With pump' => MeasurementContext.withPump,
+    'Without pump' => MeasurementContext.withoutPump,
+    _ => null,
+  };
+}
+
+String? _measurementNote(Measurement entry) {
+  final note = entry.note?.trim();
+  if (note == null || note.isEmpty) return null;
+  return _legacyMeasurementContext(note) == null ? note : null;
 }
 
 Color? _deltaColor(BuildContext context, double? delta) {
@@ -1822,52 +1950,14 @@ String _cleanNumber(double value) {
   return value.toStringAsFixed(1);
 }
 
-String _compactNumber(double value) {
-  if (value.abs() >= 1000) {
-    return '${(value / 1000).toStringAsFixed(1)}k';
-  }
-  return _cleanNumber(value);
+String _compactNumber(double value, Locale locale) {
+  return LocalizedFormatters.compactNumber(value, locale);
 }
 
-String _formatDate(DateTime value) {
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
-  return '${months[value.month - 1]} ${value.day}, ${value.year}';
+String _shortDate(DateTime value, Locale locale) {
+  return LocalizedFormatters.shortDate(value, locale);
 }
 
-String _shortDate(DateTime value) {
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
-  return '${months[value.month - 1]} ${value.day}';
-}
-
-String _formatDateTime(DateTime value) {
-  final hour = value.hour % 12 == 0 ? 12 : value.hour % 12;
-  final minute = value.minute.toString().padLeft(2, '0');
-  final suffix = value.hour >= 12 ? 'PM' : 'AM';
-  return '${_formatDate(value)} $hour:$minute $suffix';
+String _formatDateTime(DateTime value, Locale locale) {
+  return LocalizedFormatters.dateTime(value, locale);
 }

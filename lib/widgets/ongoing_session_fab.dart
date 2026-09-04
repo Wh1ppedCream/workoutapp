@@ -29,6 +29,7 @@ class _OngoingSessionFabState extends State<OngoingSessionFab> {
       return FloatingActionButton(
         key: AppTestKeys.ongoingSessionMenu,
         backgroundColor: Colors.green,
+        tooltip: strings.sessionTitle,
         child: const Icon(Icons.fitness_center),
         onPressed: () => setState(() => _open = true),
       );

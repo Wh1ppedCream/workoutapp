@@ -1,7 +1,6 @@
 // File: lib/widgets/past_sessions_list.dart
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../models/models.dart';
@@ -11,6 +10,7 @@ import '../screens/exercise/full_history_screen.dart';
 import '../screens/exercise/session_detail_screen.dart';
 import '../theme/theme_extensions.dart';
 import '../utils/completed_workout_duration_formatter.dart';
+import '../utils/localized_formatters.dart';
 import '../services/safe_failure.dart';
 import 'safe_error_view.dart';
 
@@ -182,9 +182,10 @@ class _PastSessionsListState extends State<PastSessionsList>
                           ),
                       itemBuilder: (ctx, i) {
                         final ses = sessions[i];
-                        final dateStr = DateFormat.yMMMd(
-                          Localizations.localeOf(context).toString(),
-                        ).format(ses.calendarDay.toLocalDateTime());
+                        final dateStr = LocalizedFormatters.date(
+                          ses.calendarDay.toLocalDateTime(),
+                          Localizations.localeOf(context),
+                        );
                         final duration = formatCompletedWorkoutDuration(
                           strings,
                           ses.duration,

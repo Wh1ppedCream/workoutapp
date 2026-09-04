@@ -74,6 +74,24 @@ void main() {
     expect(workflow, contains('name: Localization, analyzer, and tests'));
     expect(workflow, contains('name: Release APK'));
     expect(workflow, contains('dart format lib/l10n/generated'));
+    expect(workflow, contains('name: Run localization contract tests'));
+    expect(
+      workflow,
+      contains('test/localization/hardcoded_ui_copy_contract_test.dart'),
+    );
+    expect(
+      workflow,
+      contains('test/localization/reviewed_english_values_contract_test.dart'),
+    );
+    expect(
+      workflow,
+      contains('test/localization/arb_structure_contract_test.dart'),
+    );
+    expect(
+      workflow,
+      contains('test/widgets/media_accessibility_contract_test.dart'),
+    );
+    expect(workflow, contains('test/widgets/workout_record_badges_test.dart'));
     expect(workflow, contains('tools/content_environment_check.dart'));
     expect(workflow, contains('--target development'));
     expect(workflow, contains('TONOS_CONTENT_ENVIRONMENT=development'));

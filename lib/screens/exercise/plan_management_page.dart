@@ -9,6 +9,7 @@ import '../../repositories/app_repository.dart';
 import '../../services/active_plan_store.dart';
 import '../../services/safe_failure.dart';
 import '../../services/tutorial_state_store.dart';
+import '../../utils/localized_formatters.dart';
 import '../../utils/tutorial_launcher.dart';
 import '../../widgets/guided_tutorial_overlay.dart';
 import '../../widgets/safe_error_view.dart';
@@ -425,6 +426,7 @@ class _PlanCountPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final locale = Localizations.localeOf(context);
     return DecoratedBox(
       decoration: BoxDecoration(
         color: colorScheme.primaryContainer,
@@ -433,7 +435,7 @@ class _PlanCountPill extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         child: Text(
-          '$count',
+          LocalizedFormatters.number(count, locale, maximumFractionDigits: 0),
           style: TextStyle(
             color: colorScheme.onPrimaryContainer,
             fontWeight: FontWeight.w900,

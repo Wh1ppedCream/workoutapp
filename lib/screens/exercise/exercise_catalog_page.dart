@@ -8,6 +8,7 @@ import '../../l10n/generated/app_localizations.dart';
 import '../../models/models.dart';
 import '../../providers/selected_profile.dart';
 import '../../repositories/app_repository.dart';
+import '../../services/catalog_entity_localizer.dart';
 import '../../services/exercise_content_localizer.dart';
 import '../../services/exercise_equipment_compatibility.dart';
 import '../../services/tutorial_state_store.dart';
@@ -16,6 +17,7 @@ import '../../utils/tutorial_launcher.dart';
 import '../../widgets/exercise_detail_sheet.dart';
 import '../../widgets/exercise_media_thumbnail.dart';
 import '../../widgets/guided_tutorial_overlay.dart';
+import '../../widgets/localized_catalog_entity_name.dart';
 import '../../widgets/localized_exercise_name.dart';
 import '../../widgets/onboarding_plan_builder_coach.dart';
 
@@ -76,11 +78,11 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
 
   // Dropdown options
   List<GymProfile> _profiles = [];
-  List<String> _equipmentOptions = [_allFilter];
+  List<Equipment> _equipmentOptions = [];
   List<String> _areaOptions = [_allFilter];
-  List<String> _muscleOptions = [_allFilter];
-  List<String>? _allEquipmentNames;
-  final Map<int, List<String>> _equipmentNamesByProfileId = {};
+  List<Muscle> _muscleOptions = [];
+  List<Equipment>? _allEquipmentItems;
+  final Map<int, List<Equipment>> _equipmentItemsByProfileId = {};
 
   ExerciseDefinition? _selectedDef;
   String? _selectedDisplayName;
@@ -136,8 +138,8 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
     if (!mounted) return;
     setState(() {
       _areaOptions = [_allFilter, ...areas.map((b) => b.name)];
-      _muscleOptions = [_allFilter, ...muscles.map((m) => m.name)];
-      _equipmentOptions = [_allFilter, ...initialEquipment];
+      _muscleOptions = muscles;
+      _equipmentOptions = initialEquipment;
       _displayedDefs = List.from(_allDefs); // show all until they hit “Save”
       _isLoading = false;
     });
@@ -213,21 +215,30 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
     }
   }
 
-  Future<List<String>> _allEquipment() async {
-    final cached = _allEquipmentNames;
+  Future<List<Equipment>> _allEquipment() async {
+    final cached = _allEquipmentItems;
     if (cached != null) return cached;
-    final names = await _repo.fetchAllEquipmentNames();
-    _allEquipmentNames = names;
-    return names;
+    final equipment = await _repo.fetchAllEquipment();
+    _allEquipmentItems = equipment;
+    return equipment;
   }
 
-  Future<List<String>> _equipmentForProfile(int profileId) async {
-    final cached = _equipmentNamesByProfileId[profileId];
+  Future<List<Equipment>> _equipmentForProfile(int profileId) async {
+    final cached = _equipmentItemsByProfileId[profileId];
     if (cached != null) return cached;
     final eqMaps = await _repo.dbHelper.fetchEquipmentForProfile(profileId);
-    final names = eqMaps.map((e) => e['name'] as String).toList();
-    _equipmentNamesByProfileId[profileId] = names;
-    return names;
+    final equipment =
+        eqMaps
+            .map(
+              (e) => Equipment(
+                e['id'] as int,
+                e['name'] as String,
+                e['catalog_id'] as String?,
+              ),
+            )
+            .toList();
+    _equipmentItemsByProfileId[profileId] = equipment;
+    return equipment;
   }
 
   /// Applies profile, equipment, bodypart, muscle, and text filters in one pass.
@@ -239,12 +250,14 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
       });
     }
     List<ExerciseDefinition> filtered = List.from(_allDefs);
-    List<String> nextEquipmentOptions;
+    List<Equipment> nextEquipmentOptions;
 
     // 1) Workspace profile subset-of filter
     if (_useProfileFilter && _dialogProfileId != null) {
-      final allowedList = await _equipmentForProfile(_dialogProfileId!);
+      final allowedEquipment = await _equipmentForProfile(_dialogProfileId!);
       if (generation != _filterGeneration || !mounted) return;
+      final allowedList =
+          allowedEquipment.map((equipment) => equipment.name).toList();
       filtered =
           filtered.where((d) {
             return ExerciseEquipmentCompatibility.fitsProfileNames(
@@ -252,15 +265,17 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
               allowedList,
             );
           }).toList();
-      nextEquipmentOptions = [_allFilter, ...allowedList];
+      nextEquipmentOptions = allowedEquipment;
     } else {
       // Profile off: use global equipment list
       final allEq = await _allEquipment();
       if (generation != _filterGeneration || !mounted) return;
-      nextEquipmentOptions = [_allFilter, ...allEq];
+      nextEquipmentOptions = allEq;
     }
+    final equipmentNames =
+        nextEquipmentOptions.map((equipment) => equipment.name).toSet();
     final equipmentFilter =
-        nextEquipmentOptions.contains(_filterEquipment)
+        equipmentNames.contains(_filterEquipment)
             ? _filterEquipment
             : _allFilter;
 
@@ -380,21 +395,25 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                             labelText: strings.catalogEquipment,
                           ),
                           value: eq,
-                          items:
-                              _equipmentOptions
-                                  .map(
-                                    (name) => DropdownMenuItem(
-                                      value: name,
-                                      child: Text(
-                                        name == _allFilter
-                                            ? strings.commonAll
-                                            : name,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  )
-                                  .toList(),
+                          items: [
+                            DropdownMenuItem<String>(
+                              value: _allFilter,
+                              child: Text(strings.commonAll),
+                            ),
+                            ..._equipmentOptions.map(
+                              (equipment) => DropdownMenuItem<String>(
+                                value: equipment.name,
+                                child: LocalizedCatalogEntityName(
+                                  entity: CatalogEntityDisplayName(
+                                    catalogId: equipment.catalogId,
+                                    canonicalName: equipment.name,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ),
+                          ],
                           onChanged: (v) => setDialogState(() => eq = v!),
                         ),
                         const SizedBox(height: 8),
@@ -431,21 +450,25 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                             labelText: strings.catalogSpecificMuscle,
                           ),
                           value: muscle,
-                          items:
-                              _muscleOptions
-                                  .map(
-                                    (name) => DropdownMenuItem(
-                                      value: name,
-                                      child: Text(
-                                        name == _allFilter
-                                            ? strings.commonAll
-                                            : name,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  )
-                                  .toList(),
+                          items: [
+                            DropdownMenuItem<String>(
+                              value: _allFilter,
+                              child: Text(strings.commonAll),
+                            ),
+                            ..._muscleOptions.map(
+                              (muscle) => DropdownMenuItem<String>(
+                                value: muscle.name,
+                                child: LocalizedCatalogEntityName(
+                                  entity: CatalogEntityDisplayName(
+                                    catalogId: muscle.catalogId,
+                                    canonicalName: muscle.name,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ),
+                          ],
                           onChanged: (v) => setDialogState(() => muscle = v!),
                         ),
                       ],
@@ -602,6 +625,7 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                   ? KeyedSubtree(
                     key: _catalogAddTutorialKey,
                     child: FloatingActionButton(
+                      tooltip: strings.commonAdd,
                       child: const Icon(Icons.add),
                       onPressed: () {
                         final picked = _selectedDef!;
@@ -640,10 +664,15 @@ class _ExerciseCatalogBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final equipmentText = definition.equipmentList
-        .map((equipment) => equipment.name)
-        .where((name) => name.trim().isNotEmpty)
-        .join(', ');
+    final equipment = definition.equipmentList
+        .where((item) => item.name.trim().isNotEmpty)
+        .map(
+          (item) => CatalogEntityDisplayName(
+            catalogId: item.catalogId,
+            canonicalName: item.name,
+          ),
+        )
+        .toList(growable: false);
     return Card(
       clipBehavior: Clip.antiAlias,
       margin: const EdgeInsets.only(bottom: 10),
@@ -676,15 +705,19 @@ class _ExerciseCatalogBar extends StatelessWidget {
                         fontWeight: FontWeight.w800,
                       ),
                     ),
-                    if (equipmentText.isNotEmpty) ...[
+                    if (equipment.isNotEmpty) ...[
                       const SizedBox(height: 3),
-                      Text(
-                        equipmentText,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
+                      LocalizedCatalogEntityNamesBuilder(
+                        entities: equipment,
+                        builder:
+                            (context, names) => Text(
+                              names.join(', '),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            ),
                       ),
                     ],
                   ],

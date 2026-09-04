@@ -6,7 +6,9 @@ import '../l10n/generated/app_localizations.dart';
 import '../l10n/safe_failure_localizations.dart';
 import '../repositories/app_repository.dart';
 import '../models/models.dart';
+import '../services/catalog_entity_localizer.dart';
 import '../services/safe_failure.dart';
+import '../widgets/localized_catalog_entity_name.dart';
 import '../widgets/safe_error_view.dart';
 
 class ExerciseMusclePercentScreen extends StatefulWidget {
@@ -201,17 +203,23 @@ class _ExerciseMusclePercentScreenState
                         itemBuilder: (_, i) {
                           final e = _entries[i];
                           final def = _sel!;
-                          final muscleName =
+                          final muscle =
                               def.muscles
                                   .firstWhere(
                                     (rm) => rm.muscle.id == e.muscleId,
                                   )
-                                  .muscle
-                                  .name;
+                                  .muscle;
                           final isOverride = _overrides.contains(e.muscleId);
 
                           return ListTile(
-                            title: Text(muscleName),
+                            title: LocalizedCatalogEntityName(
+                              entity: CatalogEntityDisplayName(
+                                catalogId: muscle.catalogId,
+                                canonicalName: muscle.name,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [

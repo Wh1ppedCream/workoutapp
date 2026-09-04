@@ -237,20 +237,30 @@ class _SharedEntityMediaThumbnailState
   }
 
   Widget _loadingOverlay(BuildContext context) {
-    return Align(
-      alignment: Alignment.bottomRight,
-      child: SizedBox.square(
-        dimension: widget.size * 0.22,
-        child: CircularProgressIndicator(
-          strokeWidth: 1.5,
-          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.72),
+    return Semantics(
+      container: true,
+      label: AppLocalizations.of(context).diagnosticsLoading,
+      child: Align(
+        alignment: Alignment.bottomRight,
+        child: SizedBox.square(
+          dimension: widget.size * 0.22,
+          child: CircularProgressIndicator(
+            strokeWidth: 1.5,
+            color: Theme.of(
+              context,
+            ).colorScheme.primary.withValues(alpha: 0.72),
+          ),
         ),
       ),
     );
   }
 
   Widget _wifiOverlay(BuildContext context) {
-    return _statusCircle(context, Icons.wifi);
+    return Semantics(
+      container: true,
+      label: AppLocalizations.of(context).databaseWifiOnly,
+      child: _statusCircle(context, Icons.wifi),
+    );
   }
 
   Widget _retryOverlay(BuildContext context) {

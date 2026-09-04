@@ -5,6 +5,7 @@ import '../l10n/generated/app_localizations.dart';
 import '../screens/nutrition/log_entry_page.dart';
 
 import '../theme/theme_extensions.dart';
+import '../utils/localized_formatters.dart';
 
 /// A calendar‐style grid plus summary for “Data & Records”.
 class DataRecordsSection extends StatelessWidget {
@@ -20,9 +21,18 @@ class DataRecordsSection extends StatelessWidget {
     final today = DateTime.now();
     final colors = context.colors;
     final strings = AppLocalizations.of(context);
+    final locale = Localizations.localeOf(context);
 
-    // Two‐letter labels for Monday–Sunday
-    const dayLabels = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
+    final monday = today.subtract(
+      Duration(days: today.weekday - DateTime.monday),
+    );
+    final dayLabels = List.generate(
+      DateTime.daysPerWeek,
+      (index) => LocalizedFormatters.weekdayNarrow(
+        monday.add(Duration(days: index)),
+        locale,
+      ),
+    );
 
     return Padding(
       padding: padding,
@@ -71,34 +81,42 @@ class DataRecordsSection extends StatelessWidget {
                     date.month == today.month &&
                     date.day == today.day;
 
-                return GestureDetector(
-                  onTap:
-                      () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => LogEntryPage(date: date),
+                return Semantics(
+                  button: true,
+                  label: LocalizedFormatters.longDate(date, locale),
+                  child: GestureDetector(
+                    onTap:
+                        () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => LogEntryPage(date: date),
+                          ),
                         ),
-                      ),
-                  child: Container(
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color:
-                          isToday
-                              ? colors.dataRecordsTodayBg!.withValues(
-                                alpha: 0.2,
-                              )
-                              : Colors.transparent,
-                      border: Border.all(
+                    child: Container(
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
                         color:
                             isToday
-                                ? colors.dataRecordsTodayBorder!
-                                : colors.dataRecordsDefaultBorder!,
+                                ? colors.dataRecordsTodayBg!.withValues(
+                                  alpha: 0.2,
+                                )
+                                : Colors.transparent,
+                        border: Border.all(
+                          color:
+                              isToday
+                                  ? colors.dataRecordsTodayBorder!
+                                  : colors.dataRecordsDefaultBorder!,
+                        ),
                       ),
-                    ),
-                    child: Text(
-                      '${date.day}',
-                      style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                        color: isToday ? colors.dataRecordsTodayText! : null,
+                      child: Text(
+                        LocalizedFormatters.number(
+                          date.day,
+                          locale,
+                          maximumFractionDigits: 0,
+                        ),
+                        style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                          color: isToday ? colors.dataRecordsTodayText! : null,
+                        ),
                       ),
                     ),
                   ),

@@ -1810,5 +1810,31 @@
   "speedDialLogMeasurement": "Registrar medición",
   "healthTapToLog": "Toca + para registrar",
   "healthMetricInvalid": "Usa un nombre de métrica único y una unidad corta sin espacios.",
-  "healthMeasurementEntryInvalid": "Introduce un valor positivo razonable con una unidad compatible."
+  "healthMeasurementEntryInvalid": "Introduce un valor positivo razonable con una unidad compatible.",
+  "allocationSourceAutomatic": "Cálculo automático",
+  "allocationSourceCreatorDefault": "Predeterminado de Tonos",
+  "allocationSourcePersonalOverride": "Tu asignación personalizada",
+  "allocationSourceLegacy": "Asignación existente",
+  "quickActionMeasurement": "+ Medición",
+  "quickActionFood": "+ Comida",
+  "quickActionWorkout": "+ Entrenamiento",
+  "healthTrendNeedEntries": "Registra entradas para crear una tendencia.",
+  "healthTrendNeedOneMore": "Registra una entrada más para dibujar una tendencia.",
+  "healthNoChange": "Sin cambios todavía",
+  "healthChangeSinceLast": "{delta} desde la última",
+  "@healthChangeSinceLast": {
+    "placeholders": {
+      "delta": {"type": "String"}
+    }
+  },
+  "healthTrendChartSemantics": "{name}. Gráfico de tendencia. {count, plural, =0{Aún no hay entradas.} =1{1 entrada.} other{{count} entradas.}} Valor más reciente: {value}.",
+  "@healthTrendChartSemantics": {
+    "placeholders": {
+      "name": {"type": "String"},
+      "count": {"type": "int"},
+      "value": {"type": "String"}
+    }
+  },
+  "healthEntryActions": "Acciones de la entrada",
+  "premadeOneHourDescription": "Versión de {duration} de {planName} con los movimientos principales de la plantilla completa."
 }

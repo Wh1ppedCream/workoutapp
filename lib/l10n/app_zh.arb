@@ -1751,5 +1751,31 @@
   "speedDialLogMeasurement": "记录测量",
   "healthTapToLog": "点击 + 以记录",
   "healthMetricInvalid": "请使用唯一的指标名称和不含空格的简短单位。",
-  "healthMeasurementEntryInvalid": "请使用受支持的单位输入合理的正数值。"
+  "healthMeasurementEntryInvalid": "请使用受支持的单位输入合理的正数值。",
+  "allocationSourceAutomatic": "自动计算",
+  "allocationSourceCreatorDefault": "Tonos 默认值",
+  "allocationSourcePersonalOverride": "您的自定义分配",
+  "allocationSourceLegacy": "现有分配",
+  "quickActionMeasurement": "+ 测量",
+  "quickActionFood": "+ 食物",
+  "quickActionWorkout": "+ 训练",
+  "healthTrendNeedEntries": "记录条目以建立趋势。",
+  "healthTrendNeedOneMore": "再记录一条以绘制趋势。",
+  "healthNoChange": "暂无变化",
+  "healthChangeSinceLast": "{delta} 与上一条相比",
+  "@healthChangeSinceLast": {
+    "placeholders": {
+      "delta": {"type": "String"}
+    }
+  },
+  "healthTrendChartSemantics": "{name}趋势图。{count, plural, =0{暂无记录。} =1{1 条记录。} other{{count} 条记录。}} 最新值：{value}。",
+  "@healthTrendChartSemantics": {
+    "placeholders": {
+      "name": {"type": "String"},
+      "count": {"type": "int"},
+      "value": {"type": "String"}
+    }
+  },
+  "healthEntryActions": "记录操作",
+  "premadeOneHourDescription": "保留完整模板主要动作的{planName}{duration}版本。"
 }

@@ -26,6 +26,15 @@ every user, whether a particular muscle order is correct, or whether two
 similar exercises should be combined. Those are product decisions and require
 review.
 
+## Localization Boundary
+
+Localized names and guidance are presentation data keyed by stable
+`catalogId`; they do not replace the canonical English catalog values used for
+matching, history, plans, imports, exports, or media. The localization bundles,
+ARB resources, and native-speaker review are tracked separately in
+`exercise-catalog-localization.md`, `localization-remaining-inventory.md`, and
+`localization-review.md`.
+
 ## Edit Workflow
 
 1. Make catalog edits while preserving `catalogId` and `legacyMediaId`.

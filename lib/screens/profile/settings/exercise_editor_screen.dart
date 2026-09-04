@@ -8,7 +8,10 @@ import '../../../l10n/generated/app_localizations.dart';
 import '../../../l10n/safe_failure_localizations.dart';
 import '../../../models/models.dart';
 import '../../../repositories/app_repository.dart';
+import '../../../services/catalog_entity_localizer.dart';
 import '../../../services/safe_failure.dart';
+import '../../../utils/localized_formatters.dart';
+import '../../../widgets/localized_catalog_entity_name.dart';
 import '../../../widgets/settings_tiles.dart';
 import '../../../widgets/safe_error_view.dart';
 import '../../exercise/exercise_catalog_page.dart';
@@ -53,8 +56,8 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
   bool _hasPendingChanges = false;
 
   // Tab data
-  List<Map<String, Object>> _muscleEntries =
-      []; // { 'id': int, 'name': String, 'percent': double }
+  List<Map<String, Object?>> _muscleEntries =
+      []; // { 'id': int, 'name': String, 'catalogId': String?, 'percent': double }
 
   bool _useManualBody = false;
 
@@ -62,8 +65,8 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
   bool _useManualMuscles = false;
 
   // new:
-  List<Map<String, Object>> _equipmentEntries =
-      []; // { 'id': int, 'name': String }
+  List<Map<String, Object?>> _equipmentEntries =
+      []; // { 'id': int, 'name': String, 'catalogId': String? }
 
   List<Map<String, Object>> _bodyAutoEntries = []; // muscle‐calculated values
   List<Map<String, Object>> _bodyManualEntries = []; // manual overrides
@@ -204,6 +207,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
               return {
                 'id': rm.muscle.id,
                 'name': rm.muscle.name,
+                'catalogId': rm.muscle.catalogId,
                 'percent': override.percent,
               };
             }).toList();
@@ -224,9 +228,18 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
               return {'id': bp.id, 'name': bp.name, 'count': count};
             }).toList();
 
-        // Equipment (unchanged)
+        // Keep the canonical name for saves while retaining the stable ID for
+        // localized display.
         _equipmentEntries =
-            def.equipmentList.map((e) => {'id': e.id, 'name': e.name}).toList();
+            def.equipmentList
+                .map(
+                  (e) => <String, Object?>{
+                    'id': e.id,
+                    'name': e.name,
+                    'catalogId': e.catalogId,
+                  },
+                )
+                .toList();
         _rating = def.rating;
         _mediaItems = mediaItems;
         _primaryEquipmentId = def.equipmentId;
@@ -328,6 +341,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
                   muscle: Muscle(
                     id: _muscleEntries[index]['id'] as int,
                     name: _muscleEntries[index]['name'] as String,
+                    catalogId: _muscleEntries[index]['catalogId'] as String?,
                   ),
                   rank: index + 1,
                 ),
@@ -522,7 +536,12 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
                       final m = available[i];
                       final checked = selectedIds.contains(m.id);
                       return CheckboxListTile(
-                        title: Text(m.name),
+                        title: LocalizedCatalogEntityName(
+                          entity: CatalogEntityDisplayName(
+                            catalogId: m.catalogId,
+                            canonicalName: m.name,
+                          ),
+                        ),
                         value: checked,
                         onChanged: (on) {
                           setDialogState(() {
@@ -557,9 +576,10 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
       setState(() {
         for (final id in result) {
           final m = allMuscles.firstWhere((muscle) => muscle.id == id);
-          _muscleEntries.add(<String, Object>{
+          _muscleEntries.add(<String, Object?>{
             'id': m.id,
             'name': m.name,
+            'catalogId': m.catalogId,
             'percent': 0.0,
           });
         }
@@ -592,7 +612,12 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
                       final eq = available[i];
                       final checked = selectedIds.contains(eq.id);
                       return CheckboxListTile(
-                        title: Text(eq.name),
+                        title: LocalizedCatalogEntityName(
+                          entity: CatalogEntityDisplayName(
+                            catalogId: eq.catalogId,
+                            canonicalName: eq.name,
+                          ),
+                        ),
                         value: checked,
                         onChanged:
                             (on) => setState2(() {
@@ -625,7 +650,11 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
       setState(() {
         for (var id in result) {
           final eq = allEq.firstWhere((e) => e.id == id);
-          _equipmentEntries.add({'id': eq.id, 'name': eq.name});
+          _equipmentEntries.add({
+            'id': eq.id,
+            'name': eq.name,
+            'catalogId': eq.catalogId,
+          });
         }
         _hasPendingChanges = true;
       });
@@ -843,7 +872,12 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
                             ..._allEquipment.map(
                               (equipment) => DropdownMenuItem(
                                 value: equipment.id,
-                                child: Text(equipment.name),
+                                child: LocalizedCatalogEntityName(
+                                  entity: CatalogEntityDisplayName(
+                                    catalogId: equipment.catalogId,
+                                    canonicalName: equipment.name,
+                                  ),
+                                ),
                               ),
                             ),
                           ],
@@ -1240,6 +1274,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
   Widget _buildMuscleTile(int index) {
     final entry = _muscleEntries[index];
     final name = entry['name'] as String;
+    final catalogId = entry['catalogId'] as String?;
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
       leading: Container(
@@ -1255,7 +1290,14 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
           style: const TextStyle(fontWeight: FontWeight.w900),
         ),
       ),
-      title: Text(name),
+      title: LocalizedCatalogEntityName(
+        entity: CatalogEntityDisplayName(
+          catalogId: catalogId,
+          canonicalName: name,
+        ),
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      ),
       trailing:
           !_isEditing
               ? null
@@ -1291,8 +1333,22 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
                   IconButton(
                     tooltip: _strings.exerciseEditorRemoveMuscle,
                     onPressed: () async {
+                      var displayName = name;
+                      try {
+                        displayName = await CatalogEntityLocalizer.instance
+                            .resolveName(
+                              CatalogEntityDisplayName(
+                                catalogId: catalogId,
+                                canonicalName: name,
+                              ),
+                              Localizations.localeOf(context),
+                            );
+                      } catch (_) {
+                        displayName = name;
+                      }
+                      if (!mounted) return;
                       if (!await _confirmRemove(
-                        name,
+                        displayName,
                         _strings.exerciseEditorMuscleItem,
                       )) {
                         return;
@@ -1311,6 +1367,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
 
   /// Mirrors the old _buildMusclesTab list, but showing “sets” instead of “%”.
   Widget _buildBodypartsTab() {
+    final locale = Localizations.localeOf(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1370,7 +1427,14 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
                   ),
                   leading: const Icon(Icons.auto_graph),
                   title: Text(entry['name'] as String),
-                  trailing: Text((entry['count'] as double).toStringAsFixed(2)),
+                  trailing: Text(
+                    LocalizedFormatters.number(
+                      entry['count'] as double,
+                      locale,
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    ),
+                  ),
                 ),
             ],
           ),
@@ -1432,6 +1496,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
           leading:
               _isEditing
                   ? IconButton(
+                    tooltip: _strings.exerciseEditorRemoveBodypart,
                     icon: const Icon(Icons.delete),
                     onPressed: () async {
                       final confirm = await showDialog<bool>(
@@ -1544,6 +1609,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
     final entry = _equipmentEntries[index];
     final equipmentId = entry['id'] as int;
     final equipmentName = entry['name'] as String;
+    final catalogId = entry['catalogId'] as String?;
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
       leading: Container(
@@ -1558,19 +1624,39 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
           color: SettingsAccent.training,
         ),
       ),
-      title: Text(equipmentName),
+      title: LocalizedCatalogEntityName(
+        entity: CatalogEntityDisplayName(
+          catalogId: catalogId,
+          canonicalName: equipmentName,
+        ),
+      ),
       trailing:
           !_isEditing
               ? null
               : IconButton(
                 tooltip: _strings.exerciseEditorRemoveEquipment,
                 onPressed: () async {
+                  var displayName = equipmentName;
+                  try {
+                    displayName = await CatalogEntityLocalizer.instance
+                        .resolveName(
+                          CatalogEntityDisplayName(
+                            catalogId: catalogId,
+                            canonicalName: equipmentName,
+                          ),
+                          Localizations.localeOf(context),
+                        );
+                  } catch (_) {
+                    displayName = equipmentName;
+                  }
+                  if (!mounted) return;
                   if (!await _confirmRemove(
-                    equipmentName,
+                    displayName,
                     _strings.exerciseEditorEquipmentItem,
                   )) {
                     return;
                   }
+                  if (!mounted) return;
                   setState(() {
                     _equipmentEntries.removeAt(index);
                     if (_primaryEquipmentId == equipmentId) {

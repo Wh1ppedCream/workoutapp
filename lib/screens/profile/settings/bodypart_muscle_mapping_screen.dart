@@ -7,7 +7,9 @@ import '../../../l10n/generated/app_localizations.dart';
 import '../../../l10n/safe_failure_localizations.dart';
 import '../../../models/models.dart';
 import '../../../repositories/app_repository.dart';
+import '../../../services/catalog_entity_localizer.dart';
 import '../../../services/safe_failure.dart';
+import '../../../widgets/localized_catalog_entity_name.dart';
 import '../../../widgets/settings_tiles.dart';
 import '../../../widgets/safe_error_view.dart';
 
@@ -290,8 +292,11 @@ class _BodyPartMuscleMappingScreenState
               }
             });
           },
-          title: Text(
-            muscle.name,
+          title: LocalizedCatalogEntityName(
+            entity: CatalogEntityDisplayName(
+              catalogId: muscle.catalogId,
+              canonicalName: muscle.name,
+            ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -319,6 +324,14 @@ class _BodyPartMuscleMappingScreenState
             (muscle) => SettingsActionTile(
               icon: Icons.fitness_center,
               title: muscle.name,
+              titleWidget: LocalizedCatalogEntityName(
+                entity: CatalogEntityDisplayName(
+                  catalogId: muscle.catalogId,
+                  canonicalName: muscle.name,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
               trailing: const SizedBox.shrink(),
             ),
           )

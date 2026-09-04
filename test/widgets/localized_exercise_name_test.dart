@@ -71,4 +71,41 @@ void main() {
 
     expect(find.text('Bench Press - Barbell'), findsOneWidget);
   });
+
+  testWidgets('refreshes a built-in name when the locale changes', (
+    tester,
+  ) async {
+    final localizer = ExerciseContentLocalizer(
+      bundleLoader:
+          () async => jsonEncode({
+            'version': 1,
+            'names': {
+              'es': {'tonos.exercise.0007': 'Press de banca con barra'},
+              'zh': {'tonos.exercise.0007': '\u6760\u94c3\u5367\u63a8'},
+            },
+            'locales': <String, Object?>{},
+          }),
+    );
+
+    Widget host(Locale locale) => MaterialApp(
+      locale: locale,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: Scaffold(
+        body: LocalizedExerciseName(
+          key: const ValueKey('exercise-name'),
+          definition: definition(catalogId: 'tonos.exercise.0007'),
+          localizer: localizer,
+        ),
+      ),
+    );
+
+    await tester.pumpWidget(host(const Locale('es')));
+    await tester.pump();
+    expect(find.text('Press de banca con barra'), findsOneWidget);
+
+    await tester.pumpWidget(host(const Locale('zh')));
+    await tester.pump();
+    expect(find.text('\u6760\u94c3\u5367\u63a8'), findsOneWidget);
+  });
 }

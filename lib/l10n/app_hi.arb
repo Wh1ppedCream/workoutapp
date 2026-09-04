@@ -1810,5 +1810,31 @@
   "speedDialLogMeasurement": "माप दर्ज करें",
   "healthTapToLog": "+ टैप करके लॉग करें",
   "healthMetricInvalid": "एक अद्वितीय माप नाम और बिना रिक्त स्थान वाली छोटी इकाई का उपयोग करें।",
-  "healthMeasurementEntryInvalid": "समर्थित इकाई के साथ एक उचित धनात्मक मान दर्ज करें।"
+  "healthMeasurementEntryInvalid": "समर्थित इकाई के साथ एक उचित धनात्मक मान दर्ज करें।",
+  "allocationSourceAutomatic": "स्वचालित गणना",
+  "allocationSourceCreatorDefault": "Tonos डिफ़ॉल्ट",
+  "allocationSourcePersonalOverride": "आपका कस्टम आवंटन",
+  "allocationSourceLegacy": "मौजूदा आवंटन",
+  "quickActionMeasurement": "+ माप",
+  "quickActionFood": "+ भोजन",
+  "quickActionWorkout": "+ वर्कआउट",
+  "healthTrendNeedEntries": "रुझान बनाने के लिए प्रविष्टियाँ लॉग करें।",
+  "healthTrendNeedOneMore": "रुझान दिखाने के लिए एक और प्रविष्टि लॉग करें।",
+  "healthNoChange": "अभी कोई बदलाव नहीं",
+  "healthChangeSinceLast": "{delta} पिछली प्रविष्टि से",
+  "@healthChangeSinceLast": {
+    "placeholders": {
+      "delta": {"type": "String"}
+    }
+  },
+  "healthTrendChartSemantics": "{name} रुझान चार्ट। {count, plural, =0{अभी कोई प्रविष्टि नहीं।} =1{1 प्रविष्टि।} other{{count} प्रविष्टियाँ।}} नवीनतम मान: {value}।",
+  "@healthTrendChartSemantics": {
+    "placeholders": {
+      "name": {"type": "String"},
+      "count": {"type": "int"},
+      "value": {"type": "String"}
+    }
+  },
+  "healthEntryActions": "प्रविष्टि कार्रवाइयाँ",
+  "premadeOneHourDescription": "पूरे टेम्पलेट की मुख्य एक्सरसाइज़ वाला {planName} का {duration} संस्करण।"
 }

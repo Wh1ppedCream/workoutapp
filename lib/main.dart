@@ -612,7 +612,7 @@ class _MainScreenState extends State<MainScreen> {
         for (final tab in tabs)
           BottomNavigationBarItem(
             icon: KeyedSubtree(
-              key: AppTestKeys.mainTab(tab.name),
+              key: AppTestKeys.mainTab(tab.storageKey),
               child: Icon(tab.icon),
             ),
             label: tab.localizedTitle(strings),

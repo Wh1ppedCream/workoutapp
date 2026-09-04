@@ -9,6 +9,7 @@ import '../providers/preset_session.dart';
 import '../providers/unit_preference_provider.dart';
 import '../models/models.dart';
 import '../theme/app_colors.dart';
+import '../utils/localized_formatters.dart';
 import '../utils/weight_unit_formatter.dart';
 
 /// Bottom sheet for editing automatic preset progression settings.
@@ -209,6 +210,15 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
     return WeightUnitFormatter.formatInputWeight(pounds, _weightUnit);
   }
 
+  String _formatSetWeight(double pounds) {
+    return LocalizedFormatters.number(
+      pounds,
+      Localizations.localeOf(context),
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 15,
+    );
+  }
+
   double? _parseIncrement(String text) {
     final value = double.tryParse(text);
     if (value == null) return null;
@@ -360,7 +370,7 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
                                             context,
                                           ).automaticSetLabel(
                                             pi + 1,
-                                            set.weight.toString(),
+                                            _formatSetWeight(set.weight),
                                             set.reps,
                                           ),
                                           controller: setCtrl,
@@ -390,7 +400,9 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
                                               ).automaticChildSetLabel(
                                                 parentIdx + 1,
                                                 childIndex + 1,
-                                                childSet.weight.toString(),
+                                                _formatSetWeight(
+                                                  childSet.weight,
+                                                ),
                                                 childSet.reps,
                                               ),
                                               controller: childCtrl,
@@ -470,7 +482,7 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
                                             context,
                                           ).automaticSetLabel(
                                             pi + 1,
-                                            set.weight.toString(),
+                                            _formatSetWeight(set.weight),
                                             set.reps,
                                           ),
                                           controller: setCtrl,
@@ -512,7 +524,7 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
                                               ).automaticChildSetLabel(
                                                 parentIdx + 1,
                                                 ci + 1,
-                                                child.weight.toString(),
+                                                _formatSetWeight(child.weight),
                                                 child.reps,
                                               ),
                                               controller: childCtrl,

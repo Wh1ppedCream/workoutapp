@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/generated/app_localizations.dart';
@@ -9,8 +8,8 @@ import '../models/models.dart';
 import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
 import '../theme/theme_extensions.dart';
-import '../utils/localized_digit_formatter.dart';
 import '../utils/completed_workout_duration_formatter.dart';
+import '../utils/localized_formatters.dart';
 import '../utils/weight_unit_formatter.dart';
 import '../utils/app_test_keys.dart';
 import 'body_heatmap.dart';
@@ -280,28 +279,16 @@ class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
     final locale = Localizations.localeOf(context);
     switch (_mode) {
       case _CalendarRangeMode.month:
-        final pattern =
-            locale.languageCode == 'es' ? 'EEE, d MMM' : 'EEE, MMM d';
-        return preserveWesternDigits(
-          DateFormat(pattern, locale.toLanguageTag()).format(_selectedDay),
-          locale,
-        );
+        return LocalizedFormatters.weekdayShortDate(_selectedDay, locale);
       case _CalendarRangeMode.threeMonth:
         final end = _monthWeekEndExclusive(
           _selectedWeekStart,
         ).subtract(const Duration(days: 1));
-        return _formatDateRange(
-          _selectedWeekStart,
-          end,
-          locale.toLanguageTag(),
-        );
+        return _formatDateRange(_selectedWeekStart, end, locale);
       case _CalendarRangeMode.year:
-        return preserveWesternDigits(
-          DateFormat.yMMMM(locale.toLanguageTag()).format(_selectedMonth),
-          locale,
-        );
+        return LocalizedFormatters.monthYear(_selectedMonth, locale);
       case _CalendarRangeMode.fourYear:
-        return _selectedYear.toString();
+        return LocalizedFormatters.year(_selectedYear, locale);
     }
   }
 
@@ -438,33 +425,16 @@ String _workoutCountText(AppLocalizations strings, int count) {
   return strings.logbookWorkoutCount(count);
 }
 
-String _formatDateRange(DateTime start, DateTime end, String localeName) {
-  final startFormat =
-      start.year == end.year
-          ? DateFormat.MMMd(localeName)
-          : DateFormat.yMMMd(localeName);
-  final endFormat = DateFormat.yMMMd(localeName);
-  return preserveWesternDigitsForLocale(
-    '${startFormat.format(start)} - ${endFormat.format(end)}',
-    localeName,
-  );
+String _formatDateRange(DateTime start, DateTime end, Locale locale) {
+  return LocalizedFormatters.dateRange(start, end, locale);
 }
 
 String _formatMonthRangeTitle(
   DateTime startMonth,
   DateTime endMonth,
-  String localeName,
+  Locale locale,
 ) {
-  final startFormat =
-      startMonth.year == endMonth.year
-          ? DateFormat.MMM(localeName)
-          : DateFormat.yMMM(localeName);
-  return preserveWesternDigitsForLocale(
-    '${startFormat.format(startMonth)} - '
-            '${DateFormat.yMMM(localeName).format(endMonth)}'
-        .toUpperCase(),
-    localeName,
-  );
+  return LocalizedFormatters.monthRange(startMonth, endMonth, locale);
 }
 
 int _sessionCountInRange(
@@ -597,16 +567,17 @@ class _CalendarModeBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
-    final localeName = Localizations.localeOf(context).toLanguageTag();
+    final locale = Localizations.localeOf(context);
     switch (mode) {
       case _CalendarRangeMode.month:
         return Column(
           children: [
             _CalendarHeader(
               title:
-                  DateFormat.yMMMM(
-                    localeName,
-                  ).format(visibleMonth).toUpperCase(),
+                  LocalizedFormatters.monthYear(
+                    visibleMonth,
+                    locale,
+                  ).toUpperCase(),
               onPrevious: onPreviousMonth,
               onNext: onNextMonth,
               previousTooltip: strings.logbookPreviousMonth,
@@ -694,7 +665,7 @@ class _ThreeMonthWeekSelector extends StatelessWidget {
           title: _formatMonthRangeTitle(
             months.first,
             visibleEndMonth,
-            Localizations.localeOf(context).toLanguageTag(),
+            Localizations.localeOf(context),
           ),
           onPrevious: onPrevious,
           onNext: onNext,
@@ -754,9 +725,7 @@ class _MonthWeekPanel extends StatelessWidget {
     return Column(
       children: [
         Text(
-          DateFormat.MMMM(
-            Localizations.localeOf(context).toLanguageTag(),
-          ).format(month),
+          LocalizedFormatters.month(month, Localizations.localeOf(context)),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: Theme.of(
@@ -784,9 +753,10 @@ class _MonthWeekPanel extends StatelessWidget {
             return _PeriodCircleButton(
               label: AppLocalizations.of(context).logbookWeekShort(index + 1),
               semanticLabel: AppLocalizations.of(context).logbookMonthWeek(
-                DateFormat.MMMM(
-                  Localizations.localeOf(context).toLanguageTag(),
-                ).format(month),
+                LocalizedFormatters.month(
+                  month,
+                  Localizations.localeOf(context),
+                ),
                 index + 1,
               ),
               isSelected: DateUtils.isSameDay(weekStart, selectedWeekStart),
@@ -837,7 +807,10 @@ class _YearMonthSelector extends StatelessWidget {
     return Column(
       children: [
         _CalendarHeader(
-          title: visibleYear.toString(),
+          title: LocalizedFormatters.year(
+            visibleYear,
+            Localizations.localeOf(context),
+          ),
           onPrevious: onPrevious,
           onNext: onNext,
           previousTooltip: AppLocalizations.of(context).logbookPreviousYear,
@@ -862,12 +835,14 @@ class _YearMonthSelector extends StatelessWidget {
               DateTime(month.year, month.month + 1),
             );
             return _PeriodCircleButton(
-              label: DateFormat.MMM(
-                Localizations.localeOf(context).toLanguageTag(),
-              ).format(month),
-              semanticLabel: DateFormat.yMMMM(
-                Localizations.localeOf(context).toLanguageTag(),
-              ).format(month),
+              label: LocalizedFormatters.monthShort(
+                month,
+                Localizations.localeOf(context),
+              ),
+              semanticLabel: LocalizedFormatters.monthYear(
+                month,
+                Localizations.localeOf(context),
+              ),
               isSelected:
                   selectedMonth.year == month.year &&
                   selectedMonth.month == month.month,
@@ -924,8 +899,14 @@ class _FourYearSelector extends StatelessWidget {
           DateTime(year + 1),
         );
         return _PeriodCircleButton(
-          label: year.toString(),
-          semanticLabel: year.toString(),
+          label: LocalizedFormatters.year(
+            year,
+            Localizations.localeOf(context),
+          ),
+          semanticLabel: LocalizedFormatters.year(
+            year,
+            Localizations.localeOf(context),
+          ),
           isSelected: year == selectedYear,
           sessionCount: sessionCount,
           maxSessionCount: maxYearSessions,
@@ -1065,15 +1046,18 @@ class _CalendarHeader extends StatelessWidget {
 class _WeekdayRow extends StatelessWidget {
   const _WeekdayRow();
 
-  static const _defaultLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-  static const _spanishLabels = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
-
   @override
   Widget build(BuildContext context) {
-    final labels =
-        Localizations.localeOf(context).languageCode == 'es'
-            ? _spanishLabels
-            : _defaultLabels;
+    final locale = Localizations.localeOf(context);
+    final today = DateTime.now();
+    final sunday = today.subtract(Duration(days: today.weekday % 7));
+    final labels = List.generate(
+      DateTime.daysPerWeek,
+      (index) => LocalizedFormatters.weekdayNarrow(
+        sunday.add(Duration(days: index)),
+        locale,
+      ),
+    );
     return Row(
       children:
           labels
@@ -1193,9 +1177,7 @@ class _CalendarDayButton extends StatelessWidget {
 
     return Semantics(
       button: true,
-      label: DateFormat.yMMMMd(
-        Localizations.localeOf(context).toLanguageTag(),
-      ).format(day),
+      label: LocalizedFormatters.longDate(day, Localizations.localeOf(context)),
       child: InkWell(
         borderRadius: BorderRadius.circular(999),
         onTap: onTap,
@@ -1215,7 +1197,11 @@ class _CalendarDayButton extends StatelessWidget {
                         : null,
               ),
               child: Text(
-                day.day.toString(),
+                LocalizedFormatters.number(
+                  day.day,
+                  Localizations.localeOf(context),
+                  maximumFractionDigits: 0,
+                ),
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   color: foregroundColor,
                   fontWeight: FontWeight.w900,
@@ -1263,7 +1249,11 @@ class _WorkoutCountBadge extends StatelessWidget {
           shape: BoxShape.circle,
         ),
         child: Text(
-          count.toString(),
+          LocalizedFormatters.number(
+            count,
+            Localizations.localeOf(context),
+            maximumFractionDigits: 0,
+          ),
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
             color: foregroundColor,
             fontSize: compact ? 8 : 9,
@@ -1352,7 +1342,11 @@ class _SelectedPeriodHeatmapSummary extends StatelessWidget {
                       children: [
                         Expanded(
                           child: _CalendarMetricCard(
-                            value: workoutCount.toString(),
+                            value: LocalizedFormatters.number(
+                              workoutCount,
+                              Localizations.localeOf(context),
+                              maximumFractionDigits: 0,
+                            ),
                             label: AppLocalizations.of(context).logbookWorkouts,
                             compact: compactMetrics,
                           ),
@@ -1375,6 +1369,7 @@ class _SelectedPeriodHeatmapSummary extends StatelessWidget {
                             value: WeightUnitFormatter.formatVolume(
                               totalVolume,
                               weightUnit,
+                              locale: Localizations.localeOf(context),
                             ),
                             label:
                                 AppLocalizations.of(context).logbookTotalVolume,
@@ -1556,9 +1551,10 @@ class _SessionRow extends StatelessWidget {
       contentPadding: EdgeInsets.zero,
       onTap: onTap,
       title: Text(
-        DateFormat.jm(
-          Localizations.localeOf(context).toLanguageTag(),
-        ).format(session.displayDateTime),
+        LocalizedFormatters.time(
+          session.displayDateTime,
+          Localizations.localeOf(context),
+        ),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: const TextStyle(fontWeight: FontWeight.w800),
@@ -1571,7 +1567,11 @@ class _SessionRow extends StatelessWidget {
           ),
           session.exerciseCount,
           session.setCount,
-          WeightUnitFormatter.formatVolume(session.totalVolume, weightUnit),
+          WeightUnitFormatter.formatVolume(
+            session.totalVolume,
+            weightUnit,
+            locale: Localizations.localeOf(context),
+          ),
         ),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,

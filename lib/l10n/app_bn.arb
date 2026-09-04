@@ -2820,5 +2820,31 @@
   "speedDialLogMeasurement": "পরিমাপ লগ করুন",
   "healthTapToLog": "+ ট্যাপ করে লগ করুন",
   "healthMetricInvalid": "একটি অনন্য মেট্রিক নাম এবং ফাঁকা জায়গাবিহীন ছোট একক ব্যবহার করুন।",
-  "healthMeasurementEntryInvalid": "সমর্থিত একক ব্যবহার করে একটি যুক্তিসঙ্গত ধনাত্মক মান লিখুন।"
+  "healthMeasurementEntryInvalid": "সমর্থিত একক ব্যবহার করে একটি যুক্তিসঙ্গত ধনাত্মক মান লিখুন।",
+  "allocationSourceAutomatic": "স্বয়ংক্রিয় হিসাব",
+  "allocationSourceCreatorDefault": "Tonos-এর ডিফল্ট",
+  "allocationSourcePersonalOverride": "আপনার কাস্টম বরাদ্দ",
+  "allocationSourceLegacy": "বিদ্যমান বরাদ্দ",
+  "quickActionMeasurement": "+ পরিমাপ",
+  "quickActionFood": "+ খাবার",
+  "quickActionWorkout": "+ ওয়ার্কআউট",
+  "healthTrendNeedEntries": "ট্রেন্ড তৈরি করতে এন্ট্রি লগ করুন।",
+  "healthTrendNeedOneMore": "ট্রেন্ড আঁকতে আরও একটি এন্ট্রি লগ করুন।",
+  "healthNoChange": "এখনও কোনো পরিবর্তন নেই",
+  "healthChangeSinceLast": "{delta} শেষ এন্ট্রির পর থেকে",
+  "@healthChangeSinceLast": {
+    "placeholders": {
+      "delta": {"type": "String"}
+    }
+  },
+  "healthTrendChartSemantics": "{name}। ট্রেন্ড চার্ট। {count, plural, =0{এখনও কোনো এন্ট্রি নেই।} =1{1টি এন্ট্রি।} other{{count}টি এন্ট্রি।}} সর্বশেষ মান: {value}।",
+  "@healthTrendChartSemantics": {
+    "placeholders": {
+      "name": {"type": "String"},
+      "count": {"type": "int"},
+      "value": {"type": "String"}
+    }
+  },
+  "healthEntryActions": "এন্ট্রির কাজ",
+  "premadeOneHourDescription": "সম্পূর্ণ টেমপ্লেটের প্রধান ব্যায়ামগুলোসহ {planName}-এর {duration} সংস্করণ।"
 }

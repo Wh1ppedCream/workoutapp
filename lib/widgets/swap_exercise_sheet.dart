@@ -6,10 +6,12 @@ import '../l10n/generated/app_localizations.dart';
 import '../models/models.dart';
 import '../repositories/app_repository.dart';
 import '../screens/exercise/exercise_catalog_page.dart';
+import '../services/catalog_entity_localizer.dart';
 import '../services/exercise_equipment_compatibility.dart';
 import '../theme/theme_extensions.dart';
 import '../utils/async_pool.dart';
 import 'body_heatmap.dart';
+import 'localized_catalog_entity_name.dart';
 import 'localized_exercise_name.dart';
 
 /// Bottom sheet that helps replace the current exercise with a similar one.
@@ -183,7 +185,7 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
       muscleUnitsById: muscleUnitsById,
       bodyPartHits: bodyPartHits,
       frequencyMap: frequencyMap,
-      equipmentText: _equipmentText(detailedDefinition),
+      equipment: _equipmentEntities(detailedDefinition),
     );
   }
 
@@ -531,12 +533,18 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
     );
   }
 
-  String _equipmentText(ExerciseDefinition definition) {
-    final equipment = definition.equipmentList
-        .map((item) => item.name)
-        .where((name) => name.trim().isNotEmpty)
-        .join(', ');
-    return equipment.isEmpty ? _strings.swapNoEquipment : equipment;
+  List<CatalogEntityDisplayName> _equipmentEntities(
+    ExerciseDefinition definition,
+  ) {
+    return definition.equipmentList
+        .where((item) => item.name.trim().isNotEmpty)
+        .map(
+          (item) => CatalogEntityDisplayName(
+            catalogId: item.catalogId,
+            canonicalName: item.name,
+          ),
+        )
+        .toList(growable: false);
   }
 
   List<_ExerciseSwapEntry> _filteredCandidates(_SwapExerciseData data) {
@@ -587,6 +595,7 @@ class _SwapSheetHeader extends StatelessWidget {
             ),
           ),
           IconButton(
+            tooltip: strings.commonClose,
             icon: const Icon(Icons.close),
             onPressed: () => Navigator.pop(context),
           ),
@@ -680,26 +689,30 @@ class _ExerciseSwapBox extends StatelessWidget {
             LocalizedExerciseNameBuilder(
               definition: entry.definition,
               builder:
-                  (context, name) => Text.rich(
-                    TextSpan(
-                      children: [
-                        TextSpan(text: name),
-                        TextSpan(
-                          text: '  •  ${entry.equipmentText}',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.textTheme.bodySmall?.color?.withAlpha(
-                              184,
-                            ),
-                            fontWeight: FontWeight.w500,
+                  (context, name) => LocalizedCatalogEntityNamesBuilder(
+                    entities: entry.equipment,
+                    builder:
+                        (context, equipmentNames) => Text.rich(
+                          TextSpan(
+                            children: [
+                              TextSpan(text: name),
+                              TextSpan(
+                                text:
+                                    '  •  ${equipmentNames.isEmpty ? AppLocalizations.of(context).swapNoEquipment : equipmentNames.join(', ')}',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.textTheme.bodySmall?.color
+                                      ?.withAlpha(184),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
-                      ],
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
                   ),
             ),
             const SizedBox(height: 16),
@@ -903,7 +916,7 @@ class _ExerciseSwapEntry {
   final Map<int, double> muscleUnitsById;
   final List<_BodyPartHit> bodyPartHits;
   final Map<String, double> frequencyMap;
-  final String equipmentText;
+  final List<CatalogEntityDisplayName> equipment;
   final double score;
 
   const _ExerciseSwapEntry({
@@ -912,7 +925,7 @@ class _ExerciseSwapEntry {
     required this.muscleUnitsById,
     required this.bodyPartHits,
     required this.frequencyMap,
-    required this.equipmentText,
+    required this.equipment,
     this.score = 1.0,
   });
 
@@ -923,7 +936,7 @@ class _ExerciseSwapEntry {
       muscleUnitsById: muscleUnitsById,
       bodyPartHits: bodyPartHits,
       frequencyMap: frequencyMap,
-      equipmentText: equipmentText,
+      equipment: equipment,
       score: score ?? this.score,
     );
   }

@@ -1,12 +1,12 @@
 // File: lib/screens/exercise/full_history_screen.dart
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../models/models.dart';
 import '../../repositories/app_repository.dart';
 import '../../utils/completed_workout_duration_formatter.dart';
+import '../../utils/localized_formatters.dart';
 import 'session_detail_screen.dart';
 
 /// Shows every workout session in a simple scrollable list.
@@ -57,9 +57,10 @@ class _FullHistoryScreenState extends State<FullHistoryScreen> {
             separatorBuilder: (_, __) => const Divider(height: 1),
             itemBuilder: (context, i) {
               final s = sessions[i];
-              final dateStr = DateFormat.yMMMd(
-                Localizations.localeOf(context).toLanguageTag(),
-              ).format(s.calendarDay.toLocalDateTime());
+              final dateStr = LocalizedFormatters.date(
+                s.calendarDay.toLocalDateTime(),
+                Localizations.localeOf(context),
+              );
               final duration = formatCompletedWorkoutDuration(
                 strings,
                 s.duration,

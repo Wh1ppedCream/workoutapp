@@ -18,6 +18,9 @@ class StretchDefinition {
   /// Unique identifier in the database.
   final int id;
 
+  /// Stable shipped-catalog identity. Null means a custom/local row.
+  final String? catalogId;
+
   /// Display name of the stretch.
   final String name;
 
@@ -32,6 +35,7 @@ class StretchDefinition {
   /// Defaults [bodyParts] to an empty list if not provided.
   StretchDefinition({
     required this.id,
+    this.catalogId,
     required this.name,
     required this.description,
     this.bodyParts = const [],

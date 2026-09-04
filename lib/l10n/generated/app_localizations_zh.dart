@@ -6288,4 +6288,59 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get healthMeasurementEntryInvalid => '请使用受支持的单位输入合理的正数值。';
+
+  @override
+  String get allocationSourceAutomatic => '自动计算';
+
+  @override
+  String get allocationSourceCreatorDefault => 'Tonos 默认值';
+
+  @override
+  String get allocationSourcePersonalOverride => '您的自定义分配';
+
+  @override
+  String get allocationSourceLegacy => '现有分配';
+
+  @override
+  String get quickActionMeasurement => '+ 测量';
+
+  @override
+  String get quickActionFood => '+ 食物';
+
+  @override
+  String get quickActionWorkout => '+ 训练';
+
+  @override
+  String get healthTrendNeedEntries => '记录条目以建立趋势。';
+
+  @override
+  String get healthTrendNeedOneMore => '再记录一条以绘制趋势。';
+
+  @override
+  String get healthNoChange => '暂无变化';
+
+  @override
+  String healthChangeSinceLast(String delta) {
+    return '$delta 与上一条相比';
+  }
+
+  @override
+  String healthTrendChartSemantics(String name, int count, String value) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 条记录。',
+      one: '1 条记录。',
+      zero: '暂无记录。',
+    );
+    return '$name趋势图。$_temp0 最新值：$value。';
+  }
+
+  @override
+  String get healthEntryActions => '记录操作';
+
+  @override
+  String premadeOneHourDescription(String duration, String planName) {
+    return '保留完整模板主要动作的$planName$duration版本。';
+  }
 }

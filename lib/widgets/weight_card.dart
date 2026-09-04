@@ -692,6 +692,7 @@ class _WeightCardState extends State<WeightCard> {
                                 const Spacer(),
                                 IconButton(
                                   icon: const Icon(Icons.remove_circle_outline),
+                                  tooltip: strings.weightRemoveChangeSetTitle,
                                   onPressed: () async {
                                     final confirm = await showDialog<bool>(
                                       context: context,

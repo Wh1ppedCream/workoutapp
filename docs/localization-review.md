@@ -11,6 +11,16 @@ Native-speaker sign-off is pending for every supported non-English locale.
 Record the reviewer, date, build version, and disposition below before calling a
 locale release-ready.
 
+## Latest automated evidence
+
+On 2026-09-03, all seven ARB resources contained the 1,933 canonical message
+keys with aligned runtime placeholders. Generated localization output was
+regenerated, the targeted analyzer passed, and the focused localization and
+workflow tests passed (`00:09 +31: All tests passed!`). The pass also corrected
+Canadian-French placeholder wording in logbook, anatomy, and ranking messages.
+This evidence confirms structural and runtime contracts only; it does not
+replace the pending native-speaker review recorded below.
+
 | Locale | Reviewer | Build/version | Date | Status | Notes |
 | --- | --- | --- | --- | --- | --- |
 | French (`fr`) |  |  |  | Pending |  |
@@ -33,8 +43,8 @@ terms such as sets, reps, volume, plan, and workout.
 - The translation preserves the feature's intended meaning and action.
 - Tone is consistent and appropriate for a fitness application.
 - Regional phrasing is correct for the locale, including `fr` versus `fr_CA`.
-- No English fallback is visible except for intentional exercise, equipment, or
-  anatomical proper names that are not yet catalog-localized.
+- No app-authored English fallback is visible except for an approved proper
+  name or a deliberately deferred source-owned catalog entry.
 - Labels are concise enough for the reviewed layouts and usable at increased
   text scale.
 - Every finding is either fixed and rechecked or explicitly accepted with a

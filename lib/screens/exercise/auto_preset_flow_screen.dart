@@ -582,6 +582,7 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
                         overflow: TextOverflow.ellipsis,
                       ),
                       trailing: IconButton(
+                        tooltip: strings.commonDelete,
                         icon: const Icon(Icons.delete),
                         onPressed: () async {
                           final navigator = Navigator.of(ctx);

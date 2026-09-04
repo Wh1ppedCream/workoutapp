@@ -1,6 +1,6 @@
 # Maintenance Backlog
 
-Last updated: 2026-08-31.
+Last updated: 2026-09-03.
 
 This is Tonos's maintained, prioritized engineering backlog. Historical
 roadmap snapshots live in `docs/archive/roadmaps/`; do not use them to plan new
@@ -11,8 +11,8 @@ work. Cloud-media publishing state and commands live in
 ## Current Status
 
 `updates/backlog` contains the active release-preparation work based on
-`origin/master` at `f14eee0`. The latest reported verification passed analyzer
-and all 306 Flutter tests, plus locked development and production
+`origin/master` at `f14eee0`. The latest recorded full-suite verification
+passed analyzer and all 337 Flutter tests, plus locked development and production
 content-target tests and release APK builds. Experimental navigation is now
 explicitly excluded from release artifacts while remaining available to
 development builds for future product work. Stable
@@ -20,9 +20,15 @@ exercise-catalog identities and standardized safe
 error recovery are implemented, and development media manifest version 10
 contains 154 of 301 exercise thumbnails (51.2%). Production media and the
 diagnostics relay remain intentionally disabled. Production was last audited at
-62 thumbnails and must be re-audited before promotion. Catalog revision 5,
+62 thumbnails and must be re-audited before promotion. Catalog revision 7,
 its concise instruction format, premade-plan, alias-migration, media-source,
 and quality contracts are verified locally with project-owner audit sign-off.
+The latest deterministic localization pass also regenerated the checked-in
+localization sources, confirmed all 1,933 ARB keys and runtime placeholders
+across the supported locales, and passed 31 focused localization/workflow
+tests. Corrected Canadian-French placeholder wording is now synchronized in
+the generated API. Native-speaker review and final signed-device localization
+review remain open.
 
 ## Recently Completed
 
@@ -161,6 +167,13 @@ and quality contracts are verified locally with project-owner audit sign-off.
    the current bundled catalog without losing personal allocation overrides or
    durable active-workout recovery state. Transactional export, policy
    coverage, snapshot completeness, and import behavior are contract-tested.
+24. Deterministic localization coverage is synchronized across the supported
+   ARB resources. Every locale contains the 1,933 canonical keys with matching
+   runtime placeholders; generated Dart output is regenerated and clean, and
+   focused tests cover ARB structure, reviewed-English policy, locale smoke,
+   formatters, record badges, premade-plan localization, and workflow policy.
+   Canadian-French logbook, anatomy, and ranking placeholder defects were
+   corrected. Linguistic approval and final device review remain separate gates.
 
 ## Findings Added By The August 23 Audit
 
@@ -230,21 +243,28 @@ and quality contracts are verified locally with project-owner audit sign-off.
 7. **Complete native-speaker localization review.**
    Qualified reviewers should approve French, Canadian French, Bangla,
    Simplified Chinese, Hindi, and Spanish terminology, pluralization, tone, and
-   regional usage. Record findings and approval in `localization-review.md`.
+   regional usage. Record findings and approval in `localization-review.md` and
+   track every remaining source boundary in
+   `localization-remaining-inventory.md`.
 
 8. **Close localization boundaries outside widget literals.**
     Replace file-picker dialog titles, maintenance result prose, import warning
     strings, domain exceptions, and other platform/plugin-facing text with typed
     codes rendered through ARB messages. Extend contracts to named plugin
     arguments and dynamic result types without exposing internal exceptions.
+    Use `localization-remaining-inventory.md` as the completion checklist.
 
 9. **Localize catalog entities using stable codes.**
-    Exercise identity is stable and form guidance is complete for all supported
-    base locales, and all five supported non-English base locales now have all
-    300 exercise display names. Canadian French inherits the French map. Next,
-    cover equipment, muscles, stretches, and built-in plans with stable codes
-    and English fallback. Do not change history, media slugs, or user-created
-    content.
+    Exercise, equipment, muscle, and built-in-plan display localization now
+    uses stable catalog codes while canonical English values remain the source
+    for matching, persistence, history, and media. The five supported
+    non-English base locales cover all 300 exercise names and guidance, 40
+    equipment labels, 56 muscle labels, 21 direct plan IDs, and four derived
+    one-hour plan rows; Canadian French inherits French content. Remaining
+    stable-code work is stretch and nutrition catalogs, persisted snapshot
+    identities, page-level coverage, and linguistic review. Do not change
+    history, media slugs, or user-created content. Counts and release gates are
+    tracked in `localization-remaining-inventory.md`.
 
 10. **Decide the offline-first media experience.**
     Choose whether release builds accept anatomy fallbacks on a first offline

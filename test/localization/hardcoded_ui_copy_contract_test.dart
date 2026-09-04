@@ -66,6 +66,57 @@ void main() {
       expect(violations.join('\n'), contains('No workouts yet'));
     },
   );
+
+  test('literal contract detects native platform prompt copy', () {
+    final violations = _findUserFacingLiteralViolations(
+      path: 'test_fixture.dart',
+      source: "FilePicker.pickFiles(dialogTitle: 'Select a file');",
+    );
+
+    expect(violations, hasLength(1));
+    expect(violations.single, contains('Select a file'));
+  });
+
+  test('literal contract detects rich-text and menu copy', () {
+    final violations = _findUserFacingLiteralViolations(
+      path: 'test_fixture.dart',
+      source: '''
+      Text.rich(TextSpan(text: 'Rich details'));
+      PopupMenuItem(child: Text('Edit item'));
+      ''',
+    );
+
+    expect(violations, hasLength(2));
+    expect(violations.join('\n'), contains('Rich details'));
+    expect(violations.join('\n'), contains('Edit item'));
+  });
+
+  test('literal contract detects helper-returned user-facing copy', () {
+    final violations = _findUserFacingLiteralViolations(
+      path: 'test_fixture.dart',
+      source: '''
+      String emptyMessage() => 'No workouts yet';
+      String titleText() {
+        return 'Save changes';
+      }
+      String machineCode() => 'session_state';
+      ''',
+    );
+
+    expect(violations, hasLength(2));
+    expect(violations.join('\n'), contains('No workouts yet'));
+    expect(violations.join('\n'), contains('Save changes'));
+  });
+
+  test('literal contract detects hardcoded weekday label lists', () {
+    final violations = _findUserFacingLiteralViolations(
+      path: 'test_fixture.dart',
+      source: "const weekdayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];",
+    );
+
+    expect(violations, hasLength(1));
+    expect(violations.single, contains('S'));
+  });
 }
 
 List<String> _findUserFacingLiteralViolations({
@@ -92,7 +143,11 @@ final _userFacingLiteralPatterns = <RegExp>[
     multiLine: true,
   ),
   RegExp(
-    r'''(?:title|subtitle|label|labelText|emptyMessage|hintText|helperText|tooltip|semanticLabel|message|description|body|primaryLabel|secondaryLabel)\s*:\s*['"](?<copy>[A-Za-z\$][^'"\r\n]*)['"]''',
+    r'''TextSpan\(\s*(?:const\s+)?text:\s*['"](?<copy>[A-Za-z\$][^'"\r\n]*)['"]''',
+    multiLine: true,
+  ),
+  RegExp(
+    r'''(?:title|subtitle|label|labelText|emptyMessage|hintText|helperText|tooltip|semanticLabel|message|description|body|primaryLabel|secondaryLabel|dialogTitle)\s*:\s*['"](?<copy>[A-Za-z\$][^'"\r\n]*)['"]''',
     multiLine: true,
   ),
   RegExp(
@@ -104,11 +159,26 @@ final _userFacingLiteralPatterns = <RegExp>[
     multiLine: true,
   ),
   RegExp(
-    r'''(?:title|subtitle|label|labelText|emptyMessage|hintText|helperText|tooltip|semanticLabel|message|description|body|primaryLabel|secondaryLabel)\s*:\s*[^'"\r\n]*?\?\s*['"](?<copy>[A-Za-z\$][^'"\r\n]*)['"]''',
+    r'''(?:title|subtitle|label|labelText|emptyMessage|hintText|helperText|tooltip|semanticLabel|message|description|body|primaryLabel|secondaryLabel|dialogTitle)\s*:\s*[^'"\r\n]*?\?\s*['"](?<copy>[A-Za-z\$][^'"\r\n]*)['"]''',
     multiLine: true,
   ),
   RegExp(
-    r'''(?:title|subtitle|label|labelText|emptyMessage|hintText|helperText|tooltip|semanticLabel|message|description|body|primaryLabel|secondaryLabel)\s*:\s*[^'"\r\n]*?\?\s*['"][^'"\r\n]*['"]\s*:\s*['"](?<copy>[A-Za-z\$][^'"\r\n]*)['"]''',
+    r'''(?:title|subtitle|label|labelText|emptyMessage|hintText|helperText|tooltip|semanticLabel|message|description|body|primaryLabel|secondaryLabel|dialogTitle)\s*:\s*[^'"\r\n]*?\?\s*['"][^'"\r\n]*['"]\s*:\s*['"](?<copy>[A-Za-z\$][^'"\r\n]*)['"]''',
+    multiLine: true,
+  ),
+  RegExp(
+    r'''String\??\s+_?[A-Za-z]\w*(?:label|title|subtitle|message|description|copy|text|summary|tooltip|empty|error|status|name)\w*\s*(?:\([^)]*\))?\s*=>\s*['"](?<copy>[A-Za-z\$][^'"\r\n]*)['"]''',
+    caseSensitive: false,
+    multiLine: true,
+  ),
+  RegExp(
+    r'''String\??\s+_?[A-Za-z]\w*(?:label|title|subtitle|message|description|copy|text|summary|tooltip|empty|error|status|name)\w*\s*(?:\([^)]*\))?\s*\{[^{}]*?\breturn\s+['"](?<copy>[A-Za-z\$][^'"\r\n]*)['"]''',
+    caseSensitive: false,
+    multiLine: true,
+  ),
+  RegExp(
+    r'''(?:(?:static|final|const)\s+)*(?:List<String>\s+)?_?(?:day|weekday)[A-Za-z_]*Labels\s*=\s*\[(?<copy>[^\]]*)\]''',
+    caseSensitive: false,
     multiLine: true,
   ),
 ];

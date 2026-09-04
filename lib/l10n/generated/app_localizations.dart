@@ -11617,6 +11617,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enter a plausible positive value using a supported unit.'**
   String get healthMeasurementEntryInvalid;
+
+  /// No description provided for @allocationSourceAutomatic.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic calculation'**
+  String get allocationSourceAutomatic;
+
+  /// No description provided for @allocationSourceCreatorDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Tonos default'**
+  String get allocationSourceCreatorDefault;
+
+  /// No description provided for @allocationSourcePersonalOverride.
+  ///
+  /// In en, this message translates to:
+  /// **'Your custom allocation'**
+  String get allocationSourcePersonalOverride;
+
+  /// No description provided for @allocationSourceLegacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Existing allocation'**
+  String get allocationSourceLegacy;
+
+  /// No description provided for @quickActionMeasurement.
+  ///
+  /// In en, this message translates to:
+  /// **'+ Measurement'**
+  String get quickActionMeasurement;
+
+  /// No description provided for @quickActionFood.
+  ///
+  /// In en, this message translates to:
+  /// **'+ Food'**
+  String get quickActionFood;
+
+  /// No description provided for @quickActionWorkout.
+  ///
+  /// In en, this message translates to:
+  /// **'+ Workout'**
+  String get quickActionWorkout;
+
+  /// No description provided for @healthTrendNeedEntries.
+  ///
+  /// In en, this message translates to:
+  /// **'Log entries to build a trend.'**
+  String get healthTrendNeedEntries;
+
+  /// No description provided for @healthTrendNeedOneMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Log one more entry to draw a trend.'**
+  String get healthTrendNeedOneMore;
+
+  /// No description provided for @healthNoChange.
+  ///
+  /// In en, this message translates to:
+  /// **'No change yet'**
+  String get healthNoChange;
+
+  /// No description provided for @healthChangeSinceLast.
+  ///
+  /// In en, this message translates to:
+  /// **'{delta} since last'**
+  String healthChangeSinceLast(String delta);
+
+  /// No description provided for @healthTrendChartSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} trend chart. {count, plural, =0{No entries yet.} =1{1 entry.} other{{count} entries.}} Latest value: {value}.'**
+  String healthTrendChartSemantics(String name, int count, String value);
+
+  /// No description provided for @healthEntryActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Entry actions'**
+  String get healthEntryActions;
+
+  /// No description provided for @premadeOneHourDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'{duration} version of {planName} using the main movements from the full template.'**
+  String premadeOneHourDescription(String duration, String planName);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

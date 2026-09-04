@@ -6313,6 +6313,61 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get healthMeasurementEntryInvalid => 'Saisissez une valeur positive plausible avec une unité prise en charge.';
+
+  @override
+  String get allocationSourceAutomatic => 'Calcul automatique';
+
+  @override
+  String get allocationSourceCreatorDefault => 'Valeur par défaut de Tonos';
+
+  @override
+  String get allocationSourcePersonalOverride => 'Votre répartition personnalisée';
+
+  @override
+  String get allocationSourceLegacy => 'Répartition existante';
+
+  @override
+  String get quickActionMeasurement => '+ Mesure';
+
+  @override
+  String get quickActionFood => '+ Aliments';
+
+  @override
+  String get quickActionWorkout => '+ Entraînement';
+
+  @override
+  String get healthTrendNeedEntries => 'Consignez des entrées pour créer une tendance.';
+
+  @override
+  String get healthTrendNeedOneMore => 'Consignez une entrée de plus pour tracer une tendance.';
+
+  @override
+  String get healthNoChange => 'Aucun changement pour le moment';
+
+  @override
+  String healthChangeSinceLast(String delta) {
+    return '$delta depuis la précédente';
+  }
+
+  @override
+  String healthTrendChartSemantics(String name, int count, String value) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count entrées.',
+      one: '1 entrée.',
+      zero: 'Aucune entrée pour le moment.',
+    );
+    return '$name. Graphique de tendance. $_temp0 Dernière valeur : $value.';
+  }
+
+  @override
+  String get healthEntryActions => 'Actions de l’entrée';
+
+  @override
+  String premadeOneHourDescription(String duration, String planName) {
+    return 'Version de $duration de $planName avec les mouvements principaux du modèle complet.';
+  }
 }
 
 /// The translations for French, as used in Canada (`fr_CA`).
@@ -7504,17 +7559,17 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
 
   @override
   String presetsShowMore(int count) {
-    return 'Afficher plus';
-  }
-
-  @override
-  String presetsShowMoreRemaining(int count, int remaining) {
     return 'Afficher $count de plus';
   }
 
   @override
+  String presetsShowMoreRemaining(int count, int remaining) {
+    return 'Afficher $count de plus ($remaining restants)';
+  }
+
+  @override
   String planDefaultName(int number) {
-    return 'Nouveau plan';
+    return 'Plan $number';
   }
 
   @override
@@ -9044,12 +9099,12 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
 
   @override
   String logbookWeekShort(int week) {
-    return 'Sem.';
+    return 'S$week';
   }
 
   @override
   String logbookMonthWeek(String month, int week) {
-    return 'Mois / semaine';
+    return '$month, semaine $week';
   }
 
   @override
@@ -9570,7 +9625,7 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
 
   @override
   String anatomyTargetExercises(String name) {
-    return 'Exercices ciblés';
+    return 'Exercices : $name';
   }
 
   @override
@@ -9581,7 +9636,7 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
 
   @override
   String anatomyRecommendedSetsUpdated(String name) {
-    return 'Séries recommandées mises à jour.';
+    return 'Séries recommandées mises à jour pour $name.';
   }
 
   @override
@@ -9600,7 +9655,7 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
 
   @override
   String anatomySetUnits(String count) {
-    return 'unités de séries';
+    return '$count séries';
   }
 
   @override
@@ -9611,7 +9666,7 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
 
   @override
   String anatomySetRange(String min, String max) {
-    return 'Plage de séries';
+    return '$min-$max séries';
   }
 
   @override
@@ -9868,7 +9923,7 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
 
   @override
   String rankingsSaved(String target) {
-    return 'Classements enregistrés.';
+    return 'Classements de $target enregistrés.';
   }
 
   @override
@@ -9876,12 +9931,12 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
 
   @override
   String rankingsTitle(String target) {
-    return 'Classements';
+    return 'Classements des $target';
   }
 
   @override
   String rankingsHero(String target) {
-    return 'Classez vos priorités afin que Tonos puisse mieux répartir le travail dans les entraînements générés.';
+    return 'Faites glisser les $target dans l’ordre que les entraînements générés devraient privilégier.';
   }
 
   @override
@@ -9892,7 +9947,7 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
 
   @override
   String rankingsLoadError(String target, String error) {
-    return 'Impossible de charger les classements : $error';
+    return 'Impossible de charger $target : $error';
   }
 
   @override
@@ -12618,4 +12673,59 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
 
   @override
   String get healthMeasurementEntryInvalid => 'Saisissez une valeur positive plausible avec une unité prise en charge.';
+
+  @override
+  String get allocationSourceAutomatic => 'Calcul automatique';
+
+  @override
+  String get allocationSourceCreatorDefault => 'Valeur par défaut de Tonos';
+
+  @override
+  String get allocationSourcePersonalOverride => 'Votre répartition personnalisée';
+
+  @override
+  String get allocationSourceLegacy => 'Répartition existante';
+
+  @override
+  String get quickActionMeasurement => '+ Mesure';
+
+  @override
+  String get quickActionFood => '+ Aliments';
+
+  @override
+  String get quickActionWorkout => '+ Entraînement';
+
+  @override
+  String get healthTrendNeedEntries => 'Ajoutez des entrées pour créer une tendance.';
+
+  @override
+  String get healthTrendNeedOneMore => 'Ajoutez une entrée de plus pour tracer une tendance.';
+
+  @override
+  String get healthNoChange => 'Aucun changement pour le moment';
+
+  @override
+  String healthChangeSinceLast(String delta) {
+    return '$delta depuis la précédente';
+  }
+
+  @override
+  String healthTrendChartSemantics(String name, int count, String value) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count entrées.',
+      one: '1 entrée.',
+      zero: 'Aucune entrée pour le moment.',
+    );
+    return '$name. Graphique de tendance. $_temp0 Dernière valeur : $value.';
+  }
+
+  @override
+  String get healthEntryActions => 'Actions de l’entrée';
+
+  @override
+  String premadeOneHourDescription(String duration, String planName) {
+    return 'Version de $duration de $planName avec les mouvements principaux du modèle complet.';
+  }
 }

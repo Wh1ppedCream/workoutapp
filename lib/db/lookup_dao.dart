@@ -15,7 +15,11 @@ class LookupDao {
   static String _nameFromRow(Map<String, Object?> row) => row['name'] as String;
 
   static Equipment _equipmentFromRow(Map<String, Object?> row) {
-    return Equipment(row['id'] as int, row['name'] as String);
+    return Equipment(
+      row['id'] as int,
+      row['name'] as String,
+      row['catalog_id'] as String?,
+    );
   }
 
   static BodyPart _bodyPartFromRow(Map<String, Object?> row) {
@@ -23,7 +27,11 @@ class LookupDao {
   }
 
   static Muscle _muscleFromRow(Map<String, Object?> row) {
-    return Muscle(id: row['id'] as int, name: row['name'] as String);
+    return Muscle(
+      id: row['id'] as int,
+      name: row['name'] as String,
+      catalogId: row['catalog_id'] as String?,
+    );
   }
 
   static Future<List<String>> _getAllNames(Database db, String table) async {
@@ -218,7 +226,7 @@ class LookupDao {
             ? await db.query('stretch_definitions', orderBy: 'name')
             : await db.rawQuery(
               '''
-            SELECT sd.id, sd.name, sd.description
+            SELECT sd.id, sd.catalog_id, sd.name, sd.description
               FROM stretch_definitions sd
               JOIN stretch_bodypart sb ON sb.stretch_id = sd.id
              WHERE sb.bodypart_id = ?
@@ -253,6 +261,7 @@ class LookupDao {
       final id = row['id'] as int;
       return StretchDefinition(
         id: id,
+        catalogId: row['catalog_id'] as String?,
         name: row['name'] as String,
         description: (row['description'] as String?) ?? '',
         bodyParts: bodyPartsByStretchId[id] ?? const <BodyPart>[],

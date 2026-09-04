@@ -23,6 +23,13 @@ Bangla, Simplified Chinese, and Hindi now have complete name coverage. Canadian
 French inherits the French names unless a reviewed regional override is added.
 Unsupported locales and user-created exercises retain their stored names.
 
+Stable-code localization for other shipped catalog entities is maintained
+separately in `assets/catalog_entity_localizations.json` and
+`assets/premade_plan_localizations.json`. The current implementation covers 40
+equipment labels, 56 muscle labels, 21 direct built-in plan IDs, and four
+derived one-hour plan rows in the same five base locales. Stretch and nutrition
+catalog localization remain deferred until those product surfaces are ready.
+
 Use `fr_CA` only for Canadian French differences; the resolver falls back from
 a regional locale to its base language, then to the original English catalog
 guidance. Do not add translations for user-created exercises, and do not use
@@ -31,9 +38,11 @@ sync with each locale's entries; its contract catches drift.
 
 ## Review And Release
 
-Guidance may be drafted during development, but a fluent speaker and an
-exercise-content reviewer must approve every locale batch before release. A
-missing entry deliberately shows the stored English text; it must not show a
-partial translation. Record completed reviews in `localization-review.md`, and
-run the catalog localization contract whenever entries are added, renamed, or
-retired.
+As of 2026-09-03, the deterministic catalog-localization contracts pass for
+all 300 exercise IDs and all five non-English base locales, including runtime
+placeholder and fallback checks. Guidance may be drafted during development,
+but a fluent speaker and an exercise-content reviewer must approve every
+locale batch before release. A missing entry deliberately shows the stored
+English text; it must not show a partial translation. Record completed reviews
+in `localization-review.md`, and run the catalog localization contract whenever
+entries are added, renamed, or retired.

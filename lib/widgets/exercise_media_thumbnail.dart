@@ -239,13 +239,17 @@ class _ExerciseMediaThumbnailState extends State<ExerciseMediaThumbnail> {
 
   Widget _buildLoadingOverlay(BuildContext context) {
     final theme = Theme.of(context);
-    return Align(
-      alignment: Alignment.bottomRight,
-      child: SizedBox.square(
-        dimension: widget.size * 0.24,
-        child: CircularProgressIndicator(
-          strokeWidth: 1.6,
-          color: theme.colorScheme.primary.withValues(alpha: 0.75),
+    return Semantics(
+      container: true,
+      label: AppLocalizations.of(context).diagnosticsLoading,
+      child: Align(
+        alignment: Alignment.bottomRight,
+        child: SizedBox.square(
+          dimension: widget.size * 0.24,
+          child: CircularProgressIndicator(
+            strokeWidth: 1.6,
+            color: theme.colorScheme.primary.withValues(alpha: 0.75),
+          ),
         ),
       ),
     );
@@ -282,20 +286,24 @@ class _ExerciseMediaThumbnailState extends State<ExerciseMediaThumbnail> {
 
   Widget _buildWifiOnlyOverlay(BuildContext context) {
     final theme = Theme.of(context);
-    return Align(
-      alignment: Alignment.bottomRight,
-      child: Container(
-        width: widget.size * 0.3,
-        height: widget.size * 0.3,
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface.withValues(alpha: 0.82),
-          shape: BoxShape.circle,
-          border: Border.all(color: theme.colorScheme.outlineVariant),
-        ),
-        child: Icon(
-          Icons.wifi,
-          size: widget.size * 0.18,
-          color: theme.colorScheme.primary,
+    return Semantics(
+      container: true,
+      label: AppLocalizations.of(context).databaseWifiOnly,
+      child: Align(
+        alignment: Alignment.bottomRight,
+        child: Container(
+          width: widget.size * 0.3,
+          height: widget.size * 0.3,
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface.withValues(alpha: 0.82),
+            shape: BoxShape.circle,
+            border: Border.all(color: theme.colorScheme.outlineVariant),
+          ),
+          child: Icon(
+            Icons.wifi,
+            size: widget.size * 0.18,
+            color: theme.colorScheme.primary,
+          ),
         ),
       ),
     );

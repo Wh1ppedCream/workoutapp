@@ -167,6 +167,7 @@ class Schema {
     await migrateV59(db);
     await migrateV60(db);
     await migrateV61(db);
+    await migrateV62(db);
   }
 
   /// Handler for onUpgrade callback.
@@ -235,6 +236,7 @@ class Schema {
     if (oldVersion < 59) await migrateV59(db);
     if (oldVersion < 60) await migrateV60(db);
     if (oldVersion < 61) await migrateV61(db);
+    if (oldVersion < 62) await migrateV62(db);
   }
 
   /// Migration to version 3: adds rating, equipment/muscle tables.
@@ -3448,6 +3450,31 @@ WHERE source_id IS NULL
           CREATE INDEX IF NOT EXISTS idx_measurements_definition_day
           ON measurements(def_id, measured_on, measured_at_ms, id)
         ''');
+      }
+    });
+  }
+
+  /// v62 - gives shipped lookup entities durable catalog identities.
+  ///
+  /// Names remain canonical database values for matching and legacy data. A
+  /// null ID deliberately identifies user-created lookup rows.
+  static Future<void> migrateV62(Database db) async {
+    await db.transaction((txn) async {
+      for (final table in const [
+        'equipment',
+        'muscles',
+        'stretch_definitions',
+      ]) {
+        if (!await _schemaTableExists(txn, table)) continue;
+        final columns = await _schemaColumnNames(txn, table);
+        if (!columns.contains('catalog_id')) {
+          await txn.execute('ALTER TABLE $table ADD COLUMN catalog_id TEXT;');
+        }
+        await txn.execute(
+          'CREATE UNIQUE INDEX IF NOT EXISTS '
+          'idx_${table}_catalog_id ON $table(catalog_id) '
+          'WHERE catalog_id IS NOT NULL',
+        );
       }
     });
   }

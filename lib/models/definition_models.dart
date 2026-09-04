@@ -283,9 +283,10 @@ class ExerciseMediaItem {
 class Equipment {
   final int id;
   final String name;
+  final String? catalogId;
 
   /// Creates an [Equipment] entry.
-  Equipment(this.id, this.name);
+  Equipment(this.id, this.name, [this.catalogId]);
 }
 
 /// Lookup table entry for body parts.
@@ -301,9 +302,10 @@ class BodyPart {
 class Muscle {
   final int id;
   final String name;
+  final String? catalogId;
 
   /// Creates a [Muscle] entry.
-  Muscle({required this.id, required this.name});
+  Muscle({required this.id, required this.name, this.catalogId});
 }
 
 /// Associates a [Muscle] with a specified [rank] (1 through 7).

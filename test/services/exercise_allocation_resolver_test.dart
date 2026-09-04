@@ -123,9 +123,11 @@ Future<void> _createSchema(Database db) async {
     )
   ''');
   await db.execute(
-    'CREATE TABLE equipment (id INTEGER PRIMARY KEY, name TEXT)',
+    'CREATE TABLE equipment (id INTEGER PRIMARY KEY, name TEXT, catalog_id TEXT)',
   );
-  await db.execute('CREATE TABLE muscles (id INTEGER PRIMARY KEY, name TEXT)');
+  await db.execute(
+    'CREATE TABLE muscles (id INTEGER PRIMARY KEY, name TEXT, catalog_id TEXT)',
+  );
   await db.execute('CREATE TABLE bodypart (id INTEGER PRIMARY KEY, name TEXT)');
   await db.execute('''
     CREATE TABLE exercise_muscle (

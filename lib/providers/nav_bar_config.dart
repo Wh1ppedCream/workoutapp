@@ -29,6 +29,21 @@ extension TabItemExtension on TabItem {
     _ => false,
   };
 
+  /// Stable persisted identifier. Display text must never be used for storage.
+  String get storageKey => switch (this) {
+    TabItem.train => 'train',
+    TabItem.train2 => 'train2',
+    TabItem.catalog => 'catalog',
+    TabItem.history => 'history',
+    TabItem.measurementsTrends => 'progress',
+    TabItem.profile => 'profile',
+    TabItem.dashboard => 'dashboard',
+    TabItem.nutrition => 'nutrition',
+    TabItem.nutritionLog => 'nutrition_log',
+    TabItem.combinedHistory => 'combined_history',
+    TabItem.formAndPosing => 'form_and_posing',
+  };
+
   /// Full page titles and settings-page labels.
   String get title {
     switch (this) {
@@ -224,7 +239,11 @@ class NavBarConfig extends ChangeNotifier {
 
   TabItem? _tabFromStorage(String value) {
     for (final tab in TabItem.values) {
-      if (tab.toString() == value) return tab;
+      if (tab.storageKey == value ||
+          tab.name == value ||
+          tab.toString() == value) {
+        return tab;
+      }
     }
     return null;
   }
@@ -243,11 +262,11 @@ class NavBarConfig extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList(
       _keyOrder,
-      _order.map((e) => e.toString()).toList(),
+      _order.map((e) => e.storageKey).toList(),
     );
     await prefs.setStringList(
       _keyEnabled,
-      _enabled.map((e) => e.toString()).toList(),
+      _enabled.map((e) => e.storageKey).toList(),
     );
   }
 

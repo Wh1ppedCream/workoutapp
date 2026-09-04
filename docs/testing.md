@@ -16,6 +16,12 @@ screen name:
 - Cloud-content boundary tests also cover HTTPS/redirect policy, integrity
   metadata, corrupt and interrupted streams, orphan pruning, and LRU limits.
 - `test/db` runs selected DAO contracts against in-memory SQLite.
+- `test/db/gym_profile_equipment_query_test.dart` verifies that profile
+  equipment hydration retains the stable catalog ID needed by localized UI.
+- `test/db/definition_dao_equipment_hydration_test.dart` verifies that full
+  and by-ID detailed definition loads retain stable equipment and muscle IDs.
+- `test/widgets/localized_catalog_entity_name_test.dart` verifies built-in
+  muscle translation, custom-name fallback, and locale switching.
 - `test/widgets` smoke-tests reusable user-interface components and their
   accessibility actions. `visual_layout_contract_test.dart` exercises the
   release layout matrix across representative phone/tablet, locale, and
@@ -26,9 +32,29 @@ screen name:
   user-facing English literals in active screens and widgets. Deliberately
   deferred nutrition, cardio/stretch, and placeholder surfaces are narrowly
   excluded until those product areas are rebuilt.
+- `test/localization/reviewed_english_values_contract_test.dart` keeps the
+  reviewed-identical-English policy synchronized with every ARB locale and
+  rejects newly copied English values without an explicit review reason.
+- `test/localization/arb_structure_contract_test.dart` keeps message keys,
+  locale tags, non-empty values, and runtime placeholders aligned across every
+  ARB file.
+- `test/utils/localized_formatters_test.dart` verifies locale-aware calendar
+  periods, dates, times, numbers, percentages, compact values, and the
+  Western-digit Bangla policy.
+- `test/widgets/workout_record_badges_test.dart` verifies visible record-badge
+  labels refresh when an already-open widget changes locale.
+- `test/utils/weight_unit_formatter_locale_test.dart` verifies localized
+  display separators without changing canonical input formatting.
 - `test/localization/safe_error_handling_contract_test.dart` rejects raw
   exception interpolation, `toString()` rendering, and raw load/save error
   state in active UI code.
+- `test/premade_plan_exercise_catalog_contract_test.dart` verifies every
+  built-in premade-plan exercise and equipment row resolves to the current
+  catalog by stable identity, while
+  `test/localization/premade_plan_arb_contract_test.dart` protects the
+  parameterized derived-plan message in every supported locale.
+- `test/services/premade_plan_localizer_test.dart` verifies direct plan-ID
+  parity, fallback behavior, and localized one-hour plan descriptions.
 - `integration_test` runs device-level core flows against an isolated database.
   Its core suite drives plan creation, workout start/resume/exit/completion,
   record presentation, Save as plan, profile editing, and database
@@ -46,6 +72,17 @@ Run a focused test file while developing a feature:
 ```powershell
 flutter test test\services\flow_executor_test.dart
 ```
+
+## Latest deterministic localization verification
+
+On 2026-09-03, the recorded localization verification regenerated the ARB
+sources, formatted the generated Dart output, and passed the targeted analyzer
+run. The focused Flutter run covered ARB structure, reviewed-identical-English
+policy, localization smoke, premade-plan localization, locale-aware
+formatters, record badges, and workflow policy: `00:09 +31: All tests passed!`.
+`git diff --check` reported no content errors; its only output was the expected
+LF-to-CRLF working-tree warning. This proves deterministic resource and code
+contracts, not native-speaker approval or the final physical-device review.
 
 ## Experimental navigation
 
@@ -239,7 +276,11 @@ stretch, the alternate Train hub, combined history, and form/posing.
 Automated checks and visual QA do not constitute linguistic approval. Follow
 the native-speaker scope, acceptance criteria, and review log in
 `docs/localization-review.md` before describing a non-English locale as
-release-ready.
+release-ready. The source-by-source remaining work and release completion gate
+live in `docs/localization-remaining-inventory.md`. The latest automated pass
+also corrected and contract-checked Canadian-French placeholders in logbook,
+anatomy, and ranking messages; those corrections still require linguistic
+review.
 
 ## Release diagnostics verification
 

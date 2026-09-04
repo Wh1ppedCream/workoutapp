@@ -67,6 +67,49 @@ void main() {
     expect(resolved, 'Press de banca con barra');
   });
 
+  test(
+    'resolves a localized name without constructing a full definition',
+    () async {
+      final localizer = localizerWith({
+        'version': 1,
+        'names': {
+          'es': {'tonos.exercise.0007': 'Press de banca con barra'},
+        },
+        'locales': {
+          'es': {'tonos.exercise.0007': spanishContent},
+        },
+      });
+
+      final resolved = await localizer.resolveNameForCatalogId(
+        catalogId: 'tonos.exercise.0007',
+        fallbackName: 'Bench Press - Barbell',
+        locale: const Locale('es'),
+      );
+
+      expect(resolved, 'Press de banca con barra');
+    },
+  );
+
+  test('keeps the supplied fallback for an unknown catalog name', () async {
+    final localizer = localizerWith({
+      'version': 1,
+      'names': {
+        'es': {'tonos.exercise.0007': 'Press de banca con barra'},
+      },
+      'locales': {
+        'es': {'tonos.exercise.0007': spanishContent},
+      },
+    });
+
+    final resolved = await localizer.resolveNameForCatalogId(
+      catalogId: 'tonos.exercise.0099',
+      fallbackName: 'Custom exercise',
+      locale: const Locale('es'),
+    );
+
+    expect(resolved, 'Custom exercise');
+  });
+
   test('uses a base-language translation for a regional locale', () async {
     final localizer = localizerWith({
       'version': 1,

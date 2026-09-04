@@ -11,9 +11,11 @@ import '../../models/content_models.dart';
 import '../../models/gym_models.dart';
 import '../../providers/selected_profile.dart';
 import '../../repositories/app_repository.dart';
+import '../../services/catalog_entity_localizer.dart';
 import '../../services/tutorial_state_store.dart';
 import '../../utils/tutorial_launcher.dart';
 import '../../widgets/guided_tutorial_overlay.dart';
+import '../../widgets/localized_catalog_entity_name.dart';
 import '../../widgets/shared_entity_media_thumbnail.dart';
 
 /// Profile edits returned to onboarding before the real profile is created.
@@ -116,7 +118,11 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
 
     final equipment =
         all.map((item) {
-          return _EquipmentOption(id: item.id, name: item.name);
+          return _EquipmentOption(
+            id: item.id,
+            name: item.name,
+            catalogId: item.catalogId,
+          );
         }).toList();
 
     if (!mounted) return;
@@ -842,8 +848,11 @@ class _EquipmentTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    item.name,
+                  LocalizedCatalogEntityName(
+                    entity: CatalogEntityDisplayName(
+                      catalogId: item.catalogId,
+                      canonicalName: item.name,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodyLarge?.copyWith(
@@ -954,8 +963,13 @@ class _EmptyEquipmentSearch extends StatelessWidget {
 class _EquipmentOption {
   final int id;
   final String name;
+  final String? catalogId;
 
-  const _EquipmentOption({required this.id, required this.name});
+  const _EquipmentOption({
+    required this.id,
+    required this.name,
+    this.catalogId,
+  });
 }
 
 enum _UnsavedGymProfileAction { keepEditing, discard, save }

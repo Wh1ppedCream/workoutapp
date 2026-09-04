@@ -15,6 +15,7 @@ import '../../../repositories/app_repository.dart';
 import '../../../services/content_environment_policy.dart';
 import '../../../services/content_environment_preferences.dart';
 import '../../../services/tutorial_state_store.dart';
+import '../../../utils/localized_formatters.dart';
 import '../../../utils/tutorial_launcher.dart';
 import '../../../utils/app_test_keys.dart';
 import '../../../widgets/guided_tutorial_overlay.dart';
@@ -206,7 +207,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
       type: FileType.custom,
       allowedExtensions: const ['json'],
       withData: true,
-      dialogTitle: 'Select a database export file',
+      dialogTitle: _strings.databaseImportBackup,
     );
     if (result == null || result.files.isEmpty) return null;
 
@@ -238,7 +239,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
       final location = await _saveJsonFileWithPicker(
         filename: 'fitness_tracker_database_export.json',
         contents: jsonStr,
-        dialogTitle: 'Save database export',
+        dialogTitle: _strings.databaseExportBackup,
       );
       if (location == null) return;
       await _showSavedFileDialog(
@@ -274,7 +275,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
       final backupLocation = await _saveJsonFileWithPicker(
         filename: 'fitness_tracker_database_backup_before_import.json',
         contents: await _repo.exportDatabase(),
-        dialogTitle: 'Save backup before import',
+        dialogTitle: _strings.databaseExportBackup,
       );
       if (backupLocation == null) {
         if (!mounted) return;
@@ -417,7 +418,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
     }
   }
 
-  String _formatBytes(int bytes) {
+  String _formatBytes(int bytes, Locale locale) {
     const units = ['B', 'KB', 'MB', 'GB'];
     var size = bytes.toDouble();
     var unit = 0;
@@ -426,14 +427,20 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
       unit++;
     }
     final decimals = unit == 0 || size >= 100 ? 0 : 1;
-    return '${size.toStringAsFixed(decimals)} ${units[unit]}';
+    return '${LocalizedFormatters.number(
+      size,
+      locale,
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    )} ${units[unit]}';
   }
 
   String _formatDateTime(DateTime? value) {
     if (value == null) return _strings.databaseNever;
-    final local = value.toLocal();
-    return '${local.year}-${_twoDigits(local.month)}-${_twoDigits(local.day)} '
-        '${_twoDigits(local.hour)}:${_twoDigits(local.minute)}';
+    return LocalizedFormatters.dateTime(
+      value.toLocal(),
+      Localizations.localeOf(context),
+    );
   }
 
   Future<String> _loadCustomManifestUrl() async {
@@ -836,7 +843,10 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
               title: strings.databaseDownloadedMediaCache,
               subtitle: strings.databaseCacheUsage(
                 usage.fileCount,
-                _formatBytes(usage.totalBytes),
+                _formatBytes(
+                  usage.totalBytes,
+                  Localizations.localeOf(context),
+                ),
               ),
               trailing: const SizedBox.shrink(),
             );
@@ -1027,7 +1037,10 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
 
             return _DatabaseHealthCard(
               health: snapshot.data!,
-              formatBytes: _formatBytes,
+              formatBytes: (bytes) => _formatBytes(
+                bytes,
+                Localizations.localeOf(context),
+              ),
             );
           },
         ),

@@ -1,4 +1,8 @@
 import '../models/unit_preference.dart';
+import 'package:flutter/widgets.dart';
+import 'package:intl/intl.dart';
+
+import 'localized_digit_formatter.dart';
 
 class WeightUnitFormatter {
   static const double kgPerLb = 0.45359237;
@@ -26,9 +30,14 @@ class WeightUnitFormatter {
     double pounds,
     WeightUnit unit, {
     bool includeUnit = true,
+    Locale? locale,
   }) {
     final value = _displayWeightValue(pounds, unit);
-    final text = _formatNumber(value, unit == WeightUnit.kilograms ? 1 : 0);
+    final text = _formatNumber(
+      value,
+      unit == WeightUnit.kilograms ? 1 : 0,
+      locale,
+    );
     return includeUnit ? '$text ${unit.shortLabel}' : text;
   }
 
@@ -53,36 +62,57 @@ class WeightUnitFormatter {
     return (value / increment).roundToDouble() * increment;
   }
 
-  static String formatVolume(double pounds, WeightUnit unit) {
+  static String formatVolume(double pounds, WeightUnit unit, {Locale? locale}) {
     final value = fromPounds(pounds, unit);
     final abs = value.abs();
     if (abs >= 1000000) {
-      return '${(value / 1000000).toStringAsFixed(1)}M ${unit.shortLabel}';
+      return '${_formatNumber(value / 1000000, 1, locale, true)}M ${unit.shortLabel}';
     }
     if (abs >= 1000) {
       final digits = abs >= 10000 ? 0 : 1;
-      return '${(value / 1000).toStringAsFixed(digits)}k ${unit.shortLabel}';
+      return '${_formatNumber(value / 1000, digits, locale, true)}k ${unit.shortLabel}';
     }
-    return '${value.round()} ${unit.shortLabel}';
+    return '${_formatNumber(value.roundToDouble(), 0, locale)} ${unit.shortLabel}';
   }
 
-  static String formatCompactVolumeValue(double pounds, WeightUnit unit) {
+  static String formatCompactVolumeValue(
+    double pounds,
+    WeightUnit unit, {
+    Locale? locale,
+  }) {
     final value = fromPounds(pounds, unit);
     final abs = value.abs();
     if (abs >= 1000000) {
-      return '${(value / 1000000).toStringAsFixed(1)}M';
+      return '${_formatNumber(value / 1000000, 1, locale, true)}M';
     }
     if (abs >= 1000) {
       final digits = abs >= 10000 ? 0 : 1;
-      return '${(value / 1000).toStringAsFixed(digits)}k';
+      return '${_formatNumber(value / 1000, digits, locale, true)}k';
     }
-    return value.round().toString();
+    return _formatNumber(value.roundToDouble(), 0, locale);
   }
 
-  static String _formatNumber(double value, int maxDecimals) {
-    if (maxDecimals == 0 || value == value.roundToDouble()) {
-      return value.round().toString();
+  static String _formatNumber(
+    double value,
+    int maxDecimals, [
+    Locale? locale,
+    bool forceFractionDigits = false,
+  ]) {
+    if (!forceFractionDigits &&
+        (maxDecimals == 0 || value == value.roundToDouble())) {
+      if (locale == null) return value.round().toString();
+      return preserveWesternDigits(
+        NumberFormat.decimalPattern(
+          locale.toLanguageTag(),
+        ).format(value.round()),
+        locale,
+      );
     }
-    return value.toStringAsFixed(maxDecimals);
+    if (locale == null) return value.toStringAsFixed(maxDecimals);
+    final formatter =
+        NumberFormat.decimalPattern(locale.toLanguageTag())
+          ..minimumFractionDigits = maxDecimals
+          ..maximumFractionDigits = maxDecimals;
+    return preserveWesternDigits(formatter.format(value), locale);
   }
 }

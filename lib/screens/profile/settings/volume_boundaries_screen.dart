@@ -7,7 +7,9 @@ import '../../../l10n/generated/app_localizations.dart';
 import '../../../l10n/safe_failure_localizations.dart';
 import '../../../models/models.dart';
 import '../../../repositories/app_repository.dart';
+import '../../../services/catalog_entity_localizer.dart';
 import '../../../services/safe_failure.dart';
+import '../../../widgets/localized_catalog_entity_name.dart';
 import '../../../widgets/settings_tiles.dart';
 import '../../../widgets/safe_error_view.dart';
 
@@ -323,6 +325,15 @@ class _VolumeBoundariesScreenState extends State<VolumeBoundariesScreen>
           selected: _selectedMuscle,
           items: _muscles,
           itemName: (muscle) => muscle.name,
+          itemLabelFor:
+              (context, muscle) => LocalizedCatalogEntityName(
+                entity: CatalogEntityDisplayName(
+                  catalogId: muscle.catalogId,
+                  canonicalName: muscle.name,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
           onChanged: (muscle) {
             if (muscle == null) return;
             setState(() => _selectedMuscle = muscle);
@@ -345,6 +356,7 @@ class _BoundaryTab<T> extends StatelessWidget {
   final T? selected;
   final List<T> items;
   final String Function(T item) itemName;
+  final Widget Function(BuildContext context, T item)? itemLabelFor;
   final ValueChanged<T?> onChanged;
   final List<TextEditingController> controllers;
   final bool isLoading;
@@ -358,6 +370,7 @@ class _BoundaryTab<T> extends StatelessWidget {
     required this.selected,
     required this.items,
     required this.itemName,
+    this.itemLabelFor,
     required this.onChanged,
     required this.controllers,
     required this.isLoading,
@@ -399,7 +412,9 @@ class _BoundaryTab<T> extends StatelessWidget {
                         .map(
                           (item) => DropdownMenuItem(
                             value: item,
-                            child: Text(itemName(item)),
+                            child:
+                                itemLabelFor?.call(context, item) ??
+                                Text(itemName(item)),
                           ),
                         )
                         .toList(),

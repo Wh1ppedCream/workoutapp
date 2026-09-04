@@ -6288,4 +6288,59 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get healthMeasurementEntryInvalid => 'समर्थित इकाई के साथ एक उचित धनात्मक मान दर्ज करें।';
+
+  @override
+  String get allocationSourceAutomatic => 'स्वचालित गणना';
+
+  @override
+  String get allocationSourceCreatorDefault => 'Tonos डिफ़ॉल्ट';
+
+  @override
+  String get allocationSourcePersonalOverride => 'आपका कस्टम आवंटन';
+
+  @override
+  String get allocationSourceLegacy => 'मौजूदा आवंटन';
+
+  @override
+  String get quickActionMeasurement => '+ माप';
+
+  @override
+  String get quickActionFood => '+ भोजन';
+
+  @override
+  String get quickActionWorkout => '+ वर्कआउट';
+
+  @override
+  String get healthTrendNeedEntries => 'रुझान बनाने के लिए प्रविष्टियाँ लॉग करें।';
+
+  @override
+  String get healthTrendNeedOneMore => 'रुझान दिखाने के लिए एक और प्रविष्टि लॉग करें।';
+
+  @override
+  String get healthNoChange => 'अभी कोई बदलाव नहीं';
+
+  @override
+  String healthChangeSinceLast(String delta) {
+    return '$delta पिछली प्रविष्टि से';
+  }
+
+  @override
+  String healthTrendChartSemantics(String name, int count, String value) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count प्रविष्टियाँ।',
+      one: '1 प्रविष्टि।',
+      zero: 'अभी कोई प्रविष्टि नहीं।',
+    );
+    return '$name रुझान चार्ट। $_temp0 नवीनतम मान: $value।';
+  }
+
+  @override
+  String get healthEntryActions => 'प्रविष्टि कार्रवाइयाँ';
+
+  @override
+  String premadeOneHourDescription(String duration, String planName) {
+    return 'पूरे टेम्पलेट की मुख्य एक्सरसाइज़ वाला $planName का $duration संस्करण।';
+  }
 }

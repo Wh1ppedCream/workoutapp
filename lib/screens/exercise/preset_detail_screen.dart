@@ -537,6 +537,7 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                   key: _editTutorialKey,
                   child: IconButton(
                     key: AppTestKeys.planEdit,
+                    tooltip: strings.commonEdit,
                     icon: Icon(
                       Icons.edit,
                       color: _isEditing ? Colors.green : Colors.grey,

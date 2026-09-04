@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 
 import '../../../models/models.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../l10n/app_localization_extensions.dart';
 import '../../../providers/locale_preference_provider.dart';
 import '../../../providers/onboarding_provider.dart';
 import '../../../providers/theme_provider.dart';
@@ -207,10 +208,7 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
   }
 
   String _weightUnitLabel(AppLocalizations strings, WeightUnit unit) {
-    if (!strings.localeName.startsWith('es')) return unit.label;
-    return unit == WeightUnit.pounds
-        ? strings.onboardingPounds
-        : strings.onboardingKilograms;
+    return unit.localizedLabel(strings);
   }
 
   String _languageLabel(

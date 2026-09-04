@@ -127,6 +127,7 @@ class _SessionScreenState extends State<SessionScreen> {
         leading: Builder(
           builder:
               (innerCtx) => IconButton(
+                tooltip: strings.sessionTimerTitle,
                 icon: const Icon(Icons.menu),
                 onPressed: () => Scaffold.of(innerCtx).openDrawer(),
               ),

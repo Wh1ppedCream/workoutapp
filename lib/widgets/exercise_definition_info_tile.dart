@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/generated/app_localizations.dart';
 import '../models/models.dart';
 import 'exercise_detail_sheet.dart';
 import 'localized_exercise_name.dart';
@@ -16,6 +17,7 @@ class ExerciseDefinitionInfoTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: ListTile(
@@ -28,6 +30,7 @@ class ExerciseDefinitionInfoTile extends StatelessWidget {
         ),
         subtitle: subtitle,
         trailing: IconButton(
+          tooltip: strings.catalogOpenExerciseInfo,
           icon: const Icon(Icons.info_outline),
           onPressed: () => _showDetails(context),
         ),

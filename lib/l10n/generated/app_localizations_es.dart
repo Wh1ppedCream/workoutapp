@@ -6313,4 +6313,59 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get healthMeasurementEntryInvalid => 'Introduce un valor positivo razonable con una unidad compatible.';
+
+  @override
+  String get allocationSourceAutomatic => 'Cálculo automático';
+
+  @override
+  String get allocationSourceCreatorDefault => 'Predeterminado de Tonos';
+
+  @override
+  String get allocationSourcePersonalOverride => 'Tu asignación personalizada';
+
+  @override
+  String get allocationSourceLegacy => 'Asignación existente';
+
+  @override
+  String get quickActionMeasurement => '+ Medición';
+
+  @override
+  String get quickActionFood => '+ Comida';
+
+  @override
+  String get quickActionWorkout => '+ Entrenamiento';
+
+  @override
+  String get healthTrendNeedEntries => 'Registra entradas para crear una tendencia.';
+
+  @override
+  String get healthTrendNeedOneMore => 'Registra una entrada más para dibujar una tendencia.';
+
+  @override
+  String get healthNoChange => 'Sin cambios todavía';
+
+  @override
+  String healthChangeSinceLast(String delta) {
+    return '$delta desde la última';
+  }
+
+  @override
+  String healthTrendChartSemantics(String name, int count, String value) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count entradas.',
+      one: '1 entrada.',
+      zero: 'Aún no hay entradas.',
+    );
+    return '$name. Gráfico de tendencia. $_temp0 Valor más reciente: $value.';
+  }
+
+  @override
+  String get healthEntryActions => 'Acciones de la entrada';
+
+  @override
+  String premadeOneHourDescription(String duration, String planName) {
+    return 'Versión de $duration de $planName con los movimientos principales de la plantilla completa.';
+  }
 }

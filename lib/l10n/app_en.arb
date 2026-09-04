@@ -2532,5 +2532,37 @@
   "speedDialLogMeasurement": "Log measurement",
   "healthTapToLog": "Tap + to log",
   "healthMetricInvalid": "Use a unique metric name and a short unit without spaces.",
-  "healthMeasurementEntryInvalid": "Enter a plausible positive value using a supported unit."
+  "healthMeasurementEntryInvalid": "Enter a plausible positive value using a supported unit.",
+  "allocationSourceAutomatic": "Automatic calculation",
+  "allocationSourceCreatorDefault": "Tonos default",
+  "allocationSourcePersonalOverride": "Your custom allocation",
+  "allocationSourceLegacy": "Existing allocation",
+  "quickActionMeasurement": "+ Measurement",
+  "quickActionFood": "+ Food",
+  "quickActionWorkout": "+ Workout",
+  "healthTrendNeedEntries": "Log entries to build a trend.",
+  "healthTrendNeedOneMore": "Log one more entry to draw a trend.",
+  "healthNoChange": "No change yet",
+  "healthChangeSinceLast": "{delta} since last",
+  "@healthChangeSinceLast": {
+    "placeholders": {
+      "delta": {"type": "String"}
+    }
+  },
+  "healthTrendChartSemantics": "{name} trend chart. {count, plural, =0{No entries yet.} =1{1 entry.} other{{count} entries.}} Latest value: {value}.",
+  "@healthTrendChartSemantics": {
+    "placeholders": {
+      "name": {"type": "String"},
+      "count": {"type": "int"},
+      "value": {"type": "String"}
+    }
+  },
+  "healthEntryActions": "Entry actions",
+  "premadeOneHourDescription": "{duration} version of {planName} using the main movements from the full template.",
+  "@premadeOneHourDescription": {
+    "placeholders": {
+      "duration": {"type": "String"},
+      "planName": {"type": "String"}
+    }
+  }
 }

@@ -8,11 +8,14 @@ import 'package:provider/provider.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../models/models.dart';
 import '../../repositories/app_repository.dart';
+import '../../services/catalog_entity_localizer.dart';
 import '../../services/tutorial_state_store.dart';
 import '../../utils/localized_body_part_name.dart';
+import '../../utils/localized_formatters.dart';
 import '../../utils/tutorial_launcher.dart';
 import '../../widgets/body_heatmap.dart';
 import '../../widgets/exercise_definition_info_tile.dart';
+import '../../widgets/localized_catalog_entity_name.dart';
 import '../../widgets/guided_tutorial_overlay.dart';
 import '../../widgets/recommended_sets_editor_dialog.dart';
 import '../../widgets/set_stat_chip.dart';
@@ -306,7 +309,12 @@ class _BodyPartHeader extends StatelessWidget {
                                   value: AppLocalizations.of(
                                     context,
                                   ).anatomySetUnits(
-                                    data.recentSetUnits.toStringAsFixed(1),
+                                    LocalizedFormatters.number(
+                                      data.recentSetUnits,
+                                      Localizations.localeOf(context),
+                                      minimumFractionDigits: 1,
+                                      maximumFractionDigits: 1,
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(height: 10),
@@ -318,6 +326,7 @@ class _BodyPartHeader extends StatelessWidget {
                                   value: _rangeLabel(
                                     AppLocalizations.of(context),
                                     data.volumeBounds,
+                                    Localizations.localeOf(context),
                                   ),
                                   onEdit: onEditRecommended,
                                 ),
@@ -351,7 +360,14 @@ class _BodyPartHeader extends StatelessWidget {
                   data.muscles
                       .map(
                         (muscle) => ActionChip(
-                          label: Text(muscle.name),
+                          label: LocalizedCatalogEntityName(
+                            entity: CatalogEntityDisplayName(
+                              catalogId: muscle.catalogId,
+                              canonicalName: muscle.name,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                           avatar: const Icon(Icons.fitness_center, size: 18),
                           onPressed: () => onMuscleTap(muscle),
                         ),
@@ -376,10 +392,22 @@ class _BodyPartHeader extends StatelessWidget {
     );
   }
 
-  String _rangeLabel(AppLocalizations strings, VolumeBoundaries? bounds) {
+  String _rangeLabel(
+    AppLocalizations strings,
+    VolumeBoundaries? bounds,
+    Locale locale,
+  ) {
     if (bounds == null) return strings.anatomyNotSet;
-    final min = bounds.minEffective.toStringAsFixed(0);
-    final max = bounds.maxRecoverable.toStringAsFixed(0);
+    final min = LocalizedFormatters.number(
+      bounds.minEffective,
+      locale,
+      maximumFractionDigits: 0,
+    );
+    final max = LocalizedFormatters.number(
+      bounds.maxRecoverable,
+      locale,
+      maximumFractionDigits: 0,
+    );
     return strings.anatomySetRange(min, max);
   }
 }
@@ -406,45 +434,78 @@ class _ExerciseMetadata extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    final equipment =
-        definition.equipmentList.isEmpty
-            ? AppLocalizations.of(context).anatomyNoEquipment
-            : definition.equipmentList
-                .map((equipment) => equipment.name)
-                .join(', ');
-    final muscles =
-        definition.muscles.isEmpty
-            ? AppLocalizations.of(context).anatomyNoMusclesListed
-            : definition.muscles
-                .take(3)
-                .map((ranked) => ranked.muscle.name)
-                .join(', ');
+    final equipmentEntities = definition.equipmentList
+        .where((item) => item.name.trim().isNotEmpty)
+        .map(
+          (item) => CatalogEntityDisplayName(
+            catalogId: item.catalogId,
+            canonicalName: item.name,
+          ),
+        )
+        .toList(growable: false);
+    final equipmentLabel =
+        equipmentEntities.isEmpty
+            ? Text(
+              AppLocalizations.of(context).anatomyNoEquipment,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: colors.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            )
+            : LocalizedCatalogEntityNamesBuilder(
+              entities: equipmentEntities,
+              builder:
+                  (context, names) => Text(
+                    names.join(', '),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: colors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+            );
+    final muscleEntities = definition.muscles
+        .take(3)
+        .map(
+          (ranked) => CatalogEntityDisplayName(
+            catalogId: ranked.muscle.catalogId,
+            canonicalName: ranked.muscle.name,
+          ),
+        )
+        .toList(growable: false);
+    final muscleLabel =
+        muscleEntities.isEmpty
+            ? Text(
+              AppLocalizations.of(context).anatomyNoMusclesListed,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: Colors.green.shade600,
+                fontWeight: FontWeight.w500,
+              ),
+            )
+            : LocalizedCatalogEntityNamesBuilder(
+              entities: muscleEntities,
+              builder:
+                  (context, names) => Text(
+                    names.join(', '),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: Colors.green.shade600,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+            );
 
     return Padding(
       padding: const EdgeInsets.only(top: 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            equipment,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: colors.primary,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 3),
-          Text(
-            muscles,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: Colors.green.shade600,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
+        children: [equipmentLabel, const SizedBox(height: 3), muscleLabel],
       ),
     );
   }
