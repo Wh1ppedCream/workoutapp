@@ -20,6 +20,7 @@ import '../../widgets/guided_tutorial_overlay.dart';
 import '../../widgets/localized_catalog_entity_name.dart';
 import '../../widgets/localized_exercise_name.dart';
 import '../../widgets/onboarding_plan_builder_coach.dart';
+import '../../theme/theme_extensions.dart';
 
 /// Catalog of exercise definitions with profile-aware equipment filtering.
 ///
@@ -664,6 +665,7 @@ class _ExerciseCatalogBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final surfaces = context.surfaceTokens;
     final equipment = definition.equipmentList
         .where((item) => item.name.trim().isNotEmpty)
         .map(
@@ -676,14 +678,11 @@ class _ExerciseCatalogBar extends StatelessWidget {
     return Card(
       clipBehavior: Clip.antiAlias,
       margin: const EdgeInsets.only(bottom: 10),
-      color:
-          selected
-              ? colorScheme.primaryContainer.withValues(alpha: 0.45)
-              : null,
+      color: selected ? surfaces.catalogSelection : null,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
-          color: selected ? colorScheme.primary : colorScheme.outlineVariant,
+          color: selected ? colorScheme.primary : surfaces.catalogOutline,
           width: selected ? 1.5 : 1,
         ),
       ),

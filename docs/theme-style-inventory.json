@@ -1,0 +1,378 @@
+{
+  "schemaVersion": 1,
+  "mode": "report-only",
+  "classifications": [
+    {
+      "id": "theme_system",
+      "label": "Theme system",
+      "target": "ThemeData, ThemeExtension, and Tonos primitive recipes",
+      "status": "migrated"
+    },
+    {
+      "id": "generated",
+      "label": "Generated source",
+      "target": "Flutter localization generation",
+      "status": "excluded"
+    },
+    {
+      "id": "structural_theme",
+      "label": "Structural theme styling",
+      "target": "ColorScheme, component themes, focused tokens, or shared Tonos primitives",
+      "status": "pending"
+    },
+    {
+      "id": "material_component",
+      "label": "Material component styling",
+      "target": "ThemeData component themes and standard Material roles",
+      "status": "pending"
+    },
+    {
+      "id": "tonos_semantic",
+      "label": "Tonos semantic styling",
+      "target": "Focused non-null Tonos ThemeExtension roles",
+      "status": "pending"
+    },
+    {
+      "id": "data_visualization",
+      "label": "Data visualization",
+      "target": "AppDataVisualizationTokens with contrast and non-color indicators",
+      "status": "allowlisted"
+    },
+    {
+      "id": "illustration_media",
+      "label": "Illustration and media",
+      "target": "Asset/media treatment contracts, not application chrome",
+      "status": "allowlisted"
+    },
+    {
+      "id": "intentional_one_off",
+      "label": "Intentional one-off",
+      "target": "A named, documented exception with a future owner",
+      "status": "review"
+    },
+    {
+      "id": "application_shell",
+      "label": "Application shell",
+      "target": "AppMaterialTheme, navigation, and shared shell primitives",
+      "status": "pending"
+    },
+    {
+      "id": "release_surface",
+      "label": "Release surface",
+      "target": "Vertical-slice migration to the shared theme boundary",
+      "status": "pending"
+    },
+    {
+      "id": "pending_triage",
+      "label": "Pending triage",
+      "target": "Classify the expression during its owning screen or widget migration",
+      "status": "pending"
+    }
+  ],
+  "pathRules": [
+    {
+      "id": "generated-localization",
+      "pattern": "lib/l10n/generated/**",
+      "classification": "generated",
+      "status": "excluded",
+      "target": "Flutter localization generation",
+      "rationale": "Generated localization output is owned by Flutter tooling and is not hand-authored styling."
+    },
+    {
+      "id": "theme-system",
+      "pattern": "lib/theme/**",
+      "classification": "theme_system",
+      "status": "migrated",
+      "target": "ThemeData, ThemeExtension, and Tonos primitive recipes",
+      "rationale": "The theme boundary is the intentional owner of shared visual definitions and recipes."
+    },
+    {
+      "id": "application-shell",
+      "pattern": "lib/main.dart",
+      "classification": "application_shell",
+      "status": "pending",
+      "target": "AppMaterialTheme, navigation, and shared shell primitives",
+      "rationale": "The app root has high fan-out and must be migrated as one shell-owned surface."
+    },
+    {
+      "id": "body-heatmap-data",
+      "pattern": "lib/widgets/body_heatmap.dart",
+      "kinds": [
+        "color",
+        "color_literal",
+        "color_literal_candidate",
+        "color_transform"
+      ],
+      "classification": "data_visualization",
+      "status": "allowlisted",
+      "target": "AppDataVisualizationTokens anatomy roles",
+      "rationale": "The palette communicates anatomy intensity and is data meaning, not application chrome. Contrast and non-color meaning remain required."
+    },
+    {
+      "id": "generic-bar-data",
+      "pattern": "lib/widgets/generic_bar.dart",
+      "classification": "data_visualization",
+      "status": "allowlisted",
+      "target": "AppDataVisualizationTokens chart and threshold roles",
+      "rationale": "This reusable bar renderer owns visualization geometry and series colors; it must retain readable labels and thresholds."
+    },
+    {
+      "id": "nutrition-dashboard-data",
+      "pattern": "lib/widgets/nutrition_dash.dart",
+      "classification": "data_visualization",
+      "status": "allowlisted",
+      "target": "AppDataVisualizationTokens nutrition series roles",
+      "rationale": "Nutrition series colors carry category meaning and are reviewed separately from structural surfaces."
+    },
+    {
+      "id": "nutrition-bar-data",
+      "pattern": "lib/widgets/nutrition_bar_details.dart",
+      "classification": "data_visualization",
+      "status": "allowlisted",
+      "target": "AppDataVisualizationTokens nutrition series roles",
+      "rationale": "Nutrition bar colors carry category meaning and must not become arbitrary theme accents."
+    },
+    {
+      "id": "nutrition-circle-data",
+      "pattern": "lib/widgets/nutrition_circle_details.dart",
+      "classification": "data_visualization",
+      "status": "allowlisted",
+      "target": "AppDataVisualizationTokens nutrition series roles",
+      "rationale": "Nutrition circle colors carry category meaning and need independent contrast review."
+    },
+    {
+      "id": "exercise-media-thumbnail",
+      "pattern": "lib/widgets/exercise_media_thumbnail.dart",
+      "classification": "illustration_media",
+      "status": "allowlisted",
+      "target": "Media treatment contract and asset-specific fallback",
+      "rationale": "Thumbnail backgrounds and image treatments belong to media presentation; they are not a license for surrounding application chrome to remain hard-coded."
+    },
+    {
+      "id": "shared-media-thumbnail",
+      "pattern": "lib/widgets/shared_entity_media_thumbnail.dart",
+      "classification": "illustration_media",
+      "status": "allowlisted",
+      "target": "Media treatment contract and asset-specific fallback",
+      "rationale": "Shared entity thumbnails own asset presentation and fallback treatment, which can remain distinct from structural theme surfaces."
+    },
+    {
+      "id": "tutorial-scrim",
+      "pattern": "lib/widgets/guided_tutorial_overlay.dart",
+      "kinds": [
+        "color",
+        "color_literal",
+        "color_literal_candidate",
+        "color_transform",
+        "decoration",
+        "geometry",
+        "shadow"
+      ],
+      "classification": "intentional_one_off",
+      "status": "review",
+      "target": "AppEffectTokens and an accessibility-reviewed tutorial scrim recipe",
+      "rationale": "The overlay needs a controlled scrim and spotlight treatment, but it remains a review item until effect fallbacks and accessibility are explicitly qualified."
+    },
+    {
+      "id": "quick-action-bar",
+      "pattern": "lib/widgets/quick_bar.dart",
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "TonosSegmentedActionBar and semantic domain action roles",
+      "rationale": "The reusable segmented action treatment now owns its shape, clipping, divider, typography, and interaction recipe in the theme boundary."
+    },
+    {
+      "id": "identity-color-palettes",
+      "pattern": "lib/widgets/identity_color_palettes.dart",
+      "kinds": [
+        "color",
+        "color_literal",
+        "color_literal_candidate"
+      ],
+      "classification": "intentional_one_off",
+      "status": "review",
+      "target": "An explicitly retained fixed profile and plan identity palette",
+      "rationale": "Profile and plan colors distinguish saved entities rather than application state. The retained fixed-palette decision is explicit through dedicated identity owners; visual treatment remains a manual review item."
+    },
+    {
+      "id": "navigation-drawers",
+      "pattern": "lib/widgets/drawers.dart",
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Tonos drawer primitives, focused shape/motion tokens, and a reviewed profile identity palette",
+      "rationale": "Drawers are shared navigation surfaces; structural roles now use focused tokens and standard scheme roles, while the profile identity palette remains a deliberate review item."
+    },
+    {
+      "id": "ongoing-session-action",
+      "pattern": "lib/widgets/ongoing_session_fab.dart",
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Semantic workout actions, Tonos dialog/surface recipes, and effect tokens",
+      "rationale": "The persistent workout action is shell-owned and now uses semantic action roles, shared geometry/surfaces, and standard dialog/button recipes."
+    },
+    {
+      "id": "durability-banner",
+      "pattern": "lib/widgets/active_session_durability_banner.dart",
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Semantic feedback surface, shape tokens, and a named effect-token elevation recipe",
+      "rationale": "This banner is injected at the app root and now uses standard feedback colors plus shared shape, elevation, and shadow ownership."
+    },
+    {
+      "id": "settings-tiles",
+      "pattern": "lib/widgets/settings_tiles.dart",
+      "classification": "structural_theme",
+      "status": "pending",
+      "target": "Tonos section/action primitives and semantic category roles",
+      "rationale": "Settings tiles are shared application chrome; surface, geometry, divider, value-text, form-recipe, save-bar, and status-badge ownership has started migrating while category accents and local control overrides remain pending."
+    },
+    {
+      "id": "profile-settings",
+      "pattern": "lib/screens/profile/settings/**",
+      "classification": "structural_theme",
+      "status": "pending",
+      "target": "Tonos field/section/action primitives and component themes",
+      "rationale": "Profile settings contain repeated controls and local theme overrides; the first UI Appearance, User Information, bottom-tab editor, and deferred-feature badge recipes have migrated while the broader subtree and local overrides remain pending."
+    },
+    {
+      "id": "exercise-detail-hotspot",
+      "pattern": "lib/widgets/exercise_detail_sheet.dart",
+      "classification": "structural_theme",
+      "status": "pending",
+      "target": "Tonos sheet/surface/section primitives and media tokens",
+      "rationale": "The exercise detail sheet is a high-use release surface with repeated containment, tabs, and media treatment."
+    },
+    {
+      "id": "onboarding-hotspot",
+      "pattern": "lib/screens/onboarding_flow.dart",
+      "classification": "structural_theme",
+      "status": "pending",
+      "target": "Tonos fields/sections/actions and shared Material component themes",
+      "rationale": "Onboarding has high interaction and localization risk, so it needs a deliberate screen-level migration."
+    },
+    {
+      "id": "dashboard-hotspot",
+      "pattern": "lib/widgets/dashboard_sections.dart",
+      "classification": "structural_theme",
+      "status": "pending",
+      "target": "Tonos surfaces/sections plus semantic and visualization tokens",
+      "rationale": "Dashboard sections combine application chrome with data and anatomy visuals; mixed ownership must be separated rather than globally recolored."
+    },
+    {
+      "id": "exercise-editor-hotspot",
+      "pattern": "lib/screens/profile/settings/exercise_editor_screen.dart",
+      "classification": "structural_theme",
+      "status": "pending",
+      "target": "Tonos fields, sections, and component themes",
+      "rationale": "The exercise editor is a high-use settings surface with dense form styling."
+    },
+    {
+      "id": "preset-generation-hotspot",
+      "pattern": "lib/screens/exercise/preset_generation_qa.dart",
+      "classification": "structural_theme",
+      "status": "pending",
+      "target": "Tonos surfaces/actions and named development-only variants",
+      "rationale": "Preset generation QA is visually dense and must not silently establish a second untracked theme system."
+    },
+    {
+      "id": "release-screens",
+      "pattern": "lib/screens/**",
+      "classification": "release_surface",
+      "status": "pending",
+      "target": "Vertical-slice migration to shared theme ownership",
+      "rationale": "Screens remain reportable until their styling expressions are classified and migrated without changing behavior."
+    },
+    {
+      "id": "release-widgets",
+      "pattern": "lib/widgets/**",
+      "classification": "release_surface",
+      "status": "pending",
+      "target": "Vertical-slice migration to shared primitives and focused tokens",
+      "rationale": "Widgets are kept in the inventory so new structural styling cannot disappear into an unreviewed exception."
+    },
+    {
+      "id": "remaining-lib",
+      "pattern": "lib/**",
+      "classification": "pending_triage",
+      "status": "pending",
+      "target": "Assign a domain owner and migration destination before the owning feature slice is marked complete",
+      "rationale": "The catch-all keeps the report total and makes new style-bearing production files measurable."
+    }
+  ],
+  "reviewQueue": [
+    {
+      "id": "application-shell",
+      "title": "Application shell and navigation",
+      "patterns": [
+        "lib/main.dart",
+        "lib/screens/dashboard_page.dart",
+        "lib/screens/exercise/train_page.dart",
+        "lib/screens/exercise/train2_page.dart",
+        "lib/widgets/drawers.dart",
+        "lib/widgets/quick_bar.dart"
+      ],
+      "target": "AppMaterialTheme, navigation component themes, and Tonos shared primitives",
+      "rationale": "This has the widest visual fan-out and should be migrated before screen-specific styling is tightened."
+    },
+    {
+      "id": "shared-settings",
+      "title": "Shared settings and form controls",
+      "patterns": [
+        "lib/widgets/settings_tiles.dart",
+        "lib/screens/profile/settings/**"
+      ],
+      "target": "Tonos field/section/action primitives plus semantic category roles",
+      "rationale": "Settings repeat the same fields, switches, tiles, and local Theme overrides across many routes."
+    },
+    {
+      "id": "active-workout",
+      "title": "Active workout and completion",
+      "patterns": [
+        "lib/screens/exercise/session_screen.dart",
+        "lib/screens/exercise/session_detail_screen.dart",
+        "lib/widgets/active_session_durability_banner.dart",
+        "lib/widgets/ongoing_session_fab.dart",
+        "lib/widgets/session_complete_sheet.dart",
+        "lib/widgets/weight_card.dart"
+      ],
+      "target": "Tonos surfaces/actions, workout semantic roles, and stable input component themes",
+      "rationale": "This flow is interaction-critical and should preserve set semantics, completion state, and tap targets while its visual ownership changes."
+    },
+    {
+      "id": "catalog-detail",
+      "title": "Catalog and exercise detail",
+      "patterns": [
+        "lib/screens/exercise/exercise_catalog_page.dart",
+        "lib/widgets/exercise_card.dart",
+        "lib/widgets/exercise_detail_sheet.dart",
+        "lib/widgets/exercise_media_thumbnail.dart"
+      ],
+      "target": "Tonos surfaces/fields/sheets plus media and data-visualization contracts",
+      "rationale": "Catalog rows and detail sheets combine structural UI with fixed exercise illustrations and need separate ownership."
+    },
+    {
+      "id": "dashboard-progress-health",
+      "title": "Dashboard, progress, and health trends",
+      "patterns": [
+        "lib/widgets/dashboard_sections.dart",
+        "lib/widgets/exercise_progress_section.dart",
+        "lib/widgets/health_trends_section.dart",
+        "lib/widgets/workout_metric_chart_card.dart",
+        "lib/widgets/workout_history_calendar.dart"
+      ],
+      "target": "Tonos surfaces plus AppDataVisualizationTokens and semantic measurement roles",
+      "rationale": "These surfaces mix charts, empty states, anatomy, and structural cards; each expression needs an explicit destination."
+    },
+    {
+      "id": "onboarding-and-development",
+      "title": "Onboarding and development-only routes",
+      "patterns": [
+        "lib/screens/onboarding_flow.dart",
+        "lib/screens/exercise/preset_generation_qa.dart",
+        "lib/widgets/guided_tutorial_overlay.dart"
+      ],
+      "target": "Named Tonos variants, effect fallbacks, and release-gated surface ownership",
+      "rationale": "These routes have specialized presentation and must not introduce hidden theme branches or unqualified effects."
+    }
+  ]
+}

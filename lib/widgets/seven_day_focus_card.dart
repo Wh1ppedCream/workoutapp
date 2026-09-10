@@ -140,7 +140,7 @@ class _SevenDayFocusLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
+    final dataVisualization = context.dataVisualizationTokens;
     return LayoutBuilder(
       builder: (context, constraints) {
         final heatmapBox =
@@ -159,8 +159,8 @@ class _SevenDayFocusLayout extends StatelessWidget {
                 child: Center(
                   child: BodyHeatmap(
                     frequencyMap: data.heatmapFrequencyMap,
-                    lowColor: colors.historySummaryHeatmapLow!,
-                    highColor: colors.historySummaryHeatmapHigh!,
+                    lowColor: dataVisualization.heatmapLow,
+                    highColor: dataVisualization.heatmapHigh,
                     width: heatmapSize,
                     height: heatmapSize,
                   ),

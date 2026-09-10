@@ -10,6 +10,7 @@ import '../providers/dashboard_config.dart';
 import '../providers/nutrition_profile.dart';
 import '../screens/exercise/full_history_screen.dart';
 import '../screens/exercise/session_detail_screen.dart';
+import '../theme/theme_extensions.dart';
 import '../widgets/data_records_section.dart';
 import '../widgets/dashboard_sections.dart';
 import '../widgets/exercise_progress_section.dart';
@@ -151,14 +152,16 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget _buildEditableTile(String id, int index) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
     final strings = AppLocalizations.of(context);
     final details = dashboardSectionDetails(strings, id);
     return Container(
       key: ValueKey(id),
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.46),
-        borderRadius: BorderRadius.circular(20),
+        color: surfaces.dashboardEditor,
+        borderRadius: shapes.dashboardEditor,
         border: Border.all(color: details.color.withValues(alpha: 0.48)),
       ),
       child: Row(
@@ -223,6 +226,8 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget _buildDashboardEditorFooter() {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
     final config = context.watch<DashboardConfig>();
     final hiddenCount =
         config.widgetOrder.where((id) => !config.isVisible(id)).length;
@@ -230,8 +235,8 @@ class _DashboardPageState extends State<DashboardPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.34),
-        borderRadius: BorderRadius.circular(22),
+        color: surfaces.dashboardSection,
+        borderRadius: shapes.dashboardFooter,
         border: Border.all(color: scheme.outlineVariant),
       ),
       child: Column(
@@ -264,12 +269,14 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget _buildEmptyDashboard() {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
     final strings = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.34),
-        borderRadius: BorderRadius.circular(24),
+        color: surfaces.dashboardSection,
+        borderRadius: shapes.dashboardSection,
         border: Border.all(color: scheme.outlineVariant),
       ),
       child: Column(

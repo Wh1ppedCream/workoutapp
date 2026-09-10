@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../l10n/generated/app_localizations.dart';
 import '../providers/active_session.dart';
+import '../theme/theme_extensions.dart';
 
 /// Persistent, app-level recovery notice for workout durability failures.
 class ActiveSessionDurabilityBanner extends StatelessWidget {
@@ -20,6 +21,10 @@ class ActiveSessionDurabilityBanner extends StatelessWidget {
             final issue = session.durabilityIssue;
             if (issue == null) return const SizedBox.shrink();
             final strings = AppLocalizations.of(context);
+            final theme = Theme.of(context);
+            final scheme = theme.colorScheme;
+            final shapes = context.shapeTokens;
+            final effects = context.effectTokens;
             final message = switch (issue) {
               ActiveSessionDurabilityIssue.restore =>
                 strings.workoutDurabilityRestoreWarning,
@@ -39,9 +44,10 @@ class ActiveSessionDurabilityBanner extends StatelessWidget {
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 640),
                     child: Material(
-                      color: Theme.of(context).colorScheme.errorContainer,
-                      elevation: 6,
-                      borderRadius: BorderRadius.circular(16),
+                      color: scheme.errorContainer,
+                      elevation: effects.feedbackElevation,
+                      shadowColor: effects.shadowColor,
+                      borderRadius: shapes.card,
                       child: Semantics(
                         liveRegion: true,
                         container: true,
@@ -51,20 +57,14 @@ class ActiveSessionDurabilityBanner extends StatelessWidget {
                             children: [
                               Icon(
                                 Icons.save_outlined,
-                                color:
-                                    Theme.of(
-                                      context,
-                                    ).colorScheme.onErrorContainer,
+                                color: scheme.onErrorContainer,
                               ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Text(
                                   message,
-                                  style: TextStyle(
-                                    color:
-                                        Theme.of(
-                                          context,
-                                        ).colorScheme.onErrorContainer,
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: scheme.onErrorContainer,
                                   ),
                                 ),
                               ),

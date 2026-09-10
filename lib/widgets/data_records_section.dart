@@ -19,7 +19,8 @@ class DataRecordsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final today = DateTime.now();
-    final colors = context.colors;
+    final surfaces = context.surfaceTokens;
+    final dataVisualization = context.dataVisualizationTokens;
     final strings = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context);
 
@@ -97,15 +98,13 @@ class DataRecordsSection extends StatelessWidget {
                         shape: BoxShape.circle,
                         color:
                             isToday
-                                ? colors.dataRecordsTodayBg!.withValues(
-                                  alpha: 0.2,
-                                )
+                                ? dataVisualization.recordTodayContainer
                                 : Colors.transparent,
                         border: Border.all(
                           color:
                               isToday
-                                  ? colors.dataRecordsTodayBorder!
-                                  : colors.dataRecordsDefaultBorder!,
+                                  ? dataVisualization.recordTodayBorder
+                                  : surfaces.divider,
                         ),
                       ),
                       child: Text(
@@ -115,7 +114,10 @@ class DataRecordsSection extends StatelessWidget {
                           maximumFractionDigits: 0,
                         ),
                         style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                          color: isToday ? colors.dataRecordsTodayText! : null,
+                          color:
+                              isToday
+                                  ? dataVisualization.onRecordTodayContainer
+                                  : null,
                         ),
                       ),
                     ),
@@ -148,7 +150,7 @@ class DataRecordsSection extends StatelessWidget {
               Icon(
                 Icons.chevron_right,
                 size: 16,
-                color: colors.dataRecordsChevron!.withValues(alpha: 0.45),
+                color: dataVisualization.label.withValues(alpha: 0.45),
               ),
             ],
           ),

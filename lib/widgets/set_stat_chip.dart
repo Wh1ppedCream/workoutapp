@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../theme/theme_extensions.dart';
 import 'recommended_sets_editor_dialog.dart';
 
 class SetStatChip extends StatelessWidget {
@@ -17,11 +18,13 @@ class SetStatChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final shapes = context.shapeTokens;
+    final surfaces = context.surfaceTokens;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(14),
+        color: surfaces.metricChip,
+        borderRadius: shapes.metric,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

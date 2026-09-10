@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../l10n/generated/app_localizations.dart';
 import '../models/models.dart';
+import '../theme/theme_extensions.dart';
 import '../utils/localized_body_part_name.dart';
 import '../utils/localized_formatters.dart';
 
@@ -68,6 +69,7 @@ class _FocusedSetRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final shapes = context.shapeTokens;
     final value = maxUnits == 0.0 ? 0.0 : hit.units / maxUnits;
 
     return Column(
@@ -96,7 +98,7 @@ class _FocusedSetRow extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         ClipRRect(
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: shapes.pill,
           child: LinearProgressIndicator(
             minHeight: 6,
             value: value.clamp(0.0, 1.0).toDouble(),

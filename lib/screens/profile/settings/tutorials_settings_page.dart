@@ -25,7 +25,7 @@ class TutorialsSettingsPage extends StatelessWidget {
               icon: Icons.restart_alt,
               title: strings.tutorialsResetAllTitle,
               subtitle: strings.tutorialsResetAllSubtitle,
-              trailing: _ResetPill(label: strings.tutorialsResetAll),
+              trailing: _tutorialResetPill(context, strings.tutorialsResetAll),
               onTap:
                   () => _resetAllTutorials(
                     context,
@@ -40,9 +40,10 @@ class TutorialsSettingsPage extends StatelessWidget {
           body: strings.tutorialsHowItWorksBody,
         ),
         const SizedBox(height: 16),
-        _TutorialSettingsSection(
+        SettingsExpansionSection(
           title: strings.tutorialsMainTabsTitle,
           subtitle: strings.tutorialsMainTabsSubtitle,
+          icon: Icons.school_outlined,
           accentColor: SettingsAccent.appearance,
           children: settingsTilesWithDividers(context, [
             _tutorialResetTile(
@@ -72,9 +73,10 @@ class TutorialsSettingsPage extends StatelessWidget {
             ),
           ]),
         ),
-        _TutorialSettingsSection(
+        SettingsExpansionSection(
           title: strings.tutorialsWorkoutTitle,
           subtitle: strings.tutorialsWorkoutSubtitle,
+          icon: Icons.school_outlined,
           accentColor: SettingsAccent.training,
           children: settingsTilesWithDividers(context, [
             _tutorialResetTile(
@@ -84,9 +86,10 @@ class TutorialsSettingsPage extends StatelessWidget {
             ),
           ]),
         ),
-        _TutorialSettingsSection(
+        SettingsExpansionSection(
           title: strings.tutorialsPlansTitle,
           subtitle: strings.tutorialsPlansSubtitle,
+          icon: Icons.school_outlined,
           accentColor: SettingsAccent.training,
           children: settingsTilesWithDividers(context, [
             _tutorialResetTile(
@@ -126,9 +129,10 @@ class TutorialsSettingsPage extends StatelessWidget {
             ),
           ]),
         ),
-        _TutorialSettingsSection(
+        SettingsExpansionSection(
           title: strings.tutorialsCatalogTitle,
           subtitle: strings.tutorialsCatalogSubtitle,
+          icon: Icons.school_outlined,
           accentColor: SettingsAccent.advanced,
           children: settingsTilesWithDividers(context, [
             _tutorialResetTile(
@@ -163,9 +167,10 @@ class TutorialsSettingsPage extends StatelessWidget {
             ),
           ]),
         ),
-        _TutorialSettingsSection(
+        SettingsExpansionSection(
           title: strings.tutorialsProgressTitle,
           subtitle: strings.tutorialsProgressSubtitle,
+          icon: Icons.school_outlined,
           accentColor: SettingsAccent.progress,
           children: settingsTilesWithDividers(context, [
             _tutorialResetTile(
@@ -210,7 +215,7 @@ class TutorialsSettingsPage extends StatelessWidget {
       icon: icon,
       title: strings.tutorialsReplayTitle(topic),
       subtitle: strings.tutorialsShownNextTime(topic),
-      trailing: _ResetPill(label: strings.tutorialsReset),
+      trailing: _tutorialResetPill(context, strings.tutorialsReset),
       onTap:
           () => _resetTutorial(
             context,
@@ -274,97 +279,13 @@ class TutorialsSettingsPage extends StatelessWidget {
   }
 }
 
-class _TutorialSettingsSection extends StatelessWidget {
-  const _TutorialSettingsSection({
-    required this.title,
-    required this.subtitle,
-    required this.children,
-    required this.accentColor,
-  });
-
-  final String title;
-  final String subtitle;
-  final List<Widget> children;
-  final Color accentColor;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Container(
-        decoration: BoxDecoration(
-          color: scheme.surfaceContainerHighest.withValues(alpha: 0.34),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: accentColor.withValues(alpha: 0.46)),
-        ),
-        child: Theme(
-          data: theme.copyWith(
-            dividerColor: Colors.transparent,
-            colorScheme: scheme.copyWith(primary: accentColor),
-          ),
-          child: ExpansionTile(
-            tilePadding: const EdgeInsets.symmetric(
-              horizontal: 14,
-              vertical: 4,
-            ),
-            childrenPadding: EdgeInsets.zero,
-            leading: Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: accentColor.withValues(alpha: 0.16),
-                borderRadius: BorderRadius.circular(15),
-              ),
-              child: Icon(Icons.school_outlined, color: accentColor, size: 22),
-            ),
-            title: Text(
-              title,
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-            subtitle: Text(
-              subtitle,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: scheme.onSurfaceVariant,
-              ),
-            ),
-            children: children,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ResetPill extends StatelessWidget {
-  final String label;
-
-  const _ResetPill({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: scheme.primary.withValues(alpha: 0.13),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: scheme.primary.withValues(alpha: 0.42)),
-      ),
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: scheme.primary,
-          fontWeight: FontWeight.w900,
-        ),
-      ),
-    );
-  }
+Widget _tutorialResetPill(BuildContext context, String label) {
+  return SettingsAccentPill(
+    label: label,
+    color: Theme.of(context).colorScheme.primary,
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+    backgroundAlpha: 0.13,
+    borderAlpha: 0.42,
+    fontWeight: FontWeight.w900,
+  );
 }

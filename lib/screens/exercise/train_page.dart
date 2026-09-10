@@ -18,6 +18,7 @@ import '../../services/tutorial_state_store.dart';
 import '../../utils/localized_formatters.dart';
 import '../../utils/workout_exercise_clone.dart';
 import '../../utils/app_test_keys.dart';
+import '../../theme/theme_extensions.dart';
 import '../../widgets/drawers.dart';
 import '../../widgets/exercise_card.dart';
 import '../../widgets/generic_bar.dart';
@@ -667,7 +668,8 @@ class _TrainPageState extends State<TrainPage> {
                   onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
                   icon: CircleAvatar(
                     radius: 18,
-                    backgroundColor: Colors.lightGreen,
+                    backgroundColor:
+                        ProfileIdentityPalette.currentProfileAvatar,
                     child: Text(
                       _profileInitial(sel.currentProfile?.name),
                       style: const TextStyle(
@@ -740,15 +742,18 @@ class _TrainTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final shapes = context.shapeTokens;
+    final surfaces = context.surfaceTokens;
     final strings = AppLocalizations.of(context);
     return Container(
       height: 44,
       constraints: const BoxConstraints(maxWidth: 320),
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.75),
-        borderRadius: BorderRadius.circular(999),
+        color: surfaces.panelRaised.withValues(
+          alpha: surfaces.trainTabSurfaceOpacity,
+        ),
+        borderRadius: shapes.pill,
       ),
       child: Row(
         children: [
@@ -784,18 +789,20 @@ class _TabButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final colorScheme = context.cs;
+    final shapes = context.shapeTokens;
+    final textTheme = Theme.of(context).textTheme;
     return Expanded(
       child: Material(
         color: selected ? colorScheme.primaryContainer : Colors.transparent,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: shapes.pill,
         child: InkWell(
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: shapes.pill,
           onTap: onTap,
           child: Center(
             child: Text(
               label,
-              style: TextStyle(
+              style: textTheme.bodyMedium?.copyWith(
                 fontWeight: FontWeight.w700,
                 color:
                     selected
@@ -1077,6 +1084,7 @@ class _PlansTabState extends State<_PlansTab> {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
+    final dataVisualization = context.dataVisualizationTokens;
     return FutureBuilder<Set<int>>(
       future: _activePresetIdsFuture,
       builder: (context, snapshot) {
@@ -1132,14 +1140,14 @@ class _PlansTabState extends State<_PlansTab> {
             const SizedBox(height: 16),
             GenericBar(
               label: strings.trainGenerateCustomPlans,
-              color: Colors.purple,
+              color: dataVisualization.tertiarySeries,
               onTap: widget.onGeneratePreset,
             ),
             const SizedBox(height: 8),
             GenericBar(
               key: AppTestKeys.trainCreateManualPlan,
               label: strings.trainManuallyAddPlan,
-              color: Colors.purple,
+              color: dataVisualization.tertiarySeries,
               onTap: widget.onCreatePreset,
             ),
           ],
@@ -1268,9 +1276,15 @@ class _SplitWorkoutBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final colorScheme = context.cs;
+    final semantic = context.semanticColors;
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
+    final effects = context.effectTokens;
+    final textTheme = Theme.of(context).textTheme;
     final strings = AppLocalizations.of(context);
-    final green = Colors.green.shade700;
+    final startWorkoutAction = semantic.startWorkoutAction;
+    final onStartWorkoutAction = semantic.onStartWorkoutAction;
     final useVerticalLayout =
         Localizations.localeOf(context).languageCode != 'en' &&
         MediaQuery.textScalerOf(context).scale(1) > 1.15;
@@ -1278,9 +1292,9 @@ class _SplitWorkoutBar extends StatelessWidget {
       minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: shapes.sheet,
         clipBehavior: Clip.antiAlias,
-        elevation: 8,
+        elevation: effects.sheetElevation,
         child: SizedBox(
           height: useVerticalLayout ? 120 : 64,
           child:
@@ -1289,7 +1303,7 @@ class _SplitWorkoutBar extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Material(
-                          color: green,
+                          color: startWorkoutAction,
                           child: InkWell(
                             key: AppTestKeys.trainStartWorkout,
                             onTap: onStartWorkout,
@@ -1302,10 +1316,9 @@ class _SplitWorkoutBar extends StatelessWidget {
                                   strings.trainStartWorkout,
                                   maxLines: 2,
                                   textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                    color: Colors.white,
+                                  style: textTheme.titleMedium?.copyWith(
+                                    color: onStartWorkoutAction,
                                     fontWeight: FontWeight.w800,
-                                    fontSize: 16,
                                   ),
                                 ),
                               ),
@@ -1315,7 +1328,9 @@ class _SplitWorkoutBar extends StatelessWidget {
                       ),
                       Container(
                         height: 1,
-                        color: colorScheme.outline.withValues(alpha: 0.18),
+                        color: colorScheme.outline.withValues(
+                          alpha: surfaces.splitWorkoutDividerOpacity,
+                        ),
                       ),
                       Expanded(
                         child: Material(
@@ -1345,13 +1360,13 @@ class _SplitWorkoutBar extends StatelessWidget {
                                               strings.trainOptimize,
                                               maxLines: 2,
                                               textAlign: TextAlign.center,
-                                              style: TextStyle(
-                                                color:
-                                                    colorScheme
-                                                        .onPrimaryContainer,
-                                                fontWeight: FontWeight.w800,
-                                                fontSize: 14,
-                                              ),
+                                              style: textTheme.bodyMedium
+                                                  ?.copyWith(
+                                                    color:
+                                                        colorScheme
+                                                            .onPrimaryContainer,
+                                                    fontWeight: FontWeight.w800,
+                                                  ),
                                             ),
                                   ),
                                 ),
@@ -1376,17 +1391,16 @@ class _SplitWorkoutBar extends StatelessWidget {
                       Expanded(
                         flex: 3,
                         child: Material(
-                          color: green,
+                          color: startWorkoutAction,
                           child: InkWell(
                             key: AppTestKeys.trainStartWorkout,
                             onTap: onStartWorkout,
                             child: Center(
                               child: Text(
                                 strings.trainStartWorkout,
-                                style: const TextStyle(
-                                  color: Colors.white,
+                                style: textTheme.titleMedium?.copyWith(
+                                  color: onStartWorkoutAction,
                                   fontWeight: FontWeight.w800,
-                                  fontSize: 16,
                                 ),
                               ),
                             ),
@@ -1396,7 +1410,9 @@ class _SplitWorkoutBar extends StatelessWidget {
                       Container(
                         width: 1,
                         height: double.infinity,
-                        color: colorScheme.outline.withValues(alpha: 0.18),
+                        color: colorScheme.outline.withValues(
+                          alpha: surfaces.splitWorkoutDividerOpacity,
+                        ),
                       ),
                       Expanded(
                         flex: 2,
@@ -1428,13 +1444,14 @@ class _SplitWorkoutBar extends StatelessWidget {
                                               : Text(
                                                 strings.trainOptimize,
                                                 textAlign: TextAlign.center,
-                                                style: TextStyle(
-                                                  color:
-                                                      colorScheme
-                                                          .onPrimaryContainer,
-                                                  fontWeight: FontWeight.w800,
-                                                  fontSize: 14,
-                                                ),
+                                                style: textTheme.bodyMedium
+                                                    ?.copyWith(
+                                                      color:
+                                                          colorScheme
+                                                              .onPrimaryContainer,
+                                                      fontWeight:
+                                                          FontWeight.w800,
+                                                    ),
                                               ),
                                     ),
                                   ),

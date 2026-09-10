@@ -2598,6 +2598,14 @@ class DatabaseHelper {
     return DefinitionDao.getExerciseDefinitionById(db, defId);
   }
 
+  /// Fetches a shipped exercise by its immutable catalog identity.
+  Future<ExerciseDefinition?> getExerciseDefinitionByCatalogId(
+    String catalogId,
+  ) async {
+    final db = await database;
+    return DefinitionDao.getExerciseDefinitionByCatalogId(db, catalogId);
+  }
+
   Future<List<ExerciseMediaItem>> getExerciseMedia(int defId) async {
     final db = await database;
     final rows = await db.query(

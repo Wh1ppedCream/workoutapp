@@ -38,7 +38,9 @@ class _WorkoutDashboardState extends State<WorkoutDashboard>
     final s = widget.scale;
     final sel = context.watch<SelectedProfile>();
     final activeSession = context.watch<ActiveSession>();
-    final colors = context.colors;
+    final semantic = context.semanticColors;
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final profiles = sel.profiles.where((p) => p.id != null).toList();
@@ -54,8 +56,8 @@ class _WorkoutDashboardState extends State<WorkoutDashboard>
     return Container(
       padding: EdgeInsets.all(16 * s),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.34),
-        borderRadius: BorderRadius.circular(24 * s),
+        color: surfaces.dashboardSection,
+        borderRadius: shapes.dashboardSection * s,
         border: Border.all(color: scheme.outlineVariant),
       ),
       child: Column(
@@ -68,12 +70,12 @@ class _WorkoutDashboardState extends State<WorkoutDashboard>
                 width: 42 * s,
                 height: 42 * s,
                 decoration: BoxDecoration(
-                  color: colors.workoutStartBg!.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(14 * s),
+                  color: semantic.workoutAction.withValues(alpha: 0.2),
+                  borderRadius: shapes.settingsInput * s,
                 ),
                 child: Icon(
                   Icons.fitness_center,
-                  color: colors.workoutStartText!,
+                  color: semantic.onWorkoutAction,
                   size: 21 * s,
                 ),
               ),
@@ -103,7 +105,7 @@ class _WorkoutDashboardState extends State<WorkoutDashboard>
                   vertical: 8 * s,
                 ),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14 * s),
+                  borderRadius: shapes.settingsInput * s,
                 ),
               ),
               items:
@@ -170,11 +172,11 @@ class _WorkoutDashboardState extends State<WorkoutDashboard>
                 widget.onSessionComplete?.call();
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: colors.workoutStartBg!,
-                foregroundColor: colors.workoutStartText!,
+                backgroundColor: semantic.workoutAction,
+                foregroundColor: semantic.onWorkoutAction,
                 minimumSize: Size.fromHeight(52 * s),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16 * s),
+                  borderRadius: shapes.dashboardAction * s,
                 ),
               ),
               child: Text(

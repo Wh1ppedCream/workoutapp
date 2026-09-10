@@ -66,11 +66,11 @@ class BranchControls extends StatelessWidget {
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
     final cs = context.cs;
-    final extras = context.colors;
-    final dropdownBg = extras.dialogBackground ?? cs.surface;
+    final flow = context.flowTokens;
+    final dropdownBg = context.surfaceTokens.dialog;
     final textColor = cs.onSurface;
-    final btnBg = extras.buttonBg ?? cs.primary;
-    final btnText = extras.buttonText ?? cs.onPrimary;
+    final btnBg = flow.action;
+    final btnText = flow.onAction;
 
     return Wrap(
       spacing: 12,
@@ -159,11 +159,11 @@ class MethodControls extends StatelessWidget {
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
     final cs = context.cs;
-    final extras = context.colors;
-    final dropdownBg = extras.dialogBackground ?? cs.surface;
+    final flow = context.flowTokens;
+    final dropdownBg = context.surfaceTokens.dialog;
     final textColor = cs.onSurface;
-    final btnBg = extras.buttonBg ?? cs.primary;
-    final btnText = extras.buttonText ?? cs.onPrimary;
+    final btnBg = flow.action;
+    final btnText = flow.onAction;
 
     return Wrap(
       spacing: 12,

@@ -15,6 +15,7 @@ import '../../providers/selected_profile.dart';
 import '../../repositories/app_repository.dart';
 import '../../services/preset_generation_service.dart';
 import '../../utils/workout_exercise_clone.dart';
+import '../../theme/theme_extensions.dart';
 
 import '../../widgets/generic_bar.dart';
 import '../../widgets/presets_loaded.dart';
@@ -504,6 +505,8 @@ class _Train2PageState extends State<Train2Page> {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
+    final shapes = context.shapeTokens;
+    final semantic = context.semanticColors;
     final completedSessionVersion = context.select<ActiveSession, int>(
       (session) => session.completedSessionVersion,
     );
@@ -591,10 +594,10 @@ class _Train2PageState extends State<Train2Page> {
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
                   color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: shapes.trainTab,
                 ),
                 child: ToggleButtons(
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: shapes.trainTab,
                   borderWidth: 0,
                   borderColor: Colors.transparent,
                   selectedBorderColor: Colors.transparent,
@@ -623,12 +626,12 @@ class _Train2PageState extends State<Train2Page> {
             centerTitle: true,
             actions: [
               IconButton(
-                icon: const CircleAvatar(
-                  backgroundColor: Colors.lightGreen,
+                icon: CircleAvatar(
+                  backgroundColor: semantic.trainProfileAvatar,
                   child: Text(
                     'P',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: semantic.onTrainProfileAvatar,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -651,6 +654,8 @@ class _Train2PageState extends State<Train2Page> {
 
   Widget _buildTrainContent(SelectedProfile sel) {
     final strings = AppLocalizations.of(context);
+    final semantic = context.semanticColors;
+    final dataVisualization = context.dataVisualizationTokens;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -677,13 +682,13 @@ class _Train2PageState extends State<Train2Page> {
         const SizedBox(height: 8),
         GenericBar(
           label: AppLocalizations.of(context).trainGeneratePlans,
-          color: Colors.purple,
+          color: dataVisualization.tertiarySeries,
           onTap: () => _openCustomPresetGenerator(sel),
         ),
         const SizedBox(height: 8),
         GenericBar(
           label: AppLocalizations.of(context).trainAddPlan,
-          color: Colors.purple,
+          color: dataVisualization.tertiarySeries,
           onTap: () async {
             final strings = AppLocalizations.of(context);
             final profileId = sel.currentProfile?.id;
@@ -709,7 +714,7 @@ class _Train2PageState extends State<Train2Page> {
               _isStartingOptimized
                   ? AppLocalizations.of(context).trainBuildingOptimized
                   : AppLocalizations.of(context).trainStartOptimized,
-          color: Colors.green,
+          color: semantic.trainOptimizedAction,
           onTap:
               _isStartingOptimized ? null : () => _startOptimizedWorkout(sel),
           trailing:
@@ -732,7 +737,7 @@ class _Train2PageState extends State<Train2Page> {
                       minWidth: 32,
                       minHeight: 32,
                     ),
-                    color: Colors.green,
+                    color: semantic.trainOptimizedAction,
                     onPressed: _openOptimizedWorkoutSettings,
                   ),
         ),

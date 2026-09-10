@@ -231,20 +231,9 @@ class _ProfilePageState extends State<ProfilePage> {
         iconColor: scheme.onSurfaceVariant,
         title: strings.profileDietNutritionSettingsTitle,
         subtitle: strings.profileDietNutritionSettingsSubtitle,
-        trailing: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-          decoration: BoxDecoration(
-            color: scheme.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: scheme.outlineVariant),
-          ),
-          child: Text(
-            strings.profileLater,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: scheme.onSurfaceVariant,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
+        trailing: SettingsStatusBadge(
+          label: strings.profileLater,
+          foregroundColor: scheme.onSurfaceVariant,
         ),
       ),
     );

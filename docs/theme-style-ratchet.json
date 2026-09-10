@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "files": [
+    {
+      "path": "lib/theme/widgets/tonos_surface.dart",
+      "owner": "theme-maintainers",
+      "evidence": "test/theme/widgets/tonos_surface_test.dart covers injected surface, shape and effect roles, clipping, shadows, tap behavior and semantics; the latest user-run theme suite passed 200 tests.",
+      "approvals": [
+        {
+          "fingerprint": "2c7e21fed72c6f6b4eebdc38f735de9bb4fa3a3176440ae6f47e9bf0e3431bd8",
+          "count": 1,
+          "reason": "Reviewed RoundedRectangleBorder recipe in the TonosSurface shape path."
+        },
+        {
+          "fingerprint": "2c7f1b1f305688e0abca3dd091fe8342ab15b65e9159b137129c3a1da7240937",
+          "count": 1,
+          "reason": "Reviewed BorderSide outline recipe for the semantic input variant."
+        },
+        {
+          "fingerprint": "56e8c522e82b8c5dcf2e29742da65fec9a1c903e24a8531377020d398d8115fa",
+          "count": 1,
+          "reason": "Reviewed BoxDecoration shadow wrapper for the compact-card variant."
+        },
+        {
+          "fingerprint": "8ef342baa03979dd6421a045f53f88c9fc23658e1c2bb3ad3ff79373efa9aad9",
+          "count": 1,
+          "reason": "Reviewed Material surface composition and effect-role usage."
+        },
+        {
+          "fingerprint": "9bdf961789555fe00416725e0c162aaf0336445979911b96ca29175c8e950cbb",
+          "count": 2,
+          "reason": "Reviewed the two Color-typed surface declarations retained by the primitive."
+        },
+        {
+          "fingerprint": "bb57f75a7b25430369f73e8fa187eca804bc4f47907be13257b6f63e7878ba9d",
+          "count": 1,
+          "reason": "Reviewed the surface's themed border and shape construction."
+        }
+      ]
+    }
+  ]
+}

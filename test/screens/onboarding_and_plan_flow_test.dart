@@ -71,6 +71,38 @@ void main() {
     expect(find.text('Renseignements'), findsOneWidget);
   });
 
+  testWidgets('onboarding advances without animation when motion is reduced', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(430, 932));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          Provider<AppRepository>.value(value: _OnboardingRepository()),
+          ChangeNotifierProvider(create: (_) => UnitPreferenceProvider()),
+          ChangeNotifierProvider(create: (_) => LocalePreferenceProvider()),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          builder:
+              (context, child) => MediaQuery(
+                data: MediaQuery.of(context).copyWith(disableAnimations: true),
+                child: child!,
+              ),
+          home: const OnboardingFlow(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Next'));
+    await tester.pump();
+    final pages = tester.widget<PageView>(find.byType(PageView));
+    expect(pages.controller!.page, 1.0);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('onboarding welcome reflows new locales at large text sizes', (
     tester,
   ) async {

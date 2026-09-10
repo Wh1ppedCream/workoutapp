@@ -2,13 +2,50 @@ import 'package:env_test/l10n/generated/app_localizations.dart';
 import 'package:env_test/models/models.dart';
 import 'package:env_test/repositories/app_repository.dart';
 import 'package:env_test/screens/nutrition/measured_items_page.dart';
-import 'package:env_test/theme/app_colors.dart';
 import 'package:env_test/widgets/health_trends_section.dart';
+import 'package:env_test/theme/classic_theme.dart';
+import 'package:env_test/theme/theme_extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
 void main() {
+  testWidgets('health cards resolve Classic and injected progress surfaces', (
+    tester,
+  ) async {
+    final base = ClassicThemeDefinition.light();
+    for (final color in [base.cardColor, Colors.orange]) {
+      final theme = base.copyWith(
+        extensions: [
+          ...base.extensions.values.where(
+            (extension) =>
+                extension.runtimeType != base.progressColors.runtimeType,
+          ),
+          base.progressColors.copyWith(healthCard: color),
+        ],
+      );
+      await tester.pumpWidget(
+        Provider<AppRepository>.value(
+          value: _MeasurementRepository(),
+          child: MaterialApp(
+            theme: theme,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const Scaffold(body: HealthTrendsSection()),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final card = find.byKey(const ValueKey('measurement-trend-1'));
+      final material =
+          find.ancestor(of: card, matching: find.byType(Material)).first;
+      expect(material, findsOneWidget);
+      expect(tester.widget<Material>(material).color, color);
+      expect(tester.getSize(card).width, 154);
+      expect(tester.takeException(), isNull);
+    }
+  });
+
   testWidgets('uses a two-column trend grid in the measurements hub', (
     tester,
   ) async {
@@ -16,9 +53,6 @@ void main() {
       Provider<AppRepository>.value(
         value: _MeasurementRepository(),
         child: MaterialApp(
-          theme: ThemeData(
-            extensions: const <ThemeExtension<dynamic>>[AppColors()],
-          ),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: const MeasuredItemsPage(),
@@ -46,9 +80,6 @@ void main() {
       Provider<AppRepository>.value(
         value: _MeasurementRepository(),
         child: MaterialApp(
-          theme: ThemeData(
-            extensions: const <ThemeExtension<dynamic>>[AppColors()],
-          ),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: const Scaffold(body: HealthTrendsSection()),

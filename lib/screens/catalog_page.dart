@@ -10,6 +10,7 @@ import '../repositories/app_repository.dart';
 import '../services/catalog_entity_localizer.dart';
 import '../services/safe_failure.dart';
 import '../services/tutorial_state_store.dart';
+import '../theme/theme_extensions.dart';
 import '../utils/localized_body_part_name.dart';
 import '../widgets/body_heatmap.dart';
 import '../widgets/exercise_media_thumbnail.dart';
@@ -431,6 +432,7 @@ class _ExerciseUsageBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final surfaces = context.surfaceTokens;
     final strings = AppLocalizations.of(context);
     final equipment = summary.definition.equipmentList
         .where((item) => item.name.trim().isNotEmpty)
@@ -446,11 +448,9 @@ class _ExerciseUsageBar extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(
-          alpha: 0.65,
-        ),
+        color: surfaces.catalogUsage,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: theme.colorScheme.outlineVariant),
+        border: Border.all(color: surfaces.catalogOutline),
       ),
       child: Row(
         children: [

@@ -7,6 +7,8 @@ import '../l10n/generated/app_localizations.dart';
 import '../models/models.dart';
 import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
+import '../theme/theme_extensions.dart';
+import '../theme/widgets/workout_actions.dart';
 import '../utils/weight_unit_formatter.dart';
 import 'exercise_media_thumbnail.dart';
 
@@ -225,6 +227,10 @@ class _WeightCardState extends State<WeightCard> {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final semantic = context.semanticColors;
+    final shapes = context.shapeTokens;
+    final surfaces = context.surfaceTokens;
     final we = widget.exercise;
     final sets = we.sets;
     final readOnly = widget.readOnlyMode;
@@ -233,12 +239,17 @@ class _WeightCardState extends State<WeightCard> {
     final effectiveCollapsed = widget.forceCollapsed || _isCollapsed;
     final doneColor =
         allSetsComplete
-            ? Colors.green
-            : Theme.of(context).textTheme.bodySmall?.color;
+            ? semantic.workoutCompleted
+            : theme.textTheme.bodySmall?.color;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
-      color: allSetsComplete ? Colors.green.withAlpha(24) : null,
+      color:
+          allSetsComplete
+              ? semantic.workoutCompleted.withValues(
+                alpha: surfaces.workoutCardCompleteFill,
+              )
+              : null,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -267,10 +278,7 @@ class _WeightCardState extends State<WeightCard> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        we.name,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
+                      Text(we.name, style: theme.textTheme.titleMedium),
                       const SizedBox(height: 4),
                       Row(
                         children: [
@@ -286,9 +294,7 @@ class _WeightCardState extends State<WeightCard> {
                             AppLocalizations.of(
                               context,
                             ).weightCardSetsDone(completedCount, sets.length),
-                            style: Theme.of(
-                              context,
-                            ).textTheme.bodySmall!.copyWith(
+                            style: theme.textTheme.bodySmall!.copyWith(
                               color: doneColor,
                               fontWeight:
                                   allSetsComplete ? FontWeight.w700 : null,
@@ -369,12 +375,19 @@ class _WeightCardState extends State<WeightCard> {
                 children.add(
                   Container(
                     decoration: BoxDecoration(
-                      color: isSetComplete ? Colors.green.withAlpha(76) : null,
+                      color:
+                          isSetComplete
+                              ? semantic.workoutCompleted.withValues(
+                                alpha: surfaces.workoutSetCompleteFill,
+                              )
+                              : null,
                       border:
                           _isChangeSetMode
-                              ? Border.all(color: Colors.grey)
+                              ? Border.all(
+                                color: surfaces.workoutChangeSetOutline,
+                              )
                               : null,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: shapes.control,
                     ),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
@@ -407,7 +420,7 @@ class _WeightCardState extends State<WeightCard> {
                                   semanticLabel: strings.weightSetLabel(
                                     index + 1,
                                   ),
-                                  activeColor: Colors.green,
+                                  activeColor: semantic.workoutCompleted,
                                   visualDensity: VisualDensity.compact,
                                   onChanged:
                                       readOnly
@@ -624,7 +637,9 @@ class _WeightCardState extends State<WeightCard> {
                           margin: const EdgeInsets.only(left: 32, bottom: 4),
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey),
+                            border: Border.all(
+                              color: surfaces.workoutChangeSetOutline,
+                            ),
                           ),
                           child: Row(
                             children: [
@@ -761,17 +776,10 @@ class _WeightCardState extends State<WeightCard> {
                   children.add(
                     Align(
                       alignment: Alignment.centerLeft,
-                      child: Container(
-                        margin: const EdgeInsets.only(left: 16, bottom: 4),
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 4,
-                          horizontal: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.blueAccent),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: GestureDetector(
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 16, bottom: 4),
+                        child: WorkoutAddChangeSetAction(
+                          label: strings.weightAddChangeSet,
                           onTap: () {
                             setState(() {
                               _cSets.putIfAbsent(index, () => []);
@@ -787,7 +795,6 @@ class _WeightCardState extends State<WeightCard> {
                             });
                             widget.onValueChanged?.call();
                           },
-                          child: Text(strings.weightAddChangeSet),
                         ),
                       ),
                     ),
@@ -906,7 +913,7 @@ class _WeightExerciseThumbnailButtonState
           return ExerciseMediaThumbnail(
             definition: definition,
             size: 48,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: context.shapeTokens.mediaThumbnail,
             padding: EdgeInsets.zero,
             framed: false,
             onTap: widget.onTap,
@@ -916,7 +923,7 @@ class _WeightExerciseThumbnailButtonState
         return SizedBox.square(
           dimension: 48,
           child: InkWell(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: context.shapeTokens.mediaThumbnail,
             onTap: widget.onTap,
             child: Center(
               child:

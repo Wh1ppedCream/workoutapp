@@ -4,6 +4,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../l10n/generated/app_localizations.dart';
+import '../theme/theme_extensions.dart';
+import '../theme/tokens/app_tutorial_tokens.dart';
 import '../services/tutorial_state_store.dart';
 
 class GuidedTutorialStep {
@@ -108,7 +110,10 @@ class _GuidedTutorialOverlayState extends State<GuidedTutorialOverlay>
     if (targetContext != null) {
       await Scrollable.ensureVisible(
         targetContext,
-        duration: const Duration(milliseconds: 260),
+        duration: tutorialMotion(
+          context,
+          context.tutorialTokens.guidedScrollDuration,
+        ),
         alignment: 0.36,
       );
       await Future<void>.delayed(const Duration(milliseconds: 280));
@@ -210,8 +215,8 @@ class _GuidedTutorialOverlayState extends State<GuidedTutorialOverlay>
             if (measuredTarget == null) {
               return Stack(
                 children: [
-                  const ModalBarrier(
-                    color: Color(0xAD000000),
+                  ModalBarrier(
+                    color: context.tutorialTokens.scrim,
                     dismissible: false,
                   ),
                   Positioned(
@@ -269,7 +274,12 @@ class _GuidedTutorialOverlayState extends State<GuidedTutorialOverlay>
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     onTap: () {},
-                    child: CustomPaint(painter: _TutorialScrimPainter(target)),
+                    child: CustomPaint(
+                      painter: _TutorialScrimPainter(
+                        target,
+                        context.tutorialTokens,
+                      ),
+                    ),
                   ),
                 ),
                 Positioned.fromRect(
@@ -277,15 +287,20 @@ class _GuidedTutorialOverlayState extends State<GuidedTutorialOverlay>
                   child: IgnorePointer(
                     child: DecoratedBox(
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(22),
+                        borderRadius: context.tutorialTokens.focusShape,
                         border: Border.all(color: scheme.primary, width: 2),
-                        boxShadow: [
-                          BoxShadow(
-                            color: scheme.primary.withValues(alpha: 0.36),
-                            blurRadius: 22,
-                            spreadRadius: 2,
-                          ),
-                        ],
+                        boxShadow:
+                            context.tutorialTokens.effectsEnabled
+                                ? [
+                                  BoxShadow(
+                                    color: scheme.primary.withValues(
+                                      alpha: 0.36,
+                                    ),
+                                    blurRadius: 22,
+                                    spreadRadius: 2,
+                                  ),
+                                ]
+                                : const [],
                       ),
                     ),
                   ),
@@ -403,15 +418,12 @@ class _TutorialCard extends StatelessWidget {
       constraints: const BoxConstraints(maxWidth: 420),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(26),
+        borderRadius: context.tutorialTokens.cardShape,
         border: Border.all(color: scheme.primary.withValues(alpha: 0.42)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.28),
-            blurRadius: 28,
-            offset: const Offset(0, 14),
-          ),
-        ],
+        boxShadow:
+            context.tutorialTokens.effectsEnabled
+                ? [context.tutorialTokens.cardShadow]
+                : const [],
       ),
       child: Padding(
         padding: const EdgeInsets.all(18),
@@ -537,7 +549,7 @@ class _TutorialCardContent extends StatelessWidget {
               height: 42,
               decoration: BoxDecoration(
                 color: scheme.primary.withValues(alpha: 0.18),
-                borderRadius: BorderRadius.circular(15),
+                borderRadius: context.tutorialTokens.iconShape,
               ),
               child: Icon(step.icon, color: scheme.primary),
             ),
@@ -587,7 +599,10 @@ class _SkipAllTutorialConfirmation extends StatelessWidget {
     return Positioned.fill(
       child: Stack(
         children: [
-          const ModalBarrier(color: Color(0xB3000000), dismissible: false),
+          ModalBarrier(
+            color: context.tutorialTokens.confirmationScrim,
+            dismissible: false,
+          ),
           Center(
             child: SafeArea(
               minimum: const EdgeInsets.all(24),
@@ -619,7 +634,9 @@ class _SkipAllTutorialConfirmation extends StatelessWidget {
 class _TutorialScrimPainter extends CustomPainter {
   final Rect targetRect;
 
-  const _TutorialScrimPainter(this.targetRect);
+  final AppTutorialTokens tokens;
+
+  const _TutorialScrimPainter(this.targetRect, this.tokens);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -627,18 +644,15 @@ class _TutorialScrimPainter extends CustomPainter {
         Path()
           ..fillType = PathFillType.evenOdd
           ..addRect(Offset.zero & size)
-          ..addRRect(
-            RRect.fromRectAndRadius(targetRect, const Radius.circular(22)),
-          );
-    canvas.drawPath(
-      path,
-      Paint()..color = Colors.black.withValues(alpha: 0.68),
-    );
+          ..addRRect(tokens.focusShape.toRRect(targetRect));
+    canvas.drawPath(path, Paint()..color = tokens.scrim);
   }
 
   @override
   bool shouldRepaint(covariant _TutorialScrimPainter oldDelegate) {
-    return oldDelegate.targetRect != targetRect;
+    return oldDelegate.targetRect != targetRect ||
+        oldDelegate.tokens.scrim != tokens.scrim ||
+        oldDelegate.tokens.focusShape != tokens.focusShape;
   }
 }
 
@@ -647,6 +661,9 @@ class _MeasuringTutorialScrim extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const ModalBarrier(color: Color(0x66000000), dismissible: false);
+    return ModalBarrier(
+      color: context.tutorialTokens.measuringScrim,
+      dismissible: false,
+    );
   }
 }

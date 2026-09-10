@@ -15,6 +15,7 @@ import '../../services/active_plan_store.dart';
 import '../../services/preset_generation_service.dart';
 import '../../services/tutorial_state_store.dart';
 import '../../models/training_plan_models.dart';
+import '../../theme/theme_extensions.dart';
 import '../../widgets/bodypart_focus_chips.dart';
 import '../../widgets/guided_tutorial_overlay.dart';
 import '../../utils/tutorial_launcher.dart';
@@ -375,21 +376,18 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
   }
 
   Widget _buildIntroCard() {
-    final scheme = Theme.of(context).colorScheme;
+    final generation = context.generationTokens;
     final strings = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(26),
+        borderRadius: generation.introShape,
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            scheme.primaryContainer.withValues(alpha: 0.46),
-            scheme.surfaceContainerHighest.withValues(alpha: 0.58),
-          ],
+          colors: [generation.introGradientStart, generation.introGradientEnd],
         ),
-        border: Border.all(color: scheme.primary.withValues(alpha: 0.18)),
+        border: Border.all(color: generation.introBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -400,10 +398,10 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: scheme.primary.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(18),
+                  color: generation.introIconFill,
+                  borderRadius: generation.introIconShape,
                 ),
-                child: Icon(Icons.auto_awesome, color: scheme.primary),
+                child: Icon(Icons.auto_awesome, color: generation.accent),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -420,7 +418,7 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
                     Text(
                       strings.generateIntroBody,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: scheme.onSurfaceVariant,
+                        color: generation.secondaryText,
                       ),
                     ),
                   ],
@@ -467,18 +465,18 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
   }
 
   Widget _buildSummaryPill({required IconData icon, required String text}) {
-    final scheme = Theme.of(context).colorScheme;
+    final generation = context.generationTokens;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
       decoration: BoxDecoration(
-        color: scheme.surface.withValues(alpha: 0.66),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+        color: generation.summarySurface,
+        borderRadius: generation.summaryPillShape,
+        border: Border.all(color: generation.summaryBorder),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 17, color: scheme.primary),
+          Icon(icon, size: 17, color: generation.accent),
           const SizedBox(width: 8),
           Text(
             text,
@@ -497,15 +495,13 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
     required String subtitle,
     required List<Widget> children,
   }) {
-    final scheme = Theme.of(context).colorScheme;
+    final generation = context.generationTokens;
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.36),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.45),
-        ),
+        color: generation.sectionSurface,
+        borderRadius: generation.sectionShape,
+        border: Border.all(color: generation.sectionBorder),
       ),
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
@@ -516,10 +512,10 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
             width: 42,
             height: 42,
             decoration: BoxDecoration(
-              color: scheme.primary.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(16),
+              color: generation.sectionIconFill,
+              borderRadius: generation.sectionIconShape,
             ),
-            child: Icon(icon, color: scheme.primary),
+            child: Icon(icon, color: generation.accent),
           ),
           title: Text(
             title,
@@ -531,7 +527,7 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
             subtitle,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: scheme.onSurfaceVariant),
+            style: TextStyle(color: generation.secondaryText),
           ),
           children: children,
         ),
@@ -546,12 +542,10 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
     required String helperText,
     String? suffixText,
   }) {
-    final scheme = Theme.of(context).colorScheme;
+    final generation = context.generationTokens;
     final border = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(18),
-      borderSide: BorderSide(
-        color: scheme.outlineVariant.withValues(alpha: 0.78),
-      ),
+      borderRadius: generation.fieldShape,
+      borderSide: BorderSide(color: generation.fieldBorder),
     );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -559,7 +553,7 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
         Text(
           label,
           style: TextStyle(
-            color: scheme.onSurfaceVariant,
+            color: generation.fieldLabel,
             fontSize: 13,
             fontWeight: FontWeight.w700,
           ),
@@ -579,7 +573,7 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
               horizontal: 14,
               vertical: 14,
             ),
-            fillColor: scheme.surface.withValues(alpha: 0.54),
+            fillColor: generation.fieldFill,
             border: border,
             enabledBorder: border,
           ),
@@ -589,7 +583,7 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
           helperText,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
-          style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
+          style: TextStyle(color: generation.secondaryText, fontSize: 12),
         ),
       ],
     );
@@ -602,15 +596,15 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
     required T? groupValue,
     required ValueChanged<T?> onChanged,
   }) {
-    final scheme = Theme.of(context).colorScheme;
+    final generation = context.generationTokens;
     final selected = value == groupValue;
     final shape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: generation.choiceShape,
       side: BorderSide(
         color:
             selected
-                ? scheme.primary.withValues(alpha: 0.72)
-                : scheme.outlineVariant.withValues(alpha: 0.58),
+                ? generation.choiceSelectedBorder
+                : generation.choiceUnselectedBorder,
       ),
     );
     return Padding(
@@ -618,8 +612,8 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
       child: Material(
         color:
             selected
-                ? scheme.primaryContainer.withValues(alpha: 0.24)
-                : scheme.surface.withValues(alpha: 0.38),
+                ? generation.choiceSelectedSurface
+                : generation.choiceUnselectedSurface,
         shape: shape,
         clipBehavior: Clip.antiAlias,
         child: RadioListTile<T>(
@@ -643,7 +637,7 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
             subtitle,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
+            style: TextStyle(color: generation.secondaryText, fontSize: 12),
           ),
         ),
       ),
@@ -1080,19 +1074,15 @@ class _OnboardingPlanActionBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final generation = context.generationTokens;
     final strings = AppLocalizations.of(context);
     return SafeArea(
       top: false,
       child: Container(
         padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
         decoration: BoxDecoration(
-          color: scheme.surface.withValues(alpha: 0.96),
-          border: Border(
-            top: BorderSide(
-              color: scheme.outlineVariant.withValues(alpha: 0.6),
-            ),
-          ),
+          color: generation.actionBarSurface,
+          border: Border(top: BorderSide(color: generation.actionBarBorder)),
         ),
         child: Row(
           children: [
@@ -1127,7 +1117,7 @@ class _PlanCountBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final generation = context.generationTokens;
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -1139,13 +1129,13 @@ class _PlanCountBadge extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
               decoration: BoxDecoration(
-                color: scheme.error,
-                borderRadius: BorderRadius.circular(999),
+                color: generation.badge,
+                borderRadius: generation.badgeShape,
               ),
               child: Text(
                 count > 99 ? '99+' : '$count',
                 style: TextStyle(
-                  color: scheme.onError,
+                  color: generation.onBadge,
                   fontSize: 10,
                   fontWeight: FontWeight.w900,
                 ),

@@ -9,6 +9,7 @@ import '../screens/exercise/exercise_catalog_page.dart';
 import '../services/catalog_entity_localizer.dart';
 import '../services/exercise_equipment_compatibility.dart';
 import '../theme/theme_extensions.dart';
+import '../theme/widgets/workout_actions.dart';
 import '../utils/async_pool.dart';
 import 'body_heatmap.dart';
 import 'localized_catalog_entity_name.dart';
@@ -500,29 +501,20 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
             child: Row(
               children: [
                 Expanded(
-                  child: OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.redAccent,
-                      side: const BorderSide(color: Colors.redAccent),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                    ),
+                  child: WorkoutSwapAction(
+                    cancel: true,
+                    label: strings.commonCancel,
                     onPressed: () => Navigator.pop(context),
-                    child: Text(strings.commonCancel),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: FilledButton(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                    ),
+                  child: WorkoutSwapAction(
+                    label: strings.swapConfirm,
                     onPressed:
                         selected == null
                             ? null
                             : () => Navigator.pop(context, selected.definition),
-                    child: Text(strings.swapConfirm),
                   ),
                 ),
               ],
@@ -619,31 +611,11 @@ class _ProfileEquipmentFilterRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.38),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.55),
-        ),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              strings.swapFilterProfileEquipment,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: enabled ? null : scheme.onSurfaceVariant,
-              ),
-            ),
-          ),
-          Switch(value: value, onChanged: enabled ? onChanged : null),
-        ],
-      ),
+    return WorkoutEquipmentFilter(
+      label: strings.swapFilterProfileEquipment,
+      value: value,
+      enabled: enabled,
+      onChanged: onChanged,
     );
   }
 }
@@ -662,7 +634,7 @@ class _ExerciseSwapBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colors = context.colors;
+    final dataVisualization = context.dataVisualizationTokens;
 
     return Card(
       child: Padding(
@@ -701,7 +673,12 @@ class _ExerciseSwapBox extends StatelessWidget {
                                     '  •  ${equipmentNames.isEmpty ? AppLocalizations.of(context).swapNoEquipment : equipmentNames.join(', ')}',
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: theme.textTheme.bodySmall?.color
-                                      ?.withAlpha(184),
+                                      ?.withValues(
+                                        alpha:
+                                            context
+                                                .surfaceTokens
+                                                .swapSecondaryTextOpacity,
+                                      ),
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -729,8 +706,8 @@ class _ExerciseSwapBox extends StatelessWidget {
                   child: Center(
                     child: BodyHeatmap(
                       frequencyMap: entry.frequencyMap,
-                      lowColor: colors.historySummaryHeatmapLow!,
-                      highColor: colors.historySummaryHeatmapHigh!,
+                      lowColor: dataVisualization.heatmapLow,
+                      highColor: dataVisualization.heatmapHigh,
                       width: heatmapSize,
                       height: heatmapSize,
                     ),
@@ -784,14 +761,7 @@ class _BodyPartNameList extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: 4),
               child: Row(
                 children: [
-                  Container(
-                    width: 6,
-                    height: 6,
-                    decoration: const BoxDecoration(
-                      color: Colors.green,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
+                  const WorkoutMatchMarker(),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
@@ -821,23 +791,7 @@ class _MatchBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
     final percent = (score * 100).clamp(0, 100).round();
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-      decoration: BoxDecoration(
-        color: Colors.green.withAlpha(30),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.green.withAlpha(110)),
-      ),
-      child: Text(
-        strings.swapMatch(percent),
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: Colors.green,
-          fontSize: 10,
-          height: 1,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
+    return WorkoutMatchBadge(label: strings.swapMatch(percent));
   }
 }
 

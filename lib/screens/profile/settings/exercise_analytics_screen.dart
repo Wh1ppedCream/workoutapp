@@ -7,6 +7,7 @@ import '../../../models/models.dart';
 import '../../../repositories/app_repository.dart';
 import '../../../services/catalog_entity_localizer.dart';
 import '../../../services/safe_failure.dart';
+import '../../../theme/theme_extensions.dart';
 import '../../exercise/exercise_catalog_page.dart';
 import '../../../widgets/localized_catalog_entity_name.dart';
 import '../../../widgets/settings_tiles.dart';
@@ -426,17 +427,18 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
   Widget _buildExercisePicker(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final shapes = context.shapeTokens;
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: shapes.settingsPicker,
         onTap: _pickExercise,
         child: Container(
           padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
           decoration: BoxDecoration(
             color: scheme.surfaceContainerHighest.withValues(alpha: 0.34),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: shapes.settingsPicker,
             border: Border.all(
               color: SettingsAccent.advanced.withValues(alpha: 0.42),
             ),
@@ -448,7 +450,7 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
                 height: 40,
                 decoration: BoxDecoration(
                   color: SettingsAccent.advanced.withValues(alpha: 0.16),
-                  borderRadius: BorderRadius.circular(13),
+                  borderRadius: shapes.settingsIcon,
                 ),
                 child: const Icon(
                   Icons.fitness_center,
@@ -490,11 +492,12 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
   Widget _buildTabBar(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final shapes = context.shapeTokens;
 
     return Container(
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest.withValues(alpha: 0.34),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: shapes.profileTile,
       ),
       child: TabBar(
         controller: _tabController,
@@ -502,7 +505,7 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
         indicatorSize: TabBarIndicatorSize.tab,
         indicator: BoxDecoration(
           color: SettingsAccent.advanced.withValues(alpha: 0.24),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: shapes.settingsTabIndicator,
         ),
         labelColor: SettingsAccent.advanced,
         unselectedLabelColor: scheme.onSurfaceVariant,
@@ -688,19 +691,11 @@ class _AllocationSectionHeader extends StatelessWidget {
                 ),
             ],
           ),
-          Container(
-            margin: const EdgeInsets.only(top: 2, bottom: 4),
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: _sourceColor(source).withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(99),
-            ),
-            child: Text(
-              source.localizedLabel(AppLocalizations.of(context)),
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: _sourceColor(source),
-                fontWeight: FontWeight.w800,
-              ),
+          Padding(
+            padding: const EdgeInsets.only(top: 2, bottom: 4),
+            child: SettingsAccentPill(
+              label: source.localizedLabel(AppLocalizations.of(context)),
+              color: _sourceColor(source),
             ),
           ),
           const SizedBox(height: 3),
@@ -742,12 +737,13 @@ class _MuscleCreditCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final shapes = context.shapeTokens;
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest.withValues(alpha: 0.34),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: shapes.profileTile,
         border: Border.all(
           color: (source == ExerciseAllocationSource.personalOverride
                   ? SettingsAccent.advanced
@@ -767,7 +763,7 @@ class _MuscleCreditCard extends StatelessWidget {
             height: 38,
             decoration: BoxDecoration(
               color: SettingsAccent.advanced.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: shapes.control,
             ),
             child: const Icon(
               Icons.fitness_center,
@@ -813,8 +809,9 @@ class _MuscleCreditCard extends StatelessWidget {
                 decimal: true,
               ),
               textInputAction: TextInputAction.done,
-              decoration: InputDecoration(
-                labelText: AppLocalizations.of(context).allocationCredit,
+              decoration: settingsFieldDecoration(
+                context,
+                label: AppLocalizations.of(context).allocationCredit,
                 isDense: true,
               ),
               onChanged: (_) => onChanged(),
@@ -846,12 +843,13 @@ class _BodyPartCreditCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final shapes = context.shapeTokens;
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest.withValues(alpha: 0.34),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: shapes.profileTile,
         border: Border.all(color: _sourceColor(source).withValues(alpha: 0.48)),
       ),
       child: Row(
@@ -861,7 +859,7 @@ class _BodyPartCreditCard extends StatelessWidget {
             height: 38,
             decoration: BoxDecoration(
               color: SettingsAccent.training.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: shapes.control,
             ),
             child: const Icon(
               Icons.accessibility_new,
@@ -887,8 +885,9 @@ class _BodyPartCreditCard extends StatelessWidget {
                 decimal: true,
               ),
               textInputAction: TextInputAction.done,
-              decoration: InputDecoration(
-                labelText: AppLocalizations.of(context).allocationCredit,
+              decoration: settingsFieldDecoration(
+                context,
+                label: AppLocalizations.of(context).allocationCredit,
                 isDense: true,
               ),
               onChanged: (_) => onChanged(),

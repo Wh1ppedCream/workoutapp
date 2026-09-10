@@ -1,6 +1,7 @@
 // File: lib/screens/nutrition/food_customization_page.dart
 
 import 'package:flutter/material.dart';
+import '../../theme/theme_extensions.dart';
 import 'package:flutter/services.dart';
 
 import '../../l10n/generated/app_localizations.dart';
@@ -494,14 +495,15 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
                       children: [
                         Container(
                           height: 100,
-                          color: Colors.grey[200],
+                          color: context.nutritionTokens.photoPlaceholder,
                           child:
                               _foodImagePath == null
-                                  ? const Center(
+                                  ? Center(
                                     child: Icon(
                                       Icons.photo,
                                       size: 40,
-                                      color: Colors.grey,
+                                      color:
+                                          context.nutritionTokens.mutedAction,
                                     ),
                                   )
                                   : Image.network(
@@ -525,14 +527,15 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
                       children: [
                         Container(
                           height: 100,
-                          color: Colors.grey[200],
+                          color: context.nutritionTokens.photoPlaceholder,
                           child:
                               _labelImagePath == null
-                                  ? const Center(
+                                  ? Center(
                                     child: Icon(
                                       Icons.photo,
                                       size: 40,
-                                      color: Colors.grey,
+                                      color:
+                                          context.nutritionTokens.mutedAction,
                                     ),
                                   )
                                   : Image.network(
@@ -575,7 +578,10 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
                 ),
                 child: Text(
                   strings.foodCustomizationDensityHelp,
-                  style: TextStyle(fontSize: 12, color: Colors.black54),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: context.nutritionTokens.densityHelp,
+                  ),
                 ),
               ),
 
@@ -636,8 +642,8 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
       elevation: 0,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.shade300),
+        borderRadius: context.nutritionTokens.sectionShape,
+        side: BorderSide(color: context.nutritionTokens.foodBorder),
       ),
       child: Theme(
         data: theme.copyWith(dividerColor: Colors.transparent),
@@ -957,8 +963,8 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
       elevation: 0,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.shade300),
+        borderRadius: context.nutritionTokens.sectionShape,
+        side: BorderSide(color: context.nutritionTokens.foodBorder),
       ),
       child: Theme(
         data: theme.copyWith(dividerColor: Colors.transparent),
@@ -1108,7 +1114,9 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 6),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      shape: RoundedRectangleBorder(
+        borderRadius: context.nutritionTokens.portionShape,
+      ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
         child: Column(

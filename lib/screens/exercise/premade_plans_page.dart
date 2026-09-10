@@ -15,6 +15,7 @@ import '../../services/exercise_equipment_compatibility.dart';
 import '../../services/exercise_content_localizer.dart';
 import '../../services/premade_plan_localizer.dart';
 import '../../services/tutorial_state_store.dart';
+import '../../theme/theme_extensions.dart';
 import '../../utils/async_pool.dart';
 import '../../utils/localized_formatters.dart';
 import '../../utils/tutorial_launcher.dart';
@@ -176,10 +177,13 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
       final presetName = await _uniqueAddedPlanName(plan.name, profileId);
       final writes = <WorkoutExerciseWrite>[];
       for (final exercise in exercises) {
-        final defId = await _repo.findOrCreateExerciseDefinition(
-          exercise.name,
-          exercise.equipment,
-        );
+        final definition = await _findPremadeExerciseDefinition(exercise);
+        final defId =
+            definition?.id ??
+            await _repo.findOrCreateExerciseDefinition(
+              exercise.name,
+              exercise.equipment,
+            );
         writes.add(
           WorkoutExerciseWrite(
             exercise: WeightExercise(
@@ -409,6 +413,12 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
   Future<ExerciseDefinition?> _findPremadeExerciseDefinition(
     PremadeTrainingExercise exercise,
   ) async {
+    final catalogId = exercise.catalogId;
+    if (catalogId != null && catalogId.isNotEmpty) {
+      final definition = await _repo.fetchDefinitionByCatalogId(catalogId);
+      if (definition != null) return definition;
+    }
+
     try {
       final id = await _repo.findExerciseDefinitionId(
         exercise.name,
@@ -624,7 +634,7 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
       appBar: AppBar(title: Text(strings.premadePlansTitle)),
       bottomNavigationBar:
           widget.onboardingMode
-              ? _OnboardingPlanActionBar(
+              ? OnboardingPlanActionBar(
                 addedCount: _onboardingCreatedPlanIds.length,
                 isBusy: _isDiscardingOnboardingPlans,
                 onCancel: _discardOnboardingPlans,
@@ -749,13 +759,14 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
   }
 }
 
-class _OnboardingPlanActionBar extends StatelessWidget {
+class OnboardingPlanActionBar extends StatelessWidget {
   final int addedCount;
   final bool isBusy;
   final VoidCallback onCancel;
   final VoidCallback? onSave;
 
-  const _OnboardingPlanActionBar({
+  const OnboardingPlanActionBar({
+    super.key,
     required this.addedCount,
     required this.isBusy,
     required this.onCancel,
@@ -765,16 +776,18 @@ class _OnboardingPlanActionBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
-    final scheme = Theme.of(context).colorScheme;
+    final surfaces = context.surfaceTokens;
     return SafeArea(
       top: false,
       child: Container(
         padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
         decoration: BoxDecoration(
-          color: scheme.surface.withValues(alpha: 0.96),
+          color: surfaces.planActionBar,
           border: Border(
             top: BorderSide(
-              color: scheme.outlineVariant.withValues(alpha: 0.6),
+              color: Theme.of(
+                context,
+              ).colorScheme.outlineVariant.withValues(alpha: 0.6),
             ),
           ),
         ),
@@ -812,6 +825,7 @@ class _PlanCountBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final shapes = context.shapeTokens;
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -824,7 +838,7 @@ class _PlanCountBadge extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
               decoration: BoxDecoration(
                 color: scheme.error,
-                borderRadius: BorderRadius.circular(999),
+                borderRadius: shapes.pill,
               ),
               child: Text(
                 count > 99 ? '99+' : '$count',
@@ -912,6 +926,7 @@ class _PremadeProfileEquipmentFilterCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final surfaces = context.surfaceTokens;
     final strings = AppLocalizations.of(context);
     final subtitle =
         !enabled
@@ -927,7 +942,7 @@ class _PremadeProfileEquipmentFilterCard extends StatelessWidget {
             : strings.premadeEquipmentFits;
 
     return Card(
-      color: scheme.surfaceContainerHighest.withValues(alpha: 0.38),
+      color: surfaces.planFilter,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(14, 10, 10, 10),
         child: Row(
@@ -1031,7 +1046,9 @@ class _PremadeDurationSwitch extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final surfaces = context.surfaceTokens;
     final strings = AppLocalizations.of(context);
+    final shapes = context.shapeTokens;
     final isTwoHour = durationMinutes == 120;
     final activeStyle = theme.textTheme.labelLarge?.copyWith(
       color: theme.colorScheme.primary,
@@ -1044,10 +1061,8 @@ class _PremadeDurationSwitch extends StatelessWidget {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(
-          alpha: 0.45,
-        ),
-        borderRadius: BorderRadius.circular(18),
+        color: surfaces.planDuration,
+        borderRadius: shapes.planCard,
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -1215,11 +1230,12 @@ class _PremadePlanGroupTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final surfaces = context.surfaceTokens;
     final strings = AppLocalizations.of(context);
     final planCount = plans.length;
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
-      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
+      color: surfaces.planGroup,
       clipBehavior: Clip.antiAlias,
       child: ExpansionTile(
         initiallyExpanded: false,
@@ -1318,6 +1334,7 @@ class _PremadePlanCardState extends State<_PremadePlanCard> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final motion = context.motionTokens;
     final strings = AppLocalizations.of(context);
     final exercises = widget.exercises;
     final totalSets = exercises.fold<int>(
@@ -1441,7 +1458,7 @@ class _PremadePlanCardState extends State<_PremadePlanCard> {
                   _isExpanded
                       ? CrossFadeState.showSecond
                       : CrossFadeState.showFirst,
-              duration: const Duration(milliseconds: 180),
+              duration: motion.quick,
               firstCurve: Curves.easeOutCubic,
               secondCurve: Curves.easeOutCubic,
               sizeCurve: Curves.easeOutCubic,
@@ -1521,6 +1538,8 @@ class _PremadeExerciseRowState extends State<_PremadeExerciseRow> {
     String displayName,
   ) {
     final locale = Localizations.localeOf(context);
+    final shapes = context.shapeTokens;
+    final surfaces = context.surfaceTokens;
     final equipment = <CatalogEntityDisplayName>[
       if (widget.exercise.equipment.trim().isNotEmpty)
         CatalogEntityDisplayName(
@@ -1580,8 +1599,10 @@ class _PremadeExerciseRowState extends State<_PremadeExerciseRow> {
                         DecoratedBox(
                           decoration: BoxDecoration(
                             color: theme.colorScheme.primaryContainer
-                                .withValues(alpha: 0.55),
-                            borderRadius: BorderRadius.circular(999),
+                                .withValues(
+                                  alpha: surfaces.planSwapBadgeOpacity,
+                                ),
+                            borderRadius: shapes.pill,
                           ),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(

@@ -216,7 +216,7 @@ class _PresetInfoCardState extends State<PresetInfoCard>
   Widget build(BuildContext context) {
     super.build(context);
     final theme = Theme.of(context);
-    final colors = context.colors;
+    final dataVisualization = context.dataVisualizationTokens;
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
 
     return FutureBuilder<_PresetInfoSummary>(
@@ -281,8 +281,8 @@ class _PresetInfoCardState extends State<PresetInfoCard>
                               child: Center(
                                 child: BodyHeatmap(
                                   frequencyMap: summary.frequencyMap,
-                                  lowColor: colors.historySummaryHeatmapLow!,
-                                  highColor: colors.historySummaryHeatmapHigh!,
+                                  lowColor: dataVisualization.heatmapLow,
+                                  highColor: dataVisualization.heatmapHigh,
                                   width: heatmapSize,
                                   height: heatmapSize,
                                 ),
@@ -341,7 +341,9 @@ class _PresetMetricTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colors = context.colors;
+    final shapes = context.shapeTokens;
+    final surfaces = context.surfaceTokens;
+    final semantic = context.semanticColors;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -352,8 +354,8 @@ class _PresetMetricTile extends StatelessWidget {
             vertical: compact ? 10 : 12,
           ),
           decoration: BoxDecoration(
-            color: colors.infoCardBackground,
-            borderRadius: BorderRadius.circular(14),
+            color: surfaces.card,
+            borderRadius: shapes.metric,
           ),
           child: Row(
             children: [
@@ -373,7 +375,7 @@ class _PresetMetricTile extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
-                        color: colors.infoCardValueText,
+                        color: semantic.strongContent,
                       ),
                     ),
                     FittedBox(
@@ -383,7 +385,7 @@ class _PresetMetricTile extends StatelessWidget {
                         label,
                         maxLines: 1,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: colors.infoCardLabelText,
+                          color: semantic.mutedContent,
                         ),
                       ),
                     ),

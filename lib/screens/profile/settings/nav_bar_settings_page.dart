@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../l10n/app_localization_extensions.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../providers/nav_bar_config.dart';
+import '../../../theme/theme_extensions.dart';
 import '../../../utils/app_test_keys.dart';
 import '../../../widgets/settings_tiles.dart';
 
@@ -85,17 +86,12 @@ class _NavBarSettingsPageState extends State<NavBarSettingsPage> {
       subtitle: strings.navEditorSubtitle,
       icon: Icons.space_dashboard_outlined,
       heroAccentColor: SettingsAccent.data,
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-          child: FilledButton.icon(
-            key: AppTestKeys.navigationSave,
-            onPressed: _save,
-            icon: const Icon(Icons.save_outlined),
-            label: Text(strings.navEditorSave),
-          ),
-        ),
+      bottomNavigationBar: SettingsSaveBar(
+        buttonKey: AppTestKeys.navigationSave,
+        label: strings.navEditorSave,
+        onPressed: _save,
+        decorated: false,
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
       ),
       children: [
         SettingsSection(
@@ -229,6 +225,7 @@ class _IconBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final shapes = context.shapeTokens;
 
     return SizedBox(
       width: 48,
@@ -241,7 +238,7 @@ class _IconBadge extends StatelessWidget {
             height: 42,
             decoration: BoxDecoration(
               color: scheme.primary.withValues(alpha: 0.16),
-              borderRadius: BorderRadius.circular(15),
+              borderRadius: shapes.settingsAction,
             ),
             child: Icon(icon, color: scheme.primary, size: 22),
           ),

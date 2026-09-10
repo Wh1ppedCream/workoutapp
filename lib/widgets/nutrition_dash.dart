@@ -53,8 +53,7 @@ class _NutritionDashState extends State<NutritionDash>
     super.build(context);
     final s = widget.scale;
 
-    // pull in our theme extension
-    final colors = context.colors;
+    final dataVisualization = context.dataVisualizationTokens;
 
     final detailWidgets = <Widget>[
       NutritionCircleDetails(
@@ -117,8 +116,8 @@ class _NutritionDashState extends State<NutritionDash>
                 shape: BoxShape.circle,
                 color:
                     selected
-                        ? colors.nutritionPageIndicatorActive!
-                        : colors.nutritionPageIndicatorInactive!,
+                        ? dataVisualization.paginationActive
+                        : dataVisualization.paginationInactive,
               ),
             );
           }),

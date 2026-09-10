@@ -19,6 +19,8 @@ import '../services/tutorial_state_store.dart';
 import '../utils/localized_body_part_name.dart';
 import '../utils/localized_formatters.dart';
 import '../theme/theme_extensions.dart';
+import '../theme/tokens/app_media_tokens.dart';
+import '../theme/widgets/media_viewer_image.dart';
 import '../utils/tutorial_launcher.dart';
 import '../utils/weight_unit_formatter.dart';
 import 'body_heatmap.dart';
@@ -83,9 +85,9 @@ class _ExerciseMediaPreviewCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: theme.colorScheme.outlineVariant),
+        color: theme.surfaceTokens.mediaPlaceholder,
+        borderRadius: theme.mediaTokens.previewShape,
+        border: Border.all(color: theme.surfaceTokens.mediaOutline),
       ),
       clipBehavior: Clip.antiAlias,
       child: AspectRatio(
@@ -101,7 +103,7 @@ class _ExerciseMediaPreviewCard extends StatelessWidget {
               child: GestureDetector(
                 onTap: onImageTap,
                 child: ColoredBox(
-                  color: theme.colorScheme.surface,
+                  color: theme.surfaceTokens.media,
                   child: Image.file(
                     previewFile,
                     fit: BoxFit.cover,
@@ -119,12 +121,16 @@ class _ExerciseMediaPreviewCard extends StatelessWidget {
               child: IgnorePointer(
                 child: DecoratedBox(
                   decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.45),
+                    color: MediaViewingColors.indicator,
                     shape: BoxShape.circle,
                   ),
                   child: const Padding(
                     padding: EdgeInsets.all(6),
-                    child: Icon(Icons.zoom_in, color: Colors.white, size: 18),
+                    child: Icon(
+                      Icons.zoom_in,
+                      color: MediaViewingColors.onIndicator,
+                      size: 18,
+                    ),
                   ),
                 ),
               ),
@@ -454,7 +460,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
 
   Widget _buildDetailsTab(ScrollController scrollCtrl) {
     final def = widget.definition;
-    final colors = context.colors;
+    final dataVisualization = context.dataVisualizationTokens;
     final heatmapFrequencyMap = bodyPartFrequencyMapFromNames({
       for (final bodyPart in def.bodyParts) bodyPart.name: 1.0,
     });
@@ -474,11 +480,11 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                   child: _buildHeatmapButton(
                     definition: def,
                     frequencyMap: heatmapFrequencyMap,
-                    lowColor: colors.historySummaryHeatmapLow!,
-                    highColor: colors.historySummaryHeatmapHigh!,
+                    lowColor: dataVisualization.heatmapLow,
+                    highColor: dataVisualization.heatmapHigh,
                     size: 220,
                     padding: 12,
-                    borderRadius: BorderRadius.circular(18),
+                    borderRadius: context.mediaTokens.previewShape,
                   ),
                 );
               }
@@ -491,11 +497,11 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                         : _buildHeatmapButton(
                           definition: def,
                           frequencyMap: heatmapFrequencyMap,
-                          lowColor: colors.historySummaryHeatmapLow!,
-                          highColor: colors.historySummaryHeatmapHigh!,
+                          lowColor: dataVisualization.heatmapLow,
+                          highColor: dataVisualization.heatmapHigh,
                           size: 98,
                           padding: 6,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: context.mediaTokens.overlayShape,
                           elevated: true,
                         ),
                 onImageTap:
@@ -749,19 +755,24 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     required Widget child,
   }) {
     final theme = Theme.of(context);
+    final surfaces = theme.surfaceTokens;
+    final shapes = theme.shapeTokens;
+    final motion = theme.motionTokens;
     final isExpandable = onExpandedChanged != null;
     return AnimatedSize(
-      duration: const Duration(milliseconds: 180),
+      duration: motion.quick,
       curve: Curves.easeOutCubic,
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest.withValues(
-            alpha: 0.52,
+          color: surfaces.exerciseDetailCard,
+          borderRadius: shapes.exerciseDetailCard,
+          border: Border.all(
+            color: accent.withValues(
+              alpha: surfaces.exerciseDetailCardBorderOpacity,
+            ),
           ),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: accent.withValues(alpha: 0.32)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -780,8 +791,10 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                       width: 34,
                       height: 34,
                       decoration: BoxDecoration(
-                        color: accent.withValues(alpha: 0.16),
-                        borderRadius: BorderRadius.circular(10),
+                        color: accent.withValues(
+                          alpha: surfaces.exerciseDetailIconFillOpacity,
+                        ),
+                        borderRadius: shapes.exerciseDetailIcon,
                       ),
                       child: Icon(icon, color: accent, size: 19),
                     ),
@@ -823,12 +836,18 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
   }
 
   Widget _buildDetailTag(String label, {required Color color}) {
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.13),
-        borderRadius: BorderRadius.circular(9),
-        border: Border.all(color: color.withValues(alpha: 0.28)),
+        color: color.withValues(alpha: surfaces.exerciseDetailTagFillOpacity),
+        borderRadius: shapes.exerciseDetailTag,
+        border: Border.all(
+          color: color.withValues(
+            alpha: surfaces.exerciseDetailTagBorderOpacity,
+          ),
+        ),
       ),
       child: Text(
         label,
@@ -911,21 +930,12 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
           height: size,
           padding: EdgeInsets.all(padding),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerHighest.withValues(
-              alpha: elevated ? 0.96 : 1,
+            color: theme.surfaceTokens.mediaPlaceholder.withValues(
+              alpha: elevated ? theme.mediaTokens.overlayOpacity : 1,
             ),
             borderRadius: borderRadius,
-            border: Border.all(color: theme.colorScheme.outlineVariant),
-            boxShadow:
-                elevated
-                    ? [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.30),
-                        blurRadius: 10,
-                        offset: const Offset(0, 3),
-                      ),
-                    ]
-                    : null,
+            border: Border.all(color: theme.surfaceTokens.mediaOutline),
+            boxShadow: elevated ? theme.mediaTokens.overlayShadow : null,
           ),
           child:
               hasHeatmap
@@ -950,64 +960,13 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     File imageFile, {
     required ExerciseDefinition definition,
   }) {
-    return showDialog<void>(
+    return showMediaImageViewer(
       context: context,
-      barrierColor: Colors.black87,
-      builder:
-          (dialogContext) => Material(
-            color: Colors.black,
-            child: SafeArea(
-              child: Stack(
-                children: [
-                  Positioned.fill(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(16, 64, 16, 28),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(20),
-                            child: AspectRatio(
-                              aspectRatio: 1,
-                              child: InteractiveViewer(
-                                minScale: 0.8,
-                                maxScale: 4,
-                                boundaryMargin: const EdgeInsets.all(48),
-                                child: SizedBox.expand(
-                                  child: Image.file(
-                                    imageFile,
-                                    fit: BoxFit.contain,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Center(
-                            child: Text(
-                              _strings.exerciseDetailZoomHint,
-                              style: const TextStyle(color: Colors.white70),
-                            ),
-                          ),
-                          const SizedBox(height: 18),
-                          _buildFormGuideCard(definition, expandable: false),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: IconButton.filledTonal(
-                      tooltip: _strings.commonClose,
-                      onPressed: () => Navigator.of(dialogContext).pop(),
-                      icon: const Icon(Icons.close),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+      file: imageFile,
+      imageLabel: _strings.exerciseEditorMediaImage,
+      zoomHint: _strings.exerciseDetailZoomHint,
+      closeLabel: _strings.commonClose,
+      footer: _buildFormGuideCard(definition, expandable: false),
     );
   }
 
@@ -1019,10 +978,10 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
   }) {
     return showDialog<void>(
       context: context,
-      barrierColor: Colors.black87,
+      barrierColor: MediaViewingColors.barrier,
       builder:
           (dialogContext) => Material(
-            color: Theme.of(dialogContext).colorScheme.surface,
+            color: dialogContext.surfaceTokens.media,
             child: SafeArea(
               child: Stack(
                 children: [
@@ -1035,15 +994,11 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                           Container(
                             decoration: BoxDecoration(
                               color:
-                                  Theme.of(
-                                    dialogContext,
-                                  ).colorScheme.surfaceContainerHighest,
-                              borderRadius: BorderRadius.circular(20),
+                                  dialogContext.surfaceTokens.mediaPlaceholder,
+                              borderRadius:
+                                  dialogContext.mediaTokens.viewerShape,
                               border: Border.all(
-                                color:
-                                    Theme.of(
-                                      dialogContext,
-                                    ).colorScheme.outlineVariant,
+                                color: dialogContext.surfaceTokens.mediaOutline,
                               ),
                             ),
                             clipBehavior: Clip.antiAlias,
@@ -1146,6 +1101,9 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
 
   Widget _buildMetricsTimeframePicker(int selectedIndex) {
     final theme = Theme.of(context);
+    final surfaces = theme.surfaceTokens;
+    final shapes = theme.shapeTokens;
+    final motion = theme.motionTokens;
     final labels = <String>[
       _strings.exerciseDetailWeek,
       _strings.exerciseDetailMonth,
@@ -1155,12 +1113,12 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(
-          alpha: 0.58,
-        ),
-        borderRadius: BorderRadius.circular(15),
+        color: surfaces.exerciseDetailTimeframe,
+        borderRadius: shapes.exerciseDetailTimeframe,
         border: Border.all(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.6),
+          color: theme.colorScheme.outlineVariant.withValues(
+            alpha: surfaces.exerciseDetailTimeframeBorderOpacity,
+          ),
         ),
       ),
       child: Row(
@@ -1174,7 +1132,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
-                  borderRadius: BorderRadius.circular(11),
+                  borderRadius: shapes.exerciseDetailTimeframeOption,
                   onTap:
                       selected
                           ? null
@@ -1185,7 +1143,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                             );
                           }),
                   child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 160),
+                    duration: motion.exerciseDetailSelection,
                     curve: Curves.easeOutCubic,
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     decoration: BoxDecoration(
@@ -1193,7 +1151,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                           selected
                               ? theme.colorScheme.primary
                               : Colors.transparent,
-                      borderRadius: BorderRadius.circular(11),
+                      borderRadius: shapes.exerciseDetailTimeframeOption,
                     ),
                     child: Text(
                       labels[index],
@@ -1224,6 +1182,8 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     required WeightUnit weightUnit,
   }) {
     final theme = Theme.of(context);
+    final surfaces = theme.surfaceTokens;
+    final shapes = theme.shapeTokens;
     final highestEstimatedOneRm = rows.fold<double>(
       0,
       (currentHighest, row) => math.max(currentHighest, row.oneErm),
@@ -1301,8 +1261,10 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(9),
+                    color: theme.colorScheme.primary.withValues(
+                      alpha: surfaces.exerciseDetailRangeFillOpacity,
+                    ),
+                    borderRadius: shapes.exerciseDetailTag,
                   ),
                   child: Text(
                     _strings.exerciseDetailRanges(rows.length),
@@ -1323,6 +1285,9 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
   }
 
   Widget _buildRecordsTab(ScrollController scrollCtrl) {
+    final theme = Theme.of(context);
+    final surfaces = theme.surfaceTokens;
+    final shapes = theme.shapeTokens;
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     return FutureBuilder<_ExerciseHistoryPage>(
       future: _historyFuture,
@@ -1412,7 +1377,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                             height: 17,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: Theme.of(context).colorScheme.primary,
+                              color: theme.colorScheme.primary,
                             ),
                           )
                           : const Icon(Icons.expand_more_rounded),
@@ -1422,15 +1387,15 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                         : _strings.exerciseDetailLoadMoreSessions,
                   ),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: theme.colorScheme.primary,
                     side: BorderSide(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.primary.withValues(alpha: 0.55),
+                      color: theme.colorScheme.primary.withValues(
+                        alpha: surfaces.exerciseDetailLoadMoreBorderOpacity,
+                      ),
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 13),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(13),
+                      borderRadius: shapes.exerciseDetailLoadMore,
                     ),
                   ),
                 ),
@@ -1468,8 +1433,10 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
               decoration: BoxDecoration(
                 color: Theme.of(
                   context,
-                ).colorScheme.onSurfaceVariant.withValues(alpha: 0.55),
-                borderRadius: BorderRadius.circular(99),
+                ).colorScheme.onSurfaceVariant.withValues(
+                  alpha: context.surfaceTokens.exerciseDetailHandleOpacity,
+                ),
+                borderRadius: context.shapeTokens.pill,
               ),
             ),
           ),
@@ -1480,6 +1447,8 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final effects = context.effectTokens;
+    final shapes = context.shapeTokens;
     return DraggableScrollableSheet(
       controller: _sheetController,
       expand: false,
@@ -1490,10 +1459,8 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
           (_, scrollCtrl) => DefaultTabController(
             length: 3,
             child: Material(
-              elevation: 12,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(16),
-              ),
+              elevation: effects.exerciseDetailSheetElevation,
+              borderRadius: shapes.exerciseDetailSheet,
               clipBehavior: Clip.hardEdge,
               child: Column(
                 children: [
@@ -1583,6 +1550,8 @@ class _ExerciseHistorySessionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final surfaces = theme.surfaceTokens;
+    final shapes = theme.shapeTokens;
     final strings = AppLocalizations.of(context);
     final dateLabel = LocalizedFormatters.dateTime(
       record.displayDateTime,
@@ -1593,9 +1562,13 @@ class _ExerciseHistorySessionCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.42),
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: scheme.primary.withValues(alpha: 0.36)),
+        color: surfaces.exerciseDetailRecord,
+        borderRadius: shapes.exerciseDetailRecord,
+        border: Border.all(
+          color: scheme.primary.withValues(
+            alpha: surfaces.exerciseDetailRecordBorderOpacity,
+          ),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1606,8 +1579,10 @@ class _ExerciseHistorySessionCard extends StatelessWidget {
                 width: 34,
                 height: 34,
                 decoration: BoxDecoration(
-                  color: scheme.primary.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(10),
+                  color: scheme.primary.withValues(
+                    alpha: surfaces.exerciseDetailRecordIconFillOpacity,
+                  ),
+                  borderRadius: shapes.exerciseDetailIcon,
                 ),
                 child: Icon(
                   Icons.calendar_today_outlined,
@@ -1637,15 +1612,17 @@ class _ExerciseHistorySessionCard extends StatelessWidget {
                 label: strings.exerciseDetailOpenWorkoutWithSets(setCount),
                 child: Material(
                   color: Colors.transparent,
-                  borderRadius: BorderRadius.circular(9),
+                  borderRadius: shapes.exerciseDetailRecordAction,
                   child: InkWell(
                     onTap: onOpenSession,
-                    borderRadius: BorderRadius.circular(9),
+                    borderRadius: shapes.exerciseDetailRecordAction,
                     child: Container(
                       padding: const EdgeInsets.fromLTRB(8, 5, 5, 5),
                       decoration: BoxDecoration(
-                        color: scheme.secondary.withValues(alpha: 0.13),
-                        borderRadius: BorderRadius.circular(9),
+                        color: scheme.secondary.withValues(
+                          alpha: surfaces.exerciseDetailRecordActionFillOpacity,
+                        ),
+                        borderRadius: shapes.exerciseDetailRecordAction,
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -1705,6 +1682,7 @@ class _ExerciseHistorySetRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final surfaces = theme.surfaceTokens;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -1715,7 +1693,9 @@ class _ExerciseHistorySetRow extends StatelessWidget {
             height: 25,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: scheme.primary.withValues(alpha: 0.18),
+              color: scheme.primary.withValues(
+                alpha: surfaces.exerciseDetailRecordSetFillOpacity,
+              ),
               shape: BoxShape.circle,
             ),
             child: Text(
@@ -1829,13 +1809,21 @@ class _MetricSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final surfaces = theme.surfaceTokens;
+    final shapes = theme.shapeTokens;
     return Container(
       height: 92,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: color.withValues(alpha: 0.38)),
+        color: color.withValues(
+          alpha: surfaces.exerciseDetailMetricFillOpacity,
+        ),
+        borderRadius: shapes.exerciseDetailMetric,
+        border: Border.all(
+          color: color.withValues(
+            alpha: surfaces.exerciseDetailMetricBorderOpacity,
+          ),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1885,14 +1873,18 @@ class _RepBestMetricsList extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final surfaces = theme.surfaceTokens;
+    final shapes = theme.shapeTokens;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.44),
-        borderRadius: BorderRadius.circular(15),
+        color: surfaces.exerciseDetailMetricList,
+        borderRadius: shapes.exerciseDetailMetric,
         border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.65),
+          color: scheme.outlineVariant.withValues(
+            alpha: surfaces.exerciseDetailMetricListBorderOpacity,
+          ),
         ),
       ),
       child: Column(
@@ -1909,8 +1901,10 @@ class _RepBestMetricsList extends StatelessWidget {
                       height: 40,
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: scheme.primary.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(11),
+                        color: scheme.primary.withValues(
+                          alpha: surfaces.exerciseDetailMetricRepFillOpacity,
+                        ),
+                        borderRadius: shapes.exerciseDetailMetricRep,
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -1973,7 +1967,9 @@ class _RepBestMetricsList extends StatelessWidget {
               if (index < rows.length - 1)
                 Divider(
                   height: 1,
-                  color: scheme.outlineVariant.withValues(alpha: 0.58),
+                  color: scheme.outlineVariant.withValues(
+                    alpha: surfaces.exerciseDetailMetricListDividerOpacity,
+                  ),
                 ),
             ],
           );
@@ -2043,15 +2039,17 @@ class _MetricsStateCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final surfaces = theme.surfaceTokens;
+    final shapes = theme.shapeTokens;
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(
-          alpha: 0.44,
-        ),
-        borderRadius: BorderRadius.circular(18),
+        color: surfaces.exerciseDetailState,
+        borderRadius: shapes.exerciseDetailState,
         border: Border.all(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.65),
+          color: theme.colorScheme.outlineVariant.withValues(
+            alpha: surfaces.exerciseDetailStateBorderOpacity,
+          ),
         ),
       ),
       child: Row(
@@ -2167,6 +2165,9 @@ class _ExerciseRecordTrendChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final surfaces = theme.surfaceTokens;
+    final shapes = theme.shapeTokens;
+    final motion = theme.motionTokens;
     final strings = AppLocalizations.of(context);
 
     if (points.isEmpty) {
@@ -2174,8 +2175,8 @@ class _ExerciseRecordTrendChart extends StatelessWidget {
         height: 188,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: scheme.surfaceContainerHighest.withValues(alpha: 0.28),
-          borderRadius: BorderRadius.circular(18),
+          color: surfaces.exerciseDetailChartEmpty,
+          borderRadius: shapes.exerciseDetailChart,
         ),
         child: Text(
           AppLocalizations.of(context).exerciseDetailNoChartData,
@@ -2200,9 +2201,13 @@ class _ExerciseRecordTrendChart extends StatelessWidget {
       height: 214,
       padding: const EdgeInsets.fromLTRB(8, 14, 10, 8),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.26),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.6)),
+        color: surfaces.exerciseDetailChart,
+        borderRadius: shapes.exerciseDetailChart,
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(
+            alpha: surfaces.exerciseDetailChartBorderOpacity,
+          ),
+        ),
       ),
       child: LineChart(
         LineChartData(
@@ -2212,7 +2217,7 @@ class _ExerciseRecordTrendChart extends StatelessWidget {
           maxY: bounds.maxY,
           lineTouchData: LineTouchData(
             touchTooltipData: LineTouchTooltipData(
-              tooltipBorderRadius: BorderRadius.circular(10),
+              tooltipBorderRadius: shapes.exerciseDetailChartTooltip,
               tooltipPadding: const EdgeInsets.symmetric(
                 horizontal: 8,
                 vertical: 5,
@@ -2221,8 +2226,7 @@ class _ExerciseRecordTrendChart extends StatelessWidget {
               maxContentWidth: 164,
               fitInsideHorizontally: true,
               fitInsideVertically: true,
-              getTooltipColor:
-                  (_) => scheme.surfaceContainerHighest.withValues(alpha: 0.96),
+              getTooltipColor: (_) => surfaces.exerciseDetailTooltip,
               getTooltipItems: (touchedSpots) {
                 if (touchedSpots.isEmpty) return const <LineTooltipItem?>[];
                 final spot = touchedSpots.first;
@@ -2260,7 +2264,9 @@ class _ExerciseRecordTrendChart extends StatelessWidget {
             horizontalInterval: bounds.interval,
             getDrawingHorizontalLine:
                 (_) => FlLine(
-                  color: scheme.outlineVariant.withValues(alpha: 0.42),
+                  color: scheme.outlineVariant.withValues(
+                    alpha: surfaces.exerciseDetailChartGridOpacity,
+                  ),
                   strokeWidth: 1,
                 ),
           ),
@@ -2351,7 +2357,9 @@ class _ExerciseRecordTrendChart extends StatelessWidget {
               dotData: FlDotData(show: true),
               belowBarData: BarAreaData(
                 show: true,
-                color: actualColor.withValues(alpha: 0.08),
+                color: actualColor.withValues(
+                  alpha: surfaces.exerciseDetailChartAreaOpacity,
+                ),
               ),
             ),
             LineChartBarData(
@@ -2370,7 +2378,7 @@ class _ExerciseRecordTrendChart extends StatelessWidget {
             ),
           ],
         ),
-        duration: const Duration(milliseconds: 160),
+        duration: motion.exerciseDetailSelection,
         curve: Curves.easeOut,
       ),
     );

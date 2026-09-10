@@ -37,12 +37,14 @@ class GenericBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // pick the theme’s accent if none was passed in
-    final accent = color ?? context.colors.genericBarAccent!;
+    final accent = color ?? context.dataVisualizationTokens.primarySeries;
+    final shapes = context.shapeTokens;
     // base constants × scale
-    final borderRadius = BorderRadius.circular(8 * scale);
+    final borderRadius =
+        BorderRadius.lerp(BorderRadius.zero, shapes.compact, scale)!;
     final horizontalPadding = 12 * scale;
     final verticalPadding = 16 * scale;
-    final borderWidth = 1 * scale;
+    final borderWidth = shapes.outlineWidth * scale;
     final usesLocalizedLayout =
         Localizations.localeOf(context).languageCode != 'en';
 

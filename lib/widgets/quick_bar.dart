@@ -8,151 +8,79 @@ import '../providers/nutrition_profile.dart';
 import '../screens/nutrition/measured_items_page.dart';
 import '../screens/nutrition/food_logging_page.dart';
 import '../screens/exercise/session_screen.dart';
-import '../theme/app_colors.dart';
+import '../theme/theme_extensions.dart';
+import '../theme/widgets/tonos_segmented_action_bar.dart';
 
 /// A three-section quick-action bar for measurements, food, and workouts.
 ///
-/// Each segment picks its color based on the current theme's AppColors override
-/// or falls back to the original light-mode values.
+/// Each segment uses the theme's domain action colors so families can preserve
+/// measurement, nutrition, and workout meaning while changing their treatment.
 class QuickBar extends StatelessWidget {
   final double scale;
   const QuickBar({super.key, this.scale = 1.0});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final strings = AppLocalizations.of(context);
-    final cs = theme.colorScheme;
-    final extras = theme.extension<AppColors>();
+    final semantic = context.semanticColors;
 
-    // Use overrides if present, otherwise default to original light-mode colors
-    final measurementBg = extras?.quickBarMeasurementBg ?? Colors.teal.shade100;
-    final measurementText =
-        extras?.quickBarMeasurementText ?? Colors.teal.shade800;
+    final measurementBg = semantic.measurementContainer;
+    final measurementText = semantic.onMeasurementContainer;
+    final foodBg = semantic.nutritionContainer;
+    final foodText = semantic.onNutritionContainer;
+    final workoutBg = semantic.workoutContainer;
+    final workoutText = semantic.onWorkoutContainer;
 
-    final foodBg = extras?.quickBarFoodBg ?? Colors.orange.shade100;
-    final foodText = extras?.quickBarFoodText ?? Colors.orange.shade800;
-
-    final workoutBg = extras?.quickBarWorkoutBg ?? Colors.green.shade100;
-    final workoutText = extras?.quickBarWorkoutText ?? Colors.green.shade800;
-
-    final dividerColor = cs.onSurface.withValues(alpha: 0.12);
-    final segmentHeight = 40 * scale;
-    final radii = BorderRadius.circular(24 * scale);
-
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16 * scale, vertical: 8 * scale),
-      decoration: BoxDecoration(borderRadius: radii),
-      child: Row(
-        children: [
-          Expanded(
-            child: _segment(
-              context,
-              backgroundColor: measurementBg,
-              textColor: measurementText,
-              borderRadius: BorderRadius.horizontal(left: radii.topLeft),
-              label: strings.quickActionMeasurement,
-              semanticLabel: strings.nutritionTrackMeasurement,
-              fontSize: 12 * scale,
-              onTap: () async {
-                final changed = await Navigator.of(context).push<bool>(
-                  MaterialPageRoute(builder: (_) => const MeasuredItemsPage()),
-                );
-                if (changed == true && context.mounted) {
-                  await context.read<NutritionProfile>().reloadDay();
-                }
-              },
-            ),
-          ),
-          _divider(dividerColor, segmentHeight),
-          Expanded(
-            child: _segment(
-              context,
-              backgroundColor: foodBg,
-              textColor: foodText,
-              borderRadius: BorderRadius.zero,
-              label: strings.quickActionFood,
-              semanticLabel: strings.nutritionLogFood,
-              fontSize: 14 * scale,
-              onTap: () async {
-                final changed = await Navigator.of(context).push<bool>(
-                  MaterialPageRoute(builder: (_) => const FoodLoggingPage()),
-                );
-                if (changed == true && context.mounted) {
-                  await context.read<NutritionProfile>().reloadDay();
-                }
-              },
-            ),
-          ),
-          _divider(dividerColor, segmentHeight),
-          Expanded(
-            child: _segment(
-              context,
-              backgroundColor: workoutBg,
-              textColor: workoutText,
-              borderRadius: BorderRadius.horizontal(right: radii.topLeft),
-              label: strings.quickActionWorkout,
-              semanticLabel: strings.dashboardStartWorkout,
-              fontSize: 14 * scale,
-              onTap: () async {
-                final session = context.read<ActiveSession>();
-                final started = await session.start();
-                if (!started && !session.isActive) return;
-                if (!context.mounted) return;
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const SessionScreen()),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _segment(
-    BuildContext context, {
-    required Color backgroundColor,
-    required Color textColor,
-    required BorderRadius borderRadius,
-    required String label,
-    required String semanticLabel,
-    required double fontSize,
-    required VoidCallback onTap,
-  }) {
-    final theme = Theme.of(context);
-    final textStyle = theme.textTheme.bodySmall!.copyWith(
-      fontWeight: FontWeight.w600,
-      fontSize: fontSize,
-      color: textColor,
-    );
-
-    return Semantics(
-      button: true,
-      label: semanticLabel,
-      onTap: onTap,
-      child: ExcludeSemantics(
-        child: Container(
-          decoration: BoxDecoration(
-            color: backgroundColor,
-            borderRadius: borderRadius,
-          ),
-          child: InkWell(
-            borderRadius: borderRadius,
-            onTap: onTap,
-            child: Padding(
-              padding: EdgeInsets.symmetric(vertical: 12 * scale),
-              child: SizedBox(
-                height: 40 * scale,
-                child: Center(child: Text(label, style: textStyle)),
-              ),
-            ),
-          ),
+    return TonosSegmentedActionBar(
+      scale: scale,
+      items: [
+        TonosActionBarItem(
+          backgroundColor: measurementBg,
+          foregroundColor: measurementText,
+          label: strings.quickActionMeasurement,
+          semanticLabel: strings.nutritionTrackMeasurement,
+          fontSize: 12,
+          onPressed: () async {
+            final changed = await Navigator.of(context).push<bool>(
+              MaterialPageRoute(builder: (_) => const MeasuredItemsPage()),
+            );
+            if (changed == true && context.mounted) {
+              await context.read<NutritionProfile>().reloadDay();
+            }
+          },
         ),
-      ),
+        TonosActionBarItem(
+          backgroundColor: foodBg,
+          foregroundColor: foodText,
+          label: strings.quickActionFood,
+          semanticLabel: strings.nutritionLogFood,
+          fontSize: 14,
+          onPressed: () async {
+            final changed = await Navigator.of(context).push<bool>(
+              MaterialPageRoute(builder: (_) => const FoodLoggingPage()),
+            );
+            if (changed == true && context.mounted) {
+              await context.read<NutritionProfile>().reloadDay();
+            }
+          },
+        ),
+        TonosActionBarItem(
+          backgroundColor: workoutBg,
+          foregroundColor: workoutText,
+          label: strings.quickActionWorkout,
+          semanticLabel: strings.dashboardStartWorkout,
+          fontSize: 14,
+          onPressed: () async {
+            final session = context.read<ActiveSession>();
+            final started = await session.start();
+            if (!started && !session.isActive) return;
+            if (!context.mounted) return;
+            Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const SessionScreen()));
+          },
+        ),
+      ],
     );
   }
-
-  Widget _divider(Color color, double height) =>
-      Container(width: 1 * scale, height: height, color: color);
 }

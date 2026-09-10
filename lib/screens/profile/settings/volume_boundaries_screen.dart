@@ -9,6 +9,7 @@ import '../../../models/models.dart';
 import '../../../repositories/app_repository.dart';
 import '../../../services/catalog_entity_localizer.dart';
 import '../../../services/safe_failure.dart';
+import '../../../utils/localized_body_part_name.dart';
 import '../../../widgets/localized_catalog_entity_name.dart';
 import '../../../widgets/settings_tiles.dart';
 import '../../../widgets/safe_error_view.dart';
@@ -307,7 +308,7 @@ class _VolumeBoundariesScreenState extends State<VolumeBoundariesScreen>
           icon: Icons.accessibility_new,
           selected: _selectedBodyPart,
           items: _bodyParts,
-          itemName: (bodyPart) => bodyPart.name,
+          itemName: (bodyPart) => localizedBodyPartName(context, bodyPart.name),
           onChanged: (bodyPart) {
             if (bodyPart == null) return;
             setState(() => _selectedBodyPart = bodyPart);
@@ -401,12 +402,7 @@ class _BoundaryTab<T> extends StatelessWidget {
               child: DropdownButtonFormField<T>(
                 isExpanded: true,
                 value: selected,
-                decoration: InputDecoration(
-                  labelText: title,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
+                decoration: settingsFieldDecoration(context, label: title),
                 items:
                     items
                         .map(
@@ -444,11 +440,9 @@ class _BoundaryTab<T> extends StatelessWidget {
                         keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
                         ),
-                        decoration: InputDecoration(
-                          labelText: boundaryLabels[i],
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
+                        decoration: settingsFieldDecoration(
+                          context,
+                          label: boundaryLabels[i],
                         ),
                       ),
                       if (i != controllers.length - 1)

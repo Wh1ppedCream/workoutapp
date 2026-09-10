@@ -120,7 +120,6 @@ class _MuscleRankingScreenState extends State<MuscleRankingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final strings = AppLocalizations.of(context);
 
     return Scaffold(
@@ -130,29 +129,27 @@ class _MuscleRankingScreenState extends State<MuscleRankingScreen> {
       ),
       bottomNavigationBar:
           _dirty
-              ? SafeArea(
-                minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                child: FilledButton.icon(
-                  onPressed: _isSaving ? null : _saveAll,
-                  icon:
-                      _isSaving
-                          ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                          : const Icon(Icons.save),
-                  label: Text(
+              ? SettingsSaveBar(
+                label:
                     _isSaving ? strings.nutritionSaving : strings.rankingsSave,
-                  ),
-                ),
+                onPressed: _isSaving ? null : _saveAll,
+                saveIcon:
+                    _isSaving
+                        ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                        : const Icon(Icons.save),
+                decorated: false,
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
               )
               : null,
-      body: SafeArea(child: _buildBody(scheme)),
+      body: SafeArea(child: _buildBody()),
     );
   }
 
-  Widget _buildBody(ColorScheme scheme) {
+  Widget _buildBody() {
     final strings = AppLocalizations.of(context);
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -188,11 +185,22 @@ class _MuscleRankingScreenState extends State<MuscleRankingScreen> {
             itemBuilder: (context, index) {
               final muscle = _muscles[index];
               final rank = _ranks[muscle.id] ?? index + 1;
-              return _MuscleRankingTile(
+              return SettingsRankingTile(
                 key: ValueKey(muscle.id),
                 index: index,
-                muscle: muscle,
+                name: LocalizedCatalogEntityName(
+                  entity: CatalogEntityDisplayName(
+                    catalogId: muscle.catalogId,
+                    canonicalName: muscle.name,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900),
+                ),
                 rank: rank,
+                icon: Icons.fitness_center,
                 rankLabel: strings.rankingsRank,
                 onRankSubmitted: (value) {
                   setState(() {
@@ -206,87 +214,6 @@ class _MuscleRankingScreenState extends State<MuscleRankingScreen> {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _MuscleRankingTile extends StatelessWidget {
-  final int index;
-  final Muscle muscle;
-  final int rank;
-  final String rankLabel;
-  final ValueChanged<String> onRankSubmitted;
-
-  const _MuscleRankingTile({
-    super.key,
-    required this.index,
-    required this.muscle,
-    required this.rank,
-    required this.rankLabel,
-    required this.onRankSubmitted,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.34),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.55),
-        ),
-      ),
-      child: Row(
-        children: [
-          ReorderableDragStartListener(
-            index: index,
-            child: Icon(Icons.drag_handle, color: scheme.onSurfaceVariant),
-          ),
-          const SizedBox(width: 10),
-          CircleAvatar(
-            radius: 18,
-            backgroundColor: scheme.primary.withValues(alpha: 0.16),
-            child: Icon(Icons.fitness_center, color: scheme.primary, size: 18),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: LocalizedCatalogEntityName(
-              entity: CatalogEntityDisplayName(
-                catalogId: muscle.catalogId,
-                canonicalName: muscle.name,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          SizedBox(
-            width: 58,
-            child: TextFormField(
-              key: ValueKey('rank-$rank'),
-              initialValue: rank.toString(),
-              textAlign: TextAlign.center,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: rankLabel,
-                isDense: true,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
-              onFieldSubmitted: onRankSubmitted,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

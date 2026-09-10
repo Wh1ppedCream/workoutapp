@@ -10,6 +10,7 @@ import '../screens/exercise/preset_detail_screen.dart';
 import 'body_heatmap.dart';
 import 'generic_bar.dart';
 import '../theme/theme_extensions.dart';
+import '../theme/widgets/workout_thumbnail_frame.dart';
 
 /// A colored bar that *knows* how to open, rename, & delete its own preset.
 class PresetBar extends StatelessWidget {
@@ -205,21 +206,15 @@ class _PresetFocusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
+    final dataVisualization = context.dataVisualizationTokens;
     final size = 60 * scale;
 
-    return Container(
-      width: size,
-      height: size,
-      padding: EdgeInsets.all(3 * scale),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.35),
-        borderRadius: BorderRadius.circular(10 * scale),
-      ),
+    return WorkoutThumbnailFrame(
+      scale: scale,
       child: BodyHeatmap(
         frequencyMap: frequencyMap,
-        lowColor: colors.historySummaryHeatmapLow!,
-        highColor: colors.historySummaryHeatmapHigh!,
+        lowColor: dataVisualization.heatmapLow,
+        highColor: dataVisualization.heatmapHigh,
         width: size - 6 * scale,
         height: size - 6 * scale,
       ),
@@ -233,17 +228,17 @@ class _AutomaticBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
+    final semantic = context.semanticColors;
     return Padding(
       padding: EdgeInsets.only(right: 8 * scale),
       child: CircleAvatar(
         radius: 8 * scale,
-        backgroundColor: colors.presetBadgeBg!,
+        backgroundColor: semantic.automaticPlanBadge,
         child: Text(
           'A',
           style: TextStyle(
             fontSize: 12 * scale,
-            color: colors.presetBadgeText!,
+            color: semantic.onAutomaticPlanBadge,
             fontWeight: FontWeight.bold,
           ),
         ),

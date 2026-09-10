@@ -12,6 +12,9 @@ import '../utils/completed_workout_duration_formatter.dart';
 import '../utils/localized_formatters.dart';
 import '../utils/weight_unit_formatter.dart';
 import '../utils/app_test_keys.dart';
+import '../theme/theme_extensions.dart';
+import '../theme/widgets/workout_actions.dart';
+import '../theme/widgets/workout_sheet_handle.dart';
 import 'workout_record_badges.dart';
 
 /// A container for session metadata and its exercises.
@@ -135,9 +138,13 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
     final session = data.session;
     final exercises = data.exercises;
     final theme = Theme.of(context);
+    final semantic = context.semanticColors;
     final strings = AppLocalizations.of(context);
-    const completionColor = Color(0xFF7CFF8B);
+    final completionColor = semantic.completionAccent;
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
+    final celebrationTextStyle = DefaultTextStyle.of(
+      context,
+    ).style.copyWith(fontSize: 25);
 
     // Compute total volume:
     double totalVol = 0;
@@ -186,17 +193,7 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
                       children: [
                         Padding(
                           padding: const EdgeInsets.only(top: 8, bottom: 4),
-                          child: Center(
-                            child: Container(
-                              width: 36,
-                              height: 4,
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.onSurfaceVariant
-                                    .withValues(alpha: 0.5),
-                                borderRadius: BorderRadius.circular(99),
-                              ),
-                            ),
-                          ),
+                          child: Center(child: const WorkoutSheetHandle()),
                         ),
                         // HEADER
                         Padding(
@@ -210,10 +207,7 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      const Text(
-                                        '🎉',
-                                        style: TextStyle(fontSize: 25),
-                                      ),
+                                      Text('🎉', style: celebrationTextStyle),
                                       const SizedBox(width: 8),
                                       Text(
                                         strings.sessionCompleteTitle,
@@ -227,10 +221,7 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
                                             ),
                                       ),
                                       const SizedBox(width: 8),
-                                      const Text(
-                                        '🎉',
-                                        style: TextStyle(fontSize: 25),
-                                      ),
+                                      Text('🎉', style: celebrationTextStyle),
                                     ],
                                   ),
                                 ),
@@ -276,14 +267,10 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
                   top: false,
                   child: Padding(
                     padding: const EdgeInsets.only(bottom: 12),
-                    child: FilledButton.icon(
-                      key: AppTestKeys.sessionCompleteDone,
+                    child: WorkoutDoneAction(
+                      buttonKey: AppTestKeys.sessionCompleteDone,
                       onPressed: () => Navigator.of(context).pop(),
-                      icon: const Icon(Icons.check_rounded),
-                      label: Text(strings.commonDone),
-                      style: FilledButton.styleFrom(
-                        minimumSize: const Size.fromHeight(48),
-                      ),
+                      label: strings.commonDone,
                     ),
                   ),
                 ),
@@ -307,15 +294,22 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
   }) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final shapes = context.shapeTokens;
     final usesLocalizedLayout =
         Localizations.localeOf(context).languageCode != 'en';
     return Container(
       constraints: BoxConstraints(minHeight: compact ? 70 : 76),
       padding: EdgeInsets.all(compact ? 7 : 10),
       decoration: BoxDecoration(
-        color: accentColor.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: accentColor.withValues(alpha: 0.30)),
+        color: accentColor.withValues(
+          alpha: context.surfaceTokens.completionMetricFill,
+        ),
+        borderRadius: shapes.control,
+        border: Border.all(
+          color: accentColor.withValues(
+            alpha: context.surfaceTokens.completionMetricBorder,
+          ),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -368,6 +362,7 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
     required String volume,
   }) {
     final strings = AppLocalizations.of(context);
+    final dataVisualization = context.dataVisualizationTokens;
     final textScale = MediaQuery.textScalerOf(context).scale(1);
     final usesLocalizedLayout =
         Localizations.localeOf(context).languageCode != 'en';
@@ -376,25 +371,25 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
         icon: Icons.fitness_center_outlined,
         label: strings.sessionMetricExercises,
         value: '$exercises',
-        accent: const Color(0xFF64B5F6),
+        accent: dataVisualization.sessionExercises,
       ),
       (
         icon: Icons.format_list_numbered,
         label: strings.sessionMetricSets,
         value: '$sets',
-        accent: const Color(0xFF81C784),
+        accent: dataVisualization.sessionSets,
       ),
       (
         icon: Icons.timer_outlined,
         label: strings.sessionMetricDuration,
         value: duration,
-        accent: const Color(0xFFFFD54F),
+        accent: dataVisualization.sessionDuration,
       ),
       (
         icon: Icons.monitor_weight_outlined,
         label: strings.sessionMetricVolume,
         value: volume,
-        accent: const Color(0xFFF48FB1),
+        accent: dataVisualization.sessionVolume,
       ),
     ];
 
@@ -459,6 +454,10 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
   }) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final shapes = context.shapeTokens;
+    final estimatedMaxTextStyle = DefaultTextStyle.of(
+      context,
+    ).style.copyWith(fontStyle: FontStyle.italic, fontSize: 12);
     final accentColor = _exerciseAccentColor(ex.name, colorScheme);
     final isSpanish = Localizations.localeOf(context).languageCode == 'es';
     final rows = <Widget>[
@@ -494,9 +493,7 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
       final erm = s.weight * (1 + 0.0333 * s.reps);
       final setText =
           '${WeightUnitFormatter.formatWeight(s.weight, weightUnit, locale: Localizations.localeOf(context))} x ${LocalizedFormatters.number(s.reps, Localizations.localeOf(context), maximumFractionDigits: 0)}';
-      final ermText = AppLocalizations.of(
-        context,
-      ).sessionEstimatedMax(
+      final ermText = AppLocalizations.of(context).sessionEstimatedMax(
         WeightUnitFormatter.formatWeight(
           erm,
           weightUnit,
@@ -518,7 +515,9 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
                             height: 22,
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
-                              color: accentColor.withValues(alpha: 0.20),
+                              color: accentColor.withValues(
+                                alpha: context.surfaceTokens.completionSetFill,
+                              ),
                               shape: BoxShape.circle,
                             ),
                             child: Text(
@@ -549,10 +548,7 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
                                 ermText,
                                 maxLines: 1,
                                 textAlign: TextAlign.right,
-                                style: const TextStyle(
-                                  fontStyle: FontStyle.italic,
-                                  fontSize: 12,
-                                ),
+                                style: estimatedMaxTextStyle,
                               ),
                             ),
                           ),
@@ -580,7 +576,9 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
                         height: 22,
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
-                          color: accentColor.withValues(alpha: 0.20),
+                          color: accentColor.withValues(
+                            alpha: context.surfaceTokens.completionSetFill,
+                          ),
                           shape: BoxShape.circle,
                         ),
                         child: Text(
@@ -649,10 +647,7 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
                             ermText,
                             maxLines: 1,
                             textAlign: TextAlign.right,
-                            style: const TextStyle(
-                              fontStyle: FontStyle.italic,
-                              fontSize: 12,
-                            ),
+                            style: estimatedMaxTextStyle,
                           ),
                         ),
                       ),
@@ -665,9 +660,15 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.fromLTRB(12, 5, 12, 7),
       decoration: BoxDecoration(
-        color: accentColor.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: accentColor.withValues(alpha: 0.52)),
+        color: accentColor.withValues(
+          alpha: context.surfaceTokens.completionExerciseFill,
+        ),
+        borderRadius: shapes.workoutSection,
+        border: Border.all(
+          color: accentColor.withValues(
+            alpha: context.surfaceTokens.completionExerciseBorder,
+          ),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

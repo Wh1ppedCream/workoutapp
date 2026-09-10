@@ -469,8 +469,8 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
     required VoidCallback onDelete,
   }) {
     final theme = Theme.of(context);
-    final cs = theme.colorScheme;
-    final color = _methodTypeColor(m.type, cs);
+    final shapes = context.shapeTokens;
+    final color = _methodTypeColor(m.type, context);
     final strings = AppLocalizations.of(context);
 
     return ListTile(
@@ -480,7 +480,7 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
         height: 40,
         decoration: BoxDecoration(
           color: color.withValues(alpha: .16),
-          borderRadius: BorderRadius.circular(13),
+          borderRadius: shapes.settingsIcon,
         ),
         child: Icon(_methodTypeIcon(m.type), color: color, size: 21),
       ),
@@ -771,11 +771,12 @@ class _LoadedProfileMethods {
 
 enum _RuleAction { edit, delete }
 
-Color _methodTypeColor(MethodType type, ColorScheme scheme) {
+Color _methodTypeColor(MethodType type, BuildContext context) {
+  final scheme = Theme.of(context).colorScheme;
   return switch (type) {
     MethodType.weight => scheme.primary,
     MethodType.rep => scheme.secondary,
-    MethodType.addSet => const Color(0xFF26A69A),
+    MethodType.addSet => context.flowTokens.addSetAction,
     MethodType.delSet => scheme.error,
   };
 }
@@ -790,15 +791,11 @@ IconData _methodTypeIcon(MethodType type) {
 }
 
 Color _profileScopeColor(BuildContext context) {
-  return Theme.of(context).brightness == Brightness.dark
-      ? const Color(0xFF4DB6AC)
-      : const Color(0xFF00796B);
+  return context.flowTokens.profileScope;
 }
 
 Color _planScopeColor(BuildContext context) {
-  return Theme.of(context).brightness == Brightness.dark
-      ? const Color(0xFFFFB74D)
-      : const Color(0xFFEF6C00);
+  return context.flowTokens.planScope;
 }
 
 class _RuleScopeLegend extends StatelessWidget {
@@ -813,53 +810,19 @@ class _RuleScopeLegend extends StatelessWidget {
       spacing: 8,
       runSpacing: 8,
       children: [
-        _LegendChip(color: scheme.primary, label: strings.rulesAppDefaultsChip),
-        _LegendChip(
+        SettingsLegendChip(
+          color: scheme.primary,
+          label: strings.rulesAppDefaultsChip,
+        ),
+        SettingsLegendChip(
           color: _profileScopeColor(context),
           label: strings.rulesProfilesChip,
         ),
-        _LegendChip(
+        SettingsLegendChip(
           color: _planScopeColor(context),
           label: strings.rulesPlansChip,
         ),
       ],
-    );
-  }
-}
-
-class _LegendChip extends StatelessWidget {
-  final Color color;
-  final String label;
-
-  const _LegendChip({required this.color, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: .12),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withValues(alpha: .36)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 7,
-            height: 7,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-          ),
-          const SizedBox(width: 7),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: color,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -889,6 +852,7 @@ class _RuleScopeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final shapes = context.shapeTokens;
     final padding = compact ? 12.0 : 14.0;
 
     return Container(
@@ -897,7 +861,7 @@ class _RuleScopeCard extends StatelessWidget {
         color: scheme.surfaceContainerHighest.withValues(
           alpha: compact ? .20 : .28,
         ),
-        borderRadius: BorderRadius.circular(compact ? 18 : 22),
+        borderRadius: compact ? shapes.profileTile : shapes.settingsPanel,
         border: Border.all(color: color.withValues(alpha: compact ? .36 : .52)),
       ),
       child: ExpansionTile(
@@ -911,7 +875,7 @@ class _RuleScopeCard extends StatelessWidget {
           height: compact ? 38 : 42,
           decoration: BoxDecoration(
             color: color.withValues(alpha: .17),
-            borderRadius: BorderRadius.circular(compact ? 12 : 14),
+            borderRadius: compact ? shapes.control : shapes.settingsScopeIcon,
           ),
           child: Icon(icon, color: color, size: compact ? 20 : 22),
         ),
@@ -935,39 +899,12 @@ class _RuleScopeCard extends StatelessWidget {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _CountBadge(count: count, color: color),
+            SettingsCountBadge(count: count, color: color),
             const SizedBox(width: 4),
             Icon(Icons.expand_more, color: scheme.onSurfaceVariant),
           ],
         ),
         children: children,
-      ),
-    );
-  }
-}
-
-class _CountBadge extends StatelessWidget {
-  final int count;
-  final Color color;
-
-  const _CountBadge({required this.count, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      constraints: const BoxConstraints(minWidth: 28),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: .16),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        '$count',
-        textAlign: TextAlign.center,
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-          color: color,
-          fontWeight: FontWeight.w900,
-        ),
       ),
     );
   }
@@ -1036,7 +973,7 @@ class _NestedHeading extends StatelessWidget {
             ),
           ),
         ),
-        _CountBadge(count: count, color: color),
+        SettingsCountBadge(count: count, color: color),
       ],
     );
   }
@@ -1109,11 +1046,12 @@ class _EmptyProfilesCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final shapes = context.shapeTokens;
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest.withValues(alpha: .28),
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: shapes.settingsPanel,
         border: Border.all(color: scheme.outlineVariant),
       ),
       child: _EmptyRuleState(message: message),

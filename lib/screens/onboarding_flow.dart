@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/generated/app_localizations.dart';
+import '../theme/theme_extensions.dart';
+import '../theme/tokens/app_tutorial_tokens.dart';
 import '../l10n/safe_failure_localizations.dart';
 import '../models/models.dart';
 import '../providers/active_session.dart';
@@ -406,11 +408,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       return;
     }
 
-    _controller.animateToPage(
-      equipmentPageIndex,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeOutCubic,
-    );
+    _goToPage(equipmentPageIndex);
   }
 
   void _resetGymEquipment() {
@@ -555,10 +553,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     }
 
     if (_currentPage < lastPageIndex) {
-      _controller.nextPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOutCubic,
-      );
+      _goToPage(_currentPage + 1);
       return;
     }
     _finishOnboarding();
@@ -590,10 +585,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       _finishOnboarding();
       return;
     }
-    _controller.nextPage(
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeOutCubic,
-    );
+    _goToPage(_currentPage + 1);
   }
 
   Future<void> _openOnboardingPremadePlans() async {
@@ -726,8 +718,21 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
 
   void _previousAction() {
     if (_currentPage <= 0) return;
-    _controller.previousPage(
-      duration: const Duration(milliseconds: 300),
+    _goToPage(_currentPage - 1);
+  }
+
+  void _goToPage(int page) {
+    final duration = tutorialMotion(
+      context,
+      context.tutorialTokens.pageDuration,
+    );
+    if (duration == Duration.zero) {
+      _controller.jumpToPage(page);
+      return;
+    }
+    _controller.animateToPage(
+      page,
+      duration: duration,
       curve: Curves.easeOutCubic,
     );
   }
@@ -1369,7 +1374,9 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
           decoration: InputDecoration(
             labelText: strings.onboardingProfileNameLabel,
             prefixIcon: const Icon(Icons.edit_outlined),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(18)),
+            border: OutlineInputBorder(
+              borderRadius: context.tutorialTokens.inputShape,
+            ),
           ),
         ),
         const SizedBox(height: 16),
@@ -1379,7 +1386,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
             color: Theme.of(
               context,
             ).colorScheme.surface.withValues(alpha: 0.46),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: context.tutorialTokens.sectionShape,
             border: Border.all(
               color: Theme.of(context).colorScheme.outlineVariant,
             ),
@@ -1774,7 +1781,9 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       labelText: label,
       hintText: hint,
       prefixIcon: icon == null ? null : Icon(icon),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(18)),
+      border: OutlineInputBorder(
+        borderRadius: context.tutorialTokens.inputShape,
+      ),
     );
   }
 
@@ -1911,7 +1920,7 @@ class _OnboardingHeader extends StatelessWidget {
             ),
         const SizedBox(height: 8),
         ClipRRect(
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: context.tutorialTokens.pillShape,
           child: LinearProgressIndicator(
             value: progress,
             minHeight: 8,
@@ -1953,7 +1962,7 @@ class _OnboardingCard extends StatelessWidget {
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           color: scheme.surfaceContainerHighest.withValues(alpha: 0.34),
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: context.tutorialTokens.heroShape,
           border: Border.all(
             color: scheme.outlineVariant.withValues(alpha: 0.55),
           ),
@@ -2024,7 +2033,9 @@ class _TextInput extends StatelessWidget {
         hintText: hint,
         prefixIcon: Icon(icon),
         suffixText: suffixText,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(18)),
+        border: OutlineInputBorder(
+          borderRadius: context.tutorialTokens.inputShape,
+        ),
       ),
     );
   }
@@ -2046,13 +2057,15 @@ class _ActionField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: context.tutorialTokens.inputShape,
       onTap: onTap,
       child: InputDecorator(
         decoration: InputDecoration(
           labelText: label,
           prefixIcon: Icon(icon),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(18)),
+          border: OutlineInputBorder(
+            borderRadius: context.tutorialTokens.inputShape,
+          ),
         ),
         child: Text(value),
       ),
@@ -2094,14 +2107,17 @@ class _IntentTile extends StatelessWidget {
             : scheme.surface.withValues(alpha: enabled ? 0.5 : 0.28);
 
     return InkWell(
-      borderRadius: BorderRadius.circular(22),
+      borderRadius: context.tutorialTokens.tileShape,
       onTap: enabled ? () => onChanged(!value) : null,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
+        duration: tutorialMotion(
+          context,
+          context.tutorialTokens.selectionDuration,
+        ),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: backgroundColor,
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: context.tutorialTokens.tileShape,
           border: Border.all(color: borderColor),
         ),
         child: Row(
@@ -2142,7 +2158,7 @@ class _IntentTile extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: scheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(999),
+                  borderRadius: context.tutorialTokens.pillShape,
                   border: Border.all(color: scheme.outlineVariant),
                 ),
                 child: Text(
@@ -2183,7 +2199,7 @@ class _SwitchCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: scheme.surface.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: context.tutorialTokens.sectionShape,
         border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.7)),
       ),
       child: Row(
@@ -2268,12 +2284,15 @@ class _BodyFatTile extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
 
     return InkWell(
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: context.tutorialTokens.inputShape,
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
+        duration: tutorialMotion(
+          context,
+          context.tutorialTokens.selectionDuration,
+        ),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: context.tutorialTokens.inputShape,
           border: Border.all(
             color: isSelected ? scheme.primary : scheme.outlineVariant,
             width: isSelected ? 2.4 : 1,
@@ -2334,7 +2353,7 @@ class _MetricPreviewCard extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: scheme.primary.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: context.tutorialTokens.sectionShape,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2378,7 +2397,7 @@ class _SliderPanel extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: scheme.surface.withValues(alpha: 0.52),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: context.tutorialTokens.sectionShape,
         border: Border.all(
           color: scheme.outlineVariant.withValues(alpha: 0.65),
         ),
@@ -2424,7 +2443,7 @@ class _MiniStat extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: scheme.surface.withValues(alpha: 0.52),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: context.tutorialTokens.inputShape,
         border: Border.all(
           color: scheme.outlineVariant.withValues(alpha: 0.65),
         ),
@@ -2564,7 +2583,7 @@ class _OnboardingSummaryCallout extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: scheme.primary.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: context.tutorialTokens.compactShape,
         border: Border.all(color: scheme.primary.withValues(alpha: 0.3)),
       ),
       child: Row(
@@ -2619,7 +2638,7 @@ class _OnboardingSummarySection extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(14, 13, 14, 4),
       decoration: BoxDecoration(
         color: scheme.surface.withValues(alpha: 0.46),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: context.tutorialTokens.inputShape,
         border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.6)),
       ),
       child: Column(
@@ -2664,13 +2683,16 @@ class _PageDots extends StatelessWidget {
       children: List.generate(count, (index) {
         final active = index == activeIndex;
         return AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
+          duration: tutorialMotion(
+            context,
+            context.tutorialTokens.selectionDuration,
+          ),
           margin: const EdgeInsets.symmetric(horizontal: 3),
           width: active ? 20 : 7,
           height: 7,
           decoration: BoxDecoration(
             color: active ? scheme.primary : scheme.outlineVariant,
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: context.tutorialTokens.pillShape,
           ),
         );
       }),
@@ -3033,16 +3055,19 @@ class _GymSpaceTile extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(22),
+      borderRadius: context.tutorialTokens.tileShape,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
+        duration: tutorialMotion(
+          context,
+          context.tutorialTokens.selectionDuration,
+        ),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color:
               selected
                   ? accent.withValues(alpha: 0.16)
                   : scheme.surface.withValues(alpha: 0.46),
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: context.tutorialTokens.tileShape,
           border: Border.all(
             color: selected ? accent : scheme.outlineVariant,
             width: selected ? 2 : 1,
@@ -3056,7 +3081,7 @@ class _GymSpaceTile extends StatelessWidget {
               height: 46,
               decoration: BoxDecoration(
                 color: accent.withValues(alpha: 0.16),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: context.tutorialTokens.compactShape,
               ),
               child: Icon(template.icon, color: accent),
             ),
@@ -3111,7 +3136,7 @@ class _GymEquipmentLoadError extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: scheme.errorContainer.withValues(alpha: 0.32),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: context.tutorialTokens.sectionShape,
       ),
       child: Column(
         children: [
@@ -3158,16 +3183,19 @@ class _WorkoutPlanSetupTile extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(22),
+      borderRadius: context.tutorialTokens.tileShape,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
+        duration: tutorialMotion(
+          context,
+          context.tutorialTokens.selectionDuration,
+        ),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color:
               selected
                   ? scheme.primary.withValues(alpha: 0.16)
                   : scheme.surface.withValues(alpha: 0.46),
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: context.tutorialTokens.tileShape,
           border: Border.all(
             color: selected ? scheme.primary : scheme.outlineVariant,
             width: selected ? 2 : 1,
@@ -3180,7 +3208,7 @@ class _WorkoutPlanSetupTile extends StatelessWidget {
               height: 46,
               decoration: BoxDecoration(
                 color: accent.withValues(alpha: 0.16),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: context.tutorialTokens.compactShape,
               ),
               child: Icon(icon, color: accent),
             ),
@@ -3234,7 +3262,7 @@ class _OnboardingInfoCallout extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: scheme.primary.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: context.tutorialTokens.inputShape,
         border: Border.all(color: scheme.primary.withValues(alpha: 0.28)),
       ),
       child: Row(

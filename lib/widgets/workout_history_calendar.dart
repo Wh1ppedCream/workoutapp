@@ -8,6 +8,7 @@ import '../models/models.dart';
 import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
 import '../theme/theme_extensions.dart';
+import '../theme/widgets/tonos_surface.dart';
 import '../utils/completed_workout_duration_formatter.dart';
 import '../utils/localized_formatters.dart';
 import '../utils/weight_unit_formatter.dart';
@@ -465,11 +466,13 @@ class _CalendarModeTabs extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isSpanish = Localizations.localeOf(context).languageCode == 'es';
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: context.cs.surfaceContainerHighest.withValues(alpha: 0.35),
-        borderRadius: BorderRadius.circular(999),
+        color: surfaces.calendarModeSelector,
+        borderRadius: shapes.pill,
       ),
       child: Row(
         children: [
@@ -492,9 +495,10 @@ class _CalendarModeTabs extends StatelessWidget {
     String label,
   ) {
     final isSelected = selectedMode == mode;
+    final shapes = context.shapeTokens;
     return Expanded(
       child: InkWell(
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: shapes.pill,
         onTap: () => onChanged(mode),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 160),
@@ -502,7 +506,7 @@ class _CalendarModeTabs extends StatelessWidget {
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: isSelected ? context.cs.primary : Colors.transparent,
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: shapes.pill,
           ),
           child: Text(
             label,
@@ -940,6 +944,8 @@ class _PeriodCircleButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = context.cs;
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
     final hasWorkout = sessionCount > 0;
     final intensity =
         maxSessionCount == 0
@@ -950,14 +956,14 @@ class _PeriodCircleButton extends StatelessWidget {
             ? cs.primary
             : hasWorkout
             ? cs.primary.withValues(alpha: 0.22 + intensity * 0.48)
-            : cs.surfaceContainerHighest;
+            : surfaces.calendarDayEmpty;
     final foregroundColor = isSelected ? cs.onPrimary : cs.onSurface;
 
     return Semantics(
       button: true,
       label: semanticLabel,
       child: InkWell(
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: shapes.pill,
         onTap: onTap,
         child: Stack(
           fit: StackFit.expand,
@@ -1158,6 +1164,8 @@ class _CalendarDayButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = context.cs;
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
     final hasWorkout = sessionCount > 0;
     final intensity =
         maxSessionsPerDay == 0
@@ -1166,7 +1174,7 @@ class _CalendarDayButton extends StatelessWidget {
     final baseColor =
         hasWorkout
             ? cs.primary.withValues(alpha: 0.22 + intensity * 0.48)
-            : cs.surfaceContainerHighest;
+            : surfaces.calendarDayEmpty;
     final backgroundColor = isSelected ? cs.primary : baseColor;
     final foregroundColor =
         isSelected
@@ -1179,7 +1187,7 @@ class _CalendarDayButton extends StatelessWidget {
       button: true,
       label: LocalizedFormatters.longDate(day, Localizations.localeOf(context)),
       child: InkWell(
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: shapes.pill,
         onTap: onTap,
         child: Stack(
           fit: StackFit.expand,
@@ -1298,7 +1306,7 @@ class _SelectedPeriodHeatmapSummary extends StatelessWidget {
 
         return LayoutBuilder(
           builder: (context, constraints) {
-            final colors = context.colors;
+            final dataVisualization = context.dataVisualizationTokens;
             final maxWidth = constraints.maxWidth;
             final gap = maxWidth < 330 ? 10.0 : 16.0;
             final heatmapBox = (maxWidth * 0.57).clamp(138.0, 250.0).toDouble();
@@ -1323,13 +1331,13 @@ class _SelectedPeriodHeatmapSummary extends StatelessWidget {
                                 height: 28,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2.5,
-                                  color: colors.historySummaryHeatmapHigh!,
+                                  color: dataVisualization.heatmapHigh,
                                 ),
                               )
                               : BodyHeatmap(
                                 frequencyMap: frequencyMap,
-                                lowColor: colors.historySummaryHeatmapLow!,
-                                highColor: colors.historySummaryHeatmapHigh!,
+                                lowColor: dataVisualization.heatmapLow,
+                                highColor: dataVisualization.heatmapHigh,
                                 width: heatmapSize,
                                 height: heatmapSize,
                               ),
@@ -1402,22 +1410,12 @@ class _CalendarMetricCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-    return Container(
+    final semantic = context.semanticColors;
+    return TonosSurface(
+      variant: TonosSurfaceVariant.compactCard,
       padding: EdgeInsets.symmetric(
         vertical: compact ? 8 : 12,
         horizontal: compact ? 12 : 16,
-      ),
-      decoration: BoxDecoration(
-        color: colors.infoCardBackground,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: colors.infoCardShadow!,
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -1432,7 +1430,7 @@ class _CalendarMetricCard extends StatelessWidget {
               style: TextStyle(
                 fontSize: compact ? 13 : 14,
                 fontWeight: FontWeight.bold,
-                color: colors.infoCardValueText,
+                color: semantic.strongContent,
               ),
             ),
           ),
@@ -1443,7 +1441,7 @@ class _CalendarMetricCard extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: compact ? 9 : 10,
-              color: colors.infoCardLabelText,
+              color: semantic.mutedContent,
             ),
           ),
         ],
@@ -1469,11 +1467,13 @@ class _SelectedPeriodSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: context.cs.surfaceContainerHighest.withValues(alpha: 0.45),
-        borderRadius: BorderRadius.circular(18),
+        color: surfaces.historySelectedPeriod,
+        borderRadius: shapes.historySelectedPeriod,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1519,7 +1519,7 @@ class _SelectedPeriodSummary extends StatelessWidget {
                 Divider(
                   height: 1,
                   thickness: 1,
-                  color: context.cs.outlineVariant.withValues(alpha: 0.22),
+                  color: surfaces.historyDivider,
                 ),
               _SessionRow(
                 session: sessions[index],

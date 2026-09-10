@@ -9,6 +9,7 @@ import '../../../models/models.dart';
 import '../../../repositories/app_repository.dart';
 import '../../../services/catalog_entity_localizer.dart';
 import '../../../services/safe_failure.dart';
+import '../../../utils/localized_body_part_name.dart';
 import '../../../widgets/localized_catalog_entity_name.dart';
 import '../../../widgets/settings_tiles.dart';
 import '../../../widgets/safe_error_view.dart';
@@ -140,39 +141,21 @@ class _BodyPartMuscleMappingScreenState
       ),
       bottomNavigationBar:
           _editing
-              ? SafeArea(
-                minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: _isSaving ? null : _cancelEditing,
-                        child: Text(strings.commonCancel),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: FilledButton.icon(
-                        onPressed: _isSaving ? null : _saveMappings,
-                        icon:
-                            _isSaving
-                                ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                                : const Icon(Icons.save),
-                        label: Text(
-                          _isSaving
-                              ? strings.nutritionSaving
-                              : strings.commonSave,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+              ? SettingsSaveBar(
+                label: _isSaving ? strings.nutritionSaving : strings.commonSave,
+                onPressed: _isSaving ? null : _saveMappings,
+                cancelLabel: strings.commonCancel,
+                onCancel: _isSaving ? null : _cancelEditing,
+                saveIcon:
+                    _isSaving
+                        ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                        : const Icon(Icons.save),
+                decorated: false,
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
               )
               : null,
       body: SafeArea(child: _buildBody()),
@@ -221,18 +204,18 @@ class _BodyPartMuscleMappingScreenState
               child: DropdownButtonFormField<BodyPart>(
                 isExpanded: true,
                 value: _selectedBodyPart,
-                decoration: InputDecoration(
-                  labelText: strings.mappingBodyPart,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
+                decoration: settingsFieldDecoration(
+                  context,
+                  label: strings.mappingBodyPart,
                 ),
                 items:
                     _bodyParts
                         .map(
                           (bodyPart) => DropdownMenuItem(
                             value: bodyPart,
-                            child: Text(bodyPart.name),
+                            child: Text(
+                              localizedBodyPartName(context, bodyPart.name),
+                            ),
                           ),
                         )
                         .toList(),

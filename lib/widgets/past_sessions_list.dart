@@ -79,7 +79,8 @@ class _PastSessionsListState extends State<PastSessionsList>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final colors = context.colors;
+    final dataVisualization = context.dataVisualizationTokens;
+    final surfaces = context.surfaceTokens;
     final cs = context.cs;
     final strings = AppLocalizations.of(context);
     final optionLabels = <String, String>{
@@ -128,7 +129,7 @@ class _PastSessionsListState extends State<PastSessionsList>
                   IconButton(
                     icon: Icon(
                       Icons.fullscreen,
-                      color: colors.pastSessionsIcon!,
+                      color: dataVisualization.selection,
                     ),
                     tooltip: strings.pastSessionsFullscreen,
                     onPressed: () {
@@ -150,7 +151,7 @@ class _PastSessionsListState extends State<PastSessionsList>
                         !snap.hasData) {
                       return Center(
                         child: CircularProgressIndicator(
-                          color: colors.pastSessionsProgress!,
+                          color: dataVisualization.selection,
                         ),
                       );
                     }
@@ -176,10 +177,8 @@ class _PastSessionsListState extends State<PastSessionsList>
                       padding: const EdgeInsets.symmetric(vertical: 2),
                       itemCount: sessions.length,
                       separatorBuilder:
-                          (_, __) => Divider(
-                            height: 1,
-                            color: colors.pastSessionsDivider!,
-                          ),
+                          (_, __) =>
+                              Divider(height: 1, color: surfaces.divider),
                       itemBuilder: (ctx, i) {
                         final ses = sessions[i];
                         final dateStr = LocalizedFormatters.date(

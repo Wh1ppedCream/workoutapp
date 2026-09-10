@@ -1,0 +1,865 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:env_test/theme/app_theme_family.dart';
+import 'package:env_test/theme/app_theme_factory.dart';
+import 'package:env_test/theme/theme_extensions.dart';
+import 'package:env_test/theme/tokens/app_shape_tokens.dart';
+import 'package:env_test/theme/tokens/app_surface_tokens.dart';
+import 'package:env_test/widgets/settings_tiles.dart';
+
+const _testShapes = AppShapeTokens(
+  compact: BorderRadius.all(Radius.circular(4)),
+  control: BorderRadius.all(Radius.circular(10)),
+  metric: BorderRadius.all(Radius.circular(14)),
+  recordBadge: BorderRadius.all(Radius.circular(7)),
+  recordBadgeCompact: BorderRadius.all(Radius.circular(5)),
+  workoutSection: BorderRadius.all(Radius.circular(10)),
+  planCard: BorderRadius.all(Radius.circular(18)),
+  flowControl: BorderRadius.all(Radius.circular(20)),
+  flowIcon: BorderRadius.all(Radius.circular(13)),
+  card: BorderRadius.all(Radius.circular(18)),
+  sheet: BorderRadius.all(Radius.circular(26)),
+  pill: BorderRadius.all(Radius.circular(999)),
+  settingsAction: BorderRadius.all(Radius.circular(13)),
+  settingsPanel: BorderRadius.all(Radius.circular(22)),
+  settingsInput: BorderRadius.all(Radius.circular(14)),
+  settingsTabIndicator: BorderRadius.all(Radius.circular(17)),
+  settingsScopeIcon: BorderRadius.all(Radius.circular(19)),
+  settingsTitleCard: BorderRadius.all(Radius.circular(21)),
+  settingsField: BorderRadius.all(Radius.circular(16)),
+  settingsPicker: BorderRadius.all(Radius.circular(20)),
+  settingsIcon: BorderRadius.all(Radius.circular(13)),
+  profileTile: BorderRadius.all(Radius.circular(20)),
+  hero: BorderRadius.all(Radius.circular(30)),
+  actionBar: BorderRadius.all(Radius.circular(22)),
+  dialogChoice: BorderRadius.all(Radius.circular(11)),
+  exerciseProgressHero: BorderRadius.all(Radius.circular(18)),
+  exerciseProgressStat: BorderRadius.all(Radius.circular(14)),
+  exerciseProgressSelector: BorderRadius.all(Radius.circular(14)),
+  exerciseProgressAddTile: BorderRadius.all(Radius.circular(12)),
+  exerciseProgressTooltip: BorderRadius.all(Radius.circular(10)),
+  workoutMetricStat: BorderRadius.all(Radius.circular(16)),
+  workoutMetricChart: BorderRadius.all(Radius.circular(18)),
+  workoutMetricTooltip: BorderRadius.all(Radius.circular(10)),
+  workoutMetricRange: BorderRadius.all(Radius.circular(14)),
+  workoutMetricRangeOption: BorderRadius.all(Radius.circular(11)),
+  workoutMetricDetails: BorderRadius.all(Radius.circular(14)),
+  workoutMetricInsight: BorderRadius.all(Radius.circular(14)),
+  healthTrendCard: BorderRadius.all(Radius.circular(18)),
+  healthTrendEntry: BorderRadius.all(Radius.circular(14)),
+  dashboardHero: BorderRadius.all(Radius.circular(22)),
+  dashboardSection: BorderRadius.all(Radius.circular(24)),
+  dashboardEditor: BorderRadius.all(Radius.circular(20)),
+  dashboardAction: BorderRadius.all(Radius.circular(16)),
+  dashboardUsage: BorderRadius.all(Radius.circular(13)),
+  dashboardRow: BorderRadius.all(Radius.circular(14)),
+  dashboardFooter: BorderRadius.all(Radius.circular(22)),
+  historySelectedPeriod: BorderRadius.all(Radius.circular(18)),
+  outlineWidth: 1.5,
+  focusRingWidth: 2,
+);
+
+const _testSurfaces = AppSurfaceTokens(
+  presetFocus: Color(0xFF181818),
+  workoutHandle: Color(0xFF282828),
+  sessionSummary: Color(0xFF292929),
+  panel: Color(0xFF101010),
+  panelRaised: Color(0xFF202020),
+  card: Color(0xFF303030),
+  planCard: Color(0xFF383838),
+  flowControl: Color(0xFF393939),
+  planFilter: Color(0xFF3A3A3A),
+  planDuration: Color(0xFF3B3B3B),
+  planGroup: Color(0xFF3C3C3C),
+  metricChip: Color(0xFF3D3D3D),
+  planActionBar: Color(0xFF3E3E3E),
+  optimizedAction: Color(0xFF3F3F3F),
+  subtleOutline: Color(0xFF404040),
+  input: Color(0xFF505050),
+  sheet: Color(0xFF606060),
+  dialog: Color(0xFF707070),
+  media: Color(0xFF808080),
+  mediaFrame: Color(0xFF858585),
+  mediaPlaceholder: Color(0xFF909090),
+  mediaOutline: Color(0xFF959595),
+  catalogSelection: Color(0xFF989898),
+  catalogUsage: Color(0xFF999999),
+  catalogOutline: Color(0xFF9A9A9A),
+  exerciseDetailCard: Color(0xFF9B9B9B),
+  exerciseDetailTimeframe: Color(0xFF9C9C9C),
+  exerciseDetailRecord: Color(0xFF9D9D9D),
+  exerciseDetailMetricList: Color(0xFF9E9E9E),
+  exerciseDetailState: Color(0xFF9F9F9F),
+  exerciseDetailChart: Color(0xFFA1A1A1),
+  exerciseDetailChartEmpty: Color(0xFFA2A2A2),
+  exerciseDetailTooltip: Color(0xFFA3A3A3),
+  divider: Color(0xFFA0A0A0),
+  settingsHero: Color(0xFFB0B0B0),
+  settingsSection: Color(0xFFC0C0C0),
+  settingsInput: Color(0xFFD0D0D0),
+  settingsSaveBar: Color(0xFFE0E0E0),
+  dialogChoice: Color(0xFFF0F0F0),
+  exerciseProgressHero: Color(0xFFF1F1F1),
+  exerciseProgressStat: Color(0xFFF2F2F2),
+  exerciseProgressSelector: Color(0xFFF3F3F3),
+  exerciseProgressTooltip: Color(0xFFF4F4F4),
+  workoutMetricStat: Color(0xFFF5F5F5),
+  workoutMetricChart: Color(0xFFF6F6F6),
+  workoutMetricTooltip: Color(0xFFF7F7F7),
+  workoutMetricRange: Color(0xFFF8F8F8),
+  workoutMetricDetails: Color(0xFFF9F9F9),
+  workoutMetricInsight: Color(0xFFFAFAFA),
+  dashboardHero: Color(0xFF010101),
+  dashboardSection: Color(0xFF020202),
+  dashboardEditor: Color(0xFF030303),
+  dashboardUsage: Color(0xFF040404),
+  historyPeriodSelector: Color(0xFF050505),
+  calendarModeSelector: Color(0xFF060606),
+  calendarDayEmpty: Color(0xFF090909),
+  historySelectedPeriod: Color(0xFF070707),
+  historyDivider: Color(0xFF080808),
+);
+
+void main() {
+  testWidgets('save bar respects reduced motion and remains actionable', (
+    tester,
+  ) async {
+    var saves = 0;
+    for (final reduced in [false, true]) {
+      for (final visible in [false, true]) {
+        await tester.pumpWidget(
+          _testApp(
+            MediaQuery(
+              data: MediaQueryData(disableAnimations: reduced),
+              child: SettingsSaveBar(
+                buttonKey: const ValueKey('reduced-motion-save'),
+                label: 'Save',
+                onPressed: () => saves++,
+                isVisible: visible,
+                animate: true,
+              ),
+            ),
+          ),
+        );
+        final slide = tester.widget<AnimatedSlide>(find.byType(AnimatedSlide));
+        final fade = tester.widget<AnimatedOpacity>(
+          find.byType(AnimatedOpacity),
+        );
+        final expected =
+            reduced ? Duration.zero : const Duration(milliseconds: 200);
+        expect(slide.duration, expected);
+        expect(fade.duration, expected);
+        expect(slide.offset, visible ? Offset.zero : const Offset(0, 1));
+        expect(fade.opacity, visible ? 1 : 0);
+        await tester.pumpAndSettle();
+        if (visible) {
+          await tester.tap(find.byKey(const ValueKey('reduced-motion-save')));
+        } else {
+          expect(
+            tester
+                .widget<ButtonStyleButton>(
+                  find.byKey(const ValueKey('reduced-motion-save')),
+                )
+                .onPressed,
+            isNull,
+          );
+        }
+      }
+    }
+    expect(saves, 2);
+  });
+  testWidgets('shared settings sections resolve active surface recipes', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _testApp(
+        const SettingsSection(
+          title: 'Display',
+          children: [SizedBox(height: 24)],
+        ),
+      ),
+    );
+
+    final panel = tester.widget<Container>(
+      find.byWidgetPredicate((widget) {
+        if (widget is! Container) return false;
+        final decoration = widget.decoration;
+        return decoration is BoxDecoration &&
+            decoration.borderRadius == _testShapes.sheet;
+      }),
+    );
+    final decoration = panel.decoration! as BoxDecoration;
+    expect(decoration.color, _testSurfaces.settingsSection);
+    expect(decoration.border, isA<Border>());
+    expect((decoration.border! as Border).top.color, isNotNull);
+  });
+
+  testWidgets('expandable settings sections preserve themed expansion recipe', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _testApp(
+        const SettingsExpansionSection(
+          title: 'Tutorials',
+          subtitle: 'Replay guided help',
+          icon: Icons.school_outlined,
+          accentColor: Colors.teal,
+          children: [Text('Tutorial item')],
+        ),
+      ),
+    );
+
+    final panel = tester.widget<Container>(
+      find.byWidgetPredicate((widget) {
+        if (widget is! Container) return false;
+        final decoration = widget.decoration;
+        return decoration is BoxDecoration &&
+            decoration.borderRadius == _testShapes.sheet;
+      }),
+    );
+    final decoration = panel.decoration! as BoxDecoration;
+    expect(decoration.color, _testSurfaces.settingsSection);
+    expect(
+      (decoration.border! as Border).top.color,
+      Colors.teal.withValues(alpha: 0.46),
+    );
+
+    final iconBadge = tester.widget<Container>(
+      find.byWidgetPredicate((widget) {
+        if (widget is! Container) return false;
+        final decoration = widget.decoration;
+        return decoration is BoxDecoration &&
+            decoration.borderRadius == _testShapes.settingsAction;
+      }),
+    );
+    final iconDecoration = iconBadge.decoration! as BoxDecoration;
+    expect(iconDecoration.color, Colors.teal.withValues(alpha: 0.16));
+
+    await tester.tap(find.text('Tutorials'));
+    await tester.pumpAndSettle();
+    expect(find.text('Tutorial item'), findsOneWidget);
+  });
+
+  testWidgets('shared settings actions preserve callbacks', (tester) async {
+    var taps = 0;
+    await tester.pumpWidget(
+      _testApp(
+        SettingsActionTile(
+          icon: Icons.settings,
+          title: 'Open settings',
+          onTap: () => taps++,
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Open settings'));
+    expect(taps, 1);
+  });
+
+  testWidgets('shared settings value text uses the active primary role', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_testApp(const SettingsValueText(value: 'Pounds')));
+
+    final valueText = tester.widget<Text>(find.text('Pounds'));
+    final context = tester.element(find.text('Pounds'));
+    expect(valueText.style?.color, Theme.of(context).colorScheme.primary);
+    expect(valueText.style?.fontWeight, FontWeight.w900);
+  });
+
+  testWidgets('shared settings status badges resolve surface recipes', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _testApp(const SettingsStatusBadge(label: 'Later')),
+    );
+
+    final badge = tester.widget<Container>(
+      find.byWidgetPredicate((widget) {
+        if (widget is! Container) return false;
+        final decoration = widget.decoration;
+        return decoration is BoxDecoration &&
+            decoration.borderRadius == _testShapes.pill;
+      }),
+    );
+    final decoration = badge.decoration! as BoxDecoration;
+    expect(decoration.color, _testSurfaces.panelRaised);
+    expect(decoration.border, isA<Border>());
+    expect(
+      (decoration.border! as Border).top.color,
+      Theme.of(tester.element(find.text('Later'))).colorScheme.outlineVariant,
+    );
+  });
+
+  testWidgets('Classic light and dark badges keep the standard outline role', (
+    tester,
+  ) async {
+    for (final theme in <ThemeData>[
+      AppThemeFactory.light(AppThemeFamily.classic),
+      AppThemeFactory.dark(AppThemeFamily.classic),
+    ]) {
+      await tester.pumpWidget(
+        _testApp(const SettingsStatusBadge(label: 'Classic'), theme: theme),
+      );
+      final badge = tester.widget<Container>(
+        find.byWidgetPredicate((widget) {
+          if (widget is! Container) return false;
+          final decoration = widget.decoration;
+          return decoration is BoxDecoration &&
+              decoration.borderRadius == theme.shapeTokens.pill;
+        }),
+      );
+      final decoration = badge.decoration! as BoxDecoration;
+      expect(decoration.border, isA<Border>());
+      expect(
+        (decoration.border! as Border).top.color,
+        theme.colorScheme.outlineVariant,
+      );
+    }
+  });
+
+  testWidgets(
+    'Classic light and dark shared settings primitives preserve their roles',
+    (tester) async {
+      const accent = Colors.teal;
+      for (final theme in <ThemeData>[
+        AppThemeFactory.light(AppThemeFamily.classic),
+        AppThemeFactory.dark(AppThemeFamily.classic),
+      ]) {
+        await tester.pumpWidget(
+          _testApp(
+            Column(
+              children: [
+                SettingsAccentPill(
+                  key: ValueKey('classic-accent-pill'),
+                  label: 'Source',
+                  color: accent,
+                ),
+                SettingsLegendChip(
+                  key: ValueKey('classic-legend-chip'),
+                  color: accent,
+                  label: 'Plan scope',
+                ),
+                SettingsCountBadge(
+                  key: ValueKey('classic-count-badge'),
+                  count: 3,
+                  color: accent,
+                ),
+                SettingsInlineActionButton(
+                  key: ValueKey('classic-inline-action'),
+                  label: 'Add item',
+                  icon: Icons.add,
+                  onPressed: _noop,
+                ),
+              ],
+            ),
+            theme: theme,
+          ),
+        );
+
+        final pill = tester.widget<Container>(
+          find.descendant(
+            of: find.byKey(const ValueKey('classic-accent-pill')),
+            matching: find.byType(Container),
+          ),
+        );
+        final pillDecoration = pill.decoration! as BoxDecoration;
+        expect(pillDecoration.borderRadius, theme.shapeTokens.pill);
+        expect(pillDecoration.color, accent.withValues(alpha: 0.14));
+
+        final legend = tester.widget<Container>(
+          find.descendant(
+            of: find.byKey(const ValueKey('classic-legend-chip')),
+            matching: find.byWidgetPredicate((widget) {
+              if (widget is! Container) return false;
+              final decoration = widget.decoration;
+              return decoration is BoxDecoration &&
+                  decoration.borderRadius == theme.shapeTokens.pill;
+            }),
+          ),
+        );
+        final legendDecoration = legend.decoration! as BoxDecoration;
+        expect(legendDecoration.color, accent.withValues(alpha: 0.12));
+        expect(
+          (legendDecoration.border! as Border).top.color,
+          accent.withValues(alpha: 0.36),
+        );
+
+        final count = tester.widget<Container>(
+          find.descendant(
+            of: find.byKey(const ValueKey('classic-count-badge')),
+            matching: find.byType(Container),
+          ),
+        );
+        final countDecoration = count.decoration! as BoxDecoration;
+        expect(countDecoration.borderRadius, theme.shapeTokens.pill);
+        expect(countDecoration.color, accent.withValues(alpha: 0.16));
+
+        expect(
+          find.descendant(
+            of: find.byKey(const ValueKey('classic-inline-action')),
+            matching: find.byWidgetPredicate(
+              (widget) =>
+                  widget is ButtonStyleButton && widget.onPressed != null,
+            ),
+          ),
+          findsOneWidget,
+        );
+      }
+    },
+  );
+
+  testWidgets('shared accent pills preserve default and custom label roles', (
+    tester,
+  ) async {
+    const accent = Colors.teal;
+    await tester.pumpWidget(
+      _testApp(const SettingsAccentPill(label: 'Source', color: accent)),
+    );
+
+    var pill = tester.widget<Container>(
+      find.descendant(
+        of: find.byType(SettingsAccentPill),
+        matching: find.byType(Container),
+      ),
+    );
+    var decoration = pill.decoration! as BoxDecoration;
+    expect(decoration.color, accent.withValues(alpha: 0.14));
+    expect(decoration.borderRadius, _testShapes.pill);
+    expect(decoration.border, isNull);
+    expect(
+      pill.padding,
+      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+    );
+    var text = tester.widget<Text>(find.text('Source'));
+    expect(text.style?.color, accent);
+    expect(text.style?.fontWeight, FontWeight.w800);
+
+    await tester.pumpWidget(
+      _testApp(
+        const SettingsAccentPill(
+          label: 'Reset',
+          color: accent,
+          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          backgroundAlpha: 0.13,
+          borderAlpha: 0.42,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+    );
+
+    pill = tester.widget<Container>(
+      find.descendant(
+        of: find.byType(SettingsAccentPill),
+        matching: find.byType(Container),
+      ),
+    );
+    decoration = pill.decoration! as BoxDecoration;
+    expect(decoration.color, accent.withValues(alpha: 0.13));
+    expect(
+      pill.padding,
+      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+    );
+    expect(
+      (decoration.border! as Border).top.color,
+      accent.withValues(alpha: 0.42),
+    );
+    text = tester.widget<Text>(find.text('Reset'));
+    expect(text.style?.fontWeight, FontWeight.w900);
+  });
+
+  testWidgets('shared legend chips preserve accent marker and outline roles', (
+    tester,
+  ) async {
+    const accent = Colors.orange;
+    await tester.pumpWidget(
+      _testApp(const SettingsLegendChip(color: accent, label: 'Plan scope')),
+    );
+
+    final chip = tester.widget<Container>(
+      find.byWidgetPredicate((widget) {
+        if (widget is! Container) return false;
+        final decoration = widget.decoration;
+        return decoration is BoxDecoration &&
+            decoration.borderRadius == _testShapes.pill;
+      }),
+    );
+    final decoration = chip.decoration! as BoxDecoration;
+    expect(decoration.color, accent.withValues(alpha: 0.12));
+    expect(decoration.borderRadius, _testShapes.pill);
+    expect(
+      (decoration.border! as Border).top.color,
+      accent.withValues(alpha: 0.36),
+    );
+    expect(find.text('Plan scope'), findsOneWidget);
+    expect(find.byType(Row), findsOneWidget);
+  });
+
+  testWidgets('shared count badges preserve compact count geometry', (
+    tester,
+  ) async {
+    const accent = Colors.indigo;
+    await tester.pumpWidget(
+      _testApp(const SettingsCountBadge(count: 3, color: accent)),
+    );
+
+    final badge = tester.widget<Container>(
+      find.descendant(
+        of: find.byType(SettingsCountBadge),
+        matching: find.byType(Container),
+      ),
+    );
+    final decoration = badge.decoration! as BoxDecoration;
+    expect(decoration.color, accent.withValues(alpha: 0.16));
+    expect(decoration.borderRadius, _testShapes.pill);
+    expect(badge.constraints!.minWidth, 28);
+    final text = tester.widget<Text>(find.text('3'));
+    expect(text.style?.fontWeight, FontWeight.w900);
+  });
+
+  testWidgets('shared inline action buttons preserve padding and callbacks', (
+    tester,
+  ) async {
+    var taps = 0;
+    await tester.pumpWidget(
+      _testApp(
+        SettingsInlineActionButton(
+          label: 'Add item',
+          icon: Icons.add,
+          onPressed: () => taps++,
+        ),
+      ),
+    );
+
+    final padding = tester.widget<Padding>(
+      find.descendant(
+        of: find.byType(SettingsInlineActionButton),
+        matching: find.byWidgetPredicate(
+          (widget) =>
+              widget is Padding && widget.padding == const EdgeInsets.all(12),
+        ),
+      ),
+    );
+    expect(padding.padding, const EdgeInsets.all(12));
+
+    await tester.tap(find.text('Add item'));
+    expect(taps, 1);
+  });
+
+  testWidgets('shared settings input decoration resolves surface recipes', (
+    tester,
+  ) async {
+    InputDecoration? decoration;
+    await tester.pumpWidget(
+      _testApp(
+        Builder(
+          builder: (context) {
+            decoration = settingsInputDecoration(
+              context,
+              label: 'Name',
+              hint: 'Your name',
+              icon: Icons.person_outline,
+              suffixText: 'kg',
+            );
+            return const SizedBox.shrink();
+          },
+        ),
+      ),
+    );
+
+    expect(decoration, isNotNull);
+    expect(decoration!.fillColor, _testSurfaces.settingsInput);
+    expect(decoration!.labelText, 'Name');
+    expect(decoration!.hintText, 'Your name');
+    expect(decoration!.suffixText, 'kg');
+    expect(decoration!.border, isA<OutlineInputBorder>());
+    expect(
+      (decoration!.border! as OutlineInputBorder).borderRadius,
+      _testShapes.settingsField,
+    );
+  });
+
+  testWidgets('shared settings field decoration preserves compact geometry', (
+    tester,
+  ) async {
+    InputDecoration? decoration;
+    await tester.pumpWidget(
+      _testApp(
+        Builder(
+          builder: (context) {
+            decoration = settingsFieldDecoration(
+              context,
+              label: 'Calories',
+              hint: 'Optional',
+              suffixText: 'kcal',
+              isDense: true,
+            );
+            return const SizedBox.shrink();
+          },
+        ),
+      ),
+    );
+
+    expect(decoration, isNotNull);
+    expect(decoration!.labelText, 'Calories');
+    expect(decoration!.hintText, 'Optional');
+    expect(decoration!.suffixText, 'kcal');
+    expect(decoration!.isDense, isTrue);
+    expect(
+      (decoration!.border! as OutlineInputBorder).borderRadius,
+      _testShapes.settingsField,
+    );
+  });
+
+  testWidgets(
+    'Classic light and dark field helpers preserve independent surface roles',
+    (tester) async {
+      InputDecoration? filled;
+      InputDecoration? outlined;
+      for (final theme in <ThemeData>[
+        AppThemeFactory.light(AppThemeFamily.classic),
+        AppThemeFactory.dark(AppThemeFamily.classic),
+      ]) {
+        await tester.pumpWidget(
+          _testApp(
+            Builder(
+              builder: (context) {
+                filled = settingsInputDecoration(
+                  context,
+                  label: 'Name',
+                  icon: Icons.person_outline,
+                );
+                outlined = settingsFieldDecoration(
+                  context,
+                  label: 'Calories',
+                  isDense: true,
+                );
+                return const SizedBox.shrink();
+              },
+            ),
+            theme: theme,
+          ),
+        );
+
+        expect(filled!.filled, isTrue);
+        expect(filled!.fillColor, theme.surfaceTokens.settingsInput);
+        expect(
+          (filled!.border! as OutlineInputBorder).borderRadius,
+          theme.shapeTokens.settingsField,
+        );
+        expect(outlined!.filled ?? false, isFalse);
+        expect(outlined!.isDense, isTrue);
+        expect(
+          (outlined!.border! as OutlineInputBorder).borderRadius,
+          theme.shapeTokens.settingsField,
+        );
+      }
+    },
+  );
+
+  testWidgets('shared ranking tiles preserve panel and rank input recipes', (
+    tester,
+  ) async {
+    String? submittedRank;
+    await tester.pumpWidget(
+      _testApp(
+        SettingsRankingTile(
+          index: 0,
+          name: const Text('Squat'),
+          rank: 1,
+          icon: Icons.accessibility_new,
+          rankLabel: 'Rank',
+          onRankSubmitted: (value) => submittedRank = value,
+        ),
+      ),
+    );
+
+    final panel = tester.widget<Container>(
+      find.byWidgetPredicate((widget) {
+        if (widget is! Container) return false;
+        final decoration = widget.decoration;
+        return decoration is BoxDecoration &&
+            decoration.borderRadius == _testShapes.settingsPanel;
+      }),
+    );
+    final panelDecoration = panel.decoration! as BoxDecoration;
+    expect(panelDecoration.color, _testSurfaces.settingsSection);
+    expect(panelDecoration.border, isA<Border>());
+
+    final rankField = tester.widget<TextFormField>(find.byType(TextFormField));
+    expect(rankField.initialValue, '1');
+    final inputDecorator = tester.widget<InputDecorator>(
+      find.byType(InputDecorator),
+    );
+    expect(
+      (inputDecorator.decoration.border! as OutlineInputBorder).borderRadius,
+      _testShapes.settingsInput,
+    );
+
+    await tester.enterText(find.byType(TextFormField), '3');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    expect(submittedRank, '3');
+  });
+
+  testWidgets('shared settings save bar preserves the button contract', (
+    tester,
+  ) async {
+    var saves = 0;
+    await tester.pumpWidget(
+      _testApp(
+        SettingsSaveBar(
+          buttonKey: const ValueKey('save'),
+          label: 'Save changes',
+          onPressed: () => saves++,
+        ),
+      ),
+    );
+
+    await tester.tap(find.byKey(const ValueKey('save')));
+    expect(saves, 1);
+
+    final bar = tester.widget<Container>(
+      find.byWidgetPredicate((widget) {
+        if (widget is! Container) return false;
+        final decoration = widget.decoration;
+        return decoration is BoxDecoration &&
+            decoration.color == _testSurfaces.settingsSaveBar;
+      }),
+    );
+    final decoration = bar.decoration! as BoxDecoration;
+    expect(decoration.border, isA<Border>());
+    final context = tester.element(find.byKey(const ValueKey('save')));
+    expect(
+      (decoration.border! as Border).top.color,
+      Theme.of(context).colorScheme.outlineVariant,
+    );
+  });
+
+  testWidgets('shared settings save bar supports undecorated recipes', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _testApp(
+        SettingsSaveBar(
+          buttonKey: const ValueKey('plain-save'),
+          label: 'Save navigation',
+          onPressed: () {},
+          decorated: false,
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+        ),
+      ),
+    );
+
+    expect(
+      find.byWidgetPredicate((widget) {
+        if (widget is! Container) return false;
+        final decoration = widget.decoration;
+        return decoration is BoxDecoration &&
+            decoration.color == _testSurfaces.settingsSaveBar;
+      }),
+      findsNothing,
+    );
+    final buttonPadding = tester.widget<Padding>(
+      find
+          .ancestor(
+            of: find.byKey(const ValueKey('plain-save')),
+            matching: find.byType(Padding),
+          )
+          .first,
+    );
+    expect(buttonPadding.padding, const EdgeInsets.fromLTRB(16, 10, 16, 16));
+  });
+
+  testWidgets('shared settings save bar supports cancel and save actions', (
+    tester,
+  ) async {
+    var cancelled = 0;
+    var saved = 0;
+    await tester.pumpWidget(
+      _testApp(
+        SettingsSaveBar(
+          buttonKey: const ValueKey('dual-save'),
+          label: 'Save changes',
+          onPressed: () => saved++,
+          cancelLabel: 'Cancel',
+          onCancel: () => cancelled++,
+          decorated: false,
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        ),
+      ),
+    );
+
+    expect(find.byType(OutlinedButton), findsOneWidget);
+    expect(find.byKey(const ValueKey('dual-save')), findsOneWidget);
+    await tester.tap(find.text('Cancel'));
+    await tester.tap(find.byKey(const ValueKey('dual-save')));
+
+    expect(cancelled, 1);
+    expect(saved, 1);
+  });
+
+  testWidgets(
+    'Classic dual save bars preserve order and disabled progress state',
+    (tester) async {
+      for (final theme in <ThemeData>[
+        AppThemeFactory.light(AppThemeFamily.classic),
+        AppThemeFactory.dark(AppThemeFamily.classic),
+      ]) {
+        await tester.pumpWidget(
+          _testApp(
+            SettingsSaveBar(
+              buttonKey: const ValueKey('classic-dual-save'),
+              label: 'Save',
+              onPressed: null,
+              cancelLabel: 'Cancel',
+              onCancel: _noop,
+              saveIcon: const SizedBox(key: ValueKey('classic-save-progress')),
+              decorated: false,
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+            ),
+            theme: theme,
+          ),
+        );
+
+        expect(
+          tester
+              .widget<FilledButton>(
+                find.byKey(const ValueKey('classic-dual-save')),
+              )
+              .onPressed,
+          isNull,
+        );
+        expect(
+          tester.widget<OutlinedButton>(find.byType(OutlinedButton)).onPressed,
+          isNotNull,
+        );
+        expect(
+          find.byKey(const ValueKey('classic-save-progress')),
+          findsOneWidget,
+        );
+        expect(
+          tester.getCenter(find.text('Cancel')).dx,
+          lessThan(tester.getCenter(find.text('Save')).dx),
+        );
+      }
+    },
+  );
+}
+
+Widget _testApp(Widget child, {ThemeData? theme}) {
+  return MaterialApp(
+    theme:
+        theme ??
+        ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+          extensions: const <ThemeExtension<dynamic>>[
+            _testShapes,
+            _testSurfaces,
+          ],
+        ),
+    themeAnimationDuration: Duration.zero,
+    home: Scaffold(body: child),
+  );
+}
+
+void _noop() {}

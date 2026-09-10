@@ -9,6 +9,7 @@ import '../models/models.dart';
 import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
 import '../theme/theme_extensions.dart';
+import '../theme/tokens/app_progress_colors.dart';
 import '../utils/completed_workout_duration_formatter.dart';
 import '../utils/localized_formatters.dart';
 import '../utils/weight_unit_formatter.dart';
@@ -149,7 +150,7 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
-    final colors = context.colors;
+    final dataVisualization = context.dataVisualizationTokens;
 
     return FutureBuilder<List<WorkoutReportSession>>(
       future: _sessionsFuture,
@@ -163,7 +164,7 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
               height: 260,
               child: Center(
                 child: CircularProgressIndicator(
-                  color: colors.historySummaryProgress,
+                  color: dataVisualization.selection,
                 ),
               ),
             ),
@@ -737,8 +738,11 @@ class _ReportStat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = context.cs;
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
+    final progressColors = context.progressColors;
     final strings = AppLocalizations.of(context);
-    final trendColor = _trendColor(cs);
+    final trendColor = _trendColor(progressColors);
     return Semantics(
       button: true,
       selected: selected,
@@ -746,7 +750,7 @@ class _ReportStat extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: shapes.workoutMetricStat,
           onTap: onTap,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 180),
@@ -754,13 +758,13 @@ class _ReportStat extends StatelessWidget {
             decoration: BoxDecoration(
               color:
                   selected
-                      ? cs.primary.withValues(alpha: 0.14)
-                      : cs.surfaceContainerHighest.withValues(alpha: 0.55),
-              borderRadius: BorderRadius.circular(16),
+                      ? progressColors.accent.withValues(alpha: 0.14)
+                      : surfaces.workoutMetricStat,
+              borderRadius: shapes.workoutMetricStat,
               border: Border.all(
                 color:
                     selected
-                        ? cs.primary.withValues(alpha: 0.75)
+                        ? progressColors.accent.withValues(alpha: 0.75)
                         : cs.outlineVariant.withValues(alpha: 0.7),
               ),
             ),
@@ -771,7 +775,7 @@ class _ReportStat extends StatelessWidget {
                   label,
                   maxLines: 2,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: selected ? cs.primary : cs.onSurface,
+                    color: selected ? progressColors.accent : cs.onSurface,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -791,7 +795,8 @@ class _ReportStat extends StatelessWidget {
                           style: Theme.of(
                             context,
                           ).textTheme.headlineSmall?.copyWith(
-                            color: selected ? cs.primary : cs.onSurface,
+                            color:
+                                selected ? progressColors.accent : cs.onSurface,
                             fontWeight: FontWeight.w900,
                           ),
                         ),
@@ -836,14 +841,14 @@ class _ReportStat extends StatelessWidget {
     );
   }
 
-  Color _trendColor(ColorScheme cs) {
+  Color _trendColor(AppProgressColors progressColors) {
     switch (trend.direction) {
       case _MetricTrendDirection.up:
-        return Colors.green.shade400;
+        return progressColors.workoutIncrease;
       case _MetricTrendDirection.down:
-        return Colors.red.shade400;
+        return progressColors.workoutDecrease;
       case _MetricTrendDirection.flat:
-        return cs.onSurfaceVariant;
+        return progressColors.neutral;
     }
   }
 }
@@ -866,11 +871,13 @@ class _MetricChartPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
     final hasValue = buckets.any((bucket) => bucket.valueFor(metric) > 0);
     return Container(
       decoration: BoxDecoration(
-        color: context.cs.surfaceContainerHighest.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(18),
+        color: surfaces.workoutMetricChart,
+        borderRadius: shapes.workoutMetricChart,
       ),
       padding: const EdgeInsets.fromLTRB(8, 10, 8, 6),
       child: Column(
@@ -944,6 +951,9 @@ class _InteractiveWorkoutLineChartState
 
   @override
   Widget build(BuildContext context) {
+    final progressColors = context.progressColors;
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
     return LayoutBuilder(
       builder: (context, constraints) {
         final size = Size(constraints.maxWidth, constraints.maxHeight);
@@ -954,11 +964,12 @@ class _InteractiveWorkoutLineChartState
             metric: widget.metric,
             interval: widget.interval,
             strings: AppLocalizations.of(context),
-            accent: context.cs.primary,
-            grid: context.cs.outlineVariant,
-            labelColor: context.cs.onSurfaceVariant,
-            tooltipBackground: context.cs.surfaceContainerHighest,
+            accent: progressColors.accent,
+            grid: progressColors.grid,
+            labelColor: progressColors.label,
+            tooltipBackground: surfaces.workoutMetricTooltip,
             tooltipTextColor: context.cs.onSurface,
+            tooltipBorderRadius: shapes.workoutMetricTooltip,
             showValueLabels: widget.showValueLabels,
             selectedIndex: _selectedIndex,
             weightUnit: widget.weightUnit,
@@ -1052,11 +1063,14 @@ class _RangeSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
+    final progressColors = context.progressColors;
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: context.cs.surfaceContainerHighest.withValues(alpha: 0.55),
-        borderRadius: BorderRadius.circular(14),
+        color: surfaces.workoutMetricRange,
+        borderRadius: shapes.workoutMetricRange,
       ),
       child: Row(
         children:
@@ -1066,7 +1080,7 @@ class _RangeSelector extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 2),
                   child: InkWell(
-                    borderRadius: BorderRadius.circular(11),
+                    borderRadius: shapes.workoutMetricRangeOption,
                     onTap: () => onSelectRange(range),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 160),
@@ -1074,8 +1088,10 @@ class _RangeSelector extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       decoration: BoxDecoration(
                         color:
-                            selected ? context.cs.primary : Colors.transparent,
-                        borderRadius: BorderRadius.circular(11),
+                            selected
+                                ? progressColors.accent
+                                : Colors.transparent,
+                        borderRadius: shapes.workoutMetricRangeOption,
                       ),
                       child: Text(
                         _rangeLabel(range, strings),
@@ -1115,19 +1131,21 @@ class _AdditionalDetailsDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = context.cs;
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Material(
           color: Colors.transparent,
           child: InkWell(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: shapes.workoutMetricDetails,
             onTap: onToggle,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
-                color: cs.surfaceContainerHighest.withValues(alpha: 0.38),
-                borderRadius: BorderRadius.circular(14),
+                color: surfaces.workoutMetricDetails,
+                borderRadius: shapes.workoutMetricDetails,
                 border: Border.all(
                   color: cs.outlineVariant.withValues(alpha: 0.55),
                 ),
@@ -1210,18 +1228,21 @@ class _ReportInsightTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = context.cs;
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
+    final progressColors = context.progressColors;
     final usesLocalizedLayout =
         Localizations.localeOf(context).languageCode != 'en';
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: cs.surfaceContainerHighest.withValues(alpha: 0.42),
-        borderRadius: BorderRadius.circular(14),
+        color: surfaces.workoutMetricInsight,
+        borderRadius: shapes.workoutMetricInsight,
         border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.55)),
       ),
       child: Row(
         children: [
-          Icon(insight.icon, size: 18, color: cs.primary),
+          Icon(insight.icon, size: 18, color: progressColors.accent),
           const SizedBox(width: 9),
           Expanded(
             child: Column(
@@ -1351,6 +1372,7 @@ class _WorkoutLineChartPainter extends CustomPainter {
   final Color labelColor;
   final Color tooltipBackground;
   final Color tooltipTextColor;
+  final BorderRadius tooltipBorderRadius;
   final bool showValueLabels;
   final int? selectedIndex;
   final WeightUnit weightUnit;
@@ -1366,6 +1388,7 @@ class _WorkoutLineChartPainter extends CustomPainter {
     required this.labelColor,
     required this.tooltipBackground,
     required this.tooltipTextColor,
+    required this.tooltipBorderRadius,
     this.showValueLabels = false,
     this.selectedIndex,
     required this.weightUnit,
@@ -1563,7 +1586,7 @@ class _WorkoutLineChartPainter extends CustomPainter {
     final top = math.max(2.0, geometry.plotRect.top - height + 16);
     final rect = Rect.fromLTWH(left, top, width, height);
     canvas.drawRRect(
-      RRect.fromRectAndRadius(rect, const Radius.circular(10)),
+      tooltipBorderRadius.toRRect(rect),
       Paint()
         ..color = tooltipBackground.withValues(alpha: 0.97)
         ..style = PaintingStyle.fill,
@@ -1587,6 +1610,7 @@ class _WorkoutLineChartPainter extends CustomPainter {
         oldDelegate.labelColor != labelColor ||
         oldDelegate.tooltipBackground != tooltipBackground ||
         oldDelegate.tooltipTextColor != tooltipTextColor ||
+        oldDelegate.tooltipBorderRadius != tooltipBorderRadius ||
         oldDelegate.showValueLabels != showValueLabels ||
         oldDelegate.selectedIndex != selectedIndex ||
         oldDelegate.weightUnit != weightUnit ||
@@ -1617,10 +1641,11 @@ class _WorkoutLineChartPainter extends CustomPainter {
     _ReportBucketInterval interval,
     Locale locale,
   ) {
-    final label = (interval == _ReportBucketInterval.month
-            ? LocalizedFormatters.monthShort(bucket.start, locale)
-            : LocalizedFormatters.dayMonth(bucket.start, locale))
-        .toUpperCase();
+    final label =
+        (interval == _ReportBucketInterval.month
+                ? LocalizedFormatters.monthShort(bucket.start, locale)
+                : LocalizedFormatters.dayMonth(bucket.start, locale))
+            .toUpperCase();
     if (interval == _ReportBucketInterval.month) return label;
     return label.replaceAll(' ', '\n');
   }
@@ -1870,10 +1895,7 @@ int _longestWorkoutDayStreak(List<WorkoutReportSession> sessions) {
   return longest;
 }
 
-String _mostActiveWeekday(
-  List<WorkoutReportSession> sessions,
-  Locale locale,
-) {
+String _mostActiveWeekday(List<WorkoutReportSession> sessions, Locale locale) {
   if (sessions.isEmpty) return '-';
   final counts = <int, int>{};
   for (final session in sessions) {
@@ -1960,26 +1982,28 @@ String _formatAxis(
 String _formatCompact(double value, [Locale? locale]) {
   final abs = value.abs();
   if (abs >= 1000000) {
-    final text = locale == null
-        ? (value / 1000000).toStringAsFixed(1)
-        : LocalizedFormatters.number(
-          value / 1000000,
-          locale,
-          minimumFractionDigits: 1,
-          maximumFractionDigits: 1,
-        );
+    final text =
+        locale == null
+            ? (value / 1000000).toStringAsFixed(1)
+            : LocalizedFormatters.number(
+              value / 1000000,
+              locale,
+              minimumFractionDigits: 1,
+              maximumFractionDigits: 1,
+            );
     return '${text}M';
   }
   if (abs >= 1000) {
     final digits = abs >= 10000 ? 0 : 1;
-    final text = locale == null
-        ? (value / 1000).toStringAsFixed(digits)
-        : LocalizedFormatters.number(
-          value / 1000,
-          locale,
-          minimumFractionDigits: digits,
-          maximumFractionDigits: digits,
-        );
+    final text =
+        locale == null
+            ? (value / 1000).toStringAsFixed(digits)
+            : LocalizedFormatters.number(
+              value / 1000,
+              locale,
+              minimumFractionDigits: digits,
+              maximumFractionDigits: digits,
+            );
     return '${text}k';
   }
   final rounded = value.round();

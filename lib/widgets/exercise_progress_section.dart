@@ -246,7 +246,7 @@ class _ExerciseProgressSectionState extends State<ExerciseProgressSection>
   Widget build(BuildContext context) {
     super.build(context);
     final theme = Theme.of(context);
-    final colors = context.colors;
+    final dataVisualization = context.dataVisualizationTokens;
 
     return FutureBuilder<_ExerciseProgressSectionData>(
       future: _dataFuture,
@@ -276,7 +276,7 @@ class _ExerciseProgressSectionState extends State<ExerciseProgressSection>
                     height: layout.loadingHeight,
                     child: Center(
                       child: CircularProgressIndicator(
-                        color: colors.historySummaryProgress,
+                        color: dataVisualization.selection,
                       ),
                     ),
                   ),
@@ -408,7 +408,6 @@ class _ExerciseProgressLayout {
   double get sectionGap => value(14);
   double get loadingHeight => value(248);
   double get heroPadding => value(10);
-  double get heroRadius => value(18);
   double get heroHeight => value(226);
   double get heroStackedStatsHeight => value(184);
   double get heroChartHeight => value(166);
@@ -419,7 +418,6 @@ class _ExerciseProgressLayout {
   double get statsGap => value(10);
   double get statPaddingHorizontal => value(9);
   double get statPaddingVertical => value(7);
-  double get statRadius => value(14);
   double get statBoxHeight => value(106);
   double get statIconSize => value(15);
   double get statIconGap => value(3);
@@ -429,7 +427,6 @@ class _ExerciseProgressLayout {
   double get selectorWidth => value(154);
   double get selectorMarginRight => value(10);
   double get selectorPadding => value(10);
-  double get selectorRadius => value(14);
   double get selectorGraphGap => value(5);
   double get selectorDeltaGap => value(3);
   double get compactIconSize => value(12);
@@ -438,7 +435,6 @@ class _ExerciseProgressLayout {
   double get removeIconSize => value(15);
   double get addTileWidth => value(120);
   double get addTileMarginRight => value(8);
-  double get addTileRadius => value(12);
   double get addIconSize => value(32);
   double get emptyPadding => value(18);
   double get emptyIconSize => value(34);
@@ -514,17 +510,16 @@ class _ExerciseProgressHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(layout.heroRadius),
+      borderRadius: shapes.exerciseProgressHero * layout.scale,
       child: Container(
         padding: EdgeInsets.all(layout.heroPadding),
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest.withValues(
-            alpha: 0.36,
-          ),
-          borderRadius: BorderRadius.circular(layout.heroRadius),
+          color: surfaces.exerciseProgressHero,
+          borderRadius: shapes.exerciseProgressHero * layout.scale,
         ),
         child: Stack(
           children: [
@@ -711,6 +706,8 @@ class _ExerciseProgressStatBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     final icon = _deltaIcon(delta);
     final deltaColor = _deltaColor(context, delta);
@@ -722,8 +719,8 @@ class _ExerciseProgressStatBox extends StatelessWidget {
           vertical: layout.statPaddingVertical,
         ),
         decoration: BoxDecoration(
-          color: theme.cardColor.withValues(alpha: 0.72),
-          borderRadius: BorderRadius.circular(layout.statRadius),
+          color: surfaces.exerciseProgressStat,
+          borderRadius: shapes.exerciseProgressStat * layout.scale,
           border: Border.all(
             color: theme.colorScheme.outlineVariant.withValues(alpha: 0.45),
           ),
@@ -799,11 +796,13 @@ class _ExerciseProgressSelectorTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colors = context.colors;
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
+    final progressColors = context.progressColors;
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     final latest = tile.latestPoint;
     final delta = _deltaFromPrevious(tile.points);
-    final accent = theme.colorScheme.primary;
+    final accent = progressColors.accent;
 
     return GestureDetector(
       onTap: onTap,
@@ -815,12 +814,12 @@ class _ExerciseProgressSelectorTile extends StatelessWidget {
           color:
               isSelected
                   ? accent.withValues(alpha: 0.14)
-                  : theme.cardColor.withValues(alpha: 0.72),
+                  : surfaces.exerciseProgressSelector,
           border: Border.all(
-            color: isSelected ? accent : colors.healthTrendBorder!,
+            color: isSelected ? accent : surfaces.subtleOutline,
             width: isSelected ? layout.value(1.5) : layout.value(1),
           ),
-          borderRadius: BorderRadius.circular(layout.selectorRadius),
+          borderRadius: shapes.exerciseProgressSelector * layout.scale,
         ),
         child: Stack(
           children: [
@@ -1004,11 +1003,7 @@ List<_ExerciseProgressPoint> _validPoints(
   ];
 }
 
-String _formatDeltaWeight(
-  double? delta,
-  WeightUnit unit, {
-  Locale? locale,
-}) {
+String _formatDeltaWeight(double? delta, WeightUnit unit, {Locale? locale}) {
   if (delta == null) return '--';
   final value = WeightUnitFormatter.fromPounds(delta, unit);
   final rounded = value.round();
@@ -1025,9 +1020,11 @@ String _formatDeltaWeight(
 }
 
 Color _deltaColor(BuildContext context, double? delta) {
-  final scheme = Theme.of(context).colorScheme;
-  if (delta == null || delta == 0) return scheme.onSurfaceVariant;
-  return delta > 0 ? Colors.green.shade400 : scheme.error;
+  final progressColors = context.progressColors;
+  if (delta == null || delta == 0) return progressColors.neutral;
+  return delta > 0
+      ? progressColors.exerciseIncrease
+      : progressColors.exerciseDecrease;
 }
 
 IconData? _deltaIcon(double? delta) {
@@ -1044,17 +1041,17 @@ class _ExerciseProgressEmptyHero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
     final strings = AppLocalizations.of(context);
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(layout.heroRadius),
+      borderRadius: shapes.exerciseProgressHero * layout.scale,
       child: Container(
         padding: EdgeInsets.all(layout.emptyPadding),
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest.withValues(
-            alpha: 0.36,
-          ),
-          borderRadius: BorderRadius.circular(layout.heroRadius),
+          color: surfaces.exerciseProgressHero,
+          borderRadius: shapes.exerciseProgressHero * layout.scale,
         ),
         child: Column(
           children: [
@@ -1093,21 +1090,23 @@ class _AddExerciseProgressTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
+    final dataVisualization = context.dataVisualizationTokens;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: layout.addTileWidth,
         margin: EdgeInsets.only(right: layout.addTileMarginRight),
         decoration: BoxDecoration(
-          border: Border.all(color: colors.healthTrendBorder!),
-          borderRadius: BorderRadius.circular(layout.addTileRadius),
+          border: Border.all(color: surfaces.subtleOutline),
+          borderRadius: shapes.exerciseProgressAddTile * layout.scale,
         ),
         child: Center(
           child: Icon(
             Icons.add,
             size: layout.addIconSize,
-            color: colors.healthTrendIcon!,
+            color: dataVisualization.label,
           ),
         ),
       ),
@@ -1123,21 +1122,23 @@ class _EditExerciseProgressTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
+    final dataVisualization = context.dataVisualizationTokens;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: layout.addTileWidth,
         margin: EdgeInsets.only(right: layout.addTileMarginRight),
         decoration: BoxDecoration(
-          border: Border.all(color: colors.healthTrendBorder!),
-          borderRadius: BorderRadius.circular(layout.addTileRadius),
+          border: Border.all(color: surfaces.subtleOutline),
+          borderRadius: shapes.exerciseProgressAddTile * layout.scale,
         ),
         child: Center(
           child: Icon(
             Icons.edit,
             size: layout.value(26),
-            color: colors.healthTrendIcon!,
+            color: dataVisualization.label,
           ),
         ),
       ),
@@ -1319,17 +1320,17 @@ class _ExerciseProgressLegend extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+    final progressColors = context.progressColors;
     return Wrap(
       spacing: 14,
       runSpacing: 8,
       children: [
         _LegendItem(
-          color: cs.primary,
+          color: progressColors.accent,
           label: AppLocalizations.of(context).exerciseProgressActual,
         ),
         _LegendItem(
-          color: cs.onSurfaceVariant,
+          color: progressColors.estimated,
           label: AppLocalizations.of(context).exerciseProgressEstimated,
           dashed: true,
         ),
@@ -1505,6 +1506,9 @@ class _ExerciseProgressChartState extends State<_ExerciseProgressChart> {
 
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
+    final progressColors = context.progressColors;
     final strings = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context);
     return LayoutBuilder(
@@ -1514,12 +1518,13 @@ class _ExerciseProgressChartState extends State<_ExerciseProgressChart> {
           size: size,
           painter: _ExerciseProgressChartPainter(
             points: widget.points,
-            actualColor: cs.primary,
-            estimatedColor: cs.onSurfaceVariant,
-            gridColor: cs.outlineVariant,
-            axisLabelColor: cs.onSurfaceVariant,
-            tooltipBackgroundColor: cs.surfaceContainerHighest,
+            actualColor: progressColors.accent,
+            estimatedColor: progressColors.estimated,
+            gridColor: progressColors.grid,
+            axisLabelColor: progressColors.label,
+            tooltipBackgroundColor: surfaces.exerciseProgressTooltip,
             tooltipTextColor: cs.onSurface,
+            tooltipBorderRadius: shapes.exerciseProgressTooltip,
             showAxes: widget.showAxes,
             selectedIndex: _selectedIndex,
             weightUnit: widget.weightUnit,
@@ -1577,6 +1582,7 @@ class _ExerciseProgressChartPainter extends CustomPainter {
   final Color axisLabelColor;
   final Color tooltipBackgroundColor;
   final Color tooltipTextColor;
+  final BorderRadius tooltipBorderRadius;
   final bool showAxes;
   final int? selectedIndex;
   final WeightUnit weightUnit;
@@ -1593,6 +1599,7 @@ class _ExerciseProgressChartPainter extends CustomPainter {
     required this.axisLabelColor,
     required this.tooltipBackgroundColor,
     required this.tooltipTextColor,
+    required this.tooltipBorderRadius,
     required this.showAxes,
     required this.selectedIndex,
     required this.weightUnit,
@@ -1801,10 +1808,7 @@ class _ExerciseProgressChartPainter extends CustomPainter {
         Paint()
           ..color = tooltipBackgroundColor.withValues(alpha: 0.96)
           ..style = PaintingStyle.fill;
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(rect, const Radius.circular(10)),
-      background,
-    );
+    canvas.drawRRect(tooltipBorderRadius.toRRect(rect), background);
 
     var y = rect.top + 8;
     for (final painter in painters) {
@@ -1873,6 +1877,7 @@ class _ExerciseProgressChartPainter extends CustomPainter {
         oldDelegate.axisLabelColor != axisLabelColor ||
         oldDelegate.tooltipBackgroundColor != tooltipBackgroundColor ||
         oldDelegate.tooltipTextColor != tooltipTextColor ||
+        oldDelegate.tooltipBorderRadius != tooltipBorderRadius ||
         oldDelegate.showAxes != showAxes ||
         oldDelegate.selectedIndex != selectedIndex ||
         oldDelegate.weightUnit != weightUnit ||

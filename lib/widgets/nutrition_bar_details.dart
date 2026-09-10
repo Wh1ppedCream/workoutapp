@@ -48,8 +48,7 @@ class NutritionBarDetails extends StatelessWidget {
     final pctFat =
         fatTarget > 0 ? (fatConsumed / fatTarget).clamp(0.0, 1.0) : 0.0;
 
-    // pull in AppColors & ColorScheme
-    final colors = context.colors;
+    final dataVisualization = context.dataVisualizationTokens;
 
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 16 * scale),
@@ -63,7 +62,7 @@ class NutritionBarDetails extends StatelessWidget {
             remaining: remainingCalories,
             factor: pctCal,
             height: 80 * scale,
-            color: colors.nutritionCalorieBar!,
+            color: dataVisualization.positive,
           ),
 
           SizedBox(height: 24 * scale),
@@ -80,7 +79,7 @@ class NutritionBarDetails extends StatelessWidget {
                 factor: pctProtein,
                 height: 140 * scale,
                 width: 50 * scale,
-                color: colors.nutritionProteinBar!,
+                color: dataVisualization.secondarySeries,
               ),
               _buildVerticalBar(
                 context: context,
@@ -90,7 +89,7 @@ class NutritionBarDetails extends StatelessWidget {
                 factor: pctCarb,
                 height: 140 * scale,
                 width: 50 * scale,
-                color: colors.nutritionCarbBar!,
+                color: dataVisualization.carbohydrateSeries,
               ),
               _buildVerticalBar(
                 context: context,
@@ -100,7 +99,7 @@ class NutritionBarDetails extends StatelessWidget {
                 factor: pctFat,
                 height: 140 * scale,
                 width: 50 * scale,
-                color: colors.nutritionFatBar!,
+                color: dataVisualization.negative,
               ),
             ],
           ),

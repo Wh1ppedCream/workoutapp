@@ -676,6 +676,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
+    final semantic = context.semanticColors;
     final isSpanish = Localizations.localeOf(context).languageCode == 'es';
     return PopScope<Object?>(
       canPop: false,
@@ -705,7 +706,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
                 key: _editTutorialKey,
                 child: Icon(
                   _isEditing ? Icons.check : Icons.edit,
-                  color: _isEditing ? Colors.green : null,
+                  color: _isEditing ? semantic.editingActive : null,
                 ),
               ),
               onPressed: () => setState(() => _isEditing = !_isEditing),
@@ -914,7 +915,7 @@ class _SessionSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colors = context.colors;
+    final dataVisualization = context.dataVisualizationTokens;
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     final durationText = formatCompletedWorkoutDuration(
       AppLocalizations.of(context),
@@ -998,8 +999,8 @@ class _SessionSummaryCard extends StatelessWidget {
                     child: Center(
                       child: BodyHeatmap(
                         frequencyMap: summary.frequencyMap,
-                        lowColor: colors.historySummaryHeatmapLow!,
-                        highColor: colors.historySummaryHeatmapHigh!,
+                        lowColor: dataVisualization.heatmapLow,
+                        highColor: dataVisualization.heatmapHigh,
                         width: heatmapSize,
                         height: heatmapSize,
                       ),
@@ -1037,11 +1038,13 @@ class _SummaryMetricTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final shapes = context.shapeTokens;
+    final surfaces = context.surfaceTokens;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(14),
+        color: surfaces.sessionSummary,
+        borderRadius: shapes.metric,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1194,7 +1197,7 @@ class _CompletedWeightCard extends StatelessWidget {
                     child: ExerciseMediaThumbnail(
                       definition: definition!,
                       size: 56,
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: context.shapeTokens.mediaThumbnail,
                       padding: EdgeInsets.zero,
                       framed: false,
                       onTap: onDetails,
@@ -1290,6 +1293,8 @@ class _CompletedSetRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final surfaces = context.surfaceTokens;
+    final inheritedTextStyle = DefaultTextStyle.of(context).style;
     final eRm = _epley(row.set);
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     return Padding(
@@ -1301,12 +1306,12 @@ class _CompletedSetRow extends StatelessWidget {
             height: 28,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest,
+              color: surfaces.panelRaised,
               shape: BoxShape.circle,
             ),
             child: Text(
               row.label,
-              style: const TextStyle(fontWeight: FontWeight.w900),
+              style: inheritedTextStyle.copyWith(fontWeight: FontWeight.w900),
             ),
           ),
           const SizedBox(width: 12),

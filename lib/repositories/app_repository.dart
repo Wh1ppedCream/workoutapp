@@ -474,6 +474,9 @@ class AppRepository {
   Future<ExerciseDefinition?> fetchDefinitionById(int defId) =>
       _dbHelper.getExerciseDefinitionById(defId);
 
+  Future<ExerciseDefinition?> fetchDefinitionByCatalogId(String catalogId) =>
+      _dbHelper.getExerciseDefinitionByCatalogId(catalogId);
+
   Future<List<ExerciseMediaItem>> fetchExerciseMedia(int defId) =>
       _dbHelper.getExerciseMedia(defId);
 

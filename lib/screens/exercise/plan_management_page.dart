@@ -13,6 +13,7 @@ import '../../utils/localized_formatters.dart';
 import '../../utils/tutorial_launcher.dart';
 import '../../widgets/guided_tutorial_overlay.dart';
 import '../../widgets/safe_error_view.dart';
+import '../../theme/theme_extensions.dart';
 
 class PlanManagementPage extends StatefulWidget {
   final int profileId;
@@ -346,14 +347,16 @@ class _PlanManagementTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final shapes = context.shapeTokens;
+    final surfaces = context.surfaceTokens;
     final strings = AppLocalizations.of(context);
     final statusColor =
         isActive ? colorScheme.primary : colorScheme.onSurfaceVariant;
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.42),
-        borderRadius: BorderRadius.circular(18),
+        color: surfaces.planCard,
+        borderRadius: shapes.planCard,
         border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: Padding(
@@ -426,11 +429,12 @@ class _PlanCountPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final shapes = context.shapeTokens;
     final locale = Localizations.localeOf(context);
     return DecoratedBox(
       decoration: BoxDecoration(
         color: colorScheme.primaryContainer,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: shapes.pill,
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),

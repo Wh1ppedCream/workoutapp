@@ -24,6 +24,7 @@ import '../../services/tutorial_state_store.dart';
 import '../../utils/tutorial_launcher.dart';
 import '../../utils/workout_exercise_clone.dart';
 import '../../utils/app_test_keys.dart';
+import '../../theme/theme_extensions.dart';
 import 'session_screen.dart';
 import 'auto_preset_flow_screen.dart';
 
@@ -469,6 +470,7 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
   Widget build(BuildContext context) {
     final preset = context.watch<PresetSession>();
     final strings = AppLocalizations.of(context);
+    final semantic = context.semanticColors;
     final onboardingPlanGuideStep = _buildOnboardingPlanGuideStep();
     final isNamingPlan =
         _showsOnboardingPlanGuide &&
@@ -540,7 +542,10 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                     tooltip: strings.commonEdit,
                     icon: Icon(
                       Icons.edit,
-                      color: _isEditing ? Colors.green : Colors.grey,
+                      color:
+                          _isEditing
+                              ? semantic.editingActive
+                              : semantic.editingInactive,
                     ),
                     onPressed: () => setState(() => _isEditing = !_isEditing),
                   ),

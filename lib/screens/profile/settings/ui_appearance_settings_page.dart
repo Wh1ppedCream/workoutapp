@@ -102,8 +102,8 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
                 subtitle: strings.darkModeSubtitle,
                 value: themeMode == ThemeMode.dark,
                 onChanged:
-                    (on) => context.read<ThemeProvider>().setMode(
-                      on ? ThemeMode.dark : ThemeMode.light,
+                    (on) => unawaited(
+                      _setThemeMode(on ? ThemeMode.dark : ThemeMode.light),
                     ),
               ),
               SettingsSwitchTile(
@@ -119,12 +119,8 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
                 iconColor: SettingsAccent.progress,
                 title: strings.weightUnitsTitle,
                 subtitle: strings.weightUnitsSubtitle(weightUnit.shortLabel),
-                trailing: Text(
-                  _weightUnitLabel(strings, weightUnit),
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.w900,
-                  ),
+                trailing: SettingsValueText(
+                  value: _weightUnitLabel(strings, weightUnit),
                 ),
                 onTap: () => _showWeightUnitDialog(context, weightUnit),
               ),
@@ -135,12 +131,8 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
                   iconColor: SettingsAccent.appearance,
                   title: strings.languageTitle,
                   subtitle: strings.languageSubtitle,
-                  trailing: Text(
-                    _languageLabel(strings, language),
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.w900,
-                    ),
+                  trailing: SettingsValueText(
+                    value: _languageLabel(strings, language),
                   ),
                   onTap: () => _showLanguageDialog(context, language),
                 ),
@@ -175,6 +167,19 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
         ),
       ],
     );
+  }
+
+  Future<void> _setThemeMode(ThemeMode mode) async {
+    try {
+      await context.read<ThemeProvider>().setMode(mode);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).safeFailureSaveTitle),
+        ),
+      );
+    }
   }
 
   Future<void> _showWeightUnitDialog(

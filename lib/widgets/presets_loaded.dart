@@ -9,8 +9,10 @@ import '../l10n/generated/app_localizations.dart';
 import '../providers/selected_profile.dart';
 import '../repositories/app_repository.dart';
 import '../services/active_plan_store.dart';
+import '../theme/theme_extensions.dart';
 import '../utils/async_pool.dart';
 import 'body_heatmap.dart';
+import 'identity_color_palettes.dart';
 import 'preset_bar.dart';
 
 /// Fetches & displays presets for the current profile.
@@ -83,14 +85,6 @@ class _PresetsLoadedState extends State<PresetsLoaded>
   Future<List<_PresetListItem>>? _presetsFuture;
   List<_PresetListItem>? _lastRows;
   late int _visibleCount;
-
-  static const _palette = [
-    Colors.blue,
-    Colors.orange,
-    Colors.green,
-    Colors.purple,
-    Colors.teal,
-  ];
 
   @override
   void initState() {
@@ -325,7 +319,9 @@ class _PresetsLoadedState extends State<PresetsLoaded>
             }
 
             final row = visibleRows[i];
-            final color = _palette[row.listIndex % _palette.length];
+            final color =
+                PlanIdentityPalette.colors[row.listIndex %
+                    PlanIdentityPalette.colors.length];
 
             return Padding(
               padding: EdgeInsets.symmetric(vertical: 6 * widget.scale),
@@ -369,6 +365,8 @@ class _ShowMorePlansButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final shapes = context.shapeTokens;
+    final surfaces = context.surfaceTokens;
     final strings = AppLocalizations.of(context);
     final countText =
         revealCount == remainingCount
@@ -383,10 +381,13 @@ class _ShowMorePlansButton extends StatelessWidget {
         style: OutlinedButton.styleFrom(
           foregroundColor: theme.colorScheme.primary,
           side: BorderSide(
-            color: theme.colorScheme.primary.withValues(alpha: 0.45),
+            color: theme.colorScheme.primary.withValues(
+              alpha: surfaces.planRevealBorderOpacity,
+            ),
           ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16 * scale),
+            borderRadius:
+                BorderRadius.lerp(BorderRadius.zero, shapes.card, scale)!,
           ),
           padding: EdgeInsets.symmetric(
             horizontal: 14 * scale,

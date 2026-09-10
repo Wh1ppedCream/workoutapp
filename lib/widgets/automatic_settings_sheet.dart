@@ -8,7 +8,7 @@ import '../l10n/safe_failure_localizations.dart';
 import '../providers/preset_session.dart';
 import '../providers/unit_preference_provider.dart';
 import '../models/models.dart';
-import '../theme/app_colors.dart';
+import '../theme/theme_extensions.dart';
 import '../utils/localized_formatters.dart';
 import '../utils/weight_unit_formatter.dart';
 
@@ -230,8 +230,7 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
     final strings = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
-    final extras = theme.extension<AppColors>();
-    final sheetBg = extras?.sheetBackground ?? cs.surface;
+    final sheetBg = context.surfaceTokens.sheet;
     final labelColor = cs.onSurface;
     final dividerColor = cs.onSurface.withValues(alpha: 0.12);
 

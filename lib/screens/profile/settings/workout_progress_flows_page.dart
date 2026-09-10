@@ -6,6 +6,7 @@ import '../../../models/gym_models.dart';
 import '../../../models/preset_models.dart';
 import '../../../repositories/app_repository.dart';
 import '../../../services/safe_failure.dart';
+import '../../../theme/theme_extensions.dart';
 import '../../../widgets/safe_error_view.dart';
 import '../../../widgets/settings_tiles.dart';
 import '../../exercise/auto_preset_flow_screen.dart';
@@ -271,56 +272,19 @@ class _ScopeLegend extends StatelessWidget {
       spacing: 8,
       runSpacing: 8,
       children: [
-        _LegendChip(
+        SettingsLegendChip(
           color: appColor,
           label: AppLocalizations.of(context).rulesAppDefaultsChip,
         ),
-        _LegendChip(
+        SettingsLegendChip(
           color: profileColor,
           label: AppLocalizations.of(context).rulesGymProfilesTitle,
         ),
-        _LegendChip(
+        SettingsLegendChip(
           color: planColor,
           label: AppLocalizations.of(context).rulesPlansChip,
         ),
       ],
-    );
-  }
-}
-
-class _LegendChip extends StatelessWidget {
-  final Color color;
-  final String label;
-
-  const _LegendChip({required this.color, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: .12),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withValues(alpha: .36)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 7,
-            height: 7,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-          ),
-          const SizedBox(width: 7),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: color,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -346,11 +310,12 @@ class _FlowScopeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final shapes = context.shapeTokens;
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest.withValues(alpha: .28),
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: shapes.settingsPanel,
         border: Border.all(color: color.withValues(alpha: .52)),
       ),
       child: ExpansionTile(
@@ -364,7 +329,7 @@ class _FlowScopeCard extends StatelessWidget {
           height: 42,
           decoration: BoxDecoration(
             color: color.withValues(alpha: .17),
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: shapes.settingsScopeIcon,
           ),
           child: Icon(icon, color: color, size: 22),
         ),
@@ -477,16 +442,17 @@ class _FlowEntryTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final shapes = context.shapeTokens;
     return Material(
       color: color.withValues(alpha: .06),
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: shapes.card,
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: shapes.card,
         onTap: onTap,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: shapes.card,
             border: Border.all(color: color.withValues(alpha: .34)),
           ),
           child: Row(
@@ -496,7 +462,7 @@ class _FlowEntryTile extends StatelessWidget {
                 height: 38,
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: .16),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: shapes.control,
                 ),
                 child: Icon(icon, color: color, size: 20),
               ),
@@ -582,11 +548,12 @@ class _EmptyFlowsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final shapes = context.shapeTokens;
     return Container(
       padding: EdgeInsets.all(compact ? 12 : 16),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest.withValues(alpha: .24),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: shapes.card,
         border: Border.all(color: scheme.outlineVariant.withValues(alpha: .5)),
       ),
       child: Row(
@@ -608,13 +575,9 @@ class _EmptyFlowsCard extends StatelessWidget {
 }
 
 Color _profileColor(BuildContext context) {
-  return Theme.of(context).brightness == Brightness.dark
-      ? const Color(0xFF4DB6AC)
-      : const Color(0xFF00796B);
+  return context.flowTokens.profileScope;
 }
 
 Color _planColor(BuildContext context) {
-  return Theme.of(context).brightness == Brightness.dark
-      ? const Color(0xFFFFB74D)
-      : const Color(0xFFEF6C00);
+  return context.flowTokens.planScope;
 }

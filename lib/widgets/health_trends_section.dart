@@ -622,7 +622,9 @@ class _TrendTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colors = context.colors;
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
+    final dataVisualization = context.dataVisualizationTokens;
     final strings = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context);
     final title = _measurementTitle(trend.definition, strings);
@@ -631,21 +633,20 @@ class _TrendTile extends StatelessWidget {
     final deltaColor = _deltaColor(context, delta);
 
     return Material(
-      color: theme.cardColor,
-      borderRadius: BorderRadius.circular(16),
+      color: context.progressColors.healthCard,
+      borderRadius: shapes.card,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: shapes.card,
         child: Container(
           key: AppTestKeys.measurementTrend(trend.definition.id),
           width: fillCell ? double.infinity : 154,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             border: Border.all(
-              color: (colors.healthTrendBorder ?? theme.dividerColor)
-                  .withValues(alpha: 0.75),
+              color: surfaces.subtleOutline.withValues(alpha: 0.75),
             ),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: shapes.card,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -676,9 +677,7 @@ class _TrendTile extends StatelessWidget {
                         child: Icon(
                           Icons.add_circle_outline,
                           size: 18,
-                          color:
-                              colors.healthTrendIcon ??
-                              theme.colorScheme.primary,
+                          color: dataVisualization.label,
                         ),
                       ),
                     ),
@@ -689,8 +688,7 @@ class _TrendTile extends StatelessWidget {
               Expanded(
                 child: _MeasurementSparkline(
                   entries: trend.entries,
-                  lineColor:
-                      colors.healthTrendLine ?? theme.colorScheme.primary,
+                  lineColor: dataVisualization.tertiarySeries,
                 ),
               ),
               const SizedBox(height: 8),
@@ -731,7 +729,9 @@ class _AddTrendTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final strings = AppLocalizations.of(context);
-    final colors = context.colors;
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
+    final dataVisualization = context.dataVisualizationTokens;
     return Semantics(
       button: true,
       label: strings.healthCreateMetric,
@@ -739,27 +739,21 @@ class _AddTrendTile extends StatelessWidget {
       child: ExcludeSemantics(
         child: Material(
           color: Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: shapes.card,
           child: InkWell(
             onTap: onTap,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: shapes.card,
             child: Container(
               width: fillCell ? double.infinity : 132,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                border: Border.all(
-                  color: colors.healthTrendBorder ?? theme.dividerColor,
-                ),
-                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: surfaces.subtleOutline),
+                borderRadius: shapes.card,
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.add,
-                    color: colors.healthTrendIcon ?? theme.colorScheme.primary,
-                    size: 30,
-                  ),
+                  Icon(Icons.add, color: dataVisualization.label, size: 30),
                   const SizedBox(height: 8),
                   Text(
                     strings.healthCustomMetric,
@@ -834,7 +828,7 @@ class _MeasurementSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final shapes = context.shapeTokens;
     final strings = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context);
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
@@ -848,8 +842,8 @@ class _MeasurementSummaryCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(18),
+        color: context.progressColors.healthCard,
+        borderRadius: shapes.healthTrendCard,
       ),
       child: Row(
         children: [
@@ -958,9 +952,11 @@ class _MeasurementChartCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
+    final shapes = context.shapeTokens;
     final strings = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context);
-    final colors = context.colors;
+    final dataVisualization = context.dataVisualizationTokens;
     final spots = _spotsFor(entries);
     final bounds = _chartBounds(entries.map((m) => m.value).toList());
     final title = _measurementTitle(definition, strings);
@@ -982,8 +978,8 @@ class _MeasurementChartCard extends StatelessWidget {
           height: height,
           padding: const EdgeInsets.fromLTRB(14, 16, 14, 12),
           decoration: BoxDecoration(
-            color: theme.cardColor,
-            borderRadius: BorderRadius.circular(18),
+            color: context.progressColors.healthCard,
+            borderRadius: shapes.healthTrendCard,
           ),
           child:
               entries.length < 2
@@ -1006,7 +1002,8 @@ class _MeasurementChartCard extends StatelessWidget {
                         drawVerticalLine: false,
                         getDrawingHorizontalLine:
                             (_) => FlLine(
-                              color: theme.dividerColor.withValues(alpha: 0.35),
+                              color: context.progressColors.healthGrid
+                                  .withValues(alpha: 0.35),
                               strokeWidth: 1,
                             ),
                       ),
@@ -1082,16 +1079,14 @@ class _MeasurementChartCard extends StatelessWidget {
                         LineChartBarData(
                           spots: spots,
                           isCurved: true,
-                          color:
-                              colors.healthTrendLine ??
-                              theme.colorScheme.primary,
+                          color: dataVisualization.tertiarySeries,
                           barWidth: 3,
                           dotData: FlDotData(show: true),
                           belowBarData: BarAreaData(
                             show: true,
-                            color: (colors.healthTrendLine ??
-                                    theme.colorScheme.primary)
-                                .withValues(alpha: 0.12),
+                            color: dataVisualization.tertiarySeries.withValues(
+                              alpha: 0.12,
+                            ),
                           ),
                         ),
                       ],
@@ -1116,7 +1111,7 @@ class _MeasurementEntryTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final shapes = context.shapeTokens;
     final strings = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context);
     final contextLabel = _measurementContextLabel(entry, strings);
@@ -1150,8 +1145,8 @@ class _MeasurementEntryTile extends StatelessWidget {
                 ),
               ],
         ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        tileColor: theme.cardColor,
+        shape: RoundedRectangleBorder(borderRadius: shapes.healthTrendEntry),
+        tileColor: context.progressColors.healthCard,
       ),
     );
   }
@@ -1175,14 +1170,16 @@ class _HealthTrendMessageCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
+    final shapes = context.shapeTokens;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: theme.cardColor,
-          borderRadius: BorderRadius.circular(18),
+          color: context.progressColors.healthCard,
+          borderRadius: shapes.healthTrendCard,
         ),
         child: Row(
           children: [
@@ -1934,10 +1931,13 @@ String? _measurementNote(Measurement entry) {
 }
 
 Color? _deltaColor(BuildContext context, double? delta) {
+  final progressColors = context.progressColors;
   if (delta == null || delta.abs() < 0.001) {
     return Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.7);
   }
-  return delta > 0 ? Colors.greenAccent.shade400 : Colors.redAccent.shade100;
+  return delta > 0
+      ? progressColors.healthIncrease
+      : progressColors.healthDecrease;
 }
 
 String _cleanNumber(double value) {

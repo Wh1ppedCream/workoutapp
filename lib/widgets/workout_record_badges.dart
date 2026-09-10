@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../l10n/generated/app_localizations.dart';
 import '../models/session_record_badge_models.dart';
-
-const _monthlyRecordColor = Color(0xFF81C784);
-const _allTimeRecordColor = Color(0xFFFFC857);
+import '../theme/theme_extensions.dart';
 
 /// Compact first-completion badge shared by workout record lists.
 class FirstRecordBadge extends StatelessWidget {
@@ -14,21 +12,28 @@ class FirstRecordBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dataVisualization = context.dataVisualizationTokens;
+    final shapes = context.shapeTokens;
+    final color = dataVisualization.firstRecord;
     return Container(
       padding:
           compact
               ? const EdgeInsets.symmetric(horizontal: 4, vertical: 1)
               : const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(compact ? 5 : 7),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.72)),
+        color: color.withValues(alpha: context.surfaceTokens.firstRecordFill),
+        borderRadius: compact ? shapes.recordBadgeCompact : shapes.recordBadge,
+        border: Border.all(
+          color: color.withValues(
+            alpha: context.surfaceTokens.firstRecordBorder,
+          ),
+        ),
       ),
       child: Text(
         AppLocalizations.of(context).recordFirst,
         maxLines: 1,
         style: TextStyle(
-          color: Colors.white,
+          color: color,
           fontSize: compact ? 7.5 : 9,
           height: compact ? 1 : null,
           fontWeight: FontWeight.w800,
@@ -55,10 +60,12 @@ class WorkoutRecordBadgeChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dataVisualization = context.dataVisualizationTokens;
+    final shapes = context.shapeTokens;
     final color =
         badge.tier == WorkoutRecordBadgeTier.allTime
-            ? _allTimeRecordColor
-            : _monthlyRecordColor;
+            ? dataVisualization.recordAllTime
+            : dataVisualization.recordMonthly;
     final strings = AppLocalizations.of(context);
     return Container(
       width: width,
@@ -67,9 +74,13 @@ class WorkoutRecordBadgeChip extends StatelessWidget {
               ? const EdgeInsets.symmetric(horizontal: 4, vertical: 0)
               : const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(compact ? 5 : 7),
-        border: Border.all(color: color.withValues(alpha: 0.62)),
+        color: color.withValues(alpha: context.surfaceTokens.recordBadgeFill),
+        borderRadius: compact ? shapes.recordBadgeCompact : shapes.recordBadge,
+        border: Border.all(
+          color: color.withValues(
+            alpha: context.surfaceTokens.recordBadgeBorder,
+          ),
+        ),
       ),
       child: Text(
         badge.type == WorkoutRecordBadgeType.repBest
@@ -99,6 +110,7 @@ class WorkoutRecordBadgeLegend extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final dataVisualization = context.dataVisualizationTokens;
     final strings = AppLocalizations.of(context);
     final textStyle = theme.textTheme.labelMedium?.copyWith(
       fontWeight: FontWeight.w700,
@@ -109,15 +121,15 @@ class WorkoutRecordBadgeLegend extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           _LegendItem(
-            color: _monthlyRecordColor,
+            color: dataVisualization.recordMonthly,
             label: strings.recordMonthly,
-            style: textStyle?.copyWith(color: _monthlyRecordColor),
+            style: textStyle?.copyWith(color: dataVisualization.recordMonthly),
           ),
           const SizedBox(width: 18),
           _LegendItem(
-            color: _allTimeRecordColor,
+            color: dataVisualization.recordAllTime,
             label: strings.recordAllTime,
-            style: textStyle?.copyWith(color: _allTimeRecordColor),
+            style: textStyle?.copyWith(color: dataVisualization.recordAllTime),
           ),
         ],
       ),

@@ -115,37 +115,21 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
       title: strings.nutritionManualGoalsTitle,
       subtitle: strings.nutritionManualGoalsPageSubtitle,
       icon: Icons.flag,
-      bottomNavigationBar: SafeArea(
-        minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-        child: Row(
-          children: [
-            Expanded(
-              child: OutlinedButton(
-                onPressed: _saving ? null : () => Navigator.pop(context, false),
-                child: Text(strings.commonCancel),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: FilledButton.icon(
-                onPressed: !canSave || _saving ? null : _saveGoals,
-                icon:
-                    _saving
-                        ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                        : const Icon(Icons.save),
-                label: Text(
-                  _saving
-                      ? strings.nutritionSaving
-                      : strings.nutritionSaveGoals,
-                ),
-              ),
-            ),
-          ],
-        ),
+      bottomNavigationBar: SettingsSaveBar(
+        label: _saving ? strings.nutritionSaving : strings.nutritionSaveGoals,
+        onPressed: !canSave || _saving ? null : _saveGoals,
+        cancelLabel: strings.commonCancel,
+        onCancel: _saving ? null : () => Navigator.pop(context, false),
+        saveIcon:
+            _saving
+                ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+                : const Icon(Icons.save),
+        decorated: false,
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       ),
       children: [
         Form(
@@ -277,11 +261,7 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
                 signed: false,
                 decimal: true,
               ),
-      decoration: InputDecoration(
-        labelText: label,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-        isDense: true,
-      ),
+      decoration: settingsFieldDecoration(context, label: label, isDense: true),
       validator: (value) {
         if (value == null || value.trim().isEmpty) return null;
         final parsed = num.tryParse(value);

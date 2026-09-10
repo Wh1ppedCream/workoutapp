@@ -714,6 +714,29 @@ class DefinitionDao {
     return definitions.isEmpty ? null : definitions.first;
   }
 
+  /// Fetches a shipped exercise by its immutable catalog identity.
+  ///
+  /// Names and equipment remain presentation and matching fallbacks for legacy
+  /// rows. Built-in callers should prefer this lookup so catalog renames do not
+  /// disconnect plans or other authored references from their definition.
+  static Future<ExerciseDefinition?> getExerciseDefinitionByCatalogId(
+    Database db,
+    String catalogId,
+  ) async {
+    final normalizedCatalogId = catalogId.trim();
+    if (normalizedCatalogId.isEmpty) return null;
+
+    final rows = await db.query(
+      'exercise_definitions',
+      columns: ['id'],
+      where: 'catalog_id = ?',
+      whereArgs: [normalizedCatalogId],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return getExerciseDefinitionById(db, rows.single['id'] as int);
+  }
+
   /// Inserts a muscle↔exercise link at a given rank.
   static Future<int> insertExerciseMuscleMapping(
     Database db,

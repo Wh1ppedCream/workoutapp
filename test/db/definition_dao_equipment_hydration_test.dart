@@ -35,6 +35,7 @@ void main() {
       });
       await db.insert('exercise_definitions', {
         'id': 1,
+        'catalog_id': 'tonos.exercise.0007',
         'name': 'Bench Press - Barbell',
         'equipment_id': 1,
         'rating': 90,
@@ -78,6 +79,24 @@ void main() {
         batched.single.muscles.single.muscle.catalogId,
         'tonos.muscle.0001',
       );
+
+      final byCatalogId = await DefinitionDao.getExerciseDefinitionByCatalogId(
+        db,
+        'tonos.exercise.0007',
+      );
+      expect(byCatalogId?.id, 1);
+      expect(
+        byCatalogId?.equipmentList.first.catalogId,
+        'tonos.equipment.0001',
+      );
+      expect(byCatalogId?.muscles.single.muscle.catalogId, 'tonos.muscle.0001');
+      expect(
+        await DefinitionDao.getExerciseDefinitionByCatalogId(
+          db,
+          'tonos.exercise.9999',
+        ),
+        isNull,
+      );
     },
   );
 }
@@ -86,6 +105,7 @@ Future<void> _createSchema(Database db) async {
   await db.execute('''
     CREATE TABLE exercise_definitions (
       id INTEGER PRIMARY KEY,
+      catalog_id TEXT,
       name TEXT NOT NULL,
       equipment_id INTEGER,
       rating INTEGER NOT NULL DEFAULT 0

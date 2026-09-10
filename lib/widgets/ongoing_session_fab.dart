@@ -7,6 +7,8 @@ import '../l10n/safe_failure_localizations.dart';
 import '../providers/active_session.dart';
 import '../screens/exercise/session_screen.dart'; // adjust path if needed
 import '../services/workout_exit_preferences.dart';
+import '../theme/theme_extensions.dart';
+import '../theme/widgets/workout_actions.dart';
 import '../utils/app_test_keys.dart';
 
 /// A FAB that toggles between a single dumbbell icon and
@@ -25,10 +27,11 @@ class _OngoingSessionFabState extends State<OngoingSessionFab> {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
+    final semantic = context.semanticColors;
     if (!_open) {
       return FloatingActionButton(
         key: AppTestKeys.ongoingSessionMenu,
-        backgroundColor: Colors.green,
+        backgroundColor: semantic.ongoingSessionAction,
         tooltip: strings.sessionTitle,
         child: const Icon(Icons.fitness_center),
         onPressed: () => setState(() => _open = true),
@@ -40,7 +43,7 @@ class _OngoingSessionFabState extends State<OngoingSessionFab> {
       children: [
         FloatingActionButton.extended(
           key: AppTestKeys.ongoingSessionResume,
-          backgroundColor: Colors.green,
+          backgroundColor: semantic.ongoingSessionAction,
           icon: const Icon(Icons.play_arrow),
           label: Text(strings.sessionResume),
           onPressed: () {
@@ -53,7 +56,7 @@ class _OngoingSessionFabState extends State<OngoingSessionFab> {
         const SizedBox(width: 8),
         FloatingActionButton.extended(
           key: AppTestKeys.ongoingSessionExit,
-          backgroundColor: Colors.red,
+          backgroundColor: semantic.ongoingSessionExit,
           icon: const Icon(Icons.exit_to_app),
           label: Text(strings.sessionExit),
           onPressed:
@@ -148,16 +151,17 @@ class _OngoingSessionFabState extends State<OngoingSessionFab> {
       builder:
           (dialogContext) => StatefulBuilder(
             builder: (context, setDialogState) {
-              final colors = Theme.of(context).colorScheme;
-              final textTheme = Theme.of(context).textTheme;
+              final theme = Theme.of(context);
+              final colors = theme.colorScheme;
+              final textTheme = theme.textTheme;
+              final shapes = context.shapeTokens;
+              final surfaces = context.surfaceTokens;
               return Dialog(
                 insetPadding: const EdgeInsets.symmetric(
                   horizontal: 24,
                   vertical: 24,
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
-                ),
+                shape: RoundedRectangleBorder(borderRadius: shapes.sheet),
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 380),
                   child: Padding(
@@ -173,7 +177,7 @@ class _OngoingSessionFabState extends State<OngoingSessionFab> {
                               height: 38,
                               decoration: BoxDecoration(
                                 color: colors.primaryContainer,
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: shapes.control,
                               ),
                               child: Icon(
                                 Icons.flag_outlined,
@@ -193,7 +197,9 @@ class _OngoingSessionFabState extends State<OngoingSessionFab> {
                           ],
                         ),
                         const SizedBox(height: 18),
-                        OutlinedButton.icon(
+                        WorkoutExitAction(
+                          discard: true,
+                          label: strings.sessionCancelDelete,
                           onPressed:
                               () => Navigator.pop(
                                 dialogContext,
@@ -202,18 +208,10 @@ class _OngoingSessionFabState extends State<OngoingSessionFab> {
                                   remember: remember,
                                 ),
                               ),
-                          icon: const Icon(Icons.delete_outline, size: 18),
-                          label: Text(strings.sessionCancelDelete),
-                          style: OutlinedButton.styleFrom(
-                            minimumSize: const Size.fromHeight(48),
-                            foregroundColor: colors.error,
-                            side: BorderSide(
-                              color: colors.error.withValues(alpha: 0.7),
-                            ),
-                          ),
                         ),
                         const SizedBox(height: 10),
-                        FilledButton.icon(
+                        WorkoutExitAction(
+                          label: strings.sessionEndSave,
                           onPressed:
                               () => Navigator.pop(
                                 dialogContext,
@@ -222,18 +220,11 @@ class _OngoingSessionFabState extends State<OngoingSessionFab> {
                                   remember: remember,
                                 ),
                               ),
-                          icon: const Icon(Icons.save_outlined, size: 18),
-                          label: Text(strings.sessionEndSave),
-                          style: FilledButton.styleFrom(
-                            minimumSize: const Size.fromHeight(48),
-                          ),
                         ),
                         const SizedBox(height: 12),
                         Material(
-                          color: colors.surfaceContainerHighest.withValues(
-                            alpha: 0.45,
-                          ),
-                          borderRadius: BorderRadius.circular(14),
+                          color: surfaces.dialogChoice,
+                          borderRadius: shapes.dialogChoice,
                           child: CheckboxListTile(
                             value: remember,
                             dense: true,

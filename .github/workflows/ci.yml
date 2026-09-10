@@ -88,6 +88,12 @@ jobs:
           tools/content_pipeline.dart
           tools/shared_media_pipeline.dart
 
+      - name: Report structural theme inventory
+        run: dart run tools/theme_style_inventory.dart --check
+
+      - name: Enforce qualified theme styles
+        run: dart run tools/theme_style_ratchet.dart docs/theme-style-ratchet.json
+
       - name: Validate development content environment
         run: >-
           dart run tools/content_environment_check.dart

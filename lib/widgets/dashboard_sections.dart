@@ -21,6 +21,7 @@ import '../screens/exercise/session_screen.dart';
 import '../screens/nutrition/measured_items_page.dart';
 import '../services/active_plan_store.dart';
 import '../services/catalog_entity_localizer.dart';
+import '../theme/theme_extensions.dart';
 import '../utils/localized_body_part_name.dart';
 import '../utils/completed_workout_duration_formatter.dart';
 import '../utils/localized_formatters.dart';
@@ -43,19 +44,17 @@ class DashboardHero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
     const accent = Color(0xFF64B5F6);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: shapes.dashboardHero,
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            accent.withValues(alpha: 0.25),
-            scheme.surfaceContainerHighest.withValues(alpha: 0.54),
-          ],
+          colors: [accent.withValues(alpha: 0.25), surfaces.dashboardHero],
         ),
         border: Border.all(color: accent.withValues(alpha: 0.44)),
       ),
@@ -118,13 +117,15 @@ class DashboardQuickActions extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
     final activeSession = context.watch<ActiveSession>();
     final workoutActive = activeSession.isActive && !activeSession.isRestoring;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.34),
-        borderRadius: BorderRadius.circular(24),
+        color: surfaces.dashboardSection,
+        borderRadius: shapes.dashboardSection,
         border: Border.all(color: scheme.outlineVariant),
       ),
       child: Column(
@@ -203,12 +204,13 @@ class _DashboardActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final shapes = context.shapeTokens;
     return Material(
       color: color.withValues(alpha: 0.13),
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: shapes.dashboardAction,
       child: InkWell(
         onTap: onPressed,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: shapes.dashboardAction,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
           child: Column(
@@ -313,11 +315,13 @@ class _DashboardRecentWorkoutsCardState
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.34),
-        borderRadius: BorderRadius.circular(24),
+        color: surfaces.dashboardSection,
+        borderRadius: shapes.dashboardSection,
         border: Border.all(color: scheme.outlineVariant),
       ),
       child: Column(
@@ -424,11 +428,12 @@ class _DashboardWorkoutRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final shapes = context.shapeTokens;
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onOpen,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: shapes.dashboardRow,
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 2),
           child: Row(
@@ -1134,6 +1139,8 @@ class _DashboardExerciseUsageRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
     final strings = AppLocalizations.of(context);
     final equipment = usage.definition.equipmentList
         .where((item) => item.name.trim().isNotEmpty)
@@ -1148,8 +1155,8 @@ class _DashboardExerciseUsageRow extends StatelessWidget {
       margin: const EdgeInsets.only(top: 8),
       padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(13),
+        color: surfaces.dashboardUsage,
+        borderRadius: shapes.dashboardUsage,
       ),
       child: Row(
         children: [
@@ -1217,9 +1224,10 @@ class _DashboardFocusPane extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final shapes = context.shapeTokens;
     final strings = AppLocalizations.of(context);
     return InkWell(
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: shapes.dashboardRow,
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 4),

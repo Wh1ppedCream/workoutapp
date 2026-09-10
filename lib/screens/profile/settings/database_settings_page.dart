@@ -15,6 +15,7 @@ import '../../../repositories/app_repository.dart';
 import '../../../services/content_environment_policy.dart';
 import '../../../services/content_environment_preferences.dart';
 import '../../../services/tutorial_state_store.dart';
+import '../../../theme/theme_extensions.dart';
 import '../../../utils/localized_formatters.dart';
 import '../../../utils/tutorial_launcher.dart';
 import '../../../utils/app_test_keys.dart';
@@ -427,12 +428,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
       unit++;
     }
     final decimals = unit == 0 || size >= 100 ? 0 : 1;
-    return '${LocalizedFormatters.number(
-      size,
-      locale,
-      minimumFractionDigits: decimals,
-      maximumFractionDigits: decimals,
-    )} ${units[unit]}';
+    return '${LocalizedFormatters.number(size, locale, minimumFractionDigits: decimals, maximumFractionDigits: decimals)} ${units[unit]}';
   }
 
   String _formatDateTime(DateTime? value) {
@@ -843,10 +839,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
               title: strings.databaseDownloadedMediaCache,
               subtitle: strings.databaseCacheUsage(
                 usage.fileCount,
-                _formatBytes(
-                  usage.totalBytes,
-                  Localizations.localeOf(context),
-                ),
+                _formatBytes(usage.totalBytes, Localizations.localeOf(context)),
               ),
               trailing: const SizedBox.shrink(),
             );
@@ -1037,10 +1030,9 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
 
             return _DatabaseHealthCard(
               health: snapshot.data!,
-              formatBytes: (bytes) => _formatBytes(
-                bytes,
-                Localizations.localeOf(context),
-              ),
+              formatBytes:
+                  (bytes) =>
+                      _formatBytes(bytes, Localizations.localeOf(context)),
             );
           },
         ),
@@ -1287,12 +1279,13 @@ class _HealthInfoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final semantic = context.semanticColors;
     final statusColor =
         healthy == null
             ? scheme.primary
             : healthy!
-            ? Colors.green
-            : Colors.orange;
+            ? semantic.databaseHealthy
+            : semantic.databaseWarning;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),

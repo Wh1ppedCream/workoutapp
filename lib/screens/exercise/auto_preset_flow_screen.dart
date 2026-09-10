@@ -12,6 +12,7 @@ import '../../repositories/app_repository.dart';
 import '../../widgets/flow_screen_widgets.dart';
 
 import '../../theme/theme_extensions.dart';
+import '../../theme/flow_diagram_presentation.dart';
 
 enum AddSetMode { explicit, copy }
 
@@ -214,14 +215,25 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final colors = context.colors;
-    final cs = context.cs;
+    final flow = context.flowTokens;
+    final dataVisualization = context.dataVisualizationTokens;
 
-    final bg = colors.flowChartBackground!;
-    final grid =
-        cs.brightness == Brightness.dark
-            ? Colors.white.withValues(alpha: 0.15) // light grid in dark mode
-            : colors.flowChartGrid!; // theme default in light mode
+    final bg = flow.canvas;
+    final grid = dataVisualization.grid;
+
+    final root = _nodes['1st attempt'];
+    if (root != null) {
+      updateFlowDiagramPresentation(
+        nodes: _nodes.values,
+        rootId: root.id,
+        success: flow.success,
+        failure: flow.failure,
+        loopback: flow.loopback,
+        background: flow.nodeBackground,
+        border: flow.nodeBorder,
+        text: flow.nodeText,
+      );
+    }
 
     _dashboard.setGridBackgroundParams(
       GridBackgroundParams(backgroundColor: bg, gridColor: grid),
@@ -273,17 +285,17 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
   }
 
   void _buildDashboard() {
-    final extras = context.colors;
+    final flow = context.flowTokens;
+    final dataVisualization = context.dataVisualizationTokens;
 
     // 1) Create dashboard
     _dashboard = Dashboard(defaultArrowStyle: ArrowStyle.curve);
 
     // 2) Re-set your grid colors on the fresh dashboard
-    final colors = context.colors;
     _dashboard.setGridBackgroundParams(
       GridBackgroundParams(
-        backgroundColor: colors.flowChartBackground!,
-        gridColor: colors.flowChartGrid!,
+        backgroundColor: flow.canvas,
+        gridColor: dataVisualization.grid,
       ),
     );
     _nodes.clear();
@@ -346,9 +358,9 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
           position: pos,
           size: const Size(60, 30),
           text: name,
-          backgroundColor: extras.flowNodeBg!,
-          borderColor: extras.flowNodeBorder!,
-          textColor: extras.flowNodeText!,
+          backgroundColor: flow.nodeBackground,
+          borderColor: flow.nodeBorder,
+          textColor: flow.nodeText,
           textSize: 7,
           kind: ElementKind.rectangle,
           handlers: const [
@@ -376,11 +388,7 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
           fromEl,
           toEl.id,
           ArrowParams(
-            color:
-                isSucc
-                    ? extras.flowArrowSuccess! // ← use your success arrow color
-                    : extras
-                        .flowArrowFailure!, // ← use your failure arrow color
+            color: isSucc ? flow.success : flow.failure,
             thickness: 2,
             style: isSucc ? ArrowStyle.segmented : ArrowStyle.curve,
             startArrowPosition: Alignment.bottomCenter,
@@ -401,14 +409,14 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
   }
 
   void _initializeDefaultTree() {
-    final extras = context.colors;
+    final flow = context.flowTokens;
     final root = FlowElement(
       position: const Offset(60, 50),
       size: const Size(60, 30),
       text: '1st attempt',
-      backgroundColor: extras.flowNodeBg!,
-      borderColor: extras.flowNodeBorder!,
-      textColor: extras.flowNodeText!,
+      backgroundColor: flow.nodeBackground,
+      borderColor: flow.nodeBorder,
+      textColor: flow.nodeText,
       textSize: 7,
       kind: ElementKind.rectangle,
       handlers: const [
@@ -446,7 +454,7 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
   }
 
   void _applyLoopbacks() {
-    final extras = context.colors;
+    final loopback = context.flowTokens.loopback;
     final rootEl = _nodes['1st attempt'];
     if (rootEl == null) return;
     final hasSucc = <String, bool>{};
@@ -463,7 +471,7 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
           fromEl,
           rootEl.id,
           ArrowParams(
-            color: extras.flowArrowLoopback!,
+            color: loopback,
             thickness: 2,
             style: ArrowStyle.curve,
             startArrowPosition: Alignment.centerLeft,
@@ -476,7 +484,7 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
           fromEl,
           rootEl.id,
           ArrowParams(
-            color: extras.flowArrowLoopback!,
+            color: loopback,
             thickness: 2,
             style: ArrowStyle.curve,
             startArrowPosition: Alignment.centerLeft,
@@ -488,7 +496,8 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
   }
 
   void _createBranchNode(String parent, String name, String outcome) {
-    final extras = context.colors;
+    final flow = context.flowTokens;
+    final loopback = flow.loopback;
     final pData = _nodeData[parent]!;
     final depth = pData.depth + 1;
     final idx = (_placement[depth] ?? 0);
@@ -499,9 +508,9 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
       position: pos,
       size: const Size(60, 30),
       text: name,
-      backgroundColor: extras.flowNodeBg!,
-      borderColor: extras.flowNodeBorder!,
-      textColor: extras.flowNodeText!,
+      backgroundColor: flow.nodeBackground,
+      borderColor: flow.nodeBorder,
+      textColor: flow.nodeText,
       textSize: 7,
       kind: ElementKind.rectangle,
       handlers: const [
@@ -515,10 +524,7 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
     _nodes[name] = el;
     _nodeData[name] = _NodeData(depth: depth);
 
-    final branchColor =
-        outcome == 'success'
-            ? context.colors.flowArrowSuccess!
-            : context.colors.flowArrowFailure!;
+    final branchColor = outcome == 'success' ? flow.success : flow.failure;
     final branchStyle =
         outcome == 'success' ? ArrowStyle.segmented : ArrowStyle.curve;
     _dashboard.addNextById(
@@ -541,7 +547,7 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
       el,
       rootEl.id,
       ArrowParams(
-        color: context.colors.flowArrowLoopback!,
+        color: loopback,
         thickness: 2,
         style: ArrowStyle.curve,
         startArrowPosition: Alignment.centerLeft,
@@ -1133,8 +1139,10 @@ class _FlowControlDeck extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final strings = AppLocalizations.of(context);
-    final success = context.colors.flowArrowSuccess ?? const Color(0xFF66BB6A);
-    final failure = context.colors.flowArrowFailure ?? scheme.error;
+    final flow = context.flowTokens;
+    final surfaces = context.surfaceTokens;
+    final success = flow.success;
+    final failure = flow.failure;
 
     return Column(
       children: [
@@ -1171,7 +1179,7 @@ class _FlowControlDeck extends StatelessWidget {
                     child: FilledButton.icon(
                       style: FilledButton.styleFrom(
                         backgroundColor: success,
-                        foregroundColor: Colors.white,
+                        foregroundColor: flow.onAction,
                       ),
                       onPressed:
                           selectedBranchParent == null || existingSuccess >= 1
@@ -1186,7 +1194,7 @@ class _FlowControlDeck extends StatelessWidget {
                     child: FilledButton.icon(
                       style: FilledButton.styleFrom(
                         backgroundColor: failure,
-                        foregroundColor: Colors.white,
+                        foregroundColor: flow.onAction,
                       ),
                       onPressed:
                           selectedBranchParent == null || existingFailure >= 1
@@ -1286,7 +1294,9 @@ class _FlowControlDeck extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(horizontal: 6),
                         foregroundColor: scheme.error,
                         side: BorderSide(
-                          color: scheme.error.withValues(alpha: .6),
+                          color: scheme.error.withValues(
+                            alpha: surfaces.flowErrorBorderOpacity,
+                          ),
                         ),
                       ),
                       onPressed: canDeleteNode ? onRemoveNode : null,
@@ -1322,27 +1332,35 @@ class _FlowControlCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final shapes = context.shapeTokens;
+    final surfaces = context.surfaceTokens;
 
     return Container(
       width: double.infinity,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: .34),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: .46)),
+        color: surfaces.flowControl,
+        borderRadius: shapes.flowControl,
+        border: Border.all(
+          color: color.withValues(alpha: surfaces.flowControlBorderOpacity),
+        ),
       ),
       child: ExpansionTile(
         key: PageStorageKey(title),
         tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
         childrenPadding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
-        collapsedBackgroundColor: color.withValues(alpha: .05),
-        backgroundColor: color.withValues(alpha: .04),
+        collapsedBackgroundColor: color.withValues(
+          alpha: surfaces.flowControlCollapsedOpacity,
+        ),
+        backgroundColor: color.withValues(
+          alpha: surfaces.flowControlExpandedOpacity,
+        ),
         leading: Container(
           width: 38,
           height: 38,
           decoration: BoxDecoration(
-            color: color.withValues(alpha: .16),
-            borderRadius: BorderRadius.circular(13),
+            color: color.withValues(alpha: surfaces.flowControlIconOpacity),
+            borderRadius: shapes.flowIcon,
           ),
           child: Icon(icon, color: color, size: 20),
         ),

@@ -2,6 +2,7 @@
 
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../theme/theme_extensions.dart';
 import 'package:provider/provider.dart';
 
 import '../../l10n/generated/app_localizations.dart';
@@ -378,15 +379,18 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                         padding: const EdgeInsets.only(right: 8),
                         child: InkWell(
                           onTap: () => Scaffold.of(ctx).openEndDrawer(),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: context.nutritionTokens.compactShape,
                           child: Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 10,
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              border: Border.all(color: Colors.green),
-                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: context.nutritionTokens.addFoodAction,
+                              ),
+                              borderRadius:
+                                  context.nutritionTokens.compactShape,
                             ),
                             child: SizedBox(
                               height: kToolbarHeight - 12,
@@ -525,7 +529,7 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                       clipBehavior: Clip.antiAlias,
                       shape: RoundedRectangleBorder(
                         side: BorderSide(color: borderColor, width: 1.25),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: context.nutritionTokens.sectionShape,
                       ),
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
@@ -669,6 +673,7 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                                 Text(strings.foodQuantity),
                                 const SizedBox(width: 8),
                                 _qtyButton(
+                                  context: context,
                                   icon: Icons.remove,
                                   onTap: () {
                                     setState(
@@ -691,6 +696,7 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                                   ),
                                 ),
                                 _qtyButton(
+                                  context: context,
                                   icon: Icons.add,
                                   onTap: () {
                                     setState(() => it.qty += 1);
@@ -774,7 +780,7 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                         ),
                         shape: WidgetStateProperty.all(
                           RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: context.nutritionTokens.portionShape,
                             side: BorderSide(
                               color: Theme.of(context).colorScheme.primary,
                               width: 1.25,
@@ -830,8 +836,8 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                       _tabs[idx] = idx == i;
                     }
                   }),
-              borderRadius: BorderRadius.circular(8),
-              selectedColor: Colors.white,
+              borderRadius: context.nutritionTokens.compactShape,
+              selectedColor: context.nutritionTokens.selectedLabel,
               fillColor: Theme.of(context).primaryColor,
               children: [
                 Padding(
@@ -892,7 +898,7 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                                 },
                               ),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: context.nutritionTokens.compactShape,
                       ),
                     ),
                     onChanged: (s) {
@@ -1070,7 +1076,7 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                         onPressed: () => setState(() => _barcodeCtrl.clear()),
                       ),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: context.nutritionTokens.compactShape,
               ),
             ),
             onChanged: (_) => setState(() {}),
@@ -1354,7 +1360,10 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                   (ctx, isFav, _) => IconButton(
                     tooltip: isFav ? 'Unfavorite' : 'Favorite',
                     icon: Icon(isFav ? Icons.star : Icons.star_border),
-                    color: isFav ? Colors.amber : Colors.grey,
+                    color:
+                        isFav
+                            ? context.nutritionTokens.favoriteAction
+                            : context.nutritionTokens.mutedAction,
                     visualDensity: VisualDensity.compact,
                     onPressed:
                         () =>
@@ -1364,21 +1373,21 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
             IconButton(
               tooltip: 'Customize food',
               icon: const Icon(Icons.settings),
-              color: Colors.grey,
+              color: context.nutritionTokens.mutedAction,
               visualDensity: VisualDensity.compact,
               onPressed: () => _openCustomizeFood(f),
             ),
             IconButton(
               tooltip: 'Edit & add',
               icon: const Icon(Icons.edit),
-              color: Colors.amber,
+              color: context.nutritionTokens.favoriteAction,
               visualDensity: VisualDensity.compact,
               onPressed: () => _openAddSheet(context, f),
             ),
             IconButton(
               tooltip: 'Add 1',
               icon: const Icon(Icons.add_circle),
-              color: Colors.green,
+              color: context.nutritionTokens.addFoodAction,
               visualDensity: VisualDensity.compact,
               onPressed: () => _quickAddOne(f),
             ),
@@ -1955,8 +1964,8 @@ class _StatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey[300]!),
-        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: context.nutritionTokens.foodBorder),
+        borderRadius: context.nutritionTokens.compactShape,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -2001,19 +2010,23 @@ class _LineMacros {
   String kcalText() => '${kcal.round()} kcal';
 }
 
-Widget _qtyButton({required IconData icon, required VoidCallback onTap}) {
+Widget _qtyButton({
+  required BuildContext context,
+  required IconData icon,
+  required VoidCallback onTap,
+}) {
   return Padding(
     padding: const EdgeInsets.symmetric(horizontal: 6),
     child: InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(6),
+      borderRadius: context.nutritionTokens.quantityShape,
       child: Container(
         width: 36,
         height: 36,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey.shade300),
-          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: context.nutritionTokens.foodBorder),
+          borderRadius: context.nutritionTokens.quantityShape,
         ),
         child: Icon(icon, size: 18),
       ),

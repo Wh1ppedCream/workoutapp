@@ -95,6 +95,20 @@ void main() {
     expect(workflow, contains('tools/content_environment_check.dart'));
     expect(workflow, contains('--target development'));
     expect(workflow, contains('TONOS_CONTENT_ENVIRONMENT=development'));
+    expect(workflow, contains('tools/theme_style_inventory.dart'));
+    expect(workflow, contains('tools/theme_style_ratchet.dart'));
+    expect(workflow, contains('name: Report structural theme inventory'));
+    expect(workflow, contains('name: Enforce qualified theme styles'));
+    expect(
+      workflow,
+      contains(
+        'dart run tools/theme_style_ratchet.dart docs/theme-style-ratchet.json',
+      ),
+    );
+    expect(
+      workflow,
+      contains('dart run tools/theme_style_inventory.dart --check'),
+    );
     expect(workflow, contains('TONOS_CONTENT_ALLOW_OVERRIDES=false'));
     expect(workflow, contains('TONOS_ENABLE_EXPERIMENTAL_TABS=false'));
     expect(workflow, contains('working-directory: tools/catalog_builder'));

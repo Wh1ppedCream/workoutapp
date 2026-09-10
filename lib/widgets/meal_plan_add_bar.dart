@@ -14,8 +14,8 @@ class MealPlanAddBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-    final dividerColor = colors.mealPlanDivider!;
+    final nutrition = context.nutritionTokens;
+    final dividerColor = context.surfaceTokens.divider;
     final margin = EdgeInsets.symmetric(
       horizontal: 16 * scale,
       vertical: 8 * scale,
@@ -34,7 +34,7 @@ class MealPlanAddBar extends StatelessWidget {
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: colors.mealPlanPantryLogBg!,
+                color: nutrition.pantryLogSurface,
                 borderRadius: BorderRadius.horizontal(
                   left: Radius.circular(24 * scale),
                 ),
@@ -69,7 +69,7 @@ class MealPlanAddBar extends StatelessWidget {
           // Add Meal (light green)
           Expanded(
             child: Container(
-              color: colors.mealPlanAddMealBg!,
+              color: nutrition.addMealSurface,
               child: InkWell(
                 onTap: () {
                   Navigator.of(context).push(
@@ -98,7 +98,7 @@ class MealPlanAddBar extends StatelessWidget {
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: colors.mealPlanPlanMealBg!,
+                color: nutrition.planMealSurface,
                 borderRadius: BorderRadius.horizontal(
                   right: Radius.circular(24 * scale),
                 ),

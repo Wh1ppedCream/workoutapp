@@ -10,6 +10,7 @@ import '../models/models.dart';
 import '../repositories/app_repository.dart';
 import '../repositories/content_repository.dart';
 import '../services/media_download_preferences.dart';
+import '../theme/theme_extensions.dart';
 
 /// Displays optional cloud media for a stable equipment, bodypart, or muscle
 /// definition. The caller supplies a local semantic fallback so an incomplete
@@ -179,7 +180,7 @@ class _SharedEntityMediaThumbnailState
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final surfaces = context.surfaceTokens;
     final contentSize = widget.size - widget.padding.horizontal;
     final child = Container(
       width: widget.size,
@@ -187,7 +188,7 @@ class _SharedEntityMediaThumbnailState
       padding: widget.padding,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: widget.backgroundColor ?? theme.colorScheme.surfaceContainerHigh,
+        color: widget.backgroundColor ?? surfaces.mediaFrame,
         borderRadius: widget.borderRadius,
         border:
             widget.borderColor == null
@@ -277,15 +278,16 @@ class _SharedEntityMediaThumbnailState
 
   Widget _statusCircle(BuildContext context, IconData icon) {
     final theme = Theme.of(context);
+    final surfaces = context.surfaceTokens;
     return Align(
       alignment: Alignment.bottomRight,
       child: Container(
         width: widget.size * 0.3,
         height: widget.size * 0.3,
         decoration: BoxDecoration(
-          color: theme.colorScheme.surface.withValues(alpha: 0.84),
+          color: surfaces.media.withValues(alpha: 0.84),
           shape: BoxShape.circle,
-          border: Border.all(color: theme.colorScheme.outlineVariant),
+          border: Border.all(color: surfaces.mediaOutline),
         ),
         child: Icon(
           icon,

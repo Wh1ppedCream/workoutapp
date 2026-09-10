@@ -158,18 +158,15 @@ class _ExerciseMediaThumbnailState extends State<ExerciseMediaThumbnail> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final surfaces = context.surfaceTokens;
     final child = Container(
       width: widget.size,
       height: widget.size,
       padding: widget.padding,
       decoration: BoxDecoration(
-        color: widget.framed ? theme.colorScheme.surfaceContainerHighest : null,
+        color: widget.framed ? surfaces.mediaPlaceholder : null,
         borderRadius: widget.borderRadius,
-        border:
-            widget.framed
-                ? Border.all(color: theme.colorScheme.outlineVariant)
-                : null,
+        border: widget.framed ? Border.all(color: surfaces.mediaOutline) : null,
       ),
       clipBehavior: Clip.antiAlias,
       child: FutureBuilder<_ThumbnailData?>(
@@ -214,7 +211,7 @@ class _ExerciseMediaThumbnailState extends State<ExerciseMediaThumbnail> {
 
   Widget _buildHeatmapFallback(BuildContext context) {
     final theme = Theme.of(context);
-    final colors = context.colors;
+    final dataVisualization = context.dataVisualizationTokens;
     final heatmapFrequencyMap = bodyPartFrequencyMapFromNames({
       for (final bodyPart in widget.definition.bodyParts) bodyPart.name: 1.0,
     });
@@ -230,8 +227,8 @@ class _ExerciseMediaThumbnailState extends State<ExerciseMediaThumbnail> {
     final heatmapSize = widget.size - widget.padding.horizontal;
     return BodyHeatmap(
       frequencyMap: heatmapFrequencyMap,
-      lowColor: colors.historySummaryHeatmapLow!,
-      highColor: colors.historySummaryHeatmapHigh!,
+      lowColor: dataVisualization.heatmapLow,
+      highColor: dataVisualization.heatmapHigh,
       width: heatmapSize,
       height: heatmapSize,
     );
@@ -257,6 +254,7 @@ class _ExerciseMediaThumbnailState extends State<ExerciseMediaThumbnail> {
 
   Widget _buildRetryOverlay(BuildContext context) {
     final theme = Theme.of(context);
+    final surfaces = context.surfaceTokens;
     return Align(
       alignment: Alignment.bottomRight,
       child: Semantics(
@@ -269,9 +267,9 @@ class _ExerciseMediaThumbnailState extends State<ExerciseMediaThumbnail> {
             width: widget.size * 0.32,
             height: widget.size * 0.32,
             decoration: BoxDecoration(
-              color: theme.colorScheme.surface.withValues(alpha: 0.86),
+              color: surfaces.media.withValues(alpha: 0.86),
               shape: BoxShape.circle,
-              border: Border.all(color: theme.colorScheme.outlineVariant),
+              border: Border.all(color: surfaces.mediaOutline),
             ),
             child: Icon(
               Icons.refresh,
@@ -286,6 +284,7 @@ class _ExerciseMediaThumbnailState extends State<ExerciseMediaThumbnail> {
 
   Widget _buildWifiOnlyOverlay(BuildContext context) {
     final theme = Theme.of(context);
+    final surfaces = context.surfaceTokens;
     return Semantics(
       container: true,
       label: AppLocalizations.of(context).databaseWifiOnly,
@@ -295,9 +294,9 @@ class _ExerciseMediaThumbnailState extends State<ExerciseMediaThumbnail> {
           width: widget.size * 0.3,
           height: widget.size * 0.3,
           decoration: BoxDecoration(
-            color: theme.colorScheme.surface.withValues(alpha: 0.82),
+            color: surfaces.media.withValues(alpha: 0.82),
             shape: BoxShape.circle,
-            border: Border.all(color: theme.colorScheme.outlineVariant),
+            border: Border.all(color: surfaces.mediaOutline),
           ),
           child: Icon(
             Icons.wifi,

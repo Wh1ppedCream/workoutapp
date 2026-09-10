@@ -98,7 +98,7 @@ class SingleBodyPartHeatmap extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colors = context.colors;
+    final dataVisualization = context.dataVisualizationTokens;
     final svgIds = bodyPartNameToSvgIds[bodyPartName] ?? const <String>[];
     final frequencyMap =
         singleBodyPartFrequencyMaps[bodyPartName] ?? const <String, double>{};
@@ -124,8 +124,8 @@ class SingleBodyPartHeatmap extends StatelessWidget {
                 )
                 : BodyHeatmap(
                   frequencyMap: frequencyMap,
-                  lowColor: lowColor ?? colors.historySummaryHeatmapLow!,
-                  highColor: highColor ?? colors.historySummaryHeatmapHigh!,
+                  lowColor: lowColor ?? dataVisualization.heatmapLow,
+                  highColor: highColor ?? dataVisualization.heatmapHigh,
                   width: contentSize,
                   height: contentSize,
                 ),

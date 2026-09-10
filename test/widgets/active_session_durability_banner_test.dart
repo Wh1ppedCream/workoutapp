@@ -1,6 +1,7 @@
 import 'package:env_test/l10n/generated/app_localizations.dart';
 import 'package:env_test/providers/active_session.dart';
 import 'package:env_test/repositories/app_repository.dart';
+import 'package:env_test/theme/tokens/app_effect_tokens.dart';
 import 'package:env_test/widgets/active_session_durability_banner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -39,6 +40,21 @@ void main() {
         'another workout.',
       ),
       findsOneWidget,
+    );
+    expect(
+      tester
+          .widget<Material>(
+            find.byWidgetPredicate(
+              (widget) =>
+                  widget is Material &&
+                  widget.color ==
+                      Theme.of(
+                        tester.element(find.text('Retry')),
+                      ).colorScheme.errorContainer,
+            ),
+          )
+          .elevation,
+      AppEffectTokens.classic(Brightness.light).feedbackElevation,
     );
 
     repository.failuresRemaining = 0;
